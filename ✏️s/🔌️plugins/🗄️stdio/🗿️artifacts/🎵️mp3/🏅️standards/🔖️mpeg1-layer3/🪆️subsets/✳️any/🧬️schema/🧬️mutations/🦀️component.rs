@@ -29,11 +29,11 @@ impl Mutation<Mp3Snapshot> for Mp3Mutation {
     async fn diff(&self, base: &Mp3Snapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             Mp3Mutation::NoMutation => Mp3Diff::default(),
-            Mp3Mutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
-            Mp3Mutation::SetId3v2 { id3v2 } => diff_set_id3v2(id3v2.clone()),
-            Mp3Mutation::SetFrames { frames } => diff_set_frames(frames.clone()),
-            Mp3Mutation::SetId3v1 { id3v1 } => diff_set_id3v1(id3v1.clone()),
-        })
+            Mp3Mutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot).await,
+            Mp3Mutation::SetId3v2 { id3v2 } => diff_set_id3v2(id3v2.clone()).await,
+            Mp3Mutation::SetFrames { frames } => diff_set_frames(frames.clone()).await,
+            Mp3Mutation::SetId3v1 { id3v1 } => diff_set_id3v1(id3v1.clone()).await,
+        }).await
     }
 
     async fn inverse(&self, base: &Mp3Snapshot) -> Vec<Self> {
@@ -50,13 +50,13 @@ impl Mutation<Mp3Snapshot> for Mp3Mutation {
 /// ▶️ Applies a mutation to `snapshot` in place, returning the diff (the diff is the single
 /// semantics source — never apply-and-capture).
 pub async fn apply_mp3_mutation(snapshot: &mut Mp3Snapshot, mutation: &Mp3Mutation) -> protocol::MutationOutcome<Mp3Diff> {
-    let outcome = <Mp3Mutation as Mutation<Mp3Snapshot>>::diff(mutation, snapshot);
-    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
+    let outcome = <Mp3Mutation as Mutation<Mp3Snapshot>>::diff(mutation, snapshot).await;
+    match protocol::MutationDiff::apply(outcome.diff().await, snapshot).await {
         Ok(next) => {
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).await.absorb_messages(outcome.messages().await.to_vec()).await,
     }
 }
 //#endregion 🔖️Mutation

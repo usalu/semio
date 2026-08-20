@@ -35,7 +35,7 @@ pub mod derived_composition {
             if native.is_empty() {
                 return Err(ComposeError { message: "TxtComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() });
             }
-            let analysis = TxtAnalyzer::analyze(&native);
+            let analysis = TxtAnalyzer::analyze(&native).await;
             let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError { message: "TxtComposerComposition: analysis produced no snapshot".into(), diagnostics: analysis.diagnostics.clone() })?;
             Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics })
         }
@@ -57,7 +57,7 @@ pub async fn register() {
     register_artifact_inferences();
     register_pilot_languages();
     register_schema_specs();
-    let _ = store::register_document_codec(store::ArtifactCodec::of::<TxtSnapshot, TxtMutation>(STDIO_TXT_DOCUMENT_SCHEMA));
+    let _ = store::register_document_codec(store::ArtifactCodec::of::<TxtSnapshot, TxtMutation>(STDIO_TXT_DOCUMENT_SCHEMA).await);
 }
 
 /// 📇️ P2-P3: `dsl::registry::register_schema_spec` (P2-M3's `FullResolver` insertion API) — real,
@@ -136,14 +136,14 @@ pub async fn register_pilot_languages() {
 
 /// 📌️ Registers schema leaves for `s.stdio.txt`.
 pub async fn register_artifact_schema() {
-    ::schema::register_artifact_schema_descriptor(crate::artifacts::txt::schema::txt_artifact_schema_descriptor());
+    ::schema::register_artifact_schema_descriptor(crate::artifacts::txt::schema::txt_artifact_schema_descriptor().await);
 }
 
 /// 💡️ Registers `s.stdio.txt.inference`'s facet leaves into the OS-wide inference catalog —
 /// sibling to `register_artifact_schema()` (separate registry, ticket
 /// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
 pub async fn register_artifact_inferences() {
-    ::schema::register_artifact_inference_descriptor(crate::artifacts::txt::standards::v_utf_8::subsets::any::schema::inferences::txt_artifact_inference_descriptor());
+    ::schema::register_artifact_inference_descriptor(crate::artifacts::txt::standards::v_utf_8::subsets::any::schema::inferences::txt_artifact_inference_descriptor().await);
 }
 //#endregion 🔖️Register
 
@@ -155,7 +155,8 @@ pub mod io_registry {
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 
-    pub async fn entries() -> &'static [ComposerEntry] {
+    // 🚫️async: E1 pure table accessor consumed by OnceLock::get_or_init's sync closure — see R9
+    pub fn entries() -> &'static [ComposerEntry] {
         ENTRIES.get_or_init(|| vec![composer_entry_of::<TxtRawAnyComposer>()]).as_slice()
     }
 }
@@ -177,7 +178,7 @@ pub async fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
             diff: LanguagePair { text: None, binary: None },
             mutations: LanguagePair { text: None, binary: None },
             inferences: None,
-            codec: store::ArtifactCodec::of::<TxtSnapshot, TxtMutation>(STDIO_TXT_DOCUMENT_SCHEMA),
+            codec: store::ArtifactCodec::of::<TxtSnapshot, TxtMutation>(STDIO_TXT_DOCUMENT_SCHEMA).await,
         },
         entries: &[],
     }

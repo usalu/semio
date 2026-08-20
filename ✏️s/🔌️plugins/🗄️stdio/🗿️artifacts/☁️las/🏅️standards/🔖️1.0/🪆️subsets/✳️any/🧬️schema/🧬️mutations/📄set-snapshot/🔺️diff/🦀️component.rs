@@ -7,7 +7,7 @@ use crate::artifacts::las::LasSnapshot;
 /// full-replace slot exists on `LasDiff` to short-circuit into).
 pub async fn diff(base: &LasSnapshot, snapshot: &LasSnapshot) -> protocol::MutationOutcome<LasDiff> {
     if base == snapshot {
-        return protocol::MutationOutcome::new(LasDiff::default()).warn("mutation.no-op", "set-snapshot: new snapshot is identical to the current one");
+        return protocol::MutationOutcome::new(LasDiff::default()).await.warn("mutation.no-op", "set-snapshot: new snapshot is identical to the current one").await;
     }
     protocol::MutationOutcome::new(diff_set_snapshot(base, snapshot))
 }

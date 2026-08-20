@@ -24,19 +24,19 @@ pub(crate) async fn infer_pair(pair: &super::super::geometry_core::GltfPairGeome
 
 pub(crate) async fn from_assembly(part_count: usize, area: f64, complete: bool, sample_count: usize, topology: Topology) -> GltfMeasure<f64> {
     if part_count <= 1 {
-        return exact(0.0, GltfUnit::SquareMetre, sample_count, Some(topology));
+        return exact(0.0, GltfUnit::SquareMetre, sample_count, Some(topology)).await;
     }
     if complete {
-        return estimate(area, GltfUnit::SquareMetre, sample_count, Some(topology));
+        return estimate(area, GltfUnit::SquareMetre, sample_count, Some(topology)).await;
     }
-    unavailable(GltfUnit::SquareMetre, GltfAvailability::Unavailable, Vec::new(), sample_count, Some(topology))
+    unavailable(GltfUnit::SquareMetre, GltfAvailability::Unavailable, Vec::new(), sample_count, Some(topology)).await
 }
 pub(crate) async fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<f64> {
-    unavailable(GltfUnit::SquareMetre, GltfAvailability::Unavailable, Vec::new(), context.sample_count, Some(context.topology))
+    unavailable(GltfUnit::SquareMetre, GltfAvailability::Unavailable, Vec::new(), context.sample_count, Some(context.topology)).await
 }
 
 pub async fn unavailable_measure(ids: &[String]) -> GltfMeasure<f64> {
-    unavailable(GltfUnit::SquareMetre, GltfAvailability::Unavailable, ids.to_vec(), 0, None)
+    unavailable(GltfUnit::SquareMetre, GltfAvailability::Unavailable, ids.to_vec(), 0, None).await
 }
 
 pub async fn encode_result(indicators: &GltfEntityIndicators) -> Result<serde_json::Value, serde_json::Error> {

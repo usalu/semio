@@ -26,7 +26,7 @@ pub const GIF_89A_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.gif", sta
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec`.
 pub async fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
-    crate::registry::definition_only_assembly("gif", definition)
+    crate::registry::definition_only_assembly("gif", definition).await
 }
 
 pub async fn artifact_kind() -> ArtifactKindSpec {
@@ -60,7 +60,8 @@ pub mod io_registry {
     /// `writes` matches the requested `Dialect`, so 87a and 89a coexist without either shadowing
     /// the other (unlike the flat schema/document-codec registries, which are standard-agnostic
     /// pre-D4 and would collide — see `standards::v89a::engine::register`'s doc comment).
-    pub async fn entries() -> &'static [&'static ComposerEntry] {
+    // 🚫️async: E1 pure table accessor consumed by OnceLock::get_or_init's sync closure — see R9
+    pub fn entries() -> &'static [&'static ComposerEntry] {
         ENTRIES.get_or_init(|| v87a::entries().iter().chain(v89a::entries().iter()).collect()).as_slice()
     }
 

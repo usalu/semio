@@ -15,7 +15,7 @@ pub struct GltfUnbindNodeChildDiff {
 }
 
 pub async fn derive(payload: &GltfUnbindNodeChildPayload, base: &GltfSnapshot) -> Result<GltfUnbindNodeChildDiff, GltfTopLevelMutationRejection> {
-    validate(payload, base)?;
+    validate(payload, base).await?;
     let position =
         base.document.nodes[payload.parent].children.iter().position(|child| *child == payload.child).ok_or_else(|| reject("gltf.mutation.relation-absent", format!("document/nodes/{}/children", payload.parent), "child is not linked to parent"))?;
     Ok(GltfUnbindNodeChildDiff { parent: payload.parent, child: payload.child, position, touched_paths: vec![format!("document/nodes/{}/children/{}", payload.parent, position)] })
@@ -24,11 +24,11 @@ pub async fn derive(payload: &GltfUnbindNodeChildPayload, base: &GltfSnapshot) -
 pub async fn apply(base: &GltfSnapshot, diff: &GltfUnbindNodeChildDiff) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
     let path = format!("document/nodes/{}/children/{}", diff.parent, diff.position);
     if diff.touched_paths.len() != 1 || diff.touched_paths[0] != path {
-        return Err(reject("gltf.mutation.invalid-touched-path", path, "patch touched path does not match its edge coordinates"));
+        return Err(reject("gltf.mutation.invalid-touched-path", path, "patch touched path does not match its edge coordinates").await);
     }
     let children = &base.document.nodes.get(diff.parent).ok_or_else(|| reject("gltf.mutation.index-out-of-range", "document/nodes", "parent is absent"))?.children;
     if children.get(diff.position) != Some(&diff.child) {
-        return Err(reject("gltf.mutation.stale-diff", format!("document/nodes/{}/children/{}", diff.parent, diff.position), "child is not at the recorded removal position"));
+        return Err(reject("gltf.mutation.stale-diff", format!("document/nodes/{}/children/{}", diff.parent, diff.position), "child is not at the recorded removal position").await);
     }
     let mut next = base.clone();
     next.document.nodes[diff.parent].children.remove(diff.position);

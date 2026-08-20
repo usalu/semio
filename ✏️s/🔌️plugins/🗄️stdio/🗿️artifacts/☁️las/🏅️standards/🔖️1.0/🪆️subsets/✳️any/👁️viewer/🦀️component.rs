@@ -69,8 +69,8 @@ impl ArtifactViewer for LasAnyViewer {
 
     async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
-            main::BODY_KEY => main::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
+            main::BODY_KEY => main::render(doc.snapshot).await,
+            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))).await,
         }
     }
 }
@@ -79,12 +79,12 @@ impl ArtifactViewer for LasAnyViewer {
 //#region 🔖️Manifest
 pub async fn create_las_any_viewer() -> semio_framework_plugin::AppDefinition {
     Viewer::builder(LAS_ANY_DIALECT)
-        .document(["stdio", "las"])
-        .icon_id("box")
-        .mode_def(view::definition())
-        .default_mode_id(view::LAS_ANY_VIEW_MODE_ID)
-        .window_kind_def(main::definition())
-        .default_layout(view::layout())
+        .await.document(["stdio", "las"])
+        .await.icon_id("box")
+        .await.mode_def(view::definition().await)
+        .await.default_mode_id(view::LAS_ANY_VIEW_MODE_ID)
+        .await.window_kind_def(main::definition().await)
+        .await.default_layout(view::layout())
         .build_definition()
 }
 //#endregion 🔖️Manifest

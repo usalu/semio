@@ -27,7 +27,7 @@ pub struct SemioVideoInference {
 
 impl protocol::Inference<SemioVideoSnapshot> for SemioVideoInference {
     async fn infer(snapshot: &SemioVideoSnapshot) -> Self {
-        Self { duration: compute_semio_video_duration(snapshot) }
+        Self { duration: compute_semio_video_duration(snapshot).await }
     }
 }
 

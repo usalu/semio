@@ -26,7 +26,7 @@ use std::sync::{Arc, Mutex};
 use std::thread::{self, JoinHandle};
 use std::time::Duration;
 
-fn now_ms() -> u64 {
+async fn now_ms() -> u64 {
     std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|duration| duration.as_millis() as u64).unwrap_or(0)
 }
 
@@ -48,7 +48,7 @@ mod framing {
     /// separate `write_all`s interleaved with another thread's frame would corrupt the boundary,
     /// which is why both sides share one `Mutex`-guarded handle rather than re-acquiring
     /// `io::stdout()` per call.
-    pub fn write_frame<W: Write>(writer: &mut W, tag: u8, payload: &[u8]) -> io::Result<()> {
+    pub async fn write_frame<W: Write>(writer: &mut W, tag: u8, payload: &[u8]) -> io::Result<()> {
         writer.write_all(&[tag])?;
         writer.write_all(&(payload.len() as u32).to_le_bytes())?;
         writer.write_all(payload)?;
@@ -58,7 +58,7 @@ mod framing {
     /// 📖️ Blocking read of one frame. `Ok(None)` is a clean EOF (the other end closed its write
     /// half) — the ONE unambiguous "the process is gone" signal `ProcessTransport`'s reader thread
     /// needs, distinct from `Heartbeat`'s "still alive, nothing to say".
-    pub fn read_frame<R: Read>(reader: &mut R) -> io::Result<Option<Frame>> {
+    pub async fn read_frame<R: Read>(reader: &mut R) -> io::Result<Option<Frame>> {
         let mut tag = [0u8; 1];
         match reader.read_exact(&mut tag) {
             Ok(()) => {}
@@ -101,13 +101,13 @@ impl ProcessTransport {
     /// 🚀️ Spawns `program args…` with piped stdin/stdout (stderr inherited — the child's own
     /// `[DEBUG]`/panic output belongs in the PARENT's own log, not silently swallowed) and starts the
     /// reader thread immediately, so no frame the child sends before this call returns is lost.
-    pub fn spawn(program: &Path, args: &[String]) -> io::Result<Self> {
+    pub async fn spawn(program: &Path, args: &[String]) -> io::Result<Self> {
         let mut child = Command::new(program).args(args).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::inherit()).spawn()?;
         let stdin = child.stdin.take().expect("Command::stdin(Stdio::piped()) guarantees Some");
         let mut stdout = child.stdout.take().expect("Command::stdout(Stdio::piped()) guarantees Some");
 
         let inbound: Arc<Mutex<VecDeque<Vec<u8>>>> = Arc::new(Mutex::new(VecDeque::new()));
-        let heartbeat_ms = Arc::new(AtomicU64::new(now_ms()));
+        let heartbeat_ms = Arc::new(AtomicU64::new(now_ms().await));
         let alive = Arc::new(AtomicBool::new(true));
 
         let reader = {
@@ -117,13 +117,17 @@ impl ProcessTransport {
             thread::Builder::new()
                 .name("semio-process-shard-reader".to_string())
                 .spawn(move || loop {
-                    match framing::read_frame(&mut stdout) {
+                    // 🚫️async: dedicated reader thread IS its own executor (R4 clause 2/4 — same
+                    // shape as the db postgres/neo4j bridge threads and `ShardExecutor::spawn`'s
+                    // thread root); `read_frame` never actually suspends (blocking std I/O, zero
+                    // internal `.await`s), so `block_on` here is a trivial, non-parking bridge.
+                    match semio_framework_async::block_on(framing::read_frame(&mut stdout)) {
                         Ok(Some(framing::Frame::Data(bytes))) => {
-                            heartbeat_ms.store(now_ms(), Ordering::SeqCst);
+                            heartbeat_ms.store(semio_framework_async::block_on(now_ms()), Ordering::SeqCst);
                             inbound.lock().expect("process-shard inbound lock").push_back(bytes);
                         }
                         Ok(Some(framing::Frame::Heartbeat)) => {
-                            heartbeat_ms.store(now_ms(), Ordering::SeqCst);
+                            heartbeat_ms.store(semio_framework_async::block_on(now_ms()), Ordering::SeqCst);
                         }
                         Ok(None) | Err(_) => {
                             // 💀️ Clean EOF or a read error both mean the same thing here: the
@@ -144,14 +148,14 @@ impl ProcessTransport {
     /// 💀️ `false` once the reader thread has observed EOF/an error on the child's stdout — the
     /// fast, definitive half of "the parent detects it (heartbeat/EOF)"; [`ShardTransport::
     /// heartbeat`] going stale is the slower half (a hung-but-not-dead child, e.g. `SIGSTOP`).
-    pub fn is_child_alive(&self) -> bool {
+    pub async fn is_child_alive(&self) -> bool {
         self.alive.load(Ordering::SeqCst)
     }
 
     /// 🪪️ The child's OS pid — for logging, and for a test/demo driver that wants to simulate an
     /// INVOLUNTARY death (`kill -9 <pid>` from outside this type, i.e. NOT via [`Self::kill`]) to
     /// prove detection rather than merely proving this type's own `kill()` works.
-    pub fn child_id(&self) -> Option<u32> {
+    pub async fn child_id(&self) -> Option<u32> {
         self.child.lock().ok().map(|child| child.id())
     }
 }
@@ -162,7 +166,7 @@ impl ShardTransport for ProcessTransport {
             return;
         }
         if let Ok(mut stdin) = self.stdin.lock() {
-            let _ = framing::write_frame(&mut *stdin, framing::TAG_DATA, bytes);
+            let _ = framing::write_frame(&mut *stdin, framing::TAG_DATA, bytes).await;
         }
     }
 
@@ -219,7 +223,7 @@ pub struct StdioTransport {
 }
 
 impl StdioTransport {
-    pub fn new(heartbeat_interval_ms: u64) -> Self {
+    pub async fn new(heartbeat_interval_ms: u64) -> Self {
         let stdout = Arc::new(Mutex::new(io::stdout()));
         let inbound: Arc<Mutex<VecDeque<Vec<u8>>>> = Arc::new(Mutex::new(VecDeque::new()));
         let alive = Arc::new(AtomicBool::new(true));
@@ -232,7 +236,9 @@ impl StdioTransport {
                 .spawn(move || {
                     let mut stdin = io::stdin();
                     loop {
-                        match framing::read_frame(&mut stdin) {
+                        // 🚫️async: dedicated reader thread IS its own executor — see the parent-side
+                        // reader thread's own comment on this same pattern, above in this file.
+                        match semio_framework_async::block_on(framing::read_frame(&mut stdin)) {
                             Ok(Some(framing::Frame::Data(bytes))) => inbound.lock().expect("stdio-shard inbound lock").push_back(bytes),
                             Ok(Some(framing::Frame::Heartbeat)) => {}
                             Ok(None) | Err(_) => {
@@ -257,7 +263,8 @@ impl StdioTransport {
                             break;
                         }
                         let Ok(mut guard) = stdout.lock() else { break };
-                        if framing::write_frame(&mut *guard, framing::TAG_HEARTBEAT, &[]).is_err() {
+                        // 🚫️async: dedicated heartbeat thread IS its own executor — same pattern.
+                        if semio_framework_async::block_on(framing::write_frame(&mut *guard, framing::TAG_HEARTBEAT, &[])).is_err() {
                             break;
                         }
                     }
@@ -272,7 +279,7 @@ impl StdioTransport {
 impl ShardTransport for StdioTransport {
     async fn send(&self, bytes: &[u8]) {
         if let Ok(mut guard) = self.stdout.lock() {
-            let _ = framing::write_frame(&mut *guard, framing::TAG_DATA, bytes);
+            let _ = framing::write_frame(&mut *guard, framing::TAG_DATA, bytes).await;
         }
     }
 
@@ -312,7 +319,7 @@ pub enum ShardRuntimeKind {
 
 impl ShardRuntimeKind {
     /// 🚩️ `SEMIO_SHARD_KIND=process` opts in; anything else (including unset) is `Thread`.
-    pub fn from_env() -> Self {
+    pub async fn from_env() -> Self {
         match std::env::var("SEMIO_SHARD_KIND").ok().as_deref() {
             Some("process") => ShardRuntimeKind::Process,
             _ => ShardRuntimeKind::Thread,
@@ -341,14 +348,14 @@ pub struct ProcessShardWatchdog {
 }
 
 impl ProcessShardWatchdog {
-    pub fn new(timeout_ms: u64, now_ms: u64) -> Self {
+    pub async fn new(timeout_ms: u64, now_ms: u64) -> Self {
         Self { timeout_ms, last_seen_ms: now_ms, last_miss_counted_ms: now_ms, missed: 0 }
     }
 
     /// ▶️ Call periodically with the transport's own `heartbeat()` reading. `true` once three
     /// consecutive `timeout_ms` windows have elapsed with no fresher heartbeat — mirrors
     /// `ShardClient.checkHeartbeats`'s `HEARTBEAT_MISSED_LIMIT = 3`.
-    pub fn poll(&mut self, heartbeat_ms: u64, now_ms: u64) -> bool {
+    pub async fn poll(&mut self, heartbeat_ms: u64, now_ms: u64) -> bool {
         if heartbeat_ms > self.last_seen_ms {
             self.last_seen_ms = heartbeat_ms;
             self.last_miss_counted_ms = now_ms;
@@ -369,11 +376,11 @@ impl ProcessShardWatchdog {
 
     /// ▶️ [`Self::poll`] plus the EOF fast path: an observed-dead child is lost IMMEDIATELY, never
     /// waiting out three heartbeat windows for a signal that has already definitively arrived.
-    pub fn poll_with_liveness(&mut self, heartbeat_ms: u64, child_alive: bool, now_ms: u64) -> bool {
+    pub async fn poll_with_liveness(&mut self, heartbeat_ms: u64, child_alive: bool, now_ms: u64) -> bool {
         if !child_alive {
             return true;
         }
-        self.poll(heartbeat_ms, now_ms)
+        self.poll(heartbeat_ms, now_ms).await
     }
 }
 //#endregion 🚑️Watchdog
@@ -383,50 +390,50 @@ mod tests {
     use super::*;
 
     //#region 🧪️FramingTests
-    #[test]
-    fn a_data_frame_round_trips_arbitrary_bytes_including_zero_and_newline() {
+    #[semio_framework_async_macros::async_test]
+    async fn a_data_frame_round_trips_arbitrary_bytes_including_zero_and_newline() {
         let payload = vec![0u8, 1, 2, b'\n', 255, 0u8];
         let mut buffer = Vec::new();
-        framing::write_frame(&mut buffer, framing::TAG_DATA, &payload).expect("write");
+        framing::write_frame(&mut buffer, framing::TAG_DATA, &payload).await.expect("write");
         let mut cursor = io::Cursor::new(buffer);
-        match framing::read_frame(&mut cursor).expect("read").expect("some frame") {
+        match framing::read_frame(&mut cursor).await.expect("read").expect("some frame") {
             framing::Frame::Data(bytes) => assert_eq!(bytes, payload),
             framing::Frame::Heartbeat => panic!("expected Data"),
         }
     }
 
-    #[test]
-    fn a_heartbeat_frame_carries_no_payload_and_does_not_desync_the_next_frame() {
+    #[semio_framework_async_macros::async_test]
+    async fn a_heartbeat_frame_carries_no_payload_and_does_not_desync_the_next_frame() {
         let mut buffer = Vec::new();
-        framing::write_frame(&mut buffer, framing::TAG_HEARTBEAT, &[]).expect("write heartbeat");
-        framing::write_frame(&mut buffer, framing::TAG_DATA, b"after").expect("write data");
+        framing::write_frame(&mut buffer, framing::TAG_HEARTBEAT, &[]).await.expect("write heartbeat");
+        framing::write_frame(&mut buffer, framing::TAG_DATA, b"after").await.expect("write data");
         let mut cursor = io::Cursor::new(buffer);
-        assert!(matches!(framing::read_frame(&mut cursor).expect("read").expect("some"), framing::Frame::Heartbeat));
-        match framing::read_frame(&mut cursor).expect("read").expect("some") {
+        assert!(matches!(framing::read_frame(&mut cursor).await.expect("read").expect("some"), framing::Frame::Heartbeat));
+        match framing::read_frame(&mut cursor).await.expect("read").expect("some") {
             framing::Frame::Data(bytes) => assert_eq!(bytes, b"after"),
             framing::Frame::Heartbeat => panic!("expected Data"),
         }
     }
 
-    #[test]
-    fn read_frame_reports_clean_eof_as_none_not_an_error() {
+    #[semio_framework_async_macros::async_test]
+    async fn read_frame_reports_clean_eof_as_none_not_an_error() {
         let mut cursor = io::Cursor::new(Vec::<u8>::new());
-        assert!(framing::read_frame(&mut cursor).expect("EOF is Ok(None), not Err").is_none());
+        assert!(framing::read_frame(&mut cursor).await.expect("EOF is Ok(None), not Err").is_none());
     }
     //#endregion 🧪️FramingTests
 
     //#region 🧪️SelectionTests
-    #[test]
-    fn shard_runtime_kind_defaults_to_thread_and_opts_into_process_explicitly() {
+    #[semio_framework_async_macros::async_test]
+    async fn shard_runtime_kind_defaults_to_thread_and_opts_into_process_explicitly() {
         // 🧯️ Env-var mutation makes this test order-sensitive vs. any OTHER test reading the same
         // var in the same process; none exists in this crate today (grepped before writing), and
         // `cargo test`'s default multi-threaded runner still serializes same-process env access
         // adequately for a single var this test both sets and restores.
         let previous = std::env::var("SEMIO_SHARD_KIND").ok();
         std::env::remove_var("SEMIO_SHARD_KIND");
-        assert_eq!(ShardRuntimeKind::from_env(), ShardRuntimeKind::Thread, "unset must default to Thread — never Process by default in P1");
+        assert_eq!(ShardRuntimeKind::from_env().await, ShardRuntimeKind::Thread, "unset must default to Thread — never Process by default in P1");
         std::env::set_var("SEMIO_SHARD_KIND", "process");
-        assert_eq!(ShardRuntimeKind::from_env(), ShardRuntimeKind::Process);
+        assert_eq!(ShardRuntimeKind::from_env().await, ShardRuntimeKind::Process);
         match previous {
             Some(value) => std::env::set_var("SEMIO_SHARD_KIND", value),
             None => std::env::remove_var("SEMIO_SHARD_KIND"),
@@ -435,41 +442,41 @@ mod tests {
     //#endregion 🧪️SelectionTests
 
     //#region 🧪️WatchdogTests
-    #[test]
-    fn watchdog_does_not_fire_while_heartbeats_keep_advancing() {
-        let mut watchdog = ProcessShardWatchdog::new(1000, 0);
-        assert!(!watchdog.poll(100, 100));
-        assert!(!watchdog.poll(1200, 1300));
-        assert!(!watchdog.poll(2500, 2600));
+    #[semio_framework_async_macros::async_test]
+    async fn watchdog_does_not_fire_while_heartbeats_keep_advancing() {
+        let mut watchdog = ProcessShardWatchdog::new(1000, 0).await;
+        assert!(!watchdog.poll(100, 100).await);
+        assert!(!watchdog.poll(1200, 1300).await);
+        assert!(!watchdog.poll(2500, 2600).await);
     }
 
-    #[test]
-    fn watchdog_fires_after_three_consecutive_stale_windows() {
-        let mut watchdog = ProcessShardWatchdog::new(1000, 0);
+    #[semio_framework_async_macros::async_test]
+    async fn watchdog_fires_after_three_consecutive_stale_windows() {
+        let mut watchdog = ProcessShardWatchdog::new(1000, 0).await;
         // heartbeat frozen at 0 forever — three separate `timeout_ms`-apart polls must each count
         // exactly one miss, matching `ShardClient`'s `lastMissCountedAtMs` gate (a flurry of polls
         // inside the SAME window must not multi-count).
-        assert!(!watchdog.poll(0, 1500));
-        assert!(!watchdog.poll(0, 1600), "same window as the previous miss — must not double-count");
-        assert!(!watchdog.poll(0, 2600));
-        assert!(watchdog.poll(0, 3700), "third consecutive stale window — must fire");
+        assert!(!watchdog.poll(0, 1500).await);
+        assert!(!watchdog.poll(0, 1600).await, "same window as the previous miss — must not double-count");
+        assert!(!watchdog.poll(0, 2600).await);
+        assert!(watchdog.poll(0, 3700).await, "third consecutive stale window — must fire");
     }
 
-    #[test]
-    fn watchdog_resets_the_miss_count_on_a_fresh_heartbeat() {
-        let mut watchdog = ProcessShardWatchdog::new(1000, 0);
-        assert!(!watchdog.poll(0, 1500));
-        assert!(!watchdog.poll(0, 2600));
-        assert!(!watchdog.poll(5000, 5000), "a fresh heartbeat must reset the miss streak");
-        assert!(!watchdog.poll(5000, 6600));
-        assert!(!watchdog.poll(5000, 7700));
-        assert!(watchdog.poll(5000, 8800), "three fresh consecutive misses after the reset");
+    #[semio_framework_async_macros::async_test]
+    async fn watchdog_resets_the_miss_count_on_a_fresh_heartbeat() {
+        let mut watchdog = ProcessShardWatchdog::new(1000, 0).await;
+        assert!(!watchdog.poll(0, 1500).await);
+        assert!(!watchdog.poll(0, 2600).await);
+        assert!(!watchdog.poll(5000, 5000).await, "a fresh heartbeat must reset the miss streak");
+        assert!(!watchdog.poll(5000, 6600).await);
+        assert!(!watchdog.poll(5000, 7700).await);
+        assert!(watchdog.poll(5000, 8800).await, "three fresh consecutive misses after the reset");
     }
 
-    #[test]
-    fn poll_with_liveness_fires_immediately_on_a_dead_child_without_waiting_out_the_timeout() {
-        let mut watchdog = ProcessShardWatchdog::new(1000, 0);
-        assert!(watchdog.poll_with_liveness(0, false, 5), "EOF is definitive — no need to wait for three stale windows");
+    #[semio_framework_async_macros::async_test]
+    async fn poll_with_liveness_fires_immediately_on_a_dead_child_without_waiting_out_the_timeout() {
+        let mut watchdog = ProcessShardWatchdog::new(1000, 0).await;
+        assert!(watchdog.poll_with_liveness(0, false, 5).await, "EOF is definitive — no need to wait for three stale windows");
     }
     //#endregion 🧪️WatchdogTests
 
@@ -480,13 +487,13 @@ mod tests {
     /// component built first. The `semio-shard`-hosted, real-wasmtime-actor version of this same
     /// proof (kill -9, detect, rebuild, sibling unaffected) is `👶️child/🦀️main.rs`'s own
     /// `#[ignore]`d integration test — see the P1 report's `## kill-rebuild-evidence`.
-    #[test]
-    fn process_transport_round_trips_bytes_through_a_real_child_process() {
+    #[semio_framework_async_macros::async_test]
+    async fn process_transport_round_trips_bytes_through_a_real_child_process() {
         // 👶️ host-dedyn: `#[test] fn` is a sanctioned `block_on` entry point (R4 clause 5) —
         // `ShardTransport`'s methods are `async fn` now (O1); every impl here resolves on its
         // first poll (pure `Mutex`/`AtomicBool`/pipe I/O, no real suspension), so `block_on` never
         // actually parks.
-        let transport = ProcessTransport::spawn(Path::new("cat"), &[]).expect("spawn cat");
+        let transport = ProcessTransport::spawn(Path::new("cat"), &[]).await.expect("spawn cat");
         semio_framework_async::block_on(transport.send(b"hello-process-shard"));
         let mut received = None;
         for _ in 0..200 {
@@ -500,14 +507,14 @@ mod tests {
         semio_framework_async::block_on(transport.kill());
     }
 
-    #[test]
-    fn kill_terminates_the_child_and_is_observed_as_eof_on_recv_side() {
-        let transport = ProcessTransport::spawn(Path::new("cat"), &[]).expect("spawn cat");
-        assert!(transport.is_child_alive());
+    #[semio_framework_async_macros::async_test]
+    async fn kill_terminates_the_child_and_is_observed_as_eof_on_recv_side() {
+        let transport = ProcessTransport::spawn(Path::new("cat"), &[]).await.expect("spawn cat");
+        assert!(transport.is_child_alive().await);
         semio_framework_async::block_on(transport.kill());
         let mut dead = false;
         for _ in 0..200 {
-            if !transport.is_child_alive() {
+            if !transport.is_child_alive().await {
                 dead = true;
                 break;
             }
@@ -516,10 +523,10 @@ mod tests {
         assert!(dead, "reader thread must observe EOF after kill()");
     }
 
-    #[test]
-    fn an_externally_killed_child_is_detected_as_dead_without_this_type_calling_kill() {
-        let transport = ProcessTransport::spawn(Path::new("sleep"), &["30".to_string()]).expect("spawn sleep 30");
-        let pid = transport.child_id().expect("pid");
+    #[semio_framework_async_macros::async_test]
+    async fn an_externally_killed_child_is_detected_as_dead_without_this_type_calling_kill() {
+        let transport = ProcessTransport::spawn(Path::new("sleep"), &["30".to_string()]).await.expect("spawn sleep 30");
+        let pid = transport.child_id().await.expect("pid");
         // 🔪️ An INVOLUNTARY death — `kill -9` from OUTSIDE this type, mirroring the packet's
         // required proof ("kill -9 a shard child -> the parent detects it") rather than merely
         // exercising this type's OWN `kill()` method (the test above already covers that).
@@ -527,7 +534,7 @@ mod tests {
         assert!(status.success());
         let mut dead = false;
         for _ in 0..300 {
-            if !transport.is_child_alive() {
+            if !transport.is_child_alive().await {
                 dead = true;
                 break;
             }
@@ -558,37 +565,37 @@ mod tests {
     /// routing slot ("rebuild"), activate a fresh actor on it, confirm it replies — proving the
     /// shard is usable again. Throughout, shard `b` — untouched — must still answer a SECOND turn,
     /// proving the failure was isolated to `a`.
-    #[test]
+    #[semio_framework_async_macros::async_test]
     #[ignore = "needs a pre-built wasm32-wasip2 component at SEMIO_SCALE_FIXTURE_WASM; see this test's own doc comment"]
-    fn process_shard_kill_is_detected_and_the_shard_rebuilds_while_a_sibling_shard_stays_healthy() {
+    async fn process_shard_kill_is_detected_and_the_shard_rebuilds_while_a_sibling_shard_stays_healthy() {
         let Ok(wasm_path) = std::env::var("SEMIO_SCALE_FIXTURE_WASM") else {
             eprintln!("[skip] SEMIO_SCALE_FIXTURE_WASM not set — see this test's doc comment for the build command");
             return;
         };
         let shard_bin = std::env::var("CARGO_BIN_EXE_semio-shard").expect("cargo test sets CARGO_BIN_EXE_semio-shard for this package's own [[bin]] target");
 
-        let shard_a = ProcessTransport::spawn(Path::new(&shard_bin), &[wasm_path.clone(), "scale-fixture-a".to_string(), "1".to_string()]).expect("spawn shard a");
-        let shard_b = ProcessTransport::spawn(Path::new(&shard_bin), &[wasm_path.clone(), "scale-fixture-b".to_string(), "2".to_string()]).expect("spawn shard b");
+        let shard_a = ProcessTransport::spawn(Path::new(&shard_bin), &[wasm_path.clone(), "scale-fixture-a".to_string(), "1".to_string()]).await.expect("spawn shard a");
+        let shard_b = ProcessTransport::spawn(Path::new(&shard_bin), &[wasm_path.clone(), "scale-fixture-b".to_string(), "2".to_string()]).await.expect("spawn shard b");
 
-        semio_framework_async::block_on(shard_a.send(&instance_open_envelope(1, 1, "idle")));
-        semio_framework_async::block_on(shard_b.send(&instance_open_envelope(2, 1, "idle")));
+        semio_framework_async::block_on(shard_a.send(&instance_open_envelope(1, 1, "idle").await));
+        semio_framework_async::block_on(shard_b.send(&instance_open_envelope(2, 1, "idle").await));
 
-        let outcome_a = recv_outcome(&shard_a, 400).expect("shard a must reply to InstanceOpen with a real ShardOutcome");
-        let outcome_b = recv_outcome(&shard_b, 400).expect("shard b must reply to InstanceOpen with a real ShardOutcome");
+        let outcome_a = recv_outcome(&shard_a, 400).await.expect("shard a must reply to InstanceOpen with a real ShardOutcome");
+        let outcome_b = recv_outcome(&shard_b, 400).await.expect("shard b must reply to InstanceOpen with a real ShardOutcome");
         assert!(matches!(outcome_a, crate::shard::ShardOutcome::Turn { actor: 1, .. }), "shard a: expected ShardOutcome::Turn, got {outcome_a:?}");
         assert!(matches!(outcome_b, crate::shard::ShardOutcome::Turn { actor: 2, .. }), "shard b: expected ShardOutcome::Turn, got {outcome_b:?}");
 
-        let pid_a = shard_a.child_id().expect("shard a pid");
+        let pid_a = shard_a.child_id().await.expect("shard a pid");
         // 🔪️ Involuntary death, exactly the packet's required proof — `kill -9` from OUTSIDE this
         // process's own `ProcessTransport::kill()`.
         let status = Command::new("kill").args(["-9", &pid_a.to_string()]).status().expect("run kill -9 on shard a");
         assert!(status.success(), "kill -9 shard a must succeed");
 
-        let mut watchdog = ProcessShardWatchdog::new(500, now_ms());
+        let mut watchdog = ProcessShardWatchdog::new(500, now_ms().await).await;
         let mut lost = false;
         for _ in 0..100 {
             thread::sleep(Duration::from_millis(50));
-            if watchdog.poll_with_liveness(semio_framework_async::block_on(shard_a.heartbeat()), shard_a.is_child_alive(), now_ms()) {
+            if watchdog.poll_with_liveness(semio_framework_async::block_on(shard_a.heartbeat()), shard_a.is_child_alive().await, now_ms().await).await {
                 lost = true;
                 break;
             }
@@ -598,15 +605,15 @@ mod tests {
         // ▶️ Rebuild: a fresh child at a fresh actor id (a real restart would restore-from-checkpoint
         // here — out of this test's scope, `GuestRuntime::checkpoint`/`restore` are proven separately
         // by `🧵️shard/🦀️component.rs`'s K1 tests; this proves the PROCESS half of rebuild).
-        let shard_a2 = ProcessTransport::spawn(Path::new(&shard_bin), &[wasm_path, "scale-fixture-a".to_string(), "3".to_string()]).expect("rebuild shard a");
-        semio_framework_async::block_on(shard_a2.send(&instance_open_envelope(3, 1, "idle")));
-        let outcome_a2 = recv_outcome(&shard_a2, 400).expect("rebuilt shard a must reply");
+        let shard_a2 = ProcessTransport::spawn(Path::new(&shard_bin), &[wasm_path, "scale-fixture-a".to_string(), "3".to_string()]).await.expect("rebuild shard a");
+        semio_framework_async::block_on(shard_a2.send(&instance_open_envelope(3, 1, "idle").await));
+        let outcome_a2 = recv_outcome(&shard_a2, 400).await.expect("rebuilt shard a must reply");
         assert!(matches!(outcome_a2, crate::shard::ShardOutcome::Turn { actor: 3, .. }), "rebuilt shard a: expected ShardOutcome::Turn, got {outcome_a2:?}");
 
         // 🎯️ Sibling isolation: shard b, never touched, is still alive and answers a SECOND turn.
-        assert!(shard_b.is_child_alive(), "shard b must be unaffected by shard a's death");
-        semio_framework_async::block_on(shard_b.send(&wake_envelope(2, 2)));
-        let outcome_b2 = recv_outcome(&shard_b, 400).expect("shard b must still respond after shard a's kill+rebuild");
+        assert!(shard_b.is_child_alive().await, "shard b must be unaffected by shard a's death");
+        semio_framework_async::block_on(shard_b.send(&wake_envelope(2, 2).await));
+        let outcome_b2 = recv_outcome(&shard_b, 400).await.expect("shard b must still respond after shard a's kill+rebuild");
         assert!(matches!(outcome_b2, crate::shard::ShardOutcome::Turn { actor: 2, .. }), "shard b second turn: expected ShardOutcome::Turn, got {outcome_b2:?}");
 
         semio_framework_async::block_on(shard_a2.kill());
@@ -616,7 +623,7 @@ mod tests {
     /// terra-shard-grants: wraps in `crate::shard::ShardFrame::Envelope` — the wire now carries
     /// `ShardFrame`, not raw `Envelope` bytes (`ShardLoop::pump`'s own change), so this fixture's
     /// hand-rolled encoder must wrap here too, even though its one caller is `#[ignore]`d.
-    fn encode_envelope(actor: u64, seq: u64, payload: semio_framework_actor::Payload) -> Vec<u8> {
+    async fn encode_envelope(actor: u64, seq: u64, payload: semio_framework_actor::Payload) -> Vec<u8> {
         let envelope = semio_framework_actor::Envelope {
             to: semio_framework_actor::ActorId(actor),
             from: semio_framework_actor::Origin::Kernel,
@@ -628,11 +635,11 @@ mod tests {
             payload,
         };
         let mut bytes = Vec::new();
-        crate::shard::ShardFrame::Envelope(envelope).pack_encode(&mut bytes);
+        crate::shard::ShardFrame::Envelope(envelope).pack_encode(&mut bytes).await;
         bytes
     }
 
-    fn instance_open_envelope(actor: u64, seq: u64, profile: &str) -> Vec<u8> {
+    async fn instance_open_envelope(actor: u64, seq: u64, profile: &str) -> Vec<u8> {
         let config = format!("{{\"profile\":\"{profile}\"}}").into_bytes();
         let event = semio_framework::kernel::Event::InstanceOpen {
             instance: semio_framework::kernel::PluginInstanceId(format!("scale-fixture-{actor}")),
@@ -644,15 +651,15 @@ mod tests {
             quotas: semio_framework::kernel::QuotaSchema::default(),
         };
         let event_bytes = serde_json::to_vec(&event).expect("encode Event::InstanceOpen");
-        encode_envelope(actor, seq, semio_framework_actor::Payload::Event { bytes: event_bytes })
+        encode_envelope(actor, seq, semio_framework_actor::Payload::Event { bytes: event_bytes }).await
     }
 
-    fn wake_envelope(actor: u64, seq: u64) -> Vec<u8> {
+    async fn wake_envelope(actor: u64, seq: u64) -> Vec<u8> {
         let event_bytes = serde_json::to_vec(&semio_framework::kernel::Event::Wake).expect("encode Event::Wake");
-        encode_envelope(actor, seq, semio_framework_actor::Payload::Event { bytes: event_bytes })
+        encode_envelope(actor, seq, semio_framework_actor::Payload::Event { bytes: event_bytes }).await
     }
 
-    fn recv_outcome(transport: &ProcessTransport, attempts: u32) -> Option<crate::shard::ShardOutcome> {
+    async fn recv_outcome(transport: &ProcessTransport, attempts: u32) -> Option<crate::shard::ShardOutcome> {
         for _ in 0..attempts {
             if let Some(bytes) = semio_framework_async::block_on(transport.recv()) {
                 return serde_json::from_slice(&bytes).ok();

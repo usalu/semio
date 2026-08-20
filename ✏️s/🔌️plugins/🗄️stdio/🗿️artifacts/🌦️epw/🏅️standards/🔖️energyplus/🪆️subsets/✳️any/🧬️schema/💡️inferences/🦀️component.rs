@@ -26,7 +26,7 @@ pub struct EpwInference {
 
 impl protocol::Inference<EpwSnapshot> for EpwInference {
     async fn infer(snapshot: &EpwSnapshot) -> Self {
-        Self { climate: compute_epw_climate_summary(snapshot) }
+        Self { climate: compute_epw_climate_summary(snapshot).await }
     }
 }
 

@@ -11,10 +11,10 @@ pub async fn diff(payload: &UnbindRepresentation, base: &SemioKitSnapshot) -> pr
             "mutation.target-missing",
             format!("No representation binding exists at index #{}.", payload.index),
             [payload.index.to_string()],
-        );
+        ).await;
     }
     let mut representations = base.representations.clone();
     representations.remove(payload.index);
-    protocol::MutationOutcome::new(SemioKitDiff { representations: Some(SemioKitLinkList { values: representations }), ..Default::default() })
+    protocol::MutationOutcome::new(SemioKitDiff { representations: Some(SemioKitLinkList { values: representations }), ..Default::default() }).await
 }
 //#endregion 🔖️Diff

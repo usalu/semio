@@ -1,0 +1,18 @@
+{
+  "case": "duplicate-sibling-key",
+  "kind": "rejection",
+  "description": "Upserting node 2 with key 'same' collides with sibling node 1's key — rejected as DuplicateSiblingKey.",
+  "outcome": "reject",
+  "limits": null,
+  "baseRevision": 0,
+  "patchRejection": {
+    "type": "invariantViolated",
+    "violations": [
+      {
+        "type": "duplicateSiblingKey",
+        "parent": 0,
+        "key": "same"
+      }
+    ]
+  }
+}

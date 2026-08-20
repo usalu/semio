@@ -25,7 +25,7 @@ pub struct AviInference {
 
 impl protocol::Inference<AviSnapshot> for AviInference {
     async fn infer(snapshot: &AviSnapshot) -> Self {
-        Self { duration: compute_avi_duration(snapshot) }
+        Self { duration: compute_avi_duration(snapshot).await }
     }
 }
 

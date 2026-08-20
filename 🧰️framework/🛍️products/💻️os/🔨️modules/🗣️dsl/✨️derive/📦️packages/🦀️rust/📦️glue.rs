@@ -500,7 +500,7 @@ fn record_codegen(fields: &Fields) -> (Vec<proc_macro2::TokenStream>, Vec<proc_m
                 quote! {
                     {
                         let mut __items = Vec::with_capacity(self.#ident.len());
-                        for v in self.#ident.iter() { __items.push(::dsl::DslVariants::to_named_record(v).await); }
+                        for v in self.#ident.iter() { __items.push(Box::pin(::dsl::DslVariants::to_named_record(v)).await); }
                         ::dsl::FieldValue::Statements(__items)
                     }
                 },
@@ -508,7 +508,7 @@ fn record_codegen(fields: &Fields) -> (Vec<proc_macro2::TokenStream>, Vec<proc_m
                     match value {
                         ::dsl::FieldValue::Statements(items) => {
                             let mut __out = Vec::with_capacity(items.len());
-                            for (keyword, record) in items.iter() { __out.push(<#inner as ::dsl::DslVariants>::from_named_record(keyword, record).await?); }
+                            for (keyword, record) in items.iter() { __out.push(Box::pin(<#inner as ::dsl::DslVariants>::from_named_record(keyword, record)).await?); }
                             __out
                         }
                         other => return Err(::dsl::__rt::field_error(format!("expected Statements, found {other:?}"))),
@@ -520,7 +520,7 @@ fn record_codegen(fields: &Fields) -> (Vec<proc_macro2::TokenStream>, Vec<proc_m
                 quote! {
                     {
                         let mut __items = Vec::with_capacity(self.#ident.len());
-                        for v in self.#ident.iter() { __items.push(::dsl::DslVariants::to_named_record(v).await); }
+                        for v in self.#ident.iter() { __items.push(Box::pin(::dsl::DslVariants::to_named_record(v)).await); }
                         ::dsl::FieldValue::Block(Box::new(::dsl::FieldValue::Statements(__items)))
                     }
                 },
@@ -529,7 +529,7 @@ fn record_codegen(fields: &Fields) -> (Vec<proc_macro2::TokenStream>, Vec<proc_m
                         ::dsl::FieldValue::Block(inner_value) => match inner_value.as_ref() {
                             ::dsl::FieldValue::Statements(items) => {
                                 let mut __out = Vec::with_capacity(items.len());
-                                for (keyword, record) in items.iter() { __out.push(<#inner as ::dsl::DslVariants>::from_named_record(keyword, record).await?); }
+                                for (keyword, record) in items.iter() { __out.push(Box::pin(<#inner as ::dsl::DslVariants>::from_named_record(keyword, record)).await?); }
                                 __out
                             }
                             other => return Err(::dsl::__rt::field_error(format!("expected Statements inside Block, found {other:?}"))),
@@ -562,7 +562,7 @@ fn record_codegen(fields: &Fields) -> (Vec<proc_macro2::TokenStream>, Vec<proc_m
                 quote! { ::dsl::Shape::Statements(<#inner as ::dsl::DslVariants>::variants()) },
                 quote! {
                     ::dsl::FieldValue::Statements(match &self.#ident {
-                        Some(v) => vec![::dsl::DslVariants::to_named_record(v).await],
+                        Some(v) => vec![Box::pin(::dsl::DslVariants::to_named_record(v)).await],
                         None => vec![],
                     })
                 },
@@ -571,7 +571,7 @@ fn record_codegen(fields: &Fields) -> (Vec<proc_macro2::TokenStream>, Vec<proc_m
                         ::dsl::FieldValue::Absent => None,
                         ::dsl::FieldValue::Statements(items) if items.is_empty() => None,
                         ::dsl::FieldValue::Statements(items) if items.len() == 1 => {
-                            Some(<#inner as ::dsl::DslVariants>::from_named_record(&items[0].0, &items[0].1).await?)
+                            Some(Box::pin(<#inner as ::dsl::DslVariants>::from_named_record(&items[0].0, &items[0].1)).await?)
                         }
                         other => return Err(::dsl::__rt::field_error(format!("expected 0 or 1 tagged values, found {other:?}"))),
                     }
@@ -579,11 +579,11 @@ fn record_codegen(fields: &Fields) -> (Vec<proc_macro2::TokenStream>, Vec<proc_m
             ),
             FieldKind::RequiredStatements(inner) => (
                 quote! { ::dsl::Shape::Statements(<#inner as ::dsl::DslVariants>::variants()) },
-                quote! { ::dsl::FieldValue::Statements(vec![::dsl::DslVariants::to_named_record(self.#ident.as_ref()).await]) },
+                quote! { ::dsl::FieldValue::Statements(vec![Box::pin(::dsl::DslVariants::to_named_record(self.#ident.as_ref())).await]) },
                 quote! {
                     match value {
                         ::dsl::FieldValue::Statements(items) if items.len() == 1 => {
-                            Box::new(<#inner as ::dsl::DslVariants>::from_named_record(&items[0].0, &items[0].1).await?)
+                            Box::new(Box::pin(<#inner as ::dsl::DslVariants>::from_named_record(&items[0].0, &items[0].1)).await?)
                         }
                         other => return Err(::dsl::__rt::field_error(format!("expected exactly 1 tagged value, found {other:?}"))),
                     }
@@ -1111,22 +1111,22 @@ pub fn derive_mutations(input: TokenStream) -> TokenStream {
         let assert_verb_message = format!("#[derive(Mutations)]: {}::{}'s MutationKind::SEMANTICS.verb must be one of protocol::APPROVED_VERBS", name, variant_ident);
 
         diff_arms.push(quote! {
-            #name::#variant_ident(payload) => <#payload_ty as ::semio_framework_os_kernel::MutationKind<#snapshot_ty, #name>>::diff(payload, base)
+            #name::#variant_ident(payload) => <#payload_ty as ::semio_framework_os_kernel::MutationKind<#snapshot_ty, #name>>::diff(payload, base).await
         });
         inverse_arms.push(quote! {
-            #name::#variant_ident(payload) => <#payload_ty as ::semio_framework_os_kernel::MutationKind<#snapshot_ty, #name>>::inverse(payload, base)
+            #name::#variant_ident(payload) => <#payload_ty as ::semio_framework_os_kernel::MutationKind<#snapshot_ty, #name>>::inverse(payload, base).await
         });
         semantics_arms.push(quote! {
             #name::#variant_ident(_) => &<#payload_ty as ::semio_framework_os_kernel::MutationKind<#snapshot_ty, #name>>::SEMANTICS
         });
         label_arms.push(quote! {
-            #name::#variant_ident(payload) => <#payload_ty as ::semio_framework_os_kernel::MutationKind<#snapshot_ty, #name>>::label(payload)
+            #name::#variant_ident(payload) => <#payload_ty as ::semio_framework_os_kernel::MutationKind<#snapshot_ty, #name>>::label(payload).await
         });
         target_arms.push(quote! {
-            #name::#variant_ident(payload) => <#payload_ty as ::semio_framework_os_kernel::MutationKind<#snapshot_ty, #name>>::target(payload)
+            #name::#variant_ident(payload) => <#payload_ty as ::semio_framework_os_kernel::MutationKind<#snapshot_ty, #name>>::target(payload).await
         });
         foreign_steps_arms.push(quote! {
-            #name::#variant_ident(payload) => <#payload_ty as ::semio_framework_os_kernel::MutationKind<#snapshot_ty, #name>>::foreign_steps(payload, base)
+            #name::#variant_ident(payload) => <#payload_ty as ::semio_framework_os_kernel::MutationKind<#snapshot_ty, #name>>::foreign_steps(payload, base).await
         });
         kind_consts.push(quote! {
             <#payload_ty as ::semio_framework_os_kernel::MutationKind<#snapshot_ty, #name>>::SEMANTICS
@@ -1142,8 +1142,11 @@ pub fn derive_mutations(input: TokenStream) -> TokenStream {
                     ::semio_framework_os_kernel::SchemaVersion(1),
                     ::semio_framework_os_kernel::StateClass::Artifact,
                 )
-                .with_semantics(&<#payload_ty as ::semio_framework_os_kernel::MutationKind<#snapshot_ty, #name>>::SEMANTICS),
-            );
+                .await
+                .with_semantics(&<#payload_ty as ::semio_framework_os_kernel::MutationKind<#snapshot_ty, #name>>::SEMANTICS)
+                .await,
+            )
+            .await;
         });
     }
 
@@ -1183,7 +1186,7 @@ pub fn derive_mutations(input: TokenStream) -> TokenStream {
 
         /// 🪪️ Registers every variant's `::semio_framework_os_kernel::MutationDescriptor` — idempotent, safe to call
         /// repeatedly; call once during host/plugin startup.
-        pub fn #register_fn_ident() {
+        pub async fn #register_fn_ident() {
             #(#register_calls)*
         }
     };
@@ -1251,19 +1254,19 @@ pub fn derive_composite_mutation(input: TokenStream) -> TokenStream {
         impl ::semio_framework_os_kernel::MutationKind<#snapshot_ty, #op_ty> for #name {
             const SEMANTICS: ::semio_framework_os_kernel::SemanticDescriptor = <#name as ::semio_framework_os_kernel::CompositeMutationKind<#snapshot_ty, #op_ty>>::SEMANTICS;
             async fn diff(&self, base: &#snapshot_ty) -> ::semio_framework_os_kernel::MutationOutcome<<#op_ty as ::semio_framework_os_kernel::Mutation<#snapshot_ty>>::Diff> {
-                ::semio_framework_os_kernel::fold_plan_diff(self, base)
+                ::semio_framework_os_kernel::fold_plan_diff(self, base).await
             }
             async fn inverse(&self, base: &#snapshot_ty) -> Vec<#op_ty> {
-                ::semio_framework_os_kernel::fold_plan_inverse(self, base)
+                ::semio_framework_os_kernel::fold_plan_inverse(self, base).await
             }
             async fn label(&self) -> String {
-                ::semio_framework_os_kernel::CompositeMutationKind::label(self)
+                ::semio_framework_os_kernel::CompositeMutationKind::label(self).await
             }
             async fn target(&self) -> Vec<String> {
-                ::semio_framework_os_kernel::CompositeMutationKind::target(self)
+                ::semio_framework_os_kernel::CompositeMutationKind::target(self).await
             }
             async fn foreign_steps(&self, base: &#snapshot_ty) -> Vec<::semio_framework_os_kernel::ForeignStep> {
-                ::semio_framework_os_kernel::plan_foreign_steps(self, base)
+                ::semio_framework_os_kernel::plan_foreign_steps(self, base).await
             }
         }
     };
@@ -1347,14 +1350,14 @@ fn record_codegen_to_value_from_bindings(fields: &Fields) -> Vec<proc_macro2::To
                 FieldKind::VecStatements(_) => quote! {
                     {
                         let mut __items = Vec::with_capacity(#ident.len());
-                        for v in #ident.iter() { __items.push(::dsl::DslVariants::to_named_record(v).await); }
+                        for v in #ident.iter() { __items.push(Box::pin(::dsl::DslVariants::to_named_record(v)).await); }
                         ::dsl::FieldValue::Statements(__items)
                     }
                 },
                 FieldKind::VecBlockStatements(_) => quote! {
                     {
                         let mut __items = Vec::with_capacity(#ident.len());
-                        for v in #ident.iter() { __items.push(::dsl::DslVariants::to_named_record(v).await); }
+                        for v in #ident.iter() { __items.push(Box::pin(::dsl::DslVariants::to_named_record(v)).await); }
                         ::dsl::FieldValue::Block(Box::new(::dsl::FieldValue::Statements(__items)))
                     }
                 },
@@ -1367,11 +1370,11 @@ fn record_codegen_to_value_from_bindings(fields: &Fields) -> Vec<proc_macro2::To
                 },
                 FieldKind::OptionStatements(_) => quote! {
                     ::dsl::FieldValue::Statements(match #ident {
-                        Some(v) => vec![::dsl::DslVariants::to_named_record(v).await],
+                        Some(v) => vec![Box::pin(::dsl::DslVariants::to_named_record(v)).await],
                         None => vec![],
                     })
                 },
-                FieldKind::RequiredStatements(_) => quote! { ::dsl::FieldValue::Statements(vec![::dsl::DslVariants::to_named_record(#ident.as_ref()).await]) },
+                FieldKind::RequiredStatements(_) => quote! { ::dsl::FieldValue::Statements(vec![Box::pin(::dsl::DslVariants::to_named_record(#ident.as_ref())).await]) },
             };
             let to_value_expr = if *block {
                 quote! {

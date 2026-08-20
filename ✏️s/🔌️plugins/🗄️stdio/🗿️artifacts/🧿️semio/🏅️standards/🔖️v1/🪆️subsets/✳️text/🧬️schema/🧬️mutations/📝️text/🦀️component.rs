@@ -30,10 +30,10 @@ async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
 async fn enc_str(s: &str) -> String {
-    hex_encode(s.as_bytes())
+    hex_encode(s.as_bytes()).await
 }
 async fn dec_str(s: &str) -> Result<String, String> {
-    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
+    String::from_utf8(hex_decode(s).await?).map_err(|e| e.to_string())
 }
 async fn parse_usize(s: &str) -> Result<usize, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
@@ -60,19 +60,19 @@ async fn enc_mark(m: &SemioTextMark) -> String {
     format!("[{},{}]", enc_mark_kind(m.kind), enc_str(&m.href))
 }
 async fn dec_mark(s: &str) -> Result<SemioTextMark, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [kind, href] = parts.as_slice() else { return Err(format!("mark: expected 2 fields, got {}", parts.len())) };
-    Ok(SemioTextMark { kind: dec_mark_kind(kind)?, href: dec_str(href)? })
+    Ok(SemioTextMark { kind: dec_mark_kind(kind).await?, href: dec_str(href).await? })
 }
 async fn enc_run(r: &SemioTextRun) -> String {
     let marks = r.marks.iter().map(enc_mark).collect::<Vec<_>>().join(",");
     format!("[{},{},[{}]]", enc_str(&r.language), enc_str(&r.content), marks)
 }
 async fn dec_run(s: &str) -> Result<SemioTextRun, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [language, content, marks] = parts.as_slice() else { return Err(format!("run: expected 3 fields, got {}", parts.len())) };
-    let marks = split_top_level(strip_brackets(marks)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_mark).collect::<Result<Vec<_>, String>>()?;
-    Ok(SemioTextRun { language: dec_str(language)?, content: dec_str(content)?, marks })
+    let marks = split_top_level(strip_brackets(marks).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_mark).collect::<Result<Vec<_>, String>>()?;
+    Ok(SemioTextRun { language: dec_str(language).await?, content: dec_str(content).await?, marks })
 }
 //#endregion 🔖️Primitives
 
@@ -94,31 +94,31 @@ async fn parse_text_mutation(line: &str) -> Result<SemioTextMutation, String> {
     match tag {
         "insertRun" => {
             let (idx, run) = rest.split_once(',').ok_or_else(|| "insertRun: missing comma".to_string())?;
-            Ok(SemioTextMutation::InsertRun(InsertRun { index: parse_usize(idx)?, run: dec_run(run)? }))
+            Ok(SemioTextMutation::InsertRun(InsertRun { index: parse_usize(idx).await?, run: dec_run(run).await? }))
         }
-        "removeRun" => Ok(SemioTextMutation::RemoveRun(RemoveRun { index: parse_usize(rest)? })),
+        "removeRun" => Ok(SemioTextMutation::RemoveRun(RemoveRun { index: parse_usize(rest).await? })),
         "editRun" => {
             let (idx, content) = rest.split_once(',').ok_or_else(|| "editRun: missing comma".to_string())?;
-            Ok(SemioTextMutation::EditRun(EditRun { index: parse_usize(idx)?, new_content: dec_str(content)? }))
+            Ok(SemioTextMutation::EditRun(EditRun { index: parse_usize(idx).await?, new_content: dec_str(content).await? }))
         }
         "changeRunLanguage" => {
             let (idx, lang) = rest.split_once(',').ok_or_else(|| "changeRunLanguage: missing comma".to_string())?;
-            Ok(SemioTextMutation::ChangeRunLanguage(ChangeRunLanguage { index: parse_usize(idx)?, new_language: dec_str(lang)? }))
+            Ok(SemioTextMutation::ChangeRunLanguage(ChangeRunLanguage { index: parse_usize(idx).await?, new_language: dec_str(lang).await? }))
         }
         "reorderRuns" => {
-            let parts = split_top_level(rest, ',');
+            let parts = split_top_level(rest, ',').await;
             let [from, to] = parts.as_slice() else { return Err(format!("reorderRuns: expected 2 fields, got {}", parts.len())) };
-            Ok(SemioTextMutation::ReorderRuns(ReorderRuns { from: parse_usize(from)?, to: parse_usize(to)? }))
+            Ok(SemioTextMutation::ReorderRuns(ReorderRuns { from: parse_usize(from).await?, to: parse_usize(to).await? }))
         }
         "addMark" => {
-            let parts = split_top_level(rest, ',');
+            let parts = split_top_level(rest, ',').await;
             let [run_index, index, mark] = parts.as_slice() else { return Err(format!("addMark: expected 3 fields, got {}", parts.len())) };
-            Ok(SemioTextMutation::AddMark(AddMark { run_index: parse_usize(run_index)?, index: parse_usize(index)?, mark: dec_mark(mark)? }))
+            Ok(SemioTextMutation::AddMark(AddMark { run_index: parse_usize(run_index).await?, index: parse_usize(index).await?, mark: dec_mark(mark).await? }))
         }
         "removeMark" => {
-            let parts = split_top_level(rest, ',');
+            let parts = split_top_level(rest, ',').await;
             let [run_index, index] = parts.as_slice() else { return Err(format!("removeMark: expected 2 fields, got {}", parts.len())) };
-            Ok(SemioTextMutation::RemoveMark(RemoveMark { run_index: parse_usize(run_index)?, index: parse_usize(index)? }))
+            Ok(SemioTextMutation::RemoveMark(RemoveMark { run_index: parse_usize(run_index).await?, index: parse_usize(index).await? }))
         }
         other => Err(format!("text mutation: unknown keyword {other:?}")),
     }
@@ -126,10 +126,10 @@ async fn parse_text_mutation(line: &str) -> Result<SemioTextMutation, String> {
 
 impl protocol::OpText for SemioTextMutation {
     async fn print_op(&self) -> String {
-        print_text_mutation(self)
+        print_text_mutation(self).await
     }
     async fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_text_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_text_mutation(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
 //#endregion 🔖️OpText

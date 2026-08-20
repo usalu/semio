@@ -1,0 +1,21 @@
+{
+  "case": "quota-patch-bytes",
+  "kind": "rejection",
+  "description": "The Upsert's estimated wire cost exceeds UiDocumentLimits::max_patch_bytes (set to 4 for this fixture) — rejected as QuotaExceeded(PatchBytes) before any op is applied.",
+  "outcome": "reject",
+  "limits": {
+    "maxNodes": 20000,
+    "maxDepth": 128,
+    "maxChildren": 4096,
+    "maxTextBytes": 65536,
+    "maxPatchOps": 4096,
+    "maxPatchBytes": 4
+  },
+  "baseRevision": 0,
+  "patchRejection": {
+    "type": "quotaExceeded",
+    "quota": "patchBytes",
+    "actual": 44,
+    "max": 4
+  }
+}

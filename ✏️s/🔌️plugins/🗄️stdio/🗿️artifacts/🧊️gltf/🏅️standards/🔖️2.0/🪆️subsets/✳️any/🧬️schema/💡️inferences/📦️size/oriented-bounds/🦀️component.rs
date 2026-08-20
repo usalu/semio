@@ -12,10 +12,10 @@ pub async fn descriptor() -> GltfInferenceLeafDescriptor {
     GltfOrientedBoundsInference::DESCRIPTOR
 }
 pub(crate) async fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<GltfBounds3> {
-    exact(context.oriented_bounds.clone(), GltfUnit::Metre, context.sample_count, Some(context.topology))
+    exact(context.oriented_bounds.clone(), GltfUnit::Metre, context.sample_count, Some(context.topology)).await
 }
 pub async fn unavailable_measure(ids: &[String]) -> GltfMeasure<GltfBounds3> {
-    unavailable(GltfUnit::Metre, GltfAvailability::Unavailable, ids.to_vec(), 0, None)
+    unavailable(GltfUnit::Metre, GltfAvailability::Unavailable, ids.to_vec(), 0, None).await
 }
 
 pub async fn encode_result(indicators: &GltfEntityIndicators) -> Result<serde_json::Value, serde_json::Error> {

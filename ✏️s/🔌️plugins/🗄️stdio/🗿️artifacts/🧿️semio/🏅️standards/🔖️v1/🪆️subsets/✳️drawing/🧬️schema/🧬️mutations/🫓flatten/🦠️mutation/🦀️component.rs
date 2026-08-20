@@ -22,10 +22,10 @@ impl protocol::MutationKind<SemioDrawingSnapshot, SemioDrawingMutation> for Flat
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "flatten", entity: "node", kind: "flatten", record: "FlattenedNode" };
 
     async fn diff(&self, base: &SemioDrawingSnapshot) -> protocol::MutationOutcome<<SemioDrawingMutation as protocol::Mutation<SemioDrawingSnapshot>>::Diff> {
-        super::diff::diff(self, base)
+        super::diff::diff(self, base).await
     }
     async fn inverse(&self, base: &SemioDrawingSnapshot) -> Vec<SemioDrawingMutation> {
-        super::inverse::inverse(self, base)
+        super::inverse::inverse(self, base).await
     }
     async fn label(&self) -> String {
         format!("Flatten node in layer #{}", self.at.layer)

@@ -1,0 +1,30 @@
+{
+  "case": "labelled",
+  "kind": "accessibility",
+  "description": "A Toggle whose accessible name is set explicitly, distinct from its visible icon-only chrome.",
+  "outcome": "accept",
+  "limits": null,
+  "tree": {
+    "root": 0,
+    "nodeCount": 1,
+    "shape": [
+      {
+        "id": 0,
+        "key": "#0",
+        "type": "toggle",
+        "children": []
+      }
+    ]
+  },
+  "accessibility": [
+    {
+      "id": 0,
+      "label": "Notifications enabled",
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    }
+  ],
+  "actionIds": []
+}

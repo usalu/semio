@@ -273,7 +273,7 @@ where
     for m in &diff.modified {
         if let Some(original) = base_items.get(m.index) {
             let next_index = transform_index(m.index, &diff.removed, &diff.added);
-            modified.push(IndexModified { index: next_index, diff: inverse_item(original, &m.diff) });
+            modified.push(IndexModified { index: next_index.await, diff: inverse_item(original, &m.diff) });
         }
     }
     let mut added = Vec::new();
@@ -341,7 +341,7 @@ where
         base_len += 1;
     }
 
-    let mid = simulate_mid_origins(base_len, &d1.removed, &d1.added);
+    let mid = simulate_mid_origins(base_len, &d1.removed, &d1.added).await;
 
     let mut removed = d1.removed.clone();
     let mut modified = d1.modified;
@@ -391,7 +391,7 @@ where
             continue;
         }
         let final_index = transform_index(add.index, &d2.removed, &d2.added);
-        added.push(IndexAdded { index: final_index, item: add.item });
+        added.push(IndexAdded { index: final_index.await, item: add.item });
     }
     for a2 in &d2.added {
         added.push(a2.clone());
@@ -521,7 +521,7 @@ async fn diff_run(old: &DocRun, new: &DocRun) -> Option<DocRunDiff> {
     if old == new {
         return None;
     }
-    Some(DocRunDiff { text: (old.text != new.text).then(|| new.text.clone()), style: diff_run_style(&old.style, &new.style) })
+    Some(DocRunDiff { text: (old.text != new.text).then(|| new.text.clone()), style: diff_run_style(&old.style, &new.style).await })
 }
 
 async fn diff_run_style(old: &RunStyle, new: &RunStyle) -> Option<RunStyleDiff> {
@@ -540,17 +540,17 @@ async fn diff_run_style(old: &RunStyle, new: &RunStyle) -> Option<RunStyleDiff> 
 }
 
 async fn diff_list_item(old: &DocListItem, new: &DocListItem) -> Option<DocListItemDiff> {
-    let blocks = between_indexed(&old.blocks, &new.blocks, diff_block);
+    let blocks = between_indexed(&old.blocks, &new.blocks, diff_block).await;
     blocks.map(|blocks| DocListItemDiff { blocks: Some(blocks) })
 }
 
 async fn diff_cell(old: &DocTableCell, new: &DocTableCell) -> Option<DocTableCellDiff> {
-    let blocks = between_indexed(&old.blocks, &new.blocks, diff_block);
+    let blocks = between_indexed(&old.blocks, &new.blocks, diff_block).await;
     blocks.map(|blocks| DocTableCellDiff { blocks: Some(blocks) })
 }
 
 async fn diff_row(old: &DocTableRow, new: &DocTableRow) -> Option<DocTableRowDiff> {
-    let cells = between_indexed(&old.cells, &new.cells, diff_cell);
+    let cells = between_indexed(&old.cells, &new.cells, diff_cell).await;
     cells.map(|cells| DocTableRowDiff { cells: Some(cells) })
 }
 
@@ -575,7 +575,7 @@ pub(crate) async fn diff_block(old: &DocBlock, new: &DocBlock) -> Option<DocBloc
     match (old, new) {
         (DocBlock::Paragraph { style_id: os, runs: or }, DocBlock::Paragraph { style_id: ns, runs: nr }) => {
             let style_id = (os != ns).then(|| ns.clone());
-            let runs = between_indexed(or, nr, diff_run);
+            let runs = between_indexed(or, nr, diff_run).await;
             if style_id.is_none() && runs.is_none() {
                 None
             } else {
@@ -585,7 +585,7 @@ pub(crate) async fn diff_block(old: &DocBlock, new: &DocBlock) -> Option<DocBloc
         (DocBlock::Heading { level: ol, style_id: os, runs: or }, DocBlock::Heading { level: nl, style_id: ns, runs: nr }) => {
             let level = (ol != nl).then_some(*nl);
             let style_id = (os != ns).then(|| ns.clone());
-            let runs = between_indexed(or, nr, diff_run);
+            let runs = between_indexed(or, nr, diff_run).await;
             if level.is_none() && style_id.is_none() && runs.is_none() {
                 None
             } else {
@@ -594,7 +594,7 @@ pub(crate) async fn diff_block(old: &DocBlock, new: &DocBlock) -> Option<DocBloc
         }
         (DocBlock::List { ordered: oo, items: oi }, DocBlock::List { ordered: no, items: ni }) => {
             let ordered = (oo != no).then_some(*no);
-            let items = between_indexed(oi, ni, diff_list_item);
+            let items = between_indexed(oi, ni, diff_list_item).await;
             if ordered.is_none() && items.is_none() {
                 None
             } else {
@@ -602,7 +602,7 @@ pub(crate) async fn diff_block(old: &DocBlock, new: &DocBlock) -> Option<DocBloc
             }
         }
         (DocBlock::Table { rows: or }, DocBlock::Table { rows: nr }) => {
-            let rows = between_indexed(or, nr, diff_row);
+            let rows = between_indexed(or, nr, diff_row).await;
             rows.map(|rows| DocBlockDiff::Table(DocTableDiff { rows: Some(rows) }))
         }
         (DocBlock::Code { language: ol, text: ot }, DocBlock::Code { language: nl, text: nt }) => {
@@ -616,7 +616,7 @@ pub(crate) async fn diff_block(old: &DocBlock, new: &DocBlock) -> Option<DocBloc
         }
         (DocBlock::Quote { blocks: ob }, DocBlock::Quote { blocks: nb }) => {
             let blocks = between_indexed(ob, nb, diff_block);
-            blocks.map(|blocks| DocBlockDiff::Quote(DocQuoteDiff { blocks: Some(blocks) }))
+            blocks.await.map(|blocks| DocBlockDiff::Quote(DocQuoteDiff { blocks: Some(blocks) }))
         }
         (DocBlock::Image { image_id: oid, alt: oa, width: ow, height: oh }, DocBlock::Image { image_id: nid, alt: na, width: nw, height: nh }) => {
             let image_id = (oid != nid).then(|| nid.clone());
@@ -824,10 +824,10 @@ async fn inverse_run(base: &DocRun, diff: &DocRunDiff) -> DocRunDiff {
 }
 
 async fn inverse_list_item(base: &DocListItem, diff: &DocListItemDiff) -> DocListItemDiff {
-    DocListItemDiff { blocks: diff.blocks.as_ref().map(|bd| inverse_indexed(&base.blocks, bd, inverse_block)) }
+    DocListItemDiff { blocks: diff.blocks.as_ref().map(|bd| inverse_indexed(&base.blocks, bd, |b, d| semio_framework_plugin::resolve_ready(inverse_block(b, d)))) }
 }
 async fn inverse_cell(base: &DocTableCell, diff: &DocTableCellDiff) -> DocTableCellDiff {
-    DocTableCellDiff { blocks: diff.blocks.as_ref().map(|bd| inverse_indexed(&base.blocks, bd, inverse_block)) }
+    DocTableCellDiff { blocks: diff.blocks.as_ref().map(|bd| inverse_indexed(&base.blocks, bd, |b, d| semio_framework_plugin::resolve_ready(inverse_block(b, d)))) }
 }
 async fn inverse_row(base: &DocTableRow, diff: &DocTableRowDiff) -> DocTableRowDiff {
     DocTableRowDiff { cells: diff.cells.as_ref().map(|cd| inverse_indexed(&base.cells, cd, inverse_cell)) }
@@ -864,7 +864,7 @@ async fn inverse_block(base: &DocBlock, diff: &DocBlockDiff) -> DocBlockDiff {
         }
         DocBlockDiff::Quote(qd) => {
             let DocBlock::Quote { blocks } = base else { return DocBlockDiff::Replace { block: base.clone() } };
-            DocBlockDiff::Quote(DocQuoteDiff { blocks: qd.blocks.as_ref().map(|bd| inverse_indexed(blocks, bd, inverse_block)) })
+            DocBlockDiff::Quote(DocQuoteDiff { blocks: qd.blocks.as_ref().map(|bd| inverse_indexed(blocks, bd, |b, d| semio_framework_plugin::resolve_ready(inverse_block(b, d)))) })
         }
         DocBlockDiff::Image(id) => {
             let DocBlock::Image { image_id, alt, width, height } = base else { return DocBlockDiff::Replace { block: base.clone() } };
@@ -882,7 +882,7 @@ async fn absorb_run_diff(a: DocRunDiff, b: DocRunDiff) -> DocRunDiff {
         style: match (a.style, b.style) {
             (None, x) => x,
             (x, None) => x,
-            (Some(sa), Some(sb)) => Some(absorb_run_style_diff(sa, sb)),
+            (Some(sa), Some(sb)) => Some(absorb_run_style_diff(sa, sb).await),
         },
     }
 }
@@ -890,7 +890,7 @@ async fn absorb_list_item_diff(mut a: DocListItemDiff, b: DocListItemDiff) -> Do
     a.blocks = match (a.blocks.take(), b.blocks) {
         (None, x) => x,
         (x, None) => x,
-        (Some(ba), Some(bb)) => Some(absorb_indexed(ba, bb, absorb_block_diff, block_with_diff_applied)),
+        (Some(ba), Some(bb)) => Some(absorb_indexed(ba, bb, absorb_block_diff, block_with_diff_applied).await),
     };
     a
 }
@@ -898,7 +898,7 @@ async fn absorb_cell_diff(mut a: DocTableCellDiff, b: DocTableCellDiff) -> DocTa
     a.blocks = match (a.blocks.take(), b.blocks) {
         (None, x) => x,
         (x, None) => x,
-        (Some(ba), Some(bb)) => Some(absorb_indexed(ba, bb, absorb_block_diff, block_with_diff_applied)),
+        (Some(ba), Some(bb)) => Some(absorb_indexed(ba, bb, absorb_block_diff, block_with_diff_applied).await),
     };
     a
 }
@@ -906,7 +906,7 @@ async fn absorb_row_diff(mut a: DocTableRowDiff, b: DocTableRowDiff) -> DocTable
     a.cells = match (a.cells.take(), b.cells) {
         (None, x) => x,
         (x, None) => x,
-        (Some(ca), Some(cb)) => Some(absorb_indexed(ca, cb, absorb_cell_diff, cell_with_diff_applied)),
+        (Some(ca), Some(cb)) => Some(absorb_indexed(ca, cb, absorb_cell_diff, cell_with_diff_applied).await),
     };
     a
 }
@@ -932,7 +932,7 @@ async fn absorb_image_diff(mut a: DocImageDiff, b: DocImageDiff) -> DocImageDiff
 async fn absorb_block_diff(a: DocBlockDiff, b: DocBlockDiff) -> DocBlockDiff {
     match (a, b) {
         (_, DocBlockDiff::Replace { block }) => DocBlockDiff::Replace { block },
-        (DocBlockDiff::Replace { block }, b) => DocBlockDiff::Replace { block: block_with_diff_applied(&block, &b) },
+        (DocBlockDiff::Replace { block }, b) => DocBlockDiff::Replace { block: block_with_diff_applied(&block, &b).await },
         (DocBlockDiff::Paragraph(mut pa), DocBlockDiff::Paragraph(pb)) => {
             if pb.style_id.is_some() {
                 pa.style_id = pb.style_id;
@@ -940,7 +940,7 @@ async fn absorb_block_diff(a: DocBlockDiff, b: DocBlockDiff) -> DocBlockDiff {
             pa.runs = match (pa.runs.take(), pb.runs) {
                 (None, x) => x,
                 (x, None) => x,
-                (Some(ra), Some(rb)) => Some(absorb_indexed(ra, rb, absorb_run_diff, run_with_diff_applied)),
+                (Some(ra), Some(rb)) => Some(absorb_indexed(ra, rb, absorb_run_diff, run_with_diff_applied).await),
             };
             DocBlockDiff::Paragraph(pa)
         }
@@ -954,7 +954,7 @@ async fn absorb_block_diff(a: DocBlockDiff, b: DocBlockDiff) -> DocBlockDiff {
             ha.runs = match (ha.runs.take(), hb.runs) {
                 (None, x) => x,
                 (x, None) => x,
-                (Some(ra), Some(rb)) => Some(absorb_indexed(ra, rb, absorb_run_diff, run_with_diff_applied)),
+                (Some(ra), Some(rb)) => Some(absorb_indexed(ra, rb, absorb_run_diff, run_with_diff_applied).await),
             };
             DocBlockDiff::Heading(ha)
         }
@@ -965,7 +965,7 @@ async fn absorb_block_diff(a: DocBlockDiff, b: DocBlockDiff) -> DocBlockDiff {
             la.items = match (la.items.take(), lb.items) {
                 (None, x) => x,
                 (x, None) => x,
-                (Some(ia), Some(ib)) => Some(absorb_indexed(ia, ib, absorb_list_item_diff, list_item_with_diff_applied)),
+                (Some(ia), Some(ib)) => Some(absorb_indexed(ia, ib, absorb_list_item_diff, list_item_with_diff_applied).await),
             };
             DocBlockDiff::List(la)
         }
@@ -973,7 +973,7 @@ async fn absorb_block_diff(a: DocBlockDiff, b: DocBlockDiff) -> DocBlockDiff {
             ta.rows = match (ta.rows.take(), tb.rows) {
                 (None, x) => x,
                 (x, None) => x,
-                (Some(ra), Some(rb)) => Some(absorb_indexed(ra, rb, absorb_row_diff, row_with_diff_applied)),
+                (Some(ra), Some(rb)) => Some(absorb_indexed(ra, rb, absorb_row_diff, row_with_diff_applied).await),
             };
             DocBlockDiff::Table(ta)
         }
@@ -990,7 +990,7 @@ async fn absorb_block_diff(a: DocBlockDiff, b: DocBlockDiff) -> DocBlockDiff {
             qa.blocks = match (qa.blocks.take(), qb.blocks) {
                 (None, x) => x,
                 (x, None) => x,
-                (Some(ba), Some(bb)) => Some(absorb_indexed(ba, bb, absorb_block_diff, block_with_diff_applied)),
+                (Some(ba), Some(bb)) => Some(absorb_indexed(ba, bb, absorb_block_diff, block_with_diff_applied).await),
             };
             DocBlockDiff::Quote(qa)
         }
@@ -1021,9 +1021,9 @@ async fn absorb_block_diff(a: DocBlockDiff, b: DocBlockDiff) -> DocBlockDiff {
 /// 🧭️ Whole-document `between`: `styles`/`images` name-keyed, `blocks` index-keyed recursive.
 async fn diff_document(base: &SemioDocumentSnapshot, other: &SemioDocumentSnapshot) -> SemioDocumentDiff {
     SemioDocumentDiff {
-        styles: between_named(&base.styles, &other.styles, |s| s.id.clone(), diff_style),
-        images: between_named(&base.images, &other.images, |i| i.id.clone(), diff_image),
-        blocks: between_indexed(&base.blocks, &other.blocks, diff_block),
+        styles: between_named(&base.styles, &other.styles, |s| s.id.clone(), diff_style).await,
+        images: between_named(&base.images, &other.images, |i| i.id.clone(), diff_image).await,
+        blocks: between_indexed(&base.blocks, &other.blocks, diff_block).await,
     }
 }
 
@@ -1031,15 +1031,15 @@ impl MutationDiff<SemioDocumentSnapshot> for SemioDocumentDiff {
     async fn apply(&self, base: &SemioDocumentSnapshot) -> protocol::MutationApplyResult<SemioDocumentSnapshot> {
         let mut out = base.clone();
         if let Some(sd) = &self.styles {
-            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&out.styles, sd, |item| item.id.clone(), |item| item.id.clone(), ["styles"])?;
+            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&out.styles, sd, |item| item.id.clone(), |item| item.id.clone(), ["styles"]).await?;
             apply_named(&mut out.styles, sd, |s| s.id.clone(), apply_style);
         }
         if let Some(id) = &self.images {
-            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&out.images, id, |item| item.id.clone(), |item| item.id.clone(), ["images"])?;
+            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&out.images, id, |item| item.id.clone(), |item| item.id.clone(), ["images"]).await?;
             apply_named(&mut out.images, id, |i| i.id.clone(), apply_image);
         }
         if let Some(bd) = &self.blocks {
-            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_indexed_triple(bd, out.blocks.len(), ["blocks"])?;
+            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_indexed_triple(bd, out.blocks.len(), ["blocks"]).await?;
             apply_indexed(&mut out.blocks, bd, apply_block);
         }
         Ok(out)
@@ -1050,32 +1050,32 @@ impl MutationDiff<SemioDocumentSnapshot> for SemioDocumentDiff {
         self.styles = match (styles, other.styles) {
             (None, x) => x,
             (x, None) => x,
-            (Some(sa), Some(sb)) => Some(absorb_named(sa, sb, |s| s.id.clone(), absorb_style_diff, apply_style)),
+            (Some(sa), Some(sb)) => Some(absorb_named(sa, sb, |s| s.id.clone(), absorb_style_diff, apply_style).await),
         };
         let images = std::mem::take(&mut self.images);
         self.images = match (images, other.images) {
             (None, x) => x,
             (x, None) => x,
-            (Some(ia), Some(ib)) => Some(absorb_named(ia, ib, |i| i.id.clone(), absorb_image_diff, apply_image)),
+            (Some(ia), Some(ib)) => Some(absorb_named(ia, ib, |i| i.id.clone(), absorb_image_diff, apply_image).await),
         };
         let blocks = std::mem::take(&mut self.blocks);
         self.blocks = match (blocks, other.blocks) {
             (None, x) => x,
             (x, None) => x,
-            (Some(ba), Some(bb)) => Some(absorb_indexed(ba, bb, absorb_block_diff, block_with_diff_applied)),
+            (Some(ba), Some(bb)) => Some(absorb_indexed(ba, bb, absorb_block_diff, block_with_diff_applied).await),
         };
     }
 }
 
 impl DiffAlgebra<SemioDocumentSnapshot> for SemioDocumentDiff {
     async fn between(base: &SemioDocumentSnapshot, other: &SemioDocumentSnapshot) -> Self {
-        diff_document(base, other)
+        diff_document(base, other).await
     }
     async fn inverse(&self, base: &SemioDocumentSnapshot) -> Self {
         SemioDocumentDiff {
             styles: self.styles.as_ref().map(|sd| inverse_named(&base.styles, sd, |s| s.id.clone(), inverse_style)),
             images: self.images.as_ref().map(|id| inverse_named(&base.images, id, |i| i.id.clone(), inverse_image)),
-            blocks: self.blocks.as_ref().map(|bd| inverse_indexed(&base.blocks, bd, inverse_block)),
+            blocks: self.blocks.as_ref().map(|bd| inverse_indexed(&base.blocks, bd, |b, d| semio_framework_plugin::resolve_ready(inverse_block(b, d)))),
         }
     }
     async fn is_empty(&self) -> bool {
@@ -1085,7 +1085,7 @@ impl DiffAlgebra<SemioDocumentSnapshot> for SemioDocumentDiff {
 
 /// 🧩 Set-snapshot diff helper — used by the `📸️set-snapshot/🔺️diff` leaf.
 pub async fn diff_set_snapshot(base: &SemioDocumentSnapshot, snapshot: &SemioDocumentSnapshot) -> SemioDocumentDiff {
-    <SemioDocumentDiff as DiffAlgebra<SemioDocumentSnapshot>>::between(base, snapshot)
+    <SemioDocumentDiff as DiffAlgebra<SemioDocumentSnapshot>>::between(base, snapshot).await
 }
 //#endregion 🔖️TopLevel
 
@@ -1101,10 +1101,10 @@ pub(crate) async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
 pub(crate) async fn enc_str(s: &str) -> String {
-    hex_encode(s.as_bytes())
+    hex_encode(s.as_bytes()).await
 }
 pub(crate) async fn dec_str(s: &str) -> Result<String, String> {
-    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
+    String::from_utf8(hex_decode(s).await?).map_err(|e| e.to_string())
 }
 pub(crate) async fn enc_bool(b: &bool) -> String {
     if *b {
@@ -1139,8 +1139,8 @@ pub(crate) async fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String
     }
 }
 pub(crate) async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
-    let inner = strip_brackets(s)?;
-    match split_top_level(inner, ',').as_slice() {
+    let inner = strip_brackets(s).await?;
+    match split_top_level(inner, ',').await.as_slice() {
         ["0"] => Ok(None),
         [tag, value] if *tag == "1" => Ok(Some(dec(value)?)),
         other => Err(format!("option decode: bad shape {other:?}")),
@@ -1150,7 +1150,7 @@ pub(crate) async fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> Stri
     format!("[{}]", items.iter().map(|i| enc(i)).collect::<Vec<_>>().join(","))
 }
 pub(crate) async fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
-    split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec).collect()
+    split_top_level(strip_brackets(s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec).collect()
 }
 //#endregion 🔖️Primitives
 
@@ -1164,14 +1164,14 @@ pub(crate) async fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
     out.extend_from_slice(bytes);
 }
 pub(crate) async fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
+    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec())
 }
 pub(crate) async fn write_str_lp(out: &mut Vec<u8>, s: &str) {
     write_bytes_lp(out, s.as_bytes());
 }
 pub(crate) async fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
-    String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
+    String::from_utf8(read_bytes_lp(reader).await?).map_err(|e| e.to_string())
 }
 //#endregion 🔖️BinaryPrimitives
 
@@ -1189,27 +1189,27 @@ pub(crate) async fn enc_run_style(s: &RunStyle) -> String {
     )
 }
 pub(crate) async fn dec_run_style(s: &str) -> Result<RunStyle, String> {
-    let inner = strip_brackets(s)?;
-    let parts = split_top_level(inner, ',');
+    let inner = strip_brackets(s).await?;
+    let parts = split_top_level(inner, ',').await;
     let [bold, italic, underline, size, font, color, link] = parts.as_slice() else { return Err(format!("run style: expected 7 fields, got {}", parts.len())) };
     Ok(RunStyle {
-        bold: dec_bool(bold)?,
-        italic: dec_bool(italic)?,
-        underline: dec_bool(underline)?,
-        size: decode_option(size, dec_f64)?,
-        font: decode_option(font, dec_str)?,
-        color: decode_option(color, dec_str)?,
-        link: decode_option(link, dec_str)?,
+        bold: dec_bool(bold).await?,
+        italic: dec_bool(italic).await?,
+        underline: dec_bool(underline).await?,
+        size: decode_option(size, dec_f64).await?,
+        font: decode_option(font, dec_str).await?,
+        color: decode_option(color, dec_str).await?,
+        link: decode_option(link, dec_str).await?,
     })
 }
 pub(crate) async fn enc_run(r: &DocRun) -> String {
     format!("[{},{}]", enc_str(&r.text), enc_run_style(&r.style))
 }
 pub(crate) async fn dec_run(s: &str) -> Result<DocRun, String> {
-    let inner = strip_brackets(s)?;
-    let parts = split_top_level(inner, ',');
+    let inner = strip_brackets(s).await?;
+    let parts = split_top_level(inner, ',').await;
     let [text, style] = parts.as_slice() else { return Err(format!("run: expected 2 fields, got {}", parts.len())) };
-    Ok(DocRun { text: dec_str(text)?, style: dec_run_style(style)? })
+    Ok(DocRun { text: dec_str(text).await?, style: dec_run_style(style).await? })
 }
 
 pub(crate) async fn enc_block(b: &DocBlock) -> String {
@@ -1219,41 +1219,41 @@ pub(crate) async fn enc_block(b: &DocBlock) -> String {
         DocBlock::List { ordered, items } => format!("L[{},{}]", enc_bool(ordered), enc_list(items, enc_list_item)),
         DocBlock::Table { rows } => format!("T[{}]", enc_list(rows, enc_row)),
         DocBlock::Code { language, text } => format!("C[{},{}]", encode_option(language, |v| enc_str(v)), enc_str(text)),
-        DocBlock::Quote { blocks } => format!("Q[{}]", enc_list(blocks, enc_block)),
+        DocBlock::Quote { blocks } => format!("Q[{}.await]", enc_list(blocks, enc_block)),
         DocBlock::Image { image_id, alt, width, height } => format!("I[{},{},{},{}]", enc_str(image_id), enc_str(alt), encode_option(width, enc_f64), encode_option(height, enc_f64)),
         DocBlock::PageBreak => "B[]".to_string(),
     }
 }
 pub(crate) async fn dec_block(s: &str) -> Result<DocBlock, String> {
     let (tag, rest) = s.split_at(1);
-    let inner = strip_brackets(rest)?;
+    let inner = strip_brackets(rest).await?;
     match tag {
         "P" => {
-            let parts = split_top_level(inner, ',');
+            let parts = split_top_level(inner, ',').await;
             let [style_id, runs] = parts.as_slice() else { return Err(format!("paragraph: expected 2 fields, got {}", parts.len())) };
-            Ok(DocBlock::Paragraph { style_id: decode_option(style_id, dec_str)?, runs: dec_list(runs, dec_run)? })
+            Ok(DocBlock::Paragraph { style_id: decode_option(style_id, dec_str).await?, runs: dec_list(runs, dec_run).await? })
         }
         "H" => {
-            let parts = split_top_level(inner, ',');
+            let parts = split_top_level(inner, ',').await;
             let [level, style_id, runs] = parts.as_slice() else { return Err(format!("heading: expected 3 fields, got {}", parts.len())) };
-            Ok(DocBlock::Heading { level: dec_u8(level)?, style_id: decode_option(style_id, dec_str)?, runs: dec_list(runs, dec_run)? })
+            Ok(DocBlock::Heading { level: dec_u8(level).await?, style_id: decode_option(style_id, dec_str).await?, runs: dec_list(runs, dec_run).await? })
         }
         "L" => {
-            let parts = split_top_level(inner, ',');
+            let parts = split_top_level(inner, ',').await;
             let [ordered, items] = parts.as_slice() else { return Err(format!("list: expected 2 fields, got {}", parts.len())) };
-            Ok(DocBlock::List { ordered: dec_bool(ordered)?, items: dec_list(items, dec_list_item)? })
+            Ok(DocBlock::List { ordered: dec_bool(ordered).await?, items: dec_list(items, dec_list_item).await? })
         }
-        "T" => Ok(DocBlock::Table { rows: dec_list(inner, dec_row)? }),
+        "T" => Ok(DocBlock::Table { rows: dec_list(inner, dec_row).await? }),
         "C" => {
-            let parts = split_top_level(inner, ',');
+            let parts = split_top_level(inner, ',').await;
             let [language, text] = parts.as_slice() else { return Err(format!("code: expected 2 fields, got {}", parts.len())) };
-            Ok(DocBlock::Code { language: decode_option(language, dec_str)?, text: dec_str(text)? })
+            Ok(DocBlock::Code { language: decode_option(language, dec_str).await?, text: dec_str(text).await? })
         }
-        "Q" => Ok(DocBlock::Quote { blocks: dec_list(inner, dec_block)? }),
+        "Q" => Ok(DocBlock::Quote { blocks: dec_list(inner, dec_block).await? }),
         "I" => {
-            let parts = split_top_level(inner, ',');
+            let parts = split_top_level(inner, ',').await;
             let [image_id, alt, width, height] = parts.as_slice() else { return Err(format!("image: expected 4 fields, got {}", parts.len())) };
-            Ok(DocBlock::Image { image_id: dec_str(image_id)?, alt: dec_str(alt)?, width: decode_option(width, dec_f64)?, height: decode_option(height, dec_f64)? })
+            Ok(DocBlock::Image { image_id: dec_str(image_id).await?, alt: dec_str(alt).await?, width: decode_option(width, dec_f64).await?, height: decode_option(height, dec_f64).await? })
         }
         "B" => Ok(DocBlock::PageBreak),
         other => Err(format!("block: unknown tag {other:?}")),
@@ -1264,85 +1264,85 @@ pub(crate) async fn enc_list_item(i: &DocListItem) -> String {
     format!("[{}]", enc_list(&i.blocks, enc_block))
 }
 pub(crate) async fn dec_list_item(s: &str) -> Result<DocListItem, String> {
-    let inner = strip_brackets(s)?;
-    Ok(DocListItem { blocks: dec_list(inner, dec_block)? })
+    let inner = strip_brackets(s).await?;
+    Ok(DocListItem { blocks: dec_list(inner, dec_block).await? })
 }
 pub(crate) async fn enc_cell(c: &DocTableCell) -> String {
     format!("[{}]", enc_list(&c.blocks, enc_block))
 }
 pub(crate) async fn dec_cell(s: &str) -> Result<DocTableCell, String> {
-    let inner = strip_brackets(s)?;
-    Ok(DocTableCell { blocks: dec_list(inner, dec_block)? })
+    let inner = strip_brackets(s).await?;
+    Ok(DocTableCell { blocks: dec_list(inner, dec_block).await? })
 }
 pub(crate) async fn enc_row(r: &DocTableRow) -> String {
     format!("[{}]", enc_list(&r.cells, enc_cell))
 }
 pub(crate) async fn dec_row(s: &str) -> Result<DocTableRow, String> {
-    let inner = strip_brackets(s)?;
-    Ok(DocTableRow { cells: dec_list(inner, dec_cell)? })
+    let inner = strip_brackets(s).await?;
+    Ok(DocTableRow { cells: dec_list(inner, dec_cell).await? })
 }
 pub(crate) async fn enc_style(s: &DocStyle) -> String {
     format!("[{},{},{}]", enc_str(&s.id), enc_str(&s.name), encode_option(&s.based_on, |v| enc_str(v)))
 }
 pub(crate) async fn dec_style(s: &str) -> Result<DocStyle, String> {
-    let inner = strip_brackets(s)?;
-    let parts = split_top_level(inner, ',');
+    let inner = strip_brackets(s).await?;
+    let parts = split_top_level(inner, ',').await;
     let [id, name, based_on] = parts.as_slice() else { return Err(format!("style: expected 3 fields, got {}", parts.len())) };
-    Ok(DocStyle { id: dec_str(id)?, name: dec_str(name)?, based_on: decode_option(based_on, dec_str)? })
+    Ok(DocStyle { id: dec_str(id).await?, name: dec_str(name).await?, based_on: decode_option(based_on, dec_str).await? })
 }
 pub(crate) async fn enc_image(i: &DocImage) -> String {
     format!("[{},{},{}]", enc_str(&i.id), enc_str(&i.mime), hex_encode(&i.bytes))
 }
 pub(crate) async fn dec_image(s: &str) -> Result<DocImage, String> {
-    let inner = strip_brackets(s)?;
-    let parts = split_top_level(inner, ',');
+    let inner = strip_brackets(s).await?;
+    let parts = split_top_level(inner, ',').await;
     let [id, mime, bytes] = parts.as_slice() else { return Err(format!("image: expected 3 fields, got {}", parts.len())) };
-    Ok(DocImage { id: dec_str(id)?, mime: dec_str(mime)?, bytes: hex_decode(bytes)? })
+    Ok(DocImage { id: dec_str(id).await?, mime: dec_str(mime).await?, bytes: hex_decode(bytes).await? })
 }
 //#endregion 🔖️ValueCodecs
 
 //#region 🔖️DiffValueCodecs
 async fn enc_runs_diff(d: &RunsDiff) -> String {
-    enc_indexed_triple(d, enc_run_diff, enc_run)
+    enc_indexed_triple(d, enc_run_diff, enc_run).await
 }
 async fn dec_runs_diff(s: &str) -> Result<RunsDiff, String> {
-    dec_indexed_triple(s, dec_run_diff, dec_run)
+    dec_indexed_triple(s, dec_run_diff, dec_run).await
 }
 async fn enc_blocks_diff(d: &BlocksDiff) -> String {
-    enc_indexed_triple(d, enc_block_diff, enc_block)
+    enc_indexed_triple(d, enc_block_diff, enc_block).await
 }
 async fn dec_blocks_diff(s: &str) -> Result<BlocksDiff, String> {
-    dec_indexed_triple(s, dec_block_diff, dec_block)
+    dec_indexed_triple(s, dec_block_diff, dec_block).await
 }
 async fn enc_list_items_diff(d: &ListItemsDiff) -> String {
-    enc_indexed_triple(d, enc_list_item_diff, enc_list_item)
+    enc_indexed_triple(d, enc_list_item_diff, enc_list_item).await
 }
 async fn dec_list_items_diff(s: &str) -> Result<ListItemsDiff, String> {
-    dec_indexed_triple(s, dec_list_item_diff, dec_list_item)
+    dec_indexed_triple(s, dec_list_item_diff, dec_list_item).await
 }
 async fn enc_table_rows_diff(d: &TableRowsDiff) -> String {
-    enc_indexed_triple(d, enc_row_diff, enc_row)
+    enc_indexed_triple(d, enc_row_diff, enc_row).await
 }
 async fn dec_table_rows_diff(s: &str) -> Result<TableRowsDiff, String> {
-    dec_indexed_triple(s, dec_row_diff, dec_row)
+    dec_indexed_triple(s, dec_row_diff, dec_row).await
 }
 async fn enc_table_cells_diff(d: &TableCellsDiff) -> String {
-    enc_indexed_triple(d, enc_cell_diff, enc_cell)
+    enc_indexed_triple(d, enc_cell_diff, enc_cell).await
 }
 async fn dec_table_cells_diff(s: &str) -> Result<TableCellsDiff, String> {
-    dec_indexed_triple(s, dec_cell_diff, dec_cell)
+    dec_indexed_triple(s, dec_cell_diff, dec_cell).await
 }
 async fn enc_styles_diff(d: &StylesDiff) -> String {
-    enc_named_triple(d, |k| enc_str(k), enc_style_diff, enc_style)
+    enc_named_triple(d, |k| enc_str(k), enc_style_diff, enc_style).await
 }
 async fn dec_styles_diff(s: &str) -> Result<StylesDiff, String> {
-    dec_named_triple(s, dec_str, dec_style_diff, dec_style)
+    dec_named_triple(s, dec_str, dec_style_diff, dec_style).await
 }
 async fn enc_images_diff(d: &ImagesDiff) -> String {
-    enc_named_triple(d, |k| enc_str(k), enc_image_diff, enc_image)
+    enc_named_triple(d, |k| enc_str(k), enc_image_diff, enc_image).await
 }
 async fn dec_images_diff(s: &str) -> Result<ImagesDiff, String> {
-    dec_named_triple(s, dec_str, dec_image_diff, dec_image)
+    dec_named_triple(s, dec_str, dec_image_diff, dec_image).await
 }
 
 async fn enc_run_style_diff(d: &RunStyleDiff) -> String {
@@ -1358,118 +1358,118 @@ async fn enc_run_style_diff(d: &RunStyleDiff) -> String {
     )
 }
 async fn dec_run_style_diff(s: &str) -> Result<RunStyleDiff, String> {
-    let inner = strip_brackets(s)?;
-    let parts = split_top_level(inner, ',');
+    let inner = strip_brackets(s).await?;
+    let parts = split_top_level(inner, ',').await;
     let [bold, italic, underline, size, font, color, link] = parts.as_slice() else { return Err(format!("run style diff: expected 7 fields, got {}", parts.len())) };
     Ok(RunStyleDiff {
-        bold: decode_option(bold, dec_bool)?,
-        italic: decode_option(italic, dec_bool)?,
-        underline: decode_option(underline, dec_bool)?,
-        size: decode_option(size, |s| decode_option(s, dec_f64))?,
-        font: decode_option(font, |s| decode_option(s, dec_str))?,
-        color: decode_option(color, |s| decode_option(s, dec_str))?,
-        link: decode_option(link, |s| decode_option(s, dec_str))?,
+        bold: decode_option(bold, dec_bool).await?,
+        italic: decode_option(italic, dec_bool).await?,
+        underline: decode_option(underline, dec_bool).await?,
+        size: decode_option(size, |s| decode_option(s, dec_f64)).await?,
+        font: decode_option(font, |s| decode_option(s, dec_str)).await?,
+        color: decode_option(color, |s| decode_option(s, dec_str)).await?,
+        link: decode_option(link, |s| decode_option(s, dec_str)).await?,
     })
 }
 async fn enc_run_diff(d: &DocRunDiff) -> String {
     format!("[{},{}]", encode_option(&d.text, |v| enc_str(v)), encode_option(&d.style, enc_run_style_diff))
 }
 async fn dec_run_diff(s: &str) -> Result<DocRunDiff, String> {
-    let inner = strip_brackets(s)?;
-    let parts = split_top_level(inner, ',');
+    let inner = strip_brackets(s).await?;
+    let parts = split_top_level(inner, ',').await;
     let [text, style] = parts.as_slice() else { return Err(format!("run diff: expected 2 fields, got {}", parts.len())) };
-    Ok(DocRunDiff { text: decode_option(text, dec_str)?, style: decode_option(style, dec_run_style_diff)? })
+    Ok(DocRunDiff { text: decode_option(text, dec_str).await?, style: decode_option(style, dec_run_style_diff).await? })
 }
 
 async fn enc_list_item_diff(d: &DocListItemDiff) -> String {
     format!("[{}]", encode_option(&d.blocks, enc_blocks_diff))
 }
 async fn dec_list_item_diff(s: &str) -> Result<DocListItemDiff, String> {
-    let inner = strip_brackets(s)?;
-    Ok(DocListItemDiff { blocks: decode_option(inner, dec_blocks_diff)? })
+    let inner = strip_brackets(s).await?;
+    Ok(DocListItemDiff { blocks: decode_option(inner, dec_blocks_diff).await? })
 }
 async fn enc_cell_diff(d: &DocTableCellDiff) -> String {
     format!("[{}]", encode_option(&d.blocks, enc_blocks_diff))
 }
 async fn dec_cell_diff(s: &str) -> Result<DocTableCellDiff, String> {
-    let inner = strip_brackets(s)?;
-    Ok(DocTableCellDiff { blocks: decode_option(inner, dec_blocks_diff)? })
+    let inner = strip_brackets(s).await?;
+    Ok(DocTableCellDiff { blocks: decode_option(inner, dec_blocks_diff).await? })
 }
 async fn enc_row_diff(d: &DocTableRowDiff) -> String {
     format!("[{}]", encode_option(&d.cells, enc_table_cells_diff))
 }
 async fn dec_row_diff(s: &str) -> Result<DocTableRowDiff, String> {
-    let inner = strip_brackets(s)?;
-    Ok(DocTableRowDiff { cells: decode_option(inner, dec_table_cells_diff)? })
+    let inner = strip_brackets(s).await?;
+    Ok(DocTableRowDiff { cells: decode_option(inner, dec_table_cells_diff).await? })
 }
 async fn enc_style_diff(d: &DocStyleDiff) -> String {
     format!("[{},{}]", encode_option(&d.name, |v| enc_str(v)), encode_option(&d.based_on, |v: &Option<String>| encode_option(v, |s| enc_str(s))))
 }
 async fn dec_style_diff(s: &str) -> Result<DocStyleDiff, String> {
-    let inner = strip_brackets(s)?;
-    let parts = split_top_level(inner, ',');
+    let inner = strip_brackets(s).await?;
+    let parts = split_top_level(inner, ',').await;
     let [name, based_on] = parts.as_slice() else { return Err(format!("style diff: expected 2 fields, got {}", parts.len())) };
-    Ok(DocStyleDiff { name: decode_option(name, dec_str)?, based_on: decode_option(based_on, |s| decode_option(s, dec_str))? })
+    Ok(DocStyleDiff { name: decode_option(name, dec_str).await?, based_on: decode_option(based_on, |s| decode_option(s, dec_str)).await? })
 }
 async fn enc_image_diff(d: &DocImageDiff) -> String {
     format!("[{},{}]", encode_option(&d.mime, |v| enc_str(v)), encode_option(&d.bytes, |v: &Vec<u8>| hex_encode(v)))
 }
 async fn dec_image_diff(s: &str) -> Result<DocImageDiff, String> {
-    let inner = strip_brackets(s)?;
-    let parts = split_top_level(inner, ',');
+    let inner = strip_brackets(s).await?;
+    let parts = split_top_level(inner, ',').await;
     let [mime, bytes] = parts.as_slice() else { return Err(format!("image diff: expected 2 fields, got {}", parts.len())) };
-    Ok(DocImageDiff { mime: decode_option(mime, dec_str)?, bytes: decode_option(bytes, hex_decode)? })
+    Ok(DocImageDiff { mime: decode_option(mime, dec_str).await?, bytes: decode_option(bytes, hex_decode).await? })
 }
 
 async fn enc_paragraph_diff(d: &DocParagraphDiff) -> String {
     format!("[{},{}]", encode_option(&d.style_id, |v: &Option<String>| encode_option(v, |s| enc_str(s))), encode_option(&d.runs, enc_runs_diff))
 }
 async fn dec_paragraph_diff(s: &str) -> Result<DocParagraphDiff, String> {
-    let inner = strip_brackets(s)?;
-    let parts = split_top_level(inner, ',');
+    let inner = strip_brackets(s).await?;
+    let parts = split_top_level(inner, ',').await;
     let [style_id, runs] = parts.as_slice() else { return Err(format!("paragraph diff: expected 2 fields, got {}", parts.len())) };
-    Ok(DocParagraphDiff { style_id: decode_option(style_id, |s| decode_option(s, dec_str))?, runs: decode_option(runs, dec_runs_diff)? })
+    Ok(DocParagraphDiff { style_id: decode_option(style_id, |s| decode_option(s, dec_str)).await?, runs: decode_option(runs, dec_runs_diff).await? })
 }
 async fn enc_heading_diff(d: &DocHeadingDiff) -> String {
     format!("[{},{},{}]", encode_option(&d.level, enc_u8), encode_option(&d.style_id, |v: &Option<String>| encode_option(v, |s| enc_str(s))), encode_option(&d.runs, enc_runs_diff))
 }
 async fn dec_heading_diff(s: &str) -> Result<DocHeadingDiff, String> {
-    let inner = strip_brackets(s)?;
-    let parts = split_top_level(inner, ',');
+    let inner = strip_brackets(s).await?;
+    let parts = split_top_level(inner, ',').await;
     let [level, style_id, runs] = parts.as_slice() else { return Err(format!("heading diff: expected 3 fields, got {}", parts.len())) };
-    Ok(DocHeadingDiff { level: decode_option(level, dec_u8)?, style_id: decode_option(style_id, |s| decode_option(s, dec_str))?, runs: decode_option(runs, dec_runs_diff)? })
+    Ok(DocHeadingDiff { level: decode_option(level, dec_u8).await?, style_id: decode_option(style_id, |s| decode_option(s, dec_str)).await?, runs: decode_option(runs, dec_runs_diff).await? })
 }
 async fn enc_list_diff(d: &DocListDiff) -> String {
     format!("[{},{}]", encode_option(&d.ordered, enc_bool), encode_option(&d.items, enc_list_items_diff))
 }
 async fn dec_list_diff(s: &str) -> Result<DocListDiff, String> {
-    let inner = strip_brackets(s)?;
-    let parts = split_top_level(inner, ',');
+    let inner = strip_brackets(s).await?;
+    let parts = split_top_level(inner, ',').await;
     let [ordered, items] = parts.as_slice() else { return Err(format!("list diff: expected 2 fields, got {}", parts.len())) };
-    Ok(DocListDiff { ordered: decode_option(ordered, dec_bool)?, items: decode_option(items, dec_list_items_diff)? })
+    Ok(DocListDiff { ordered: decode_option(ordered, dec_bool).await?, items: decode_option(items, dec_list_items_diff).await? })
 }
 async fn enc_table_diff(d: &DocTableDiff) -> String {
     format!("[{}]", encode_option(&d.rows, enc_table_rows_diff))
 }
 async fn dec_table_diff(s: &str) -> Result<DocTableDiff, String> {
-    let inner = strip_brackets(s)?;
-    Ok(DocTableDiff { rows: decode_option(inner, dec_table_rows_diff)? })
+    let inner = strip_brackets(s).await?;
+    Ok(DocTableDiff { rows: decode_option(inner, dec_table_rows_diff).await? })
 }
 async fn enc_code_diff(d: &DocCodeDiff) -> String {
     format!("[{},{}]", encode_option(&d.language, |v: &Option<String>| encode_option(v, |s| enc_str(s))), encode_option(&d.text, |v| enc_str(v)))
 }
 async fn dec_code_diff(s: &str) -> Result<DocCodeDiff, String> {
-    let inner = strip_brackets(s)?;
-    let parts = split_top_level(inner, ',');
+    let inner = strip_brackets(s).await?;
+    let parts = split_top_level(inner, ',').await;
     let [language, text] = parts.as_slice() else { return Err(format!("code diff: expected 2 fields, got {}", parts.len())) };
-    Ok(DocCodeDiff { language: decode_option(language, |s| decode_option(s, dec_str))?, text: decode_option(text, dec_str)? })
+    Ok(DocCodeDiff { language: decode_option(language, |s| decode_option(s, dec_str)).await?, text: decode_option(text, dec_str).await? })
 }
 async fn enc_quote_diff(d: &DocQuoteDiff) -> String {
     format!("[{}]", encode_option(&d.blocks, enc_blocks_diff))
 }
 async fn dec_quote_diff(s: &str) -> Result<DocQuoteDiff, String> {
-    let inner = strip_brackets(s)?;
-    Ok(DocQuoteDiff { blocks: decode_option(inner, dec_blocks_diff)? })
+    let inner = strip_brackets(s).await?;
+    Ok(DocQuoteDiff { blocks: decode_option(inner, dec_blocks_diff).await? })
 }
 async fn enc_image_block_diff(d: &DocImageBlockDiff) -> String {
     format!(
@@ -1481,10 +1481,10 @@ async fn enc_image_block_diff(d: &DocImageBlockDiff) -> String {
     )
 }
 async fn dec_image_block_diff(s: &str) -> Result<DocImageBlockDiff, String> {
-    let inner = strip_brackets(s)?;
-    let parts = split_top_level(inner, ',');
+    let inner = strip_brackets(s).await?;
+    let parts = split_top_level(inner, ',').await;
     let [image_id, alt, width, height] = parts.as_slice() else { return Err(format!("image block diff: expected 4 fields, got {}", parts.len())) };
-    Ok(DocImageBlockDiff { image_id: decode_option(image_id, dec_str)?, alt: decode_option(alt, dec_str)?, width: decode_option(width, |s| decode_option(s, dec_f64))?, height: decode_option(height, |s| decode_option(s, dec_f64))? })
+    Ok(DocImageBlockDiff { image_id: decode_option(image_id, dec_str).await?, alt: decode_option(alt, dec_str).await?, width: decode_option(width, |s| decode_option(s, dec_f64)).await?, height: decode_option(height, |s| decode_option(s, dec_f64)).await? })
 }
 
 /// 🌳️ `P[...]`/`H[...]`/`L[...]`/`T[...]`/`C[...]`/`Q[...]`/`I[...]` -- per-kind diff, `R[block]`
@@ -1504,14 +1504,14 @@ async fn enc_block_diff(d: &DocBlockDiff) -> String {
 async fn dec_block_diff(s: &str) -> Result<DocBlockDiff, String> {
     let (tag, rest) = s.split_at(1);
     match tag {
-        "P" => Ok(DocBlockDiff::Paragraph(dec_paragraph_diff(rest)?)),
-        "H" => Ok(DocBlockDiff::Heading(dec_heading_diff(rest)?)),
-        "L" => Ok(DocBlockDiff::List(dec_list_diff(rest)?)),
-        "T" => Ok(DocBlockDiff::Table(dec_table_diff(rest)?)),
-        "C" => Ok(DocBlockDiff::Code(dec_code_diff(rest)?)),
-        "Q" => Ok(DocBlockDiff::Quote(dec_quote_diff(rest)?)),
-        "I" => Ok(DocBlockDiff::Image(dec_image_block_diff(rest)?)),
-        "R" => Ok(DocBlockDiff::Replace { block: dec_block(strip_brackets(rest)?)? }),
+        "P" => Ok(DocBlockDiff::Paragraph(dec_paragraph_diff(rest).await?)),
+        "H" => Ok(DocBlockDiff::Heading(dec_heading_diff(rest).await?)),
+        "L" => Ok(DocBlockDiff::List(dec_list_diff(rest).await?)),
+        "T" => Ok(DocBlockDiff::Table(dec_table_diff(rest).await?)),
+        "C" => Ok(DocBlockDiff::Code(dec_code_diff(rest).await?)),
+        "Q" => Ok(DocBlockDiff::Quote(dec_quote_diff(rest).await?)),
+        "I" => Ok(DocBlockDiff::Image(dec_image_block_diff(rest).await?)),
+        "R" => Ok(DocBlockDiff::Replace { block: dec_block(strip_brackets(rest).await?).await? }),
         other => Err(format!("block diff: unknown tag {other:?}")),
     }
 }
@@ -1536,11 +1536,11 @@ async fn parse_document_diff(line: &str) -> Result<SemioDocumentDiff, String> {
     }
     for token in line.split(' ') {
         if let Some(rest) = token.strip_prefix("styles=") {
-            d.styles = Some(dec_styles_diff(rest)?);
+            d.styles = Some(dec_styles_diff(rest).await?);
         } else if let Some(rest) = token.strip_prefix("images=") {
-            d.images = Some(dec_images_diff(rest)?);
+            d.images = Some(dec_images_diff(rest).await?);
         } else if let Some(rest) = token.strip_prefix("blocks=") {
-            d.blocks = Some(dec_blocks_diff(rest)?);
+            d.blocks = Some(dec_blocks_diff(rest).await?);
         } else {
             return Err(format!("document diff: unknown token {token:?}"));
         }
@@ -1550,10 +1550,10 @@ async fn parse_document_diff(line: &str) -> Result<SemioDocumentDiff, String> {
 
 impl protocol::DiffCodec for SemioDocumentDiff {
     async fn print_diff(&self) -> String {
-        print_document_diff(self)
+        print_document_diff(self).await
     }
     async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
-        parse_document_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_document_diff(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// ⚡️ ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION document wave: real binary
     /// diff frame, replacing the old `print_diff().into_bytes()` text-as-binary shortcut. `format
@@ -1599,20 +1599,20 @@ impl protocol::DiffCodec for SemioDocumentDiff {
         let presence = bytes[1];
         let mut reader = store::ByteReader::new(&bytes[2..]);
         let styles = if presence & 0b001 != 0 {
-            let text = read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff styles blob", offset: 2, detail: e })?;
-            Some(dec_styles_diff(&text).map_err(|e| protocol::ProtocolError::Malformed { what: "diff styles text", offset: 2, detail: e })?)
+            let text = read_str_lp(&mut reader).await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff styles blob", offset: 2, detail: e })?;
+            Some(dec_styles_diff(&text).await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff styles text", offset: 2, detail: e })?)
         } else {
             None
         };
         let images = if presence & 0b010 != 0 {
-            let text = read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff images blob", offset: 2, detail: e })?;
-            Some(dec_images_diff(&text).map_err(|e| protocol::ProtocolError::Malformed { what: "diff images text", offset: 2, detail: e })?)
+            let text = read_str_lp(&mut reader).await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff images blob", offset: 2, detail: e })?;
+            Some(dec_images_diff(&text).await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff images text", offset: 2, detail: e })?)
         } else {
             None
         };
         let blocks = if presence & 0b100 != 0 {
-            let text = read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff blocks blob", offset: 2, detail: e })?;
-            Some(dec_blocks_diff(&text).map_err(|e| protocol::ProtocolError::Malformed { what: "diff blocks text", offset: 2, detail: e })?)
+            let text = read_str_lp(&mut reader).await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff blocks blob", offset: 2, detail: e })?;
+            Some(dec_blocks_diff(&text).await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff blocks text", offset: 2, detail: e })?)
         } else {
             None
         };

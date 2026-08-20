@@ -1,0 +1,50 @@
+{
+  "case": "set-bindings",
+  "kind": "patch",
+  "description": "UiPatchOp::SetBindings replaces node 1's binding list wholesale.",
+  "outcome": "accept",
+  "limits": null,
+  "baseRevision": 0,
+  "resultRevision": 1,
+  "tree": {
+    "root": 0,
+    "nodeCount": 2,
+    "shape": [
+      {
+        "id": 0,
+        "key": "root",
+        "type": "container",
+        "children": [
+          1
+        ]
+      },
+      {
+        "id": 1,
+        "key": "a",
+        "type": "text",
+        "children": []
+      }
+    ]
+  },
+  "accessibility": [
+    {
+      "id": 0,
+      "label": null,
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    },
+    {
+      "id": 1,
+      "label": null,
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    }
+  ],
+  "actionIds": [
+    "scope.name@1"
+  ]
+}

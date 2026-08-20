@@ -25,7 +25,7 @@ pub struct SemioCadInference {
 
 impl protocol::Inference<SemioCadSnapshot> for SemioCadInference {
     async fn infer(snapshot: &SemioCadSnapshot) -> Self {
-        Self { bounds: compute_semio_cad_bounds(snapshot) }
+        Self { bounds: compute_semio_cad_bounds(snapshot).await }
     }
 }
 

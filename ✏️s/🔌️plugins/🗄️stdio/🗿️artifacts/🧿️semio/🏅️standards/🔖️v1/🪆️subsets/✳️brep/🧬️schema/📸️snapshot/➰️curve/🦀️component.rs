@@ -57,14 +57,14 @@ impl Curve3 {
         match self {
             Curve3::Line { .. } => (f64::NEG_INFINITY, f64::INFINITY),
             Curve3::Circle { .. } | Curve3::Ellipse { .. } => (0.0, std::f64::consts::TAU),
-            Curve3::Nurbs { knots, .. } => knots.domain(),
+            Curve3::Nurbs { knots, .. } => knots.domain().await,
         }
     }
     pub async fn is_periodic(&self) -> bool {
         matches!(self, Curve3::Circle { .. } | Curve3::Ellipse { .. })
     }
     pub async fn period(&self) -> Option<f64> {
-        if self.is_periodic() {
+        if self.is_periodic().await {
             Some(std::f64::consts::TAU)
         } else {
             None
@@ -73,41 +73,41 @@ impl Curve3 {
     pub async fn eval(&self, t: f64) -> Pnt3 {
         match self {
             Curve3::Line { origin, dir } => *origin + *dir * t,
-            Curve3::Circle { frame, radius } => frame.to_world(Pnt3::new(radius * t.cos(), radius * t.sin(), 0.0)),
-            Curve3::Ellipse { frame, major_radius, minor_radius } => frame.to_world(Pnt3::new(major_radius * t.cos(), minor_radius * t.sin(), 0.0)),
-            Curve3::Nurbs { knots, controls, weights } => eval_nurbs_curve(knots, controls, weights, t),
+            Curve3::Circle { frame, radius } => frame.to_world(Pnt3::new(radius * t.cos(), radius * t.sin(), 0.0).await).await,
+            Curve3::Ellipse { frame, major_radius, minor_radius } => frame.to_world(Pnt3::new(major_radius * t.cos(), minor_radius * t.sin(), 0.0).await).await,
+            Curve3::Nurbs { knots, controls, weights } => eval_nurbs_curve(knots, controls, weights, t).await,
         }
     }
     /// 🌀️ First derivative `dC/dt`.
     pub async fn d1(&self, t: f64) -> Vec3 {
         match self {
             Curve3::Line { dir, .. } => *dir,
-            Curve3::Circle { frame, radius } => frame.to_world_vector(Vec3::new(-radius * t.sin(), radius * t.cos(), 0.0)),
-            Curve3::Ellipse { frame, major_radius, minor_radius } => frame.to_world_vector(Vec3::new(-major_radius * t.sin(), minor_radius * t.cos(), 0.0)),
-            Curve3::Nurbs { .. } => nurbs_derivative_finite(self, t, 1),
+            Curve3::Circle { frame, radius } => frame.to_world_vector(Vec3::new(-radius * t.sin(), radius * t.cos(), 0.0).await).await,
+            Curve3::Ellipse { frame, major_radius, minor_radius } => frame.to_world_vector(Vec3::new(-major_radius * t.sin(), minor_radius * t.cos(), 0.0).await).await,
+            Curve3::Nurbs { .. } => nurbs_derivative_finite(self, t, 1).await,
         }
     }
     /// 🌀️ Second derivative `d²C/dt²`.
     pub async fn d2(&self, t: f64) -> Vec3 {
         match self {
             Curve3::Line { .. } => Vec3::ZERO,
-            Curve3::Circle { frame, radius } => frame.to_world_vector(Vec3::new(-radius * t.cos(), -radius * t.sin(), 0.0)),
-            Curve3::Ellipse { frame, major_radius, minor_radius } => frame.to_world_vector(Vec3::new(-major_radius * t.cos(), -minor_radius * t.sin(), 0.0)),
-            Curve3::Nurbs { .. } => nurbs_derivative_finite(self, t, 2),
+            Curve3::Circle { frame, radius } => frame.to_world_vector(Vec3::new(-radius * t.cos(), -radius * t.sin(), 0.0).await).await,
+            Curve3::Ellipse { frame, major_radius, minor_radius } => frame.to_world_vector(Vec3::new(-major_radius * t.cos(), -minor_radius * t.sin(), 0.0).await).await,
+            Curve3::Nurbs { .. } => nurbs_derivative_finite(self, t, 2).await,
         }
     }
     pub async fn tangent(&self, t: f64) -> Option<Vec3> {
-        self.d1(t).normalized()
+        self.d1(t).await.normalized().await
     }
     /// 🌀️ Signed curvature magnitude `|C' × C''| / |C'|³` (the standard space-curve formula).
     pub async fn curvature(&self, t: f64) -> f64 {
-        let d1 = self.d1(t);
+        let d1 = self.d1(t).await;
         let d2 = self.d2(t);
-        let speed = d1.norm();
+        let speed = d1.norm().await;
         if speed <= f64::EPSILON {
             return 0.0;
         }
-        d1.cross(d2).norm() / speed.powi(3)
+        d1.cross(d2.await).await.norm() / speed.powi(3)
     }
     /// 🌀️ An exact rational-NURBS representation over `domain` (required for [`Curve3::Line`],
     /// whose natural domain is unbounded). Arcs longer than 120° are split into equal spans of
@@ -122,10 +122,10 @@ impl Curve3 {
             Curve3::Line { origin, dir } => {
                 let p0 = *origin + *dir * domain.0;
                 let p1 = *origin + *dir * domain.1;
-                NurbsCurve3 { knots: KnotVector::new(vec![domain.0, domain.0, domain.1, domain.1], 1, 2).unwrap(), controls: vec![p0, p1], weights: vec![1.0, 1.0] }
+                NurbsCurve3 { knots: KnotVector::new(vec![domain.0, domain.0, domain.1, domain.1], 1, 2).await.unwrap(), controls: vec![p0, p1], weights: vec![1.0, 1.0] }
             }
-            Curve3::Circle { frame, radius } => arc_to_nurbs(frame, *radius, *radius, domain),
-            Curve3::Ellipse { frame, major_radius, minor_radius } => arc_to_nurbs(frame, *major_radius, *minor_radius, domain),
+            Curve3::Circle { frame, radius } => arc_to_nurbs(frame, *radius, *radius, domain).await,
+            Curve3::Ellipse { frame, major_radius, minor_radius } => arc_to_nurbs(frame, *major_radius, *minor_radius, domain).await,
             Curve3::Nurbs { knots, controls, weights } => NurbsCurve3 { knots: knots.clone(), controls: controls.clone(), weights: weights.clone() },
         }
     }
@@ -136,7 +136,7 @@ async fn eval_nurbs_curve(knots: &KnotVector, controls: &[Pnt3], weights: &[f64]
     let hy: Vec<f64> = controls.iter().zip(weights).map(|(p, w)| p.y * w).collect();
     let hz: Vec<f64> = controls.iter().zip(weights).map(|(p, w)| p.z * w).collect();
     let w = de_boor(knots, weights, t);
-    Pnt3::new(de_boor(knots, &hx, t) / w, de_boor(knots, &hy, t) / w, de_boor(knots, &hz, t) / w)
+    Pnt3::new(de_boor(knots, &hx, t) / w, de_boor(knots, &hy, t) / w, de_boor(knots, &hz, t) / w).await
 }
 
 /// 🌀️ Central-difference derivative — used for NURBS curves as a robust, simple stand-in until a
@@ -148,9 +148,9 @@ async fn nurbs_derivative_finite(curve: &Curve3, t: f64, order: u32) -> Vec3 {
     match order {
         1 => (curve.eval(t + h) - curve.eval(t - h)) * (1.0 / (2.0 * h)),
         2 => {
-            let a = curve.eval(t + h).to_vec();
-            let b = curve.eval(t).to_vec();
-            let c = curve.eval(t - h).to_vec();
+            let a = curve.eval(t + h).await.to_vec();
+            let b = curve.eval(t).await.to_vec();
+            let c = curve.eval(t - h).await.to_vec();
             (a - b * 2.0 + c) * (1.0 / (h * h))
         }
         _ => Vec3::ZERO,
@@ -178,12 +178,12 @@ async fn arc_to_nurbs(frame: &Frame3, radius_x: f64, radius_y: f64, domain: (f64
         let p2 = local_point(a1, 1.0);
         let p1 = local_point(mid, 1.0 / w1);
         if span_i == 0 {
-            controls.push(frame.to_world(p0));
+            controls.push(frame.to_world(p0.await));
             weights.push(1.0);
         }
-        controls.push(frame.to_world(p1));
+        controls.push(frame.to_world(p1.await));
         weights.push(w1);
-        controls.push(frame.to_world(p2));
+        controls.push(frame.to_world(p2.await));
         weights.push(1.0);
     }
     let mut knots = vec![domain.0, domain.0, domain.0];
@@ -195,7 +195,7 @@ async fn arc_to_nurbs(frame: &Frame3, radius_x: f64, radius_y: f64, domain: (f64
     knots.push(domain.1);
     knots.push(domain.1);
     knots.push(domain.1);
-    NurbsCurve3 { knots: KnotVector::new(knots, 2, controls.len()).unwrap(), controls, weights }
+    NurbsCurve3 { knots: KnotVector::new(knots, 2, controls.len()).await.unwrap(), controls, weights }
 }
 
 // #endregion 🔖️Curve3
@@ -216,27 +216,27 @@ impl Curve2 {
         match self {
             Curve2::Line { .. } => (f64::NEG_INFINITY, f64::INFINITY),
             Curve2::Circle { .. } | Curve2::Ellipse { .. } => (0.0, std::f64::consts::TAU),
-            Curve2::Nurbs { knots, .. } => knots.domain(),
+            Curve2::Nurbs { knots, .. } => knots.domain().await,
         }
     }
     pub async fn eval(&self, t: f64) -> Pnt2 {
         match self {
             Curve2::Line { origin, dir } => *origin + *dir * t,
-            Curve2::Circle { center, radius } => *center + Vec2::new(radius * t.cos(), radius * t.sin()),
+            Curve2::Circle { center, radius } => *center + Vec2::new(radius * t.cos(), radius * t.sin()).await,
             Curve2::Ellipse { center, x_axis, major_radius, minor_radius } => {
-                let x = x_axis.normalized().unwrap_or(Vec2::new(1.0, 0.0));
+                let x = x_axis.normalized().await.unwrap_or(Vec2::new(1.0, 0.0).await);
                 let y = x.perp();
                 *center + x * (major_radius * t.cos()) + y * (minor_radius * t.sin())
             }
-            Curve2::Nurbs { knots, controls, weights } => eval_nurbs_curve2(knots, controls, weights, t),
+            Curve2::Nurbs { knots, controls, weights } => eval_nurbs_curve2(knots, controls, weights, t).await,
         }
     }
     pub async fn d1(&self, t: f64) -> Vec2 {
         match self {
             Curve2::Line { dir, .. } => *dir,
-            Curve2::Circle { radius, .. } => Vec2::new(-radius * t.sin(), radius * t.cos()),
+            Curve2::Circle { radius, .. } => Vec2::new(-radius * t.sin(), radius * t.cos()).await,
             Curve2::Ellipse { x_axis, major_radius, minor_radius, .. } => {
-                let x = x_axis.normalized().unwrap_or(Vec2::new(1.0, 0.0));
+                let x = x_axis.normalized().await.unwrap_or(Vec2::new(1.0, 0.0).await);
                 let y = x.perp();
                 x * (-major_radius * t.sin()) + y * (minor_radius * t.cos())
             }
@@ -252,7 +252,7 @@ async fn eval_nurbs_curve2(knots: &KnotVector, controls: &[Pnt2], weights: &[f64
     let hx: Vec<f64> = controls.iter().zip(weights).map(|(p, w)| p.x * w).collect();
     let hy: Vec<f64> = controls.iter().zip(weights).map(|(p, w)| p.y * w).collect();
     let w = de_boor(knots, weights, t);
-    Pnt2::new(de_boor(knots, &hx, t) / w, de_boor(knots, &hy, t) / w)
+    Pnt2::new(de_boor(knots, &hx, t) / w, de_boor(knots, &hy, t) / w).await
 }
 
 // #endregion 🔖️Curve2

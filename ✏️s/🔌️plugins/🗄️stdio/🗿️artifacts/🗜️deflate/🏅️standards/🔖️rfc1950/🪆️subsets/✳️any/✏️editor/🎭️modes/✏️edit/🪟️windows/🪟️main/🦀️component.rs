@@ -19,7 +19,7 @@ pub const BODY_KEY: &str = TextWindowKit::KIND_ID;
 //#region 🔖️Definition
 /// 🧱️ Stitched into the editor manifest by `crate::editor::deflate::create_deflate_editor`.
 pub async fn definition() -> WindowKindDefinition {
-    WindowKindDefinition { label: LocalizedLabel::native("Compression Header", "Komprimierungs-Header"), ..TextWindowKit::editable_window_kind() }
+    WindowKindDefinition { label: LocalizedLabel::native("Compression Header", "Komprimierungs-Header"), ..TextWindowKit::editable_window_kind().await }
 }
 //#endregion 🔖️Definition
 
@@ -69,7 +69,7 @@ pub async fn render(document: &DeflateSnapshot) -> UiNode {
         preset_dictionary_text(document.dict_id),
         document.payload.len(),
     );
-    TextWindowKit::render(&TextView { text, language: Some("deflate-summary".into()), read_only: false })
+    TextWindowKit::render(&TextView { text, language: Some("deflate-summary".into()), read_only: false }).await
 }
 //#endregion 🔖️Render
 

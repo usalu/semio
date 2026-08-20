@@ -25,7 +25,7 @@ pub struct Mp4Inference {
 
 impl protocol::Inference<Mp4Snapshot> for Mp4Inference {
     async fn infer(snapshot: &Mp4Snapshot) -> Self {
-        Self { duration: compute_mp4_duration(snapshot) }
+        Self { duration: compute_mp4_duration(snapshot).await }
     }
 }
 

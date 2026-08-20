@@ -379,35 +379,67 @@ pub trait HostAsyncRuntime: Send + Sync {
     /// 🌳️ Opens a new [`Scope`] under `owner`, optionally nested under `parent` (so its
     /// [`CancelToken`] is a [`CancelToken::child`] of the parent's — cancelling the parent
     /// transitively cancels this scope and everything spawned into it).
-    async fn open_scope(&self, owner: ScopeOwner, parent: Option<&ScopeHandle>) -> ScopeHandle;
+    ///
+    /// 🚫️async: R15 — declared as RPITIT with an explicit `Send` bound (not a literal `async fn`
+    /// signature) so a generic `R: HostAsyncRuntime` caller can box this future into a
+    /// `HostFuture<()>` (R1's sanctioned erased spawn channel). Every `impl` still provides this
+    /// with a literal `async fn` body; only the trait declaration's shape changed. See R15 in this
+    /// ticket's `📌️important.md` for the full ruling.
+    fn open_scope<'a>(
+        &'a self,
+        owner: ScopeOwner,
+        parent: Option<&'a ScopeHandle>,
+    ) -> impl Future<Output = ScopeHandle> + Send + 'a;
 
     /// ▶️ Spawns `fut` into `scope` — the ONLY way to start async work on this trait. There is no
     /// detached-spawn entry point: a [`ScopeHandle`] is mandatory, so every task is always
     /// findable, cancellable and drainable through its scope.
-    async fn spawn_scoped(&self, scope: &ScopeHandle, ctx: OperationContext, fut: HostFuture<()>);
+    ///
+    /// 🚫️async: R15, see [`HostAsyncRuntime::open_scope`]'s doc.
+    fn spawn_scoped<'a>(
+        &'a self,
+        scope: &'a ScopeHandle,
+        ctx: OperationContext,
+        fut: HostFuture<()>,
+    ) -> impl Future<Output = ()> + Send + 'a;
 
     /// 🧱️ Runs `work` off the async executor's own worker threads (a real thread pool in the tokio
     /// implementation), still accounted to `scope`.
-    async fn run_blocking(&self, scope: &ScopeHandle, ctx: OperationContext, work: Box<dyn FnOnce() + Send>);
+    ///
+    /// 🚫️async: R15, see [`HostAsyncRuntime::open_scope`]'s doc.
+    fn run_blocking<'a>(
+        &'a self,
+        scope: &'a ScopeHandle,
+        ctx: OperationContext,
+        work: Box<dyn FnOnce() + Send>,
+    ) -> impl Future<Output = ()> + Send + 'a;
 
     /// ⏰️ Resolves once the implementation's own clock reaches `deadline_ms`. This trait never reads
-    /// a clock itself; `deadline_ms` is caller-supplied, same as everywhere else in this crate. Plain
-    /// `async fn`, not `-> HostFuture<()>`: an `async fn` already returns a future, so boxing a
-    /// second one on top is exactly the double-future shape `dyn Future` erasure is banned from
-    /// trait-method return position to remove — `HostFuture<T>` survives in this trait ONLY as
-    /// `spawn_scoped`'s argument type, where the caller builds the box at a concrete type.
-    async fn sleep_until(&self, deadline_ms: u64);
+    /// a clock itself; `deadline_ms` is caller-supplied, same as everywhere else in this crate.
+    ///
+    /// 🚫️async: R15, see [`HostAsyncRuntime::open_scope`]'s doc. `HostFuture<T>` still survives in
+    /// this trait ONLY as `spawn_scoped`'s argument type, where the caller builds the box at a
+    /// concrete type — this RPITIT declaration is not that shape, it has no body to box.
+    fn sleep_until(&self, deadline_ms: u64) -> impl Future<Output = ()> + Send + '_;
 
     /// 🛑️ Cancels every task in `owner`'s scope (and its descendants), waits up to `grace_ms` for
     /// in-flight work to finish, then reports what happened via [`ScopeDrainReport`]. See
     /// [`HostAsyncRuntime::sleep_until`]'s doc for why this returns `ScopeDrainReport` directly
     /// rather than `HostFuture<ScopeDrainReport>`.
-    async fn cancel_scope(&self, owner: &ScopeOwner, grace_ms: u64) -> ScopeDrainReport;
+    ///
+    /// 🚫️async: R15, see [`HostAsyncRuntime::open_scope`]'s doc.
+    fn cancel_scope<'a>(
+        &'a self,
+        owner: &'a ScopeOwner,
+        grace_ms: u64,
+    ) -> impl Future<Output = ScopeDrainReport> + Send + 'a;
 
     /// 🕐️ The implementation's own notion of the current time, in milliseconds. The only place in
     /// the whole `HostAsyncRuntime` contract permitted to read a real clock — everything else on
     /// this trait takes `now_ms`/`deadline_ms` as a parameter instead.
-    async fn now_ms(&self) -> u64;
+    ///
+    /// 🚫️async: R15, see [`HostAsyncRuntime::open_scope`]'s doc.
+    fn now_ms(&self) -> impl Future<Output = u64> + Send + '_;
 }
 //#endregion 🎛️HostAsyncRuntime
 
@@ -483,6 +515,7 @@ pub mod testkit {
     use std::sync::Mutex;
     use std::task::{Context, Poll, Waker};
 
+    #[derive(Clone)]
     struct ManualScopeRecord {
         cancel: CancelToken,
         finished: u32,
@@ -604,28 +637,41 @@ pub mod testkit {
 
         async fn cancel_scope(&self, owner: &ScopeOwner, grace_ms: u64) -> ScopeDrainReport {
             let _ = grace_ms;
-            let mut scopes = self.0.scopes.lock().expect("ManualRuntime scopes mutex poisoned");
             let mut report = ScopeDrainReport::default();
-            let mut tasks = self.0.tasks.lock().expect("ManualRuntime tasks mutex poisoned");
+            // 🌉️ R15: `cancel_scope` is now `Send`-bound at the trait (an explicit RPITIT bound,
+            // not the implicit auto-trait rustc could not previously prove for a generic `R`), so a
+            // `std::sync::MutexGuard` — itself never `Send` — can no longer be held across the
+            // `.await`s below. Snapshot both maps into owned, lock-free data first, then await, then
+            // take the locks back out only for the plain-synchronous mutation at the end.
+            let snapshot: Vec<(u64, ManualScopeRecord)> = {
+                let scopes = self.0.scopes.lock().expect("ManualRuntime scopes mutex poisoned");
+                scopes.iter().map(|(id, record)| (*id, record.clone())).collect()
+            };
             let mut cancelled_scope_ids = Vec::new();
-            for (id, record) in scopes.iter() {
+            for (id, record) in &snapshot {
                 if scope_owner_matches(owner, record).await {
                     cancelled_scope_ids.push(*id);
                 }
             }
-            for id in &cancelled_scope_ids {
-                if let Some(record) = scopes.get(id) {
+            for (id, record) in &snapshot {
+                if cancelled_scope_ids.contains(id) {
                     record.cancel.cancel().await;
                 }
             }
-            let before = tasks.len();
-            tasks.retain(|task| !cancelled_scope_ids.contains(&task.scope_id));
-            let cancelled_task_count = (before - tasks.len()) as u32;
-            for id in &cancelled_scope_ids {
-                if let Some(record) = scopes.get_mut(id) {
-                    record.cancelled += cancelled_task_count;
-                    report.finished += record.finished;
-                    report.cancelled += record.cancelled;
+            let cancelled_task_count = {
+                let mut tasks = self.0.tasks.lock().expect("ManualRuntime tasks mutex poisoned");
+                let before = tasks.len();
+                tasks.retain(|task| !cancelled_scope_ids.contains(&task.scope_id));
+                (before - tasks.len()) as u32
+            };
+            {
+                let mut scopes = self.0.scopes.lock().expect("ManualRuntime scopes mutex poisoned");
+                for id in &cancelled_scope_ids {
+                    if let Some(record) = scopes.get_mut(id) {
+                        record.cancelled += cancelled_task_count;
+                        report.finished += record.finished;
+                        report.cancelled += record.cancelled;
+                    }
                 }
             }
             report

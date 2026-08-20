@@ -49,7 +49,7 @@ pub mod derived_composition {
             if native.is_empty() {
                 return Err(ComposeError { message: "BcfComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() });
             }
-            let analysis = BcfAnalyzer::analyze(&native);
+            let analysis = BcfAnalyzer::analyze(&native).await;
             let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError { message: "BcfComposerComposition: analysis produced no snapshot".into(), diagnostics: analysis.diagnostics.clone() })?;
             Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics })
         }
@@ -69,12 +69,12 @@ async fn as_element(node: &XmlNode) -> Option<(&str, &[XmlAttr], &[XmlNode])> {
 
 /// 🔎️ First direct child element named `name`.
 async fn find_child<'a>(children: &'a [XmlNode], name: &str) -> Option<&'a XmlNode> {
-    children.iter().find(|c| as_element(c).map(|(n, _, _)| n == name).unwrap_or(false))
+    children.iter().find(|c| semio_framework_plugin::resolve_ready(as_element(c)).map(|(n, _, _)| n == name).unwrap_or(false))
 }
 
 /// 🔎️ All direct child elements named `name`, in document order.
 async fn find_children<'a>(children: &'a [XmlNode], name: &str) -> Vec<&'a XmlNode> {
-    children.iter().filter(|c| as_element(c).map(|(n, _, _)| n == name).unwrap_or(false)).collect()
+    children.iter().filter(|c| semio_framework_plugin::resolve_ready(as_element(c)).map(|(n, _, _)| n == name).unwrap_or(false)).collect()
 }
 
 /// 🏷️ Attribute value by name.
@@ -85,7 +85,7 @@ async fn attr<'a>(attrs: &'a [XmlAttr], name: &str) -> Option<&'a str> {
 /// 🔤️ Concatenated text/CDATA content of an element's direct children (BCF's leaf elements are
 /// always simple text content, never mixed markup).
 async fn text_content(node: &XmlNode) -> String {
-    let Some((_, _, children)) = as_element(node) else { return String::new() };
+    let Some((_, _, children)) = as_element(node).await else { return String::new() };
     let mut out = String::new();
     for child in children {
         match child {
@@ -121,21 +121,21 @@ async fn xml_bytes(root: XmlNode) -> Vec<u8> {
 /// 🧩️ Parses `bcf.version`'s `<Version VersionId="...">` root attribute.
 async fn parse_bcf_version(data: &[u8]) -> Option<String> {
     let text = std::str::from_utf8(data).ok()?;
-    let doc = xml_document_from_text(text).ok()?;
+    let doc = xml_document_from_text(text).await.ok()?;
     let root = doc.root.as_ref()?;
-    let (name, attrs, _) = as_element(root)?;
+    let (name, attrs, _) = as_element(root).await?;
     if name != "Version" {
         return None;
     }
-    Some(attr(attrs, "VersionId").unwrap_or_default().to_string())
+    Some(attr(attrs, "VersionId").await.unwrap_or_default().to_string())
 }
 
 async fn bcf_version_bytes(version: &str) -> Vec<u8> {
     let mut children = Vec::new();
-    if let Some(n) = text_element("DetailedVersion", version) {
+    if let Some(n) = text_element("DetailedVersion", version).await {
         children.push(n);
     }
-    xml_bytes(XmlNode::Element { name: "Version".into(), attrs: vec![XmlAttr { name: "VersionId".into(), value: version.to_string() }], children })
+    xml_bytes(XmlNode::Element { name: "Version".into(), attrs: vec![XmlAttr { name: "VersionId".into(), value: version.to_string() }], children }).await
 }
 //#endregion 🔖️VersionXml
 
@@ -164,33 +164,33 @@ struct RawTopicMarkup {
 /// "...">`, and zero-or-more `<Viewpoints Guid="...">` reference entries).
 async fn parse_markup_bcf(data: &[u8]) -> Option<RawTopicMarkup> {
     let text = std::str::from_utf8(data).ok()?;
-    let doc = xml_document_from_text(text).ok()?;
+    let doc = xml_document_from_text(text).await.ok()?;
     let root = doc.root.as_ref()?;
-    let (root_name, _, root_children) = as_element(root)?;
+    let (root_name, _, root_children) = as_element(root).await?;
     if root_name != "Markup" {
         return None;
     }
-    let topic_node = find_child(root_children, "Topic")?;
-    let (_, topic_attrs, topic_children) = as_element(topic_node)?;
-    let guid = attr(topic_attrs, "Guid").unwrap_or_default().to_string();
-    let status = attr(topic_attrs, "TopicStatus").unwrap_or_default().to_string();
-    let title = find_child(topic_children, "Title").map(text_content).unwrap_or_default();
-    let priority = find_child(topic_children, "Priority").map(text_content).unwrap_or_default();
-    let description = find_child(topic_children, "Description").map(text_content).unwrap_or_default();
-    let creation_date = find_child(topic_children, "CreationDate").map(text_content).unwrap_or_default();
-    let creation_author = find_child(topic_children, "CreationAuthor").map(text_content).unwrap_or_default();
+    let topic_node = find_child(root_children, "Topic").await?;
+    let (_, topic_attrs, topic_children) = as_element(topic_node).await?;
+    let guid = attr(topic_attrs, "Guid").await.unwrap_or_default().to_string();
+    let status = attr(topic_attrs, "TopicStatus").await.unwrap_or_default().to_string();
+    let title = find_child(topic_children, "Title").await.map(text_content).unwrap_or_default();
+    let priority = find_child(topic_children, "Priority").await.map(text_content).unwrap_or_default();
+    let description = find_child(topic_children, "Description").await.map(text_content).unwrap_or_default();
+    let creation_date = find_child(topic_children, "CreationDate").await.map(text_content).unwrap_or_default();
+    let creation_author = find_child(topic_children, "CreationAuthor").await.map(text_content).unwrap_or_default();
     let labels: Vec<String> = find_children(topic_children, "Labels").into_iter().map(text_content).collect();
 
     let comments = find_children(root_children, "Comment")
         .into_iter()
         .map(|c| {
-            let (_, c_attrs, c_children) = as_element(c).unwrap_or(("Comment", &[], &[]));
-            let viewpoint_ref = find_child(c_children, "Viewpoint").and_then(as_element).and_then(|(_, vattrs, _)| attr(vattrs, "Guid")).map(|s| s.to_string());
+            let (_, c_attrs, c_children) = semio_framework_plugin::resolve_ready(as_element(c)).unwrap_or(("Comment", &[], &[]));
+            let viewpoint_ref = semio_framework_plugin::resolve_ready(find_child(c_children, "Viewpoint")).and_then(as_element).and_then(|(_, vattrs, _)| attr(vattrs, "Guid")).map(|s| s.to_string());
             BcfComment {
-                guid: attr(c_attrs, "Guid").unwrap_or_default().to_string(),
-                date: find_child(c_children, "Date").map(text_content).unwrap_or_default(),
-                author: find_child(c_children, "Author").map(text_content).unwrap_or_default(),
-                text: find_child(c_children, "Comment").map(text_content).unwrap_or_default(),
+                guid: semio_framework_plugin::resolve_ready(attr(c_attrs, "Guid")).unwrap_or_default().to_string(),
+                date: semio_framework_plugin::resolve_ready(find_child(c_children, "Date")).map(text_content).unwrap_or_default(),
+                author: semio_framework_plugin::resolve_ready(find_child(c_children, "Author")).map(text_content).unwrap_or_default(),
+                text: semio_framework_plugin::resolve_ready(find_child(c_children, "Comment")).map(text_content).unwrap_or_default(),
                 viewpoint_ref,
             }
         })
@@ -199,11 +199,11 @@ async fn parse_markup_bcf(data: &[u8]) -> Option<RawTopicMarkup> {
     let viewpoint_refs = find_children(root_children, "Viewpoints")
         .into_iter()
         .map(|v| {
-            let (_, v_attrs, v_children) = as_element(v).unwrap_or(("Viewpoints", &[], &[]));
+            let (_, v_attrs, v_children) = semio_framework_plugin::resolve_ready(as_element(v)).unwrap_or(("Viewpoints", &[], &[]));
             ViewpointRef {
-                guid: attr(v_attrs, "Guid").unwrap_or_default().to_string(),
-                viewpoint_file: find_child(v_children, "Viewpoint").map(text_content).filter(|s| !s.is_empty()),
-                snapshot_file: find_child(v_children, "Snapshot").map(text_content).filter(|s| !s.is_empty()),
+                guid: semio_framework_plugin::resolve_ready(attr(v_attrs, "Guid")).unwrap_or_default().to_string(),
+                viewpoint_file: semio_framework_plugin::resolve_ready(find_child(v_children, "Viewpoint")).map(text_content).filter(|s| !s.is_empty()),
+                snapshot_file: semio_framework_plugin::resolve_ready(find_child(v_children, "Snapshot")).map(text_content).filter(|s| !s.is_empty()),
             }
         })
         .collect();
@@ -216,24 +216,24 @@ async fn parse_markup_bcf(data: &[u8]) -> Option<RawTopicMarkup> {
 /// this artifact's canonical `<guid>.bcfv`/`<guid>.png` filenames (documented normal form).
 async fn markup_bcf_bytes(topic: &BcfTopic) -> Vec<u8> {
     let mut topic_children = Vec::new();
-    if let Some(n) = text_element("Title", &topic.title) {
+    if let Some(n) = text_element("Title", &topic.title).await {
         topic_children.push(n);
     }
-    if let Some(n) = text_element("Priority", &topic.priority) {
+    if let Some(n) = text_element("Priority", &topic.priority).await {
         topic_children.push(n);
     }
     for label in &topic.labels {
-        if let Some(n) = text_element("Labels", label) {
+        if let Some(n) = text_element("Labels", label).await {
             topic_children.push(n);
         }
     }
-    if let Some(n) = text_element("CreationDate", &topic.creation_date) {
+    if let Some(n) = text_element("CreationDate", &topic.creation_date).await {
         topic_children.push(n);
     }
-    if let Some(n) = text_element("CreationAuthor", &topic.creation_author) {
+    if let Some(n) = text_element("CreationAuthor", &topic.creation_author).await {
         topic_children.push(n);
     }
-    if let Some(n) = text_element("Description", &topic.description) {
+    if let Some(n) = text_element("Description", &topic.description).await {
         topic_children.push(n);
     }
 
@@ -241,13 +241,13 @@ async fn markup_bcf_bytes(topic: &BcfTopic) -> Vec<u8> {
 
     for comment in &topic.comments {
         let mut children = Vec::new();
-        if let Some(n) = text_element("Date", &comment.date) {
+        if let Some(n) = text_element("Date", &comment.date).await {
             children.push(n);
         }
-        if let Some(n) = text_element("Author", &comment.author) {
+        if let Some(n) = text_element("Author", &comment.author).await {
             children.push(n);
         }
-        if let Some(n) = text_element("Comment", &comment.text) {
+        if let Some(n) = text_element("Comment", &comment.text).await {
             children.push(n);
         }
         if let Some(vref) = &comment.viewpoint_ref {
@@ -265,14 +265,14 @@ async fn markup_bcf_bytes(topic: &BcfTopic) -> Vec<u8> {
         markup_children.push(XmlNode::Element { name: "Viewpoints".into(), attrs: vec![XmlAttr { name: "Guid".into(), value: vp.guid.clone() }], children });
     }
 
-    xml_bytes(XmlNode::Element { name: "Markup".into(), attrs: Vec::new(), children: markup_children })
+    xml_bytes(XmlNode::Element { name: "Markup".into(), attrs: Vec::new(), children: markup_children }).await
 }
 //#endregion 🔖️MarkupXml
 
 //#region 🔖️VisualizationInfoXml
 async fn parse_point(node: &XmlNode) -> BcfPoint3 {
-    let attrs = as_element(node).map(|(_, a, _)| a).unwrap_or(&[]);
-    BcfPoint3 { x: attr(attrs, "X").map(parse_f64).unwrap_or(0.0), y: attr(attrs, "Y").map(parse_f64).unwrap_or(0.0), z: attr(attrs, "Z").map(parse_f64).unwrap_or(0.0) }
+    let attrs = as_element(node).await.map(|(_, a, _)| a).unwrap_or(&[]);
+    BcfPoint3 { x: attr(attrs, "X").await.map(parse_f64).unwrap_or(0.0).await, y: attr(attrs, "Y").await.map(parse_f64).unwrap_or(0.0).await, z: attr(attrs, "Z").await.map(parse_f64).unwrap_or(0.0).await }
 }
 
 async fn point_element(name: &str, p: &BcfPoint3) -> XmlNode {
@@ -280,20 +280,20 @@ async fn point_element(name: &str, p: &BcfPoint3) -> XmlNode {
 }
 
 async fn parse_camera(children: &[XmlNode]) -> Option<BcfCamera> {
-    if let Some(persp) = find_child(children, "PerspectiveCamera") {
-        let (_, _, pc) = as_element(persp)?;
-        let view_point = find_child(pc, "CameraViewPoint").map(parse_point).unwrap_or_default();
-        let direction = find_child(pc, "CameraDirection").map(parse_point).unwrap_or_default();
-        let up_vector = find_child(pc, "CameraUpVector").map(parse_point).unwrap_or_default();
-        let field_of_view = find_child(pc, "FieldOfView").map(|n| parse_f64(&text_content(n))).unwrap_or(0.0);
+    if let Some(persp) = find_child(children, "PerspectiveCamera").await {
+        let (_, _, pc) = as_element(persp).await?;
+        let view_point = find_child(pc, "CameraViewPoint").await.map(parse_point).unwrap_or_default();
+        let direction = find_child(pc, "CameraDirection").await.map(parse_point).unwrap_or_default();
+        let up_vector = find_child(pc, "CameraUpVector").await.map(parse_point).unwrap_or_default();
+        let field_of_view = find_child(pc, "FieldOfView").await.map(|n| parse_f64(&text_content(n))).unwrap_or(0.0);
         return Some(BcfCamera::Perspective { view_point, direction, up_vector, field_of_view });
     }
-    if let Some(ortho) = find_child(children, "OrthogonalCamera") {
-        let (_, _, oc) = as_element(ortho)?;
-        let view_point = find_child(oc, "CameraViewPoint").map(parse_point).unwrap_or_default();
-        let direction = find_child(oc, "CameraDirection").map(parse_point).unwrap_or_default();
-        let up_vector = find_child(oc, "CameraUpVector").map(parse_point).unwrap_or_default();
-        let view_to_world_scale = find_child(oc, "ViewToWorldScale").map(|n| parse_f64(&text_content(n))).unwrap_or(0.0);
+    if let Some(ortho) = find_child(children, "OrthogonalCamera").await {
+        let (_, _, oc) = as_element(ortho).await?;
+        let view_point = find_child(oc, "CameraViewPoint").await.map(parse_point).unwrap_or_default();
+        let direction = find_child(oc, "CameraDirection").await.map(parse_point).unwrap_or_default();
+        let up_vector = find_child(oc, "CameraUpVector").await.map(parse_point).unwrap_or_default();
+        let view_to_world_scale = find_child(oc, "ViewToWorldScale").await.map(|n| parse_f64(&text_content(n))).unwrap_or(0.0);
         return Some(BcfCamera::Orthogonal { view_point, direction, up_vector, view_to_world_scale });
     }
     None
@@ -305,9 +305,9 @@ async fn camera_element(camera: &BcfCamera) -> XmlNode {
             name: "PerspectiveCamera".into(),
             attrs: Vec::new(),
             children: vec![
-                point_element("CameraViewPoint", view_point),
-                point_element("CameraDirection", direction),
-                point_element("CameraUpVector", up_vector),
+                point_element("CameraViewPoint", view_point).await,
+                point_element("CameraDirection", direction).await,
+                point_element("CameraUpVector", up_vector).await,
                 XmlNode::Element { name: "FieldOfView".into(), attrs: Vec::new(), children: vec![XmlNode::Text { text: field_of_view.to_string() }] },
             ],
         },
@@ -315,9 +315,9 @@ async fn camera_element(camera: &BcfCamera) -> XmlNode {
             name: "OrthogonalCamera".into(),
             attrs: Vec::new(),
             children: vec![
-                point_element("CameraViewPoint", view_point),
-                point_element("CameraDirection", direction),
-                point_element("CameraUpVector", up_vector),
+                point_element("CameraViewPoint", view_point).await,
+                point_element("CameraDirection", direction).await,
+                point_element("CameraUpVector", up_vector).await,
                 XmlNode::Element { name: "ViewToWorldScale".into(), attrs: Vec::new(), children: vec![XmlNode::Text { text: view_to_world_scale.to_string() }] },
             ],
         },
@@ -325,8 +325,8 @@ async fn camera_element(camera: &BcfCamera) -> XmlNode {
 }
 
 async fn parse_component_list(container: &XmlNode) -> Vec<String> {
-    let Some((_, _, children)) = as_element(container) else { return Vec::new() };
-    find_children(children, "Component").into_iter().filter_map(|c| as_element(c).and_then(|(_, a, _)| attr(a, "IfcGuid")).map(|s| s.to_string())).collect()
+    let Some((_, _, children)) = as_element(container).await else { return Vec::new() };
+    find_children(children, "Component").into_iter().filter_map(|c| semio_framework_plugin::resolve_ready(as_element(c)).and_then(|(_, a, _)| attr(a, "IfcGuid")).map(|s| s.to_string())).collect()
 }
 
 async fn component_list_elements(guids: &[String]) -> Vec<XmlNode> {
@@ -334,25 +334,25 @@ async fn component_list_elements(guids: &[String]) -> Vec<XmlNode> {
 }
 
 async fn parse_components(components_node: &XmlNode) -> BcfComponents {
-    let (_, _, children) = as_element(components_node).unwrap_or(("Components", &[], &[]));
-    let selection = find_child(children, "Selection").map(parse_component_list).unwrap_or_default();
-    let visibility = match find_child(children, "Visibility") {
+    let (_, _, children) = as_element(components_node).await.unwrap_or(("Components", &[], &[]));
+    let selection = find_child(children, "Selection").await.map(parse_component_list).unwrap_or_default();
+    let visibility = match find_child(children, "Visibility").await {
         Some(v) => {
-            let (_, vattrs, vchildren) = as_element(v).unwrap_or(("Visibility", &[], &[]));
-            let default_visibility = attr(vattrs, "DefaultVisibility").map(|s| s != "false").unwrap_or(true);
-            let exceptions = find_child(vchildren, "Exceptions").map(parse_component_list).unwrap_or_default();
+            let (_, vattrs, vchildren) = as_element(v).await.unwrap_or(("Visibility", &[], &[]));
+            let default_visibility = attr(vattrs, "DefaultVisibility").await.map(|s| s != "false").unwrap_or(true);
+            let exceptions = find_child(vchildren, "Exceptions").await.map(parse_component_list).unwrap_or_default();
             BcfVisibility { default_visibility, exceptions }
         }
         None => BcfVisibility { default_visibility: true, exceptions: Vec::new() },
     };
-    let coloring = match find_child(children, "Coloring") {
+    let coloring = match find_child(children, "Coloring").await {
         Some(c) => {
-            let (_, _, cchildren) = as_element(c).unwrap_or(("Coloring", &[], &[]));
+            let (_, _, cchildren) = as_element(c).await.unwrap_or(("Coloring", &[], &[]));
             find_children(cchildren, "Color")
                 .into_iter()
                 .map(|color_node| {
-                    let (_, cattrs, _) = as_element(color_node).unwrap_or(("Color", &[], &[]));
-                    BcfColoring { color: attr(cattrs, "Color").unwrap_or_default().to_string(), components: parse_component_list(color_node) }
+                    let (_, cattrs, _) = semio_framework_plugin::resolve_ready(as_element(color_node)).unwrap_or(("Color", &[], &[]));
+                    BcfColoring { color: semio_framework_plugin::resolve_ready(attr(cattrs, "Color")).unwrap_or_default().to_string(), components: parse_component_list(color_node) }
                 })
                 .collect()
         }
@@ -364,11 +364,11 @@ async fn parse_components(components_node: &XmlNode) -> BcfComponents {
 async fn components_element(components: &BcfComponents) -> XmlNode {
     let mut children = Vec::new();
     if !components.selection.is_empty() {
-        children.push(XmlNode::Element { name: "Selection".into(), attrs: Vec::new(), children: component_list_elements(&components.selection) });
+        children.push(XmlNode::Element { name: "Selection".into(), attrs: Vec::new(), children: component_list_elements(&components.selection).await });
     }
     let mut visibility_children = Vec::new();
     if !components.visibility.exceptions.is_empty() {
-        visibility_children.push(XmlNode::Element { name: "Exceptions".into(), attrs: Vec::new(), children: component_list_elements(&components.visibility.exceptions) });
+        visibility_children.push(XmlNode::Element { name: "Exceptions".into(), attrs: Vec::new(), children: component_list_elements(&components.visibility.exceptions).await });
     }
     children.push(XmlNode::Element { name: "Visibility".into(), attrs: vec![XmlAttr { name: "DefaultVisibility".into(), value: components.visibility.default_visibility.to_string() }], children: visibility_children });
     if !components.coloring.is_empty() {
@@ -383,15 +383,15 @@ async fn components_element(components: &BcfComponents) -> XmlNode {
 /// `<Viewpoints>` reference entry, so it isn't re-extracted here.
 async fn parse_visualization_info(data: &[u8]) -> Option<(Option<BcfCamera>, Option<BcfComponents>)> {
     let text = std::str::from_utf8(data).ok()?;
-    let doc = xml_document_from_text(text).ok()?;
+    let doc = xml_document_from_text(text).await.ok()?;
     let root = doc.root.as_ref()?;
-    let (name, _, children) = as_element(root)?;
+    let (name, _, children) = as_element(root).await?;
     if name != "VisualizationInfo" {
         return None;
     }
-    let components = find_child(children, "Components").map(parse_components);
+    let components = find_child(children, "Components").await.map(parse_components);
     let camera = parse_camera(children);
-    Some((camera, components))
+    Some((camera.await, components))
 }
 
 async fn visualization_info_bytes(vp: &BcfViewpoint) -> Vec<u8> {
@@ -402,18 +402,18 @@ async fn visualization_info_bytes(vp: &BcfViewpoint) -> Vec<u8> {
     if let Some(camera) = &vp.camera {
         children.push(camera_element(camera));
     }
-    xml_bytes(XmlNode::Element { name: "VisualizationInfo".into(), attrs: vec![XmlAttr { name: "Guid".into(), value: vp.guid.clone() }], children })
+    xml_bytes(XmlNode::Element { name: "VisualizationInfo".into(), attrs: vec![XmlAttr { name: "Guid".into(), value: vp.guid.clone() }], children }).await
 }
 //#endregion 🔖️VisualizationInfoXml
 
 //#region 🔖️Codec
 pub async fn encode_bcf(snap: &BcfSnapshot) -> Result<Vec<u8>, String> {
     let mut entries = Vec::new();
-    entries.push(ZipEntry { name: "bcf.version".into(), data: bcf_version_bytes(&snap.version), ..Default::default() });
+    entries.push(ZipEntry { name: "bcf.version".into(), data: bcf_version_bytes(&snap.version).await, ..Default::default() });
     for topic in &snap.topics {
-        entries.push(ZipEntry { name: format!("{}/markup.bcf", topic.guid), data: markup_bcf_bytes(topic), ..Default::default() });
+        entries.push(ZipEntry { name: format!("{}/markup.bcf", topic.guid), data: markup_bcf_bytes(topic).await, ..Default::default() });
         for vp in &topic.viewpoints {
-            entries.push(ZipEntry { name: format!("{}/{}.bcfv", topic.guid, vp.guid), data: visualization_info_bytes(vp), ..Default::default() });
+            entries.push(ZipEntry { name: format!("{}/{}.bcfv", topic.guid, vp.guid), data: visualization_info_bytes(vp).await, ..Default::default() });
             if let Some(bytes) = &vp.snapshot {
                 entries.push(ZipEntry { name: format!("{}/{}.png", topic.guid, vp.guid), data: bytes.clone(), ..Default::default() });
             }
@@ -423,16 +423,16 @@ pub async fn encode_bcf(snap: &BcfSnapshot) -> Result<Vec<u8>, String> {
         entries.push(ZipEntry { name: part.name.clone(), data: part.data.clone(), ..Default::default() });
     }
     let zip_snap = crate::artifacts::zip::ZipSnapshot { schema: crate::artifacts::zip::STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries, comment: String::new() };
-    crate::artifacts::zip::standards::v2_0::subsets::any::io::encode_zip(&zip_snap).map_err(|e| e.to_string())
+    crate::artifacts::zip::standards::v2_0::subsets::any::io::encode_zip(&zip_snap).await.map_err(|e| e.to_string())
 }
 
 pub async fn decode_bcf(data: &[u8]) -> Result<BcfSnapshot, String> {
-    let zip = crate::artifacts::zip::standards::v2_0::subsets::any::io::decode_zip(data).map_err(|e| e.to_string())?;
+    let zip = crate::artifacts::zip::standards::v2_0::subsets::any::io::decode_zip(data).await.map_err(|e| e.to_string())?;
 
     let mut version = String::new();
     let mut consumed: std::collections::HashSet<String> = std::collections::HashSet::new();
     if let Some(e) = zip.entries.iter().find(|e| e.name.eq_ignore_ascii_case("bcf.version")) {
-        version = parse_bcf_version(&e.data).unwrap_or_default();
+        version = parse_bcf_version(&e.data).await.unwrap_or_default();
         consumed.insert(e.name.clone());
     }
 
@@ -447,7 +447,7 @@ pub async fn decode_bcf(data: &[u8]) -> Result<BcfSnapshot, String> {
     for (folder, folder_entries) in &folders {
         let markup_name = format!("{folder}/markup.bcf");
         let Some(markup_entry) = folder_entries.iter().find(|e| e.name.eq_ignore_ascii_case(&markup_name)) else { continue };
-        let Some(raw) = parse_markup_bcf(&markup_entry.data) else { continue };
+        let Some(raw) = parse_markup_bcf(&markup_entry.data).await else { continue };
         consumed.insert(markup_entry.name.clone());
 
         let mut viewpoints = Vec::new();
@@ -457,7 +457,7 @@ pub async fn decode_bcf(data: &[u8]) -> Result<BcfSnapshot, String> {
             if let Some(vp_file) = &vref.viewpoint_file {
                 let full = format!("{folder}/{vp_file}");
                 if let Some(vp_entry) = folder_entries.iter().find(|e| e.name.eq_ignore_ascii_case(&full)) {
-                    if let Some((c, comp)) = parse_visualization_info(&vp_entry.data) {
+                    if let Some((c, comp)) = parse_visualization_info(&vp_entry.data).await {
                         camera = c;
                         components = comp;
                     }
@@ -1169,7 +1169,8 @@ pub mod io_registry {
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 
-    pub async fn entries() -> &'static [ComposerEntry] {
+    // 🚫️async: E1 pure table accessor consumed by OnceLock::get_or_init's sync closure — see R9
+    pub fn entries() -> &'static [ComposerEntry] {
         ENTRIES.get_or_init(|| vec![composer_entry_of::<BcfRawAnyComposer>()]).as_slice()
     }
 }

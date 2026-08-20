@@ -82,11 +82,11 @@ impl store::InferredField<SemioTableSnapshot> for ColumnMoments {
     }
 
     async fn compute(snapshot: &SemioTableSnapshot, key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {
-        let values = column_values(snapshot, key);
+        let values = column_values(snapshot, key).await;
         let count = values.len() as u32;
-        let mean = statistics_internals::mean(&values).unwrap_or(0.0);
-        let variance = statistics_internals::variance(&values).unwrap_or(0.0);
-        let std_dev = statistics_internals::std_dev(&values).unwrap_or(0.0);
+        let mean = statistics_internals::mean(&values).await.unwrap_or(0.0);
+        let variance = statistics_internals::variance(&values).await.unwrap_or(0.0);
+        let std_dev = statistics_internals::std_dev(&values).await.unwrap_or(0.0);
         SemioColumnMoments { count, mean, variance, std_dev }
     }
 }

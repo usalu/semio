@@ -31,13 +31,13 @@ pub enum PdfMutation {
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`.
 pub async fn apply_pdf_mutation(snapshot: &mut PdfSnapshot, mutation: &PdfMutation) -> protocol::MutationOutcome<PdfDiff> {
-    let outcome = <PdfMutation as Mutation<PdfSnapshot>>::diff(mutation, snapshot);
-    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
+    let outcome = <PdfMutation as Mutation<PdfSnapshot>>::diff(mutation, snapshot).await;
+    match protocol::MutationDiff::apply(outcome.diff().await, snapshot).await {
         Ok(next) => {
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).await.absorb_messages(outcome.messages().await.to_vec()).await,
     }
 }
 //#endregion 🔖️Apply
@@ -49,8 +49,8 @@ impl Mutation<PdfSnapshot> for PdfMutation {
     async fn diff(&self, base: &PdfSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             PdfMutation::NoMutation => PdfDiff::default(),
-            PdfMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
-        })
+            PdfMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot).await,
+        }).await
     }
 
     async fn inverse(&self, base: &PdfSnapshot) -> Vec<Self> {
@@ -75,26 +75,26 @@ impl protocol::OpText for PdfMutation {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
-                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
+                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline }).await?;
+                return <Self as dsl::DslVariants>::from_named_record(keyword, &record).await;
             }
         }
         Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
     }
     async fn print_op(&self) -> String {
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
+        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self).await;
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
+        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline).await
     }
 }
 
 impl protocol::OpBinary for PdfMutation {
     async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        dsl::variants_binary::encode_op(self)
+        dsl::variants_binary::encode_op(self).await
     }
     async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        dsl::variants_binary::decode_op(bytes)
+        dsl::variants_binary::decode_op(bytes).await
     }
 }
 //#endregion OpCodecs

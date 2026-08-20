@@ -4,5 +4,5 @@ use protocol::Mutation;
 
 /// ↩️ Inverse of set-snapshot.
 pub async fn inverse(base: &DxfSnapshot, mutation: &DxfMutation) -> Vec<DxfMutation> {
-    <DxfMutation as Mutation<DxfSnapshot>>::inverse(mutation, base)
+    <DxfMutation as Mutation<DxfSnapshot>>::inverse(mutation, base).await
 }

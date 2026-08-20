@@ -9,7 +9,7 @@ pub async fn label() -> LocalizedLabel {
 pub const ICON: &str = "file";
 pub const PRIMARY_TEXT: &str = include_str!("🖼️assets/🗣️example.dsl.semio");
 pub async fn source() -> ExampleSource {
-    ExampleSource::new(ID, label(), PRIMARY_TEXT, ICON)
+    ExampleSource::new(ID, label(), PRIMARY_TEXT, ICON).await
 }
 
 /// 🎒️ P2-P3: genuine `encode_pack` bytes of the demo snapshot (SEMIO binary envelope + the

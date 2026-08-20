@@ -51,18 +51,18 @@ pub async fn artifact_kind() -> ArtifactKindSpec {
 /// repo to populate this field, see its own builder doc).
 /// 🧩️ Binds this executable root to its sole schema-owned definition.
 pub async fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
-    crate::registry::runtime_assembly("json", definition, declaration)
+    crate::registry::runtime_assembly("json", definition, declaration).await
 }
 
 pub async fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
-    let formats = crate::registry::format_descriptors_for("json")?;
+    let formats = crate::registry::format_descriptors_for("json").await?;
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
-        .schema(crate::artifacts::json::schema::json_artifact_schema_descriptor())
-        .formats(formats)
-        .inferences([crate::artifacts::json::standards::v_rfc8259::subsets::any::schema::inferences::json_artifact_inference_descriptor()])
-        .composers(crate::artifacts::json::standards::v_rfc8259::subsets::any::io::io_registry::entries())
-        .subset_validators(pilot_subset_validators())
-        .languages(pilot_languages())
+        .await.schema(crate::artifacts::json::schema::json_artifact_schema_descriptor().await)
+        .await.formats(formats)
+        .await.inferences([crate::artifacts::json::standards::v_rfc8259::subsets::any::schema::inferences::json_artifact_inference_descriptor()])
+        .await.composers(crate::artifacts::json::standards::v_rfc8259::subsets::any::io::io_registry::entries())
+        .await.subset_validators(pilot_subset_validators().await)
+        .await.languages(pilot_languages())
         .document_codec_bare::<JsonSnapshot, JsonMutation>(STDIO_JSON_DOCUMENT_SCHEMA)
         .try_build()
 }
@@ -148,7 +148,8 @@ pub mod io_registry {
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 
-    pub async fn entries() -> &'static [&'static ComposerEntry] {
+    // 🚫️async: E1 pure table accessor consumed by OnceLock::get_or_init's sync closure — see R9
+    pub fn entries() -> &'static [&'static ComposerEntry] {
         ENTRIES.get_or_init(|| v_rfc8259::entries().iter().collect()).as_slice()
     }
 

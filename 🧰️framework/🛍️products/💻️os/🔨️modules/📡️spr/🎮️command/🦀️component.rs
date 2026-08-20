@@ -783,10 +783,10 @@ mod tests {
     //#region 🧪️ApplyErrorContract
     #[semio_framework_async_macros::async_test]
     async fn mutation_apply_error_json_round_trip_matches_typescript_parity_vector() {
-        let error = MutationApplyError::new("mutation.apply.invalid-index", "index 4 exceeds length 2").await.at(["slides", "4"]);
+        let error = MutationApplyError::new("mutation.apply.invalid-index", "index 4 exceeds length 2").await.at(["slides", "4"]).await;
         let json = serde_json::to_string(&error).expect("serialize apply error");
         assert_eq!(json, r#"{"code":"mutation.apply.invalid-index","message":"index 4 exceeds length 2","target":["slides","4"]}"#);
-        assert_eq!(serde_json::from_str::<MutationApplyError>(&json).expect("deserialize apply error"), error.await);
+        assert_eq!(serde_json::from_str::<MutationApplyError>(&json).expect("deserialize apply error"), error);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -842,7 +842,8 @@ mod tests {
         value: i64,
     }
     impl Identified<String> for Item {
-        async fn id(&self) -> &String {
+        // 🚫️async: E1 pure accessor — Identified::id must stay sync, see the trait's own tag.
+        fn id(&self) -> &String {
             &self.id
         }
     }
@@ -890,7 +891,7 @@ mod tests {
         const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "add", entity: "counter", kind: "quad-add", record: "QuadAdded" };
         async fn plan(&self, base: &i64, planner: &mut Planner<i64, AddOp>) -> Result<(), PlanError> {
             DoubleAdd { delta: self.delta }.plan(base, planner).await?;
-            let mid = *planner.base();
+            let mid = *planner.base().await;
             DoubleAdd { delta: self.delta }.plan(&mid, planner).await?;
             Ok(())
         }
@@ -935,30 +936,30 @@ mod tests {
     async fn operation_diff_apply_matches_backwards_inverse() {
         let base: i64 = 10;
         let op = AddOp { delta: 5 };
-        let forward = op.diff(&base).await.diff().apply(&base).expect("valid forward diff");
+        let forward = op.diff(&base).await.diff().await.apply(&base).await.expect("valid forward diff");
         assert_eq!(forward, 15);
-        let [undo] = <[AddOp; 1]>::try_from(op.inverse(&base)).unwrap();
-        let restored = undo.diff(&forward).await.diff().apply(&forward).expect("valid inverse diff");
+        let [undo] = <[AddOp; 1]>::try_from(op.inverse(&base).await).unwrap();
+        let restored = undo.diff(&forward).await.diff().await.apply(&forward).await.expect("valid inverse diff");
         assert_eq!(restored, base);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn operation_diff_absorb_accumulates() {
         let mut a = AddDiff { delta: 3 };
-        a.absorb(AddDiff { delta: 4 });
+        a.absorb(AddDiff { delta: 4 }).await;
         assert_eq!(a.delta, 7);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn operation_defaults_are_stable() {
         let op = AddOp { delta: 1 };
-        assert_eq!(op.mutation_id(), None);
+        assert_eq!(op.mutation_id().await, None);
         assert!(op.dependencies().await.is_empty());
-        assert_eq!(op.base_version(), None);
-        assert_eq!(op.author_id(), None);
-        assert_eq!(op.timestamp(), None);
-        assert_eq!(op.undo_policy(), crate::os_spr::UndoPolicy::ExactBaseOnly);
-        assert_eq!(op.state_class(), crate::os_spr::StateClass::Artifact);
+        assert_eq!(op.base_version().await, None);
+        assert_eq!(op.author_id().await, None);
+        assert_eq!(op.timestamp().await, None);
+        assert_eq!(op.undo_policy().await, crate::os_spr::UndoPolicy::ExactBaseOnly);
+        assert_eq!(op.state_class().await, crate::os_spr::StateClass::Artifact);
         assert!(op.foreign_steps(&0).await.is_empty());
     }
     //#endregion 🧪️MutationLaws
@@ -967,8 +968,8 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn op_text_round_trip() {
         let op = AddOp { delta: -7 };
-        let line = op.print_op();
-        assert!(!line.await.contains('\n'));
+        let line = op.print_op().await;
+        assert!(!line.contains('\n'));
         let parsed = AddOp::parse_op(&line).await.expect("round trip parse");
         assert_eq!(parsed, op);
     }
@@ -1045,16 +1046,16 @@ mod tests {
     async fn apply_add_remove_move_patch() {
         let mut items = vec![Item { id: "a".into(), value: 1 }, Item { id: "b".into(), value: 2 }];
 
-        apply_collection_mutation(&mut items, &CollectionMutation::Add { index: 1, item: Item { id: "c".into(), value: 3 } });
+        apply_collection_mutation(&mut items, &CollectionMutation::Add { index: 1, item: Item { id: "c".into(), value: 3 } }).await;
         assert_eq!(items.iter().map(|i| i.id.clone()).collect::<Vec<_>>(), vec!["a", "c", "b"]);
 
-        apply_collection_mutation(&mut items, &CollectionMutation::Move { id: "c".into(), to_index: 2 });
+        apply_collection_mutation(&mut items, &CollectionMutation::Move { id: "c".into(), to_index: 2 }).await;
         assert_eq!(items.iter().map(|i| i.id.clone()).collect::<Vec<_>>(), vec!["a", "b", "c"]);
 
-        apply_collection_mutation::<String, Item, i64>(&mut items, &CollectionMutation::Patch { id: "b".into(), patch: 10 });
+        apply_collection_mutation::<String, Item, i64>(&mut items, &CollectionMutation::Patch { id: "b".into(), patch: 10 }).await;
         assert_eq!(items.iter().find(|i| i.id == "b").unwrap().value, 12);
 
-        apply_collection_mutation(&mut items, &CollectionMutation::Remove { id: "a".into() });
+        apply_collection_mutation(&mut items, &CollectionMutation::Remove { id: "a".into() }).await;
         assert_eq!(items.iter().map(|i| i.id.clone()).collect::<Vec<_>>(), vec!["b", "c"]);
     }
 
@@ -1064,30 +1065,30 @@ mod tests {
 
         let add = CollectionMutation::Add { index: 2, item: Item { id: "c".into(), value: 3 } };
         let mut items = original.clone();
-        apply_collection_mutation(&mut items, &add);
+        apply_collection_mutation(&mut items, &add).await;
         let inverse = inverse_collection_mutation(&original, &add);
-        apply_collection_mutation(&mut items, &inverse);
+        apply_collection_mutation(&mut items, &inverse.await).await;
         assert_eq!(items, original);
 
         let mov = CollectionMutation::<String, Item, i64>::Move { id: "b".into(), to_index: 0 };
         let mut items = original.clone();
-        apply_collection_mutation(&mut items, &mov);
+        apply_collection_mutation(&mut items, &mov).await;
         let inverse = inverse_collection_mutation(&original, &mov);
-        apply_collection_mutation(&mut items, &inverse);
+        apply_collection_mutation(&mut items, &inverse.await).await;
         assert_eq!(items, original);
 
         let patch = CollectionMutation::Patch { id: "a".into(), patch: 9i64 };
         let mut items = original.clone();
-        apply_collection_mutation(&mut items, &patch);
+        apply_collection_mutation(&mut items, &patch).await;
         let inverse = inverse_collection_mutation(&original, &patch);
-        apply_collection_mutation(&mut items, &inverse);
+        apply_collection_mutation(&mut items, &inverse.await).await;
         assert_eq!(items, original);
 
         let remove = CollectionMutation::<String, Item, i64>::Remove { id: "a".into() };
         let mut items = original.clone();
-        apply_collection_mutation(&mut items, &remove);
+        apply_collection_mutation(&mut items, &remove).await;
         let inverse = inverse_collection_mutation(&original, &remove);
-        apply_collection_mutation(&mut items, &inverse);
+        apply_collection_mutation(&mut items, &inverse.await).await;
         assert_eq!(items, original);
     }
 
@@ -1096,9 +1097,9 @@ mod tests {
         let items = vec![Item { id: "a".into(), value: 1 }, Item { id: "b".into(), value: 2 }];
 
         let add = CollectionMutation::<String, Item, i64>::Add { index: 0, item: Item { id: "c".into(), value: 3 } };
-        let diff = collection_diff_from_mutation(&items, &add);
-        assert_eq!(diff.await.added, vec![Item { id: "c".into(), value: 3 }]);
-        assert!(diff.await.removed.is_empty() && diff.await.modified.is_empty());
+        let diff = collection_diff_from_mutation(&items, &add).await;
+        assert_eq!(diff.added, vec![Item { id: "c".into(), value: 3 }]);
+        assert!(diff.removed.is_empty() && diff.modified.is_empty());
 
         let remove = CollectionMutation::<String, Item, i64>::Remove { id: "a".into() };
         let diff = collection_diff_from_mutation(&items, &remove);
@@ -1109,9 +1110,9 @@ mod tests {
         assert_eq!(diff.await.modified, vec![ItemPatch { id: "b".into(), patch: 5i64 }]);
 
         let mov = CollectionMutation::<String, Item, i64>::Move { id: "a".into(), to_index: 1 };
-        let diff = collection_diff_from_mutation(&items, &mov);
-        assert_eq!(diff.await.removed, vec!["a".to_string()]);
-        assert_eq!(diff.await.added, vec![Item { id: "a".into(), value: 1 }]);
+        let diff = collection_diff_from_mutation(&items, &mov).await;
+        assert_eq!(diff.removed, vec!["a".to_string()]);
+        assert_eq!(diff.added, vec![Item { id: "a".into(), value: 1 }]);
     }
     //#endregion 🧪️CollectionLaws
 
@@ -1128,9 +1129,9 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn named_triple_diff_is_empty_holds() {
         let empty: NamedTripleDiff<String, Item, i64> = NamedTripleDiff::default();
-        assert!(empty.is_empty());
+        assert!(empty.is_empty().await);
         let nonempty = NamedTripleDiff::<String, Item, i64> { added: vec![Item { id: "a".into(), value: 1 }], ..Default::default() };
-        assert!(!nonempty.is_empty());
+        assert!(!nonempty.is_empty().await);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -1160,9 +1161,9 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn indexed_triple_diff_is_empty_holds() {
         let empty: IndexedTripleDiff<Item, i64> = IndexedTripleDiff::default();
-        assert!(empty.is_empty());
+        assert!(empty.is_empty().await);
         let nonempty = IndexedTripleDiff::<Item, i64> { removed: vec![0], ..Default::default() };
-        assert!(!nonempty.is_empty());
+        assert!(!nonempty.is_empty().await);
     }
     //#endregion 🧪️DiffKitLaws
 
@@ -1195,13 +1196,13 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn mutation_descriptor_with_semantics_attaches_without_changing_fingerprint() {
         let semantics = SemanticDescriptor { verb: "rename", entity: "widget", kind: "rename-widget", record: "RenamedWidget" };
-        let base = MutationDescriptor::new(crate::os_spr::ids::SchemaId("demo.rename-widget".into()), crate::os_spr::ids::SchemaVersion(1), crate::os_spr::StateClass::Artifact);
-        let fingerprint_before = base.await.fingerprint;
-        let with_semantics = base.await.with_semantics(&semantics);
-        assert_eq!(with_semantics.await.fingerprint, fingerprint_before, "attaching semantics must not change the fingerprint");
-        assert_eq!(with_semantics.await.verb, Some("rename"));
-        assert_eq!(with_semantics.await.entity, Some("widget"));
-        assert_eq!(with_semantics.await.record, Some("RenamedWidget"));
+        let base = MutationDescriptor::new(crate::os_spr::ids::SchemaId("demo.rename-widget".into()), crate::os_spr::ids::SchemaVersion(1), crate::os_spr::StateClass::Artifact).await;
+        let fingerprint_before = base.fingerprint;
+        let with_semantics = base.with_semantics(&semantics).await;
+        assert_eq!(with_semantics.fingerprint, fingerprint_before, "attaching semantics must not change the fingerprint");
+        assert_eq!(with_semantics.verb, Some("rename"));
+        assert_eq!(with_semantics.entity, Some("widget"));
+        assert_eq!(with_semantics.record, Some("RenamedWidget"));
     }
     //#endregion 🧪️SemanticsLaws
 
@@ -1263,22 +1264,22 @@ mod tests {
         let base = MiniDoc { name: "a".into() };
         let mutation = MiniMutation::RenameMini(rename_mini::RenameMini { new_name: "b".into() });
 
-        let after = mutation.diff(&base).await.diff().apply(&base).expect("valid forward diff");
+        let after = mutation.diff(&base).await.diff().await.apply(&base).await.expect("valid forward diff");
         assert_eq!(after.name, "b");
 
-        let inverse = mutation.inverse(&base);
-        assert_eq!(inverse.await.len(), 1, "inverse of a single rename is a single rename back");
+        let inverse = mutation.inverse(&base).await;
+        assert_eq!(inverse.len(), 1, "inverse of a single rename is a single rename back");
         let MiniMutation::RenameMini(undo) = &inverse[0];
-        assert_eq!(undo.diff(&after).await.diff().apply(&after), Ok(base), "inverse computed from base must restore base");
+        assert_eq!(undo.diff(&after).await.diff().await.apply(&after).await, Ok(base), "inverse computed from base must restore base");
 
         assert_eq!(MiniMutation::kinds().await.len(), 1);
-        assert_eq!(MiniMutation::kinds()[0].kind, "rename-mini");
-        assert_eq!(mutation.semantics().kind, "rename-mini");
-        assert_eq!(mutation.semantics().record, "RenamedMini");
-        assert_eq!(mutation.label(), "Rename mini to \"b\"");
+        assert_eq!(MiniMutation::kinds().await[0].kind, "rename-mini");
+        assert_eq!(mutation.semantics().await.kind, "rename-mini");
+        assert_eq!(mutation.semantics().await.record, "RenamedMini");
+        assert_eq!(mutation.label().await, "Rename mini to \"b\"");
         assert!(mutation.target().await.is_empty(), "MutationKind::target defaults to empty (whole-artifact scope)");
 
-        register_mini_mutation_descriptors();
+        register_mini_mutation_descriptors().await;
         let descriptor = mutation_descriptor("mini.doc#rename-mini").await.expect("derive-generated register fn must register the descriptor");
         assert_eq!(descriptor.verb, Some("rename"));
         assert_eq!(descriptor.entity, Some("mini"));
@@ -1315,9 +1316,9 @@ mod tests {
         let upcaster = ClampToFloor;
         let version = crate::os_spr::ids::SchemaVersion(1);
         for start in [0i64, 3, 7, 10, 40] {
-            let once = upcaster.upcast(version, start);
-            let twice = upcaster.upcast(version, once.await);
-            assert_eq!(once, twice);
+            let once = upcaster.upcast(version, start).await;
+            let twice = upcaster.upcast(version, once);
+            assert_eq!(once, twice.await);
         }
     }
     //#endregion 🧪️UpcastLaws
@@ -1367,33 +1368,33 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
         let base: i64 = 42;
-        assert_eq!(AddInference::infer(&base), AddInference::infer(&base));
-        let json_a = serde_json::to_string(&AddInference::infer(&base)).unwrap();
-        let json_b = serde_json::to_string(&AddInference::infer(&42)).unwrap();
+        assert_eq!(AddInference::infer(&base).await, AddInference::infer(&base).await);
+        let json_a = serde_json::to_string(&AddInference::infer(&base).await).unwrap();
+        let json_b = serde_json::to_string(&AddInference::infer(&42).await).unwrap();
         assert_eq!(json_a, json_b, "equal snapshots must infer byte-equal canonical serializations");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
-        assert_eq!(AddInference::infer(&i64::default()), AddInference::default());
+        assert_eq!(AddInference::infer(&i64::default()).await, AddInference::default());
     }
 
     #[semio_framework_async_macros::async_test]
     async fn inference_diff_consistency_law() {
         let base: i64 = 10;
         let noop = AddDiff { delta: 0 };
-        assert!(!noop.touches().await.intersects_any(AddInference::fields()[0].reads));
-        assert_eq!(AddInference::infer(&noop.apply(&base).await.expect("valid no-op diff")), AddInference::infer(&base));
+        assert!(!noop.touches().await.intersects_any(AddInference::fields().await[0].reads));
+        assert_eq!(AddInference::infer(&noop.apply(&base).await.expect("valid no-op diff")).await, AddInference::infer(&base).await);
 
         let real = AddDiff { delta: 1 };
-        assert!(real.touches().await.intersects_any(AddInference::fields()[0].reads));
-        assert_ne!(AddInference::infer(&real.apply(&base).await.expect("valid real diff")), AddInference::infer(&base));
+        assert!(real.touches().await.intersects_any(AddInference::fields().await[0].reads));
+        assert_ne!(AddInference::infer(&real.apply(&base).await.expect("valid real diff")).await, AddInference::infer(&base).await);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn inference_spec_carries_schema_identity() {
-        assert_eq!(AddInference::inference_schema_id(), "s.wave3.synthetic.inference");
-        assert_eq!(AddInference::schema_version(), 1);
+        assert_eq!(AddInference::inference_schema_id().await, "s.wave3.synthetic.inference");
+        assert_eq!(AddInference::schema_version().await, 1);
         assert_eq!(AddInference::fields().await.len(), 2);
     }
 
@@ -1449,29 +1450,29 @@ mod tests {
     async fn fold_plan_diff_equals_sequential_apply() {
         let base: i64 = 10;
         let kind = DoubleAdd { delta: 3 };
-        let diff = fold_plan_diff(&kind, &base);
-        assert_eq!(diff.await.diff().apply(&base), Ok(16));
+        let diff = fold_plan_diff(&kind, &base).await;
+        assert_eq!(diff.diff().await.apply(&base).await, Ok(16));
 
         let steps = plan_of(&kind, &base).await.expect("plan succeeds");
         let mut sequential = base;
         for step in &steps {
             if let PlanStep::Local(op) = step {
-                sequential = op.diff(&sequential).await.diff().apply(&sequential).expect("valid planned diff");
+                sequential = op.diff(&sequential).await.diff().await.apply(&sequential).await.expect("valid planned diff");
             }
         }
-        assert_eq!(diff.await.diff().apply(&base), Ok(sequential), "fold_plan_diff must equal sequential application of the plan's local steps");
+        assert_eq!(diff.diff().await.apply(&base).await, Ok(sequential), "fold_plan_diff must equal sequential application of the plan's local steps");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn fold_plan_inverse_restores_base() {
         let base: i64 = 10;
         let kind = DoubleAdd { delta: 3 };
-        let forward = fold_plan_diff(&kind, &base).await.diff().apply(&base).expect("valid folded diff");
+        let forward = fold_plan_diff(&kind, &base).await.diff().await.apply(&base).await.expect("valid folded diff");
         assert_ne!(forward, base);
         let inverses = fold_plan_inverse(&kind, &base);
         let mut restored = forward;
-        for op in &inverses {
-            restored = op.diff(&restored).diff().apply(&restored).expect("valid inverse diff");
+        for op in &inverses.await {
+            restored = op.diff(&restored).await.diff().await.apply(&restored).await.expect("valid inverse diff");
         }
         assert_eq!(restored, base, "fold_plan_inverse applied after the composite must restore base");
     }
@@ -1480,8 +1481,8 @@ mod tests {
     async fn composite_of_composite_nests_and_folds_identically_to_flattened_plan() {
         let base: i64 = 0;
         let quad = QuadAdd { delta: 2 };
-        let diff = fold_plan_diff(&quad, &base);
-        assert_eq!(diff.await.diff().apply(&base), Ok(8), "two nested DoubleAdd{{delta:2}} embeds must fold to +8");
+        let diff = fold_plan_diff(&quad, &base).await;
+        assert_eq!(diff.diff().await.apply(&base).await, Ok(8), "two nested DoubleAdd{{delta:2}} embeds must fold to +8");
 
         let steps = plan_of(&quad, &base).await.expect("plan succeeds");
         let local_deltas: Vec<i64> = steps
@@ -1494,9 +1495,9 @@ mod tests {
         assert_eq!(local_deltas, vec![2, 2, 2, 2], "nesting must flatten to four local steps, identical to the un-nested plan");
 
         let inverses = fold_plan_inverse(&quad, &base);
-        let mut restored = diff.await.diff().apply(&base).expect("valid folded diff");
-        for op in &inverses {
-            restored = op.diff(&restored).diff().apply(&restored).expect("valid inverse diff");
+        let mut restored = diff.diff().await.apply(&base).await.expect("valid folded diff");
+        for op in &inverses.await {
+            restored = op.diff(&restored).await.diff().await.apply(&restored).await.expect("valid inverse diff");
         }
         assert_eq!(restored, base);
     }
@@ -1522,11 +1523,11 @@ mod tests {
     async fn foreign_steps_are_excluded_from_fold_plan_diff() {
         let base: i64 = 5;
         let kind = AddThenNotifyForeign { delta: 4, foreign_count: 2 };
-        let diff = fold_plan_diff(&kind, &base);
-        assert_eq!(diff.await.diff().apply(&base), Ok(9), "only the local AddOp{{delta:4}} may contribute to the folded diff");
+        let diff = fold_plan_diff(&kind, &base).await;
+        assert_eq!(diff.diff().await.apply(&base).await, Ok(9), "only the local AddOp{{delta:4}} may contribute to the folded diff");
 
-        let foreign = plan_foreign_steps(&kind, &base);
-        assert_eq!(foreign.await.len(), 2);
+        let foreign = plan_foreign_steps(&kind, &base).await;
+        assert_eq!(foreign.len(), 2);
         assert_eq!(foreign[0].target.artifact_id, "artifact-0");
         assert_eq!(foreign[1].target.artifact_id, "artifact-1");
     }
@@ -1556,12 +1557,12 @@ mod tests {
     async fn derive_composite_mutation_wires_delegating_mutation_kind() {
         let base: i64 = 1;
         let kind = DerivedDoubleAdd { delta: 5 };
-        let diff = MutationKind::<i64, AddOp>::diff(&kind, &base);
-        assert_eq!(diff.await.diff().apply(&base), Ok(11));
+        let diff = MutationKind::<i64, AddOp>::diff(&kind, &base).await;
+        assert_eq!(diff.diff().await.apply(&base).await, Ok(11));
         let inverse = MutationKind::<i64, AddOp>::inverse(&kind, &base);
-        let mut restored = diff.await.diff().apply(&base).expect("valid folded diff");
-        for op in &inverse {
-            restored = op.diff(&restored).diff().apply(&restored).expect("valid inverse diff");
+        let mut restored = diff.diff().await.apply(&base).await.expect("valid folded diff");
+        for op in &inverse.await {
+            restored = op.diff(&restored).await.diff().await.apply(&restored).await.expect("valid inverse diff");
         }
         assert_eq!(restored, base);
         assert_eq!(<DerivedDoubleAdd as MutationKind<i64, AddOp>>::SEMANTICS.kind, "derived-double-add");

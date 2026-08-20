@@ -36,7 +36,7 @@ impl TiffArtifact {
         Self { schema: snapshot.schema, byte_order: snapshot.byte_order, ifds: snapshot.ifds, pixels: snapshot.pixels }
     }
     pub async fn set_snapshot(&mut self, snapshot: TiffSnapshot) {
-        *self = Self::from_snapshot(snapshot);
+        *self = Self::from_snapshot(snapshot).await;
     }
 }
 
@@ -97,17 +97,17 @@ pub mod derived_construction {
             Self { snapshot, diagnostics: Vec::new() }
         }
         async fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self::from_snapshot(<TiffSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+            Ok(Self::from_snapshot(<TiffSnapshot as store::ArtifactDsl>::parse_dsl(text).await?).await)
         }
         async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<TiffSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+            Ok(Self::from_snapshot(<TiffSnapshot as store::ArtifactPack>::decode_pack(bytes).await?).await)
         }
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::tiff::schema::mutations::apply_tiff_mutation(&mut self.snapshot, &mutation);
-            (self, diff)
+            (self, diff.await)
         }
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            self.snapshot = <TiffDiff as protocol::MutationDiff<TiffSnapshot>>::apply(&diff, &self.snapshot)?;
+            self.snapshot = <TiffDiff as protocol::MutationDiff<TiffSnapshot>>::apply(&diff, &self.snapshot).await?;
             Ok(self)
         }
         async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
@@ -188,14 +188,14 @@ pub mod derived_analysis {
             let mut confidence = IoConfidence::High;
             for source in sources {
                 match source {
-                    AnalyzeSource::Text(text) => match <TiffSnapshot as store::ArtifactDsl>::parse_dsl(text) {
+                    AnalyzeSource::Text(text) => match <TiffSnapshot as store::ArtifactDsl>::parse_dsl(text).await {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
                             diagnostics.push(dsl::Diagnostic::error("stdio.analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
-                    AnalyzeSource::Binary(bytes) => match <TiffSnapshot as store::ArtifactPack>::decode_pack(bytes) {
+                    AnalyzeSource::Binary(bytes) => match <TiffSnapshot as store::ArtifactPack>::decode_pack(bytes).await {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
@@ -277,7 +277,7 @@ pub async fn demo_tiff_snapshot() -> TiffSnapshot {
         }],
         pixels,
     };
-    let encoded = encode_tiff(&seed).expect("demo_tiff_snapshot: encode must succeed");
-    decode_tiff(&encoded).expect("demo_tiff_snapshot: decode must succeed")
+    let encoded = encode_tiff(&seed).await.expect("demo_tiff_snapshot: encode must succeed");
+    decode_tiff(&encoded).await.expect("demo_tiff_snapshot: decode must succeed")
 }
 //#endregion 🔖️DocumentHelpers

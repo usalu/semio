@@ -68,7 +68,7 @@ pub async fn compute_ply_bounds(snapshot: &PlySnapshot) -> PlyBounds {
     for element in &snapshot.elements {
         if element.name == "vertex" {
             vertex_count += element.rows.len() as u32;
-            let coords: Option<(usize, usize, usize)> = property_index(&element.properties, "x").zip(property_index(&element.properties, "y")).zip(property_index(&element.properties, "z")).map(|((ix, iy), iz)| (ix, iy, iz));
+            let coords: Option<(usize, usize, usize)> = property_index(&element.properties, "x").await.zip(property_index(&element.properties, "y").await).zip(property_index(&element.properties, "z").await).map(|((ix, iy), iz)| (ix, iy, iz));
             if let Some((ix, iy, iz)) = coords {
                 for row in &element.rows {
                     let x = row.values.get(ix).and_then(ply_value_as_f64);

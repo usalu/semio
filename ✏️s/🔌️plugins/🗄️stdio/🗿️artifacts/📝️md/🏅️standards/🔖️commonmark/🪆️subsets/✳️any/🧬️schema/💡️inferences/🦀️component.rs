@@ -24,7 +24,7 @@ pub struct MdInference {
 
 impl protocol::Inference<MdSnapshot> for MdInference {
     async fn infer(snapshot: &MdSnapshot) -> Self {
-        Self { outline: MdOutline::compute(snapshot) }
+        Self { outline: MdOutline::compute(snapshot).await }
     }
 }
 

@@ -93,7 +93,7 @@ impl protocol::command::DiffAlgebra<SemioObjectSnapshot> for SemioObjectDiff {
         }
     }
     async fn is_empty(&self) -> bool {
-        self.is_empty_diff()
+        self.is_empty_diff().await
     }
 }
 //#endregion 🔖️Diff
@@ -127,10 +127,10 @@ async fn parse_object_diff(line: &str) -> Result<SemioObjectDiff, String> {
     for field in line.split(';') {
         let (tag, rest) = field.split_once('=').ok_or_else(|| format!("object diff: missing '=' in {field:?}"))?;
         match tag {
-            "t" => d.transform = Some(dec_transform(rest)?),
-            "b" => d.brep = Some(dec_child_opt(rest)?),
-            "m" => d.mesh = Some(dec_child_opt(rest)?),
-            "p" => d.properties = Some(dec_child_opt(rest)?),
+            "t" => d.transform = Some(dec_transform(rest).await?),
+            "b" => d.brep = Some(dec_child_opt(rest).await?),
+            "m" => d.mesh = Some(dec_child_opt(rest).await?),
+            "p" => d.properties = Some(dec_child_opt(rest).await?),
             other => return Err(format!("object diff: unknown field tag {other:?}")),
         }
     }
@@ -139,10 +139,10 @@ async fn parse_object_diff(line: &str) -> Result<SemioObjectDiff, String> {
 
 impl protocol::DiffCodec for SemioObjectDiff {
     async fn print_diff(&self) -> String {
-        print_object_diff(self)
+        print_object_diff(self).await
     }
     async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
-        parse_object_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_object_diff(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 
     /// ⚡️ Real binary diff frame: `format u8` + `presence u8` (bit0=transform, bit1=brep,
@@ -190,10 +190,10 @@ impl protocol::DiffCodec for SemioObjectDiff {
         let presence = bytes[1];
         let mut reader = store::ByteReader::new(&bytes[2..]);
         let map_err = |e: String| protocol::ProtocolError::Malformed { what: "object diff field", offset: 2, detail: e };
-        let transform = if presence & 0b0001 != 0 { Some(read_transform(&mut reader).map_err(map_err)?) } else { None };
-        let brep = if presence & 0b0010 != 0 { Some(read_child_opt(&mut reader).map_err(map_err)?) } else { None };
-        let mesh = if presence & 0b0100 != 0 { Some(read_child_opt(&mut reader).map_err(map_err)?) } else { None };
-        let properties = if presence & 0b1000 != 0 { Some(read_child_opt(&mut reader).map_err(map_err)?) } else { None };
+        let transform = if presence & 0b0001 != 0 { Some(read_transform(&mut reader).await.map_err(map_err)?) } else { None };
+        let brep = if presence & 0b0010 != 0 { Some(read_child_opt(&mut reader).await.map_err(map_err)?) } else { None };
+        let mesh = if presence & 0b0100 != 0 { Some(read_child_opt(&mut reader).await.map_err(map_err)?) } else { None };
+        let properties = if presence & 0b1000 != 0 { Some(read_child_opt(&mut reader).await.map_err(map_err)?) } else { None };
         Ok(SemioObjectDiff { transform, brep, mesh, properties })
     }
 }

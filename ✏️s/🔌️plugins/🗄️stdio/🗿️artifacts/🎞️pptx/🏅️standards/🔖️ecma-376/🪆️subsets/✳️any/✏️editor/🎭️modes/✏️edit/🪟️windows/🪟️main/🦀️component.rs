@@ -17,7 +17,7 @@ pub const BODY_KEY: &str = DocumentWindowKit::KIND_ID;
 //#region 🔖️Definition
 /// 🧱️ Stitched into the editor manifest by `create_pptx_editor` (this subset's surface root).
 pub async fn definition() -> WindowKindDefinition {
-    WindowKindDefinition { label: LocalizedLabel::native("Slides", "Folien"), icon_id: "presentation".into(), ..DocumentWindowKit::editable_window_kind() }
+    WindowKindDefinition { label: LocalizedLabel::native("Slides", "Folien"), icon_id: "presentation".into(), ..DocumentWindowKit::editable_window_kind().await }
 }
 //#endregion 🔖️Definition
 
@@ -36,7 +36,7 @@ async fn shape_text(shape: &PptxShape) -> Option<String> {
 /// ✏️ Real `PptxSnapshot -> UiNode`: one `DocumentPage` per slide.
 pub async fn render(document: &PptxSnapshot) -> UiNode {
     let pages = document.presentation.slides.iter().map(|slide| DocumentPage { text: slide.shapes.iter().filter_map(shape_text).collect::<Vec<_>>().join("\n") }).collect();
-    DocumentWindowKit::render(&DocumentView { pages })
+    DocumentWindowKit::render(&DocumentView { pages }).await
 }
 //#endregion 🔖️Render
 

@@ -63,7 +63,7 @@ impl VecD {
     }
 
     pub async fn norm2(&self) -> f64 {
-        self.dot(self).sqrt()
+        self.dot(self).await.sqrt()
     }
 
     pub async fn norm_inf(&self) -> f64 {
@@ -87,9 +87,9 @@ impl MatD {
     }
 
     pub async fn identity(n: usize) -> Self {
-        let mut m = Self::zeros(n, n);
+        let mut m = Self::zeros(n, n).await;
         for i in 0..n {
-            m.set(i, i, 1.0);
+            m.set(i, i, 1.0).await;
         }
         m
     }
@@ -107,10 +107,10 @@ impl MatD {
     }
 
     pub async fn transpose(&self) -> Self {
-        let mut out = Self::zeros(self.cols, self.rows);
+        let mut out = Self::zeros(self.cols, self.rows).await;
         for row in 0..self.rows {
             for col in 0..self.cols {
-                out.set(col, row, self.get(row, col));
+                out.set(col, row, self.get(row, col).await).await;
             }
         }
         out
@@ -118,7 +118,7 @@ impl MatD {
 
     pub async fn matmul(&self, other: &Self) -> Self {
         assert_eq!(self.cols, other.rows, "matmul dimension mismatch");
-        let mut out = Self::zeros(self.rows, other.cols);
+        let mut out = Self::zeros(self.rows, other.cols).await;
         for row in 0..self.rows {
             for k in 0..self.cols {
                 let a = self.get(row, k);
@@ -126,7 +126,7 @@ impl MatD {
                     continue;
                 }
                 for col in 0..other.cols {
-                    out.add_at(row, col, a * other.get(k, col));
+                    out.add_at(row, col, a * other.get(k, col)).await;
                 }
             }
         }
@@ -135,22 +135,22 @@ impl MatD {
 
     pub async fn mul_vec(&self, x: &VecD) -> VecD {
         assert_eq!(self.cols, x.len(), "mul_vec dimension mismatch");
-        let mut out = VecD::zeros(self.rows);
+        let mut out = VecD::zeros(self.rows).await;
         for row in 0..self.rows {
             let mut sum = 0.0;
             for col in 0..self.cols {
                 sum += self.get(row, col) * x.get(col);
             }
-            out.set(row, sum);
+            out.set(row, sum).await;
         }
         out
     }
 
     /// 🧮️ `Bᵀ D B` scaled by `weight`, accumulated into `self` — the element-stiffness Gauss-point kernel.
     pub async fn add_triple_product(&mut self, b: &MatD, d: &MatD, weight: f64) {
-        let btdb = b.transpose().matmul(d).matmul(b);
+        let btdb = b.transpose().await.matmul(d).await.matmul(b);
         for i in 0..self.data.len() {
-            self.data[i] += weight * btdb.data[i];
+            self.data[i] += weight * btdb.await.data[i];
         }
     }
 

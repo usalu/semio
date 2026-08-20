@@ -11,16 +11,16 @@ use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::
 
 //#region 🔖️Diff
 pub async fn diff(payload: &Rotate, base: &SemioDrawingSnapshot) -> protocol::MutationOutcome<SemioDrawingDiff> {
-    let Some(node) = node_at(base, &payload.at) else {
-        return protocol::MutationOutcome::error("mutation.target-missing", format!("Node at layer #{} does not exist.", payload.at.layer), [payload.at.layer.to_string()]);
+    let Some(node) = node_at(base, &payload.at).await else {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Node at layer #{} does not exist.", payload.at.layer), [payload.at.layer.to_string()]).await;
     };
     let r = payload.new_rotation;
     if !r.x.is_finite() || !r.y.is_finite() || !r.z.is_finite() || !r.w.is_finite() {
-        return protocol::MutationOutcome::fatal("mutation.invariant", format!("Node at layer #{} new rotation has a non-finite component.", payload.at.layer), [payload.at.layer.to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.invariant", format!("Node at layer #{} new rotation has a non-finite component.", payload.at.layer), [payload.at.layer.to_string()]).await;
     }
     if let DrawNode::Group { transform, .. } = node {
         if transform.rotation == r {
-            return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Node in layer #{} already has that rotation.", payload.at.layer));
+            return protocol::MutationOutcome::empty().await.warn("mutation.no-op", format!("Node in layer #{} already has that rotation.", payload.at.layer)).await;
         }
     }
     protocol::MutationOutcome::new(diff_rotate_node(base, &payload.at, r))

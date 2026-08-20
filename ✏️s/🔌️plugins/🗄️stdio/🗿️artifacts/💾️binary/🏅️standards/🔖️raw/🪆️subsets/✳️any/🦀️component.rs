@@ -32,10 +32,10 @@ async fn inference_descriptors() -> &'static [::schema::ArtifactInferenceDescrip
 pub async fn subset() -> SubsetDeclaration {
     SubsetDeclaration {
         dialect: DIALECT,
-        schema: SchemaDeclaration { descriptor: schema::binary_artifact_schema_descriptor(), inferences: inference_descriptors(), inference_services: Vec::new() },
-        io: io::io(),
-        viewer: viewer_surface::<viewer::BinaryViewer>(viewer::create_binary_viewer()),
-        editor: editor_surface::<editor::BinaryEditor>(editor::create_binary_editor()),
-        examples: examples(),
+        schema: SchemaDeclaration { descriptor: schema::binary_artifact_schema_descriptor().await, inferences: inference_descriptors().await, inference_services: Vec::new() },
+        io: io::io().await,
+        viewer: viewer_surface::<viewer::BinaryViewer>(viewer::create_binary_viewer().await).await,
+        editor: editor_surface::<editor::BinaryEditor>(editor::create_binary_editor().await).await,
+        examples: examples().await,
     }
 }

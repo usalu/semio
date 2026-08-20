@@ -67,47 +67,47 @@ async fn parse_kit_mutation(line: &str) -> Result<SemioKitMutation, String> {
     match tag {
         "createObject" => {
             let (child_id, target) = rest.split_once(',').ok_or_else(|| "createObject: missing comma".to_string())?;
-            Ok(SemioKitMutation::CreateObject(CreateObject { child_id: dec_str(child_id)?, target: dec_ref(target)? }))
+            Ok(SemioKitMutation::CreateObject(CreateObject { child_id: dec_str(child_id).await?, target: dec_ref(target).await? }))
         }
-        "deleteObject" => Ok(SemioKitMutation::DeleteObject(DeleteObject { child_id: dec_str(rest)? })),
+        "deleteObject" => Ok(SemioKitMutation::DeleteObject(DeleteObject { child_id: dec_str(rest).await? })),
         "createModel" => {
             let (child_id, target) = rest.split_once(',').ok_or_else(|| "createModel: missing comma".to_string())?;
-            Ok(SemioKitMutation::CreateModel(CreateModel { child_id: dec_str(child_id)?, target: dec_ref(target)? }))
+            Ok(SemioKitMutation::CreateModel(CreateModel { child_id: dec_str(child_id).await?, target: dec_ref(target).await? }))
         }
-        "deleteModel" => Ok(SemioKitMutation::DeleteModel(DeleteModel { child_id: dec_str(rest)? })),
+        "deleteModel" => Ok(SemioKitMutation::DeleteModel(DeleteModel { child_id: dec_str(rest).await? })),
         "createProperties" => {
             let (child_id, target) = rest.split_once(',').ok_or_else(|| "createProperties: missing comma".to_string())?;
-            Ok(SemioKitMutation::CreateProperties(CreateProperties { child_id: dec_str(child_id)?, target: dec_ref(target)? }))
+            Ok(SemioKitMutation::CreateProperties(CreateProperties { child_id: dec_str(child_id).await?, target: dec_ref(target).await? }))
         }
         "bindRepresentation" => {
-            let parts = split_top_level(rest, ',');
+            let parts = split_top_level(rest, ',').await;
             let [target, pin, role] = parts.as_slice() else { return Err(format!("bindRepresentation: expected 3 fields, got {}", parts.len())) };
-            Ok(SemioKitMutation::BindRepresentation(BindRepresentation { target: dec_ref(target)?, pin: dec_pin(pin)?, role: dec_str(role)? }))
+            Ok(SemioKitMutation::BindRepresentation(BindRepresentation { target: dec_ref(target).await?, pin: dec_pin(pin).await?, role: dec_str(role).await? }))
         }
-        "unbindRepresentation" => Ok(SemioKitMutation::UnbindRepresentation(UnbindRepresentation { index: parse_usize(rest)? })),
+        "unbindRepresentation" => Ok(SemioKitMutation::UnbindRepresentation(UnbindRepresentation { index: parse_usize(rest).await? })),
         "changeRepresentationPin" => {
             let (index, pin) = rest.split_once(',').ok_or_else(|| "changeRepresentationPin: missing comma".to_string())?;
-            Ok(SemioKitMutation::ChangeRepresentationPin(ChangeRepresentationPin { index: parse_usize(index)?, pin: dec_pin(pin)? }))
+            Ok(SemioKitMutation::ChangeRepresentationPin(ChangeRepresentationPin { index: parse_usize(index).await?, pin: dec_pin(pin).await? }))
         }
         "addType" => {
-            let parts = split_top_level(rest, ',');
+            let parts = split_top_level(rest, ',').await;
             let [id, name, category] = parts.as_slice() else { return Err(format!("addType: expected 3 fields, got {}", parts.len())) };
-            Ok(SemioKitMutation::AddType(AddType { id: dec_str(id)?, name: dec_str(name)?, category: dec_str(category)? }))
+            Ok(SemioKitMutation::AddType(AddType { id: dec_str(id).await?, name: dec_str(name).await?, category: dec_str(category).await? }))
         }
-        "removeType" => Ok(SemioKitMutation::RemoveType(RemoveType { id: dec_str(rest)? })),
+        "removeType" => Ok(SemioKitMutation::RemoveType(RemoveType { id: dec_str(rest).await? })),
         "renameType" => {
             let (id, new_name) = rest.split_once(',').ok_or_else(|| "renameType: missing comma".to_string())?;
-            Ok(SemioKitMutation::RenameType(RenameType { id: dec_str(id)?, new_name: dec_str(new_name)? }))
+            Ok(SemioKitMutation::RenameType(RenameType { id: dec_str(id).await?, new_name: dec_str(new_name).await? }))
         }
         "addDesign" => {
             let (id, name) = rest.split_once(',').ok_or_else(|| "addDesign: missing comma".to_string())?;
-            Ok(SemioKitMutation::AddDesign(AddDesign { id: dec_str(id)?, name: dec_str(name)? }))
+            Ok(SemioKitMutation::AddDesign(AddDesign { id: dec_str(id).await?, name: dec_str(name).await? }))
         }
-        "removeDesign" => Ok(SemioKitMutation::RemoveDesign(RemoveDesign { id: dec_str(rest)? })),
+        "removeDesign" => Ok(SemioKitMutation::RemoveDesign(RemoveDesign { id: dec_str(rest).await? })),
         "editDesign" => {
-            let parts = split_top_level(rest, ',');
+            let parts = split_top_level(rest, ',').await;
             let [id, pieces, connections] = parts.as_slice() else { return Err(format!("editDesign: expected 3 fields, got {}", parts.len())) };
-            Ok(SemioKitMutation::EditDesign(EditDesign { id: dec_str(id)?, pieces: dec_pieces(pieces)?, connections: dec_connections(connections)? }))
+            Ok(SemioKitMutation::EditDesign(EditDesign { id: dec_str(id).await?, pieces: dec_pieces(pieces).await?, connections: dec_connections(connections).await? }))
         }
         other => Err(format!("kit mutation: unknown keyword {other:?}")),
     }
@@ -115,10 +115,10 @@ async fn parse_kit_mutation(line: &str) -> Result<SemioKitMutation, String> {
 
 impl protocol::OpText for SemioKitMutation {
     async fn print_op(&self) -> String {
-        print_kit_mutation(self)
+        print_kit_mutation(self).await
     }
     async fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_kit_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_kit_mutation(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
 //#endregion 🔖️OpText

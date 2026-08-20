@@ -28,40 +28,44 @@ impl Vec3 {
 
     #[allow(clippy::should_implement_trait, reason = "renaming ripples through lowpoly/core, lowpoly/plugin, remodel/plugin (outside this crate); add/sub read better than +/- across this file's dense vector algebra")]
     pub async fn add(self, o: Self) -> Self {
-        Self([self.x() + o.x(), self.y() + o.y(), self.z() + o.z()])
+        Self([self.x().await + o.x().await, self.y().await + o.y().await, self.z().await + o.z().await])
     }
 
     #[allow(clippy::should_implement_trait, reason = "renaming ripples through lowpoly/core, lowpoly/plugin, remodel/plugin (outside this crate); add/sub read better than +/- across this file's dense vector algebra")]
     pub async fn sub(self, o: Self) -> Self {
-        Self([self.x() - o.x(), self.y() - o.y(), self.z() - o.z()])
+        Self([self.x().await - o.x().await, self.y().await - o.y().await, self.z().await - o.z().await])
     }
 
     pub async fn scale(self, s: f32) -> Self {
-        Self([self.x() * s, self.y() * s, self.z() * s])
+        Self([self.x().await * s, self.y().await * s, self.z().await * s])
     }
 
     pub async fn dot(self, o: Self) -> f32 {
-        self.x() * o.x() + self.y() * o.y() + self.z() * o.z()
+        self.x().await * o.x().await + self.y().await * o.y().await + self.z().await * o.z().await
     }
 
     pub async fn cross(self, o: Self) -> Self {
-        Self([self.y() * o.z() - self.z() * o.y(), self.z() * o.x() - self.x() * o.z(), self.x() * o.y() - self.y() * o.x()])
+        Self([
+            self.y().await * o.z().await - self.z().await * o.y().await,
+            self.z().await * o.x().await - self.x().await * o.z().await,
+            self.x().await * o.y().await - self.y().await * o.x().await,
+        ])
     }
 
     pub async fn length(self) -> f32 {
-        self.dot(self).sqrt()
+        self.dot(self).await.sqrt()
     }
 
     pub async fn normalize(self) -> Self {
-        let l = self.length();
+        let l = self.length().await;
         if l < 1e-8 {
             return Self::ZERO;
         }
-        self.scale(1.0 / l)
+        self.scale(1.0 / l).await
     }
 
     pub async fn lerp(self, o: Self, t: f32) -> Self {
-        self.add(o.sub(self).scale(t))
+        self.add(o.sub(self).await.scale(t).await).await
     }
 }
 
@@ -117,7 +121,9 @@ pub struct MeshVertex {
     halfedge: Option<u32>,
 }
 
-async fn default_uv() -> [f32; 2] {
+// 🚫️async: E4 fn-pointer slot — serde's `#[serde(default = "...")]` calls this by path as a plain
+// `fn() -> T`; an `async fn` item's pointer type is unnameable there.
+fn default_uv() -> [f32; 2] {
     [0.0, 0.0]
 }
 
@@ -219,12 +225,15 @@ impl HalfedgeMesh {
     }
 
     pub async fn face_normal(&self, face: FaceId) -> MeshResult<Vec3> {
-        let verts = self.face_vertex_ids(face)?;
+        let verts = self.face_vertex_ids(face).await?;
         if verts.len() < 3 {
             return Err(MeshKernelError::DegenerateOperation);
         }
-        let positions: Vec<Vec3> = verts.iter().map(|v| self.vertex_position(*v)).collect::<MeshResult<Vec<_>>>()?;
-        Ok(newell_normal(&positions).normalize())
+        let mut positions: Vec<Vec3> = Vec::with_capacity(verts.len());
+        for v in &verts {
+            positions.push(self.vertex_position(*v).await?);
+        }
+        Ok(newell_normal(&positions).await.normalize().await)
     }
 
     pub async fn edge_endpoints(&self, edge: EdgeId) -> MeshResult<(VertexId, VertexId)> {
@@ -258,7 +267,7 @@ impl HalfedgeMesh {
             let entry = self.faces.get_mut(face.0 as usize).ok_or(MeshKernelError::InvalidHandle)?;
             entry.flipped = !entry.flipped;
         }
-        self.recompute_normals()
+        self.recompute_normals().await
     }
 
     pub async fn from_indexed_triangles(positions: &[f32], indices: &[u32]) -> MeshResult<Self> {
@@ -270,7 +279,7 @@ impl HalfedgeMesh {
         }
         let verts: Vec<[f32; 3]> = positions.as_chunks::<3>().0.to_vec();
         let faces: Vec<Vec<u32>> = indices.as_chunks::<3>().0.iter().map(|tri| tri.to_vec()).collect();
-        Self::from_faces(&verts, &faces)
+        Self::from_faces(&verts, &faces).await
     }
 
     /// Builds a halfedge mesh from a CAD solid tessellation that carries one B-Rep face id per triangle.
@@ -280,7 +289,7 @@ impl HalfedgeMesh {
     /// [`Self::weld_coincident_vertices`] afterwards so independently-tessellated seam vertices become shared.
     pub async fn from_indexed_triangles_by_face_id(positions: &[f32], indices: &[u32], face_ids: &[u32]) -> MeshResult<Self> {
         if face_ids.is_empty() {
-            return Self::from_indexed_triangles(positions, indices);
+            return Self::from_indexed_triangles(positions, indices).await;
         }
         if !positions.len().is_multiple_of(3) {
             return Err(MeshKernelError::InvalidInput("positions length must be a multiple of 3".into()));
@@ -300,13 +309,13 @@ impl HalfedgeMesh {
         }
         let mut faces: Vec<Vec<u32>> = Vec::new();
         for group_indices in groups.values() {
-            let mut face_mesh = Self::from_indexed_triangles(positions, group_indices)?;
-            let _ = face_mesh.merge_coplanar_faces()?;
-            let (_, group_faces) = face_mesh.polygon_soup();
+            let mut face_mesh = Self::from_indexed_triangles(positions, group_indices).await?;
+            let _ = face_mesh.merge_coplanar_faces().await?;
+            let (_, group_faces) = face_mesh.polygon_soup().await;
             faces.extend(group_faces);
         }
         let verts: Vec<[f32; 3]> = positions.as_chunks::<3>().0.to_vec();
-        Self::from_faces(&verts, &faces)
+        Self::from_faces(&verts, &faces).await
     }
 
     /// Builds a halfedge mesh from CAD face wire loops that share a global vertex buffer.
@@ -323,15 +332,15 @@ impl HalfedgeMesh {
                 faces.push(outer.clone());
                 continue;
             }
-            for tri in triangulate_indexed_polygon_with_holes(positions, outer, holes) {
+            for tri in triangulate_indexed_polygon_with_holes(positions, outer, holes).await {
                 faces.push(tri.to_vec());
             }
         }
-        Self::from_faces(positions, &faces)
+        Self::from_faces(positions, &faces).await
     }
 
     pub async fn from_faces(positions: &[[f32; 3]], faces: &[Vec<u32>]) -> MeshResult<Self> {
-        let mut mesh = Self::empty();
+        let mut mesh = Self::empty().await;
         for p in positions {
             mesh.vertices.push(MeshVertex { position: *p, normal: None, halfedge: None });
         }
@@ -366,7 +375,7 @@ impl HalfedgeMesh {
             let v0 = mesh.halfedges[start_he as usize].vertex;
             mesh.vertices[v0 as usize].halfedge = Some(start_he);
         }
-        mesh.recompute_normals()?;
+        mesh.recompute_normals().await?;
         Ok(mesh)
     }
 
@@ -377,7 +386,7 @@ impl HalfedgeMesh {
     }
 
     async fn rebuild_from_polygon_soup(&mut self, positions: &[[f32; 3]], faces: &[Vec<u32>]) -> MeshResult<()> {
-        *self = Self::from_faces(positions, faces)?;
+        *self = Self::from_faces(positions, faces).await?;
         Ok(())
     }
 
@@ -385,7 +394,7 @@ impl HalfedgeMesh {
         let positions: Vec<[f32; 3]> = self.vertices.iter().map(|v| v.position).collect();
         let mut faces = Vec::new();
         for fi in 0..self.faces.len() {
-            if let Ok(verts) = self.face_vertex_ids(FaceId(fi as u32)) {
+            if let Ok(verts) = self.face_vertex_ids(FaceId(fi as u32)).await {
                 faces.push(verts.into_iter().map(|v| v.0).collect());
             }
         }
@@ -404,13 +413,13 @@ impl HalfedgeMesh {
         let hd = depth * 0.5;
         let positions = [[-hw, -hh, -hd], [hw, -hh, -hd], [hw, hh, -hd], [-hw, hh, -hd], [-hw, -hh, hd], [hw, -hh, hd], [hw, hh, hd], [-hw, hh, hd]];
         let faces = vec![vec![0, 1, 2, 3], vec![4, 7, 6, 5], vec![0, 4, 5, 1], vec![1, 5, 6, 2], vec![2, 6, 7, 3], vec![3, 7, 4, 0]];
-        Self::from_faces(&positions, &faces)
+        Self::from_faces(&positions, &faces).await
     }
 
     pub async fn plane_prim(width: f32, depth: f32) -> MeshResult<Self> {
         let hw = width * 0.5;
         let hd = depth * 0.5;
-        Self::from_faces(&[[-hw, 0.0, -hd], [hw, 0.0, -hd], [hw, 0.0, hd], [-hw, 0.0, hd]], &[vec![0, 1, 2, 3]])
+        Self::from_faces(&[[-hw, 0.0, -hd], [hw, 0.0, -hd], [hw, 0.0, hd], [-hw, 0.0, hd]], &[vec![0, 1, 2, 3]]).await
     }
 
     pub async fn cylinder_prim(radius: f32, height: f32, segments: u32) -> MeshResult<Self> {
@@ -441,7 +450,7 @@ impl HalfedgeMesh {
             faces.push(vec![bottom, b1, b0]);
             faces.push(vec![top, t0, t1]);
         }
-        Self::from_faces(&positions, &faces)
+        Self::from_faces(&positions, &faces).await
     }
 
     pub async fn cone_prim(radius: f32, height: f32, segments: u32) -> MeshResult<Self> {
@@ -463,15 +472,15 @@ impl HalfedgeMesh {
             faces.push(vec![i0, i1, apex]);
             faces.push(vec![base, i1, i0]);
         }
-        Self::from_faces(&positions, &faces)
+        Self::from_faces(&positions, &faces).await
     }
 
     pub async fn ico_sphere_prim(radius: f32, subdivisions: u32) -> MeshResult<Self> {
         let t = (1.0 + 5.0_f32.sqrt()) * 0.5;
         let mut positions = vec![[-1.0, t, 0.0], [1.0, t, 0.0], [-1.0, -t, 0.0], [1.0, -t, 0.0], [0.0, -1.0, t], [0.0, 1.0, t], [0.0, -1.0, -t], [0.0, 1.0, -t], [t, 0.0, -1.0], [t, 0.0, 1.0], [-t, 0.0, -1.0], [-t, 0.0, 1.0]];
         for p in &mut positions {
-            let v = Vec3(*p).normalize().scale(radius);
-            *p = v.0;
+            let v = Vec3(*p).normalize().await.scale(radius);
+            *p = v.await.0;
         }
         let mut faces = vec![
             vec![0, 11, 5],
@@ -505,14 +514,17 @@ impl HalfedgeMesh {
                     let a = face[i];
                     let b = face[(i + 1) % face.len()];
                     let key = if a < b { (a, b) } else { (b, a) };
-                    let mid = *midpoint_cache.entry(key).or_insert_with(|| {
+                    let mid = if let Some(&existing) = midpoint_cache.get(&key) {
+                        existing
+                    } else {
                         let pa = Vec3(positions[a as usize]);
                         let pb = Vec3(positions[b as usize]);
-                        let m = pa.lerp(pb, 0.5).normalize().scale(radius);
+                        let m = pa.lerp(pb, 0.5).await.normalize().await.scale(radius).await;
                         let id = positions.len() as u32;
                         positions.push(m.0);
+                        midpoint_cache.insert(key, id);
                         id
-                    });
+                    };
                     mids.push(mid);
                 }
                 for i in 0..face.len() {
@@ -524,7 +536,7 @@ impl HalfedgeMesh {
             }
             faces = new_faces;
         }
-        Self::from_faces(&positions, &faces)
+        Self::from_faces(&positions, &faces).await
     }
 }
 
@@ -535,32 +547,34 @@ impl HalfedgeMesh {
 impl HalfedgeMesh {
     pub async fn translate(&mut self, delta: Vec3) -> MeshResult<()> {
         for v in &mut self.vertices {
-            v.position = Vec3(v.position).add(delta).0;
+            v.position = Vec3(v.position).add(delta).await.0;
         }
         Ok(())
     }
 
     pub async fn rotate(&mut self, axis: Vec3, angle_rad: f32) -> MeshResult<()> {
-        let ax = axis.normalize();
-        let (x, y, z) = (ax.x(), ax.y(), ax.z());
+        let ax = axis.normalize().await;
+        let (x, y, z) = (ax.x().await, ax.y().await, ax.z().await);
         let c = angle_rad.cos();
         let s = angle_rad.sin();
         let t = 1.0 - c;
         for v in &mut self.vertices {
             let p = Vec3(v.position);
-            let rx = (t * x * x + c) * p.x() + (t * x * y - s * z) * p.y() + (t * x * z + s * y) * p.z();
-            let ry = (t * x * y + s * z) * p.x() + (t * y * y + c) * p.y() + (t * y * z - s * x) * p.z();
-            let rz = (t * x * z - s * y) * p.x() + (t * y * z + s * x) * p.y() + (t * z * z + c) * p.z();
+            let (px, py, pz) = (p.x().await, p.y().await, p.z().await);
+            let rx = (t * x * x + c) * px + (t * x * y - s * z) * py + (t * x * z + s * y) * pz;
+            let ry = (t * x * y + s * z) * px + (t * y * y + c) * py + (t * y * z - s * x) * pz;
+            let rz = (t * x * z - s * y) * px + (t * y * z + s * x) * py + (t * z * z + c) * pz;
             v.position = [rx, ry, rz];
         }
-        self.recompute_normals()
+        self.recompute_normals().await
     }
 
     pub async fn scale(&mut self, factor: Vec3) -> MeshResult<()> {
+        let (fx, fy, fz) = (factor.x().await, factor.y().await, factor.z().await);
         for v in &mut self.vertices {
-            v.position = [v.position[0] * factor.x(), v.position[1] * factor.y(), v.position[2] * factor.z()];
+            v.position = [v.position[0] * fx, v.position[1] * fy, v.position[2] * fz];
         }
-        self.recompute_normals()
+        self.recompute_normals().await
     }
 
     pub async fn move_vertices(&mut self, verts: &[VertexId], delta: Vec3) -> MeshResult<()> {
@@ -569,41 +583,44 @@ impl HalfedgeMesh {
         }
         for &vid in verts {
             let v = self.vertices.get_mut(vid.0 as usize).ok_or(MeshKernelError::InvalidHandle)?;
-            v.position = Vec3(v.position).add(delta).0;
+            v.position = Vec3(v.position).add(delta).await.0;
         }
-        self.recompute_normals()
+        self.recompute_normals().await
     }
 
     pub async fn rotate_vertices(&mut self, verts: &[VertexId], axis: Vec3, angle_rad: f32, pivot: Vec3) -> MeshResult<()> {
         if verts.is_empty() {
             return Err(MeshKernelError::EmptySelection);
         }
-        let ax = axis.normalize();
-        let (x, y, z) = (ax.x(), ax.y(), ax.z());
+        let ax = axis.normalize().await;
+        let (x, y, z) = (ax.x().await, ax.y().await, ax.z().await);
         let c = angle_rad.cos();
         let s = angle_rad.sin();
         let t = 1.0 - c;
         for &vid in verts {
             let v = self.vertices.get_mut(vid.0 as usize).ok_or(MeshKernelError::InvalidHandle)?;
-            let p = Vec3(v.position).sub(pivot);
-            let rx = (t * x * x + c) * p.x() + (t * x * y - s * z) * p.y() + (t * x * z + s * y) * p.z();
-            let ry = (t * x * y + s * z) * p.x() + (t * y * y + c) * p.y() + (t * y * z - s * x) * p.z();
-            let rz = (t * x * z - s * y) * p.x() + (t * y * z + s * x) * p.y() + (t * z * z + c) * p.z();
-            v.position = pivot.add(Vec3::new(rx, ry, rz)).0;
+            let p = Vec3(v.position).sub(pivot).await;
+            let (px, py, pz) = (p.x().await, p.y().await, p.z().await);
+            let rx = (t * x * x + c) * px + (t * x * y - s * z) * py + (t * x * z + s * y) * pz;
+            let ry = (t * x * y + s * z) * px + (t * y * y + c) * py + (t * y * z - s * x) * pz;
+            let rz = (t * x * z - s * y) * px + (t * y * z + s * x) * py + (t * z * z + c) * pz;
+            v.position = pivot.add(Vec3::new(rx, ry, rz).await).await.0;
         }
-        self.recompute_normals()
+        self.recompute_normals().await
     }
 
     pub async fn scale_vertices(&mut self, verts: &[VertexId], factor: Vec3, pivot: Vec3) -> MeshResult<()> {
         if verts.is_empty() {
             return Err(MeshKernelError::EmptySelection);
         }
+        let (fx, fy, fz) = (factor.x().await, factor.y().await, factor.z().await);
         for &vid in verts {
             let v = self.vertices.get_mut(vid.0 as usize).ok_or(MeshKernelError::InvalidHandle)?;
-            let p = Vec3(v.position).sub(pivot);
-            v.position = pivot.add(Vec3::new(p.x() * factor.x(), p.y() * factor.y(), p.z() * factor.z())).0;
+            let p = Vec3(v.position).sub(pivot).await;
+            let (px, py, pz) = (p.x().await, p.y().await, p.z().await);
+            v.position = pivot.add(Vec3::new(px * fx, py * fy, pz * fz).await).await.0;
         }
-        self.recompute_normals()
+        self.recompute_normals().await
     }
 
     pub async fn move_vertices_proportional(&mut self, verts: &[VertexId], delta: Vec3, pivot: Vec3, radius: f32) -> MeshResult<()> {
@@ -614,11 +631,11 @@ impl HalfedgeMesh {
         for &vid in verts {
             let v = self.vertices.get_mut(vid.0 as usize).ok_or(MeshKernelError::InvalidHandle)?;
             let pos = Vec3(v.position);
-            let dist = pos.sub(pivot).length();
+            let dist = pos.sub(pivot).await.length().await;
             let falloff = (1.0 - (dist / r).min(1.0)).max(0.0);
-            v.position = pos.add(delta.scale(falloff)).0;
+            v.position = pos.add(delta.scale(falloff).await).await.0;
         }
-        self.recompute_normals()
+        self.recompute_normals().await
     }
 
     pub async fn snap_vertices_to_grid(&mut self, verts: &[VertexId], grid: f32) -> MeshResult<()> {
@@ -644,13 +661,13 @@ impl HalfedgeMesh {
         }
         let mut new_faces = Vec::new();
         for &fid in faces {
-            let normal = self.face_normal(fid)?;
-            let verts = self.face_vertex_ids(fid)?;
+            let normal = self.face_normal(fid).await?;
+            let verts = self.face_vertex_ids(fid).await?;
             let mut new_verts = Vec::new();
             for v in &verts {
-                let pos = self.vertex_position(*v)?;
-                let nv = self.add_vertex(pos.add(normal.scale(distance)).0);
-                new_verts.push(nv.0);
+                let pos = self.vertex_position(*v).await?;
+                let nv = self.add_vertex(pos.add(normal.scale(distance).await).await.0);
+                new_verts.push(nv.await.0);
             }
             let old_ids: Vec<u32> = verts.iter().map(|v| v.0).collect();
             new_faces.push(old_ids.clone());
@@ -664,11 +681,11 @@ impl HalfedgeMesh {
                 new_faces.push(vec![o0, o1, n1, n0]);
             }
         }
-        let (positions, mut face_list) = self.polygon_soup();
+        let (positions, mut face_list) = self.polygon_soup().await;
         for f in new_faces {
             face_list.push(f);
         }
-        self.rebuild_from_polygon_soup(&positions, &face_list)?;
+        self.rebuild_from_polygon_soup(&positions, &face_list).await?;
         Ok(())
     }
 
@@ -676,30 +693,32 @@ impl HalfedgeMesh {
         if faces.is_empty() {
             return Err(MeshKernelError::EmptySelection);
         }
-        let (mut positions, mut face_list) = self.polygon_soup();
+        let (mut positions, mut face_list) = self.polygon_soup().await;
         for &fid in faces {
-            let verts = self.face_vertex_ids(fid)?;
+            let verts = self.face_vertex_ids(fid).await?;
             let mut centroid = Vec3::ZERO;
             for v in &verts {
-                centroid = centroid.add(self.vertex_position(*v)?);
+                centroid = centroid.add(self.vertex_position(*v).await?).await;
             }
-            centroid = centroid.scale(1.0 / verts.len() as f32);
-            let normal = self.face_normal(fid)?;
+            centroid = centroid.scale(1.0 / verts.len() as f32).await;
+            let normal = self.face_normal(fid).await?;
             let indices: Vec<usize> = verts.iter().map(|v| v.0 as usize).collect();
             for &vi in &indices {
                 let pos = Vec3(positions[vi]);
-                let to_center = centroid.sub(pos);
-                let inset_dir = to_center.sub(normal.scale(to_center.dot(normal))).normalize();
-                let new_pos = pos.add(inset_dir.scale(amount));
+                let to_center = centroid.sub(pos).await;
+                let to_center_dot_n = to_center.dot(normal).await;
+                let inset_dir = to_center.sub(normal.scale(to_center_dot_n).await).await.normalize().await;
+                let new_pos = pos.add(inset_dir.scale(amount).await).await;
                 positions[vi] = new_pos.0;
             }
             if amount.abs() > 1e-6 {
                 let mut inner = Vec::new();
                 for v in &verts {
                     let pos = Vec3(positions[v.0 as usize]);
-                    let to_center = centroid.sub(pos);
-                    let inset_dir = to_center.sub(normal.scale(to_center.dot(normal))).normalize();
-                    let inner_pos = pos.add(inset_dir.scale(amount * 0.5));
+                    let to_center = centroid.sub(pos).await;
+                    let to_center_dot_n = to_center.dot(normal).await;
+                    let inset_dir = to_center.sub(normal.scale(to_center_dot_n).await).await.normalize().await;
+                    let inner_pos = pos.add(inset_dir.scale(amount * 0.5).await).await;
                     let id = positions.len() as u32;
                     positions.push(inner_pos.0);
                     inner.push(id);
@@ -707,35 +726,35 @@ impl HalfedgeMesh {
                 face_list.push(inner);
             }
         }
-        self.rebuild_from_polygon_soup(&positions, &face_list)
+        self.rebuild_from_polygon_soup(&positions, &face_list).await
     }
 
     pub async fn bevel_edges(&mut self, edges: &[EdgeId], amount: f32, _segments: u32) -> MeshResult<()> {
         if edges.is_empty() {
             return Err(MeshKernelError::EmptySelection);
         }
-        let (mut positions, face_list) = self.polygon_soup();
+        let (mut positions, face_list) = self.polygon_soup().await;
         for &eid in edges {
-            let (v0, v1) = self.edge_endpoints(eid)?;
-            let p0 = self.vertex_position(v0)?;
-            let p1 = self.vertex_position(v1)?;
-            let dir = p1.sub(p0).normalize();
-            let mid = p0.lerp(p1, 0.5);
-            let offset = dir.cross(Vec3::new(0.0, 1.0, 0.0)).normalize().scale(amount);
+            let (v0, v1) = self.edge_endpoints(eid).await?;
+            let p0 = self.vertex_position(v0).await?;
+            let p1 = self.vertex_position(v1).await?;
+            let dir = p1.sub(p0).await.normalize().await;
+            let mid = p0.lerp(p1, 0.5).await;
+            let offset = dir.cross(Vec3::new(0.0, 1.0, 0.0).await).await.normalize().await.scale(amount).await;
             let nv0 = positions.len() as u32;
-            positions.push(mid.add(offset).0);
+            positions.push(mid.add(offset).await.0);
             let nv1 = positions.len() as u32;
-            positions.push(mid.sub(offset).0);
+            positions.push(mid.sub(offset).await.0);
             let _ = (nv0, nv1, v0, v1);
         }
-        self.rebuild_from_polygon_soup(&positions, &face_list)
+        self.rebuild_from_polygon_soup(&positions, &face_list).await
     }
 
     pub async fn loop_cut(&mut self, _edges: &[EdgeId], cuts: u32) -> MeshResult<()> {
         if cuts == 0 {
             return Err(MeshKernelError::InvalidInput("cuts must be > 0".into()));
         }
-        let (mut positions, mut face_list) = self.polygon_soup();
+        let (mut positions, mut face_list) = self.polygon_soup().await;
         let face_count = face_list.len();
         for fi in 0..face_count {
             let face = face_list[fi].clone();
@@ -751,7 +770,7 @@ impl HalfedgeMesh {
                     let b = Vec3(positions[face[(i + 1) % face.len()] as usize]);
                     let p = a.lerp(b, t);
                     let id = positions.len() as u32;
-                    positions.push(p.0);
+                    positions.push(p.await.0);
                     ring.push(id);
                 }
                 sub_faces.push(ring);
@@ -760,21 +779,22 @@ impl HalfedgeMesh {
                 face_list.push(ring);
             }
         }
-        self.rebuild_from_polygon_soup(&positions, &face_list)
+        self.rebuild_from_polygon_soup(&positions, &face_list).await
     }
 
     pub async fn knife_cut(&mut self, face: FaceId, cut_a: Vec3, cut_b: Vec3) -> MeshResult<()> {
-        let verts = self.face_vertex_ids(face)?;
+        let verts = self.face_vertex_ids(face).await?;
         if verts.len() < 3 {
             return Err(MeshKernelError::DegenerateOperation);
         }
-        let (mut positions, mut face_list) = self.polygon_soup();
-        let cut_dir = cut_b.sub(cut_a).normalize();
+        let (mut positions, mut face_list) = self.polygon_soup().await;
+        let cut_dir = cut_b.sub(cut_a).await.normalize().await;
+        let cut_plane_normal = cut_dir.cross(Vec3::new(0.0, 1.0, 0.0).await).await.normalize().await;
         let mut hits: Vec<(usize, f32, [f32; 3])> = Vec::new();
         for i in 0..verts.len() {
-            let v0 = self.vertex_position(verts[i])?;
-            let v1 = self.vertex_position(verts[(i + 1) % verts.len()])?;
-            if let Some((t, p)) = segment_plane_intersect(v0, v1, cut_a, cut_dir.cross(Vec3::new(0.0, 1.0, 0.0)).normalize()) {
+            let v0 = self.vertex_position(verts[i]).await?;
+            let v1 = self.vertex_position(verts[(i + 1) % verts.len()]).await?;
+            if let Some((t, p)) = segment_plane_intersect(v0, v1, cut_a, cut_plane_normal).await {
                 if t > 0.0 && t < 1.0 {
                     hits.push((i, t, p.0));
                 }
@@ -793,7 +813,7 @@ impl HalfedgeMesh {
                 face_list.push(vec![id0, f1, id1]);
             }
         }
-        self.rebuild_from_polygon_soup(&positions, &face_list)
+        self.rebuild_from_polygon_soup(&positions, &face_list).await
     }
 
     pub async fn merge_vertices(&mut self, verts: &[VertexId], mode: WeldMode, threshold: f32) -> MeshResult<()> {
@@ -801,23 +821,23 @@ impl HalfedgeMesh {
             return Err(MeshKernelError::EmptySelection);
         }
         let target_pos = match mode {
-            WeldMode::First => self.vertex_position(verts[0])?,
+            WeldMode::First => self.vertex_position(verts[0]).await?,
             WeldMode::Center => {
                 let mut c = Vec3::ZERO;
                 for v in verts {
-                    c = c.add(self.vertex_position(*v)?);
+                    c = c.add(self.vertex_position(*v).await?).await;
                 }
-                c.scale(1.0 / verts.len() as f32)
+                c.scale(1.0 / verts.len() as f32).await
             }
-            WeldMode::ByDistance => self.vertex_position(verts[0])?,
+            WeldMode::ByDistance => self.vertex_position(verts[0]).await?,
         };
-        let (positions, face_list) = self.polygon_soup();
+        let (positions, face_list) = self.polygon_soup().await;
         let keep = verts[0].0;
         let mut remap: HashMap<u32, u32> = HashMap::new();
         for v in verts {
             if mode == WeldMode::ByDistance {
-                let pos = self.vertex_position(*v)?;
-                if pos.sub(target_pos).length() <= threshold {
+                let pos = self.vertex_position(*v).await?;
+                if pos.sub(target_pos).await.length().await <= threshold {
                     remap.insert(v.0, keep);
                 }
             } else {
@@ -836,25 +856,25 @@ impl HalfedgeMesh {
                 unique.len() >= 3
             })
             .collect();
-        self.rebuild_from_polygon_soup(&new_positions, &new_faces)
+        self.rebuild_from_polygon_soup(&new_positions, &new_faces).await
     }
 
     pub async fn dissolve_edges(&mut self, edges: &[EdgeId]) -> MeshResult<()> {
         if edges.is_empty() {
             return Err(MeshKernelError::EmptySelection);
         }
-        let (positions, mut face_list) = self.polygon_soup();
+        let (positions, mut face_list) = self.polygon_soup().await;
         for &eid in edges {
-            let Ok((v0, v1)) = self.edge_endpoints(eid) else {
+            let Ok((v0, v1)) = self.edge_endpoints(eid).await else {
                 continue;
             };
             let mut a_idx = None;
             let mut b_idx = None;
             for (fi, face) in face_list.iter().enumerate() {
-                if find_edge_position(face, v0.0, v1.0).is_some() {
+                if find_edge_position(face, v0.0, v1.0).await.is_some() {
                     a_idx = Some(fi);
                 }
-                if find_edge_position(face, v1.0, v0.0).is_some() {
+                if find_edge_position(face, v1.0, v0.0).await.is_some() {
                     b_idx = Some(fi);
                 }
             }
@@ -862,15 +882,15 @@ impl HalfedgeMesh {
                 if ai == bi {
                     continue;
                 }
-                if let Some(merged) = merge_face_loops(&face_list[ai], &face_list[bi]) {
+                if let Some(merged) = merge_face_loops(&face_list[ai], &face_list[bi]).await {
                     let (keep, remove) = if ai < bi { (ai, bi) } else { (bi, ai) };
                     face_list[keep] = merged;
                     face_list.remove(remove);
                 }
             }
         }
-        let cleaned = collinear_cleanup(&positions, &face_list);
-        self.rebuild_from_polygon_soup(&positions, &cleaned)
+        let cleaned = collinear_cleanup(&positions, &face_list).await;
+        self.rebuild_from_polygon_soup(&positions, &cleaned).await
     }
 
     pub async fn dissolve_vertices(&mut self, verts: &[VertexId]) -> MeshResult<()> {
@@ -878,16 +898,16 @@ impl HalfedgeMesh {
             return Err(MeshKernelError::EmptySelection);
         }
         let remove: HashMap<u32, bool> = verts.iter().map(|v| (v.0, true)).collect();
-        let (positions, face_list) = self.polygon_soup();
+        let (positions, face_list) = self.polygon_soup().await;
         let new_faces: Vec<Vec<u32>> = face_list.into_iter().filter(|f| !f.iter().any(|vi| remove.contains_key(vi))).collect();
-        self.rebuild_from_polygon_soup(&positions, &new_faces)
+        self.rebuild_from_polygon_soup(&positions, &new_faces).await
     }
 
     pub async fn subdivide_faces(&mut self, faces: &[FaceId]) -> MeshResult<()> {
         if faces.is_empty() {
             return Err(MeshKernelError::EmptySelection);
         }
-        let (mut positions, face_list) = self.polygon_soup();
+        let (mut positions, face_list) = self.polygon_soup().await;
         let selected: HashMap<u32, bool> = faces.iter().map(|f| (f.0, true)).collect();
         let mut new_faces = Vec::new();
         for (fi, face) in face_list.iter().enumerate() {
@@ -900,9 +920,9 @@ impl HalfedgeMesh {
             }
             let mut centroid = Vec3::ZERO;
             for &vi in face {
-                centroid = centroid.add(Vec3(positions[vi as usize]));
+                centroid = centroid.add(Vec3(positions[vi as usize])).await;
             }
-            centroid = centroid.scale(1.0 / face.len() as f32);
+            centroid = centroid.scale(1.0 / face.len() as f32).await;
             let ci = positions.len() as u32;
             positions.push(centroid.0);
             let mut mids = Vec::new();
@@ -911,7 +931,7 @@ impl HalfedgeMesh {
                 let b = Vec3(positions[face[(i + 1) % face.len()] as usize]);
                 let mid = a.lerp(b, 0.5);
                 let mi = positions.len() as u32;
-                positions.push(mid.0);
+                positions.push(mid.await.0);
                 mids.push(mi);
             }
             for i in 0..face.len() {
@@ -921,11 +941,11 @@ impl HalfedgeMesh {
                 new_faces.push(vec![m0, mids[(i + 1) % face.len()], ci]);
             }
         }
-        self.rebuild_from_polygon_soup(&positions, &new_faces)
+        self.rebuild_from_polygon_soup(&positions, &new_faces).await
     }
 
     pub async fn triangulate(&mut self) -> MeshResult<()> {
-        let (positions, face_list) = self.polygon_soup();
+        let (positions, face_list) = self.polygon_soup().await;
         let mut new_faces = Vec::new();
         for face in face_list {
             if face.len() <= 3 {
@@ -933,18 +953,18 @@ impl HalfedgeMesh {
                 continue;
             }
             let face_positions: Vec<Vec3> = face.iter().map(|&vi| Vec3(positions[vi as usize])).collect();
-            for tri in triangulate_polygon(&face_positions) {
+            for tri in triangulate_polygon(&face_positions).await {
                 new_faces.push(vec![face[tri[0]], face[tri[1]], face[tri[2]]]);
             }
         }
-        self.rebuild_from_polygon_soup(&positions, &new_faces)
+        self.rebuild_from_polygon_soup(&positions, &new_faces).await
     }
 
     /// Merges every pair of adjacent faces whose normals are parallel and whose union is planar (within kernel
     /// tolerances) into a single n-gon, then drops resulting straight-pass-through (collinear) vertices. Returns
     /// the number of merges performed.
     pub async fn merge_coplanar_faces(&mut self) -> MeshResult<usize> {
-        let (positions, mut face_list) = self.polygon_soup();
+        let (positions, mut face_list) = self.polygon_soup().await;
         let mut merge_count = 0usize;
         loop {
             let mut merged_this_round = false;
@@ -953,12 +973,18 @@ impl HalfedgeMesh {
                 for i in 0..a_len {
                     let u = face_list[ai][i];
                     let v = face_list[ai][(i + 1) % a_len];
-                    let bi_found = face_list.iter().enumerate().find(|&(bi, f)| bi != ai && find_edge_position(f, v, u).is_some()).map(|(bi, _)| bi);
+                    let mut bi_found = None;
+                    for (bi, f) in face_list.iter().enumerate() {
+                        if bi != ai && find_edge_position(f, v, u).await.is_some() {
+                            bi_found = Some(bi);
+                            break;
+                        }
+                    }
                     let Some(bi) = bi_found else { continue };
-                    if !faces_coplanar(&positions, &face_list[ai], &face_list[bi]) {
+                    if !faces_coplanar(&positions, &face_list[ai], &face_list[bi]).await {
                         continue;
                     }
-                    if let Some(merged) = merge_face_loops(&face_list[ai], &face_list[bi]) {
+                    if let Some(merged) = merge_face_loops(&face_list[ai], &face_list[bi]).await {
                         let (keep, remove) = if ai < bi { (ai, bi) } else { (bi, ai) };
                         face_list[keep] = merged;
                         face_list.remove(remove);
@@ -972,8 +998,8 @@ impl HalfedgeMesh {
                 break;
             }
         }
-        let cleaned = collinear_cleanup(&positions, &face_list);
-        self.rebuild_from_polygon_soup(&positions, &cleaned)?;
+        let cleaned = collinear_cleanup(&positions, &face_list).await;
+        self.rebuild_from_polygon_soup(&positions, &cleaned).await?;
         Ok(merge_count)
     }
 
@@ -982,7 +1008,7 @@ impl HalfedgeMesh {
     /// shared boundaries — into a single vertex id per position, so the halfedge topology (twins, boundary
     /// detection) reflects the true geometric connectivity. Returns the number of vertices removed.
     pub async fn weld_coincident_vertices(&mut self, precision: f32) -> MeshResult<usize> {
-        let (positions, face_list) = self.polygon_soup();
+        let (positions, face_list) = self.polygon_soup().await;
         let scale = 1.0 / precision.max(1e-9);
         let mut groups: HashMap<(i64, i64, i64), u32> = HashMap::new();
         let mut compacted_positions: Vec<[f32; 3]> = Vec::new();
@@ -1009,7 +1035,7 @@ impl HalfedgeMesh {
                 unique.len() >= 3
             })
             .collect();
-        self.rebuild_from_polygon_soup(&compacted_positions, &new_faces)?;
+        self.rebuild_from_polygon_soup(&compacted_positions, &new_faces).await?;
         Ok(removed)
     }
 
@@ -1017,7 +1043,7 @@ impl HalfedgeMesh {
     /// CAD imports often leave inconsistently oriented face wires; without this pass, halfedge twins are
     /// missing even though the undirected mesh is closed. Returns the number of faces flipped.
     pub async fn orient_faces_consistently(&mut self) -> MeshResult<usize> {
-        let (positions, mut face_list) = self.polygon_soup();
+        let (positions, mut face_list) = self.polygon_soup().await;
         if face_list.is_empty() {
             return Ok(0);
         }
@@ -1072,7 +1098,7 @@ impl HalfedgeMesh {
                 face.reverse();
             }
         }
-        self.rebuild_from_polygon_soup(&positions, &face_list)?;
+        self.rebuild_from_polygon_soup(&positions, &face_list).await?;
         Ok(flips)
     }
 
@@ -1130,7 +1156,7 @@ impl HalfedgeMesh {
             return Ok(0);
         }
         let filled = new_loops.len();
-        let (positions, face_list) = self.polygon_soup();
+        let (positions, face_list) = self.polygon_soup().await;
         let mut all_faces = face_list;
         for mut loop_verts in new_loops {
             // Boundary loops are traced in the "hole" direction (following existing faces' own winding
@@ -1138,12 +1164,12 @@ impl HalfedgeMesh {
             loop_verts.reverse();
             all_faces.push(loop_verts);
         }
-        self.rebuild_from_polygon_soup(&positions, &all_faces)?;
+        self.rebuild_from_polygon_soup(&positions, &all_faces).await?;
         Ok(filled)
     }
 
     pub async fn mirror(&mut self, axis: MirrorAxis, weld_threshold: f32) -> MeshResult<()> {
-        let (positions, face_list) = self.polygon_soup();
+        let (positions, face_list) = self.polygon_soup().await;
         let mut all_positions = positions.clone();
         let offset = all_positions.len() as u32;
         for p in &positions {
@@ -1161,14 +1187,14 @@ impl HalfedgeMesh {
             mirrored.reverse();
             all_faces.push(mirrored);
         }
-        self.rebuild_from_polygon_soup(&all_positions, &all_faces)?;
-        let vert_count = self.vertex_count();
+        self.rebuild_from_polygon_soup(&all_positions, &all_faces).await?;
+        let vert_count = self.vertex_count().await;
         let mut to_merge: Vec<VertexId> = Vec::new();
         for i in 0..vert_count {
             for j in (i + 1)..vert_count {
-                let pi = self.vertex_position(VertexId(i as u32))?;
-                let pj = self.vertex_position(VertexId(j as u32))?;
-                if pi.sub(pj).length() <= weld_threshold {
+                let pi = self.vertex_position(VertexId(i as u32)).await?;
+                let pj = self.vertex_position(VertexId(j as u32)).await?;
+                if pi.sub(pj).await.length().await <= weld_threshold {
                     to_merge.push(VertexId(i as u32));
                     to_merge.push(VertexId(j as u32));
                     if to_merge.len() >= 2 {
@@ -1184,37 +1210,37 @@ impl HalfedgeMesh {
 
     pub async fn decimate(&mut self, target_ratio: f32) -> MeshResult<()> {
         let ratio = target_ratio.clamp(0.1, 1.0);
-        let target_verts = ((self.vertex_count() as f32) * ratio).ceil() as usize;
-        if target_verts >= self.vertex_count() {
+        let target_verts = ((self.vertex_count().await as f32) * ratio).ceil() as usize;
+        if target_verts >= self.vertex_count().await {
             return Ok(());
         }
         // 🩹️ Merging remaps a vertex id but never shrinks `self.vertices`, so `self.vertex_count()` itself
         // never drops; track the live (merged-away-aware) count locally for the loop guard instead, or this
         // never converges on `target_verts` and instead collapses edges until the mesh is empty.
-        let mut live_verts = self.vertex_count();
-        while live_verts > target_verts && self.edge_count() > 0 {
+        let mut live_verts = self.vertex_count().await;
+        while live_verts > target_verts && self.edge_count().await > 0 {
             let mut shortest: Option<(EdgeId, f32)> = None;
             for he_id in 0..self.halfedges.len() {
                 if he_id % 2 != 0 {
                     continue;
                 }
-                if let Ok((v0, v1)) = self.edge_endpoints(EdgeId(he_id as u32)) {
-                    let len = self.vertex_position(v0)?.sub(self.vertex_position(v1)?).length();
+                if let Ok((v0, v1)) = self.edge_endpoints(EdgeId(he_id as u32)).await {
+                    let len = self.vertex_position(v0).await?.sub(self.vertex_position(v1).await?).await.length().await;
                     if shortest.map(|(_, l)| len < l).unwrap_or(true) {
                         shortest = Some((EdgeId(he_id as u32), len));
                     }
                 }
             }
             let Some((edge, _)) = shortest else { break };
-            let (v0, v1) = self.edge_endpoints(edge)?;
-            let p0 = self.vertex_position(v0)?;
-            let p1 = self.vertex_position(v1)?;
+            let (v0, v1) = self.edge_endpoints(edge).await?;
+            let p0 = self.vertex_position(v0).await?;
+            let p1 = self.vertex_position(v1).await?;
             let mid = p0.lerp(p1, 0.5);
-            let (positions, face_list) = self.polygon_soup();
+            let (positions, face_list) = self.polygon_soup().await;
             let mut remap: HashMap<u32, u32> = HashMap::new();
             remap.insert(v1.0, v0.0);
             let mut new_positions = positions;
-            new_positions[v0.0 as usize] = mid.0;
+            new_positions[v0.0 as usize] = mid.await.0;
             let new_faces: Vec<Vec<u32>> = face_list
                 .into_iter()
                 .map(|f| f.into_iter().map(|vi| *remap.get(&vi).unwrap_or(&vi)).collect())
@@ -1225,17 +1251,17 @@ impl HalfedgeMesh {
                     u.len() >= 3
                 })
                 .collect();
-            self.rebuild_from_polygon_soup(&new_positions, &new_faces)?;
+            self.rebuild_from_polygon_soup(&new_positions, &new_faces).await?;
             live_verts -= 1;
         }
-        self.drop_unreferenced_vertices()
+        self.drop_unreferenced_vertices().await
     }
 
     /// 🧹️ Compacts away vertices no longer referenced by any face, so `vertex_count()` reflects the mesh's
     /// actual remaining complexity after operations (like [`Self::decimate`]) that remap vertex ids away
     /// without themselves shrinking the position buffer.
     async fn drop_unreferenced_vertices(&mut self) -> MeshResult<()> {
-        let (positions, face_list) = self.polygon_soup();
+        let (positions, face_list) = self.polygon_soup().await;
         let mut used = vec![false; positions.len()];
         for face in &face_list {
             for &vi in face {
@@ -1254,7 +1280,7 @@ impl HalfedgeMesh {
             }
         }
         let new_faces: Vec<Vec<u32>> = face_list.into_iter().map(|f| f.into_iter().map(|vi| remap[vi as usize]).collect()).collect();
-        self.rebuild_from_polygon_soup(&compacted, &new_faces)
+        self.rebuild_from_polygon_soup(&compacted, &new_faces).await
     }
 
     pub async fn set_shading(&mut self, faces: &[FaceId], smooth: bool) -> MeshResult<()> {
@@ -1270,14 +1296,14 @@ impl HalfedgeMesh {
             v.normal = None;
         }
         for fi in 0..self.faces.len() {
-            let face_normal = self.face_normal(FaceId(fi as u32))?;
-            let verts = self.face_vertex_ids(FaceId(fi as u32))?;
+            let face_normal = self.face_normal(FaceId(fi as u32)).await?;
+            let verts = self.face_vertex_ids(FaceId(fi as u32)).await?;
             let smooth = self.faces[fi].smooth;
             for v in verts {
                 let vert = &mut self.vertices[v.0 as usize];
                 if smooth {
                     let n = vert.normal.map(Vec3).unwrap_or(Vec3::ZERO).add(face_normal);
-                    vert.normal = Some(n.normalize().0);
+                    vert.normal = Some(n.await.normalize().await.0);
                 } else {
                     vert.normal = Some(face_normal.0);
                 }
@@ -1288,16 +1314,17 @@ impl HalfedgeMesh {
 }
 
 async fn segment_plane_intersect(a: Vec3, b: Vec3, plane_point: Vec3, plane_normal: Vec3) -> Option<(f32, Vec3)> {
-    let ab = b.sub(a);
-    let denom = plane_normal.dot(ab);
+    let ab = b.sub(a).await;
+    let denom = plane_normal.dot(ab).await;
     if denom.abs() < 1e-8 {
         return None;
     }
-    let t = plane_normal.dot(plane_point.sub(a)) / denom;
+    let numer = plane_normal.dot(plane_point.sub(a).await).await;
+    let t = numer / denom;
     if t < 0.0 || t > 1.0 {
         return None;
     }
-    Some((t, a.add(ab.scale(t))))
+    Some((t, a.add(ab.scale(t).await).await))
 }
 
 //#endregion Edit
@@ -1305,13 +1332,13 @@ async fn segment_plane_intersect(a: Vec3, b: Vec3, plane_point: Vec3, plane_norm
 //#region Uv
 
 async fn cot_angle(a: Vec3, b: Vec3, c: Vec3) -> f32 {
-    let ab = b.sub(a);
-    let ac = c.sub(a);
-    let cross_len = ab.cross(ac).length();
+    let ab = b.sub(a).await;
+    let ac = c.sub(a).await;
+    let cross_len = ab.cross(ac).await.length().await;
     if cross_len < 1e-8 {
         return 0.0;
     }
-    ab.dot(ac) / cross_len
+    ab.dot(ac).await / cross_len
 }
 
 async fn solve_lscm_1d(n: usize, triplets: &[(usize, usize, f64)], pin_a: usize, pin_b: usize, val_a: f64, val_b: f64) -> Vec<f64> {
@@ -1428,7 +1455,7 @@ impl HalfedgeMesh {
             visited[start] = true;
             while let Some(fi) = stack.pop() {
                 island.push(fi);
-                let hes = self.face_halfedge_ids(FaceId(fi as u32)).unwrap_or_default();
+                let hes = self.face_halfedge_ids(FaceId(fi as u32)).await.unwrap_or_default();
                 for he_id in hes {
                     let he = &self.halfedges[he_id as usize];
                     if self.uv_seams.contains(&he_id) {
@@ -1457,12 +1484,12 @@ impl HalfedgeMesh {
         let mut vert_set: HashSet<u32> = HashSet::new();
         let mut triangles: Vec<[u32; 3]> = Vec::new();
         for &fi in island_faces {
-            let verts = self.face_vertex_ids(FaceId(fi as u32)).unwrap_or_default();
+            let verts = self.face_vertex_ids(FaceId(fi as u32)).await.unwrap_or_default();
             if verts.len() < 3 {
                 continue;
             }
             let face_positions: Vec<Vec3> = verts.iter().map(|v| Vec3(self.vertices[v.0 as usize].position)).collect();
-            for tri in triangulate_polygon(&face_positions) {
+            for tri in triangulate_polygon(&face_positions).await {
                 triangles.push([verts[tri[0]].0, verts[tri[1]].0, verts[tri[2]].0]);
             }
             for v in verts {
@@ -1485,9 +1512,9 @@ impl HalfedgeMesh {
             let pa = pos(a);
             let pb = pos(b);
             let pc = pos(c);
-            let cot_a = cot_angle(pb, pa, pc) as f64;
-            let cot_b = cot_angle(pa, pb, pc) as f64;
-            let cot_c = cot_angle(pa, pc, pb) as f64;
+            let cot_a = cot_angle(pb, pa, pc).await as f64;
+            let cot_b = cot_angle(pa, pb, pc).await as f64;
+            let cot_c = cot_angle(pa, pc, pb).await as f64;
             let pairs = [(ia, ib, cot_c), (ib, ia, cot_c), (ib, ic, cot_a), (ic, ib, cot_a), (ia, ic, cot_b), (ic, ia, cot_b)];
             for (i, j, w) in pairs {
                 if w.abs() < 1e-12 {
@@ -1502,14 +1529,14 @@ impl HalfedgeMesh {
         let mut max_dist = 0.0f32;
         let p0 = pos(verts[pin_a]);
         for (i, &v) in verts.iter().enumerate().skip(1) {
-            let d = p0.sub(pos(v)).length();
+            let d = p0.sub(pos(v)).await.length().await;
             if d > max_dist {
                 max_dist = d;
                 pin_b = i;
             }
         }
-        let u = solve_lscm_1d(n, &triplets, pin_a, pin_b, 0.0, 1.0);
-        let v = solve_lscm_1d(n, &triplets, pin_a, pin_b, 0.0, 0.0);
+        let u = solve_lscm_1d(n, &triplets, pin_a, pin_b, 0.0, 1.0).await;
+        let v = solve_lscm_1d(n, &triplets, pin_a, pin_b, 0.0, 0.0).await;
         verts.into_iter().enumerate().map(|(i, vid)| (vid, [u[i] as f32, v[i] as f32])).collect()
     }
 
@@ -1520,7 +1547,7 @@ impl HalfedgeMesh {
         let mut shelf_x = 0.0f32;
         const PAD: f32 = 0.01;
         for island in islands {
-            let local = self.solve_island_uv(island);
+            let local = self.solve_island_uv(island).await;
             if local.is_empty() {
                 continue;
             }
@@ -1554,10 +1581,10 @@ impl HalfedgeMesh {
     }
 
     pub async fn unwrap_uv(&mut self) -> MeshResult<()> {
-        let islands = self.uv_island_faces();
-        let packed = self.pack_island_uvs(&islands);
+        let islands = self.uv_island_faces().await;
+        let packed = self.pack_island_uvs(&islands).await;
         for fi in 0..self.faces.len() {
-            let hes = self.face_halfedge_ids(FaceId(fi as u32))?;
+            let hes = self.face_halfedge_ids(FaceId(fi as u32)).await?;
             for he_id in hes {
                 let he = &mut self.halfedges[he_id as usize];
                 if let Some(uv) = packed.get(&he.vertex) {
@@ -1582,11 +1609,13 @@ async fn newell_normal(positions: &[Vec3]) -> Vec3 {
     for i in 0..n {
         let a = positions[i];
         let b = positions[(i + 1) % n];
-        nx += (a.y() as f64 - b.y() as f64) * (a.z() as f64 + b.z() as f64);
-        ny += (a.z() as f64 - b.z() as f64) * (a.x() as f64 + b.x() as f64);
-        nz += (a.x() as f64 - b.x() as f64) * (a.y() as f64 + b.y() as f64);
+        let (ax, ay, az) = (a.x().await as f64, a.y().await as f64, a.z().await as f64);
+        let (bx, by, bz) = (b.x().await as f64, b.y().await as f64, b.z().await as f64);
+        nx += (ay - by) * (az + bz);
+        ny += (az - bz) * (ax + bx);
+        nz += (ax - bx) * (ay + by);
     }
-    Vec3::new(nx as f32, ny as f32, nz as f32)
+    Vec3::new(nx as f32, ny as f32, nz as f32).await
 }
 
 type Vec3f64 = (f64, f64, f64);
@@ -1604,11 +1633,11 @@ async fn cross3(a: Vec3f64, b: Vec3f64) -> Vec3f64 {
 }
 
 async fn length3(a: Vec3f64) -> f64 {
-    dot3(a, a).sqrt()
+    dot3(a, a).await.sqrt()
 }
 
 async fn normalize3(a: Vec3f64) -> Vec3f64 {
-    let l = length3(a);
+    let l = length3(a).await;
     if l < 1e-12 {
         return (0.0, 0.0, 0.0);
     }
@@ -1625,8 +1654,8 @@ async fn plane_basis(normal: Vec3f64) -> (Vec3f64, Vec3f64) {
     } else {
         (0.0, 0.0, 1.0)
     };
-    let axis_u = normalize3(cross3(normal, reference));
-    let axis_v = cross3(normal, axis_u);
+    let axis_u = normalize3(cross3(normal, reference).await).await;
+    let axis_v = cross3(normal, axis_u).await;
     (axis_u, axis_v)
 }
 
@@ -1635,9 +1664,9 @@ async fn cross2(o: (f64, f64), a: (f64, f64), b: (f64, f64)) -> f64 {
 }
 
 async fn point_in_triangle(p: (f64, f64), a: (f64, f64), b: (f64, f64), c: (f64, f64)) -> bool {
-    let d1 = cross2(a, b, p);
-    let d2 = cross2(b, c, p);
-    let d3 = cross2(c, a, p);
+    let d1 = cross2(a, b, p).await;
+    let d2 = cross2(b, c, p).await;
+    let d3 = cross2(c, a, p).await;
     let has_neg = d1 < 0.0 || d2 < 0.0 || d3 < 0.0;
     let has_pos = d1 > 0.0 || d2 > 0.0 || d3 > 0.0;
     !(has_neg && has_pos)
@@ -1648,11 +1677,11 @@ async fn point_in_triangle(p: (f64, f64), a: (f64, f64), b: (f64, f64), c: (f64,
 async fn triangulate_indexed_polygon_with_holes(positions: &[[f32; 3]], outer: &[u32], holes: &[Vec<u32>]) -> Vec<[u32; 3]> {
     if holes.is_empty() {
         let pts: Vec<Vec3> = outer.iter().map(|&i| Vec3(positions[i as usize])).collect();
-        return triangulate_polygon(&pts).into_iter().map(|[a, b, c]| [outer[a], outer[b], outer[c]]).collect();
+        return triangulate_polygon(&pts).await.into_iter().map(|[a, b, c]| [outer[a], outer[b], outer[c]]).collect();
     }
     let mut combined: Vec<u32> = outer.to_vec();
     let mut remaining: Vec<Vec<u32>> = holes.to_vec();
-    while let Some((hole_index, outer_pos, hole_pos)) = find_closest_bridge(&combined, &remaining, positions) {
+    while let Some((hole_index, outer_pos, hole_pos)) = find_closest_bridge(&combined, &remaining, positions).await {
         let hole = remaining.remove(hole_index);
         let mut spliced = Vec::with_capacity(combined.len() + hole.len() + 2);
         spliced.extend_from_slice(&combined[..=outer_pos]);
@@ -1666,7 +1695,7 @@ async fn triangulate_indexed_polygon_with_holes(positions: &[[f32; 3]], outer: &
         combined = spliced;
     }
     let pts: Vec<Vec3> = combined.iter().map(|&i| Vec3(positions[i as usize])).collect();
-    triangulate_polygon(&pts).into_iter().map(|[a, b, c]| [combined[a], combined[b], combined[c]]).collect()
+    triangulate_polygon(&pts).await.into_iter().map(|[a, b, c]| [combined[a], combined[b], combined[c]]).collect()
 }
 
 async fn find_closest_bridge(outer: &[u32], holes: &[Vec<u32>], positions: &[[f32; 3]]) -> Option<(usize, usize, usize)> {
@@ -1676,7 +1705,7 @@ async fn find_closest_bridge(outer: &[u32], holes: &[Vec<u32>], positions: &[[f3
             let operation = Vec3(positions[ov as usize]);
             for (hpi, &hv) in hole.iter().enumerate() {
                 let hp = Vec3(positions[hv as usize]);
-                let d = operation.sub(hp).length();
+                let d = operation.sub(hp).await.length().await;
                 if best.map(|(bd, _, _, _)| d < bd).unwrap_or(true) {
                     best = Some((d, hi, oi, hpi));
                 }
@@ -1701,21 +1730,22 @@ async fn triangulate_polygon(positions: &[Vec3]) -> Vec<[usize; 3]> {
         let _ = from;
         (1..n - 1).map(|i| [0, i, i + 1]).collect()
     };
-    let points_f64: Vec<Vec3f64> = positions.iter().map(|p| (p.x() as f64, p.y() as f64, p.z() as f64)).collect();
-    let normal = newell_normal(positions);
-    if normal.length() < 1e-8 {
+    let mut points_f64: Vec<Vec3f64> = Vec::with_capacity(positions.len());
+    for p in positions {
+        points_f64.push((p.x().await as f64, p.y().await as f64, p.z().await as f64));
+    }
+    let normal = newell_normal(positions).await;
+    if normal.length().await < 1e-8 {
         return fan(0);
     }
-    let normal_f64 = normalize3((normal.x() as f64, normal.y() as f64, normal.z() as f64));
-    let (axis_u, axis_v) = plane_basis(normal_f64);
+    let normal_f64 = normalize3((normal.x().await as f64, normal.y().await as f64, normal.z().await as f64)).await;
+    let (axis_u, axis_v) = plane_basis(normal_f64).await;
     let origin = points_f64[0];
-    let projected: Vec<(f64, f64)> = points_f64
-        .iter()
-        .map(|&p| {
-            let local = sub3(p, origin);
-            (dot3(local, axis_u), dot3(local, axis_v))
-        })
-        .collect();
+    let mut projected: Vec<(f64, f64)> = Vec::with_capacity(points_f64.len());
+    for &p in &points_f64 {
+        let local = sub3(p, origin).await;
+        projected.push((dot3(local, axis_u).await, dot3(local, axis_v).await));
+    }
     let mut signed_area2 = 0.0f64;
     for i in 0..n {
         let a = projected[i];
@@ -1748,7 +1778,7 @@ async fn triangulate_polygon(positions: &[Vec3]) -> Vec<[usize; 3]> {
             let a = projected[prev];
             let b = projected[curr];
             let c = projected[next];
-            let cross = cross2(a, b, c);
+            let cross = cross2(a, b, c).await;
             let is_convex = if ccw { cross > 1e-14 } else { cross < -1e-14 };
             if !is_convex {
                 continue;
@@ -1758,7 +1788,7 @@ async fn triangulate_polygon(positions: &[Vec3]) -> Vec<[usize; 3]> {
                 if k == prev || k == curr || k == next {
                     continue;
                 }
-                if point_in_triangle(projected[k], a, b, c) {
+                if point_in_triangle(projected[k], a, b, c).await {
                     contains_other = true;
                     break;
                 }
@@ -1800,7 +1830,7 @@ async fn merge_face_loops(a: &[u32], b: &[u32]) -> Option<Vec<u32>> {
     for i in 0..n {
         let u = a[i];
         let v = a[(i + 1) % n];
-        if find_edge_position(b, v, u).is_some() {
+        if find_edge_position(b, v, u).await.is_some() {
             shared_a_pos = Some(i);
             break;
         }
@@ -1808,14 +1838,14 @@ async fn merge_face_loops(a: &[u32], b: &[u32]) -> Option<Vec<u32>> {
     let a_pos = shared_a_pos?;
     let u = a[a_pos];
     let v = a[(a_pos + 1) % n];
-    let b_pos = find_edge_position(b, v, u)?;
+    let b_pos = find_edge_position(b, v, u).await?;
     for i in 0..n {
         if i == a_pos {
             continue;
         }
         let uu = a[i];
         let vv = a[(i + 1) % n];
-        if find_edge_position(b, vv, uu).is_some() {
+        if find_edge_position(b, vv, uu).await.is_some() {
             return None;
         }
     }
@@ -1841,32 +1871,32 @@ async fn faces_coplanar(positions: &[[f32; 3]], a: &[u32], b: &[u32]) -> bool {
     let pos = |vi: u32| Vec3(positions[vi as usize]);
     let a_pts: Vec<Vec3> = a.iter().map(|&vi| pos(vi)).collect();
     let b_pts: Vec<Vec3> = b.iter().map(|&vi| pos(vi)).collect();
-    let na = newell_normal(&a_pts);
-    let la = na.length();
+    let na = newell_normal(&a_pts).await;
+    let la = na.length().await;
     if la < 1e-10 {
         return false;
     }
-    let na_n = na.scale(1.0 / la);
-    let nb = newell_normal(&b_pts);
-    let lb = nb.length();
+    let na_n = na.scale(1.0 / la).await;
+    let nb = newell_normal(&b_pts).await;
+    let lb = nb.length().await;
     if lb < 1e-10 {
         return false;
     }
-    let nb_n = nb.scale(1.0 / lb);
-    if na_n.dot(nb_n) < COPLANAR_NORMAL_DOT_MIN {
+    let nb_n = nb.scale(1.0 / lb).await;
+    if na_n.dot(nb_n).await < COPLANAR_NORMAL_DOT_MIN {
         return false;
     }
     let origin = a_pts[0];
     let mut min = a_pts[0];
     let mut max = a_pts[0];
     for &p in a_pts.iter().chain(b_pts.iter()) {
-        min = Vec3::new(min.x().min(p.x()), min.y().min(p.y()), min.z().min(p.z()));
-        max = Vec3::new(max.x().max(p.x()), max.y().max(p.y()), max.z().max(p.z()));
+        min = Vec3::new(min.x().await.min(p.x().await), min.y().await.min(p.y().await), min.z().await.min(p.z().await)).await;
+        max = Vec3::new(max.x().await.max(p.x().await), max.y().await.max(p.y().await), max.z().await.max(p.z().await)).await;
     }
-    let diag = max.sub(min).length();
+    let diag = max.sub(min).await.length().await;
     let tol = (COPLANAR_DISTANCE_REL_TOL * diag).max(1e-6);
     for &p in b_pts.iter() {
-        if p.sub(origin).dot(na_n).abs() > tol {
+        if p.sub(origin).await.dot(na_n).await.abs() > tol {
             return false;
         }
     }
@@ -1897,12 +1927,12 @@ async fn collinear_cleanup(positions: &[[f32; 3]], face_list: &[Vec<u32>]) -> Ve
         if prev == next || prev == vid || next == vid {
             continue;
         }
-        let d1 = pos(vid).sub(pos(prev));
-        let d2 = pos(next).sub(pos(vid));
-        if d1.length() < 1e-9 || d2.length() < 1e-9 {
+        let d1 = pos(vid).sub(pos(prev)).await;
+        let d2 = pos(next).sub(pos(vid)).await;
+        if d1.length().await < 1e-9 || d2.length().await < 1e-9 {
             continue;
         }
-        if d1.normalize().dot(d2.normalize()) > 1.0 - 1e-4 {
+        if d1.normalize().await.dot(d2.normalize().await).await > 1.0 - 1e-4 {
             removable.insert(vid);
         }
     }
@@ -1930,17 +1960,17 @@ impl HalfedgeMesh {
         for fi in 0..self.faces.len() {
             let face = &self.faces[fi];
             let smooth = face.smooth;
-            let topology_hes = self.face_halfedge_ids(FaceId(fi as u32))?;
+            let topology_hes = self.face_halfedge_ids(FaceId(fi as u32)).await?;
             let topology_verts: Vec<VertexId> = topology_hes.iter().map(|halfedge| VertexId(self.halfedges[*halfedge as usize].vertex)).collect();
             let mut hes = topology_hes.clone();
             if face.flipped {
                 hes.reverse();
             }
-            let verts = self.face_vertex_ids(FaceId(fi as u32))?;
+            let verts = self.face_vertex_ids(FaceId(fi as u32)).await?;
             if verts.len() < 3 {
                 continue;
             }
-            let face_normal = self.face_normal(FaceId(fi as u32))?;
+            let face_normal = self.face_normal(FaceId(fi as u32)).await?;
             let base = positions.len() as u32 / 3;
 
             let push_corner = |he_id: u32, positions: &mut Vec<f32>, normals: &mut Vec<f32>, vertex_ids: &mut Vec<u32>, uvs: &mut Vec<f32>, normal: Vec3| {
@@ -1955,7 +1985,7 @@ impl HalfedgeMesh {
             };
 
             let face_positions: Vec<Vec3> = verts.iter().map(|v| Vec3(self.vertices[v.0 as usize].position)).collect();
-            let triangles = triangulate_polygon(&face_positions);
+            let triangles = triangulate_polygon(&face_positions).await;
 
             if smooth {
                 for &he_id in &hes {
@@ -2025,7 +2055,7 @@ impl HalfedgeMesh {
             }
         }
         for fi in 0..self.faces.len() {
-            let mut hes = self.face_halfedge_ids(FaceId(fi as u32))?;
+            let mut hes = self.face_halfedge_ids(FaceId(fi as u32)).await?;
             if self.faces[fi].flipped {
                 hes.reverse();
             }
@@ -2060,28 +2090,28 @@ impl HalfedgeMesh {
 mod tests {
     use super::*;
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn box_prim_has_six_faces() {
-        let mesh = HalfedgeMesh::box_prim(2.0, 2.0, 2.0).unwrap();
-        assert_eq!(mesh.face_count(), 6);
-        assert_eq!(mesh.vertex_count(), 8);
+        let mesh = HalfedgeMesh::box_prim(2.0, 2.0, 2.0).await.unwrap();
+        assert_eq!(mesh.face_count().await, 6);
+        assert_eq!(mesh.vertex_count().await, 8);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn plane_prim_single_face() {
-        let mesh = HalfedgeMesh::plane_prim(4.0, 4.0).unwrap();
-        assert_eq!(mesh.face_count(), 1);
+        let mesh = HalfedgeMesh::plane_prim(4.0, 4.0).await.unwrap();
+        assert_eq!(mesh.face_count().await, 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn translate_moves_vertices() {
-        let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap();
-        mesh.translate(Vec3::new(1.0, 0.0, 0.0)).unwrap();
-        let p = mesh.vertex_position(VertexId(0)).unwrap();
-        assert!((p.x() - 0.5).abs() < 1e-5);
+        let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).await.unwrap();
+        mesh.translate(Vec3::new(1.0, 0.0, 0.0).await).await.unwrap();
+        let p = mesh.vertex_position(VertexId(0)).await.unwrap();
+        assert!((p.x().await - 0.5).abs() < 1e-5);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn from_indexed_triangles_builds_triangle_faces() {
         let positions = vec![
             0.0, 0.0, 0.0, //
@@ -2089,12 +2119,12 @@ mod tests {
             0.0, 1.0, 0.0, //
         ];
         let indices = vec![0, 1, 2];
-        let mesh = HalfedgeMesh::from_indexed_triangles(&positions, &indices).unwrap();
-        assert_eq!(mesh.vertex_count(), 3);
-        assert_eq!(mesh.face_count(), 1);
+        let mesh = HalfedgeMesh::from_indexed_triangles(&positions, &indices).await.unwrap();
+        assert_eq!(mesh.vertex_count().await, 3);
+        assert_eq!(mesh.face_count().await, 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn from_indexed_triangles_by_face_id_merges_per_brep_face_without_filling_holes() {
         // Two quads on z=0 sharing no edge (a slab with a gap — like a face pair that must not be bridged),
         // plus a third vertical face that should stay separate. Face ids: 1 covers both coplanar quads'
@@ -2117,13 +2147,13 @@ mod tests {
             0, 1, 9, 0, 9, 8, // face 12 — vertical
         ];
         let face_ids = vec![10, 10, 11, 11, 12, 12];
-        let mut mesh = HalfedgeMesh::from_indexed_triangles_by_face_id(&positions, &indices, &face_ids).unwrap();
-        assert_eq!(mesh.face_count(), 3, "each B-Rep face becomes one n-gon; gap must not be filled");
-        mesh.weld_coincident_vertices(1e-6).unwrap();
+        let mut mesh = HalfedgeMesh::from_indexed_triangles_by_face_id(&positions, &indices, &face_ids).await.unwrap();
+        assert_eq!(mesh.face_count().await, 3, "each B-Rep face becomes one n-gon; gap must not be filled");
+        mesh.weld_coincident_vertices(1e-6).await.unwrap();
         let open = {
             let mut directed: HashMap<(u32, u32), u32> = HashMap::new();
-            for fi in 0..mesh.face_count() {
-                let verts = mesh.face_vertex_ids(FaceId(fi as u32)).unwrap();
+            for fi in 0..mesh.face_count().await {
+                let verts = mesh.face_vertex_ids(FaceId(fi as u32)).await.unwrap();
                 let n = verts.len();
                 for i in 0..n {
                     *directed.entry((verts[i].0, verts[(i + 1) % n].0)).or_insert(0) += 1;
@@ -2134,16 +2164,16 @@ mod tests {
         assert!(open > 0, "gap between the two quads must remain an open boundary, not a filled face");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn orient_faces_consistently_fixes_same_winding_neighbors() {
         // Two quads sharing edge 1-2, both wound CCW in XY — shared edge has the same directed sense.
         let positions = [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 1.0, 0.0], [0.0, 1.0, 0.0], [2.0, 0.0, 0.0], [2.0, 1.0, 0.0]];
         let faces = vec![vec![0, 1, 2, 3], vec![1, 2, 5, 4]];
-        let mut mesh = HalfedgeMesh::from_faces(&positions, &faces).unwrap();
+        let mut mesh = HalfedgeMesh::from_faces(&positions, &faces).await.unwrap();
         let open_before = {
             let mut directed: HashMap<(u32, u32), u32> = HashMap::new();
-            for fi in 0..mesh.face_count() {
-                let verts = mesh.face_vertex_ids(FaceId(fi as u32)).unwrap();
+            for fi in 0..mesh.face_count().await {
+                let verts = mesh.face_vertex_ids(FaceId(fi as u32)).await.unwrap();
                 let n = verts.len();
                 for i in 0..n {
                     *directed.entry((verts[i].0, verts[(i + 1) % n].0)).or_insert(0) += 1;
@@ -2152,12 +2182,12 @@ mod tests {
             directed.keys().filter(|&&(a, b)| !directed.contains_key(&(b, a))).count()
         };
         assert!(open_before > 0);
-        let flips = mesh.orient_faces_consistently().unwrap();
+        let flips = mesh.orient_faces_consistently().await.unwrap();
         assert!(flips >= 1);
         let open_after = {
             let mut directed: HashMap<(u32, u32), u32> = HashMap::new();
-            for fi in 0..mesh.face_count() {
-                let verts = mesh.face_vertex_ids(FaceId(fi as u32)).unwrap();
+            for fi in 0..mesh.face_count().await {
+                let verts = mesh.face_vertex_ids(FaceId(fi as u32)).await.unwrap();
                 let n = verts.len();
                 for i in 0..n {
                     *directed.entry((verts[i].0, verts[(i + 1) % n].0)).or_insert(0) += 1;
@@ -2168,28 +2198,28 @@ mod tests {
         assert_eq!(open_after, 6, "only the outer boundary of the 2-quad strip should remain open");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn triangulate_produces_triangles_only() {
-        let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap();
-        mesh.triangulate().unwrap();
-        for fi in 0..mesh.face_count() {
-            let verts = mesh.face_vertex_ids(FaceId(fi as u32)).unwrap();
+        let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).await.unwrap();
+        mesh.triangulate().await.unwrap();
+        for fi in 0..mesh.face_count().await {
+            let verts = mesh.face_vertex_ids(FaceId(fi as u32)).await.unwrap();
             assert_eq!(verts.len(), 3);
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn extrude_increases_face_count() {
-        let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap();
-        let before = mesh.face_count();
-        mesh.extrude_faces(&[FaceId(0)], 0.5).unwrap();
-        assert!(mesh.face_count() > before);
+        let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).await.unwrap();
+        let before = mesh.face_count().await;
+        mesh.extrude_faces(&[FaceId(0)], 0.5).await.unwrap();
+        assert!(mesh.face_count().await > before);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn tessellate_has_positions_and_indices() {
-        let mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap();
-        let transfer = mesh.tessellate().unwrap();
+        let mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).await.unwrap();
+        let transfer = mesh.tessellate().await.unwrap();
         assert!(!transfer.positions.is_empty());
         assert!(!transfer.indices.is_empty());
         assert!(!transfer.edge_positions.is_empty());
@@ -2201,22 +2231,22 @@ mod tests {
         assert_eq!(transfer.edge_is_seam.len(), transfer.edge_ids.len());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn flip_faces_reverses_only_requested_normals() {
-        let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap();
-        let before = mesh.face_normal(FaceId(0)).unwrap();
-        let edge_ids = mesh.tessellate().unwrap().edge_ids;
-        mesh.flip_faces(&[FaceId(0)]).unwrap();
-        let after = mesh.face_normal(FaceId(0)).unwrap();
-        assert!(before.dot(after) < -0.99);
-        assert_eq!(mesh.tessellate().unwrap().edge_ids, edge_ids);
+        let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).await.unwrap();
+        let before = mesh.face_normal(FaceId(0)).await.unwrap();
+        let edge_ids = mesh.tessellate().await.unwrap().edge_ids;
+        mesh.flip_faces(&[FaceId(0)]).await.unwrap();
+        let after = mesh.face_normal(FaceId(0)).await.unwrap();
+        assert!(before.dot(after).await < -0.99);
+        assert_eq!(mesh.tessellate().await.unwrap().edge_ids, edge_ids);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn unwrap_uv_produces_bounded_coordinates() {
-        let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap();
-        mesh.unwrap_uv().unwrap();
-        let transfer = mesh.tessellate().unwrap();
+        let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).await.unwrap();
+        mesh.unwrap_uv().await.unwrap();
+        let transfer = mesh.tessellate().await.unwrap();
         assert!(!transfer.uvs.is_empty());
         for chunk in transfer.uvs.chunks(2) {
             assert!(chunk[0].is_finite());
@@ -2226,53 +2256,56 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn obj_export_contains_vertices() {
-        let mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap();
-        let obj = mesh.to_obj().unwrap();
+        let mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).await.unwrap();
+        let obj = mesh.to_obj().await.unwrap();
         assert!(obj.contains("v "));
         assert!(obj.contains("f "));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn ico_sphere_has_faces() {
-        let mesh = HalfedgeMesh::ico_sphere_prim(1.0, 1).unwrap();
-        assert!(mesh.face_count() > 20);
+        let mesh = HalfedgeMesh::ico_sphere_prim(1.0, 1).await.unwrap();
+        assert!(mesh.face_count().await > 20);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn decimate_reduces_vertices() {
-        let mut mesh = HalfedgeMesh::ico_sphere_prim(1.0, 2).unwrap();
-        let before = mesh.vertex_count();
-        mesh.decimate(0.5).unwrap();
-        assert!(mesh.vertex_count() <= before);
+        let mut mesh = HalfedgeMesh::ico_sphere_prim(1.0, 2).await.unwrap();
+        let before = mesh.vertex_count().await;
+        mesh.decimate(0.5).await.unwrap();
+        assert!(mesh.vertex_count().await <= before);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn json_roundtrip() {
-        let mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap();
-        let json = mesh.to_json().unwrap();
-        let restored = HalfedgeMesh::from_json(&json).unwrap();
-        assert_eq!(restored.vertex_count(), mesh.vertex_count());
+        let mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).await.unwrap();
+        let json = mesh.to_json().await.unwrap();
+        let restored = HalfedgeMesh::from_json(&json).await.unwrap();
+        assert_eq!(restored.vertex_count().await, mesh.vertex_count().await);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn newell_normal_handles_collinear_first_corner() {
         // First three points (0,0,0)-(1,0,0)-(2,0,0) are collinear: the old first-triangle-cross
         // method degenerates to a zero vector here, Newell's method must not.
         let positions = vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [2.0, 0.0, 0.0], [2.0, 1.0, 0.0]];
-        let mesh = HalfedgeMesh::from_faces(&positions, &[vec![0, 1, 2, 3]]).unwrap();
-        let normal = mesh.face_normal(FaceId(0)).unwrap();
-        assert!(normal.length() > 0.99 && normal.length() < 1.01);
-        assert!(normal.dot(Vec3::new(0.0, 0.0, 1.0)).abs() > 0.99);
+        let mesh = HalfedgeMesh::from_faces(&positions, &[vec![0, 1, 2, 3]]).await.unwrap();
+        let normal = mesh.face_normal(FaceId(0)).await.unwrap();
+        assert!(normal.length().await > 0.99 && normal.length().await < 1.01);
+        assert!(normal.dot(Vec3::new(0.0, 0.0, 1.0).await).await.abs() > 0.99);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn ear_clipping_triangulates_concave_l_polygon() {
         // Concave L-shaped hexagon.
         let corners = [(0.0, 0.0), (2.0, 0.0), (2.0, 1.0), (1.0, 1.0), (1.0, 2.0), (0.0, 2.0)];
-        let positions: Vec<Vec3> = corners.iter().map(|&(x, y)| Vec3::new(x, y, 0.0)).collect();
-        let triangles = triangulate_polygon(&positions);
+        let mut positions: Vec<Vec3> = Vec::with_capacity(corners.len());
+        for &(x, y) in &corners {
+            positions.push(Vec3::new(x, y, 0.0).await);
+        }
+        let triangles = triangulate_polygon(&positions).await;
         assert_eq!(triangles.len(), corners.len() - 2);
         let shoelace = |pts: &[(f64, f64)]| -> f64 {
             let n = pts.len();
@@ -2295,60 +2328,60 @@ mod tests {
         assert!((triangle_area_sum - polygon_area).abs() < 1e-6);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn merge_coplanar_faces_reassembles_triangulated_cube_into_quads() {
-        let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap();
-        mesh.triangulate().unwrap();
-        assert_eq!(mesh.face_count(), 12);
-        let merges = mesh.merge_coplanar_faces().unwrap();
+        let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).await.unwrap();
+        mesh.triangulate().await.unwrap();
+        assert_eq!(mesh.face_count().await, 12);
+        let merges = mesh.merge_coplanar_faces().await.unwrap();
         assert_eq!(merges, 6);
-        assert_eq!(mesh.face_count(), 6);
-        for fi in 0..mesh.face_count() {
-            let verts = mesh.face_vertex_ids(FaceId(fi as u32)).unwrap();
+        assert_eq!(mesh.face_count().await, 6);
+        for fi in 0..mesh.face_count().await {
+            let verts = mesh.face_vertex_ids(FaceId(fi as u32)).await.unwrap();
             assert_eq!(verts.len(), 4);
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dissolve_edges_merges_two_triangles_into_a_quad() {
         let positions = vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 1.0, 0.0], [0.0, 1.0, 0.0]];
         let faces = vec![vec![0, 1, 2], vec![0, 2, 3]];
-        let mut mesh = HalfedgeMesh::from_faces(&positions, &faces).unwrap();
-        assert_eq!(mesh.face_count(), 2);
+        let mut mesh = HalfedgeMesh::from_faces(&positions, &faces).await.unwrap();
+        assert_eq!(mesh.face_count().await, 2);
         // Halfedge index 2 is face 0's edge 2->0, the shared diagonal.
-        mesh.dissolve_edges(&[EdgeId(2)]).unwrap();
-        assert_eq!(mesh.face_count(), 1);
-        let verts = mesh.face_vertex_ids(FaceId(0)).unwrap();
+        mesh.dissolve_edges(&[EdgeId(2)]).await.unwrap();
+        assert_eq!(mesh.face_count().await, 1);
+        let verts = mesh.face_vertex_ids(FaceId(0)).await.unwrap();
         assert_eq!(verts.len(), 4);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn merge_and_cleanup_collapses_seam_vertices_of_a_contiguous_strip() {
         // Three coplanar quads in a row sharing seam edges; the seam vertices are used by exactly
         // two faces each and lie on straight boundary lines, so they must be dropped after merge.
         let positions = vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 1.0, 0.0], [0.0, 1.0, 0.0], [2.0, 0.0, 0.0], [2.0, 1.0, 0.0], [3.0, 0.0, 0.0], [3.0, 1.0, 0.0]];
         let faces = vec![vec![0, 1, 2, 3], vec![1, 4, 5, 2], vec![4, 6, 7, 5]];
-        let mut mesh = HalfedgeMesh::from_faces(&positions, &faces).unwrap();
-        assert_eq!(mesh.face_count(), 3);
-        let merges = mesh.merge_coplanar_faces().unwrap();
+        let mut mesh = HalfedgeMesh::from_faces(&positions, &faces).await.unwrap();
+        assert_eq!(mesh.face_count().await, 3);
+        let merges = mesh.merge_coplanar_faces().await.unwrap();
         assert_eq!(merges, 2);
-        assert_eq!(mesh.face_count(), 1);
-        let verts = mesh.face_vertex_ids(FaceId(0)).unwrap();
+        assert_eq!(mesh.face_count().await, 1);
+        let verts = mesh.face_vertex_ids(FaceId(0)).await.unwrap();
         assert_eq!(verts.len(), 4, "seam vertices 1,2,4,5 should have been dropped as collinear");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn tessellate_concave_face_tags_all_triangles_with_one_face_id() {
         let corners = [(0.0, 0.0), (2.0, 0.0), (2.0, 1.0), (1.0, 1.0), (1.0, 2.0), (0.0, 2.0)];
         let positions: Vec<[f32; 3]> = corners.iter().map(|&(x, y)| [x, y, 0.0]).collect();
-        let mesh = HalfedgeMesh::from_faces(&positions, &[(0..6).collect()]).unwrap();
-        let transfer = mesh.tessellate().unwrap();
+        let mesh = HalfedgeMesh::from_faces(&positions, &[(0..6).collect()]).await.unwrap();
+        let transfer = mesh.tessellate().await.unwrap();
         assert_eq!(transfer.face_ids.len(), corners.len() - 2);
         assert!(transfer.face_ids.iter().all(|&id| id == 0));
         assert_eq!(transfer.indices.len(), (corners.len() - 2) * 3);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn weld_coincident_vertices_unifies_independently_tessellated_seam() {
         // Two quads sharing an edge but built with DUPLICATE (non-shared) vertices at that seam, as an
         // importer would produce when tessellating adjacent source faces independently.
@@ -2363,32 +2396,32 @@ mod tests {
             [2.0, 1.0, 0.0],
         ];
         let faces = vec![vec![0, 1, 2, 3], vec![4, 6, 7, 5]];
-        let mut mesh = HalfedgeMesh::from_faces(&positions, &faces).unwrap();
-        assert_eq!(mesh.vertex_count(), 8);
-        let removed = mesh.weld_coincident_vertices(1e-4).unwrap();
+        let mut mesh = HalfedgeMesh::from_faces(&positions, &faces).await.unwrap();
+        assert_eq!(mesh.vertex_count().await, 8);
+        let removed = mesh.weld_coincident_vertices(1e-4).await.unwrap();
         assert_eq!(removed, 2);
-        assert_eq!(mesh.vertex_count(), 6);
-        let merges = mesh.merge_coplanar_faces().unwrap();
+        assert_eq!(mesh.vertex_count().await, 6);
+        let merges = mesh.merge_coplanar_faces().await.unwrap();
         assert_eq!(merges, 1, "welding should have made the seam mergeable");
-        assert_eq!(mesh.face_count(), 1);
+        assert_eq!(mesh.face_count().await, 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fill_holes_caps_a_missing_box_face() {
-        let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap();
+        let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).await.unwrap();
         // Remove one face by rebuilding without it.
-        let (positions, mut face_list) = mesh.polygon_soup();
+        let (positions, mut face_list) = mesh.polygon_soup().await;
         face_list.remove(0);
         assert_eq!(face_list.len(), 5);
-        mesh = HalfedgeMesh::from_faces(&positions, &face_list).unwrap();
-        let filled = mesh.fill_holes().unwrap();
+        mesh = HalfedgeMesh::from_faces(&positions, &face_list).await.unwrap();
+        let filled = mesh.fill_holes().await.unwrap();
         assert_eq!(filled, 1);
-        assert_eq!(mesh.face_count(), 6);
+        assert_eq!(mesh.face_count().await, 6);
         // Verify the resulting mesh is watertight: every directed boundary edge (position-keyed) now has
         // an opposite-winding counterpart.
         let mut directed: HashMap<(u32, u32), u32> = HashMap::new();
-        for fi in 0..mesh.face_count() {
-            let verts = mesh.face_vertex_ids(FaceId(fi as u32)).unwrap();
+        for fi in 0..mesh.face_count().await {
+            let verts = mesh.face_vertex_ids(FaceId(fi as u32)).await.unwrap();
             let n = verts.len();
             for i in 0..n {
                 *directed.entry((verts[i].0, verts[(i + 1) % n].0)).or_insert(0) += 1;
@@ -2399,7 +2432,7 @@ mod tests {
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn fill_holes_disambiguates_two_holes_sharing_one_vertex() {
         // 3x3 grid of vertices forming a 2x2 grid of quads; keep only the two DIAGONAL quads, so the two
         // missing (diagonally opposite) quads are separate holes that touch at exactly the shared center
@@ -2413,355 +2446,355 @@ mod tests {
         let idx = |i: usize, j: usize| (i * 3 + j) as u32;
         let q00 = vec![idx(0, 0), idx(1, 0), idx(1, 1), idx(0, 1)];
         let q11 = vec![idx(1, 1), idx(2, 1), idx(2, 2), idx(1, 2)];
-        let mut mesh = HalfedgeMesh::from_faces(&positions, &[q00, q11]).unwrap();
-        assert_eq!(mesh.face_count(), 2);
-        let filled = mesh.fill_holes().unwrap();
+        let mut mesh = HalfedgeMesh::from_faces(&positions, &[q00, q11]).await.unwrap();
+        assert_eq!(mesh.face_count().await, 2);
+        let filled = mesh.fill_holes().await.unwrap();
         assert_eq!(filled, 2, "expected both diagonal holes to be found and capped separately");
-        assert_eq!(mesh.face_count(), 4);
-        for fi in 0..mesh.face_count() {
-            assert_eq!(mesh.face_vertex_ids(FaceId(fi as u32)).unwrap().len(), 4);
+        assert_eq!(mesh.face_count().await, 4);
+        for fi in 0..mesh.face_count().await {
+            assert_eq!(mesh.face_vertex_ids(FaceId(fi as u32)).await.unwrap().len(), 4);
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn vec3_dot_cross_length_lerp() {
-        let a = Vec3::new(1.0, 0.0, 0.0);
-        let b = Vec3::new(0.0, 1.0, 0.0);
-        assert!((a.dot(b)).abs() < 1e-6);
-        assert!((a.cross(b).z() - 1.0).abs() < 1e-6);
-        assert!((Vec3::new(3.0, 4.0, 0.0).length() - 5.0).abs() < 1e-6);
-        let mid = a.lerp(b, 0.5);
-        assert!((mid.x() - 0.5).abs() < 1e-6 && (mid.y() - 0.5).abs() < 1e-6);
+        let a = Vec3::new(1.0, 0.0, 0.0).await;
+        let b = Vec3::new(0.0, 1.0, 0.0).await;
+        assert!(a.dot(b).await.abs() < 1e-6);
+        assert!((a.cross(b).await.z().await - 1.0).abs() < 1e-6);
+        assert!((Vec3::new(3.0, 4.0, 0.0).await.length().await - 5.0).abs() < 1e-6);
+        let mid = a.lerp(b, 0.5).await;
+        assert!((mid.x().await - 0.5).abs() < 1e-6 && (mid.y().await - 0.5).abs() < 1e-6);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn vec3_normalize_zero_vector_returns_zero() {
-        assert_eq!(Vec3::ZERO.normalize(), Vec3::ZERO);
-        let tiny = Vec3::new(1e-9, 0.0, 0.0);
-        assert_eq!(tiny.normalize(), Vec3::ZERO);
+        assert_eq!(Vec3::ZERO.normalize().await, Vec3::ZERO);
+        let tiny = Vec3::new(1e-9, 0.0, 0.0).await;
+        assert_eq!(tiny.normalize().await, Vec3::ZERO);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn vertex_position_invalid_handle_returns_err() {
-        let mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap();
-        assert_eq!(mesh.vertex_position(VertexId(999)), Err(MeshKernelError::InvalidHandle));
+        let mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).await.unwrap();
+        assert_eq!(mesh.vertex_position(VertexId(999)).await, Err(MeshKernelError::InvalidHandle));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_vertex_position_updates_and_rejects_invalid_handle() {
-        let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap();
-        mesh.set_vertex_position(VertexId(0), Vec3::new(9.0, 9.0, 9.0)).unwrap();
-        assert_eq!(mesh.vertex_position(VertexId(0)).unwrap(), Vec3::new(9.0, 9.0, 9.0));
-        assert_eq!(mesh.set_vertex_position(VertexId(999), Vec3::ZERO), Err(MeshKernelError::InvalidHandle));
+        let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).await.unwrap();
+        mesh.set_vertex_position(VertexId(0), Vec3::new(9.0, 9.0, 9.0).await).await.unwrap();
+        assert_eq!(mesh.vertex_position(VertexId(0)).await.unwrap(), Vec3::new(9.0, 9.0, 9.0).await);
+        assert_eq!(mesh.set_vertex_position(VertexId(999), Vec3::ZERO).await, Err(MeshKernelError::InvalidHandle));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn edge_endpoints_returns_ordered_vertices() {
-        let mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap();
-        let (v0, v1) = mesh.edge_endpoints(EdgeId(0)).unwrap();
+        let mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).await.unwrap();
+        let (v0, v1) = mesh.edge_endpoints(EdgeId(0)).await.unwrap();
         assert_ne!(v0, v1);
-        assert_eq!(mesh.edge_endpoints(EdgeId(9999)), Err(MeshKernelError::InvalidHandle));
+        assert_eq!(mesh.edge_endpoints(EdgeId(9999)).await, Err(MeshKernelError::InvalidHandle));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn face_vertex_ids_invalid_handle_returns_err() {
-        let mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap();
-        assert_eq!(mesh.face_vertex_ids(FaceId(999)), Err(MeshKernelError::InvalidHandle));
+        let mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).await.unwrap();
+        assert_eq!(mesh.face_vertex_ids(FaceId(999)).await, Err(MeshKernelError::InvalidHandle));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn flip_faces_rejects_empty_selection_and_invalid_handle() {
-        let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap();
-        assert_eq!(mesh.flip_faces(&[]), Err(MeshKernelError::EmptySelection));
-        assert_eq!(mesh.flip_faces(&[FaceId(999)]), Err(MeshKernelError::InvalidHandle));
+        let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).await.unwrap();
+        assert_eq!(mesh.flip_faces(&[]).await, Err(MeshKernelError::EmptySelection));
+        assert_eq!(mesh.flip_faces(&[FaceId(999)]).await, Err(MeshKernelError::InvalidHandle));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn from_indexed_triangles_rejects_malformed_lengths() {
-        assert!(matches!(HalfedgeMesh::from_indexed_triangles(&[0.0, 0.0], &[0, 1, 2]), Err(MeshKernelError::InvalidInput(_))));
-        assert!(matches!(HalfedgeMesh::from_indexed_triangles(&[0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0], &[0, 1]), Err(MeshKernelError::InvalidInput(_))));
+        assert!(matches!(HalfedgeMesh::from_indexed_triangles(&[0.0, 0.0], &[0, 1, 2]).await, Err(MeshKernelError::InvalidInput(_))));
+        assert!(matches!(HalfedgeMesh::from_indexed_triangles(&[0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0], &[0, 1]).await, Err(MeshKernelError::InvalidInput(_))));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn from_indexed_triangles_by_face_id_falls_back_when_empty() {
         let positions = vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0];
         let indices = vec![0, 1, 2];
-        let mesh = HalfedgeMesh::from_indexed_triangles_by_face_id(&positions, &indices, &[]).unwrap();
-        assert_eq!(mesh.face_count(), 1);
+        let mesh = HalfedgeMesh::from_indexed_triangles_by_face_id(&positions, &indices, &[]).await.unwrap();
+        assert_eq!(mesh.face_count().await, 1);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn from_indexed_triangles_by_face_id_rejects_length_mismatch() {
         let positions = vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0];
         let indices = vec![0, 1, 2];
-        let err = HalfedgeMesh::from_indexed_triangles_by_face_id(&positions, &indices, &[10, 11]).unwrap_err();
+        let err = HalfedgeMesh::from_indexed_triangles_by_face_id(&positions, &indices, &[10, 11]).await.unwrap_err();
         assert!(matches!(err, MeshKernelError::InvalidInput(_)));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn from_faces_rejects_degenerate_and_out_of_range() {
         let positions = [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]];
-        assert!(matches!(HalfedgeMesh::from_faces(&positions, &[vec![0, 1]]), Err(MeshKernelError::DegenerateOperation)));
-        assert!(matches!(HalfedgeMesh::from_faces(&positions, &[vec![0, 1, 99]]), Err(MeshKernelError::InvalidInput(_))));
+        assert!(matches!(HalfedgeMesh::from_faces(&positions, &[vec![0, 1]]).await, Err(MeshKernelError::DegenerateOperation)));
+        assert!(matches!(HalfedgeMesh::from_faces(&positions, &[vec![0, 1, 99]]).await, Err(MeshKernelError::InvalidInput(_))));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn from_face_loops_bridges_hole_and_skips_degenerate_outer() {
         let mut positions = vec![[0.0, 0.0, 0.0], [4.0, 0.0, 0.0], [4.0, 4.0, 0.0], [0.0, 4.0, 0.0]];
         positions.extend_from_slice(&[[1.0, 1.0, 0.0], [3.0, 1.0, 0.0], [3.0, 3.0, 0.0], [1.0, 3.0, 0.0]]);
         let outer = vec![0, 1, 2, 3];
         let hole = vec![4, 5, 6, 7];
         let face_loops = vec![(outer, vec![hole]), (vec![0, 1], vec![])];
-        let mesh = HalfedgeMesh::from_face_loops(&positions, &face_loops).unwrap();
-        assert_eq!(mesh.face_count(), 8, "outer-with-hole bridges into a 10-vertex simple polygon (n-2 triangles); degenerate loop must be skipped");
-        for fi in 0..mesh.face_count() {
-            let verts = mesh.face_vertex_ids(FaceId(fi as u32)).unwrap();
+        let mesh = HalfedgeMesh::from_face_loops(&positions, &face_loops).await.unwrap();
+        assert_eq!(mesh.face_count().await, 8, "outer-with-hole bridges into a 10-vertex simple polygon (n-2 triangles); degenerate loop must be skipped");
+        for fi in 0..mesh.face_count().await {
+            let verts = mesh.face_vertex_ids(FaceId(fi as u32)).await.unwrap();
             assert_eq!(verts.len(), 3);
         }
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn cylinder_prim_has_expected_topology() {
-        let mesh = HalfedgeMesh::cylinder_prim(1.0, 2.0, 8).unwrap();
-        assert_eq!(mesh.face_count(), 8 * 3);
-        assert_eq!(mesh.vertex_count(), 8 * 2 + 2);
+        let mesh = HalfedgeMesh::cylinder_prim(1.0, 2.0, 8).await.unwrap();
+        assert_eq!(mesh.face_count().await, 8 * 3);
+        assert_eq!(mesh.vertex_count().await, 8 * 2 + 2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn cone_prim_has_expected_topology() {
-        let mesh = HalfedgeMesh::cone_prim(1.0, 2.0, 6).unwrap();
-        assert_eq!(mesh.face_count(), 6 * 2);
-        assert_eq!(mesh.vertex_count(), 6 + 2);
+        let mesh = HalfedgeMesh::cone_prim(1.0, 2.0, 6).await.unwrap();
+        assert_eq!(mesh.face_count().await, 6 * 2);
+        assert_eq!(mesh.vertex_count().await, 6 + 2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rotate_mesh_rotates_vertices_about_axis() {
-        let mut mesh = HalfedgeMesh::box_prim(2.0, 2.0, 2.0).unwrap();
-        let before = mesh.vertex_position(VertexId(0)).unwrap();
-        mesh.rotate(Vec3::new(0.0, 0.0, 1.0), std::f32::consts::FRAC_PI_2).unwrap();
-        let after = mesh.vertex_position(VertexId(0)).unwrap();
-        assert!((before.x() - after.y()).abs() < 1e-4);
+        let mut mesh = HalfedgeMesh::box_prim(2.0, 2.0, 2.0).await.unwrap();
+        let before = mesh.vertex_position(VertexId(0)).await.unwrap();
+        mesh.rotate(Vec3::new(0.0, 0.0, 1.0).await, std::f32::consts::FRAC_PI_2).await.unwrap();
+        let after = mesh.vertex_position(VertexId(0)).await.unwrap();
+        assert!((before.x().await - after.y().await).abs() < 1e-4);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn scale_mesh_scales_vertices() {
-        let mut mesh = HalfedgeMesh::box_prim(2.0, 2.0, 2.0).unwrap();
-        mesh.scale(Vec3::new(2.0, 1.0, 1.0)).unwrap();
-        let p = mesh.vertex_position(VertexId(0)).unwrap();
-        assert!((p.x() - (-2.0)).abs() < 1e-5);
+        let mut mesh = HalfedgeMesh::box_prim(2.0, 2.0, 2.0).await.unwrap();
+        mesh.scale(Vec3::new(2.0, 1.0, 1.0).await).await.unwrap();
+        let p = mesh.vertex_position(VertexId(0)).await.unwrap();
+        assert!((p.x().await - (-2.0)).abs() < 1e-5);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn move_vertices_rejects_empty_and_moves_selected() {
-        let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap();
-        assert_eq!(mesh.move_vertices(&[], Vec3::new(1.0, 0.0, 0.0)), Err(MeshKernelError::EmptySelection));
-        let before = mesh.vertex_position(VertexId(0)).unwrap();
-        mesh.move_vertices(&[VertexId(0)], Vec3::new(1.0, 0.0, 0.0)).unwrap();
-        let after = mesh.vertex_position(VertexId(0)).unwrap();
-        assert!((after.x() - before.x() - 1.0).abs() < 1e-5);
+        let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).await.unwrap();
+        assert_eq!(mesh.move_vertices(&[], Vec3::new(1.0, 0.0, 0.0).await).await, Err(MeshKernelError::EmptySelection));
+        let before = mesh.vertex_position(VertexId(0)).await.unwrap();
+        mesh.move_vertices(&[VertexId(0)], Vec3::new(1.0, 0.0, 0.0).await).await.unwrap();
+        let after = mesh.vertex_position(VertexId(0)).await.unwrap();
+        assert!((after.x().await - before.x().await - 1.0).abs() < 1e-5);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn rotate_vertices_rejects_empty_and_rotates_around_pivot() {
-        let mut mesh = HalfedgeMesh::box_prim(2.0, 2.0, 2.0).unwrap();
-        assert_eq!(mesh.rotate_vertices(&[], Vec3::new(0.0, 0.0, 1.0), 1.0, Vec3::ZERO), Err(MeshKernelError::EmptySelection));
+        let mut mesh = HalfedgeMesh::box_prim(2.0, 2.0, 2.0).await.unwrap();
+        assert_eq!(mesh.rotate_vertices(&[], Vec3::new(0.0, 0.0, 1.0).await, 1.0, Vec3::ZERO).await, Err(MeshKernelError::EmptySelection));
         // Vertex 0 starts at (-1,-1,-1); rotating 90° about Z around the origin maps (x,y) -> (-y,x).
-        mesh.rotate_vertices(&[VertexId(0)], Vec3::new(0.0, 0.0, 1.0), std::f32::consts::FRAC_PI_2, Vec3::ZERO).unwrap();
-        let p = mesh.vertex_position(VertexId(0)).unwrap();
-        assert!((p.x() - 1.0).abs() < 1e-4, "got x={}", p.x());
-        assert!((p.y() - (-1.0)).abs() < 1e-4, "got y={}", p.y());
-        assert!((p.z() - (-1.0)).abs() < 1e-4, "got z={}", p.z());
+        mesh.rotate_vertices(&[VertexId(0)], Vec3::new(0.0, 0.0, 1.0).await, std::f32::consts::FRAC_PI_2, Vec3::ZERO).await.unwrap();
+        let p = mesh.vertex_position(VertexId(0)).await.unwrap();
+        assert!((p.x().await - 1.0).abs() < 1e-4, "got x={}", p.x().await);
+        assert!((p.y().await - (-1.0)).abs() < 1e-4, "got y={}", p.y().await);
+        assert!((p.z().await - (-1.0)).abs() < 1e-4, "got z={}", p.z().await);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn scale_vertices_rejects_empty_and_scales_around_pivot() {
-        let mut mesh = HalfedgeMesh::box_prim(2.0, 2.0, 2.0).unwrap();
-        assert_eq!(mesh.scale_vertices(&[], Vec3::new(2.0, 2.0, 2.0), Vec3::ZERO), Err(MeshKernelError::EmptySelection));
-        let before = mesh.vertex_position(VertexId(0)).unwrap();
-        mesh.scale_vertices(&[VertexId(0)], Vec3::new(2.0, 1.0, 1.0), Vec3::ZERO).unwrap();
-        let after = mesh.vertex_position(VertexId(0)).unwrap();
-        assert!((after.x() - before.x() * 2.0).abs() < 1e-5);
+        let mut mesh = HalfedgeMesh::box_prim(2.0, 2.0, 2.0).await.unwrap();
+        assert_eq!(mesh.scale_vertices(&[], Vec3::new(2.0, 2.0, 2.0).await, Vec3::ZERO).await, Err(MeshKernelError::EmptySelection));
+        let before = mesh.vertex_position(VertexId(0)).await.unwrap();
+        mesh.scale_vertices(&[VertexId(0)], Vec3::new(2.0, 1.0, 1.0).await, Vec3::ZERO).await.unwrap();
+        let after = mesh.vertex_position(VertexId(0)).await.unwrap();
+        assert!((after.x().await - before.x().await * 2.0).abs() < 1e-5);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn move_vertices_proportional_rejects_empty_and_applies_falloff() {
-        let mut mesh = HalfedgeMesh::box_prim(2.0, 2.0, 2.0).unwrap();
-        assert_eq!(mesh.move_vertices_proportional(&[], Vec3::new(1.0, 0.0, 0.0), Vec3::ZERO, 1.0), Err(MeshKernelError::EmptySelection));
-        let all: Vec<VertexId> = (0..mesh.vertex_count() as u32).map(VertexId).collect();
-        let before = mesh.vertex_position(VertexId(0)).unwrap();
-        mesh.move_vertices_proportional(&all, Vec3::new(1.0, 0.0, 0.0), before, 0.001).unwrap();
-        let moved = mesh.vertex_position(VertexId(0)).unwrap();
-        assert!((moved.x() - before.x() - 1.0).abs() < 1e-4, "vertex at the pivot itself should get full falloff");
+        let mut mesh = HalfedgeMesh::box_prim(2.0, 2.0, 2.0).await.unwrap();
+        assert_eq!(mesh.move_vertices_proportional(&[], Vec3::new(1.0, 0.0, 0.0).await, Vec3::ZERO, 1.0).await, Err(MeshKernelError::EmptySelection));
+        let all: Vec<VertexId> = (0..mesh.vertex_count().await as u32).map(VertexId).collect();
+        let before = mesh.vertex_position(VertexId(0)).await.unwrap();
+        mesh.move_vertices_proportional(&all, Vec3::new(1.0, 0.0, 0.0).await, before, 0.001).await.unwrap();
+        let moved = mesh.vertex_position(VertexId(0)).await.unwrap();
+        assert!((moved.x().await - before.x().await - 1.0).abs() < 1e-4, "vertex at the pivot itself should get full falloff");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn snap_vertices_to_grid_rejects_non_positive_and_snaps() {
-        let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap();
-        assert_eq!(mesh.snap_vertices_to_grid(&[VertexId(0)], 0.0), Err(MeshKernelError::InvalidInput("grid must be positive".into())));
-        mesh.set_vertex_position(VertexId(0), Vec3::new(0.44, 0.0, 0.0)).unwrap();
-        mesh.snap_vertices_to_grid(&[VertexId(0)], 0.5).unwrap();
-        let p = mesh.vertex_position(VertexId(0)).unwrap();
-        assert!((p.x() - 0.5).abs() < 1e-6);
+        let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).await.unwrap();
+        assert_eq!(mesh.snap_vertices_to_grid(&[VertexId(0)], 0.0).await, Err(MeshKernelError::InvalidInput("grid must be positive".into())));
+        mesh.set_vertex_position(VertexId(0), Vec3::new(0.44, 0.0, 0.0).await).await.unwrap();
+        mesh.snap_vertices_to_grid(&[VertexId(0)], 0.5).await.unwrap();
+        let p = mesh.vertex_position(VertexId(0)).await.unwrap();
+        assert!((p.x().await - 0.5).abs() < 1e-6);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn inset_faces_rejects_empty_and_adds_inner_face() {
-        let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap();
-        assert_eq!(mesh.inset_faces(&[], 0.1), Err(MeshKernelError::EmptySelection));
-        let before = mesh.face_count();
-        mesh.inset_faces(&[FaceId(0)], 0.1).unwrap();
-        assert!(mesh.face_count() > before);
+        let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).await.unwrap();
+        assert_eq!(mesh.inset_faces(&[], 0.1).await, Err(MeshKernelError::EmptySelection));
+        let before = mesh.face_count().await;
+        mesh.inset_faces(&[FaceId(0)], 0.1).await.unwrap();
+        assert!(mesh.face_count().await > before);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn bevel_edges_rejects_empty_and_runs_on_selection() {
-        let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap();
-        assert_eq!(mesh.bevel_edges(&[], 0.1, 1), Err(MeshKernelError::EmptySelection));
-        let before_verts = mesh.vertex_count();
-        mesh.bevel_edges(&[EdgeId(0)], 0.1, 1).unwrap();
-        assert_eq!(mesh.vertex_count(), before_verts + 2, "bevel_edges appends two offset points per edge");
+        let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).await.unwrap();
+        assert_eq!(mesh.bevel_edges(&[], 0.1, 1).await, Err(MeshKernelError::EmptySelection));
+        let before_verts = mesh.vertex_count().await;
+        mesh.bevel_edges(&[EdgeId(0)], 0.1, 1).await.unwrap();
+        assert_eq!(mesh.vertex_count().await, before_verts + 2, "bevel_edges appends two offset points per edge");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn loop_cut_rejects_zero_cuts_and_adds_rings() {
-        let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap();
-        assert_eq!(mesh.loop_cut(&[], 0), Err(MeshKernelError::InvalidInput("cuts must be > 0".into())));
-        let before = mesh.face_count();
-        mesh.loop_cut(&[], 1).unwrap();
-        assert!(mesh.face_count() > before);
+        let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).await.unwrap();
+        assert_eq!(mesh.loop_cut(&[], 0).await, Err(MeshKernelError::InvalidInput("cuts must be > 0".into())));
+        let before = mesh.face_count().await;
+        mesh.loop_cut(&[], 1).await.unwrap();
+        assert!(mesh.face_count().await > before);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn knife_cut_on_quad_face_adds_split_triangles() {
         // Quad lies in the XZ plane (y=0); the cut plane (x from cut_dir, z=1 from cut_a/cut_b) crosses
         // both z-varying edges of the quad transversally, so knife_cut must find two hits and add faces.
         let positions = [[0.0, 0.0, 0.0], [2.0, 0.0, 0.0], [2.0, 0.0, 2.0], [0.0, 0.0, 2.0]];
-        let mut mesh = HalfedgeMesh::from_faces(&positions, &[vec![0, 1, 2, 3]]).unwrap();
-        let before = mesh.face_count();
-        mesh.knife_cut(FaceId(0), Vec3::new(0.0, -1.0, 1.0), Vec3::new(1.0, -1.0, 1.0)).unwrap();
-        assert!(mesh.face_count() > before, "two valid plane hits on the quad must add new split faces");
+        let mut mesh = HalfedgeMesh::from_faces(&positions, &[vec![0, 1, 2, 3]]).await.unwrap();
+        let before = mesh.face_count().await;
+        mesh.knife_cut(FaceId(0), Vec3::new(0.0, -1.0, 1.0).await, Vec3::new(1.0, -1.0, 1.0).await).await.unwrap();
+        assert!(mesh.face_count().await > before, "two valid plane hits on the quad must add new split faces");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn knife_cut_rejects_invalid_face_handle() {
-        let mut mesh = HalfedgeMesh::empty();
-        assert_eq!(mesh.knife_cut(FaceId(0), Vec3::ZERO, Vec3::new(1.0, 0.0, 0.0)), Err(MeshKernelError::InvalidHandle));
+        let mut mesh = HalfedgeMesh::empty().await;
+        assert_eq!(mesh.knife_cut(FaceId(0), Vec3::ZERO, Vec3::new(1.0, 0.0, 0.0).await).await, Err(MeshKernelError::InvalidHandle));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn merge_vertices_rejects_too_few_and_merges_first_and_center_modes() {
-        let mut mesh = HalfedgeMesh::box_prim(2.0, 2.0, 2.0).unwrap();
-        assert_eq!(mesh.merge_vertices(&[VertexId(0)], WeldMode::First, 0.0), Err(MeshKernelError::EmptySelection));
+        let mut mesh = HalfedgeMesh::box_prim(2.0, 2.0, 2.0).await.unwrap();
+        assert_eq!(mesh.merge_vertices(&[VertexId(0)], WeldMode::First, 0.0).await, Err(MeshKernelError::EmptySelection));
 
-        let mut first_mesh = HalfedgeMesh::box_prim(2.0, 2.0, 2.0).unwrap();
-        let p0 = first_mesh.vertex_position(VertexId(0)).unwrap();
-        first_mesh.merge_vertices(&[VertexId(0), VertexId(1)], WeldMode::First, 0.0).unwrap();
-        assert_eq!(first_mesh.vertex_position(VertexId(0)).unwrap(), p0);
+        let mut first_mesh = HalfedgeMesh::box_prim(2.0, 2.0, 2.0).await.unwrap();
+        let p0 = first_mesh.vertex_position(VertexId(0)).await.unwrap();
+        first_mesh.merge_vertices(&[VertexId(0), VertexId(1)], WeldMode::First, 0.0).await.unwrap();
+        assert_eq!(first_mesh.vertex_position(VertexId(0)).await.unwrap(), p0);
 
-        let mut center_mesh = HalfedgeMesh::box_prim(2.0, 2.0, 2.0).unwrap();
-        let a = center_mesh.vertex_position(VertexId(0)).unwrap();
-        let b = center_mesh.vertex_position(VertexId(1)).unwrap();
-        center_mesh.merge_vertices(&[VertexId(0), VertexId(1)], WeldMode::Center, 0.0).unwrap();
-        let merged = center_mesh.vertex_position(VertexId(0)).unwrap();
-        assert!((merged.x() - a.lerp(b, 0.5).x()).abs() < 1e-5);
+        let mut center_mesh = HalfedgeMesh::box_prim(2.0, 2.0, 2.0).await.unwrap();
+        let a = center_mesh.vertex_position(VertexId(0)).await.unwrap();
+        let b = center_mesh.vertex_position(VertexId(1)).await.unwrap();
+        center_mesh.merge_vertices(&[VertexId(0), VertexId(1)], WeldMode::Center, 0.0).await.unwrap();
+        let merged = center_mesh.vertex_position(VertexId(0)).await.unwrap();
+        assert!((merged.x().await - a.lerp(b, 0.5).await.x().await).abs() < 1e-5);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn merge_vertices_by_distance_only_merges_within_threshold() {
-        let mut mesh = HalfedgeMesh::box_prim(2.0, 2.0, 2.0).unwrap();
-        let before_verts = mesh.vertex_count();
-        mesh.merge_vertices(&[VertexId(0), VertexId(1)], WeldMode::ByDistance, 0.01).unwrap();
-        assert_eq!(mesh.vertex_count(), before_verts, "vertices farther apart than threshold must not be remapped");
+        let mut mesh = HalfedgeMesh::box_prim(2.0, 2.0, 2.0).await.unwrap();
+        let before_verts = mesh.vertex_count().await;
+        mesh.merge_vertices(&[VertexId(0), VertexId(1)], WeldMode::ByDistance, 0.01).await.unwrap();
+        assert_eq!(mesh.vertex_count().await, before_verts, "vertices farther apart than threshold must not be remapped");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn dissolve_vertices_rejects_empty_and_removes_incident_faces() {
-        let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap();
-        assert_eq!(mesh.dissolve_vertices(&[]), Err(MeshKernelError::EmptySelection));
-        let before = mesh.face_count();
-        mesh.dissolve_vertices(&[VertexId(0)]).unwrap();
-        assert!(mesh.face_count() < before);
+        let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).await.unwrap();
+        assert_eq!(mesh.dissolve_vertices(&[]).await, Err(MeshKernelError::EmptySelection));
+        let before = mesh.face_count().await;
+        mesh.dissolve_vertices(&[VertexId(0)]).await.unwrap();
+        assert!(mesh.face_count().await < before);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn subdivide_faces_rejects_empty_and_quadruples_selected_face() {
-        let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap();
-        assert_eq!(mesh.subdivide_faces(&[]), Err(MeshKernelError::EmptySelection));
-        let before = mesh.face_count();
-        mesh.subdivide_faces(&[FaceId(0)]).unwrap();
-        assert_eq!(mesh.face_count(), before - 1 + 8, "a quad face fans 4 edge-midpoint pairs to the centroid into 8 triangles");
+        let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).await.unwrap();
+        assert_eq!(mesh.subdivide_faces(&[]).await, Err(MeshKernelError::EmptySelection));
+        let before = mesh.face_count().await;
+        mesh.subdivide_faces(&[FaceId(0)]).await.unwrap();
+        assert_eq!(mesh.face_count().await, before - 1 + 8, "a quad face fans 4 edge-midpoint pairs to the centroid into 8 triangles");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn set_shading_rejects_invalid_handle_and_marks_smooth() {
-        let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap();
-        assert_eq!(mesh.set_shading(&[FaceId(999)], true), Err(MeshKernelError::InvalidHandle));
-        mesh.set_shading(&[FaceId(0)], true).unwrap();
-        mesh.recompute_normals().unwrap();
+        let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).await.unwrap();
+        assert_eq!(mesh.set_shading(&[FaceId(999)], true).await, Err(MeshKernelError::InvalidHandle));
+        mesh.set_shading(&[FaceId(0)], true).await.unwrap();
+        mesh.recompute_normals().await.unwrap();
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mirror_doubles_geometry_and_welds_seam() {
-        let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap();
-        let before_faces = mesh.face_count();
-        mesh.mirror(MirrorAxis::X, 1e-4).unwrap();
-        assert_eq!(mesh.face_count(), before_faces * 2);
+        let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).await.unwrap();
+        let before_faces = mesh.face_count().await;
+        mesh.mirror(MirrorAxis::X, 1e-4).await.unwrap();
+        assert_eq!(mesh.face_count().await, before_faces * 2);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn mark_uv_seam_toggles_and_is_uv_seam_reports_state() {
-        let mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap();
+        let mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).await.unwrap();
         let mut mesh = mesh;
-        assert!(!mesh.is_uv_seam(EdgeId(0)));
-        mesh.mark_uv_seam(&[EdgeId(0)], true);
-        assert!(mesh.is_uv_seam(EdgeId(0)));
-        mesh.mark_uv_seam(&[EdgeId(0)], false);
-        assert!(!mesh.is_uv_seam(EdgeId(0)));
+        assert!(!mesh.is_uv_seam(EdgeId(0)).await);
+        mesh.mark_uv_seam(&[EdgeId(0)], true).await;
+        assert!(mesh.is_uv_seam(EdgeId(0)).await);
+        mesh.mark_uv_seam(&[EdgeId(0)], false).await;
+        assert!(!mesh.is_uv_seam(EdgeId(0)).await);
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn unwrap_uv_splits_islands_across_seam() {
-        let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap();
-        mesh.mark_uv_seam(&[EdgeId(0), EdgeId(2), EdgeId(4), EdgeId(6), EdgeId(8), EdgeId(10)], true);
-        mesh.unwrap_uv().unwrap();
-        let transfer = mesh.tessellate().unwrap();
+        let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).await.unwrap();
+        mesh.mark_uv_seam(&[EdgeId(0), EdgeId(2), EdgeId(4), EdgeId(6), EdgeId(8), EdgeId(10)], true).await;
+        mesh.unwrap_uv().await.unwrap();
+        let transfer = mesh.tessellate().await.unwrap();
         assert!(!transfer.uvs.is_empty());
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn decimate_no_op_when_ratio_at_max_and_clamps_below_min() {
-        let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap();
-        let before = mesh.vertex_count();
-        mesh.decimate(1.0).unwrap();
-        assert_eq!(mesh.vertex_count(), before);
+        let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).await.unwrap();
+        let before = mesh.vertex_count().await;
+        mesh.decimate(1.0).await.unwrap();
+        assert_eq!(mesh.vertex_count().await, before);
 
-        let mut sphere = HalfedgeMesh::ico_sphere_prim(1.0, 2).unwrap();
-        let before_sphere = sphere.vertex_count();
-        sphere.decimate(0.0).unwrap();
-        assert!(sphere.vertex_count() < before_sphere, "ratio below 0.1 must clamp to 0.1, not become a no-op");
+        let mut sphere = HalfedgeMesh::ico_sphere_prim(1.0, 2).await.unwrap();
+        let before_sphere = sphere.vertex_count().await;
+        sphere.decimate(0.0).await.unwrap();
+        assert!(sphere.vertex_count().await < before_sphere, "ratio below 0.1 must clamp to 0.1, not become a no-op");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn decimate_converges_near_target_ratio_without_emptying_mesh() {
-        let mut mesh = HalfedgeMesh::ico_sphere_prim(1.0, 2).unwrap();
-        let before = mesh.vertex_count();
-        mesh.decimate(0.5).unwrap();
+        let mut mesh = HalfedgeMesh::ico_sphere_prim(1.0, 2).await.unwrap();
+        let before = mesh.vertex_count().await;
+        mesh.decimate(0.5).await.unwrap();
         let target = ((before as f32) * 0.5).ceil() as usize;
-        assert!(mesh.vertex_count() <= target + 1, "decimate must converge on roughly the requested vertex count, not merge forever");
-        assert!(mesh.face_count() > 0, "a 50% decimation must not leave zero faces");
+        assert!(mesh.vertex_count().await <= target + 1, "decimate must converge on roughly the requested vertex count, not merge forever");
+        assert!(mesh.face_count().await > 0, "a 50% decimation must not leave zero faces");
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn to_obj_includes_uv_coordinates_when_present() {
-        let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap();
-        mesh.unwrap_uv().unwrap();
-        let obj = mesh.to_obj().unwrap();
+        let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).await.unwrap();
+        mesh.unwrap_uv().await.unwrap();
+        let obj = mesh.to_obj().await.unwrap();
         assert!(obj.contains("vt "));
     }
 
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn from_json_rejects_invalid_input() {
-        let err = HalfedgeMesh::from_json("not json").unwrap_err();
+        let err = HalfedgeMesh::from_json("not json").await.unwrap_err();
         assert!(matches!(err, MeshKernelError::InvalidInput(_)));
     }
 }

@@ -16,11 +16,11 @@ pub async fn descriptor() -> GltfInferenceLeafDescriptor {
 }
 
 pub(crate) async fn from_raw(context: &GltfGeometryContext<'_>, raw: &super::GltfCurvatureRaw) -> GltfMeasure<GltfStatistics> {
-    estimate(super::statistics(&raw.edge_curvatures, &context.policy.histogram_edges), GltfUnit::InverseMetre, raw.edge_curvatures.len(), Some(context.topology))
+    estimate(super::statistics(&raw.edge_curvatures, &context.policy.histogram_edges), GltfUnit::InverseMetre, raw.edge_curvatures.len(), Some(context.topology)).await
 }
 
 pub async fn unavailable_measure(ids: &[String]) -> GltfMeasure<GltfStatistics> {
-    unavailable(GltfUnit::InverseMetre, GltfAvailability::Unavailable, ids.to_vec(), 0, None)
+    unavailable(GltfUnit::InverseMetre, GltfAvailability::Unavailable, ids.to_vec(), 0, None).await
 }
 
 pub async fn encode_result(indicators: &GltfEntityIndicators) -> Result<serde_json::Value, serde_json::Error> {

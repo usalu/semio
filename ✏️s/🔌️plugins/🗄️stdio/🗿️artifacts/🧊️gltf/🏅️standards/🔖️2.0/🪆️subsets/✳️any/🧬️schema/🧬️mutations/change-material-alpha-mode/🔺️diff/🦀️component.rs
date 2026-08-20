@@ -32,7 +32,7 @@ impl GltfChangeMaterialAlphaModeDiff {
     }
 }
 pub async fn derive(payload: &GltfChangeMaterialAlphaModePayload, base: &GltfSnapshot) -> Result<GltfChangeMaterialAlphaModeDiff, GltfChangeMaterialAlphaModeRejection> {
-    validate(payload, base)?;
+    validate(payload, base).await?;
     let touched_paths = vec![format!("document/materials/{}/alphaMode", payload.material)];
     Ok(GltfChangeMaterialAlphaModeDiff { material: payload.material, expected_alpha_mode: base.document.materials[payload.material].alpha_mode, alpha_mode: payload.alpha_mode, touched_paths })
 }

@@ -111,17 +111,17 @@ pub mod derived_construction {
             Self { snapshot, diagnostics: Vec::new() }
         }
         async fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self::from_snapshot(<XlsxSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+            Ok(Self::from_snapshot(<XlsxSnapshot as store::ArtifactDsl>::parse_dsl(text).await?).await)
         }
         async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<XlsxSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+            Ok(Self::from_snapshot(<XlsxSnapshot as store::ArtifactPack>::decode_pack(bytes).await?).await)
         }
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::xlsx::schema::mutations::apply_xlsx_mutation(&mut self.snapshot, &mutation);
-            (self, diff)
+            (self, diff.await)
         }
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            self.snapshot = <XlsxDiff as protocol::MutationDiff<XlsxSnapshot>>::apply(&diff, &self.snapshot)?;
+            self.snapshot = <XlsxDiff as protocol::MutationDiff<XlsxSnapshot>>::apply(&diff, &self.snapshot).await?;
             Ok(self)
         }
         async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
@@ -141,7 +141,7 @@ pub mod derived_construction {
         /// ➕️ Appends a new (initially empty) sheet and makes it the active sheet for `add_row`.
         pub async fn add_sheet(mut self, name: impl Into<String>) -> Self {
             self.snapshot.workbook.sheets.push(XlsxSheet { name: name.into(), cells: Vec::new() });
-            self.rebuild()
+            self.rebuild().await
         }
 
         /// ➕️ Appends a row of values to the active sheet (the most recently added one), assigning
@@ -150,11 +150,11 @@ pub mod derived_construction {
             if let Some(sheet) = self.snapshot.workbook.sheets.last_mut() {
                 sheet.cells.extend(values.into_iter().enumerate().map(|(col, value)| XlsxCell { row: index, col: col as u32, value }));
             }
-            self.rebuild()
+            self.rebuild().await
         }
 
         async fn rebuild(mut self) -> Self {
-            self.snapshot = crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::io::export::serializers::build_minimal_xlsx(self.snapshot.workbook);
+            self.snapshot = crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::io::export::serializers::build_minimal_xlsx(self.snapshot.workbook).await;
             self
         }
     }
@@ -188,7 +188,7 @@ pub mod derived_analysis {
             // 🕵️ Real sniff: OPC-shaped bytes whose root officeDocument relationship resolves under
             // `xl/` — disambiguates from docx/pptx, which share the same zip magic and OPC shape.
             match source {
-                AnalyzeSource::Binary(bytes) if crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::io::import::deserializers::sniff_xlsx_bytes(bytes) => IoConfidence::High,
+                AnalyzeSource::Binary(bytes) if crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::io::import::deserializers::sniff_xlsx_bytes(bytes).await => IoConfidence::High,
                 AnalyzeSource::Binary(_) | AnalyzeSource::Text(_) => IoConfidence::Low,
             }
         }
@@ -199,14 +199,14 @@ pub mod derived_analysis {
             let mut confidence = IoConfidence::High;
             for source in sources {
                 match source {
-                    AnalyzeSource::Text(text) => match <XlsxSnapshot as store::ArtifactDsl>::parse_dsl(text) {
+                    AnalyzeSource::Text(text) => match <XlsxSnapshot as store::ArtifactDsl>::parse_dsl(text).await {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
                             diagnostics.push(dsl::Diagnostic::error("stdio.analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
-                    AnalyzeSource::Binary(bytes) => match <XlsxSnapshot as store::ArtifactPack>::decode_pack(bytes) {
+                    AnalyzeSource::Binary(bytes) => match <XlsxSnapshot as store::ArtifactPack>::decode_pack(bytes).await {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
@@ -257,7 +257,7 @@ pub async fn demo_xlsx_snapshot() -> XlsxSnapshot {
         ],
         shared_strings: vec!["Name".into(), "Score".into(), "Alice".into()],
     };
-    let mut snap = build_minimal_xlsx(workbook);
+    let mut snap = build_minimal_xlsx(workbook).await;
     snap.opc.set_part("xl/styles.xml", "application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml", b"<styleSheet/>".to_vec());
     // 🩹 Normalize `opc.parts`' ORDER to the canonical post-regeneration shape `encode_xlsx`
     // always produces (`regenerate_workbook_parts`'s `retain` keeps any unmodeled part -- here
@@ -269,8 +269,8 @@ pub async fn demo_xlsx_snapshot() -> XlsxSnapshot {
     // round-trips correctly (`XlsxSnapshot`'s derived `PartialEq` is order-sensitive on
     // `opc.parts: Vec<OpcPart>`) -- a real, previously-undiscovered fixture-construction bug this
     // wave's own `fixture_honesty_law` caught live, not assumed.
-    let bytes = encode_xlsx(&snap).expect("encode demo xlsx for part-order normalization");
-    decode_xlsx(&bytes).expect("decode demo xlsx for part-order normalization")
+    let bytes = encode_xlsx(&snap).await.expect("encode demo xlsx for part-order normalization");
+    decode_xlsx(&bytes).await.expect("decode demo xlsx for part-order normalization")
 }
 //#endregion 🔖️DocumentHelpers
 

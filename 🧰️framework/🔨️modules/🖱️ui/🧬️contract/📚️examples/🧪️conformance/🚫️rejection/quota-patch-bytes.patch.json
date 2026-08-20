@@ -1,0 +1,24 @@
+{
+  "surface": "conformance.rejection",
+  "baseRevision": 0,
+  "revision": 1,
+  "ops": [
+    {
+      "type": "upsert",
+      "id": 2,
+      "key": "b",
+      "component": {
+        "type": "text",
+        "value": "a fairly long piece of text"
+      },
+      "layout": {
+        "kind": "leaf",
+        "width": "hug",
+        "height": "hug"
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {}
+    }
+  ]
+}

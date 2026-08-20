@@ -37,7 +37,7 @@ pub mod derived_composition {
             if native.is_empty() {
                 return Err(ComposeError { message: "SemioFlowComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() });
             }
-            let analysis = SemioFlowAnalyzer::analyze(&native);
+            let analysis = SemioFlowAnalyzer::analyze(&native).await;
             let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError { message: "SemioFlowComposerComposition: analysis produced no snapshot".into(), diagnostics: analysis.diagnostics.clone() })?;
             Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics })
         }
@@ -80,11 +80,11 @@ pub mod derived_composition {
         const DIALECT: Dialect = DIALECT;
         async fn validate(payload: &IoPayload) -> Vec<dsl::Diagnostic> {
             let decoded = match payload {
-                IoPayload::Binary(bytes) => <SemioFlowSnapshot as store::ArtifactPack>::decode_pack(bytes).ok(),
-                IoPayload::Text(text) => <SemioFlowSnapshot as store::ArtifactDsl>::parse_dsl(text).ok(),
+                IoPayload::Binary(bytes) => <SemioFlowSnapshot as store::ArtifactPack>::decode_pack(bytes).await.ok(),
+                IoPayload::Text(text) => <SemioFlowSnapshot as store::ArtifactDsl>::parse_dsl(text).await.ok(),
             };
             match decoded {
-                Some(snapshot) => check_flow_referential_invariants(&snapshot),
+                Some(snapshot) => check_flow_referential_invariants(&snapshot).await,
                 None => vec![dsl::Diagnostic::error("stdio.semio_flow.validate-decode-failed", dsl::TextSpan::at(1, 1), "SemioFlowValidator: payload did not decode as a SemioFlowSnapshot".to_string())],
             }
         }
@@ -110,12 +110,12 @@ pub mod derived_composition {
     /// 📌️ Registers this subset's schema descriptor, document codec, SubsetValidator, and the
     /// flow<->json io bridge row. Called from this artifact's standard-level `engine::register()`.
     pub async fn register() {
-        ::schema::register_artifact_schema_descriptor(crate::artifacts::semio::standards::v1::subsets::flow::schema::semio_flow_artifact_schema_descriptor());
+        ::schema::register_artifact_schema_descriptor(crate::artifacts::semio::standards::v1::subsets::flow::schema::semio_flow_artifact_schema_descriptor().await);
         let _ = store::register_document_codec(store::ArtifactCodec::of::<SemioFlowSnapshot, crate::artifacts::semio::standards::v1::subsets::flow::schema::mutations::SemioFlowMutation>(
             crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::STDIO_SEMIOFLOW_DOCUMENT_SCHEMA,
-        ));
-        let _ = register_subset_validator(validator_entry());
-        let _ = register_composer_entries(io_entries());
+        ).await);
+        let _ = register_subset_validator(validator_entry().await);
+        let _ = register_composer_entries(io_entries().await);
         register_artifact_inferences();
     }
 
@@ -123,7 +123,7 @@ pub mod derived_composition {
     /// catalog — sibling to `register_artifact_schema_descriptor` above (separate registry,
     /// ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
     pub async fn register_artifact_inferences() {
-        ::schema::register_artifact_inference_descriptor(crate::artifacts::semio::standards::v1::subsets::flow::schema::inferences::semio_flow_artifact_inference_descriptor());
+        ::schema::register_artifact_inference_descriptor(crate::artifacts::semio::standards::v1::subsets::flow::schema::inferences::semio_flow_artifact_inference_descriptor().await);
     }
     //#endregion 🔖️Register
 

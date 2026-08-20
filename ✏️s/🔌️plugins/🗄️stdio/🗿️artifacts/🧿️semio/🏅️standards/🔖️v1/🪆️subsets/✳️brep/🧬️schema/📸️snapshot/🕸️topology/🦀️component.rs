@@ -115,7 +115,7 @@ impl Body {
         Body::default()
     }
     pub async fn new_label(&mut self) -> PersistentLabel {
-        self.labels.next_label()
+        self.labels.next_label().await
     }
 }
 
@@ -128,24 +128,24 @@ impl Body {
     /// returns to the start. Panics via a debug assertion in the euler layer's invariant checks
     /// if the ring is malformed; callers here get a plain `Vec` (empty if the loop id is stale).
     pub async fn loop_coedges(&self, loop_id: LoopId) -> Vec<CoedgeId> {
-        let Some(lp) = self.loops.get(loop_id) else { return Vec::new() };
+        let Some(lp) = self.loops.get(loop_id).await else { return Vec::new() };
         let mut result = Vec::new();
         let mut current = lp.first;
         loop {
             result.push(current);
-            let Some(coedge) = self.coedges.get(current) else { break };
+            let Some(coedge) = self.coedges.get(current).await else { break };
             current = coedge.next;
             if current == lp.first {
                 break;
             }
-            if result.len() > self.coedges.len() {
+            if result.len() > self.coedges.len().await {
                 break; // malformed ring guard: never loop forever on corrupt data
             }
         }
         result
     }
     pub async fn face_loops(&self, face_id: FaceId) -> Vec<LoopId> {
-        let Some(face) = self.faces.get(face_id) else { return Vec::new() };
+        let Some(face) = self.faces.get(face_id).await else { return Vec::new() };
         let mut result: Vec<LoopId> = face.outer.into_iter().collect();
         result.extend(face.inners.iter().copied());
         result
@@ -154,10 +154,10 @@ impl Body {
         self.face_loops(face_id).into_iter().flat_map(|l| self.loop_coedges(l)).collect()
     }
     pub async fn shell_faces(&self, shell_id: ShellId) -> Vec<FaceId> {
-        self.shells.get(shell_id).map(|s| s.faces.clone()).unwrap_or_default()
+        self.shells.get(shell_id).await.map(|s| s.faces.clone()).unwrap_or_default()
     }
     pub async fn solid_shells(&self, solid_id: SolidId) -> Vec<ShellId> {
-        let Some(solid) = self.solids.get(solid_id) else { return Vec::new() };
+        let Some(solid) = self.solids.get(solid_id).await else { return Vec::new() };
         let mut result = vec![solid.outer];
         result.extend(solid.inners.iter().copied());
         result
@@ -168,8 +168,8 @@ impl Body {
     /// 🧱️ The edge's endpoint vertices in `(start, end)` order as seen through `coedge`'s own
     /// orientation (i.e. respecting `forward`, not the underlying edge's raw `v0`/`v1`).
     pub async fn coedge_endpoints(&self, coedge_id: CoedgeId) -> Option<(VertexId, VertexId)> {
-        let coedge = self.coedges.get(coedge_id)?;
-        let edge = self.edges.get(coedge.edge)?;
+        let coedge = self.coedges.get(coedge_id).await?;
+        let edge = self.edges.get(coedge.edge).await?;
         Some(if coedge.forward { (edge.v0, edge.v1) } else { (edge.v1, edge.v0) })
     }
     /// 🧱️ Every vertex incident to at least one edge that references it as `v0` or `v1`.
@@ -283,20 +283,20 @@ impl EngineRep<BrepArenaSeed> for Body {
     /// calling them would silently break the round-trip law below. `euler::make_loop` is the one
     /// euler function this DOES call, because loops carry no label to preserve or break.
     async fn build(seed: &BrepArenaSeed) -> Self {
-        let mut body = Body::new();
-        body.labels = LabelSource::from_next(seed.next_label);
+        let mut body = Body::new().await;
+        body.labels = LabelSource::from_next(seed.next_label).await;
 
         let mut vertex_ids: HashMap<PersistentLabel, VertexId> = HashMap::with_capacity(seed.vertices.len());
         for v in &seed.vertices {
             let id = body.vertices.insert(Vertex { position: v.position, tol: v.tol, label: v.label });
-            vertex_ids.insert(v.label, id);
+            vertex_ids.insert(v.label, id.await);
         }
 
         let mut edge_ids: HashMap<PersistentLabel, EdgeId> = HashMap::with_capacity(seed.edges.len());
         for e in &seed.edges {
             let curve_id = body.curves3.insert(e.curve.clone());
-            let id = body.edges.insert(Edge { curve: curve_id, range: e.range, v0: vertex_ids[&e.v0], v1: vertex_ids[&e.v1], tol: e.tol, label: e.label });
-            edge_ids.insert(e.label, id);
+            let id = body.edges.insert(Edge { curve: curve_id.await, range: e.range, v0: vertex_ids[&e.v0], v1: vertex_ids[&e.v1], tol: e.tol, label: e.label });
+            edge_ids.insert(e.label, id.await);
         }
 
         let placeholder = placeholder_face_for_build();
@@ -314,21 +314,21 @@ impl EngineRep<BrepArenaSeed> for Body {
             let surface_id = body.surfaces.insert(f.surface.clone());
             let outer = f.outer.map(|i| loop_ids[i]);
             let inners: Vec<LoopId> = f.inners.iter().map(|&i| loop_ids[i]).collect();
-            let id = body.faces.insert(Face { surface: surface_id, outer, inners: inners.clone(), flipped: f.flipped, tol: f.tol, label: f.label });
+            let id = body.faces.insert(Face { surface: surface_id.await, outer, inners: inners.clone(), flipped: f.flipped, tol: f.tol, label: f.label });
             if let Some(outer_id) = outer {
-                body.loops.get_mut(outer_id).expect("just inserted").face = id;
+                body.loops.get_mut(outer_id).await.expect("just inserted").face = id.await;
             }
             for inner_id in &inners {
-                body.loops.get_mut(*inner_id).expect("just inserted").face = id;
+                body.loops.get_mut(*inner_id).await.expect("just inserted").face = id.await;
             }
-            face_ids.insert(f.label, id);
+            face_ids.insert(f.label, id.await);
         }
 
         let mut shell_ids: HashMap<PersistentLabel, ShellId> = HashMap::with_capacity(seed.shells.len());
         for s in &seed.shells {
             let faces = s.faces.iter().map(|l| face_ids[l]).collect();
             let id = body.shells.insert(Shell { faces, label: s.label });
-            shell_ids.insert(s.label, id);
+            shell_ids.insert(s.label, id.await);
         }
 
         for s in &seed.solids {
@@ -346,26 +346,26 @@ impl EngineRep<BrepArenaSeed> for Body {
 /// by a future diff constructor, which reads post-op state back out this way to translate into a
 /// `SemioBrepDiff` via the label↔snapshot-id map it owns.
 pub async fn to_seed(body: &Body) -> BrepArenaSeed {
-    let vertex_label = |id: VertexId| -> PersistentLabel { body.vertices.get(id).expect("live vertex").label };
-    let edge_label = |id: EdgeId| -> PersistentLabel { body.edges.get(id).expect("live edge").label };
-    let face_label = |id: FaceId| -> PersistentLabel { body.faces.get(id).expect("live face").label };
-    let shell_label = |id: ShellId| -> PersistentLabel { body.shells.get(id).expect("live shell").label };
+    let vertex_label = |id: VertexId| -> PersistentLabel { semio_framework_plugin::resolve_ready(body.vertices.get(id)).expect("live vertex").label };
+    let edge_label = |id: EdgeId| -> PersistentLabel { semio_framework_plugin::resolve_ready(body.edges.get(id)).expect("live edge").label };
+    let face_label = |id: FaceId| -> PersistentLabel { semio_framework_plugin::resolve_ready(body.faces.get(id)).expect("live face").label };
+    let shell_label = |id: ShellId| -> PersistentLabel { semio_framework_plugin::resolve_ready(body.shells.get(id)).expect("live shell").label };
 
     let vertices: Vec<SeedVertex> = body.vertices.iter().map(|(_, v)| SeedVertex { label: v.label, position: v.position, tol: v.tol }).collect();
 
-    let edges: Vec<SeedEdge> = body.edges.iter().map(|(_, e)| SeedEdge { label: e.label, v0: vertex_label(e.v0), v1: vertex_label(e.v1), curve: body.curves3.get(e.curve).expect("live curve").clone(), range: e.range, tol: e.tol }).collect();
+    let edges: Vec<SeedEdge> = body.edges.iter().map(|(_, e)| SeedEdge { label: e.label, v0: vertex_label(e.v0), v1: vertex_label(e.v1), curve: semio_framework_plugin::resolve_ready(body.curves3.get(e.curve)).expect("live curve").clone(), range: e.range, tol: e.tol }).collect();
 
     // One entry per distinct LoopId, in the order faces first reference it — the same order
     // `build` assigns indices in, which is what the round-trip law needs to hold.
     let mut loops: Vec<Vec<(PersistentLabel, bool)>> = Vec::new();
     let mut loop_index: HashMap<LoopId, usize> = HashMap::new();
-    let mut faces: Vec<SeedFace> = Vec::with_capacity(body.faces.len());
+    let mut faces: Vec<SeedFace> = Vec::with_capacity(body.faces.len().await);
     for (_, f) in body.faces.iter() {
         let mut resolve_loop = |loop_id: LoopId| -> usize {
             if let Some(&i) = loop_index.get(&loop_id) {
                 return i;
             }
-            let ring: Vec<(PersistentLabel, bool)> = body.loop_coedges(loop_id).into_iter().filter_map(|cid| body.coedges.get(cid).map(|c| (edge_label(c.edge), c.forward))).collect();
+            let ring: Vec<(PersistentLabel, bool)> = body.loop_coedges(loop_id).into_iter().filter_map(|cid| semio_framework_plugin::resolve_ready(body.coedges.get(cid)).map(|c| (edge_label(c.edge), c.forward))).collect();
             let i = loops.len();
             loops.push(ring);
             loop_index.insert(loop_id, i);
@@ -373,14 +373,14 @@ pub async fn to_seed(body: &Body) -> BrepArenaSeed {
         };
         let outer = f.outer.map(|l| resolve_loop(l));
         let inners: Vec<usize> = f.inners.iter().map(|&l| resolve_loop(l)).collect();
-        faces.push(SeedFace { label: f.label, surface: body.surfaces.get(f.surface).expect("live surface").clone(), outer, inners, flipped: f.flipped, tol: f.tol });
+        faces.push(SeedFace { label: f.label, surface: body.surfaces.get(f.surface).await.expect("live surface").clone(), outer, inners, flipped: f.flipped, tol: f.tol });
     }
 
     let shells: Vec<SeedShell> = body.shells.iter().map(|(_, s)| SeedShell { label: s.label, faces: s.faces.iter().map(|&f| face_label(f)).collect() }).collect();
 
     let solids: Vec<SeedSolid> = body.solids.iter().map(|(_, s)| SeedSolid { label: s.label, outer: shell_label(s.outer), inners: s.inners.iter().map(|&sh| shell_label(sh)).collect() }).collect();
 
-    BrepArenaSeed { next_label: body.labels.next(), vertices, edges, loops, faces, shells, solids }
+    BrepArenaSeed { next_label: body.labels.next().await, vertices, edges, loops, faces, shells, solids }
 }
 
 // #endregion 🔖️EngineRep

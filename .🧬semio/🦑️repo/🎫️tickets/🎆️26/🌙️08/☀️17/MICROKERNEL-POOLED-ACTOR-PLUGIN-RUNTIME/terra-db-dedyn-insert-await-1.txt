@@ -1,0 +1,971 @@
+{
+  "crate": "semio-framework-os-kernel-db",
+  "history": [
+    {
+      "pass": 1,
+      "errors": 280,
+      "edits": 171,
+      "ambiguous": 0,
+      "other": 29
+    }
+  ],
+  "residual_errors": 274,
+  "ambiguous": [],
+  "other": [
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:52",
+      "code": "E0432",
+      "msg": "unresolved import `crate::db_storage::DbStorage`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔢️index/🦀️component.rs:182",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔢️index/🦀️component.rs:184",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔢️index/🦀️component.rs:206",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔢️index/🦀️component.rs:207",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔢️index/🦀️component.rs:208",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔢️index/🦀️component.rs:209",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔢️index/🦀️component.rs:219",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔢️index/🦀️component.rs:220",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔢️index/🦀️component.rs:222",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔢️index/🦀️component.rs:225",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔢️index/🦀️component.rs:226",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔢️index/🦀️component.rs:227",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔢️index/🦀️component.rs:231",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔢️index/🦀️component.rs:233",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔢️index/🦀️component.rs:258",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔢️index/🦀️component.rs:260",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔢️index/🦀️component.rs:266",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔢️index/🦀️component.rs:270",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔢️index/🦀️component.rs:272",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔢️index/🦀️component.rs:542",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔢️index/🦀️component.rs:543",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔢️index/🦀️component.rs:544",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔢️index/🦀️component.rs:545",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔢️index/🦀️component.rs:550",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔢️index/🦀️component.rs:551",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔢️index/🦀️component.rs:552",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔢️index/🦀️component.rs:721",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔢️index/🦀️component.rs:722",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔢️index/🦀️component.rs:723",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔢️index/🦀️component.rs:724",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔢️index/🦀️component.rs:725",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔢️index/🦀️component.rs:726",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔢️index/🦀️component.rs:727",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔢️index/🦀️component.rs:732",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔢️index/🦀️component.rs:734",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔢️index/🦀️component.rs:736",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔢️index/🦀️component.rs:737",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔢️index/🦀️component.rs:738",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔢️index/🦀️component.rs:739",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔢️index/🦀️component.rs:773",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔢️index/🦀️component.rs:775",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔢️index/🦀️component.rs:777",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔢️index/🦀️component.rs:782",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔢️index/🦀️component.rs:786",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔢️index/🦀️component.rs:894",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔢️index/🦀️component.rs:896",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔢️index/🦀️component.rs:897",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔢️index/🦀️component.rs:899",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔢️index/🦀️component.rs:904",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔢️index/🦀️component.rs:908",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔢️index/🦀️component.rs:910",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🗄️storage/🦀️component.rs:1443",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🗄️storage/🦀️component.rs:1444",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🗄️storage/🦀️component.rs:1445",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🗄️storage/🦀️component.rs:1446",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🗄️storage/🦀️component.rs:1447",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🗄️storage/🦀️component.rs:1452",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🗄️storage/🦀️component.rs:1453",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🗄️storage/🦀️component.rs:1454",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🗄️storage/🦀️component.rs:1456",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📝️wal/🦀️component.rs:175",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📝️wal/🦀️component.rs:178",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📝️wal/🦀️component.rs:179",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📝️wal/🦀️component.rs:181",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📝️wal/🦀️component.rs:186",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📝️wal/🦀️component.rs:190",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📝️wal/🦀️component.rs:191",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📝️wal/🦀️component.rs:195",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📝️wal/🦀️component.rs:199",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📝️wal/🦀️component.rs:203",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📝️wal/🦀️component.rs:208",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📝️wal/🦀️component.rs:209",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📝️wal/🦀️component.rs:213",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📝️wal/🦀️component.rs:217",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📝️wal/🦀️component.rs:221",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📝️wal/🦀️component.rs:225",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📝️wal/🦀️component.rs:237",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📝️wal/🦀️component.rs:242",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📝️wal/🦀️component.rs:244",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📝️wal/🦀️component.rs:251",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📝️wal/🦀️component.rs:252",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📝️wal/🦀️component.rs:256",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📝️wal/🦀️component.rs:260",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📝️wal/🦀️component.rs:271",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📝️wal/🦀️component.rs:272",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📝️wal/🦀️component.rs:272",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📝️wal/🦀️component.rs:275",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📝️wal/🦀️component.rs:276",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📝️wal/🦀️component.rs:276",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📝️wal/🦀️component.rs:277",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📝️wal/🦀️component.rs:279",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📝️wal/🦀️component.rs:281",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📝️wal/🦀️component.rs:291",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📝️wal/🦀️component.rs:295",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📝️wal/🦀️component.rs:299",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📝️wal/🦀️component.rs:306",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📝️wal/🦀️component.rs:307",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📝️wal/🦀️component.rs:452",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📝️wal/🦀️component.rs:526",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📝️wal/🦀️component.rs:571",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📝️wal/🦀️component.rs:578",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📝️wal/🦀️component.rs:582",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:99",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:101",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:103",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:104",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:105",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:106",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:107",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:110",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:113",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:117",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:118",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:120",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:124",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:125",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:133",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:138",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:140",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:141",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:142",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:143",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:144",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:145",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:150",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:152",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:157",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:340",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔄️sync/🦀️component.rs:52",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📄️artifact/🦀️component.rs:139",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📄️artifact/🦀️component.rs:230",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📄️artifact/🦀️component.rs:235",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📄️artifact/🦀️component.rs:237",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📄️artifact/🦀️component.rs:241",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📄️artifact/🦀️component.rs:285",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📄️artifact/🦀️component.rs:288",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📄️artifact/🦀️component.rs:574",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📄️artifact/🦀️component.rs:1052",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📄️artifact/🦀️component.rs:1054",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📄️artifact/🦀️component.rs:1055",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📄️artifact/🦀️component.rs:1058",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📄️artifact/🦀️component.rs:1059",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📄️artifact/🦀️component.rs:1060",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📄️artifact/🦀️component.rs:1062",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📄️artifact/🦀️component.rs:1065",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📄️artifact/🦀️component.rs:1077",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📄️artifact/🦀️component.rs:1081",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📄️artifact/🦀️component.rs:1083",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📄️artifact/🦀️component.rs:1085",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📄️artifact/🦀️component.rs:1086",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📄️artifact/🦀️component.rs:1088",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:181",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:456",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:465",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:466",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:467",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:509",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:521",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:537",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:538",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:552",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:392",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:402",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:432",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:447",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔍️query/🦀️component.rs:583",
+      "code": "E0107",
+      "msg": "struct takes 1 generic argument but 0 generic arguments were supplied"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⌨️cli/🦀️component.rs:448",
+      "code": "E0107",
+      "msg": "missing generics for struct `fs_storage::FsStorage`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:289",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:327",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:301",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:334",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:351",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:312",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:357",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔍️query/🦀️component.rs:979",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:315",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:361",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:365",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔍️query/🦀️component.rs:983",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔍️query/🦀️component.rs:987",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔍️query/🦀️component.rs:995",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:222",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:226",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🧪️testkit/🦀️component.rs:599",
+      "code": "E0107",
+      "msg": "missing generics for struct `ArtifactEngine`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📝️wal/🦀️component.rs:413",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📝️wal/🦀️component.rs:418",
+      "code": "(no code)",
+      "msg": "method should be `async` or return a future, but it is synchronous"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔒️security/🦀️component.rs:320",
+      "code": "E0038",
+      "msg": "the trait `Signer` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔒️security/🦀️component.rs:329",
+      "code": "E0038",
+      "msg": "the trait `SignatureVerifier` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🗄️storage/🦀️component.rs:611",
+      "code": "E0733",
+      "msg": "recursion in an async fn requires boxing"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🧪️testkit/🦀️component.rs:322",
+      "code": "E0733",
+      "msg": "recursion in an async fn requires boxing"
+    }
+  ]
+}

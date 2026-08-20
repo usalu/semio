@@ -16,10 +16,10 @@ impl protocol::MutationKind<SemioTextSnapshot, SemioTextMutation> for ReorderRun
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "reorder", entity: "runs", kind: "reorder-runs", record: "ReorderedRuns" };
 
     async fn diff(&self, base: &SemioTextSnapshot) -> protocol::MutationOutcome<<SemioTextMutation as protocol::Mutation<SemioTextSnapshot>>::Diff> {
-        super::diff::diff(self, base)
+        super::diff::diff(self, base).await
     }
     async fn inverse(&self, base: &SemioTextSnapshot) -> Vec<SemioTextMutation> {
-        super::inverse::inverse(self, base)
+        super::inverse::inverse(self, base).await
     }
     async fn label(&self) -> String {
         format!("Move run #{} to #{}", self.from, self.to)

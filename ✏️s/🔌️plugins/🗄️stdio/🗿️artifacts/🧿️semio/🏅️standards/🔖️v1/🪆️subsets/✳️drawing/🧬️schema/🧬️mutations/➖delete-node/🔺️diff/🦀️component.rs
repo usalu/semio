@@ -19,10 +19,10 @@ pub(crate) async fn parent_and_index(at: &NodePath) -> Option<(NodePath, usize)>
 
 //#region 🔖️Diff
 pub async fn diff(payload: &DeleteNode, base: &SemioDrawingSnapshot) -> protocol::MutationOutcome<SemioDrawingDiff> {
-    let Some((parent, index)) = parent_and_index(&payload.at) else {
-        return protocol::MutationOutcome::error("mutation.target-missing", format!("Node at layer #{} has no parent to delete from (layer root).", payload.at.layer), [payload.at.layer.to_string()]);
+    let Some((parent, index)) = parent_and_index(&payload.at).await else {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Node at layer #{} has no parent to delete from (layer root).", payload.at.layer), [payload.at.layer.to_string()]).await;
     };
-    match node_at(base, &parent) {
+    match node_at(base, &parent).await {
         Some(DrawNode::Group { children, .. }) if index < children.len() => {
             protocol::MutationOutcome::new(diff_at_path(&parent, DrawNodeDiff::Group(DrawGroupDiff { transform: None, children: Some(IndexedTripleDiff { removed: vec![index], modified: Vec::new(), added: Vec::new() }) })))
         }

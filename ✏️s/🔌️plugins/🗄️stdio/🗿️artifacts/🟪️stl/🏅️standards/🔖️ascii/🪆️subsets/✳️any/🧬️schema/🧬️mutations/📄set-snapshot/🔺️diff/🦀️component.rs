@@ -7,7 +7,7 @@ use crate::artifacts::stl::StlSnapshot;
 /// the recipe's "no full-replace slot" rule (no `StlDiff{snapshot: Option<StlSnapshot>}` blob).
 pub async fn diff(base: &StlSnapshot, snapshot: &StlSnapshot) -> protocol::MutationOutcome<StlDiff> {
     if base == snapshot {
-        return protocol::MutationOutcome::new(StlDiff::default()).warn("mutation.no-op", "set-snapshot: new snapshot is identical to the current one");
+        return protocol::MutationOutcome::new(StlDiff::default()).await.warn("mutation.no-op", "set-snapshot: new snapshot is identical to the current one").await;
     }
     protocol::MutationOutcome::new(diff_set_snapshot(base, snapshot))
 }

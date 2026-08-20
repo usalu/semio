@@ -25,7 +25,7 @@ pub struct WavInference {
 
 impl protocol::Inference<WavSnapshot> for WavInference {
     async fn infer(snapshot: &WavSnapshot) -> Self {
-        Self { duration: compute_wav_duration(snapshot) }
+        Self { duration: compute_wav_duration(snapshot).await }
     }
 }
 

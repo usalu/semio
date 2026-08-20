@@ -25,7 +25,7 @@ impl PortDirectedGraph {
     // #subregion 🔖️Construction
     /// 🆕️ Empty directed multigraph.
     pub async fn new() -> Self {
-        Self { storage: Storage::new(), default_handle: BTreeMap::new(), name: String::new() }
+        Self { storage: Storage::new().await, default_handle: BTreeMap::new(), name: String::new() }
     }
     // #endsubregion
 
@@ -35,7 +35,7 @@ impl PortDirectedGraph {
         if let Some(&h) = self.default_handle.get(&node) {
             return h;
         }
-        let h = self.storage.add_handle(node).expect("node exists before a handle is requested for it");
+        let h = self.storage.add_handle(node).await.expect("node exists before a handle is requested for it");
         self.default_handle.insert(node, h);
         h
     }
@@ -43,15 +43,15 @@ impl PortDirectedGraph {
 
     // #subregion 🔖️NodeOperations
     pub async fn add_node(&mut self) -> NodeId {
-        self.storage.add_node()
+        self.storage.add_node().await
     }
 
     pub async fn add_node_with(&mut self, attrs: PropertyBag) -> NodeId {
-        self.storage.add_node_with(attrs)
+        self.storage.add_node_with(attrs).await
     }
 
     pub async fn add_node_with_id(&mut self, id: NodeId, attrs: PropertyBag) -> NodeId {
-        self.storage.add_node_with_id(id, attrs)
+        self.storage.add_node_with_id(id, attrs).await
     }
 
     pub async fn add_nodes_from(&mut self, nodes: impl IntoIterator<Item = NodeId>) {
@@ -63,10 +63,10 @@ impl PortDirectedGraph {
     /// 🗑️ Removes a node, cascading incident edges (any handle-node they route through), then drops its default handle entry.
     pub async fn remove_node(&mut self, node: NodeId) -> bool {
         let removed = self.storage.remove_node(node);
-        if removed {
+        if removed.await {
             self.default_handle.remove(&node);
         }
-        removed
+        removed.await
     }
 
     pub async fn remove_nodes_from(&mut self, nodes: impl IntoIterator<Item = NodeId>) {
@@ -76,15 +76,15 @@ impl PortDirectedGraph {
     }
 
     pub async fn has_node(&self, node: NodeId) -> bool {
-        self.storage.contains_node(node)
+        self.storage.contains_node(node).await
     }
 
     pub async fn number_of_nodes(&self) -> usize {
-        self.storage.node_count()
+        self.storage.node_count().await
     }
 
     pub async fn order(&self) -> usize {
-        self.storage.node_count()
+        self.storage.node_count().await
     }
 
     pub async fn nodes(&self) -> impl Iterator<Item = NodeId> + '_ {
@@ -96,7 +96,7 @@ impl PortDirectedGraph {
     /// ➕️ Auto-creates missing endpoints, then always adds a fresh parallel `source -> target` edge (NetworkX
     /// `MultiDiGraph.add_edge` semantics — never an upsert, direction matters).
     pub async fn add_edge(&mut self, source: NodeId, target: NodeId) -> EdgeId {
-        self.add_edge_with(source, target, PropertyBag::new())
+        self.add_edge_with(source, target, PropertyBag::new()).await
     }
 
     pub async fn add_edge_with(&mut self, source: NodeId, target: NodeId, attrs: PropertyBag) -> EdgeId {
@@ -108,7 +108,7 @@ impl PortDirectedGraph {
         }
         let hs = self.handle_of(source);
         let ht = self.handle_of(target);
-        self.storage.add_edge_with(hs, ht, attrs)
+        self.storage.add_edge_with(hs.await, ht.await, attrs).await
     }
 
     pub async fn add_edges_from(&mut self, edges: impl IntoIterator<Item = (NodeId, NodeId)>) {
@@ -127,13 +127,13 @@ impl PortDirectedGraph {
     }
 
     pub async fn remove_edge(&mut self, id: EdgeId) -> bool {
-        self.storage.remove_edge(id)
+        self.storage.remove_edge(id).await
     }
 
     /// 🗑️ Removes an arbitrary one of the parallel `source -> target` edges — the smallest `EdgeId`, for determinism.
     pub async fn remove_one_edge(&mut self, source: NodeId, target: NodeId) -> bool {
         let Some(id) = self.edges_between(source, target).next() else { return false };
-        self.storage.remove_edge(id)
+        self.storage.remove_edge(id).await
     }
 
     pub async fn has_edge(&self, source: NodeId, target: NodeId) -> bool {
@@ -152,7 +152,7 @@ impl PortDirectedGraph {
     }
 
     pub async fn get_edge_data(&self, id: EdgeId) -> Option<&PropertyBag> {
-        self.storage.edge_attrs(id)
+        self.storage.edge_attrs(id).await
     }
 
     pub async fn edges_between(&self, source: NodeId, target: NodeId) -> impl Iterator<Item = EdgeId> + '_ {
@@ -210,15 +210,15 @@ impl PortDirectedGraph {
     }
 
     pub async fn in_degree(&self, node: NodeId) -> usize {
-        GraphView::in_degree(&self.storage, node)
+        GraphView::in_degree(&self.storage, node).await
     }
 
     pub async fn out_degree(&self, node: NodeId) -> usize {
-        GraphView::out_degree(&self.storage, node)
+        GraphView::out_degree(&self.storage, node).await
     }
 
     pub async fn degree(&self, node: NodeId) -> usize {
-        GraphView::degree(&self.storage, node)
+        GraphView::degree(&self.storage, node).await
     }
 
     /// ⚖️ Sums the edge weights of every incident edge (in + out) using `weights`.
@@ -256,15 +256,15 @@ impl PortDirectedGraph {
     /// 🔎️ Owned copy restricted to `nodes`; an edge is kept only when both endpoints are in the subset.
     pub async fn subgraph(&self, nodes: impl IntoIterator<Item = NodeId>) -> Self {
         let keep: BTreeSet<NodeId> = nodes.into_iter().filter(|&n| self.storage.contains_node(n)).collect();
-        let mut out = Self::new();
+        let mut out = Self::new().await;
         for &n in &keep {
-            let attrs = self.storage.node_attrs(n).cloned().unwrap_or_default();
+            let attrs = self.storage.node_attrs(n).await.cloned().unwrap_or_default();
             out.storage.add_node_with_id(n, attrs);
         }
         for e in self.storage.edges() {
             if keep.contains(&e.u) && keep.contains(&e.v) {
-                let attrs = self.storage.edge_attrs(e.id).cloned().unwrap_or_default();
-                out.add_edge_with(e.u, e.v, attrs);
+                let attrs = self.storage.edge_attrs(e.id).await.cloned().unwrap_or_default();
+                out.add_edge_with(e.u, e.v, attrs).await;
             }
         }
         *out.storage.graph_attrs_mut() = self.storage.graph_attrs().clone();
@@ -275,19 +275,19 @@ impl PortDirectedGraph {
     /// 🔎️ Owned copy restricted to `edges`; nodes are exactly the endpoints of the included edges.
     pub async fn edge_subgraph(&self, edges: impl IntoIterator<Item = EdgeId>) -> Self {
         let keep: BTreeSet<EdgeId> = edges.into_iter().collect();
-        let mut out = Self::new();
+        let mut out = Self::new().await;
         for e in self.storage.edges() {
             if !keep.contains(&e.id) {
                 continue;
             }
             for n in [e.u, e.v] {
                 if !out.storage.contains_node(n) {
-                    let attrs = self.storage.node_attrs(n).cloned().unwrap_or_default();
+                    let attrs = self.storage.node_attrs(n).await.cloned().unwrap_or_default();
                     out.storage.add_node_with_id(n, attrs);
                 }
             }
-            let attrs = self.storage.edge_attrs(e.id).cloned().unwrap_or_default();
-            out.add_edge_with(e.u, e.v, attrs);
+            let attrs = self.storage.edge_attrs(e.id).await.cloned().unwrap_or_default();
+            out.add_edge_with(e.u, e.v, attrs).await;
         }
         *out.storage.graph_attrs_mut() = self.storage.graph_attrs().clone();
         out.name = self.name.clone();
@@ -297,14 +297,14 @@ impl PortDirectedGraph {
     /// ↩️ Owned copy with every edge's source/target swapped (NetworkX `MultiDiGraph.reverse()`); rebuilt explicitly
     /// (rather than wrapping with `ReversedView`) since the facade owns its storage and must hand back a `Self`.
     pub async fn reverse(&self) -> Self {
-        let mut out = Self::new();
+        let mut out = Self::new().await;
         for n in self.storage.nodes() {
-            let attrs = self.storage.node_attrs(n).cloned().unwrap_or_default();
+            let attrs = self.storage.node_attrs(n).await.cloned().unwrap_or_default();
             out.storage.add_node_with_id(n, attrs);
         }
         for e in self.storage.edges() {
-            let attrs = self.storage.edge_attrs(e.id).cloned().unwrap_or_default();
-            out.add_edge_with(e.v, e.u, attrs);
+            let attrs = self.storage.edge_attrs(e.id).await.cloned().unwrap_or_default();
+            out.add_edge_with(e.v, e.u, attrs).await;
         }
         *out.storage.graph_attrs_mut() = self.storage.graph_attrs().clone();
         out.name = self.name.clone();
@@ -320,17 +320,17 @@ impl PortDirectedGraph {
     /// mirroring NetworkX's behavior of keeping both directed edges' data). Builds fresh default-handle bookkeeping —
     /// this new `Storage<Ported, Undirected>`'s handle ids are unrelated to `self`'s.
     pub async fn to_undirected(&self, reciprocal: bool) -> Storage<Ported, Undirected> {
-        let mut out = Storage::<Ported, Undirected>::new();
+        let mut out = Storage::<Ported, Undirected>::new().await;
         let mut handles: BTreeMap<NodeId, HandleId> = BTreeMap::new();
         for n in self.storage.nodes() {
-            let attrs = self.storage.node_attrs(n).cloned().unwrap_or_default();
-            out.add_node_with_id(n, attrs);
+            let attrs = self.storage.node_attrs(n).await.cloned().unwrap_or_default();
+            out.add_node_with_id(n, attrs).await;
         }
         let mut handle_of = |out: &mut Storage<Ported, Undirected>, node: NodeId| -> HandleId {
             if let Some(&h) = handles.get(&node) {
                 return h;
             }
-            let h = out.add_handle(node).expect("node was inserted above before any handle is requested");
+            let h = semio_framework_plugin::resolve_ready(out.add_handle(node)).expect("node was inserted above before any handle is requested");
             handles.insert(node, h);
             h
         };
@@ -338,32 +338,32 @@ impl PortDirectedGraph {
             if reciprocal && self.storage.edges_between(e.v, e.u).next().is_none() {
                 continue;
             }
-            let attrs = self.storage.edge_attrs(e.id).cloned().unwrap_or_default();
+            let attrs = self.storage.edge_attrs(e.id).await.cloned().unwrap_or_default();
             let hu = handle_of(&mut out, e.u);
             let hv = handle_of(&mut out, e.v);
-            out.add_edge_with(hu, hv, attrs);
+            out.add_edge_with(hu, hv, attrs).await;
         }
-        *out.graph_attrs_mut() = self.storage.graph_attrs().clone();
+        *out.graph_attrs_mut().await = self.storage.graph_attrs().clone();
         out
     }
 
     /// 🧵️ Collapses parallel `(source, target)` directed edges into one, summing each edge's `"weight"` attribute
     /// (defaulting to `1.0` per edge when absent) — NetworkX `MultiDiGraph` -> `DiGraph` simplification.
     pub async fn to_simple(&self) -> Storage<Normal, Directed> {
-        let mut out = Storage::<Normal, Directed>::new();
+        let mut out = Storage::<Normal, Directed>::new().await;
         for n in self.storage.nodes() {
-            let attrs = self.storage.node_attrs(n).cloned().unwrap_or_default();
-            out.add_node_with_id(n, attrs);
+            let attrs = self.storage.node_attrs(n).await.cloned().unwrap_or_default();
+            out.add_node_with_id(n, attrs).await;
         }
         let mut weight_sum: BTreeMap<(NodeId, NodeId), f64> = BTreeMap::new();
         for e in self.storage.edges() {
-            let w = self.storage.edge_attrs(e.id).and_then(|a| a.get("weight")).and_then(PropertyValue::as_f64).unwrap_or(1.0);
+            let w = self.storage.edge_attrs(e.id).await.and_then(|a| a.get("weight")).and_then(PropertyValue::as_f64).unwrap_or(1.0);
             *weight_sum.entry((e.u, e.v)).or_insert(0.0) += w;
         }
         for ((u, v), w) in weight_sum {
             let mut attrs = PropertyBag::new();
             attrs.insert("weight".to_string(), PropertyValue::Number(w));
-            out.add_edge_with(u, v, attrs);
+            out.add_edge_with(u, v, attrs).await;
         }
         out
     }
@@ -383,23 +383,23 @@ impl PortDirectedGraph {
 
     // #subregion 🔖️Attributes
     pub async fn set_node_attributes(&mut self, node: NodeId, attrs: PropertyBag) {
-        if let Some(bag) = self.storage.node_attrs_mut(node) {
+        if let Some(bag) = self.storage.node_attrs_mut(node).await {
             bag.extend(attrs);
         }
     }
 
     pub async fn get_node_attributes(&self, node: NodeId) -> Option<&PropertyBag> {
-        self.storage.node_attrs(node)
+        self.storage.node_attrs(node).await
     }
 
     pub async fn set_edge_attributes(&mut self, edge: EdgeId, attrs: PropertyBag) {
-        if let Some(bag) = self.storage.edge_attrs_mut(edge) {
+        if let Some(bag) = self.storage.edge_attrs_mut(edge).await {
             bag.extend(attrs);
         }
     }
 
     pub async fn get_edge_attributes(&self, edge: EdgeId) -> Option<&PropertyBag> {
-        self.storage.edge_attrs(edge)
+        self.storage.edge_attrs(edge).await
     }
 
     pub async fn name(&self) -> &str {
@@ -431,16 +431,16 @@ impl PortDirectedGraph {
 // #region 🔖️ViewDelegation
 impl GraphView for PortDirectedGraph {
     async fn node_count(&self) -> usize {
-        self.storage.node_count()
+        self.storage.node_count().await
     }
     async fn nodes(&self) -> impl Iterator<Item = NodeId> {
         self.storage.nodes()
     }
     async fn contains_node(&self, node: NodeId) -> bool {
-        self.storage.contains_node(node)
+        self.storage.contains_node(node).await
     }
     async fn edge_count(&self) -> usize {
-        self.storage.edge_count()
+        self.storage.edge_count().await
     }
     async fn edges(&self) -> impl Iterator<Item = EdgeRef> {
         self.storage.edges()
@@ -455,19 +455,19 @@ impl GraphView for PortDirectedGraph {
         self.storage.in_neighbors(node)
     }
     async fn degree(&self, node: NodeId) -> usize {
-        self.storage.degree(node)
+        self.storage.degree(node).await
     }
     async fn out_degree(&self, node: NodeId) -> usize {
-        self.storage.out_degree(node)
+        self.storage.out_degree(node).await
     }
     async fn in_degree(&self, node: NodeId) -> usize {
-        self.storage.in_degree(node)
+        self.storage.in_degree(node).await
     }
     async fn is_directed(&self) -> bool {
-        self.storage.is_directed()
+        self.storage.is_directed().await
     }
     async fn is_multigraph(&self) -> bool {
-        self.storage.is_multigraph()
+        self.storage.is_multigraph().await
     }
     async fn edges_between(&self, u: NodeId, v: NodeId) -> impl Iterator<Item = EdgeRef> {
         self.storage.edges_between(u, v)
@@ -476,19 +476,19 @@ impl GraphView for PortDirectedGraph {
 
 impl AttrView for PortDirectedGraph {
     async fn node_attrs(&self, node: NodeId) -> Option<&PropertyBag> {
-        self.storage.node_attrs(node)
+        self.storage.node_attrs(node).await
     }
     async fn edge_attrs(&self, edge: EdgeId) -> Option<&PropertyBag> {
-        self.storage.edge_attrs(edge)
+        self.storage.edge_attrs(edge).await
     }
     async fn graph_attrs(&self) -> &PropertyBag {
-        self.storage.graph_attrs()
+        self.storage.graph_attrs().await
     }
 }
 
 impl EdgeWeights for PortDirectedGraph {
     async fn weight(&self, edge: EdgeRef) -> f64 {
-        self.storage.weight(edge)
+        self.storage.weight(edge).await
     }
 }
 // #endregion 🔖️ViewDelegation

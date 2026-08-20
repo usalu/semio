@@ -25,7 +25,7 @@ pub struct PdfInference {
 
 impl Inference<PdfSnapshot> for PdfInference {
     async fn infer(snapshot: &PdfSnapshot) -> Self {
-        Self { outline: PdfOutline::compute(snapshot) }
+        Self { outline: PdfOutline::compute(snapshot).await }
     }
 }
 

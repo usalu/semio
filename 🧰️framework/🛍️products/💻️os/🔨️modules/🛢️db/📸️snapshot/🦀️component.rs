@@ -87,121 +87,121 @@ pub struct SnapshotDescriptor {
 
 impl SnapshotDescriptor {
     /// @emoji 🧭️ Reconstructs the `Frontier` this generation was taken at.
-    pub fn frontier(&self) -> Frontier {
+    pub async fn frontier(&self) -> Frontier {
         Frontier { document: self.document.clone(), head_seq: self.head_seq, commit_seq: self.commit_seq, chain_hash: self.chain_hash, epoch: self.epoch }
     }
 
     /// @emoji ✍️ Serializes this descriptor to the exact bytes written into the `KIND_SNAPSHOT`
     /// segment — a flat, versioned, varint-framed encoding (this crate's own choice; the contract
     /// fixes only the segment kind, not the payload layout).
-    pub fn encode(&self) -> Vec<u8> {
-        let mut w = pack::ByteWriter::new();
-        w.write_u8(DESCRIPTOR_FORMAT_VERSION);
-        write_string(&mut w, &self.document.0);
-        w.write_varint_u64(self.generation);
-        write_option_u64(&mut w, self.parent_generation);
-        w.write_varint_u64(self.head_seq);
-        w.write_varint_u64(self.commit_seq);
-        w.write_varint_u64(self.epoch);
-        w.write_bytes(&self.chain_hash);
-        w.write_varint_u64(self.protocol_version as u64);
+    pub async fn encode(&self) -> Vec<u8> {
+        let mut w = pack::ByteWriter::new().await;
+        w.write_u8(DESCRIPTOR_FORMAT_VERSION).await;
+        write_string(&mut w, &self.document.0).await;
+        w.write_varint_u64(self.generation).await;
+        write_option_u64(&mut w, self.parent_generation).await;
+        w.write_varint_u64(self.head_seq).await;
+        w.write_varint_u64(self.commit_seq).await;
+        w.write_varint_u64(self.epoch).await;
+        w.write_bytes(&self.chain_hash).await;
+        w.write_varint_u64(self.protocol_version as u64).await;
         match &self.vcs_head {
             Some(head) => {
-                w.write_u8(1);
-                write_string(&mut w, head);
+                w.write_u8(1).await;
+                write_string(&mut w, head).await;
             }
-            None => w.write_u8(0),
+            None => w.write_u8(0).await,
         }
         match &self.base_pack_hash {
             Some(hash) => {
-                w.write_u8(1);
-                w.write_bytes(&hash.0);
+                w.write_u8(1).await;
+                w.write_bytes(&hash.0).await;
             }
-            None => w.write_u8(0),
+            None => w.write_u8(0).await,
         }
-        write_hash_list(&mut w, &self.roots);
-        write_hash_list(&mut w, &self.new_pages);
-        w.write_varint_u64(self.created_at_ms);
-        w.into_bytes()
+        write_hash_list(&mut w, &self.roots).await;
+        write_hash_list(&mut w, &self.new_pages).await;
+        w.write_varint_u64(self.created_at_ms).await;
+        w.into_bytes().await
     }
 
     /// @emoji 📖️ Inverse of `encode`. Never panics on malformed input — every field read is
     /// bounds-checked by `pack::ByteReader` and every count is checked against
     /// `MAX_HASH_LIST_LEN`/`MAX_STRING_BYTES` before the corresponding `Vec`/`String` is allocated.
-    pub fn decode(bytes: &[u8]) -> Result<SnapshotDescriptor, DbError> {
-        let mut r = pack::ByteReader::new(bytes);
-        let version = r.read_u8()?;
+    pub async fn decode(bytes: &[u8]) -> Result<SnapshotDescriptor, DbError> {
+        let mut r = pack::ByteReader::new(bytes).await;
+        let version = r.read_u8().await?;
         if version != DESCRIPTOR_FORMAT_VERSION {
             return Err(DbError::Corrupt(format!("unsupported snapshot descriptor format version {version}")));
         }
-        let document = ArtifactId(read_string(&mut r)?);
-        let generation = r.read_varint_u64()?;
-        let parent_generation = read_option_u64(&mut r)?;
-        let head_seq = r.read_varint_u64()?;
-        let commit_seq = r.read_varint_u64()?;
-        let epoch = r.read_varint_u64()?;
-        let chain_hash = r.read_array32()?;
-        let protocol_version = r.read_varint_u64()? as u32;
-        let vcs_head = match r.read_u8()? {
+        let document = ArtifactId(read_string(&mut r).await?);
+        let generation = r.read_varint_u64().await?;
+        let parent_generation = read_option_u64(&mut r).await?;
+        let head_seq = r.read_varint_u64().await?;
+        let commit_seq = r.read_varint_u64().await?;
+        let epoch = r.read_varint_u64().await?;
+        let chain_hash = r.read_array32().await?;
+        let protocol_version = r.read_varint_u64().await? as u32;
+        let vcs_head = match r.read_u8().await? {
             0 => None,
-            1 => Some(read_string(&mut r)?),
+            1 => Some(read_string(&mut r).await?),
             other => return Err(DbError::Corrupt(format!("bad option tag {other}"))),
         };
-        let base_pack_hash = match r.read_u8()? {
+        let base_pack_hash = match r.read_u8().await? {
             0 => None,
-            1 => Some(ContentHash(r.read_array32()?)),
+            1 => Some(ContentHash(r.read_array32().await?)),
             other => return Err(DbError::Corrupt(format!("bad option tag {other}"))),
         };
-        let roots = read_hash_list(&mut r)?;
-        let new_pages = read_hash_list(&mut r)?;
-        let created_at_ms = r.read_varint_u64()?;
+        let roots = read_hash_list(&mut r).await?;
+        let new_pages = read_hash_list(&mut r).await?;
+        let created_at_ms = r.read_varint_u64().await?;
         Ok(SnapshotDescriptor { document, generation, parent_generation, head_seq, commit_seq, epoch, chain_hash, protocol_version, vcs_head, base_pack_hash, roots, new_pages, created_at_ms })
     }
 }
 
-fn write_string(w: &mut pack::ByteWriter, s: &str) {
-    w.write_varint_u64(s.len() as u64);
-    w.write_bytes(s.as_bytes());
+async fn write_string(w: &mut pack::ByteWriter, s: &str) {
+    w.write_varint_u64(s.len() as u64).await;
+    w.write_bytes(s.as_bytes()).await;
 }
 
-fn read_string(r: &mut pack::ByteReader<'_>) -> Result<String, DbError> {
-    let len = r.read_varint_u64()?;
+async fn read_string(r: &mut pack::ByteReader<'_>) -> Result<String, DbError> {
+    let len = r.read_varint_u64().await?;
     check_len(len, MAX_STRING_BYTES, "snapshot descriptor string")?;
-    let bytes = r.read_bytes(len as usize)?;
+    let bytes = r.read_bytes(len as usize).await?;
     String::from_utf8(bytes.to_vec()).map_err(|_| DbError::Corrupt("invalid utf8 in snapshot descriptor".to_string()))
 }
 
-fn write_option_u64(w: &mut pack::ByteWriter, value: Option<u64>) {
+async fn write_option_u64(w: &mut pack::ByteWriter, value: Option<u64>) {
     match value {
         Some(v) => {
-            w.write_u8(1);
-            w.write_varint_u64(v);
+            w.write_u8(1).await;
+            w.write_varint_u64(v).await;
         }
-        None => w.write_u8(0),
+        None => w.write_u8(0).await,
     }
 }
 
-fn read_option_u64(r: &mut pack::ByteReader<'_>) -> Result<Option<u64>, DbError> {
-    match r.read_u8()? {
+async fn read_option_u64(r: &mut pack::ByteReader<'_>) -> Result<Option<u64>, DbError> {
+    match r.read_u8().await? {
         0 => Ok(None),
-        1 => Ok(Some(r.read_varint_u64()?)),
+        1 => Ok(Some(r.read_varint_u64().await?)),
         other => Err(DbError::Corrupt(format!("bad option tag {other}"))),
     }
 }
 
-fn write_hash_list(w: &mut pack::ByteWriter, hashes: &[ContentHash]) {
-    w.write_varint_u64(hashes.len() as u64);
+async fn write_hash_list(w: &mut pack::ByteWriter, hashes: &[ContentHash]) {
+    w.write_varint_u64(hashes.len() as u64).await;
     for hash in hashes {
-        w.write_bytes(&hash.0);
+        w.write_bytes(&hash.0).await;
     }
 }
 
-fn read_hash_list(r: &mut pack::ByteReader<'_>) -> Result<Vec<ContentHash>, DbError> {
-    let count = r.read_varint_u64()?;
+async fn read_hash_list(r: &mut pack::ByteReader<'_>) -> Result<Vec<ContentHash>, DbError> {
+    let count = r.read_varint_u64().await?;
     check_len(count, MAX_HASH_LIST_LEN, "snapshot descriptor hash list")?;
     let mut out = Vec::with_capacity(count as usize);
     for _ in 0..count {
-        out.push(ContentHash(r.read_array32()?));
+        out.push(ContentHash(r.read_array32().await?));
     }
     Ok(out)
 }
@@ -219,16 +219,16 @@ struct SubSource<'a> {
 }
 
 impl<'a> pack::PackSource for SubSource<'a> {
-    fn len(&self) -> u64 {
+    async fn len(&self) -> u64 {
         self.len
     }
 
-    fn read_at(&self, offset: u64, buf: &mut [u8]) -> Result<usize, pack::PackError> {
+    async fn read_at(&self, offset: u64, buf: &mut [u8]) -> Result<usize, pack::PackError> {
         if offset > self.len {
             return Err(pack::PackError::Truncated(offset));
         }
         let available = ((self.len - offset) as usize).min(buf.len());
-        self.inner.read_at(self.base + offset, &mut buf[..available])
+        self.inner.read_at(self.base + offset, &mut buf[..available]).await
     }
 }
 
@@ -236,12 +236,12 @@ impl<'a> pack::PackSource for SubSource<'a> {
 /// (fixed local offset `pack::HEADER_SIZE`, right after the header) of one generation's own
 /// coordinate space. Only understands identity-codec framing (`flags == 0`) since this crate never
 /// compresses that segment; CRC-validates before returning the payload.
-fn decode_snapshot_segment(source: &SubSource<'_>) -> Result<Vec<u8>, DbError> {
+async fn decode_snapshot_segment(source: &SubSource<'_>) -> Result<Vec<u8>, DbError> {
     use pack::PackSource as _;
     let offset = pack::HEADER_SIZE as u64;
     const PREFIX_CAP: usize = 16;
     let mut prefix = [0u8; PREFIX_CAP];
-    let read = source.read_at(offset, &mut prefix)?;
+    let read = source.read_at(offset, &mut prefix).await?;
     if read < 2 {
         return Err(DbError::Corrupt("truncated snapshot descriptor segment header".to_string()));
     }
@@ -251,15 +251,15 @@ fn decode_snapshot_segment(source: &SubSource<'_>) -> Result<Vec<u8>, DbError> {
         return Err(DbError::Corrupt("snapshot descriptor segment must use the identity codec".to_string()));
     }
     let mut pos = 2usize;
-    let seg_len = pack::os_pack::read_varint_u64(&prefix[..read], &mut pos)?;
+    let seg_len = pack::os_pack::read_varint_u64(&prefix[..read], &mut pos).await?;
     check_len(seg_len, 64 * 1024 * 1024, "snapshot descriptor segment length")?;
     let header_len = pos as u64;
     let mut frame = vec![0u8; (header_len + seg_len) as usize];
-    source.read_exact_at(offset, &mut frame)?;
+    source.read_exact_at(offset, &mut frame).await?;
     let mut crc_bytes = [0u8; 4];
-    source.read_exact_at(offset + header_len + seg_len, &mut crc_bytes)?;
+    source.read_exact_at(offset + header_len + seg_len, &mut crc_bytes).await?;
     let stored_crc = u32::from_le_bytes(crc_bytes);
-    let computed_crc = pack::crc32c(&frame);
+    let computed_crc = pack::crc32c(&frame).await;
     if stored_crc != computed_crc {
         return Err(DbError::Corrupt("snapshot descriptor segment checksum mismatch".to_string()));
     }
@@ -277,7 +277,7 @@ fn decode_snapshot_segment(source: &SubSource<'_>) -> Result<Vec<u8>, DbError> {
 /// trailer. If `parent_footer_position` is `Some`, the trailing footer's `prev_footer_offset` is
 /// patched in place afterward (see module doc) and `REQUIRED_FOOTER_CHAIN` is set in both the
 /// header and the footer's `required_flags`.
-pub fn build_generation(descriptor: &SnapshotDescriptor, new_pages: &[Page], parent_footer_position: Option<u64>) -> Result<Vec<u8>, DbError> {
+pub async fn build_generation(descriptor: &SnapshotDescriptor, new_pages: &[Page], parent_footer_position: Option<u64>) -> Result<Vec<u8>, DbError> {
     if new_pages.len() != descriptor.new_pages.len() {
         return Err(DbError::InvalidArgument("new_pages count does not match descriptor.new_pages".to_string()));
     }
@@ -295,12 +295,12 @@ pub fn build_generation(descriptor: &SnapshotDescriptor, new_pages: &[Page], par
         required_flags |= pack::REQUIRED_CHUNKED;
     }
     let options = pack::os_pack::WriteOptions { required_flags, optional_flags: 0, codec: pack::CodecId(0) };
-    let mut writer = pack::PackWriter::begin(Vec::<u8>::new(), &options)?;
+    let mut writer = pack::PackWriter::begin(Vec::<u8>::new(), &options).await?;
 
-    let descriptor_bytes = descriptor.encode();
-    writer.write_segment(pack::KIND_SNAPSHOT, &descriptor_bytes)?;
+    let descriptor_bytes = descriptor.encode().await;
+    writer.write_segment(pack::KIND_SNAPSHOT, &descriptor_bytes).await?;
     for page in new_pages {
-        writer.write_chunk(&page.bytes)?;
+        writer.write_chunk(&page.bytes).await?;
     }
 
     let manifest = pack::Manifest {
@@ -316,10 +316,10 @@ pub fn build_generation(descriptor: &SnapshotDescriptor, new_pages: &[Page], par
         chunk_count: 0,
         symbol_count: 0,
     };
-    let mut bytes = writer.finish(&manifest)?;
+    let mut bytes = writer.finish(&manifest).await?;
 
     if let Some(parent_offset) = parent_footer_position {
-        patch_prev_footer_offset(&mut bytes, parent_offset)?;
+        patch_prev_footer_offset(&mut bytes, parent_offset).await?;
     }
     Ok(bytes)
 }
@@ -330,13 +330,13 @@ pub fn build_generation(descriptor: &SnapshotDescriptor, new_pages: &[Page], par
 /// `pack_format::Footer`'s own layout, verified byte-for-byte against `pack`'s own tests) in
 /// place, then recomputes the footer's CRC-32C (over the preceding 80 bytes) so the result still
 /// parses cleanly through `pack::read_footer_only`/`PackFile::open_superblock`.
-fn patch_prev_footer_offset(bytes: &mut [u8], parent_footer_offset: u64) -> Result<(), DbError> {
+async fn patch_prev_footer_offset(bytes: &mut [u8], parent_footer_offset: u64) -> Result<(), DbError> {
     if bytes.len() < pack::FOOTER_SIZE {
         return Err(DbError::Corrupt("pack bytes shorter than one footer".to_string()));
     }
     let footer_start = bytes.len() - pack::FOOTER_SIZE;
     bytes[footer_start + 72..footer_start + 80].copy_from_slice(&parent_footer_offset.to_le_bytes());
-    let crc = pack::crc32c(&bytes[footer_start..footer_start + 80]);
+    let crc = pack::crc32c(&bytes[footer_start..footer_start + 80]).await;
     bytes[footer_start + 80..footer_start + 84].copy_from_slice(&crc.to_le_bytes());
     Ok(())
 }
@@ -352,7 +352,7 @@ pub struct GenerationHandle {
 }
 
 impl GenerationHandle {
-    pub fn generation(&self) -> u64 {
+    pub async fn generation(&self) -> u64 {
         self.descriptor.generation
     }
 
@@ -361,7 +361,7 @@ impl GenerationHandle {
     /// footer's `REQUIRED_FOOTER_CHAIN` bit, per this crate's `prev_footer_offset` semantics (see
     /// module doc), not merely from `prev_footer_offset != 0` (which is a legitimate value for a
     /// parent occupying the chain's very first byte).
-    pub fn parent_footer_offset(&self) -> Option<u64> {
+    pub async fn parent_footer_offset(&self) -> Option<u64> {
         if self.footer_required_flags & pack::REQUIRED_FOOTER_CHAIN != 0 {
             Some(self.footer_prev_offset)
         } else {
@@ -370,24 +370,24 @@ impl GenerationHandle {
     }
 }
 
-fn open_generation_at(combined: &[u8], base: u64, len: u64, footer: &pack::Footer) -> Result<GenerationHandle, DbError> {
+async fn open_generation_at(combined: &[u8], base: u64, len: u64, footer: &pack::Footer) -> Result<GenerationHandle, DbError> {
     let sub = SubSource { inner: combined, base, len };
-    let descriptor_bytes = decode_snapshot_segment(&sub)?;
-    let descriptor = SnapshotDescriptor::decode(&descriptor_bytes)?;
+    let descriptor_bytes = decode_snapshot_segment(&sub).await?;
+    let descriptor = SnapshotDescriptor::decode(&descriptor_bytes).await?;
     Ok(GenerationHandle { descriptor, base, len, footer_required_flags: footer.required_flags, footer_prev_offset: footer.prev_footer_offset })
 }
 
 /// @emoji 🔚️ Opens the LAST generation physically present in `combined` (the one whose footer sits
 /// at `combined.len() - FOOTER_SIZE`) — the entry point for reading a freshly-fetched or
 /// freshly-`materialize_chain`d buffer.
-pub fn open_latest(combined: &[u8]) -> Result<GenerationHandle, DbError> {
+pub async fn open_latest(combined: &[u8]) -> Result<GenerationHandle, DbError> {
     let whole = SubSource { inner: combined, base: 0, len: combined.len() as u64 };
-    let footer = pack::read_footer_only(&whole)?;
+    let footer = pack::read_footer_only(&whole).await?;
     if footer.file_len > combined.len() as u64 {
         return Err(DbError::Corrupt("snapshot generation footer.file_len exceeds buffer length".to_string()));
     }
     let base = combined.len() as u64 - footer.file_len;
-    open_generation_at(combined, base, footer.file_len, &footer)
+    open_generation_at(combined, base, footer.file_len, &footer).await
 }
 
 /// @emoji ⬅️ Opens the generation whose own footer starts at absolute offset `footer_offset`
@@ -395,33 +395,33 @@ pub fn open_latest(combined: &[u8]) -> Result<GenerationHandle, DbError> {
 /// Uses only `pack::read_footer_only` (via a length-bounded `SubSource`) to find that footer's own
 /// `file_len`, from which its base offset is derived (`footer_offset + FOOTER_SIZE - file_len`) —
 /// no `pack_format` private footer-parsing internals needed.
-pub fn open_ancestor(combined: &[u8], footer_offset: u64) -> Result<GenerationHandle, DbError> {
+pub async fn open_ancestor(combined: &[u8], footer_offset: u64) -> Result<GenerationHandle, DbError> {
     let footer_end = footer_offset.checked_add(pack::FOOTER_SIZE as u64).ok_or_else(|| DbError::Corrupt("snapshot chain footer offset overflow".to_string()))?;
     if footer_end > combined.len() as u64 {
         return Err(DbError::Corrupt("snapshot chain prev_footer_offset points past end of buffer".to_string()));
     }
     let bounded = SubSource { inner: combined, base: 0, len: footer_end };
-    let footer = pack::read_footer_only(&bounded)?;
+    let footer = pack::read_footer_only(&bounded).await?;
     if footer.file_len > footer_end {
         return Err(DbError::Corrupt("ancestor generation footer.file_len exceeds its own footer offset".to_string()));
     }
     let base = footer_end - footer.file_len;
-    open_generation_at(combined, base, footer.file_len, &footer)
+    open_generation_at(combined, base, footer.file_len, &footer).await
 }
 
 /// @emoji 📄️ Reads one page's raw bytes by content hash, starting at `handle` and walking to
 /// ancestors (via `open_ancestor`) until a generation whose `new_pages` lists it is found.
 /// Errors `NotFound` once the chain is exhausted without a match.
-pub fn read_page(combined: &[u8], handle: &GenerationHandle, hash: ContentHash) -> Result<Vec<u8>, DbError> {
+pub async fn read_page(combined: &[u8], handle: &GenerationHandle, hash: ContentHash) -> Result<Vec<u8>, DbError> {
     if let Some(index) = handle.descriptor.new_pages.iter().position(|candidate| *candidate == hash) {
         let sub = SubSource { inner: combined, base: handle.base, len: handle.len };
-        let file = pack::PackFile::open_manifest(sub, &pack::PackLimits::default(), pack::os_pack::VerificationLevel::Standard)?;
-        return Ok(file.read_chunk(pack::ChunkId(index as u32), pack::os_pack::VerificationLevel::Standard)?);
+        let file = pack::PackFile::open_manifest(sub, &pack::PackLimits::default(), pack::os_pack::VerificationLevel::Standard).await?;
+        return Ok(file.read_chunk(pack::ChunkId(index as u32), pack::os_pack::VerificationLevel::Standard).await?);
     }
-    match handle.parent_footer_offset() {
+    match handle.parent_footer_offset().await {
         Some(offset) => {
-            let parent = open_ancestor(combined, offset)?;
-            read_page(combined, &parent, hash)
+            let parent = open_ancestor(combined, offset).await?;
+            Box::pin(read_page(combined, &parent, hash)).await
         }
         None => Err(DbError::NotFound(format!("page {hash} not found anywhere in the snapshot chain"))),
     }
@@ -463,7 +463,7 @@ pub struct SnapshotPolicy {
 }
 
 impl SnapshotPolicy {
-    pub fn should_snapshot(&self, ops_since_last: u64, bytes_since_last: u64, ms_since_last: u64) -> bool {
+    pub async fn should_snapshot(&self, ops_since_last: u64, bytes_since_last: u64, ms_since_last: u64) -> bool {
         ops_since_last >= self.max_ops_since_last || bytes_since_last >= self.max_bytes_since_last || ms_since_last >= self.max_ms_since_last
     }
 }
@@ -476,7 +476,7 @@ pub struct SnapshotManager<'storage, S: SnapshotStorage> {
 }
 
 impl<'storage, S: SnapshotStorage> SnapshotManager<'storage, S> {
-    pub fn new(storage: &'storage S) -> SnapshotManager<'storage, S> {
+    pub async fn new(storage: &'storage S) -> SnapshotManager<'storage, S> {
         SnapshotManager { storage }
     }
 
@@ -510,7 +510,7 @@ impl<'storage, S: SnapshotStorage> SnapshotManager<'storage, S> {
             new_pages: new_pages.iter().map(|page| page.hash).collect(),
             created_at_ms: body.created_at_ms,
         };
-        let bytes = build_generation(&descriptor, new_pages, parent_footer_position)?;
+        let bytes = build_generation(&descriptor, new_pages, parent_footer_position).await?;
         self.storage.write_generation(document, generation, &bytes).await?;
         Ok(generation)
     }
@@ -525,7 +525,7 @@ impl<'storage, S: SnapshotStorage> SnapshotManager<'storage, S> {
         let mut current = Some(through_generation);
         while let Some(generation) = current {
             let bytes = self.storage.read_generation(document, generation).await?;
-            let handle = open_latest(&bytes)?;
+            let handle = open_latest(&bytes).await?;
             current = handle.descriptor.parent_generation;
             chain.push(bytes);
         }
@@ -545,7 +545,7 @@ impl<'storage, S: SnapshotStorage> SnapshotManager<'storage, S> {
             None => Ok(None),
             Some(generation) => {
                 let bytes = self.storage.read_generation(document, generation).await?;
-                let handle = open_latest(&bytes)?;
+                let handle = open_latest(&bytes).await?;
                 Ok(Some((generation, handle.descriptor)))
             }
         }
@@ -558,7 +558,7 @@ impl<'storage, S: SnapshotStorage> SnapshotManager<'storage, S> {
         let mut best: Option<(u64, u64)> = None;
         for generation in self.storage.list_generations(document).await? {
             let bytes = self.storage.read_generation(document, generation).await?;
-            let handle = open_latest(&bytes)?;
+            let handle = open_latest(&bytes).await?;
             if handle.descriptor.head_seq <= at_most_head_seq {
                 let better = best.is_none_or(|(_, best_head_seq)| handle.descriptor.head_seq > best_head_seq);
                 if better {
@@ -574,7 +574,7 @@ impl<'storage, S: SnapshotStorage> SnapshotManager<'storage, S> {
     /// boundary on why an incremental floor is rejected rather than silently breaking its chain.
     pub async fn retain_from(&self, document: &ArtifactId, floor_generation: u64) -> Result<(), DbError> {
         let floor_bytes = self.storage.read_generation(document, floor_generation).await?;
-        let floor_handle = open_latest(&floor_bytes)?;
+        let floor_handle = open_latest(&floor_bytes).await?;
         if floor_handle.descriptor.parent_generation.is_some() {
             return Err(DbError::InvalidArgument("retention floor must be a full-baseline generation (no parent)".to_string()));
         }
@@ -594,11 +594,11 @@ impl<'storage, S: SnapshotStorage> SnapshotManager<'storage, S> {
     /// no separate hash recomputation needed here.
     pub async fn verify(&self, document: &ArtifactId, generation: u64, level: pack::os_pack::VerificationLevel) -> Result<(), DbError> {
         let bytes = self.storage.read_generation(document, generation).await?;
-        let handle = open_latest(&bytes)?;
+        let handle = open_latest(&bytes).await?;
         let sub = SubSource { inner: &bytes, base: 0, len: bytes.len() as u64 };
-        let file = pack::PackFile::open_manifest(sub, &pack::PackLimits::default(), level)?;
+        let file = pack::PackFile::open_manifest(sub, &pack::PackLimits::default(), level).await?;
         for index in 0..handle.descriptor.new_pages.len() {
-            file.read_chunk(pack::ChunkId(index as u32), level)?;
+            file.read_chunk(pack::ChunkId(index as u32), level).await?;
         }
         Ok(())
     }
@@ -617,6 +617,7 @@ pub struct SnapshotLease;
 
 impl SnapshotLease {
     /// @emoji 🏷️ The `LeaseStorage` resource name guarding `document`'s snapshot builder.
+    // 🚫️async: E1 pure accessor consumed synchronously by `acquire`/`renew`/`release`/`current` — see R9
     pub fn resource(document: &ArtifactId) -> String {
         format!("snapshot:{document}")
     }
@@ -653,7 +654,7 @@ mod tests {
     use db_storage::MemoryStorage;
 
     //#region 🔖️Descriptor
-    fn sample_descriptor(generation: u64, parent: Option<u64>) -> SnapshotDescriptor {
+    async fn sample_descriptor(generation: u64, parent: Option<u64>) -> SnapshotDescriptor {
         SnapshotDescriptor {
             document: "doc-1".into(),
             generation,
@@ -671,168 +672,168 @@ mod tests {
         }
     }
 
-    #[test]
-    fn descriptor_encode_decode_round_trips_all_fields() {
-        let descriptor = sample_descriptor(3, Some(2));
-        let bytes = descriptor.encode();
-        let decoded = SnapshotDescriptor::decode(&bytes).unwrap();
+    #[semio_framework_async_macros::async_test]
+    async fn descriptor_encode_decode_round_trips_all_fields() {
+        let descriptor = sample_descriptor(3, Some(2)).await;
+        let bytes = descriptor.encode().await;
+        let decoded = SnapshotDescriptor::decode(&bytes).await.unwrap();
         assert_eq!(decoded, descriptor);
     }
 
-    #[test]
-    fn descriptor_encode_decode_round_trips_none_optionals() {
-        let mut descriptor = sample_descriptor(0, None);
+    #[semio_framework_async_macros::async_test]
+    async fn descriptor_encode_decode_round_trips_none_optionals() {
+        let mut descriptor = sample_descriptor(0, None).await;
         descriptor.vcs_head = None;
         descriptor.base_pack_hash = None;
         descriptor.roots.clear();
-        let bytes = descriptor.encode();
-        let decoded = SnapshotDescriptor::decode(&bytes).unwrap();
+        let bytes = descriptor.encode().await;
+        let decoded = SnapshotDescriptor::decode(&bytes).await.unwrap();
         assert_eq!(decoded, descriptor);
-        assert_eq!(decoded.frontier().head_seq, 0);
+        assert_eq!(decoded.frontier().await.head_seq, 0);
     }
 
-    #[test]
-    fn descriptor_decode_rejects_bad_version_tag() {
-        let mut bytes = sample_descriptor(0, None).encode();
+    #[semio_framework_async_macros::async_test]
+    async fn descriptor_decode_rejects_bad_version_tag() {
+        let mut bytes = sample_descriptor(0, None).await.encode().await;
         bytes[0] = 0xFF;
-        assert!(matches!(SnapshotDescriptor::decode(&bytes), Err(DbError::Corrupt(_))));
+        assert!(matches!(SnapshotDescriptor::decode(&bytes).await, Err(DbError::Corrupt(_))));
     }
 
-    #[test]
-    fn descriptor_decode_never_panics_on_truncated_input() {
-        let bytes = sample_descriptor(1, Some(0)).encode();
+    #[semio_framework_async_macros::async_test]
+    async fn descriptor_decode_never_panics_on_truncated_input() {
+        let bytes = sample_descriptor(1, Some(0)).await.encode().await;
         for len in 0..bytes.len() {
-            assert!(SnapshotDescriptor::decode(&bytes[..len]).is_err(), "expected error at truncation length {len}");
+            assert!(SnapshotDescriptor::decode(&bytes[..len]).await.is_err(), "expected error at truncation length {len}");
         }
     }
     //#endregion 🔖️Descriptor
 
     //#region 🔖️Generation
-    fn page(bytes: &[u8]) -> Page {
+    async fn page(bytes: &[u8]) -> Page {
         Page::new(bytes.to_vec())
     }
 
-    #[test]
-    fn single_generation_round_trips_through_pack_public_api() {
-        let pages = vec![page(b"page-zero"), page(b"page-one")];
-        let mut descriptor = sample_descriptor(0, None);
+    #[semio_framework_async_macros::async_test]
+    async fn single_generation_round_trips_through_pack_public_api() {
+        let pages = vec![page(b"page-zero").await, page(b"page-one").await];
+        let mut descriptor = sample_descriptor(0, None).await;
         descriptor.new_pages = pages.iter().map(|p| p.hash).collect();
         descriptor.roots = vec![pages[0].hash];
 
-        let bytes = build_generation(&descriptor, &pages, None).unwrap();
+        let bytes = build_generation(&descriptor, &pages, None).await.unwrap();
 
         // 🔬️ A real `pack::PackFile`, unrelated to this crate's own reader, must accept the bytes.
-        let file = pack::PackFile::open_manifest(bytes.as_slice(), &pack::PackLimits::default(), pack::os_pack::VerificationLevel::Full).unwrap();
+        let file = pack::PackFile::open_manifest(bytes.as_slice(), &pack::PackLimits::default(), pack::os_pack::VerificationLevel::Full).await.unwrap();
         assert_eq!(file.chunk_count(), 2);
         assert_eq!(file.manifest().unwrap().schema_name, "");
 
-        let handle = open_latest(&bytes).unwrap();
-        assert_eq!(handle.generation(), 0);
+        let handle = open_latest(&bytes).await.unwrap();
+        assert_eq!(handle.generation().await, 0);
         assert_eq!(handle.descriptor, descriptor);
-        assert!(handle.parent_footer_offset().is_none());
+        assert!(handle.parent_footer_offset().await.is_none());
 
-        let read_back = read_page(&bytes, &handle, pages[1].hash).unwrap();
+        let read_back = read_page(&bytes, &handle, pages[1].hash).await.unwrap();
         assert_eq!(read_back, b"page-one");
     }
 
-    #[test]
-    fn build_generation_rejects_new_pages_mismatched_with_descriptor() {
-        let pages = vec![page(b"a")];
-        let descriptor = sample_descriptor(0, None); // descriptor.new_pages left empty
-        assert!(matches!(build_generation(&descriptor, &pages, None), Err(DbError::InvalidArgument(_))));
+    #[semio_framework_async_macros::async_test]
+    async fn build_generation_rejects_new_pages_mismatched_with_descriptor() {
+        let pages = vec![page(b"a").await];
+        let descriptor = sample_descriptor(0, None).await; // descriptor.new_pages left empty
+        assert!(matches!(build_generation(&descriptor, &pages, None).await, Err(DbError::InvalidArgument(_))));
     }
 
-    #[test]
-    fn footer_chain_flag_and_prev_offset_are_genuine_pack_wire_data() {
-        let parent_pages = vec![page(b"gen0-page")];
-        let mut gen0_descriptor = sample_descriptor(0, None);
+    #[semio_framework_async_macros::async_test]
+    async fn footer_chain_flag_and_prev_offset_are_genuine_pack_wire_data() {
+        let parent_pages = vec![page(b"gen0-page").await];
+        let mut gen0_descriptor = sample_descriptor(0, None).await;
         gen0_descriptor.new_pages = parent_pages.iter().map(|p| p.hash).collect();
-        let gen0_bytes = build_generation(&gen0_descriptor, &parent_pages, None).unwrap();
+        let gen0_bytes = build_generation(&gen0_descriptor, &parent_pages, None).await.unwrap();
 
         let parent_footer_position = gen0_bytes.len() as u64 - pack::FOOTER_SIZE as u64;
-        let child_pages = vec![page(b"gen1-page")];
-        let mut gen1_descriptor = sample_descriptor(1, Some(0));
+        let child_pages = vec![page(b"gen1-page").await];
+        let mut gen1_descriptor = sample_descriptor(1, Some(0)).await;
         gen1_descriptor.new_pages = child_pages.iter().map(|p| p.hash).collect();
-        let gen1_bytes = build_generation(&gen1_descriptor, &child_pages, Some(parent_footer_position)).unwrap();
+        let gen1_bytes = build_generation(&gen1_descriptor, &child_pages, Some(parent_footer_position)).await.unwrap();
 
         // 🔬️ Read gen1's footer via `pack`'s own public superblock API, not this crate's helpers.
-        let superblock = pack::PackFile::open_superblock(gen1_bytes.as_slice(), &pack::PackLimits::default()).unwrap();
+        let superblock = pack::PackFile::open_superblock(gen1_bytes.as_slice(), &pack::PackLimits::default()).await.unwrap();
         let footer = superblock.superblock().footer;
         assert_eq!(footer.required_flags & pack::REQUIRED_FOOTER_CHAIN, pack::REQUIRED_FOOTER_CHAIN);
         assert_eq!(footer.prev_footer_offset, parent_footer_position);
         assert_eq!(footer.file_len, gen1_bytes.len() as u64);
 
-        let direct_footer = pack::read_footer_only(&gen1_bytes.as_slice()).unwrap();
+        let direct_footer = pack::read_footer_only(&gen1_bytes.as_slice()).await.unwrap();
         assert_eq!(direct_footer, footer);
     }
 
-    #[test]
-    fn two_generation_incremental_chain_resolves_inherited_pages() {
-        let gen0_pages = vec![page(b"root-page"), page(b"stable-page")];
-        let mut gen0_descriptor = sample_descriptor(0, None);
+    #[semio_framework_async_macros::async_test]
+    async fn two_generation_incremental_chain_resolves_inherited_pages() {
+        let gen0_pages = vec![page(b"root-page").await, page(b"stable-page").await];
+        let mut gen0_descriptor = sample_descriptor(0, None).await;
         gen0_descriptor.new_pages = gen0_pages.iter().map(|p| p.hash).collect();
         gen0_descriptor.roots = vec![gen0_pages[0].hash, gen0_pages[1].hash];
-        let gen0_bytes = build_generation(&gen0_descriptor, &gen0_pages, None).unwrap();
+        let gen0_bytes = build_generation(&gen0_descriptor, &gen0_pages, None).await.unwrap();
 
         let parent_footer_position = gen0_bytes.len() as u64 - pack::FOOTER_SIZE as u64;
-        let gen1_pages = vec![page(b"changed-page")];
-        let mut gen1_descriptor = sample_descriptor(1, Some(0));
+        let gen1_pages = vec![page(b"changed-page").await];
+        let mut gen1_descriptor = sample_descriptor(1, Some(0)).await;
         gen1_descriptor.new_pages = gen1_pages.iter().map(|p| p.hash).collect();
         gen1_descriptor.roots = vec![gen1_pages[0].hash, gen0_pages[1].hash];
-        let gen1_bytes = build_generation(&gen1_descriptor, &gen1_pages, Some(parent_footer_position)).unwrap();
+        let gen1_bytes = build_generation(&gen1_descriptor, &gen1_pages, Some(parent_footer_position)).await.unwrap();
 
         let mut combined = Vec::new();
         combined.extend_from_slice(&gen0_bytes);
         combined.extend_from_slice(&gen1_bytes);
 
-        let latest = open_latest(&combined).unwrap();
-        assert_eq!(latest.generation(), 1);
-        let parent_offset = latest.parent_footer_offset().unwrap();
+        let latest = open_latest(&combined).await.unwrap();
+        assert_eq!(latest.generation().await, 1);
+        let parent_offset = latest.parent_footer_offset().await.unwrap();
         assert_eq!(parent_offset, parent_footer_position);
 
-        let ancestor = open_ancestor(&combined, parent_offset).unwrap();
-        assert_eq!(ancestor.generation(), 0);
+        let ancestor = open_ancestor(&combined, parent_offset).await.unwrap();
+        assert_eq!(ancestor.generation().await, 0);
         assert_eq!(ancestor.descriptor, gen0_descriptor);
-        assert!(ancestor.parent_footer_offset().is_none());
+        assert!(ancestor.parent_footer_offset().await.is_none());
 
         // ✅️ New-in-gen1 page resolves directly from gen1's own chunk table.
-        let changed = read_page(&combined, &latest, gen1_pages[0].hash).unwrap();
+        let changed = read_page(&combined, &latest, gen1_pages[0].hash).await.unwrap();
         assert_eq!(changed, b"changed-page");
 
         // ✅️ Unchanged page (not listed in gen1) resolves by walking to gen0.
-        let inherited = read_page(&combined, &latest, gen0_pages[1].hash).unwrap();
+        let inherited = read_page(&combined, &latest, gen0_pages[1].hash).await.unwrap();
         assert_eq!(inherited, b"stable-page");
 
         // ❌️ A hash present in neither generation reports NotFound, not a panic.
-        assert!(matches!(read_page(&combined, &latest, pack::ContentHash([0xEE; 32])), Err(DbError::NotFound(_))));
+        assert!(matches!(read_page(&combined, &latest, pack::ContentHash([0xEE; 32])).await, Err(DbError::NotFound(_))));
     }
 
-    #[test]
-    fn open_latest_rejects_truncated_buffer() {
-        let pages = vec![page(b"only-page")];
-        let mut descriptor = sample_descriptor(0, None);
+    #[semio_framework_async_macros::async_test]
+    async fn open_latest_rejects_truncated_buffer() {
+        let pages = vec![page(b"only-page").await];
+        let mut descriptor = sample_descriptor(0, None).await;
         descriptor.new_pages = pages.iter().map(|p| p.hash).collect();
-        let bytes = build_generation(&descriptor, &pages, None).unwrap();
+        let bytes = build_generation(&descriptor, &pages, None).await.unwrap();
         for len in 0..pack::FOOTER_SIZE {
-            assert!(open_latest(&bytes[..len]).is_err(), "expected error at truncation length {len}");
+            assert!(open_latest(&bytes[..len]).await.is_err(), "expected error at truncation length {len}");
         }
-        assert!(open_latest(&bytes).is_ok());
+        assert!(open_latest(&bytes).await.is_ok());
     }
     //#endregion 🔖️Generation
 
     //#region 🔖️Manager
-    fn body(head_seq: u64) -> SnapshotBody {
+    async fn body(head_seq: u64) -> SnapshotBody {
         SnapshotBody { head_seq, commit_seq: head_seq, epoch: 0, chain_hash: [0u8; 32], protocol_version: 1, vcs_head: None, base_pack_hash: None, roots: vec![], created_at_ms: head_seq * 1000 }
     }
 
-    #[test]
-    fn manager_publishes_full_baseline_then_loads_it_back() {
-        let storage = MemoryStorage::new();
-        let manager = SnapshotManager::new(&storage);
+    #[semio_framework_async_macros::async_test]
+    async fn manager_publishes_full_baseline_then_loads_it_back() {
+        let storage = MemoryStorage::new().await;
+        let manager = SnapshotManager::new(&storage).await;
         let document: ArtifactId = "doc-a".into();
-        let pages = vec![page(b"p0")];
+        let pages = vec![page(b"p0").await];
 
-        let generation = db_actor::block_on(manager.publish(&document, SnapshotOrigin::FullBaseline, &pages, body(10))).unwrap();
+        let generation = db_actor::block_on(manager.publish(&document, SnapshotOrigin::FullBaseline, &pages, body(10).await)).unwrap();
         assert_eq!(generation, 0);
 
         let (loaded_generation, descriptor) = db_actor::block_on(manager.load_latest(&document)).unwrap().unwrap();
@@ -841,26 +842,26 @@ mod tests {
         assert_eq!(descriptor.head_seq, 10);
     }
 
-    #[test]
-    fn manager_incremental_publish_without_prior_generation_errors() {
-        let storage = MemoryStorage::new();
-        let manager = SnapshotManager::new(&storage);
+    #[semio_framework_async_macros::async_test]
+    async fn manager_incremental_publish_without_prior_generation_errors() {
+        let storage = MemoryStorage::new().await;
+        let manager = SnapshotManager::new(&storage).await;
         let document: ArtifactId = "doc-b".into();
-        let result = db_actor::block_on(manager.publish(&document, SnapshotOrigin::Incremental, &[], body(0)));
+        let result = db_actor::block_on(manager.publish(&document, SnapshotOrigin::Incremental, &[], body(0).await));
         assert!(matches!(result, Err(DbError::InvalidArgument(_))));
     }
 
-    #[test]
-    fn manager_incremental_chain_materializes_and_resolves_inherited_pages() {
-        let storage = MemoryStorage::new();
-        let manager = SnapshotManager::new(&storage);
+    #[semio_framework_async_macros::async_test]
+    async fn manager_incremental_chain_materializes_and_resolves_inherited_pages() {
+        let storage = MemoryStorage::new().await;
+        let manager = SnapshotManager::new(&storage).await;
         let document: ArtifactId = "doc-c".into();
 
-        let gen0_pages = vec![page(b"base-a"), page(b"base-b")];
-        db_actor::block_on(manager.publish(&document, SnapshotOrigin::FullBaseline, &gen0_pages, body(0))).unwrap();
+        let gen0_pages = vec![page(b"base-a").await, page(b"base-b").await];
+        db_actor::block_on(manager.publish(&document, SnapshotOrigin::FullBaseline, &gen0_pages, body(0).await)).unwrap();
 
-        let gen1_pages = vec![page(b"delta-a")];
-        let gen1 = db_actor::block_on(manager.publish(&document, SnapshotOrigin::Incremental, &gen1_pages, body(5))).unwrap();
+        let gen1_pages = vec![page(b"delta-a").await];
+        let gen1 = db_actor::block_on(manager.publish(&document, SnapshotOrigin::Incremental, &gen1_pages, body(5).await)).unwrap();
         assert_eq!(gen1, 1);
 
         let (latest_generation, descriptor) = db_actor::block_on(manager.load_latest(&document)).unwrap().unwrap();
@@ -868,45 +869,45 @@ mod tests {
         assert_eq!(descriptor.parent_generation, Some(0));
 
         let combined = db_actor::block_on(manager.materialize_chain(&document, 1)).unwrap();
-        let handle = open_latest(&combined).unwrap();
-        let inherited = read_page(&combined, &handle, gen0_pages[1].hash).unwrap();
+        let handle = open_latest(&combined).await.unwrap();
+        let inherited = read_page(&combined, &handle, gen0_pages[1].hash).await.unwrap();
         assert_eq!(inherited, b"base-b");
-        let local = read_page(&combined, &handle, gen1_pages[0].hash).unwrap();
+        let local = read_page(&combined, &handle, gen1_pages[0].hash).await.unwrap();
         assert_eq!(local, b"delta-a");
     }
 
-    #[test]
-    fn manager_retain_from_requires_full_baseline_floor() {
-        let storage = MemoryStorage::new();
-        let manager = SnapshotManager::new(&storage);
+    #[semio_framework_async_macros::async_test]
+    async fn manager_retain_from_requires_full_baseline_floor() {
+        let storage = MemoryStorage::new().await;
+        let manager = SnapshotManager::new(&storage).await;
         let document: ArtifactId = "doc-d".into();
-        db_actor::block_on(manager.publish(&document, SnapshotOrigin::FullBaseline, &[], body(0))).unwrap();
-        db_actor::block_on(manager.publish(&document, SnapshotOrigin::Incremental, &[], body(1))).unwrap();
+        db_actor::block_on(manager.publish(&document, SnapshotOrigin::FullBaseline, &[], body(0).await)).unwrap();
+        db_actor::block_on(manager.publish(&document, SnapshotOrigin::Incremental, &[], body(1).await)).unwrap();
 
         assert!(matches!(db_actor::block_on(manager.retain_from(&document, 1)), Err(DbError::InvalidArgument(_))));
     }
 
-    #[test]
-    fn manager_retain_from_deletes_generations_below_a_valid_baseline_floor() {
-        let storage = MemoryStorage::new();
-        let manager = SnapshotManager::new(&storage);
+    #[semio_framework_async_macros::async_test]
+    async fn manager_retain_from_deletes_generations_below_a_valid_baseline_floor() {
+        let storage = MemoryStorage::new().await;
+        let manager = SnapshotManager::new(&storage).await;
         let document: ArtifactId = "doc-e".into();
-        db_actor::block_on(manager.publish(&document, SnapshotOrigin::FullBaseline, &[], body(0))).unwrap();
-        db_actor::block_on(manager.publish(&document, SnapshotOrigin::Incremental, &[], body(1))).unwrap();
-        db_actor::block_on(manager.publish(&document, SnapshotOrigin::FullBaseline, &[], body(2))).unwrap();
+        db_actor::block_on(manager.publish(&document, SnapshotOrigin::FullBaseline, &[], body(0).await)).unwrap();
+        db_actor::block_on(manager.publish(&document, SnapshotOrigin::Incremental, &[], body(1).await)).unwrap();
+        db_actor::block_on(manager.publish(&document, SnapshotOrigin::FullBaseline, &[], body(2).await)).unwrap();
 
         db_actor::block_on(manager.retain_from(&document, 2)).unwrap();
         assert_eq!(db_actor::block_on(storage.list_generations(&document)).unwrap(), vec![2]);
     }
 
-    #[test]
-    fn manager_select_generation_picks_highest_head_seq_at_most_target() {
-        let storage = MemoryStorage::new();
-        let manager = SnapshotManager::new(&storage);
+    #[semio_framework_async_macros::async_test]
+    async fn manager_select_generation_picks_highest_head_seq_at_most_target() {
+        let storage = MemoryStorage::new().await;
+        let manager = SnapshotManager::new(&storage).await;
         let document: ArtifactId = "doc-f".into();
-        db_actor::block_on(manager.publish(&document, SnapshotOrigin::FullBaseline, &[], body(0))).unwrap();
-        db_actor::block_on(manager.publish(&document, SnapshotOrigin::Incremental, &[], body(10))).unwrap();
-        db_actor::block_on(manager.publish(&document, SnapshotOrigin::Incremental, &[], body(20))).unwrap();
+        db_actor::block_on(manager.publish(&document, SnapshotOrigin::FullBaseline, &[], body(0).await)).unwrap();
+        db_actor::block_on(manager.publish(&document, SnapshotOrigin::Incremental, &[], body(10).await)).unwrap();
+        db_actor::block_on(manager.publish(&document, SnapshotOrigin::Incremental, &[], body(20).await)).unwrap();
 
         assert_eq!(db_actor::block_on(manager.select_generation(&document, 15)).unwrap(), Some(1));
         assert_eq!(db_actor::block_on(manager.select_generation(&document, 25)).unwrap(), Some(2));
@@ -916,13 +917,13 @@ mod tests {
         assert_eq!(db_actor::block_on(manager.select_generation(&empty_document, 100)).unwrap(), None);
     }
 
-    #[test]
-    fn manager_verify_accepts_intact_and_rejects_corrupted_generation() {
-        let storage = MemoryStorage::new();
-        let manager = SnapshotManager::new(&storage);
+    #[semio_framework_async_macros::async_test]
+    async fn manager_verify_accepts_intact_and_rejects_corrupted_generation() {
+        let storage = MemoryStorage::new().await;
+        let manager = SnapshotManager::new(&storage).await;
         let document: ArtifactId = "doc-g".into();
-        let pages = vec![page(b"verify-me")];
-        db_actor::block_on(manager.publish(&document, SnapshotOrigin::FullBaseline, &pages, body(0))).unwrap();
+        let pages = vec![page(b"verify-me").await];
+        db_actor::block_on(manager.publish(&document, SnapshotOrigin::FullBaseline, &pages, body(0).await)).unwrap();
 
         db_actor::block_on(manager.verify(&document, 0, pack::os_pack::VerificationLevel::Full)).unwrap();
 
@@ -935,20 +936,20 @@ mod tests {
     //#endregion 🔖️Manager
 
     //#region 🔖️Policy
-    #[test]
-    fn snapshot_policy_fires_on_any_threshold_alone() {
+    #[semio_framework_async_macros::async_test]
+    async fn snapshot_policy_fires_on_any_threshold_alone() {
         let policy = SnapshotPolicy { max_ops_since_last: 100, max_bytes_since_last: 1_000_000, max_ms_since_last: 60_000 };
-        assert!(!policy.should_snapshot(10, 10, 10));
-        assert!(policy.should_snapshot(100, 0, 0));
-        assert!(policy.should_snapshot(0, 1_000_000, 0));
-        assert!(policy.should_snapshot(0, 0, 60_000));
+        assert!(!policy.should_snapshot(10, 10, 10).await);
+        assert!(policy.should_snapshot(100, 0, 0).await);
+        assert!(policy.should_snapshot(0, 1_000_000, 0).await);
+        assert!(policy.should_snapshot(0, 0, 60_000).await);
     }
     //#endregion 🔖️Policy
 
     //#region 🔖️Lease
-    #[test]
-    fn snapshot_lease_round_trips_acquire_renew_release_via_memory_storage() {
-        let storage = MemoryStorage::new();
+    #[semio_framework_async_macros::async_test]
+    async fn snapshot_lease_round_trips_acquire_renew_release_via_memory_storage() {
+        let storage = MemoryStorage::new().await;
         let document: ArtifactId = "doc-1".into();
 
         let fence = db_actor::block_on(SnapshotLease::acquire(&storage, &document, "actor-a", 1_000, 0)).unwrap();
@@ -974,8 +975,8 @@ mod tests {
         assert_eq!(expired_handoff, after_release.next());
     }
 
-    #[test]
-    fn snapshot_lease_resource_name_is_scoped_per_document() {
+    #[semio_framework_async_macros::async_test]
+    async fn snapshot_lease_resource_name_is_scoped_per_document() {
         let a: ArtifactId = "doc-a".into();
         let b: ArtifactId = "doc-b".into();
         assert_ne!(SnapshotLease::resource(&a), SnapshotLease::resource(&b));

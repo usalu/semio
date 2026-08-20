@@ -57,18 +57,18 @@ pub async fn artifact_kind() -> ArtifactKindSpec {
 /// itself is untouched — this only REFERENCES what it already exposes.
 /// 🧩️ Binds this executable root to its sole schema-owned definition.
 pub async fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
-    crate::registry::runtime_assembly("png", definition, declaration)
+    crate::registry::runtime_assembly("png", definition, declaration).await
 }
 
 pub async fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
-    let formats = crate::registry::format_descriptors_for("png")?;
+    let formats = crate::registry::format_descriptors_for("png").await?;
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
-        .schema(crate::artifacts::png::standards::v1_2::subsets::any::schema::png_artifact_schema_descriptor())
-        .formats(formats)
-        .inferences([crate::artifacts::png::standards::v1_2::subsets::any::schema::inferences::png_artifact_inference_descriptor()])
-        .composers(crate::artifacts::png::standards::v1_2::subsets::any::io::io_registry::entries())
-        .languages(pilot_languages())
-        .document_codec_bare::<PngSnapshot, PngMutation>(STDIO_PNG_DOCUMENT_SCHEMA)
+        .await.schema(crate::artifacts::png::standards::v1_2::subsets::any::schema::png_artifact_schema_descriptor().await)
+        .await.formats(formats)
+        .await.inferences([crate::artifacts::png::standards::v1_2::subsets::any::schema::inferences::png_artifact_inference_descriptor()])
+        .await.composers(crate::artifacts::png::standards::v1_2::subsets::any::io::io_registry::entries())
+        .await.languages(pilot_languages().await)
+        .await.document_codec_bare::<PngSnapshot, PngMutation>(STDIO_PNG_DOCUMENT_SCHEMA)
         .try_build()
 }
 
@@ -146,12 +146,12 @@ async fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 /// preserved verbatim — only the module path changed (`engine::register` → `png::register`).
 pub async fn register() {
     io_registry::register();
-    ::schema::register_artifact_schema_descriptor(crate::artifacts::png::standards::v1_2::subsets::any::schema::png_artifact_schema_descriptor());
-    ::schema::register_artifact_inference_descriptor(crate::artifacts::png::standards::v1_2::subsets::any::schema::inferences::png_artifact_inference_descriptor());
+    ::schema::register_artifact_schema_descriptor(crate::artifacts::png::standards::v1_2::subsets::any::schema::png_artifact_schema_descriptor().await);
+    ::schema::register_artifact_inference_descriptor(crate::artifacts::png::standards::v1_2::subsets::any::schema::inferences::png_artifact_inference_descriptor().await);
     for lang in pilot_languages() {
         dsl::register_language(lang.clone());
     }
-    let _ = store::register_document_codec(store::ArtifactCodec::of::<PngSnapshot, PngMutation>(STDIO_PNG_DOCUMENT_SCHEMA));
+    let _ = store::register_document_codec(store::ArtifactCodec::of::<PngSnapshot, PngMutation>(STDIO_PNG_DOCUMENT_SCHEMA).await);
 }
 //#endregion 🔖️ImperativeRegister
 
@@ -163,7 +163,8 @@ pub mod io_registry {
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 
-    pub async fn entries() -> &'static [&'static ComposerEntry] {
+    // 🚫️async: E1 pure table accessor consumed by OnceLock::get_or_init's sync closure — see R9
+    pub fn entries() -> &'static [&'static ComposerEntry] {
         ENTRIES.get_or_init(|| v1_2::entries().iter().collect()).as_slice()
     }
 

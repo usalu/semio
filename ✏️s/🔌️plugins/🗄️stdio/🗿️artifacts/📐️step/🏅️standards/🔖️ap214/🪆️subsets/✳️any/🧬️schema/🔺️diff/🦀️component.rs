@@ -38,7 +38,7 @@ async fn unrank_excluding(rank: usize, excluded_sorted: &[usize]) -> usize {
     }
 }
 async fn transport_forward(index: usize, removed_sorted: &[usize], added_index_sorted: &[usize]) -> usize {
-    unrank_excluding(rank_excluding(index, removed_sorted), added_index_sorted)
+    unrank_excluding(rank_excluding(index, removed_sorted).await, added_index_sorted).await
 }
 //#endregion 🔖️IndexTransport
 
@@ -77,8 +77,8 @@ async fn absorb_indexed_collection<T: Clone, D: Clone>(
             merged_added.retain(|(i, _)| *i != r2);
         } else {
             let post_remove_rank = rank_excluding(r2, &added1_index_sorted);
-            let base_index = unrank_excluding(post_remove_rank, &removed1_sorted);
-            merged_removed_base.push(base_index);
+            let base_index = unrank_excluding(post_remove_rank.await, &removed1_sorted);
+            merged_removed_base.push(base_index.await);
         }
     }
     merged_removed_base.sort_unstable();
@@ -98,11 +98,11 @@ async fn absorb_indexed_collection<T: Clone, D: Clone>(
             }
         } else {
             let post_remove_rank = rank_excluding(mp, &added1_index_sorted);
-            let base_index = unrank_excluding(post_remove_rank, &removed1_sorted);
+            let base_index = unrank_excluding(post_remove_rank.await, &removed1_sorted);
             if merged_removed_base.binary_search(&base_index).is_ok() {
                 continue;
             }
-            modified_map.entry(base_index).and_modify(|d| absorb_diff(d, dd2.clone())).or_insert(dd2);
+            modified_map.entry(base_index.await).and_modify(|d| absorb_diff(d, dd2.clone())).or_insert(dd2);
         }
     }
     let merged_modified: Vec<(usize, D)> = modified_map.into_iter().collect();
@@ -137,7 +137,7 @@ async fn inverse_indexed_collection<T: Clone, D: Clone>(removed: &[usize], modif
     for (base_index, d) in modified {
         if let Some(orig) = base_items.get(*base_index) {
             let after_index = transport_forward(*base_index, &removed_sorted, &added_index_sorted);
-            inv_modified.push((after_index, diff_inverse(d, orig)));
+            inv_modified.push((after_index.await, diff_inverse(d, orig)));
         }
     }
     let mut inv_added: Vec<(usize, T)> = Vec::new();
@@ -228,7 +228,7 @@ impl StepArgsDiff {
             other.added.into_iter().map(|a| (a.index, a.value)).collect(),
             |d: &mut StepValue, o: StepValue| *d = o,
             |d: &StepValue, _item: &StepValue| d.clone(),
-        );
+        ).await;
         self.removed = removed;
         self.modified = modified.into_iter().map(|(index, value)| StepArgModified { index, value }).collect();
         self.added = added.into_iter().map(|(index, value)| StepArgAdded { index, value }).collect();
@@ -241,7 +241,7 @@ impl StepArgsDiff {
             &self.added.iter().map(|a| (a.index, a.value.clone())).collect::<Vec<_>>(),
             base_args,
             |_d: &StepValue, item: &StepValue| item.clone(),
-        );
+        ).await;
         Self { removed, modified: modified.into_iter().map(|(index, value)| StepArgModified { index, value }).collect(), added: added.into_iter().map(|(index, value)| StepArgAdded { index, value }).collect() }
     }
 }
@@ -267,8 +267,8 @@ impl StepEntityDiff {
     }
 
     pub async fn between(base: &StepEntity, other: &StepEntity) -> Self {
-        let args_diff = StepArgsDiff::between(&base.args, &other.args);
-        Self { name: (base.name != other.name).then(|| other.name.clone()), args: (!args_diff.is_empty()).then_some(args_diff), complex: (base.complex != other.complex).then(|| other.complex.clone()) }
+        let args_diff = StepArgsDiff::between(&base.args, &other.args).await;
+        Self { name: (base.name != other.name).then(|| other.name.clone()), args: (!args_diff.is_empty().await).then_some(args_diff), complex: (base.complex != other.complex).then(|| other.complex.clone()) }
     }
 
     pub async fn apply(&self, base: &StepEntity) -> StepEntity {
@@ -277,7 +277,7 @@ impl StepEntityDiff {
             next.name = v.clone();
         }
         if let Some(d) = &self.args {
-            next.args = d.apply(&next.args);
+            next.args = d.apply(&next.args).await;
         }
         if let Some(v) = &self.complex {
             next.complex = v.clone();
@@ -294,7 +294,7 @@ impl StepEntityDiff {
             self.name = other.name;
         }
         match (&mut self.args, other.args) {
-            (Some(mine), Some(theirs)) => mine.absorb(theirs),
+            (Some(mine), Some(theirs)) => mine.absorb(theirs).await,
             (slot @ None, Some(theirs)) => *slot = Some(theirs),
             _ => {}
         }
@@ -349,8 +349,8 @@ impl StepEntitiesDiff {
         let mut modified = Vec::new();
         for be in base {
             if let Some(oe) = other.iter().find(|o| o.id == be.id) {
-                let d = StepEntityDiff::between(be, oe);
-                if !d.is_empty() {
+                let d = StepEntityDiff::between(be, oe).await;
+                if !d.is_empty().await {
                     modified.push(StepEntityModified { id: be.id, diff: d });
                 }
             }
@@ -370,7 +370,7 @@ impl StepEntitiesDiff {
         for m in &self.modified {
             for entity in &mut entities {
                 if entity.id == m.id {
-                    *entity = m.diff.apply(entity);
+                    *entity = m.diff.apply(entity).await;
                 }
             }
         }
@@ -430,7 +430,7 @@ async fn absorb_entities(d1: Option<StepEntitiesDiff>, d2: Option<StepEntitiesDi
                 continue; // modified-of-annihilated-add: moot.
             }
             if let Some(a) = merged_added.iter_mut().find(|a| a.entity.id == dm.id) {
-                a.entity = dm.diff.apply(&a.entity);
+                a.entity = dm.diff.apply(&a.entity).await;
             }
         } else {
             if merged_removed.contains(&dm.id) {
@@ -447,7 +447,7 @@ async fn absorb_entities(d1: Option<StepEntitiesDiff>, d2: Option<StepEntitiesDi
     merged_added.extend(d2.added);
 
     let merged = StepEntitiesDiff { removed: merged_removed, modified: merged_modified, added: merged_added };
-    if merged.is_empty() {
+    if merged.is_empty().await {
         None
     } else {
         Some(merged)
@@ -479,12 +479,12 @@ pub struct StepDiff {
 
 impl StepDiff {
     pub async fn is_empty_diff(&self) -> bool {
-        self.file_description.is_none() && self.file_name.is_none() && self.file_schema.is_none() && self.entities.as_ref().map(StepEntitiesDiff::is_empty).unwrap_or(true)
+        self.file_description.is_none() && self.file_name.is_none() && self.file_schema.is_none() && self.entities.as_ref().map(StepEntitiesDiff::is_empty).unwrap_or(true).await
     }
 }
 
 async fn target_error(code: &'static str, message: &'static str, target: Vec<String>) -> MutationApplyError {
-    MutationApplyError::new(code, message).at(target)
+    MutationApplyError::new(code, message).await.at(target).await
 }
 
 async fn validate_args_diff(base_len: usize, diff: &StepArgsDiff, prefix: &[String]) -> MutationApplyResult<()> {
@@ -493,7 +493,7 @@ async fn validate_args_diff(base_len: usize, diff: &StepArgsDiff, prefix: &[Stri
         let mut target = prefix.to_vec();
         target.extend(["args".to_string(), index.to_string()]);
         if index >= base_len || !removed.insert(index) {
-            return Err(target_error("invalid-remove-index", "argument removal target must exist exactly once", target));
+            return Err(target_error("invalid-remove-index", "argument removal target must exist exactly once", target).await);
         }
     }
     let mut modified = BTreeSet::new();
@@ -501,7 +501,7 @@ async fn validate_args_diff(base_len: usize, diff: &StepArgsDiff, prefix: &[Stri
         let mut target = prefix.to_vec();
         target.extend(["args".to_string(), entry.index.to_string()]);
         if entry.index >= base_len || removed.contains(&entry.index) || !modified.insert(entry.index) {
-            return Err(target_error("invalid-modify-index", "argument modification target must exist exactly once and remain present", target));
+            return Err(target_error("invalid-modify-index", "argument modification target must exist exactly once and remain present", target).await);
         }
     }
     let mut length = base_len - removed.len();
@@ -512,7 +512,7 @@ async fn validate_args_diff(base_len: usize, diff: &StepArgsDiff, prefix: &[Stri
         let mut target = prefix.to_vec();
         target.extend(["args".to_string(), index.to_string()]);
         if index > length || previous == Some(index) {
-            return Err(target_error("invalid-add-index", "argument addition target must be unique and within the evolving sequence", target));
+            return Err(target_error("invalid-add-index", "argument addition target must be unique and within the evolving sequence", target).await);
         }
         previous = Some(index);
         length += 1;
@@ -524,23 +524,23 @@ async fn validate_entities_diff(base: &[StepEntity], diff: &StepEntitiesDiff) ->
     let mut base_by_id = BTreeMap::new();
     for entity in base {
         if base_by_id.insert(entity.id, entity).is_some() {
-            return Err(target_error("duplicate-base-target", "base entity ids must be unique", vec!["entities".to_string(), entity.id.to_string()]));
+            return Err(target_error("duplicate-base-target", "base entity ids must be unique", vec!["entities".to_string(), entity.id.to_string()]).await);
         }
     }
     let mut removed = BTreeSet::new();
     for &id in &diff.removed {
         if !base_by_id.contains_key(&id) || !removed.insert(id) {
-            return Err(target_error("invalid-remove-target", "entity removal target must exist exactly once", vec!["entities".to_string(), id.to_string()]));
+            return Err(target_error("invalid-remove-target", "entity removal target must exist exactly once", vec!["entities".to_string(), id.to_string()]).await);
         }
     }
     let mut modified = BTreeSet::new();
     for entry in &diff.modified {
         let base_entity = base_by_id.get(&entry.id);
         if base_entity.is_none() || removed.contains(&entry.id) || !modified.insert(entry.id) {
-            return Err(target_error("invalid-modify-target", "entity modification target must exist exactly once and remain present", vec!["entities".to_string(), entry.id.to_string()]));
+            return Err(target_error("invalid-modify-target", "entity modification target must exist exactly once and remain present", vec!["entities".to_string(), entry.id.to_string()]).await);
         }
         if let Some(args) = &entry.diff.args {
-            validate_args_diff(base_entity.map(|entity| entity.args.len()).unwrap_or_default(), args, &["entities".to_string(), entry.id.to_string()])?;
+            validate_args_diff(base_entity.map(|entity| entity.args.len()).unwrap_or_default(), args, &["entities".to_string(), entry.id.to_string()]).await?;
         }
     }
     let mut length = base.len() - removed.len();
@@ -550,7 +550,7 @@ async fn validate_entities_diff(base: &[StepEntity], diff: &StepEntitiesDiff) ->
     let mut previous = None;
     for entry in additions {
         if base_by_id.contains_key(&entry.entity.id) || !added_ids.insert(entry.entity.id) || entry.index > length || previous == Some(entry.index) {
-            return Err(target_error("invalid-add-target", "entity id and position must be unique and valid", vec!["entities".to_string(), entry.entity.id.to_string()]));
+            return Err(target_error("invalid-add-target", "entity id and position must be unique and valid", vec!["entities".to_string(), entry.entity.id.to_string()]).await);
         }
         previous = Some(entry.index);
         length += 1;
@@ -570,7 +570,7 @@ async fn apply_step_diff_unchecked(diff: &StepDiff, base: &StepSnapshot) -> Step
         next.header.file_schema = value.clone();
     }
     if let Some(value) = &diff.entities {
-        next.entities = value.apply(&next.entities);
+        next.entities = value.apply(&next.entities).await;
     }
     next
 }
@@ -578,9 +578,9 @@ async fn apply_step_diff_unchecked(diff: &StepDiff, base: &StepSnapshot) -> Step
 impl MutationDiff<StepSnapshot> for StepDiff {
     async fn apply(&self, base: &StepSnapshot) -> MutationApplyResult<StepSnapshot> {
         if let Some(diff) = &self.entities {
-            validate_entities_diff(&base.entities, diff)?;
+            validate_entities_diff(&base.entities, diff).await?;
         }
-        Ok(apply_step_diff_unchecked(self, base))
+        Ok(apply_step_diff_unchecked(self, base).await)
     }
 
     async fn absorb(&mut self, other: Self) {
@@ -593,7 +593,7 @@ impl MutationDiff<StepSnapshot> for StepDiff {
         if other.file_schema.is_some() {
             self.file_schema = other.file_schema;
         }
-        self.entities = absorb_entities(self.entities.take(), other.entities);
+        self.entities = absorb_entities(self.entities.take(), other.entities).await;
     }
 }
 
@@ -603,27 +603,27 @@ impl DiffAlgebra<StepSnapshot> for StepDiff {
     /// state pair into a diff.
     async fn inverse(&self, base: &StepSnapshot) -> Self {
         let mutated = apply_step_diff_unchecked(self, base);
-        Self::between(&mutated, base)
+        Self::between(&mutated, base).await
     }
 
     async fn between(base: &StepSnapshot, other: &StepSnapshot) -> Self {
-        let entities_diff = StepEntitiesDiff::between(&base.entities, &other.entities);
+        let entities_diff = StepEntitiesDiff::between(&base.entities, &other.entities).await;
         Self {
             file_description: (base.header.file_description != other.header.file_description).then(|| other.header.file_description.clone()),
             file_name: (base.header.file_name != other.header.file_name).then(|| other.header.file_name.clone()),
             file_schema: (base.header.file_schema != other.header.file_schema).then(|| other.header.file_schema.clone()),
-            entities: (!entities_diff.is_empty()).then_some(entities_diff),
+            entities: (!entities_diff.is_empty().await).then_some(entities_diff),
         }
     }
 
     async fn is_empty(&self) -> bool {
-        self.is_empty_diff()
+        self.is_empty_diff().await
     }
 }
 
 /// 🧩 Builds a set-snapshot diff — sparse field-by-field, never a full-replace slot.
 pub async fn diff_set_snapshot(base: &StepSnapshot, next: &StepSnapshot) -> StepDiff {
-    <StepDiff as DiffAlgebra<StepSnapshot>>::between(base, next)
+    <StepDiff as DiffAlgebra<StepSnapshot>>::between(base, next).await
 }
 //#endregion 🔖️Diff
 
@@ -653,10 +653,10 @@ pub(crate) async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
 pub(crate) async fn enc_str(s: &str) -> String {
-    hex_encode(s.as_bytes())
+    hex_encode(s.as_bytes()).await
 }
 pub(crate) async fn dec_str(s: &str) -> Result<String, String> {
-    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
+    String::from_utf8(hex_decode(s).await?).map_err(|e| e.to_string())
 }
 pub(crate) async fn parse_usize(s: &str) -> Result<usize, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
@@ -696,8 +696,8 @@ pub(crate) async fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String
     }
 }
 pub(crate) async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
-    let inner = strip_brackets(s)?;
-    match split_top_level(inner, ',').as_slice() {
+    let inner = strip_brackets(s).await?;
+    match split_top_level(inner, ',').await.as_slice() {
         ["0"] => Ok(None),
         [tag, value] if *tag == "1" => Ok(Some(dec(value)?)),
         other => Err(format!("option decode: bad shape {other:?}")),
@@ -718,14 +718,14 @@ pub(crate) async fn write_str_bin(out: &mut Vec<u8>, s: &str) {
     out.extend_from_slice(s.as_bytes());
 }
 pub(crate) async fn read_str_bin(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
-    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-    String::from_utf8(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec()).map_err(|e| e.to_string())
+    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+    String::from_utf8(reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec()).map_err(|e| e.to_string())
 }
 pub(crate) async fn write_f64_bin(out: &mut Vec<u8>, v: f64) {
     out.extend_from_slice(&v.to_le_bytes());
 }
 pub(crate) async fn read_f64_bin(reader: &mut store::ByteReader<'_>) -> Result<f64, String> {
-    reader.read_f64_le().map_err(|e| e.to_string())
+    reader.read_f64_le().await.map_err(|e| e.to_string())
 }
 pub(crate) async fn write_option_bin<T>(out: &mut Vec<u8>, opt: &Option<T>, enc: impl FnOnce(&T, &mut Vec<u8>)) {
     match opt {
@@ -737,7 +737,7 @@ pub(crate) async fn write_option_bin<T>(out: &mut Vec<u8>, opt: &Option<T>, enc:
     }
 }
 pub(crate) async fn read_option_bin<T>(reader: &mut store::ByteReader<'_>, dec: impl FnOnce(&mut store::ByteReader<'_>) -> Result<T, String>) -> Result<Option<T>, String> {
-    match reader.read_u8().map_err(|e| e.to_string())? {
+    match reader.read_u8().await.map_err(|e| e.to_string())? {
         0 => Ok(None),
         1 => Ok(Some(dec(reader)?)),
         other => Err(format!("option binary: unknown tag {other}")),
@@ -750,7 +750,7 @@ pub(crate) async fn write_str_list_bin(out: &mut Vec<u8>, list: &[String]) {
     }
 }
 pub(crate) async fn read_str_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<String>, String> {
-    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     (0..count).map(|_| read_str_bin(reader)).collect()
 }
 //#endregion 🔖️BinaryPrimitives
@@ -777,23 +777,23 @@ pub(crate) async fn dec_value(s: &str) -> Result<StepValue, String> {
         return Err(format!("step value: too short {s:?}"));
     }
     let (tag, rest) = s.split_at(1);
-    let inner = strip_brackets(rest)?;
+    let inner = strip_brackets(rest).await?;
     match tag {
         "U" => Ok(StepValue::Unset),
         "D" => Ok(StepValue::Derived),
         "I" => Ok(StepValue::Integer(inner.parse().map_err(|e: std::num::ParseIntError| e.to_string())?)),
         "R" => Ok(StepValue::Real(inner.parse().map_err(|e: std::num::ParseFloatError| e.to_string())?)),
-        "S" => Ok(StepValue::String(dec_str(inner)?)),
-        "E" => Ok(StepValue::Enum(dec_str(inner)?)),
+        "S" => Ok(StepValue::String(dec_str(inner).await?)),
+        "E" => Ok(StepValue::Enum(dec_str(inner).await?)),
         "F" => Ok(StepValue::Reference(inner.parse().map_err(|e: std::num::ParseIntError| e.to_string())?)),
         "A" => {
             let items = split_top_level(inner, ',').into_iter().filter(|s| !s.is_empty()).map(dec_value).collect::<Result<Vec<_>, String>>()?;
             Ok(StepValue::Aggregate(items))
         }
         "T" => {
-            let parts = split_top_level(inner, ',');
+            let parts = split_top_level(inner, ',').await;
             let [type_name, value] = parts.as_slice() else { return Err(format!("typed value: expected 2 fields, got {}", parts.len())) };
-            Ok(StepValue::TypedValue { type_name: dec_str(type_name)?, value: Box::new(dec_value(value)?) })
+            Ok(StepValue::TypedValue { type_name: dec_str(type_name).await?, value: Box::new(dec_value(value).await?) })
         }
         other => Err(format!("step value: unknown tag {other:?}")),
     }
@@ -803,23 +803,23 @@ async fn enc_complex(c: &StepComplexType) -> String {
     format!("[{},[{}]]", enc_str(&c.name), c.args.iter().map(enc_value).collect::<Vec<_>>().join(","))
 }
 async fn dec_complex(s: &str) -> Result<StepComplexType, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [name, args] = parts.as_slice() else { return Err(format!("complex type: expected 2 fields, got {}", parts.len())) };
-    let args = split_top_level(strip_brackets(args)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_value).collect::<Result<Vec<_>, String>>()?;
-    Ok(StepComplexType { name: dec_str(name)?, args })
+    let args = split_top_level(strip_brackets(args).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_value).collect::<Result<Vec<_>, String>>()?;
+    Ok(StepComplexType { name: dec_str(name).await?, args })
 }
 
 pub(crate) async fn enc_entity(e: &StepEntity) -> String {
     format!("[{},{},[{}],[{}]]", e.id, enc_str(&e.name), e.args.iter().map(enc_value).collect::<Vec<_>>().join(","), e.complex.iter().map(enc_complex).collect::<Vec<_>>().join(","),)
 }
 pub(crate) async fn dec_entity(s: &str) -> Result<StepEntity, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [id, name, args, complex] = parts.as_slice() else { return Err(format!("entity: expected 4 fields, got {}", parts.len())) };
     Ok(StepEntity {
-        id: parse_u64(id)?,
-        name: dec_str(name)?,
-        args: split_top_level(strip_brackets(args)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_value).collect::<Result<Vec<_>, String>>()?,
-        complex: split_top_level(strip_brackets(complex)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_complex).collect::<Result<Vec<_>, String>>()?,
+        id: parse_u64(id).await?,
+        name: dec_str(name).await?,
+        args: split_top_level(strip_brackets(args).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_value).collect::<Result<Vec<_>, String>>()?,
+        complex: split_top_level(strip_brackets(complex).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_complex).collect::<Result<Vec<_>, String>>()?,
     })
 }
 
@@ -827,9 +827,9 @@ pub(crate) async fn enc_file_description(d: &StepFileDescription) -> String {
     format!("[[{}],{}]", d.description.iter().map(|s| enc_str(s)).collect::<Vec<_>>().join(","), enc_str(&d.implementation_level))
 }
 pub(crate) async fn dec_file_description(s: &str) -> Result<StepFileDescription, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [description, implementation_level] = parts.as_slice() else { return Err(format!("file description: expected 2 fields, got {}", parts.len())) };
-    Ok(StepFileDescription { description: split_top_level(strip_brackets(description)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_str).collect::<Result<Vec<_>, String>>()?, implementation_level: dec_str(implementation_level)? })
+    Ok(StepFileDescription { description: split_top_level(strip_brackets(description).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_str).collect::<Result<Vec<_>, String>>()?, implementation_level: dec_str(implementation_level).await? })
 }
 
 pub(crate) async fn enc_file_name(f: &StepFileName) -> String {
@@ -845,18 +845,18 @@ pub(crate) async fn enc_file_name(f: &StepFileName) -> String {
     )
 }
 pub(crate) async fn dec_file_name(s: &str) -> Result<StepFileName, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [name, timestamp, author, organization, preprocessor_version, originating_system, authorization] = parts.as_slice() else {
         return Err(format!("file name: expected 7 fields, got {}", parts.len()));
     };
     Ok(StepFileName {
-        name: dec_str(name)?,
-        timestamp: dec_str(timestamp)?,
-        author: split_top_level(strip_brackets(author)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_str).collect::<Result<Vec<_>, String>>()?,
-        organization: split_top_level(strip_brackets(organization)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_str).collect::<Result<Vec<_>, String>>()?,
-        preprocessor_version: dec_str(preprocessor_version)?,
-        originating_system: dec_str(originating_system)?,
-        authorization: dec_str(authorization)?,
+        name: dec_str(name).await?,
+        timestamp: dec_str(timestamp).await?,
+        author: split_top_level(strip_brackets(author).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_str).collect::<Result<Vec<_>, String>>()?,
+        organization: split_top_level(strip_brackets(organization).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_str).collect::<Result<Vec<_>, String>>()?,
+        preprocessor_version: dec_str(preprocessor_version).await?,
+        originating_system: dec_str(originating_system).await?,
+        authorization: dec_str(authorization).await?,
     })
 }
 
@@ -864,7 +864,7 @@ pub(crate) async fn enc_file_schema(s: &StepFileSchema) -> String {
     format!("[{}]", s.schemas.iter().map(|x| enc_str(x)).collect::<Vec<_>>().join(","))
 }
 pub(crate) async fn dec_file_schema(s: &str) -> Result<StepFileSchema, String> {
-    let schemas = split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_str).collect::<Result<Vec<_>, String>>()?;
+    let schemas = split_top_level(strip_brackets(s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_str).collect::<Result<Vec<_>, String>>()?;
     Ok(StepFileSchema { schemas })
 }
 
@@ -875,14 +875,14 @@ pub(crate) async fn enc_step_snapshot(s: &StepSnapshot) -> String {
     format!("[{},{},{},{},[{}]]", enc_str(&s.schema), enc_file_description(&s.header.file_description), enc_file_name(&s.header.file_name), enc_file_schema(&s.header.file_schema), s.entities.iter().map(enc_entity).collect::<Vec<_>>().join(","),)
 }
 pub(crate) async fn dec_step_snapshot(s: &str) -> Result<StepSnapshot, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [schema, file_description, file_name, file_schema, entities] = parts.as_slice() else {
         return Err(format!("step snapshot: expected 5 fields, got {}", parts.len()));
     };
     Ok(StepSnapshot {
-        schema: dec_str(schema)?,
-        header: crate::artifacts::step::schema::snapshot::StepHeader { file_description: dec_file_description(file_description)?, file_name: dec_file_name(file_name)?, file_schema: dec_file_schema(file_schema)? },
-        entities: split_top_level(strip_brackets(entities)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_entity).collect::<Result<Vec<_>, String>>()?,
+        schema: dec_str(schema).await?,
+        header: crate::artifacts::step::schema::snapshot::StepHeader { file_description: dec_file_description(file_description).await?, file_name: dec_file_name(file_name).await?, file_schema: dec_file_schema(file_schema).await? },
+        entities: split_top_level(strip_brackets(entities).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_entity).collect::<Result<Vec<_>, String>>()?,
     })
 }
 //#endregion 🔖️ValueCodecs
@@ -934,23 +934,23 @@ pub(crate) async fn enc_value_bin(v: &StepValue, out: &mut Vec<u8>) {
     }
 }
 pub(crate) async fn dec_value_bin(reader: &mut store::ByteReader<'_>) -> Result<StepValue, String> {
-    let tag = reader.read_u8().map_err(|e| e.to_string())?;
+    let tag = reader.read_u8().await.map_err(|e| e.to_string())?;
     match tag {
         0 => Ok(StepValue::Unset),
         1 => Ok(StepValue::Derived),
-        2 => Ok(StepValue::Integer(reader.read_varint_i64().map_err(|e| e.to_string())?)),
-        3 => Ok(StepValue::Real(read_f64_bin(reader)?)),
-        4 => Ok(StepValue::String(read_str_bin(reader)?)),
-        5 => Ok(StepValue::Enum(read_str_bin(reader)?)),
-        6 => Ok(StepValue::Reference(reader.read_varint_u64().map_err(|e| e.to_string())?)),
+        2 => Ok(StepValue::Integer(reader.read_varint_i64().await.map_err(|e| e.to_string())?)),
+        3 => Ok(StepValue::Real(read_f64_bin(reader).await?)),
+        4 => Ok(StepValue::String(read_str_bin(reader).await?)),
+        5 => Ok(StepValue::Enum(read_str_bin(reader).await?)),
+        6 => Ok(StepValue::Reference(reader.read_varint_u64().await.map_err(|e| e.to_string())?)),
         7 => {
-            let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+            let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
             let items = (0..count).map(|_| dec_value_bin(reader)).collect::<Result<Vec<_>, String>>()?;
             Ok(StepValue::Aggregate(items))
         }
         8 => {
-            let type_name = read_str_bin(reader)?;
-            let value = Box::new(dec_value_bin(reader)?);
+            let type_name = read_str_bin(reader).await?;
+            let value = Box::new(dec_value_bin(reader).await?);
             Ok(StepValue::TypedValue { type_name, value })
         }
         other => Err(format!("step value binary: unknown tag {other}")),
@@ -965,8 +965,8 @@ pub(crate) async fn enc_complex_bin(c: &StepComplexType, out: &mut Vec<u8>) {
     }
 }
 pub(crate) async fn dec_complex_bin(reader: &mut store::ByteReader<'_>) -> Result<StepComplexType, String> {
-    let name = read_str_bin(reader)?;
-    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let name = read_str_bin(reader).await?;
+    let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let args = (0..count).map(|_| dec_value_bin(reader)).collect::<Result<Vec<_>, String>>()?;
     Ok(StepComplexType { name, args })
 }
@@ -984,11 +984,11 @@ pub(crate) async fn enc_entity_bin(e: &StepEntity, out: &mut Vec<u8>) {
     }
 }
 pub(crate) async fn dec_entity_bin(reader: &mut store::ByteReader<'_>) -> Result<StepEntity, String> {
-    let id = reader.read_varint_u64().map_err(|e| e.to_string())?;
-    let name = read_str_bin(reader)?;
-    let args_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let id = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let name = read_str_bin(reader).await?;
+    let args_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let args = (0..args_count).map(|_| dec_value_bin(reader)).collect::<Result<Vec<_>, String>>()?;
-    let complex_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let complex_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let complex = (0..complex_count).map(|_| dec_complex_bin(reader)).collect::<Result<Vec<_>, String>>()?;
     Ok(StepEntity { id, name, args, complex })
 }
@@ -998,8 +998,8 @@ pub(crate) async fn enc_file_description_bin(d: &StepFileDescription, out: &mut 
     write_str_bin(out, &d.implementation_level);
 }
 pub(crate) async fn dec_file_description_bin(reader: &mut store::ByteReader<'_>) -> Result<StepFileDescription, String> {
-    let description = read_str_list_bin(reader)?;
-    let implementation_level = read_str_bin(reader)?;
+    let description = read_str_list_bin(reader).await?;
+    let implementation_level = read_str_bin(reader).await?;
     Ok(StepFileDescription { description, implementation_level })
 }
 
@@ -1014,13 +1014,13 @@ pub(crate) async fn enc_file_name_bin(f: &StepFileName, out: &mut Vec<u8>) {
 }
 pub(crate) async fn dec_file_name_bin(reader: &mut store::ByteReader<'_>) -> Result<StepFileName, String> {
     Ok(StepFileName {
-        name: read_str_bin(reader)?,
-        timestamp: read_str_bin(reader)?,
-        author: read_str_list_bin(reader)?,
-        organization: read_str_list_bin(reader)?,
-        preprocessor_version: read_str_bin(reader)?,
-        originating_system: read_str_bin(reader)?,
-        authorization: read_str_bin(reader)?,
+        name: read_str_bin(reader).await?,
+        timestamp: read_str_bin(reader).await?,
+        author: read_str_list_bin(reader).await?,
+        organization: read_str_list_bin(reader).await?,
+        preprocessor_version: read_str_bin(reader).await?,
+        originating_system: read_str_bin(reader).await?,
+        authorization: read_str_bin(reader).await?,
     })
 }
 
@@ -1028,7 +1028,7 @@ pub(crate) async fn enc_file_schema_bin(s: &StepFileSchema, out: &mut Vec<u8>) {
     write_str_list_bin(out, &s.schemas);
 }
 pub(crate) async fn dec_file_schema_bin(reader: &mut store::ByteReader<'_>) -> Result<StepFileSchema, String> {
-    Ok(StepFileSchema { schemas: read_str_list_bin(reader)? })
+    Ok(StepFileSchema { schemas: read_str_list_bin(reader).await? })
 }
 
 /// 📸️ Full `StepSnapshot` binary codec — needed by `SetSnapshot`'s `OpBinary` (mutations file
@@ -1046,11 +1046,11 @@ pub(crate) async fn enc_step_snapshot_bin(s: &StepSnapshot, out: &mut Vec<u8>) {
     }
 }
 pub(crate) async fn dec_step_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<StepSnapshot, String> {
-    let schema = read_str_bin(reader)?;
-    let file_description = dec_file_description_bin(reader)?;
-    let file_name = dec_file_name_bin(reader)?;
-    let file_schema = dec_file_schema_bin(reader)?;
-    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let schema = read_str_bin(reader).await?;
+    let file_description = dec_file_description_bin(reader).await?;
+    let file_name = dec_file_name_bin(reader).await?;
+    let file_schema = dec_file_schema_bin(reader).await?;
+    let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let entities = (0..count).map(|_| dec_entity_bin(reader)).collect::<Result<Vec<_>, String>>()?;
     Ok(StepSnapshot { schema, header: crate::artifacts::step::schema::snapshot::StepHeader { file_description, file_name, file_schema }, entities })
 }
@@ -1064,10 +1064,10 @@ async fn enc_args_diff(d: &StepArgsDiff) -> String {
     format!("[{removed}];[{modified}];[{added}]")
 }
 async fn dec_args_diff(body: &str) -> Result<StepArgsDiff, String> {
-    let three = split_top_level(body, ';');
+    let three = split_top_level(body, ';').await;
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("args diff: expected 3 sections, got {}", three.len())) };
-    let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
-    let modified = split_top_level(strip_brackets(modified_s)?, ',')
+    let removed = split_top_level(strip_brackets(removed_s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
+    let modified = split_top_level(strip_brackets(modified_s).await?, ',')
         .into_iter()
         .filter(|s| !s.is_empty())
         .map(|entry| {
@@ -1075,7 +1075,7 @@ async fn dec_args_diff(body: &str) -> Result<StepArgsDiff, String> {
             Ok(StepArgModified { index: parse_usize(idx)?, value: dec_value(rest)? })
         })
         .collect::<Result<Vec<_>, String>>()?;
-    let added = split_top_level(strip_brackets(added_s)?, ',')
+    let added = split_top_level(strip_brackets(added_s).await?, ',')
         .into_iter()
         .filter(|s| !s.is_empty())
         .map(|entry| {
@@ -1090,12 +1090,12 @@ async fn enc_entity_diff(d: &StepEntityDiff) -> String {
     format!("[{},{},{}]", encode_option(&d.name, |v| enc_str(v)), encode_option(&d.args, enc_args_diff), encode_option(&d.complex, |v| format!("[{}]", v.iter().map(enc_complex).collect::<Vec<_>>().join(","))),)
 }
 async fn dec_entity_diff(s: &str) -> Result<StepEntityDiff, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [name, args, complex] = parts.as_slice() else { return Err(format!("entity diff: expected 3 fields, got {}", parts.len())) };
     Ok(StepEntityDiff {
-        name: decode_option(name, dec_str)?,
-        args: decode_option(args, dec_args_diff)?,
-        complex: decode_option(complex, |v| split_top_level(strip_brackets(v)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_complex).collect::<Result<Vec<_>, String>>())?,
+        name: decode_option(name, dec_str).await?,
+        args: decode_option(args, dec_args_diff).await?,
+        complex: decode_option(complex, |v| split_top_level(strip_brackets(v)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_complex).collect::<Result<Vec<_>, String>>()).await?,
     })
 }
 
@@ -1106,10 +1106,10 @@ async fn enc_entities_diff(d: &StepEntitiesDiff) -> String {
     format!("[{removed}];[{modified}];[{added}]")
 }
 async fn dec_entities_diff(body: &str) -> Result<StepEntitiesDiff, String> {
-    let three = split_top_level(body, ';');
+    let three = split_top_level(body, ';').await;
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("entities diff: expected 3 sections, got {}", three.len())) };
-    let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_u64).collect::<Result<Vec<_>, String>>()?;
-    let modified = split_top_level(strip_brackets(modified_s)?, ',')
+    let removed = split_top_level(strip_brackets(removed_s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_u64).collect::<Result<Vec<_>, String>>()?;
+    let modified = split_top_level(strip_brackets(modified_s).await?, ',')
         .into_iter()
         .filter(|s| !s.is_empty())
         .map(|entry| {
@@ -1117,7 +1117,7 @@ async fn dec_entities_diff(body: &str) -> Result<StepEntitiesDiff, String> {
             Ok(StepEntityModified { id: parse_u64(id)?, diff: dec_entity_diff(rest)? })
         })
         .collect::<Result<Vec<_>, String>>()?;
-    let added = split_top_level(strip_brackets(added_s)?, ',')
+    let added = split_top_level(strip_brackets(added_s).await?, ',')
         .into_iter()
         .filter(|s| !s.is_empty())
         .map(|entry| {
@@ -1150,23 +1150,23 @@ pub(crate) async fn enc_args_diff_bin(d: &StepArgsDiff, out: &mut Vec<u8>) {
     }
 }
 pub(crate) async fn dec_args_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<StepArgsDiff, String> {
-    let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let removed_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(removed_count as usize);
     for _ in 0..removed_count {
-        removed.push(reader.read_varint_u64().map_err(|e| e.to_string())? as usize);
+        removed.push(reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize);
     }
-    let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let modified_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut modified = Vec::with_capacity(modified_count as usize);
     for _ in 0..modified_count {
-        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-        let value = dec_value_bin(reader)?;
+        let index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+        let value = dec_value_bin(reader).await?;
         modified.push(StepArgModified { index, value });
     }
-    let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let added_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut added = Vec::with_capacity(added_count as usize);
     for _ in 0..added_count {
-        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-        let value = dec_value_bin(reader)?;
+        let index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+        let value = dec_value_bin(reader).await?;
         added.push(StepArgAdded { index, value });
     }
     Ok(StepArgsDiff { removed, modified, added })
@@ -1183,12 +1183,12 @@ pub(crate) async fn enc_entity_diff_bin(d: &StepEntityDiff, out: &mut Vec<u8>) {
     });
 }
 pub(crate) async fn dec_entity_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<StepEntityDiff, String> {
-    let name = read_option_bin(reader, read_str_bin)?;
-    let args = read_option_bin(reader, dec_args_diff_bin)?;
+    let name = read_option_bin(reader, read_str_bin).await?;
+    let args = read_option_bin(reader, dec_args_diff_bin).await?;
     let complex = read_option_bin(reader, |r| {
-        let count = r.read_varint_u64().map_err(|e| e.to_string())?;
+        let count = semio_framework_plugin::resolve_ready(r.read_varint_u64()).map_err(|e| e.to_string())?;
         (0..count).map(|_| dec_complex_bin(r)).collect::<Result<Vec<_>, String>>()
-    })?;
+    }).await?;
     Ok(StepEntityDiff { name, args, complex })
 }
 
@@ -1209,23 +1209,23 @@ pub(crate) async fn enc_entities_diff_bin(d: &StepEntitiesDiff, out: &mut Vec<u8
     }
 }
 pub(crate) async fn dec_entities_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<StepEntitiesDiff, String> {
-    let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let removed_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(removed_count as usize);
     for _ in 0..removed_count {
-        removed.push(reader.read_varint_u64().map_err(|e| e.to_string())?);
+        removed.push(reader.read_varint_u64().await.map_err(|e| e.to_string())?);
     }
-    let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let modified_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut modified = Vec::with_capacity(modified_count as usize);
     for _ in 0..modified_count {
-        let id = reader.read_varint_u64().map_err(|e| e.to_string())?;
-        let diff = dec_entity_diff_bin(reader)?;
+        let id = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+        let diff = dec_entity_diff_bin(reader).await?;
         modified.push(StepEntityModified { id, diff });
     }
-    let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let added_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut added = Vec::with_capacity(added_count as usize);
     for _ in 0..added_count {
-        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-        let entity = dec_entity_bin(reader)?;
+        let index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+        let entity = dec_entity_bin(reader).await?;
         added.push(StepEntityAdded { index, entity });
     }
     Ok(StepEntitiesDiff { removed, modified, added })
@@ -1256,13 +1256,13 @@ async fn parse_step_diff(line: &str) -> Result<StepDiff, String> {
     }
     for token in line.split(' ') {
         if let Some(rest) = token.strip_prefix("file-description=") {
-            d.file_description = Some(dec_file_description(rest)?);
+            d.file_description = Some(dec_file_description(rest).await?);
         } else if let Some(rest) = token.strip_prefix("file-name=") {
-            d.file_name = Some(dec_file_name(rest)?);
+            d.file_name = Some(dec_file_name(rest).await?);
         } else if let Some(rest) = token.strip_prefix("file-schema=") {
-            d.file_schema = Some(dec_file_schema(rest)?);
+            d.file_schema = Some(dec_file_schema(rest).await?);
         } else if let Some(rest) = token.strip_prefix("entities=") {
-            d.entities = Some(dec_entities_diff(rest)?);
+            d.entities = Some(dec_entities_diff(rest).await?);
         } else {
             return Err(format!("step diff: unknown token {token:?}"));
         }
@@ -1272,10 +1272,10 @@ async fn parse_step_diff(line: &str) -> Result<StepDiff, String> {
 
 impl protocol::DiffCodec for StepDiff {
     async fn print_diff(&self) -> String {
-        print_step_diff(self)
+        print_step_diff(self).await
     }
     async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
-        parse_step_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_step_diff(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// 🧪️ P2-FG1: REAL binary frame (`format u8 | flags u8 | present-field payloads`), matching
     /// `../💾️binary/📡️component.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape —
@@ -1302,14 +1302,14 @@ impl protocol::DiffCodec for StepDiff {
         Ok(out)
     }
     async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let mut reader = store::ByteReader::new(bytes);
+        let mut reader = store::ByteReader::new(bytes).await;
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
-        let _format = reader.read_u8().map_err(|e| malformed("diff format", 0, e.to_string()))?;
-        let flags = reader.read_u8().map_err(|e| malformed("diff flags", 1, e.to_string()))?;
-        let file_description = if flags & 1 != 0 { Some(dec_file_description_bin(&mut reader).map_err(|e| malformed("diff file_description", reader.position(), e))?) } else { None };
-        let file_name = if flags & 2 != 0 { Some(dec_file_name_bin(&mut reader).map_err(|e| malformed("diff file_name", reader.position(), e))?) } else { None };
-        let file_schema = if flags & 4 != 0 { Some(dec_file_schema_bin(&mut reader).map_err(|e| malformed("diff file_schema", reader.position(), e))?) } else { None };
-        let entities = if flags & 8 != 0 { Some(dec_entities_diff_bin(&mut reader).map_err(|e| malformed("diff entities", reader.position(), e))?) } else { None };
+        let _format = reader.read_u8().await.map_err(|e| malformed("diff format", 0, e.to_string()))?;
+        let flags = reader.read_u8().await.map_err(|e| malformed("diff flags", 1, e.to_string()))?;
+        let file_description = if flags & 1 != 0 { Some(dec_file_description_bin(&mut reader).await.map_err(|e| malformed("diff file_description", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
+        let file_name = if flags & 2 != 0 { Some(dec_file_name_bin(&mut reader).await.map_err(|e| malformed("diff file_name", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
+        let file_schema = if flags & 4 != 0 { Some(dec_file_schema_bin(&mut reader).await.map_err(|e| malformed("diff file_schema", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
+        let entities = if flags & 8 != 0 { Some(dec_entities_diff_bin(&mut reader).await.map_err(|e| malformed("diff entities", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
         Ok(StepDiff { file_description, file_name, file_schema, entities })
     }
 }

@@ -13,7 +13,7 @@ pub const BODY_KEY: &str = TableWindowKit::KIND_ID;
 
 //#region 🔖️Definition
 pub async fn definition() -> WindowKindDefinition {
-    TableWindowKit::editable_window_kind()
+    TableWindowKit::editable_window_kind().await
 }
 //#endregion 🔖️Definition
 
@@ -25,8 +25,8 @@ async fn columns_and_rows(document: &BcfSnapshot) -> (Vec<String>, Vec<Vec<Strin
 }
 
 pub async fn render(document: &BcfSnapshot) -> UiNode {
-    let (columns, rows) = columns_and_rows(document);
-    TableWindowKit::render(&TableView { columns, rows })
+    let (columns, rows) = columns_and_rows(document).await;
+    TableWindowKit::render(&TableView { columns, rows }).await
 }
 //#endregion 🔖️Render
 

@@ -56,7 +56,7 @@ pub mod derived_construction {
     impl PdfVtBuilderConstruction {
         /// ➕ The recommended entry point: REQUIRES an output-condition identifier up front.
         pub async fn new(output_condition: impl Into<String>) -> Self {
-            Self { snapshot: seeded_snapshot(output_condition.into()) }
+            Self { snapshot: seeded_snapshot(output_condition.into()).await }
         }
 
         pub async fn add_page(mut self, page: PdfPage) -> Self {
@@ -77,7 +77,7 @@ pub mod derived_construction {
         type Diff = PdfDiff;
 
         async fn empty() -> Self {
-            Self::new("FOGRA39")
+            Self::new("FOGRA39").await
         }
 
         async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
@@ -85,20 +85,20 @@ pub mod derived_construction {
         }
 
         async fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self::from_snapshot(<PdfSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+            Ok(Self::from_snapshot(<PdfSnapshot as store::ArtifactDsl>::parse_dsl(text).await?).await)
         }
 
         async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<PdfSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+            Ok(Self::from_snapshot(<PdfSnapshot as store::ArtifactPack>::decode_pack(bytes).await?).await)
         }
 
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = apply_pdf_mutation(&mut self.snapshot, &mutation);
-            (self, diff)
+            (self, diff.await)
         }
 
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            self.snapshot = <PdfDiff as protocol::MutationDiff<PdfSnapshot>>::apply(&diff, &self.snapshot)?;
+            self.snapshot = <PdfDiff as protocol::MutationDiff<PdfSnapshot>>::apply(&diff, &self.snapshot).await?;
             Ok(self)
         }
 
@@ -166,13 +166,13 @@ pub mod derived_analysis {
 
     async fn resolve_item<'a>(objects: &'a [PdfIndirectObject], item: &'a PdfObject) -> Option<&'a PdfObject> {
         match item {
-            PdfObject::Ref(r) => resolve_ref(objects, *r),
+            PdfObject::Ref(r) => resolve_ref(objects, *r).await,
             other => Some(other),
         }
     }
 
     async fn find_catalog(objects: &[PdfIndirectObject]) -> Option<&PdfObject> {
-        objects.iter().find(|o| o.value.as_dict().map(|d| dict_name(d, "Type") == Some("Catalog")).unwrap_or(false)).map(|o| &o.value)
+        objects.iter().find(|o| semio_framework_plugin::resolve_ready(o.value.as_dict()).map(|d| dict_name(d, "Type") == Some("Catalog")).unwrap_or(false)).map(|o| &o.value)
     }
 
     /// 🌳️ Real, recursive walk of the `/DPartRoot`/`/DParts` tree (ISO 16612-2 §6.2): each DPart
@@ -180,15 +180,15 @@ pub mod derived_analysis {
     /// from the root that lacks a `/DPM` metadata dict key. `visited` guards against a malformed
     /// document with a reference cycle.
     async fn dparts_missing_dpm(objects: &[PdfIndirectObject], node: &PdfObject, visited: &mut Vec<ObjRef>, out: &mut Vec<ObjRef>) {
-        let Some(dparts) = node.dict_get("DParts").and_then(|v| v.as_array()) else { return };
+        let Some(dparts) = node.dict_get("DParts").await.and_then(|v| v.as_array()) else { return };
         for item in dparts {
             let PdfObject::Ref(r) = item else { continue };
             if visited.contains(r) {
                 continue;
             }
             visited.push(*r);
-            let Some(resolved) = resolve_ref(objects, *r) else { continue };
-            if resolved.dict_get("DPM").is_none() {
+            let Some(resolved) = resolve_ref(objects, *r).await else { continue };
+            if resolved.dict_get("DPM").await.is_none() {
                 out.push(*r);
             }
             dparts_missing_dpm(objects, resolved, visited, out);
@@ -209,19 +209,19 @@ pub mod derived_analysis {
     /// `PdfVtBuilder`, and `PdfVtValidator`.
     pub async fn check_vt_conformance(snapshot: &PdfSnapshot) -> Vec<Diagnostic> {
         let objects = &snapshot.objects;
-        let mut out = check_x_conformance(snapshot);
-        let Some(catalog) = find_catalog(objects) else {
-            out.push(hard(CODE_DPART_ROOT, "no /Type /Catalog object found -- cannot verify /DPartRoot".into()));
+        let mut out = check_x_conformance(snapshot).await;
+        let Some(catalog) = find_catalog(objects).await else {
+            out.push(hard(CODE_DPART_ROOT, "no /Type /Catalog object found -- cannot verify /DPartRoot".into()).await);
             return out;
         };
-        match catalog.dict_get("DPartRoot").and_then(|v| resolve_item(objects, v)) {
-            None => out.push(hard(CODE_DPART_ROOT, "/Root carries no /DPartRoot key -- ISO 16612-2's variable-data partitioning mechanism is entirely absent".into())),
+        match catalog.dict_get("DPartRoot").await.and_then(|v| resolve_item(objects, v)) {
+            None => out.push(hard(CODE_DPART_ROOT, "/Root carries no /DPartRoot key -- ISO 16612-2's variable-data partitioning mechanism is entirely absent".into()).await),
             Some(root) => {
                 let mut visited = Vec::new();
                 let mut missing = Vec::new();
                 dparts_missing_dpm(objects, root, &mut visited, &mut missing);
                 for r in missing {
-                    out.push(soft(CODE_DPM, format!("DPart node {} {} R has no /DPM metadata dict -- ISO 16612-2 expects per-part metadata", r.num, r.gen)));
+                    out.push(soft(CODE_DPM, format!("DPart node {} {} R has no /DPM metadata dict -- ISO 16612-2 expects per-part metadata", r.num, r.gen)).await);
                 }
             }
         }
@@ -237,15 +237,15 @@ pub mod derived_analysis {
         const DIALECT: Dialect = DIALECT;
 
         async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
-            PdfAnyAnalyzer::sniff(source)
+            PdfAnyAnalyzer::sniff(source).await
         }
 
         async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
-            let inner = PdfAnyAnalyzer::analyze(sources);
+            let inner = PdfAnyAnalyzer::analyze(sources).await;
             let mut diagnostics = inner.diagnostics.clone();
             let mut confidence = inner.confidence;
             if let Some(snapshot) = &inner.parts.snapshot {
-                let checks = check_vt_conformance(snapshot);
+                let checks = check_vt_conformance(snapshot).await;
                 if checks.iter().any(|d| matches!(d.severity, Severity::Error | Severity::Fatal)) {
                     confidence = IoConfidence::Low;
                 }

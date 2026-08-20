@@ -27,7 +27,7 @@ pub struct Ifc2x3Inference {
 
 impl protocol::Inference<Ifc2x3Snapshot> for Ifc2x3Inference {
     async fn infer(snapshot: &Ifc2x3Snapshot) -> Self {
-        Self { bounds: compute_ifc2x3_bounds(snapshot) }
+        Self { bounds: compute_ifc2x3_bounds(snapshot).await }
     }
 }
 

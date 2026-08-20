@@ -108,7 +108,7 @@ impl DiffAlgebra<DeflateSnapshot> for DeflateDiff {
 
 /// 🧩 Builds a set-snapshot diff: the sparse field-by-field delta, never a full-replace slot.
 pub async fn diff_set_snapshot(base: &DeflateSnapshot, snapshot: &DeflateSnapshot) -> DeflateDiff {
-    DeflateDiff::between(base, snapshot)
+    DeflateDiff::between(base, snapshot).await
 }
 /// 🧩 Builds a set-compression-params diff.
 pub async fn diff_set_compression_params(method: u8, window_bits: u8, level_hint: DeflateLevelHint) -> DeflateDiff {
@@ -231,8 +231,8 @@ async fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String
     }
 }
 async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
-    let inner = strip_brackets(s)?;
-    match split_top_level(inner, ',').as_slice() {
+    let inner = strip_brackets(s).await?;
+    match split_top_level(inner, ',').await.as_slice() {
         ["0"] => Ok(None),
         [tag, value] if *tag == "1" => Ok(Some(dec(value)?)),
         other => Err(format!("option decode: bad shape {other:?}")),
@@ -287,15 +287,15 @@ async fn parse_deflate_diff(line: &str) -> Result<DeflateDiff, String> {
     }
     for token in line.split(' ') {
         if let Some(rest) = token.strip_prefix("compression-method=") {
-            d.compression_method = Some(parse_u8(rest)?);
+            d.compression_method = Some(parse_u8(rest).await?);
         } else if let Some(rest) = token.strip_prefix("window-bits=") {
-            d.window_bits = Some(parse_u8(rest)?);
+            d.window_bits = Some(parse_u8(rest).await?);
         } else if let Some(rest) = token.strip_prefix("level=") {
-            d.compression_level_hint = Some(dec_level_hint(rest)?);
+            d.compression_level_hint = Some(dec_level_hint(rest).await?);
         } else if let Some(rest) = token.strip_prefix("dict-id=") {
-            d.dict_id = Some(decode_option(rest, parse_u32)?);
+            d.dict_id = Some(decode_option(rest, parse_u32).await?);
         } else if let Some(rest) = token.strip_prefix("payload=") {
-            d.payload = Some(hex_decode(rest)?);
+            d.payload = Some(hex_decode(rest).await?);
         } else {
             return Err(format!("deflate diff: unknown token {token:?}"));
         }
@@ -305,10 +305,10 @@ async fn parse_deflate_diff(line: &str) -> Result<DeflateDiff, String> {
 
 impl protocol::DiffCodec for DeflateDiff {
     async fn print_diff(&self) -> String {
-        print_deflate_diff(self)
+        print_deflate_diff(self).await
     }
     async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
-        parse_deflate_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_deflate_diff(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// 🧪️ P2-FG2: REAL binary frame (`format u8 | flags u8 | [compression_method][window_bits]
     /// [compression_level_hint][dict_id][payload]`), matching
@@ -344,7 +344,7 @@ impl protocol::DiffCodec for DeflateDiff {
             out.push(v);
         }
         if let Some(v) = self.compression_level_hint {
-            out.push(v.to_bits());
+            out.push(v.to_bits().await);
         }
         if let Some(dict_id) = &self.dict_id {
             out.push(if dict_id.is_some() { 1 } else { 0 });
@@ -358,22 +358,22 @@ impl protocol::DiffCodec for DeflateDiff {
         Ok(out)
     }
     async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let mut reader = store::ByteReader::new(bytes);
+        let mut reader = store::ByteReader::new(bytes).await;
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
-        let _format = reader.read_u8().map_err(|e| malformed("diff format", 0, e.to_string()))?;
-        let flags = reader.read_u8().map_err(|e| malformed("diff flags", 1, e.to_string()))?;
-        let compression_method = if flags & 0b0_0001 != 0 { Some(reader.read_u8().map_err(|e| malformed("diff compression_method", reader.position(), e.to_string()))?) } else { None };
-        let window_bits = if flags & 0b0_0010 != 0 { Some(reader.read_u8().map_err(|e| malformed("diff window_bits", reader.position(), e.to_string()))?) } else { None };
+        let _format = reader.read_u8().await.map_err(|e| malformed("diff format", 0, e.to_string()))?;
+        let flags = reader.read_u8().await.map_err(|e| malformed("diff flags", 1, e.to_string()))?;
+        let compression_method = if flags & 0b0_0001 != 0 { Some(reader.read_u8().await.map_err(|e| malformed("diff compression_method", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?) } else { None };
+        let window_bits = if flags & 0b0_0010 != 0 { Some(reader.read_u8().await.map_err(|e| malformed("diff window_bits", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?) } else { None };
         let compression_level_hint = if flags & 0b0_0100 != 0 {
-            let bits = reader.read_u8().map_err(|e| malformed("diff compression_level_hint", reader.position(), e.to_string()))?;
+            let bits = reader.read_u8().await.map_err(|e| malformed("diff compression_level_hint", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
             Some(DeflateLevelHint::from_bits(bits))
         } else {
             None
         };
         let dict_id = if flags & 0b0_1000 != 0 {
-            let has = reader.read_u8().map_err(|e| malformed("diff dict_id presence", reader.position(), e.to_string()))?;
+            let has = reader.read_u8().await.map_err(|e| malformed("diff dict_id presence", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
             Some(if has != 0 {
-                let bytes4 = reader.read_bytes(4).map_err(|e| malformed("diff dict_id", reader.position(), e.to_string()))?;
+                let bytes4 = reader.read_bytes(4).await.map_err(|e| malformed("diff dict_id", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
                 Some(u32::from_le_bytes([bytes4[0], bytes4[1], bytes4[2], bytes4[3]]))
             } else {
                 None
@@ -382,7 +382,7 @@ impl protocol::DiffCodec for DeflateDiff {
             None
         };
         let payload = if flags & 0b1_0000 != 0 {
-            let rest = reader.read_bytes(reader.remaining()).map_err(|e| malformed("diff payload", reader.position(), e.to_string()))?;
+            let rest = reader.read_bytes(reader.remaining().await).await.map_err(|e| malformed("diff payload", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
             Some(rest.to_vec())
         } else {
             None

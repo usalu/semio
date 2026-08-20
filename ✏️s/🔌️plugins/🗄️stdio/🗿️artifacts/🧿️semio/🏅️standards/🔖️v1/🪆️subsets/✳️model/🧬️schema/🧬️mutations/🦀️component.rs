@@ -112,7 +112,7 @@ impl Mutation<SemioModelSnapshot> for SemioModelMutation {
     async fn diff(&self, base: &SemioModelSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             SemioModelMutation::NoMutation => SemioModelDiff::default(),
-            SemioModelMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
+            SemioModelMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot).await,
             SemioModelMutation::InsertSpatialNode { node } => SemioModelDiff { spatial: Some(NamedTripleDiff { added: vec![node.clone()], ..Default::default() }), ..Default::default() },
             SemioModelMutation::RemoveSpatialNode { id } => SemioModelDiff { spatial: Some(NamedTripleDiff { removed: vec![id.clone()], ..Default::default() }), ..Default::default() },
             SemioModelMutation::SetSpatialNode { id, kind, name, parent_id, placement } => SemioModelDiff {
@@ -133,7 +133,7 @@ impl Mutation<SemioModelSnapshot> for SemioModelMutation {
             SemioModelMutation::SetRelation { id, kind, from, to } => {
                 SemioModelDiff { relations: Some(NamedTripleDiff { modified: vec![NamedModified { key: id.clone(), diff: ModelRelationDiff { kind: kind.clone(), from: from.clone(), to: to.clone() } }], ..Default::default() }), ..Default::default() }
             }
-        })
+        }).await
     }
 
     async fn inverse(&self, base: &SemioModelSnapshot) -> Vec<Self> {
@@ -190,8 +190,8 @@ impl Mutation<SemioModelSnapshot> for SemioModelMutation {
 /// ▶️ Applies a mutation to `snapshot` in place, returning the diff (mirrors gif's
 /// `apply_gif_mutation` convention — used by the builder's `mutate()` and the set-snapshot leaf).
 pub async fn apply_semio_model_mutation(snapshot: &mut SemioModelSnapshot, mutation: &SemioModelMutation) -> protocol::MutationOutcome<SemioModelDiff> {
-    let outcome = <SemioModelMutation as Mutation<SemioModelSnapshot>>::diff(mutation, snapshot);
-    outcome.apply_to(snapshot)
+    let outcome = <SemioModelMutation as Mutation<SemioModelSnapshot>>::diff(mutation, snapshot).await;
+    outcome.apply_to(snapshot).await
 }
 //#endregion 🔖️Mutation
 
@@ -213,13 +213,13 @@ async fn enc_semio_model_snapshot(s: &SemioModelSnapshot) -> String {
     )
 }
 async fn dec_semio_model_snapshot(s: &str) -> Result<SemioModelSnapshot, String> {
-    let inner = strip_brackets(s)?;
-    let parts = split_top_level(inner, ',');
+    let inner = strip_brackets(s).await?;
+    let parts = split_top_level(inner, ',').await;
     let [schema, spatial, elements, relations] = parts.as_slice() else { return Err(format!("snapshot: expected 4 fields, got {}", parts.len())) };
-    let spatial = split_top_level(strip_brackets(spatial)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_spatial_node).collect::<Result<Vec<_>, String>>()?;
-    let elements = split_top_level(strip_brackets(elements)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_element).collect::<Result<Vec<_>, String>>()?;
-    let relations = split_top_level(strip_brackets(relations)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_relation).collect::<Result<Vec<_>, String>>()?;
-    Ok(SemioModelSnapshot { schema: dec_str(schema)?, spatial, elements, relations })
+    let spatial = split_top_level(strip_brackets(spatial).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_spatial_node).collect::<Result<Vec<_>, String>>()?;
+    let elements = split_top_level(strip_brackets(elements).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_element).collect::<Result<Vec<_>, String>>()?;
+    let relations = split_top_level(strip_brackets(relations).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_relation).collect::<Result<Vec<_>, String>>()?;
+    Ok(SemioModelSnapshot { schema: dec_str(schema).await?, spatial, elements, relations })
 }
 
 async fn print_semio_model_mutation(m: &SemioModelMutation) -> String {
@@ -263,39 +263,39 @@ async fn parse_semio_model_mutation(line: &str) -> Result<SemioModelMutation, St
         rest.split(' ').filter(|s| !s.is_empty()).map(|tok| tok.split_once('=').ok_or_else(|| format!("model mutation: bad arg token {tok:?}"))).collect::<Result<Vec<_>, String>>()?.into_iter().collect();
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("model mutation: missing arg '{k}' for '{keyword}'"));
     match keyword {
-        "set-snapshot" => Ok(SemioModelMutation::SetSnapshot { snapshot: dec_semio_model_snapshot(arg("snapshot")?)? }),
-        "insert-spatial-node" => Ok(SemioModelMutation::InsertSpatialNode { node: dec_spatial_node(arg("node")?)? }),
-        "remove-spatial-node" => Ok(SemioModelMutation::RemoveSpatialNode { id: dec_str(arg("id")?)? }),
+        "set-snapshot" => Ok(SemioModelMutation::SetSnapshot { snapshot: dec_semio_model_snapshot(arg("snapshot")?).await? }),
+        "insert-spatial-node" => Ok(SemioModelMutation::InsertSpatialNode { node: dec_spatial_node(arg("node")?).await? }),
+        "remove-spatial-node" => Ok(SemioModelMutation::RemoveSpatialNode { id: dec_str(arg("id")?).await? }),
         "set-spatial-node" => Ok(SemioModelMutation::SetSpatialNode {
-            id: dec_str(arg("id")?)?,
-            kind: decode_option(arg("kind")?, dec_spatial_kind)?,
-            name: decode_option(arg("name")?, dec_str)?,
-            parent_id: decode_option(arg("parent_id")?, |s| decode_option(s, dec_str))?,
-            placement: decode_option(arg("placement")?, dec_transform)?,
+            id: dec_str(arg("id")?).await?,
+            kind: decode_option(arg("kind")?, dec_spatial_kind).await?,
+            name: decode_option(arg("name")?, dec_str).await?,
+            parent_id: decode_option(arg("parent_id")?, |s| decode_option(s, dec_str)).await?,
+            placement: decode_option(arg("placement")?, dec_transform).await?,
         }),
-        "insert-element" => Ok(SemioModelMutation::InsertElement { element: dec_element(arg("element")?)? }),
-        "remove-element" => Ok(SemioModelMutation::RemoveElement { id: dec_str(arg("id")?)? }),
+        "insert-element" => Ok(SemioModelMutation::InsertElement { element: dec_element(arg("element")?).await? }),
+        "remove-element" => Ok(SemioModelMutation::RemoveElement { id: dec_str(arg("id")?).await? }),
         "set-element" => Ok(SemioModelMutation::SetElement {
-            id: dec_str(arg("id")?)?,
-            class: decode_option(arg("class")?, dec_element_class)?,
-            placement: decode_option(arg("placement")?, dec_transform)?,
-            geometry: decode_option(arg("geometry")?, dec_geometry_ref)?,
-            spatial_id: decode_option(arg("spatial_id")?, |s| decode_option(s, dec_str))?,
-            psets: decode_option(arg("psets")?, |s| dec_list(s, dec_property_set))?,
+            id: dec_str(arg("id")?).await?,
+            class: decode_option(arg("class")?, dec_element_class).await?,
+            placement: decode_option(arg("placement")?, dec_transform).await?,
+            geometry: decode_option(arg("geometry")?, dec_geometry_ref).await?,
+            spatial_id: decode_option(arg("spatial_id")?, |s| decode_option(s, dec_str)).await?,
+            psets: decode_option(arg("psets")?, |s| dec_list(s, dec_property_set)).await?,
         }),
-        "insert-relation" => Ok(SemioModelMutation::InsertRelation { relation: dec_relation(arg("relation")?)? }),
-        "remove-relation" => Ok(SemioModelMutation::RemoveRelation { id: dec_str(arg("id")?)? }),
-        "set-relation" => Ok(SemioModelMutation::SetRelation { id: dec_str(arg("id")?)?, kind: decode_option(arg("kind")?, dec_relation_kind)?, from: decode_option(arg("from")?, dec_str)?, to: decode_option(arg("to")?, dec_str)? }),
+        "insert-relation" => Ok(SemioModelMutation::InsertRelation { relation: dec_relation(arg("relation")?).await? }),
+        "remove-relation" => Ok(SemioModelMutation::RemoveRelation { id: dec_str(arg("id")?).await? }),
+        "set-relation" => Ok(SemioModelMutation::SetRelation { id: dec_str(arg("id")?).await?, kind: decode_option(arg("kind")?, dec_relation_kind).await?, from: decode_option(arg("from")?, dec_str).await?, to: decode_option(arg("to")?, dec_str).await? }),
         other => Err(format!("model mutation: unknown keyword {other:?}")),
     }
 }
 
 impl OpText for SemioModelMutation {
     async fn print_op(&self) -> String {
-        print_semio_model_mutation(self)
+        print_semio_model_mutation(self).await
     }
     async fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_semio_model_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_semio_model_mutation(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
 
@@ -321,7 +321,7 @@ async fn variant_ordinal(m: &SemioModelMutation) -> u8 {
 /// `no-mutation`) — the binary frame's `tag` byte already carries the keyword, so the text keyword
 /// itself is redundant in the binary payload.
 async fn print_semio_model_mutation_args(m: &SemioModelMutation) -> String {
-    match print_semio_model_mutation(m).split_once(' ') {
+    match print_semio_model_mutation(m).await.split_once(' ') {
         Some((_, rest)) => rest.to_string(),
         None => String::new(),
     }
@@ -336,8 +336,8 @@ async fn print_semio_model_mutation_args(m: &SemioModelMutation) -> String {
 impl OpBinary for SemioModelMutation {
     async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
-        let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self)];
-        out.extend_from_slice(print_semio_model_mutation_args(self).as_bytes());
+        let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self).await];
+        out.extend_from_slice(print_semio_model_mutation_args(self).await.as_bytes());
         Ok(out)
     }
     async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
@@ -352,7 +352,7 @@ impl OpBinary for SemioModelMutation {
         let keyword = OP_KEYWORDS.get(tag as usize).ok_or_else(|| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("tag {tag} out of range for {} declared variants", OP_KEYWORDS.len()) })?;
         let args = std::str::from_utf8(&bytes[2..]).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 2, detail: e.to_string() })?;
         let line = if args.is_empty() { keyword.to_string() } else { format!("{keyword} {args}") };
-        Self::parse_op(&line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 2, detail: e.to_string() })
+        Self::parse_op(&line).await.map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 2, detail: e.to_string() })
     }
 }
 //#endregion 🔖️OpCodecs

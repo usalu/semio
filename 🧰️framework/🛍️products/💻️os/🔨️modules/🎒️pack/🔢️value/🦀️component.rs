@@ -1427,31 +1427,39 @@ mod tests {
     use crate::os_dsl::schema::{FieldSpec, RecordLayout};
 
     //#region 🔖️Fixtures
-    async fn nested_spec() -> RecordSpec {
+    // 🚫️async: E4 fn-pointer slot — passed by name into `Shape::Record`/`Shape::Statements`
+    // (`fn() -> RecordSpec`, unnameable if async) — see R9/E4.
+    fn nested_spec() -> RecordSpec {
         RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(1, "a", Shape::Int), FieldSpec::new(2, "b", Shape::Text).optional()])
     }
 
-    async fn table_row_spec() -> RecordSpec {
+    // 🚫️async: E4 fn-pointer slot — see nested_spec above
+    fn table_row_spec() -> RecordSpec {
         RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(1, "id", Shape::UInt), FieldSpec::new(2, "name", Shape::Text), FieldSpec::new(3, "score", Shape::Float), FieldSpec::new(4, "active", Shape::Bool)])
     }
 
-    async fn header_spec() -> RecordSpec {
+    // 🚫️async: E4 fn-pointer slot — see nested_spec above
+    fn header_spec() -> RecordSpec {
         RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(1, "name", Shape::Text), FieldSpec::new(2, "description", Shape::Text).optional()])
     }
 
-    async fn table_row_with_nested_record_spec() -> RecordSpec {
+    // 🚫️async: E4 fn-pointer slot — see nested_spec above
+    fn table_row_with_nested_record_spec() -> RecordSpec {
         RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(1, "id", Shape::UInt), FieldSpec::new(2, "header", Shape::Record(header_spec))])
     }
 
-    async fn table_row_with_tuple_spec() -> RecordSpec {
+    // 🚫️async: E4 fn-pointer slot — see nested_spec above
+    fn table_row_with_tuple_spec() -> RecordSpec {
         RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(1, "id", Shape::UInt), FieldSpec::new(2, "distortion", Shape::Tuple(Box::new(Shape::Float), Some(5)))])
     }
 
-    async fn stmt_foo_spec() -> RecordSpec {
+    // 🚫️async: E4 fn-pointer slot — see nested_spec above
+    fn stmt_foo_spec() -> RecordSpec {
         RecordSpec::new(Some("foo"), RecordLayout::Lines, vec![FieldSpec::new(1, "x", Shape::Int)])
     }
 
-    async fn stmt_bar_spec() -> RecordSpec {
+    // 🚫️async: E4 fn-pointer slot — see nested_spec above
+    fn stmt_bar_spec() -> RecordSpec {
         RecordSpec::new(Some("bar"), RecordLayout::Lines, vec![FieldSpec::new(1, "y", Shape::Text)])
     }
 
@@ -1561,13 +1569,13 @@ mod tests {
     //#region 🔖️RoundTrip
     #[semio_framework_async_macros::async_test]
     async fn round_trips_every_shape_variant_in_one_document() {
-        let spec = full_spec();
-        let record = full_record();
+        let spec = full_spec().await;
+        let record = full_record().await;
         let bytes = encode_document(&spec, &record, &EncodeOptions::default()).await.expect("encode");
         let (decoded, report) = decode_document(&bytes, &spec, &DecodeOptions::default()).await.expect("decode");
         assert!(report.unknown_field_ids.is_empty());
         assert!(!report.schema_drift);
-        assert_eq!(decoded, record.await);
+        assert_eq!(decoded, record);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -1742,16 +1750,16 @@ mod tests {
     //#region 🔖️Canonical
     #[semio_framework_async_macros::async_test]
     async fn canonical_encoding_is_byte_stable_across_shuffled_insertion_order() {
-        let spec = full_spec();
-        let record_a = full_record();
+        let spec = full_spec().await;
+        let record_a = full_record().await;
         // Rebuild an equal `RecordValue` by inserting fields in a deliberately different order —
         // `HashMap` insertion order never affects iteration order anyway, but this at minimum
         // proves two independent builds of an equal value encode identically, twice in a row.
         let mut shuffled_fields = HashMap::new();
-        let mut ids: Vec<u16> = record_a.await.fields.keys().copied().collect();
+        let mut ids: Vec<u16> = record_a.fields.keys().copied().collect();
         ids.sort_unstable_by(|a, b| b.cmp(a));
         for id in ids {
-            shuffled_fields.insert(id, record_a.await.fields.get(&id).unwrap().clone());
+            shuffled_fields.insert(id, record_a.fields.get(&id).unwrap().clone());
         }
         let record_b = RecordValue { fields: shuffled_fields };
         assert_eq!(record_a, record_b);
@@ -1768,27 +1776,27 @@ mod tests {
     async fn schema_hash_is_order_independent_and_content_sensitive() {
         let spec_a = RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(2, "b", Shape::Text), FieldSpec::new(1, "a", Shape::Int)]);
         let spec_b = RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(1, "a", Shape::Int), FieldSpec::new(2, "b", Shape::Text)]);
-        assert_eq!(schema_hash(&spec_a), schema_hash(&spec_b));
+        assert_eq!(schema_hash(&spec_a).await, schema_hash(&spec_b).await);
 
         let spec_c = RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(1, "a", Shape::Int), FieldSpec::new(2, "b", Shape::Float)]);
-        assert_ne!(schema_hash(&spec_a), schema_hash(&spec_c));
+        assert_ne!(schema_hash(&spec_a).await, schema_hash(&spec_c).await);
     }
     //#endregion 🔖️Canonical
 
     //#region 🔖️Unknown
     #[semio_framework_async_macros::async_test]
     async fn unknown_field_round_trips_through_decode_then_reencode() {
-        let full = full_spec();
-        let mut record = full_record();
+        let full = full_spec().await;
+        let mut record = full_record().await;
         // Add a field id absent from `narrow_spec` below but present in `full` for the initial
         // encode, simulating "a writer on a newer schema version wrote an extra field".
-        record.await.fields.insert(200, FieldValue::Text("extra field payload".to_string()));
-        record.await.fields.insert(201, FieldValue::List(vec![FieldValue::Int(1), FieldValue::Int(2), FieldValue::Int(3)]));
+        record.fields.insert(200, FieldValue::Text("extra field payload".to_string()));
+        record.fields.insert(201, FieldValue::List(vec![FieldValue::Int(1), FieldValue::Int(2), FieldValue::Int(3)]));
 
-        let mut widened_fields = full.await.fields.clone();
+        let mut widened_fields = full.fields.clone();
         widened_fields.push(FieldSpec::new(200, "extra", Shape::Text));
         widened_fields.push(FieldSpec::new(201, "extra_list", Shape::List(Box::new(Shape::Int))));
-        let widened_spec = RecordSpec::new(full.await.keyword.as_deref(), full.await.layout, widened_fields);
+        let widened_spec = RecordSpec::new(full.keyword.as_deref(), full.layout, widened_fields);
 
         let bytes = encode_document(&widened_spec, &record, &EncodeOptions::default()).await.expect("encode with widened spec");
 
@@ -1865,19 +1873,19 @@ mod tests {
     //#region 🔖️RecordBody
     #[semio_framework_async_macros::async_test]
     async fn record_body_round_trips_every_shape() {
-        let spec = full_spec();
-        let record = full_record();
+        let spec = full_spec().await;
+        let record = full_record().await;
         let bytes = encode_record_body(&spec, &record, &EncodeOptions::default()).await.expect("encode");
         let (decoded, report) = decode_record_body(&bytes, &spec, &DecodeOptions::default()).await.expect("decode");
-        assert_eq!(decoded, record.await);
+        assert_eq!(decoded, record);
         assert!(report.unknown_field_ids.is_empty());
     }
 
     #[semio_framework_async_macros::async_test]
     async fn record_body_is_deterministic_for_equal_inputs() {
-        let spec = full_spec();
-        let a = encode_record_body(&spec, &full_record(), &EncodeOptions::default()).await.expect("encode a");
-        let b = encode_record_body(&spec, &full_record(), &EncodeOptions::default()).await.expect("encode b");
+        let spec = full_spec().await;
+        let a = encode_record_body(&spec, &full_record().await, &EncodeOptions::default()).await.expect("encode a");
+        let b = encode_record_body(&spec, &full_record().await, &EncodeOptions::default()).await.expect("encode b");
         assert_eq!(a, b);
     }
 

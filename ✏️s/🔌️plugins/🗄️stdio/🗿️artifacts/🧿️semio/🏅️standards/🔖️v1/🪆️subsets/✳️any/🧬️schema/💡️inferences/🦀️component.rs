@@ -30,7 +30,7 @@ pub struct SemioInference {
 
 impl protocol::Inference<SemioSnapshot> for SemioInference {
     async fn infer(snapshot: &SemioSnapshot) -> Self {
-        Self { kind: compute_semio_kind(snapshot) }
+        Self { kind: compute_semio_kind(snapshot).await }
     }
 }
 

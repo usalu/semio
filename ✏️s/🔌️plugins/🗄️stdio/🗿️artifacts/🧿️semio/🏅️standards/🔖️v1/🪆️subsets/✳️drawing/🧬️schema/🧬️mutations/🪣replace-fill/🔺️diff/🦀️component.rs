@@ -11,15 +11,15 @@ use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::
 //#region 🔖️Diff
 pub async fn diff(payload: &ReplaceFill, base: &SemioDrawingSnapshot) -> protocol::MutationOutcome<SemioDrawingDiff> {
     let Some(old) = base.styles.iter().find(|s| s.name == payload.style_name) else {
-        return protocol::MutationOutcome::error("mutation.target-missing", format!("Style \"{}\" does not exist.", payload.style_name), [payload.style_name.clone()]);
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Style \"{}\" does not exist.", payload.style_name), [payload.style_name.clone()]).await;
     };
     if let Some(c) = payload.new_fill {
         if !c.r.is_finite() || !c.g.is_finite() || !c.b.is_finite() || !c.a.is_finite() {
-            return protocol::MutationOutcome::fatal("mutation.invariant", format!("Style \"{}\" new fill has a non-finite component.", payload.style_name), [payload.style_name.clone()]);
+            return protocol::MutationOutcome::fatal("mutation.invariant", format!("Style \"{}\" new fill has a non-finite component.", payload.style_name), [payload.style_name.clone()]).await;
         }
     }
     if old.fill == payload.new_fill {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Style \"{}\" already has that fill.", payload.style_name));
+        return protocol::MutationOutcome::empty().await.warn("mutation.no-op", format!("Style \"{}\" already has that fill.", payload.style_name)).await;
     }
     protocol::MutationOutcome::new(SemioDrawingDiff {
         canvas: None,
@@ -29,6 +29,6 @@ pub async fn diff(payload: &ReplaceFill, base: &SemioDrawingSnapshot) -> protoco
             added: Vec::new(),
         }),
         layers: None,
-    })
+    }).await
 }
 //#endregion 🔖️Diff

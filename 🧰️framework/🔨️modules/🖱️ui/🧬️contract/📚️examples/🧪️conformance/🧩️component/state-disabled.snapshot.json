@@ -1,0 +1,28 @@
+{
+  "surface": "conformance.component.state-disabled",
+  "revision": 0,
+  "root": 0,
+  "nodes": [
+    {
+      "id": 0,
+      "key": "#0",
+      "component": {
+        "type": "button",
+        "icon": "trash",
+        "label": "Delete"
+      },
+      "layout": {
+        "kind": "leaf",
+        "width": "hug",
+        "height": "hug"
+      },
+      "style": {},
+      "activity": "idle",
+      "disabled": true,
+      "accessibility": {
+        "label": "Delete"
+      }
+    }
+  ],
+  "layoutEpoch": 0
+}

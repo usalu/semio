@@ -218,10 +218,10 @@ async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
 async fn enc_str(s: &str) -> String {
-    hex_encode(s.as_bytes())
+    hex_encode(s.as_bytes()).await
 }
 async fn dec_str(s: &str) -> Result<String, String> {
-    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
+    String::from_utf8(hex_decode(s).await?).map_err(|e| e.to_string())
 }
 async fn enc_f64(v: f64) -> String {
     format!("{v}")
@@ -236,8 +236,8 @@ async fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String
     }
 }
 async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
-    let inner = strip_brackets(s)?;
-    match split_top_level(inner, ',').as_slice() {
+    let inner = strip_brackets(s).await?;
+    match split_top_level(inner, ',').await.as_slice() {
         ["0"] => Ok(None),
         [tag, value] if *tag == "1" => Ok(Some(dec(value)?)),
         other => Err(format!("option decode: bad shape {other:?}")),
@@ -247,32 +247,32 @@ async fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
     format!("[{}]", items.iter().map(|it| enc(it)).collect::<Vec<_>>().join(","))
 }
 async fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
-    split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| dec(entry)).collect()
+    split_top_level(strip_brackets(s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| dec(entry)).collect()
 }
 
 async fn enc_point3(p: &SemioPoint3) -> String {
     format!("[{},{},{}]", enc_f64(p.x), enc_f64(p.y), enc_f64(p.z))
 }
 async fn dec_point3(s: &str) -> Result<SemioPoint3, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [x, y, z] = parts.as_slice() else { return Err(format!("point3: expected 3 fields, got {}", parts.len())) };
-    Ok(SemioPoint3 { x: dec_f64(x)?, y: dec_f64(y)?, z: dec_f64(z)? })
+    Ok(SemioPoint3 { x: dec_f64(x).await?, y: dec_f64(y).await?, z: dec_f64(z).await? })
 }
 async fn enc_quat(q: &SemioQuaternion) -> String {
     format!("[{},{},{},{}]", enc_f64(q.x), enc_f64(q.y), enc_f64(q.z), enc_f64(q.w))
 }
 async fn dec_quat(s: &str) -> Result<SemioQuaternion, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [x, y, z, w] = parts.as_slice() else { return Err(format!("quaternion: expected 4 fields, got {}", parts.len())) };
-    Ok(SemioQuaternion { x: dec_f64(x)?, y: dec_f64(y)?, z: dec_f64(z)?, w: dec_f64(w)? })
+    Ok(SemioQuaternion { x: dec_f64(x).await?, y: dec_f64(y).await?, z: dec_f64(z).await?, w: dec_f64(w).await? })
 }
 async fn enc_transform(t: &SemioTransform) -> String {
     format!("[{},{},{}]", enc_point3(&t.translation), enc_quat(&t.rotation), enc_point3(&t.scale))
 }
 async fn dec_transform(s: &str) -> Result<SemioTransform, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [translation, rotation, scale] = parts.as_slice() else { return Err(format!("transform: expected 3 fields, got {}", parts.len())) };
-    Ok(SemioTransform { translation: dec_point3(translation)?, rotation: dec_quat(rotation)?, scale: dec_point3(scale)? })
+    Ok(SemioTransform { translation: dec_point3(translation).await?, rotation: dec_quat(rotation).await?, scale: dec_point3(scale).await? })
 }
 
 async fn enc_spatial_kind(k: &SpatialKind) -> &'static str {
@@ -318,7 +318,7 @@ async fn dec_element_class(s: &str) -> Result<ElementClass, String> {
         "RO" => Ok(ElementClass::Roof),
         "ST" => Ok(ElementClass::Stair),
         "FU" => Ok(ElementClass::Furniture),
-        other if other.starts_with("OT[") => Ok(ElementClass::Other { name: dec_str(strip_brackets(&other[2..])?)? }),
+        other if other.starts_with("OT[") => Ok(ElementClass::Other { name: dec_str(strip_brackets(&other[2..]).await?).await? }),
         other => Err(format!("element class: unknown tag {other:?}")),
     }
 }
@@ -335,10 +335,10 @@ async fn dec_geometry_ref(s: &str) -> Result<GeometryRef, String> {
         return Ok(GeometryRef::None);
     }
     let (tag, rest) = s.split_at(1);
-    let inner = strip_brackets(rest)?;
+    let inner = strip_brackets(rest).await?;
     match tag {
-        "B" => Ok(GeometryRef::Brep { brep_id: dec_str(inner)? }),
-        "M" => Ok(GeometryRef::Mesh { mesh_id: dec_str(inner)? }),
+        "B" => Ok(GeometryRef::Brep { brep_id: dec_str(inner).await? }),
+        "M" => Ok(GeometryRef::Mesh { mesh_id: dec_str(inner).await? }),
         other => Err(format!("geometry ref: unknown tag {other:?}")),
     }
 }
@@ -352,10 +352,10 @@ async fn enc_pset_value(v: &PsetValue) -> String {
 }
 async fn dec_pset_value(s: &str) -> Result<PsetValue, String> {
     let (tag, rest) = s.split_at(1);
-    let inner = strip_brackets(rest)?;
+    let inner = strip_brackets(rest).await?;
     match tag {
-        "T" => Ok(PsetValue::Text { value: dec_str(inner)? }),
-        "N" => Ok(PsetValue::Number { value: dec_f64(inner)? }),
+        "T" => Ok(PsetValue::Text { value: dec_str(inner).await? }),
+        "N" => Ok(PsetValue::Number { value: dec_f64(inner).await? }),
         "B" => Ok(PsetValue::Boolean { value: inner == "1" }),
         other => Err(format!("pset value: unknown tag {other:?}")),
     }
@@ -365,36 +365,36 @@ async fn enc_property(p: &Property) -> String {
     format!("[{},{}]", enc_str(&p.key), enc_pset_value(&p.value))
 }
 async fn dec_property(s: &str) -> Result<Property, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [key, value] = parts.as_slice() else { return Err(format!("property: expected 2 fields, got {}", parts.len())) };
-    Ok(Property { key: dec_str(key)?, value: dec_pset_value(value)? })
+    Ok(Property { key: dec_str(key).await?, value: dec_pset_value(value).await? })
 }
 
 async fn enc_property_set(ps: &PropertySet) -> String {
     format!("[{},{}]", enc_str(&ps.name), enc_list(&ps.properties, enc_property))
 }
 async fn dec_property_set(s: &str) -> Result<PropertySet, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [name, properties] = parts.as_slice() else { return Err(format!("property set: expected 2 fields, got {}", parts.len())) };
-    Ok(PropertySet { name: dec_str(name)?, properties: dec_list(properties, dec_property)? })
+    Ok(PropertySet { name: dec_str(name).await?, properties: dec_list(properties, dec_property).await? })
 }
 
 async fn enc_spatial_node(n: &SpatialNode) -> String {
     format!("[{},{},{},{},{}]", enc_str(&n.id), enc_spatial_kind(&n.kind), enc_str(&n.name), encode_option(&n.parent_id, |v: &String| enc_str(v)), enc_transform(&n.placement))
 }
 async fn dec_spatial_node(s: &str) -> Result<SpatialNode, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [id, kind, name, parent_id, placement] = parts.as_slice() else { return Err(format!("spatial node: expected 5 fields, got {}", parts.len())) };
-    Ok(SpatialNode { id: dec_str(id)?, kind: dec_spatial_kind(kind)?, name: dec_str(name)?, parent_id: decode_option(parent_id, dec_str)?, placement: dec_transform(placement)? })
+    Ok(SpatialNode { id: dec_str(id).await?, kind: dec_spatial_kind(kind).await?, name: dec_str(name).await?, parent_id: decode_option(parent_id, dec_str).await?, placement: dec_transform(placement).await? })
 }
 
 async fn enc_element(e: &SemioModelElement) -> String {
     format!("[{},{},{},{},{},{}]", enc_str(&e.id), enc_element_class(&e.class), enc_transform(&e.placement), enc_geometry_ref(&e.geometry), encode_option(&e.spatial_id, |v: &String| enc_str(v)), enc_list(&e.psets, enc_property_set),)
 }
 async fn dec_element(s: &str) -> Result<SemioModelElement, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [id, class, placement, geometry, spatial_id, psets] = parts.as_slice() else { return Err(format!("element: expected 6 fields, got {}", parts.len())) };
-    Ok(SemioModelElement { id: dec_str(id)?, class: dec_element_class(class)?, placement: dec_transform(placement)?, geometry: dec_geometry_ref(geometry)?, spatial_id: decode_option(spatial_id, dec_str)?, psets: dec_list(psets, dec_property_set)? })
+    Ok(SemioModelElement { id: dec_str(id).await?, class: dec_element_class(class).await?, placement: dec_transform(placement).await?, geometry: dec_geometry_ref(geometry).await?, spatial_id: decode_option(spatial_id, dec_str).await?, psets: dec_list(psets, dec_property_set).await? })
 }
 
 async fn enc_relation_kind(k: &RelationKind) -> String {
@@ -414,7 +414,7 @@ async fn dec_relation_kind(s: &str) -> Result<RelationKind, String> {
         "CN" => Ok(RelationKind::ConnectsTo),
         "FV" => Ok(RelationKind::FillsVoid),
         "VE" => Ok(RelationKind::VoidsElement),
-        other if other.starts_with("OT[") => Ok(RelationKind::Other { label: dec_str(strip_brackets(&other[2..])?)? }),
+        other if other.starts_with("OT[") => Ok(RelationKind::Other { label: dec_str(strip_brackets(&other[2..]).await?).await? }),
         other => Err(format!("relation kind: unknown tag {other:?}")),
     }
 }
@@ -423,9 +423,9 @@ async fn enc_relation(r: &ModelRelation) -> String {
     format!("[{},{},{},{}]", enc_str(&r.id), enc_relation_kind(&r.kind), enc_str(&r.from), enc_str(&r.to))
 }
 async fn dec_relation(s: &str) -> Result<ModelRelation, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [id, kind, from, to] = parts.as_slice() else { return Err(format!("relation: expected 4 fields, got {}", parts.len())) };
-    Ok(ModelRelation { id: dec_str(id)?, kind: dec_relation_kind(kind)?, from: dec_str(from)?, to: dec_str(to)? })
+    Ok(ModelRelation { id: dec_str(id).await?, kind: dec_relation_kind(kind).await?, from: dec_str(from).await?, to: dec_str(to).await? })
 }
 
 /// 📄️ The real structured text body: four lines — `schema=<hex>`, `spatial=[<node>,...]`,
@@ -453,15 +453,15 @@ async fn parse_semio_model_snapshot_body(body: &str) -> Result<SemioModelSnapsho
             continue;
         }
         if let Some(rest) = line.strip_prefix("schema=") {
-            schema = Some(dec_str(rest)?);
+            schema = Some(dec_str(rest).await?);
         } else if let Some(rest) = line.strip_prefix("spatial=") {
-            let inner = strip_brackets(rest)?;
+            let inner = strip_brackets(rest).await?;
             spatial = split_top_level(inner, ',').into_iter().filter(|s| !s.is_empty()).map(dec_spatial_node).collect::<Result<Vec<_>, String>>()?;
         } else if let Some(rest) = line.strip_prefix("elements=") {
-            let inner = strip_brackets(rest)?;
+            let inner = strip_brackets(rest).await?;
             elements = split_top_level(inner, ',').into_iter().filter(|s| !s.is_empty()).map(dec_element).collect::<Result<Vec<_>, String>>()?;
         } else if let Some(rest) = line.strip_prefix("relations=") {
-            let inner = strip_brackets(rest)?;
+            let inner = strip_brackets(rest).await?;
             relations = split_top_level(inner, ',').into_iter().filter(|s| !s.is_empty()).map(dec_relation).collect::<Result<Vec<_>, String>>()?;
         } else {
             return Err(format!("model snapshot: unknown line {line:?}"));
@@ -482,14 +482,14 @@ async fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
     out.extend_from_slice(bytes);
 }
 async fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
+    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec())
 }
 async fn write_str_lp(out: &mut Vec<u8>, s: &str) {
     write_bytes_lp(out, s.as_bytes());
 }
 async fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
-    String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
+    String::from_utf8(read_bytes_lp(reader).await?).map_err(|e| e.to_string())
 }
 async fn write_option_str(out: &mut Vec<u8>, opt: &Option<String>) {
     match opt {
@@ -501,9 +501,9 @@ async fn write_option_str(out: &mut Vec<u8>, opt: &Option<String>) {
     }
 }
 async fn read_option_str(reader: &mut store::ByteReader<'_>) -> Result<Option<String>, String> {
-    match reader.read_u8().map_err(|e| e.to_string())? {
+    match reader.read_u8().await.map_err(|e| e.to_string())? {
         0 => Ok(None),
-        1 => Ok(Some(read_str_lp(reader)?)),
+        1 => Ok(Some(read_str_lp(reader).await?)),
         other => Err(format!("option<str>: unknown presence tag {other}")),
     }
 }
@@ -521,7 +521,7 @@ async fn write_transform(out: &mut Vec<u8>, t: &SemioTransform) {
     out.extend_from_slice(&t.scale.z.to_le_bytes());
 }
 async fn read_transform(reader: &mut store::ByteReader<'_>) -> Result<SemioTransform, String> {
-    let mut next = || reader.read_f64_le().map_err(|e| e.to_string());
+    let mut next = || semio_framework_plugin::resolve_ready(reader.read_f64_le()).map_err(|e| e.to_string());
     let translation = SemioPoint3 { x: next()?, y: next()?, z: next()? };
     let rotation = SemioQuaternion { x: next()?, y: next()?, z: next()?, w: next()? };
     let scale = SemioPoint3 { x: next()?, y: next()?, z: next()? };
@@ -537,7 +537,7 @@ async fn write_spatial_kind(out: &mut Vec<u8>, k: &SpatialKind) {
     });
 }
 async fn read_spatial_kind(reader: &mut store::ByteReader<'_>) -> Result<SpatialKind, String> {
-    match reader.read_u8().map_err(|e| e.to_string())? {
+    match reader.read_u8().await.map_err(|e| e.to_string())? {
         0 => Ok(SpatialKind::Site),
         1 => Ok(SpatialKind::Building),
         2 => Ok(SpatialKind::Storey),
@@ -564,7 +564,7 @@ async fn write_element_class(out: &mut Vec<u8>, c: &ElementClass) {
     }
 }
 async fn read_element_class(reader: &mut store::ByteReader<'_>) -> Result<ElementClass, String> {
-    match reader.read_u8().map_err(|e| e.to_string())? {
+    match reader.read_u8().await.map_err(|e| e.to_string())? {
         0 => Ok(ElementClass::Wall),
         1 => Ok(ElementClass::Slab),
         2 => Ok(ElementClass::Column),
@@ -574,7 +574,7 @@ async fn read_element_class(reader: &mut store::ByteReader<'_>) -> Result<Elemen
         6 => Ok(ElementClass::Roof),
         7 => Ok(ElementClass::Stair),
         8 => Ok(ElementClass::Furniture),
-        9 => Ok(ElementClass::Other { name: read_str_lp(reader)? }),
+        9 => Ok(ElementClass::Other { name: read_str_lp(reader).await? }),
         other => Err(format!("element class: unknown tag {other}")),
     }
 }
@@ -593,10 +593,10 @@ async fn write_geometry_ref(out: &mut Vec<u8>, g: &GeometryRef) {
     }
 }
 async fn read_geometry_ref(reader: &mut store::ByteReader<'_>) -> Result<GeometryRef, String> {
-    match reader.read_u8().map_err(|e| e.to_string())? {
+    match reader.read_u8().await.map_err(|e| e.to_string())? {
         0 => Ok(GeometryRef::None),
-        1 => Ok(GeometryRef::Brep { brep_id: read_str_lp(reader)? }),
-        2 => Ok(GeometryRef::Mesh { mesh_id: read_str_lp(reader)? }),
+        1 => Ok(GeometryRef::Brep { brep_id: read_str_lp(reader).await? }),
+        2 => Ok(GeometryRef::Mesh { mesh_id: read_str_lp(reader).await? }),
         other => Err(format!("geometry ref: unknown tag {other}")),
     }
 }
@@ -618,10 +618,10 @@ async fn write_pset_value(out: &mut Vec<u8>, v: &PsetValue) {
     }
 }
 async fn read_pset_value(reader: &mut store::ByteReader<'_>) -> Result<PsetValue, String> {
-    match reader.read_u8().map_err(|e| e.to_string())? {
-        0 => Ok(PsetValue::Text { value: read_str_lp(reader)? }),
-        1 => Ok(PsetValue::Number { value: reader.read_f64_le().map_err(|e| e.to_string())? }),
-        2 => Ok(PsetValue::Boolean { value: reader.read_u8().map_err(|e| e.to_string())? != 0 }),
+    match reader.read_u8().await.map_err(|e| e.to_string())? {
+        0 => Ok(PsetValue::Text { value: read_str_lp(reader).await? }),
+        1 => Ok(PsetValue::Number { value: reader.read_f64_le().await.map_err(|e| e.to_string())? }),
+        2 => Ok(PsetValue::Boolean { value: reader.read_u8().await.map_err(|e| e.to_string())? != 0 }),
         other => Err(format!("pset value: unknown tag {other}")),
     }
 }
@@ -631,8 +631,8 @@ async fn write_property(out: &mut Vec<u8>, p: &Property) {
     write_pset_value(out, &p.value);
 }
 async fn read_property(reader: &mut store::ByteReader<'_>) -> Result<Property, String> {
-    let key = read_str_lp(reader)?;
-    let value = read_pset_value(reader)?;
+    let key = read_str_lp(reader).await?;
+    let value = read_pset_value(reader).await?;
     Ok(Property { key, value })
 }
 
@@ -644,11 +644,11 @@ async fn write_property_set(out: &mut Vec<u8>, ps: &PropertySet) {
     }
 }
 async fn read_property_set(reader: &mut store::ByteReader<'_>) -> Result<PropertySet, String> {
-    let name = read_str_lp(reader)?;
-    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let name = read_str_lp(reader).await?;
+    let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut properties = Vec::with_capacity(count as usize);
     for _ in 0..count {
-        properties.push(read_property(reader)?);
+        properties.push(read_property(reader).await?);
     }
     Ok(PropertySet { name, properties })
 }
@@ -661,11 +661,11 @@ async fn write_spatial_node(out: &mut Vec<u8>, n: &SpatialNode) {
     write_transform(out, &n.placement);
 }
 async fn read_spatial_node(reader: &mut store::ByteReader<'_>) -> Result<SpatialNode, String> {
-    let id = read_str_lp(reader)?;
-    let kind = read_spatial_kind(reader)?;
-    let name = read_str_lp(reader)?;
-    let parent_id = read_option_str(reader)?;
-    let placement = read_transform(reader)?;
+    let id = read_str_lp(reader).await?;
+    let kind = read_spatial_kind(reader).await?;
+    let name = read_str_lp(reader).await?;
+    let parent_id = read_option_str(reader).await?;
+    let placement = read_transform(reader).await?;
     Ok(SpatialNode { id, kind, name, parent_id, placement })
 }
 
@@ -681,15 +681,15 @@ async fn write_element(out: &mut Vec<u8>, e: &SemioModelElement) {
     }
 }
 async fn read_element(reader: &mut store::ByteReader<'_>) -> Result<SemioModelElement, String> {
-    let id = read_str_lp(reader)?;
-    let class = read_element_class(reader)?;
-    let placement = read_transform(reader)?;
-    let geometry = read_geometry_ref(reader)?;
-    let spatial_id = read_option_str(reader)?;
-    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let id = read_str_lp(reader).await?;
+    let class = read_element_class(reader).await?;
+    let placement = read_transform(reader).await?;
+    let geometry = read_geometry_ref(reader).await?;
+    let spatial_id = read_option_str(reader).await?;
+    let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut psets = Vec::with_capacity(count as usize);
     for _ in 0..count {
-        psets.push(read_property_set(reader)?);
+        psets.push(read_property_set(reader).await?);
     }
     Ok(SemioModelElement { id, class, placement, geometry, spatial_id, psets })
 }
@@ -708,13 +708,13 @@ async fn write_relation_kind(out: &mut Vec<u8>, k: &RelationKind) {
     }
 }
 async fn read_relation_kind(reader: &mut store::ByteReader<'_>) -> Result<RelationKind, String> {
-    match reader.read_u8().map_err(|e| e.to_string())? {
+    match reader.read_u8().await.map_err(|e| e.to_string())? {
         0 => Ok(RelationKind::Aggregates),
         1 => Ok(RelationKind::ContainedIn),
         2 => Ok(RelationKind::ConnectsTo),
         3 => Ok(RelationKind::FillsVoid),
         4 => Ok(RelationKind::VoidsElement),
-        5 => Ok(RelationKind::Other { label: read_str_lp(reader)? }),
+        5 => Ok(RelationKind::Other { label: read_str_lp(reader).await? }),
         other => Err(format!("relation kind: unknown tag {other}")),
     }
 }
@@ -726,10 +726,10 @@ async fn write_relation(out: &mut Vec<u8>, r: &ModelRelation) {
     write_str_lp(out, &r.to);
 }
 async fn read_relation(reader: &mut store::ByteReader<'_>) -> Result<ModelRelation, String> {
-    let id = read_str_lp(reader)?;
-    let kind = read_relation_kind(reader)?;
-    let from = read_str_lp(reader)?;
-    let to = read_str_lp(reader)?;
+    let id = read_str_lp(reader).await?;
+    let kind = read_relation_kind(reader).await?;
+    let from = read_str_lp(reader).await?;
+    let to = read_str_lp(reader).await?;
     Ok(ModelRelation { id, kind, from, to })
 }
 
@@ -754,26 +754,26 @@ async fn encode_model_snapshot_binary(s: &SemioModelSnapshot) -> Vec<u8> {
 }
 async fn decode_model_snapshot_binary(bytes: &[u8]) -> Result<SemioModelSnapshot, String> {
     const PACK_BINARY_FORMAT: u8 = 1;
-    let mut reader = store::ByteReader::new(bytes);
-    let format = reader.read_u8().map_err(|e| e.to_string())?;
+    let mut reader = store::ByteReader::new(bytes).await;
+    let format = reader.read_u8().await.map_err(|e| e.to_string())?;
     if format != PACK_BINARY_FORMAT {
         return Err(format!("unsupported pack format {format}"));
     }
-    let schema = read_str_lp(&mut reader)?;
-    let spatial_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let schema = read_str_lp(&mut reader).await?;
+    let spatial_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut spatial = Vec::with_capacity(spatial_count as usize);
     for _ in 0..spatial_count {
-        spatial.push(read_spatial_node(&mut reader)?);
+        spatial.push(read_spatial_node(&mut reader).await?);
     }
-    let element_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let element_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut elements = Vec::with_capacity(element_count as usize);
     for _ in 0..element_count {
-        elements.push(read_element(&mut reader)?);
+        elements.push(read_element(&mut reader).await?);
     }
-    let relation_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let relation_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut relations = Vec::with_capacity(relation_count as usize);
     for _ in 0..relation_count {
-        relations.push(read_relation(&mut reader)?);
+        relations.push(read_relation(&mut reader).await?);
     }
     Ok(SemioModelSnapshot { schema, spatial, elements, relations })
 }
@@ -794,12 +794,12 @@ impl store::ArtifactDsl for SemioModelSnapshot {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        parse_semio_model_snapshot_body(body).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_semio_model_snapshot_body(body).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 
     async fn print_dsl(&self) -> String {
         let body = print_semio_model_snapshot_body(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -808,7 +808,7 @@ impl store::ArtifactPack for SemioModelSnapshot {
     async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = encode_model_snapshot_binary(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
 
@@ -818,7 +818,7 @@ impl store::ArtifactPack for SemioModelSnapshot {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
-        decode_model_snapshot_binary(&inner).map_err(store::PackError::Schema)
+        decode_model_snapshot_binary(&inner).await.map_err(store::PackError::Schema)
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs

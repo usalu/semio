@@ -38,7 +38,7 @@ pub async fn shape_representation_instances(doc: &Part21Document) -> Vec<(u64, S
     let mut out = Vec::new();
     for inst in &doc.instances {
         for (name, _) in &inst.entities {
-            if let Some(rung) = ladder_rung_of(name) {
+            if let Some(rung) = ladder_rung_of(name).await {
                 out.push((inst.id, name.clone(), rung));
             }
         }
@@ -64,8 +64,8 @@ pub async fn file_schema_contains(doc: &Part21Document, schema_name: &str) -> bo
     async fn walk(value: &Part21Value, schema_name: &str) -> bool {
         match value {
             Part21Value::Str(s) => s.eq_ignore_ascii_case(schema_name),
-            Part21Value::List(items) => items.iter().any(|v| walk(v, schema_name)),
-            Part21Value::Typed(_, items) => items.iter().any(|v| walk(v, schema_name)),
+            Part21Value::List(items) => items.iter().any(|v| semio_framework_plugin::resolve_ready(walk(v, schema_name))),
+            Part21Value::Typed(_, items) => items.iter().any(|v| semio_framework_plugin::resolve_ready(walk(v, schema_name))),
             _ => false,
         }
     }
@@ -85,7 +85,7 @@ pub async fn has_product_definition_chain(doc: &Part21Document) -> bool {
 /// composer performs before hard-gating serialization, so a composer-built document always
 /// carries a schema declaration compatible with the class it's being stamped at.
 pub async fn ensure_file_schema(doc: &mut Part21Document, schema_name: &str) {
-    if file_schema_contains(doc, schema_name) {
+    if file_schema_contains(doc, schema_name).await {
         return;
     }
     doc.header.file_schema = vec![Part21Value::List(vec![Part21Value::Str(schema_name.to_string())])];

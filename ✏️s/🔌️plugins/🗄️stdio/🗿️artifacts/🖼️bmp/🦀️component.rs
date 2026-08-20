@@ -25,7 +25,7 @@ pub const BMP_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.bmp", standar
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec`.
 pub async fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
-    crate::registry::definition_only_assembly("bmp", definition)
+    crate::registry::definition_only_assembly("bmp", definition).await
 }
 
 pub async fn artifact_kind() -> ArtifactKindSpec {
@@ -53,7 +53,8 @@ pub mod io_registry {
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 
-    pub async fn entries() -> &'static [&'static ComposerEntry] {
+    // 🚫️async: E1 pure table accessor consumed by OnceLock::get_or_init's sync closure — see R9
+    pub fn entries() -> &'static [&'static ComposerEntry] {
         ENTRIES.get_or_init(|| v_v3::entries().iter().collect()).as_slice()
     }
 

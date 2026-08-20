@@ -38,20 +38,20 @@ async fn measure<T>(value: T, unit: GltfUnit, method: GltfComputationMethod, sam
         availability: if method == GltfComputationMethod::Exact { GltfAvailability::Available } else { GltfAvailability::Approximate },
         validity: GltfValidity::Valid,
         diagnostic_ids: Vec::new(),
-        quality: quality(method, sample_count, topology),
-        provenance: provenance(),
+        quality: quality(method, sample_count, topology).await,
+        provenance: provenance().await,
     }
 }
 
 pub(crate) async fn unavailable<T>(unit: GltfUnit, availability: GltfAvailability, diagnostic_ids: Vec<String>, sample_count: usize, topology: Option<Topology>) -> GltfMeasure<T> {
     let validity = if availability == GltfAvailability::InvalidInput { GltfValidity::Invalid } else { GltfValidity::Indeterminate };
-    GltfMeasure { value: None, unit, availability, validity, diagnostic_ids, quality: quality(GltfComputationMethod::Exact, sample_count, topology), provenance: provenance() }
+    GltfMeasure { value: None, unit, availability, validity, diagnostic_ids, quality: quality(GltfComputationMethod::Exact, sample_count, topology).await, provenance: provenance().await }
 }
 
 pub(crate) async fn exact<T>(value: T, unit: GltfUnit, sample_count: usize, topology: Option<Topology>) -> GltfMeasure<T> {
-    measure(value, unit, GltfComputationMethod::Exact, sample_count, topology)
+    measure(value, unit, GltfComputationMethod::Exact, sample_count, topology).await
 }
 pub(crate) async fn estimate<T>(value: T, unit: GltfUnit, sample_count: usize, topology: Option<Topology>) -> GltfMeasure<T> {
-    measure(value, unit, GltfComputationMethod::DeterministicEstimate, sample_count, topology)
+    measure(value, unit, GltfComputationMethod::DeterministicEstimate, sample_count, topology).await
 }
 //#endregion 💡️Measures

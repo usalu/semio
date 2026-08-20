@@ -51,11 +51,11 @@ impl protocol::OpText for TsvEditorCommand {
 
 impl protocol::OpBinary for TsvEditorCommand {
     async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(<Self as protocol::OpText>::print_op(self).into_bytes())
+        Ok(<Self as protocol::OpText>::print_op(self).await.into_bytes())
     }
     async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let line = String::from_utf8(bytes.to_vec()).map_err(|error| protocol::ProtocolError::Malformed { what: "tsv editor command utf8", offset: 0, detail: error.to_string() })?;
-        <Self as protocol::OpText>::parse_op(&line).map_err(|error| protocol::ProtocolError::Malformed { what: "tsv editor command", offset: 0, detail: error.to_string() })
+        <Self as protocol::OpText>::parse_op(&line).await.map_err(|error| protocol::ProtocolError::Malformed { what: "tsv editor command", offset: 0, detail: error.to_string() })
     }
 }
 //#endregion 🔖️Command
@@ -102,8 +102,8 @@ impl ArtifactEditor for TsvEditor {
 
     async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
-            main::BODY_KEY => main::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
+            main::BODY_KEY => main::render(doc.snapshot).await,
+            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))).await,
         }
     }
 }
@@ -112,12 +112,12 @@ impl ArtifactEditor for TsvEditor {
 //#region 🔖️Manifest
 pub async fn create_tsv_editor() -> semio_framework_plugin::AppDefinition {
     Editor::builder(TSV_EDITOR_DIALECT)
-        .document(["semio", "stdio", "tsv"])
-        .icon_id("table-2")
-        .mode_def(edit::definition())
-        .default_mode_id(edit::TSV_EDIT_MODE_ID)
-        .window_kind_def(main::definition())
-        .default_layout(edit::layout())
+        .await.document(["semio", "stdio", "tsv"])
+        .await.icon_id("table-2")
+        .await.mode_def(edit::definition().await)
+        .await.default_mode_id(edit::TSV_EDIT_MODE_ID)
+        .await.window_kind_def(main::definition().await)
+        .await.default_layout(edit::layout())
         .build_definition()
 }
 //#endregion 🔖️Manifest

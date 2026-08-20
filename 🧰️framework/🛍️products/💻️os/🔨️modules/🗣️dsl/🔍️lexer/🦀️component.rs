@@ -880,7 +880,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn lexer_forgiving_mode_never_fails_on_malformed_input() {
-        let result = lex("key=\"unterminated\n$$$", &Limits::default(), true);
+        let limits = Limits::default();
+        let result = lex("key=\"unterminated\n$$$", &limits, true);
         assert!(result.await.is_ok(), "forgiving lexer must not error");
     }
 
@@ -904,7 +905,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn token_classes_distinguish_keywords_from_idents() {
         let tokens = lex("camera x=1", &Limits::default(), false).await.expect("lex");
-        let classes = token_classes(&tokens, &["camera"]);
+        let classes = token_classes(&tokens, &["camera"]).await;
         assert_eq!(classes[0].0, TokenClass::Keyword);
         assert_eq!(classes[1].0, TokenClass::Ident);
     }
@@ -951,22 +952,22 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn is_bare_ident_accepts_normal_idents_and_rejects_reserved_and_number_shaped() {
-        assert!(is_bare_ident("alpha"));
-        assert!(is_bare_ident("hexagonal-mushroom-column"));
-        assert!(is_bare_ident("airtightness_n50"));
-        assert!(!is_bare_ident("_"));
-        assert!(!is_bare_ident("true"));
-        assert!(!is_bare_ident("false"));
-        assert!(!is_bare_ident("null"));
-        assert!(!is_bare_ident("nan"));
-        assert!(!is_bare_ident("inf"));
-        assert!(!is_bare_ident("3"));
-        assert!(!is_bare_ident("1.5"));
-        assert!(!is_bare_ident("-inf"));
-        assert!(!is_bare_ident("-2"));
-        assert!(!is_bare_ident("two words"));
-        assert!(!is_bare_ident(""));
-        assert!(!is_bare_ident("\"quoted\""));
+        assert!(is_bare_ident("alpha").await);
+        assert!(is_bare_ident("hexagonal-mushroom-column").await);
+        assert!(is_bare_ident("airtightness_n50").await);
+        assert!(!is_bare_ident("_").await);
+        assert!(!is_bare_ident("true").await);
+        assert!(!is_bare_ident("false").await);
+        assert!(!is_bare_ident("null").await);
+        assert!(!is_bare_ident("nan").await);
+        assert!(!is_bare_ident("inf").await);
+        assert!(!is_bare_ident("3").await);
+        assert!(!is_bare_ident("1.5").await);
+        assert!(!is_bare_ident("-inf").await);
+        assert!(!is_bare_ident("-2").await);
+        assert!(!is_bare_ident("two words").await);
+        assert!(!is_bare_ident("").await);
+        assert!(!is_bare_ident("\"quoted\"").await);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -1025,9 +1026,10 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn lexer_unterminated_fence_is_a_strict_error_and_forgiving_error_token() {
-        let strict = lex("body=```jack\nMATCH (a) RETURN a", &Limits::default(), false);
+        let limits = Limits::default();
+        let strict = lex("body=```jack\nMATCH (a) RETURN a", &limits, false);
         assert!(strict.await.is_err(), "unterminated fence must be a strict-mode error");
-        let forgiving = lex("body=```jack\nMATCH (a) RETURN a", &Limits::default(), true);
+        let forgiving = lex("body=```jack\nMATCH (a) RETURN a", &limits, true);
         assert!(forgiving.await.is_ok(), "forgiving mode must never fail on malformed input");
     }
 
@@ -1042,13 +1044,13 @@ mod tests {
     async fn unit_conversion_scales_within_a_dimension_and_rejects_across_dimensions() {
         let gpa = unit_by_symbol("GPa").await.unwrap();
         let mpa = unit_by_symbol("MPa").await.unwrap();
-        assert_eq!(convert(210.0, gpa, mpa), Some(210_000.0));
+        assert_eq!(convert(210.0, gpa, mpa).await, Some(210_000.0));
         let deg = unit_by_symbol("deg").await.unwrap();
         let rad = unit_by_symbol("rad").await.unwrap();
         let converted = convert(180.0, deg, rad).await.unwrap();
         assert!((converted - std::f64::consts::PI).abs() < 1e-9);
         let kg = unit_by_symbol("kg").await.unwrap();
-        assert_eq!(convert(1.0, gpa, kg), None, "pressure must not convert into mass");
+        assert_eq!(convert(1.0, gpa, kg).await, None, "pressure must not convert into mass");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -1064,7 +1066,7 @@ mod tests {
     async fn unit_conversion_same_unit_short_circuits_bit_exactly() {
         let deg = unit_by_symbol("deg").await.unwrap();
         // 30.0 degrees previously round-tripped as 29.999999999999996 due to (30.0 * (PI/180)) / (PI/180).
-        assert_eq!(convert(30.0, deg, deg), Some(30.0));
+        assert_eq!(convert(30.0, deg, deg).await, Some(30.0));
     }
 
     #[semio_framework_async_macros::async_test]

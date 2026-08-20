@@ -33,7 +33,7 @@ pub mod derived_composition {
             if native.is_empty() {
                 return Err(ComposeError { message: "Mp3ComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() });
             }
-            let analysis = Mp3Analyzer::analyze(&native);
+            let analysis = Mp3Analyzer::analyze(&native).await;
             let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError { message: "Mp3ComposerComposition: analysis produced no snapshot".into(), diagnostics: analysis.diagnostics.clone() })?;
             Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics })
         }
@@ -44,10 +44,10 @@ pub mod derived_composition {
     /// 📌️ Registers this subset's schema descriptor, document codec. Called from
     /// this artifact's standard-level `engine::register()`.
     pub async fn register() {
-        ::schema::register_artifact_schema_descriptor(crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::mp3_artifact_schema_descriptor());
+        ::schema::register_artifact_schema_descriptor(crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::mp3_artifact_schema_descriptor().await);
         let _ = store::register_document_codec(store::ArtifactCodec::of::<Mp3Snapshot, crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::mutations::Mp3Mutation>(
             crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::snapshot::STDIO_MP3_DOCUMENT_SCHEMA,
-        ));
+        ).await);
         register_artifact_inferences();
     }
 
@@ -55,7 +55,7 @@ pub mod derived_composition {
     /// catalog — sibling to `register_artifact_schema_descriptor` above (separate registry,
     /// ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING P2/S3+S4).
     pub async fn register_artifact_inferences() {
-        ::schema::register_artifact_inference_descriptor(crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::inferences::mp3_artifact_inference_descriptor());
+        ::schema::register_artifact_inference_descriptor(crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::inferences::mp3_artifact_inference_descriptor().await);
     }
     //#endregion 🔖️Register
 }
@@ -68,7 +68,7 @@ use crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::snapsh
 /// 🔍 Real magic sniff: an ID3v2 header at the front, OR a valid MPEG frame sync anywhere in the
 /// buffer.
 pub async fn sniff_real_bytes(bytes: &[u8]) -> bool {
-    detect_id3v2_header(bytes).is_some() || find_frame_sync(bytes).is_some()
+    detect_id3v2_header(bytes).await.is_some() || find_frame_sync(bytes).await.is_some()
 }
 //#endregion 🔖️Sniff
 
@@ -100,14 +100,14 @@ async fn detect_id3v2_header(bytes: &[u8]) -> Option<Id3v2HeaderRaw> {
         return None;
     }
     let size_bytes: [u8; 4] = bytes[6..10].try_into().ok()?;
-    Some(Id3v2HeaderRaw { major_version: bytes[3], minor_version: bytes[4], flags: bytes[5], size: decode_syncsafe(&size_bytes) })
+    Some(Id3v2HeaderRaw { major_version: bytes[3], minor_version: bytes[4], flags: bytes[5], size: decode_syncsafe(&size_bytes).await })
 }
 
 /// 🏷️ Parses the ID3v2 tag (10-byte header + `size` bytes of frames, stopping at padding — a
 /// frame id of all-zero bytes). ID3v2.3 frame sizes are a plain big-endian `u32`; ID3v2.4 frame
 /// sizes are themselves synchsafe (spec difference honored here).
 async fn parse_id3v2(bytes: &[u8]) -> Option<(Id3v2Tag, usize)> {
-    let header = detect_id3v2_header(bytes)?;
+    let header = detect_id3v2_header(bytes).await?;
     let body_start = 10usize;
     let body_end = body_start + header.size as usize;
     if body_end > bytes.len() {
@@ -122,7 +122,7 @@ async fn parse_id3v2(bytes: &[u8]) -> Option<(Id3v2Tag, usize)> {
         }
         let id = String::from_utf8_lossy(id_bytes).into_owned();
         let size_bytes: [u8; 4] = bytes[pos + 4..pos + 8].try_into().ok()?;
-        let size = if header.major_version >= 4 { decode_syncsafe(&size_bytes) } else { u32::from_be_bytes(size_bytes) } as usize;
+        let size = if header.major_version >= 4 { decode_syncsafe(&size_bytes).await } else { u32::from_be_bytes(size_bytes) } as usize;
         let flags = u16::from_be_bytes([bytes[pos + 8], bytes[pos + 9]]);
         let data_start = pos + 10;
         let data_end = data_start + size;
@@ -232,8 +232,8 @@ async fn parse_frame_header(bytes: &[u8], pos: usize) -> Option<(Mp3FrameHeader,
     let original = ((b3 >> 2) & 0x01) != 0;
     let emphasis = b3 & 0x03;
 
-    let bitrate_bps = bitrate_kbps(mpeg_version_id, layer, bitrate_index)? as u32 * 1000;
-    let sample_rate = crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::sample_rate_hz(mpeg_version_id, sample_rate_index)?;
+    let bitrate_bps = bitrate_kbps(mpeg_version_id, layer, bitrate_index).await? as u32 * 1000;
+    let sample_rate = crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::sample_rate_hz(mpeg_version_id, sample_rate_index).await?;
     let pad = if padding { 1u32 } else { 0 };
     let frame_size = if layer == 3 {
         // Layer I: slots are 4 bytes.
@@ -264,7 +264,7 @@ async fn encode_frame_header(h: &Mp3FrameHeader) -> [u8; 4] {
 /// an optional trailing 128-byte ID3v1 tag (`TAG` magic).
 pub async fn decode_mp3(bytes: &[u8]) -> Result<Mp3Snapshot, String> {
     let mut pos = 0usize;
-    let id3v2 = match parse_id3v2(bytes) {
+    let id3v2 = match parse_id3v2(bytes).await {
         Some((tag, consumed)) => {
             pos = consumed;
             Some(tag)
@@ -274,10 +274,10 @@ pub async fn decode_mp3(bytes: &[u8]) -> Result<Mp3Snapshot, String> {
 
     let mut frames = Vec::new();
     loop {
-        match find_frame_sync(&bytes[pos..]) {
+        match find_frame_sync(&bytes[pos..]).await {
             Some(offset) => {
                 let frame_pos = pos + offset;
-                match parse_frame_header(bytes, frame_pos) {
+                match parse_frame_header(bytes, frame_pos).await {
                     Some((header, frame_size)) => {
                         let payload = bytes[frame_pos + 4..frame_pos + frame_size].to_vec();
                         frames.push(Mp3Frame { header, payload });
@@ -448,7 +448,8 @@ pub mod io_registry {
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 
-    pub async fn entries() -> &'static [ComposerEntry] {
+    // 🚫️async: E1 pure table accessor consumed by OnceLock::get_or_init's sync closure — see R9
+    pub fn entries() -> &'static [ComposerEntry] {
         ENTRIES.get_or_init(|| vec![composer_entry_of::<Mp3RawAnyComposer>()]).as_slice()
     }
 }

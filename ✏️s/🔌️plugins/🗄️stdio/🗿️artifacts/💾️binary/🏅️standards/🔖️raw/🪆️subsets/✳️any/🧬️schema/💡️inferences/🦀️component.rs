@@ -29,7 +29,7 @@ pub struct BinaryInference {
 
 impl protocol::Inference<BinarySnapshot> for BinaryInference {
     async fn infer(snapshot: &BinarySnapshot) -> Self {
-        Self { extent: compute_binary_extent(snapshot) }
+        Self { extent: compute_binary_extent(snapshot).await }
     }
 }
 

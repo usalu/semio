@@ -108,35 +108,35 @@ async fn parse_brep_mutation(line: &str) -> Result<SemioBrepMutation, String> {
     let args: std::collections::BTreeMap<&str, &str> = rest.split(' ').filter(|s| !s.is_empty()).map(|tok| tok.split_once('=').ok_or_else(|| format!("brep mutation: bad arg token {tok:?}"))).collect::<Result<Vec<_>, String>>()?.into_iter().collect();
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("brep mutation: missing arg '{k}' for '{keyword}'"));
     match keyword {
-        "create-vertex" => Ok(SemioBrepMutation::CreateVertex(create_vertex::mutation::CreateVertex { id: dec_str(arg("id")?)?, point: dec_point3(arg("point")?)? })),
-        "delete-vertex" => Ok(SemioBrepMutation::DeleteVertex(delete_vertex::mutation::DeleteVertex { id: dec_str(arg("id")?)? })),
-        "create-edge" => Ok(SemioBrepMutation::CreateEdge(create_edge::mutation::CreateEdge { id: dec_str(arg("id")?)?, start_vertex: dec_str(arg("start")?)?, end_vertex: dec_str(arg("end")?)?, curve: dec_curve(arg("curve")?)? })),
-        "delete-edge" => Ok(SemioBrepMutation::DeleteEdge(delete_edge::mutation::DeleteEdge { id: dec_str(arg("id")?)? })),
+        "create-vertex" => Ok(SemioBrepMutation::CreateVertex(create_vertex::mutation::CreateVertex { id: dec_str(arg("id")?).await?, point: dec_point3(arg("point")?).await? })),
+        "delete-vertex" => Ok(SemioBrepMutation::DeleteVertex(delete_vertex::mutation::DeleteVertex { id: dec_str(arg("id")?).await? })),
+        "create-edge" => Ok(SemioBrepMutation::CreateEdge(create_edge::mutation::CreateEdge { id: dec_str(arg("id")?).await?, start_vertex: dec_str(arg("start")?).await?, end_vertex: dec_str(arg("end")?).await?, curve: dec_curve(arg("curve")?).await? })),
+        "delete-edge" => Ok(SemioBrepMutation::DeleteEdge(delete_edge::mutation::DeleteEdge { id: dec_str(arg("id")?).await? })),
         "create-face" => Ok(SemioBrepMutation::CreateFace(create_face::mutation::CreateFace {
-            id: dec_str(arg("id")?)?,
-            outer_loop: dec_str(arg("outer")?)?,
-            inner_loops: dec_list(arg("inner")?, dec_str)?,
-            surface: dec_surface(arg("surface")?)?,
-            orientation: crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::parse_bool(arg("orientation")?)?,
+            id: dec_str(arg("id")?).await?,
+            outer_loop: dec_str(arg("outer")?).await?,
+            inner_loops: dec_list(arg("inner")?, dec_str).await?,
+            surface: dec_surface(arg("surface")?).await?,
+            orientation: crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::parse_bool(arg("orientation")?).await?,
         })),
-        "delete-face" => Ok(SemioBrepMutation::DeleteFace(delete_face::mutation::DeleteFace { id: dec_str(arg("id")?)? })),
-        "create-shell" => Ok(SemioBrepMutation::CreateShell(create_shell::mutation::CreateShell { id: dec_str(arg("id")?)?, faces: dec_list(arg("faces")?, dec_shell_face)? })),
-        "delete-shell" => Ok(SemioBrepMutation::DeleteShell(delete_shell::mutation::DeleteShell { id: dec_str(arg("id")?)? })),
-        "create-solid" => Ok(SemioBrepMutation::CreateSolid(create_solid::mutation::CreateSolid { id: dec_str(arg("id")?)?, shells: dec_list(arg("shells")?, dec_solid_shell)? })),
-        "delete-solid" => Ok(SemioBrepMutation::DeleteSolid(delete_solid::mutation::DeleteSolid { id: dec_str(arg("id")?)? })),
-        "replace-curve" => Ok(SemioBrepMutation::ReplaceCurve(replace_curve::mutation::ReplaceCurve { edge_id: dec_str(arg("edge")?)?, new_curve: dec_curve(arg("curve")?)? })),
-        "replace-surface" => Ok(SemioBrepMutation::ReplaceSurface(replace_surface::mutation::ReplaceSurface { face_id: dec_str(arg("face")?)?, new_surface: dec_surface(arg("surface")?)? })),
-        "move-vertex" => Ok(SemioBrepMutation::MoveVertex(move_vertex::mutation::MoveVertex { vertex_id: dec_str(arg("id")?)?, new_point: dec_point3(arg("point")?)? })),
+        "delete-face" => Ok(SemioBrepMutation::DeleteFace(delete_face::mutation::DeleteFace { id: dec_str(arg("id")?).await? })),
+        "create-shell" => Ok(SemioBrepMutation::CreateShell(create_shell::mutation::CreateShell { id: dec_str(arg("id")?).await?, faces: dec_list(arg("faces")?, dec_shell_face).await? })),
+        "delete-shell" => Ok(SemioBrepMutation::DeleteShell(delete_shell::mutation::DeleteShell { id: dec_str(arg("id")?).await? })),
+        "create-solid" => Ok(SemioBrepMutation::CreateSolid(create_solid::mutation::CreateSolid { id: dec_str(arg("id")?).await?, shells: dec_list(arg("shells")?, dec_solid_shell).await? })),
+        "delete-solid" => Ok(SemioBrepMutation::DeleteSolid(delete_solid::mutation::DeleteSolid { id: dec_str(arg("id")?).await? })),
+        "replace-curve" => Ok(SemioBrepMutation::ReplaceCurve(replace_curve::mutation::ReplaceCurve { edge_id: dec_str(arg("edge")?).await?, new_curve: dec_curve(arg("curve")?).await? })),
+        "replace-surface" => Ok(SemioBrepMutation::ReplaceSurface(replace_surface::mutation::ReplaceSurface { face_id: dec_str(arg("face")?).await?, new_surface: dec_surface(arg("surface")?).await? })),
+        "move-vertex" => Ok(SemioBrepMutation::MoveVertex(move_vertex::mutation::MoveVertex { vertex_id: dec_str(arg("id")?).await?, new_point: dec_point3(arg("point")?).await? })),
         other => Err(format!("brep mutation: unknown keyword {other:?}")),
     }
 }
 
 impl OpText for SemioBrepMutation {
     async fn print_op(&self) -> String {
-        print_brep_mutation(self)
+        print_brep_mutation(self).await
     }
     async fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_brep_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_brep_mutation(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
 //#endregion 🔖️OpText
@@ -165,7 +165,7 @@ async fn variant_ordinal(m: &SemioBrepMutation) -> u8 {
 /// ✂️ Just the `key=value ...` argument tail of `print_brep_mutation` — the binary frame's `tag`
 /// byte already carries the keyword, so the text keyword itself is redundant in the binary payload.
 async fn print_brep_mutation_args(m: &SemioBrepMutation) -> String {
-    match print_brep_mutation(m).split_once(' ') {
+    match print_brep_mutation(m).await.split_once(' ') {
         Some((_, rest)) => rest.to_string(),
         None => String::new(),
     }
@@ -179,8 +179,8 @@ async fn print_brep_mutation_args(m: &SemioBrepMutation) -> String {
 impl OpBinary for SemioBrepMutation {
     async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
-        let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self)];
-        out.extend_from_slice(print_brep_mutation_args(self).as_bytes());
+        let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self).await];
+        out.extend_from_slice(print_brep_mutation_args(self).await.as_bytes());
         Ok(out)
     }
     async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
@@ -195,7 +195,7 @@ impl OpBinary for SemioBrepMutation {
         let keyword = OP_KEYWORDS.get(tag as usize).ok_or_else(|| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("tag {tag} out of range for {} declared variants", OP_KEYWORDS.len()) })?;
         let args = std::str::from_utf8(&bytes[2..]).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 2, detail: e.to_string() })?;
         let line = if args.is_empty() { keyword.to_string() } else { format!("{keyword} {args}") };
-        Self::parse_op(&line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 2, detail: e.to_string() })
+        Self::parse_op(&line).await.map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 2, detail: e.to_string() })
     }
 }
 //#endregion 🔖️OpBinary

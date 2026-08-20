@@ -23,7 +23,7 @@ pub const BASE_GLB_BYTES: &[u8] = include_bytes!("🖼️assets/🧊️base.glb"
 /// canonical real snapshot every other consumer of this example (and the fixture tests) works
 /// against, never a hand-authored stand-in.
 pub async fn decoded_snapshot() -> crate::artifacts::gltf::GltfSnapshot {
-    crate::artifacts::gltf::engine::decode_glb(BASE_GLB_BYTES).unwrap_or_else(|error| panic!("{ID} example base.glb decodes: {error}"))
+    crate::artifacts::gltf::engine::decode_glb(BASE_GLB_BYTES).await.unwrap_or_else(|error| panic!("{ID} example base.glb decodes: {error}"))
 }
 
 /// 📄️ Full-fidelity JSON serialization of the real decoded snapshot (document + resolved buffer
@@ -34,7 +34,7 @@ async fn document_json() -> String {
 
 /// 📚️ Canonical example source for `App::example_source`.
 pub async fn source() -> ExampleSource {
-    ExampleSource::new(ID, label(), document_json(), ICON)
+    ExampleSource::new(ID, label(), document_json(), ICON).await
 }
 
 #[cfg(test)]

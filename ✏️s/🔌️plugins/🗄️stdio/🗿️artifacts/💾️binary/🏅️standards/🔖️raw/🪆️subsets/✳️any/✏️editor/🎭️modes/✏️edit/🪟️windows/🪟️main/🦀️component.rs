@@ -25,7 +25,7 @@ pub const HEX_PREVIEW_CAP_BYTES: usize = 4096;
 //#region 🔖️Definition
 /// 🧱️ Stitched into the editor manifest by `crate::editor::binary::create_binary_editor`.
 pub async fn definition() -> WindowKindDefinition {
-    WindowKindDefinition { label: LocalizedLabel::native("Bytes", "Bytes"), ..TextWindowKit::editable_window_kind() }
+    WindowKindDefinition { label: LocalizedLabel::native("Bytes", "Bytes"), ..TextWindowKit::editable_window_kind().await }
 }
 //#endregion 🔖️Definition
 
@@ -42,7 +42,7 @@ pub async fn render(document: &BinarySnapshot) -> UiNode {
     } else {
         format!("{hex}\n# total bytes: {total}")
     };
-    TextWindowKit::render(&TextView { text, language: Some("hex".into()), read_only: false })
+    TextWindowKit::render(&TextView { text, language: Some("hex".into()), read_only: false }).await
 }
 //#endregion 🔖️Render
 

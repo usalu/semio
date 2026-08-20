@@ -21,7 +21,7 @@ const IFC2X3_ANY_VIEW_DEFAULT_CAMERA_FOV: f64 = 45.0;
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by the surface root's `create_*_viewer`.
 pub async fn definition() -> WindowKindDefinition {
-    MeshWindowKit::window_kind()
+    MeshWindowKit::window_kind().await
 }
 //#endregion 🔖️Definition
 
@@ -40,7 +40,7 @@ async fn entity_count(document: &Ifc2x3Snapshot) -> usize {
 
 async fn world_instances_json(document: &Ifc2x3Snapshot) -> String {
     let count = entity_count(document);
-    let instances: Vec<serde_json::Value> = (0..count)
+    let instances: Vec<serde_json::Value> = (0..count.await)
         .map(|index| {
             serde_json::json!({
                 "id": format!("ifc2x3_any-{index}"),
@@ -61,12 +61,12 @@ async fn world_instances_json(document: &Ifc2x3Snapshot) -> String {
 pub async fn render(document: &Ifc2x3Snapshot) -> UiNode {
     let meshes_json = serde_json::to_string(&[serde_json::json!({ "id": IFC2X3_ANY_VIEW_FALLBACK_MESH_KIND, "data": mesh_from_kind(IFC2X3_ANY_VIEW_FALLBACK_MESH_KIND) })]).unwrap_or_else(|_| "[]".into());
     let view = MeshView {
-        camera_json: world3d_camera_json(IFC2X3_ANY_VIEW_DEFAULT_CAMERA_POSITION, IFC2X3_ANY_VIEW_DEFAULT_CAMERA_TARGET, IFC2X3_ANY_VIEW_DEFAULT_CAMERA_FOV),
+        camera_json: world3d_camera_json(IFC2X3_ANY_VIEW_DEFAULT_CAMERA_POSITION, IFC2X3_ANY_VIEW_DEFAULT_CAMERA_TARGET, IFC2X3_ANY_VIEW_DEFAULT_CAMERA_FOV).await,
         meshes_json,
-        instances_json: world_instances_json(document),
-        selection_json: world3d_selection_json("rectangle", &[], None),
+        instances_json: world_instances_json(document).await,
+        selection_json: world3d_selection_json("rectangle", &[], None).await,
     };
-    MeshWindowKit::render(&view)
+    MeshWindowKit::render(&view).await
 }
 //#endregion 🔖️Render
 

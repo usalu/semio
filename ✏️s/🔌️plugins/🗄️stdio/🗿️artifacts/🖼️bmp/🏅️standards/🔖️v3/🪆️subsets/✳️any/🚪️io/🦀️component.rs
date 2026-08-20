@@ -35,7 +35,7 @@ pub mod derived_composition {
             if native.is_empty() {
                 return Err(ComposeError { message: "BmpComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() });
             }
-            let analysis = BmpAnalyzer::analyze(&native);
+            let analysis = BmpAnalyzer::analyze(&native).await;
             let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError { message: "BmpComposerComposition: analysis produced no snapshot".into(), diagnostics: analysis.diagnostics.clone() })?;
             Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics })
         }
@@ -99,7 +99,7 @@ async fn mask_shift_width(mask: u32) -> (u32, u32) {
 }
 
 async fn extract_channel(raw: u32, mask: u32) -> u8 {
-    let (shift, width) = mask_shift_width(mask);
+    let (shift, width) = mask_shift_width(mask).await;
     if width == 0 {
         return 0;
     }
@@ -140,24 +140,24 @@ pub async fn decode_bmp(bytes: &[u8]) -> Result<BmpSnapshot, String> {
     if bytes.len() < 14 || bytes[0..2] != BMP_MAGIC {
         return Err("bmp: bad signature".into());
     }
-    let data_offset = read_u32(bytes, 10)? as usize;
-    let header_size = read_u32(bytes, 14)?;
+    let data_offset = read_u32(bytes, 10).await? as usize;
+    let header_size = read_u32(bytes, 14).await?;
     if (header_size as usize) < 40 {
         return Err(format!("bmp: unsupported info header size {header_size}"));
     }
-    let width_i = read_i32(bytes, 18)?;
-    let height_i = read_i32(bytes, 22)?;
+    let width_i = read_i32(bytes, 18).await?;
+    let height_i = read_i32(bytes, 22).await?;
     // 🧾 The rest of BITMAPINFOHEADER's 11 real fields — read honestly regardless of which
     // branch (empty-sentinel vs. real image) follows, per the recipe's "codec fills what it
     // decodes" rule.
-    let planes = read_u16(bytes, 26)?;
-    let bpp = read_u16(bytes, 28)?;
-    let compression = read_u32(bytes, 30)?;
-    let image_size = read_u32(bytes, 34)?;
-    let x_pixels_per_meter = read_i32(bytes, 38)?;
-    let y_pixels_per_meter = read_i32(bytes, 42)?;
-    let colors_used_field = read_u32(bytes, 46)?;
-    let colors_important = read_u32(bytes, 50)?;
+    let planes = read_u16(bytes, 26).await?;
+    let bpp = read_u16(bytes, 28).await?;
+    let compression = read_u32(bytes, 30).await?;
+    let image_size = read_u32(bytes, 34).await?;
+    let x_pixels_per_meter = read_i32(bytes, 38).await?;
+    let y_pixels_per_meter = read_i32(bytes, 42).await?;
+    let colors_used_field = read_u32(bytes, 46).await?;
+    let colors_important = read_u32(bytes, 50).await?;
 
     if width_i == 0 && height_i == 0 {
         // 🌱 The zero-dimension "empty document" case round-tripped by encode_bmp — no pixel
@@ -204,21 +204,21 @@ pub async fn decode_bmp(bytes: &[u8]) -> Result<BmpSnapshot, String> {
         if header_size == 40 {
             // 📌 Classic Win9x extension: 3 (sometimes 4) DWORD masks immediately follow the
             // core 40-byte BITMAPINFOHEADER, before the pixel data.
-            masks[0] = read_u32(bytes, cursor)?;
-            masks[1] = read_u32(bytes, cursor + 4)?;
-            masks[2] = read_u32(bytes, cursor + 8)?;
+            masks[0] = read_u32(bytes, cursor).await?;
+            masks[1] = read_u32(bytes, cursor + 4).await?;
+            masks[2] = read_u32(bytes, cursor + 8).await?;
             cursor += 12;
             if cursor + 4 <= data_offset {
-                masks[3] = read_u32(bytes, cursor)?;
+                masks[3] = read_u32(bytes, cursor).await?;
                 cursor += 4;
             }
         } else {
             // 📌 BITMAPV2/V3/V4/V5INFOHEADER embed the masks at fixed offsets inside the header.
-            masks[0] = read_u32(bytes, 14 + 40)?;
-            masks[1] = read_u32(bytes, 14 + 44)?;
-            masks[2] = read_u32(bytes, 14 + 48)?;
+            masks[0] = read_u32(bytes, 14 + 40).await?;
+            masks[1] = read_u32(bytes, 14 + 44).await?;
+            masks[2] = read_u32(bytes, 14 + 48).await?;
             if header_size >= 56 {
-                masks[3] = read_u32(bytes, 14 + 52)?;
+                masks[3] = read_u32(bytes, 14 + 52).await?;
             }
         }
     } else if bpp == 16 {
@@ -281,10 +281,10 @@ pub async fn decode_bmp(bytes: &[u8]) -> Result<BmpSnapshot, String> {
                     let so = x * 2;
                     let raw = u16::from_le_bytes([row[so], row[so + 1]]) as u32;
                     let o = (out_y * width as usize + x) * 4;
-                    pixels[o] = extract_channel(raw, masks[0]);
-                    pixels[o + 1] = extract_channel(raw, masks[1]);
-                    pixels[o + 2] = extract_channel(raw, masks[2]);
-                    pixels[o + 3] = if masks[3] != 0 { extract_channel(raw, masks[3]) } else { 255 };
+                    pixels[o] = extract_channel(raw, masks[0]).await;
+                    pixels[o + 1] = extract_channel(raw, masks[1]).await;
+                    pixels[o + 2] = extract_channel(raw, masks[2]).await;
+                    pixels[o + 3] = if masks[3] != 0 { extract_channel(raw, masks[3]).await } else { 255 };
                 }
             }
             32 => {
@@ -292,10 +292,10 @@ pub async fn decode_bmp(bytes: &[u8]) -> Result<BmpSnapshot, String> {
                     let so = x * 4;
                     let raw = u32::from_le_bytes([row[so], row[so + 1], row[so + 2], row[so + 3]]);
                     let o = (out_y * width as usize + x) * 4;
-                    pixels[o] = extract_channel(raw, masks[0]);
-                    pixels[o + 1] = extract_channel(raw, masks[1]);
-                    pixels[o + 2] = extract_channel(raw, masks[2]);
-                    pixels[o + 3] = if masks[3] != 0 { extract_channel(raw, masks[3]) } else { 255 };
+                    pixels[o] = extract_channel(raw, masks[0]).await;
+                    pixels[o + 1] = extract_channel(raw, masks[1]).await;
+                    pixels[o + 2] = extract_channel(raw, masks[2]).await;
+                    pixels[o + 3] = if masks[3] != 0 { extract_channel(raw, masks[3]).await } else { 255 };
                 }
             }
             _ => return Err(format!("bmp: unsupported bit depth {bpp}")),
@@ -367,7 +367,7 @@ pub async fn encode_bmp(snap: &BmpSnapshot) -> Result<Vec<u8>, String> {
             BmpRowOrder::BottomUp => h as usize - 1 - file_row,
             BmpRowOrder::TopDown => file_row,
         };
-        let mut row_buf = vec![0u8; rb];
+        let mut row_buf = vec![0u8; rb.await];
         for x in 0..w as usize {
             let i = (src_y * w as usize + x) * 4;
             let o = x * 3;
@@ -389,7 +389,7 @@ pub async fn register() {
     register_artifact_inferences();
     register_pilot_languages();
     register_schema_specs();
-    let _ = store::register_document_codec(store::ArtifactCodec::of::<BmpSnapshot, BmpMutation>(STDIO_BMP_DOCUMENT_SCHEMA));
+    let _ = store::register_document_codec(store::ArtifactCodec::of::<BmpSnapshot, BmpMutation>(STDIO_BMP_DOCUMENT_SCHEMA).await);
 }
 
 /// 📇️ P2-FG2: `dsl::registry::register_schema_spec` (P2-M3's `FullResolver` insertion API) —
@@ -474,14 +474,14 @@ pub async fn register_pilot_languages() {
 
 /// 📌️ Registers schema leaves for `s.stdio.bmp`.
 pub async fn register_artifact_schema() {
-    ::schema::register_artifact_schema_descriptor(crate::artifacts::bmp::schema::bmp_artifact_schema_descriptor());
+    ::schema::register_artifact_schema_descriptor(crate::artifacts::bmp::schema::bmp_artifact_schema_descriptor().await);
 }
 
 /// 💡️ Registers `s.stdio.bmp.inference`'s facet leaves into the OS-wide inference catalog —
 /// sibling to `register_artifact_schema()` above (separate registry, ticket
 /// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
 pub async fn register_artifact_inferences() {
-    ::schema::register_artifact_inference_descriptor(crate::artifacts::bmp::standards::v_v3::subsets::any::schema::inferences::bmp_artifact_inference_descriptor());
+    ::schema::register_artifact_inference_descriptor(crate::artifacts::bmp::standards::v_v3::subsets::any::schema::inferences::bmp_artifact_inference_descriptor().await);
 }
 //#endregion 🔖️Register
 
@@ -899,7 +899,8 @@ pub mod io_registry {
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 
-    pub async fn entries() -> &'static [ComposerEntry] {
+    // 🚫️async: E1 pure table accessor consumed by OnceLock::get_or_init's sync closure — see R9
+    pub fn entries() -> &'static [ComposerEntry] {
         ENTRIES.get_or_init(|| vec![composer_entry_of::<BmpRawAnyComposer>()]).as_slice()
     }
 }

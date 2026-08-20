@@ -12,11 +12,11 @@ pub async fn diff(payload: &InsertRow, base: &SemioTableSnapshot) -> protocol::M
     let mut rows = base.rows.clone();
     let at = payload.index.min(rows.len());
     rows.insert(at, payload.row.clone());
-    let outcome = protocol::MutationOutcome::new(SemioTableDiff { columns: None, rows: Some(SemioTableRowList { values: rows }) });
+    let outcome = protocol::MutationOutcome::new(SemioTableDiff { columns: None, rows: Some(SemioTableRowList { values: rows }) }).await;
     if at == payload.index {
         outcome
     } else {
-        outcome.warn("mutation.clamped", format!("Insert index {} was out of range; inserted at #{} instead.", payload.index, at))
+        outcome.warn("mutation.clamped", format!("Insert index {} was out of range; inserted at #{} instead.", payload.index, at)).await
     }
 }
 //#endregion 🔖️Diff

@@ -115,17 +115,17 @@ pub mod derived_construction {
             Self { snapshot, diagnostics: Vec::new() }
         }
         async fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self::from_snapshot(<PptxSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+            Ok(Self::from_snapshot(<PptxSnapshot as store::ArtifactDsl>::parse_dsl(text).await?).await)
         }
         async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<PptxSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+            Ok(Self::from_snapshot(<PptxSnapshot as store::ArtifactPack>::decode_pack(bytes).await?).await)
         }
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::pptx::schema::mutations::apply_pptx_mutation(&mut self.snapshot, &mutation);
-            (self, diff)
+            (self, diff.await)
         }
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            self.snapshot = <PptxDiff as protocol::MutationDiff<PptxSnapshot>>::apply(&diff, &self.snapshot)?;
+            self.snapshot = <PptxDiff as protocol::MutationDiff<PptxSnapshot>>::apply(&diff, &self.snapshot).await?;
             Ok(self)
         }
         async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
@@ -145,7 +145,7 @@ pub mod derived_construction {
         /// ➕️ Appends a new (initially empty) slide and makes it the active slide for `add_paragraph`.
         pub async fn add_slide(mut self) -> Self {
             self.snapshot.presentation.slides.push(PptxSlide::default());
-            self.rebuild()
+            self.rebuild().await
         }
 
         /// ➕️ Appends a paragraph to the active slide's active `TextBox` shape (the most recently
@@ -158,21 +158,21 @@ pub mod derived_construction {
                     _ => slide.shapes.push(PptxShape::TextBox { text_frame: vec![paragraph], position: PptxTransform::default() }),
                 }
             }
-            self.rebuild()
+            self.rebuild().await
         }
 
         /// ➕️ Appends a single-run plain-text paragraph to the active slide.
         pub async fn add_text_paragraph(self, text: impl Into<String>) -> Self {
-            self.add_paragraph(PptxParagraph::text(text.into()))
+            self.add_paragraph(PptxParagraph::text(text.into()).await).await
         }
 
         /// ➕️ Appends a paragraph made of the given runs (basic bold/italic formatting).
         pub async fn add_runs(self, runs: Vec<PptxRun>) -> Self {
-            self.add_paragraph(PptxParagraph { runs })
+            self.add_paragraph(PptxParagraph { runs }).await
         }
 
         async fn rebuild(mut self) -> Self {
-            self.snapshot = crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::export::serializers::build_minimal_pptx(self.snapshot.presentation);
+            self.snapshot = crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::export::serializers::build_minimal_pptx(self.snapshot.presentation).await;
             self
         }
     }
@@ -206,7 +206,7 @@ pub mod derived_analysis {
             // 🕵️ Real sniff: OPC-shaped bytes whose root officeDocument relationship resolves under
             // `ppt/` — disambiguates from docx/xlsx, which share the same zip magic and OPC shape.
             match source {
-                AnalyzeSource::Binary(bytes) if crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::import::deserializers::sniff_pptx_bytes(bytes) => IoConfidence::High,
+                AnalyzeSource::Binary(bytes) if crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::import::deserializers::sniff_pptx_bytes(bytes).await => IoConfidence::High,
                 AnalyzeSource::Binary(_) | AnalyzeSource::Text(_) => IoConfidence::Low,
             }
         }
@@ -217,7 +217,7 @@ pub mod derived_analysis {
             let mut confidence = IoConfidence::High;
             for source in sources {
                 match source {
-                    AnalyzeSource::Text(text) => match <PptxSnapshot as store::ArtifactDsl>::parse_dsl(text) {
+                    AnalyzeSource::Text(text) => match <PptxSnapshot as store::ArtifactDsl>::parse_dsl(text).await {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
@@ -225,10 +225,10 @@ pub mod derived_analysis {
                         }
                     },
                     AnalyzeSource::Binary(bytes) => {
-                        let result = if crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::import::deserializers::sniff_pptx_bytes(bytes) {
-                            crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::import::deserializers::decode_pptx(bytes).map_err(|err| err.to_string())
+                        let result = if crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::import::deserializers::sniff_pptx_bytes(bytes).await {
+                            crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::import::deserializers::decode_pptx(bytes).await.map_err(|err| err.to_string())
                         } else {
-                            <PptxSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|err| err.to_string())
+                            <PptxSnapshot as store::ArtifactPack>::decode_pack(bytes).await.map_err(|err| err.to_string())
                         };
                         match result {
                             Ok(snapshot) => parts.snapshot = Some(snapshot),
@@ -282,7 +282,7 @@ pub async fn demo_pptx_snapshot() -> PptxSnapshot {
                     PptxShape::TextBox {
                         text_frame: vec![
                             PptxParagraph { runs: vec![PptxRun { text: "Bold and ".into(), bold: true, italic: false, font_size: None }, PptxRun { text: "italic".into(), bold: false, italic: true, font_size: None }] },
-                            PptxParagraph::text("second paragraph"),
+                            PptxParagraph::text("second paragraph").await,
                         ],
                         position: PptxTransform { x: 685800, y: 457200, cx: 7772400, cy: 2286000 },
                     },
@@ -300,7 +300,7 @@ pub async fn demo_pptx_snapshot() -> PptxSnapshot {
                     // conformance law honest without exercising that known gap.
                     PptxShape::Other {
                         node: crate::artifacts::xml::schema::snapshot::xml_document_from_text(r#"<p:graphicFrame><p:nvGraphicFramePr><p:cNvPr id="9" name="Table 1"/></p:nvGraphicFramePr></p:graphicFrame>"#)
-                            .expect("valid logical fallback XML")
+                            .await.expect("valid logical fallback XML")
                             .root
                             .expect("fallback XML root"),
                     },
@@ -308,12 +308,12 @@ pub async fn demo_pptx_snapshot() -> PptxSnapshot {
             },
         ],
     };
-    let mut snap = build_minimal_pptx(presentation);
+    let mut snap = build_minimal_pptx(presentation).await;
     snap.opc.set_part("ppt/media/image1.png", "image/png", b"\x89PNG\r\n\x1a\n".to_vec());
     // 🩹 Normalize the authored binary media plus logical XML through the same deterministic
     // materialization/deserialization boundary used by native I/O.
-    let canonical_bytes = encode_pptx(&snap).expect("encode demo pptx for order canonicalization");
-    decode_pptx(&canonical_bytes).expect("decode demo pptx for order canonicalization")
+    let canonical_bytes = encode_pptx(&snap).await.expect("encode demo pptx for order canonicalization");
+    decode_pptx(&canonical_bytes).await.expect("decode demo pptx for order canonicalization")
 }
 //#endregion 🔖️DocumentHelpers
 

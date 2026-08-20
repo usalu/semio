@@ -8,10 +8,10 @@ use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::Se
 //#region 🔖️Diff
 pub async fn diff(payload: &RemoveRow, base: &SemioTableSnapshot) -> protocol::MutationOutcome<SemioTableDiff> {
     if payload.index >= base.rows.len() {
-        return protocol::MutationOutcome::error("mutation.target-missing", format!("Row #{} does not exist.", payload.index), [payload.index.to_string()]);
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Row #{} does not exist.", payload.index), [payload.index.to_string()]).await;
     }
     let mut rows = base.rows.clone();
     rows.remove(payload.index);
-    protocol::MutationOutcome::new(SemioTableDiff { columns: None, rows: Some(SemioTableRowList { values: rows }) })
+    protocol::MutationOutcome::new(SemioTableDiff { columns: None, rows: Some(SemioTableRowList { values: rows }) }).await
 }
 //#endregion 🔖️Diff

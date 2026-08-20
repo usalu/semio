@@ -1,0 +1,7 @@
+   Compiling syn v2.0.117
+   Compiling thiserror-impl v2.0.18
+   Compiling serde_derive v1.0.228
+    Checking thiserror v2.0.18
+    Checking serde v1.0.228
+    Checking semio-framework-actor v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust)
+    Finished `dev` profile [unoptimized] target(s) in 11.69s

@@ -1,0 +1,53 @@
+    Checking semio-framework-os-services v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust)
+warning: trait `BoxedHostAsyncRuntime` is more private than the item `TimerWheel::spawn_driver`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:544:5
+    |
+544 |     pub async fn spawn_driver<R: BoxedHostAsyncRuntime + 'static>(&self, runtime: &Arc<R>, scope: &ScopeHandle, ctx: OperationContext, sink: Arc<dyn CompletionSink>) {
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ method `TimerWheel::spawn_driver` is reachable at visibility `pub`
+    |
+note: but trait `BoxedHostAsyncRuntime` is only usable at visibility `pub(self)`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:328:1
+    |
+328 | trait BoxedHostAsyncRuntime: HostAsyncRuntime {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    = note: `#[warn(private_bounds)]` on by default
+
+warning: unused implementer of `Future` that must be used
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:187:21
+    |
+187 |                     record.cancel.cancel();
+    |                     ^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: futures do nothing unless you `.await` or poll them
+    = note: `#[warn(unused_must_use)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused implementer of `Future` that must be used
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:255:9
+    |
+255 |         budget.checkout(ThreadRole::IoWorker, plan.io_workers);
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: futures do nothing unless you `.await` or poll them
+
+warning: unused implementer of `Future` that must be used
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:256:9
+    |
+256 |         budget.checkout(ThreadRole::Compute, plan.compute);
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: futures do nothing unless you `.await` or poll them
+
+warning: trait `BoxedHostAsyncRuntime` is more private than the item `HttpPool::spawn_refill_driver`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:919:5
+    |
+919 |     pub async fn spawn_refill_driver<R: BoxedHostAsyncRuntime + 'static>(&self, runtime: &Arc<R>, scope: &ScopeHandle, ctx: OperationContext) {
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ method `HttpPool::spawn_refill_driver` is reachable at visibility `pub`
+    |
+note: but trait `BoxedHostAsyncRuntime` is only usable at visibility `pub(self)`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:328:1
+    |
+328 | trait BoxedHostAsyncRuntime: HostAsyncRuntime {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: `semio-framework-os-services` (lib) generated 5 warnings
+    Finished `dev` profile [unoptimized] target(s) in 0.59s

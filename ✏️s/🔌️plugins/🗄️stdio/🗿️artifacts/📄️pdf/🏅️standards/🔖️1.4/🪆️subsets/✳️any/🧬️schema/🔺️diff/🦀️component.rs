@@ -73,8 +73,8 @@ impl MutationDiff<PdfSnapshot> for PdfDiff {
 impl DiffAlgebra<PdfSnapshot> for PdfDiff {
     /// 🔁️ Diff-level undo, derived generically from `between` (correct by construction).
     async fn inverse(&self, base: &PdfSnapshot) -> Self {
-        let mid = self.apply(base).unwrap();
-        Self::between(&mid, base)
+        let mid = self.apply(base).await.unwrap();
+        Self::between(&mid, base).await
     }
 
     async fn between(base: &PdfSnapshot, other: &PdfSnapshot) -> Self {
@@ -89,7 +89,7 @@ impl DiffAlgebra<PdfSnapshot> for PdfDiff {
 /// 🧩 `SetSnapshot`'s diff is the sparse field-by-field `between(base, next)` -- no full-replace
 /// slot exists on `PdfDiff` to short-circuit into.
 pub async fn diff_set_snapshot(base: &PdfSnapshot, next: &PdfSnapshot) -> PdfDiff {
-    PdfDiff::between(base, next)
+    PdfDiff::between(base, next).await
 }
 //#endregion 🔖️Diff
 

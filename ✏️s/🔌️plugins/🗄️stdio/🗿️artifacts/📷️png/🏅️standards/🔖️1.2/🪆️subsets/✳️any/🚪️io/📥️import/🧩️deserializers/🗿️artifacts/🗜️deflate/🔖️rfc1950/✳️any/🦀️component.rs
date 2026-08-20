@@ -6,7 +6,7 @@ use crate::artifacts::png::{PngSnapshot, STDIO_PNG_DOCUMENT_SCHEMA};
 pub async fn register() {}
 
 pub async fn deserialize(from: &DeflateSnapshot) -> Result<PngSnapshot, store::PackError> {
-    let mut snap = crate::artifacts::png::engine::decode_png(&from.payload).map_err(|e| store::PackError::Schema(e))?;
+    let mut snap = crate::artifacts::png::engine::decode_png(&from.payload).await.map_err(|e| store::PackError::Schema(e))?;
     snap.schema = STDIO_PNG_DOCUMENT_SCHEMA.into();
     Ok(snap)
 }

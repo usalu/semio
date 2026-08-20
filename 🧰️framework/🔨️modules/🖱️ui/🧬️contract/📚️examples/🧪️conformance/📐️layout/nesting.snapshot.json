@@ -1,0 +1,99 @@
+{
+  "surface": "conformance.layout.nesting",
+  "revision": 0,
+  "root": 0,
+  "nodes": [
+    {
+      "id": 0,
+      "key": "#0",
+      "component": {
+        "type": "container"
+      },
+      "layout": {
+        "kind": "stack",
+        "axis": "vertical",
+        "gap": "none",
+        "padding": {
+          "all": "none"
+        },
+        "align": "stretch",
+        "justify": "start",
+        "grow": false,
+        "wrap": false
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {},
+      "children": [
+        1
+      ]
+    },
+    {
+      "id": 1,
+      "key": "#0",
+      "component": {
+        "type": "container"
+      },
+      "layout": {
+        "kind": "grid",
+        "columns": [
+          "auto"
+        ],
+        "rows": [
+          "auto"
+        ],
+        "columnGap": "none",
+        "rowGap": "none",
+        "padding": {
+          "all": "none"
+        },
+        "align": "stretch",
+        "justify": "start"
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {},
+      "children": [
+        2
+      ]
+    },
+    {
+      "id": 2,
+      "key": "#0",
+      "component": {
+        "type": "container"
+      },
+      "layout": {
+        "kind": "scroll",
+        "axes": "both",
+        "padding": {
+          "all": "none"
+        },
+        "sizing": "fill"
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {},
+      "children": [
+        3
+      ]
+    },
+    {
+      "id": 3,
+      "key": "#0",
+      "component": {
+        "type": "text",
+        "value": "Deepest"
+      },
+      "layout": {
+        "kind": "leaf",
+        "width": "hug",
+        "height": "hug"
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {}
+    }
+  ],
+  "layoutEpoch": 0
+}

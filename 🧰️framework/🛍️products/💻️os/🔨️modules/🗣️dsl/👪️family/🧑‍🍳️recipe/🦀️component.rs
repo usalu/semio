@@ -99,14 +99,14 @@ mod tests {
     async fn parses_a_typed_call_step_with_a_dotted_target() {
         let step = parse_step_text("step-1: state.set(counter 0)").await.expect("parse_step_text");
         assert_eq!(step, RecipeStep { name: "step-1".to_string(), target: "state.set".to_string(), args: vec!["counter".to_string(), "0".to_string()] });
-        assert_eq!(print_step(&step), "step-1: state.set(counter 0)");
+        assert_eq!(print_step(&step).await, "step-1: state.set(counter 0)");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn parses_a_step_with_no_args() {
         let step = parse_step_text("step-2: state.reset()").await.expect("parse_step_text");
         assert_eq!(step.args, Vec::<String>::new());
-        assert_eq!(print_step(&step), "step-2: state.reset()");
+        assert_eq!(print_step(&step).await, "step-2: state.reset()");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -131,7 +131,7 @@ mod tests {
         let sources = vec!["step-1: state.set(counter 0)", "step-2: state.reset()", "step-3: math.add(1 2 3)"];
         for source in sources {
             let step = parse_step_text(source).await.unwrap_or_else(|e| panic!("parse of {source:?} failed: {e:?}"));
-            let printed = print_step(&step);
+            let printed = print_step(&step).await;
             assert_eq!(printed, source);
             let reparsed = parse_step_text(&printed).await.unwrap_or_else(|e| panic!("reparse of {printed:?} failed: {e:?}"));
             assert_eq!(reparsed, step);

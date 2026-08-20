@@ -12,7 +12,7 @@ async fn any_edge<G: GraphView>(graph: &G, u: NodeId, v: NodeId) -> EdgeRef {
 
 /// 🔌️ Every edge incident to `node`: out-edges only for directed views (matching successor-direction traversal), all touching edges for undirected views. Parallel edges (multigraphs) each appear once per their `EdgeId`.
 async fn incident_edges<G: GraphView>(graph: &G, node: NodeId) -> Vec<EdgeRef> {
-    if graph.is_directed() {
+    if graph.is_directed().await {
         graph.out_neighbors(node).flat_map(|nbr| graph.edges_between(node, nbr)).collect()
     } else {
         graph.neighbors(node).flat_map(|nbr| graph.edges_between(node, nbr)).collect()
@@ -34,7 +34,7 @@ pub async fn generic_bfs_edges<G: GraphView, F: Fn(&G, NodeId) -> Vec<NodeId>>(g
     while let Some(node) = queue.pop_front() {
         for nbr in neighbor_fn(graph, node) {
             if visited.insert(nbr) {
-                result.push(any_edge(graph, node, nbr));
+                result.push(any_edge(graph, node, nbr).await);
                 queue.push_back(nbr);
             }
         }
@@ -44,12 +44,12 @@ pub async fn generic_bfs_edges<G: GraphView, F: Fn(&G, NodeId) -> Vec<NodeId>>(g
 
 /// 🔁️ Breadth-first tree edges from `source`, in discovery order (NetworkX `bfs_edges`).
 pub async fn bfs_edges<G: GraphView>(graph: &G, source: NodeId) -> Vec<EdgeRef> {
-    generic_bfs_edges(graph, source, |g: &G, n: NodeId| -> Vec<NodeId> { g.out_neighbors(n).collect() })
+    generic_bfs_edges(graph, source, |g: &G, n: NodeId| -> Vec<NodeId> { g.out_neighbors(n).collect() }).await
 }
 
 /// 🌳️ Breadth-first spanning tree edges from `source` (NetworkX `bfs_tree`); NetworkX returns a tree graph, this crate returns the same edge list as `bfs_edges` — callers build a graph from it if a materialized tree is needed.
 pub async fn bfs_tree<G: GraphView>(graph: &G, source: NodeId) -> Vec<EdgeRef> {
-    bfs_edges(graph, source)
+    bfs_edges(graph, source).await
 }
 
 /// 🧱️ Multi-source breadth-first layering: `layers[0]` is the (deduplicated, existing) `sources`, `layers[k]` is every node first reached at distance `k` (NetworkX `bfs_layers`).
@@ -141,7 +141,7 @@ pub async fn dfs_edges<G: GraphView>(graph: &G, source: NodeId) -> Vec<EdgeRef> 
             let nbr = stack[i].1[stack[i].2];
             stack[i].2 += 1;
             if visited.insert(nbr) {
-                result.push(any_edge(graph, node, nbr));
+                result.push(any_edge(graph, node, nbr).await);
                 stack.push((nbr, graph.out_neighbors(nbr).collect(), 0));
             }
         } else {
@@ -153,7 +153,7 @@ pub async fn dfs_edges<G: GraphView>(graph: &G, source: NodeId) -> Vec<EdgeRef> 
 
 /// 🌲️ Depth-first spanning tree edges from `source` (NetworkX `dfs_tree`); same simplification as `bfs_tree` — returns the edge list, not a materialized tree graph.
 pub async fn dfs_tree<G: GraphView>(graph: &G, source: NodeId) -> Vec<EdgeRef> {
-    dfs_edges(graph, source)
+    dfs_edges(graph, source).await
 }
 
 /// 🔼️ Nodes in depth-first preorder (parent emitted before its subtree) starting at `source` (NetworkX `dfs_preorder_nodes`).
@@ -211,10 +211,10 @@ pub async fn dfs_labeled_edges<G: GraphView>(graph: &G, source: NodeId) -> Vec<(
             stack[i].2 += 1;
             let edge = any_edge(graph, node, nbr);
             if visited.insert(nbr) {
-                result.push((edge, true));
+                result.push((edge.await, true));
                 stack.push((nbr, graph.out_neighbors(nbr).collect(), 0, Some(node)));
-            } else if directed || Some(nbr) != parent {
-                result.push((edge, false));
+            } else if directed.await || Some(nbr) != parent {
+                result.push((edge.await, false));
             }
         } else {
             stack.pop();
@@ -253,7 +253,7 @@ pub async fn edge_bfs<G: GraphView>(graph: &G, source: NodeId) -> Vec<EdgeRef> {
     let mut visited_edges: BTreeSet<EdgeId> = BTreeSet::new();
     visited_nodes.insert(source);
     let mut queue: VecDeque<(NodeId, Vec<EdgeRef>, usize)> = VecDeque::new();
-    queue.push_back((source, incident_edges(graph, source), 0));
+    queue.push_back((source, incident_edges(graph, source).await, 0));
     while !queue.is_empty() {
         let node = queue[0].0;
         if queue[0].2 < queue[0].1.len() {
@@ -263,7 +263,7 @@ pub async fn edge_bfs<G: GraphView>(graph: &G, source: NodeId) -> Vec<EdgeRef> {
                 result.push(edge);
                 let other = if edge.u == node { edge.v } else { edge.u };
                 if visited_nodes.insert(other) {
-                    queue.push_back((other, incident_edges(graph, other), 0));
+                    queue.push_back((other, incident_edges(graph, other).await, 0));
                 }
             }
         } else {
@@ -282,7 +282,7 @@ pub async fn edge_dfs<G: GraphView>(graph: &G, source: NodeId) -> Vec<EdgeRef> {
     let mut visited_nodes: BTreeSet<NodeId> = BTreeSet::new();
     let mut visited_edges: BTreeSet<EdgeId> = BTreeSet::new();
     visited_nodes.insert(source);
-    let mut stack: Vec<(NodeId, Vec<EdgeRef>, usize)> = vec![(source, incident_edges(graph, source), 0)];
+    let mut stack: Vec<(NodeId, Vec<EdgeRef>, usize)> = vec![(source, incident_edges(graph, source).await, 0)];
     while !stack.is_empty() {
         let i = stack.len() - 1;
         let node = stack[i].0;
@@ -293,7 +293,7 @@ pub async fn edge_dfs<G: GraphView>(graph: &G, source: NodeId) -> Vec<EdgeRef> {
                 result.push(edge);
                 let other = if edge.u == node { edge.v } else { edge.u };
                 if visited_nodes.insert(other) {
-                    stack.push((other, incident_edges(graph, other), 0));
+                    stack.push((other, incident_edges(graph, other).await, 0));
                 }
             }
         } else {
@@ -334,7 +334,7 @@ pub async fn bfs_beam_edges<G: GraphView>(graph: &G, source: NodeId, width: usiz
         let mut next_frontier = Vec::new();
         for child in chosen {
             let parent = discovered[&child];
-            result.push(any_edge(graph, parent, child));
+            result.push(any_edge(graph, parent, child).await);
             visited.insert(child);
             next_frontier.push(child);
         }

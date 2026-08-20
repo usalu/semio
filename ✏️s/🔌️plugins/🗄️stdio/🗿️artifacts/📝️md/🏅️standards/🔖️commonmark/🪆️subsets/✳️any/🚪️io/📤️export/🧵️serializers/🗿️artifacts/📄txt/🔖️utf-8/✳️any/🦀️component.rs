@@ -10,11 +10,11 @@ pub async fn register() {}
 /// 📤️ Encode md into a TxtSnapshot (rendered markdown text -- see `render_markdown_blocks`'s
 /// doc comment for the documented normal form this renders to).
 pub async fn serialize(from: &MdSnapshot) -> Result<TxtSnapshot, store::PackError> {
-    Ok(TxtSnapshot::from_body(&crate::artifacts::md::standards::v_commonmark::subsets::any::io::export::serializers::render_markdown_blocks(&from.blocks)))
+    Ok(TxtSnapshot::from_body(&crate::artifacts::md::standards::v_commonmark::subsets::any::io::export::serializers::render_markdown_blocks(&from.blocks)).await)
 }
 
 /// 📤️ Encode as txt DSL.
 pub async fn serialize_text(from: &MdSnapshot) -> Result<String, store::PackError> {
-    Ok(store::ArtifactDsl::print_dsl(&serialize(from)?))
+    Ok(store::ArtifactDsl::print_dsl(&serialize(from).await?).await)
 }
 //#endregion 🔖️Codec

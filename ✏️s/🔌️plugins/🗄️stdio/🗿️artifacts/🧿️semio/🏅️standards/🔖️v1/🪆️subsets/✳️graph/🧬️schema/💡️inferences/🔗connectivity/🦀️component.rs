@@ -42,16 +42,16 @@ pub struct SemioGraphNodeConnectivity {
 /// lookup needed to translate back. Node ids are assigned in `nodes` array order — deterministic
 /// because that order is itself the persisted snapshot order, never a `HashMap` iteration order.
 async fn build_undirected(snapshot: &SemioGraphSnapshot) -> (UndirectedGraph, BTreeMap<String, NodeId>) {
-    let mut graph = UndirectedGraph::new();
+    let mut graph = UndirectedGraph::new().await;
     let mut id_of: BTreeMap<String, NodeId> = BTreeMap::new();
     for (index, node) in snapshot.nodes.iter().enumerate() {
         let id = index as NodeId;
         id_of.insert(node.id.value.clone(), id);
-        graph.add_node_with_id(id, PropertyBag::new());
+        graph.add_node_with_id(id, PropertyBag::new()).await;
     }
     for edge in &snapshot.edges {
         if let (Some(&u), Some(&v)) = (id_of.get(&edge.source.value), id_of.get(&edge.target.value)) {
-            graph.add_edge(u, v);
+            graph.add_edge(u, v).await;
         }
     }
     (graph, id_of)
@@ -114,12 +114,12 @@ impl store::InferredField<SemioGraphSnapshot> for NodeConnectivity {
     }
 
     async fn compute(snapshot: &SemioGraphSnapshot, key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {
-        let (graph, id_of) = build_undirected(snapshot);
+        let (graph, id_of) = build_undirected(snapshot).await;
         let Some(&id) = id_of.get(key.as_str()) else {
             return SemioGraphNodeConnectivity::default();
         };
         let degree = graph.degree(id) as u32;
-        let component = component_of(&graph).get(&id).copied().unwrap_or(0);
+        let component = component_of(&graph).await.get(&id).copied().unwrap_or(0);
         SemioGraphNodeConnectivity { degree, component }
     }
 }

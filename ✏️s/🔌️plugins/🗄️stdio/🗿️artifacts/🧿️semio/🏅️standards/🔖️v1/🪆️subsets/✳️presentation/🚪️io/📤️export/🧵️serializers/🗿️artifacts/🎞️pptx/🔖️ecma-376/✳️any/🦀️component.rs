@@ -42,9 +42,9 @@ pub(crate) async fn block_to_pptx_paragraphs(block: &DocBlock) -> Vec<PptxParagr
         DocBlock::Heading { runs, .. } => vec![PptxParagraph { runs: runs.iter().map(map_semio_run).collect() }],
         DocBlock::List { items, .. } => items.iter().flat_map(|item| item.blocks.iter().flat_map(block_to_pptx_paragraphs)).collect(),
         DocBlock::Table { rows } => rows.iter().flat_map(|row| row.cells.iter().flat_map(|cell| cell.blocks.iter().flat_map(block_to_pptx_paragraphs))).collect(),
-        DocBlock::Code { text, .. } => vec![PptxParagraph::text(text.clone())],
+        DocBlock::Code { text, .. } => vec![PptxParagraph::text(text.clone()).await],
         DocBlock::Quote { blocks } => blocks.iter().flat_map(block_to_pptx_paragraphs).collect(),
-        DocBlock::Image { alt, .. } => vec![PptxParagraph::text(alt.clone())],
+        DocBlock::Image { alt, .. } => vec![PptxParagraph::text(alt.clone()).await],
         DocBlock::PageBreak => Vec::new(),
     }
 }
@@ -66,10 +66,10 @@ pub(crate) async fn placeholder_kind_to_str(kind: &PlaceholderKind) -> String {
 
 async fn map_shape(shape: &SlideShape) -> Option<PptxShape> {
     match shape {
-        SlideShape::TextBox { frame, blocks } => Some(PptxShape::TextBox { text_frame: blocks.iter().flat_map(block_to_pptx_paragraphs).collect(), position: transform_from_frame(frame) }),
-        SlideShape::Picture { frame, image } => Some(PptxShape::Picture { blip_rel_id: image.asset_id.clone(), position: transform_from_frame(frame) }),
+        SlideShape::TextBox { frame, blocks } => Some(PptxShape::TextBox { text_frame: blocks.iter().flat_map(block_to_pptx_paragraphs).collect(), position: transform_from_frame(frame).await }),
+        SlideShape::Picture { frame, image } => Some(PptxShape::Picture { blip_rel_id: image.asset_id.clone(), position: transform_from_frame(frame).await }),
         SlideShape::Table { .. } => None,
-        SlideShape::Placeholder { frame, kind } => Some(PptxShape::Placeholder { kind: placeholder_kind_to_str(kind), text_frame: Vec::new(), position: transform_from_frame(frame) }),
+        SlideShape::Placeholder { frame, kind } => Some(PptxShape::Placeholder { kind: placeholder_kind_to_str(kind).await, text_frame: Vec::new(), position: transform_from_frame(frame).await }),
     }
 }
 //#endregion 🔖️FieldMapping
@@ -85,7 +85,7 @@ impl ArtifactSerializer for SemioPresentationToPptx {
 
     async fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         let slides = from.slides.iter().map(|slide| PptxSlide { shapes: slide.shapes.iter().filter_map(map_shape).collect() }).collect();
-        Ok(PptxSnapshot::from_parts(OpcPackage::default(), Vec::new(), PptxPresentation { slides }))
+        Ok(PptxSnapshot::from_parts(OpcPackage::default(), Vec::new(), PptxPresentation { slides }).await)
     }
 }
 //#endregion 🔖️Serializer

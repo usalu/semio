@@ -1,0 +1,30 @@
+{
+  "case": "shortcut",
+  "kind": "accessibility",
+  "description": "A Button carrying a keyboard shortcut hint.",
+  "outcome": "accept",
+  "limits": null,
+  "tree": {
+    "root": 0,
+    "nodeCount": 1,
+    "shape": [
+      {
+        "id": 0,
+        "key": "#0",
+        "type": "button",
+        "children": []
+      }
+    ]
+  },
+  "accessibility": [
+    {
+      "id": 0,
+      "label": "Save",
+      "description": null,
+      "live": "off",
+      "shortcut": "Ctrl+S",
+      "hidden": false
+    }
+  ],
+  "actionIds": []
+}

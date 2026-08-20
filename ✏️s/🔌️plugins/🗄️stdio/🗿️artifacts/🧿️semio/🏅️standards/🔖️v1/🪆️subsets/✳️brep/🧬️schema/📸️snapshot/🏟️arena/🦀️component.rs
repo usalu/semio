@@ -95,11 +95,11 @@ impl<T, Id: ArenaId> Store<T, Id> {
         if let Some(index) = self.free.pop() {
             let slot = &mut self.slots[index as usize];
             slot.value = Some(value);
-            Id::from_raw(index, slot.generation)
+            Id::from_raw(index, slot.generation).await
         } else {
             let index = self.slots.len() as u32;
             self.slots.push(Slot { generation: 0, value: Some(value) });
-            Id::from_raw(index, 0)
+            Id::from_raw(index, 0).await
         }
     }
     pub async fn get(&self, id: Id) -> Option<&T> {
@@ -119,7 +119,7 @@ impl<T, Id: ArenaId> Store<T, Id> {
         }
     }
     pub async fn contains(&self, id: Id) -> bool {
-        self.get(id).is_some()
+        self.get(id).await.is_some()
     }
     pub async fn remove(&mut self, id: Id) -> Option<T> {
         let slot = self.slots.get_mut(id.raw_index() as usize)?;
@@ -128,7 +128,7 @@ impl<T, Id: ArenaId> Store<T, Id> {
         }
         let value = slot.value.take()?;
         slot.generation = slot.generation.wrapping_add(1);
-        self.free.push(id.raw_index());
+        self.free.push(id.raw_index().await);
         Some(value)
     }
     pub async fn len(&self) -> usize {

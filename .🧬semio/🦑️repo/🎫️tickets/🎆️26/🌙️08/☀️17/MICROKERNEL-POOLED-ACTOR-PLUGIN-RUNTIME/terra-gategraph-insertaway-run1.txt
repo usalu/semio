@@ -1,0 +1,29 @@
+[pass 1] errors=577 await-edits=318 ambiguous=0 other=7
+  applied 311
+[pass 2] errors=280 await-edits=7 ambiguous=0 other=10
+  applied 7
+[pass 3] errors=278 await-edits=1 ambiguous=0 other=13
+  applied 1
+[pass 4] errors=278 await-edits=1 ambiguous=0 other=13
+  applied 1
+[pass 5] errors=278 await-edits=1 ambiguous=0 other=13
+  applied 1
+[pass 6] errors=278 await-edits=1 ambiguous=0 other=13
+  applied 1
+[pass 7] errors=278 await-edits=1 ambiguous=0 other=13
+  applied 1
+[pass 8] errors=278 await-edits=1 ambiguous=0 other=13
+  applied 1
+[pass 9] errors=278 await-edits=1 ambiguous=0 other=13
+  applied 1
+[pass 10] errors=278 await-edits=1 ambiguous=0 other=13
+  applied 1
+[pass 11] errors=278 await-edits=1 ambiguous=0 other=13
+  applied 1
+[pass 12] errors=278 await-edits=1 ambiguous=0 other=13
+  applied 1
+[pass 13] errors=278 await-edits=1 ambiguous=0 other=13
+  applied 1
+[pass 14] errors=277 await-edits=0 ambiguous=0 other=13
+  fixpoint reached (no unambiguous .await edits left)
+report -> /Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/terra-gategraph-insertaway-report1.json

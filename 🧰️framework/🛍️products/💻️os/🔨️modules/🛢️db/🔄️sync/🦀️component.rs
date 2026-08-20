@@ -36,9 +36,9 @@ use crate::db_durability::Frontier;
 /// relay it as a typed `protocol::MutationEnvelope` in a `ServerFrame::Commands`), so it is the
 /// natural place to fix this convention. Once `db_artifact` lands it becomes the writer of these
 /// bytes; this codec is the seam it should reuse rather than inventing a second one.
-pub fn encode_command_envelope(envelope: &protocol::MutationEnvelope) -> Vec<u8> {
+pub async fn encode_command_envelope(envelope: &protocol::MutationEnvelope) -> Vec<u8> {
     let mut out = Vec::new();
-    protocol::encode_envelope(envelope, &mut out);
+    protocol::encode_envelope(envelope, &mut out).await;
     out
 }
 
@@ -46,10 +46,10 @@ pub fn encode_command_envelope(envelope: &protocol::MutationEnvelope) -> Vec<u8>
 /// `DbLimits::default().max_command_bytes` BEFORE decoding anything sized by it (mirrors
 /// `pack_core`'s stated invariant), then maps a decode failure to `DbError::Corrupt` rather than
 /// leaking `protocol::ProtocolError`.
-pub fn decode_command_envelope(bytes: &[u8]) -> Result<protocol::MutationEnvelope, DbError> {
+pub async fn decode_command_envelope(bytes: &[u8]) -> Result<protocol::MutationEnvelope, DbError> {
     check_len(bytes.len() as u64, DbLimits::default().max_command_bytes, "wal_command_envelope")?;
     let mut pos = 0usize;
-    let envelope = protocol::decode_envelope(bytes, &mut pos).map_err(|error| DbError::Corrupt(format!("malformed wal command envelope: {error}")))?;
+    let envelope = protocol::decode_envelope(bytes, &mut pos).await.map_err(|error| DbError::Corrupt(format!("malformed wal command envelope: {error}")))?;
     Ok(envelope)
 }
 //#endregion 🔖️Codec
@@ -89,7 +89,7 @@ pub async fn replay_sync_state(storage: &impl db_storage::WalStorage, document: 
     for record in &records {
         match record {
             db_wal::WalRecord::Command(bytes) => {
-                commands.push(decode_command_envelope(bytes)?);
+                commands.push(decode_command_envelope(bytes).await?);
                 command_digests.push(*blake3::hash(bytes).as_bytes());
             }
             db_wal::WalRecord::TxCommit { .. } => commit_seq += 1,
@@ -108,6 +108,7 @@ pub async fn replay_sync_state(storage: &impl db_storage::WalStorage, document: 
 /// @emoji 🔐️ Folds per-command digests into one combined digest — see `ArtifactSyncState`'s doc
 /// for the derivation this implements. `[0u8; 32]` for an empty document, matching
 /// `Frontier::genesis`'s all-zero `chain_hash`.
+// 🚫️async: E1 pure accessor, always used inline in a struct-literal field position — see R9
 fn fold_content_chain(digests: &[[u8; 32]]) -> [u8; 32] {
     if digests.is_empty() {
         return [0u8; 32];
@@ -125,8 +126,8 @@ fn fold_content_chain(digests: &[[u8; 32]]) -> [u8; 32] {
 /// discoverability — frontier-delta computation is this crate's stated responsibility, so
 /// `db_sync::frontier_delta` is the expected first stop even though the primitive itself lives in
 /// `db_core`.
-pub fn frontier_delta(from: &Frontier, to: &Frontier) -> Result<FrontierDelta, DbError> {
-    FrontierDelta::between(from, to)
+pub async fn frontier_delta(from: &Frontier, to: &Frontier) -> Result<FrontierDelta, DbError> {
+    FrontierDelta::between(from, to).await
 }
 
 /// @emoji 🌉️ `Frontier` -> `protocol::RuntimeFrontierSummary` (the wire-frame shape
@@ -134,7 +135,7 @@ pub fn frontier_delta(from: &Frontier, to: &Frontier) -> Result<FrontierDelta, D
 /// `Frontier` counterpart (see `ArtifactSyncState`'s doc); callers pass whatever they
 /// consider the frontier's tip identity (`state_frontier_summary` below supplies the natural
 /// choice: the last replayed command's `mutation_id`).
-pub fn to_frontier_summary(frontier: &Frontier, head_edit_id: String) -> protocol::RuntimeFrontierSummary {
+pub async fn to_frontier_summary(frontier: &Frontier, head_edit_id: String) -> protocol::RuntimeFrontierSummary {
     protocol::RuntimeFrontierSummary { document_id: protocol::ArtifactId(frontier.document.0.clone()), head_edit_ordinal: frontier.head_seq, head_edit_id, last_commit_seq: frontier.commit_seq, chain_hash: frontier.chain_hash }
 }
 
@@ -143,6 +144,7 @@ pub fn to_frontier_summary(frontier: &Frontier, head_edit_id: String) -> protoco
 /// wire frontier into something `missing_commands`/`decide_bootstrap` can compare against a
 /// `ArtifactSyncState`. `epoch` is always `0` (see `ArtifactSyncState`'s doc: `RuntimeFrontierSummary`
 /// carries no cluster-fencing epoch at all).
+// 🚫️async: E1 pure accessor consumed by a sync Option::map — see R9
 pub fn from_frontier_summary(summary: &protocol::RuntimeFrontierSummary) -> Frontier {
     Frontier { document: ArtifactId(summary.document_id.0.clone()), head_seq: summary.head_edit_ordinal, commit_seq: summary.last_commit_seq, chain_hash: summary.chain_hash, epoch: 0 }
 }
@@ -150,9 +152,9 @@ pub fn from_frontier_summary(summary: &protocol::RuntimeFrontierSummary) -> Fron
 /// @emoji 🌉️ `state`'s own frontier as a `RuntimeFrontierSummary`, with `head_edit_id` filled from
 /// the last replayed command's `mutation_id` (empty string for a genesis document with no
 /// commands yet).
-pub fn state_frontier_summary(state: &ArtifactSyncState) -> protocol::RuntimeFrontierSummary {
+pub async fn state_frontier_summary(state: &ArtifactSyncState) -> protocol::RuntimeFrontierSummary {
     let head_edit_id = state.commands.last().map(|envelope| envelope.mutation_id.0.clone()).unwrap_or_default();
-    to_frontier_summary(&state.frontier, head_edit_id)
+    to_frontier_summary(&state.frontier, head_edit_id).await
 }
 //#endregion 🔖️Frontier
 
@@ -169,7 +171,7 @@ pub fn state_frontier_summary(state: &ArtifactSyncState) -> protocol::RuntimeFro
 /// cannot find them. This function is this crate's `WAL_COMMAND`-shaped analog, built the same
 /// way (a linear ordinal-indexed slice) but over `ArtifactSyncState::commands`, which is already
 /// the fully-decoded, ordinal-indexed sequence `replay_sync_state` produced.
-pub fn missing_commands(state: &ArtifactSyncState, replica: &Frontier) -> Result<Vec<protocol::MutationEnvelope>, DbError> {
+pub async fn missing_commands(state: &ArtifactSyncState, replica: &Frontier) -> Result<Vec<protocol::MutationEnvelope>, DbError> {
     if replica.document != state.frontier.document {
         return Err(DbError::InvalidArgument(format!("frontier document mismatch: replica {} vs server {}", replica.document, state.frontier.document)));
     }
@@ -186,8 +188,8 @@ pub fn missing_commands(state: &ArtifactSyncState, replica: &Frontier) -> Result
 /// stamped with `state`'s current frontier — `origin` is the relaying actor identity the caller
 /// (the semio_hub session layer, which owns its own actor identity) supplies; this crate has no opinion
 /// on it beyond passing it through.
-pub fn commands_server_frame(state: &ArtifactSyncState, envelopes: Vec<protocol::MutationEnvelope>, origin: protocol::ActorId) -> protocol::ServerFrame {
-    protocol::ServerFrame::Commands { envelopes, origin, frontier: state_frontier_summary(state) }
+pub async fn commands_server_frame(state: &ArtifactSyncState, envelopes: Vec<protocol::MutationEnvelope>, origin: protocol::ActorId) -> protocol::ServerFrame {
+    protocol::ServerFrame::Commands { envelopes, origin, frontier: state_frontier_summary(state).await }
 }
 //#endregion 🔖️MissingCommands
 
@@ -215,7 +217,7 @@ pub async fn decide_bootstrap(state: &ArtifactSyncState, snapshots: &impl db_sto
     let replica_head_seq = replica.map_or(0, |frontier| frontier.head_seq);
     if replica_head_seq >= state.floor_head_seq {
         let missing = match replica {
-            Some(frontier) => missing_commands(state, frontier)?,
+            Some(frontier) => missing_commands(state, frontier).await?,
             None => state.commands.clone(),
         };
         return Ok(if missing.is_empty() { BootstrapPlan::None } else { BootstrapPlan::Tail { envelopes: missing } });
@@ -233,7 +235,7 @@ pub async fn decide_bootstrap(state: &ArtifactSyncState, snapshots: &impl db_sto
 /// @emoji 🎫️ Issues a fresh resume token for `frontier` — the send-path half of resume tokens (see
 /// module doc for why the receive path uses `Hello.frontier` instead). `Welcome.resume_token` is
 /// always populated from this.
-pub fn issue_resume_token(frontier: &Frontier) -> Result<String, DbError> {
+pub async fn issue_resume_token(frontier: &Frontier) -> Result<String, DbError> {
     Ok(ResumeToken::encode(frontier)?.as_str().to_string())
 }
 //#endregion 🔖️ResumeToken
@@ -254,10 +256,10 @@ pub struct WelcomeResponse {
 /// `Bootstrap::Snapshot.inline` (no follow-up frames); a larger one is chunked instead — this
 /// crate's own choice of threshold behavior, since the contract fixes `Bootstrap::Snapshot`'s two
 /// shapes but not when to prefer one over the other.
-fn lower_bootstrap_plan(plan: &BootstrapPlan, state: &ArtifactSyncState, origin: &protocol::ActorId, snapshot_chunk_bytes: usize) -> (protocol::Bootstrap, Vec<protocol::ServerFrame>) {
+async fn lower_bootstrap_plan(plan: &BootstrapPlan, state: &ArtifactSyncState, origin: &protocol::ActorId, snapshot_chunk_bytes: usize) -> (protocol::Bootstrap, Vec<protocol::ServerFrame>) {
     match plan {
         BootstrapPlan::None => (protocol::Bootstrap::None, Vec::new()),
-        BootstrapPlan::Tail { envelopes } => (protocol::Bootstrap::Tail, vec![commands_server_frame(state, envelopes.clone(), origin.clone())]),
+        BootstrapPlan::Tail { envelopes } => (protocol::Bootstrap::Tail, vec![commands_server_frame(state, envelopes.clone(), origin.clone()).await]),
         BootstrapPlan::Snapshot { bytes, pack_hash, .. } => {
             if bytes.len() <= snapshot_chunk_bytes {
                 (protocol::Bootstrap::Snapshot { pack_hash: *pack_hash, inline: Some(bytes.clone()) }, Vec::new())
@@ -274,13 +276,13 @@ fn lower_bootstrap_plan(plan: &BootstrapPlan, state: &ArtifactSyncState, origin:
 /// @emoji 🏗️ Builds the full `WelcomeResponse` for `plan` against `state`. `snapshot_chunk_bytes`
 /// must be non-zero (validated before `lower_bootstrap_plan` could otherwise divide the snapshot
 /// into a runaway number of zero-progress chunks).
-pub fn build_welcome(state: &ArtifactSyncState, plan: &BootstrapPlan, session_id: String, origin: &protocol::ActorId, snapshot_chunk_bytes: usize) -> Result<WelcomeResponse, DbError> {
+pub async fn build_welcome(state: &ArtifactSyncState, plan: &BootstrapPlan, session_id: String, origin: &protocol::ActorId, snapshot_chunk_bytes: usize) -> Result<WelcomeResponse, DbError> {
     if snapshot_chunk_bytes == 0 {
         return Err(DbError::InvalidArgument("snapshot_chunk_bytes must be non-zero".to_string()));
     }
-    let resume_token = issue_resume_token(&state.frontier)?;
-    let (bootstrap, follow_up) = lower_bootstrap_plan(plan, state, origin, snapshot_chunk_bytes);
-    let welcome = protocol::ServerFrame::Welcome { session_id, resume_token, server_frontier: state_frontier_summary(state), bootstrap };
+    let resume_token = issue_resume_token(&state.frontier).await?;
+    let (bootstrap, follow_up) = lower_bootstrap_plan(plan, state, origin, snapshot_chunk_bytes).await;
+    let welcome = protocol::ServerFrame::Welcome { session_id, resume_token, server_frontier: state_frontier_summary(state).await, bootstrap };
     Ok(WelcomeResponse { welcome, follow_up })
 }
 
@@ -300,7 +302,7 @@ pub async fn handle_hello<R: semio_framework_async::HostAsyncRuntime>(
     let state = replay_sync_state(&storage.wal().await, document).await?;
     let replica = hello_frontier.map(from_frontier_summary);
     let plan = decide_bootstrap(&state, &storage.snapshot().await, replica.as_ref()).await?;
-    build_welcome(&state, &plan, session_id, origin, snapshot_chunk_bytes)
+    build_welcome(&state, &plan, session_id, origin, snapshot_chunk_bytes).await
 }
 
 /// @emoji 📡️ Mid-session catch-up: a connected replica sends `ClientFrame::FrontierAdvertise`
@@ -309,8 +311,8 @@ pub async fn handle_hello<R: semio_framework_async::HostAsyncRuntime>(
 pub async fn handle_frontier_advertise(storage: &impl db_storage::WalStorage, document: ArtifactId, advertised: &protocol::RuntimeFrontierSummary, origin: protocol::ActorId) -> Result<Option<protocol::ServerFrame>, DbError> {
     let state = replay_sync_state(storage, document).await?;
     let replica = from_frontier_summary(advertised);
-    let missing = missing_commands(&state, &replica)?;
-    Ok(if missing.is_empty() { None } else { Some(commands_server_frame(&state, missing, origin)) })
+    let missing = missing_commands(&state, &replica).await?;
+    Ok(if missing.is_empty() { None } else { Some(commands_server_frame(&state, missing, origin).await) })
 }
 //#endregion 🔖️Hello
 
@@ -323,7 +325,7 @@ mod tests {
     use db_wal::{ArtifactWal, GroupCommitPolicy, WalRecord};
 
     //#region 🧸️Fixtures
-    fn sample_envelope(id: &str, seq: u64) -> protocol::MutationEnvelope {
+    async fn sample_envelope(id: &str, seq: u64) -> protocol::MutationEnvelope {
         protocol::MutationEnvelope {
             mutation_id: protocol::MutationId(id.to_string()),
             document_id: protocol::ArtifactId("doc-1".to_string()),
@@ -331,48 +333,48 @@ mod tests {
             dependencies: Vec::new(),
             diff: protocol::ArtifactDiff { schema: protocol::SchemaId("diff.v1".to_string()), payload: seq.to_le_bytes().to_vec() },
             inverse: protocol::InverseMutation { schema: protocol::SchemaId("diff.v1".to_string()), payload: Vec::new() },
-            timestamp: protocol::HybridLogicalTimestamp::new(1, seq),
+            timestamp: protocol::HybridLogicalTimestamp::new(1, seq).await,
         }
     }
 
     /// @emoji 🧸️ Creates `document`'s WAL in `storage` and submits `count` sample commands
     /// (ids `"op-0".."op-{count-1}"`), each `Fsync`-durable so replay sees them immediately.
-    fn seed_wal(storage: &MemoryStorage, document: &ArtifactId, count: u64) {
+    async fn seed_wal(storage: &MemoryStorage, document: &ArtifactId, count: u64) {
         let mut wal = db_actor::block_on(ArtifactWal::create(storage, document.clone(), GroupCommitPolicy::default(), 0)).unwrap();
         for i in 0..count {
-            let envelope = sample_envelope(&format!("op-{i}"), i);
-            let bytes = encode_command_envelope(&envelope);
+            let envelope = sample_envelope(&format!("op-{i}"), i).await;
+            let bytes = encode_command_envelope(&envelope).await;
             db_actor::block_on(wal.submit(storage, &[WalRecord::Command(bytes)], DurabilityClass::Fsync, i)).unwrap();
         }
     }
 
     /// @emoji 🧸️ Reopens `document`'s WAL and appends one `SnapshotPub` marker covering `frontier`.
-    fn publish_snapshot_marker(storage: &MemoryStorage, document: &ArtifactId, generation: u64, frontier: Frontier) {
+    async fn publish_snapshot_marker(storage: &MemoryStorage, document: &ArtifactId, generation: u64, frontier: Frontier) {
         let (mut wal, _report) = db_actor::block_on(ArtifactWal::open(storage, document.clone(), GroupCommitPolicy::default(), 1000)).unwrap();
         db_actor::block_on(wal.submit(storage, &[WalRecord::SnapshotPub { generation, frontier }], DurabilityClass::Fsync, 1000)).unwrap();
     }
     //#endregion 🧸️Fixtures
 
     //#region 🔖️Codec
-    #[test]
-    fn command_envelope_round_trips_through_encode_decode() {
-        let envelope = sample_envelope("op-1", 7);
-        let bytes = encode_command_envelope(&envelope);
-        assert_eq!(decode_command_envelope(&bytes).unwrap(), envelope);
+    #[semio_framework_async_macros::async_test]
+    async fn command_envelope_round_trips_through_encode_decode() {
+        let envelope = sample_envelope("op-1", 7).await;
+        let bytes = encode_command_envelope(&envelope).await;
+        assert_eq!(decode_command_envelope(&bytes).await.unwrap(), envelope);
     }
 
-    #[test]
-    fn decode_command_envelope_rejects_malformed_bytes_without_panicking() {
-        assert!(matches!(decode_command_envelope(b"not json"), Err(DbError::Corrupt(_))));
+    #[semio_framework_async_macros::async_test]
+    async fn decode_command_envelope_rejects_malformed_bytes_without_panicking() {
+        assert!(matches!(decode_command_envelope(b"not json").await, Err(DbError::Corrupt(_))));
     }
     //#endregion 🔖️Codec
 
     //#region 🔖️ReplicaState
-    #[test]
-    fn replay_sync_state_derives_frontier_and_ordered_commands() {
-        let storage = MemoryStorage::new();
+    #[semio_framework_async_macros::async_test]
+    async fn replay_sync_state_derives_frontier_and_ordered_commands() {
+        let storage = MemoryStorage::new().await;
         let document: ArtifactId = "doc-1".into();
-        seed_wal(&storage, &document, 3);
+        seed_wal(&storage, &document, 3).await;
 
         let state = db_actor::block_on(replay_sync_state(&storage, document)).unwrap();
         assert_eq!(state.frontier.head_seq, 3);
@@ -383,11 +385,11 @@ mod tests {
         assert_eq!(state.commands[2].mutation_id.0, "op-2");
     }
 
-    #[test]
-    fn replay_sync_state_on_empty_document_is_genesis() {
-        let storage = MemoryStorage::new();
+    #[semio_framework_async_macros::async_test]
+    async fn replay_sync_state_on_empty_document_is_genesis() {
+        let storage = MemoryStorage::new().await;
         let document: ArtifactId = "doc-1".into();
-        seed_wal(&storage, &document, 0);
+        seed_wal(&storage, &document, 0).await;
 
         let state = db_actor::block_on(replay_sync_state(&storage, document)).unwrap();
         assert_eq!(state.frontier.head_seq, 0);
@@ -395,13 +397,13 @@ mod tests {
         assert!(state.commands.is_empty());
     }
 
-    #[test]
-    fn replay_sync_state_tracks_the_latest_snapshot_pub_as_the_floor() {
-        let storage = MemoryStorage::new();
+    #[semio_framework_async_macros::async_test]
+    async fn replay_sync_state_tracks_the_latest_snapshot_pub_as_the_floor() {
+        let storage = MemoryStorage::new().await;
         let document: ArtifactId = "doc-1".into();
-        seed_wal(&storage, &document, 5);
+        seed_wal(&storage, &document, 5).await;
         let floor_frontier = Frontier { document: document.clone(), head_seq: 2, commit_seq: 2, chain_hash: [1u8; 32], epoch: 0 };
-        publish_snapshot_marker(&storage, &document, 1, floor_frontier);
+        publish_snapshot_marker(&storage, &document, 1, floor_frontier).await;
 
         let state = db_actor::block_on(replay_sync_state(&storage, document)).unwrap();
         assert_eq!(state.floor_head_seq, 2);
@@ -410,26 +412,26 @@ mod tests {
     //#endregion 🔖️ReplicaState
 
     //#region 🔖️Frontier
-    #[test]
-    fn frontier_delta_reports_the_command_gap_and_rejects_backwards() {
+    #[semio_framework_async_macros::async_test]
+    async fn frontier_delta_reports_the_command_gap_and_rejects_backwards() {
         let document: ArtifactId = "doc-1".into();
         let from = Frontier { document: document.clone(), head_seq: 2, commit_seq: 2, chain_hash: [0u8; 32], epoch: 0 };
         let to = Frontier { document, head_seq: 5, commit_seq: 5, chain_hash: [9u8; 32], epoch: 0 };
 
-        let delta = frontier_delta(&from, &to).unwrap();
+        let delta = frontier_delta(&from, &to).await.unwrap();
         assert_eq!(delta.commands, 3);
-        assert!(!delta.is_empty());
-        assert!(frontier_delta(&to, &from).is_err(), "a delta only ever moves forward");
+        assert!(!delta.is_empty().await);
+        assert!(frontier_delta(&to, &from).await.is_err(), "a delta only ever moves forward");
     }
 
-    #[test]
-    fn frontier_summary_bridges_round_trip() {
-        let storage = MemoryStorage::new();
+    #[semio_framework_async_macros::async_test]
+    async fn frontier_summary_bridges_round_trip() {
+        let storage = MemoryStorage::new().await;
         let document: ArtifactId = "doc-1".into();
-        seed_wal(&storage, &document, 2);
+        seed_wal(&storage, &document, 2).await;
         let state = db_actor::block_on(replay_sync_state(&storage, document)).unwrap();
 
-        let summary = state_frontier_summary(&state);
+        let summary = state_frontier_summary(&state).await;
         assert_eq!(summary.head_edit_ordinal, 2);
         assert_eq!(summary.head_edit_id, "op-1");
         assert_eq!(summary.last_commit_seq, state.frontier.commit_seq);
@@ -444,27 +446,27 @@ mod tests {
     //#endregion 🔖️Frontier
 
     //#region 🔖️MissingCommands
-    #[test]
-    fn missing_commands_transfer_round_trip_from_genesis() {
-        let storage = MemoryStorage::new();
+    #[semio_framework_async_macros::async_test]
+    async fn missing_commands_transfer_round_trip_from_genesis() {
+        let storage = MemoryStorage::new().await;
         let document: ArtifactId = "doc-1".into();
-        seed_wal(&storage, &document, 4);
+        seed_wal(&storage, &document, 4).await;
         let state = db_actor::block_on(replay_sync_state(&storage, document.clone())).unwrap();
 
         let replica_frontier = Frontier::genesis(document);
-        let missing = missing_commands(&state, &replica_frontier).unwrap();
+        let missing = missing_commands(&state, &replica_frontier).await.unwrap();
         assert_eq!(missing, state.commands, "a genesis replica is missing every command");
 
         // "Applying" the transfer catches the replica up to the server's frontier exactly.
         let caught_up = state.frontier.clone();
-        assert!(missing_commands(&state, &caught_up).unwrap().is_empty());
+        assert!(missing_commands(&state, &caught_up).await.unwrap().is_empty());
     }
 
-    #[test]
-    fn missing_commands_transfer_round_trip_for_a_partially_caught_up_replica() {
-        let storage = MemoryStorage::new();
+    #[semio_framework_async_macros::async_test]
+    async fn missing_commands_transfer_round_trip_for_a_partially_caught_up_replica() {
+        let storage = MemoryStorage::new().await;
         let document: ArtifactId = "doc-1".into();
-        seed_wal(&storage, &document, 3);
+        seed_wal(&storage, &document, 3).await;
         let first_state = db_actor::block_on(replay_sync_state(&storage, document.clone())).unwrap();
         let replica_frontier = first_state.frontier;
 
@@ -472,76 +474,76 @@ mod tests {
         {
             let (mut wal, _report) = db_actor::block_on(ArtifactWal::open(&storage, document.clone(), GroupCommitPolicy::default(), 100)).unwrap();
             for i in 3..6u64 {
-                let envelope = sample_envelope(&format!("op-{i}"), i);
-                db_actor::block_on(wal.submit(&storage, &[WalRecord::Command(encode_command_envelope(&envelope))], DurabilityClass::Fsync, i)).unwrap();
+                let envelope = sample_envelope(&format!("op-{i}"), i).await;
+                db_actor::block_on(wal.submit(&storage, &[WalRecord::Command(encode_command_envelope(&envelope).await)], DurabilityClass::Fsync, i)).unwrap();
             }
         }
 
         let second_state = db_actor::block_on(replay_sync_state(&storage, document)).unwrap();
-        let missing = missing_commands(&second_state, &replica_frontier).unwrap();
+        let missing = missing_commands(&second_state, &replica_frontier).await.unwrap();
         assert_eq!(missing.len(), 3);
         assert_eq!(missing[0].mutation_id.0, "op-3");
         assert_eq!(missing[2].mutation_id.0, "op-5");
     }
 
-    #[test]
-    fn missing_commands_rejects_document_mismatch_and_a_replica_ahead_of_server() {
-        let storage = MemoryStorage::new();
+    #[semio_framework_async_macros::async_test]
+    async fn missing_commands_rejects_document_mismatch_and_a_replica_ahead_of_server() {
+        let storage = MemoryStorage::new().await;
         let document: ArtifactId = "doc-1".into();
-        seed_wal(&storage, &document, 2);
+        seed_wal(&storage, &document, 2).await;
         let state = db_actor::block_on(replay_sync_state(&storage, document)).unwrap();
 
         let other_document = Frontier::genesis("doc-2".into());
-        assert!(matches!(missing_commands(&state, &other_document), Err(DbError::InvalidArgument(_))));
+        assert!(matches!(missing_commands(&state, &other_document).await, Err(DbError::InvalidArgument(_))));
 
         let ahead = Frontier { head_seq: 99, ..state.frontier.clone() };
-        assert!(matches!(missing_commands(&state, &ahead), Err(DbError::InvalidArgument(_))));
+        assert!(matches!(missing_commands(&state, &ahead).await, Err(DbError::InvalidArgument(_))));
     }
 
-    #[test]
-    fn missing_commands_rejects_a_replica_behind_the_retained_floor() {
-        let storage = MemoryStorage::new();
+    #[semio_framework_async_macros::async_test]
+    async fn missing_commands_rejects_a_replica_behind_the_retained_floor() {
+        let storage = MemoryStorage::new().await;
         let document: ArtifactId = "doc-1".into();
-        seed_wal(&storage, &document, 5);
+        seed_wal(&storage, &document, 5).await;
         let floor_frontier = Frontier { document: document.clone(), head_seq: 3, commit_seq: 3, chain_hash: [2u8; 32], epoch: 0 };
-        publish_snapshot_marker(&storage, &document, 1, floor_frontier);
+        publish_snapshot_marker(&storage, &document, 1, floor_frontier).await;
         let state = db_actor::block_on(replay_sync_state(&storage, document.clone())).unwrap();
 
         let too_far_behind = Frontier { document, head_seq: 1, commit_seq: 1, chain_hash: [0u8; 32], epoch: 0 };
-        assert!(matches!(missing_commands(&state, &too_far_behind), Err(DbError::Unavailable(_))));
+        assert!(matches!(missing_commands(&state, &too_far_behind).await, Err(DbError::Unavailable(_))));
     }
     //#endregion 🔖️MissingCommands
 
     //#region 🔖️Bootstrap
-    #[test]
-    fn decide_bootstrap_serves_tail_for_a_fresh_replica_within_the_floor() {
-        let storage = MemoryStorage::new();
+    #[semio_framework_async_macros::async_test]
+    async fn decide_bootstrap_serves_tail_for_a_fresh_replica_within_the_floor() {
+        let storage = MemoryStorage::new().await;
         let document: ArtifactId = "doc-1".into();
-        seed_wal(&storage, &document, 3);
+        seed_wal(&storage, &document, 3).await;
         let state = db_actor::block_on(replay_sync_state(&storage, document)).unwrap();
 
         let plan = db_actor::block_on(decide_bootstrap(&state, &storage, None)).unwrap();
         assert_eq!(plan, BootstrapPlan::Tail { envelopes: state.commands });
     }
 
-    #[test]
-    fn decide_bootstrap_reports_none_for_an_already_caught_up_replica() {
-        let storage = MemoryStorage::new();
+    #[semio_framework_async_macros::async_test]
+    async fn decide_bootstrap_reports_none_for_an_already_caught_up_replica() {
+        let storage = MemoryStorage::new().await;
         let document: ArtifactId = "doc-1".into();
-        seed_wal(&storage, &document, 3);
+        seed_wal(&storage, &document, 3).await;
         let state = db_actor::block_on(replay_sync_state(&storage, document)).unwrap();
 
         let plan = db_actor::block_on(decide_bootstrap(&state, &storage, Some(&state.frontier))).unwrap();
         assert_eq!(plan, BootstrapPlan::None);
     }
 
-    #[test]
-    fn decide_bootstrap_serves_snapshot_when_a_generation_is_available_below_the_floor() {
-        let storage = MemoryStorage::new();
+    #[semio_framework_async_macros::async_test]
+    async fn decide_bootstrap_serves_snapshot_when_a_generation_is_available_below_the_floor() {
+        let storage = MemoryStorage::new().await;
         let document: ArtifactId = "doc-1".into();
-        seed_wal(&storage, &document, 5);
+        seed_wal(&storage, &document, 5).await;
         let floor_frontier = Frontier { document: document.clone(), head_seq: 4, commit_seq: 4, chain_hash: [3u8; 32], epoch: 0 };
-        publish_snapshot_marker(&storage, &document, 7, floor_frontier);
+        publish_snapshot_marker(&storage, &document, 7, floor_frontier).await;
         db_actor::block_on(db_storage::SnapshotStorage::write_generation(&storage, &document, 7, b"snapshot-bytes")).unwrap();
         let state = db_actor::block_on(replay_sync_state(&storage, document.clone())).unwrap();
 
@@ -557,13 +559,13 @@ mod tests {
         }
     }
 
-    #[test]
-    fn decide_bootstrap_reports_unavailable_when_below_floor_with_no_snapshot() {
-        let storage = MemoryStorage::new();
+    #[semio_framework_async_macros::async_test]
+    async fn decide_bootstrap_reports_unavailable_when_below_floor_with_no_snapshot() {
+        let storage = MemoryStorage::new().await;
         let document: ArtifactId = "doc-1".into();
-        seed_wal(&storage, &document, 5);
+        seed_wal(&storage, &document, 5).await;
         let floor_frontier = Frontier { document: document.clone(), head_seq: 4, commit_seq: 4, chain_hash: [3u8; 32], epoch: 0 };
-        publish_snapshot_marker(&storage, &document, 7, floor_frontier);
+        publish_snapshot_marker(&storage, &document, 7, floor_frontier).await;
         let state = db_actor::block_on(replay_sync_state(&storage, document.clone())).unwrap();
 
         let stale_replica = Frontier { document, head_seq: 0, commit_seq: 0, chain_hash: [0u8; 32], epoch: 0 };
@@ -572,22 +574,22 @@ mod tests {
     //#endregion 🔖️Bootstrap
 
     //#region 🔖️ResumeToken
-    #[test]
-    fn issue_resume_token_produces_the_documented_v1_wire_format() {
+    #[semio_framework_async_macros::async_test]
+    async fn issue_resume_token_produces_the_documented_v1_wire_format() {
         let document: ArtifactId = "doc-1".into();
         let frontier = Frontier { document, head_seq: 4, commit_seq: 4, chain_hash: [5u8; 32], epoch: 0 };
-        let token = issue_resume_token(&frontier).unwrap();
+        let token = issue_resume_token(&frontier).await.unwrap();
         assert!(token.starts_with("v1|doc-1|4|4|0|"));
     }
     //#endregion 🔖️ResumeToken
 
     //#region 🔖️Hello
-    #[test]
-    fn handle_hello_bootstraps_a_fresh_replica_via_tail_and_issues_a_resume_token() {
-        let storage = MemoryStorage::new();
+    #[semio_framework_async_macros::async_test]
+    async fn handle_hello_bootstraps_a_fresh_replica_via_tail_and_issues_a_resume_token() {
+        let storage = MemoryStorage::new().await;
         let document: ArtifactId = "doc-1".into();
-        seed_wal(&storage, &document, 3);
-        let storage = db_storage::DbBackend::Memory(storage);
+        seed_wal(&storage, &document, 3).await;
+        let storage: db_storage::DbBackend<db_storage::InlineRuntime> = db_storage::DbBackend::Memory(storage);
 
         let response = db_actor::block_on(handle_hello(&storage, document, None, "session-1".to_string(), &protocol::ActorId("semio_hub".to_string()), 64 * 1024)).unwrap();
         let protocol::ServerFrame::Welcome { bootstrap, server_frontier, resume_token, .. } = &response.welcome else {
@@ -603,14 +605,14 @@ mod tests {
         }
     }
 
-    #[test]
-    fn handle_hello_reports_no_follow_up_for_an_already_caught_up_replica() {
-        let storage = MemoryStorage::new();
+    #[semio_framework_async_macros::async_test]
+    async fn handle_hello_reports_no_follow_up_for_an_already_caught_up_replica() {
+        let storage = MemoryStorage::new().await;
         let document: ArtifactId = "doc-1".into();
-        seed_wal(&storage, &document, 2);
+        seed_wal(&storage, &document, 2).await;
         let state = db_actor::block_on(replay_sync_state(&storage, document.clone())).unwrap();
-        let hello_frontier = state_frontier_summary(&state);
-        let storage = db_storage::DbBackend::Memory(storage);
+        let hello_frontier = state_frontier_summary(&state).await;
+        let storage: db_storage::DbBackend<db_storage::InlineRuntime> = db_storage::DbBackend::Memory(storage);
 
         let response = db_actor::block_on(handle_hello(&storage, document, Some(&hello_frontier), "session-2".to_string(), &protocol::ActorId("semio_hub".to_string()), 64 * 1024)).unwrap();
         let protocol::ServerFrame::Welcome { bootstrap, .. } = &response.welcome else {
@@ -620,16 +622,16 @@ mod tests {
         assert!(response.follow_up.is_empty());
     }
 
-    #[test]
-    fn handle_hello_chunks_a_snapshot_larger_than_the_requested_chunk_size() {
-        let storage = MemoryStorage::new();
+    #[semio_framework_async_macros::async_test]
+    async fn handle_hello_chunks_a_snapshot_larger_than_the_requested_chunk_size() {
+        let storage = MemoryStorage::new().await;
         let document: ArtifactId = "doc-1".into();
-        seed_wal(&storage, &document, 4);
+        seed_wal(&storage, &document, 4).await;
         let floor_frontier = Frontier { document: document.clone(), head_seq: 4, commit_seq: 4, chain_hash: [1u8; 32], epoch: 0 };
-        publish_snapshot_marker(&storage, &document, 9, floor_frontier);
+        publish_snapshot_marker(&storage, &document, 9, floor_frontier).await;
         let big_snapshot = vec![7u8; 10];
         db_actor::block_on(db_storage::SnapshotStorage::write_generation(&storage, &document, 9, &big_snapshot)).unwrap();
-        let storage = db_storage::DbBackend::Memory(storage);
+        let storage: db_storage::DbBackend<db_storage::InlineRuntime> = db_storage::DbBackend::Memory(storage);
 
         let stale_hello_frontier = protocol::RuntimeFrontierSummary { document_id: protocol::ArtifactId(document.0.clone()), head_edit_ordinal: 0, head_edit_id: String::new(), last_commit_seq: 0, chain_hash: [0u8; 32] };
         let response = db_actor::block_on(handle_hello(&storage, document, Some(&stale_hello_frontier), "session-3".to_string(), &protocol::ActorId("semio_hub".to_string()), 4)).unwrap();
@@ -643,27 +645,27 @@ mod tests {
         assert!(matches!(response.follow_up[3], protocol::ServerFrame::SnapshotDone { seq_count: 3 }));
     }
 
-    #[test]
-    fn handle_hello_rejects_zero_snapshot_chunk_bytes() {
-        let storage = MemoryStorage::new();
+    #[semio_framework_async_macros::async_test]
+    async fn handle_hello_rejects_zero_snapshot_chunk_bytes() {
+        let storage = MemoryStorage::new().await;
         let document: ArtifactId = "doc-1".into();
-        seed_wal(&storage, &document, 1);
-        let storage = db_storage::DbBackend::Memory(storage);
+        seed_wal(&storage, &document, 1).await;
+        let storage: db_storage::DbBackend<db_storage::InlineRuntime> = db_storage::DbBackend::Memory(storage);
         assert!(matches!(db_actor::block_on(handle_hello(&storage, document, None, "s".to_string(), &protocol::ActorId("semio_hub".to_string()), 0)), Err(DbError::InvalidArgument(_))));
     }
 
-    #[test]
-    fn handle_frontier_advertise_relays_missing_commands_and_none_when_caught_up() {
-        let storage = MemoryStorage::new();
+    #[semio_framework_async_macros::async_test]
+    async fn handle_frontier_advertise_relays_missing_commands_and_none_when_caught_up() {
+        let storage = MemoryStorage::new().await;
         let document: ArtifactId = "doc-1".into();
-        seed_wal(&storage, &document, 2);
+        seed_wal(&storage, &document, 2).await;
         let first_state = db_actor::block_on(replay_sync_state(&storage, document.clone())).unwrap();
-        let replica_summary = state_frontier_summary(&first_state);
+        let replica_summary = state_frontier_summary(&first_state).await;
 
         {
             let (mut wal, _report) = db_actor::block_on(ArtifactWal::open(&storage, document.clone(), GroupCommitPolicy::default(), 100)).unwrap();
-            let envelope = sample_envelope("op-2", 2);
-            db_actor::block_on(wal.submit(&storage, &[WalRecord::Command(encode_command_envelope(&envelope))], DurabilityClass::Fsync, 100)).unwrap();
+            let envelope = sample_envelope("op-2", 2).await;
+            db_actor::block_on(wal.submit(&storage, &[WalRecord::Command(encode_command_envelope(&envelope).await)], DurabilityClass::Fsync, 100)).unwrap();
         }
 
         let frame = db_actor::block_on(handle_frontier_advertise(&storage, document.clone(), &replica_summary, protocol::ActorId("semio_hub".to_string()))).unwrap();
@@ -676,7 +678,7 @@ mod tests {
         }
 
         let up_to_date_state = db_actor::block_on(replay_sync_state(&storage, document.clone())).unwrap();
-        let up_to_date_summary = state_frontier_summary(&up_to_date_state);
+        let up_to_date_summary = state_frontier_summary(&up_to_date_state).await;
         assert!(db_actor::block_on(handle_frontier_advertise(&storage, document, &up_to_date_summary, protocol::ActorId("semio_hub".to_string()))).unwrap().is_none());
     }
     //#endregion 🔖️Hello

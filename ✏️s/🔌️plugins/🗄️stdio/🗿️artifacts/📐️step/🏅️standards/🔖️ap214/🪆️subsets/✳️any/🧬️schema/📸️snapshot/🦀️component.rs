@@ -164,14 +164,14 @@ async fn value_from_part21(v: &Part21Value) -> StepValue {
         Part21Value::Unset => StepValue::Unset,
         Part21Value::Derived => StepValue::Derived,
         Part21Value::Int(i) => StepValue::Integer(*i),
-        Part21Value::Real(r) => StepValue::Real(r.to_f64().unwrap_or_default()),
+        Part21Value::Real(r) => StepValue::Real(r.to_f64().await.unwrap_or_default()),
         Part21Value::Str(s) => StepValue::String(s.clone()),
         Part21Value::Enum(s) => StepValue::Enum(s.clone()),
         Part21Value::Ref(id) => StepValue::Reference(*id),
         Part21Value::List(items) => StepValue::Aggregate(items.iter().map(value_from_part21).collect()),
         Part21Value::Typed(name, items) => {
             let value = if items.len() == 1 { value_from_part21(&items[0]) } else { StepValue::Aggregate(items.iter().map(value_from_part21).collect()) };
-            StepValue::TypedValue { type_name: name.clone(), value: Box::new(value) }
+            StepValue::TypedValue { type_name: name.clone(), value: Box::new(value.await) }
         }
     }
 }
@@ -186,7 +186,7 @@ async fn value_to_part21(v: &StepValue) -> Part21Value {
         StepValue::Enum(s) => Part21Value::Enum(s.clone()),
         StepValue::Reference(id) => Part21Value::Ref(*id),
         StepValue::Aggregate(items) => Part21Value::List(items.iter().map(value_to_part21).collect()),
-        StepValue::TypedValue { type_name, value } => Part21Value::Typed(type_name.clone(), vec![value_to_part21(value)]),
+        StepValue::TypedValue { type_name, value } => Part21Value::Typed(type_name.clone(), vec![value_to_part21(value).await]),
     }
 }
 
@@ -212,7 +212,7 @@ async fn as_string_list(v: Option<&Part21Value>) -> Vec<String> {
 }
 
 async fn file_description_from_part21(args: &[Part21Value]) -> StepFileDescription {
-    StepFileDescription { description: as_string_list(args.first()), implementation_level: as_string(args.get(1)) }
+    StepFileDescription { description: as_string_list(args.first()).await, implementation_level: as_string(args.get(1)).await }
 }
 async fn file_description_to_part21(d: &StepFileDescription) -> Vec<Part21Value> {
     vec![Part21Value::List(d.description.iter().cloned().map(Part21Value::Str).collect()), Part21Value::Str(d.implementation_level.clone())]
@@ -220,13 +220,13 @@ async fn file_description_to_part21(d: &StepFileDescription) -> Vec<Part21Value>
 
 async fn file_name_from_part21(args: &[Part21Value]) -> StepFileName {
     StepFileName {
-        name: as_string(args.first()),
-        timestamp: as_string(args.get(1)),
-        author: as_string_list(args.get(2)),
-        organization: as_string_list(args.get(3)),
-        preprocessor_version: as_string(args.get(4)),
-        originating_system: as_string(args.get(5)),
-        authorization: as_string(args.get(6)),
+        name: as_string(args.first()).await,
+        timestamp: as_string(args.get(1)).await,
+        author: as_string_list(args.get(2)).await,
+        organization: as_string_list(args.get(3)).await,
+        preprocessor_version: as_string(args.get(4)).await,
+        originating_system: as_string(args.get(5)).await,
+        authorization: as_string(args.get(6)).await,
     }
 }
 async fn file_name_to_part21(f: &StepFileName) -> Vec<Part21Value> {
@@ -242,17 +242,17 @@ async fn file_name_to_part21(f: &StepFileName) -> Vec<Part21Value> {
 }
 
 async fn file_schema_from_part21(args: &[Part21Value]) -> StepFileSchema {
-    StepFileSchema { schemas: as_string_list(args.first()) }
+    StepFileSchema { schemas: as_string_list(args.first()).await }
 }
 async fn file_schema_to_part21(s: &StepFileSchema) -> Vec<Part21Value> {
     vec![Part21Value::List(s.schemas.iter().cloned().map(Part21Value::Str).collect())]
 }
 
 async fn header_from_part21(h: &Part21Header) -> StepHeader {
-    StepHeader { file_description: file_description_from_part21(&h.file_description), file_name: file_name_from_part21(&h.file_name), file_schema: file_schema_from_part21(&h.file_schema) }
+    StepHeader { file_description: file_description_from_part21(&h.file_description).await, file_name: file_name_from_part21(&h.file_name).await, file_schema: file_schema_from_part21(&h.file_schema).await }
 }
 async fn header_to_part21(h: &StepHeader) -> Part21Header {
-    Part21Header { file_description: file_description_to_part21(&h.file_description), file_name: file_name_to_part21(&h.file_name), file_schema: file_schema_to_part21(&h.file_schema) }
+    Part21Header { file_description: file_description_to_part21(&h.file_description).await, file_name: file_name_to_part21(&h.file_name).await, file_schema: file_schema_to_part21(&h.file_schema).await }
 }
 
 async fn entity_from_part21(inst: &Part21Instance) -> StepEntity {
@@ -275,25 +275,25 @@ async fn entity_to_part21(e: &StepEntity) -> Part21Instance {
 pub async fn step_snapshot_from_part21(doc: Part21Document) -> (StepHeader, Vec<StepEntity>) {
     let header = header_from_part21(&doc.header);
     let entities = doc.instances.iter().map(entity_from_part21).collect();
-    (header, entities)
+    (header.await, entities)
 }
 /// 🔁️ `(StepHeader, &[StepEntity])` -> `Part21Document` — the inverse, used by the DSL/pack codecs
 /// and by every real consumer (conformance-class ladder checks, the cad/process3d plugins' STEP
 /// import/export) that still wants the generic view.
 pub async fn step_snapshot_to_part21(header: &StepHeader, entities: &[StepEntity]) -> Part21Document {
-    Part21Document { header: header_to_part21(header), instances: entities.iter().map(entity_to_part21).collect() }
+    Part21Document { header: header_to_part21(header).await, instances: entities.iter().map(entity_to_part21).collect() }
 }
 
 impl StepSnapshot {
     /// 🔁️ Materializes the shared generic Part-21 graph on demand — never stored, always derived
     /// from the typed `header`/`entities` fields.
     pub async fn to_part21_document(&self) -> Part21Document {
-        step_snapshot_to_part21(&self.header, &self.entities)
+        step_snapshot_to_part21(&self.header, &self.entities).await
     }
     /// 🔁️ Builds a `StepSnapshot` from a generic Part-21 graph (e.g. one built by
     /// `engine::brep::brep_mesh_to_part21` or hand-assembled in a test).
     pub async fn from_part21_document(doc: Part21Document) -> Self {
-        let (header, entities) = step_snapshot_from_part21(doc);
+        let (header, entities) = step_snapshot_from_part21(doc).await;
         Self { schema: STDIO_STEP_DOCUMENT_SCHEMA.into(), header, entities }
     }
 }
@@ -311,12 +311,12 @@ impl store::ArtifactDsl for StepSnapshot {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        let document = parse_part21(body).map_err(|e| store::TextError::new(format!("step parse: {e}"), dsl::TextSpan::at(1, 1)))?;
-        Ok(Self::from_part21_document(document))
+        let document = parse_part21(body).await.map_err(|e| store::TextError::new(format!("step parse: {e}"), dsl::TextSpan::at(1, 1)))?;
+        Ok(Self::from_part21_document(document).await)
     }
     async fn print_dsl(&self) -> String {
         let body = write_part21(&self.to_part21_document());
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -324,8 +324,8 @@ impl store::ArtifactDsl for StepSnapshot {
 impl store::ArtifactPack for StepSnapshot {
     async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
-        let raw = write_part21(&self.to_part21_document()).into_bytes();
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let raw = write_part21(&self.to_part21_document()).await.into_bytes();
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
     async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
@@ -335,8 +335,8 @@ impl store::ArtifactPack for StepSnapshot {
         }
         let _ = options;
         let text = String::from_utf8(inner).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        let document = parse_part21(&text).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        Ok(Self::from_part21_document(document))
+        let document = parse_part21(&text).await.map_err(|e| store::PackError::Schema(e.to_string()))?;
+        Ok(Self::from_part21_document(document).await)
     }
 }
 //#endregion 🔖️Part21Codec

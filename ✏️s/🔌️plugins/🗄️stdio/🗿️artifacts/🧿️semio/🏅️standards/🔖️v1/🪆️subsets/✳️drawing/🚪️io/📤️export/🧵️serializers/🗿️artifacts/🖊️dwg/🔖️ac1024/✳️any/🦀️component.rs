@@ -76,19 +76,19 @@ impl ArtifactSerializer for SemioDrawingToDwg {
             let mut texts = Vec::new();
             collect_node(&layer.root, &mut paths, &mut texts);
 
-            let sub = paths_to_dwg_drawing(&paths);
+            let sub = paths_to_dwg_drawing(&paths).await;
             for mut entity in sub.entities {
-                entity.layer = layer_index;
+                entity.layer = layer_index.await;
                 drawing.entities.push(entity);
             }
             for (at, content) in texts {
-                drawing.entities.push(DwgEntity { layer: layer_index, color: DwgColor::ByLayer, geometry: DwgGeometry::Text { at: [at.x, at.y, 0.0], height: 1.0, rotation: 0.0, content } });
+                drawing.entities.push(DwgEntity { layer: layer_index.await, color: DwgColor::ByLayer, geometry: DwgGeometry::Text { at: [at.x, at.y, 0.0], height: 1.0, rotation: 0.0, content } });
             }
         }
 
         let mut snapshot = DwgSnapshot::default();
         snapshot.version = DWG_CODEC_VERSION.into();
-        snapshot.drawing = DwgLogicalDrawing::from_native(&drawing).map_err(store::PackError::Schema)?;
+        snapshot.drawing = DwgLogicalDrawing::from_native(&drawing).await.map_err(store::PackError::Schema)?;
         Ok(snapshot)
     }
 }

@@ -23,15 +23,15 @@ pub mod derived_construction {
     /// rest of the package (worksheets/sharedStrings/relationships) -- only the three attrs
     /// `check_strict_conformance` actually inspects change.
     pub async fn stamp_strict_namespace(mut snapshot: XlsxSnapshot) -> XlsxSnapshot {
-        if let Some(bytes) = snapshot.opc.part_bytes(WORKBOOK_PART) {
+        if let Some(bytes) = snapshot.opc.part_bytes(WORKBOOK_PART).await {
             if let Ok(text) = std::str::from_utf8(bytes) {
-                if let Ok(mut doc) = xml_document_from_text(text) {
+                if let Ok(mut doc) = xml_document_from_text(text).await {
                     if let Some(XmlNode::Element { attrs, .. }) = &mut doc.root {
                         set_attr(attrs, "xmlns", STRICT_SML_NS);
                         set_attr(attrs, "xmlns:r", STRICT_R_NS);
                         set_attr(attrs, "conformance", "strict");
                     }
-                    let bytes = xml_document_to_text(&doc).into_bytes();
+                    let bytes = xml_document_to_text(&doc).await.into_bytes();
                     snapshot.opc.set_part(WORKBOOK_PART, WORKBOOK_CONTENT_TYPE, bytes);
                 }
             }
@@ -58,7 +58,7 @@ pub mod derived_construction {
         /// ➕️ The recommended entry point: builds a minimal package from `workbook` via the shared
         /// ecma-376 engine, then stamps it Strict.
         pub async fn new(workbook: XlsxWorkbook) -> Self {
-            Self { snapshot: stamp_strict_namespace(crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::io::export::serializers::build_minimal_xlsx(workbook)) }
+            Self { snapshot: stamp_strict_namespace(crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::io::export::serializers::build_minimal_xlsx(workbook).await).await }
         }
     }
 
@@ -72,7 +72,7 @@ pub mod derived_construction {
         /// Strict regardless. Prefer `XlsxStrictBuilderConstruction::new(workbook)` directly wherever real content
         /// is known up front.
         async fn empty() -> Self {
-            Self::new(XlsxWorkbook::default())
+            Self::new(XlsxWorkbook::default()).await
         }
 
         async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
@@ -80,20 +80,20 @@ pub mod derived_construction {
         }
 
         async fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self::from_snapshot(<XlsxSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+            Ok(Self::from_snapshot(<XlsxSnapshot as store::ArtifactDsl>::parse_dsl(text).await?).await)
         }
 
         async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<XlsxSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+            Ok(Self::from_snapshot(<XlsxSnapshot as store::ArtifactPack>::decode_pack(bytes).await?).await)
         }
 
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::mutations::apply_xlsx_mutation(&mut self.snapshot, &mutation);
-            (self, diff)
+            (self, diff.await)
         }
 
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            self.snapshot = <XlsxDiff as protocol::MutationDiff<XlsxSnapshot>>::apply(&diff, &self.snapshot)?;
+            self.snapshot = <XlsxDiff as protocol::MutationDiff<XlsxSnapshot>>::apply(&diff, &self.snapshot).await?;
             Ok(self)
         }
 
@@ -170,9 +170,9 @@ pub mod derived_analysis {
     /// each `None` when absent. `None` overall only when the part is missing or unparsable as XML
     /// (should never happen for anything that survived `✳️any` decode, but never assumed).
     async fn workbook_root_attrs(snapshot: &XlsxSnapshot) -> Option<(Option<String>, Option<String>, Option<String>)> {
-        let bytes = snapshot.opc.part_bytes(WORKBOOK_PART)?;
+        let bytes = snapshot.opc.part_bytes(WORKBOOK_PART).await?;
         let text = std::str::from_utf8(bytes).ok()?;
-        let doc = xml_document_from_text(text).ok()?;
+        let doc = xml_document_from_text(text).await.ok()?;
         let XmlNode::Element { name, attrs, .. } = doc.root? else { return None };
         if name != "workbook" {
             return None;
@@ -209,7 +209,7 @@ pub mod derived_analysis {
     /// wire payload for the D5 validate-on-build hook.
     pub async fn check_strict_conformance(snapshot: &XlsxSnapshot) -> Vec<Diagnostic> {
         let mut out = Vec::new();
-        let Some((xmlns, xmlns_r, conformance)) = workbook_root_attrs(snapshot) else {
+        let Some((xmlns, xmlns_r, conformance)) = workbook_root_attrs(snapshot).await else {
             out.push(hard(CODE_NAMESPACE_MISMATCH, format!("{WORKBOOK_PART} is missing or unparsable as XML -- cannot verify ISO/IEC 29500-1 Strict conformance")));
             return out;
         };
@@ -245,15 +245,15 @@ pub mod derived_analysis {
         const DIALECT: Dialect = DIALECT;
 
         async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
-            XlsxAnyAnalyzer::sniff(source)
+            XlsxAnyAnalyzer::sniff(source).await
         }
 
         async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
-            let inner = XlsxAnyAnalyzer::analyze(sources);
+            let inner = XlsxAnyAnalyzer::analyze(sources).await;
             let mut diagnostics = inner.diagnostics.clone();
             let mut confidence = inner.confidence;
             if let Some(snapshot) = &inner.parts.snapshot {
-                let checks = check_strict_conformance(snapshot);
+                let checks = check_strict_conformance(snapshot).await;
                 if checks.iter().any(|d| matches!(d.severity, Severity::Error | Severity::Fatal)) {
                     confidence = IoConfidence::Low;
                 }

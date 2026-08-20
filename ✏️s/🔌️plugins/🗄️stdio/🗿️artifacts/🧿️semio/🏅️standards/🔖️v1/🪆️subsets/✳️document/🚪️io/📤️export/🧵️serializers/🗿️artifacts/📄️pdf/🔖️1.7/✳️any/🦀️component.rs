@@ -27,8 +27,8 @@ async fn join_runs(runs: &[crate::artifacts::semio::standards::v1::subsets::docu
 /// `document`<->`txt` pair uses).
 async fn block_to_lines(block: &DocBlock) -> Vec<String> {
     match block {
-        DocBlock::Paragraph { runs, .. } => vec![join_runs(runs)],
-        DocBlock::Heading { runs, .. } => vec![join_runs(runs)],
+        DocBlock::Paragraph { runs, .. } => vec![join_runs(runs).await],
+        DocBlock::Heading { runs, .. } => vec![join_runs(runs).await],
         DocBlock::List { items, .. } => items.iter().flat_map(|item| item.blocks.iter().flat_map(block_to_lines)).collect(),
         DocBlock::Table { rows } => rows.iter().map(|row| row.cells.iter().map(|cell| cell.blocks.iter().flat_map(block_to_lines).collect::<Vec<_>>().join(" ")).collect::<Vec<_>>().join("\t")).collect(),
         DocBlock::Code { text, .. } => text.lines().map(str::to_string).collect(),
@@ -39,7 +39,7 @@ async fn block_to_lines(block: &DocBlock) -> Vec<String> {
 }
 
 async fn make_page(lines: &[String]) -> PdfPage {
-    let mut page = PdfPage::new(612.0, 792.0);
+    let mut page = PdfPage::new(612.0, 792.0).await;
     page.text = lines.join("\n");
     page
 }

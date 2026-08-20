@@ -20,16 +20,16 @@ pub const PDF_ARTIFACT_SCHEMA_ID: &str = "s.stdio.pdf";
 ///
 /// 🧩️ Binds this executable root to its sole schema-owned definition.
 pub async fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
-    crate::registry::runtime_assembly("pdf", definition, declaration)
+    crate::registry::runtime_assembly("pdf", definition, declaration).await
 }
 
 pub async fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
-    let formats = crate::registry::format_descriptors_for("pdf")?;
+    let formats = crate::registry::format_descriptors_for("pdf").await?;
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
-        .schema(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::pdf_artifact_schema_descriptor())
-        .formats(formats)
-        .schemas([crate::artifacts::pdf::standards::v1_4::subsets::any::schema::pdf_artifact_schema_descriptor()])
-        .inferences([crate::artifacts::pdf::standards::v1_7::subsets::any::schema::inferences::pdf17_artifact_inference_descriptor(), crate::artifacts::pdf::standards::v1_4::subsets::any::schema::inferences::pdf_artifact_inference_descriptor()])
+        .await.schema(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::pdf_artifact_schema_descriptor().await)
+        .await.formats(formats)
+        .await.schemas([crate::artifacts::pdf::standards::v1_4::subsets::any::schema::pdf_artifact_schema_descriptor()])
+        .await.inferences([crate::artifacts::pdf::standards::v1_7::subsets::any::schema::inferences::pdf17_artifact_inference_descriptor(), crate::artifacts::pdf::standards::v1_4::subsets::any::schema::inferences::pdf_artifact_inference_descriptor()])
         .composers(crate::artifacts::pdf::standards::v1_7::subsets::any::io::io_registry::entries())
         .composers(crate::artifacts::pdf::standards::v1_4::subsets::any::io::io_registry::entries())
         .subset_validators(pdf_1_7_subset_validators())
@@ -227,7 +227,8 @@ pub mod io_registry {
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 
-    pub async fn entries() -> &'static [&'static ComposerEntry] {
+    // 🚫️async: E1 pure table accessor consumed by OnceLock::get_or_init's sync closure — see R9
+    pub fn entries() -> &'static [&'static ComposerEntry] {
         ENTRIES.get_or_init(|| v1_4::entries().iter().chain(v1_7::entries().iter()).collect()).as_slice()
     }
 

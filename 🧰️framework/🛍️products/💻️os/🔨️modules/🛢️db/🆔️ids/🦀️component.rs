@@ -59,6 +59,7 @@ impl GenerationId {
     pub const INITIAL: GenerationId = GenerationId(0);
 
     /// @emoji ⏭️ The next generation after a supervised restart.
+    // 🚫️async: E1 pure accessor, only consumed by sync `#[test] fn` assertions — see R9
     pub fn next(self) -> GenerationId {
         GenerationId(self.0 + 1)
     }
@@ -151,6 +152,7 @@ impl Default for DbLimits {
 /// @emoji 📏️ Validates `len` against `max` BEFORE the caller allocates anything sized by it —
 /// shared by every length check across the `db` family so the "validate before allocating"
 /// invariant has exactly one implementation to audit.
+// 🚫️async: E1 pure accessor called from sync `run_blocking_op` closures throughout `db_storage` — see R9
 pub fn check_len(len: u64, max: u64, what: &'static str) -> Result<(), DbError> {
     if len > max {
         return Err(DbError::LimitExceeded(what));
@@ -164,8 +166,8 @@ mod tests {
     use super::*;
 
     //#region 🔖️Ids
-    #[test]
-    fn document_id_and_actor_id_convert_and_display() {
+    #[semio_framework_async_macros::async_test]
+    async fn document_id_and_actor_id_convert_and_display() {
         let document: ArtifactId = "doc-1".into();
         assert_eq!(document.to_string(), "doc-1");
         assert_eq!(document, ArtifactId::from("doc-1".to_string()));
@@ -174,8 +176,8 @@ mod tests {
         assert_eq!(actor.to_string(), "actor-1");
     }
 
-    #[test]
-    fn generation_id_next_is_strictly_monotonic() {
+    #[semio_framework_async_macros::async_test]
+    async fn generation_id_next_is_strictly_monotonic() {
         let g0 = GenerationId::INITIAL;
         let g1 = g0.next();
         let g2 = g1.next();
@@ -187,8 +189,8 @@ mod tests {
     //#endregion 🔖️Ids
 
     //#region 🔖️Errors
-    #[test]
-    fn pack_error_conversion_never_panics_and_maps_by_category() {
+    #[semio_framework_async_macros::async_test]
+    async fn pack_error_conversion_never_panics_and_maps_by_category() {
         let corrupt: DbError = pack::PackError::BadMagic.into();
         assert!(matches!(corrupt, DbError::Corrupt(_)));
 
@@ -204,8 +206,8 @@ mod tests {
     //#endregion 🔖️Errors
 
     //#region 🔖️Limits
-    #[test]
-    fn check_len_rejects_over_limit_before_any_allocation_would_happen() {
+    #[semio_framework_async_macros::async_test]
+    async fn check_len_rejects_over_limit_before_any_allocation_would_happen() {
         assert!(check_len(10, 100, "test").is_ok());
         assert_eq!(check_len(101, 100, "test"), Err(DbError::LimitExceeded("test")));
     }

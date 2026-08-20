@@ -26,7 +26,7 @@ pub struct ZipInference {
 
 impl protocol::Inference<ZipSnapshot> for ZipInference {
     async fn infer(snapshot: &ZipSnapshot) -> Self {
-        Self { entries: compute_zip_entries(snapshot) }
+        Self { entries: compute_zip_entries(snapshot).await }
     }
 }
 

@@ -18,18 +18,18 @@ pub async fn descriptor() -> GltfInferenceLeafDescriptor {
 }
 
 pub(crate) async fn infer_pair(pair: &super::super::geometry_core::GltfPairGeometry) -> GltfMeasure<f64> {
-    unavailable(GltfUnit::Unitless, GltfAvailability::Unavailable, Vec::new(), pair.sample_count, None)
+    unavailable(GltfUnit::Unitless, GltfAvailability::Unavailable, Vec::new(), pair.sample_count, None).await
 }
 
 pub(crate) async fn unavailable_for_assembly(sample_count: usize, topology: Topology) -> GltfMeasure<f64> {
-    unavailable(GltfUnit::Unitless, GltfAvailability::Unavailable, Vec::new(), sample_count, Some(topology))
+    unavailable(GltfUnit::Unitless, GltfAvailability::Unavailable, Vec::new(), sample_count, Some(topology)).await
 }
 pub(crate) async fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<f64> {
-    exact(if context.topology.oriented { 1.0 } else { 0.0 }, GltfUnit::Unitless, context.sample_count, Some(context.topology))
+    exact(if context.topology.oriented { 1.0 } else { 0.0 }, GltfUnit::Unitless, context.sample_count, Some(context.topology)).await
 }
 
 pub async fn unavailable_measure(ids: &[String]) -> GltfMeasure<f64> {
-    unavailable(GltfUnit::Unitless, GltfAvailability::Unavailable, ids.to_vec(), 0, None)
+    unavailable(GltfUnit::Unitless, GltfAvailability::Unavailable, ids.to_vec(), 0, None).await
 }
 
 pub async fn encode_result(indicators: &GltfEntityIndicators) -> Result<serde_json::Value, serde_json::Error> {

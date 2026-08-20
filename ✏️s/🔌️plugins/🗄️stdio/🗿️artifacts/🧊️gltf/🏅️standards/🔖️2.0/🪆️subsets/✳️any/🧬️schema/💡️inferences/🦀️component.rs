@@ -328,7 +328,7 @@ pub use super::dag_assembly::compute_gltf_inference;
 //#region 🧠️InferenceContract
 impl protocol::Inference<GltfSnapshot> for GltfInference {
     async fn infer(snapshot: &GltfSnapshot) -> Self {
-        Self { geometry: compute_gltf_inference(snapshot) }
+        Self { geometry: compute_gltf_inference(snapshot).await }
     }
 }
 

@@ -1,0 +1,971 @@
+{
+  "crate": "semio-framework-graph",
+  "history": [
+    {
+      "pass": 1,
+      "errors": 264,
+      "edits": 0,
+      "ambiguous": 0,
+      "other": 191
+    }
+  ],
+  "residual_errors": 264,
+  "ambiguous": [],
+  "other": [
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:1389",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:1399",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:1417",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:1432",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:1450",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:1464",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:1472",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:1484",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:1497",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:1504",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:1518",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:1525",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:1533",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:1543",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:1557",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:1568",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:1576",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:1588",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:1594",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:1615",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:1627",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:1635",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:1657",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:1670",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:1685",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:1699",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:1715",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:1731",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:1744",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:1760",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:1772",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:1783",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:1793",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:1806",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:1821",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:1835",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:1846",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:1858",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:1871",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:1881",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:1895",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:1908",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:1917",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:1929",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:1936",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:1942",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:1966",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:1972",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:1978",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:1983",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:1995",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:2007",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:2017",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:2027",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:2046",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:2090",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:2096",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:2107",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:2121",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:2128",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:2140",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:2152",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🧮️algorithms/🦀️component.rs:451",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🧮️algorithms/🦀️component.rs:458",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🧮️algorithms/🦀️component.rs:465",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🧮️algorithms/🦀️component.rs:475",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🧮️algorithms/🦀️component.rs:482",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🧮️algorithms/🦀️component.rs:491",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🧮️algorithms/🦀️component.rs:498",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🧮️algorithms/🦀️component.rs:505",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🧮️algorithms/🦀️component.rs:515",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🧮️algorithms/🦀️component.rs:524",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🧮️algorithms/🦀️component.rs:533",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🧮️algorithms/🦀️component.rs:544",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🧮️algorithms/🦀️component.rs:553",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🧮️algorithms/🦀️component.rs:563",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🧮️algorithms/🦀️component.rs:572",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🧮️algorithms/🦀️component.rs:578",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🧮️algorithms/🦀️component.rs:585",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🧮️algorithms/🦀️component.rs:591",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🧮️algorithms/🦀️component.rs:597",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🧮️algorithms/🦀️component.rs:604",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:184",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:197",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:206",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:447",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:481",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:492",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:508",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:522",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:534",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:545",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:556",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🛂️manifest/🦀️component.rs:601",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🛂️manifest/🦀️component.rs:609",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🛂️manifest/🦀️component.rs:616",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🛂️manifest/🦀️component.rs:622",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:501",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:514",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:522",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:533",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:546",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:553",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:561",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:571",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:577",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:586",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:596",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:602",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:608",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:622",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:632",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2272",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2278",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2293",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2391",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2398",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2408",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2420",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2435",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2559",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2570",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2581",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2592",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2603",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2615",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2632",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2643",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2649",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2658",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2665",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2676",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2688",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2697",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2706",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2714",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2722",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2733",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2739",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2747",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2757",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2767",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2773",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2784",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2792",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2800",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2808",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2816",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2823",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2835",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2846",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2852",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2859",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2866",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2873",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2880",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2889",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2899",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2910",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2919",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2927",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2935",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2945",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2955",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2963",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2970",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2979",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2988",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2997",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:3004",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:3012",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:3019",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:3027",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:3035",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:1999",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:2000",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:2002",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:2003",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:2009",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:2012",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:2029",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:2147",
+      "code": "E0382",
+      "msg": "use of moved value: `round_tripped`"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:518",
+      "code": "E0382",
+      "msg": "use of moved value: `text`"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2620",
+      "code": "E0382",
+      "msg": "use of moved value: `node_kinds`"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2627",
+      "code": "E0382",
+      "msg": "use of moved value: `props`"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2725",
+      "code": "E0382",
+      "msg": "use of moved value: `spans`"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2726",
+      "code": "E0382",
+      "msg": "use of moved value: `spans`"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2727",
+      "code": "E0382",
+      "msg": "use of moved value: `spans`"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2728",
+      "code": "E0382",
+      "msg": "use of moved value: `spans`"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2729",
+      "code": "E0382",
+      "msg": "use of moved value: `spans`"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2883",
+      "code": "E0382",
+      "msg": "use of moved value: `tokens`"
+    }
+  ]
+}

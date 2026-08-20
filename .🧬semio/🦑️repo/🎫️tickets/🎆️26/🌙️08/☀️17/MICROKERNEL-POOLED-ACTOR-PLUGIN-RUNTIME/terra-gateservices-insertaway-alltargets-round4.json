@@ -1,0 +1,15 @@
+{
+  "crate": "semio-framework-os-services",
+  "history": [
+    {
+      "pass": 1,
+      "errors": 82,
+      "edits": 0,
+      "ambiguous": 0,
+      "other": 0
+    }
+  ],
+  "residual_errors": 82,
+  "ambiguous": [],
+  "other": []
+}

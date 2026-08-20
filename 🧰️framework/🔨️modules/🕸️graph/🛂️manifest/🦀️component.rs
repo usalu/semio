@@ -39,14 +39,17 @@ pub enum PropertyValue {
 }
 
 impl PropertyValue {
-    pub async fn as_str(&self) -> Option<&str> {
+    // 🚫️async: E1 pure accessor passed by name into `Option::and_then` (a sync fn-pointer slot) at
+    // every call site in this crate; no consumer awaits it directly. See R9.
+    pub fn as_str(&self) -> Option<&str> {
         match self {
             Self::String(s) => Some(s.as_str()),
             _ => None,
         }
     }
 
-    pub async fn as_f64(&self) -> Option<f64> {
+    // 🚫️async: E1 pure accessor, same reason as `as_str` above — see R9.
+    pub fn as_f64(&self) -> Option<f64> {
         match self {
             Self::Number(n) => Some(*n),
             _ => None,
@@ -77,8 +80,23 @@ async fn property_value_to_dsl_value(value: &PropertyValue) -> dsl_core::DslValu
         PropertyValue::Bool(b) => dsl_core::DslValue::Bool(*b),
         PropertyValue::Number(n) => dsl_core::DslValue::Number(*n),
         PropertyValue::String(s) => dsl_core::DslValue::String(s.clone()),
-        PropertyValue::Array(items) => dsl_core::DslValue::Array(items.iter().map(property_value_to_dsl_value).collect()),
-        PropertyValue::Object(map) => dsl_core::DslValue::Object(map.iter().map(|(k, v)| (k.clone(), property_value_to_dsl_value(v))).collect()),
+        PropertyValue::Array(items) => {
+            // 🔀️ Rewritten from `.map(property_value_to_dsl_value).collect()` — the closure was
+            // sync and this fn is self-recursive through Array/Object, so it also needs Box::pin
+            // (R10 residue shapes #1 and #3).
+            let mut out = Vec::with_capacity(items.len());
+            for item in items {
+                out.push(Box::pin(property_value_to_dsl_value(item)).await);
+            }
+            dsl_core::DslValue::Array(out)
+        }
+        PropertyValue::Object(map) => {
+            let mut out = Vec::with_capacity(map.len());
+            for (k, v) in map {
+                out.push((k.clone(), Box::pin(property_value_to_dsl_value(v)).await));
+            }
+            dsl_core::DslValue::Object(out)
+        }
     }
 }
 
@@ -88,23 +106,39 @@ async fn dsl_value_to_property_value(value: &dsl_core::DslValue) -> PropertyValu
         dsl_core::DslValue::Bool(b) => PropertyValue::Bool(*b),
         dsl_core::DslValue::Number(n) => PropertyValue::Number(*n),
         dsl_core::DslValue::String(s) => PropertyValue::String(s.clone()),
-        dsl_core::DslValue::Array(items) => PropertyValue::Array(items.iter().map(dsl_value_to_property_value).collect()),
-        dsl_core::DslValue::Object(entries) => PropertyValue::Object(entries.iter().map(|(k, v)| (k.clone(), dsl_value_to_property_value(v))).collect()),
+        dsl_core::DslValue::Array(items) => {
+            // 🔀️ Same rewrite as `property_value_to_dsl_value` above, mirrored.
+            let mut out = Vec::with_capacity(items.len());
+            for item in items {
+                out.push(Box::pin(dsl_value_to_property_value(item)).await);
+            }
+            PropertyValue::Array(out)
+        }
+        dsl_core::DslValue::Object(entries) => {
+            let mut out = std::collections::BTreeMap::new();
+            for (k, v) in entries {
+                out.insert(k.clone(), Box::pin(dsl_value_to_property_value(v)).await);
+            }
+            PropertyValue::Object(out)
+        }
     }
 }
 
 impl dsl_core::DslField for PropertyValue {
-    async fn shape() -> dsl_core::Shape {
+    // 🚫️async: E1 impl of externally-declared trait `dsl_core::DslField` — `shape()` is E4-tagged
+    // sync in the trait itself (fn-pointer transitivity through `Shape::Record`/`Table`), see
+    // `🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🦀️component.rs`.
+    fn shape() -> dsl_core::Shape {
         dsl_core::Shape::Value
     }
 
     async fn to_value(&self) -> dsl_core::FieldValue {
-        dsl_core::FieldValue::Value(property_value_to_dsl_value(self))
+        dsl_core::FieldValue::Value(property_value_to_dsl_value(self).await)
     }
 
     async fn from_value(value: &dsl_core::FieldValue) -> Result<Self, String> {
         match value {
-            dsl_core::FieldValue::Value(dsl_value) => Ok(dsl_value_to_property_value(dsl_value)),
+            dsl_core::FieldValue::Value(dsl_value) => Ok(dsl_value_to_property_value(dsl_value).await),
             other => Err(format!("expected Value, found {other:?}")),
         }
     }
@@ -119,7 +153,10 @@ pub enum PropertyKind {
     Derived,
 }
 
-async fn deserialize_value_type<'de, D>(deserializer: D) -> Result<ValueType, D::Error>
+// 🚫️async: E1 pure computation consumed by serde's derive-generated `Deserialize::deserialize`
+// (a `deserialize_with` hook) — `Deserialize::deserialize` is an externally-declared trait method
+// and is sync, so the hook it calls synchronously must stay sync too. See R9.
+fn deserialize_value_type<'de, D>(deserializer: D) -> Result<ValueType, D::Error>
 where
     D: Deserializer<'de>,
 {
@@ -127,14 +164,17 @@ where
     parse_value_type_value(&raw).map_err(serde::de::Error::custom)
 }
 
-async fn serialize_value_type<S>(value: &ValueType, serializer: S) -> Result<S::Ok, S::Error>
+// 🚫️async: E1 — `serialize_with` hook called synchronously from derive-generated `Serialize::serialize`. See R9.
+fn serialize_value_type<S>(value: &ValueType, serializer: S) -> Result<S::Ok, S::Error>
 where
     S: Serializer,
 {
     value.serialize(serializer)
 }
 
-async fn parse_value_type_value(raw: &serde_json::Value) -> Result<ValueType, GraphManifestError> {
+// 🚫️async: E1 pure computation, no I/O, whose only consumer (`deserialize_value_type` above) is
+// itself sync-pinned by serde's external `Deserialize` trait. See R9.
+fn parse_value_type_value(raw: &serde_json::Value) -> Result<ValueType, GraphManifestError> {
     if let Ok(vt) = serde_json::from_value::<ValueType>(raw.clone()) {
         return Ok(vt);
     }
@@ -371,7 +411,7 @@ impl TrinityManifest {
 
     /// 📜️ Nakagin capsule tower compile-time manifest.
     pub async fn nakagin_default() -> Self {
-        nakagin::nakagin_manifest().to_trinity_manifest()
+        nakagin::nakagin_manifest().to_trinity_manifest().await
     }
 }
 
@@ -403,65 +443,65 @@ impl<'a> ManifestValidator<'a> {
     }
 
     pub async fn validate_node_kind(&self, kind: &str) -> Result<(), ManifestValidationError> {
-        if self.manifest.node_kind(kind).is_some() {
+        if self.manifest.node_kind(kind).await.is_some() {
             Ok(())
         } else {
-            Err(ManifestValidationError::new(format!("nodes/{kind}"), format!("unknown node kind {kind:?}")))
+            Err(ManifestValidationError::new(format!("nodes/{kind}"), format!("unknown node kind {kind:?}")).await)
         }
     }
 
     pub async fn validate_edge_kind(&self, kind: &str) -> Result<(), ManifestValidationError> {
-        if self.manifest.edge_kind(kind).is_some() {
+        if self.manifest.edge_kind(kind).await.is_some() {
             Ok(())
         } else {
-            Err(ManifestValidationError::new(format!("edges/{kind}"), format!("unknown edge kind {kind:?}")))
+            Err(ManifestValidationError::new(format!("edges/{kind}"), format!("unknown edge kind {kind:?}")).await)
         }
     }
 
     pub async fn validate_port_kind(&self, kind: &str) -> Result<(), ManifestValidationError> {
-        if self.manifest.port_kind(kind).is_some() {
+        if self.manifest.port_kind(kind).await.is_some() {
             Ok(())
         } else {
-            Err(ManifestValidationError::new(format!("ports/{kind}"), format!("unknown port kind {kind:?}")))
+            Err(ManifestValidationError::new(format!("ports/{kind}"), format!("unknown port kind {kind:?}")).await)
         }
     }
 
     pub async fn validate_wire_kind(&self, kind: &str) -> Result<(), ManifestValidationError> {
-        if self.manifest.wire_kind(kind).is_some() {
+        if self.manifest.wire_kind(kind).await.is_some() {
             Ok(())
         } else {
-            Err(ManifestValidationError::new(format!("wires/{kind}"), format!("unknown wire kind {kind:?}")))
+            Err(ManifestValidationError::new(format!("wires/{kind}"), format!("unknown wire kind {kind:?}")).await)
         }
     }
 
     pub async fn validate_layer_kind(&self, kind: &str) -> Result<(), ManifestValidationError> {
-        if self.manifest.layer_kind(kind).is_some() {
+        if self.manifest.layer_kind(kind).await.is_some() {
             Ok(())
         } else {
-            Err(ManifestValidationError::new(format!("layers/{kind}"), format!("unknown layer kind {kind:?}")))
+            Err(ManifestValidationError::new(format!("layers/{kind}"), format!("unknown layer kind {kind:?}")).await)
         }
     }
 
     pub async fn validate_language_kind(&self, kind: &str) -> Result<(), ManifestValidationError> {
-        if self.manifest.language_kind(kind).is_some() {
+        if self.manifest.language_kind(kind).await.is_some() {
             Ok(())
         } else {
-            Err(ManifestValidationError::new(format!("languages/{kind}"), format!("unknown language kind {kind:?}")))
+            Err(ManifestValidationError::new(format!("languages/{kind}"), format!("unknown language kind {kind:?}")).await)
         }
     }
 
     pub async fn validate_node_properties(&self, kind: &str, properties: &PropertyBag) -> Result<(), ManifestValidationError> {
-        let Some(def) = self.manifest.node_kind(kind) else {
-            return self.validate_node_kind(kind);
+        let Some(def) = self.manifest.node_kind(kind).await else {
+            return self.validate_node_kind(kind).await;
         };
-        self.validate_property_bag(&format!("nodes/{kind}/properties"), &def.properties, properties)
+        self.validate_property_bag(&format!("nodes/{kind}/properties"), &def.properties, properties).await
     }
 
     pub async fn validate_edge_properties(&self, kind: &str, properties: &PropertyBag) -> Result<(), ManifestValidationError> {
-        let Some(def) = self.manifest.edge_kind(kind) else {
-            return self.validate_edge_kind(kind);
+        let Some(def) = self.manifest.edge_kind(kind).await else {
+            return self.validate_edge_kind(kind).await;
         };
-        self.validate_property_bag(&format!("edges/{kind}/properties"), &def.properties, properties)
+        self.validate_property_bag(&format!("edges/{kind}/properties"), &def.properties, properties).await
     }
 
     async fn validate_property_bag(&self, path: &str, defs: &[PropertyDef], bag: &PropertyBag) -> Result<(), ManifestValidationError> {
@@ -472,13 +512,13 @@ impl<'a> ManifestValidator<'a> {
             let Some(value) = bag.get(&def.name) else {
                 continue;
             };
-            if !property_value_matches_type(value, &def.value_type) {
-                return Err(ManifestValidationError::new(format!("{path}/{}", def.name), format!("property type mismatch for {}", def.value_type.id())));
+            if !property_value_matches_type(value, &def.value_type).await {
+                return Err(ManifestValidationError::new(format!("{path}/{}", def.name), format!("property type mismatch for {}", def.value_type.id())).await);
             }
         }
         for key in bag.keys() {
             if !defs.iter().any(|d| d.name == *key) {
-                return Err(ManifestValidationError::new(format!("{path}/{key}"), format!("unknown property {key:?}")));
+                return Err(ManifestValidationError::new(format!("{path}/{key}"), format!("unknown property {key:?}")).await);
             }
         }
         Ok(())
@@ -486,20 +526,20 @@ impl<'a> ManifestValidator<'a> {
 
     pub async fn validate_trinity_graph(&self, nodes: &[TrinityNodeRef<'_>], edges: &[TrinityEdgeRef<'_>]) -> Result<(), ManifestValidationError> {
         for node in nodes {
-            self.validate_node_kind(node.kind)?;
-            self.validate_node_properties(node.kind, node.properties)?;
+            self.validate_node_kind(node.kind).await?;
+            self.validate_node_properties(node.kind, node.properties).await?;
             for port in node.ports {
-                self.validate_port_kind(port.kind)?;
-                if let Some(node_def) = self.manifest.node_kind(node.kind) {
+                self.validate_port_kind(port.kind).await?;
+                if let Some(node_def) = self.manifest.node_kind(node.kind).await {
                     if !node_def.ports.is_empty() && !node_def.ports.iter().any(|p| p == port.kind) {
-                        return Err(ManifestValidationError::new(format!("nodes/{}/ports/{}", node.id, port.kind), format!("port kind {} not declared on node kind {}", port.kind, node.kind)));
+                        return Err(ManifestValidationError::new(format!("nodes/{}/ports/{}", node.id, port.kind), format!("port kind {} not declared on node kind {}", port.kind, node.kind)).await);
                     }
                 }
             }
         }
         for edge in edges {
-            self.validate_edge_kind(edge.kind)?;
-            self.validate_edge_properties(edge.kind, edge.properties)?;
+            self.validate_edge_kind(edge.kind).await?;
+            self.validate_edge_properties(edge.kind, edge.properties).await?;
         }
         Ok(())
     }
@@ -512,7 +552,7 @@ async fn property_value_matches_type(value: &PropertyValue, expected: &ValueType
     match value {
         PropertyValue::Object(_) if matches!(expected, ValueType::Schema(_)) => true,
         _ => {
-            let neural = property_value_to_neural(value);
+            let neural = property_value_to_neural(value).await;
             expected.matches(&neural)
         }
     }
@@ -557,47 +597,78 @@ pub struct TrinityEdgeRef<'a> {
 mod tests {
     use super::*;
 
+    // 🚫️async: E5-class executor bridge, sanctioned per R4 clause 5 — `#[test]` cannot run
+    // an `async fn` directly (std has no executor for it), so every async test body in this
+    // module runs through this instead. Sound because this crate performs no real I/O: every
+    // future here resolves on its first poll, so a single poll (never a spin-park loop) is
+    // enough — panics loudly if that invariant is ever violated rather than hanging.
+    fn block_on_test<F: std::future::Future>(fut: F) -> F::Output {
+        use std::task::{Context, Poll, RawWaker, RawWakerVTable, Waker};
+        fn noop(_: *const ()) {}
+        fn clone_raw(_: *const ()) -> RawWaker {
+            RawWaker::new(std::ptr::null(), &VTABLE)
+        }
+        static VTABLE: RawWakerVTable = RawWakerVTable::new(clone_raw, noop, noop, noop);
+        let raw = RawWaker::new(std::ptr::null(), &VTABLE);
+        let waker = unsafe { Waker::from_raw(raw) };
+        let mut cx = Context::from_waker(&waker);
+        let mut fut = Box::pin(fut);
+        match fut.as_mut().poll(&mut cx) {
+            Poll::Ready(v) => v,
+            Poll::Pending => panic!("block_on_test: future did not complete synchronously"),
+        }
+    }
+
+
     #[test]
-    async fn nakagin_manifest_loads() {
-        let m = nakagin::nakagin_manifest();
-        assert_eq!(m.id, "nakagin");
-        assert!(m.node_kind("Piece").is_some());
-        assert!(m.edge_kind("Connection").is_some());
+    fn nakagin_manifest_loads() {
+        block_on_test(async {
+            let m = nakagin::nakagin_manifest();
+            assert_eq!(m.id, "nakagin");
+            assert!(m.node_kind("Piece").await.is_some());
+            assert!(m.edge_kind("Connection").await.is_some());
+        });
     }
 
     #[test]
-    async fn validator_rejects_unknown_node_kind() {
-        let m = nakagin::nakagin_manifest();
-        let v = ManifestValidator::new(&m);
-        assert!(v.validate_node_kind("NoSuchNode").is_err());
+    fn validator_rejects_unknown_node_kind() {
+        block_on_test(async {
+            let m = nakagin::nakagin_manifest();
+            let v = ManifestValidator::new(&m);
+            assert!(v.await.validate_node_kind("NoSuchNode").await.is_err());
+        });
     }
 
     #[test]
-    async fn manifest_by_id_resolves() {
-        let m = manifest_by_id("nakagin").expect("nakagin");
-        assert!(m.node_kind("Balcony").is_some());
+    fn manifest_by_id_resolves() {
+        block_on_test(async {
+            let m = manifest_by_id("nakagin").expect("nakagin");
+            assert!(m.node_kind("Balcony").await.is_some());
+        });
     }
 
     #[test]
-    async fn property_value_dsl_field_round_trips_nested_array_and_object() {
-        // 🌳️ Nested case: an Object containing an Array containing an Object — proves the
-        // `dsl_core::DslField` bridge (via `dsl_core::DslValue`) recurses correctly at every depth, not just
-        // for a flat value.
-        let mut inner_obj = std::collections::BTreeMap::new();
-        inner_obj.insert("flag".to_string(), PropertyValue::Bool(true));
-        inner_obj.insert("label".to_string(), PropertyValue::String("leaf".to_string()));
+    fn property_value_dsl_field_round_trips_nested_array_and_object() {
+        block_on_test(async {
+            // 🌳️ Nested case: an Object containing an Array containing an Object — proves the
+            // `dsl_core::DslField` bridge (via `dsl_core::DslValue`) recurses correctly at every depth, not just
+            // for a flat value.
+            let mut inner_obj = std::collections::BTreeMap::new();
+            inner_obj.insert("flag".to_string(), PropertyValue::Bool(true));
+            inner_obj.insert("label".to_string(), PropertyValue::String("leaf".to_string()));
 
-        let array_of_objects = PropertyValue::Array(vec![PropertyValue::Number(1.0), PropertyValue::Object(inner_obj), PropertyValue::Null]);
+            let array_of_objects = PropertyValue::Array(vec![PropertyValue::Number(1.0), PropertyValue::Object(inner_obj), PropertyValue::Null]);
 
-        let mut root = std::collections::BTreeMap::new();
-        root.insert("id".to_string(), PropertyValue::String("root".to_string()));
-        root.insert("count".to_string(), PropertyValue::Number(3.0));
-        root.insert("items".to_string(), array_of_objects);
-        let value = PropertyValue::Object(root);
+            let mut root = std::collections::BTreeMap::new();
+            root.insert("id".to_string(), PropertyValue::String("root".to_string()));
+            root.insert("count".to_string(), PropertyValue::Number(3.0));
+            root.insert("items".to_string(), array_of_objects);
+            let value = PropertyValue::Object(root);
 
-        let field_value = <PropertyValue as ::dsl_core::DslField>::to_value(&value);
-        let round_tripped = <PropertyValue as ::dsl_core::DslField>::from_value(&field_value).expect("round trip must succeed");
-        assert_eq!(round_tripped, value, "PropertyValue dsl_core::DslField round trip diverged for a nested Object/Array/Object value");
+            let field_value = <PropertyValue as ::dsl_core::DslField>::to_value(&value).await;
+            let round_tripped = <PropertyValue as ::dsl_core::DslField>::from_value(&field_value).await.expect("round trip must succeed");
+            assert_eq!(round_tripped, value, "PropertyValue dsl_core::DslField round trip diverged for a nested Object/Array/Object value");
+        });
     }
 }
 // #endregion 🔖️Tests

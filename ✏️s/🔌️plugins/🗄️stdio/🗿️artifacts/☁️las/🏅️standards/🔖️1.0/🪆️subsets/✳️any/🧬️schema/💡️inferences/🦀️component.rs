@@ -26,7 +26,7 @@ pub struct LasInference {
 
 impl protocol::Inference<LasSnapshot> for LasInference {
     async fn infer(snapshot: &LasSnapshot) -> Self {
-        Self { bounds: compute_las_bounds(snapshot) }
+        Self { bounds: compute_las_bounds(snapshot).await }
     }
 }
 

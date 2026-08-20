@@ -26,7 +26,7 @@ pub const ENTRY_NODE_PREFIX: &str = "entry:";
 //#region 🔖️Definition
 /// 🧱️ Stitched into the editor manifest by `crate::editor::zip::iso21320::create_zip_iso21320_editor`.
 pub async fn definition() -> WindowKindDefinition {
-    WindowKindDefinition { label: LocalizedLabel::native("Archive", "Archiv"), icon_id: "archive".into(), ..TreeWindowKit::editable_window_kind() }
+    WindowKindDefinition { label: LocalizedLabel::native("Archive", "Archiv"), icon_id: "archive".into(), ..TreeWindowKit::editable_window_kind().await }
 }
 //#endregion 🔖️Definition
 
@@ -37,7 +37,7 @@ pub async fn definition() -> WindowKindDefinition {
 pub async fn render(document: &ZipSnapshot) -> UiNode {
     let children = document.entries.iter().enumerate().map(|(index, entry)| TreeNodeView { id: format!("{ENTRY_NODE_PREFIX}{index}"), label: format!("{} ({} bytes)", entry.name, entry.data.len()), children: Vec::new() }).collect();
     let root = TreeNodeView { id: COMMENT_NODE_ID.into(), label: format!("Comment: {}", document.comment), children };
-    TreeWindowKit::render(&TreeView { roots: vec![root] })
+    TreeWindowKit::render(&TreeView { roots: vec![root] }).await
 }
 //#endregion 🔖️Render
 

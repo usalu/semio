@@ -1,0 +1,34 @@
+{
+  "surface": "conformance.component.surface",
+  "revision": 0,
+  "root": 0,
+  "nodes": [
+    {
+      "id": 0,
+      "key": "#0",
+      "component": {
+        "type": "surface",
+        "surfaceId": "surf-1",
+        "controllerId": "ctrl",
+        "kind": "world-3d",
+        "docSchema": "world3d@1",
+        "doc": {
+          "bytes": [
+            1,
+            2,
+            3
+          ]
+        }
+      },
+      "layout": {
+        "kind": "leaf",
+        "width": "hug",
+        "height": "hug"
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {}
+    }
+  ],
+  "layoutEpoch": 0
+}

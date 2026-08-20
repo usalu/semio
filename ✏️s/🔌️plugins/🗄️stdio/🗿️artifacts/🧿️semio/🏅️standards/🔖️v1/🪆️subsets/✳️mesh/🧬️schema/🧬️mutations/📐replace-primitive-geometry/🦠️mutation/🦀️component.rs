@@ -21,10 +21,10 @@ impl protocol::MutationKind<SemioMeshSnapshot, SemioMeshMutation> for ReplacePri
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "primitive-geometry", kind: "replace-primitive-geometry", record: "ReplacedPrimitiveGeometry" };
 
     async fn diff(&self, base: &SemioMeshSnapshot) -> protocol::MutationOutcome<<SemioMeshMutation as protocol::Mutation<SemioMeshSnapshot>>::Diff> {
-        super::diff::diff(self, base)
+        super::diff::diff(self, base).await
     }
     async fn inverse(&self, base: &SemioMeshSnapshot) -> Vec<SemioMeshMutation> {
-        super::inverse::inverse(self, base)
+        super::inverse::inverse(self, base).await
     }
     async fn label(&self) -> String {
         format!("Replace primitive \"{}\" geometry in mesh \"{}\"", self.primitive_id, self.mesh_id)

@@ -32,6 +32,7 @@
 
 use crate::*;
 use crate::db_ids::{check_len, DbError, ArtifactId};
+use db_storage::SnapshotStorage as _;
 
 //#region 🔖️Budget
 /// @emoji 💰️ Bounds how much work one `Compactor::run` pass does across every subsystem — the
@@ -74,6 +75,7 @@ pub struct CompactionLease;
 
 impl CompactionLease {
     /// @emoji 🏷️ The `LeaseStorage` resource name guarding `document`'s compaction pass.
+    // 🚫️async: E1 pure accessor consumed synchronously by `acquire`/`renew`/`release`/`current` — see R9
     pub fn resource(document: &ArtifactId) -> String {
         format!("compact:{document}")
     }
@@ -121,7 +123,7 @@ pub struct SegmentHorizon {
 /// @emoji 🪢️ Groups `records` (as returned by `db_wal::replay_document`, already in
 /// segment-then-on-disk order) by the `WalRecord::SegmentHeader` boundaries that open each span —
 /// the shared traversal `segment_horizons`/`sweep_payloads` both build on.
-fn group_records_by_segment(records: &[db_wal::WalRecord]) -> Vec<(u64, Vec<&db_wal::WalRecord>)> {
+async fn group_records_by_segment(records: &[db_wal::WalRecord]) -> Vec<(u64, Vec<&db_wal::WalRecord>)> {
     let mut groups: Vec<(u64, Vec<&db_wal::WalRecord>)> = Vec::new();
     for record in records {
         if let db_wal::WalRecord::SegmentHeader { segment_index, .. } = record {
@@ -136,8 +138,8 @@ fn group_records_by_segment(records: &[db_wal::WalRecord]) -> Vec<(u64, Vec<&db_
 
 /// @emoji 📊️ Computes every segment's `SegmentHorizon` from a document's full replayed record
 /// stream.
-pub fn segment_horizons(records: &[db_wal::WalRecord]) -> Vec<SegmentHorizon> {
-    group_records_by_segment(records)
+pub async fn segment_horizons(records: &[db_wal::WalRecord]) -> Vec<SegmentHorizon> {
+    group_records_by_segment(records).await
         .into_iter()
         .map(|(segment_index, group)| {
             let max_head_seq = group
@@ -158,6 +160,7 @@ pub fn segment_horizons(records: &[db_wal::WalRecord]) -> Vec<SegmentHorizon> {
 /// sealed" query, so this crate never risks touching one that might still be live, per the module
 /// doc), with a known `max_head_seq` at or below `floor_head_seq`, capped at
 /// `budget.max_wal_segments`. Ascending order (oldest first).
+// 🚫️async: E1 pure accessor consumed synchronously by `run_under_lease` and tests — see R9
 pub fn plan_wal_retention(horizons: &[SegmentHorizon], floor_head_seq: u64, budget: &CompactionBudget) -> Vec<u64> {
     let Some(max_index) = horizons.iter().map(|horizon| horizon.segment_index).max() else {
         return Vec::new();
@@ -200,7 +203,7 @@ pub async fn sweep_payloads(payload_storage: &impl db_storage::PayloadStorage, r
     let deleted_set: std::collections::HashSet<u64> = deleted_segments.iter().copied().collect();
     let mut candidates = std::collections::HashSet::new();
     let mut live = std::collections::HashSet::new();
-    for (segment_index, group) in group_records_by_segment(records) {
+    for (segment_index, group) in group_records_by_segment(records).await {
         let target = if deleted_set.contains(&segment_index) { &mut candidates } else { &mut live };
         for record in group {
             if let db_wal::WalRecord::Payload(db_wal::WalPayloadRef::CasRef(hash)) = record {
@@ -240,7 +243,7 @@ pub struct IndexKindReport {
 pub async fn compact_all_indexes(storage: &impl db_storage::IndexStorage, document: &ArtifactId) -> Result<Vec<IndexKindReport>, DbError> {
     let mut reports = Vec::with_capacity(db_index::IndexKind::ALL.len());
     for kind in db_index::IndexKind::ALL {
-        let handle = db_index::IndexHandle::new(storage, document.clone(), kind);
+        let handle = db_index::IndexHandle::new(storage, document.clone(), kind).await;
         let stats = handle.compact().await?;
         reports.push(IndexKindReport { kind, stats });
     }
@@ -254,7 +257,7 @@ pub async fn compact_all_indexes(storage: &impl db_storage::IndexStorage, docume
 /// chain, deduplicated by content hash — `SnapshotConsolidator::consolidate`'s input.
 async fn collect_chain_pages<S: db_storage::SnapshotStorage>(manager: &db_snapshot::SnapshotManager<'_, S>, document: &ArtifactId, through_generation: u64, budget: &CompactionBudget) -> Result<(db_snapshot::SnapshotDescriptor, Vec<db_state::Page>), DbError> {
     let combined = manager.materialize_chain(document, through_generation).await?;
-    let mut handle = db_snapshot::open_latest(&combined)?;
+    let mut handle = db_snapshot::open_latest(&combined).await?;
     let latest_descriptor = handle.descriptor.clone();
     let mut seen = std::collections::HashSet::new();
     let mut pages = Vec::new();
@@ -264,12 +267,12 @@ async fn collect_chain_pages<S: db_storage::SnapshotStorage>(manager: &db_snapsh
         check_len(generations_walked, budget.max_snapshot_generations, "db_compact::snapshot_chain_depth")?;
         for hash in handle.descriptor.new_pages.clone() {
             if seen.insert(hash) {
-                let bytes = db_snapshot::read_page(&combined, &handle, hash)?;
+                let bytes = db_snapshot::read_page(&combined, &handle, hash).await?;
                 pages.push(db_state::Page::new(bytes));
             }
         }
-        match handle.parent_footer_offset() {
-            Some(offset) => handle = db_snapshot::open_ancestor(&combined, offset)?,
+        match handle.parent_footer_offset().await {
+            Some(offset) => handle = db_snapshot::open_ancestor(&combined, offset).await?,
             None => break,
         }
     }
@@ -284,8 +287,8 @@ pub struct SnapshotConsolidator<'storage, S: db_storage::SnapshotStorage> {
 }
 
 impl<'storage, S: db_storage::SnapshotStorage> SnapshotConsolidator<'storage, S> {
-    pub fn new(storage: &'storage S) -> SnapshotConsolidator<'storage, S> {
-        SnapshotConsolidator { manager: db_snapshot::SnapshotManager::new(storage) }
+    pub async fn new(storage: &'storage S) -> SnapshotConsolidator<'storage, S> {
+        SnapshotConsolidator { manager: db_snapshot::SnapshotManager::new(storage).await }
     }
 
     /// @emoji 🧵️ Publishes a new full-baseline generation carrying the union of every page from
@@ -335,7 +338,7 @@ impl<'storage, S: db_storage::SnapshotStorage> SnapshotConsolidator<'storage, S>
 /// archive bytes rather than inventing a storage seam unilaterally in a crate that isn't
 /// `db_storage`'s own.
 pub async fn build_cold_archive(storage: &impl db_storage::SnapshotStorage, document: &ArtifactId, through_generation: u64) -> Result<Vec<u8>, DbError> {
-    db_snapshot::SnapshotManager::new(storage).materialize_chain(document, through_generation).await
+    db_snapshot::SnapshotManager::new(storage).await.materialize_chain(document, through_generation).await
 }
 //#endregion 🔖️ColdArchive
 
@@ -358,7 +361,7 @@ pub struct Compactor<'storage, R: semio_framework_async::HostAsyncRuntime> {
 }
 
 impl<'storage, R: semio_framework_async::HostAsyncRuntime> Compactor<'storage, R> {
-    pub fn new(storage: &'storage db_storage::DbBackend<R>) -> Compactor<'storage, R> {
+    pub async fn new(storage: &'storage db_storage::DbBackend<R>) -> Compactor<'storage, R> {
         Compactor { storage }
     }
 
@@ -385,7 +388,7 @@ impl<'storage, R: semio_framework_async::HostAsyncRuntime> Compactor<'storage, R
     /// latest snapshot generation (or `0`, i.e. nothing deletable, if it has none yet).
     pub async fn run_from_latest_snapshot(&self, document: &ArtifactId, holder: &str, consolidate_snapshots: bool, budget: &CompactionBudget, now_ms: u64) -> Result<CompactionReport, DbError> {
         let snapshot = self.storage.snapshot().await;
-        let floor = db_snapshot::SnapshotManager::new(&snapshot).load_latest(document).await?.map_or(0, |(_, descriptor)| descriptor.head_seq);
+        let floor = db_snapshot::SnapshotManager::new(&snapshot).await.load_latest(document).await?.map_or(0, |(_, descriptor)| descriptor.head_seq);
         drop(snapshot);
         self.run(document, holder, floor, consolidate_snapshots, budget, now_ms).await
     }
@@ -394,7 +397,7 @@ impl<'storage, R: semio_framework_async::HostAsyncRuntime> Compactor<'storage, R
         let mut report = CompactionReport::default();
 
         let records = db_wal::replay_document(&self.storage.wal().await, document).await?;
-        let horizons = segment_horizons(&records);
+        let horizons = segment_horizons(&records).await;
         let selected = plan_wal_retention(&horizons, wal_floor_head_seq, budget);
         report.wal_segments_deleted = apply_wal_retention(&self.storage.wal().await, document, &selected).await?;
         report.payloads_deleted = sweep_payloads(&self.storage.payload().await, &records, &selected, budget).await?.deleted;
@@ -403,9 +406,9 @@ impl<'storage, R: semio_framework_async::HostAsyncRuntime> Compactor<'storage, R
 
         if consolidate_snapshots {
             let snapshot = self.storage.snapshot().await;
-            let manager = db_snapshot::SnapshotManager::new(&snapshot);
+            let manager = db_snapshot::SnapshotManager::new(&snapshot).await;
             if let Some((latest_generation, _)) = manager.load_latest(document).await? {
-                let consolidator = SnapshotConsolidator::new(&snapshot);
+                let consolidator = SnapshotConsolidator::new(&snapshot).await;
                 let new_generation = consolidator.consolidate(document, latest_generation, budget).await?;
                 let before_retain = snapshot.list_generations(document).await?.len() as u64;
                 consolidator.retain_from(document, new_generation).await?;
@@ -428,21 +431,21 @@ mod tests {
     use db_storage::{MemoryStorage, PayloadStorage as _, SnapshotStorage as _, WalStorage as _};
     use db_wal::{WalPayloadRef, WalRecord};
 
-    fn doc(id: &str) -> ArtifactId {
+    async fn doc(id: &str) -> ArtifactId {
         ArtifactId::from(id)
     }
 
-    fn frontier(document: &ArtifactId, head_seq: u64) -> Frontier {
+    async fn frontier(document: &ArtifactId, head_seq: u64) -> Frontier {
         Frontier { document: document.clone(), head_seq, commit_seq: head_seq, chain_hash: [0u8; 32], epoch: 0 }
     }
 
-    fn sample_body(head_seq: u64) -> db_snapshot::SnapshotBody {
+    async fn sample_body(head_seq: u64) -> db_snapshot::SnapshotBody {
         db_snapshot::SnapshotBody { head_seq, commit_seq: head_seq, epoch: 0, chain_hash: [0u8; 32], protocol_version: 1, vcs_head: None, base_pack_hash: None, roots: vec![], created_at_ms: head_seq * 1_000 }
     }
 
     //#region 🔖️Budget
-    #[test]
-    fn compaction_budget_default_is_finite_and_unlimited_is_boundless() {
+    #[semio_framework_async_macros::async_test]
+    async fn compaction_budget_default_is_finite_and_unlimited_is_boundless() {
         let default = CompactionBudget::default();
         assert!(default.max_wal_segments > 0 && default.max_wal_segments < u64::MAX);
         assert!(default.max_snapshot_generations > 0 && default.max_snapshot_generations < u64::MAX);
@@ -456,10 +459,10 @@ mod tests {
     //#endregion 🔖️Budget
 
     //#region 🔖️Lease
-    #[test]
-    fn compaction_lease_round_trips_and_is_scoped_distinctly_from_the_snapshot_lease() {
-        let storage = MemoryStorage::new();
-        let document = doc("doc-1");
+    #[semio_framework_async_macros::async_test]
+    async fn compaction_lease_round_trips_and_is_scoped_distinctly_from_the_snapshot_lease() {
+        let storage = MemoryStorage::new().await;
+        let document = doc("doc-1").await;
 
         let fence = db_actor::block_on(CompactionLease::acquire(&storage, &document, "holder-a", 1_000, 0)).unwrap();
         assert!(db_actor::block_on(CompactionLease::current(&storage, &document, 0)).unwrap().is_some());
@@ -475,54 +478,54 @@ mod tests {
     //#endregion 🔖️Lease
 
     //#region 🔖️WalRetention
-    #[test]
-    fn segment_horizons_tracks_the_max_head_seq_seen_within_each_segment_span() {
-        let document = doc("doc-1");
+    #[semio_framework_async_macros::async_test]
+    async fn segment_horizons_tracks_the_max_head_seq_seen_within_each_segment_span() {
+        let document = doc("doc-1").await;
         let records = vec![
             WalRecord::SegmentHeader { document: document.clone(), segment_index: 0, prev_chain_hash: None },
             WalRecord::Command(b"a".to_vec()),
-            WalRecord::Frontier(frontier(&document, 3)),
-            WalRecord::Frontier(frontier(&document, 7)),
+            WalRecord::Frontier(frontier(&document, 3).await),
+            WalRecord::Frontier(frontier(&document, 7).await),
             WalRecord::SegmentHeader { document: document.clone(), segment_index: 1, prev_chain_hash: Some([1u8; 32]) },
             WalRecord::Command(b"b".to_vec()),
         ];
-        let horizons = segment_horizons(&records);
+        let horizons = segment_horizons(&records).await;
         assert_eq!(horizons, vec![SegmentHorizon { segment_index: 0, max_head_seq: Some(7) }, SegmentHorizon { segment_index: 1, max_head_seq: None },]);
     }
 
-    #[test]
-    fn plan_wal_retention_never_selects_the_highest_segment_index_even_if_it_qualifies() {
+    #[semio_framework_async_macros::async_test]
+    async fn plan_wal_retention_never_selects_the_highest_segment_index_even_if_it_qualifies() {
         let horizons = vec![SegmentHorizon { segment_index: 0, max_head_seq: Some(5) }, SegmentHorizon { segment_index: 1, max_head_seq: Some(5) }];
         let selected = plan_wal_retention(&horizons, 100, &CompactionBudget::default());
         assert_eq!(selected, vec![0]);
     }
 
-    #[test]
-    fn plan_wal_retention_never_selects_a_segment_with_no_known_horizon() {
+    #[semio_framework_async_macros::async_test]
+    async fn plan_wal_retention_never_selects_a_segment_with_no_known_horizon() {
         let horizons = vec![SegmentHorizon { segment_index: 0, max_head_seq: None }, SegmentHorizon { segment_index: 1, max_head_seq: Some(999) }];
         let selected = plan_wal_retention(&horizons, 10, &CompactionBudget::default());
         assert!(selected.is_empty());
     }
 
-    #[test]
-    fn plan_wal_retention_only_selects_segments_at_or_below_the_floor() {
+    #[semio_framework_async_macros::async_test]
+    async fn plan_wal_retention_only_selects_segments_at_or_below_the_floor() {
         let horizons = vec![SegmentHorizon { segment_index: 0, max_head_seq: Some(5) }, SegmentHorizon { segment_index: 1, max_head_seq: Some(15) }, SegmentHorizon { segment_index: 2, max_head_seq: Some(20) }];
         let selected = plan_wal_retention(&horizons, 10, &CompactionBudget::default());
         assert_eq!(selected, vec![0]);
     }
 
-    #[test]
-    fn plan_wal_retention_respects_the_budget_cap() {
+    #[semio_framework_async_macros::async_test]
+    async fn plan_wal_retention_respects_the_budget_cap() {
         let horizons = vec![SegmentHorizon { segment_index: 0, max_head_seq: Some(1) }, SegmentHorizon { segment_index: 1, max_head_seq: Some(1) }, SegmentHorizon { segment_index: 2, max_head_seq: Some(1) }];
         let budget = CompactionBudget { max_wal_segments: 1, ..CompactionBudget::default() };
         let selected = plan_wal_retention(&horizons, 100, &budget);
         assert_eq!(selected.len(), 1);
     }
 
-    #[test]
-    fn apply_wal_retention_deletes_selected_segments_and_is_idempotent() {
-        let storage = MemoryStorage::new();
-        let document = doc("doc-1");
+    #[semio_framework_async_macros::async_test]
+    async fn apply_wal_retention_deletes_selected_segments_and_is_idempotent() {
+        let storage = MemoryStorage::new().await;
+        let document = doc("doc-1").await;
         db_actor::block_on(storage.create_segment(&document, 0)).unwrap();
         db_actor::block_on(storage.create_segment(&document, 1)).unwrap();
         db_actor::block_on(storage.create_segment(&document, 2)).unwrap();
@@ -537,12 +540,12 @@ mod tests {
     //#endregion 🔖️WalRetention
 
     //#region 🔖️PayloadGc
-    #[test]
-    fn sweep_payloads_deletes_orphaned_candidates_but_keeps_hashes_still_referenced_elsewhere() {
-        let storage = MemoryStorage::new();
+    #[semio_framework_async_macros::async_test]
+    async fn sweep_payloads_deletes_orphaned_candidates_but_keeps_hashes_still_referenced_elsewhere() {
+        let storage = MemoryStorage::new().await;
         let orphan_hash = db_actor::block_on(storage.put(b"orphan-payload")).unwrap();
         let shared_hash = db_actor::block_on(storage.put(b"shared-payload")).unwrap();
-        let document = doc("doc-1");
+        let document = doc("doc-1").await;
 
         let records = vec![
             WalRecord::SegmentHeader { document: document.clone(), segment_index: 0, prev_chain_hash: None },
@@ -559,12 +562,12 @@ mod tests {
         assert!(db_actor::block_on(storage.contains(&shared_hash)).unwrap());
     }
 
-    #[test]
-    fn sweep_payloads_respects_the_budget_cap() {
-        let storage = MemoryStorage::new();
+    #[semio_framework_async_macros::async_test]
+    async fn sweep_payloads_respects_the_budget_cap() {
+        let storage = MemoryStorage::new().await;
         let hash_a = db_actor::block_on(storage.put(b"a")).unwrap();
         let hash_b = db_actor::block_on(storage.put(b"b")).unwrap();
-        let document = doc("doc-1");
+        let document = doc("doc-1").await;
         let records = vec![WalRecord::SegmentHeader { document, segment_index: 0, prev_chain_hash: None }, WalRecord::Payload(WalPayloadRef::CasRef(hash_a)), WalRecord::Payload(WalPayloadRef::CasRef(hash_b))];
         let budget = CompactionBudget { max_payloads: 1, ..CompactionBudget::default() };
         let report = db_actor::block_on(sweep_payloads(&storage, &records, &[0], &budget)).unwrap();
@@ -573,11 +576,11 @@ mod tests {
     //#endregion 🔖️PayloadGc
 
     //#region 🔖️IndexCompaction
-    #[test]
-    fn compact_all_indexes_reports_every_kind_and_merges_multiple_runs_into_one() {
-        let storage = MemoryStorage::new();
-        let document = doc("doc-1");
-        let handle = db_index::IndexHandle::new(&storage, document.clone(), db_index::IndexKind::Command);
+    #[semio_framework_async_macros::async_test]
+    async fn compact_all_indexes_reports_every_kind_and_merges_multiple_runs_into_one() {
+        let storage = MemoryStorage::new().await;
+        let document = doc("doc-1").await;
+        let handle = db_index::IndexHandle::new(&storage, document.clone(), db_index::IndexKind::Command).await;
         db_actor::block_on(handle.put(b"a".to_vec(), b"1".to_vec())).unwrap();
         db_actor::block_on(handle.put(b"b".to_vec(), b"2".to_vec())).unwrap();
         assert!(db_actor::block_on(handle.stats()).unwrap().run_count >= 2, "two separate put calls must land in separate runs below the auto-merge threshold");
@@ -592,114 +595,114 @@ mod tests {
     //#endregion 🔖️IndexCompaction
 
     //#region 🔖️SnapshotConsolidation
-    #[test]
-    fn consolidate_produces_a_self_sufficient_full_baseline_covering_the_whole_chain() {
-        let storage = MemoryStorage::new();
-        let document = doc("doc-1");
-        let manager = db_snapshot::SnapshotManager::new(&storage);
+    #[semio_framework_async_macros::async_test]
+    async fn consolidate_produces_a_self_sufficient_full_baseline_covering_the_whole_chain() {
+        let storage = MemoryStorage::new().await;
+        let document = doc("doc-1").await;
+        let manager = db_snapshot::SnapshotManager::new(&storage).await;
 
         let gen0_pages = vec![db_state::Page::new(b"base-a".to_vec()), db_state::Page::new(b"base-b".to_vec())];
-        db_actor::block_on(manager.publish(&document, db_snapshot::SnapshotOrigin::FullBaseline, &gen0_pages, sample_body(0))).unwrap();
+        db_actor::block_on(manager.publish(&document, db_snapshot::SnapshotOrigin::FullBaseline, &gen0_pages, sample_body(0).await)).unwrap();
 
         let gen1_pages = vec![db_state::Page::new(b"delta-a".to_vec())];
-        let mut body1 = sample_body(5);
+        let mut body1 = sample_body(5).await;
         body1.roots = vec![gen1_pages[0].hash, gen0_pages[1].hash];
         db_actor::block_on(manager.publish(&document, db_snapshot::SnapshotOrigin::Incremental, &gen1_pages, body1.clone())).unwrap();
 
-        let consolidator = SnapshotConsolidator::new(&storage);
+        let consolidator = SnapshotConsolidator::new(&storage).await;
         let new_generation = db_actor::block_on(consolidator.consolidate(&document, 1, &CompactionBudget::default())).unwrap();
         assert_eq!(new_generation, 2);
 
         let bytes = db_actor::block_on(storage.read_generation(&document, new_generation)).unwrap();
-        let handle = db_snapshot::open_latest(&bytes).unwrap();
-        assert!(handle.parent_footer_offset().is_none(), "a consolidated generation must be a self-sufficient full baseline");
+        let handle = db_snapshot::open_latest(&bytes).await.unwrap();
+        assert!(handle.parent_footer_offset().await.is_none(), "a consolidated generation must be a self-sufficient full baseline");
         assert_eq!(handle.descriptor.roots, body1.roots);
 
         for page in gen0_pages.iter().chain(gen1_pages.iter()) {
-            let read_back = db_snapshot::read_page(&bytes, &handle, page.hash).unwrap();
+            let read_back = db_snapshot::read_page(&bytes, &handle, page.hash).await.unwrap();
             assert_eq!(read_back.as_slice(), page.bytes.as_ref());
         }
     }
 
-    #[test]
-    fn retain_from_after_consolidate_prunes_every_generation_below_the_new_baseline() {
-        let storage = MemoryStorage::new();
-        let document = doc("doc-1");
-        let manager = db_snapshot::SnapshotManager::new(&storage);
-        db_actor::block_on(manager.publish(&document, db_snapshot::SnapshotOrigin::FullBaseline, &[], sample_body(0))).unwrap();
-        db_actor::block_on(manager.publish(&document, db_snapshot::SnapshotOrigin::Incremental, &[], sample_body(1))).unwrap();
+    #[semio_framework_async_macros::async_test]
+    async fn retain_from_after_consolidate_prunes_every_generation_below_the_new_baseline() {
+        let storage = MemoryStorage::new().await;
+        let document = doc("doc-1").await;
+        let manager = db_snapshot::SnapshotManager::new(&storage).await;
+        db_actor::block_on(manager.publish(&document, db_snapshot::SnapshotOrigin::FullBaseline, &[], sample_body(0).await)).unwrap();
+        db_actor::block_on(manager.publish(&document, db_snapshot::SnapshotOrigin::Incremental, &[], sample_body(1).await)).unwrap();
 
-        let consolidator = SnapshotConsolidator::new(&storage);
+        let consolidator = SnapshotConsolidator::new(&storage).await;
         let new_generation = db_actor::block_on(consolidator.consolidate(&document, 1, &CompactionBudget::default())).unwrap();
         db_actor::block_on(consolidator.retain_from(&document, new_generation)).unwrap();
 
         assert_eq!(db_actor::block_on(storage.list_generations(&document)).unwrap(), vec![new_generation]);
     }
 
-    #[test]
-    fn consolidate_respects_the_snapshot_chain_depth_budget() {
-        let storage = MemoryStorage::new();
-        let document = doc("doc-1");
-        let manager = db_snapshot::SnapshotManager::new(&storage);
-        db_actor::block_on(manager.publish(&document, db_snapshot::SnapshotOrigin::FullBaseline, &[], sample_body(0))).unwrap();
-        db_actor::block_on(manager.publish(&document, db_snapshot::SnapshotOrigin::Incremental, &[], sample_body(1))).unwrap();
-        db_actor::block_on(manager.publish(&document, db_snapshot::SnapshotOrigin::Incremental, &[], sample_body(2))).unwrap();
+    #[semio_framework_async_macros::async_test]
+    async fn consolidate_respects_the_snapshot_chain_depth_budget() {
+        let storage = MemoryStorage::new().await;
+        let document = doc("doc-1").await;
+        let manager = db_snapshot::SnapshotManager::new(&storage).await;
+        db_actor::block_on(manager.publish(&document, db_snapshot::SnapshotOrigin::FullBaseline, &[], sample_body(0).await)).unwrap();
+        db_actor::block_on(manager.publish(&document, db_snapshot::SnapshotOrigin::Incremental, &[], sample_body(1).await)).unwrap();
+        db_actor::block_on(manager.publish(&document, db_snapshot::SnapshotOrigin::Incremental, &[], sample_body(2).await)).unwrap();
 
-        let consolidator = SnapshotConsolidator::new(&storage);
+        let consolidator = SnapshotConsolidator::new(&storage).await;
         let tight_budget = CompactionBudget { max_snapshot_generations: 1, ..CompactionBudget::default() };
         assert!(matches!(db_actor::block_on(consolidator.consolidate(&document, 2, &tight_budget)), Err(DbError::LimitExceeded(_))));
     }
     //#endregion 🔖️SnapshotConsolidation
 
     //#region 🔖️ColdArchive
-    #[test]
-    fn build_cold_archive_matches_materialize_chain_and_reopens_independently() {
-        let storage = MemoryStorage::new();
-        let document = doc("doc-1");
-        let manager = db_snapshot::SnapshotManager::new(&storage);
+    #[semio_framework_async_macros::async_test]
+    async fn build_cold_archive_matches_materialize_chain_and_reopens_independently() {
+        let storage = MemoryStorage::new().await;
+        let document = doc("doc-1").await;
+        let manager = db_snapshot::SnapshotManager::new(&storage).await;
         let pages = vec![db_state::Page::new(b"page-a".to_vec())];
-        db_actor::block_on(manager.publish(&document, db_snapshot::SnapshotOrigin::FullBaseline, &pages, sample_body(0))).unwrap();
+        db_actor::block_on(manager.publish(&document, db_snapshot::SnapshotOrigin::FullBaseline, &pages, sample_body(0).await)).unwrap();
 
         let archive = db_actor::block_on(build_cold_archive(&storage, &document, 0)).unwrap();
         let expected = db_actor::block_on(manager.materialize_chain(&document, 0)).unwrap();
         assert_eq!(archive, expected);
 
-        let handle = db_snapshot::open_latest(&archive).unwrap();
-        assert_eq!(handle.generation(), 0);
+        let handle = db_snapshot::open_latest(&archive).await.unwrap();
+        assert_eq!(handle.generation().await, 0);
     }
     //#endregion 🔖️ColdArchive
 
     //#region 🔖️Compactor
-    #[test]
-    fn run_never_deletes_the_sole_or_active_wal_segment() {
-        let storage = MemoryStorage::new();
-        let document = doc("doc-1");
+    #[semio_framework_async_macros::async_test]
+    async fn run_never_deletes_the_sole_or_active_wal_segment() {
+        let storage = MemoryStorage::new().await;
+        let document = doc("doc-1").await;
         let mut wal = db_actor::block_on(db_wal::ArtifactWal::create(&storage, document.clone(), db_wal::GroupCommitPolicy::default(), 0)).unwrap();
-        db_actor::block_on(wal.submit(&storage, &[WalRecord::Frontier(frontier(&document, 100))], DurabilityClass::Fsync, 0)).unwrap();
-        let storage = db_storage::DbBackend::Memory(storage);
+        db_actor::block_on(wal.submit(&storage, &[WalRecord::Frontier(frontier(&document, 100).await)], DurabilityClass::Fsync, 0)).unwrap();
+        let storage: db_storage::DbBackend<db_storage::InlineRuntime> = db_storage::DbBackend::Memory(storage);
 
-        let compactor = Compactor::new(&storage);
+        let compactor = Compactor::new(&storage).await;
         let report = db_actor::block_on(compactor.run(&document, "holder-a", 1_000, false, &CompactionBudget::default(), 0)).unwrap();
         assert_eq!(report.wal_segments_deleted, 0);
         assert_eq!(db_actor::block_on(async { storage.wal().await.list_segments(&document).await }).unwrap(), vec![0]);
     }
 
-    #[test]
-    fn run_end_to_end_compacts_indexes_and_consolidates_snapshots_then_releases_the_lease() {
-        let storage = MemoryStorage::new();
-        let document = doc("doc-1");
-        let manager = db_snapshot::SnapshotManager::new(&storage);
+    #[semio_framework_async_macros::async_test]
+    async fn run_end_to_end_compacts_indexes_and_consolidates_snapshots_then_releases_the_lease() {
+        let storage = MemoryStorage::new().await;
+        let document = doc("doc-1").await;
+        let manager = db_snapshot::SnapshotManager::new(&storage).await;
         let gen0_pages = vec![db_state::Page::new(b"p0".to_vec())];
-        db_actor::block_on(manager.publish(&document, db_snapshot::SnapshotOrigin::FullBaseline, &gen0_pages, sample_body(0))).unwrap();
+        db_actor::block_on(manager.publish(&document, db_snapshot::SnapshotOrigin::FullBaseline, &gen0_pages, sample_body(0).await)).unwrap();
         let gen1_pages = vec![db_state::Page::new(b"p1".to_vec())];
-        db_actor::block_on(manager.publish(&document, db_snapshot::SnapshotOrigin::Incremental, &gen1_pages, sample_body(5))).unwrap();
+        db_actor::block_on(manager.publish(&document, db_snapshot::SnapshotOrigin::Incremental, &gen1_pages, sample_body(5).await)).unwrap();
 
-        let command_handle = db_index::IndexHandle::new(&storage, document.clone(), db_index::IndexKind::Command);
+        let command_handle = db_index::IndexHandle::new(&storage, document.clone(), db_index::IndexKind::Command).await;
         db_actor::block_on(command_handle.put(b"k1".to_vec(), b"v1".to_vec())).unwrap();
         db_actor::block_on(command_handle.put(b"k2".to_vec(), b"v2".to_vec())).unwrap();
-        let storage = db_storage::DbBackend::Memory(storage);
+        let storage: db_storage::DbBackend<db_storage::InlineRuntime> = db_storage::DbBackend::Memory(storage);
 
-        let compactor = Compactor::new(&storage);
+        let compactor = Compactor::new(&storage).await;
         let report = db_actor::block_on(compactor.run(&document, "holder-a", 0, true, &CompactionBudget::default(), 0)).unwrap();
 
         assert_eq!(report.snapshot_consolidated_generation, Some(2));
@@ -713,30 +716,30 @@ mod tests {
         assert!(db_actor::block_on(async { CompactionLease::current(&storage.lease().await, &document, 0).await }).unwrap().is_none(), "a successful run must release its lease");
     }
 
-    #[test]
-    fn run_fails_with_conflict_when_another_holder_already_holds_the_compaction_lease() {
-        let storage = MemoryStorage::new();
-        let document = doc("doc-1");
+    #[semio_framework_async_macros::async_test]
+    async fn run_fails_with_conflict_when_another_holder_already_holds_the_compaction_lease() {
+        let storage = MemoryStorage::new().await;
+        let document = doc("doc-1").await;
         let fence = db_actor::block_on(CompactionLease::acquire(&storage, &document, "holder-a", 10_000, 0)).unwrap();
-        let storage = db_storage::DbBackend::Memory(storage);
+        let storage: db_storage::DbBackend<db_storage::InlineRuntime> = db_storage::DbBackend::Memory(storage);
 
-        let compactor = Compactor::new(&storage);
+        let compactor = Compactor::new(&storage).await;
         let result = db_actor::block_on(compactor.run(&document, "holder-b", 0, false, &CompactionBudget::default(), 0));
         assert!(matches!(result, Err(DbError::Conflict(_))));
 
         db_actor::block_on(async { CompactionLease::release(&storage.lease().await, &document, "holder-a", fence).await }).unwrap();
     }
 
-    #[test]
-    fn run_releases_the_compaction_lease_even_when_a_step_fails() {
-        let storage = MemoryStorage::new();
-        let document = doc("doc-1");
+    #[semio_framework_async_macros::async_test]
+    async fn run_releases_the_compaction_lease_even_when_a_step_fails() {
+        let storage = MemoryStorage::new().await;
+        let document = doc("doc-1").await;
         db_actor::block_on(storage.create_segment(&document, 0)).unwrap();
         db_actor::block_on(storage.append(&document, 0, b"not a valid spr segment at all")).unwrap();
         db_actor::block_on(storage.seal(&document, 0)).unwrap();
-        let storage = db_storage::DbBackend::Memory(storage);
+        let storage: db_storage::DbBackend<db_storage::InlineRuntime> = db_storage::DbBackend::Memory(storage);
 
-        let compactor = Compactor::new(&storage);
+        let compactor = Compactor::new(&storage).await;
         let budget = CompactionBudget::default();
         let result = db_actor::block_on(compactor.run(&document, "holder-a", 0, false, &budget, 0));
         assert!(result.is_err());
@@ -744,18 +747,18 @@ mod tests {
         assert!(db_actor::block_on(async { CompactionLease::current(&storage.lease().await, &document, 0).await }).unwrap().is_none(), "the lease must be freed despite the failure");
     }
 
-    #[test]
-    fn run_from_latest_snapshot_derives_the_floor_from_the_current_snapshot_head_seq() {
-        let storage = MemoryStorage::new();
-        let document = doc("doc-1");
-        let manager = db_snapshot::SnapshotManager::new(&storage);
-        db_actor::block_on(manager.publish(&document, db_snapshot::SnapshotOrigin::FullBaseline, &[], sample_body(42))).unwrap();
+    #[semio_framework_async_macros::async_test]
+    async fn run_from_latest_snapshot_derives_the_floor_from_the_current_snapshot_head_seq() {
+        let storage = MemoryStorage::new().await;
+        let document = doc("doc-1").await;
+        let manager = db_snapshot::SnapshotManager::new(&storage).await;
+        db_actor::block_on(manager.publish(&document, db_snapshot::SnapshotOrigin::FullBaseline, &[], sample_body(42).await)).unwrap();
 
         let mut wal = db_actor::block_on(db_wal::ArtifactWal::create(&storage, document.clone(), db_wal::GroupCommitPolicy::default(), 0)).unwrap();
-        db_actor::block_on(wal.submit(&storage, &[WalRecord::Frontier(frontier(&document, 42))], DurabilityClass::Fsync, 0)).unwrap();
-        let storage = db_storage::DbBackend::Memory(storage);
+        db_actor::block_on(wal.submit(&storage, &[WalRecord::Frontier(frontier(&document, 42).await)], DurabilityClass::Fsync, 0)).unwrap();
+        let storage: db_storage::DbBackend<db_storage::InlineRuntime> = db_storage::DbBackend::Memory(storage);
 
-        let compactor = Compactor::new(&storage);
+        let compactor = Compactor::new(&storage).await;
         let report = db_actor::block_on(compactor.run_from_latest_snapshot(&document, "holder-a", false, &CompactionBudget::default(), 0)).unwrap();
         assert_eq!(report.wal_segments_deleted, 0, "the sole segment must still never be touched, even though its horizon is at the floor");
     }

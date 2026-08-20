@@ -49,7 +49,7 @@ pub mod derived_composition {
             if native.is_empty() {
                 return Err(ComposeError { message: "SemioMeshComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() });
             }
-            let analysis = SemioMeshAnalyzer::analyze(&native);
+            let analysis = SemioMeshAnalyzer::analyze(&native).await;
             let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError { message: "SemioMeshComposerComposition: analysis produced no snapshot".into(), diagnostics: analysis.diagnostics.clone() })?;
             Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics })
         }
@@ -68,11 +68,11 @@ pub mod derived_composition {
         const DIALECT: Dialect = DIALECT;
         async fn validate(payload: &IoPayload) -> Vec<dsl::Diagnostic> {
             let decoded = match payload {
-                IoPayload::Binary(bytes) => <SemioMeshSnapshot as store::ArtifactPack>::decode_pack(bytes).ok(),
-                IoPayload::Text(text) => <SemioMeshSnapshot as store::ArtifactDsl>::parse_dsl(text).ok(),
+                IoPayload::Binary(bytes) => <SemioMeshSnapshot as store::ArtifactPack>::decode_pack(bytes).await.ok(),
+                IoPayload::Text(text) => <SemioMeshSnapshot as store::ArtifactDsl>::parse_dsl(text).await.ok(),
             };
             match decoded {
-                Some(snapshot) => check_mesh_referential_invariants(&snapshot),
+                Some(snapshot) => check_mesh_referential_invariants(&snapshot).await,
                 None => vec![dsl::Diagnostic::error("stdio.semio_mesh.validate-decode-failed", dsl::TextSpan::at(1, 1), "SemioMeshValidator: payload did not decode as a SemioMeshSnapshot".to_string())],
             }
         }
@@ -132,12 +132,12 @@ pub mod derived_composition {
     /// 📌️ Registers this subset's schema descriptor, document codec, and SubsetValidator. Called from
     /// this artifact's standard-level `engine::register()`.
     pub async fn register() {
-        ::schema::register_artifact_schema_descriptor(crate::artifacts::semio::standards::v1::subsets::mesh::schema::semio_mesh_artifact_schema_descriptor());
+        ::schema::register_artifact_schema_descriptor(crate::artifacts::semio::standards::v1::subsets::mesh::schema::semio_mesh_artifact_schema_descriptor().await);
         let _ = store::register_document_codec(store::ArtifactCodec::of::<SemioMeshSnapshot, crate::artifacts::semio::standards::v1::subsets::mesh::schema::mutations::SemioMeshMutation>(
             crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::STDIO_SEMIOMESH_DOCUMENT_SCHEMA,
-        ));
-        let _ = register_subset_validator(validator_entry());
-        let _ = register_composer_entries(io_bridge_entries());
+        ).await);
+        let _ = register_subset_validator(validator_entry().await);
+        let _ = register_composer_entries(io_bridge_entries().await);
         register_artifact_inferences();
     }
 
@@ -145,7 +145,7 @@ pub mod derived_composition {
     /// catalog — sibling to `register_artifact_schema_descriptor` above (separate registry,
     /// ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
     pub async fn register_artifact_inferences() {
-        ::schema::register_artifact_inference_descriptor(crate::artifacts::semio::standards::v1::subsets::mesh::schema::inferences::semio_mesh_artifact_inference_descriptor());
+        ::schema::register_artifact_inference_descriptor(crate::artifacts::semio::standards::v1::subsets::mesh::schema::inferences::semio_mesh_artifact_inference_descriptor().await);
     }
 
     //#region 🔖️IoBridgeEntries

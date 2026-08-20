@@ -32,7 +32,7 @@ impl RationalBezier3 {
     }
     pub async fn unweighted(controls: Vec<Pnt3>) -> Self {
         let weights = vec![1.0; controls.len()];
-        RationalBezier3::new(controls, weights)
+        RationalBezier3::new(controls, weights).await
     }
     pub async fn degree(&self) -> usize {
         self.controls.len().saturating_sub(1)
@@ -56,7 +56,7 @@ impl RationalBezier3 {
                 hw[i] = hw[i] * (1.0 - t) + hw[i + 1] * t;
             }
         }
-        Pnt3::new(hx[0] / hw[0], hy[0] / hw[0], hz[0] / hw[0])
+        Pnt3::new(hx[0] / hw[0], hy[0] / hw[0], hz[0] / hw[0]).await
     }
     /// 🎀️ Splits into two segments at `t`, each reparameterized onto `[0, 1]`. Uses de Casteljau
     /// on the homogeneous control net so the split is exact for rational curves too.
@@ -95,7 +95,7 @@ impl RationalBezier3 {
             right_c.push(Pnt3::new(hx[row][col] / w_right, hy[row][col] / w_right, hz[row][col] / w_right));
             right_w.push(w_right);
         }
-        (RationalBezier3::new(left_c, left_w), RationalBezier3::new(right_c, right_w))
+        (RationalBezier3::new(left_c, left_w).await, RationalBezier3::new(right_c, right_w).await)
     }
     /// 🎀️ An axis-aligned box guaranteed to contain the curve (the convex hull of the weighted
     /// control points contains an unweighted curve exactly; for rational curves with all-positive
@@ -105,8 +105,8 @@ impl RationalBezier3 {
         let mut lo = self.controls[0];
         let mut hi = self.controls[0];
         for p in &self.controls[1..] {
-            lo = Pnt3::new(lo.x.min(p.x), lo.y.min(p.y), lo.z.min(p.z));
-            hi = Pnt3::new(hi.x.max(p.x), hi.y.max(p.y), hi.z.max(p.z));
+            lo = Pnt3::new(lo.x.min(p.x), lo.y.min(p.y), lo.z.min(p.z)).await;
+            hi = Pnt3::new(hi.x.max(p.x), hi.y.max(p.y), hi.z.max(p.z)).await;
         }
         (lo, hi)
     }
@@ -122,10 +122,10 @@ impl RationalBezier3 {
             let a = i as f64 / m as f64;
             let b = (m - i) as f64 / m as f64;
             let left = if i > 0 { self.controls[i - 1].to_vec() * a } else { crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::Vec3::ZERO };
-            let right = if i <= n { self.controls[i].to_vec() * b } else { crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::Vec3::ZERO };
+            let right = if i <= n.await { self.controls[i].to_vec() * b.await } else { crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::Vec3::ZERO };
             controls.push(Pnt3::from_array((left + right).to_array()));
         }
-        RationalBezier3::unweighted(controls)
+        RationalBezier3::unweighted(controls).await
     }
 }
 
@@ -136,7 +136,7 @@ impl RationalBezier2 {
     }
     pub async fn unweighted(controls: Vec<Pnt2>) -> Self {
         let weights = vec![1.0; controls.len()];
-        RationalBezier2::new(controls, weights)
+        RationalBezier2::new(controls, weights).await
     }
     pub async fn degree(&self) -> usize {
         self.controls.len().saturating_sub(1)
@@ -153,7 +153,7 @@ impl RationalBezier2 {
                 hw[i] = hw[i] * (1.0 - t) + hw[i + 1] * t;
             }
         }
-        Pnt2::new(hx[0] / hw[0], hy[0] / hw[0])
+        Pnt2::new(hx[0] / hw[0], hy[0] / hw[0]).await
     }
     pub async fn subdivide(&self, t: f64) -> (RationalBezier2, RationalBezier2) {
         let n = self.controls.len();
@@ -187,14 +187,14 @@ impl RationalBezier2 {
             right_c.push(Pnt2::new(hx[row][col] / w_right, hy[row][col] / w_right));
             right_w.push(w_right);
         }
-        (RationalBezier2::new(left_c, left_w), RationalBezier2::new(right_c, right_w))
+        (RationalBezier2::new(left_c, left_w).await, RationalBezier2::new(right_c, right_w).await)
     }
     pub async fn control_hull_box(&self) -> (Pnt2, Pnt2) {
         let mut lo = self.controls[0];
         let mut hi = self.controls[0];
         for p in &self.controls[1..] {
-            lo = Pnt2::new(lo.x.min(p.x), lo.y.min(p.y));
-            hi = Pnt2::new(hi.x.max(p.x), hi.y.max(p.y));
+            lo = Pnt2::new(lo.x.min(p.x), lo.y.min(p.y)).await;
+            hi = Pnt2::new(hi.x.max(p.x), hi.y.max(p.y)).await;
         }
         (lo, hi)
     }
@@ -214,12 +214,12 @@ pub async fn subdivide_until_flat(b: &RationalBezier2, tol: f64, max_depth: u32)
 }
 
 async fn subdivide_recursive(b: RationalBezier2, tol: f64, depth: u32, out: &mut Vec<RationalBezier2>) {
-    let (lo, hi) = b.control_hull_box();
+    let (lo, hi) = b.control_hull_box().await;
     if (hi.x - lo.x) <= tol && (hi.y - lo.y) <= tol || depth == 0 {
         out.push(b);
         return;
     }
-    let (left, right) = b.subdivide(0.5);
+    let (left, right) = b.subdivide(0.5).await;
     subdivide_recursive(left, tol, depth - 1, out);
     subdivide_recursive(right, tol, depth - 1, out);
 }

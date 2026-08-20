@@ -114,6 +114,7 @@ impl PostgresStorage {
 /// `std::io::Error`. A `Database`-flavored error further classifies via
 /// `DatabaseError::is_unique_violation` (driver-agnostic, no hand-parsed SQLSTATE string).
 #[allow(clippy::needless_pass_by_value)] // used directly as a `map_err` callback, which passes the error by value
+// 🚫️async: E4 fn-pointer slot
 fn map_sqlx_error(err: sqlx::Error) -> DbError {
     match &err {
         sqlx::Error::RowNotFound => return DbError::NotFound("row not found".to_string()),
@@ -136,6 +137,7 @@ fn map_sqlx_error(err: sqlx::Error) -> DbError {
 
 /// @emoji 🆕️ Like `map_sqlx_error`, but a unique-violation becomes `DbError::AlreadyExists(what())`
 /// instead of the generic `DbError::Io` — used by every `create_segment`-shaped write.
+// 🚫️async: E1 pure accessor called from sync `.map_err(|err| map_create_error(...))` closures — see R9
 fn map_create_error(err: sqlx::Error, what: impl FnOnce() -> String) -> DbError {
     if let Some(db_err) = err.as_database_error() {
         if db_err.is_unique_violation() {
@@ -151,14 +153,14 @@ fn map_create_error(err: sqlx::Error, what: impl FnOnce() -> String) -> DbError 
 /// trait boundary but `BIGINT` (`i64`) in Postgres — this is the one narrowing conversion point,
 /// erroring rather than silently wrapping on the (astronomically unlikely) values above
 /// `i64::MAX`.
-fn to_i64(value: u64) -> Result<i64, DbError> {
+async fn to_i64(value: u64) -> Result<i64, DbError> {
     i64::try_from(value).map_err(|_| DbError::InvalidArgument(format!("value {value} exceeds i64::MAX")))
 }
 
 /// @emoji ✂️ Validates a `WalStorage::read` range against the segment's actual current length
 /// (already fetched via `octet_length`, so this never touches the segment bytes themselves) and
 /// converts to the 1-indexed `(offset, len)` pair Postgres's `substring(bytea, int, int)` expects.
-fn validate_read_range(current_len: u64, range: ByteRange) -> Result<(i64, i64), DbError> {
+async fn validate_read_range(current_len: u64, range: ByteRange) -> Result<(i64, i64), DbError> {
     let end = range.offset.checked_add(range.len).ok_or_else(|| DbError::InvalidArgument("read range overflows u64".to_string()))?;
     if end > current_len {
         return Err(DbError::InvalidArgument(format!("read range {}..{end} out of bounds (len {current_len})", range.offset)));
@@ -168,7 +170,7 @@ fn validate_read_range(current_len: u64, range: ByteRange) -> Result<(i64, i64),
 
 /// @emoji ✂️ Validates a `WalStorage::truncate_tail` request against the segment's sealed flag and
 /// current length, matching `db_storage::{MemoryStorage, FsStorage}`'s identical checks.
-fn validate_truncate(sealed: bool, current_len: u64, new_len: u64) -> Result<(), DbError> {
+async fn validate_truncate(sealed: bool, current_len: u64, new_len: u64) -> Result<(), DbError> {
     if sealed {
         return Err(DbError::InvalidArgument("cannot truncate sealed wal segment".to_string()));
     }
@@ -427,7 +429,7 @@ struct ExistingLease {
 /// @emoji 🤝️ Pure decision for `LeaseStorage::acquire` — identical state machine to
 /// `db_storage::{MemoryStorage, FsStorage}::acquire`: re-acquire by the same still-live holder keeps
 /// the fence, a genuine hand-off (absent or expired) bumps it, a live foreign holder conflicts.
-fn lease_acquire_decision(existing: Option<&ExistingLease>, holder: &str, now_ms: u64) -> Result<EpochFence, DbError> {
+async fn lease_acquire_decision(existing: Option<&ExistingLease>, holder: &str, now_ms: u64) -> Result<EpochFence, DbError> {
     match existing {
         Some(info) if now_ms < info.expires_at_ms => {
             if info.holder != holder {
@@ -442,7 +444,7 @@ fn lease_acquire_decision(existing: Option<&ExistingLease>, holder: &str, now_ms
 
 /// @emoji ♻️ Pure decision for `LeaseStorage::renew` — errors precisely as documented on the trait:
 /// `NotFound` absent, `Unavailable` expired, `Unauthorized` wrong holder, `Fenced` wrong epoch.
-fn lease_renew_check(existing: Option<&ExistingLease>, holder: &str, fence: EpochFence, now_ms: u64) -> Result<(), DbError> {
+async fn lease_renew_check(existing: Option<&ExistingLease>, holder: &str, fence: EpochFence, now_ms: u64) -> Result<(), DbError> {
     let info = existing.ok_or_else(|| DbError::NotFound("lease not found".to_string()))?;
     if now_ms >= info.expires_at_ms {
         return Err(DbError::Unavailable("lease already expired".to_string()));
@@ -455,7 +457,7 @@ fn lease_renew_check(existing: Option<&ExistingLease>, holder: &str, fence: Epoc
 
 /// @emoji 🕊️ Pure decision for `LeaseStorage::release` — same holder/fence checks as `renew`, minus
 /// the expiry check (a holder may release its own already-expired-but-not-yet-reclaimed lease).
-fn lease_release_check(existing: Option<&ExistingLease>, holder: &str, fence: EpochFence) -> Result<(), DbError> {
+async fn lease_release_check(existing: Option<&ExistingLease>, holder: &str, fence: EpochFence) -> Result<(), DbError> {
     let info = existing.ok_or_else(|| DbError::NotFound("lease not found".to_string()))?;
     if info.holder != holder {
         return Err(DbError::Unauthorized(format!("lease is not held by {holder}")));
@@ -532,7 +534,7 @@ impl LeaseStorage for PostgresStorage {
 //#region 🔖️DbBackend
 /// @emoji 🎚️ `PostgresStorage`'s fixed capability set — extracted to a free fn so the unit tests
 /// below can assert on it without opening a real connection.
-fn postgres_capabilities() -> StorageCapabilities {
+async fn postgres_capabilities() -> StorageCapabilities {
     StorageCapabilities { durable: true, max_durability: DurabilityClass::Fsync, supports_fsync: true, supports_cas: true }
 }
 
@@ -556,63 +558,63 @@ mod tests {
     // itself is exercised by inspection against the schema in `//#region 🔖️Schema`.
 
     //#region 🔖️RangeAndTruncate
-    #[test]
-    fn validate_read_range_accepts_in_bounds_slice() {
+    #[semio_framework_async_macros::async_test]
+    async fn validate_read_range_accepts_in_bounds_slice() {
         assert_eq!(validate_read_range(10, ByteRange { offset: 2, len: 5 }).unwrap(), (2, 5));
     }
 
-    #[test]
-    fn validate_read_range_rejects_out_of_bounds() {
+    #[semio_framework_async_macros::async_test]
+    async fn validate_read_range_rejects_out_of_bounds() {
         assert!(matches!(validate_read_range(10, ByteRange { offset: 8, len: 5 }), Err(DbError::InvalidArgument(_))));
     }
 
-    #[test]
-    fn validate_read_range_rejects_offset_len_overflow() {
+    #[semio_framework_async_macros::async_test]
+    async fn validate_read_range_rejects_offset_len_overflow() {
         assert!(matches!(validate_read_range(10, ByteRange { offset: u64::MAX, len: 1 }), Err(DbError::InvalidArgument(_))));
     }
 
-    #[test]
-    fn validate_truncate_rejects_sealed_segment() {
+    #[semio_framework_async_macros::async_test]
+    async fn validate_truncate_rejects_sealed_segment() {
         assert!(matches!(validate_truncate(true, 10, 5), Err(DbError::InvalidArgument(_))));
     }
 
-    #[test]
-    fn validate_truncate_rejects_growth() {
+    #[semio_framework_async_macros::async_test]
+    async fn validate_truncate_rejects_growth() {
         assert!(matches!(validate_truncate(false, 10, 20), Err(DbError::InvalidArgument(_))));
     }
 
-    #[test]
-    fn validate_truncate_accepts_shrink() {
+    #[semio_framework_async_macros::async_test]
+    async fn validate_truncate_accepts_shrink() {
         assert!(validate_truncate(false, 10, 5).is_ok());
     }
     //#endregion 🔖️RangeAndTruncate
 
     //#region 🔖️Lease
-    #[test]
-    fn lease_acquire_fresh_resource_starts_at_initial_fence() {
+    #[semio_framework_async_macros::async_test]
+    async fn lease_acquire_fresh_resource_starts_at_initial_fence() {
         assert_eq!(lease_acquire_decision(None, "alice", 0).unwrap(), EpochFence::INITIAL);
     }
 
-    #[test]
-    fn lease_acquire_reacquire_by_same_live_holder_keeps_fence() {
+    #[semio_framework_async_macros::async_test]
+    async fn lease_acquire_reacquire_by_same_live_holder_keeps_fence() {
         let existing = ExistingLease { holder: "alice".to_string(), fence: EpochFence::INITIAL.next(), expires_at_ms: 1_000 };
         assert_eq!(lease_acquire_decision(Some(&existing), "alice", 500).unwrap(), existing.fence);
     }
 
-    #[test]
-    fn lease_acquire_by_other_holder_before_expiry_conflicts() {
+    #[semio_framework_async_macros::async_test]
+    async fn lease_acquire_by_other_holder_before_expiry_conflicts() {
         let existing = ExistingLease { holder: "alice".to_string(), fence: EpochFence::INITIAL, expires_at_ms: 1_000 };
         assert!(matches!(lease_acquire_decision(Some(&existing), "bob", 500), Err(DbError::Conflict(_))));
     }
 
-    #[test]
-    fn lease_acquire_after_expiry_bumps_fence_for_new_holder() {
+    #[semio_framework_async_macros::async_test]
+    async fn lease_acquire_after_expiry_bumps_fence_for_new_holder() {
         let existing = ExistingLease { holder: "alice".to_string(), fence: EpochFence::INITIAL, expires_at_ms: 1_000 };
         assert_eq!(lease_acquire_decision(Some(&existing), "bob", 2_000).unwrap(), EpochFence::INITIAL.next());
     }
 
-    #[test]
-    fn lease_renew_rejects_absent_expired_wrong_holder_and_wrong_fence() {
+    #[semio_framework_async_macros::async_test]
+    async fn lease_renew_rejects_absent_expired_wrong_holder_and_wrong_fence() {
         let existing = ExistingLease { holder: "alice".to_string(), fence: EpochFence::INITIAL, expires_at_ms: 1_000 };
         assert!(matches!(lease_renew_check(None, "alice", EpochFence::INITIAL, 0), Err(DbError::NotFound(_))));
         assert!(matches!(lease_renew_check(Some(&existing), "alice", EpochFence::INITIAL, 2_000), Err(DbError::Unavailable(_))));
@@ -620,14 +622,14 @@ mod tests {
         assert!(matches!(lease_renew_check(Some(&existing), "alice", EpochFence::INITIAL.next(), 500), Err(DbError::Fenced { .. })));
     }
 
-    #[test]
-    fn lease_renew_accepts_matching_live_holder_and_fence() {
+    #[semio_framework_async_macros::async_test]
+    async fn lease_renew_accepts_matching_live_holder_and_fence() {
         let existing = ExistingLease { holder: "alice".to_string(), fence: EpochFence::INITIAL, expires_at_ms: 1_000 };
         assert!(lease_renew_check(Some(&existing), "alice", EpochFence::INITIAL, 500).is_ok());
     }
 
-    #[test]
-    fn lease_release_rejects_wrong_holder_or_fence() {
+    #[semio_framework_async_macros::async_test]
+    async fn lease_release_rejects_wrong_holder_or_fence() {
         let existing = ExistingLease { holder: "alice".to_string(), fence: EpochFence::INITIAL, expires_at_ms: 1_000 };
         assert!(matches!(lease_release_check(Some(&existing), "bob", EpochFence::INITIAL), Err(DbError::Unauthorized(_))));
         assert!(matches!(lease_release_check(Some(&existing), "alice", EpochFence::INITIAL.next()), Err(DbError::Fenced { .. })));
@@ -636,59 +638,59 @@ mod tests {
     //#endregion 🔖️Lease
 
     //#region 🔖️Conversion
-    #[test]
-    fn to_i64_round_trips_ordinary_values() {
+    #[semio_framework_async_macros::async_test]
+    async fn to_i64_round_trips_ordinary_values() {
         assert_eq!(to_i64(42).unwrap(), 42);
         assert_eq!(to_i64(0).unwrap(), 0);
     }
 
-    #[test]
-    fn to_i64_rejects_values_above_i64_max() {
+    #[semio_framework_async_macros::async_test]
+    async fn to_i64_rejects_values_above_i64_max() {
         assert!(to_i64(u64::MAX).is_err());
     }
     //#endregion 🔖️Conversion
 
     //#region 🔖️ErrorMapping
-    #[test]
-    fn map_sqlx_error_classifies_row_not_found() {
+    #[semio_framework_async_macros::async_test]
+    async fn map_sqlx_error_classifies_row_not_found() {
         assert!(matches!(map_sqlx_error(sqlx::Error::RowNotFound), DbError::NotFound(_)));
     }
 
-    #[test]
-    fn map_sqlx_error_classifies_pool_exhaustion_as_unavailable() {
+    #[semio_framework_async_macros::async_test]
+    async fn map_sqlx_error_classifies_pool_exhaustion_as_unavailable() {
         assert!(matches!(map_sqlx_error(sqlx::Error::PoolClosed), DbError::Unavailable(_)));
         assert!(matches!(map_sqlx_error(sqlx::Error::PoolTimedOut), DbError::Unavailable(_)));
         assert!(matches!(map_sqlx_error(sqlx::Error::WorkerCrashed), DbError::Unavailable(_)));
     }
 
-    #[test]
-    fn map_sqlx_error_classifies_protocol_and_configuration_as_invalid_argument() {
+    #[semio_framework_async_macros::async_test]
+    async fn map_sqlx_error_classifies_protocol_and_configuration_as_invalid_argument() {
         assert!(matches!(map_sqlx_error(sqlx::Error::Protocol("bad frame".to_string())), DbError::InvalidArgument(_)));
         assert!(matches!(map_sqlx_error(sqlx::Error::InvalidArgument("bad bind".to_string())), DbError::InvalidArgument(_)));
     }
 
-    #[test]
-    fn map_sqlx_error_classifies_io_as_io() {
+    #[semio_framework_async_macros::async_test]
+    async fn map_sqlx_error_classifies_io_as_io() {
         assert!(matches!(map_sqlx_error(sqlx::Error::Io(std::io::Error::other("disconnected"))), DbError::Io(_)));
     }
     //#endregion 🔖️ErrorMapping
 
     //#region 🔖️SchemaAndCapabilities
-    #[test]
-    fn schema_statements_cover_every_storage_table() {
+    #[semio_framework_async_macros::async_test]
+    async fn schema_statements_cover_every_storage_table() {
         let joined = SCHEMA_STATEMENTS.join(" ");
         for table in ["db_wal_segment", "db_snapshot_generation", "db_payload", "db_catalog_root", "db_index_run", "db_lease"] {
             assert!(joined.contains(table), "schema is missing table {table}");
         }
     }
 
-    #[test]
-    fn schema_seeds_the_catalog_singleton_row() {
+    #[semio_framework_async_macros::async_test]
+    async fn schema_seeds_the_catalog_singleton_row() {
         assert!(SCHEMA_STATEMENTS.iter().any(|statement| statement.contains("INSERT INTO db_catalog_root")));
     }
 
-    #[test]
-    fn postgres_capabilities_report_durable_fsync_and_real_cas() {
+    #[semio_framework_async_macros::async_test]
+    async fn postgres_capabilities_report_durable_fsync_and_real_cas() {
         let caps = postgres_capabilities();
         assert!(caps.durable);
         assert!(caps.supports_fsync);
@@ -698,8 +700,8 @@ mod tests {
     //#endregion 🔖️SchemaAndCapabilities
 
     //#region 🔖️ContentAddressing
-    #[test]
-    fn payload_hash_is_deterministic_and_content_addressed() {
+    #[semio_framework_async_macros::async_test]
+    async fn payload_hash_is_deterministic_and_content_addressed() {
         let a = ContentHash(*blake3::hash(b"hello").as_bytes());
         let b = ContentHash(*blake3::hash(b"hello").as_bytes());
         let c = ContentHash(*blake3::hash(b"world").as_bytes());

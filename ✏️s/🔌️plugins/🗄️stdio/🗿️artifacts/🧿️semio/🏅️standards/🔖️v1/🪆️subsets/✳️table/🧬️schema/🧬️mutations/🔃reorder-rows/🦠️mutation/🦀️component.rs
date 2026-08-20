@@ -16,10 +16,10 @@ impl protocol::MutationKind<SemioTableSnapshot, SemioTableMutation> for ReorderR
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "reorder", entity: "rows", kind: "reorder-rows", record: "ReorderedRows" };
 
     async fn diff(&self, base: &SemioTableSnapshot) -> protocol::MutationOutcome<<SemioTableMutation as protocol::Mutation<SemioTableSnapshot>>::Diff> {
-        super::diff::diff(self, base)
+        super::diff::diff(self, base).await
     }
     async fn inverse(&self, base: &SemioTableSnapshot) -> Vec<SemioTableMutation> {
-        super::inverse::inverse(self, base)
+        super::inverse::inverse(self, base).await
     }
     async fn label(&self) -> String {
         format!("Move row #{} to #{}", self.from, self.to)

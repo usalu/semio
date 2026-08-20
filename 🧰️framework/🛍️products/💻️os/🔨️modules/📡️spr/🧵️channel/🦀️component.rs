@@ -997,73 +997,73 @@ mod tests {
     //#region 🔖️AppCommand
     async fn assert_command_round_trips(command: &AppCommand) {
         let bytes = encode_app_command(command);
-        let decoded = decode_app_command(&bytes).await.expect("decode must succeed");
+        let decoded = decode_app_command(&bytes.await).await.expect("decode must succeed");
         assert_eq!(&decoded, command);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn app_command_config_command_round_trips() {
-        assert_command_round_trips(&AppCommand::ConfigCommand { seq: 1, command: vec![9, 9] });
+        assert_command_round_trips(&AppCommand::ConfigCommand { seq: 1, command: vec![9, 9] }).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn app_command_command_round_trips() {
-        assert_command_round_trips(&AppCommand::Command { seq: 2, command: vec![1, 2], view_state: vec![] });
+        assert_command_round_trips(&AppCommand::Command { seq: 2, command: vec![1, 2], view_state: vec![] }).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn app_command_command_text_round_trips() {
-        assert_command_round_trips(&AppCommand::CommandText { seq: 3, line: "set foo = 1".to_string() });
+        assert_command_round_trips(&AppCommand::CommandText { seq: 3, line: "set foo = 1".to_string() }).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn app_command_context_menu_round_trips() {
-        assert_command_round_trips(&AppCommand::ContextMenu { seq: 5, request: vec![7] });
+        assert_command_round_trips(&AppCommand::ContextMenu { seq: 5, request: vec![7] }).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn app_command_document_command_round_trips() {
-        assert_command_round_trips(&AppCommand::ArtifactCommand { seq: 6, command: vec![8, 8] });
+        assert_command_round_trips(&AppCommand::ArtifactCommand { seq: 6, command: vec![8, 8] }).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn app_command_apply_envelopes_round_trips() {
-        assert_command_round_trips(&AppCommand::ApplyEnvelopes { seq: 7, envelopes: vec![sample_envelope("op-1").await, sample_envelope("op-2").await] });
+        assert_command_round_trips(&AppCommand::ApplyEnvelopes { seq: 7, envelopes: vec![sample_envelope("op-1").await, sample_envelope("op-2").await] }).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn app_command_load_document_round_trips() {
-        assert_command_round_trips(&AppCommand::LoadDocument { seq: 8, pack: vec![1], spr: vec![2] });
+        assert_command_round_trips(&AppCommand::LoadDocument { seq: 8, pack: vec![1], spr: vec![2] }).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn app_command_read_artifact_round_trips() {
-        assert_command_round_trips(&AppCommand::ReadDocument { seq: 9 });
+        assert_command_round_trips(&AppCommand::ReadDocument { seq: 9 }).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn app_command_load_config_round_trips() {
-        assert_command_round_trips(&AppCommand::LoadConfig { seq: 10, pack: vec![1], spr: vec![2] });
+        assert_command_round_trips(&AppCommand::LoadConfig { seq: 10, pack: vec![1], spr: vec![2] }).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn app_command_read_config_round_trips() {
-        assert_command_round_trips(&AppCommand::ReadConfig { seq: 11 });
+        assert_command_round_trips(&AppCommand::ReadConfig { seq: 11 }).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn app_command_media_in_round_trips() {
-        assert_command_round_trips(&AppCommand::MediaIn { seq: 14, port: "camera".to_string(), descriptor: vec![1], data: vec![2, 3] });
+        assert_command_round_trips(&AppCommand::MediaIn { seq: 14, port: "camera".to_string(), descriptor: vec![1], data: vec![2, 3] }).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn app_command_media_out_round_trips() {
-        assert_command_round_trips(&AppCommand::MediaOut { seq: 15, port: "speaker".to_string(), request: vec![4] });
+        assert_command_round_trips(&AppCommand::MediaOut { seq: 15, port: "speaker".to_string(), request: vec![4] }).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn app_command_media_fingerprint_round_trips() {
-        assert_command_round_trips(&AppCommand::MediaFingerprint { seq: 16, port: "camera".to_string() });
+        assert_command_round_trips(&AppCommand::MediaFingerprint { seq: 16, port: "camera".to_string() }).await;
     }
 
     #[semio_framework_async_macros::async_test]
@@ -1077,7 +1077,7 @@ mod tests {
             config_spr: vec![5],
             draft: vec![6],
             draft_spr: vec![7],
-        });
+        }).await;
     }
 
     //#region 🔖️Transaction
@@ -1091,7 +1091,7 @@ mod tests {
             prepared_ops: Vec::new(),
             label: String::new(),
             origin: Vec::new(),
-        });
+        }).await;
         assert_command_round_trips(&AppCommand::TransactionPrepare {
             seq: 2,
             txn_id: "t".to_string(),
@@ -1100,64 +1100,64 @@ mod tests {
             prepared_ops: vec![vec![1], vec![2, 2]],
             label: "l".to_string(),
             origin: vec![9],
-        });
+        }).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn app_command_transaction_commit_round_trips() {
-        assert_command_round_trips(&AppCommand::TransactionCommit { seq: 3, txn_id: "t".to_string() });
+        assert_command_round_trips(&AppCommand::TransactionCommit { seq: 3, txn_id: "t".to_string() }).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn app_command_transaction_rollback_round_trips() {
-        assert_command_round_trips(&AppCommand::TransactionRollback { seq: 4, txn_id: "t".to_string() });
+        assert_command_round_trips(&AppCommand::TransactionRollback { seq: 4, txn_id: "t".to_string() }).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn app_command_transaction_undo_round_trips() {
-        assert_command_round_trips(&AppCommand::TransactionUndo { seq: 5, group_id: "g".to_string() });
+        assert_command_round_trips(&AppCommand::TransactionUndo { seq: 5, group_id: "g".to_string() }).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn app_command_transaction_redo_round_trips() {
-        assert_command_round_trips(&AppCommand::TransactionRedo { seq: 6, group_id: "g".to_string() });
+        assert_command_round_trips(&AppCommand::TransactionRedo { seq: 6, group_id: "g".to_string() }).await;
     }
     //#endregion 🔖️Transaction
 
     //#region 🔖️Opening
     #[semio_framework_async_macros::async_test]
     async fn app_command_open_artifact_round_trips_resolved_and_explicit_forms() {
-        assert_command_round_trips(&AppCommand::OpenArtifact { seq: 1, artifact_ref: "s.cad.cad@1/*#viewer".to_string(), role: 0, plugin_id: String::new(), app_id: String::new() });
-        assert_command_round_trips(&AppCommand::OpenArtifact { seq: 2, artifact_ref: "s.cad.cad@1/*#editor".to_string(), role: 1, plugin_id: "cad".to_string(), app_id: "s.cad.cad@1/*#editor".to_string() });
+        assert_command_round_trips(&AppCommand::OpenArtifact { seq: 1, artifact_ref: "s.cad.cad@1/*#viewer".to_string(), role: 0, plugin_id: String::new(), app_id: String::new() }).await;
+        assert_command_round_trips(&AppCommand::OpenArtifact { seq: 2, artifact_ref: "s.cad.cad@1/*#editor".to_string(), role: 1, plugin_id: "cad".to_string(), app_id: "s.cad.cad@1/*#editor".to_string() }).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn app_command_set_default_app_round_trips() {
-        assert_command_round_trips(&AppCommand::SetDefaultApp { seq: 3, artifact_kind: "s.cad.cad".to_string(), standard: "1".to_string(), subset: "*".to_string(), role: 1, plugin_id: "cad".to_string(), app_id: "s.cad.cad@1/*#editor".to_string() });
+        assert_command_round_trips(&AppCommand::SetDefaultApp { seq: 3, artifact_kind: "s.cad.cad".to_string(), standard: "1".to_string(), subset: "*".to_string(), role: 1, plugin_id: "cad".to_string(), app_id: "s.cad.cad@1/*#editor".to_string() }).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn app_command_clear_default_app_round_trips() {
-        assert_command_round_trips(&AppCommand::ClearDefaultApp { seq: 4, artifact_kind: "s.cad.cad".to_string(), standard: "1".to_string(), subset: "*".to_string(), role: 0 });
+        assert_command_round_trips(&AppCommand::ClearDefaultApp { seq: 4, artifact_kind: "s.cad.cad".to_string(), standard: "1".to_string(), subset: "*".to_string(), role: 0 }).await;
     }
     //#endregion 🔖️Opening
 
     //#region 🔖️Merge
     #[semio_framework_async_macros::async_test]
     async fn app_command_set_merge_policy_round_trips() {
-        assert_command_round_trips(&AppCommand::SetMergePolicy { seq: 5, policy: 0 });
-        assert_command_round_trips(&AppCommand::SetMergePolicy { seq: 6, policy: 2 });
+        assert_command_round_trips(&AppCommand::SetMergePolicy { seq: 5, policy: 0 }).await;
+        assert_command_round_trips(&AppCommand::SetMergePolicy { seq: 6, policy: 2 }).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn app_command_resolve_conflict_round_trips() {
-        assert_command_round_trips(&AppCommand::ResolveConflict { seq: 7, conflict_id: "c-1".to_string(), resolution: 0 });
-        assert_command_round_trips(&AppCommand::ResolveConflict { seq: 8, conflict_id: "c-1".to_string(), resolution: 1 });
+        assert_command_round_trips(&AppCommand::ResolveConflict { seq: 7, conflict_id: "c-1".to_string(), resolution: 0 }).await;
+        assert_command_round_trips(&AppCommand::ResolveConflict { seq: 8, conflict_id: "c-1".to_string(), resolution: 1 }).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn app_command_read_conflicts_round_trips() {
-        assert_command_round_trips(&AppCommand::ReadConflicts { seq: 9 });
+        assert_command_round_trips(&AppCommand::ReadConflicts { seq: 9 }).await;
     }
     //#endregion 🔖️Merge
     //#endregion 🔖️AppCommand
@@ -1165,60 +1165,60 @@ mod tests {
     //#region 🔖️AppFrame
     async fn assert_frame_round_trips(frame: &AppFrame) {
         let bytes = encode_app_frame(frame);
-        let decoded = decode_app_frame(&bytes).await.expect("decode must succeed");
+        let decoded = decode_app_frame(&bytes.await).await.expect("decode must succeed");
         assert_eq!(&decoded, frame);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn app_frame_done_round_trips() {
-        assert_frame_round_trips(&AppFrame::Done { in_reply_to: 1 });
+        assert_frame_round_trips(&AppFrame::Done { in_reply_to: 1 }).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn app_frame_invocation_round_trips() {
-        assert_frame_round_trips(&AppFrame::Invocation { in_reply_to: 2, output: vec![1], diagnostics: vec![2], ui_scope: vec![3], history_patch: vec![4], messages: vec![5] });
-        assert_frame_round_trips(&AppFrame::Invocation { in_reply_to: 2, output: vec![1], diagnostics: vec![2], ui_scope: vec![3], history_patch: vec![4], messages: Vec::new() });
+        assert_frame_round_trips(&AppFrame::Invocation { in_reply_to: 2, output: vec![1], diagnostics: vec![2], ui_scope: vec![3], history_patch: vec![4], messages: vec![5] }).await;
+        assert_frame_round_trips(&AppFrame::Invocation { in_reply_to: 2, output: vec![1], diagnostics: vec![2], ui_scope: vec![3], history_patch: vec![4], messages: Vec::new() }).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn app_frame_document_changed_round_trips() {
-        assert_frame_round_trips(&AppFrame::DocumentChanged { envelopes: vec![sample_envelope("op-1").await], origin: "peer-1".to_string() });
+        assert_frame_round_trips(&AppFrame::DocumentChanged { envelopes: vec![sample_envelope("op-1").await], origin: "peer-1".to_string() }).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn app_frame_document_round_trips() {
-        assert_frame_round_trips(&AppFrame::Document { in_reply_to: 5, pack: vec![1], spr: vec![2], ops: "set foo = 1".to_string() });
+        assert_frame_round_trips(&AppFrame::Document { in_reply_to: 5, pack: vec![1], spr: vec![2], ops: "set foo = 1".to_string() }).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn app_frame_config_round_trips() {
-        assert_frame_round_trips(&AppFrame::Config { in_reply_to: 5, pack: vec![1], spr: vec![2], ops: "set cam = 1".to_string() });
+        assert_frame_round_trips(&AppFrame::Config { in_reply_to: 5, pack: vec![1], spr: vec![2], ops: "set cam = 1".to_string() }).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn app_frame_config_changed_round_trips() {
-        assert_frame_round_trips(&AppFrame::ConfigChanged { envelopes: vec![sample_envelope("cfg-1").await], origin: "peer-1".to_string() });
+        assert_frame_round_trips(&AppFrame::ConfigChanged { envelopes: vec![sample_envelope("cfg-1").await], origin: "peer-1".to_string() }).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn app_frame_context_menu_round_trips() {
-        assert_frame_round_trips(&AppFrame::ContextMenu { in_reply_to: 6, items: vec![1, 2, 3] });
+        assert_frame_round_trips(&AppFrame::ContextMenu { in_reply_to: 6, items: vec![1, 2, 3] }).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn app_frame_media_round_trips() {
-        assert_frame_round_trips(&AppFrame::Media { in_reply_to: 7, port: "camera".to_string(), descriptor: vec![1], data: vec![2] });
+        assert_frame_round_trips(&AppFrame::Media { in_reply_to: 7, port: "camera".to_string(), descriptor: vec![1], data: vec![2] }).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn app_frame_media_fingerprint_round_trips() {
-        assert_frame_round_trips(&AppFrame::MediaFingerprint { in_reply_to: 8, port: "camera".to_string(), fingerprint: vec![1, 2] });
+        assert_frame_round_trips(&AppFrame::MediaFingerprint { in_reply_to: 8, port: "camera".to_string(), fingerprint: vec![1, 2] }).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn app_frame_error_round_trips() {
-        assert_frame_round_trips(&AppFrame::Error { in_reply_to: Some(9), fault: b"rejected:bad command".to_vec(), report: vec![1, 2] });
-        assert_frame_round_trips(&AppFrame::Error { in_reply_to: None, fault: b"rejected:bad command".to_vec(), report: Vec::new() });
+        assert_frame_round_trips(&AppFrame::Error { in_reply_to: Some(9), fault: b"rejected:bad command".to_vec(), report: vec![1, 2] }).await;
+        assert_frame_round_trips(&AppFrame::Error { in_reply_to: None, fault: b"rejected:bad command".to_vec(), report: Vec::new() }).await;
     }
 
     #[semio_framework_async_macros::async_test]
@@ -1230,16 +1230,16 @@ mod tests {
             draft_ops: vec![3],
             output: vec![4],
             diagnostics: vec![5],
-        });
+        }).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn app_frame_draft_round_trips() {
-        assert_frame_round_trips(&AppFrame::Draft { in_reply_to: 15, pack: vec![1], spr: vec![2], ops: "d".to_string() });
-        assert_frame_round_trips(&AppFrame::Children { in_reply_to: 16, entries: sample_child_entries().await });
-        assert_frame_round_trips(&AppFrame::Children { in_reply_to: 17, entries: Vec::new() });
-        assert_frame_round_trips(&AppFrame::Ephemeral { presence: vec![1, 2], presence_generation: 3, transient_generation: 4, interaction: vec![9, 9] });
-        assert_frame_round_trips(&AppFrame::Ephemeral { presence: vec![1, 2], presence_generation: 3, transient_generation: 4, interaction: Vec::new() });
+        assert_frame_round_trips(&AppFrame::Draft { in_reply_to: 15, pack: vec![1], spr: vec![2], ops: "d".to_string() }).await;
+        assert_frame_round_trips(&AppFrame::Children { in_reply_to: 16, entries: sample_child_entries().await }).await;
+        assert_frame_round_trips(&AppFrame::Children { in_reply_to: 17, entries: Vec::new() }).await;
+        assert_frame_round_trips(&AppFrame::Ephemeral { presence: vec![1, 2], presence_generation: 3, transient_generation: 4, interaction: vec![9, 9] }).await;
+        assert_frame_round_trips(&AppFrame::Ephemeral { presence: vec![1, 2], presence_generation: 3, transient_generation: 4, interaction: Vec::new() }).await;
     }
 
     //#region 🔖️Children
@@ -1254,10 +1254,10 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn child_pack_commands_round_trip() {
-        assert_command_round_trips(&AppCommand::LoadChildren { seq: 19, entries: sample_child_entries().await });
-        assert_command_round_trips(&AppCommand::LoadChildren { seq: 20, entries: Vec::new() });
-        assert_command_round_trips(&AppCommand::ReadChildren { seq: 21 });
-        assert_command_round_trips(&AppCommand::ReadHistory { seq: 22 });
+        assert_command_round_trips(&AppCommand::LoadChildren { seq: 19, entries: sample_child_entries().await }).await;
+        assert_command_round_trips(&AppCommand::LoadChildren { seq: 20, entries: Vec::new() }).await;
+        assert_command_round_trips(&AppCommand::ReadChildren { seq: 21 }).await;
+        assert_command_round_trips(&AppCommand::ReadHistory { seq: 22 }).await;
     }
     //#endregion 🔖️Children
 
@@ -1271,37 +1271,37 @@ mod tests {
             description: "d".to_string(),
             coalesce_key: "k".to_string(),
             foreign: Vec::new(),
-        });
+        }).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn app_frame_transaction_prepared_round_trips_with_and_without_rejection() {
-        assert_frame_round_trips(&AppFrame::TransactionPrepared { txn_id: "t".to_string(), foreign: vec![vec![1]], rejection: Vec::new() });
-        assert_frame_round_trips(&AppFrame::TransactionPrepared { txn_id: "t".to_string(), foreign: Vec::new(), rejection: b"rejected".to_vec() });
+        assert_frame_round_trips(&AppFrame::TransactionPrepared { txn_id: "t".to_string(), foreign: vec![vec![1]], rejection: Vec::new() }).await;
+        assert_frame_round_trips(&AppFrame::TransactionPrepared { txn_id: "t".to_string(), foreign: Vec::new(), rejection: b"rejected".to_vec() }).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn app_frame_transaction_committed_round_trips() {
-        assert_frame_round_trips(&AppFrame::TransactionCommitted { txn_id: "t".to_string(), edit_id: "e".to_string() });
+        assert_frame_round_trips(&AppFrame::TransactionCommitted { txn_id: "t".to_string(), edit_id: "e".to_string() }).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn app_frame_transaction_rolled_back_round_trips() {
-        assert_frame_round_trips(&AppFrame::TransactionRolledBack { txn_id: "t".to_string() });
+        assert_frame_round_trips(&AppFrame::TransactionRolledBack { txn_id: "t".to_string() }).await;
     }
     //#endregion 🔖️Transaction
 
     //#region 🔖️Merge
     #[semio_framework_async_macros::async_test]
     async fn app_frame_merge_report_round_trips() {
-        assert_frame_round_trips(&AppFrame::MergeReport { in_reply_to: Some(1), report: vec![1, 2, 3] });
-        assert_frame_round_trips(&AppFrame::MergeReport { in_reply_to: None, report: Vec::new() });
+        assert_frame_round_trips(&AppFrame::MergeReport { in_reply_to: Some(1), report: vec![1, 2, 3] }).await;
+        assert_frame_round_trips(&AppFrame::MergeReport { in_reply_to: None, report: Vec::new() }).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn app_frame_conflicts_round_trips() {
-        assert_frame_round_trips(&AppFrame::Conflicts { in_reply_to: Some(2), conflicts: vec![4, 5] });
-        assert_frame_round_trips(&AppFrame::Conflicts { in_reply_to: None, conflicts: Vec::new() });
+        assert_frame_round_trips(&AppFrame::Conflicts { in_reply_to: Some(2), conflicts: vec![4, 5] }).await;
+        assert_frame_round_trips(&AppFrame::Conflicts { in_reply_to: None, conflicts: Vec::new() }).await;
     }
     //#endregion 🔖️Merge
 
@@ -1315,7 +1315,7 @@ mod tests {
             revision: 5,
             base_revision: 4,
             ops: vec![1, 2, 3],
-        });
+        }).await;
         assert_frame_round_trips(&AppFrame::UiPatch {
             in_reply_to: None,
             surface: "1:body".to_string(),
@@ -1323,12 +1323,12 @@ mod tests {
             revision: 1,
             base_revision: 0,
             ops: Vec::new(),
-        });
+        }).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn app_frame_ui_snapshot_end_round_trips() {
-        assert_frame_round_trips(&AppFrame::UiSnapshotEnd { revision: 7 });
+        assert_frame_round_trips(&AppFrame::UiSnapshotEnd { revision: 7 }).await;
     }
     //#endregion 🔖️UiPatch
     //#endregion 🔖️AppFrame
@@ -1337,10 +1337,10 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn encoding_is_deterministic() {
         let command = AppCommand::ContextMenu { seq: 1, request: vec![1, 2, 3] };
-        assert_eq!(encode_app_command(&command), encode_app_command(&command));
+        assert_eq!(encode_app_command(&command).await, encode_app_command(&command).await);
 
         let frame = AppFrame::Error { in_reply_to: Some(1), fault: b"e:m".to_vec(), report: vec![9] };
-        assert_eq!(encode_app_frame(&frame), encode_app_frame(&frame));
+        assert_eq!(encode_app_frame(&frame).await, encode_app_frame(&frame).await);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -1369,15 +1369,15 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn decode_app_command_rejects_truncated_field() {
-        let bytes = encode_app_command(&AppCommand::CommandText { seq: 1, line: "hello".to_string() });
-        let truncated = &bytes[..bytes.await.len() - 2];
+        let bytes = encode_app_command(&AppCommand::CommandText { seq: 1, line: "hello".to_string() }).await;
+        let truncated = &bytes[..bytes.len() - 2];
         assert!(decode_app_command(truncated).await.is_err());
     }
 
     #[semio_framework_async_macros::async_test]
     async fn decode_app_frame_rejects_truncated_field() {
-        let bytes = encode_app_frame(&AppFrame::Error { in_reply_to: Some(1), fault: b"e:message".to_vec(), report: Vec::new() });
-        let truncated = &bytes[..bytes.await.len() - 2];
+        let bytes = encode_app_frame(&AppFrame::Error { in_reply_to: Some(1), fault: b"e:message".to_vec(), report: Vec::new() }).await;
+        let truncated = &bytes[..bytes.len() - 2];
         assert!(decode_app_frame(truncated).await.is_err());
     }
 
@@ -1584,20 +1584,22 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn app_command_fixture_corpus_matches_golden_hex_and_round_trips() {
-        for (label, value) in channel_command_fixture_corpus() {
-            let actual = hex_encode(&encode_app_command(&value));
-            assert_eq!(actual, channel_command_fixture_hex(label), "{label}'s encoding drifted from its committed golden hex");
-            let decoded = decode_app_command(&encode_app_command(&value)).await.unwrap();
+        for (label, value) in channel_command_fixture_corpus().await {
+            let encoded = encode_app_command(&value).await;
+            let actual = hex_encode(&encoded).await;
+            assert_eq!(actual, channel_command_fixture_hex(label).await, "{label}'s encoding drifted from its committed golden hex");
+            let decoded = decode_app_command(&encode_app_command(&value).await).await.unwrap();
             assert_eq!(decoded, value, "{label} must round-trip");
         }
     }
 
     #[semio_framework_async_macros::async_test]
     async fn app_frame_fixture_corpus_matches_golden_hex_and_round_trips() {
-        for (label, value) in channel_frame_fixture_corpus() {
-            let actual = hex_encode(&encode_app_frame(&value));
-            assert_eq!(actual, channel_frame_fixture_hex(label), "{label}'s encoding drifted from its committed golden hex");
-            let decoded = decode_app_frame(&encode_app_frame(&value)).await.unwrap();
+        for (label, value) in channel_frame_fixture_corpus().await {
+            let encoded = encode_app_frame(&value).await;
+            let actual = hex_encode(&encoded).await;
+            assert_eq!(actual, channel_frame_fixture_hex(label).await, "{label}'s encoding drifted from its committed golden hex");
+            let decoded = decode_app_frame(&encode_app_frame(&value).await).await.unwrap();
             assert_eq!(decoded, value, "{label} must round-trip");
         }
     }
@@ -1627,15 +1629,15 @@ mod tests {
         assert_eq!(command_vectors.len(), 6, "app-command-transaction.json vector count changed");
         assert_eq!(frame_vectors.len(), 4, "app-frame-transaction.json vector count changed");
 
-        for (label, value) in channel_command_fixture_corpus() {
+        for (label, value) in channel_command_fixture_corpus().await {
             if let Some(expected) = command_vectors.get(label) {
-                let actual = hex_encode(&encode_app_command(&value));
+                let actual = hex_encode(&encode_app_command(&value).await).await;
                 assert_eq!(&actual, expected, "AppCommand::{label} drifted from the shared cross-language fixture");
             }
         }
-        for (label, value) in channel_frame_fixture_corpus() {
+        for (label, value) in channel_frame_fixture_corpus().await {
             if let Some(expected) = frame_vectors.get(label) {
-                let actual = hex_encode(&encode_app_frame(&value));
+                let actual = hex_encode(&encode_app_frame(&value).await).await;
                 assert_eq!(&actual, expected, "AppFrame::{label} drifted from the shared cross-language fixture");
             }
         }
@@ -1651,9 +1653,9 @@ mod tests {
         let command_vectors: std::collections::BTreeMap<String, String> = serde_json::from_str(command_json).expect("app-command-opening.json must parse");
         assert_eq!(command_vectors.len(), 4, "app-command-opening.json vector count changed");
 
-        for (label, value) in channel_command_fixture_corpus() {
+        for (label, value) in channel_command_fixture_corpus().await {
             if let Some(expected) = command_vectors.get(label) {
-                let actual = hex_encode(&encode_app_command(&value));
+                let actual = hex_encode(&encode_app_command(&value).await).await;
                 assert_eq!(&actual, expected, "AppCommand::{label} drifted from the shared cross-language fixture");
             }
         }
@@ -1674,15 +1676,15 @@ mod tests {
         assert_eq!(command_vectors.len(), 3, "app-command-merge.json vector count changed");
         assert_eq!(frame_vectors.len(), 4, "app-frame-merge.json vector count changed");
 
-        for (label, value) in channel_command_fixture_corpus() {
+        for (label, value) in channel_command_fixture_corpus().await {
             if let Some(expected) = command_vectors.get(label) {
-                let actual = hex_encode(&encode_app_command(&value));
+                let actual = hex_encode(&encode_app_command(&value).await).await;
                 assert_eq!(&actual, expected, "AppCommand::{label} drifted from the shared cross-language fixture");
             }
         }
-        for (label, value) in channel_frame_fixture_corpus() {
+        for (label, value) in channel_frame_fixture_corpus().await {
             if let Some(expected) = frame_vectors.get(label) {
-                let actual = hex_encode(&encode_app_frame(&value));
+                let actual = hex_encode(&encode_app_frame(&value).await).await;
                 assert_eq!(&actual, expected, "AppFrame::{label} drifted from the shared cross-language fixture");
             }
         }

@@ -26,20 +26,20 @@ pub fn set_default_app(dialect: ArtifactDialect, role: AppRole, app: AppRef) -> 
 impl MutationKind<OpeningPreferences, OpeningConfigMutation> for SetDefaultApp {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "default-app", kind: "set-default-app", record: "Set" };
 
-    fn diff(&self, base: &OpeningPreferences) -> MutationOutcome<OpeningPreferences> {
-        super::diff::diff(self, base)
+    async fn diff(&self, base: &OpeningPreferences) -> MutationOutcome<OpeningPreferences> {
+        super::diff::diff(self, base).await
     }
 
-    fn inverse(&self, base: &OpeningPreferences) -> Vec<OpeningConfigMutation> {
+    async fn inverse(&self, base: &OpeningPreferences) -> Vec<OpeningConfigMutation> {
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Set default {} for \"{}\"", self.role.as_str(), self.dialect.to_coordinate())
+    async fn label(&self) -> String {
+        format!("Set default {} for \"{}\"", self.role.as_str().await, self.dialect.to_coordinate().await)
     }
 
-    fn target(&self) -> Vec<String> {
-        vec![self.dialect.to_coordinate(), self.role.as_str().to_string()]
+    async fn target(&self) -> Vec<String> {
+        vec![self.dialect.to_coordinate().await, self.role.as_str().await.to_string()]
     }
 }
 //#endregion 🔖️Mutation
@@ -49,11 +49,11 @@ impl MutationKind<OpeningPreferences, OpeningConfigMutation> for SetDefaultApp {
 mod tests {
     use super::*;
 
-    #[test]
-    fn set_default_app_label_names_role_and_dialect() {
+    #[semio_framework_async_macros::async_test]
+    async fn set_default_app_label_names_role_and_dialect() {
         let dialect = ArtifactDialect { artifact_kind: "s.cad.cad".to_string(), standard: "1".to_string(), subset: "*".to_string() };
         let payload = SetDefaultApp { dialect: dialect.clone(), role: AppRole::Editor, app: AppRef { plugin_id: "cad".to_string(), app_id: "s.cad.cad@1/*#editor".to_string() } };
-        assert_eq!(MutationKind::<OpeningPreferences, OpeningConfigMutation>::label(&payload), "Set default editor for \"s.cad.cad@1/*\"");
+        assert_eq!(MutationKind::<OpeningPreferences, OpeningConfigMutation>::label(&payload).await, "Set default editor for \"s.cad.cad@1/*\"");
     }
 }
 //#endregion 🧪️Tests

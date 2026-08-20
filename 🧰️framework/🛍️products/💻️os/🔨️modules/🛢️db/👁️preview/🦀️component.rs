@@ -235,6 +235,7 @@ pub struct DbConflictOracle {
 impl DbConflictOracle {
     /// @emoji 🏗️ Builds an oracle around a caller-supplied detector (e.g. one configured with a
     /// `db_conflict::CommandKindMatrix`, though this crate never populates one of its own).
+    // 🚫️async: E1 pure constructor consumed by `impl Default`, itself E1 — see R9
     pub fn new(detector: db_conflict::ConflictDetector) -> Self {
         DbConflictOracle { detector }
     }
@@ -254,12 +255,16 @@ const ORACLE_PREVIEW_TAG: &str = "db-preview::oracle::preview";
 const ORACLE_LANDED_TAG: &str = "db-preview::oracle::landed";
 
 impl ConflictOracle for DbConflictOracle {
+    // 🚫️async: E5 executor bridge — `ConflictOracle::conflicts` is sync (see the trait's own
+    // doc), but `protocol::HybridLogicalTimestamp::new` is a genuinely async external-crate call
+    // (out of this packet's scope); bridged via `db_actor::block_on` rather than making the
+    // whole trait async again for one impl's sake.
     fn conflicts(&self, preview_touched: &TouchedSet, landed_touched: &TouchedSet) -> bool {
         let mut preview_command = db_conflict::CommandTouch::new(
             protocol::MutationId(ORACLE_PREVIEW_TAG.to_string()),
             protocol::ActorId(ORACLE_PREVIEW_TAG.to_string()),
             db_conflict::CommandKind::from(ORACLE_PREVIEW_TAG),
-            protocol::HybridLogicalTimestamp::new(0, 0),
+            db_actor::block_on(protocol::HybridLogicalTimestamp::new(0, 0)),
         );
         preview_command.touched = preview_touched.clone();
 
@@ -267,7 +272,7 @@ impl ConflictOracle for DbConflictOracle {
             protocol::MutationId(ORACLE_LANDED_TAG.to_string()),
             protocol::ActorId(ORACLE_LANDED_TAG.to_string()),
             db_conflict::CommandKind::from(ORACLE_LANDED_TAG),
-            protocol::HybridLogicalTimestamp::new(1, 0),
+            db_actor::block_on(protocol::HybridLogicalTimestamp::new(1, 0)),
         );
         landed_command.touched = landed_touched.clone();
 
@@ -480,7 +485,11 @@ impl PreviewStore {
     /// `Superseded` ("stale"), or it doesn't and its `base` is advanced to `landed.frontier`
     /// ("rebase") while it stays `Active`. Previews already at or ahead of `landed.frontier` are
     /// left untouched (nothing to reconcile).
-    pub fn reconcile_with(&mut self, landed: &LandedCommand, oracle: &dyn ConflictOracle) -> ReconcileOutcome {
+    // 🔀️ `oracle: &impl ConflictOracle` (was `&dyn`) — `conflicts`'s `fn` broke `dyn`
+    // object-safety (R1); every call site passes exactly one concrete oracle type
+    // (`DbConflictOracle`, `TouchedRegionOracle`, or the test-only `AlwaysConflicts`), never a
+    // runtime-chosen mix and never stored — R11(a) parameter-position generic.
+    pub fn reconcile_with(&mut self, landed: &LandedCommand, oracle: &impl ConflictOracle) -> ReconcileOutcome {
         let mut outcome = ReconcileOutcome::default();
         for preview in self.previews.values_mut() {
             if !preview.is_active() || preview.base.head_seq >= landed.frontier.head_seq {
@@ -518,7 +527,11 @@ mod tests {
             dependencies: Vec::new(),
             diff: protocol::ArtifactDiff { schema: protocol::SchemaId("test".to_string()), payload: Vec::new() },
             inverse: protocol::InverseMutation { schema: protocol::SchemaId("test".to_string()), payload: Vec::new() },
-            timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
+            // 🪡 `HybridLogicalTimestamp::new` is `async fn` in an out-of-scope crate
+            // (📡️replication/🆔️ids), but this helper is a plain sync `fn` used from sync call
+            // sites; its constructor body is a pure struct literal, so building it directly here
+            // is behavior-identical without needing to thread `async` through this whole helper chain.
+            timestamp: protocol::HybridLogicalTimestamp { actor: 0, physical_ms: 0, logical: 0 },
         }
     }
 

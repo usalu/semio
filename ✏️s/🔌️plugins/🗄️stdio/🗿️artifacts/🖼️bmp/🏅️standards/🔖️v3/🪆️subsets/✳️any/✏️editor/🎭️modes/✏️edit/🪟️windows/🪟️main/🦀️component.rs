@@ -11,15 +11,15 @@ pub const WINDOW_KIND_ID: &str = ImageWindowKit::KIND_ID;
 pub const BODY_KEY: &str = ImageWindowKit::KIND_ID;
 
 pub async fn definition() -> WindowKindDefinition {
-    ImageWindowKit::editable_window_kind()
+    ImageWindowKit::editable_window_kind().await
 }
 
 pub async fn render(snapshot: &BmpSnapshot) -> UiNode {
-    ImageWindowKit::render(&image_view(snapshot))
+    ImageWindowKit::render(&image_view(snapshot)).await
 }
 
 async fn image_view(snapshot: &BmpSnapshot) -> ImageView {
-    let bytes = encode_bmp(snapshot).ok().unwrap_or_default();
+    let bytes = encode_bmp(snapshot).await.ok().unwrap_or_default();
     ImageView { width: snapshot.width, height: snapshot.height, mime: "image/bmp".into(), base64: base64::engine::general_purpose::STANDARD.encode(bytes) }
 }
 

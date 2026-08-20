@@ -53,7 +53,7 @@ async fn dxf_entity_from_cad(rec: &CadEntityRecord) -> DxfEntity {
         CadEntity::Line { a, b } => DxfEntity::Line { start: [a.x, a.y, 0.0], end: [b.x, b.y, 0.0], layer, unknown_group_codes: vec![] },
         CadEntity::Circle { center, radius } => DxfEntity::Circle { center: [center.x, center.y, 0.0], radius: *radius, layer, unknown_group_codes: vec![] },
         CadEntity::Arc { center, radius, start_angle, end_angle } => DxfEntity::Arc { center: [center.x, center.y, 0.0], radius: *radius, start_angle: *start_angle, end_angle: *end_angle, layer, unknown_group_codes: vec![] },
-        CadEntity::Ellipse { center, major_axis_end, ratio, start_param, end_param } => ellipse_to_other(center, major_axis_end, *ratio, *start_param, *end_param),
+        CadEntity::Ellipse { center, major_axis_end, ratio, start_param, end_param } => ellipse_to_other(center, major_axis_end, *ratio, *start_param, *end_param).await,
         CadEntity::Polyline { vertices, closed } => DxfEntity::Polyline {
             vertices: vertices.iter().map(|v| crate::artifacts::dxf::schema::snapshot::DxfVertex { x: v.x, y: v.y, z: 0.0, bulge: 0.0, unknown_group_codes: vec![] }).collect(),
             closed: *closed,
@@ -65,7 +65,7 @@ async fn dxf_entity_from_cad(rec: &CadEntityRecord) -> DxfEntity {
             DxfEntity::Insert { block_name: block_name.clone(), position: [insertion_point.x, insertion_point.y, 0.0], scale: [scale.x, scale.y, 1.0], rotation: *rotation, layer, unknown_group_codes: vec![] }
         }
         CadEntity::Solid { p1, p2, p3, p4 } => DxfEntity::Solid { points: [[p1.x, p1.y, 0.0], [p2.x, p2.y, 0.0], [p3.x, p3.y, 0.0], [p4.x, p4.y, 0.0]], layer, unknown_group_codes: vec![] },
-        CadEntity::Dimension { def_point, text_position, measurement, text } => dimension_to_other(def_point, text_position, *measurement, text),
+        CadEntity::Dimension { def_point, text_position, measurement, text } => dimension_to_other(def_point, text_position, *measurement, text).await,
     }
 }
 //#endregion 🔖️EntityMap

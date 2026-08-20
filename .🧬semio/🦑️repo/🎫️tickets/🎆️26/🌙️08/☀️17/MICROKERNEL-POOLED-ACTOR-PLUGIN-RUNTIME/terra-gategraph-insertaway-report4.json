@@ -1,0 +1,51 @@
+{
+  "crate": "semio-framework-graph",
+  "history": [
+    {
+      "pass": 1,
+      "errors": 198,
+      "edits": 0,
+      "ambiguous": 0,
+      "other": 7
+    }
+  ],
+  "residual_errors": 198,
+  "ambiguous": [],
+  "other": [
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🛂️manifest/🦀️component.rs:97",
+      "code": "E0053",
+      "msg": "method `shape` has an incompatible type for trait"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:435",
+      "code": "E0271",
+      "msg": "expected `as_f64` to return `Option<_>`, but it returns `impl Future<Output = Option<f64>>`"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:515",
+      "code": "E0271",
+      "msg": "expected `as_f64` to return `Option<_>`, but it returns `impl Future<Output = Option<f64>>`"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:742",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:1055",
+      "code": "E0382",
+      "msg": "use of moved value: `interner`"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:2215",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = Vec<std::option::Option<u32>>>`"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🛂️manifest/🦀️component.rs:475",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    }
+  ]
+}

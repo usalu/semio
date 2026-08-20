@@ -1,0 +1,172 @@
+{
+  "crate": "semio-framework-graph",
+  "history": [
+    {
+      "pass": 1,
+      "errors": 577,
+      "edits": 318,
+      "ambiguous": 0,
+      "other": 7
+    },
+    {
+      "pass": 2,
+      "errors": 280,
+      "edits": 7,
+      "ambiguous": 0,
+      "other": 10
+    },
+    {
+      "pass": 3,
+      "errors": 278,
+      "edits": 1,
+      "ambiguous": 0,
+      "other": 13
+    },
+    {
+      "pass": 4,
+      "errors": 278,
+      "edits": 1,
+      "ambiguous": 0,
+      "other": 13
+    },
+    {
+      "pass": 5,
+      "errors": 278,
+      "edits": 1,
+      "ambiguous": 0,
+      "other": 13
+    },
+    {
+      "pass": 6,
+      "errors": 278,
+      "edits": 1,
+      "ambiguous": 0,
+      "other": 13
+    },
+    {
+      "pass": 7,
+      "errors": 278,
+      "edits": 1,
+      "ambiguous": 0,
+      "other": 13
+    },
+    {
+      "pass": 8,
+      "errors": 278,
+      "edits": 1,
+      "ambiguous": 0,
+      "other": 13
+    },
+    {
+      "pass": 9,
+      "errors": 278,
+      "edits": 1,
+      "ambiguous": 0,
+      "other": 13
+    },
+    {
+      "pass": 10,
+      "errors": 278,
+      "edits": 1,
+      "ambiguous": 0,
+      "other": 13
+    },
+    {
+      "pass": 11,
+      "errors": 278,
+      "edits": 1,
+      "ambiguous": 0,
+      "other": 13
+    },
+    {
+      "pass": 12,
+      "errors": 278,
+      "edits": 1,
+      "ambiguous": 0,
+      "other": 13
+    },
+    {
+      "pass": 13,
+      "errors": 278,
+      "edits": 1,
+      "ambiguous": 0,
+      "other": 13
+    },
+    {
+      "pass": 14,
+      "errors": 277,
+      "edits": 0,
+      "ambiguous": 0,
+      "other": 13
+    }
+  ],
+  "residual_errors": 277,
+  "ambiguous": [],
+  "other": [
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:230",
+      "code": "(no code)",
+      "msg": "expected one of `,`, `:`, or `}`, found `.`"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🛂️manifest/🦀️component.rs:97",
+      "code": "E0053",
+      "msg": "method `shape` has an incompatible type for trait"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:435",
+      "code": "E0271",
+      "msg": "expected `as_f64` to return `Option<_>`, but it returns `impl Future<Output = Option<f64>>`"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:515",
+      "code": "E0271",
+      "msg": "expected `as_f64` to return `Option<_>`, but it returns `impl Future<Output = Option<f64>>`"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:742",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:1055",
+      "code": "E0382",
+      "msg": "use of moved value: `interner`"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:2215",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = Vec<std::option::Option<u32>>>`"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🧮️algorithms/🦀️component.rs:323",
+      "code": "E0382",
+      "msg": "use of moved value: `uf`"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🧮️algorithms/🦀️component.rs:329",
+      "code": "E0382",
+      "msg": "use of moved value: `uf`"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🧮️algorithms/🦀️component.rs:329",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:69",
+      "code": "E0382",
+      "msg": "use of moved value: `f`"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:425",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `-` to type `impl Future<Output = Vec2>`"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🛂️manifest/🦀️component.rs:475",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    }
+  ]
+}

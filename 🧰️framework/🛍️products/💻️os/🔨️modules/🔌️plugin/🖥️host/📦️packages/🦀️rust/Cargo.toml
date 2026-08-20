@@ -36,7 +36,12 @@ semio-framework-actor = { workspace = true }
 # shape `semio-framework-os-services` itself already establishes.
 semio-framework-async = { workspace = true }
 semio-framework-os-services = { workspace = true }
-wasmtime = { version = "47.0.3", features = ["cranelift", "component-model"] }
+# 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (B1 world-collapse): `component-model-async` is
+# declared EXPLICITLY rather than left to feature unification through `wasmtime-wasi` —
+# `Config::wasm_component_model_async`, `Store::run_concurrent`, `Accessor`, `StreamReader` and the
+# `*_async`/concurrent call shapes of every `bindgen!` export are all `#[cfg(feature = ...)]`-gated
+# on it, and the collapsed `world actor` cannot be linked or called without them.
+wasmtime = { version = "47.0.3", features = ["cranelift", "component-model", "component-model-async"] }
 wasmtime-wasi = "47.0.3"
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
@@ -47,6 +52,7 @@ thiserror = "2.0.12"
 blake3 = "1"
 
 [dev-dependencies]
+semio-framework-async-macros = { path = "../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 # 🧪️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (async-worlds): `🧪️schema-parity/🦀️component.rs`
 # parses `🧬️schema/📜️component.wit` directly to keep `world actor`/`world actor-async` from
 # drifting. Pinned to the exact version `wasmtime = "47.0.3"` already pulls transitively (see

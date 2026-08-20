@@ -15,7 +15,7 @@ pub async fn definition() -> ModeDefinition {
 /// 🪟️ One window, one layout slot — mirrors the editor's own default layout shape minus the
 /// mutation-shaped window kind.
 pub async fn layout() -> WindowLayout {
-    create_stack_layout(&[main::WINDOW_KIND_ID.into()], Some(&["Compression Header".into()]))
+    create_stack_layout(&[main::WINDOW_KIND_ID.into()], Some(&["Compression Header".into()])).await
 }
 //#endregion 🔖️Definition
 

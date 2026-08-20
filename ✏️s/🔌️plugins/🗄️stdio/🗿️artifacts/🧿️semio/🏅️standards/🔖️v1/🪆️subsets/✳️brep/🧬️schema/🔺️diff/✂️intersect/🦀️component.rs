@@ -40,11 +40,11 @@ pub mod curve_curve {
             return Err(IntersectError::Degenerate("tolerance must be positive and finite".into()));
         }
         match (a, b) {
-            (Curve3::Line { origin: o1, dir: d1 }, Curve3::Line { origin: o2, dir: d2 }) => intersect_line_line(*o1, *d1, *o2, *d2, tol),
-            (Curve3::Line { origin, dir }, Curve3::Circle { frame, radius }) => intersect_line_circle(*origin, *dir, frame, *radius, tol, false),
-            (Curve3::Circle { frame, radius }, Curve3::Line { origin, dir }) => intersect_line_circle(*origin, *dir, frame, *radius, tol, true),
-            (Curve3::Circle { frame: f1, radius: r1 }, Curve3::Circle { frame: f2, radius: r2 }) => intersect_circle_circle(f1, *r1, f2, *r2, tol),
-            _ => intersect_general(a, b, tol),
+            (Curve3::Line { origin: o1, dir: d1 }, Curve3::Line { origin: o2, dir: d2 }) => intersect_line_line(*o1, *d1, *o2, *d2, tol).await,
+            (Curve3::Line { origin, dir }, Curve3::Circle { frame, radius }) => intersect_line_circle(*origin, *dir, frame, *radius, tol, false).await,
+            (Curve3::Circle { frame, radius }, Curve3::Line { origin, dir }) => intersect_line_circle(*origin, *dir, frame, *radius, tol, true).await,
+            (Curve3::Circle { frame: f1, radius: r1 }, Curve3::Circle { frame: f2, radius: r2 }) => intersect_circle_circle(f1, *r1, f2, *r2, tol).await,
+            _ => intersect_general(a, b, tol).await,
         }
     }
 
@@ -66,7 +66,7 @@ pub mod curve_curve {
         let e = d2.dot(w0);
         let denom = a * c - b * b;
         if denom.abs() <= tol * tol * a * c {
-            let dist = w0.cross(d1).norm() / n1;
+            let dist = w0.cross(d1).await.norm() / n1;
             if dist <= tol {
                 return Err(IntersectError::Tangent);
             }
@@ -79,20 +79,20 @@ pub mod curve_curve {
         if p_a.distance(p_b) > tol {
             return Ok(vec![]);
         }
-        Ok(vec![CurveCurveHit { point: Pnt3::new((p_a.x + p_b.x) * 0.5, (p_a.y + p_b.y) * 0.5, (p_a.z + p_b.z) * 0.5), t_a, t_b }])
+        Ok(vec![CurveCurveHit { point: Pnt3::new((p_a.x + p_b.x) * 0.5, (p_a.y + p_b.y) * 0.5, (p_a.z + p_b.z) * 0.5).await, t_a, t_b }])
     }
 
     async fn intersect_line_circle(origin: Pnt3, dir: Vec3, frame: &Frame3, radius: f64, tol: f64, swap: bool) -> Result<Vec<CurveCurveHit>, IntersectError> {
         if radius <= tol || dir.norm() <= tol {
             return Err(IntersectError::Degenerate("degenerate line or circle".into()));
         }
-        let o = frame.to_local(origin);
-        let d = frame.to_local_vector(dir);
+        let o = frame.to_local(origin).await;
+        let d = frame.to_local_vector(dir).await;
         if d.z.abs() <= tol {
             if o.z.abs() > tol {
                 return Ok(vec![]);
             }
-            return intersect_line2_circle(o.x, o.y, d.x, d.y, radius, origin, dir, frame, tol, swap);
+            return intersect_line2_circle(o.x, o.y, d.x, d.y, radius, origin, dir, frame, tol, swap).await;
         }
         let t_plane = -o.z / d.z;
         let x = o.x + d.x * t_plane;
@@ -101,12 +101,12 @@ pub mod curve_curve {
         if (rho - radius).abs() <= tol {
             let point = origin + dir * t_plane;
             let t_circle = y.atan2(x).rem_euclid(std::f64::consts::TAU);
-            return Ok(vec![pack_hit(point, t_plane, t_circle, swap)]);
+            return Ok(vec![pack_hit(point, t_plane, t_circle, swap).await]);
         }
         if rho > radius + tol {
             return Ok(vec![]);
         }
-        intersect_line2_circle(o.x, o.y, d.x, d.y, radius, origin, dir, frame, tol, swap)
+        intersect_line2_circle(o.x, o.y, d.x, d.y, radius, origin, dir, frame, tol, swap).await
     }
 
     async fn intersect_line2_circle(ox: f64, oy: f64, dx: f64, dy: f64, radius: f64, origin: Pnt3, dir: Vec3, frame: &Frame3, tol: f64, swap: bool) -> Result<Vec<CurveCurveHit>, IntersectError> {
@@ -127,13 +127,13 @@ pub mod curve_curve {
             let x = ox + dx * t;
             let y = oy + dy * t;
             let point = origin + dir * t;
-            if frame.to_local(point).z.abs() > tol * 10.0 {
+            if frame.to_local(point).await.z.abs() > tol * 10.0 {
                 continue;
             }
             let t_circle = y.atan2(x).rem_euclid(std::f64::consts::TAU);
             let hit = pack_hit(point, t, t_circle, swap);
             if hits.iter().all(|h: &CurveCurveHit| h.point.distance(hit.point) > tol) {
-                hits.push(hit);
+                hits.push(hit.await);
             }
         }
         Ok(hits)
@@ -151,13 +151,13 @@ pub mod curve_curve {
         if r1 <= tol || r2 <= tol {
             return Err(IntersectError::Degenerate("non-positive circle radius".into()));
         }
-        if f1.z.cross(f2.z).norm() > tol {
-            return intersect_general(&Curve3::Circle { frame: *f1, radius: r1 }, &Curve3::Circle { frame: *f2, radius: r2 }, tol);
+        if f1.z.cross(f2.z).await.norm() > tol {
+            return intersect_general(&Curve3::Circle { frame: *f1, radius: r1 }, &Curve3::Circle { frame: *f2, radius: r2 }, tol).await;
         }
         let c1 = f1.origin;
         let c2 = f2.origin;
         let d_vec = c2 - c1;
-        let d = d_vec.norm();
+        let d = d_vec.norm().await;
         if d <= tol && (r1 - r2).abs() <= tol {
             return Err(IntersectError::Tangent);
         }
@@ -172,14 +172,14 @@ pub mod curve_curve {
         }
         let h = h_sq.max(0.0).sqrt();
         let mid = c1 + d_vec * (a / den);
-        let n = f1.z.normalized().unwrap_or(Vec3::Z);
-        let radial = (d_vec - n * d_vec.dot(n)).normalized().unwrap_or(f1.x);
+        let n = f1.z.normalized().await.unwrap_or(Vec3::Z);
+        let radial = (d_vec - n * d_vec.dot(n).await).normalized().await.unwrap_or(f1.x);
         let perp = n.cross(radial);
         let mut hits = Vec::new();
         for sign in [-1.0, 1.0] {
             let point = mid + perp * (h * sign);
-            let local1 = f1.to_local(point);
-            let local2 = f2.to_local(point);
+            let local1 = f1.to_local(point).await;
+            let local2 = f2.to_local(point).await;
             let t_a = local1.y.atan2(local1.x).rem_euclid(std::f64::consts::TAU);
             let t_b = local2.y.atan2(local2.x).rem_euclid(std::f64::consts::TAU);
             let hit = CurveCurveHit { point, t_a, t_b };
@@ -195,14 +195,14 @@ pub mod curve_curve {
     // #region 🔖️General
 
     async fn intersect_general(a: &Curve3, b: &Curve3, tol: f64) -> Result<Vec<CurveCurveHit>, IntersectError> {
-        let (dom_a, nurbs_a) = curve_as_nurbs(a, b, tol)?;
-        let (dom_b, nurbs_b) = curve_as_nurbs(b, a, tol)?;
-        let segs_a = nurbs_to_bezier_segments(&nurbs_a)?;
-        let segs_b = nurbs_to_bezier_segments(&nurbs_b)?;
+        let (dom_a, nurbs_a) = curve_as_nurbs(a, b, tol).await?;
+        let (dom_b, nurbs_b) = curve_as_nurbs(b, a, tol).await?;
+        let segs_a = nurbs_to_bezier_segments(&nurbs_a).await?;
+        let segs_b = nurbs_to_bezier_segments(&nurbs_b).await?;
         let mut hits = Vec::new();
         for (bez_a, a0, a1) in &segs_a {
             for (bez_b, b0, b1) in &segs_b {
-                clip_pair(bez_a, *a0, *a1, bez_b, *b0, *b1, a, b, tol, 0, &mut hits)?;
+                clip_pair(bez_a, *a0, *a1, bez_b, *b0, *b1, a, b, tol, 0, &mut hits).await?;
             }
         }
         if hits.is_empty() {
@@ -214,14 +214,14 @@ pub mod curve_curve {
 
     async fn curve_as_nurbs(curve: &Curve3, other: &Curve3, tol: f64) -> Result<((f64, f64), NurbsCurve3), IntersectError> {
         let domain = match curve {
-            Curve3::Line { origin, dir } => line_domain_against(origin, dir, other, tol)?,
-            Curve3::Circle { .. } | Curve3::Ellipse { .. } => curve.domain(),
-            Curve3::Nurbs { knots, .. } => knots.domain(),
+            Curve3::Line { origin, dir } => line_domain_against(origin, dir, other, tol).await?,
+            Curve3::Circle { .. } | Curve3::Ellipse { .. } => curve.domain().await,
+            Curve3::Nurbs { knots, .. } => knots.domain().await,
         };
         if !domain.0.is_finite() || !domain.1.is_finite() || domain.1 <= domain.0 {
             return Err(IntersectError::Degenerate("unable to form a finite NURBS domain".into()));
         }
-        Ok((domain, curve.to_nurbs(domain)))
+        Ok((domain, curve.to_nurbs(domain).await))
     }
 
     async fn line_domain_against(origin: &Pnt3, dir: &Vec3, other: &Curve3, tol: f64) -> Result<(f64, f64), IntersectError> {
@@ -230,7 +230,7 @@ pub mod curve_curve {
             return Err(IntersectError::Degenerate("zero-length line direction".into()));
         }
         let unit = *dir * (1.0 / n);
-        let (t0, t1) = other.domain();
+        let (t0, t1) = other.domain().await;
         let samples = if t0.is_finite() && t1.is_finite() {
             let mut ts = Vec::new();
             for i in 0..=16 {
@@ -261,7 +261,7 @@ pub mod curve_curve {
         let mut hz: Vec<f64> = nurbs.controls.iter().zip(&nurbs.weights).map(|(p, w)| p.z * w).collect();
         let mut hw = nurbs.weights.clone();
         let p = knots.degree;
-        let (d0, d1) = knots.domain();
+        let (d0, d1) = knots.domain().await;
         let mut unique: Vec<f64> = Vec::new();
         for &k in &knots.knots {
             if k > d0 + 1e-15 && k < d1 - 1e-15 && unique.last().map(|&u| (u - k).abs() > 1e-15).unwrap_or(true) {
@@ -270,10 +270,10 @@ pub mod curve_curve {
         }
         for u in unique {
             while knots.multiplicity(u) < p {
-                let (nk, nx) = insert_knot(&knots, &hx, u);
-                let (_, ny) = insert_knot(&knots, &hy, u);
-                let (_, nz) = insert_knot(&knots, &hz, u);
-                let (_, nw) = insert_knot(&knots, &hw, u);
+                let (nk, nx) = insert_knot(&knots, &hx, u).await;
+                let (_, ny) = insert_knot(&knots, &hy, u).await;
+                let (_, nz) = insert_knot(&knots, &hz, u).await;
+                let (_, nw) = insert_knot(&knots, &hw, u).await;
                 knots = nk;
                 hx = nx;
                 hy = ny;
@@ -317,33 +317,33 @@ pub mod curve_curve {
     }
 
     async fn clip_pair(bez_a: &RationalBezier3, a0: f64, a1: f64, bez_b: &RationalBezier3, b0: f64, b1: f64, curve_a: &Curve3, curve_b: &Curve3, tol: f64, depth: u32, hits: &mut Vec<CurveCurveHit>) -> Result<(), IntersectError> {
-        if !boxes_overlap3(bez_a.control_hull_box(), bez_b.control_hull_box(), tol) {
+        if !boxes_overlap3(bez_a.control_hull_box().await, bez_b.control_hull_box().await, tol) {
             return Ok(());
         }
         let span_a = (a1 - a0).abs();
         let span_b = (b1 - b0).abs();
-        let (lo_a, hi_a) = bez_a.control_hull_box();
-        let (lo_b, hi_b) = bez_b.control_hull_box();
+        let (lo_a, hi_a) = bez_a.control_hull_box().await;
+        let (lo_b, hi_b) = bez_b.control_hull_box().await;
         let size_a = (hi_a.x - lo_a.x).max(hi_a.y - lo_a.y).max(hi_a.z - lo_a.z);
         let size_b = (hi_b.x - lo_b.x).max(hi_b.y - lo_b.y).max(hi_b.z - lo_b.z);
         if (size_a <= tol && size_b <= tol) || depth >= 32 || (span_a <= tol && span_b <= tol) {
             let t_a = 0.5 * (a0 + a1);
             let t_b = 0.5 * (b0 + b1);
-            if let Some(hit) = newton_refine(curve_a, curve_b, t_a, t_b, tol) {
+            if let Some(hit) = newton_refine(curve_a, curve_b, t_a, t_b, tol).await {
                 hits.push(hit);
             }
             return Ok(());
         }
         if span_a >= span_b {
-            let (left, right) = bez_a.subdivide(0.5);
+            let (left, right) = bez_a.subdivide(0.5).await;
             let mid = 0.5 * (a0 + a1);
-            clip_pair(&left, a0, mid, bez_b, b0, b1, curve_a, curve_b, tol, depth + 1, hits)?;
-            clip_pair(&right, mid, a1, bez_b, b0, b1, curve_a, curve_b, tol, depth + 1, hits)?;
+            clip_pair(&left, a0, mid, bez_b, b0, b1, curve_a, curve_b, tol, depth + 1, hits).await?;
+            clip_pair(&right, mid, a1, bez_b, b0, b1, curve_a, curve_b, tol, depth + 1, hits).await?;
         } else {
-            let (left, right) = bez_b.subdivide(0.5);
+            let (left, right) = bez_b.subdivide(0.5).await;
             let mid = 0.5 * (b0 + b1);
-            clip_pair(bez_a, a0, a1, &left, b0, mid, curve_a, curve_b, tol, depth + 1, hits)?;
-            clip_pair(bez_a, a0, a1, &right, mid, b1, curve_a, curve_b, tol, depth + 1, hits)?;
+            clip_pair(bez_a, a0, a1, &left, b0, mid, curve_a, curve_b, tol, depth + 1, hits).await?;
+            clip_pair(bez_a, a0, a1, &right, mid, b1, curve_a, curve_b, tol, depth + 1, hits).await?;
         }
         Ok(())
     }
@@ -352,19 +352,19 @@ pub mod curve_curve {
         const N: usize = 24;
         for i in 0..=N {
             let t_a = dom_a.0 + (dom_a.1 - dom_a.0) * (i as f64 / N as f64);
-            let pa = a.eval(t_a);
+            let pa = a.eval(t_a).await;
             let mut best_t = dom_b.0;
             let mut best_d = f64::INFINITY;
             for j in 0..=N {
                 let t_b = dom_b.0 + (dom_b.1 - dom_b.0) * (j as f64 / N as f64);
-                let d = pa.distance(b.eval(t_b));
+                let d = pa.distance(b.eval(t_b).await).await;
                 if d < best_d {
                     best_d = d;
                     best_t = t_b;
                 }
             }
             if best_d <= tol * 50.0 {
-                if let Some(hit) = newton_refine(a, b, t_a, best_t, tol) {
+                if let Some(hit) = newton_refine(a, b, t_a, best_t, tol).await {
                     if hits.iter().all(|h| h.point.distance(hit.point) > tol) {
                         hits.push(hit);
                     }
@@ -375,19 +375,19 @@ pub mod curve_curve {
 
     async fn newton_refine(a: &Curve3, b: &Curve3, mut t_a: f64, mut t_b: f64, tol: f64) -> Option<CurveCurveHit> {
         for _ in 0..12 {
-            let pa = a.eval(t_a);
-            let pb = b.eval(t_b);
+            let pa = a.eval(t_a).await;
+            let pb = b.eval(t_b).await;
             let f = pa - pb;
             if f.norm() <= tol {
                 return Some(CurveCurveHit { point: pa, t_a, t_b });
             }
-            let da = a.d1(t_a);
-            let db = b.d1(t_b);
-            let j11 = da.dot(da);
-            let j12 = -da.dot(db);
-            let j22 = db.dot(db);
-            let r1 = -da.dot(f);
-            let r2 = db.dot(f);
+            let da = a.d1(t_a).await;
+            let db = b.d1(t_b).await;
+            let j11 = da.dot(da).await;
+            let j12 = -da.dot(db).await;
+            let j22 = db.dot(db).await;
+            let r1 = -da.dot(f).await;
+            let r2 = db.dot(f).await;
             let det = j11 * j22 - j12 * j12;
             if det.abs() <= 1e-30 {
                 return None;
@@ -397,10 +397,10 @@ pub mod curve_curve {
             t_a += du1;
             t_b += du2;
         }
-        let pa = a.eval(t_a);
-        let pb = b.eval(t_b);
-        if pa.distance(pb) <= tol * 10.0 {
-            Some(CurveCurveHit { point: Pnt3::new((pa.x + pb.x) * 0.5, (pa.y + pb.y) * 0.5, (pa.z + pb.z) * 0.5), t_a, t_b })
+        let pa = a.eval(t_a).await;
+        let pb = b.eval(t_b).await;
+        if pa.distance(pb).await <= tol * 10.0 {
+            Some(CurveCurveHit { point: Pnt3::new((pa.x + pb.x) * 0.5, (pa.y + pb.y) * 0.5, (pa.z + pb.z) * 0.5).await, t_a, t_b })
         } else {
             None
         }
@@ -515,10 +515,10 @@ pub mod curve_surface {
             return Err(IntersectError::Degenerate("tolerance must be positive and finite".into()));
         }
         match (curve, surface) {
-            (Curve3::Line { origin, dir }, Surface::Plane { frame }) => intersect_line_plane(*origin, *dir, frame, tol),
-            (Curve3::Line { origin, dir }, Surface::Sphere { frame, radius }) => intersect_line_sphere(*origin, *dir, frame, *radius, tol),
-            (Curve3::Line { origin, dir }, Surface::Cylinder { frame, radius }) => intersect_line_cylinder(*origin, *dir, frame, *radius, tol),
-            _ => intersect_general(curve, surface, tol),
+            (Curve3::Line { origin, dir }, Surface::Plane { frame }) => intersect_line_plane(*origin, *dir, frame, tol).await,
+            (Curve3::Line { origin, dir }, Surface::Sphere { frame, radius }) => intersect_line_sphere(*origin, *dir, frame, *radius, tol).await,
+            (Curve3::Line { origin, dir }, Surface::Cylinder { frame, radius }) => intersect_line_cylinder(*origin, *dir, frame, *radius, tol).await,
+            _ => intersect_general(curve, surface, tol).await,
         }
     }
 
@@ -532,17 +532,17 @@ pub mod curve_surface {
             return Err(IntersectError::Degenerate("zero-length line direction".into()));
         }
         let normal = frame.z;
-        let denom = dir.dot(normal);
-        let local = frame.to_local(origin);
+        let denom = dir.dot(normal).await;
+        let local = frame.to_local(origin).await;
         if denom.abs() <= tol * n {
             if local.z.abs() <= tol {
                 return Err(IntersectError::Tangent);
             }
             return Ok(vec![]);
         }
-        let t = -local.z / (frame.to_local_vector(dir).z);
+        let t = -local.z / (frame.to_local_vector(dir).await.z);
         let point = origin + dir * t;
-        let uv = frame.to_local(point);
+        let uv = frame.to_local(point).await;
         Ok(vec![CurveSurfaceHit { point, t, u: uv.x, v: uv.y }])
     }
 
@@ -550,11 +550,11 @@ pub mod curve_surface {
         if radius <= tol || dir.norm() <= tol {
             return Err(IntersectError::Degenerate("degenerate line or sphere".into()));
         }
-        let o = frame.to_local(origin).to_vec();
-        let d = frame.to_local_vector(dir);
-        let a = d.dot(d);
-        let b = 2.0 * o.dot(d);
-        let c = o.dot(o) - radius * radius;
+        let o = frame.to_local(origin).await.to_vec();
+        let d = frame.to_local_vector(dir).await;
+        let a = d.dot(d).await;
+        let b = 2.0 * o.await.dot(d);
+        let c = o.await.dot(o.await) - radius * radius;
         let disc = b * b - 4.0 * a * c;
         if disc < -(tol * tol) * a * a {
             return Ok(vec![]);
@@ -564,8 +564,8 @@ pub mod curve_surface {
         for sign in [-1.0, 1.0] {
             let t = (-b + sign * sqrt_disc) / (2.0 * a);
             let point = origin + dir * t;
-            let local = frame.to_local(point).to_vec();
-            let n = local.normalized().unwrap_or(Vec3::Z);
+            let local = frame.to_local(point).await.to_vec();
+            let n = local.await.normalized().await.unwrap_or(Vec3::Z);
             let v = n.z.clamp(-1.0, 1.0).asin();
             let u = n.y.atan2(n.x).rem_euclid(std::f64::consts::TAU);
             let hit = CurveSurfaceHit { point, t, u, v };
@@ -583,8 +583,8 @@ pub mod curve_surface {
         if radius <= tol || dir.norm() <= tol {
             return Err(IntersectError::Degenerate("degenerate line or cylinder".into()));
         }
-        let o = frame.to_local(origin);
-        let d = frame.to_local_vector(dir);
+        let o = frame.to_local(origin).await;
+        let d = frame.to_local_vector(dir).await;
         let a = d.x * d.x + d.y * d.y;
         let b = 2.0 * (o.x * d.x + o.y * d.y);
         let c = o.x * o.x + o.y * o.y - radius * radius;
@@ -603,7 +603,7 @@ pub mod curve_surface {
         for sign in [-1.0, 1.0] {
             let t = (-b + sign * sqrt_disc) / (2.0 * a);
             let point = origin + dir * t;
-            let local = frame.to_local(point);
+            let local = frame.to_local(point).await;
             let u = local.y.atan2(local.x).rem_euclid(std::f64::consts::TAU);
             let hit = CurveSurfaceHit { point, t, u, v: local.z };
             if hits.iter().all(|h: &CurveSurfaceHit| h.point.distance(hit.point) > tol) {
@@ -621,16 +621,16 @@ pub mod curve_surface {
     // #region 🔖️General
 
     async fn intersect_general(curve: &Curve3, surface: &Surface, tol: f64) -> Result<Vec<CurveSurfaceHit>, IntersectError> {
-        let domain_t = curve_sample_domain(curve, surface, tol)?;
+        let domain_t = curve_sample_domain(curve, surface, tol).await?;
         let surf_domain = finite_surface_domain(surface);
         let n_samples = 32usize;
         let mut hits = Vec::new();
         for i in 0..=n_samples {
             let t = domain_t.0 + (domain_t.1 - domain_t.0) * (i as f64 / n_samples as f64);
             let pt = curve.eval(t);
-            let (u, v, dist) = closest_point(surface, surf_domain, pt, 8);
+            let (u, v, dist) = closest_point(surface, surf_domain.await, pt.await, 8).await;
             if dist <= tol * 50.0 {
-                if let Some(hit) = newton_refine(curve, surface, t, u, v, domain_t, surf_domain, tol) {
+                if let Some(hit) = newton_refine(curve, surface, t, u, v, domain_t, surf_domain.await, tol).await {
                     push_unique(&mut hits, hit, tol);
                 }
             }
@@ -641,14 +641,14 @@ pub mod curve_surface {
 
     async fn curve_sample_domain(curve: &Curve3, surface: &Surface, tol: f64) -> Result<(f64, f64), IntersectError> {
         match curve {
-            Curve3::Line { origin, dir } => line_domain_against_surface(origin, dir, surface, tol),
-            Curve3::Circle { .. } | Curve3::Ellipse { .. } => Ok(curve.domain()),
+            Curve3::Line { origin, dir } => line_domain_against_surface(origin, dir, surface, tol).await,
+            Curve3::Circle { .. } | Curve3::Ellipse { .. } => Ok(curve.domain().await),
             Curve3::Nurbs { knots, .. } => {
                 let d = knots.domain();
                 if !d.0.is_finite() || !d.1.is_finite() || d.1 <= d.0 {
                     return Err(IntersectError::Degenerate("unable to form a finite curve domain".into()));
                 }
-                Ok(d)
+                Ok(d.await)
             }
         }
     }
@@ -659,7 +659,7 @@ pub mod curve_surface {
             return Err(IntersectError::Degenerate("zero-length line direction".into()));
         }
         let unit = *dir * (1.0 / n);
-        let ((u0, u1), (v0, v1)) = finite_surface_domain(surface);
+        let ((u0, u1), (v0, v1)) = finite_surface_domain(surface).await;
         let mut lo = f64::INFINITY;
         let mut hi = f64::NEG_INFINITY;
         for i in 0..=8 {
@@ -680,7 +680,7 @@ pub mod curve_surface {
     }
 
     async fn finite_surface_domain(surface: &Surface) -> ((f64, f64), (f64, f64)) {
-        let ((u0, u1), (v0, v1)) = surface.domain();
+        let ((u0, u1), (v0, v1)) = surface.domain().await;
         let u_hi = if u1.is_finite() { u1 } else { u0 + std::f64::consts::TAU };
         let u_lo = if u0.is_finite() { u0 } else { u_hi - std::f64::consts::TAU };
         let v_hi = if v1.is_finite() { v1 } else { 10.0 };
@@ -712,22 +712,22 @@ pub mod curve_surface {
         let v_periodic = surface.is_v_periodic();
         let t_periodic = curve.is_periodic();
         for _ in 0..16 {
-            let c_pt = curve.eval(t);
-            let d = surface.derivatives(u, v);
+            let c_pt = curve.eval(t).await;
+            let d = surface.derivatives(u, v).await;
             let residual = c_pt - d.point;
             if residual.norm() <= tol {
                 return Some(CurveSurfaceHit { point: c_pt, t, u, v });
             }
             let ct = curve.d1(t);
-            let col0 = ct;
+            let col0 = ct.await;
             let col1 = -d.du;
             let col2 = -d.dv;
             let det = col0.x * (col1.y * col2.z - col1.z * col2.y) - col1.x * (col0.y * col2.z - col0.z * col2.y) + col2.x * (col0.y * col1.z - col0.z * col1.y);
             let (dt, du, dv) = if det.abs() < 1e-30 {
                 let lambda = 1e-6;
-                let jtj = [[col0.dot(col0) + lambda, col0.dot(col1), col0.dot(col2)], [col1.dot(col0), col1.dot(col1) + lambda, col1.dot(col2)], [col2.dot(col0), col2.dot(col1), col2.dot(col2) + lambda]];
-                let jtr = [col0.dot(residual), col1.dot(residual), col2.dot(residual)];
-                solve_3x3(&jtj, &jtr)?
+                let jtj = [[col0.dot(col0).await + lambda, col0.dot(col1).await, col0.dot(col2).await], [col1.dot(col0).await, col1.dot(col1) + lambda, col1.dot(col2)], [col2.dot(col0).await, col2.dot(col1).await, col2.dot(col2) + lambda]];
+                let jtr = [col0.dot(residual).await, col1.dot(residual).await, col2.dot(residual).await];
+                solve_3x3(&jtj, &jtr).await?
             } else {
                 let inv_det = 1.0 / det;
                 let neg_r = -residual;
@@ -736,19 +736,19 @@ pub mod curve_surface {
                 let dv = inv_det * (col0.x * (col1.y * neg_r.z - col1.z * neg_r.y) - col1.x * (col0.y * neg_r.z - col0.z * neg_r.y) + neg_r.x * (col0.y * col1.z - col0.z * col1.y));
                 (dt, du, dv)
             };
-            t = if t_periodic {
-                wrap_or_clamp(t + dt, domain_t.0, domain_t.1, true)
+            t = if t_periodic.await {
+                wrap_or_clamp(t + dt, domain_t.0, domain_t.1, true).await
             } else if domain_t.0.is_finite() && domain_t.1.is_finite() {
                 (t + dt).clamp(domain_t.0, domain_t.1)
             } else {
                 t + dt
             };
-            u = wrap_or_clamp(u + du, u_lo, u_hi, u_periodic);
-            v = wrap_or_clamp(v + dv, v_lo, v_hi, v_periodic);
+            u = wrap_or_clamp(u + du, u_lo, u_hi, u_periodic.await).await;
+            v = wrap_or_clamp(v + dv, v_lo, v_hi, v_periodic.await).await;
         }
-        let c_pt = curve.eval(t);
+        let c_pt = curve.eval(t).await;
         let s_pt = surface.eval(u, v);
-        if c_pt.distance(s_pt) <= tol * 10.0 {
+        if c_pt.distance(s_pt.await).await <= tol * 10.0 {
             Some(CurveSurfaceHit { point: c_pt, t, u, v })
         } else {
             None
@@ -884,12 +884,12 @@ pub mod surface_surface {
             return Err(IntersectError::Degenerate("tolerance must be positive and finite".into()));
         }
         match (a, b) {
-            (Surface::Plane { frame: fa }, Surface::Plane { frame: fb }) => intersect_plane_plane(fa, fb, tol),
-            (Surface::Plane { frame }, Surface::Cylinder { frame: cf, radius }) => intersect_plane_cylinder(frame, cf, *radius, tol),
-            (Surface::Cylinder { frame: cf, radius }, Surface::Plane { frame }) => intersect_plane_cylinder(frame, cf, *radius, tol),
-            (Surface::Plane { frame }, Surface::Sphere { frame: sf, radius }) => intersect_plane_sphere(frame, sf, *radius, tol),
-            (Surface::Sphere { frame: sf, radius }, Surface::Plane { frame }) => intersect_plane_sphere(frame, sf, *radius, tol),
-            (Surface::Sphere { frame: fa, radius: ra }, Surface::Sphere { frame: fb, radius: rb }) => intersect_sphere_sphere(fa, *ra, fb, *rb, tol),
+            (Surface::Plane { frame: fa }, Surface::Plane { frame: fb }) => intersect_plane_plane(fa, fb, tol).await,
+            (Surface::Plane { frame }, Surface::Cylinder { frame: cf, radius }) => intersect_plane_cylinder(frame, cf, *radius, tol).await,
+            (Surface::Cylinder { frame: cf, radius }, Surface::Plane { frame }) => intersect_plane_cylinder(frame, cf, *radius, tol).await,
+            (Surface::Plane { frame }, Surface::Sphere { frame: sf, radius }) => intersect_plane_sphere(frame, sf, *radius, tol).await,
+            (Surface::Sphere { frame: sf, radius }, Surface::Plane { frame }) => intersect_plane_sphere(frame, sf, *radius, tol).await,
+            (Surface::Sphere { frame: fa, radius: ra }, Surface::Sphere { frame: fb, radius: rb }) => intersect_sphere_sphere(fa, *ra, fb, *rb, tol).await,
             _ => intersect_surfaces_sampled(a, b, tol),
         }
     }
@@ -904,7 +904,7 @@ pub mod surface_surface {
             return Err(IntersectError::Degenerate("plane normal degenerate".into()));
         }
         let n_u = n * (1.0 / n_n);
-        let dist = n_u.dot(sphere.origin - plane.origin);
+        let dist = n_u.dot(sphere.origin - plane.origin).await;
         let abs_d = dist.abs();
         if abs_d > radius + tol {
             return Ok(Vec::new());
@@ -912,8 +912,8 @@ pub mod surface_surface {
         let h2 = radius * radius - dist * dist;
         let r = if h2 <= 0.0 { 0.0 } else { h2.sqrt() };
         let center = sphere.origin - n_u * dist;
-        let x = plane.x - n_u * plane.x.dot(n_u);
-        let x = x.normalized().unwrap_or(plane.y);
+        let x = plane.x - n_u * plane.x.dot(n_u).await;
+        let x = x.normalized().await.unwrap_or(plane.y);
         let y = n_u.cross(x);
         Ok(vec![IntCurve { curve3: Curve3::Circle { frame: Frame3 { origin: center, x, y, z: n_u }, radius: r.max(tol * 0.5) } }])
     }
@@ -935,7 +935,7 @@ pub mod surface_surface {
         let h2 = ra * ra - a * a;
         let h = if h2 <= 0.0 { 0.0 } else { h2.sqrt() };
         let center = fa.origin + dir * a;
-        let x = dir.cross(Vec3::new(0.0, 0.0, 1.0)).normalized().or_else(|| dir.cross(Vec3::new(0.0, 1.0, 0.0)).normalized()).ok_or_else(|| IntersectError::Degenerate("sphere intersection frame".into()))?;
+        let x = dir.cross(Vec3::new(0.0, 0.0, 1.0).await).await.normalized().await.or_else(|| semio_framework_plugin::resolve_ready(dir.cross(Vec3::new(0.0, 1.0, 0.0))).normalized()).ok_or_else(|| IntersectError::Degenerate("sphere intersection frame".into()))?;
         let y = dir.cross(x);
         Ok(vec![IntCurve { curve3: Curve3::Circle { frame: Frame3 { origin: center, x, y, z: dir }, radius: h.max(tol * 0.5) } }])
     }
@@ -950,7 +950,7 @@ pub mod surface_surface {
             for iv in 0..=nv {
                 let v = ((iv as f64) / (nv as f64) - 0.5) * 4.0;
                 let p = a.eval(u, v);
-                if let Some(q) = project_point_to_surface(b, p, tol) {
+                if let Some(q) = project_point_to_surface(b, p.await, tol).await {
                     if (q - p).norm() <= tol * 4.0 {
                         pts.push(p);
                     }
@@ -970,7 +970,7 @@ pub mod surface_surface {
         let mut controls = Vec::<Pnt3>::new();
         for p in ordered {
             if controls.last().map(|q| (*q - p).norm() > tol).unwrap_or(true) {
-                controls.push(p);
+                controls.push(p.await);
             }
         }
         if controls.len() < 2 {
@@ -999,7 +999,7 @@ pub mod surface_surface {
                     return None;
                 }
                 let n_u = n * (1.0 / n_n);
-                Some(point - n_u * n_u.dot(point - frame.origin))
+                Some(point - n_u * n_u.dot(point - frame.origin).await)
             }
             Surface::Sphere { frame, radius } => {
                 let v = point - frame.origin;
@@ -1012,7 +1012,7 @@ pub mod surface_surface {
             Surface::Cylinder { frame, radius } => {
                 let w = point - frame.origin;
                 let axis = frame.z;
-                let axial = axis * axis.dot(w);
+                let axial = axis * axis.dot(w).await;
                 let radial = w - axial;
                 let rn = radial.norm();
                 if rn <= tol {
@@ -1027,7 +1027,7 @@ pub mod surface_surface {
                     let p = surface.eval(u, v);
                     let r = point - p;
                     if r.norm() <= tol {
-                        return Some(p);
+                        return Some(p.await);
                     }
                     let pu = surface.eval(u + 1e-3, v) - p;
                     let pv = surface.eval(u, v + 1e-3) - p;
@@ -1042,7 +1042,7 @@ pub mod surface_surface {
                         v += gv / dv;
                     }
                 }
-                Some(surface.eval(u, v))
+                Some(surface.eval(u, v).await)
             }
         }
     }
@@ -1054,18 +1054,18 @@ pub mod surface_surface {
     async fn intersect_plane_plane(fa: &Frame3, fb: &Frame3, tol: f64) -> Result<Vec<IntCurve>, IntersectError> {
         let n1 = fa.z;
         let n2 = fb.z;
-        let dir = n1.cross(n2);
-        let dir_n = dir.norm();
+        let dir = n1.cross(n2).await;
+        let dir_n = dir.norm().await;
         if dir_n <= tol {
-            let dist = n1.dot(fb.origin - fa.origin).abs();
+            let dist = n1.dot(fb.origin - fa.origin).await.abs();
             if dist <= tol {
                 return Err(IntersectError::Tangent);
             }
             return Ok(vec![]);
         }
-        let d1 = n1.dot(fa.origin.to_vec());
-        let d2 = n2.dot(fb.origin.to_vec());
-        let point = (n2.cross(dir) * d1 + dir.cross(n1) * d2) * (1.0 / (dir_n * dir_n));
+        let d1 = n1.dot(fa.origin.to_vec().await);
+        let d2 = n2.dot(fb.origin.to_vec().await);
+        let point = (n2.cross(dir) * d1 + dir.cross(n1).await * d2.await) * (1.0 / (dir_n * dir_n));
         let origin = Pnt3::new(point.x, point.y, point.z);
         let unit = dir * (1.0 / dir_n);
         Ok(vec![IntCurve { curve3: Curve3::Line { origin, dir: unit } }])
@@ -1075,28 +1075,28 @@ pub mod surface_surface {
         if radius <= tol {
             return Err(IntersectError::Degenerate("non-positive cylinder radius".into()));
         }
-        let n = plane.z.normalized().unwrap_or(Vec3::Z);
-        let axis = cyl.z.normalized().unwrap_or(Vec3::Z);
-        let cos_theta = n.dot(axis).abs();
+        let n = plane.z.normalized().await.unwrap_or(Vec3::Z);
+        let axis = cyl.z.normalized().await.unwrap_or(Vec3::Z);
+        let cos_theta = n.dot(axis).await.abs();
         if cos_theta <= tol {
-            return plane_cylinder_parallel(plane, cyl, radius, n, axis, tol);
+            return plane_cylinder_parallel(plane, cyl, radius, n, axis, tol).await;
         }
         let n_dot_axis = n.dot(axis);
         let t = n.dot(plane.origin - cyl.origin) / n_dot_axis;
         let center = cyl.origin + axis * t;
         if (1.0 - cos_theta) <= tol {
-            let frame = Frame3::from_normal(center, axis).ok_or_else(|| IntersectError::Degenerate("degenerate circle frame on cylinder".into()))?;
+            let frame = Frame3::from_normal(center, axis).await.ok_or_else(|| IntersectError::Degenerate("degenerate circle frame on cylinder".into()))?;
             return Ok(vec![IntCurve { curve3: Curve3::Circle { frame, radius } }]);
         }
         let minor = radius;
         let major = radius / cos_theta;
-        let major_dir = (axis - n * axis.dot(n)).normalized().unwrap_or_else(|| n.any_orthogonal());
-        let frame = Frame3::from_x_z(center, major_dir, n).ok_or_else(|| IntersectError::Degenerate("degenerate ellipse frame on cylinder".into()))?;
+        let major_dir = (axis - n * axis.dot(n).await).normalized().await.unwrap_or_else(|| n.any_orthogonal());
+        let frame = Frame3::from_x_z(center, major_dir, n).await.ok_or_else(|| IntersectError::Degenerate("degenerate ellipse frame on cylinder".into()))?;
         Ok(vec![IntCurve { curve3: Curve3::Ellipse { frame, major_radius: major, minor_radius: minor } }])
     }
 
     async fn plane_cylinder_parallel(plane: &Frame3, cyl: &Frame3, radius: f64, n: Vec3, axis: Vec3, tol: f64) -> Result<Vec<IntCurve>, IntersectError> {
-        let signed = n.dot(cyl.origin - plane.origin);
+        let signed = n.dot(cyl.origin - plane.origin).await;
         let dist = signed.abs();
         if dist > radius + tol {
             return Ok(vec![]);
@@ -1107,7 +1107,7 @@ pub mod surface_surface {
         }
         let h = h_sq.max(0.0).sqrt();
         let foot = cyl.origin - n * signed;
-        let perp = n.cross(axis).normalized().unwrap_or_else(|| axis.any_orthogonal());
+        let perp = n.cross(axis).await.normalized().await.unwrap_or_else(|| axis.any_orthogonal());
         if h <= tol {
             return Err(IntersectError::Tangent);
         }

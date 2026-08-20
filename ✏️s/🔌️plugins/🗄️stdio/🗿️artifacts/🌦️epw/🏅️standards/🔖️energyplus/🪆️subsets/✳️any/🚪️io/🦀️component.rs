@@ -36,7 +36,7 @@ pub mod derived_composition {
             if native.is_empty() {
                 return Err(ComposeError { message: "EpwComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() });
             }
-            let analysis = EpwAnalyzer::analyze(&native);
+            let analysis = EpwAnalyzer::analyze(&native).await;
             let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError { message: "EpwComposerComposition: analysis produced no snapshot".into(), diagnostics: analysis.diagnostics.clone() })?;
             Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics })
         }
@@ -47,18 +47,18 @@ pub mod derived_composition {
     /// 📌️ Registers this subset's schema descriptor, inferences, document codec. Called from
     /// this artifact's root-level `register()` (former standard-level `engine::register()`).
     pub async fn register() {
-        ::schema::register_artifact_schema_descriptor(crate::artifacts::epw::standards::energyplus::subsets::any::schema::epw_artifact_schema_descriptor());
+        ::schema::register_artifact_schema_descriptor(crate::artifacts::epw::standards::energyplus::subsets::any::schema::epw_artifact_schema_descriptor().await);
         register_artifact_inferences();
         let _ = store::register_document_codec(store::ArtifactCodec::of::<EpwSnapshot, crate::artifacts::epw::standards::energyplus::subsets::any::schema::mutations::EpwMutation>(
             crate::artifacts::epw::standards::energyplus::subsets::any::schema::snapshot::STDIO_EPW_DOCUMENT_SCHEMA,
-        ));
+        ).await);
     }
 
     /// 💡️ Registers `s.stdio.epw.inference`'s facet leaves into the OS-wide inference catalog —
     /// sibling to the artifact schema descriptor above (separate registry, ticket
     /// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
     pub async fn register_artifact_inferences() {
-        ::schema::register_artifact_inference_descriptor(crate::artifacts::epw::standards::energyplus::subsets::any::schema::inferences::epw_artifact_inference_descriptor());
+        ::schema::register_artifact_inference_descriptor(crate::artifacts::epw::standards::energyplus::subsets::any::schema::inferences::epw_artifact_inference_descriptor().await);
     }
     //#endregion 🔖️Register
 }
@@ -159,7 +159,7 @@ async fn parse_record_line(line: &str) -> Result<EpwRecord, String> {
     }
     let values: Vec<String> = fields.iter().map(|s| s.to_string()).collect();
     let arr: [String; EPW_RECORD_FIELD_COUNT] = values.try_into().map_err(|_| "record: field count mismatch".to_string())?;
-    Ok(EpwRecord::from_fields(arr))
+    Ok(EpwRecord::from_fields(arr).await)
 }
 //#endregion 🔖️Record
 
@@ -167,25 +167,25 @@ async fn parse_record_line(line: &str) -> Result<EpwRecord, String> {
 /// 📥️ Decodes a full EPW text document: 8 typed/retained header lines + N fully-typed 35-column
 /// data records.
 pub async fn decode_epw(text: &str) -> Result<EpwSnapshot, String> {
-    let lines = split_lines(text);
+    let lines = split_lines(text).await;
     if lines.len() < 8 {
         return Err(format!("epw: expected at least 8 header lines, got {}", lines.len()));
     }
-    let location = parse_location_line(lines[0])?;
-    let design_conditions = require_prefix(lines[1], "DESIGN CONDITIONS")?.to_string();
-    let typical_extreme_periods = require_prefix(lines[2], "TYPICAL/EXTREME PERIODS")?.to_string();
-    let ground_temperatures = require_prefix(lines[3], "GROUND TEMPERATURES")?.to_string();
-    let holidays_dst = require_prefix(lines[4], "HOLIDAYS/DAYLIGHT SAVINGS")?.to_string();
-    let comments_1 = require_prefix(lines[5], "COMMENTS 1")?.to_string();
-    let comments_2 = require_prefix(lines[6], "COMMENTS 2")?.to_string();
-    let data_periods = parse_data_periods_line(lines[7])?;
+    let location = parse_location_line(lines[0]).await?;
+    let design_conditions = require_prefix(lines[1], "DESIGN CONDITIONS").await?.to_string();
+    let typical_extreme_periods = require_prefix(lines[2], "TYPICAL/EXTREME PERIODS").await?.to_string();
+    let ground_temperatures = require_prefix(lines[3], "GROUND TEMPERATURES").await?.to_string();
+    let holidays_dst = require_prefix(lines[4], "HOLIDAYS/DAYLIGHT SAVINGS").await?.to_string();
+    let comments_1 = require_prefix(lines[5], "COMMENTS 1").await?.to_string();
+    let comments_2 = require_prefix(lines[6], "COMMENTS 2").await?.to_string();
+    let data_periods = parse_data_periods_line(lines[7]).await?;
 
     let mut records = Vec::with_capacity(lines.len().saturating_sub(8));
     for (i, line) in lines[8..].iter().enumerate() {
         if line.trim().is_empty() {
             continue;
         }
-        records.push(parse_record_line(line).map_err(|e| format!("epw: record {i}: {e}"))?);
+        records.push(parse_record_line(line).await.map_err(|e| format!("epw: record {i}: {e}"))?);
     }
     if records.is_empty() {
         return Err("epw: no data records".into());
@@ -199,16 +199,16 @@ pub async fn decode_epw(text: &str) -> Result<EpwSnapshot, String> {
 /// last record.
 pub async fn encode_epw(snap: &EpwSnapshot) -> String {
     let mut lines: Vec<String> = Vec::with_capacity(8 + snap.records.len());
-    lines.push(encode_location_line(&snap.location));
+    lines.push(encode_location_line(&snap.location).await);
     lines.push(snap.design_conditions.clone());
     lines.push(snap.typical_extreme_periods.clone());
     lines.push(snap.ground_temperatures.clone());
     lines.push(snap.holidays_dst.clone());
     lines.push(snap.comments_1.clone());
     lines.push(snap.comments_2.clone());
-    lines.push(encode_data_periods_line(&snap.data_periods));
+    lines.push(encode_data_periods_line(&snap.data_periods).await);
     for r in &snap.records {
-        lines.push(r.fields().join(","));
+        lines.push(r.fields().await.join(","));
     }
     let mut out = lines.join("\r\n");
     out.push_str("\r\n");
@@ -286,7 +286,8 @@ pub mod io_registry {
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 
-    pub async fn entries() -> &'static [ComposerEntry] {
+    // 🚫️async: E1 pure table accessor consumed by OnceLock::get_or_init's sync closure — see R9
+    pub fn entries() -> &'static [ComposerEntry] {
         ENTRIES.get_or_init(|| vec![composer_entry_of::<EpwRawAnyComposer>()]).as_slice()
     }
 }

@@ -14,10 +14,10 @@ pub async fn descriptor() -> GltfInferenceLeafDescriptor {
 }
 pub(crate) async fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<f64> {
     let area = context.faces.iter().map(|face| 0.5 * cross(sub(context.points[face[1]], context.points[face[0]]), sub(context.points[face[2]], context.points[face[0]]))[2].abs()).sum();
-    estimate(area, GltfUnit::SquareMetre, context.sample_count, Some(context.topology))
+    estimate(area, GltfUnit::SquareMetre, context.sample_count, Some(context.topology)).await
 }
 pub async fn unavailable_measure(ids: &[String]) -> GltfMeasure<f64> {
-    unavailable(GltfUnit::SquareMetre, GltfAvailability::Unavailable, ids.to_vec(), 0, None)
+    unavailable(GltfUnit::SquareMetre, GltfAvailability::Unavailable, ids.to_vec(), 0, None).await
 }
 
 pub async fn encode_result(indicators: &GltfEntityIndicators) -> Result<serde_json::Value, serde_json::Error> {

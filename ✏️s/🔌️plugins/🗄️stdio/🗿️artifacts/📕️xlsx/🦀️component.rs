@@ -34,18 +34,18 @@ pub const XLSX_ARTIFACT_SCHEMA_ID: &str = "s.stdio.xlsx";
 /// zero residual `.setup()` calls.
 /// 🧩️ Binds this executable root to its sole schema-owned definition.
 pub async fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
-    crate::registry::runtime_assembly("xlsx", definition, declaration)
+    crate::registry::runtime_assembly("xlsx", definition, declaration).await
 }
 
 pub async fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
-    let formats = crate::registry::format_descriptors_for("xlsx")?;
+    let formats = crate::registry::format_descriptors_for("xlsx").await?;
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
-        .schema(crate::artifacts::xlsx::schema::xlsx_artifact_schema_descriptor())
-        .formats(formats)
-        .inferences([crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::inferences::xlsx_artifact_inference_descriptor()])
-        .composers(crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::io::io_registry::entries())
-        .subset_validators(xlsx_subset_validators())
-        .languages(pilot_languages())
+        .await.schema(crate::artifacts::xlsx::schema::xlsx_artifact_schema_descriptor().await)
+        .await.formats(formats)
+        .await.inferences([crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::inferences::xlsx_artifact_inference_descriptor()])
+        .await.composers(crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::io::io_registry::entries())
+        .await.subset_validators(xlsx_subset_validators().await)
+        .await.languages(pilot_languages())
         .document_codec_bare::<XlsxSnapshot, XlsxMutation>(STDIO_XLSX_DOCUMENT_SCHEMA)
         .try_build()
 }
@@ -156,7 +156,8 @@ pub mod io_registry {
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 
-    pub async fn entries() -> &'static [&'static ComposerEntry] {
+    // 🚫️async: E1 pure table accessor consumed by OnceLock::get_or_init's sync closure — see R9
+    pub fn entries() -> &'static [&'static ComposerEntry] {
         ENTRIES.get_or_init(|| v_ecma_376::entries().iter().collect()).as_slice()
     }
 

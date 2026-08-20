@@ -1,0 +1,18 @@
+{
+  "case": "dangling-child",
+  "kind": "rejection",
+  "description": "Root's children names id 404, which has no record — rejected as OrphanChild; the receiver's state is left byte-for-byte unchanged.",
+  "outcome": "reject",
+  "limits": null,
+  "baseRevision": 0,
+  "patchRejection": {
+    "type": "invariantViolated",
+    "violations": [
+      {
+        "type": "orphanChild",
+        "parent": 0,
+        "child": 404
+      }
+    ]
+  }
+}

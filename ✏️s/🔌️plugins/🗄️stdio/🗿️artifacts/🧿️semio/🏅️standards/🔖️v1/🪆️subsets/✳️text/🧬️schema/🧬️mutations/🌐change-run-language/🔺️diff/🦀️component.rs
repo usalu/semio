@@ -8,13 +8,13 @@ use crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::Sem
 //#region 🔖️Diff
 pub async fn diff(payload: &ChangeRunLanguage, base: &SemioTextSnapshot) -> protocol::MutationOutcome<SemioTextDiff> {
     let Some(existing) = base.runs.get(payload.index) else {
-        return protocol::MutationOutcome::error("mutation.target-missing", format!("Run #{} does not exist.", payload.index), [payload.index.to_string()]);
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Run #{} does not exist.", payload.index), [payload.index.to_string()]).await;
     };
     if existing.language == payload.new_language {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Run #{} language is already \"{}\".", payload.index, payload.new_language));
+        return protocol::MutationOutcome::empty().await.warn("mutation.no-op", format!("Run #{} language is already \"{}\".", payload.index, payload.new_language)).await;
     }
     let mut runs = base.runs.clone();
     runs[payload.index].language = payload.new_language.clone();
-    protocol::MutationOutcome::new(SemioTextDiff { runs: Some(SemioTextRunList { values: runs }) })
+    protocol::MutationOutcome::new(SemioTextDiff { runs: Some(SemioTextRunList { values: runs }) }).await
 }
 //#endregion 🔖️Diff

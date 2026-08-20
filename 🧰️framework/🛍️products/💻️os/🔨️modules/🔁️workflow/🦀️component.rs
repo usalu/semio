@@ -688,7 +688,7 @@ impl store::ArtifactPack for WorkflowFixture {
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options).await?;
         match Self::__dsl_from_record(&record).await {
             Ok(value) => Ok(value),
-            Err(error) => Err(store::text_error_to_pack_error(error).await),
+            Err(error) => Err(store::text_error_to_pack_error(error)),
         }
     }
 
@@ -1171,7 +1171,7 @@ impl store::ArtifactPack for WorkflowSnapshot {
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options).await?;
         match Self::__dsl_from_record(&record).await {
             Ok(value) => Ok(value),
-            Err(error) => Err(store::text_error_to_pack_error(error).await),
+            Err(error) => Err(store::text_error_to_pack_error(error)),
         }
     }
     async fn record_spec() -> Option<dsl::RecordSpec> {
@@ -2190,7 +2190,7 @@ impl store::ArtifactPack for RunArtifact {
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options).await?;
         match Self::__dsl_from_record(&record).await {
             Ok(value) => Ok(value),
-            Err(error) => Err(store::text_error_to_pack_error(error).await),
+            Err(error) => Err(store::text_error_to_pack_error(error)),
         }
     }
     async fn record_spec() -> Option<dsl::RecordSpec> {

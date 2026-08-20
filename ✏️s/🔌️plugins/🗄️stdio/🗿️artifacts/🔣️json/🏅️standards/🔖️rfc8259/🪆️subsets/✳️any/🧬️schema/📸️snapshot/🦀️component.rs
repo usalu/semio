@@ -145,7 +145,7 @@ impl<'a> Parser<'a> {
     }
 
     async fn advance(&mut self) -> Option<u8> {
-        let byte = self.peek()?;
+        let byte = self.peek().await?;
         self.pos += 1;
         if byte == b'\n' {
             self.line += 1;
@@ -161,53 +161,53 @@ impl<'a> Parser<'a> {
     }
 
     async fn err(&self, message: impl Into<String>) -> TextError {
-        TextError::new(message, self.span())
+        TextError::new(message, self.span().await)
     }
 
     async fn skip_ws(&mut self) {
-        while matches!(self.peek(), Some(b' ' | b'\t' | b'\n' | b'\r')) {
+        while matches!(self.peek().await, Some(b' ' | b'\t' | b'\n' | b'\r')) {
             self.advance();
         }
     }
 
     async fn expect(&mut self, byte: u8) -> Result<(), TextError> {
-        match self.peek() {
+        match self.peek().await {
             Some(b) if b == byte => {
                 self.advance();
                 Ok(())
             }
-            Some(other) => Err(self.err(format!("expected '{}', found '{}'", byte as char, other as char))),
-            None => Err(self.err(format!("expected '{}', found end of input", byte as char))),
+            Some(other) => Err(self.err(format!("expected '{}', found '{}'", byte as char, other as char)).await),
+            None => Err(self.err(format!("expected '{}', found end of input", byte as char)).await),
         }
     }
 
     async fn parse_value(&mut self) -> Result<JsonValue, TextError> {
         self.skip_ws();
-        match self.peek() {
-            Some(b'{') => self.parse_object(),
-            Some(b'[') => self.parse_array(),
-            Some(b'"') => Ok(JsonValue::String { value: self.parse_string()? }),
-            Some(b't') => self.parse_literal("true", JsonValue::Bool { value: true }),
-            Some(b'f') => self.parse_literal("false", JsonValue::Bool { value: false }),
-            Some(b'n') => self.parse_literal("null", JsonValue::Null),
-            Some(b'-') | Some(b'0'..=b'9') => self.parse_number(),
-            Some(other) => Err(self.err(format!("unexpected character '{}'", other as char))),
-            None => Err(self.err("unexpected end of input, expected a value")),
+        match self.peek().await {
+            Some(b'{') => self.parse_object().await,
+            Some(b'[') => self.parse_array().await,
+            Some(b'"') => Ok(JsonValue::String { value: self.parse_string().await? }),
+            Some(b't') => self.parse_literal("true", JsonValue::Bool { value: true }).await,
+            Some(b'f') => self.parse_literal("false", JsonValue::Bool { value: false }).await,
+            Some(b'n') => self.parse_literal("null", JsonValue::Null).await,
+            Some(b'-') | Some(b'0'..=b'9') => self.parse_number().await,
+            Some(other) => Err(self.err(format!("unexpected character '{}'", other as char)).await),
+            None => Err(self.err("unexpected end of input, expected a value").await),
         }
     }
 
     async fn parse_literal(&mut self, literal: &str, value: JsonValue) -> Result<JsonValue, TextError> {
         for expected in literal.bytes() {
-            match self.advance() {
+            match self.advance().await {
                 Some(b) if b == expected => {}
-                _ => return Err(self.err(format!("expected literal '{literal}'"))),
+                _ => return Err(self.err(format!("expected literal '{literal}'")).await),
             }
         }
         Ok(value)
     }
 
     async fn parse_object(&mut self) -> Result<JsonValue, TextError> {
-        self.expect(b'{')?;
+        self.expect(b'{').await?;
         let mut members = Vec::new();
         self.skip_ws();
         if self.peek() == Some(b'}') {
@@ -217,15 +217,15 @@ impl<'a> Parser<'a> {
         loop {
             self.skip_ws();
             if self.peek() != Some(b'"') {
-                return Err(self.err("expected a string member key"));
+                return Err(self.err("expected a string member key").await);
             }
-            let key = self.parse_string()?;
+            let key = self.parse_string().await?;
             self.skip_ws();
-            self.expect(b':')?;
-            let value = self.parse_value()?;
+            self.expect(b':').await?;
+            let value = self.parse_value().await?;
             members.push(JsonMember { key, value });
             self.skip_ws();
-            match self.peek() {
+            match self.peek().await {
                 Some(b',') => {
                     self.advance();
                 }
@@ -233,15 +233,15 @@ impl<'a> Parser<'a> {
                     self.advance();
                     break;
                 }
-                Some(other) => return Err(self.err(format!("expected ',' or '}}', found '{}'", other as char))),
-                None => return Err(self.err("unterminated object, expected ',' or '}'")),
+                Some(other) => return Err(self.err(format!("expected ',' or '}}', found '{}'", other as char)).await),
+                None => return Err(self.err("unterminated object, expected ',' or '}'").await),
             }
         }
         Ok(JsonValue::Object { members })
     }
 
     async fn parse_array(&mut self) -> Result<JsonValue, TextError> {
-        self.expect(b'[')?;
+        self.expect(b'[').await?;
         let mut items = Vec::new();
         self.skip_ws();
         if self.peek() == Some(b']') {
@@ -249,10 +249,10 @@ impl<'a> Parser<'a> {
             return Ok(JsonValue::Array { items });
         }
         loop {
-            let value = self.parse_value()?;
+            let value = self.parse_value().await?;
             items.push(value);
             self.skip_ws();
-            match self.peek() {
+            match self.peek().await {
                 Some(b',') => {
                     self.advance();
                 }
@@ -260,8 +260,8 @@ impl<'a> Parser<'a> {
                     self.advance();
                     break;
                 }
-                Some(other) => return Err(self.err(format!("expected ',' or ']', found '{}'", other as char))),
-                None => return Err(self.err("unterminated array, expected ',' or ']'")),
+                Some(other) => return Err(self.err(format!("expected ',' or ']', found '{}'", other as char)).await),
+                None => return Err(self.err("unterminated array, expected ',' or ']'").await),
             }
         }
         Ok(JsonValue::Array { items })
@@ -271,13 +271,13 @@ impl<'a> Parser<'a> {
     /// literal characters — the LITERAL decoded value is stored (never the wire escape form), the
     /// same convention `stdio.xml`'s `XmlNode::Text` uses for entity decoding.
     async fn parse_string(&mut self) -> Result<String, TextError> {
-        self.expect(b'"')?;
+        self.expect(b'"').await?;
         let mut out = String::new();
         loop {
-            match self.advance() {
-                None => return Err(self.err("unterminated string literal")),
+            match self.advance().await {
+                None => return Err(self.err("unterminated string literal").await),
                 Some(b'"') => break,
-                Some(b'\\') => match self.advance() {
+                Some(b'\\') => match self.advance().await {
                     Some(b'"') => out.push('"'),
                     Some(b'\\') => out.push('\\'),
                     Some(b'/') => out.push('/'),
@@ -286,11 +286,11 @@ impl<'a> Parser<'a> {
                     Some(b'n') => out.push('\n'),
                     Some(b'r') => out.push('\r'),
                     Some(b't') => out.push('\t'),
-                    Some(b'u') => out.push(self.parse_unicode_escape()?),
-                    Some(other) => return Err(self.err(format!("invalid escape sequence '\\{}'", other as char))),
-                    None => return Err(self.err("unterminated escape sequence")),
+                    Some(b'u') => out.push(self.parse_unicode_escape().await?),
+                    Some(other) => return Err(self.err(format!("invalid escape sequence '\\{}'", other as char)).await),
+                    None => return Err(self.err("unterminated escape sequence").await),
                 },
-                Some(b) if b < 0x20 => return Err(self.err("unescaped control character in string literal")),
+                Some(b) if b < 0x20 => return Err(self.err("unescaped control character in string literal").await),
                 Some(b) if b < 0x80 => out.push(b as char),
                 Some(lead) => {
                     let extra = if lead >= 0xF0 {
@@ -302,9 +302,9 @@ impl<'a> Parser<'a> {
                     };
                     let mut buf = vec![lead];
                     for _ in 0..extra {
-                        match self.advance() {
+                        match self.advance().await {
                             Some(cont) => buf.push(cont),
-                            None => return Err(self.err("truncated UTF-8 sequence in string literal")),
+                            None => return Err(self.err("truncated UTF-8 sequence in string literal").await),
                         }
                     }
                     let decoded = std::str::from_utf8(&buf).map_err(|_| self.err("invalid UTF-8 sequence in string literal"))?;
@@ -316,22 +316,22 @@ impl<'a> Parser<'a> {
     }
 
     async fn parse_unicode_escape(&mut self) -> Result<char, TextError> {
-        let high = self.parse_hex4()?;
+        let high = self.parse_hex4().await?;
         if (0xD800..=0xDBFF).contains(&high) {
             if self.advance() != Some(b'\\') {
-                return Err(self.err("expected low surrogate after high surrogate"));
+                return Err(self.err("expected low surrogate after high surrogate").await);
             }
             if self.advance() != Some(b'u') {
-                return Err(self.err("expected \\u low surrogate after high surrogate"));
+                return Err(self.err("expected \\u low surrogate after high surrogate").await);
             }
-            let low = self.parse_hex4()?;
+            let low = self.parse_hex4().await?;
             if !(0xDC00..=0xDFFF).contains(&low) {
-                return Err(self.err("invalid low surrogate"));
+                return Err(self.err("invalid low surrogate").await);
             }
             let combined = 0x10000 + ((high - 0xD800) << 10) + (low - 0xDC00);
             char::from_u32(combined).ok_or_else(|| self.err("invalid surrogate pair"))
         } else if (0xDC00..=0xDFFF).contains(&high) {
-            Err(self.err("unpaired low surrogate"))
+            Err(self.err("unpaired low surrogate").await)
         } else {
             char::from_u32(high).ok_or_else(|| self.err("invalid \\u escape"))
         }
@@ -340,12 +340,12 @@ impl<'a> Parser<'a> {
     async fn parse_hex4(&mut self) -> Result<u32, TextError> {
         let mut value = 0u32;
         for _ in 0..4 {
-            let byte = self.advance().ok_or_else(|| self.err("unexpected end of input in \\u escape"))?;
+            let byte = self.advance().await.ok_or_else(|| self.err("unexpected end of input in \\u escape"))?;
             let digit = match byte {
                 b'0'..=b'9' => (byte - b'0') as u32,
                 b'a'..=b'f' => (byte - b'a' + 10) as u32,
                 b'A'..=b'F' => (byte - b'A' + 10) as u32,
-                _ => return Err(self.err("invalid hex digit in \\u escape")),
+                _ => return Err(self.err("invalid hex digit in \\u escape").await),
             };
             value = value * 16 + digit;
         }
@@ -359,35 +359,35 @@ impl<'a> Parser<'a> {
         if self.peek() == Some(b'-') {
             self.advance();
         }
-        match self.peek() {
+        match self.peek().await {
             Some(b'0') => {
                 self.advance();
             }
             Some(b'1'..=b'9') => {
-                while matches!(self.peek(), Some(b'0'..=b'9')) {
+                while matches!(self.peek().await, Some(b'0'..=b'9')) {
                     self.advance();
                 }
             }
-            _ => return Err(self.err("invalid number: expected a digit")),
+            _ => return Err(self.err("invalid number: expected a digit").await),
         }
         if self.peek() == Some(b'.') {
             self.advance();
-            if !matches!(self.peek(), Some(b'0'..=b'9')) {
-                return Err(self.err("invalid number: expected a digit after '.'"));
+            if !matches!(self.peek().await, Some(b'0'..=b'9')) {
+                return Err(self.err("invalid number: expected a digit after '.'").await);
             }
-            while matches!(self.peek(), Some(b'0'..=b'9')) {
+            while matches!(self.peek().await, Some(b'0'..=b'9')) {
                 self.advance();
             }
         }
-        if matches!(self.peek(), Some(b'e') | Some(b'E')) {
+        if matches!(self.peek().await, Some(b'e') | Some(b'E')) {
             self.advance();
-            if matches!(self.peek(), Some(b'+') | Some(b'-')) {
+            if matches!(self.peek().await, Some(b'+') | Some(b'-')) {
                 self.advance();
             }
-            if !matches!(self.peek(), Some(b'0'..=b'9')) {
-                return Err(self.err("invalid number: expected a digit in exponent"));
+            if !matches!(self.peek().await, Some(b'0'..=b'9')) {
+                return Err(self.err("invalid number: expected a digit in exponent").await);
             }
-            while matches!(self.peek(), Some(b'0'..=b'9')) {
+            while matches!(self.peek().await, Some(b'0'..=b'9')) {
                 self.advance();
             }
         }
@@ -398,11 +398,11 @@ impl<'a> Parser<'a> {
 
 /// 🔓️ Parses a complete RFC8259 JSON text into a [`JsonValue`], rejecting trailing content.
 pub async fn parse_json_text(text: &str) -> Result<JsonValue, TextError> {
-    let mut parser = Parser::new(text);
-    let value = parser.parse_value()?;
-    parser.skip_ws();
+    let mut parser = Parser::new(text).await;
+    let value = parser.parse_value().await?;
+    parser.skip_ws().await;
     if parser.pos != parser.bytes.len() {
-        return Err(parser.err("trailing characters after JSON value"));
+        return Err(parser.err("trailing characters after JSON value").await);
     }
     Ok(value)
 }
@@ -423,7 +423,7 @@ async fn write_value_compact(value: &JsonValue, out: &mut String) {
         JsonValue::Bool { value: true } => out.push_str("true"),
         JsonValue::Bool { value: false } => out.push_str("false"),
         JsonValue::Number { lexeme } => out.push_str(lexeme),
-        JsonValue::String { value: s } => write_string_escaped(s, out),
+        JsonValue::String { value: s } => write_string_escaped(s, out).await,
         JsonValue::Array { items } => {
             out.push('[');
             for (i, item) in items.iter().enumerate() {
@@ -494,7 +494,7 @@ async fn write_value_pretty(value: &JsonValue, out: &mut String, depth: usize) {
             out.push('}');
         }
         JsonValue::Object { members: _ } => out.push_str("{}"),
-        other => write_value_compact(other, out),
+        other => write_value_compact(other, out).await,
     }
 }
 
@@ -559,12 +559,12 @@ impl store::ArtifactDsl for JsonSnapshot {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        let value = parse_json_text(body.trim())?;
+        let value = parse_json_text(body.trim()).await?;
         Ok(Self { schema: STDIO_JSON_DOCUMENT_SCHEMA.into(), value })
     }
     async fn print_dsl(&self) -> String {
         let body = write_json_pretty(&self.value);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -572,8 +572,8 @@ impl store::ArtifactDsl for JsonSnapshot {
 impl store::ArtifactPack for JsonSnapshot {
     async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
-        let raw = write_json_text(&self.value).into_bytes();
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let raw = write_json_text(&self.value).await.into_bytes();
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
     async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
@@ -583,7 +583,7 @@ impl store::ArtifactPack for JsonSnapshot {
         }
         let _ = options;
         let text = std::str::from_utf8(&inner).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        let value = parse_json_text(text).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let value = parse_json_text(text).await.map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(Self { schema: STDIO_JSON_DOCUMENT_SCHEMA.into(), value })
     }
 }

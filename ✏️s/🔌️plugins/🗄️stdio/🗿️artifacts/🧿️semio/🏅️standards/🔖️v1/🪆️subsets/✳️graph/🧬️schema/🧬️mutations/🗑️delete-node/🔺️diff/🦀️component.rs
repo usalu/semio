@@ -10,16 +10,16 @@ use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::Se
 //#region 🔖️Diff
 pub async fn diff(payload: &DeleteNode, base: &SemioGraphSnapshot) -> protocol::MutationOutcome<SemioGraphDiff> {
     if !base.nodes.iter().any(|n| n.id == payload.id) {
-        return protocol::MutationOutcome::error("mutation.target-missing", format!("Node \"{}\" does not exist.", payload.id.value), [payload.id.value.clone()]);
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Node \"{}\" does not exist.", payload.id.value), [payload.id.value.clone()]).await;
     }
     let mut nodes = base.nodes.clone();
     nodes.retain(|n| n.id != payload.id);
     let mut edges = base.edges.clone();
     let severed = edges.iter().filter(|e| e.source == payload.id || e.target == payload.id).count();
     edges.retain(|e| e.source != payload.id && e.target != payload.id);
-    let outcome = protocol::MutationOutcome::new(SemioGraphDiff { nodes: Some(SemioGraphNodeList { values: nodes }), edges: Some(SemioGraphEdgeList { values: edges }) });
+    let outcome = protocol::MutationOutcome::new(SemioGraphDiff { nodes: Some(SemioGraphNodeList { values: nodes }), edges: Some(SemioGraphEdgeList { values: edges }) }).await;
     if severed > 0 {
-        outcome.info("mutation.cascade", format!("Deleting node \"{}\" also severed {severed} edge(s).", payload.id.value))
+        outcome.info("mutation.cascade", format!("Deleting node \"{}\" also severed {severed} edge(s).", payload.id.value)).await
     } else {
         outcome
     }

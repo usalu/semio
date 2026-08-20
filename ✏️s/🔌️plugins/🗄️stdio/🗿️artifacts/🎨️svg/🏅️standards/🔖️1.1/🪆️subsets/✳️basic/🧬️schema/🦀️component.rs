@@ -34,20 +34,20 @@ pub mod derived_construction {
         }
 
         async fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self::from_snapshot(<SvgSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+            Ok(Self::from_snapshot(<SvgSnapshot as store::ArtifactDsl>::parse_dsl(text).await?).await)
         }
 
         async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<SvgSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+            Ok(Self::from_snapshot(<SvgSnapshot as store::ArtifactPack>::decode_pack(bytes).await?).await)
         }
 
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::svg::schema::mutations::apply_svg_mutation(&mut self.snapshot, &mutation);
-            (self, diff)
+            (self, diff.await)
         }
 
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            self.snapshot = <SvgDiff as protocol::MutationDiff<SvgSnapshot>>::apply(&diff, &self.snapshot)?;
+            self.snapshot = <SvgDiff as protocol::MutationDiff<SvgSnapshot>>::apply(&diff, &self.snapshot).await?;
             Ok(self)
         }
 
@@ -173,7 +173,7 @@ pub mod derived_analysis {
     /// 🔍️ `true` if any (possibly-nested) descendant is one of the SVG text element kinds.
     async fn has_text_descendant(children: &[XmlNode]) -> bool {
         children.iter().any(|c| match c {
-            XmlNode::Element { name, children, .. } => TEXT_ELEMENTS.contains(&local_name(name)) || has_text_descendant(children),
+            XmlNode::Element { name, children, .. } => TEXT_ELEMENTS.contains(&local_name(name)) || semio_framework_plugin::resolve_ready(has_text_descendant(children)),
             _ => false,
         })
     }
@@ -182,7 +182,7 @@ pub mod derived_analysis {
     /// `clip-path="url(#id)"` reference can resolve to the REAL clipPath's descendants rather than a
     /// guess.
     async fn clip_path_children_by_id<'a>(elements: &[(&'a str, &'a [XmlAttr], &'a [XmlNode])]) -> HashMap<&'a str, &'a [XmlNode]> {
-        elements.iter().filter(|(name, ..)| local_name(name) == "clipPath").filter_map(|(_, attrs, children)| attr_val(attrs, "id").map(|id| (id, *children))).collect()
+        elements.iter().filter(|(name, ..)| local_name(name) == "clipPath").filter_map(|(_, attrs, children)| semio_framework_plugin::resolve_ready(attr_val(attrs, "id")).map(|id| (id, *children))).collect()
     }
 
     async fn find_nested_svg(children: &[XmlNode], out: &mut Vec<String>) {
@@ -207,17 +207,17 @@ pub mod derived_analysis {
 
         let mut elements = Vec::new();
         collect_elements(root, &mut elements);
-        let clip_paths = clip_path_children_by_id(&elements);
+        let clip_paths = clip_path_children_by_id(&elements).await;
 
         for (name, attrs, _children) in &elements {
             if BLOCKED_FILTER_PRIMITIVES.contains(&local_name(name)) {
-                out.push(hard(CODE_FILTER_PRIMITIVE, format!("element <{name}> is an expensive raster filter primitive not supported by SVG Basic 1.1")));
+                out.push(hard(CODE_FILTER_PRIMITIVE, format!("element <{name}> is an expensive raster filter primitive not supported by SVG Basic 1.1")).await);
             }
-            if let Some(cp) = attr_val(attrs, "clip-path") {
-                if let Some(id) = clip_path_ref_id(cp) {
+            if let Some(cp) = attr_val(attrs, "clip-path").await {
+                if let Some(id) = clip_path_ref_id(cp).await {
                     if let Some(cp_children) = clip_paths.get(id) {
-                        if has_text_descendant(cp_children) {
-                            out.push(hard(CODE_CLIP_PATH_TEXT, format!("<{name}> clip-path=\"{cp}\" references clipPath #{id}, which contains a text descendant -- SVG Basic 1.1 forbids clipping to text")));
+                        if has_text_descendant(cp_children).await {
+                            out.push(hard(CODE_CLIP_PATH_TEXT, format!("<{name}> clip-path=\"{cp}\" references clipPath #{id}, which contains a text descendant -- SVG Basic 1.1 forbids clipping to text")).await);
                         }
                     }
                 }
@@ -228,7 +228,7 @@ pub mod derived_analysis {
             let mut nested = Vec::new();
             find_nested_svg(children, &mut nested);
             for name in nested {
-                out.push(soft(CODE_NESTED_SVG, format!("nested <{name}> element found below the document root -- review its viewport/clipping behavior on constrained renderers")));
+                out.push(soft(CODE_NESTED_SVG, format!("nested <{name}> element found below the document root -- review its viewport/clipping behavior on constrained renderers")).await);
             }
         }
 
@@ -236,7 +236,7 @@ pub mod derived_analysis {
             let base_profile_ok = attrs.iter().any(|a| a.name == "baseProfile" && a.value == "basic");
             let version_ok = attrs.iter().any(|a| a.name == "version" && a.value == "1.1");
             if !base_profile_ok || !version_ok {
-                out.push(soft(CODE_BASE_PROFILE, format!("root <{name}> is missing baseProfile=\"basic\"/version=\"1.1\" -- SVG Basic 1.1 documents should declare their profile")));
+                out.push(soft(CODE_BASE_PROFILE, format!("root <{name}> is missing baseProfile=\"basic\"/version=\"1.1\" -- SVG Basic 1.1 documents should declare their profile")).await);
             }
         }
         out
@@ -254,15 +254,15 @@ pub mod derived_analysis {
         const DIALECT: Dialect = DIALECT;
 
         async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
-            SvgAnyAnalyzer::sniff(source)
+            SvgAnyAnalyzer::sniff(source).await
         }
 
         async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
-            let inner = SvgAnyAnalyzer::analyze(sources);
+            let inner = SvgAnyAnalyzer::analyze(sources).await;
             let mut diagnostics = inner.diagnostics.clone();
             let mut confidence = inner.confidence;
             if let Some(snapshot) = &inner.parts.snapshot {
-                let checks = check_svg_basic_conformance(snapshot);
+                let checks = check_svg_basic_conformance(snapshot).await;
                 if checks.iter().any(|d| matches!(d.severity, Severity::Error | Severity::Fatal)) {
                     confidence = IoConfidence::Low;
                 }

@@ -1,0 +1,31 @@
+[package]
+name = "semio-framework-ui-contract"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Language-neutral semantic UI contract: UiSnapshot/UiPatch/UiIntent, the single boundary every renderer consumes"
+
+[package.metadata.semio]
+role = "framework"
+id = "ui-contract"
+
+[lints]
+workspace = true
+
+[lib]
+path = "📦️glue.rs"
+
+[features]
+default = []
+# 🧬️ TypeScript mirror of the whole contract. The flat node table (no recursive `Vec<UiNode>`) is what
+# makes the entire surface ts-rs-derivable — the hand-written mirror this replaces existed only because
+# recursion blocked derivation.
+typegen = ["dep:ts-rs"]
+
+[dependencies]
+ui_styling = { path = "../../../🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
+serde = { version = "1.0.219", features = ["derive"] }
+ts-rs = { version = "10", optional = true }
+
+[dev-dependencies]
+serde_json = { version = "1.0.140" }

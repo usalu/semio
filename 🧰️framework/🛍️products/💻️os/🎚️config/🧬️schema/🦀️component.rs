@@ -34,10 +34,10 @@ pub const OPENING_CONFIG_SCHEMA: &str = "os.config.opening";
 /// handcrafted kind's `diff` already returns the full post-op preferences (matches
 /// `📕️norm`'s `NormConfig` precedent for a config facet this small).
 impl protocol::MutationDiff<OpeningPreferences> for OpeningPreferences {
-    fn apply(&self, _base: &OpeningPreferences) -> protocol::MutationApplyResult<OpeningPreferences> {
+    async fn apply(&self, _base: &OpeningPreferences) -> protocol::MutationApplyResult<OpeningPreferences> {
         Ok(self.clone())
     }
-    fn absorb(&mut self, other: Self) {
+    async fn absorb(&mut self, other: Self) {
         *self = other;
     }
 }

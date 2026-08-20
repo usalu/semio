@@ -88,7 +88,7 @@ impl ArtifactDeserializer for SemioMeshFromObj {
             let mut uvs = Vec::new();
             for &fi in &face_indices {
                 let face = from.faces.get(fi).ok_or_else(|| store::PackError::Schema(format!("SemioMeshFromObj: face index {fi} out of range")))?;
-                append_triangulated_face(from, face, &mut positions, &mut normals, &mut uvs).map_err(|e| store::PackError::Schema(format!("SemioMeshFromObj: {e}")))?;
+                semio_framework_plugin::resolve_ready(append_triangulated_face(from, face, &mut positions, &mut normals, &mut uvs)).map_err(|e| store::PackError::Schema(format!("SemioMeshFromObj: {e}")))?;
             }
             Ok(SemioPrimitive { id, topology: SemioTopology::Triangles, positions, normals, uvs, colors: Vec::new(), indices: Vec::new(), material_id: None })
         };

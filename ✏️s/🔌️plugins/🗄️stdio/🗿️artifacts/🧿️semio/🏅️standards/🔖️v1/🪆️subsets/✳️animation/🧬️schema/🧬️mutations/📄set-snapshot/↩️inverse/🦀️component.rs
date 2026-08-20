@@ -4,5 +4,5 @@ use protocol::Mutation;
 
 /// ↩️ Inverse of set-snapshot.
 pub async fn inverse(base: &SemioAnimationSnapshot, mutation: &SemioAnimationMutation) -> Vec<SemioAnimationMutation> {
-    <SemioAnimationMutation as Mutation<SemioAnimationSnapshot>>::inverse(mutation, base)
+    <SemioAnimationMutation as Mutation<SemioAnimationSnapshot>>::inverse(mutation, base).await
 }

@@ -35,7 +35,7 @@ impl GltfChangeMaterialDoubleSidedInverse {
     }
 }
 pub async fn reconstruct(payload: &GltfChangeMaterialDoubleSidedPayload, base: &GltfSnapshot) -> Result<GltfChangeMaterialDoubleSidedInverse, GltfChangeMaterialDoubleSidedRejection> {
-    validate(payload, base)?;
+    validate(payload, base).await?;
     Ok(GltfChangeMaterialDoubleSidedInverse {
         material: payload.material,
         expected_double_sided: payload.double_sided,

@@ -1,0 +1,48 @@
+{
+  "case": "set-component",
+  "kind": "patch",
+  "description": "UiPatchOp::SetComponent swaps node 1's Component from Text to Button and touches nothing else — its accessibility stays the base snapshot's default {}, unlike the button() builder's auto-derived label.",
+  "outcome": "accept",
+  "limits": null,
+  "baseRevision": 0,
+  "resultRevision": 1,
+  "tree": {
+    "root": 0,
+    "nodeCount": 2,
+    "shape": [
+      {
+        "id": 0,
+        "key": "root",
+        "type": "container",
+        "children": [
+          1
+        ]
+      },
+      {
+        "id": 1,
+        "key": "a",
+        "type": "button",
+        "children": []
+      }
+    ]
+  },
+  "accessibility": [
+    {
+      "id": 0,
+      "label": null,
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    },
+    {
+      "id": 1,
+      "label": null,
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    }
+  ],
+  "actionIds": []
+}

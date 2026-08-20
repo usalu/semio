@@ -3,5 +3,5 @@ use crate::artifacts::las::{LasDiff, LasSnapshot};
 
 /// ▶️ Applies a set-snapshot mutation.
 pub async fn apply(projection: &mut LasSnapshot, mutation: &LasMutation) -> protocol::MutationOutcome<LasDiff> {
-    apply_las_mutation(projection, mutation)
+    apply_las_mutation(projection, mutation).await
 }

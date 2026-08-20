@@ -32,7 +32,7 @@ pub mod derived_composition {
             let mut snapshot = inner.snapshot;
             let mut doc = snapshot.to_part21_document();
             ensure_file_schema(&mut doc, "AUTOMOTIVE_DESIGN");
-            snapshot = StepSnapshot::from_part21_document(doc);
+            snapshot = StepSnapshot::from_part21_document(doc.await).await;
             let checks = check_cc5_conformance(&snapshot);
             let (hard, soft): (Vec<Diagnostic>, Vec<Diagnostic>) = checks.into_iter().partition(|d| matches!(d.severity, Severity::Error | Severity::Fatal));
             if !hard.is_empty() {
@@ -57,11 +57,11 @@ pub mod derived_composition {
 
         async fn validate(payload: &IoPayload) -> Vec<Diagnostic> {
             let decoded = match payload {
-                IoPayload::Binary(bytes) => <StepSnapshot as store::ArtifactPack>::decode_pack(bytes).ok(),
-                IoPayload::Text(text) => <StepSnapshot as store::ArtifactDsl>::parse_dsl(text).ok(),
+                IoPayload::Binary(bytes) => <StepSnapshot as store::ArtifactPack>::decode_pack(bytes).await.ok(),
+                IoPayload::Text(text) => <StepSnapshot as store::ArtifactDsl>::parse_dsl(text).await.ok(),
             };
             match decoded {
-                Some(snapshot) => check_cc5_conformance(&snapshot),
+                Some(snapshot) => check_cc5_conformance(&snapshot).await,
                 None => vec![Diagnostic {
                     code: FaultCode::new("stdio.step.cc5.validate-decode-failed"),
                     severity: Severity::Warning,
@@ -85,7 +85,7 @@ pub mod derived_composition {
     /// `ComposerEntry` itself is registered separately by the standard-level composer aggregator
     /// (`crate::artifacts::step::standards::v_ap214::engine::io_registry::entries()`).
     pub async fn register() {
-        let _ = register_subset_validator(validator_entry());
+        let _ = register_subset_validator(validator_entry().await);
     }
     //#endregion 🔖️SubsetValidator
 

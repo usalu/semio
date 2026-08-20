@@ -1,0 +1,21 @@
+{
+  "case": "quota-patch-ops",
+  "kind": "rejection",
+  "description": "The patch carries 2 ops, exceeding UiDocumentLimits::max_patch_ops (set to 1 for this fixture) — rejected as QuotaExceeded(PatchOps) before any op is applied.",
+  "outcome": "reject",
+  "limits": {
+    "maxNodes": 20000,
+    "maxDepth": 128,
+    "maxChildren": 4096,
+    "maxTextBytes": 65536,
+    "maxPatchOps": 1,
+    "maxPatchBytes": 1048576
+  },
+  "baseRevision": 0,
+  "patchRejection": {
+    "type": "quotaExceeded",
+    "quota": "patchOps",
+    "actual": 2,
+    "max": 1
+  }
+}

@@ -44,28 +44,28 @@ impl protocol::OpText for EpwEditorCommand {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
-                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
+                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline }).await?;
+                return <Self as dsl::DslVariants>::from_named_record(keyword, &record).await;
             }
         }
         Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
     }
     async fn print_op(&self) -> String {
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
+        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self).await;
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
+        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline).await
     }
 }
 
 impl protocol::OpBinary for EpwEditorCommand {
     async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
+        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self).await;
         let variants = <Self as dsl::DslVariants>::variants();
         let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
         let spec = (variants[ordinal].1)();
-        let body = store::pack_rt::encode_record_body(&spec, &record, &store::PackEncodeOptions::default()).map_err(protocol::ProtocolError::from)?;
+        let body = store::pack_rt::encode_record_body(&spec, &record, &store::PackEncodeOptions::default()).await.map_err(protocol::ProtocolError::from)?;
         let mut out = Vec::with_capacity(body.len() + 3);
         out.push(OP_BINARY_FORMAT);
         store::pack_rt::write_varint_u64(&mut out, ordinal as u64);
@@ -74,18 +74,18 @@ impl protocol::OpBinary for EpwEditorCommand {
     }
     async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
-        let mut reader = store::pack_rt::ByteReader::new(bytes);
-        let format = reader.read_u8()?;
+        let mut reader = store::pack_rt::ByteReader::new(bytes).await;
+        let format = reader.read_u8().await?;
         if format != OP_BINARY_FORMAT {
             return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {format}") });
         }
-        let ordinal = reader.read_varint_u64()?;
+        let ordinal = reader.read_varint_u64().await?;
         let variants = <Self as dsl::DslVariants>::variants();
         let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
         let spec = spec_fn();
         let body = &bytes[reader.position()..];
-        let (record, _report) = store::pack_rt::decode_record_body(body, &spec, &store::PackDecodeOptions::default()).map_err(protocol::ProtocolError::from)?;
-        <Self as dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
+        let (record, _report) = store::pack_rt::decode_record_body(body, &spec, &store::PackDecodeOptions::default()).await.map_err(protocol::ProtocolError::from)?;
+        <Self as dsl::DslVariants>::from_named_record(keyword, &record).await.map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: semio_framework_plugin::resolve_ready(reader.position()) as u64, detail: error.to_string() })
     }
 }
 //#endregion 🔖️OpCodec
@@ -129,8 +129,8 @@ impl ArtifactEditor for EpwEditor {
 
     async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
-            main::BODY_KEY => main::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
+            main::BODY_KEY => main::render(doc.snapshot).await,
+            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))).await,
         }
     }
 }
@@ -139,12 +139,12 @@ impl ArtifactEditor for EpwEditor {
 //#region 🔖️Manifest
 pub async fn create_epw_editor() -> semio_framework_plugin::AppDefinition {
     Editor::builder(EPW_EDITOR_DIALECT)
-        .document(["stdio", "epw"])
-        .icon_id("cloud-sun")
-        .mode_def(edit::definition())
-        .default_mode_id(edit::EPW_EDIT_MODE_ID)
-        .window_kind_def(main::definition())
-        .default_layout(edit::layout())
+        .await.document(["stdio", "epw"])
+        .await.icon_id("cloud-sun")
+        .await.mode_def(edit::definition().await)
+        .await.default_mode_id(edit::EPW_EDIT_MODE_ID)
+        .await.window_kind_def(main::definition().await)
+        .await.default_layout(edit::layout())
         .build_definition()
 }
 //#endregion 🔖️Manifest

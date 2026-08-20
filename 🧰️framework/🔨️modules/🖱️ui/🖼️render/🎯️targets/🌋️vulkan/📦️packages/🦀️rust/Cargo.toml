@@ -1,0 +1,28 @@
+[package]
+name = "semio-framework-ui-backend-vulkan"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Hand-written Vulkan backend for Linux"
+
+[package.metadata.semio]
+role = "framework"
+id = "vulkan-backend"
+
+[lints]
+workspace = true
+
+[lib]
+path = "📦️glue.rs"
+
+[features]
+default = []
+backend-testing = ["ui_render/backend-testing"]
+
+[dependencies]
+ui_render = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-ui-render" }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+ash = "0.38"
+ash-window = "0.13"
+raw-window-handle = "0.6"

@@ -69,8 +69,8 @@ impl ArtifactViewer for SemioTextViewer {
 
     async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
-            main::BODY_KEY => main::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
+            main::BODY_KEY => main::render(doc.snapshot).await,
+            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))).await,
         }
     }
 }
@@ -79,12 +79,12 @@ impl ArtifactViewer for SemioTextViewer {
 //#region 🔖️Manifest
 pub async fn create_semio_text_viewer() -> semio_framework_plugin::AppDefinition {
     Viewer::builder(SEMIO_TEXT_DIALECT)
-        .document(["stdio", "semio"])
-        .icon_id("box")
-        .mode_def(view::definition())
-        .default_mode_id(view::SEMIO_TEXT_VIEW_MODE_ID)
-        .window_kind_def(main::definition())
-        .default_layout(view::layout())
+        .await.document(["stdio", "semio"])
+        .await.icon_id("box")
+        .await.mode_def(view::definition().await)
+        .await.default_mode_id(view::SEMIO_TEXT_VIEW_MODE_ID)
+        .await.window_kind_def(main::definition().await)
+        .await.default_layout(view::layout())
         .build_definition()
 }
 //#endregion 🔖️Manifest

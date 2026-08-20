@@ -6,9 +6,9 @@ use crate::artifacts::txt::TxtSnapshot;
 pub async fn register() {}
 
 pub async fn deserialize(from: &TxtSnapshot) -> Result<Ifc2x3Snapshot, store::TextError> {
-    crate::artifacts::ifc::standards::v2x3::engine::decode_ifc2x3(from.to_body().as_bytes()).map_err(|e| store::TextError::new(format!("ifc2x3 parse: {e}"), dsl::TextSpan::at(1, 1)))
+    crate::artifacts::ifc::standards::v2x3::engine::decode_ifc2x3(from.to_body().await.as_bytes()).await.map_err(|e| store::TextError::new(format!("ifc2x3 parse: {e}"), dsl::TextSpan::at(1, 1)))
 }
 
 pub async fn deserialize_text(text: &str) -> Result<Ifc2x3Snapshot, store::TextError> {
-    deserialize(&<TxtSnapshot as store::ArtifactDsl>::parse_dsl(text)?)
+    deserialize(&<TxtSnapshot as store::ArtifactDsl>::parse_dsl(text).await?).await
 }

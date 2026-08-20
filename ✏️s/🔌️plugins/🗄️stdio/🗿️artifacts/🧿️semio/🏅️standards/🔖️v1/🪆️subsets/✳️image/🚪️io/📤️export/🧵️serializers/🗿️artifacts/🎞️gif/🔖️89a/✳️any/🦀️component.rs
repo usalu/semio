@@ -82,7 +82,7 @@ impl ArtifactSerializer for SemioImageToGif {
                 return Err(store::PackError::Schema("semio/image→gif: a frame's pixel length does not match width*height*4".into()));
             }
         }
-        let (gct, indexed_frames, transparent_index) = quantize(&refs)?;
+        let (gct, indexed_frames, transparent_index) = quantize(&refs).await?;
         let frames = from.frames.iter().zip(indexed_frames).map(|(f, indices)| GifFrame { left: 0, top: 0, width: from.width, height: from.height, indices, delay_cs: (f.delay_ms / 10) as u16, transparent_index, ..GifFrame::default() }).collect();
         let comments = from.metadata.iter().filter(|m| m.key == "comment").map(|m| m.value.clone()).collect();
         let loop_count = from.metadata.iter().find(|m| m.key == "loopCount").and_then(|m| m.value.parse::<u16>().ok());

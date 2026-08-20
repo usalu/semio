@@ -8,10 +8,10 @@ use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::Se
 //#region 🔖️Diff
 pub async fn diff(payload: &DeleteEdge, base: &SemioGraphSnapshot) -> protocol::MutationOutcome<SemioGraphDiff> {
     if !base.edges.iter().any(|e| e.id == payload.id) {
-        return protocol::MutationOutcome::error("mutation.target-missing", format!("Edge \"{}\" does not exist.", payload.id.value), [payload.id.value.clone()]);
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Edge \"{}\" does not exist.", payload.id.value), [payload.id.value.clone()]).await;
     }
     let mut edges = base.edges.clone();
     edges.retain(|e| e.id != payload.id);
-    protocol::MutationOutcome::new(SemioGraphDiff { nodes: None, edges: Some(SemioGraphEdgeList { values: edges }) })
+    protocol::MutationOutcome::new(SemioGraphDiff { nodes: None, edges: Some(SemioGraphEdgeList { values: edges }) }).await
 }
 //#endregion 🔖️Diff

@@ -37,18 +37,18 @@ pub const ZIP_ARTIFACT_SCHEMA_ID: &str = "s.stdio.zip";
 /// zero residual `.setup()` calls.
 /// 🧩️ Binds this executable root to its sole schema-owned definition.
 pub async fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
-    crate::registry::runtime_assembly("zip", definition, declaration)
+    crate::registry::runtime_assembly("zip", definition, declaration).await
 }
 
 pub async fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
-    let formats = crate::registry::format_descriptors_for("zip")?;
+    let formats = crate::registry::format_descriptors_for("zip").await?;
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
-        .schema(crate::artifacts::zip::schema::zip_artifact_schema_descriptor())
-        .formats(formats)
-        .inferences([crate::artifacts::zip::schema::inferences::zip_artifact_inference_descriptor()])
-        .composers(crate::artifacts::zip::standards::v2_0::subsets::any::io::io_registry::entries())
-        .subset_validators(zip_subset_validators())
-        .languages(pilot_languages())
+        .await.schema(crate::artifacts::zip::schema::zip_artifact_schema_descriptor().await)
+        .await.formats(formats)
+        .await.inferences([crate::artifacts::zip::schema::inferences::zip_artifact_inference_descriptor()])
+        .await.composers(crate::artifacts::zip::standards::v2_0::subsets::any::io::io_registry::entries())
+        .await.subset_validators(zip_subset_validators().await)
+        .await.languages(pilot_languages())
         .document_codec_bare::<ZipSnapshot, ZipMutation>(STDIO_ZIP_DOCUMENT_SCHEMA)
         .try_build()
 }
@@ -152,7 +152,8 @@ pub mod io_registry {
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 
-    pub async fn entries() -> &'static [&'static ComposerEntry] {
+    // 🚫️async: E1 pure table accessor consumed by OnceLock::get_or_init's sync closure — see R9
+    pub fn entries() -> &'static [&'static ComposerEntry] {
         ENTRIES.get_or_init(|| v2_0::entries().iter().collect()).as_slice()
     }
 

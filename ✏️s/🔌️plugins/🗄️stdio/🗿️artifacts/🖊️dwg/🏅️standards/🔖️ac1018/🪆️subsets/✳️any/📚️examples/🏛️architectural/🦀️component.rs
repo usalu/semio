@@ -13,14 +13,14 @@ pub const ICON: &str = "file";
 pub const FIXTURE_BYTES: &[u8] = include_bytes!("🖼️assets/📄️architectural.dwg");
 
 async fn decoded_summary_json() -> String {
-    match decode_dwg(FIXTURE_BYTES) {
+    match decode_dwg(FIXTURE_BYTES).await {
         Ok(snap) => {
             format!(
                 r#"{{"fixture":"architectural.dwg","bytes":{},"version":"{}","layerCount":{},"entityCount":{},"classCount":{},"dependencyCount":{}}}"#,
                 FIXTURE_BYTES.len(),
                 snap.version,
                 snap.drawing.layers.len(),
-                snap.drawing.entities().len(),
+                snap.drawing.entities().await.len(),
                 snap.classes.len(),
                 snap.dependencies.len()
             )
@@ -30,5 +30,5 @@ async fn decoded_summary_json() -> String {
 }
 
 pub async fn source() -> ExampleSource {
-    ExampleSource::new(ID, label(), decoded_summary_json(), ICON)
+    ExampleSource::new(ID, label(), decoded_summary_json(), ICON).await
 }

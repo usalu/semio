@@ -35,7 +35,7 @@ pub mod derived_composition {
             if native.is_empty() {
                 return Err(ComposeError { message: "JpgComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() });
             }
-            let analysis = JpgAnalyzer::analyze(&native);
+            let analysis = JpgAnalyzer::analyze(&native).await;
             let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError { message: "JpgComposerComposition: analysis produced no snapshot".into(), diagnostics: analysis.diagnostics.clone() })?;
             Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics })
         }
@@ -282,7 +282,7 @@ impl<'a> BitReader<'a> {
     }
     async fn read_bit(&mut self) -> Result<u8, JpgError> {
         if self.nbits == 0 {
-            match self.next_byte() {
+            match self.next_byte().await {
                 Some(b) => {
                     self.acc = b as u32;
                     self.nbits = 8;
@@ -296,14 +296,14 @@ impl<'a> BitReader<'a> {
     async fn read_bits(&mut self, n: u8) -> Result<u16, JpgError> {
         let mut v = 0u16;
         for _ in 0..n {
-            v = (v << 1) | self.read_bit()? as u16;
+            v = (v << 1) | self.read_bit().await? as u16;
         }
         Ok(v)
     }
     async fn decode_symbol(&mut self, table: &HuffTable) -> Result<u8, JpgError> {
         let mut code: u16 = 0;
         for len in 1..=table.max_len {
-            code = (code << 1) | self.read_bit()? as u16;
+            code = (code << 1) | self.read_bit().await? as u16;
             if let Some(v) = table.decode.get(&(len, code)) {
                 return Ok(*v);
             }
@@ -365,7 +365,7 @@ async fn encode_block(bw: &mut BitWriter, coeffs: &[i32; 64], dc_pred: &mut i32,
     bw.put_bits(code, len);
     if sz > 0 {
         let bits = if diff < 0 { (diff - 1) as u16 & ((1u16 << sz) - 1) } else { diff as u16 };
-        bw.put_bits(bits, sz);
+        bw.put_bits(bits, sz.await);
     }
     let mut run = 0u8;
     for &v in coeffs.iter().skip(1) {
@@ -383,7 +383,7 @@ async fn encode_block(bw: &mut BitWriter, coeffs: &[i32; 64], dc_pred: &mut i32,
         let (len, code) = *ac_table.encode.get(&rs).ok_or_else(|| JpgError::Malformed("ac symbol not in table".into()))?;
         bw.put_bits(code, len);
         let bits = if v < 0 { (v - 1) as u16 & ((1u16 << sz) - 1) } else { v as u16 };
-        bw.put_bits(bits, sz);
+        bw.put_bits(bits, sz.await);
         run = 0;
     }
     if run > 0 {
@@ -396,13 +396,13 @@ async fn encode_block(bw: &mut BitWriter, coeffs: &[i32; 64], dc_pred: &mut i32,
 /// 🧱 Decodes one 8x8 block into zigzag-order quantized coefficients.
 async fn decode_block(br: &mut BitReader<'_>, dc_pred: &mut i32, dc_table: &HuffTable, ac_table: &HuffTable) -> Result<[i32; 64], JpgError> {
     let mut out = [0i32; 64];
-    let sz = br.decode_symbol(dc_table)?;
-    let bits = if sz > 0 { br.read_bits(sz)? } else { 0 };
+    let sz = br.decode_symbol(dc_table).await?;
+    let bits = if sz > 0 { br.read_bits(sz).await? } else { 0 };
     *dc_pred += extend_sign(bits, sz);
     out[0] = *dc_pred;
     let mut z = 1usize;
     while z < 64 {
-        let rs = br.decode_symbol(ac_table)?;
+        let rs = br.decode_symbol(ac_table).await?;
         let run = rs >> 4;
         let sz = rs & 0x0F;
         if sz == 0 {
@@ -416,8 +416,8 @@ async fn decode_block(br: &mut BitReader<'_>, dc_pred: &mut i32, dc_table: &Huff
         if z >= 64 {
             return Err(JpgError::Malformed("ac coefficient run overruns block".into()));
         }
-        let bits = br.read_bits(sz)?;
-        out[z] = extend_sign(bits, sz);
+        let bits = br.read_bits(sz).await?;
+        out[z] = extend_sign(bits, sz).await;
         z += 1;
     }
     Ok(out)
@@ -548,7 +548,7 @@ async fn encode_jfif_app0(snap: &JpgSnapshot) -> Vec<u8> {
     out.extend_from_slice(b"JFIF\0");
     out.push(snap.jfif_version.0);
     out.push(snap.jfif_version.1);
-    out.push(snap.jfif_density_units.to_u8());
+    out.push(snap.jfif_density_units.to_u8().await);
     out.push((snap.jfif_x_density >> 8) as u8);
     out.push((snap.jfif_x_density & 0xFF) as u8);
     out.push((snap.jfif_y_density >> 8) as u8);
@@ -599,14 +599,14 @@ pub async fn encode_jpg(snap: &JpgSnapshot) -> Result<Vec<u8>, JpgError> {
         for x in 0..pw {
             let sx = x.min(width as usize - 1);
             let idx = (sy * width as usize + sx) * 4;
-            let (yy, cb, cr) = rgb_to_ycbcr(snap.pixels[idx], snap.pixels[idx + 1], snap.pixels[idx + 2]);
+            let (yy, cb, cr) = rgb_to_ycbcr(snap.pixels[idx], snap.pixels[idx + 1], snap.pixels[idx + 2]).await;
             yfull[y * pw + x] = yy;
             cbfull[y * pw + x] = cb;
             crfull[y * pw + x] = cr;
         }
     }
-    let (cbplane, cpw, _cph) = box_downsample(&cbfull, pw, ph, hmax, vmax);
-    let (crplane, _, _) = box_downsample(&crfull, pw, ph, hmax, vmax);
+    let (cbplane, cpw, _cph) = box_downsample(&cbfull, pw, ph, hmax, vmax).await;
+    let (crplane, _, _) = box_downsample(&crfull, pw, ph, hmax, vmax).await;
 
     let comps: [JpgFrameComponent; 3] = [
         JpgFrameComponent { id: 1, h_sampling: hmax as u8, v_sampling: vmax as u8, quant_table_id: 0 },
@@ -615,12 +615,12 @@ pub async fn encode_jpg(snap: &JpgSnapshot) -> Result<Vec<u8>, JpgError> {
     ];
     let frame = JpgFrameHeader { precision: 8, width, height, components: comps.to_vec() };
 
-    let luma_q = quant_zigzag(&scale_quality(&STD_LUMA_Q, quality));
-    let chroma_q = quant_zigzag(&scale_quality(&STD_CHROMA_Q, quality));
-    let dc_luma = build_huffman(&DC_LUMA_BITS, &dc_luma_values())?;
-    let ac_luma = build_huffman(&AC_LUMA_BITS, &ac_luma_values())?;
-    let dc_chroma = build_huffman(&DC_CHROMA_BITS, &dc_chroma_values())?;
-    let ac_chroma = build_huffman(&AC_CHROMA_BITS, &ac_chroma_values())?;
+    let luma_q = quant_zigzag(&scale_quality(&STD_LUMA_Q, quality)).await;
+    let chroma_q = quant_zigzag(&scale_quality(&STD_CHROMA_Q, quality)).await;
+    let dc_luma = build_huffman(&DC_LUMA_BITS, &dc_luma_values()).await?;
+    let ac_luma = build_huffman(&AC_LUMA_BITS, &ac_luma_values()).await?;
+    let dc_chroma = build_huffman(&DC_CHROMA_BITS, &dc_chroma_values()).await?;
+    let ac_chroma = build_huffman(&AC_CHROMA_BITS, &ac_chroma_values()).await?;
 
     let mut out = Vec::new();
     out.extend_from_slice(&[0xFF, 0xD8]); // SOI
@@ -678,7 +678,7 @@ pub async fn encode_jpg(snap: &JpgSnapshot) -> Result<Vec<u8>, JpgError> {
     sos.push(0);
     out.extend_from_slice(&sos);
 
-    let mut bw = BitWriter::new();
+    let mut bw = BitWriter::new().await;
     let mut dc_pred = [0i32; 3];
     for my in 0..mcus_y {
         for mx in 0..mcus_x {
@@ -698,7 +698,7 @@ pub async fn encode_jpg(snap: &JpgSnapshot) -> Result<Vec<u8>, JpgError> {
                     for z in 0..64 {
                         zz[z] = (coeff[ZIGZAG_TO_NATURAL[z]] / luma_q[z] as f64).round() as i32;
                     }
-                    encode_block(&mut bw, &zz, &mut dc_pred[0], &dc_luma, &ac_luma)?;
+                    encode_block(&mut bw, &zz, &mut dc_pred[0], &dc_luma, &ac_luma).await?;
                 }
             }
             // Cb, Cr: one block per MCU (already half-res)
@@ -716,11 +716,11 @@ pub async fn encode_jpg(snap: &JpgSnapshot) -> Result<Vec<u8>, JpgError> {
                 for z in 0..64 {
                     zz[z] = (coeff[ZIGZAG_TO_NATURAL[z]] / chroma_q[z] as f64).round() as i32;
                 }
-                encode_block(&mut bw, &zz, &mut dc_pred[1 + ci], &dc_chroma, &ac_chroma)?;
+                encode_block(&mut bw, &zz, &mut dc_pred[1 + ci], &dc_chroma, &ac_chroma).await?;
             }
         }
     }
-    bw.flush();
+    bw.flush().await;
     out.extend_from_slice(&bw.bytes);
     out.extend_from_slice(&[0xFF, 0xD9]); // EOI
     Ok(out)
@@ -749,7 +749,7 @@ async fn parse_jfif_app0(seg: &[u8]) -> Option<(JfifVersion, JfifDensityUnits, u
         return None;
     }
     let version = (seg[5], seg[6]);
-    let units = JfifDensityUnits::from_u8(seg[7]).ok()?;
+    let units = JfifDensityUnits::from_u8(seg[7]).await.ok()?;
     let x_density = ((seg[8] as u16) << 8) | seg[9] as u16;
     let y_density = ((seg[10] as u16) << 8) | seg[11] as u16;
     let tw = seg[12];
@@ -798,8 +798,8 @@ pub async fn decode_jpg(data: &[u8]) -> Result<JpgSnapshot, JpgError> {
             0xD8 => continue, // stray SOI, tolerate
             0xD9 => return Err(JpgError::Malformed("EOI before SOS".into())),
             0xC0 => {
-                let len = read_u16(data, i)?;
-                let seg = slice_at(data, i + 2, len.saturating_sub(2))?;
+                let len = read_u16(data, i).await?;
+                let seg = slice_at(data, i + 2, len.saturating_sub(2)).await?;
                 if seg.len() < 6 {
                     return Err(JpgError::Malformed("SOF0 segment too short".into()));
                 }
@@ -836,7 +836,7 @@ pub async fn decode_jpg(data: &[u8]) -> Result<JpgSnapshot, JpgError> {
                 return Err(JpgError::Unsupported(name.into()));
             }
             0xDB => {
-                let len = read_u16(data, i)?;
+                let len = read_u16(data, i).await?;
                 let mut p = i + 2;
                 let end = i + len;
                 while p < end {
@@ -870,7 +870,7 @@ pub async fn decode_jpg(data: &[u8]) -> Result<JpgSnapshot, JpgError> {
                 i += len;
             }
             0xC4 => {
-                let len = read_u16(data, i)?;
+                let len = read_u16(data, i).await?;
                 let mut p = i + 2;
                 let end = i + len;
                 while p < end {
@@ -884,10 +884,10 @@ pub async fn decode_jpg(data: &[u8]) -> Result<JpgSnapshot, JpgError> {
                     bits.copy_from_slice(&data[p..p + 16]);
                     p += 16;
                     let count: usize = bits.iter().map(|&b| b as usize).sum();
-                    let values = slice_at(data, p, count)?.to_vec();
+                    let values = slice_at(data, p, count).await?.to_vec();
                     p += count;
-                    let table = build_huffman(&bits, &values)?;
-                    let huffman_class = JpgHuffmanClass::from_u8(class).map_err(JpgError::Malformed)?;
+                    let table = build_huffman(&bits, &values).await?;
+                    let huffman_class = JpgHuffmanClass::from_u8(class).await.map_err(JpgError::Malformed)?;
                     if class == 0 {
                         dc_tables.insert(id, table);
                     } else {
@@ -910,16 +910,16 @@ pub async fn decode_jpg(data: &[u8]) -> Result<JpgSnapshot, JpgError> {
                 return Err(JpgError::Unsupported("arithmetic coding conditioning (DAC present)".into()));
             }
             0xDD => {
-                let len = read_u16(data, i)?;
-                let seg = slice_at(data, i + 2, 2)?;
+                let len = read_u16(data, i).await?;
+                let seg = slice_at(data, i + 2, 2).await?;
                 restart_interval_raw = ((seg[0] as u16) << 8) | seg[1] as u16;
                 restart_interval = Some(restart_interval_raw);
                 i += len;
             }
             0xDA => {
                 let frame = frame.clone().ok_or_else(|| JpgError::Malformed("SOS before SOF0".into()))?;
-                let len = read_u16(data, i)?;
-                let seg = slice_at(data, i + 2, len.saturating_sub(2))?;
+                let len = read_u16(data, i).await?;
+                let seg = slice_at(data, i + 2, len.saturating_sub(2)).await?;
                 let ns = *seg.first().ok_or_else(|| JpgError::Malformed("SOS truncated".into()))? as usize;
                 let mut scan_tabs: Vec<(u8, u8)> = Vec::with_capacity(ns);
                 for k in 0..ns {
@@ -933,7 +933,7 @@ pub async fn decode_jpg(data: &[u8]) -> Result<JpgSnapshot, JpgError> {
                     return Err(JpgError::Unsupported("multi-scan (non-interleaved) baseline JPEG".into()));
                 }
                 i += len;
-                let rgba = decode_scan(data, i, &frame, &scan_tabs, &quant, &dc_tables, &ac_tables, restart_interval_raw)?;
+                let rgba = decode_scan(data, i, &frame, &scan_tabs, &quant, &dc_tables, &ac_tables, restart_interval_raw).await?;
                 let (width, height) = (frame.width as u32, frame.height as u32);
                 // 🏅️ sof_marker/arithmetic: real data the decode loop above already computed
                 // transiently (the SOF0 marker byte, the DAC rejection above) — persisted here so
@@ -964,9 +964,9 @@ pub async fn decode_jpg(data: &[u8]) -> Result<JpgSnapshot, JpgError> {
                 });
             }
             0xE0 => {
-                let len = read_u16(data, i)?;
-                let seg = slice_at(data, i + 2, len.saturating_sub(2))?;
-                match parse_jfif_app0(seg) {
+                let len = read_u16(data, i).await?;
+                let seg = slice_at(data, i + 2, len.saturating_sub(2)).await?;
+                match parse_jfif_app0(seg).await {
                     Some((version, units, xd, yd, thumb)) => {
                         jfif_version = version;
                         jfif_density_units = units;
@@ -979,8 +979,8 @@ pub async fn decode_jpg(data: &[u8]) -> Result<JpgSnapshot, JpgError> {
                 i += len;
             }
             0xE1..=0xEF | 0xFE => {
-                let len = read_u16(data, i)?;
-                let seg = slice_at(data, i + 2, len.saturating_sub(2))?;
+                let len = read_u16(data, i).await?;
+                let seg = slice_at(data, i + 2, len.saturating_sub(2)).await?;
                 other_segments.push(JpgSegment { marker, data: seg.to_vec() });
                 i += len;
             }
@@ -1021,13 +1021,13 @@ async fn decode_scan(data: &[u8], start: usize, frame: &JpgFrameHeader, scan_tab
         plane_dims.push((pwc, phc));
     }
 
-    let mut br = BitReader::new(data, start);
+    let mut br = BitReader::new(data, start).await;
     let mut dc_pred = vec![0i32; frame.components.len()];
     let mut mcus_since_restart = 0u32;
     for my in 0..mcus_y {
         for mx in 0..mcus_x {
             if restart_interval > 0 && mcus_since_restart == restart_interval as u32 && (my != 0 || mx != 0) {
-                br.skip_restart_marker()?;
+                br.skip_restart_marker().await?;
                 for p in dc_pred.iter_mut() {
                     *p = 0;
                 }
@@ -1041,7 +1041,7 @@ async fn decode_scan(data: &[u8], start: usize, frame: &JpgFrameHeader, scan_tab
                 let (pwc, _) = plane_dims[ci];
                 for by in 0..c.v_sampling.max(1) as usize {
                     for bx in 0..c.h_sampling.max(1) as usize {
-                        let zz = decode_block(&mut br, &mut dc_pred[ci], dc_tab, ac_tab)?;
+                        let zz = decode_block(&mut br, &mut dc_pred[ci], dc_tab, ac_tab).await?;
                         let mut natural = [0f64; 64];
                         for z in 0..64 {
                             natural[ZIGZAG_TO_NATURAL[z]] = (zz[z] * q[z]) as f64;
@@ -1086,7 +1086,7 @@ async fn decode_scan(data: &[u8], start: usize, frame: &JpgFrameHeader, scan_tab
                 let cbx = (x * cbc.h_sampling.max(1) as usize) / hmax;
                 let cry = (y * crc.v_sampling.max(1) as usize) / vmax;
                 let crx = (x * crc.h_sampling.max(1) as usize) / hmax;
-                ycbcr_to_rgb(yy, planes[cb_idx][cby * cbpwc + cbx], planes[cr_idx][cry * crpwc + crx])
+                ycbcr_to_rgb(yy, planes[cb_idx][cby * cbpwc + cbx], planes[cr_idx][cry * crpwc + crx]).await
             };
             let idx = (y * width + x) * 4;
             rgba[idx] = r;
@@ -1411,7 +1411,8 @@ pub mod io_registry {
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 
-    pub async fn entries() -> &'static [ComposerEntry] {
+    // 🚫️async: E1 pure table accessor consumed by OnceLock::get_or_init's sync closure — see R9
+    pub fn entries() -> &'static [ComposerEntry] {
         ENTRIES.get_or_init(|| vec![composer_entry_of::<JpgRawAnyComposer>(), composer_entry_of::<JpgBaselineComposer>()]).as_slice()
     }
 }

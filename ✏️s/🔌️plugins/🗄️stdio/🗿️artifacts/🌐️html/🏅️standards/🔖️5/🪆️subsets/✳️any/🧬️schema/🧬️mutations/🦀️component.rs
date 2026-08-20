@@ -75,13 +75,13 @@ pub enum HtmlMutation {
 /// d.apply(snapshot); d` — the diff is the single semantics source, never a separate imperative
 /// apply path (apply-and-capture is banned).
 pub async fn apply_html_mutation(snapshot: &mut HtmlSnapshot, mutation: &HtmlMutation) -> protocol::MutationOutcome<HtmlDiff> {
-    let outcome = Mutation::diff(mutation, snapshot);
-    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
+    let outcome = Mutation::diff(mutation, snapshot).await;
+    match protocol::MutationDiff::apply(outcome.diff().await, snapshot).await {
         Ok(next) => {
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).await.absorb_messages(outcome.messages().await.to_vec()).await,
     }
 }
 //#endregion 🔖️Apply
@@ -91,7 +91,7 @@ pub async fn apply_html_mutation(snapshot: &mut HtmlSnapshot, mutation: &HtmlMut
 /// element addressed by `path` against `base`, then builds the exact `HtmlAttributesDiff` entry
 /// the transition requires, lowered through `diff_at_path`.
 async fn attribute_diff_at_path(base: &HtmlSnapshot, path: &[usize], name: &str, value: Option<Option<String>>) -> HtmlDiff {
-    let target = node_at(base, path).ok();
+    let target = node_at(base, path).await.ok();
     let existing: Option<&Option<String>> = target.and_then(|n| element_attr(n, name));
     let attrs_diff = match (existing, value) {
         (Some(_), None) => HtmlAttributesDiff { removed: vec![name.to_string()], modified: Vec::new(), added: Vec::new() },
@@ -105,14 +105,14 @@ async fn attribute_diff_at_path(base: &HtmlSnapshot, path: &[usize], name: &str,
         }
         (None, None) => HtmlAttributesDiff::default(),
     };
-    diff_at_path(path, HtmlNodeDiff::Element(HtmlElementDiff { name: None, attributes: Some(attrs_diff), children: None }))
+    diff_at_path(path, HtmlNodeDiff::Element(HtmlElementDiff { name: None, attributes: Some(attrs_diff), children: None })).await
 }
 
 /// 🔎 Reads the PRIOR tri-state of attribute `name` on the element addressed by `path` in `base`:
 /// `None` = attribute absent, `Some(None)` = present and valueless, `Some(Some(v))` = present with
 /// value `v`.
 async fn prior_attribute(base: &HtmlSnapshot, path: &[usize], name: &str) -> Option<Option<String>> {
-    node_at(base, path).ok().and_then(|n| element_attr(n, name)).cloned()
+    node_at(base, path).await.ok().and_then(|n| element_attr(n, name)).cloned()
 }
 //#endregion 🔖️AttributeHelper
 
@@ -123,18 +123,18 @@ impl Mutation<HtmlSnapshot> for HtmlMutation {
     async fn diff(&self, base: &HtmlSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             HtmlMutation::NoMutation => HtmlDiff::default(),
-            HtmlMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
+            HtmlMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot).await,
             HtmlMutation::SetDoctype { doctype } => HtmlDiff { doctype: Some(doctype.clone()), root: None },
             HtmlMutation::InsertNode { parent, index, node } => diff_at_path(
                 parent,
                 HtmlNodeDiff::Element(HtmlElementDiff { name: None, attributes: None, children: Some(HtmlChildrenDiff { removed: Vec::new(), modified: Vec::new(), added: vec![HtmlChildAdded { index: *index, item: node.clone() }] }) }),
-            ),
+            ).await,
             HtmlMutation::RemoveNode { parent, index } => {
-                diff_at_path(parent, HtmlNodeDiff::Element(HtmlElementDiff { name: None, attributes: None, children: Some(HtmlChildrenDiff { removed: vec![*index], modified: Vec::new(), added: Vec::new() }) }))
+                diff_at_path(parent, HtmlNodeDiff::Element(HtmlElementDiff { name: None, attributes: None, children: Some(HtmlChildrenDiff { removed: vec![*index], modified: Vec::new(), added: Vec::new() }) })).await
             }
-            HtmlMutation::SetElementName { path, name } => diff_at_path(path, HtmlNodeDiff::Element(HtmlElementDiff { name: Some(name.clone()), attributes: None, children: None })),
-            HtmlMutation::SetAttribute { path, name, value } => attribute_diff_at_path(base, path, name, value.clone()),
-            HtmlMutation::SetText { path, text } => diff_at_path(path, HtmlNodeDiff::Text { text: Some(text.clone()) }),
+            HtmlMutation::SetElementName { path, name } => diff_at_path(path, HtmlNodeDiff::Element(HtmlElementDiff { name: Some(name.clone()), attributes: None, children: None })).await,
+            HtmlMutation::SetAttribute { path, name, value } => attribute_diff_at_path(base, path, name, value.clone()).await,
+            HtmlMutation::SetText { path, text } => diff_at_path(path, HtmlNodeDiff::Text { text: Some(text.clone()) }).await,
             HtmlMutation::SetComment { path, text } => diff_at_path(path, HtmlNodeDiff::Comment { text: Some(text.clone()) }),
             HtmlMutation::SetRawText { path, text } => diff_at_path(path, HtmlNodeDiff::RawText { parent_kind: None, text: Some(text.clone()) }),
         })
@@ -146,7 +146,7 @@ impl Mutation<HtmlSnapshot> for HtmlMutation {
             HtmlMutation::SetSnapshot { .. } => vec![HtmlMutation::SetSnapshot { snapshot: base.clone() }],
             HtmlMutation::SetDoctype { .. } => vec![HtmlMutation::SetDoctype { doctype: base.doctype.clone() }],
             HtmlMutation::InsertNode { parent, index, .. } => vec![HtmlMutation::RemoveNode { parent: parent.clone(), index: *index }],
-            HtmlMutation::RemoveNode { parent, index } => match node_at(base, parent) {
+            HtmlMutation::RemoveNode { parent, index } => match node_at(base, parent).await {
                 Ok(HtmlNode::Element { children, .. }) => match children.get(*index) {
                     Some(node) => vec![HtmlMutation::InsertNode { parent: parent.clone(), index: *index, node: node.clone() }],
                     None => vec![HtmlMutation::NoMutation],
@@ -154,31 +154,31 @@ impl Mutation<HtmlSnapshot> for HtmlMutation {
                 _ => vec![HtmlMutation::NoMutation],
             },
             HtmlMutation::SetElementName { path, .. } => {
-                let prior = match node_at(base, path) {
+                let prior = match node_at(base, path).await {
                     Ok(HtmlNode::Element { name, .. }) => name.clone(),
                     _ => return vec![HtmlMutation::NoMutation],
                 };
                 vec![HtmlMutation::SetElementName { path: path.clone(), name: prior }]
             }
             HtmlMutation::SetAttribute { path, name, .. } => {
-                vec![HtmlMutation::SetAttribute { path: path.clone(), name: name.clone(), value: prior_attribute(base, path, name) }]
+                vec![HtmlMutation::SetAttribute { path: path.clone(), name: name.clone(), value: prior_attribute(base, path, name).await }]
             }
             HtmlMutation::SetText { path, .. } => {
-                let old = match node_at(base, path) {
+                let old = match node_at(base, path).await {
                     Ok(HtmlNode::Text { text }) => text.clone(),
                     _ => String::new(),
                 };
                 vec![HtmlMutation::SetText { path: path.clone(), text: old }]
             }
             HtmlMutation::SetComment { path, .. } => {
-                let old = match node_at(base, path) {
+                let old = match node_at(base, path).await {
                     Ok(HtmlNode::Comment { text }) => text.clone(),
                     _ => String::new(),
                 };
                 vec![HtmlMutation::SetComment { path: path.clone(), text: old }]
             }
             HtmlMutation::SetRawText { path, .. } => {
-                let old = match node_at(base, path) {
+                let old = match node_at(base, path).await {
                     Ok(HtmlNode::RawText { text, .. }) => text.clone(),
                     _ => String::new(),
                 };
@@ -198,22 +198,22 @@ async fn enc_node_path(p: &NodePath) -> String {
     format!("[{}]", p.iter().map(|i| i.to_string()).collect::<Vec<_>>().join(","))
 }
 async fn dec_node_path(s: &str) -> Result<NodePath, String> {
-    split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|s| s.parse().map_err(|e: std::num::ParseIntError| e.to_string())).collect()
+    split_top_level(strip_brackets(s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(|s| s.parse().map_err(|e: std::num::ParseIntError| e.to_string())).collect()
 }
 async fn enc_html_snapshot(s: &HtmlSnapshot) -> String {
     format!("[{},{},{}]", enc_str(&s.schema), encode_option(&s.doctype, |v| enc_str(v)), enc_html_node(&s.root))
 }
 async fn dec_html_snapshot(s: &str) -> Result<HtmlSnapshot, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [schema, doctype, root] = parts.as_slice() else { return Err(format!("html snapshot: expected 3 fields, got {}", parts.len())) };
-    Ok(HtmlSnapshot { schema: dec_str(schema)?, doctype: decode_option(doctype, dec_str)?, root: dec_html_node(root)? })
+    Ok(HtmlSnapshot { schema: dec_str(schema).await?, doctype: decode_option(doctype, dec_str).await?, root: dec_html_node(root).await? })
 }
 /// 🏳️ Tri-state attribute value: `[0]` = remove, `[1,[0]]` = valueless, `[1,[1,hex]]` = set value.
 async fn enc_attr_value_tristate(v: &Option<Option<String>>) -> String {
-    encode_option(v, |inner: &Option<String>| encode_option(inner, |s| enc_str(s)))
+    encode_option(v, |inner: &Option<String>| encode_option(inner, |s| enc_str(s))).await
 }
 async fn dec_attr_value_tristate(s: &str) -> Result<Option<Option<String>>, String> {
-    decode_option(s, |inner| decode_option(inner, dec_str))
+    decode_option(s, |inner| decode_option(inner, dec_str)).await
 }
 
 async fn print_html_mutation(m: &HtmlMutation) -> String {
@@ -239,36 +239,36 @@ async fn parse_html_mutation(line: &str) -> Result<HtmlMutation, String> {
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("html mutation: missing arg '{k}' for '{keyword}'"));
     let usize_arg = |k: &str| -> Result<usize, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
     match keyword {
-        "set-snapshot" => Ok(HtmlMutation::SetSnapshot { snapshot: dec_html_snapshot(arg("snapshot")?)? }),
-        "set-doctype" => Ok(HtmlMutation::SetDoctype { doctype: decode_option(arg("doctype")?, dec_str)? }),
-        "insert-node" => Ok(HtmlMutation::InsertNode { parent: dec_node_path(arg("parent")?)?, index: usize_arg("index")?, node: dec_html_node(arg("node")?)? }),
-        "remove-node" => Ok(HtmlMutation::RemoveNode { parent: dec_node_path(arg("parent")?)?, index: usize_arg("index")? }),
-        "set-element-name" => Ok(HtmlMutation::SetElementName { path: dec_node_path(arg("path")?)?, name: dec_str(arg("name")?)? }),
-        "set-attribute" => Ok(HtmlMutation::SetAttribute { path: dec_node_path(arg("path")?)?, name: dec_str(arg("name")?)?, value: dec_attr_value_tristate(arg("value")?)? }),
-        "set-text" => Ok(HtmlMutation::SetText { path: dec_node_path(arg("path")?)?, text: dec_str(arg("text")?)? }),
-        "set-comment" => Ok(HtmlMutation::SetComment { path: dec_node_path(arg("path")?)?, text: dec_str(arg("text")?)? }),
-        "set-raw-text" => Ok(HtmlMutation::SetRawText { path: dec_node_path(arg("path")?)?, text: dec_str(arg("text")?)? }),
+        "set-snapshot" => Ok(HtmlMutation::SetSnapshot { snapshot: dec_html_snapshot(arg("snapshot")?).await? }),
+        "set-doctype" => Ok(HtmlMutation::SetDoctype { doctype: decode_option(arg("doctype")?, dec_str).await? }),
+        "insert-node" => Ok(HtmlMutation::InsertNode { parent: dec_node_path(arg("parent")?).await?, index: usize_arg("index")?, node: dec_html_node(arg("node")?).await? }),
+        "remove-node" => Ok(HtmlMutation::RemoveNode { parent: dec_node_path(arg("parent")?).await?, index: usize_arg("index")? }),
+        "set-element-name" => Ok(HtmlMutation::SetElementName { path: dec_node_path(arg("path")?).await?, name: dec_str(arg("name")?).await? }),
+        "set-attribute" => Ok(HtmlMutation::SetAttribute { path: dec_node_path(arg("path")?).await?, name: dec_str(arg("name")?).await?, value: dec_attr_value_tristate(arg("value")?).await? }),
+        "set-text" => Ok(HtmlMutation::SetText { path: dec_node_path(arg("path")?).await?, text: dec_str(arg("text")?).await? }),
+        "set-comment" => Ok(HtmlMutation::SetComment { path: dec_node_path(arg("path")?).await?, text: dec_str(arg("text")?).await? }),
+        "set-raw-text" => Ok(HtmlMutation::SetRawText { path: dec_node_path(arg("path")?).await?, text: dec_str(arg("text")?).await? }),
         other => Err(format!("html mutation: unknown keyword {other:?}")),
     }
 }
 
 impl OpText for HtmlMutation {
     async fn print_op(&self) -> String {
-        print_html_mutation(self)
+        print_html_mutation(self).await
     }
     async fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_html_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_html_mutation(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
 
 /// ⚡️ Binary = the text bytes verbatim, same simplification as `HtmlDiff`'s hand-rolled codec.
 impl OpBinary for HtmlMutation {
     async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(self.print_op().into_bytes())
+        Ok(self.print_op().await.into_bytes())
     }
     async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 0, detail: e.to_string() })?;
-        Self::parse_op(line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 0, detail: e.to_string() })
+        Self::parse_op(line).await.map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 0, detail: e.to_string() })
     }
 }
 //#endregion OpCodecs

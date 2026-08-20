@@ -32,7 +32,7 @@ pub struct DwgInference {
 
 impl protocol::Inference<DwgSnapshot> for DwgInference {
     async fn infer(snapshot: &DwgSnapshot) -> Self {
-        Self { structure: compute_dwg_structure(snapshot) }
+        Self { structure: compute_dwg_structure(snapshot).await }
     }
 }
 

@@ -16,13 +16,13 @@ async fn validate_indexed_targets(base_len: usize, removed_indices: &[usize], mo
     let mut removed = BTreeSet::new();
     for &index in removed_indices {
         if index >= base_len || !removed.insert(index) {
-            return Err(MutationApplyError::new("invalid-remove-index", "removal target must exist exactly once").at([target, &index.to_string()]));
+            return Err(MutationApplyError::new("invalid-remove-index", "removal target must exist exactly once").await.at([target, &index.to_string()]).await);
         }
     }
     let mut modified = BTreeSet::new();
     for index in modified_indices {
         if index >= base_len || removed.contains(&index) || !modified.insert(index) {
-            return Err(MutationApplyError::new("invalid-modify-index", "modification target must exist exactly once and remain present").at([target, &index.to_string()]));
+            return Err(MutationApplyError::new("invalid-modify-index", "modification target must exist exactly once and remain present").await.at([target, &index.to_string()]).await);
         }
     }
     let mut length = base_len - removed.len();
@@ -31,7 +31,7 @@ async fn validate_indexed_targets(base_len: usize, removed_indices: &[usize], mo
     let mut previous = None;
     for index in additions {
         if index > length || previous == Some(index) {
-            return Err(MutationApplyError::new("invalid-add-index", "addition target must be unique and within the evolving sequence").at([target, &index.to_string()]));
+            return Err(MutationApplyError::new("invalid-add-index", "addition target must be unique and within the evolving sequence").await.at([target, &index.to_string()]).await);
         }
         previous = Some(index);
         length += 1;
@@ -88,7 +88,7 @@ async fn absorb_indexed_triple<Item: Clone, D: Clone + Default + PartialEq>(
 
     let base_labels: Vec<Lbl> = (0..l1).map(Lbl::Base).collect();
     let d1_added_lbl: Vec<(usize, Lbl)> = d1_added.iter().enumerate().map(|(j, (idx, _))| (*idx, Lbl::Added1(j))).collect();
-    let mut mid_labels = simulate_labels(base_labels, d1_removed, &d1_added_lbl);
+    let mut mid_labels = simulate_labels(base_labels, d1_removed, &d1_added_lbl).await;
 
     let mut mid_pos_of_base: HashMap<usize, usize> = HashMap::new();
     let mut mid_pos_of_added1: HashMap<usize, usize> = HashMap::new();
@@ -270,8 +270,8 @@ impl LasVlrsDiff {
     }
 
     pub async fn apply(&self, base: &[LasVlr]) -> MutationApplyResult<Vec<LasVlr>> {
-        validate_indexed_targets(base.len(), &self.removed, self.modified.iter().map(|value| value.index), self.added.iter().map(|value| value.index), "vlrs")?;
-        Ok(self.apply_unchecked(base))
+        validate_indexed_targets(base.len(), &self.removed, self.modified.iter().map(|value| value.index), self.added.iter().map(|value| value.index), "vlrs").await?;
+        Ok(self.apply_unchecked(base).await)
     }
 
     pub async fn between(base: &[LasVlr], next: &[LasVlr]) -> Self {
@@ -280,7 +280,7 @@ impl LasVlrsDiff {
         for i in 0..min_len {
             let d = vlr_between(&base[i], &next[i]);
             if d != LasVlrDiff::default() {
-                modified.push(LasVlrModified { index: i, diff: d });
+                modified.push(LasVlrModified { index: i, diff: d.await });
             }
         }
         let removed: Vec<usize> = (next.len()..base.len()).collect();
@@ -300,9 +300,9 @@ async fn absorb_vlrs(d1: Option<LasVlrsDiff>, d2: Option<LasVlrsDiff>) -> Option
     let d1a: Vec<(usize, LasVlr)> = d1.added.iter().map(|a| (a.index, a.vlr.clone())).collect();
     let d2m: Vec<(usize, LasVlrDiff)> = d2.modified.iter().map(|m| (m.index, m.diff.clone())).collect();
     let d2a: Vec<(usize, LasVlr)> = d2.added.iter().map(|a| (a.index, a.vlr.clone())).collect();
-    let (removed, modified, added) = absorb_indexed_triple(&d1.removed, &d1m, &d1a, &d2.removed, &d2m, &d2a, absorb_vlr_diff, apply_vlr_diff);
+    let (removed, modified, added) = absorb_indexed_triple(&d1.removed, &d1m, &d1a, &d2.removed, &d2m, &d2a, absorb_vlr_diff, apply_vlr_diff).await;
     let merged = LasVlrsDiff { removed, modified: modified.into_iter().map(|(index, diff)| LasVlrModified { index, diff }).collect(), added: added.into_iter().map(|(index, vlr)| LasVlrAdded { index, vlr }).collect() };
-    if merged.is_empty() {
+    if merged.is_empty().await {
         None
     } else {
         Some(merged)
@@ -508,8 +508,8 @@ impl LasPointsDiff {
     }
 
     pub async fn apply(&self, base: &[LasPoint]) -> MutationApplyResult<Vec<LasPoint>> {
-        validate_indexed_targets(base.len(), &self.removed, self.modified.iter().map(|value| value.index), self.added.iter().map(|value| value.index), "points")?;
-        Ok(self.apply_unchecked(base))
+        validate_indexed_targets(base.len(), &self.removed, self.modified.iter().map(|value| value.index), self.added.iter().map(|value| value.index), "points").await?;
+        Ok(self.apply_unchecked(base).await)
     }
 
     pub async fn between(base: &[LasPoint], next: &[LasPoint]) -> Self {
@@ -518,7 +518,7 @@ impl LasPointsDiff {
         for i in 0..min_len {
             let d = point_between(&base[i], &next[i]);
             if d != LasPointDiff::default() {
-                modified.push(LasPointModified { index: i, diff: d });
+                modified.push(LasPointModified { index: i, diff: d.await });
             }
         }
         let removed: Vec<usize> = (next.len()..base.len()).collect();
@@ -538,9 +538,9 @@ async fn absorb_points(d1: Option<LasPointsDiff>, d2: Option<LasPointsDiff>) -> 
     let d1a: Vec<(usize, LasPoint)> = d1.added.iter().map(|a| (a.index, a.point.clone())).collect();
     let d2m: Vec<(usize, LasPointDiff)> = d2.modified.iter().map(|m| (m.index, m.diff.clone())).collect();
     let d2a: Vec<(usize, LasPoint)> = d2.added.iter().map(|a| (a.index, a.point.clone())).collect();
-    let (removed, modified, added) = absorb_indexed_triple(&d1.removed, &d1m, &d1a, &d2.removed, &d2m, &d2a, absorb_point_diff, apply_point_diff);
+    let (removed, modified, added) = absorb_indexed_triple(&d1.removed, &d1m, &d1a, &d2.removed, &d2m, &d2a, absorb_point_diff, apply_point_diff).await;
     let merged = LasPointsDiff { removed, modified: modified.into_iter().map(|(index, diff)| LasPointModified { index, diff }).collect(), added: added.into_iter().map(|(index, point)| LasPointAdded { index, point }).collect() };
-    if merged.is_empty() {
+    if merged.is_empty().await {
         None
     } else {
         Some(merged)
@@ -720,19 +720,19 @@ async fn apply_header_diff(header: &mut LasHeader, d: &LasDiff) {
 impl MutationDiff<LasSnapshot> for LasDiff {
     async fn apply(&self, base: &LasSnapshot) -> MutationApplyResult<LasSnapshot> {
         if let Some(diff) = &self.vlrs {
-            validate_indexed_targets(base.vlrs.len(), &diff.removed, diff.modified.iter().map(|value| value.index), diff.added.iter().map(|value| value.index), "vlrs")?;
+            validate_indexed_targets(base.vlrs.len(), &diff.removed, diff.modified.iter().map(|value| value.index), diff.added.iter().map(|value| value.index), "vlrs").await?;
         }
         if let Some(diff) = &self.points {
-            validate_indexed_targets(base.points.len(), &diff.removed, diff.modified.iter().map(|value| value.index), diff.added.iter().map(|value| value.index), "points")?;
+            validate_indexed_targets(base.points.len(), &diff.removed, diff.modified.iter().map(|value| value.index), diff.added.iter().map(|value| value.index), "points").await?;
         }
         let mut header = base.header.clone();
         apply_header_diff(&mut header, self);
         let vlrs = match &self.vlrs {
-            Some(vd) => vd.apply_unchecked(&base.vlrs),
+            Some(vd) => vd.apply_unchecked(&base.vlrs).await,
             None => base.vlrs.clone(),
         };
         let points = match &self.points {
-            Some(pd) => pd.apply_unchecked(&base.points),
+            Some(pd) => pd.apply_unchecked(&base.points).await,
             None => base.points.clone(),
         };
         Ok(LasSnapshot { schema: base.schema.clone(), header, vlrs, points })
@@ -816,8 +816,8 @@ impl MutationDiff<LasSnapshot> for LasDiff {
         if other.min_z.is_some() {
             self.min_z = other.min_z;
         }
-        self.vlrs = absorb_vlrs(self.vlrs.take(), other.vlrs);
-        self.points = absorb_points(self.points.take(), other.points);
+        self.vlrs = absorb_vlrs(self.vlrs.take(), other.vlrs).await;
+        self.points = absorb_points(self.points.take(), other.points).await;
     }
 }
 
@@ -835,7 +835,7 @@ impl DiffAlgebra<LasSnapshot> for LasDiff {
                 points: self.points.as_ref().map_or_else(|| base.points.clone(), |value| value.apply_unchecked(&base.points)),
             }
         };
-        Self::between(&mutated, base)
+        Self::between(&mutated, base).await
     }
 
     /// 🧭️ State delta (compose `GetXDiff`): header scalars compared field-by-field; `vlrs`/
@@ -844,8 +844,8 @@ impl DiffAlgebra<LasSnapshot> for LasDiff {
     async fn between(base: &LasSnapshot, other: &LasSnapshot) -> Self {
         let bh = &base.header;
         let oh = &other.header;
-        let vlrs_diff = LasVlrsDiff::between(&base.vlrs, &other.vlrs);
-        let points_diff = LasPointsDiff::between(&base.points, &other.points);
+        let vlrs_diff = LasVlrsDiff::between(&base.vlrs, &other.vlrs).await;
+        let points_diff = LasPointsDiff::between(&base.points, &other.points).await;
         LasDiff {
             version_major: (bh.version_major != oh.version_major).then_some(oh.version_major),
             version_minor: (bh.version_minor != oh.version_minor).then_some(oh.version_minor),
@@ -872,8 +872,8 @@ impl DiffAlgebra<LasSnapshot> for LasDiff {
             min_y: (bh.min_y != oh.min_y).then_some(oh.min_y),
             max_z: (bh.max_z != oh.max_z).then_some(oh.max_z),
             min_z: (bh.min_z != oh.min_z).then_some(oh.min_z),
-            vlrs: if vlrs_diff.is_empty() { None } else { Some(vlrs_diff) },
-            points: if points_diff.is_empty() { None } else { Some(points_diff) },
+            vlrs: if vlrs_diff.is_empty().await { None } else { Some(vlrs_diff) },
+            points: if points_diff.is_empty().await { None } else { Some(points_diff) },
         }
     }
 
@@ -885,7 +885,7 @@ impl DiffAlgebra<LasSnapshot> for LasDiff {
 /// 🧩 `SetSnapshot`'s diff is the sparse field-by-field `between(base, next)` — no full-replace
 /// slot exists on `LasDiff` to short-circuit into.
 pub async fn diff_set_snapshot(base: &LasSnapshot, next: &LasSnapshot) -> LasDiff {
-    LasDiff::between(base, next)
+    LasDiff::between(base, next).await
 }
 pub async fn diff_set_version(major: u8, minor: u8) -> LasDiff {
     LasDiff { version_major: Some(major), version_minor: Some(minor), ..Default::default() }
@@ -943,7 +943,7 @@ pub async fn diff_set_point(base: &LasSnapshot, index: usize, point: LasPoint) -
             if d == LasPointDiff::default() {
                 LasDiff::default()
             } else {
-                LasDiff { points: Some(LasPointsDiff { removed: vec![], modified: vec![LasPointModified { index, diff: d }], added: vec![] }), ..Default::default() }
+                LasDiff { points: Some(LasPointsDiff { removed: vec![], modified: vec![LasPointModified { index, diff: d.await }], added: vec![] }), ..Default::default() }
             }
         }
         None => LasDiff::default(),
@@ -1049,8 +1049,8 @@ pub(crate) async fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String
     }
 }
 pub(crate) async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
-    let inner = strip_brackets(s)?;
-    match split_top_level(inner, ',').as_slice() {
+    let inner = strip_brackets(s).await?;
+    match split_top_level(inner, ',').await.as_slice() {
         ["0"] => Ok(None),
         [tag, value] if *tag == "1" => Ok(Some(dec(value)?)),
         other => Err(format!("option decode: bad shape {other:?}")),
@@ -1063,15 +1063,15 @@ pub(crate) async fn enc_rgb(t: &(u16, u16, u16)) -> String {
     format!("[{},{},{}]", t.0, t.1, t.2)
 }
 pub(crate) async fn dec_rgb(s: &str) -> Result<(u16, u16, u16), String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [r, g, b] = parts.as_slice() else { return Err(format!("rgb: expected 3 fields, got {}", parts.len())) };
-    Ok((parse_u16(r)?, parse_u16(g)?, parse_u16(b)?))
+    Ok((parse_u16(r).await?, parse_u16(g).await?, parse_u16(b).await?))
 }
 pub(crate) async fn enc_u32x5(a: &[u32; 5]) -> String {
     format!("[{},{},{},{},{}]", a[0], a[1], a[2], a[3], a[4])
 }
 pub(crate) async fn dec_u32x5(s: &str) -> Result<[u32; 5], String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let vals: Vec<u32> = parts.iter().map(|p| parse_u32(p)).collect::<Result<_, String>>()?;
     vals.try_into().map_err(|v: Vec<u32>| format!("points-by-return: expected 5 values, got {}", v.len()))
 }
@@ -1079,11 +1079,11 @@ pub(crate) async fn enc_vlr(v: &LasVlr) -> String {
     format!("[{},{},{},{}]", hex_encode(v.user_id.as_bytes()), v.record_id, hex_encode(v.description.as_bytes()), hex_encode(&v.data))
 }
 pub(crate) async fn dec_vlr(s: &str) -> Result<LasVlr, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [user_id, record_id, description, data] = parts.as_slice() else {
         return Err(format!("vlr: expected 4 fields, got {}", parts.len()));
     };
-    Ok(LasVlr { user_id: String::from_utf8(hex_decode(user_id)?).map_err(|e| e.to_string())?, record_id: parse_u16(record_id)?, description: String::from_utf8(hex_decode(description)?).map_err(|e| e.to_string())?, data: hex_decode(data)? })
+    Ok(LasVlr { user_id: String::from_utf8(hex_decode(user_id).await?).map_err(|e| e.to_string())?, record_id: parse_u16(record_id).await?, description: String::from_utf8(hex_decode(description).await?).map_err(|e| e.to_string())?, data: hex_decode(data).await? })
 }
 pub(crate) async fn enc_point(p: &LasPoint) -> String {
     format!(
@@ -1105,25 +1105,25 @@ pub(crate) async fn enc_point(p: &LasPoint) -> String {
     )
 }
 pub(crate) async fn dec_point(s: &str) -> Result<LasPoint, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [x, y, z, intensity, return_number, number_of_returns, scan_direction_flag, edge_of_flight_line, classification, scan_angle_rank, user_data, point_source_id, gps_time, rgb] = parts.as_slice() else {
         return Err(format!("point: expected 14 fields, got {}", parts.len()));
     };
     Ok(LasPoint {
-        x: parse_f64(x)?,
-        y: parse_f64(y)?,
-        z: parse_f64(z)?,
-        intensity: parse_u16(intensity)?,
-        return_number: parse_u8(return_number)?,
-        number_of_returns: parse_u8(number_of_returns)?,
+        x: parse_f64(x).await?,
+        y: parse_f64(y).await?,
+        z: parse_f64(z).await?,
+        intensity: parse_u16(intensity).await?,
+        return_number: parse_u8(return_number).await?,
+        number_of_returns: parse_u8(number_of_returns).await?,
         scan_direction_flag: *scan_direction_flag == "1",
         edge_of_flight_line: *edge_of_flight_line == "1",
-        classification: parse_u8(classification)?,
-        scan_angle_rank: parse_i8(scan_angle_rank)?,
-        user_data: parse_u8(user_data)?,
-        point_source_id: parse_u16(point_source_id)?,
-        gps_time: decode_option(gps_time, parse_f64)?,
-        rgb: decode_option(rgb, dec_rgb)?,
+        classification: parse_u8(classification).await?,
+        scan_angle_rank: parse_i8(scan_angle_rank).await?,
+        user_data: parse_u8(user_data).await?,
+        point_source_id: parse_u16(point_source_id).await?,
+        gps_time: decode_option(gps_time, parse_f64).await?,
+        rgb: decode_option(rgb, dec_rgb).await?,
     })
 }
 //#endregion 🔖️ValueCodecs
@@ -1146,7 +1146,7 @@ async fn enc_vlr_diff(d: &LasVlrDiff) -> String {
     format!("[{}]", parts.join(","))
 }
 async fn dec_vlr_diff(s: &str) -> Result<LasVlrDiff, String> {
-    let inner = strip_brackets(s)?;
+    let inner = strip_brackets(s).await?;
     let mut d = LasVlrDiff::default();
     for entry in split_top_level(inner, ',') {
         if entry.is_empty() {
@@ -1154,10 +1154,10 @@ async fn dec_vlr_diff(s: &str) -> Result<LasVlrDiff, String> {
         }
         let (tag, val) = entry.split_once(':').ok_or_else(|| format!("vlr diff: bad entry {entry:?}"))?;
         match tag {
-            "U" => d.user_id = Some(String::from_utf8(hex_decode(val)?).map_err(|e| e.to_string())?),
-            "R" => d.record_id = Some(parse_u16(val)?),
-            "N" => d.description = Some(String::from_utf8(hex_decode(val)?).map_err(|e| e.to_string())?),
-            "X" => d.data = Some(hex_decode(val)?),
+            "U" => d.user_id = Some(String::from_utf8(hex_decode(val).await?).map_err(|e| e.to_string())?),
+            "R" => d.record_id = Some(parse_u16(val).await?),
+            "N" => d.description = Some(String::from_utf8(hex_decode(val).await?).map_err(|e| e.to_string())?),
+            "X" => d.data = Some(hex_decode(val).await?),
             other => return Err(format!("vlr diff: unknown tag {other:?}")),
         }
     }
@@ -1211,7 +1211,7 @@ async fn enc_point_diff(d: &LasPointDiff) -> String {
     format!("[{}]", parts.join(","))
 }
 async fn dec_point_diff(s: &str) -> Result<LasPointDiff, String> {
-    let inner = strip_brackets(s)?;
+    let inner = strip_brackets(s).await?;
     let mut d = LasPointDiff::default();
     for entry in split_top_level(inner, ',') {
         if entry.is_empty() {
@@ -1219,20 +1219,20 @@ async fn dec_point_diff(s: &str) -> Result<LasPointDiff, String> {
         }
         let (tag, val) = entry.split_once(':').ok_or_else(|| format!("point diff: bad entry {entry:?}"))?;
         match tag {
-            "X" => d.x = Some(parse_f64(val)?),
-            "Y" => d.y = Some(parse_f64(val)?),
-            "Z" => d.z = Some(parse_f64(val)?),
-            "I" => d.intensity = Some(parse_u16(val)?),
-            "R" => d.return_number = Some(parse_u8(val)?),
-            "N" => d.number_of_returns = Some(parse_u8(val)?),
+            "X" => d.x = Some(parse_f64(val).await?),
+            "Y" => d.y = Some(parse_f64(val).await?),
+            "Z" => d.z = Some(parse_f64(val).await?),
+            "I" => d.intensity = Some(parse_u16(val).await?),
+            "R" => d.return_number = Some(parse_u8(val).await?),
+            "N" => d.number_of_returns = Some(parse_u8(val).await?),
             "D" => d.scan_direction_flag = Some(val == "1"),
             "E" => d.edge_of_flight_line = Some(val == "1"),
-            "C" => d.classification = Some(parse_u8(val)?),
-            "A" => d.scan_angle_rank = Some(parse_i8(val)?),
-            "U" => d.user_data = Some(parse_u8(val)?),
-            "P" => d.point_source_id = Some(parse_u16(val)?),
-            "G" => d.gps_time = Some(decode_option(val, parse_f64)?),
-            "B" => d.rgb = Some(decode_option(val, dec_rgb)?),
+            "C" => d.classification = Some(parse_u8(val).await?),
+            "A" => d.scan_angle_rank = Some(parse_i8(val).await?),
+            "U" => d.user_data = Some(parse_u8(val).await?),
+            "P" => d.point_source_id = Some(parse_u16(val).await?),
+            "G" => d.gps_time = Some(decode_option(val, parse_f64).await?),
+            "B" => d.rgb = Some(decode_option(val, dec_rgb).await?),
             other => return Err(format!("point diff: unknown tag {other:?}")),
         }
     }
@@ -1248,9 +1248,9 @@ async fn enc_collection_triple(name: &str, removed: &[usize], modified: &[(usize
     format!("{name}{{[{removed}];[{modified}];[{added}]}}")
 }
 async fn dec_collection_triple(body: &str) -> Result<(Vec<usize>, Vec<(usize, String)>, Vec<(usize, String)>), String> {
-    let three = split_top_level(body, ';');
+    let three = split_top_level(body, ';').await;
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("collection: expected 3 sections, got {}", three.len())) };
-    let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
+    let removed = split_top_level(strip_brackets(removed_s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
     let parse_entries = |s: &str| -> Result<Vec<(usize, String)>, String> {
         split_top_level(strip_brackets(s)?, ',')
             .into_iter()
@@ -1265,10 +1265,10 @@ async fn dec_collection_triple(body: &str) -> Result<(Vec<usize>, Vec<(usize, St
 }
 
 async fn enc_vlrs_diff(d: &LasVlrsDiff) -> String {
-    enc_collection_triple("vlrs", &d.removed, &d.modified.iter().map(|m| (m.index, enc_vlr_diff(&m.diff))).collect::<Vec<_>>(), &d.added.iter().map(|a| (a.index, enc_vlr(&a.vlr))).collect::<Vec<_>>())
+    enc_collection_triple("vlrs", &d.removed, &d.modified.iter().map(|m| (m.index, enc_vlr_diff(&m.diff))).collect::<Vec<_>>(), &d.added.iter().map(|a| (a.index, enc_vlr(&a.vlr))).collect::<Vec<_>>()).await
 }
 async fn dec_vlrs_diff(body: &str) -> Result<LasVlrsDiff, String> {
-    let (removed, modified, added) = dec_collection_triple(body)?;
+    let (removed, modified, added) = dec_collection_triple(body).await?;
     Ok(LasVlrsDiff {
         removed,
         modified: modified.into_iter().map(|(index, enc)| Ok(LasVlrModified { index, diff: dec_vlr_diff(&enc)? })).collect::<Result<Vec<_>, String>>()?,
@@ -1276,10 +1276,10 @@ async fn dec_vlrs_diff(body: &str) -> Result<LasVlrsDiff, String> {
     })
 }
 async fn enc_points_diff(d: &LasPointsDiff) -> String {
-    enc_collection_triple("points", &d.removed, &d.modified.iter().map(|m| (m.index, enc_point_diff(&m.diff))).collect::<Vec<_>>(), &d.added.iter().map(|a| (a.index, enc_point(&a.point))).collect::<Vec<_>>())
+    enc_collection_triple("points", &d.removed, &d.modified.iter().map(|m| (m.index, enc_point_diff(&m.diff))).collect::<Vec<_>>(), &d.added.iter().map(|a| (a.index, enc_point(&a.point))).collect::<Vec<_>>()).await
 }
 async fn dec_points_diff(body: &str) -> Result<LasPointsDiff, String> {
-    let (removed, modified, added) = dec_collection_triple(body)?;
+    let (removed, modified, added) = dec_collection_triple(body).await?;
     Ok(LasPointsDiff {
         removed,
         modified: modified.into_iter().map(|(index, enc)| Ok(LasPointModified { index, diff: dec_point_diff(&enc)? })).collect::<Result<Vec<_>, String>>()?,
@@ -1367,10 +1367,10 @@ async fn print_las_diff(d: &LasDiff) -> String {
         tokens.push(format!("min-z={v}"));
     }
     if let Some(v) = &d.vlrs {
-        tokens.push(enc_vlrs_diff(v));
+        tokens.push(enc_vlrs_diff(v).await);
     }
     if let Some(v) = &d.points {
-        tokens.push(enc_points_diff(v));
+        tokens.push(enc_points_diff(v).await);
     }
     tokens.join(" ")
 }
@@ -1381,59 +1381,59 @@ async fn parse_las_diff(line: &str) -> Result<LasDiff, String> {
     }
     for token in line.split(' ') {
         if let Some(rest) = token.strip_prefix("version-major=") {
-            d.version_major = Some(parse_u8(rest)?);
+            d.version_major = Some(parse_u8(rest).await?);
         } else if let Some(rest) = token.strip_prefix("version-minor=") {
-            d.version_minor = Some(parse_u8(rest)?);
+            d.version_minor = Some(parse_u8(rest).await?);
         } else if let Some(rest) = token.strip_prefix("system-identifier=") {
-            d.system_identifier = Some(String::from_utf8(hex_decode(rest)?).map_err(|e| e.to_string())?);
+            d.system_identifier = Some(String::from_utf8(hex_decode(rest).await?).map_err(|e| e.to_string())?);
         } else if let Some(rest) = token.strip_prefix("generating-software=") {
-            d.generating_software = Some(String::from_utf8(hex_decode(rest)?).map_err(|e| e.to_string())?);
+            d.generating_software = Some(String::from_utf8(hex_decode(rest).await?).map_err(|e| e.to_string())?);
         } else if let Some(rest) = token.strip_prefix("creation-day-of-year=") {
-            d.creation_day_of_year = Some(parse_u16(rest)?);
+            d.creation_day_of_year = Some(parse_u16(rest).await?);
         } else if let Some(rest) = token.strip_prefix("creation-year=") {
-            d.creation_year = Some(parse_u16(rest)?);
+            d.creation_year = Some(parse_u16(rest).await?);
         } else if let Some(rest) = token.strip_prefix("header-size=") {
-            d.header_size = Some(parse_u16(rest)?);
+            d.header_size = Some(parse_u16(rest).await?);
         } else if let Some(rest) = token.strip_prefix("offset-to-point-data=") {
-            d.offset_to_point_data = Some(parse_u32(rest)?);
+            d.offset_to_point_data = Some(parse_u32(rest).await?);
         } else if let Some(rest) = token.strip_prefix("number-of-vlrs=") {
-            d.number_of_vlrs = Some(parse_u32(rest)?);
+            d.number_of_vlrs = Some(parse_u32(rest).await?);
         } else if let Some(rest) = token.strip_prefix("point-data-format-id=") {
-            d.point_data_format_id = Some(parse_u8(rest)?);
+            d.point_data_format_id = Some(parse_u8(rest).await?);
         } else if let Some(rest) = token.strip_prefix("point-data-record-length=") {
-            d.point_data_record_length = Some(parse_u16(rest)?);
+            d.point_data_record_length = Some(parse_u16(rest).await?);
         } else if let Some(rest) = token.strip_prefix("number-of-point-records=") {
-            d.number_of_point_records = Some(parse_u32(rest)?);
+            d.number_of_point_records = Some(parse_u32(rest).await?);
         } else if let Some(rest) = token.strip_prefix("points-by-return=") {
-            d.points_by_return = Some(dec_u32x5(rest)?);
+            d.points_by_return = Some(dec_u32x5(rest).await?);
         } else if let Some(rest) = token.strip_prefix("x-scale=") {
-            d.x_scale = Some(parse_f64(rest)?);
+            d.x_scale = Some(parse_f64(rest).await?);
         } else if let Some(rest) = token.strip_prefix("y-scale=") {
-            d.y_scale = Some(parse_f64(rest)?);
+            d.y_scale = Some(parse_f64(rest).await?);
         } else if let Some(rest) = token.strip_prefix("z-scale=") {
-            d.z_scale = Some(parse_f64(rest)?);
+            d.z_scale = Some(parse_f64(rest).await?);
         } else if let Some(rest) = token.strip_prefix("x-offset=") {
-            d.x_offset = Some(parse_f64(rest)?);
+            d.x_offset = Some(parse_f64(rest).await?);
         } else if let Some(rest) = token.strip_prefix("y-offset=") {
-            d.y_offset = Some(parse_f64(rest)?);
+            d.y_offset = Some(parse_f64(rest).await?);
         } else if let Some(rest) = token.strip_prefix("z-offset=") {
-            d.z_offset = Some(parse_f64(rest)?);
+            d.z_offset = Some(parse_f64(rest).await?);
         } else if let Some(rest) = token.strip_prefix("max-x=") {
-            d.max_x = Some(parse_f64(rest)?);
+            d.max_x = Some(parse_f64(rest).await?);
         } else if let Some(rest) = token.strip_prefix("min-x=") {
-            d.min_x = Some(parse_f64(rest)?);
+            d.min_x = Some(parse_f64(rest).await?);
         } else if let Some(rest) = token.strip_prefix("max-y=") {
-            d.max_y = Some(parse_f64(rest)?);
+            d.max_y = Some(parse_f64(rest).await?);
         } else if let Some(rest) = token.strip_prefix("min-y=") {
-            d.min_y = Some(parse_f64(rest)?);
+            d.min_y = Some(parse_f64(rest).await?);
         } else if let Some(rest) = token.strip_prefix("max-z=") {
-            d.max_z = Some(parse_f64(rest)?);
+            d.max_z = Some(parse_f64(rest).await?);
         } else if let Some(rest) = token.strip_prefix("min-z=") {
-            d.min_z = Some(parse_f64(rest)?);
+            d.min_z = Some(parse_f64(rest).await?);
         } else if let Some(rest) = token.strip_prefix("vlrs{") {
-            d.vlrs = Some(dec_vlrs_diff(rest.strip_suffix('}').ok_or_else(|| "vlrs: missing closing brace".to_string())?)?);
+            d.vlrs = Some(dec_vlrs_diff(rest.strip_suffix('}').ok_or_else(|| "vlrs: missing closing brace".to_string())?).await?);
         } else if let Some(rest) = token.strip_prefix("points{") {
-            d.points = Some(dec_points_diff(rest.strip_suffix('}').ok_or_else(|| "points: missing closing brace".to_string())?)?);
+            d.points = Some(dec_points_diff(rest.strip_suffix('}').ok_or_else(|| "points: missing closing brace".to_string())?).await?);
         } else {
             return Err(format!("las diff: unknown token {token:?}"));
         }
@@ -1466,14 +1466,14 @@ pub(crate) async fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
     out.extend_from_slice(bytes);
 }
 pub(crate) async fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
+    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec())
 }
 pub(crate) async fn write_str_lp(out: &mut Vec<u8>, s: &str) {
     write_bytes_lp(out, s.as_bytes());
 }
 pub(crate) async fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
-    String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
+    String::from_utf8(read_bytes_lp(reader).await?).map_err(|e| e.to_string())
 }
 //#endregion 🔖️BinaryPrimitives
 
@@ -1502,25 +1502,25 @@ pub(crate) async fn enc_header_bin(h: &LasHeader, out: &mut Vec<u8>) {
     }
 }
 pub(crate) async fn dec_header_bin(reader: &mut store::ByteReader<'_>) -> Result<LasHeader, String> {
-    let version_major = reader.read_u8().map_err(|e| e.to_string())?;
-    let version_minor = reader.read_u8().map_err(|e| e.to_string())?;
-    let system_identifier = read_str_lp(reader)?;
-    let generating_software = read_str_lp(reader)?;
-    let creation_day_of_year = reader.read_varint_u64().map_err(|e| e.to_string())? as u16;
-    let creation_year = reader.read_varint_u64().map_err(|e| e.to_string())? as u16;
-    let header_size = reader.read_varint_u64().map_err(|e| e.to_string())? as u16;
-    let offset_to_point_data = reader.read_varint_u64().map_err(|e| e.to_string())? as u32;
-    let number_of_vlrs = reader.read_varint_u64().map_err(|e| e.to_string())? as u32;
-    let point_data_format_id = reader.read_u8().map_err(|e| e.to_string())?;
-    let point_data_record_length = reader.read_varint_u64().map_err(|e| e.to_string())? as u16;
-    let number_of_point_records = reader.read_varint_u64().map_err(|e| e.to_string())? as u32;
+    let version_major = reader.read_u8().await.map_err(|e| e.to_string())?;
+    let version_minor = reader.read_u8().await.map_err(|e| e.to_string())?;
+    let system_identifier = read_str_lp(reader).await?;
+    let generating_software = read_str_lp(reader).await?;
+    let creation_day_of_year = reader.read_varint_u64().await.map_err(|e| e.to_string())? as u16;
+    let creation_year = reader.read_varint_u64().await.map_err(|e| e.to_string())? as u16;
+    let header_size = reader.read_varint_u64().await.map_err(|e| e.to_string())? as u16;
+    let offset_to_point_data = reader.read_varint_u64().await.map_err(|e| e.to_string())? as u32;
+    let number_of_vlrs = reader.read_varint_u64().await.map_err(|e| e.to_string())? as u32;
+    let point_data_format_id = reader.read_u8().await.map_err(|e| e.to_string())?;
+    let point_data_record_length = reader.read_varint_u64().await.map_err(|e| e.to_string())? as u16;
+    let number_of_point_records = reader.read_varint_u64().await.map_err(|e| e.to_string())? as u32;
     let mut points_by_return = [0u32; 5];
     for slot in points_by_return.iter_mut() {
-        *slot = reader.read_varint_u64().map_err(|e| e.to_string())? as u32;
+        *slot = reader.read_varint_u64().await.map_err(|e| e.to_string())? as u32;
     }
     let mut floats = [0.0f64; 12];
     for slot in floats.iter_mut() {
-        *slot = reader.read_f64_le().map_err(|e| e.to_string())?;
+        *slot = reader.read_f64_le().await.map_err(|e| e.to_string())?;
     }
     let [x_scale, y_scale, z_scale, x_offset, y_offset, z_offset, max_x, min_x, max_y, min_y, max_z, min_z] = floats;
     Ok(LasHeader {
@@ -1559,7 +1559,7 @@ pub(crate) async fn enc_vlr_bin(v: &LasVlr, out: &mut Vec<u8>) {
     write_bytes_lp(out, &v.data);
 }
 pub(crate) async fn dec_vlr_bin(reader: &mut store::ByteReader<'_>) -> Result<LasVlr, String> {
-    Ok(LasVlr { user_id: read_str_lp(reader)?, record_id: reader.read_varint_u64().map_err(|e| e.to_string())? as u16, description: read_str_lp(reader)?, data: read_bytes_lp(reader)? })
+    Ok(LasVlr { user_id: read_str_lp(reader).await?, record_id: reader.read_varint_u64().await.map_err(|e| e.to_string())? as u16, description: read_str_lp(reader).await?, data: read_bytes_lp(reader).await? })
 }
 
 pub(crate) async fn enc_point_bin(p: &LasPoint, out: &mut Vec<u8>) {
@@ -1593,26 +1593,26 @@ pub(crate) async fn enc_point_bin(p: &LasPoint, out: &mut Vec<u8>) {
     }
 }
 pub(crate) async fn dec_point_bin(reader: &mut store::ByteReader<'_>) -> Result<LasPoint, String> {
-    let x = reader.read_f64_le().map_err(|e| e.to_string())?;
-    let y = reader.read_f64_le().map_err(|e| e.to_string())?;
-    let z = reader.read_f64_le().map_err(|e| e.to_string())?;
-    let intensity = reader.read_varint_u64().map_err(|e| e.to_string())? as u16;
-    let return_number = reader.read_u8().map_err(|e| e.to_string())?;
-    let number_of_returns = reader.read_u8().map_err(|e| e.to_string())?;
-    let scan_direction_flag = reader.read_u8().map_err(|e| e.to_string())? != 0;
-    let edge_of_flight_line = reader.read_u8().map_err(|e| e.to_string())? != 0;
-    let classification = reader.read_u8().map_err(|e| e.to_string())?;
-    let scan_angle_rank = reader.read_u8().map_err(|e| e.to_string())? as i8;
-    let user_data = reader.read_u8().map_err(|e| e.to_string())?;
-    let point_source_id = reader.read_varint_u64().map_err(|e| e.to_string())? as u16;
-    let gps_time = match reader.read_u8().map_err(|e| e.to_string())? {
+    let x = reader.read_f64_le().await.map_err(|e| e.to_string())?;
+    let y = reader.read_f64_le().await.map_err(|e| e.to_string())?;
+    let z = reader.read_f64_le().await.map_err(|e| e.to_string())?;
+    let intensity = reader.read_varint_u64().await.map_err(|e| e.to_string())? as u16;
+    let return_number = reader.read_u8().await.map_err(|e| e.to_string())?;
+    let number_of_returns = reader.read_u8().await.map_err(|e| e.to_string())?;
+    let scan_direction_flag = reader.read_u8().await.map_err(|e| e.to_string())? != 0;
+    let edge_of_flight_line = reader.read_u8().await.map_err(|e| e.to_string())? != 0;
+    let classification = reader.read_u8().await.map_err(|e| e.to_string())?;
+    let scan_angle_rank = reader.read_u8().await.map_err(|e| e.to_string())? as i8;
+    let user_data = reader.read_u8().await.map_err(|e| e.to_string())?;
+    let point_source_id = reader.read_varint_u64().await.map_err(|e| e.to_string())? as u16;
+    let gps_time = match reader.read_u8().await.map_err(|e| e.to_string())? {
         0 => None,
-        1 => Some(reader.read_f64_le().map_err(|e| e.to_string())?),
+        1 => Some(reader.read_f64_le().await.map_err(|e| e.to_string())?),
         other => return Err(format!("bad option tag {other}")),
     };
-    let rgb = match reader.read_u8().map_err(|e| e.to_string())? {
+    let rgb = match reader.read_u8().await.map_err(|e| e.to_string())? {
         0 => None,
-        1 => Some((reader.read_varint_u64().map_err(|e| e.to_string())? as u16, reader.read_varint_u64().map_err(|e| e.to_string())? as u16, reader.read_varint_u64().map_err(|e| e.to_string())? as u16)),
+        1 => Some((reader.read_varint_u64().await.map_err(|e| e.to_string())? as u16, reader.read_varint_u64().await.map_err(|e| e.to_string())? as u16, reader.read_varint_u64().await.map_err(|e| e.to_string())? as u16)),
         other => return Err(format!("bad option tag {other}")),
     };
     Ok(LasPoint { x, y, z, intensity, return_number, number_of_returns, scan_direction_flag, edge_of_flight_line, classification, scan_angle_rank, user_data, point_source_id, gps_time, rgb })
@@ -1654,19 +1654,19 @@ async fn enc_vlr_diff_bin(d: &LasVlrDiff, out: &mut Vec<u8>) {
     }
 }
 async fn dec_vlr_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<LasVlrDiff, String> {
-    let mask = reader.read_u8().map_err(|e| e.to_string())?;
+    let mask = reader.read_u8().await.map_err(|e| e.to_string())?;
     let mut d = LasVlrDiff::default();
     if mask & VDF_USER_ID != 0 {
-        d.user_id = Some(read_str_lp(reader)?);
+        d.user_id = Some(read_str_lp(reader).await?);
     }
     if mask & VDF_RECORD_ID != 0 {
-        d.record_id = Some(reader.read_varint_u64().map_err(|e| e.to_string())? as u16);
+        d.record_id = Some(reader.read_varint_u64().await.map_err(|e| e.to_string())? as u16);
     }
     if mask & VDF_DESCRIPTION != 0 {
-        d.description = Some(read_str_lp(reader)?);
+        d.description = Some(read_str_lp(reader).await?);
     }
     if mask & VDF_DATA != 0 {
-        d.data = Some(read_bytes_lp(reader)?);
+        d.data = Some(read_bytes_lp(reader).await?);
     }
     Ok(d)
 }
@@ -1789,55 +1789,55 @@ async fn enc_point_diff_bin(d: &LasPointDiff, out: &mut Vec<u8>) {
     }
 }
 async fn dec_point_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<LasPointDiff, String> {
-    let mask = reader.read_u16_le().map_err(|e| e.to_string())?;
+    let mask = reader.read_u16_le().await.map_err(|e| e.to_string())?;
     let mut d = LasPointDiff::default();
     if mask & PDF_X != 0 {
-        d.x = Some(reader.read_f64_le().map_err(|e| e.to_string())?);
+        d.x = Some(reader.read_f64_le().await.map_err(|e| e.to_string())?);
     }
     if mask & PDF_Y != 0 {
-        d.y = Some(reader.read_f64_le().map_err(|e| e.to_string())?);
+        d.y = Some(reader.read_f64_le().await.map_err(|e| e.to_string())?);
     }
     if mask & PDF_Z != 0 {
-        d.z = Some(reader.read_f64_le().map_err(|e| e.to_string())?);
+        d.z = Some(reader.read_f64_le().await.map_err(|e| e.to_string())?);
     }
     if mask & PDF_INTENSITY != 0 {
-        d.intensity = Some(reader.read_varint_u64().map_err(|e| e.to_string())? as u16);
+        d.intensity = Some(reader.read_varint_u64().await.map_err(|e| e.to_string())? as u16);
     }
     if mask & PDF_RETURN_NUMBER != 0 {
-        d.return_number = Some(reader.read_u8().map_err(|e| e.to_string())?);
+        d.return_number = Some(reader.read_u8().await.map_err(|e| e.to_string())?);
     }
     if mask & PDF_NUMBER_OF_RETURNS != 0 {
-        d.number_of_returns = Some(reader.read_u8().map_err(|e| e.to_string())?);
+        d.number_of_returns = Some(reader.read_u8().await.map_err(|e| e.to_string())?);
     }
     if mask & PDF_SCAN_DIRECTION_FLAG != 0 {
-        d.scan_direction_flag = Some(reader.read_u8().map_err(|e| e.to_string())? != 0);
+        d.scan_direction_flag = Some(reader.read_u8().await.map_err(|e| e.to_string())? != 0);
     }
     if mask & PDF_EDGE_OF_FLIGHT_LINE != 0 {
-        d.edge_of_flight_line = Some(reader.read_u8().map_err(|e| e.to_string())? != 0);
+        d.edge_of_flight_line = Some(reader.read_u8().await.map_err(|e| e.to_string())? != 0);
     }
     if mask & PDF_CLASSIFICATION != 0 {
-        d.classification = Some(reader.read_u8().map_err(|e| e.to_string())?);
+        d.classification = Some(reader.read_u8().await.map_err(|e| e.to_string())?);
     }
     if mask & PDF_SCAN_ANGLE_RANK != 0 {
-        d.scan_angle_rank = Some(reader.read_u8().map_err(|e| e.to_string())? as i8);
+        d.scan_angle_rank = Some(reader.read_u8().await.map_err(|e| e.to_string())? as i8);
     }
     if mask & PDF_USER_DATA != 0 {
-        d.user_data = Some(reader.read_u8().map_err(|e| e.to_string())?);
+        d.user_data = Some(reader.read_u8().await.map_err(|e| e.to_string())?);
     }
     if mask & PDF_POINT_SOURCE_ID != 0 {
-        d.point_source_id = Some(reader.read_varint_u64().map_err(|e| e.to_string())? as u16);
+        d.point_source_id = Some(reader.read_varint_u64().await.map_err(|e| e.to_string())? as u16);
     }
     if mask & PDF_GPS_TIME != 0 {
-        d.gps_time = Some(match reader.read_u8().map_err(|e| e.to_string())? {
+        d.gps_time = Some(match reader.read_u8().await.map_err(|e| e.to_string())? {
             0 => None,
-            1 => Some(reader.read_f64_le().map_err(|e| e.to_string())?),
+            1 => Some(reader.read_f64_le().await.map_err(|e| e.to_string())?),
             other => return Err(format!("bad option tag {other}")),
         });
     }
     if mask & PDF_RGB != 0 {
-        d.rgb = Some(match reader.read_u8().map_err(|e| e.to_string())? {
+        d.rgb = Some(match reader.read_u8().await.map_err(|e| e.to_string())? {
             0 => None,
-            1 => Some((reader.read_varint_u64().map_err(|e| e.to_string())? as u16, reader.read_varint_u64().map_err(|e| e.to_string())? as u16, reader.read_varint_u64().map_err(|e| e.to_string())? as u16)),
+            1 => Some((reader.read_varint_u64().await.map_err(|e| e.to_string())? as u16, reader.read_varint_u64().await.map_err(|e| e.to_string())? as u16, reader.read_varint_u64().await.map_err(|e| e.to_string())? as u16)),
             other => return Err(format!("bad option tag {other}")),
         });
     }
@@ -1861,20 +1861,20 @@ async fn enc_vlrs_diff_bin(d: &LasVlrsDiff, out: &mut Vec<u8>) {
     }
 }
 async fn dec_vlrs_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<LasVlrsDiff, String> {
-    let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
-    let removed = (0..removed_count).map(|_| Ok(reader.read_varint_u64().map_err(|e| e.to_string())? as usize)).collect::<Result<Vec<_>, String>>()?;
-    let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let removed_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let removed = (0..removed_count).map(|_| Ok(semio_framework_plugin::resolve_ready(reader.read_varint_u64()).map_err(|e| e.to_string())? as usize)).collect::<Result<Vec<_>, String>>()?;
+    let modified_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let modified = (0..modified_count)
         .map(|_| -> Result<LasVlrModified, String> {
-            let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+            let index = semio_framework_plugin::resolve_ready(reader.read_varint_u64()).map_err(|e| e.to_string())? as usize;
             let diff = dec_vlr_diff_bin(reader)?;
             Ok(LasVlrModified { index, diff })
         })
         .collect::<Result<Vec<_>, String>>()?;
-    let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let added_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let added = (0..added_count)
         .map(|_| -> Result<LasVlrAdded, String> {
-            let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+            let index = semio_framework_plugin::resolve_ready(reader.read_varint_u64()).map_err(|e| e.to_string())? as usize;
             let vlr = dec_vlr_bin(reader)?;
             Ok(LasVlrAdded { index, vlr })
         })
@@ -1899,20 +1899,20 @@ async fn enc_points_diff_bin(d: &LasPointsDiff, out: &mut Vec<u8>) {
     }
 }
 async fn dec_points_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<LasPointsDiff, String> {
-    let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
-    let removed = (0..removed_count).map(|_| Ok(reader.read_varint_u64().map_err(|e| e.to_string())? as usize)).collect::<Result<Vec<_>, String>>()?;
-    let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let removed_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let removed = (0..removed_count).map(|_| Ok(semio_framework_plugin::resolve_ready(reader.read_varint_u64()).map_err(|e| e.to_string())? as usize)).collect::<Result<Vec<_>, String>>()?;
+    let modified_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let modified = (0..modified_count)
         .map(|_| -> Result<LasPointModified, String> {
-            let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+            let index = semio_framework_plugin::resolve_ready(reader.read_varint_u64()).map_err(|e| e.to_string())? as usize;
             let diff = dec_point_diff_bin(reader)?;
             Ok(LasPointModified { index, diff })
         })
         .collect::<Result<Vec<_>, String>>()?;
-    let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let added_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let added = (0..added_count)
         .map(|_| -> Result<LasPointAdded, String> {
-            let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+            let index = semio_framework_plugin::resolve_ready(reader.read_varint_u64()).map_err(|e| e.to_string())? as usize;
             let point = dec_point_bin(reader)?;
             Ok(LasPointAdded { index, point })
         })
@@ -1954,10 +1954,10 @@ const HDR_POINTS: u32 = 1 << 26;
 
 impl DiffCodec for LasDiff {
     async fn print_diff(&self) -> String {
-        print_las_diff(self)
+        print_las_diff(self).await
     }
     async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
-        parse_las_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_las_diff(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// ⚡️ REAL binary frame (`format u8 | header_mask u32 | <present header fields> | <vlrs diff
     /// if present> | <points diff if present>`), matching `../💾️binary/📡️component.protocol.
@@ -2137,101 +2137,101 @@ impl DiffCodec for LasDiff {
     }
     async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         async fn go(bytes: &[u8]) -> Result<LasDiff, String> {
-            let mut reader = store::ByteReader::new(bytes);
-            let format = reader.read_u8().map_err(|e| e.to_string())?;
+            let mut reader = store::ByteReader::new(bytes).await;
+            let format = reader.read_u8().await.map_err(|e| e.to_string())?;
             if format != store::pack_rt::OP_BINARY_FORMAT {
                 return Err(format!("bad diff format byte {format}"));
             }
-            let mask = reader.read_u32_le().map_err(|e| e.to_string())?;
+            let mask = reader.read_u32_le().await.map_err(|e| e.to_string())?;
             let mut d = LasDiff::default();
             if mask & HDR_VERSION_MAJOR != 0 {
-                d.version_major = Some(reader.read_u8().map_err(|e| e.to_string())?);
+                d.version_major = Some(reader.read_u8().await.map_err(|e| e.to_string())?);
             }
             if mask & HDR_VERSION_MINOR != 0 {
-                d.version_minor = Some(reader.read_u8().map_err(|e| e.to_string())?);
+                d.version_minor = Some(reader.read_u8().await.map_err(|e| e.to_string())?);
             }
             if mask & HDR_SYSTEM_IDENTIFIER != 0 {
-                d.system_identifier = Some(read_str_lp(&mut reader)?);
+                d.system_identifier = Some(read_str_lp(&mut reader).await?);
             }
             if mask & HDR_GENERATING_SOFTWARE != 0 {
-                d.generating_software = Some(read_str_lp(&mut reader)?);
+                d.generating_software = Some(read_str_lp(&mut reader).await?);
             }
             if mask & HDR_CREATION_DAY_OF_YEAR != 0 {
-                d.creation_day_of_year = Some(reader.read_varint_u64().map_err(|e| e.to_string())? as u16);
+                d.creation_day_of_year = Some(reader.read_varint_u64().await.map_err(|e| e.to_string())? as u16);
             }
             if mask & HDR_CREATION_YEAR != 0 {
-                d.creation_year = Some(reader.read_varint_u64().map_err(|e| e.to_string())? as u16);
+                d.creation_year = Some(reader.read_varint_u64().await.map_err(|e| e.to_string())? as u16);
             }
             if mask & HDR_HEADER_SIZE != 0 {
-                d.header_size = Some(reader.read_varint_u64().map_err(|e| e.to_string())? as u16);
+                d.header_size = Some(reader.read_varint_u64().await.map_err(|e| e.to_string())? as u16);
             }
             if mask & HDR_OFFSET_TO_POINT_DATA != 0 {
-                d.offset_to_point_data = Some(reader.read_varint_u64().map_err(|e| e.to_string())? as u32);
+                d.offset_to_point_data = Some(reader.read_varint_u64().await.map_err(|e| e.to_string())? as u32);
             }
             if mask & HDR_NUMBER_OF_VLRS != 0 {
-                d.number_of_vlrs = Some(reader.read_varint_u64().map_err(|e| e.to_string())? as u32);
+                d.number_of_vlrs = Some(reader.read_varint_u64().await.map_err(|e| e.to_string())? as u32);
             }
             if mask & HDR_POINT_DATA_FORMAT_ID != 0 {
-                d.point_data_format_id = Some(reader.read_u8().map_err(|e| e.to_string())?);
+                d.point_data_format_id = Some(reader.read_u8().await.map_err(|e| e.to_string())?);
             }
             if mask & HDR_POINT_DATA_RECORD_LENGTH != 0 {
-                d.point_data_record_length = Some(reader.read_varint_u64().map_err(|e| e.to_string())? as u16);
+                d.point_data_record_length = Some(reader.read_varint_u64().await.map_err(|e| e.to_string())? as u16);
             }
             if mask & HDR_NUMBER_OF_POINT_RECORDS != 0 {
-                d.number_of_point_records = Some(reader.read_varint_u64().map_err(|e| e.to_string())? as u32);
+                d.number_of_point_records = Some(reader.read_varint_u64().await.map_err(|e| e.to_string())? as u32);
             }
             if mask & HDR_POINTS_BY_RETURN != 0 {
                 let mut a = [0u32; 5];
                 for slot in a.iter_mut() {
-                    *slot = reader.read_varint_u64().map_err(|e| e.to_string())? as u32;
+                    *slot = reader.read_varint_u64().await.map_err(|e| e.to_string())? as u32;
                 }
                 d.points_by_return = Some(a);
             }
             if mask & HDR_X_SCALE != 0 {
-                d.x_scale = Some(reader.read_f64_le().map_err(|e| e.to_string())?);
+                d.x_scale = Some(reader.read_f64_le().await.map_err(|e| e.to_string())?);
             }
             if mask & HDR_Y_SCALE != 0 {
-                d.y_scale = Some(reader.read_f64_le().map_err(|e| e.to_string())?);
+                d.y_scale = Some(reader.read_f64_le().await.map_err(|e| e.to_string())?);
             }
             if mask & HDR_Z_SCALE != 0 {
-                d.z_scale = Some(reader.read_f64_le().map_err(|e| e.to_string())?);
+                d.z_scale = Some(reader.read_f64_le().await.map_err(|e| e.to_string())?);
             }
             if mask & HDR_X_OFFSET != 0 {
-                d.x_offset = Some(reader.read_f64_le().map_err(|e| e.to_string())?);
+                d.x_offset = Some(reader.read_f64_le().await.map_err(|e| e.to_string())?);
             }
             if mask & HDR_Y_OFFSET != 0 {
-                d.y_offset = Some(reader.read_f64_le().map_err(|e| e.to_string())?);
+                d.y_offset = Some(reader.read_f64_le().await.map_err(|e| e.to_string())?);
             }
             if mask & HDR_Z_OFFSET != 0 {
-                d.z_offset = Some(reader.read_f64_le().map_err(|e| e.to_string())?);
+                d.z_offset = Some(reader.read_f64_le().await.map_err(|e| e.to_string())?);
             }
             if mask & HDR_MAX_X != 0 {
-                d.max_x = Some(reader.read_f64_le().map_err(|e| e.to_string())?);
+                d.max_x = Some(reader.read_f64_le().await.map_err(|e| e.to_string())?);
             }
             if mask & HDR_MIN_X != 0 {
-                d.min_x = Some(reader.read_f64_le().map_err(|e| e.to_string())?);
+                d.min_x = Some(reader.read_f64_le().await.map_err(|e| e.to_string())?);
             }
             if mask & HDR_MAX_Y != 0 {
-                d.max_y = Some(reader.read_f64_le().map_err(|e| e.to_string())?);
+                d.max_y = Some(reader.read_f64_le().await.map_err(|e| e.to_string())?);
             }
             if mask & HDR_MIN_Y != 0 {
-                d.min_y = Some(reader.read_f64_le().map_err(|e| e.to_string())?);
+                d.min_y = Some(reader.read_f64_le().await.map_err(|e| e.to_string())?);
             }
             if mask & HDR_MAX_Z != 0 {
-                d.max_z = Some(reader.read_f64_le().map_err(|e| e.to_string())?);
+                d.max_z = Some(reader.read_f64_le().await.map_err(|e| e.to_string())?);
             }
             if mask & HDR_MIN_Z != 0 {
-                d.min_z = Some(reader.read_f64_le().map_err(|e| e.to_string())?);
+                d.min_z = Some(reader.read_f64_le().await.map_err(|e| e.to_string())?);
             }
             if mask & HDR_VLRS != 0 {
-                d.vlrs = Some(dec_vlrs_diff_bin(&mut reader)?);
+                d.vlrs = Some(dec_vlrs_diff_bin(&mut reader).await?);
             }
             if mask & HDR_POINTS != 0 {
-                d.points = Some(dec_points_diff_bin(&mut reader)?);
+                d.points = Some(dec_points_diff_bin(&mut reader).await?);
             }
             Ok(d)
         }
-        go(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "las diff binary", offset: 0, detail: e })
+        go(bytes).await.map_err(|e| protocol::ProtocolError::Malformed { what: "las diff binary", offset: 0, detail: e })
     }
 }
 //#endregion 🔖️TopLevel

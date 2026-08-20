@@ -1,0 +1,50 @@
+{
+  "crate": "semio-framework-os-services",
+  "history": [
+    {
+      "pass": 1,
+      "errors": 90,
+      "edits": 3,
+      "ambiguous": 0,
+      "other": 3
+    },
+    {
+      "pass": 2,
+      "errors": 88,
+      "edits": 1,
+      "ambiguous": 0,
+      "other": 3
+    },
+    {
+      "pass": 3,
+      "errors": 88,
+      "edits": 0,
+      "ambiguous": 0,
+      "other": 4
+    }
+  ],
+  "residual_errors": 88,
+  "ambiguous": [],
+  "other": [
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2378",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = Vec<CompletionRecord>>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2379",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = Vec<CompletionRecord>>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1614",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1837",
+      "code": "E0382",
+      "msg": "use of moved value: `wheel`"
+    }
+  ]
+}

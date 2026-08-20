@@ -1,0 +1,2765 @@
+    Checking semio-framework-os-services v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust)
+error: async functions cannot be used for tests
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1583:5
+     |
+1583 |       async fn tokio_host_runtime_checks_out_io_and_compute_threads_from_the_budget() {
+     |       ^----
+     |       |
+     |  _____`async` because of this
+     | |
+1584 | |         let plan = thread_plan(8);
+1585 | |         let budget = ThreadBudget::from_plan(plan);
+1586 | |         let _runtime = TokioHostRuntime::new(plan, &budget).expect("runtime should build");
+...    |
+1589 | |         assert_eq!(budget.await.remaining(ThreadRole::Shard), plan.shards, "TokioHostRuntime must not touch roles it does not ow...
+1590 | |     }
+     | |_____^
+
+error: async functions cannot be used for tests
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1593:5
+     |
+1593 |       async fn tokio_host_runtime_now_ms_advances_monotonically() {
+     |       ^----
+     |       |
+     |  _____`async` because of this
+     | |
+1594 | |         let plan = thread_plan(4);
+1595 | |         let budget = ThreadBudget::from_plan(plan);
+1596 | |         let runtime = TokioHostRuntime::new(plan, &budget).expect("runtime should build");
+...    |
+1599 | |         assert!(runtime.now_ms() >= first, "now_ms must never go backward");
+1600 | |     }
+     | |_____^
+
+error: async functions cannot be used for tests
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1605:5
+     |
+1605 |       async fn cancel_scope_cancels_child_scopes_transitively() {
+     |       ^----
+     |       |
+     |  _____`async` because of this
+     | |
+1606 | |         let plan = thread_plan(4);
+1607 | |         let budget = ThreadBudget::from_plan(plan);
+1608 | |         let runtime = TokioHostRuntime::new(plan, &budget).expect("runtime should build");
+...    |
+1614 | |         assert!(actor.cancel.is_cancelled(), "child scope must observe the package scope's cancellation");
+1615 | |     }
+     | |_____^
+
+error: async functions cannot be used for tests
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1622:5
+     |
+1622 |       async fn cancel_scope_reports_leaked_task_that_ignores_cancellation_not_finished() {
+     |       ^----
+     |       |
+     |  _____`async` because of this
+     | |
+1623 | |         let plan = thread_plan(4);
+1624 | |         let budget = ThreadBudget::from_plan(plan);
+1625 | |         let runtime = TokioHostRuntime::new(plan, &budget).expect("runtime should build");
+...    |
+1642 | |         assert_eq!(report.finished, 0);
+1643 | |     }
+     | |_____^
+
+error: async functions cannot be used for tests
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1646:5
+     |
+1646 |       async fn cancel_scope_counts_a_cooperative_task_as_finished() {
+     |       ^----
+     |       |
+     |  _____`async` because of this
+     | |
+1647 | |         let plan = thread_plan(4);
+1648 | |         let budget = ThreadBudget::from_plan(plan);
+1649 | |         let runtime = TokioHostRuntime::new(plan, &budget).expect("runtime should build");
+...    |
+1661 | |         assert_eq!(report.leaked, 0);
+1662 | |     }
+     | |_____^
+
+error: async functions cannot be used for tests
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1665:5
+     |
+1665 |       async fn park_holds_new_work_until_unparked() {
+     |       ^----
+     |       |
+     |  _____`async` because of this
+     | |
+1666 | |         let plan = thread_plan(4);
+1667 | |         let budget = ThreadBudget::from_plan(plan);
+1668 | |         let runtime = TokioHostRuntime::new(plan, &budget).expect("runtime should build");
+...    |
+1679 | |         assert!(ran.load(Ordering::SeqCst), "unparked scope must eventually run the held work");
+1680 | |     }
+     | |_____^
+
+error: async functions cannot be used for tests
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1685:5
+     |
+1685 |       async fn run_blocking_never_exceeds_the_compute_bound_under_a_burst() {
+     |       ^----
+     |       |
+     |  _____`async` because of this
+     | |
+1686 | |         let plan = ThreadPlan { kernel: 1, shards: 2, io_workers: 1, compute: 3, epoch_ticker: 1 };
+1687 | |         let budget = ThreadBudget::from_plan(plan);
+1688 | |         let runtime = TokioHostRuntime::new(plan, &budget).expect("runtime should build");
+...    |
+1716 | |         assert!(observed_max.load(Ordering::SeqCst) >= 2, "burst should have produced measurable overlap; observed {}", observed...
+1717 | |     }
+     | |_____^
+
+error: async functions cannot be used for tests
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1720:5
+     |
+1720 |       async fn run_blocking_deadline_actually_fires_and_the_late_result_is_not_awaited() {
+     |       ^----
+     |       |
+     |  _____`async` because of this
+     | |
+1721 | |         let plan = thread_plan(8);
+1722 | |         let budget = ThreadBudget::from_plan(plan);
+1723 | |         let runtime = TokioHostRuntime::new(plan, &budget).expect("runtime should build");
+...    |
+1738 | |         let _ = unblock_tx.send(());
+1739 | |     }
+     | |_____^
+
+error: async functions cannot be used for tests
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1761:5
+     |
+1761 |       async fn wheel_core_pop_expired_fires_in_expiry_order_not_arm_order() {
+     |       ^----
+     |       |
+     |  _____`async` because of this
+     | |
+1762 | |         let mut wheel = WheelCore::new(10);
+1763 | |         let plugin = PackageId("p".to_string());
+1764 | |         let late = wheel.arm(plugin.clone(), 1, 0, 0, 200, None).unwrap();
+...    |
+1767 | |         assert_eq!(fired, vec![early, late], "expiry order must win over arm order");
+1768 | |     }
+     | |_____^
+
+error: async functions cannot be used for tests
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1771:5
+     |
+1771 |       async fn wheel_core_pop_expired_respects_now_ms_boundary() {
+     |       ^----
+     |       |
+     |  _____`async` because of this
+     | |
+1772 | |         let mut wheel = WheelCore::new(10);
+1773 | |         let plugin = PackageId("p".to_string());
+1774 | |         wheel.arm(plugin, 1, 0, 0, 500, None).unwrap();
+1775 | |         assert!(wheel.pop_expired(400).is_empty(), "must not fire before its expiry");
+1776 | |         assert_eq!(wheel.pop_expired(500).len(), 1, "must fire once now_ms reaches the expiry");
+1777 | |     }
+     | |_____^
+
+error: async functions cannot be used for tests
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1783:5
+     |
+1783 |       async fn wheel_core_repeat_rearms_and_catches_up_without_drift_accumulation() {
+     |       ^----
+     |       |
+     |  _____`async` because of this
+     | |
+1784 | |         let mut wheel = WheelCore::new(10);
+1785 | |         let plugin = PackageId("p".to_string());
+1786 | |         let id = wheel.arm(plugin, 1, 0, 0, 100, Some(100)).unwrap();
+...    |
+1792 | |         assert!(wheel.next_expiry_ms().unwrap() > 450);
+1793 | |     }
+     | |_____^
+
+error: async functions cannot be used for tests
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1796:5
+     |
+1796 |       async fn wheel_core_disarm_prevents_a_future_fire() {
+     |       ^----
+     |       |
+     |  _____`async` because of this
+     | |
+1797 | |         let mut wheel = WheelCore::new(10);
+1798 | |         let plugin = PackageId("p".to_string());
+1799 | |         let id = wheel.arm(plugin, 1, 0, 0, 100, None).unwrap();
+...    |
+1802 | |         assert!(!wheel.disarm(id), "disarming twice must report false the second time");
+1803 | |     }
+     | |_____^
+
+error: async functions cannot be used for tests
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1806:5
+     |
+1806 |       async fn wheel_core_rejects_arm_past_the_per_plugin_quota_with_a_typed_error() {
+     |       ^----
+     |       |
+     |  _____`async` because of this
+     | |
+1807 | |         let mut wheel = WheelCore::new(2);
+1808 | |         let plugin = PackageId("p".to_string());
+1809 | |         wheel.arm(plugin.clone(), 1, 0, 0, 100, None).unwrap();
+...    |
+1813 | |         assert_eq!(wheel.armed_count(&plugin), 2, "a rejected arm must leave the wheel untouched");
+1814 | |     }
+     | |_____^
+
+error: async functions cannot be used for tests
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1817:5
+     |
+1817 |       async fn wheel_core_disarm_frees_quota_for_a_new_arm() {
+     |       ^----
+     |       |
+     |  _____`async` because of this
+     | |
+1818 | |         let mut wheel = WheelCore::new(1);
+1819 | |         let plugin = PackageId("p".to_string());
+1820 | |         let id = wheel.arm(plugin.clone(), 1, 0, 0, 100, None).unwrap();
+...    |
+1823 | |         assert!(wheel.arm(plugin, 1, 0, 0, 200, None).is_ok());
+1824 | |     }
+     | |_____^
+
+error: async functions cannot be used for tests
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1829:5
+     |
+1829 |       async fn timer_wheel_driver_posts_a_fired_timer_through_the_completion_sink() {
+     |       ^----
+     |       |
+     |  _____`async` because of this
+     | |
+1830 | |         let manual = ManualRuntime::new(0);
+1831 | |         let runtime = Arc::new(manual.clone());
+1832 | |         let scope = runtime.open_scope(ScopeOwner::Service("timer-driver-test"), None);
+...    |
+1846 | |         assert_eq!(recorded[0].lane, 1);
+1847 | |     }
+     | |_____^
+
+error: async functions cannot be used for tests
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1856:5
+     |
+1856 |       async fn storage_scheduler_dispatches_highest_priority_lane_first_despite_submit_order() {
+     |       ^----
+     |       |
+     |  _____`async` because of this
+     | |
+1857 | |         let plan = thread_plan(4);
+1858 | |         let budget = ThreadBudget::from_plan(plan);
+1859 | |         let runtime = Arc::new(TokioHostRuntime::new(plan, &budget).expect("runtime should build"));
+...    |
+1900 | |         assert_eq!(*order.lock().unwrap(), vec!["high", "low"], "the higher-priority lane (lower ctx.lane) must dispatch before ...
+1901 | |     }
+     | |_____^
+
+error: async functions cannot be used for tests
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1904:5
+     |
+1904 |       async fn storage_scheduler_never_exceeds_max_in_flight() {
+     |       ^----
+     |       |
+     |  _____`async` because of this
+     | |
+1905 | |         let plan = thread_plan(4);
+1906 | |         let budget = ThreadBudget::from_plan(plan);
+1907 | |         let runtime = Arc::new(TokioHostRuntime::new(plan, &budget).expect("runtime should build"));
+...    |
+1943 | |         assert!(!cap_violated.load(Ordering::SeqCst), "in-flight count must never exceed max_in_flight");
+1944 | |     }
+     | |_____^
+
+error: async functions cannot be used for tests
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1951:5
+     |
+1951 |       async fn storage_scheduler_rejects_over_budget_submit_with_a_typed_error_and_untouched_usage() {
+     |       ^----
+     |       |
+     |  _____`async` because of this
+     | |
+1952 | |         let plan = thread_plan(4);
+1953 | |         let budget = ThreadBudget::from_plan(plan);
+1954 | |         let runtime = Arc::new(TokioHostRuntime::new(plan, &budget).expect("runtime should build"));
+...    |
+1973 | |         });
+1974 | |     }
+     | |_____^
+
+error: async functions cannot be used for tests
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1985:5
+     |
+1985 |       async fn storage_scheduler_races_a_queued_job_against_its_deadline_and_frees_its_reservation_when_lost() {
+     |       ^----
+     |       |
+     |  _____`async` because of this
+     | |
+1986 | |         let plan = thread_plan(4);
+1987 | |         let budget = ThreadBudget::from_plan(plan);
+1988 | |         let runtime = Arc::new(TokioHostRuntime::new(plan, &budget).expect("runtime should build"));
+...    |
+2027 | |         });
+2028 | |     }
+     | |_____^
+
+error: async functions cannot be used for tests
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2033:5
+     |
+2033 |       async fn event_router_latest_wins_collapses_older_pending_value() {
+     |       ^----
+     |       |
+     |  _____`async` because of this
+     | |
+2034 | |         let router = EventRouter::new();
+2035 | |         let topic = Topic("scene.updates".to_string());
+2036 | |         let actor = ActorId(1);
+...    |
+2042 | |         assert_eq!(router.drain(&topic, actor), vec![b"v2".to_vec()], "only the LATEST value must survive the collapse");
+2043 | |     }
+     | |_____^
+
+error: async functions cannot be used for tests
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2046:5
+     |
+2046 |       async fn event_router_lossless_bounded_rejects_at_cap_without_unbounded_growth() {
+     |       ^----
+     |       |
+     |  _____`async` because of this
+     | |
+2047 | |         let router = EventRouter::new();
+2048 | |         let topic = Topic("jobs.updates".to_string());
+2049 | |         let actor = ActorId(2);
+...    |
+2054 | |         assert_eq!(router.drain(&topic, actor), vec![b"a".to_vec(), b"b".to_vec()], "the rejected message must never have been q...
+2055 | |     }
+     | |_____^
+
+error: async functions cannot be used for tests
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2058:5
+     |
+2058 |       async fn event_router_coalesced_collapses_same_key_but_queues_distinct_keys() {
+     |       ^----
+     |       |
+     |  _____`async` because of this
+     | |
+2059 | |         let router = EventRouter::new();
+2060 | |         let topic = Topic("cursor.updates".to_string());
+2061 | |         let actor = ActorId(3);
+...    |
+2070 | |         assert!(drained.contains(&b"pos-a".to_vec()));
+2071 | |     }
+     | |_____^
+
+error: async functions cannot be used for tests
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2074:5
+     |
+2074 |       async fn event_router_byte_credit_rejects_when_insufficient_and_admits_after_refund_style_new_bucket() {
+     |       ^----
+     |       |
+     |  _____`async` because of this
+     | |
+2075 | |         let router = EventRouter::new();
+2076 | |         let topic = Topic("stream.frames".to_string());
+2077 | |         let actor = ActorId(4);
+...    |
+2080 | |         assert_eq!(router.publish(&topic, None, &[0u8; 3]), vec![(actor, PublishOutcome::RejectedInsufficientCredit)], "must rej...
+2081 | |     }
+     | |_____^
+
+error: async functions cannot be used for tests
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2084:5
+     |
+2084 |       async fn event_router_unsubscribe_removes_the_mailbox_and_future_publishes_see_no_subscriber() {
+     |       ^----
+     |       |
+     |  _____`async` because of this
+     | |
+2085 | |         let router = EventRouter::new();
+2086 | |         let topic = Topic("scene.updates".to_string());
+2087 | |         let actor = ActorId(5);
+...    |
+2091 | |         assert_eq!(router.send_message(&topic, actor, b"x".to_vec()), PublishOutcome::NoSuchSubscriber);
+2092 | |     }
+     | |_____^
+
+error: async functions cannot be used for tests
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2124:5
+     |
+2124 |       async fn http_pool_rejects_past_the_per_actor_outstanding_cap() {
+     |       ^----
+     |       |
+     |  _____`async` because of this
+     | |
+2125 | |         let plan = thread_plan(4);
+2126 | |         let budget = ThreadBudget::from_plan(plan);
+2127 | |         let runtime = Arc::new(TokioHostRuntime::new(plan, &budget).expect("runtime should build"));
+...    |
+2147 | |         });
+2148 | |     }
+     | |_____^
+
+error: async functions cannot be used for tests
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2151:5
+     |
+2151 |       async fn http_pool_rejects_when_byte_budget_exhausted_and_transport_is_never_called() {
+     |       ^----
+     |       |
+     |  _____`async` because of this
+     | |
+2152 | |         let plan = thread_plan(4);
+2153 | |         let budget = ThreadBudget::from_plan(plan);
+2154 | |         let runtime = TokioHostRuntime::new(plan, &budget).expect("runtime should build");
+...    |
+2166 | |         assert_eq!(*calls.lock().unwrap(), 0, "the transport must never be called once the budget rejects the request");
+2167 | |     }
+     | |_____^
+
+error: async functions cannot be used for tests
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2174:5
+     |
+2174 |       async fn http_pool_refill_driver_actually_refills_a_consumed_bucket_on_its_tick() {
+     |       ^----
+     |       |
+     |  _____`async` because of this
+     | |
+2175 | |         let manual = ManualRuntime::new(0);
+2176 | |         let runtime = Arc::new(manual.clone());
+2177 | |         let scope = runtime.open_scope(ScopeOwner::Service("http-refill-test"), None);
+...    |
+2193 | |         assert_eq!(pool.remaining_package_budget(&package), 100, "the refill driver must actually run its loop and top the bucke...
+2194 | |     }
+     | |_____^
+
+error: async functions cannot be used for tests
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2302:5
+     |
+2302 |       async fn http_pool_fetch_charges_real_bytes_per_chunk_over_a_local_tcp_listener() {
+     |       ^----
+     |       |
+     |  _____`async` because of this
+     | |
+2303 | |         let plan = thread_plan(4);
+2304 | |         let budget = ThreadBudget::from_plan(plan);
+2305 | |         let runtime = Arc::new(TokioHostRuntime::new(plan, &budget).expect("runtime should build"));
+...    |
+2330 | |         });
+2331 | |     }
+     | |_____^
+
+error: async functions cannot be used for tests
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2339:5
+     |
+2339 |       async fn http_pool_dropping_a_body_mid_stream_frees_the_outstanding_slot_and_drops_the_connection() {
+     |       ^----
+     |       |
+     |  _____`async` because of this
+     | |
+2340 | |         let plan = thread_plan(4);
+2341 | |         let budget = ThreadBudget::from_plan(plan);
+2342 | |         let runtime = Arc::new(TokioHostRuntime::new(plan, &budget).expect("runtime should build"));
+...    |
+2366 | |         });
+2367 | |     }
+     | |_____^
+
+error: async functions cannot be used for tests
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2372:5
+     |
+2372 |       async fn mock_completion_sink_records_calls_in_order() {
+     |       ^----
+     |       |
+     |  _____`async` because of this
+     | |
+2373 | |         let sink = MockCompletionSink::new();
+2374 | |         sink.complete(1, 0, vec![1], 0);
+2375 | |         sink.complete(2, 1, vec![2], 1);
+...    |
+2379 | |         assert_eq!(recorded[1].actor, 2);
+2380 | |     }
+     | |_____^
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = Vec<(semio_framework_actor::ActorId, component::PublishOutcome)>>`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2090:9
+     |
+2090 |         assert_eq!(router.publish(&topic, None, b"x"), Vec::new(), "no subscribers left means no outcomes at all");
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |         |
+     |         impl Future<Output = Vec<(semio_framework_actor::ActorId, component::PublishOutcome)>>
+     |         Vec<_>
+
+error[E0277]: `impl Future<Output = Vec<(semio_framework_actor::ActorId, component::PublishOutcome)>>` doesn't implement `Debug`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2090:9
+     |
+2090 |         assert_eq!(router.publish(&topic, None, b"x"), Vec::new(), "no subscribers left means no outcomes at all");
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Debug` is not implemented for `impl Future<Output = Vec<(semio_framework_actor::ActorId, component::PublishOutcome)>>`
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = component::PublishOutcome>`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2091:9
+     |
+2091 |         assert_eq!(router.send_message(&topic, actor, b"x".to_vec()), PublishOutcome::NoSuchSubscriber);
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |         |
+     |         impl Future<Output = component::PublishOutcome>
+     |         component::PublishOutcome
+
+error[E0277]: `impl Future<Output = component::PublishOutcome>` doesn't implement `Debug`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2091:9
+     |
+2091 |         assert_eq!(router.send_message(&topic, actor, b"x".to_vec()), PublishOutcome::NoSuchSubscriber);
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Debug` is not implemented for `impl Future<Output = component::PublishOutcome>`
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = Vec<(semio_framework_actor::ActorId, component::PublishOutcome)>>`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2079:9
+     |
+2079 |         assert_eq!(router.publish(&topic, None, &[0u8; 3]), vec![(actor, PublishOutcome::Delivered)]);
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |         |
+     |         impl Future<Output = Vec<(semio_framework_actor::ActorId, component::PublishOutcome)>>
+     |         Vec<(semio_framework_actor::ActorId, component::PublishOutcome)>
+
+error[E0277]: `impl Future<Output = Vec<(semio_framework_actor::ActorId, component::PublishOutcome)>>` doesn't implement `Debug`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2079:9
+     |
+2079 |         assert_eq!(router.publish(&topic, None, &[0u8; 3]), vec![(actor, PublishOutcome::Delivered)]);
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Debug` is not implemented for `impl Future<Output = Vec<(semio_framework_actor::ActorId, component::PublishOutcome)>>`
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = Vec<(semio_framework_actor::ActorId, component::PublishOutcome)>>`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2080:9
+     |
+2080 | ...   assert_eq!(router.publish(&topic, None, &[0u8; 3]), vec![(actor, PublishOutcome::RejectedInsufficientCredit)], "must reject once the remaining credit is insufficient");
+     |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |       |
+     |       impl Future<Output = Vec<(semio_framework_actor::ActorId, component::PublishOutcome)>>
+     |       Vec<(semio_framework_actor::ActorId, component::PublishOutcome)>
+
+error[E0277]: `impl Future<Output = Vec<(semio_framework_actor::ActorId, component::PublishOutcome)>>` doesn't implement `Debug`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2080:9
+     |
+2080 | ...   assert_eq!(router.publish(&topic, None, &[0u8; 3]), vec![(actor, PublishOutcome::RejectedInsufficientCredit)], "must reject once the remaining credit is insufficient");
+     |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Debug` is not implemented for `impl Future<Output = Vec<(semio_framework_actor::ActorId, component::PublishOutcome)>>`
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = Vec<(semio_framework_actor::ActorId, component::PublishOutcome)>>`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2066:9
+     |
+2066 |         assert_eq!(outcome, vec![(actor, PublishOutcome::Collapsed)]);
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |         |
+     |         impl Future<Output = Vec<(semio_framework_actor::ActorId, component::PublishOutcome)>>
+     |         Vec<(semio_framework_actor::ActorId, component::PublishOutcome)>
+
+error[E0277]: `impl Future<Output = Vec<(semio_framework_actor::ActorId, component::PublishOutcome)>>` doesn't implement `Debug`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2066:9
+     |
+2066 |         assert_eq!(outcome, vec![(actor, PublishOutcome::Collapsed)]);
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Debug` is not implemented for `impl Future<Output = Vec<(semio_framework_actor::ActorId, component::PublishOutcome)>>`
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2341:46
+     |
+2341 |         let budget = ThreadBudget::from_plan(plan);
+     |                      ----------------------- ^^^^ expected `ThreadPlan`, found future
+     |                      |
+     |                      arguments to this function are incorrect
+     |
+note: calling an async function returns a future
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2341:46
+     |
+2341 |         let budget = ThreadBudget::from_plan(plan);
+     |                                              ^^^^
+note: associated function defined here
+    --> 🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:334:18
+     |
+ 334 |     pub async fn from_plan(plan: ThreadPlan) -> ThreadBudget {
+     |                  ^^^^^^^^^
+help: consider `await`ing on the `Future`
+     |
+2341 |         let budget = ThreadBudget::from_plan(plan.await);
+     |                                                  ++++++
+
+error[E0308]: arguments to this function are incorrect
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2342:32
+     |
+2342 |         let runtime = Arc::new(TokioHostRuntime::new(plan, &budget).expect("runtime should build"));
+     |                                ^^^^^^^^^^^^^^^^^^^^^
+     |
+note: expected `ThreadPlan`, found future
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2342:54
+     |
+2342 |         let runtime = Arc::new(TokioHostRuntime::new(plan, &budget).expect("runtime should build"));
+     |                                                      ^^^^
+note: calling an async function returns a future
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2342:54
+     |
+2342 |         let runtime = Arc::new(TokioHostRuntime::new(plan, &budget).expect("runtime should build"));
+     |                                                      ^^^^
+note: expected `&ThreadBudget`, found `&impl Future<Output = ThreadBudget>`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2342:60
+     |
+2342 |         let runtime = Arc::new(TokioHostRuntime::new(plan, &budget).expect("runtime should build"));
+     |                                                            ^^^^^^^
+     = note: expected reference `&semio_framework_async::ThreadBudget`
+                found reference `&impl Future<Output = semio_framework_async::ThreadBudget>`
+note: associated function defined here
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:266:12
+     |
+ 266 |     pub fn new(plan: ThreadPlan, budget: &ThreadBudget) -> Result<TokioHostRuntime, RuntimeBuildError> {
+     |            ^^^ ----------------  ---------------------
+help: consider `await`ing on the `Future`
+     |
+2342 |         let runtime = Arc::new(TokioHostRuntime::new(plan.await, &budget).expect("runtime should build"));
+     |                                                          ++++++
+
+error[E0609]: no field `compute` on type `impl Future<Output = semio_framework_async::ThreadPlan>`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2344:54
+     |
+2344 |         let compute = Arc::new(ComputePool::new(plan.compute));
+     |                                                      ^^^^^^^ field not available in `impl Future`, but it is available in its `Output`
+     |
+help: consider `await`ing on the `Future` to access the field
+     |
+2344 |         let compute = Arc::new(ComputePool::new(plan.await.compute));
+     |                                                     ++++++
+
+error[E0599]: no method named `clone` found for opaque type `impl Future<Output = ManualRuntime>` in the current scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2176:39
+     |
+2176 |         let runtime = Arc::new(manual.clone());
+     |                                       ^^^^^ method not found in `impl Future<Output = ManualRuntime>`
+
+error[E0599]: no method named `complete` found for opaque type `impl Future<Output = component::MockCompletionSink>` in the current scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2374:14
+     |
+2374 |         sink.complete(1, 0, vec![1], 0);
+     |              ^^^^^^^^ method not found in `impl Future<Output = component::MockCompletionSink>`
+     |
+     = help: items from traits can only be used if the trait is implemented and in scope
+note: `component::CompletionSink` defines an item `complete`, perhaps you need to implement it
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1533:1
+     |
+1533 | pub trait CompletionSink: Send + Sync {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2126:46
+     |
+2126 |         let budget = ThreadBudget::from_plan(plan);
+     |                      ----------------------- ^^^^ expected `ThreadPlan`, found future
+     |                      |
+     |                      arguments to this function are incorrect
+     |
+note: calling an async function returns a future
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2126:46
+     |
+2126 |         let budget = ThreadBudget::from_plan(plan);
+     |                                              ^^^^
+note: associated function defined here
+    --> 🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:334:18
+     |
+ 334 |     pub async fn from_plan(plan: ThreadPlan) -> ThreadBudget {
+     |                  ^^^^^^^^^
+help: consider `await`ing on the `Future`
+     |
+2126 |         let budget = ThreadBudget::from_plan(plan.await);
+     |                                                  ++++++
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2179:66
+     |
+2179 |         let pool = HttpPool::new(Arc::new(UnwiredHttpTransport), compute, 100, 4);
+     |                    -------------                                 ^^^^^^^ expected `Arc<ComputePool>`, found `Arc<impl Future<Output = ComputePool>>`
+     |                    |
+     |                    arguments to this function are incorrect
+     |
+     = note: expected struct `std::sync::Arc<component::ComputePool>`
+                found struct `std::sync::Arc<impl Future<Output = component::ComputePool>>`
+note: associated function defined here
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:933:18
+     |
+ 933 |     pub async fn new(transport: Arc<dyn HttpTransport>, compute: Arc<ComputePool>, bytes_per_minute_cap: u64, outstanding_cap: u32...
+     |                  ^^^                                    -------------------------
+
+error[E0609]: no field `buckets` on type `impl Future<Output = component::HttpPool>`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2182:36
+     |
+2182 |             let mut buckets = pool.buckets.lock().unwrap();
+     |                                    ^^^^^^^ field not available in `impl Future`, but it is available in its `Output`
+     |
+help: consider `await`ing on the `Future` to access the field
+     |
+2182 |             let mut buckets = pool.await.buckets.lock().unwrap();
+     |                                   ++++++
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2304:46
+     |
+2304 |         let budget = ThreadBudget::from_plan(plan);
+     |                      ----------------------- ^^^^ expected `ThreadPlan`, found future
+     |                      |
+     |                      arguments to this function are incorrect
+     |
+note: calling an async function returns a future
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2304:46
+     |
+2304 |         let budget = ThreadBudget::from_plan(plan);
+     |                                              ^^^^
+note: associated function defined here
+    --> 🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:334:18
+     |
+ 334 |     pub async fn from_plan(plan: ThreadPlan) -> ThreadBudget {
+     |                  ^^^^^^^^^
+help: consider `await`ing on the `Future`
+     |
+2304 |         let budget = ThreadBudget::from_plan(plan.await);
+     |                                                  ++++++
+
+error[E0308]: arguments to this function are incorrect
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2305:32
+     |
+2305 |         let runtime = Arc::new(TokioHostRuntime::new(plan, &budget).expect("runtime should build"));
+     |                                ^^^^^^^^^^^^^^^^^^^^^
+     |
+note: expected `ThreadPlan`, found future
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2305:54
+     |
+2305 |         let runtime = Arc::new(TokioHostRuntime::new(plan, &budget).expect("runtime should build"));
+     |                                                      ^^^^
+note: calling an async function returns a future
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2305:54
+     |
+2305 |         let runtime = Arc::new(TokioHostRuntime::new(plan, &budget).expect("runtime should build"));
+     |                                                      ^^^^
+note: expected `&ThreadBudget`, found `&impl Future<Output = ThreadBudget>`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2305:60
+     |
+2305 |         let runtime = Arc::new(TokioHostRuntime::new(plan, &budget).expect("runtime should build"));
+     |                                                            ^^^^^^^
+     = note: expected reference `&semio_framework_async::ThreadBudget`
+                found reference `&impl Future<Output = semio_framework_async::ThreadBudget>`
+note: associated function defined here
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:266:12
+     |
+ 266 |     pub fn new(plan: ThreadPlan, budget: &ThreadBudget) -> Result<TokioHostRuntime, RuntimeBuildError> {
+     |            ^^^ ----------------  ---------------------
+help: consider `await`ing on the `Future`
+     |
+2305 |         let runtime = Arc::new(TokioHostRuntime::new(plan.await, &budget).expect("runtime should build"));
+     |                                                          ++++++
+
+error[E0609]: no field `compute` on type `impl Future<Output = semio_framework_async::ThreadPlan>`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2307:54
+     |
+2307 |         let compute = Arc::new(ComputePool::new(plan.compute));
+     |                                                      ^^^^^^^ field not available in `impl Future`, but it is available in its `Output`
+     |
+help: consider `await`ing on the `Future` to access the field
+     |
+2307 |         let compute = Arc::new(ComputePool::new(plan.await.compute));
+     |                                                     ++++++
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2153:46
+     |
+2153 |         let budget = ThreadBudget::from_plan(plan);
+     |                      ----------------------- ^^^^ expected `ThreadPlan`, found future
+     |                      |
+     |                      arguments to this function are incorrect
+     |
+note: calling an async function returns a future
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2153:46
+     |
+2153 |         let budget = ThreadBudget::from_plan(plan);
+     |                                              ^^^^
+note: associated function defined here
+    --> 🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:334:18
+     |
+ 334 |     pub async fn from_plan(plan: ThreadPlan) -> ThreadBudget {
+     |                  ^^^^^^^^^
+help: consider `await`ing on the `Future`
+     |
+2153 |         let budget = ThreadBudget::from_plan(plan.await);
+     |                                                  ++++++
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2348:57
+     |
+2348 | ...   let transport = Arc::new(LocalSocketTransport { addr, compute, runtime: runtime.clone(), scope: scope.clone(), dropped: drop...
+     |                                                       ^^^^ expected `SocketAddr`, found future
+     |
+note: calling an async function returns a future
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2348:57
+     |
+2348 | ...   let transport = Arc::new(LocalSocketTransport { addr, compute, runtime: runtime.clone(), scope: scope.clone(), dropped: drop...
+     |                                                       ^^^^
+help: consider `await`ing on the `Future`
+     |
+2348 |         let transport = Arc::new(LocalSocketTransport { addr.await, compute, runtime: runtime.clone(), scope: scope.clone(), dropped: dropped.clone() });
+     |                                                             ++++++
+
+error[E0308]: arguments to this function are incorrect
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2127:32
+     |
+2127 |         let runtime = Arc::new(TokioHostRuntime::new(plan, &budget).expect("runtime should build"));
+     |                                ^^^^^^^^^^^^^^^^^^^^^
+     |
+note: expected `ThreadPlan`, found future
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2127:54
+     |
+2127 |         let runtime = Arc::new(TokioHostRuntime::new(plan, &budget).expect("runtime should build"));
+     |                                                      ^^^^
+note: calling an async function returns a future
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2127:54
+     |
+2127 |         let runtime = Arc::new(TokioHostRuntime::new(plan, &budget).expect("runtime should build"));
+     |                                                      ^^^^
+note: expected `&ThreadBudget`, found `&impl Future<Output = ThreadBudget>`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2127:60
+     |
+2127 |         let runtime = Arc::new(TokioHostRuntime::new(plan, &budget).expect("runtime should build"));
+     |                                                            ^^^^^^^
+     = note: expected reference `&semio_framework_async::ThreadBudget`
+                found reference `&impl Future<Output = semio_framework_async::ThreadBudget>`
+note: associated function defined here
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:266:12
+     |
+ 266 |     pub fn new(plan: ThreadPlan, budget: &ThreadBudget) -> Result<TokioHostRuntime, RuntimeBuildError> {
+     |            ^^^ ----------------  ---------------------
+help: consider `await`ing on the `Future`
+     |
+2127 |         let runtime = Arc::new(TokioHostRuntime::new(plan.await, &budget).expect("runtime should build"));
+     |                                                          ++++++
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2348:63
+     |
+2348 | ...cketTransport { addr, compute, runtime: runtime.clone(), scope: scope.clone(), dropped: dropped.clone() });
+     |                          ^^^^^^^ expected `Arc<ComputePool>`, found `Arc<impl Future<Output = ComputePool>>`
+     |
+     = note: expected struct `std::sync::Arc<component::ComputePool>`
+                found struct `std::sync::Arc<impl Future<Output = component::ComputePool>>`
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2311:57
+     |
+2311 |         let transport = Arc::new(LocalSocketTransport { addr, compute, runtime: runtime.clone(), scope: scope.clone(), dropped });
+     |                                                         ^^^^ expected `SocketAddr`, found future
+     |
+note: calling an async function returns a future
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2311:57
+     |
+2311 |         let transport = Arc::new(LocalSocketTransport { addr, compute, runtime: runtime.clone(), scope: scope.clone(), dropped });
+     |                                                         ^^^^
+help: consider `await`ing on the `Future`
+     |
+2311 |         let transport = Arc::new(LocalSocketTransport { addr.await, compute, runtime: runtime.clone(), scope: scope.clone(), dropped });
+     |                                                             ++++++
+
+error[E0609]: no field `compute` on type `impl Future<Output = semio_framework_async::ThreadPlan>`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2130:54
+     |
+2130 |         let compute = Arc::new(ComputePool::new(plan.compute));
+     |                                                      ^^^^^^^ field not available in `impl Future`, but it is available in its `Output`
+     |
+help: consider `await`ing on the `Future` to access the field
+     |
+2130 |         let compute = Arc::new(ComputePool::new(plan.await.compute));
+     |                                                     ++++++
+
+error[E0308]: arguments to this function are incorrect
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2154:23
+     |
+2154 |         let runtime = TokioHostRuntime::new(plan, &budget).expect("runtime should build");
+     |                       ^^^^^^^^^^^^^^^^^^^^^
+     |
+note: expected `ThreadPlan`, found future
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2154:45
+     |
+2154 |         let runtime = TokioHostRuntime::new(plan, &budget).expect("runtime should build");
+     |                                             ^^^^
+note: calling an async function returns a future
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2154:45
+     |
+2154 |         let runtime = TokioHostRuntime::new(plan, &budget).expect("runtime should build");
+     |                                             ^^^^
+note: expected `&ThreadBudget`, found `&impl Future<Output = ThreadBudget>`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2154:51
+     |
+2154 |         let runtime = TokioHostRuntime::new(plan, &budget).expect("runtime should build");
+     |                                                   ^^^^^^^
+     = note: expected reference `&semio_framework_async::ThreadBudget`
+                found reference `&impl Future<Output = semio_framework_async::ThreadBudget>`
+note: associated function defined here
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:266:12
+     |
+ 266 |     pub fn new(plan: ThreadPlan, budget: &ThreadBudget) -> Result<TokioHostRuntime, RuntimeBuildError> {
+     |            ^^^ ----------------  ---------------------
+help: consider `await`ing on the `Future`
+     |
+2154 |         let runtime = TokioHostRuntime::new(plan.await, &budget).expect("runtime should build");
+     |                                                 ++++++
+
+error[E0609]: no field `compute` on type `impl Future<Output = semio_framework_async::ThreadPlan>`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2157:54
+     |
+2157 |         let compute = Arc::new(ComputePool::new(plan.compute));
+     |                                                      ^^^^^^^ field not available in `impl Future`, but it is available in its `Output`
+     |
+help: consider `await`ing on the `Future` to access the field
+     |
+2157 |         let compute = Arc::new(ComputePool::new(plan.await.compute));
+     |                                                     ++++++
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2311:63
+     |
+2311 |         let transport = Arc::new(LocalSocketTransport { addr, compute, runtime: runtime.clone(), scope: scope.clone(), dropped });
+     |                                                               ^^^^^^^ expected `Arc<ComputePool>`, found `Arc<impl Future<Output = ComputePool>>`
+     |
+     = note: expected struct `std::sync::Arc<component::ComputePool>`
+                found struct `std::sync::Arc<impl Future<Output = component::ComputePool>>`
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2158:89
+     |
+2158 |         let pool = HttpPool::new(Arc::new(RecordingTransport { calls: calls.clone() }), compute, 4, 4);
+     |                    ------------- arguments to this function are incorrect               ^^^^^^^ expected `Arc<ComputePool>`, found `Arc<impl Future<Output = ComputePool>>`
+     |
+     = note: expected struct `std::sync::Arc<component::ComputePool>`
+                found struct `std::sync::Arc<impl Future<Output = component::ComputePool>>`
+note: associated function defined here
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:933:18
+     |
+ 933 |     pub async fn new(transport: Arc<dyn HttpTransport>, compute: Arc<ComputePool>, bytes_per_minute_cap: u64, outstanding_cap: u32...
+     |                  ^^^                                    -------------------------
+
+error[E0609]: no field `body` on type `impl Future<Output = component::HttpRequest>`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2162:21
+     |
+2162 |         big_request.body = vec![0u8; 10];
+     |                     ^^^^ field not available in `impl Future`, but it is available in its `Output`
+     |
+help: consider `await`ing on the `Future` to access the field
+     |
+2162 |         big_request.await.body = vec![0u8; 10];
+     |                    ++++++
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2131:96
+     |
+2131 |         let pool = Arc::new(HttpPool::new(Arc::new(BlockingTransport(Mutex::new(unblock_rx))), compute, 1_000_000, 1));
+     |                             ------------- arguments to this function are incorrect             ^^^^^^^ expected `Arc<ComputePool>`, found `Arc<impl Future<Output = ComputePool>>`
+     |
+     = note: expected struct `std::sync::Arc<component::ComputePool>`
+                found struct `std::sync::Arc<impl Future<Output = component::ComputePool>>`
+note: associated function defined here
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:933:18
+     |
+ 933 |     pub async fn new(transport: Arc<dyn HttpTransport>, compute: Arc<ComputePool>, bytes_per_minute_cap: u64, outstanding_cap: u32...
+     |                  ^^^                                    -------------------------
+
+error[E0609]: no field `cancel` on type `impl Future<Output = semio_framework_async::ScopeHandle>`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2163:37
+     |
+2163 |         let ctx = test_ctx(0, scope.cancel.clone());
+     |                                     ^^^^^^ field not available in `impl Future`, but it is available in its `Output`
+     |
+help: consider `await`ing on the `Future` to access the field
+     |
+2163 |         let ctx = test_ctx(0, scope.await.cancel.clone());
+     |                                    ++++++
+
+error[E0599]: no method named `len` found for opaque type `impl Future<Output = Vec<Vec<u8>>>` in the current scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2068:28
+     |
+2068 |         assert_eq!(drained.len(), 2, "distinct coalesce keys must not collapse into each other");
+     |                            ^^^ method not found in `impl Future<Output = Vec<Vec<u8>>>`
+     |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+2068 |         assert_eq!(drained.await.len(), 2, "distinct coalesce keys must not collapse into each other");
+     |                            ++++++
+
+error[E0599]: no method named `complete` found for opaque type `impl Future<Output = component::MockCompletionSink>` in the current scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2375:14
+     |
+2375 |         sink.complete(2, 1, vec![2], 1);
+     |              ^^^^^^^^ method not found in `impl Future<Output = component::MockCompletionSink>`
+     |
+     = help: items from traits can only be used if the trait is implemented and in scope
+note: `component::CompletionSink` defines an item `complete`, perhaps you need to implement it
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1533:1
+     |
+1533 | pub trait CompletionSink: Send + Sync {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error[E0599]: no method named `clone` found for opaque type `impl Future<Output = semio_framework_async::ScopeHandle>` in the current scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2137:34
+     |
+2137 |             let scope_bg = scope.clone();
+     |                                  ^^^^^ method not found in `impl Future<Output = semio_framework_async::ScopeHandle>`
+
+error[E0599]: no method named `clone` found for opaque type `impl Future<Output = semio_framework_async::ScopeHandle>` in the current scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2348:111
+     |
+2348 | ...lone(), scope: scope.clone(), dropped: dropped.clone() });
+     |                         ^^^^^ method not found in `impl Future<Output = semio_framework_async::ScopeHandle>`
+
+error[E0599]: no method named `clone` found for opaque type `impl Future<Output = semio_framework_async::ScopeHandle>` in the current scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2311:111
+     |
+2311 |         let transport = Arc::new(LocalSocketTransport { addr, compute, runtime: runtime.clone(), scope: scope.clone(), dropped });
+     |                                                                                                               ^^^^^ method not found in `impl Future<Output = semio_framework_async::ScopeHandle>`
+
+error[E0599]: no method named `request` found for opaque type `impl Future<Output = component::HttpPool>` in the current scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2164:44
+     |
+2164 |         let result = runtime.block_on(pool.request(&runtime, &scope, ctx, package.clone(), actor, big_request));
+     |                                            ^^^^^^^ method not found in `impl Future<Output = component::HttpPool>`
+     |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+2164 |         let result = runtime.block_on(pool.await.request(&runtime, &scope, ctx, package.clone(), actor, big_request));
+     |                                            ++++++
+
+error[E0599]: no method named `fetch` found for opaque type `impl Future<Output = component::HttpPool>` in the current scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2355:42
+     |
+2355 | ...   let (_head, mut body) = pool.fetch(runtime.as_ref(), &scope, ctx, package.clone(), actor, sample_request()).await.expect("fe...
+     |                                    ^^^^^ method not found in `impl Future<Output = component::HttpPool>`
+     |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+2355 |             let (_head, mut body) = pool.await.fetch(runtime.as_ref(), &scope, ctx, package.clone(), actor, sample_request()).await.expect("fetch should succeed");
+     |                                          ++++++
+
+error[E0599]: no method named `request` found for struct `std::sync::Arc<impl Future<Output = component::HttpPool>>` in the current scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2139:60
+     |
+2139 | ...sync move { pool_bg.request(runtime_bg.as_ref(), &scope_bg, ctx_bg, PackageId("pkg".to_string()), actor, sample_request()).awai...
+     |                        ^^^^^^^ method not found in `std::sync::Arc<impl Future<Output = component::HttpPool>>`
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = Vec<(semio_framework_actor::ActorId, component::PublishOutcome)>>`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2051:9
+     |
+2051 |         assert_eq!(router.publish(&topic, None, b"a"), vec![(actor, PublishOutcome::Delivered)]);
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |         |
+     |         impl Future<Output = Vec<(semio_framework_actor::ActorId, component::PublishOutcome)>>
+     |         Vec<(semio_framework_actor::ActorId, component::PublishOutcome)>
+
+error[E0277]: `impl Future<Output = Vec<(semio_framework_actor::ActorId, component::PublishOutcome)>>` doesn't implement `Debug`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2051:9
+     |
+2051 |         assert_eq!(router.publish(&topic, None, b"a"), vec![(actor, PublishOutcome::Delivered)]);
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Debug` is not implemented for `impl Future<Output = Vec<(semio_framework_actor::ActorId, component::PublishOutcome)>>`
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = Vec<(semio_framework_actor::ActorId, component::PublishOutcome)>>`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2052:9
+     |
+2052 |         assert_eq!(router.publish(&topic, None, b"b"), vec![(actor, PublishOutcome::Delivered)]);
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |         |
+     |         impl Future<Output = Vec<(semio_framework_actor::ActorId, component::PublishOutcome)>>
+     |         Vec<(semio_framework_actor::ActorId, component::PublishOutcome)>
+
+error[E0277]: `impl Future<Output = Vec<(semio_framework_actor::ActorId, component::PublishOutcome)>>` doesn't implement `Debug`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2052:9
+     |
+2052 |         assert_eq!(router.publish(&topic, None, b"b"), vec![(actor, PublishOutcome::Delivered)]);
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Debug` is not implemented for `impl Future<Output = Vec<(semio_framework_actor::ActorId, component::PublishOutcome)>>`
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = Vec<(semio_framework_actor::ActorId, component::PublishOutcome)>>`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2053:9
+     |
+2053 | ...   assert_eq!(router.publish(&topic, None, b"c"), vec![(actor, PublishOutcome::RejectedFull { cap: 2 })], "must reject rather than grow past cap");
+     |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |       |
+     |       impl Future<Output = Vec<(semio_framework_actor::ActorId, component::PublishOutcome)>>
+     |       Vec<(semio_framework_actor::ActorId, component::PublishOutcome)>
+
+error[E0277]: `impl Future<Output = Vec<(semio_framework_actor::ActorId, component::PublishOutcome)>>` doesn't implement `Debug`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2053:9
+     |
+2053 | ...   assert_eq!(router.publish(&topic, None, b"c"), vec![(actor, PublishOutcome::RejectedFull { cap: 2 })], "must reject rather than grow past cap");
+     |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Debug` is not implemented for `impl Future<Output = Vec<(semio_framework_actor::ActorId, component::PublishOutcome)>>`
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = Vec<Vec<u8>>>`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2054:9
+     |
+2054 | ...   assert_eq!(router.drain(&topic, actor), vec![b"a".to_vec(), b"b".to_vec()], "the rejected message must never have been queued");
+     |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |       |
+     |       impl Future<Output = Vec<Vec<u8>>>
+     |       Vec<Vec<u8>>
+
+error[E0277]: `impl Future<Output = Vec<Vec<u8>>>` doesn't implement `Debug`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2054:9
+     |
+2054 | ...   assert_eq!(router.drain(&topic, actor), vec![b"a".to_vec(), b"b".to_vec()], "the rejected message must never have been queued");
+     |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Debug` is not implemented for `impl Future<Output = Vec<Vec<u8>>>`
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = Vec<(semio_framework_actor::ActorId, component::PublishOutcome)>>`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2040:9
+     |
+2040 |         assert_eq!(first, vec![(actor, PublishOutcome::Delivered)]);
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |         |
+     |         impl Future<Output = Vec<(semio_framework_actor::ActorId, component::PublishOutcome)>>
+     |         Vec<(semio_framework_actor::ActorId, component::PublishOutcome)>
+
+error[E0277]: `impl Future<Output = Vec<(semio_framework_actor::ActorId, component::PublishOutcome)>>` doesn't implement `Debug`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2040:9
+     |
+2040 |         assert_eq!(first, vec![(actor, PublishOutcome::Delivered)]);
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Debug` is not implemented for `impl Future<Output = Vec<(semio_framework_actor::ActorId, component::PublishOutcome)>>`
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = Vec<(semio_framework_actor::ActorId, component::PublishOutcome)>>`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2041:9
+     |
+2041 |         assert_eq!(second, vec![(actor, PublishOutcome::Collapsed)]);
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |         |
+     |         impl Future<Output = Vec<(semio_framework_actor::ActorId, component::PublishOutcome)>>
+     |         Vec<(semio_framework_actor::ActorId, component::PublishOutcome)>
+
+error[E0599]: no method named `contains` found for opaque type `impl Future<Output = Vec<Vec<u8>>>` in the current scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2069:25
+     |
+2069 |         assert!(drained.contains(&b"pos-2".to_vec()));
+     |                         ^^^^^^^^ method not found in `impl Future<Output = Vec<Vec<u8>>>`
+     |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+2069 |         assert!(drained.await.contains(&b"pos-2".to_vec()));
+     |                         ++++++
+
+error[E0277]: `impl Future<Output = Vec<(semio_framework_actor::ActorId, component::PublishOutcome)>>` doesn't implement `Debug`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2041:9
+     |
+2041 |         assert_eq!(second, vec![(actor, PublishOutcome::Collapsed)]);
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Debug` is not implemented for `impl Future<Output = Vec<(semio_framework_actor::ActorId, component::PublishOutcome)>>`
+
+error[E0599]: no method named `remaining_package_budget` found for opaque type `impl Future<Output = component::HttpPool>` in the current scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2185:25
+     |
+2185 |         assert_eq!(pool.remaining_package_budget(&package), 30);
+     |                         ^^^^^^^^^^^^^^^^^^^^^^^^ method not found in `impl Future<Output = component::HttpPool>`
+     |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+2185 |         assert_eq!(pool.await.remaining_package_budget(&package), 30);
+     |                         ++++++
+
+error[E0599]: no method named `fetch` found for opaque type `impl Future<Output = component::HttpPool>` in the current scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2318:41
+     |
+2318 | ...   let (head, mut body) = pool.fetch(runtime.as_ref(), &scope, ctx, package.clone(), actor, sample_request()).await.expect("fet...
+     |                                   ^^^^^ method not found in `impl Future<Output = component::HttpPool>`
+     |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+2318 |             let (head, mut body) = pool.await.fetch(runtime.as_ref(), &scope, ctx, package.clone(), actor, sample_request()).await.expect("fetch should succeed");
+     |                                         ++++++
+
+error[E0599]: no method named `spawn_refill_driver` found for opaque type `impl Future<Output = component::HttpPool>` in the current scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2188:14
+     |
+2188 |         pool.spawn_refill_driver(&runtime, &scope, ctx);
+     |              ^^^^^^^^^^^^^^^^^^^ method not found in `impl Future<Output = component::HttpPool>`
+     |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+2188 |         pool.await.spawn_refill_driver(&runtime, &scope, ctx);
+     |              ++++++
+
+error[E0599]: no method named `recorded` found for opaque type `impl Future<Output = component::MockCompletionSink>` in the current scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2376:29
+     |
+2376 |         let recorded = sink.recorded();
+     |                             ^^^^^^^^ method not found in `impl Future<Output = component::MockCompletionSink>`
+     |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+2376 |         let recorded = sink.await.recorded();
+     |                             ++++++
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = Vec<Vec<u8>>>`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2042:9
+     |
+2042 |         assert_eq!(router.drain(&topic, actor), vec![b"v2".to_vec()], "only the LATEST value must survive the collapse");
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |         |
+     |         impl Future<Output = Vec<Vec<u8>>>
+     |         Vec<Vec<u8>>
+
+error[E0277]: `impl Future<Output = Vec<Vec<u8>>>` doesn't implement `Debug`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2042:9
+     |
+2042 |         assert_eq!(router.drain(&topic, actor), vec![b"v2".to_vec()], "only the LATEST value must survive the collapse");
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Debug` is not implemented for `impl Future<Output = Vec<Vec<u8>>>`
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1987:46
+     |
+1987 |         let budget = ThreadBudget::from_plan(plan);
+     |                      ----------------------- ^^^^ expected `ThreadPlan`, found future
+     |                      |
+     |                      arguments to this function are incorrect
+     |
+note: calling an async function returns a future
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1987:46
+     |
+1987 |         let budget = ThreadBudget::from_plan(plan);
+     |                                              ^^^^
+note: associated function defined here
+    --> 🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:334:18
+     |
+ 334 |     pub async fn from_plan(plan: ThreadPlan) -> ThreadBudget {
+     |                  ^^^^^^^^^
+help: consider `await`ing on the `Future`
+     |
+1987 |         let budget = ThreadBudget::from_plan(plan.await);
+     |                                                  ++++++
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1953:46
+     |
+1953 |         let budget = ThreadBudget::from_plan(plan);
+     |                      ----------------------- ^^^^ expected `ThreadPlan`, found future
+     |                      |
+     |                      arguments to this function are incorrect
+     |
+note: calling an async function returns a future
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1953:46
+     |
+1953 |         let budget = ThreadBudget::from_plan(plan);
+     |                                              ^^^^
+note: associated function defined here
+    --> 🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:334:18
+     |
+ 334 |     pub async fn from_plan(plan: ThreadPlan) -> ThreadBudget {
+     |                  ^^^^^^^^^
+help: consider `await`ing on the `Future`
+     |
+1953 |         let budget = ThreadBudget::from_plan(plan.await);
+     |                                                  ++++++
+
+error[E0308]: arguments to this function are incorrect
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1988:32
+     |
+1988 |         let runtime = Arc::new(TokioHostRuntime::new(plan, &budget).expect("runtime should build"));
+     |                                ^^^^^^^^^^^^^^^^^^^^^
+     |
+note: expected `ThreadPlan`, found future
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1988:54
+     |
+1988 |         let runtime = Arc::new(TokioHostRuntime::new(plan, &budget).expect("runtime should build"));
+     |                                                      ^^^^
+note: calling an async function returns a future
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1988:54
+     |
+1988 |         let runtime = Arc::new(TokioHostRuntime::new(plan, &budget).expect("runtime should build"));
+     |                                                      ^^^^
+note: expected `&ThreadBudget`, found `&impl Future<Output = ThreadBudget>`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1988:60
+     |
+1988 |         let runtime = Arc::new(TokioHostRuntime::new(plan, &budget).expect("runtime should build"));
+     |                                                            ^^^^^^^
+     = note: expected reference `&semio_framework_async::ThreadBudget`
+                found reference `&impl Future<Output = semio_framework_async::ThreadBudget>`
+note: associated function defined here
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:266:12
+     |
+ 266 |     pub fn new(plan: ThreadPlan, budget: &ThreadBudget) -> Result<TokioHostRuntime, RuntimeBuildError> {
+     |            ^^^ ----------------  ---------------------
+help: consider `await`ing on the `Future`
+     |
+1988 |         let runtime = Arc::new(TokioHostRuntime::new(plan.await, &budget).expect("runtime should build"));
+     |                                                          ++++++
+
+error[E0308]: arguments to this function are incorrect
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1954:32
+     |
+1954 |         let runtime = Arc::new(TokioHostRuntime::new(plan, &budget).expect("runtime should build"));
+     |                                ^^^^^^^^^^^^^^^^^^^^^
+     |
+note: expected `ThreadPlan`, found future
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1954:54
+     |
+1954 |         let runtime = Arc::new(TokioHostRuntime::new(plan, &budget).expect("runtime should build"));
+     |                                                      ^^^^
+note: calling an async function returns a future
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1954:54
+     |
+1954 |         let runtime = Arc::new(TokioHostRuntime::new(plan, &budget).expect("runtime should build"));
+     |                                                      ^^^^
+note: expected `&ThreadBudget`, found `&impl Future<Output = ThreadBudget>`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1954:60
+     |
+1954 |         let runtime = Arc::new(TokioHostRuntime::new(plan, &budget).expect("runtime should build"));
+     |                                                            ^^^^^^^
+     = note: expected reference `&semio_framework_async::ThreadBudget`
+                found reference `&impl Future<Output = semio_framework_async::ThreadBudget>`
+note: associated function defined here
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:266:12
+     |
+ 266 |     pub fn new(plan: ThreadPlan, budget: &ThreadBudget) -> Result<TokioHostRuntime, RuntimeBuildError> {
+     |            ^^^ ----------------  ---------------------
+help: consider `await`ing on the `Future`
+     |
+1954 |         let runtime = Arc::new(TokioHostRuntime::new(plan.await, &budget).expect("runtime should build"));
+     |                                                          ++++++
+
+error[E0599]: no method named `request` found for struct `std::sync::Arc<impl Future<Output = component::HttpPool>>` in the current scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2142:31
+     |
+2142 |             let second = pool.request(runtime.as_ref(), &scope, ctx2, PackageId("pkg".to_string()), actor, sample_request()).await;
+     |                               ^^^^^^^ method not found in `std::sync::Arc<impl Future<Output = component::HttpPool>>`
+
+error[E0599]: no method named `fetch` found for opaque type `impl Future<Output = component::HttpPool>` in the current scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2364:31
+     |
+2364 |             let second = pool.fetch(runtime.as_ref(), &scope, ctx2, package.clone(), actor, sample_request()).await;
+     |                               ^^^^^ method not found in `impl Future<Output = component::HttpPool>`
+     |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+2364 |             let second = pool.await.fetch(runtime.as_ref(), &scope, ctx2, package.clone(), actor, sample_request()).await;
+     |                               ++++++
+
+error[E0599]: no method named `clone` found for opaque type `impl Future<Output = semio_framework_async::ScopeHandle>` in the current scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1956:70
+     |
+1956 |         let scheduler = StorageScheduler::new(runtime.clone(), scope.clone(), 4, 100);
+     |                                                                      ^^^^^ method not found in `impl Future<Output = semio_framework_async::ScopeHandle>`
+
+error[E0609]: no field `cancel` on type `impl Future<Output = semio_framework_async::ScopeHandle>`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1957:37
+     |
+1957 |         let ctx = test_ctx(0, scope.cancel);
+     |                                     ^^^^^^ field not available in `impl Future`, but it is available in its `Output`
+     |
+help: consider `await`ing on the `Future` to access the field
+     |
+1957 |         let ctx = test_ctx(0, scope.await.cancel);
+     |                                    ++++++
+
+error[E0599]: no method named `contains` found for opaque type `impl Future<Output = Vec<Vec<u8>>>` in the current scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2070:25
+     |
+2070 |         assert!(drained.contains(&b"pos-a".to_vec()));
+     |                         ^^^^^^^^ method not found in `impl Future<Output = Vec<Vec<u8>>>`
+     |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+2070 |         assert!(drained.await.contains(&b"pos-a".to_vec()));
+     |                         ++++++
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1858:46
+     |
+1858 |         let budget = ThreadBudget::from_plan(plan);
+     |                      ----------------------- ^^^^ expected `ThreadPlan`, found future
+     |                      |
+     |                      arguments to this function are incorrect
+     |
+note: calling an async function returns a future
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1858:46
+     |
+1858 |         let budget = ThreadBudget::from_plan(plan);
+     |                                              ^^^^
+note: associated function defined here
+    --> 🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:334:18
+     |
+ 334 |     pub async fn from_plan(plan: ThreadPlan) -> ThreadBudget {
+     |                  ^^^^^^^^^
+help: consider `await`ing on the `Future`
+     |
+1858 |         let budget = ThreadBudget::from_plan(plan.await);
+     |                                                  ++++++
+
+error[E0308]: arguments to this function are incorrect
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1859:32
+     |
+1859 |         let runtime = Arc::new(TokioHostRuntime::new(plan, &budget).expect("runtime should build"));
+     |                                ^^^^^^^^^^^^^^^^^^^^^
+     |
+note: expected `ThreadPlan`, found future
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1859:54
+     |
+1859 |         let runtime = Arc::new(TokioHostRuntime::new(plan, &budget).expect("runtime should build"));
+     |                                                      ^^^^
+note: calling an async function returns a future
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1859:54
+     |
+1859 |         let runtime = Arc::new(TokioHostRuntime::new(plan, &budget).expect("runtime should build"));
+     |                                                      ^^^^
+note: expected `&ThreadBudget`, found `&impl Future<Output = ThreadBudget>`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1859:60
+     |
+1859 |         let runtime = Arc::new(TokioHostRuntime::new(plan, &budget).expect("runtime should build"));
+     |                                                            ^^^^^^^
+     = note: expected reference `&semio_framework_async::ThreadBudget`
+                found reference `&impl Future<Output = semio_framework_async::ThreadBudget>`
+note: associated function defined here
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:266:12
+     |
+ 266 |     pub fn new(plan: ThreadPlan, budget: &ThreadBudget) -> Result<TokioHostRuntime, RuntimeBuildError> {
+     |            ^^^ ----------------  ---------------------
+help: consider `await`ing on the `Future`
+     |
+1859 |         let runtime = Arc::new(TokioHostRuntime::new(plan.await, &budget).expect("runtime should build"));
+     |                                                          ++++++
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1906:46
+     |
+1906 |         let budget = ThreadBudget::from_plan(plan);
+     |                      ----------------------- ^^^^ expected `ThreadPlan`, found future
+     |                      |
+     |                      arguments to this function are incorrect
+     |
+note: calling an async function returns a future
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1906:46
+     |
+1906 |         let budget = ThreadBudget::from_plan(plan);
+     |                                              ^^^^
+note: associated function defined here
+    --> 🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:334:18
+     |
+ 334 |     pub async fn from_plan(plan: ThreadPlan) -> ThreadBudget {
+     |                  ^^^^^^^^^
+help: consider `await`ing on the `Future`
+     |
+1906 |         let budget = ThreadBudget::from_plan(plan.await);
+     |                                                  ++++++
+
+error[E0308]: arguments to this function are incorrect
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1907:32
+     |
+1907 |         let runtime = Arc::new(TokioHostRuntime::new(plan, &budget).expect("runtime should build"));
+     |                                ^^^^^^^^^^^^^^^^^^^^^
+     |
+note: expected `ThreadPlan`, found future
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1907:54
+     |
+1907 |         let runtime = Arc::new(TokioHostRuntime::new(plan, &budget).expect("runtime should build"));
+     |                                                      ^^^^
+note: calling an async function returns a future
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1907:54
+     |
+1907 |         let runtime = Arc::new(TokioHostRuntime::new(plan, &budget).expect("runtime should build"));
+     |                                                      ^^^^
+note: expected `&ThreadBudget`, found `&impl Future<Output = ThreadBudget>`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1907:60
+     |
+1907 |         let runtime = Arc::new(TokioHostRuntime::new(plan, &budget).expect("runtime should build"));
+     |                                                            ^^^^^^^
+     = note: expected reference `&semio_framework_async::ThreadBudget`
+                found reference `&impl Future<Output = semio_framework_async::ThreadBudget>`
+note: associated function defined here
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:266:12
+     |
+ 266 |     pub fn new(plan: ThreadPlan, budget: &ThreadBudget) -> Result<TokioHostRuntime, RuntimeBuildError> {
+     |            ^^^ ----------------  ---------------------
+help: consider `await`ing on the `Future`
+     |
+1907 |         let runtime = Arc::new(TokioHostRuntime::new(plan.await, &budget).expect("runtime should build"));
+     |                                                          ++++++
+
+error[E0599]: no method named `remaining_package_budget` found for opaque type `impl Future<Output = component::HttpPool>` in the current scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2190:25
+     |
+2190 |         assert_eq!(pool.remaining_package_budget(&package), 30, "must not refill before the tick interval elapses");
+     |                         ^^^^^^^^^^^^^^^^^^^^^^^^ method not found in `impl Future<Output = component::HttpPool>`
+     |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+2190 |         assert_eq!(pool.await.remaining_package_budget(&package), 30, "must not refill before the tick interval elapses");
+     |                         ++++++
+
+error[E0599]: no method named `clone` found for opaque type `impl Future<Output = semio_framework_async::ScopeHandle>` in the current scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1909:70
+     |
+1909 |         let scheduler = StorageScheduler::new(runtime.clone(), scope.clone(), 2, 1_000_000);
+     |                                                                      ^^^^^ method not found in `impl Future<Output = semio_framework_async::ScopeHandle>`
+
+error[E0609]: no field `cancel` on type `impl Future<Output = semio_framework_async::ScopeHandle>`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1912:41
+     |
+1912 |             let ctx = test_ctx(0, scope.cancel.clone());
+     |                                         ^^^^^^ field not available in `impl Future`, but it is available in its `Output`
+     |
+help: consider `await`ing on the `Future` to access the field
+     |
+1912 |             let ctx = test_ctx(0, scope.await.cancel.clone());
+     |                                        ++++++
+
+error[E0599]: no method named `remaining_package_budget` found for opaque type `impl Future<Output = component::HttpPool>` in the current scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2320:35
+     |
+2320 |             let mut before = pool.remaining_package_budget(&package);
+     |                                   ^^^^^^^^^^^^^^^^^^^^^^^^ method not found in `impl Future<Output = component::HttpPool>`
+     |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+2320 |             let mut before = pool.await.remaining_package_budget(&package);
+     |                                   ++++++
+
+error[E0599]: no method named `submit` found for opaque type `impl Future<Output = component::StorageScheduler<component::TokioHostRuntime>>` in the current scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1962:14
+     |
+1961 |           let first_ticket = scheduler
+     |  ____________________________-
+1962 | |             .submit(&ctx, plugin.clone(), 60, move || {
+     | |             -^^^^^^ method not found in `impl Future<Output = component::StorageScheduler<component::TokioHostRuntime>>`
+     | |_____________|
+     |
+     |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+1962 |             .await.submit(&ctx, plugin.clone(), 60, move || {
+     |              ++++++
+
+error[E0599]: no method named `clone` found for opaque type `impl Future<Output = ManualRuntime>` in the current scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1831:39
+     |
+1831 |         let runtime = Arc::new(manual.clone());
+     |                                       ^^^^^ method not found in `impl Future<Output = ManualRuntime>`
+
+error[E0599]: no method named `clone` found for opaque type `impl Future<Output = semio_framework_async::ScopeHandle>` in the current scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1861:70
+     |
+1861 |         let scheduler = StorageScheduler::new(runtime.clone(), scope.clone(), 1, 1_000_000);
+     |                                                                      ^^^^^ method not found in `impl Future<Output = semio_framework_async::ScopeHandle>`
+
+error[E0609]: no field `cancel` on type `impl Future<Output = semio_framework_async::ScopeHandle>`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1866:44
+     |
+1866 |         let occupy_ctx = test_ctx(0, scope.cancel.clone());
+     |                                            ^^^^^^ field not available in `impl Future`, but it is available in its `Output`
+     |
+help: consider `await`ing on the `Future` to access the field
+     |
+1866 |         let occupy_ctx = test_ctx(0, scope.await.cancel.clone());
+     |                                           ++++++
+
+error[E0599]: no method named `submit` found for opaque type `impl Future<Output = component::StorageScheduler<component::TokioHostRuntime>>` in the current scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1914:18
+     |
+1913 |               let ticket = scheduler
+     |  __________________________-
+1914 | |                 .submit(&ctx, PackageId(format!("p{i}")), 1, move || {
+     | |                 -^^^^^^ method not found in `impl Future<Output = component::StorageScheduler<component::TokioHostRuntime>>`
+     | |_________________|
+     |
+     |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+1914 |                 .await.submit(&ctx, PackageId(format!("p{i}")), 1, move || {
+     |                  ++++++
+
+error[E0599]: no method named `submit` found for opaque type `impl Future<Output = component::StorageScheduler<component::TokioHostRuntime>>` in the current scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1967:32
+     |
+1967 |         let result = scheduler.submit(&ctx, plugin.clone(), 60, || Ok(Vec::new()));
+     |                                ^^^^^^ method not found in `impl Future<Output = component::StorageScheduler<component::TokioHostRuntime>>`
+     |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+1967 |         let result = scheduler.await.submit(&ctx, plugin.clone(), 60, || Ok(Vec::new()));
+     |                                ++++++
+
+error[E0599]: no method named `submit` found for opaque type `impl Future<Output = component::StorageScheduler<component::TokioHostRuntime>>` in the current scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1868:14
+     |
+1867 |           let occupy_ticket = scheduler
+     |  _____________________________-
+1868 | |             .submit(&occupy_ctx, PackageId("occupy".to_string()), 1, move || {
+     | |             -^^^^^^ method not found in `impl Future<Output = component::StorageScheduler<component::TokioHostRuntime>>`
+     | |_____________|
+     |
+     |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+1868 |             .await.submit(&occupy_ctx, PackageId("occupy".to_string()), 1, move || {
+     |              ++++++
+
+error[E0609]: no field `cancel` on type `impl Future<Output = semio_framework_async::ScopeHandle>`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1874:45
+     |
+1874 |         let mut low_ctx = test_ctx(0, scope.cancel.clone());
+     |                                             ^^^^^^ field not available in `impl Future`, but it is available in its `Output`
+     |
+help: consider `await`ing on the `Future` to access the field
+     |
+1874 |         let mut low_ctx = test_ctx(0, scope.await.cancel.clone());
+     |                                            ++++++
+
+error[E0609]: no field `lane` on type `impl Future<Output = semio_framework_async::OperationContext>`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1875:17
+     |
+1875 |         low_ctx.lane = 200;
+     |                 ^^^^ field not available in `impl Future`, but it is available in its `Output`
+     |
+help: consider `await`ing on the `Future` to access the field
+     |
+1875 |         low_ctx.await.lane = 200;
+     |                ++++++
+
+error[E0599]: no method named `remaining_package_budget` found for opaque type `impl Future<Output = component::HttpPool>` in the current scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2193:25
+     |
+2193 | ...   assert_eq!(pool.remaining_package_budget(&package), 100, "the refill driver must actually run its loop and top the bucket ba...
+     |                       ^^^^^^^^^^^^^^^^^^^^^^^^ method not found in `impl Future<Output = component::HttpPool>`
+     |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+2193 |         assert_eq!(pool.await.remaining_package_budget(&package), 100, "the refill driver must actually run its loop and top the bucket back up on its own tick");
+     |                         ++++++
+
+error[E0599]: no method named `remaining_package_budget` found for opaque type `impl Future<Output = component::HttpPool>` in the current scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2323:34
+     |
+2323 |                 let after = pool.remaining_package_budget(&package);
+     |                                  ^^^^^^^^^^^^^^^^^^^^^^^^ method not found in `impl Future<Output = component::HttpPool>`
+     |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+2323 |                 let after = pool.await.remaining_package_budget(&package);
+     |                                  ++++++
+
+error[E0599]: no method named `spawn_driver` found for opaque type `impl Future<Output = component::TimerWheel>` in the current scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1836:15
+     |
+1836 |         wheel.spawn_driver(&runtime, &scope, ctx, sink.clone());
+     |               ^^^^^^^^^^^^ method not found in `impl Future<Output = component::TimerWheel>`
+     |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+1836 |         wheel.await.spawn_driver(&runtime, &scope, ctx, sink.clone());
+     |               ++++++
+
+error[E0599]: no method named `submit` found for opaque type `impl Future<Output = component::StorageScheduler<component::TokioHostRuntime>>` in the current scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1878:14
+     |
+1877 |           let low_ticket = scheduler
+     |  __________________________-
+1878 | |             .submit(&low_ctx, PackageId("p".to_string()), 1, move || {
+     | |             -^^^^^^ method not found in `impl Future<Output = component::StorageScheduler<component::TokioHostRuntime>>`
+     | |_____________|
+     |
+     |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+1878 |             .await.submit(&low_ctx, PackageId("p".to_string()), 1, move || {
+     |              ++++++
+
+error[E0599]: no method named `clone` found for opaque type `impl Future<Output = semio_framework_async::ScopeHandle>` in the current scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1990:70
+     |
+1990 |         let scheduler = StorageScheduler::new(runtime.clone(), scope.clone(), 1, 50);
+     |                                                                      ^^^^^ method not found in `impl Future<Output = semio_framework_async::ScopeHandle>`
+
+error[E0609]: no field `cancel` on type `impl Future<Output = semio_framework_async::ScopeHandle>`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1994:44
+     |
+1994 |         let occupy_ctx = test_ctx(0, scope.cancel.clone());
+     |                                            ^^^^^^ field not available in `impl Future`, but it is available in its `Output`
+     |
+help: consider `await`ing on the `Future` to access the field
+     |
+1994 |         let occupy_ctx = test_ctx(0, scope.await.cancel.clone());
+     |                                           ++++++
+
+error[E0609]: no field `cancel` on type `impl Future<Output = semio_framework_async::ScopeHandle>`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1884:46
+     |
+1884 |         let mut high_ctx = test_ctx(0, scope.cancel);
+     |                                              ^^^^^^ field not available in `impl Future`, but it is available in its `Output`
+     |
+help: consider `await`ing on the `Future` to access the field
+     |
+1884 |         let mut high_ctx = test_ctx(0, scope.await.cancel);
+     |                                             ++++++
+
+error[E0609]: no field `lane` on type `impl Future<Output = semio_framework_async::OperationContext>`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1885:18
+     |
+1885 |         high_ctx.lane = 1;
+     |                  ^^^^ field not available in `impl Future`, but it is available in its `Output`
+     |
+help: consider `await`ing on the `Future` to access the field
+     |
+1885 |         high_ctx.await.lane = 1;
+     |                 ++++++
+
+error[E0599]: no method named `arm` found for opaque type `impl Future<Output = component::WheelCore>` in the current scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1809:15
+     |
+1809 |         wheel.arm(plugin.clone(), 1, 0, 0, 100, None).unwrap();
+     |               ^^^ method not found in `impl Future<Output = component::WheelCore>`
+     |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+1809 |         wheel.await.arm(plugin.clone(), 1, 0, 0, 100, None).unwrap();
+     |               ++++++
+
+error[E0599]: no method named `in_flight` found for reference `&impl Future<Output = component::StorageScheduler<component::TokioHostRuntime>>` in the current scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1927:38
+     |
+1927 |                     if scheduler_ref.in_flight() > 2 {
+     |                                      ^^^^^^^^^ method not found in `&impl Future<Output = component::StorageScheduler<component::TokioHostRuntime>>`
+
+error[E0599]: no method named `submit` found for opaque type `impl Future<Output = component::StorageScheduler<component::TokioHostRuntime>>` in the current scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1888:14
+     |
+1887 |           let high_ticket = scheduler
+     |  ___________________________-
+1888 | |             .submit(&high_ctx, PackageId("p".to_string()), 1, move || {
+     | |             -^^^^^^ method not found in `impl Future<Output = component::StorageScheduler<component::TokioHostRuntime>>`
+     | |_____________|
+     |
+     |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+1888 |             .await.submit(&high_ctx, PackageId("p".to_string()), 1, move || {
+     |              ++++++
+
+error[E0599]: no method named `arm` found for opaque type `impl Future<Output = component::TimerWheel>` in the current scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1837:15
+     |
+1837 |         wheel.arm(PackageId("plugin-a".to_string()), 42, 3, 1, 100, None).expect("arm should succeed");
+     |               ^^^ method not found in `impl Future<Output = component::TimerWheel>`
+     |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+1837 |         wheel.await.arm(PackageId("plugin-a".to_string()), 42, 3, 1, 100, None).expect("arm should succeed");
+     |               ++++++
+
+error[E0599]: no method named `arm` found for opaque type `impl Future<Output = component::WheelCore>` in the current scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1820:24
+     |
+1820 |         let id = wheel.arm(plugin.clone(), 1, 0, 0, 100, None).unwrap();
+     |                        ^^^ method not found in `impl Future<Output = component::WheelCore>`
+     |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+1820 |         let id = wheel.await.arm(plugin.clone(), 1, 0, 0, 100, None).unwrap();
+     |                        ++++++
+
+error[E0599]: no method named `submit` found for opaque type `impl Future<Output = component::StorageScheduler<component::TokioHostRuntime>>` in the current scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1996:14
+     |
+1995 |           let occupy_ticket = scheduler
+     |  _____________________________-
+1996 | |             .submit(&occupy_ctx, PackageId("occupy".to_string()), 1, move || {
+     | |             -^^^^^^ method not found in `impl Future<Output = component::StorageScheduler<component::TokioHostRuntime>>`
+     | |_____________|
+     |
+     |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+1996 |             .await.submit(&occupy_ctx, PackageId("occupy".to_string()), 1, move || {
+     |              ++++++
+
+error[E0609]: no field `deadline_ms` on type `impl Future<Output = semio_framework_async::OperationContext>`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2008:26
+     |
+2008 |             deadline_ctx.deadline_ms = Some(now + 30);
+     |                          ^^^^^^^^^^^ field not available in `impl Future`, but it is available in its `Output`
+     |
+help: consider `await`ing on the `Future` to access the field
+     |
+2008 |             deadline_ctx.await.deadline_ms = Some(now + 30);
+     |                         ++++++
+
+error[E0369]: cannot add `{integer}` to `impl Future<Output = u64>`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2008:49
+     |
+2008 |             deadline_ctx.deadline_ms = Some(now + 30);
+     |                                             --- ^ -- {integer}
+     |                                             |
+     |                                             impl Future<Output = u64>
+
+error[E0599]: no method named `arm` found for opaque type `impl Future<Output = component::WheelCore>` in the current scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1799:24
+     |
+1799 |         let id = wheel.arm(plugin, 1, 0, 0, 100, None).unwrap();
+     |                        ^^^ method not found in `impl Future<Output = component::WheelCore>`
+     |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+1799 |         let id = wheel.await.arm(plugin, 1, 0, 0, 100, None).unwrap();
+     |                        ++++++
+
+error[E0599]: no method named `recorded` found for struct `std::sync::Arc<impl Future<Output = component::MockCompletionSink>>` in the current scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1839:22
+     |
+1839 |         assert!(sink.recorded().is_empty(), "must not fire before the injected clock reaches the deadline");
+     |                      ^^^^^^^^ method not found in `std::sync::Arc<impl Future<Output = component::MockCompletionSink>>`
+
+error[E0599]: no method named `arm` found for opaque type `impl Future<Output = component::WheelCore>` in the current scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1821:23
+     |
+1821 |         assert!(wheel.arm(plugin.clone(), 1, 0, 0, 200, None).is_err());
+     |                       ^^^ method not found in `impl Future<Output = component::WheelCore>`
+     |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+1821 |         assert!(wheel.await.arm(plugin.clone(), 1, 0, 0, 200, None).is_err());
+     |                       ++++++
+
+error[E0599]: no method named `submit` found for opaque type `impl Future<Output = component::StorageScheduler<component::TokioHostRuntime>>` in the current scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2009:45
+     |
+2009 |             let deadline_ticket = scheduler.submit(&deadline_ctx, plugin.clone(), 42, move || {
+     |                                   ----------^^^^^^ method not found in `impl Future<Output = component::StorageScheduler<component::TokioHostRuntime>>`
+     |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+2009 |             let deadline_ticket = scheduler.await.submit(&deadline_ctx, plugin.clone(), 42, move || {
+     |                                             ++++++
+
+error[E0599]: no method named `arm` found for opaque type `impl Future<Output = component::WheelCore>` in the current scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1786:24
+     |
+1786 |         let id = wheel.arm(plugin, 1, 0, 0, 100, Some(100)).unwrap();
+     |                        ^^^ method not found in `impl Future<Output = component::WheelCore>`
+     |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+1786 |         let id = wheel.await.arm(plugin, 1, 0, 0, 100, Some(100)).unwrap();
+     |                        ++++++
+
+error[E0599]: no method named `recorded` found for struct `std::sync::Arc<impl Future<Output = component::MockCompletionSink>>` in the current scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1842:29
+     |
+1842 |         let recorded = sink.recorded();
+     |                             ^^^^^^^^ method not found in `std::sync::Arc<impl Future<Output = component::MockCompletionSink>>`
+
+error[E0599]: no method named `arm` found for opaque type `impl Future<Output = component::WheelCore>` in the current scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1810:15
+     |
+1810 |         wheel.arm(plugin.clone(), 1, 0, 0, 200, None).unwrap();
+     |               ^^^ method not found in `impl Future<Output = component::WheelCore>`
+     |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+1810 |         wheel.await.arm(plugin.clone(), 1, 0, 0, 200, None).unwrap();
+     |               ++++++
+
+error[E0599]: no method named `disarm` found for opaque type `impl Future<Output = component::WheelCore>` in the current scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1800:23
+     |
+1800 |         assert!(wheel.disarm(id));
+     |                       ^^^^^^ method not found in `impl Future<Output = component::WheelCore>`
+     |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+1800 |         assert!(wheel.await.disarm(id));
+     |                       ++++++
+
+error[E0599]: no method named `disarm` found for opaque type `impl Future<Output = component::WheelCore>` in the current scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1822:15
+     |
+1822 |         wheel.disarm(id);
+     |               ^^^^^^ method not found in `impl Future<Output = component::WheelCore>`
+     |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+1822 |         wheel.await.disarm(id);
+     |               ++++++
+
+error[E0599]: no method named `pop_expired` found for opaque type `impl Future<Output = component::WheelCore>` in the current scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1787:27
+     |
+1787 |         let first = wheel.pop_expired(100);
+     |                           ^^^^^^^^^^^ method not found in `impl Future<Output = component::WheelCore>`
+     |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+1787 |         let first = wheel.await.pop_expired(100);
+     |                           ++++++
+
+error[E0599]: no method named `submit` found for opaque type `impl Future<Output = component::StorageScheduler<component::TokioHostRuntime>>` in the current scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2023:39
+     |
+2023 |         let verify_ticket = scheduler.submit(&test_ctx(0, scope.cancel), plugin.clone(), 45, || Ok(Vec::new()));
+     |                                       ^^^^^^ method not found in `impl Future<Output = component::StorageScheduler<component::TokioHostRuntime>>`
+     |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+2023 |         let verify_ticket = scheduler.await.submit(&test_ctx(0, scope.cancel), plugin.clone(), 45, || Ok(Vec::new()));
+     |                                       ++++++
+
+error[E0609]: no field `cancel` on type `impl Future<Output = semio_framework_async::ScopeHandle>`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2023:65
+     |
+2023 |         let verify_ticket = scheduler.submit(&test_ctx(0, scope.cancel), plugin.clone(), 45, || Ok(Vec::new()));
+     |                                                                 ^^^^^^ field not available in `impl Future`, but it is available in its `Output`
+     |
+help: consider `await`ing on the `Future` to access the field
+     |
+2023 |         let verify_ticket = scheduler.submit(&test_ctx(0, scope.await.cancel), plugin.clone(), 45, || Ok(Vec::new()));
+     |                                                                ++++++
+
+error[E0599]: no method named `arm` found for opaque type `impl Future<Output = component::WheelCore>` in the current scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1811:28
+     |
+1811 |         let result = wheel.arm(plugin.clone(), 1, 0, 0, 300, None);
+     |                            ^^^ method not found in `impl Future<Output = component::WheelCore>`
+     |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+1811 |         let result = wheel.await.arm(plugin.clone(), 1, 0, 0, 300, None);
+     |                            ++++++
+
+error[E0599]: no method named `arm` found for opaque type `impl Future<Output = component::WheelCore>` in the current scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1823:23
+     |
+1823 |         assert!(wheel.arm(plugin, 1, 0, 0, 200, None).is_ok());
+     |                       ^^^ method not found in `impl Future<Output = component::WheelCore>`
+     |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+1823 |         assert!(wheel.await.arm(plugin, 1, 0, 0, 200, None).is_ok());
+     |                       ++++++
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1722:46
+     |
+1722 |         let budget = ThreadBudget::from_plan(plan);
+     |                      ----------------------- ^^^^ expected `ThreadPlan`, found future
+     |                      |
+     |                      arguments to this function are incorrect
+     |
+note: calling an async function returns a future
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1722:46
+     |
+1722 |         let budget = ThreadBudget::from_plan(plan);
+     |                                              ^^^^
+note: associated function defined here
+    --> 🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:334:18
+     |
+ 334 |     pub async fn from_plan(plan: ThreadPlan) -> ThreadBudget {
+     |                  ^^^^^^^^^
+help: consider `await`ing on the `Future`
+     |
+1722 |         let budget = ThreadBudget::from_plan(plan.await);
+     |                                                  ++++++
+
+error[E0599]: no method named `arm` found for opaque type `impl Future<Output = component::WheelCore>` in the current scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1764:26
+     |
+1764 |         let late = wheel.arm(plugin.clone(), 1, 0, 0, 200, None).unwrap();
+     |                          ^^^ method not found in `impl Future<Output = component::WheelCore>`
+     |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+1764 |         let late = wheel.await.arm(plugin.clone(), 1, 0, 0, 200, None).unwrap();
+     |                          ++++++
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1688:51
+     |
+1688 |         let runtime = TokioHostRuntime::new(plan, &budget).expect("runtime should build");
+     |                       ---------------------       ^^^^^^^ expected `&ThreadBudget`, found `&impl Future<Output = ThreadBudget>`
+     |                       |
+     |                       arguments to this function are incorrect
+     |
+     = note: expected reference `&semio_framework_async::ThreadBudget`
+                found reference `&impl Future<Output = semio_framework_async::ThreadBudget>`
+note: associated function defined here
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:266:12
+     |
+ 266 |     pub fn new(plan: ThreadPlan, budget: &ThreadBudget) -> Result<TokioHostRuntime, RuntimeBuildError> {
+     |            ^^^                   ---------------------
+
+error[E0308]: arguments to this function are incorrect
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1723:23
+     |
+1723 |         let runtime = TokioHostRuntime::new(plan, &budget).expect("runtime should build");
+     |                       ^^^^^^^^^^^^^^^^^^^^^
+     |
+note: expected `ThreadPlan`, found future
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1723:45
+     |
+1723 |         let runtime = TokioHostRuntime::new(plan, &budget).expect("runtime should build");
+     |                                             ^^^^
+note: calling an async function returns a future
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1723:45
+     |
+1723 |         let runtime = TokioHostRuntime::new(plan, &budget).expect("runtime should build");
+     |                                             ^^^^
+note: expected `&ThreadBudget`, found `&impl Future<Output = ThreadBudget>`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1723:51
+     |
+1723 |         let runtime = TokioHostRuntime::new(plan, &budget).expect("runtime should build");
+     |                                                   ^^^^^^^
+     = note: expected reference `&semio_framework_async::ThreadBudget`
+                found reference `&impl Future<Output = semio_framework_async::ThreadBudget>`
+note: associated function defined here
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:266:12
+     |
+ 266 |     pub fn new(plan: ThreadPlan, budget: &ThreadBudget) -> Result<TokioHostRuntime, RuntimeBuildError> {
+     |            ^^^ ----------------  ---------------------
+help: consider `await`ing on the `Future`
+     |
+1723 |         let runtime = TokioHostRuntime::new(plan.await, &budget).expect("runtime should build");
+     |                                                 ++++++
+
+error[E0609]: no field `compute` on type `impl Future<Output = semio_framework_async::ThreadPlan>`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1724:42
+     |
+1724 |         let pool = ComputePool::new(plan.compute);
+     |                                          ^^^^^^^ field not available in `impl Future`, but it is available in its `Output`
+     |
+help: consider `await`ing on the `Future` to access the field
+     |
+1724 |         let pool = ComputePool::new(plan.await.compute);
+     |                                         ++++++
+
+error[E0277]: `&impl Future<Output = semio_framework_async::ScopeHandle>` is not a future
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1701:52
+     |
+1701 |                 let ctx = test_ctx(i as u64, scope.await.cancel.clone());
+     |                                                    ^^^^^ `&impl Future<Output = semio_framework_async::ScopeHandle>` is not a future
+     |
+     = help: the trait `Future` is not implemented for `&impl Future<Output = semio_framework_async::ScopeHandle>`
+     = note: &impl Future<Output = semio_framework_async::ScopeHandle> must be a future or must implement `IntoFuture` to be awaited
+     = note: required for `&impl Future<Output = semio_framework_async::ScopeHandle>` to implement `IntoFuture`
+help: consider removing the leading `&`-reference
+     |
+1698 -                 let scope = &scope;
+1698 +                 let scope = scope;
+     |
+
+error[E0599]: no method named `pop_expired` found for opaque type `impl Future<Output = component::WheelCore>` in the current scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1790:28
+     |
+1790 |         let second = wheel.pop_expired(450);
+     |                            ^^^^^^^^^^^ method not found in `impl Future<Output = component::WheelCore>`
+     |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+1790 |         let second = wheel.await.pop_expired(450);
+     |                            ++++++
+
+error[E0599]: no method named `arm` found for opaque type `impl Future<Output = component::WheelCore>` in the current scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1765:27
+     |
+1765 |         let early = wheel.arm(plugin, 2, 0, 0, 100, None).unwrap();
+     |                           ^^^ method not found in `impl Future<Output = component::WheelCore>`
+     |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+1765 |         let early = wheel.await.arm(plugin, 2, 0, 0, 100, None).unwrap();
+     |                           ++++++
+
+error[E0599]: no method named `pop_expired` found for opaque type `impl Future<Output = component::WheelCore>` in the current scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1801:23
+     |
+1801 |         assert!(wheel.pop_expired(1_000).is_empty());
+     |                       ^^^^^^^^^^^ method not found in `impl Future<Output = component::WheelCore>`
+     |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+1801 |         assert!(wheel.await.pop_expired(1_000).is_empty());
+     |                       ++++++
+
+error[E0609]: no field `deadline_ms` on type `impl Future<Output = semio_framework_async::OperationContext>`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1730:17
+     |
+1730 |             ctx.deadline_ms = Some(now + 40);
+     |                 ^^^^^^^^^^^ field not available in `impl Future`, but it is available in its `Output`
+     |
+help: consider `await`ing on the `Future` to access the field
+     |
+1730 |             ctx.await.deadline_ms = Some(now + 40);
+     |                ++++++
+
+error[E0369]: cannot add `{integer}` to `impl Future<Output = u64>`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1730:40
+     |
+1730 |             ctx.deadline_ms = Some(now + 40);
+     |                                    --- ^ -- {integer}
+     |                                    |
+     |                                    impl Future<Output = u64>
+
+error[E0599]: no method named `arm` found for opaque type `impl Future<Output = component::WheelCore>` in the current scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1774:15
+     |
+1774 |         wheel.arm(plugin, 1, 0, 0, 500, None).unwrap();
+     |               ^^^ method not found in `impl Future<Output = component::WheelCore>`
+     |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+1774 |         wheel.await.arm(plugin, 1, 0, 0, 500, None).unwrap();
+     |               ++++++
+
+error[E0599]: no method named `armed_count` found for opaque type `impl Future<Output = component::WheelCore>` in the current scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1813:26
+     |
+1813 |         assert_eq!(wheel.armed_count(&plugin), 2, "a rejected arm must leave the wheel untouched");
+     |                          ^^^^^^^^^^^ method not found in `impl Future<Output = component::WheelCore>`
+     |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+1813 |         assert_eq!(wheel.await.armed_count(&plugin), 2, "a rejected arm must leave the wheel untouched");
+     |                          ++++++
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1667:46
+     |
+1667 |         let budget = ThreadBudget::from_plan(plan);
+     |                      ----------------------- ^^^^ expected `ThreadPlan`, found future
+     |                      |
+     |                      arguments to this function are incorrect
+     |
+note: calling an async function returns a future
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1667:46
+     |
+1667 |         let budget = ThreadBudget::from_plan(plan);
+     |                                              ^^^^
+note: associated function defined here
+    --> 🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:334:18
+     |
+ 334 |     pub async fn from_plan(plan: ThreadPlan) -> ThreadBudget {
+     |                  ^^^^^^^^^
+help: consider `await`ing on the `Future`
+     |
+1667 |         let budget = ThreadBudget::from_plan(plan.await);
+     |                                                  ++++++
+
+error[E0308]: arguments to this function are incorrect
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1668:23
+     |
+1668 |         let runtime = TokioHostRuntime::new(plan, &budget).expect("runtime should build");
+     |                       ^^^^^^^^^^^^^^^^^^^^^
+     |
+note: expected `ThreadPlan`, found future
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1668:45
+     |
+1668 |         let runtime = TokioHostRuntime::new(plan, &budget).expect("runtime should build");
+     |                                             ^^^^
+note: calling an async function returns a future
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1668:45
+     |
+1668 |         let runtime = TokioHostRuntime::new(plan, &budget).expect("runtime should build");
+     |                                             ^^^^
+note: expected `&ThreadBudget`, found `&impl Future<Output = ThreadBudget>`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1668:51
+     |
+1668 |         let runtime = TokioHostRuntime::new(plan, &budget).expect("runtime should build");
+     |                                                   ^^^^^^^
+     = note: expected reference `&semio_framework_async::ThreadBudget`
+                found reference `&impl Future<Output = semio_framework_async::ThreadBudget>`
+note: associated function defined here
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:266:12
+     |
+ 266 |     pub fn new(plan: ThreadPlan, budget: &ThreadBudget) -> Result<TokioHostRuntime, RuntimeBuildError> {
+     |            ^^^ ----------------  ---------------------
+help: consider `await`ing on the `Future`
+     |
+1668 |         let runtime = TokioHostRuntime::new(plan.await, &budget).expect("runtime should build");
+     |                                                 ++++++
+
+error[E0599]: no method named `run_blocking` found for opaque type `impl Future<Output = component::ComputePool>` in the current scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1731:18
+     |
+1731 |             pool.run_blocking(&runtime, &scope, ctx, move || {
+     |             -----^^^^^^^^^^^^ method not found in `impl Future<Output = component::ComputePool>`
+     |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+1731 |             pool.await.run_blocking(&runtime, &scope, ctx, move || {
+     |                  ++++++
+
+error[E0609]: no field `cancel` on type `impl Future<Output = semio_framework_async::ScopeHandle>`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1670:15
+     |
+1670 |         scope.cancel.park();
+     |               ^^^^^^ field not available in `impl Future`, but it is available in its `Output`
+     |
+help: consider `await`ing on the `Future` to access the field
+     |
+1670 |         scope.await.cancel.park();
+     |              ++++++
+
+error[E0609]: no field `cancel` on type `impl Future<Output = semio_framework_async::ScopeHandle>`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1673:37
+     |
+1673 |         let ctx = test_ctx(0, scope.cancel.clone());
+     |                                     ^^^^^^ field not available in `impl Future`, but it is available in its `Output`
+     |
+help: consider `await`ing on the `Future` to access the field
+     |
+1673 |         let ctx = test_ctx(0, scope.await.cancel.clone());
+     |                                    ++++++
+
+error[E0308]: arguments to this method are incorrect
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1674:17
+     |
+1674 |         runtime.spawn_scoped(&scope, ctx, Box::pin(async move { ran_clone.store(true, Ordering::SeqCst) }));
+     |                 ^^^^^^^^^^^^
+     |
+note: expected `&ScopeHandle`, found `&impl Future<Output = ScopeHandle>`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1674:30
+     |
+1674 |         runtime.spawn_scoped(&scope, ctx, Box::pin(async move { ran_clone.store(true, Ordering::SeqCst) }));
+     |                              ^^^^^^
+     = note: expected reference `&semio_framework_async::ScopeHandle`
+                found reference `&impl Future<Output = semio_framework_async::ScopeHandle>`
+note: expected `OperationContext`, found future
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1674:38
+     |
+1674 |         runtime.spawn_scoped(&scope, ctx, Box::pin(async move { ran_clone.store(true, Ordering::SeqCst) }));
+     |                                      ^^^
+note: calling an async function returns a future
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1674:38
+     |
+1674 |         runtime.spawn_scoped(&scope, ctx, Box::pin(async move { ran_clone.store(true, Ordering::SeqCst) }));
+     |                                      ^^^
+note: method defined here
+    --> 🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:387:14
+     |
+ 387 |     async fn spawn_scoped(&self, scope: &ScopeHandle, ctx: OperationContext, fut: HostFuture<()>);
+     |              ^^^^^^^^^^^^
+help: consider `await`ing on the `Future`
+     |
+1674 |         runtime.spawn_scoped(&scope, ctx.await, Box::pin(async move { ran_clone.store(true, Ordering::SeqCst) }));
+     |                                         ++++++
+
+error[E0609]: no field `cancel` on type `impl Future<Output = semio_framework_async::ScopeHandle>`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1677:15
+     |
+1677 |         scope.cancel.unpark();
+     |               ^^^^^^ field not available in `impl Future`, but it is available in its `Output`
+     |
+help: consider `await`ing on the `Future` to access the field
+     |
+1677 |         scope.await.cancel.unpark();
+     |              ++++++
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1648:46
+     |
+1648 |         let budget = ThreadBudget::from_plan(plan);
+     |                      ----------------------- ^^^^ expected `ThreadPlan`, found future
+     |                      |
+     |                      arguments to this function are incorrect
+     |
+note: calling an async function returns a future
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1648:46
+     |
+1648 |         let budget = ThreadBudget::from_plan(plan);
+     |                                              ^^^^
+note: associated function defined here
+    --> 🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:334:18
+     |
+ 334 |     pub async fn from_plan(plan: ThreadPlan) -> ThreadBudget {
+     |                  ^^^^^^^^^
+help: consider `await`ing on the `Future`
+     |
+1648 |         let budget = ThreadBudget::from_plan(plan.await);
+     |                                                  ++++++
+
+error[E0599]: no method named `next_expiry_ms` found for opaque type `impl Future<Output = component::WheelCore>` in the current scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1792:23
+     |
+1792 |         assert!(wheel.next_expiry_ms().unwrap() > 450);
+     |                       ^^^^^^^^^^^^^^ method not found in `impl Future<Output = component::WheelCore>`
+     |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+1792 |         assert!(wheel.await.next_expiry_ms().unwrap() > 450);
+     |                       ++++++
+
+error[E0308]: arguments to this function are incorrect
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1649:23
+     |
+1649 |         let runtime = TokioHostRuntime::new(plan, &budget).expect("runtime should build");
+     |                       ^^^^^^^^^^^^^^^^^^^^^
+     |
+note: expected `ThreadPlan`, found future
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1649:45
+     |
+1649 |         let runtime = TokioHostRuntime::new(plan, &budget).expect("runtime should build");
+     |                                             ^^^^
+note: calling an async function returns a future
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1649:45
+     |
+1649 |         let runtime = TokioHostRuntime::new(plan, &budget).expect("runtime should build");
+     |                                             ^^^^
+note: expected `&ThreadBudget`, found `&impl Future<Output = ThreadBudget>`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1649:51
+     |
+1649 |         let runtime = TokioHostRuntime::new(plan, &budget).expect("runtime should build");
+     |                                                   ^^^^^^^
+     = note: expected reference `&semio_framework_async::ThreadBudget`
+                found reference `&impl Future<Output = semio_framework_async::ThreadBudget>`
+note: associated function defined here
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:266:12
+     |
+ 266 |     pub fn new(plan: ThreadPlan, budget: &ThreadBudget) -> Result<TokioHostRuntime, RuntimeBuildError> {
+     |            ^^^ ----------------  ---------------------
+help: consider `await`ing on the `Future`
+     |
+1649 |         let runtime = TokioHostRuntime::new(plan.await, &budget).expect("runtime should build");
+     |                                                 ++++++
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1624:46
+     |
+1624 |         let budget = ThreadBudget::from_plan(plan);
+     |                      ----------------------- ^^^^ expected `ThreadPlan`, found future
+     |                      |
+     |                      arguments to this function are incorrect
+     |
+note: calling an async function returns a future
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1624:46
+     |
+1624 |         let budget = ThreadBudget::from_plan(plan);
+     |                                              ^^^^
+note: associated function defined here
+    --> 🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:334:18
+     |
+ 334 |     pub async fn from_plan(plan: ThreadPlan) -> ThreadBudget {
+     |                  ^^^^^^^^^
+help: consider `await`ing on the `Future`
+     |
+1624 |         let budget = ThreadBudget::from_plan(plan.await);
+     |                                                  ++++++
+
+error[E0308]: arguments to this function are incorrect
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1625:23
+     |
+1625 |         let runtime = TokioHostRuntime::new(plan, &budget).expect("runtime should build");
+     |                       ^^^^^^^^^^^^^^^^^^^^^
+     |
+note: expected `ThreadPlan`, found future
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1625:45
+     |
+1625 |         let runtime = TokioHostRuntime::new(plan, &budget).expect("runtime should build");
+     |                                             ^^^^
+note: calling an async function returns a future
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1625:45
+     |
+1625 |         let runtime = TokioHostRuntime::new(plan, &budget).expect("runtime should build");
+     |                                             ^^^^
+note: expected `&ThreadBudget`, found `&impl Future<Output = ThreadBudget>`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1625:51
+     |
+1625 |         let runtime = TokioHostRuntime::new(plan, &budget).expect("runtime should build");
+     |                                                   ^^^^^^^
+     = note: expected reference `&semio_framework_async::ThreadBudget`
+                found reference `&impl Future<Output = semio_framework_async::ThreadBudget>`
+note: associated function defined here
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:266:12
+     |
+ 266 |     pub fn new(plan: ThreadPlan, budget: &ThreadBudget) -> Result<TokioHostRuntime, RuntimeBuildError> {
+     |            ^^^ ----------------  ---------------------
+help: consider `await`ing on the `Future`
+     |
+1625 |         let runtime = TokioHostRuntime::new(plan.await, &budget).expect("runtime should build");
+     |                                                 ++++++
+
+error[E0609]: no field `cancel` on type `impl Future<Output = semio_framework_async::ScopeHandle>`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1627:37
+     |
+1627 |         let ctx = test_ctx(2, scope.cancel.clone());
+     |                                     ^^^^^^ field not available in `impl Future`, but it is available in its `Output`
+     |
+help: consider `await`ing on the `Future` to access the field
+     |
+1627 |         let ctx = test_ctx(2, scope.await.cancel.clone());
+     |                                    ++++++
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1607:46
+     |
+1607 |         let budget = ThreadBudget::from_plan(plan);
+     |                      ----------------------- ^^^^ expected `ThreadPlan`, found future
+     |                      |
+     |                      arguments to this function are incorrect
+     |
+note: calling an async function returns a future
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1607:46
+     |
+1607 |         let budget = ThreadBudget::from_plan(plan);
+     |                                              ^^^^
+note: associated function defined here
+    --> 🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:334:18
+     |
+ 334 |     pub async fn from_plan(plan: ThreadPlan) -> ThreadBudget {
+     |                  ^^^^^^^^^
+help: consider `await`ing on the `Future`
+     |
+1607 |         let budget = ThreadBudget::from_plan(plan.await);
+     |                                                  ++++++
+
+error[E0599]: no method named `disarm` found for opaque type `impl Future<Output = component::WheelCore>` in the current scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1802:24
+     |
+1802 |         assert!(!wheel.disarm(id), "disarming twice must report false the second time");
+     |                        ^^^^^^ method not found in `impl Future<Output = component::WheelCore>`
+     |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+1802 |         assert!(!wheel.await.disarm(id), "disarming twice must report false the second time");
+     |                        ++++++
+
+error[E0599]: no method named `pop_expired` found for opaque type `impl Future<Output = component::WheelCore>` in the current scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1775:23
+     |
+1775 |         assert!(wheel.pop_expired(400).is_empty(), "must not fire before its expiry");
+     |                       ^^^^^^^^^^^ method not found in `impl Future<Output = component::WheelCore>`
+     |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+1775 |         assert!(wheel.await.pop_expired(400).is_empty(), "must not fire before its expiry");
+     |                       ++++++
+
+error[E0609]: no field `cancel` on type `impl Future<Output = semio_framework_async::ScopeHandle>`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1651:37
+     |
+1651 |         let ctx = test_ctx(3, scope.cancel.clone());
+     |                                     ^^^^^^ field not available in `impl Future`, but it is available in its `Output`
+     |
+help: consider `await`ing on the `Future` to access the field
+     |
+1651 |         let ctx = test_ctx(3, scope.await.cancel.clone());
+     |                                    ++++++
+
+error[E0308]: arguments to this method are incorrect
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1628:17
+     |
+1628 |         runtime.spawn_scoped(
+     |                 ^^^^^^^^^^^^
+     |
+note: expected `&ScopeHandle`, found `&impl Future<Output = ScopeHandle>`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1629:13
+     |
+1629 |             &scope,
+     |             ^^^^^^
+     = note: expected reference `&semio_framework_async::ScopeHandle`
+                found reference `&impl Future<Output = semio_framework_async::ScopeHandle>`
+note: expected `OperationContext`, found future
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1630:13
+     |
+1630 |             ctx,
+     |             ^^^
+note: calling an async function returns a future
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1630:13
+     |
+1630 |             ctx,
+     |             ^^^
+note: method defined here
+    --> 🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:387:14
+     |
+ 387 |     async fn spawn_scoped(&self, scope: &ScopeHandle, ctx: OperationContext, fut: HostFuture<()>);
+     |              ^^^^^^^^^^^^
+help: consider `await`ing on the `Future`
+     |
+1630 |             ctx.await,
+     |                ++++++
+
+error[E0599]: no method named `pop_expired` found for opaque type `impl Future<Output = component::WheelCore>` in the current scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1766:41
+     |
+1766 |         let fired: Vec<TimerId> = wheel.pop_expired(1_000).into_iter().map(|f| f.id).collect();
+     |                                         ^^^^^^^^^^^ method not found in `impl Future<Output = component::WheelCore>`
+     |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+1766 |         let fired: Vec<TimerId> = wheel.await.pop_expired(1_000).into_iter().map(|f| f.id).collect();
+     |                                         ++++++
+
+error[E0308]: arguments to this function are incorrect
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1608:23
+     |
+1608 |         let runtime = TokioHostRuntime::new(plan, &budget).expect("runtime should build");
+     |                       ^^^^^^^^^^^^^^^^^^^^^
+     |
+note: expected `ThreadPlan`, found future
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1608:45
+     |
+1608 |         let runtime = TokioHostRuntime::new(plan, &budget).expect("runtime should build");
+     |                                             ^^^^
+note: calling an async function returns a future
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1608:45
+     |
+1608 |         let runtime = TokioHostRuntime::new(plan, &budget).expect("runtime should build");
+     |                                             ^^^^
+note: expected `&ThreadBudget`, found `&impl Future<Output = ThreadBudget>`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1608:51
+     |
+1608 |         let runtime = TokioHostRuntime::new(plan, &budget).expect("runtime should build");
+     |                                                   ^^^^^^^
+     = note: expected reference `&semio_framework_async::ThreadBudget`
+                found reference `&impl Future<Output = semio_framework_async::ThreadBudget>`
+note: associated function defined here
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:266:12
+     |
+ 266 |     pub fn new(plan: ThreadPlan, budget: &ThreadBudget) -> Result<TokioHostRuntime, RuntimeBuildError> {
+     |            ^^^ ----------------  ---------------------
+help: consider `await`ing on the `Future`
+     |
+1608 |         let runtime = TokioHostRuntime::new(plan.await, &budget).expect("runtime should build");
+     |                                                 ++++++
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1585:46
+     |
+1585 |         let budget = ThreadBudget::from_plan(plan);
+     |                      ----------------------- ^^^^ expected `ThreadPlan`, found future
+     |                      |
+     |                      arguments to this function are incorrect
+     |
+note: calling an async function returns a future
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1585:46
+     |
+1585 |         let budget = ThreadBudget::from_plan(plan);
+     |                                              ^^^^
+note: associated function defined here
+    --> 🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:334:18
+     |
+ 334 |     pub async fn from_plan(plan: ThreadPlan) -> ThreadBudget {
+     |                  ^^^^^^^^^
+help: consider `await`ing on the `Future`
+     |
+1585 |         let budget = ThreadBudget::from_plan(plan.await);
+     |                                                  ++++++
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1595:46
+     |
+1595 |         let budget = ThreadBudget::from_plan(plan);
+     |                      ----------------------- ^^^^ expected `ThreadPlan`, found future
+     |                      |
+     |                      arguments to this function are incorrect
+     |
+note: calling an async function returns a future
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1595:46
+     |
+1595 |         let budget = ThreadBudget::from_plan(plan);
+     |                                              ^^^^
+note: associated function defined here
+    --> 🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:334:18
+     |
+ 334 |     pub async fn from_plan(plan: ThreadPlan) -> ThreadBudget {
+     |                  ^^^^^^^^^
+help: consider `await`ing on the `Future`
+     |
+1595 |         let budget = ThreadBudget::from_plan(plan.await);
+     |                                                  ++++++
+
+error[E0599]: no method named `run_blocking` found for reference `&impl Future<Output = component::ComputePool>` in the current scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1703:26
+     |
+1703 |                     pool.run_blocking(runtime, scope, ctx, move || {
+     |                     -----^^^^^^^^^^^^ method not found in `&impl Future<Output = component::ComputePool>`
+
+error[E0308]: arguments to this function are incorrect
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1586:24
+     |
+1586 |         let _runtime = TokioHostRuntime::new(plan, &budget).expect("runtime should build");
+     |                        ^^^^^^^^^^^^^^^^^^^^^
+     |
+note: expected `ThreadPlan`, found future
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1586:46
+     |
+1586 |         let _runtime = TokioHostRuntime::new(plan, &budget).expect("runtime should build");
+     |                                              ^^^^
+note: calling an async function returns a future
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1586:46
+     |
+1586 |         let _runtime = TokioHostRuntime::new(plan, &budget).expect("runtime should build");
+     |                                              ^^^^
+note: expected `&ThreadBudget`, found `&impl Future<Output = ThreadBudget>`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1586:52
+     |
+1586 |         let _runtime = TokioHostRuntime::new(plan, &budget).expect("runtime should build");
+     |                                                    ^^^^^^^
+     = note: expected reference `&semio_framework_async::ThreadBudget`
+                found reference `&impl Future<Output = semio_framework_async::ThreadBudget>`
+note: associated function defined here
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:266:12
+     |
+ 266 |     pub fn new(plan: ThreadPlan, budget: &ThreadBudget) -> Result<TokioHostRuntime, RuntimeBuildError> {
+     |            ^^^ ----------------  ---------------------
+help: consider `await`ing on the `Future`
+     |
+1586 |         let _runtime = TokioHostRuntime::new(plan.await, &budget).expect("runtime should build");
+     |                                                  ++++++
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = u32>`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1587:9
+     |
+1587 |         assert_eq!(budget.await.remaining(ThreadRole::IoWorker), 0);
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |         |
+     |         impl Future<Output = u32>
+     |         {integer}
+
+error[E0308]: arguments to this function are incorrect
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1596:23
+     |
+1596 |         let runtime = TokioHostRuntime::new(plan, &budget).expect("runtime should build");
+     |                       ^^^^^^^^^^^^^^^^^^^^^
+     |
+note: expected `ThreadPlan`, found future
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1596:45
+     |
+1596 |         let runtime = TokioHostRuntime::new(plan, &budget).expect("runtime should build");
+     |                                             ^^^^
+note: calling an async function returns a future
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1596:45
+     |
+1596 |         let runtime = TokioHostRuntime::new(plan, &budget).expect("runtime should build");
+     |                                             ^^^^
+note: expected `&ThreadBudget`, found `&impl Future<Output = ThreadBudget>`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1596:51
+     |
+1596 |         let runtime = TokioHostRuntime::new(plan, &budget).expect("runtime should build");
+     |                                                   ^^^^^^^
+     = note: expected reference `&semio_framework_async::ThreadBudget`
+                found reference `&impl Future<Output = semio_framework_async::ThreadBudget>`
+note: associated function defined here
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:266:12
+     |
+ 266 |     pub fn new(plan: ThreadPlan, budget: &ThreadBudget) -> Result<TokioHostRuntime, RuntimeBuildError> {
+     |            ^^^ ----------------  ---------------------
+help: consider `await`ing on the `Future`
+     |
+1596 |         let runtime = TokioHostRuntime::new(plan.await, &budget).expect("runtime should build");
+     |                                                 ++++++
+
+error[E0369]: binary operation `>=` cannot be applied to type `impl Future<Output = u64>`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1599:34
+     |
+1599 |         assert!(runtime.now_ms() >= first, "now_ms must never go backward");
+     |                 ---------------- ^^ ----- impl Future<Output = u64>
+     |                 |
+     |                 impl Future<Output = u64>
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1610:67
+     |
+1610 |         let actor = runtime.open_scope(ScopeOwner::Actor(1), Some(&package));
+     |                                                              ---- ^^^^^^^^ expected `&ScopeHandle`, found `&impl Future<Output = ScopeHandle>`
+     |                                                              |
+     |                                                              arguments to this enum variant are incorrect
+     |
+     = note: expected reference `&semio_framework_async::ScopeHandle`
+                found reference `&impl Future<Output = semio_framework_async::ScopeHandle>`
+help: the type constructed contains `&impl Future<Output = semio_framework_async::ScopeHandle>` due to the type of the argument passed
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1610:62
+     |
+1610 |         let actor = runtime.open_scope(ScopeOwner::Actor(1), Some(&package));
+     |                                                              ^^^^^--------^
+     |                                                                   |
+     |                                                                   this argument influences the type of `Some`
+note: tuple variant defined here
+    --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/option.rs:606:5
+     |
+ 606 |     Some(#[stable(feature = "rust1", since = "1.0.0")] T),
+     |     ^^^^
+
+error[E0609]: no field `cancel` on type `impl Future<Output = semio_framework_async::ScopeHandle>`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1614:23
+     |
+1614 |         assert!(actor.cancel.is_cancelled(), "child scope must observe the package scope's cancellation");
+     |                       ^^^^^^ field not available in `impl Future`, but it is available in its `Output`
+     |
+help: consider `await`ing on the `Future` to access the field
+     |
+1614 |         assert!(actor.await.cancel.is_cancelled(), "child scope must observe the package scope's cancellation");
+     |                      ++++++
+
+error[E0277]: `impl Future<Output = u32>` doesn't implement `Debug`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1587:9
+     |
+1587 |         assert_eq!(budget.await.remaining(ThreadRole::IoWorker), 0);
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Debug` is not implemented for `impl Future<Output = u32>`
+
+error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = u32>`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1588:9
+     |
+1588 |         assert_eq!(budget.await.remaining(ThreadRole::Compute), 0);
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |         |
+     |         impl Future<Output = u32>
+     |         {integer}
+
+error[E0277]: `impl Future<Output = u32>` doesn't implement `Debug`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1588:9
+     |
+1588 |         assert_eq!(budget.await.remaining(ThreadRole::Compute), 0);
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Debug` is not implemented for `impl Future<Output = u32>`
+
+error[E0609]: no field `shards` on type `impl Future<Output = semio_framework_async::ThreadPlan>`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1589:68
+     |
+1589 |         assert_eq!(budget.await.remaining(ThreadRole::Shard), plan.shards, "TokioHostRuntime must not touch roles it does not own");
+     |                                                                    ^^^^^^ field not available in `impl Future`, but it is available in its `Output`
+     |
+help: consider `await`ing on the `Future` to access the field
+     |
+1589 |         assert_eq!(budget.await.remaining(ThreadRole::Shard), plan.await.shards, "TokioHostRuntime must not touch roles it does not own");
+     |                                                                   ++++++
+
+error[E0308]: arguments to this method are incorrect
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1654:17
+     |
+1654 |         runtime.spawn_scoped(&scope, ctx, Box::pin(async move { ran_clone.store(true, Ordering::SeqCst) }));
+     |                 ^^^^^^^^^^^^
+     |
+note: expected `&ScopeHandle`, found `&impl Future<Output = ScopeHandle>`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1654:30
+     |
+1654 |         runtime.spawn_scoped(&scope, ctx, Box::pin(async move { ran_clone.store(true, Ordering::SeqCst) }));
+     |                              ^^^^^^
+     = note: expected reference `&semio_framework_async::ScopeHandle`
+                found reference `&impl Future<Output = semio_framework_async::ScopeHandle>`
+note: expected `OperationContext`, found future
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1654:38
+     |
+1654 |         runtime.spawn_scoped(&scope, ctx, Box::pin(async move { ran_clone.store(true, Ordering::SeqCst) }));
+     |                                      ^^^
+note: calling an async function returns a future
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1654:38
+     |
+1654 |         runtime.spawn_scoped(&scope, ctx, Box::pin(async move { ran_clone.store(true, Ordering::SeqCst) }));
+     |                                      ^^^
+note: method defined here
+    --> 🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:387:14
+     |
+ 387 |     async fn spawn_scoped(&self, scope: &ScopeHandle, ctx: OperationContext, fut: HostFuture<()>);
+     |              ^^^^^^^^^^^^
+help: consider `await`ing on the `Future`
+     |
+1654 |         runtime.spawn_scoped(&scope, ctx.await, Box::pin(async move { ran_clone.store(true, Ordering::SeqCst) }));
+     |                                         ++++++
+
+error[E0277]: `impl Future<Output = u32>` doesn't implement `Debug`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1589:9
+     |
+1589 |         assert_eq!(budget.await.remaining(ThreadRole::Shard), plan.shards, "TokioHostRuntime must not touch roles it does not own");
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Debug` is not implemented for `impl Future<Output = u32>`
+
+error[E0599]: no method named `pop_expired` found for opaque type `impl Future<Output = component::WheelCore>` in the current scope
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1776:26
+     |
+1776 |         assert_eq!(wheel.pop_expired(500).len(), 1, "must fire once now_ms reaches the expiry");
+     |                          ^^^^^^^^^^^ method not found in `impl Future<Output = component::WheelCore>`
+     |
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+1776 |         assert_eq!(wheel.await.pop_expired(500).len(), 1, "must fire once now_ms reaches the expiry");
+     |                          ++++++
+
+Some errors have detailed explanations: E0277, E0308, E0369, E0599, E0609.
+For more information about an error, try `rustc --explain E0277`.
+error: could not compile `semio-framework-os-services` (lib test) due to 196 previous errors

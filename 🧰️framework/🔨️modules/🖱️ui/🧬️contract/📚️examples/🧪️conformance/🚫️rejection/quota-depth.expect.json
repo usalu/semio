@@ -1,0 +1,26 @@
+{
+  "case": "quota-depth",
+  "kind": "rejection",
+  "description": "Node 1 sits one edge below root, exceeding UiDocumentLimits::max_depth (set to 0 for this fixture) — rejected as DepthQuota.",
+  "outcome": "reject",
+  "limits": {
+    "maxNodes": 20000,
+    "maxDepth": 0,
+    "maxChildren": 4096,
+    "maxTextBytes": 65536,
+    "maxPatchOps": 4096,
+    "maxPatchBytes": 1048576
+  },
+  "baseRevision": 0,
+  "patchRejection": {
+    "type": "invariantViolated",
+    "violations": [
+      {
+        "type": "depthQuota",
+        "node": 1,
+        "depth": 1,
+        "max": 0
+      }
+    ]
+  }
+}

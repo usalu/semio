@@ -1,0 +1,95 @@
+{
+  "surface": "conformance.composite.surface-embedded",
+  "revision": 0,
+  "root": 0,
+  "nodes": [
+    {
+      "id": 0,
+      "key": "#0",
+      "component": {
+        "type": "container"
+      },
+      "layout": {
+        "kind": "stack",
+        "axis": "vertical",
+        "gap": "none",
+        "padding": {
+          "all": "none"
+        },
+        "align": "stretch",
+        "justify": "start",
+        "grow": false,
+        "wrap": false
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {},
+      "children": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "id": 1,
+      "key": "#0",
+      "component": {
+        "type": "text",
+        "value": "Scene",
+        "emphasize": true
+      },
+      "layout": {
+        "kind": "leaf",
+        "width": "hug",
+        "height": "hug"
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {}
+    },
+    {
+      "id": 2,
+      "key": "#1",
+      "component": {
+        "type": "surface",
+        "surfaceId": "surf-scene",
+        "controllerId": "cad-play",
+        "kind": "world-3d",
+        "paneId": "viewport-1",
+        "docSchema": "world3d@1",
+        "doc": {
+          "bytes": [
+            9,
+            9,
+            9
+          ]
+        }
+      },
+      "layout": {
+        "kind": "leaf",
+        "width": "fill",
+        "height": "fill"
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {}
+    },
+    {
+      "id": 3,
+      "key": "#2",
+      "component": {
+        "type": "text",
+        "value": "3 objects selected"
+      },
+      "layout": {
+        "kind": "leaf",
+        "width": "hug",
+        "height": "hug"
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {}
+    }
+  ],
+  "layoutEpoch": 0
+}

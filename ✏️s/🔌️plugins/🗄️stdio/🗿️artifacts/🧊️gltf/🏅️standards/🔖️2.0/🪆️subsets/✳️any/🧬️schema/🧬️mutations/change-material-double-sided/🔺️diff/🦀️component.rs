@@ -35,7 +35,7 @@ impl GltfChangeMaterialDoubleSidedDiff {
     }
 }
 pub async fn derive(payload: &GltfChangeMaterialDoubleSidedPayload, base: &GltfSnapshot) -> Result<GltfChangeMaterialDoubleSidedDiff, GltfChangeMaterialDoubleSidedRejection> {
-    validate(payload, base)?;
+    validate(payload, base).await?;
     Ok(GltfChangeMaterialDoubleSidedDiff {
         material: payload.material,
         expected_double_sided: base.document.materials[payload.material].double_sided,

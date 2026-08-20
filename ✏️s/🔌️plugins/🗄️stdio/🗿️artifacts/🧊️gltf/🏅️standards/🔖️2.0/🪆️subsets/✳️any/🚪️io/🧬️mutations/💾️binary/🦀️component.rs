@@ -14,46 +14,46 @@ async fn malformed(offset: u64, detail: impl Into<String>) -> protocol::Protocol
 impl protocol::OpBinary for GltfMutation {
     async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let envelope = self.envelope();
-        validate_gltf_mutation_envelope(envelope).map_err(|error| malformed(0, error.to_string()))?;
-        let mut writer = dsl::ByteWriter::new();
-        writer.write_u8(store::pack_rt::OP_BINARY_FORMAT);
-        writer.write_u8(BINARY_MARKER);
-        writer.write_u8(envelope.phase.binary_tag());
-        writer.write_varint_u64(envelope.command_id.len() as u64);
-        writer.write_bytes(envelope.command_id.as_bytes());
-        writer.write_varint_u64(envelope.version as u64);
-        writer.write_varint_u64(envelope.payload.len() as u64);
-        writer.write_bytes(&envelope.payload);
-        Ok(writer.into_bytes())
+        validate_gltf_mutation_envelope(envelope.await).await.map_err(|error| malformed(0, error.to_string()))?;
+        let mut writer = dsl::ByteWriter::new().await;
+        writer.write_u8(store::pack_rt::OP_BINARY_FORMAT).await;
+        writer.write_u8(BINARY_MARKER).await;
+        writer.write_u8(envelope.phase.binary_tag()).await;
+        writer.write_varint_u64(envelope.command_id.len() as u64).await;
+        writer.write_bytes(envelope.command_id.as_bytes()).await;
+        writer.write_varint_u64(envelope.version as u64).await;
+        writer.write_varint_u64(envelope.payload.len() as u64).await;
+        writer.write_bytes(&envelope.payload).await;
+        Ok(writer.into_bytes().await)
     }
 
     async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let mut reader = dsl::ByteReader::new(bytes);
-        let format = reader.read_u8().map_err(|error| malformed(0, error.to_string()))?;
+        let mut reader = dsl::ByteReader::new(bytes).await;
+        let format = reader.read_u8().await.map_err(|error| malformed(0, error.to_string()))?;
         if format != store::pack_rt::OP_BINARY_FORMAT {
-            return Err(malformed(0, format!("expected format {}, got {format}", store::pack_rt::OP_BINARY_FORMAT)));
+            return Err(malformed(0, format!("expected format {}, got {format}", store::pack_rt::OP_BINARY_FORMAT)).await);
         }
-        let marker = reader.read_u8().map_err(|error| malformed(1, error.to_string()))?;
+        let marker = reader.read_u8().await.map_err(|error| malformed(1, error.to_string()))?;
         if marker != BINARY_MARKER {
-            return Err(malformed(1, "unknown envelope marker"));
+            return Err(malformed(1, "unknown envelope marker").await);
         }
-        let phase = GltfMutationPhase::from_binary_tag(reader.read_u8().map_err(|error| malformed(2, error.to_string()))?).map_err(|error| malformed(2, error.to_string()))?;
-        let id_len = usize::try_from(reader.read_varint_u64().map_err(|error| malformed(3, error.to_string()))?).map_err(|_| malformed(3, "command id length exceeds usize"))?;
+        let phase = GltfMutationPhase::from_binary_tag(reader.read_u8().await.map_err(|error| malformed(2, error.to_string()))?).await.map_err(|error| malformed(2, error.to_string()))?;
+        let id_len = usize::try_from(reader.read_varint_u64().await.map_err(|error| malformed(3, error.to_string()))?).map_err(|_| malformed(3, "command id length exceeds usize"))?;
         if id_len == 0 || id_len > GLTF_MUTATION_MAX_COMMAND_ID_BYTES {
             return Err(protocol::ProtocolError::LimitExceeded("GLTF mutation command id"));
         }
-        let command_id = std::str::from_utf8(reader.read_bytes(id_len).map_err(|error| malformed(3, error.to_string()))?).map_err(|error| malformed(3, error.to_string()))?.into();
-        let version = u32::try_from(reader.read_varint_u64().map_err(|error| malformed(3, error.to_string()))?).map_err(|_| malformed(3, "version exceeds u32"))?;
-        let payload_len = usize::try_from(reader.read_varint_u64().map_err(|error| malformed(3, error.to_string()))?).map_err(|_| malformed(3, "payload length exceeds usize"))?;
+        let command_id = std::str::from_utf8(reader.read_bytes(id_len).await.map_err(|error| malformed(3, error.to_string()))?).map_err(|error| malformed(3, error.to_string()))?.into();
+        let version = u32::try_from(reader.read_varint_u64().await.map_err(|error| malformed(3, error.to_string()))?).map_err(|_| malformed(3, "version exceeds u32"))?;
+        let payload_len = usize::try_from(reader.read_varint_u64().await.map_err(|error| malformed(3, error.to_string()))?).map_err(|_| malformed(3, "payload length exceeds usize"))?;
         if payload_len > GLTF_MUTATION_MAX_PAYLOAD_BYTES {
             return Err(protocol::ProtocolError::LimitExceeded("GLTF mutation payload"));
         }
-        let payload = reader.read_bytes(payload_len).map_err(|error| malformed(3, error.to_string()))?.to_vec();
-        if reader.remaining() != 0 {
-            return Err(malformed((bytes.len() - reader.remaining()) as u64, "trailing bytes"));
+        let payload = reader.read_bytes(payload_len).await.map_err(|error| malformed(3, error.to_string()))?.to_vec();
+        if reader.remaining().await != 0 {
+            return Err(malformed((bytes.len() - reader.remaining().await) as u64, "trailing bytes").await);
         }
         let envelope = GltfMutationEnvelope { command_id, version, phase, payload };
-        validate_gltf_mutation_envelope(&envelope).map_err(|error| malformed(0, error.to_string()))?;
-        GltfMutation::from_transport(envelope).map_err(|error| malformed(0, error.to_string()))
+        validate_gltf_mutation_envelope(&envelope).await.map_err(|error| malformed(0, error.to_string()))?;
+        GltfMutation::from_transport(envelope).await.map_err(|error| malformed(0, error.to_string()))
     }
 }

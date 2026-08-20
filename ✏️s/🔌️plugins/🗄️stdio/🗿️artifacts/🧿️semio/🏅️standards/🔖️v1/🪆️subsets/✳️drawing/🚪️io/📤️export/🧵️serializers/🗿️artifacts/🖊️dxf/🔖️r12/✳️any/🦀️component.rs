@@ -86,7 +86,7 @@ async fn flatten_to_polyline(segments: &[PathSegment]) -> (Vec<SemioPoint2>, boo
                 // back to a single straight segment (documented, real, honest — never fabricated
                 // curvature it can't derive without a full endpoint-to-center arc solve).
                 if (rx - ry).abs() < EPS && rx > EPS {
-                    if let Some((cx, cy)) = arc_center(cur, to, rx) {
+                    if let Some((cx, cy)) = arc_center(cur, to, rx).await {
                         let a0 = (cur.y - cy).atan2(cur.x - cx);
                         let mut a1 = (to.y - cy).atan2(to.x - cx);
                         if a1 < a0 {
@@ -134,10 +134,10 @@ async fn arc_center(p0: SemioPoint2, p1: SemioPoint2, r: f64) -> Option<(f64, f6
 async fn dxf_entity_from_node(node: &DrawNode, layer: &str) -> Option<DxfEntity> {
     match node {
         DrawNode::Path { segments, .. } => {
-            if let Some((cx, cy, r)) = as_circle(segments) {
+            if let Some((cx, cy, r)) = as_circle(segments).await {
                 return Some(DxfEntity::Circle { center: [cx, cy, 0.0], radius: r, layer: layer.into(), unknown_group_codes: vec![] });
             }
-            let (points, closed) = flatten_to_polyline(segments);
+            let (points, closed) = flatten_to_polyline(segments).await;
             if points.len() < 2 {
                 return None;
             }
@@ -157,7 +157,7 @@ async fn collect_entities(node: &DrawNode, layer: &str, out: &mut Vec<DxfEntity>
             }
         }
         other => {
-            if let Some(e) = dxf_entity_from_node(other, layer) {
+            if let Some(e) = dxf_entity_from_node(other, layer).await {
                 out.push(e);
             }
         }

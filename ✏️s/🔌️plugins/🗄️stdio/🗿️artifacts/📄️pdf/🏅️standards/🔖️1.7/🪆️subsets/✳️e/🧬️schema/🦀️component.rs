@@ -50,7 +50,7 @@ pub mod derived_construction {
         type Diff = PdfDiff;
 
         async fn empty() -> Self {
-            Self::new()
+            Self::new().await
         }
 
         async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
@@ -58,20 +58,20 @@ pub mod derived_construction {
         }
 
         async fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self::from_snapshot(<PdfSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+            Ok(Self::from_snapshot(<PdfSnapshot as store::ArtifactDsl>::parse_dsl(text).await?).await)
         }
 
         async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<PdfSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+            Ok(Self::from_snapshot(<PdfSnapshot as store::ArtifactPack>::decode_pack(bytes).await?).await)
         }
 
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = apply_pdf_mutation(&mut self.snapshot, &mutation);
-            (self, diff)
+            (self, diff.await)
         }
 
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            self.snapshot = <PdfDiff as protocol::MutationDiff<PdfSnapshot>>::apply(&diff, &self.snapshot)?;
+            self.snapshot = <PdfDiff as protocol::MutationDiff<PdfSnapshot>>::apply(&diff, &self.snapshot).await?;
             Ok(self)
         }
 
@@ -140,13 +140,13 @@ pub mod derived_analysis {
 
     async fn resolve_item<'a>(objects: &'a [PdfIndirectObject], item: &'a PdfObject) -> Option<&'a PdfObject> {
         match item {
-            PdfObject::Ref(r) => resolve_ref(objects, *r),
+            PdfObject::Ref(r) => resolve_ref(objects, *r).await,
             other => Some(other),
         }
     }
 
     async fn find_catalog(objects: &[PdfIndirectObject]) -> Option<&PdfObject> {
-        objects.iter().find(|o| o.value.as_dict().map(|d| dict_name(d, "Type") == Some("Catalog")).unwrap_or(false)).map(|o| &o.value)
+        objects.iter().find(|o| semio_framework_plugin::resolve_ready(o.value.as_dict()).map(|d| dict_name(d, "Type") == Some("Catalog")).unwrap_or(false)).map(|o| &o.value)
     }
 
     /// 🔒️ Real scan: Standard Security Handler encryption dictionary shape.
@@ -162,34 +162,34 @@ pub mod derived_analysis {
     }
 
     async fn scan_action_subtype(objects: &[PdfIndirectObject], subtype: &str) -> Vec<ObjRef> {
-        objects.iter().filter(|o| o.value.as_dict().map(|d| dict_name(d, "S") == Some(subtype)).unwrap_or(false)).map(|o| o.id).collect()
+        objects.iter().filter(|o| semio_framework_plugin::resolve_ready(o.value.as_dict()).map(|d| dict_name(d, "S") == Some(subtype)).unwrap_or(false)).map(|o| o.id).collect()
     }
 
     async fn scan_js_key_only(objects: &[PdfIndirectObject], already: &[ObjRef]) -> Vec<ObjRef> {
-        objects.iter().filter(|o| !already.contains(&o.id) && o.value.as_dict().map(|d| d.iter().any(|e| e.key == "JS")).unwrap_or(false)).map(|o| o.id).collect()
+        objects.iter().filter(|o| !already.contains(&o.id) && semio_framework_plugin::resolve_ready(o.value.as_dict()).map(|d| d.iter().any(|e| e.key == "JS")).unwrap_or(false)).map(|o| o.id).collect()
     }
 
     /// 🎬️ Real scan: `/Subtype /Movie` or `/Subtype /Sound` annotation dicts. `/Subtype /3D` is a
     /// distinct, explicitly allowed name -- this filter never matches it.
     async fn movie_or_sound_annotations(objects: &[PdfIndirectObject]) -> Vec<ObjRef> {
-        objects.iter().filter(|o| o.value.as_dict().map(|d| matches!(dict_name(d, "Subtype"), Some("Movie") | Some("Sound"))).unwrap_or(false)).map(|o| o.id).collect()
+        objects.iter().filter(|o| semio_framework_plugin::resolve_ready(o.value.as_dict()).map(|d| matches!(dict_name(d, "Subtype"), Some("Movie") | Some("Sound"))).unwrap_or(false)).map(|o| o.id).collect()
     }
 
     /// 🏳️ Real check: `/Root/OutputIntents` is a non-empty array (any `/S` marker counts for PDF/E,
     /// unlike PDF/A's/PDF/X's specific `GTS_*` requirement).
     async fn has_any_output_intent(objects: &[PdfIndirectObject]) -> bool {
-        let Some(catalog) = find_catalog(objects) else { return false };
-        catalog.dict_get("OutputIntents").and_then(|v| v.as_array()).map(|a| !a.is_empty()).unwrap_or(false)
+        let Some(catalog) = find_catalog(objects).await else { return false };
+        catalog.dict_get("OutputIntents").await.and_then(|v| v.as_array()).map(|a| !a.is_empty()).unwrap_or(false)
     }
 
     async fn descriptor_has_embedded_file(objects: &[PdfIndirectObject], desc_ref: ObjRef) -> bool {
-        resolve_ref(objects, desc_ref).and_then(|o| o.as_dict()).map(|d| d.iter().any(|e| e.key == "FontFile" || e.key == "FontFile2" || e.key == "FontFile3")).unwrap_or(false)
+        resolve_ref(objects, desc_ref).await.and_then(|o| o.as_dict()).map(|d| d.iter().any(|e| e.key == "FontFile" || e.key == "FontFile2" || e.key == "FontFile3")).unwrap_or(false)
     }
 
     async fn non_embedded_fonts(objects: &[PdfIndirectObject]) -> Vec<ObjRef> {
         let mut out = Vec::new();
         for o in objects {
-            let Some(d) = o.value.as_dict() else { continue };
+            let Some(d) = o.value.as_dict().await else { continue };
             if dict_name(d, "Type") != Some("Font") {
                 continue;
             }
@@ -200,7 +200,7 @@ pub mod derived_analysis {
                 .and_then(|e| e.value.as_array())
                 .map(|arr| {
                     arr.iter().any(|item| {
-                        resolve_item(objects, item).and_then(|desc| desc.as_dict()).and_then(|dd| dd.iter().find(|e| e.key == "FontDescriptor").and_then(|e| e.value.as_ref())).map(|r| descriptor_has_embedded_file(objects, r)).unwrap_or(false)
+                        semio_framework_plugin::resolve_ready(resolve_item(objects, item)).and_then(|desc| desc.as_dict()).and_then(|dd| dd.iter().find(|e| e.key == "FontDescriptor").and_then(|e| e.value.as_ref())).map(|r| descriptor_has_embedded_file(objects, r)).unwrap_or(false)
                     })
                 })
                 .unwrap_or(false);
@@ -259,15 +259,15 @@ pub mod derived_analysis {
         const DIALECT: Dialect = DIALECT;
 
         async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
-            PdfAnyAnalyzer::sniff(source)
+            PdfAnyAnalyzer::sniff(source).await
         }
 
         async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
-            let inner = PdfAnyAnalyzer::analyze(sources);
+            let inner = PdfAnyAnalyzer::analyze(sources).await;
             let mut diagnostics = inner.diagnostics.clone();
             let mut confidence = inner.confidence;
             if let Some(snapshot) = &inner.parts.snapshot {
-                let checks = check_e_conformance(snapshot);
+                let checks = check_e_conformance(snapshot).await;
                 if checks.iter().any(|d| matches!(d.severity, Severity::Error | Severity::Fatal)) {
                     confidence = IoConfidence::Low;
                 }

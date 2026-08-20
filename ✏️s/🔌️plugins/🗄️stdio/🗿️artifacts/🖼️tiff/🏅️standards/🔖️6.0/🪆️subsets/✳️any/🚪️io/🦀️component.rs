@@ -35,7 +35,7 @@ pub mod derived_composition {
             if native.is_empty() {
                 return Err(ComposeError { message: "TiffComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() });
             }
-            let analysis = TiffAnalyzer::analyze(&native);
+            let analysis = TiffAnalyzer::analyze(&native).await;
             let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError { message: "TiffComposerComposition: analysis produced no snapshot".into(), diagnostics: analysis.diagnostics.clone() })?;
             Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics })
         }
@@ -143,22 +143,22 @@ struct RawIfd {
 
 /// 📖️ Walks one IFD: 2-byte entry count, N x 12-byte entries, 4-byte offset to the next IFD.
 async fn read_ifd_raw(data: &[u8], ifd_off: usize, e: Endian) -> Result<RawIfd, String> {
-    let count = read_u16(data, ifd_off, e)? as usize;
+    let count = read_u16(data, ifd_off, e).await? as usize;
     let mut entries = Vec::with_capacity(count);
     let mut pos = ifd_off + 2;
     for _ in 0..count {
         if pos + 12 > data.len() {
             return Err("tiff: truncated IFD entry".into());
         }
-        let tag = read_u16(data, pos, e)?;
-        let typ = read_u16(data, pos + 2, e)?;
-        let cnt = read_u32(data, pos + 4, e)?;
+        let tag = read_u16(data, pos, e).await?;
+        let typ = read_u16(data, pos + 2, e).await?;
+        let cnt = read_u32(data, pos + 4, e).await?;
         let mut vf = [0u8; 4];
         vf.copy_from_slice(&data[pos + 8..pos + 12]);
         entries.push(RawEntry { tag, typ, count: cnt, value_field: vf });
         pos += 12;
     }
-    let next = read_u32(data, pos, e)?;
+    let next = read_u32(data, pos, e).await?;
     Ok(RawIfd { entries, next })
 }
 
@@ -172,7 +172,7 @@ async fn read_ifd_chain(data: &[u8], first_off: usize, e: Endian) -> Result<Vec<
         if !seen.insert(off) {
             return Err("tiff: IFD offset cycle detected".into());
         }
-        let raw = read_ifd_raw(data, off, e)?;
+        let raw = read_ifd_raw(data, off, e).await?;
         let next = raw.next as usize;
         out.push(raw);
         off = next;
@@ -220,14 +220,14 @@ async fn tag_values<'a>(ifd: &'a TiffIfd, tag: u16) -> Option<&'a TiffValues> {
     ifd.entries.iter().find(|t| t.tag == tag).map(|t| &t.values)
 }
 async fn tag_u32_list(ifd: &TiffIfd, tag: u16) -> Vec<u32> {
-    match tag_values(ifd, tag) {
+    match tag_values(ifd, tag).await {
         Some(TiffValues::Short(v)) => v.iter().map(|&x| x as u32).collect(),
         Some(TiffValues::Long(v)) => v.clone(),
         _ => Vec::new(),
     }
 }
 async fn tag_u32(ifd: &TiffIfd, tag: u16) -> Option<u32> {
-    tag_u32_list(ifd, tag).first().copied()
+    tag_u32_list(ifd, tag).await.first().copied()
 }
 //#endregion TagLookup
 
@@ -301,30 +301,30 @@ async fn packbits_encode(data: &[u8]) -> Vec<u8> {
 /// 🚫 CompressionScopeNote: only uncompressed(1)/PackBits(32773) are decoded for real —
 /// LZW(5)/Deflate(8)/CCITT(2/3/4)/others deliberately fail rather than fabricate pixels.
 async fn decode_pixels_from_ifd(data: &[u8], ifd: &TiffIfd) -> Result<Vec<u8>, String> {
-    let width = tag_u32(ifd, TAG_IMAGE_WIDTH).ok_or("tiff: missing ImageWidth")?;
-    let height = tag_u32(ifd, TAG_IMAGE_LENGTH).ok_or("tiff: missing ImageLength")?;
+    let width = tag_u32(ifd, TAG_IMAGE_WIDTH).await.ok_or("tiff: missing ImageWidth")?;
+    let height = tag_u32(ifd, TAG_IMAGE_LENGTH).await.ok_or("tiff: missing ImageLength")?;
     if width == 0 || height == 0 {
         return Err("tiff: zero dimension".into());
     }
-    let bits_per_sample = tag_u32(ifd, TAG_BITS_PER_SAMPLE).unwrap_or(8);
+    let bits_per_sample = tag_u32(ifd, TAG_BITS_PER_SAMPLE).await.unwrap_or(8);
     if bits_per_sample != 8 {
         return Err(format!("tiff: unsupported BitsPerSample {bits_per_sample} (only 8 is implemented)"));
     }
-    let samples_per_pixel = tag_u32(ifd, TAG_SAMPLES_PER_PIXEL).unwrap_or(1);
+    let samples_per_pixel = tag_u32(ifd, TAG_SAMPLES_PER_PIXEL).await.unwrap_or(1);
     if samples_per_pixel != 1 && samples_per_pixel != 3 && samples_per_pixel != 4 {
         return Err(format!("tiff: unsupported SamplesPerPixel {samples_per_pixel}"));
     }
-    let compression = tag_u32(ifd, TAG_COMPRESSION).unwrap_or(1);
+    let compression = tag_u32(ifd, TAG_COMPRESSION).await.unwrap_or(1);
     if compression != 1 && compression != 32773 {
         return Err(format!("tiff: unsupported compression {compression} (only uncompressed/PackBits are implemented)"));
     }
-    let photometric = tag_u32(ifd, TAG_PHOTOMETRIC).unwrap_or(1);
-    let strip_offsets = tag_u32_list(ifd, TAG_STRIP_OFFSETS);
+    let photometric = tag_u32(ifd, TAG_PHOTOMETRIC).await.unwrap_or(1);
+    let strip_offsets = tag_u32_list(ifd, TAG_STRIP_OFFSETS).await;
     if strip_offsets.is_empty() {
         return Err("tiff: missing StripOffsets".into());
     }
-    let strip_byte_counts = tag_u32_list(ifd, TAG_STRIP_BYTE_COUNTS);
-    let rows_per_strip = tag_u32(ifd, TAG_ROWS_PER_STRIP).unwrap_or(height);
+    let strip_byte_counts = tag_u32_list(ifd, TAG_STRIP_BYTE_COUNTS).await;
+    let rows_per_strip = tag_u32(ifd, TAG_ROWS_PER_STRIP).await.unwrap_or(height);
 
     let row_bytes = width as usize * samples_per_pixel as usize;
     let mut raster = vec![0u8; row_bytes * height as usize];
@@ -339,7 +339,7 @@ async fn decode_pixels_from_ifd(data: &[u8], ifd: &TiffIfd) -> Result<Vec<u8>, S
         let decoded: Vec<u8> = if compression == 32773 {
             let byte_count = *strip_byte_counts.get(i).ok_or("tiff: missing StripByteCounts entry")? as usize;
             let compressed = data.get(start..start + byte_count).ok_or("tiff: strip data truncated")?;
-            packbits_decode(compressed, strip_len)?
+            packbits_decode(compressed, strip_len).await?
         } else {
             data.get(start..start + strip_len).ok_or("tiff: strip data truncated")?.to_vec()
         };
@@ -385,11 +385,11 @@ pub async fn decode_tiff(data: &[u8]) -> Result<TiffSnapshot, String> {
         b"MM" => (Endian::Big, TiffByteOrder::BigEndian),
         _ => return Err("tiff: bad byte-order mark".into()),
     };
-    if read_u16(data, 2, e)? != 42 {
+    if read_u16(data, 2, e).await? != 42 {
         return Err("tiff: bad magic number".into());
     }
-    let first_off = read_u32(data, 4, e)? as usize;
-    let raw_ifds = read_ifd_chain(data, first_off, e)?;
+    let first_off = read_u32(data, 4, e).await? as usize;
+    let raw_ifds = read_ifd_chain(data, first_off, e).await?;
     if raw_ifds.is_empty() {
         return Err("tiff: no IFD present".into());
     }
@@ -398,8 +398,8 @@ pub async fn decode_tiff(data: &[u8]) -> Result<TiffSnapshot, String> {
     for raw in &raw_ifds {
         let mut entries = Vec::with_capacity(raw.entries.len());
         for entry in &raw.entries {
-            let kind = TiffFieldType::from_u16(entry.typ)?;
-            let values = read_tag_values(data, entry, e, kind)?;
+            let kind = TiffFieldType::from_u16(entry.typ).await?;
+            let values = read_tag_values(data, entry, e, kind).await?;
             entries.push(TiffTag { tag: entry.tag, kind, values });
         }
         entries.sort_by_key(|t| t.tag); // TIFF6 §2: entries "must be sorted in ascending order by Tag".
@@ -407,7 +407,7 @@ pub async fn decode_tiff(data: &[u8]) -> Result<TiffSnapshot, String> {
     }
 
     // Pixel decode only runs against IFD 0 — see module doc's normalization note.
-    let pixels = decode_pixels_from_ifd(data, &ifds[0])?;
+    let pixels = decode_pixels_from_ifd(data, &ifds[0]).await?;
 
     Ok(TiffSnapshot { schema: STDIO_TIFF_DOCUMENT_SCHEMA.into(), byte_order, ifds, pixels })
 }
@@ -462,7 +462,7 @@ async fn out_of_line_size(entries: &[TiffTag], bo: TiffByteOrder) -> usize {
     entries
         .iter()
         .map(|t| {
-            let len = value_bytes(&t.values, bo).len();
+            let len = semio_framework_plugin::resolve_ready(value_bytes(&t.values, bo)).len();
             if len <= 4 {
                 0
             } else {
@@ -477,13 +477,13 @@ async fn out_of_line_size(entries: &[TiffTag], bo: TiffByteOrder) -> usize {
 /// `SetTag`-set metadata round-trips. `byte_order` is honored (real round-trip, unlike the
 /// pre-migration engine which always emitted little-endian).
 async fn encode_tiff_with(snap: &TiffSnapshot, packbits: bool) -> Result<Vec<u8>, String> {
-    let width = snap.width().ok_or("tiff: encode requires an ImageWidth tag in ifds[0] (e.g. via SetTag)")?;
-    let height = snap.height().ok_or("tiff: encode requires an ImageLength tag in ifds[0] (e.g. via SetTag)")?;
+    let width = snap.width().await.ok_or("tiff: encode requires an ImageWidth tag in ifds[0] (e.g. via SetTag)")?;
+    let height = snap.height().await.ok_or("tiff: encode requires an ImageLength tag in ifds[0] (e.g. via SetTag)")?;
     if width == 0 || height == 0 {
         return Err("tiff: empty image".into());
     }
-    let rgb = rgba_to_rgb(&snap.pixels, width, height)?;
-    let strip_bytes = if packbits { packbits_encode(&rgb) } else { rgb };
+    let rgb = rgba_to_rgb(&snap.pixels, width, height).await?;
+    let strip_bytes = if packbits { packbits_encode(&rgb).await } else { rgb };
     let compression: u32 = if packbits { 32773 } else { 1 };
 
     let carried: Vec<TiffTag> = snap.ifds.first().map(|ifd| ifd.entries.iter().filter(|t| !CORE_STRIP_TAGS.contains(&t.tag)).cloned().collect()).unwrap_or_default();
@@ -517,9 +517,9 @@ async fn encode_tiff_with(snap: &TiffSnapshot, packbits: bool) -> Result<Vec<u8>
     let mut cursor = out_of_line_start;
     for t in &entries {
         write_u16(&mut out, t.tag, snap.byte_order);
-        write_u16(&mut out, t.kind.to_u16(), snap.byte_order);
-        write_u32(&mut out, t.values.count(), snap.byte_order);
-        let vb = value_bytes(&t.values, snap.byte_order);
+        write_u16(&mut out, t.kind.to_u16().await, snap.byte_order);
+        write_u32(&mut out, t.values.count().await, snap.byte_order);
+        let vb = value_bytes(&t.values, snap.byte_order).await;
         if vb.len() <= 4 {
             let mut field = [0u8; 4];
             field[..vb.len()].copy_from_slice(&vb);
@@ -531,7 +531,7 @@ async fn encode_tiff_with(snap: &TiffSnapshot, packbits: bool) -> Result<Vec<u8>
     }
     write_u32(&mut out, 0, snap.byte_order); // next IFD offset: none (single-IFD encode).
     for t in &entries {
-        let vb = value_bytes(&t.values, snap.byte_order);
+        let vb = value_bytes(&t.values, snap.byte_order).await;
         if vb.len() > 4 {
             out.extend_from_slice(&vb);
             if vb.len() % 2 == 1 {
@@ -548,12 +548,12 @@ async fn encode_tiff_with(snap: &TiffSnapshot, packbits: bool) -> Result<Vec<u8>
 /// historical default kept so `print_dsl`/`encode_pack_with` and the io export serializer
 /// (which both call this exact function) are unaffected.
 pub async fn encode_tiff(snap: &TiffSnapshot) -> Result<Vec<u8>, String> {
-    encode_tiff_with(snap, false)
+    encode_tiff_with(snap, false).await
 }
 
 /// 📦 Same shape as `encode_tiff` but real-PackBits-compresses the strip (`Compression` 32773).
 pub async fn encode_tiff_packbits(snap: &TiffSnapshot) -> Result<Vec<u8>, String> {
-    encode_tiff_with(snap, true)
+    encode_tiff_with(snap, true).await
 }
 //#endregion Encode
 
@@ -865,7 +865,8 @@ pub mod io_registry {
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 
-    pub async fn entries() -> &'static [ComposerEntry] {
+    // 🚫️async: E1 pure table accessor consumed by OnceLock::get_or_init's sync closure — see R9
+    pub fn entries() -> &'static [ComposerEntry] {
         ENTRIES.get_or_init(|| vec![composer_entry_of::<TiffRawAnyComposer>(), composer_entry_of::<TiffBaselineComposer>()]).as_slice()
     }
 }

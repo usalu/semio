@@ -21,31 +21,31 @@ async fn encode<T: Serialize>(value: &T, path: &str) -> Result<Vec<u8>, GltfMuta
 }
 
 async fn plan(payload: &[u8], base: &GltfSnapshot) -> Result<GltfMutationLeafPlan, GltfMutationLeafError> {
-    let payload = decode::<mutation::GltfCreateScenePayload>(payload, "mutation/payload")?;
-    mutation::validate(&payload, base).map_err(rejection)?;
-    let forward = diff::derive(base, payload.position).map_err(rejection)?;
-    let reverse = inverse::derive(base, payload.position).map_err(rejection)?;
-    let touched_paths = diff::touched_paths(&forward, base).map_err(rejection)?;
-    Ok(GltfMutationLeafPlan { diff_payload: encode(&forward, "diff")?, inverse_payload: encode(&reverse, "inverse")?, touched_paths })
+    let payload = decode::<mutation::GltfCreateScenePayload>(payload, "mutation/payload").await?;
+    mutation::validate(&payload, base).await.map_err(rejection)?;
+    let forward = diff::derive(base, payload.position).await.map_err(rejection)?;
+    let reverse = inverse::derive(base, payload.position).await.map_err(rejection)?;
+    let touched_paths = diff::touched_paths(&forward, base).await.map_err(rejection)?;
+    Ok(GltfMutationLeafPlan { diff_payload: encode(&forward, "diff").await?, inverse_payload: encode(&reverse, "inverse").await?, touched_paths })
 }
 
 async fn plan_inverse(payload: &[u8], base: &GltfSnapshot) -> Result<GltfMutationLeafPlan, GltfMutationLeafError> {
-    let inverse = decode::<inverse::GltfCreateSceneInverse>(payload, "inverse/payload")?;
-    let touched_paths = inverse::touched_paths(&inverse, base).map_err(rejection)?;
-    inverse::apply(&inverse, base).map_err(rejection)?;
-    Ok(GltfMutationLeafPlan { diff_payload: encode(&inverse, "inverse")?, inverse_payload: Vec::new(), touched_paths })
+    let inverse = decode::<inverse::GltfCreateSceneInverse>(payload, "inverse/payload").await?;
+    let touched_paths = inverse::touched_paths(&inverse, base).await.map_err(rejection)?;
+    inverse::apply(&inverse, base).await.map_err(rejection)?;
+    Ok(GltfMutationLeafPlan { diff_payload: encode(&inverse, "inverse").await?, inverse_payload: Vec::new(), touched_paths })
 }
 
 async fn apply_diff(payload: &[u8], base: &GltfSnapshot) -> Result<GltfMutationLeafApplication, GltfMutationLeafError> {
-    let diff = decode::<diff::GltfCreateSceneDiff>(payload, "diff/payload")?;
-    let snapshot = diff::apply(&diff, base).map_err(rejection)?;
-    let touched_paths = diff::touched_paths(&diff, base).map_err(rejection)?;
+    let diff = decode::<diff::GltfCreateSceneDiff>(payload, "diff/payload").await?;
+    let snapshot = diff::apply(&diff, base).await.map_err(rejection)?;
+    let touched_paths = diff::touched_paths(&diff, base).await.map_err(rejection)?;
     Ok(GltfMutationLeafApplication { snapshot, touched_paths })
 }
 
 async fn apply_inverse(payload: &[u8], base: &GltfSnapshot) -> Result<GltfMutationLeafApplication, GltfMutationLeafError> {
-    let inverse = decode::<inverse::GltfCreateSceneInverse>(payload, "inverse/payload")?;
-    let snapshot = inverse::apply(&inverse, base).map_err(rejection)?;
-    let touched_paths = inverse::touched_paths(&inverse, base).map_err(rejection)?;
+    let inverse = decode::<inverse::GltfCreateSceneInverse>(payload, "inverse/payload").await?;
+    let snapshot = inverse::apply(&inverse, base).await.map_err(rejection)?;
+    let touched_paths = inverse::touched_paths(&inverse, base).await.map_err(rejection)?;
     Ok(GltfMutationLeafApplication { snapshot, touched_paths })
 }

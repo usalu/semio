@@ -100,14 +100,14 @@ async fn collect_children(doc: &Part21Document) -> HashMap<u64, Vec<u64>> {
     let mut children: HashMap<u64, Vec<u64>> = HashMap::new();
     for rel in doc.by_type("IFCRELAGGREGATES") {
         if let Some(args) = rel.entity("IFCRELAGGREGATES") {
-            if let Some(parent) = arg_ref(args, 4) {
+            if let Some(parent) = arg_ref(args, 4).await {
                 children.entry(parent).or_default().extend(arg_refs(args, 5));
             }
         }
     }
     for rel in doc.by_type("IFCRELCONTAINEDINSPATIALSTRUCTURE") {
         if let Some(args) = rel.entity("IFCRELCONTAINEDINSPATIALSTRUCTURE") {
-            if let Some(parent) = arg_ref(args, 5) {
+            if let Some(parent) = arg_ref(args, 5).await {
                 children.entry(parent).or_default().extend(arg_refs(args, 4));
             }
         }
@@ -122,25 +122,25 @@ async fn build_node(doc: &Part21Document, id: u64, children_map: &HashMap<u64, V
     if !seen.insert(id) {
         return None; // cycle guard: never revisit the same instance
     }
-    let inst = doc.instance(id)?;
-    let (ifc_type, args) = inst.primary()?;
-    let name = arg_str(args, 2).filter(|n| !n.is_empty());
+    let inst = doc.instance(id).await?;
+    let (ifc_type, args) = inst.primary().await?;
+    let name = arg_str(args, 2).await.filter(|n| !n.is_empty());
     let object_placement = arg_ref(args, 5);
-    let children = children_map.get(&id).into_iter().flatten().filter_map(|&kid| build_node(doc, kid, children_map, seen)).collect();
+    let children = children_map.get(&id).into_iter().flatten().filter_map(|&kid| semio_framework_plugin::resolve_ready(build_node(doc, kid, children_map, seen))).collect();
     Some(SpatialNode { id, ifc_type: ifc_type.to_string(), name, object_placement, children })
 }
 //#endregion 🔖️SpatialTree
 
 //#region 🔖️Placements
 async fn cartesian_point(doc: &Part21Document, id: u64) -> Option<[f64; 3]> {
-    let args = doc.instance(id)?.entity("IFCCARTESIANPOINT")?;
-    let coords = args.first()?.as_list()?;
+    let args = doc.instance(id).await?.entity("IFCCARTESIANPOINT").await?;
+    let coords = args.first()?.as_list().await?;
     Some([coords.first().and_then(Part21Value::as_real).unwrap_or(0.0), coords.get(1).and_then(Part21Value::as_real).unwrap_or(0.0), coords.get(2).and_then(Part21Value::as_real).unwrap_or(0.0)])
 }
 
 async fn direction(doc: &Part21Document, id: u64) -> Option<[f64; 3]> {
-    let args = doc.instance(id)?.entity("IFCDIRECTION")?;
-    let r = args.first()?.as_list()?;
+    let args = doc.instance(id).await?.entity("IFCDIRECTION").await?;
+    let r = args.first()?.as_list().await?;
     Some([r.first().and_then(Part21Value::as_real).unwrap_or(0.0), r.get(1).and_then(Part21Value::as_real).unwrap_or(0.0), r.get(2).and_then(Part21Value::as_real).unwrap_or(0.0)])
 }
 
@@ -157,14 +157,14 @@ async fn scale3(a: [f64; 3], s: f64) -> [f64; 3] {
     [a[0] * s, a[1] * s, a[2] * s]
 }
 async fn norm3(a: [f64; 3]) -> f64 {
-    dot3(a, a).sqrt()
+    dot3(a, a).await.sqrt()
 }
 async fn normalize3(a: [f64; 3]) -> [f64; 3] {
     let n = norm3(a);
     if n < 1e-12 {
         a
     } else {
-        scale3(a, 1.0 / n)
+        scale3(a, 1.0 / n).await
     }
 }
 
@@ -173,23 +173,23 @@ async fn normalize3(a: [f64; 3]) -> [f64; 3] {
 async fn build_axis2placement(location: [f64; 3], axis_z: Option<[f64; 3]>, ref_x: Option<[f64; 3]>) -> Mat4 {
     let z = normalize3(axis_z.unwrap_or([0.0, 0.0, 1.0]));
     let x_hint = ref_x.unwrap_or([1.0, 0.0, 0.0]);
-    let x_proj = sub3(x_hint, scale3(z, dot3(x_hint, z)));
-    let x = if norm3(x_proj) < 1e-9 {
+    let x_proj = sub3(x_hint, scale3(z.await, dot3(x_hint, z.await).await).await);
+    let x = if norm3(x_proj.await) < 1e-9 {
         let fallback = if z[0].abs() < 0.9 { [1.0, 0.0, 0.0] } else { [0.0, 1.0, 0.0] };
-        normalize3(sub3(fallback, scale3(z, dot3(fallback, z))))
+        normalize3(sub3(fallback, scale3(z.await, dot3(fallback, z.await).await).await).await)
     } else {
-        normalize3(x_proj)
+        normalize3(x_proj.await)
     };
-    let y = cross3(z, x);
+    let y = cross3(z.await, x);
     Mat4([[x[0], y[0], z[0], location[0]], [x[1], y[1], z[1], location[1]], [x[2], y[2], z[2], location[2]], [0.0, 0.0, 0.0, 1.0]])
 }
 
 async fn axis2placement3d_matrix(doc: &Part21Document, id: u64) -> Option<Mat4> {
-    let args = doc.instance(id)?.entity("IFCAXIS2PLACEMENT3D")?;
-    let location = cartesian_point(doc, arg_ref(args, 0)?)?;
-    let axis_z = arg_ref(args, 1).and_then(|r| direction(doc, r));
-    let ref_x = arg_ref(args, 2).and_then(|r| direction(doc, r));
-    Some(build_axis2placement(location, axis_z, ref_x))
+    let args = doc.instance(id).await?.entity("IFCAXIS2PLACEMENT3D").await?;
+    let location = cartesian_point(doc, arg_ref(args, 0).await?).await?;
+    let axis_z = arg_ref(args, 1).await.and_then(|r| direction(doc, r));
+    let ref_x = arg_ref(args, 2).await.and_then(|r| direction(doc, r));
+    Some(build_axis2placement(location, axis_z, ref_x).await)
 }
 
 async fn resolve_placement(doc: &Part21Document, id: u64, memo: &mut HashMap<u64, Mat4>, visiting: &mut Vec<u64>, issues: &mut Vec<String>) -> Mat4 {
@@ -198,40 +198,40 @@ async fn resolve_placement(doc: &Part21Document, id: u64, memo: &mut HashMap<u64
     }
     if visiting.contains(&id) {
         issues.push(format!("cyclic IfcLocalPlacement chain detected at #{id}"));
-        return Mat4::identity();
+        return Mat4::identity().await;
     }
     visiting.push(id);
     let result = resolve_placement_inner(doc, id, memo, visiting, issues);
     visiting.pop();
     memo.insert(id, result.clone());
-    result
+    result.await
 }
 
 /// ➡️ `world = parent_world * local` — parent transforms local's coordinate frame (proven the
 /// correct order, not `local * parent`, by the standalone scratch binary's order-discriminator case).
 async fn resolve_placement_inner(doc: &Part21Document, id: u64, memo: &mut HashMap<u64, Mat4>, visiting: &mut Vec<u64>, issues: &mut Vec<String>) -> Mat4 {
-    let Some(inst) = doc.instance(id) else {
+    let Some(inst) = doc.instance(id).await else {
         issues.push(format!("missing instance #{id}"));
-        return Mat4::identity();
+        return Mat4::identity().await;
     };
-    let Some(args) = inst.entity("IFCLOCALPLACEMENT") else {
+    let Some(args) = inst.entity("IFCLOCALPLACEMENT").await else {
         issues.push(format!("#{id} is not an IFCLOCALPLACEMENT"));
-        return Mat4::identity();
+        return Mat4::identity().await;
     };
     let rel_to = arg_ref(args, 0);
-    let Some(rel_placement_ref) = arg_ref(args, 1) else {
+    let Some(rel_placement_ref) = arg_ref(args, 1).await else {
         issues.push(format!("#{id} missing RelativePlacement"));
-        return Mat4::identity();
+        return Mat4::identity().await;
     };
-    let Some(local) = axis2placement3d_matrix(doc, rel_placement_ref) else {
+    let Some(local) = axis2placement3d_matrix(doc, rel_placement_ref).await else {
         issues.push(format!("#{id} could not resolve RelativePlacement geometry"));
-        return Mat4::identity();
+        return Mat4::identity().await;
     };
-    let parent = match rel_to {
-        Some(parent_id) => resolve_placement(doc, parent_id, memo, visiting, issues),
-        None => Mat4::identity(),
+    let parent = match rel_to.await {
+        Some(parent_id) => resolve_placement(doc, parent_id, memo, visiting, issues).await,
+        None => Mat4::identity().await,
     };
-    parent.mul(&local)
+    parent.mul(&local).await
 }
 
 async fn compute_all_placements(doc: &Part21Document) -> (HashMap<u64, Mat4>, Vec<String>) {
@@ -247,15 +247,15 @@ async fn compute_all_placements(doc: &Part21Document) -> (HashMap<u64, Mat4>, Ve
 
 //#region 🔖️PropertySets
 async fn single_value_property(doc: &Part21Document, id: u64) -> Option<PropertyValue> {
-    let args = doc.instance(id)?.entity("IFCPROPERTYSINGLEVALUE")?;
-    let name = arg_str(args, 0)?;
+    let args = doc.instance(id).await?.entity("IFCPROPERTYSINGLEVALUE").await?;
+    let name = arg_str(args, 0).await?;
     let value = args.get(2)?.clone();
     Some(PropertyValue { name, value })
 }
 
 async fn property_set(doc: &Part21Document, id: u64) -> Option<PropertySet> {
-    let args = doc.instance(id)?.entity("IFCPROPERTYSET")?;
-    let name = arg_str(args, 2).unwrap_or_default();
+    let args = doc.instance(id).await?.entity("IFCPROPERTYSET").await?;
+    let name = arg_str(args, 2).await.unwrap_or_default();
     let properties = arg_refs(args, 4).into_iter().filter_map(|pid| single_value_property(doc, pid)).collect();
     Some(PropertySet { id, name, properties })
 }
@@ -264,7 +264,7 @@ async fn compute_property_sets(doc: &Part21Document) -> HashMap<u64, Vec<Propert
     let mut out: HashMap<u64, Vec<PropertySet>> = HashMap::new();
     for rel in doc.by_type("IFCRELDEFINESBYPROPERTIES") {
         let Some(args) = rel.entity("IFCRELDEFINESBYPROPERTIES") else { continue };
-        let Some(pset) = arg_ref(args, 5).and_then(|pid| property_set(doc, pid)) else { continue };
+        let Some(pset) = arg_ref(args, 5).await.and_then(|pid| property_set(doc, pid)) else { continue };
         for obj in arg_refs(args, 4) {
             out.entry(obj).or_default().push(pset.clone());
         }
@@ -279,7 +279,7 @@ pub async fn analyze_spatial(doc: &Part21Document) -> SpatialAnalysis {
     let children_map = collect_children(doc);
     let mut seen = HashSet::new();
     let roots: Vec<SpatialNode> = doc.by_type("IFCPROJECT").filter_map(|p| build_node(doc, p.id, &children_map, &mut seen)).collect();
-    let (placements, mut issues) = compute_all_placements(doc);
+    let (placements, mut issues) = compute_all_placements(doc).await;
     let property_sets = compute_property_sets(doc);
     if roots.is_empty() && doc.by_type("IFCPROJECT").next().is_none() && !doc.instances.is_empty() {
         issues.push("no IFCPROJECT root found".into());

@@ -20,9 +20,9 @@ pub(crate) async fn is_contiguous_ascending(indices: &[usize]) -> bool {
 //#region 🔖️Diff
 pub async fn diff(payload: &GroupNodes, base: &SemioDrawingSnapshot) -> protocol::MutationOutcome<SemioDrawingDiff> {
     if !is_contiguous_ascending(&payload.indices) {
-        return protocol::MutationOutcome::error("mutation.target-missing", format!("Indices for group in layer #{} are empty or not a contiguous ascending run.", payload.parent.layer), [payload.parent.layer.to_string()]);
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Indices for group in layer #{} are empty or not a contiguous ascending run.", payload.parent.layer), [payload.parent.layer.to_string()]).await;
     }
-    match node_at(base, &payload.parent) {
+    match node_at(base, &payload.parent).await {
         Some(DrawNode::Group { children, .. }) if payload.indices.iter().all(|&i| i < children.len()) => {
             let grouped: Vec<DrawNode> = payload.indices.iter().map(|&i| children[i].clone()).collect();
             let new_group = DrawNode::Group { transform: payload.transform, children: grouped };

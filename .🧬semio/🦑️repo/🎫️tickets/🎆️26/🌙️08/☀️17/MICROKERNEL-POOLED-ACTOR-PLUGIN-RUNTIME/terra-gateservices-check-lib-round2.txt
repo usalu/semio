@@ -1,0 +1,72 @@
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+    Checking semio-framework-os-services v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust)
+error[E0369]: cannot add `u64` to `impl Future<Output = u64>`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:865:53
+    |
+865 |                 runtime_for_loop.sleep_until(now_ms + HTTP_BUCKET_REFILL_INTERVAL_MS).await;
+    |                                              ------ ^ ------------------------------ u64
+    |                                              |
+    |                                              impl Future<Output = u64>
+
+error[E0308]: mismatched types
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:499:62
+    |
+499 |                     Some(expiry) if expiry > now_ms.await => runtime_for_loop.sleep_until(expiry),
+    |                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Pin<Box<dyn Future<Output = ()> + Send>>`, found associated type
+    |
+    = note:       expected struct `Pin<Box<(dyn Future<Output = ()> + Send + 'static)>>`
+            found associated type `impl Future<Output = ()>`
+
+error[E0369]: cannot add `u64` to `impl Future<Output = u64>`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:501:65
+    |
+501 |                     None => runtime_for_loop.sleep_until(now_ms + TIMER_DRIVER_IDLE_POLL_MS),
+    |                                                          ------ ^ ------------------------- u64
+    |                                                          |
+    |                                                          impl Future<Output = u64>
+
+error[E0277]: `impl Future<Output = ()>` cannot be sent between threads safely
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:744:9
+    |
+744 |           Box::pin(async move {
+    |           ^        ---------- within this `{async block@🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:744:18: 744:28}`
+    |  _________|
+    | |
+745 | |             let result = compute.run_blocking(runtime.as_ref(), &scope, ctx, move || transport.call(request)).await;
+746 | |             match result {
+747 | |                 Ok(Ok(response)) => {
+...   |
+755 | |         })
+    | |__________^ `impl Future<Output = ()>` cannot be sent between threads safely
+    |
+    = help: within `{async block@🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:744:18: 744:28}`, the trait `Send` is not implemented for `impl Future<Output = ()>`
+note: `<R as HostAsyncRuntime>::sleep_until` is an `async fn` in trait, which does not automatically imply that its future is `Send`
+   --> 🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:399:5
+    |
+399 |     async fn sleep_until(&self, deadline_ms: u64);
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    = note: required because it appears within the type `(impl Future<Output = Result<OwnedSemaphorePermit, AcquireError>>, impl Future<Output = ()>)`
+note: required because it's used within this `async` fn body
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:562:205
+    |
+562 |       pub async fn run_blocking<T: Send + 'static, R: HostAsyncRuntime>(&self, runtime: &R, scope: &ScopeHandle, ctx: OperationContext, work: impl FnOnce() -> T + Send + 'static) -> Result<T, ComputeError> {
+    |  _____________________________________________________________________________________________________________________________________________________________________________________________________________^
+563 | |         let admission = self.admission.clone();
+564 | |         let permit = match ctx.deadline_ms {
+565 | |             Some(deadline_ms) => {
+...   |
+593 | |     }
+    | |_____^
+note: required because it's used within this `async` block
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:744:18
+    |
+744 |         Box::pin(async move {
+    |                  ^^^^^^^^^^
+    = note: required for the cast from `Pin<Box<...>>` to `Pin<Box<dyn Future<Output = Result<(..., ...), ...>> + Send>>`
+    = note: the full name for the type has been written to '/private/tmp/claude-501/-Users-ueli-Documents-semio/e6a44461-bab7-421f-8a53-65123a5e9482/scratchpad/target-gate-services/debug/deps/semio_framework_os_services-0ddd97510915d303.long-type-5442807376526440753.txt'
+    = note: consider using `--verbose` to print the full type name to the console
+
+Some errors have detailed explanations: E0277, E0308, E0369.
+For more information about an error, try `rustc --explain E0277`.
+error: could not compile `semio-framework-os-services` (lib) due to 4 previous errors

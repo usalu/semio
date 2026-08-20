@@ -1,0 +1,21 @@
+{
+  "case": "quota-children",
+  "kind": "rejection",
+  "description": "SetChildren names 2 children, exceeding UiDocumentLimits::max_children (set to 1 for this fixture) — rejected directly by apply_patch as QuotaExceeded(Children), before the shadow draft is even validated.",
+  "outcome": "reject",
+  "limits": {
+    "maxNodes": 20000,
+    "maxDepth": 128,
+    "maxChildren": 1,
+    "maxTextBytes": 65536,
+    "maxPatchOps": 4096,
+    "maxPatchBytes": 1048576
+  },
+  "baseRevision": 0,
+  "patchRejection": {
+    "type": "quotaExceeded",
+    "quota": "children",
+    "actual": 2,
+    "max": 1
+  }
+}

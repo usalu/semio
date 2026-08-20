@@ -1,0 +1,46 @@
+{
+  "case": "overlay",
+  "kind": "layout",
+  "description": "Root using LayoutSpec::Overlay — anchored, dismissible positioning context.",
+  "outcome": "accept",
+  "limits": null,
+  "tree": {
+    "root": 0,
+    "nodeCount": 2,
+    "shape": [
+      {
+        "id": 0,
+        "key": "#0",
+        "type": "container",
+        "children": [
+          1
+        ]
+      },
+      {
+        "id": 1,
+        "key": "#0",
+        "type": "text",
+        "children": []
+      }
+    ]
+  },
+  "accessibility": [
+    {
+      "id": 0,
+      "label": null,
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    },
+    {
+      "id": 1,
+      "label": null,
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    }
+  ],
+  "actionIds": []
+}

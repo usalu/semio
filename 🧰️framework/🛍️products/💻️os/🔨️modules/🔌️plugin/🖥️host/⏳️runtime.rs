@@ -56,7 +56,7 @@ const TABLES_PER_COMPONENT: u32 = 4;
 /// (not merely unsafe-if-concurrent) — this is exactly why `checkpoint`/`jobs` are becoming
 /// `checkpoint-async`/`jobs-async` rather than staying sync, and why this engine must never be
 /// shared with `world actor`'s stores.
-pub fn build_async_engine(cfg: SharedEngineConfig) -> Result<(Engine, bool), PluginHostError> {
+pub async fn build_async_engine(cfg: SharedEngineConfig) -> Result<(Engine, bool), PluginHostError> {
     let build = |pooling: bool| -> wasmtime::Result<Engine> {
         let mut config = Config::new();
         config.wasm_component_model(true);
@@ -103,7 +103,7 @@ pub struct AsyncEngineHandle {
 }
 
 impl AsyncEngineHandle {
-    pub fn new(cfg: SharedEngineConfig) -> Result<Self, PluginHostError> {
+    pub async fn new(cfg: SharedEngineConfig) -> Result<Self, PluginHostError> {
         let (engine, _pooling_active) = build_async_engine(cfg)?;
         let epoch_ticker = crate::EpochTicker::start(&engine);
         let mut linker = Linker::new(&engine);
@@ -134,15 +134,15 @@ impl AsyncEngineHandle {
 struct DeadlineCell(Mutex<Instant>);
 
 impl DeadlineCell {
-    fn new(initial: Duration) -> Arc<Self> {
+    async fn new(initial: Duration) -> Arc<Self> {
         Arc::new(Self(Mutex::new(Instant::now() + initial)))
     }
 
-    fn extend(&self, from_now: Duration) {
+    async fn extend(&self, from_now: Duration) {
         *self.0.lock().expect("DeadlineCell poisoned") = Instant::now() + from_now;
     }
 
-    fn passed(&self) -> bool {
+    async fn passed(&self) -> bool {
         Instant::now() >= *self.0.lock().expect("DeadlineCell poisoned")
     }
 }
@@ -151,7 +151,7 @@ impl DeadlineCell {
 /// `epoch_deadline_callback`), reading `deadline` fresh every tick — this is what lets a single
 /// long-lived callback serve every grant an actor is ever given across its whole lifetime, not just
 /// the first one.
-fn install_epoch_budget(store: &mut Store<AsyncActorHostState>, deadline: Arc<DeadlineCell>) {
+async fn install_epoch_budget(store: &mut Store<AsyncActorHostState>, deadline: Arc<DeadlineCell>) {
     store.epoch_deadline_callback(move |_ctx: StoreContextMut<'_, AsyncActorHostState>| if deadline.passed() { Ok(UpdateDeadline::Interrupt) } else { Ok(UpdateDeadline::Yield(1)) });
     store.set_epoch_deadline(1);
 }
@@ -245,7 +245,7 @@ impl GrantHandle {
     /// here the grant and the events it releases are the same value by construction, so there is no
     /// separate number to get wrong). `pending_budget` carries the fuel/deadline half of the grant
     /// to the control loop, which is the only code with `Access` to actually apply it to the `Store`.
-    pub fn refill(&self, grant: TurnGrant) {
+    pub async fn refill(&self, grant: TurnGrant) {
         let event_count = grant.events.len() as u32;
         *self.pending_budget.lock().expect("pending_budget poisoned") = Some(grant.budget);
         let waker = {
@@ -260,7 +260,7 @@ impl GrantHandle {
         self.refilled.notify_one();
     }
 
-    pub fn close(&self) {
+    pub async fn close(&self) {
         let waker = {
             let mut w = self.window.lock().expect("GrantWindow poisoned");
             w.closed = true;
@@ -287,7 +287,7 @@ impl GrantHandle {
 /// `next_wake: None` — this world has no per-grant timer-request signal reaching this file yet
 /// (`effects::SetTimer` still lands in `effects`, not as a distinguished return value); a real
 /// value needs a source, not an invented one.
-fn synthesize_turn_result(state: &mut AsyncActorHostState, fuel_before: u64, fuel_after: u64, status: KernelTurnStatus) -> KernelTurnResult {
+async fn synthesize_turn_result(state: &mut AsyncActorHostState, fuel_before: u64, fuel_after: u64, status: KernelTurnStatus) -> KernelTurnResult {
     let effects: Vec<Effect> = state.take_effects();
     let _patches_gap_see_module_doc = state.take_patches();
     KernelTurnResult { ui_patches: Vec::new(), effects, next_wake: None, status, fuel_used: fuel_before.saturating_sub(fuel_after) }
@@ -367,7 +367,7 @@ pub struct AsyncActorTask {
 
 impl AsyncActorTask {
     #[allow(clippy::too_many_arguments)]
-    pub fn spawn(engine: &AsyncEngineHandle, component: Arc<wasmtime::component::Component>, mut state: AsyncActorHostState, initial: TurnGrant, outcomes: tokio::sync::mpsc::UnboundedSender<AsyncTurnOutcome>) -> Self {
+    pub async fn spawn(engine: &AsyncEngineHandle, component: Arc<wasmtime::component::Component>, mut state: AsyncActorHostState, initial: TurnGrant, outcomes: tokio::sync::mpsc::UnboundedSender<AsyncTurnOutcome>) -> Self {
         let (commands_tx, mut commands_rx) = tokio::sync::mpsc::unbounded_channel::<AsyncActorCommand>();
         let window = Arc::new(Mutex::new(GrantWindow { queue: VecDeque::new(), remaining: 0, closed: false, waker: None, exhausted: Arc::new(tokio::sync::Notify::new()) }));
         let pending_budget = Arc::new(Mutex::new(None::<ActorBudget>));

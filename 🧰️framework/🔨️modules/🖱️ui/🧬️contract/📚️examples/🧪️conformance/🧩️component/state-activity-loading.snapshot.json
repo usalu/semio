@@ -1,0 +1,24 @@
+{
+  "surface": "conformance.component.state-activity-loading",
+  "revision": 0,
+  "root": 0,
+  "nodes": [
+    {
+      "id": 0,
+      "key": "#0",
+      "component": {
+        "type": "input",
+        "value": "fetching..."
+      },
+      "layout": {
+        "kind": "leaf",
+        "width": "hug",
+        "height": "hug"
+      },
+      "style": {},
+      "activity": "loading",
+      "accessibility": {}
+    }
+  ],
+  "layoutEpoch": 0
+}

@@ -44,11 +44,11 @@ pub mod derived_composition {
 
         async fn validate(payload: &IoPayload) -> Vec<Diagnostic> {
             let decoded = match payload {
-                IoPayload::Binary(bytes) => <TiffSnapshot as store::ArtifactPack>::decode_pack(bytes).ok(),
-                IoPayload::Text(text) => <TiffSnapshot as store::ArtifactDsl>::parse_dsl(text).ok(),
+                IoPayload::Binary(bytes) => <TiffSnapshot as store::ArtifactPack>::decode_pack(bytes).await.ok(),
+                IoPayload::Text(text) => <TiffSnapshot as store::ArtifactDsl>::parse_dsl(text).await.ok(),
             };
             match decoded {
-                Some(snapshot) => check_tiff_baseline_conformance(&snapshot),
+                Some(snapshot) => check_tiff_baseline_conformance(&snapshot).await,
                 None => vec![Diagnostic {
                     code: FaultCode::new("stdio.tiff.baseline.validate-decode-failed"),
                     severity: Severity::Warning,
@@ -71,7 +71,7 @@ pub mod derived_composition {
     /// The `ComposerEntry` itself is registered separately via this standard's own
     /// `composer::entries()` aggregation.
     pub async fn register() {
-        let _ = register_subset_validator(validator_entry());
+        let _ = register_subset_validator(validator_entry().await);
     }
     //#endregion 🔖️SubsetValidator
 

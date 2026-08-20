@@ -9,7 +9,7 @@ use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::
 
 //#region 🔖️Diff
 pub async fn diff(payload: &CreateNode, base: &SemioDrawingSnapshot) -> protocol::MutationOutcome<SemioDrawingDiff> {
-    match node_at(base, &payload.parent) {
+    match node_at(base, &payload.parent).await {
         Some(DrawNode::Group { children, .. }) => {
             let at = payload.index.min(children.len());
             protocol::MutationOutcome::new(diff_at_path(&payload.parent, DrawNodeDiff::Group(DrawGroupDiff { transform: None, children: Some(IndexedTripleDiff { removed: Vec::new(), modified: Vec::new(), added: vec![IndexAdded { index: at, item: payload.node.clone() }] }) })))

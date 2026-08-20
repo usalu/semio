@@ -11,17 +11,17 @@ pub const WINDOW_KIND_ID: &str = ImageWindowKit::KIND_ID;
 pub const BODY_KEY: &str = ImageWindowKit::KIND_ID;
 
 pub async fn definition() -> WindowKindDefinition {
-    ImageWindowKit::editable_window_kind()
+    ImageWindowKit::editable_window_kind().await
 }
 
 pub async fn render(snapshot: &SvgSnapshot) -> UiNode {
-    ImageWindowKit::render(&image_view(snapshot))
+    ImageWindowKit::render(&image_view(snapshot)).await
 }
 
 /// 🖼️ SVG has no pixel buffer — the "image" IS its own XML source, base64-wrapped as an
 /// `image/svg+xml` data URI so `ImageWindowKit::render` displays it like any other raster.
 async fn image_view(snapshot: &SvgSnapshot) -> ImageView {
-    let xml = write_svg_xml(&snapshot.doc);
+    let xml = write_svg_xml(&snapshot.doc).await;
     ImageView { width: 300, height: 150, mime: "image/svg+xml".into(), base64: base64::engine::general_purpose::STANDARD.encode(xml.as_bytes()) }
 }
 

@@ -56,9 +56,9 @@ pub(crate) async fn placeholder_kind_from_str(kind: &str) -> PlaceholderKind {
 
 async fn map_shape(shape: &PptxShape) -> Option<SlideShape> {
     match shape {
-        PptxShape::TextBox { text_frame, position } => Some(SlideShape::TextBox { frame: frame_from_transform(position), blocks: map_text_frame(text_frame) }),
-        PptxShape::Picture { blip_rel_id, position } => Some(SlideShape::Picture { frame: frame_from_transform(position), image: SlidePictureImage { asset_id: blip_rel_id.clone(), mime: String::new(), bytes: Vec::new() } }),
-        PptxShape::Placeholder { kind, position, .. } => Some(SlideShape::Placeholder { frame: frame_from_transform(position), kind: placeholder_kind_from_str(kind) }),
+        PptxShape::TextBox { text_frame, position } => Some(SlideShape::TextBox { frame: frame_from_transform(position).await, blocks: map_text_frame(text_frame).await }),
+        PptxShape::Picture { blip_rel_id, position } => Some(SlideShape::Picture { frame: frame_from_transform(position).await, image: SlidePictureImage { asset_id: blip_rel_id.clone(), mime: String::new(), bytes: Vec::new() } }),
+        PptxShape::Placeholder { kind, position, .. } => Some(SlideShape::Placeholder { frame: frame_from_transform(position).await, kind: placeholder_kind_from_str(kind).await }),
         PptxShape::Other { .. } => None,
     }
 }

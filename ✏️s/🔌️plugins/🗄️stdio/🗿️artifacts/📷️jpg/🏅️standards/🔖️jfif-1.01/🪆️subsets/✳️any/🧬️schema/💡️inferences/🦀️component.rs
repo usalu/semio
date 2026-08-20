@@ -23,7 +23,7 @@ pub struct JpgInference {
 
 impl protocol::Inference<JpgSnapshot> for JpgInference {
     async fn infer(snapshot: &JpgSnapshot) -> Self {
-        Self { dimensions: compute_jpg_dimensions(snapshot) }
+        Self { dimensions: compute_jpg_dimensions(snapshot).await }
     }
 }
 

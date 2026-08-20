@@ -1,0 +1,62 @@
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:2470:18
+     |
+2470 |         async fn env(to: ActorId, lane: Lane, seq: u64) -> Envelope {
+     |                  ^^^ -----------
+
+error[E0599]: no method named `unwrap` found for opaque type `impl Future<Output = Result<component::Budget, PackError>>` in the current scope
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:2488:72
+     |
+2488 |                     let decoded = <$ty>::pack_decode(&bytes, &mut pos).unwrap();
+     |                                                                        ^^^^^^ method not found in `impl Future<Output = Result<component::Budget, PackError>>`
+...
+2500 |         round_trip!(pack_round_trip_budget, Budget, lane_defaults::budget_for(Lane::Interactive));
+     |         ----------------------------------------------------------------------------------------- in this macro invocation
+     |
+     = note: this error originates in the macro `round_trip` (in Nightly builds, run with -Z macro-backtrace for more info)
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+2488 |                     let decoded = <$ty>::pack_decode(&bytes, &mut pos).await.unwrap();
+     |                                                                        ++++++
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:2505:57
+     |
+2505 |         round_trip!(pack_round_trip_envelope, Envelope, env(ActorId::new(1, 0, 1, 0), Lane::Interactive, 7));
+     |                                               --------  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Envelope`, found future
+     |                                               |
+     |                                               expected due to this
+
+error[E0599]: no method named `unwrap` found for opaque type `impl Future<Output = Result<component::Envelope, PackError>>` in the current scope
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:2488:72
+     |
+2488 |                     let decoded = <$ty>::pack_decode(&bytes, &mut pos).unwrap();
+     |                                                                        ^^^^^^ method not found in `impl Future<Output = Result<component::Envelope, PackError>>`
+...
+2505 |         round_trip!(pack_round_trip_envelope, Envelope, env(ActorId::new(1, 0, 1, 0), Lane::Interactive, 7));
+     |         ---------------------------------------------------------------------------------------------------- in this macro invocation
+     |
+     = note: this error originates in the macro `round_trip` (in Nightly builds, run with -Z macro-backtrace for more info)
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+2488 |                     let decoded = <$ty>::pack_decode(&bytes, &mut pos).await.unwrap();
+     |                                                                        ++++++
+
+error[E0599]: no method named `unwrap` found for opaque type `impl Future<Output = Result<component::WindowId, PackError>>` in the current scope
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:2488:72
+     |
+2488 |                     let decoded = <$ty>::pack_decode(&bytes, &mut pos).unwrap();
+     |                                                                        ^^^^^^ method not found in `impl Future<Output = Result<component::WindowId, PackError>>`
+...
+2501 |         round_trip!(pack_round_trip_window_id, WindowId, WindowId(5));
+     |         ------------------------------------------------------------- in this macro invocation
+     |
+     = note: this error originates in the macro `round_trip` (in Nightly builds, run with -Z macro-backtrace for more info)
+help: consider `await`ing on the `Future` and calling the method on its `Output`
+     |
+2488 |                     let decoded = <$ty>::pack_decode(&bytes, &mut pos).await.unwrap();
+     |                                                                        ++++++
+
+Some errors have detailed explanations: E0271, E0277, E0308, E0369, E0529, E0599, E0600, E0605, E0609.
+error: could not compile `semio-framework-actor` (lib test) due to 499 previous errors
+
+[exited with code 0]

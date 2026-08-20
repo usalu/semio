@@ -62,7 +62,7 @@ impl ArtifactSerializer for SemioMeshToPly {
     const INTO: Dialect = INTO_DIALECT;
 
     async fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
-        let (has_normals, has_uvs, has_colors) = check_uniform_presence(&from.meshes).map_err(|e| store::PackError::Schema(format!("SemioMeshToPly: {e}")))?;
+        let (has_normals, has_uvs, has_colors) = check_uniform_presence(&from.meshes).await.map_err(|e| store::PackError::Schema(format!("SemioMeshToPly: {e}")))?;
 
         let mut properties = vec![PlyProperty::Scalar { name: "x".into(), kind: PlyScalarType::Float }, PlyProperty::Scalar { name: "y".into(), kind: PlyScalarType::Float }, PlyProperty::Scalar { name: "z".into(), kind: PlyScalarType::Float }];
         if has_normals {
@@ -103,10 +103,10 @@ impl ArtifactSerializer for SemioMeshToPly {
                     }
                     if has_colors {
                         let c = prim.colors.get(i).ok_or_else(|| store::PackError::Schema(format!("SemioMeshToPly: primitive {:?} missing color at index {i}", prim.id)))?;
-                        values.push(PlyValue::UChar(clamp_u8(c.r)));
-                        values.push(PlyValue::UChar(clamp_u8(c.g)));
-                        values.push(PlyValue::UChar(clamp_u8(c.b)));
-                        values.push(PlyValue::UChar(clamp_u8(c.a)));
+                        values.push(PlyValue::UChar(clamp_u8(c.r).await));
+                        values.push(PlyValue::UChar(clamp_u8(c.g).await));
+                        values.push(PlyValue::UChar(clamp_u8(c.b).await));
+                        values.push(PlyValue::UChar(clamp_u8(c.a).await));
                     }
                     if has_uvs {
                         let uv = prim.uvs.get(i).ok_or_else(|| store::PackError::Schema(format!("SemioMeshToPly: primitive {:?} missing uv at index {i}", prim.id)))?;

@@ -67,7 +67,7 @@ pub const WAL_MIGRATION: u8 = 0x4F;
 /// @emoji ✅️ True iff `kind` falls in this crate's SPR extension range — the test every reader
 /// (`decode_records`, `replay_document`) uses to decide whether a frame is one of ours (vs.
 /// protocol's own `REC_COMMIT`, which every `.spr` stream also contains and this crate skips).
-pub fn is_wal_record_kind(kind: u8) -> bool {
+pub async fn is_wal_record_kind(kind: u8) -> bool {
     (WAL_SEGMENT_HEADER..=WAL_MIGRATION).contains(&kind)
 }
 //#endregion 🔖️RecordKinds
@@ -84,37 +84,37 @@ const MAX_RUN_IDS: u64 = 1_000_000;
 
 /// @emoji ✍️ Writes a varint-length-prefixed byte field — this crate's one field encoding used by
 /// every string/id-shaped record field.
-fn write_field(writer: &mut pack::ByteWriter, bytes: &[u8]) {
-    writer.write_varint_u64(bytes.len() as u64);
-    writer.write_bytes(bytes);
+async fn write_field(writer: &mut pack::ByteWriter, bytes: &[u8]) {
+    writer.write_varint_u64(bytes.len() as u64).await;
+    writer.write_bytes(bytes).await;
 }
 
 /// @emoji 📖️ Inverse of `write_field`.
-fn read_field_bytes(reader: &mut pack::ByteReader<'_>) -> Result<Vec<u8>, DbError> {
-    let len = reader.read_varint_u64()?;
+async fn read_field_bytes(reader: &mut pack::ByteReader<'_>) -> Result<Vec<u8>, DbError> {
+    let len = reader.read_varint_u64().await?;
     check_len(len, MAX_FIELD_BYTES, "wal_record::field")?;
-    Ok(reader.read_bytes(len as usize)?.to_vec())
+    Ok(reader.read_bytes(len as usize).await?.to_vec())
 }
 
 /// @emoji 📖️ `read_field_bytes` plus a utf-8 validation, for text fields.
-fn read_field_string(reader: &mut pack::ByteReader<'_>) -> Result<String, DbError> {
-    String::from_utf8(read_field_bytes(reader)?).map_err(|_| DbError::Corrupt("wal record field is not valid utf-8".to_string()))
+async fn read_field_string(reader: &mut pack::ByteReader<'_>) -> Result<String, DbError> {
+    String::from_utf8(read_field_bytes(reader).await?).map_err(|_| DbError::Corrupt("wal record field is not valid utf-8".to_string()))
 }
 
-fn encode_frontier(writer: &mut pack::ByteWriter, frontier: &Frontier) {
-    write_field(writer, frontier.document.0.as_bytes());
-    writer.write_u64_le(frontier.head_seq);
-    writer.write_u64_le(frontier.commit_seq);
-    writer.write_bytes(&frontier.chain_hash);
-    writer.write_u64_le(frontier.epoch);
+async fn encode_frontier(writer: &mut pack::ByteWriter, frontier: &Frontier) {
+    write_field(writer, frontier.document.0.as_bytes()).await;
+    writer.write_u64_le(frontier.head_seq).await;
+    writer.write_u64_le(frontier.commit_seq).await;
+    writer.write_bytes(&frontier.chain_hash).await;
+    writer.write_u64_le(frontier.epoch).await;
 }
 
-fn decode_frontier(reader: &mut pack::ByteReader<'_>) -> Result<Frontier, DbError> {
-    let document = ArtifactId(read_field_string(reader)?);
-    let head_seq = reader.read_u64_le()?;
-    let commit_seq = reader.read_u64_le()?;
-    let chain_hash = reader.read_array32()?;
-    let epoch = reader.read_u64_le()?;
+async fn decode_frontier(reader: &mut pack::ByteReader<'_>) -> Result<Frontier, DbError> {
+    let document = ArtifactId(read_field_string(reader).await?);
+    let head_seq = reader.read_u64_le().await?;
+    let commit_seq = reader.read_u64_le().await?;
+    let chain_hash = reader.read_array32().await?;
+    let epoch = reader.read_u64_le().await?;
     Ok(Frontier { document, head_seq, commit_seq, chain_hash, epoch })
 }
 
@@ -167,144 +167,144 @@ impl WalRecord {
     /// history-log records (where e.g. a dictionary delta can plausibly be "skippable" to some
     /// future reader), every `WAL_*` record is load-bearing for correct replay — there is no
     /// optional WAL record in this crate's design.
-    pub fn encode(&self) -> (u8, bool, Vec<u8>) {
-        let mut writer = pack::ByteWriter::new();
+    pub async fn encode(&self) -> (u8, bool, Vec<u8>) {
+        let mut writer = pack::ByteWriter::new().await;
         let kind = match self {
             WalRecord::SegmentHeader { document, segment_index, prev_chain_hash } => {
-                write_field(&mut writer, document.0.as_bytes());
-                writer.write_u64_le(*segment_index);
+                write_field(&mut writer, document.0.as_bytes()).await;
+                writer.write_u64_le(*segment_index).await;
                 match prev_chain_hash {
                     Some(hash) => {
-                        writer.write_u8(1);
-                        writer.write_bytes(hash);
+                        writer.write_u8(1).await;
+                        writer.write_bytes(hash).await;
                     }
-                    None => writer.write_u8(0),
+                    None => writer.write_u8(0).await,
                 }
                 WAL_SEGMENT_HEADER
             }
             WalRecord::TxBegin { tx_id } => {
-                writer.write_u64_le(*tx_id);
+                writer.write_u64_le(*tx_id).await;
                 WAL_TX_BEGIN
             }
             WalRecord::TxCommit { tx_id, record_count } => {
-                writer.write_u64_le(*tx_id);
-                writer.write_u32_le(*record_count);
+                writer.write_u64_le(*tx_id).await;
+                writer.write_u32_le(*record_count).await;
                 WAL_TX_COMMIT
             }
             WalRecord::TxAbort { tx_id } => {
-                writer.write_u64_le(*tx_id);
+                writer.write_u64_le(*tx_id).await;
                 WAL_TX_ABORT
             }
             WalRecord::Command(bytes) => {
-                writer.write_bytes(bytes);
+                writer.write_bytes(bytes).await;
                 WAL_COMMAND
             }
             WalRecord::Payload(WalPayloadRef::Inline(bytes)) => {
-                writer.write_u8(0);
-                write_field(&mut writer, bytes);
+                writer.write_u8(0).await;
+                write_field(&mut writer, bytes).await;
                 WAL_PAYLOAD
             }
             WalRecord::Payload(WalPayloadRef::CasRef(hash)) => {
-                writer.write_u8(1);
-                writer.write_bytes(&hash.0);
+                writer.write_u8(1).await;
+                writer.write_bytes(&hash.0).await;
                 WAL_PAYLOAD
             }
             WalRecord::Diff(bytes) => {
-                writer.write_bytes(bytes);
+                writer.write_bytes(bytes).await;
                 WAL_DIFF
             }
             WalRecord::Inverse(bytes) => {
-                writer.write_bytes(bytes);
+                writer.write_bytes(bytes).await;
                 WAL_INVERSE
             }
             WalRecord::Event(bytes) => {
-                writer.write_bytes(bytes);
+                writer.write_bytes(bytes).await;
                 WAL_EVENT
             }
             WalRecord::Outbox(bytes) => {
-                writer.write_bytes(bytes);
+                writer.write_bytes(bytes).await;
                 WAL_OUTBOX
             }
             WalRecord::Frontier(frontier) => {
-                encode_frontier(&mut writer, frontier);
+                encode_frontier(&mut writer, frontier).await;
                 WAL_FRONTIER
             }
             WalRecord::VcsRef(id) => {
-                write_field(&mut writer, id.as_bytes());
+                write_field(&mut writer, id.as_bytes()).await;
                 WAL_VCS_REF
             }
             WalRecord::SnapshotPub { generation, frontier } => {
-                writer.write_u64_le(*generation);
-                encode_frontier(&mut writer, frontier);
+                writer.write_u64_le(*generation).await;
+                encode_frontier(&mut writer, frontier).await;
                 WAL_SNAPSHOT_PUB
             }
             WalRecord::IndexCkpt { run_ids } => {
-                writer.write_varint_u64(run_ids.len() as u64);
+                writer.write_varint_u64(run_ids.len() as u64).await;
                 for run_id in run_ids {
-                    writer.write_u64_le(*run_id);
+                    writer.write_u64_le(*run_id).await;
                 }
                 WAL_INDEX_CKPT
             }
             WalRecord::Lease { resource, holder, fence, expires_at_ms } => {
-                write_field(&mut writer, resource.as_bytes());
-                write_field(&mut writer, holder.as_bytes());
-                writer.write_u64_le(*fence);
-                writer.write_u64_le(*expires_at_ms);
+                write_field(&mut writer, resource.as_bytes()).await;
+                write_field(&mut writer, holder.as_bytes()).await;
+                writer.write_u64_le(*fence).await;
+                writer.write_u64_le(*expires_at_ms).await;
                 WAL_LEASE
             }
             WalRecord::Migration(bytes) => {
-                writer.write_bytes(bytes);
+                writer.write_bytes(bytes).await;
                 WAL_MIGRATION
             }
         };
-        (kind, true, writer.into_bytes())
+        (kind, true, writer.into_bytes().await)
     }
 
     /// @emoji 📖️ Inverse of `encode`. Errors `DbError::Corrupt` on an unrecognized `kind` (a
     /// genuinely corrupt or future-version record) rather than silently dropping it — every
     /// `WAL_*` kind is critical (see `encode`'s doc).
-    pub fn decode(kind: u8, payload: &[u8]) -> Result<WalRecord, DbError> {
-        let mut reader = pack::ByteReader::new(payload);
+    pub async fn decode(kind: u8, payload: &[u8]) -> Result<WalRecord, DbError> {
+        let mut reader = pack::ByteReader::new(payload).await;
         let record = match kind {
             WAL_SEGMENT_HEADER => {
-                let document = ArtifactId(read_field_string(&mut reader)?);
-                let segment_index = reader.read_u64_le()?;
-                let prev_chain_hash = if reader.read_u8()? == 1 { Some(reader.read_array32()?) } else { None };
+                let document = ArtifactId(read_field_string(&mut reader).await?);
+                let segment_index = reader.read_u64_le().await?;
+                let prev_chain_hash = if reader.read_u8().await? == 1 { Some(reader.read_array32().await?) } else { None };
                 WalRecord::SegmentHeader { document, segment_index, prev_chain_hash }
             }
-            WAL_TX_BEGIN => WalRecord::TxBegin { tx_id: reader.read_u64_le()? },
-            WAL_TX_COMMIT => WalRecord::TxCommit { tx_id: reader.read_u64_le()?, record_count: reader.read_u32_le()? },
-            WAL_TX_ABORT => WalRecord::TxAbort { tx_id: reader.read_u64_le()? },
+            WAL_TX_BEGIN => WalRecord::TxBegin { tx_id: reader.read_u64_le().await? },
+            WAL_TX_COMMIT => WalRecord::TxCommit { tx_id: reader.read_u64_le().await?, record_count: reader.read_u32_le().await? },
+            WAL_TX_ABORT => WalRecord::TxAbort { tx_id: reader.read_u64_le().await? },
             WAL_COMMAND => WalRecord::Command(payload.to_vec()),
-            WAL_PAYLOAD => match reader.read_u8()? {
-                0 => WalRecord::Payload(WalPayloadRef::Inline(read_field_bytes(&mut reader)?)),
-                1 => WalRecord::Payload(WalPayloadRef::CasRef(ContentHash(reader.read_array32()?))),
+            WAL_PAYLOAD => match reader.read_u8().await? {
+                0 => WalRecord::Payload(WalPayloadRef::Inline(read_field_bytes(&mut reader).await?)),
+                1 => WalRecord::Payload(WalPayloadRef::CasRef(ContentHash(reader.read_array32().await?))),
                 other => return Err(DbError::Corrupt(format!("unknown wal payload tag {other}"))),
             },
             WAL_DIFF => WalRecord::Diff(payload.to_vec()),
             WAL_INVERSE => WalRecord::Inverse(payload.to_vec()),
             WAL_EVENT => WalRecord::Event(payload.to_vec()),
             WAL_OUTBOX => WalRecord::Outbox(payload.to_vec()),
-            WAL_FRONTIER => WalRecord::Frontier(decode_frontier(&mut reader)?),
-            WAL_VCS_REF => WalRecord::VcsRef(read_field_string(&mut reader)?),
+            WAL_FRONTIER => WalRecord::Frontier(decode_frontier(&mut reader).await?),
+            WAL_VCS_REF => WalRecord::VcsRef(read_field_string(&mut reader).await?),
             WAL_SNAPSHOT_PUB => {
-                let generation = reader.read_u64_le()?;
-                WalRecord::SnapshotPub { generation, frontier: decode_frontier(&mut reader)? }
+                let generation = reader.read_u64_le().await?;
+                WalRecord::SnapshotPub { generation, frontier: decode_frontier(&mut reader).await? }
             }
             WAL_INDEX_CKPT => {
-                let count = reader.read_varint_u64()?;
+                let count = reader.read_varint_u64().await?;
                 check_len(count, MAX_RUN_IDS, "wal_record::index_ckpt run_ids")?;
                 let mut run_ids = Vec::with_capacity(count as usize);
                 for _ in 0..count {
-                    run_ids.push(reader.read_u64_le()?);
+                    run_ids.push(reader.read_u64_le().await?);
                 }
                 WalRecord::IndexCkpt { run_ids }
             }
             WAL_LEASE => {
-                let resource = read_field_string(&mut reader)?;
-                let holder = read_field_string(&mut reader)?;
-                let fence = reader.read_u64_le()?;
-                let expires_at_ms = reader.read_u64_le()?;
+                let resource = read_field_string(&mut reader).await?;
+                let holder = read_field_string(&mut reader).await?;
+                let fence = reader.read_u64_le().await?;
+                let expires_at_ms = reader.read_u64_le().await?;
                 WalRecord::Lease { resource, holder, fence, expires_at_ms }
             }
             WAL_MIGRATION => WalRecord::Migration(payload.to_vec()),
@@ -326,9 +326,9 @@ impl WalRecord {
 /// family's "external libs behind an interface" rule).
 pub trait PayloadTransform: Send + Sync {
     /// @emoji 🔒️ Transforms `plaintext` before it is embedded inline or stored via `PayloadStorage`.
-    fn encrypt(&self, plaintext: &[u8]) -> Result<Vec<u8>, DbError>;
+    async fn encrypt(&self, plaintext: &[u8]) -> Result<Vec<u8>, DbError>;
     /// @emoji 🔓️ Inverts `encrypt` — must exactly reconstruct the original bytes.
-    fn decrypt(&self, ciphertext: &[u8]) -> Result<Vec<u8>, DbError>;
+    async fn decrypt(&self, ciphertext: &[u8]) -> Result<Vec<u8>, DbError>;
 }
 
 /// @emoji 🪟️ A `PayloadTransform` that passes bytes through unchanged — the default for a
@@ -337,11 +337,11 @@ pub trait PayloadTransform: Send + Sync {
 pub struct IdentityPayloadTransform;
 
 impl PayloadTransform for IdentityPayloadTransform {
-    fn encrypt(&self, plaintext: &[u8]) -> Result<Vec<u8>, DbError> {
+    async fn encrypt(&self, plaintext: &[u8]) -> Result<Vec<u8>, DbError> {
         Ok(plaintext.to_vec())
     }
 
-    fn decrypt(&self, ciphertext: &[u8]) -> Result<Vec<u8>, DbError> {
+    async fn decrypt(&self, ciphertext: &[u8]) -> Result<Vec<u8>, DbError> {
         Ok(ciphertext.to_vec())
     }
 }
@@ -391,31 +391,36 @@ struct SharedBuf(std::sync::Arc<std::sync::Mutex<Vec<u8>>>);
 /// @emoji 🩹️ Recovers a poisoned lock instead of panicking — one panicking document actor must
 /// never turn every other document's WAL access into a cascading panic (mirrors `db_storage`'s
 /// own `MemoryStorage` convention).
+// 🚫️async: E1 pure accessor (no suspension: `Mutex::lock` on a never-genuinely-contended
+// in-process lock), consumed synchronously alongside `.await`ed uses elsewhere — see R9
 fn lock<T>(mutex: &std::sync::Mutex<T>) -> std::sync::MutexGuard<'_, T> {
     mutex.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
 }
 
 impl SharedBuf {
+    // 🚫️async: E1 pure constructor — see `lock`
     fn new() -> Self {
         Self(std::sync::Arc::new(std::sync::Mutex::new(Vec::new())))
     }
 
+    // 🚫️async: E1 pure accessor — see `lock`
     fn len(&self) -> u64 {
         lock(&self.0).len() as u64
     }
 
+    // 🚫️async: E1 pure accessor — see `lock`
     fn snapshot(&self) -> Vec<u8> {
         lock(&self.0).clone()
     }
 }
 
 impl pack::PackSink for SharedBuf {
-    fn write_all(&mut self, bytes: &[u8]) -> Result<(), pack::PackError> {
+    async fn write_all(&mut self, bytes: &[u8]) -> Result<(), pack::PackError> {
         lock(&self.0).extend_from_slice(bytes);
         Ok(())
     }
 
-    fn position(&self) -> u64 {
+    async fn position(&self) -> u64 {
         self.len()
     }
 }
@@ -424,6 +429,7 @@ impl pack::PackSink for SharedBuf {
 /// `SprWriter` always computes the commit chain regardless of this flag, but stamping it into the
 /// header makes the requirement an explicit, reader-enforced part of the file's contract rather
 /// than an implicit convention only this crate happens to uphold.
+// 🚫️async: E1 pure constructor, always used by reference inline (`&segment_write_options()`) — see R9
 fn segment_write_options() -> protocol::format::WriteOptions {
     protocol::format::WriteOptions { required_flags: protocol::wire::REQUIRED_HASH_CHAIN, optional_flags: 0 }
 }
@@ -432,6 +438,7 @@ fn segment_write_options() -> protocol::format::WriteOptions {
 //#region 🔖️Recovery
 /// @emoji 🚨️ Maps `protocol::ProtocolError` (this crate never leaks it in a public signature, per
 /// the family's `DbError`-only rule) onto the closest `DbError` variant.
+// 🚫️async: E4 fn-pointer slot
 fn protocol_err(err: protocol::ProtocolError) -> DbError {
     match err {
         protocol::ProtocolError::Pack(pack_error) => DbError::from(pack_error),
@@ -446,12 +453,12 @@ fn protocol_err(err: protocol::ProtocolError) -> DbError {
 /// frames (and any other non-`WAL_*` kind, though none should occur in a `db_wal` segment) are
 /// skipped via `is_wal_record_kind`, matching `protocol_format`'s "cursors are kind-agnostic,
 /// interpretation is a caller policy" design note.
-fn decode_records(trusted: &[u8]) -> Result<Vec<WalRecord>, DbError> {
-    let mut cursor = protocol::FrameCursor::new(trusted, protocol::format::HEADER_SIZE as u64);
+async fn decode_records(trusted: &[u8]) -> Result<Vec<WalRecord>, DbError> {
+    let mut cursor = protocol::FrameCursor::new(trusted, protocol::format::HEADER_SIZE as u64).await;
     let mut records = Vec::new();
-    while let Some(frame) = cursor.next_frame().map_err(protocol_err)? {
-        if is_wal_record_kind(frame.kind) {
-            records.push(WalRecord::decode(frame.kind, frame.payload())?);
+    while let Some(frame) = cursor.next_frame().await.map_err(protocol_err)? {
+        if is_wal_record_kind(frame.kind).await {
+            records.push(WalRecord::decode(frame.kind, frame.payload().await).await?);
         } else if frame.kind != protocol::wire::REC_COMMIT {
             return Err(DbError::Corrupt(format!("unexpected non-wal, non-commit frame kind {:#x} in a db_wal segment", frame.kind)));
         }
@@ -482,11 +489,11 @@ pub async fn replay_document(storage: &impl db_storage::WalStorage, document: &A
     for index in indices {
         let len = storage.segment_len(document, index).await?;
         let bytes = storage.read(document, index, pack::ByteRange { offset: 0, len }).await?;
-        let report = protocol::format::recover(&bytes, &protocol::ProtocolLimits::default(), protocol::RecoveryMode::LastCommit).map_err(protocol_err)?;
+        let report = protocol::format::recover(&bytes, &protocol::ProtocolLimits::default(), protocol::RecoveryMode::LastCommit).await.map_err(protocol_err)?;
         if report.bytes_recovered != bytes.len() as u64 {
             return Err(DbError::Corrupt(format!("wal segment {index} for {document} has a torn tail ({} of {} bytes trusted)", report.bytes_recovered, bytes.len())));
         }
-        all.extend(decode_records(&bytes[..report.bytes_recovered as usize])?);
+        all.extend(decode_records(&bytes[..report.bytes_recovered as usize]).await?);
     }
     Ok(all)
 }
@@ -514,16 +521,16 @@ impl SegmentWriter {
     async fn begin(storage: &impl db_storage::WalStorage, document: ArtifactId, index: u64, prev_chain_hash: Option<[u8; 32]>, now_ms: u64) -> Result<Self, DbError> {
         storage.create_segment(&document, index).await?;
         let buf = SharedBuf::new();
-        let writer = protocol::SprWriter::begin(buf.clone(), &segment_write_options()).map_err(protocol_err)?;
+        let writer = protocol::SprWriter::begin(buf.clone(), &segment_write_options()).await.map_err(protocol_err)?;
         let mut segment = Self { document: document.clone(), index, buf, writer, flushed_len: 0, pending_records: 0, oldest_pending_at_ms: None };
-        segment.append_record(&WalRecord::SegmentHeader { document, segment_index: index, prev_chain_hash }, now_ms)?;
+        segment.append_record(&WalRecord::SegmentHeader { document, segment_index: index, prev_chain_hash }, now_ms).await?;
         segment.commit_and_flush(storage, DurabilityClass::Fsync).await?;
         Ok(segment)
     }
 
-    fn append_record(&mut self, record: &WalRecord, now_ms: u64) -> Result<u64, DbError> {
-        let (kind, critical, payload) = record.encode();
-        let offset = self.writer.write_record(kind, critical, &payload, pack::CodecId(0)).map_err(protocol_err)?;
+    async fn append_record(&mut self, record: &WalRecord, now_ms: u64) -> Result<u64, DbError> {
+        let (kind, critical, payload) = record.encode().await;
+        let offset = self.writer.write_record(kind, critical, &payload, pack::CodecId(0)).await.map_err(protocol_err)?;
         if self.pending_records == 0 {
             self.oldest_pending_at_ms = Some(now_ms);
         }
@@ -550,7 +557,7 @@ impl SegmentWriter {
         if self.pending_records == 0 {
             return Ok(None);
         }
-        let commit_offset = self.writer.commit().map_err(protocol_err)?;
+        let commit_offset = self.writer.commit().await.map_err(protocol_err)?;
         let snapshot = self.buf.snapshot();
         let delta = &snapshot[self.flushed_len as usize..];
         let new_len = storage.append(&self.document, self.index, delta).await?;
@@ -566,20 +573,20 @@ impl SegmentWriter {
     /// so this should never actually hit that branch in practice — handled honestly rather than
     /// assumed away). Used by `ArtifactWal::rotate` to seed the next segment's
     /// `WAL_SEGMENT_HEADER.prev_chain_hash`.
-    fn tip_chain_hash(&self) -> Result<[u8; 32], DbError> {
+    async fn tip_chain_hash(&self) -> Result<[u8; 32], DbError> {
         let snapshot = self.buf.snapshot();
-        let report = protocol::format::recover(&snapshot, &protocol::ProtocolLimits::default(), protocol::RecoveryMode::LastCommit).map_err(protocol_err)?;
+        let report = protocol::format::recover(&snapshot, &protocol::ProtocolLimits::default(), protocol::RecoveryMode::LastCommit).await.map_err(protocol_err)?;
         if report.last_commit_seq == 0 {
             return Ok(*blake3::hash(&snapshot[..protocol::format::HEADER_SIZE]).as_bytes());
         }
         let frame_end = (report.last_commit_offset + protocol::format::COMMIT_FRAME_LEN) as usize;
         let frame_bytes = &snapshot[report.last_commit_offset as usize..frame_end];
-        let mut cursor = protocol::FrameCursor::new(frame_bytes, 0);
-        let frame = cursor.next_frame().map_err(protocol_err)?.ok_or_else(|| DbError::Corrupt("expected a commit frame while sealing wal segment".to_string()))?;
+        let mut cursor = protocol::FrameCursor::new(frame_bytes, 0).await;
+        let frame = cursor.next_frame().await.map_err(protocol_err)?.ok_or_else(|| DbError::Corrupt("expected a commit frame while sealing wal segment".to_string()))?;
         if frame.kind != protocol::wire::REC_COMMIT {
             return Err(DbError::Corrupt(format!("expected REC_COMMIT at the recovered commit offset, found kind {:#x}", frame.kind)));
         }
-        Ok(protocol::format::parse_commit_payload(frame.payload()).map_err(protocol_err)?.chain_hash)
+        Ok(protocol::format::parse_commit_payload(frame.payload().await).await.map_err(protocol_err)?.chain_hash)
     }
 }
 //#endregion 🔖️Segment
@@ -638,7 +645,7 @@ impl ArtifactWal {
         for &index in &indices[..indices.len() - 1] {
             let len = storage.segment_len(&document, index).await?;
             let bytes = storage.read(&document, index, pack::ByteRange { offset: 0, len }).await?;
-            let report = protocol::format::recover(&bytes, &protocol::ProtocolLimits::default(), protocol::RecoveryMode::LastCommit).map_err(protocol_err)?;
+            let report = protocol::format::recover(&bytes, &protocol::ProtocolLimits::default(), protocol::RecoveryMode::LastCommit).await.map_err(protocol_err)?;
             if report.bytes_recovered != bytes.len() as u64 {
                 return Err(DbError::Corrupt(format!("wal segment {index} for {document} has a torn tail ({} of {} bytes trusted) but is not the active segment", report.bytes_recovered, bytes.len())));
             }
@@ -646,9 +653,9 @@ impl ArtifactWal {
 
         let len = storage.segment_len(&document, last_index).await?;
         let bytes = storage.read(&document, last_index, pack::ByteRange { offset: 0, len }).await?;
-        let report = protocol::format::recover(&bytes, &protocol::ProtocolLimits::default(), protocol::RecoveryMode::LastCommit).map_err(protocol_err)?;
+        let report = protocol::format::recover(&bytes, &protocol::ProtocolLimits::default(), protocol::RecoveryMode::LastCommit).await.map_err(protocol_err)?;
         let torn_tail_bytes = bytes.len() as u64 - report.bytes_recovered;
-        let records = decode_records(&bytes[..report.bytes_recovered as usize])?;
+        let records = decode_records(&bytes[..report.bytes_recovered as usize]).await?;
 
         // 🎯️ Design choice (forced by `protocol::SprWriter`'s API — the same constraint
         // `protocol_io::HistoryFile::open_append` documents and works around identically): there
@@ -661,10 +668,10 @@ impl ArtifactWal {
         storage.delete_segment(&document, last_index).await?;
         storage.create_segment(&document, last_index).await?;
         let buf = SharedBuf::new();
-        let mut writer = protocol::SprWriter::begin(buf.clone(), &segment_write_options()).map_err(protocol_err)?;
+        let mut writer = protocol::SprWriter::begin(buf.clone(), &segment_write_options()).await.map_err(protocol_err)?;
         for record in &records {
-            let (kind, critical, payload) = record.encode();
-            writer.write_record(kind, critical, &payload, pack::CodecId(0)).map_err(protocol_err)?;
+            let (kind, critical, payload) = record.encode().await;
+            writer.write_record(kind, critical, &payload, pack::CodecId(0)).await.map_err(protocol_err)?;
         }
         let mut active = SegmentWriter { document: document.clone(), index: last_index, buf, writer, flushed_len: 0, pending_records: records.len() as u32, oldest_pending_at_ms: if records.is_empty() { None } else { Some(now_ms) } };
         active.commit_and_flush(storage, DurabilityClass::Fsync).await?;
@@ -674,11 +681,11 @@ impl ArtifactWal {
         Ok((Self { document, policy, max_segment_bytes: DEFAULT_MAX_SEGMENT_BYTES, next_segment_index: last_index + 1, active, next_tx_id }, recovery))
     }
 
-    pub fn document(&self) -> &ArtifactId {
+    pub async fn document(&self) -> &ArtifactId {
         &self.document
     }
 
-    pub fn active_segment_index(&self) -> u64 {
+    pub async fn active_segment_index(&self) -> u64 {
         self.active.index
     }
 
@@ -692,11 +699,11 @@ impl ArtifactWal {
         self.next_tx_id += 1;
         let segment_index = self.active.index;
 
-        self.active.append_record(&WalRecord::TxBegin { tx_id }, now_ms)?;
+        self.active.append_record(&WalRecord::TxBegin { tx_id }, now_ms).await?;
         for record in records {
-            self.active.append_record(record, now_ms)?;
+            self.active.append_record(record, now_ms).await?;
         }
-        self.active.append_record(&WalRecord::TxCommit { tx_id, record_count: records.len() as u32 }, now_ms)?;
+        self.active.append_record(&WalRecord::TxCommit { tx_id, record_count: records.len() as u32 }, now_ms).await?;
 
         let forced = matches!(durability, DurabilityClass::Fsync | DurabilityClass::Quorum(_));
         let due = forced || self.policy.is_due(self.active.pending_bytes(), self.active.pending_records, self.active.oldest_pending_at_ms, now_ms);
@@ -723,7 +730,7 @@ impl ArtifactWal {
     /// `WAL_SEGMENT_HEADER.prev_chain_hash` — the cross-segment hash-chain link.
     async fn rotate(&mut self, storage: &impl db_storage::WalStorage, now_ms: u64) -> Result<(), DbError> {
         self.active.commit_and_flush(storage, DurabilityClass::Fsync).await?;
-        let chain_hash = self.active.tip_chain_hash()?;
+        let chain_hash = self.active.tip_chain_hash().await?;
         let sealed_index = self.active.index;
         storage.seal(&self.document, sealed_index).await?;
         let new_index = self.next_segment_index;
@@ -741,17 +748,17 @@ mod tests {
     use {ArtifactId, DurabilityClass, Frontier};
     use db_storage::{MemoryStorage, WalStorage};
 
-    fn doc(id: &str) -> ArtifactId {
+    async fn doc(id: &str) -> ArtifactId {
         ArtifactId::from(id)
     }
 
-    fn sample_frontier(document: &ArtifactId) -> Frontier {
+    async fn sample_frontier(document: &ArtifactId) -> Frontier {
         Frontier { document: document.clone(), head_seq: 7, commit_seq: 3, chain_hash: [9u8; 32], epoch: 1 }
     }
 
     //#region 🔖️RecordKinds
-    #[test]
-    fn record_kinds_fill_the_extension_range_uniquely() {
+    #[semio_framework_async_macros::async_test]
+    async fn record_kinds_fill_the_extension_range_uniquely() {
         let kinds = [WAL_SEGMENT_HEADER, WAL_TX_BEGIN, WAL_TX_COMMIT, WAL_TX_ABORT, WAL_COMMAND, WAL_PAYLOAD, WAL_DIFF, WAL_INVERSE, WAL_EVENT, WAL_OUTBOX, WAL_FRONTIER, WAL_VCS_REF, WAL_SNAPSHOT_PUB, WAL_INDEX_CKPT, WAL_LEASE, WAL_MIGRATION];
         assert_eq!(kinds.len(), 16);
         let mut sorted = kinds.to_vec();
@@ -761,18 +768,18 @@ mod tests {
         assert_eq!(*sorted.first().unwrap(), 0x40);
         assert_eq!(*sorted.last().unwrap(), 0x4F);
         for kind in kinds {
-            assert!(is_wal_record_kind(kind));
+            assert!(is_wal_record_kind(kind).await);
         }
         // 🧪️ `0x0C` (protocol::wire::REC_COMMIT) hard-coded rather than depending on protocol_core
         // directly just for this one assertion — this crate's extension range never overlaps it.
-        assert!(!is_wal_record_kind(0x0C));
+        assert!(!is_wal_record_kind(0x0C).await);
     }
     //#endregion 🔖️RecordKinds
 
     //#region 🔖️Records
-    #[test]
-    fn wal_record_round_trips_every_kind_through_encode_decode() {
-        let document = doc("doc-1");
+    #[semio_framework_async_macros::async_test]
+    async fn wal_record_round_trips_every_kind_through_encode_decode() {
+        let document = doc("doc-1").await;
         let samples = vec![
             WalRecord::SegmentHeader { document: document.clone(), segment_index: 0, prev_chain_hash: None },
             WalRecord::SegmentHeader { document: document.clone(), segment_index: 1, prev_chain_hash: Some([3u8; 32]) },
@@ -786,36 +793,36 @@ mod tests {
             WalRecord::Inverse(b"inverse-bytes".to_vec()),
             WalRecord::Event(b"event-bytes".to_vec()),
             WalRecord::Outbox(b"outbox-bytes".to_vec()),
-            WalRecord::Frontier(sample_frontier(&document)),
+            WalRecord::Frontier(sample_frontier(&document).await),
             WalRecord::VcsRef("ck-abc123".to_string()),
-            WalRecord::SnapshotPub { generation: 4, frontier: sample_frontier(&document) },
+            WalRecord::SnapshotPub { generation: 4, frontier: sample_frontier(&document).await },
             WalRecord::IndexCkpt { run_ids: vec![1, 2, 3, 100] },
             WalRecord::Lease { resource: "shard-0".to_string(), holder: "node-a".to_string(), fence: 9, expires_at_ms: 12345 },
             WalRecord::Migration(b"migration-bytes".to_vec()),
         ];
         for sample in samples {
-            let (kind, critical, payload) = sample.encode();
+            let (kind, critical, payload) = sample.encode().await;
             assert!(critical, "every wal record is critical by design");
-            let decoded = WalRecord::decode(kind, &payload).unwrap();
+            let decoded = WalRecord::decode(kind, &payload).await.unwrap();
             assert_eq!(decoded, sample);
         }
     }
 
-    #[test]
-    fn decode_rejects_unknown_kind_and_malformed_payload() {
-        assert!(matches!(WalRecord::decode(0x7E, b""), Err(DbError::Corrupt(_))));
-        assert!(WalRecord::decode(WAL_TX_BEGIN, b"").is_err());
+    #[semio_framework_async_macros::async_test]
+    async fn decode_rejects_unknown_kind_and_malformed_payload() {
+        assert!(matches!(WalRecord::decode(0x7E, b"").await, Err(DbError::Corrupt(_))));
+        assert!(WalRecord::decode(WAL_TX_BEGIN, b"").await.is_err());
     }
     //#endregion 🔖️Records
 
     //#region 🔖️PayloadTransform
-    #[test]
-    fn identity_payload_transform_round_trips_without_changing_bytes() {
+    #[semio_framework_async_macros::async_test]
+    async fn identity_payload_transform_round_trips_without_changing_bytes() {
         let transform = IdentityPayloadTransform;
         let plaintext = b"hello wal";
-        let encrypted = transform.encrypt(plaintext).unwrap();
+        let encrypted = transform.encrypt(plaintext).await.unwrap();
         assert_eq!(encrypted, plaintext);
-        assert_eq!(transform.decrypt(&encrypted).unwrap(), plaintext);
+        assert_eq!(transform.decrypt(&encrypted).await.unwrap(), plaintext);
     }
 
     /// @emoji 🔐️ A reversing "cipher" — enough to prove a caller can thread a non-identity
@@ -823,37 +830,37 @@ mod tests {
     /// encode/decode, without `db_wal` itself needing to know encryption happened.
     struct ReversingTransform;
     impl PayloadTransform for ReversingTransform {
-        fn encrypt(&self, plaintext: &[u8]) -> Result<Vec<u8>, DbError> {
+        async fn encrypt(&self, plaintext: &[u8]) -> Result<Vec<u8>, DbError> {
             Ok(plaintext.iter().rev().copied().collect())
         }
-        fn decrypt(&self, ciphertext: &[u8]) -> Result<Vec<u8>, DbError> {
+        async fn decrypt(&self, ciphertext: &[u8]) -> Result<Vec<u8>, DbError> {
             Ok(ciphertext.iter().rev().copied().collect())
         }
     }
 
-    #[test]
-    fn non_identity_payload_transform_round_trips_through_an_inline_wal_payload_record() {
+    #[semio_framework_async_macros::async_test]
+    async fn non_identity_payload_transform_round_trips_through_an_inline_wal_payload_record() {
         let transform = ReversingTransform;
         let plaintext = b"round trip me through the wal".to_vec();
 
-        let ciphertext = transform.encrypt(&plaintext).unwrap();
+        let ciphertext = transform.encrypt(&plaintext).await.unwrap();
         assert_ne!(ciphertext, plaintext, "the transform must actually have changed the bytes");
 
         let record = WalRecord::Payload(WalPayloadRef::Inline(ciphertext));
-        let (kind, _critical, payload) = record.encode();
-        let decoded = WalRecord::decode(kind, &payload).unwrap();
+        let (kind, _critical, payload) = record.encode().await;
+        let decoded = WalRecord::decode(kind, &payload).await.unwrap();
         let WalRecord::Payload(WalPayloadRef::Inline(stored_ciphertext)) = decoded else {
             panic!("expected an inline payload record");
         };
 
-        let recovered = transform.decrypt(&stored_ciphertext).unwrap();
+        let recovered = transform.decrypt(&stored_ciphertext).await.unwrap();
         assert_eq!(recovered, plaintext);
     }
     //#endregion 🔖️PayloadTransform
 
     //#region 🔖️GroupCommit
-    #[test]
-    fn group_commit_policy_is_due_on_any_threshold() {
+    #[semio_framework_async_macros::async_test]
+    async fn group_commit_policy_is_due_on_any_threshold() {
         let policy = GroupCommitPolicy { max_delay_ms: 100, max_bytes: 1000, max_records: 10 };
         assert!(!policy.is_due(0, 0, None, 0));
         assert!(policy.is_due(1000, 0, None, 0));
@@ -864,10 +871,10 @@ mod tests {
     //#endregion 🔖️GroupCommit
 
     //#region 🔖️Segment + ArtifactWal
-    #[test]
-    fn single_segment_write_commit_flush_recovers_cleanly() {
-        let storage = MemoryStorage::new();
-        let document = doc("doc-1");
+    #[semio_framework_async_macros::async_test]
+    async fn single_segment_write_commit_flush_recovers_cleanly() {
+        let storage = MemoryStorage::new().await;
+        let document = doc("doc-1").await;
         let mut wal = db_actor::block_on(ArtifactWal::create(&storage, document.clone(), GroupCommitPolicy::default(), 0)).unwrap();
 
         let receipt = db_actor::block_on(wal.submit(&storage, &[WalRecord::Command(b"cmd-1".to_vec())], DurabilityClass::Fsync, 1)).unwrap();
@@ -876,7 +883,7 @@ mod tests {
 
         let len = db_actor::block_on(storage.segment_len(&document, 0)).unwrap();
         let bytes = db_actor::block_on(storage.read(&document, 0, pack::ByteRange { offset: 0, len })).unwrap();
-        let report = protocol::format::recover(&bytes, &protocol::ProtocolLimits::default(), protocol::RecoveryMode::LastCommit).unwrap();
+        let report = protocol::format::recover(&bytes, &protocol::ProtocolLimits::default(), protocol::RecoveryMode::LastCommit).await.unwrap();
         assert_eq!(report.bytes_recovered, bytes.len() as u64);
         assert_eq!(report.torn_tail_bytes, 0);
 
@@ -884,10 +891,10 @@ mod tests {
         assert_eq!(records, vec![WalRecord::SegmentHeader { document, segment_index: 0, prev_chain_hash: None }, WalRecord::TxBegin { tx_id: 1 }, WalRecord::Command(b"cmd-1".to_vec()), WalRecord::TxCommit { tx_id: 1, record_count: 1 },]);
     }
 
-    #[test]
-    fn group_commit_batches_until_policy_threshold_then_commits() {
-        let storage = MemoryStorage::new();
-        let document = doc("doc-1");
+    #[semio_framework_async_macros::async_test]
+    async fn group_commit_batches_until_policy_threshold_then_commits() {
+        let storage = MemoryStorage::new().await;
+        let document = doc("doc-1").await;
         let policy = GroupCommitPolicy { max_delay_ms: 1_000_000, max_bytes: u64::MAX, max_records: 5 };
         let mut wal = db_actor::block_on(ArtifactWal::create(&storage, document.clone(), policy, 0)).unwrap();
 
@@ -904,20 +911,20 @@ mod tests {
         assert!(db_actor::block_on(storage.segment_len(&document, 0)).unwrap() > 32, "flush must have appended past the bare header");
     }
 
-    #[test]
-    fn fsync_durability_forces_immediate_commit_regardless_of_policy() {
-        let storage = MemoryStorage::new();
-        let document = doc("doc-1");
+    #[semio_framework_async_macros::async_test]
+    async fn fsync_durability_forces_immediate_commit_regardless_of_policy() {
+        let storage = MemoryStorage::new().await;
+        let document = doc("doc-1").await;
         let policy = GroupCommitPolicy { max_delay_ms: u64::MAX, max_bytes: u64::MAX, max_records: u32::MAX };
         let mut wal = db_actor::block_on(ArtifactWal::create(&storage, document, policy, 0)).unwrap();
         let receipt = db_actor::block_on(wal.submit(&storage, &[WalRecord::Command(b"a".to_vec())], DurabilityClass::Fsync, 0)).unwrap();
         assert!(receipt.committed);
     }
 
-    #[test]
-    fn torn_tail_is_recovered_by_truncating_and_replaying_trusted_prefix() {
-        let storage = MemoryStorage::new();
-        let document = doc("doc-1");
+    #[semio_framework_async_macros::async_test]
+    async fn torn_tail_is_recovered_by_truncating_and_replaying_trusted_prefix() {
+        let storage = MemoryStorage::new().await;
+        let document = doc("doc-1").await;
         {
             let mut wal = db_actor::block_on(ArtifactWal::create(&storage, document.clone(), GroupCommitPolicy::default(), 0)).unwrap();
             db_actor::block_on(wal.submit(&storage, &[WalRecord::Command(b"trusted".to_vec())], DurabilityClass::Fsync, 1)).unwrap();
@@ -940,14 +947,14 @@ mod tests {
 
         let len = db_actor::block_on(storage.segment_len(&document, 0)).unwrap();
         let bytes = db_actor::block_on(storage.read(&document, 0, pack::ByteRange { offset: 0, len })).unwrap();
-        let post_recovery = protocol::format::recover(&bytes, &protocol::ProtocolLimits::default(), protocol::RecoveryMode::LastCommit).unwrap();
+        let post_recovery = protocol::format::recover(&bytes, &protocol::ProtocolLimits::default(), protocol::RecoveryMode::LastCommit).await.unwrap();
         assert_eq!(post_recovery.bytes_recovered, bytes.len() as u64, "the rebuilt segment must itself be torn-tail-free");
     }
 
-    #[test]
-    fn recovery_resumes_next_tx_id_and_accepts_further_submits() {
-        let storage = MemoryStorage::new();
-        let document = doc("doc-1");
+    #[semio_framework_async_macros::async_test]
+    async fn recovery_resumes_next_tx_id_and_accepts_further_submits() {
+        let storage = MemoryStorage::new().await;
+        let document = doc("doc-1").await;
         {
             let mut wal = db_actor::block_on(ArtifactWal::create(&storage, document.clone(), GroupCommitPolicy::default(), 0)).unwrap();
             db_actor::block_on(wal.submit(&storage, &[WalRecord::Command(b"one".to_vec())], DurabilityClass::Fsync, 1)).unwrap();
@@ -963,10 +970,10 @@ mod tests {
         assert_eq!(commands, vec![WalRecord::Command(b"one".to_vec()), WalRecord::Command(b"two".to_vec()), WalRecord::Command(b"three".to_vec())]);
     }
 
-    #[test]
-    fn multi_segment_rotation_chains_prev_hash_and_replay_spans_segments() {
-        let storage = MemoryStorage::new();
-        let document = doc("doc-1");
+    #[semio_framework_async_macros::async_test]
+    async fn multi_segment_rotation_chains_prev_hash_and_replay_spans_segments() {
+        let storage = MemoryStorage::new().await;
+        let document = doc("doc-1").await;
         let mut wal = db_actor::block_on(ArtifactWal::create(&storage, document.clone(), GroupCommitPolicy::default(), 0)).unwrap();
         wal.max_segment_bytes = 200; // force rotation quickly for this test
 
@@ -981,18 +988,18 @@ mod tests {
         // independently-recomputed tip chain_hash.
         let seg0_len = db_actor::block_on(storage.segment_len(&document, 0)).unwrap();
         let seg0_bytes = db_actor::block_on(storage.read(&document, 0, pack::ByteRange { offset: 0, len: seg0_len })).unwrap();
-        let seg0_report = protocol::format::recover(&seg0_bytes, &protocol::ProtocolLimits::default(), protocol::RecoveryMode::LastCommit).unwrap();
+        let seg0_report = protocol::format::recover(&seg0_bytes, &protocol::ProtocolLimits::default(), protocol::RecoveryMode::LastCommit).await.unwrap();
         let commit_frame_end = (seg0_report.last_commit_offset + protocol::format::COMMIT_FRAME_LEN) as usize;
-        let mut cursor = protocol::FrameCursor::new(&seg0_bytes[seg0_report.last_commit_offset as usize..commit_frame_end], 0);
-        let commit_frame = cursor.next_frame().unwrap().unwrap();
-        let expected_chain_hash = protocol::format::parse_commit_payload(commit_frame.payload()).unwrap().chain_hash;
+        let mut cursor = protocol::FrameCursor::new(&seg0_bytes[seg0_report.last_commit_offset as usize..commit_frame_end], 0).await;
+        let commit_frame = cursor.next_frame().await.unwrap().unwrap();
+        let expected_chain_hash = protocol::format::parse_commit_payload(commit_frame.payload().await).await.unwrap().chain_hash;
 
-        let seg0_records = decode_records(&seg0_bytes[..seg0_report.bytes_recovered as usize]).unwrap();
+        let seg0_records = decode_records(&seg0_bytes[..seg0_report.bytes_recovered as usize]).await.unwrap();
         let seg1_records = {
             let seg1_len = db_actor::block_on(storage.segment_len(&document, 1)).unwrap();
             let seg1_bytes = db_actor::block_on(storage.read(&document, 1, pack::ByteRange { offset: 0, len: seg1_len })).unwrap();
-            let seg1_report = protocol::format::recover(&seg1_bytes, &protocol::ProtocolLimits::default(), protocol::RecoveryMode::LastCommit).unwrap();
-            decode_records(&seg1_bytes[..seg1_report.bytes_recovered as usize]).unwrap()
+            let seg1_report = protocol::format::recover(&seg1_bytes, &protocol::ProtocolLimits::default(), protocol::RecoveryMode::LastCommit).await.unwrap();
+            decode_records(&seg1_bytes[..seg1_report.bytes_recovered as usize]).await.unwrap()
         };
         match &seg1_records[0] {
             WalRecord::SegmentHeader { segment_index, prev_chain_hash, .. } => {
@@ -1015,10 +1022,10 @@ mod tests {
         assert_eq!(commands_in_order, expected, "replay must span every segment in rotation order");
     }
 
-    #[test]
-    fn recovery_rejects_a_torn_non_active_sealed_segment() {
-        let storage = MemoryStorage::new();
-        let document = doc("doc-1");
+    #[semio_framework_async_macros::async_test]
+    async fn recovery_rejects_a_torn_non_active_sealed_segment() {
+        let storage = MemoryStorage::new().await;
+        let document = doc("doc-1").await;
         let mut wal = db_actor::block_on(ArtifactWal::create(&storage, document.clone(), GroupCommitPolicy::default(), 0)).unwrap();
         wal.max_segment_bytes = 1; // rotate on the very next submit
         db_actor::block_on(wal.submit(&storage, &[WalRecord::Command(b"forces-rotation".to_vec())], DurabilityClass::Fsync, 0)).unwrap();
@@ -1038,13 +1045,13 @@ mod tests {
         assert!(matches!(result, Err(DbError::Corrupt(_))), "a torn sealed (non-active) segment must be a hard recovery error");
     }
 
-    #[test]
-    fn empty_document_open_creates_a_fresh_wal() {
-        let storage = MemoryStorage::new();
-        let document = doc("doc-1");
+    #[semio_framework_async_macros::async_test]
+    async fn empty_document_open_creates_a_fresh_wal() {
+        let storage = MemoryStorage::new().await;
+        let document = doc("doc-1").await;
         let (wal, report) = db_actor::block_on(ArtifactWal::open(&storage, document.clone(), GroupCommitPolicy::default(), 0)).unwrap();
         assert_eq!(report, WalRecoveryReport::default());
-        assert_eq!(wal.active_segment_index(), 0);
+        assert_eq!(wal.active_segment_index().await, 0);
         assert_eq!(db_actor::block_on(storage.list_segments(&document)).unwrap(), vec![0]);
     }
     //#endregion 🔖️Segment + ArtifactWal

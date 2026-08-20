@@ -14,6 +14,6 @@ pub async fn standard() -> StandardDeclaration {
     StandardDeclaration {
         id: StandardId("raw"),
         media: MediaDeclaration { mimes: &["application/octet-stream"], extensions: &["bin"] },
-        subsets: vec![subsets::any::subset()],
+        subsets: vec![subsets::any::subset().await],
     }
 }

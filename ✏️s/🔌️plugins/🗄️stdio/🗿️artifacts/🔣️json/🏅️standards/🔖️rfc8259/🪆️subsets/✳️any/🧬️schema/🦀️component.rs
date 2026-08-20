@@ -105,17 +105,17 @@ pub mod derived_construction {
             Self { snapshot, diagnostics: Vec::new() }
         }
         async fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self::from_snapshot(<JsonSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+            Ok(Self::from_snapshot(<JsonSnapshot as store::ArtifactDsl>::parse_dsl(text).await?).await)
         }
         async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<JsonSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+            Ok(Self::from_snapshot(<JsonSnapshot as store::ArtifactPack>::decode_pack(bytes).await?).await)
         }
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::json::schema::mutations::apply_json_mutation(&mut self.snapshot, &mutation);
-            (self, diff)
+            (self, diff.await)
         }
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            self.snapshot = <JsonDiff as protocol::MutationDiff<JsonSnapshot>>::apply(&diff, &self.snapshot)?;
+            self.snapshot = <JsonDiff as protocol::MutationDiff<JsonSnapshot>>::apply(&diff, &self.snapshot).await?;
             Ok(self)
         }
         async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
@@ -152,7 +152,7 @@ pub mod derived_analysis {
     /// parser is the strongest available signal (cheap for realistic file sizes); fall back to a
     /// first-non-whitespace-character heuristic when the bytes aren't valid UTF-8 text at all.
     async fn looks_like_json(text: &str) -> IoConfidence {
-        if crate::artifacts::json::schema::snapshot::parse_json_text(text.trim()).is_ok() {
+        if crate::artifacts::json::schema::snapshot::parse_json_text(text.trim()).await.is_ok() {
             return IoConfidence::High;
         }
         match text.trim_start().chars().next() {
@@ -172,15 +172,15 @@ pub mod derived_analysis {
                         Ok((_, rest)) => rest,
                         Err(_) => text,
                     };
-                    looks_like_json(body)
+                    looks_like_json(body).await
                 }
                 AnalyzeSource::Binary(bytes) => match store::semio_format::unwrap_binary(bytes) {
                     Ok((_, inner)) => match String::from_utf8(inner) {
-                        Ok(text) => looks_like_json(&text),
+                        Ok(text) => looks_like_json(&text).await,
                         Err(_) => IoConfidence::Low,
                     },
                     Err(_) => match std::str::from_utf8(bytes) {
-                        Ok(text) => looks_like_json(text),
+                        Ok(text) => looks_like_json(text).await,
                         Err(_) => IoConfidence::Low,
                     },
                 },
@@ -193,14 +193,14 @@ pub mod derived_analysis {
             let mut confidence = IoConfidence::High;
             for source in sources {
                 match source {
-                    AnalyzeSource::Text(text) => match <JsonSnapshot as store::ArtifactDsl>::parse_dsl(text) {
+                    AnalyzeSource::Text(text) => match <JsonSnapshot as store::ArtifactDsl>::parse_dsl(text).await {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
                             diagnostics.push(dsl::Diagnostic::error("stdio.analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
-                    AnalyzeSource::Binary(bytes) => match <JsonSnapshot as store::ArtifactPack>::decode_pack(bytes) {
+                    AnalyzeSource::Binary(bytes) => match <JsonSnapshot as store::ArtifactPack>::decode_pack(bytes).await {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;

@@ -64,8 +64,8 @@ impl ArtifactViewer for CsvViewer {
 
     async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
-            main::BODY_KEY => main::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
+            main::BODY_KEY => main::render(doc.snapshot).await,
+            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))).await,
         }
     }
 }
@@ -74,12 +74,12 @@ impl ArtifactViewer for CsvViewer {
 //#region 🔖️Manifest
 pub async fn create_csv_viewer() -> semio_framework_plugin::AppDefinition {
     Viewer::builder(CSV_VIEWER_DIALECT)
-        .document(["semio", "stdio", "csv"])
-        .icon_id("table-2")
-        .mode_def(view::definition())
-        .default_mode_id(view::CSV_VIEW_MODE_ID)
-        .window_kind_def(main::definition())
-        .default_layout(view::layout())
+        .await.document(["semio", "stdio", "csv"])
+        .await.icon_id("table-2")
+        .await.mode_def(view::definition().await)
+        .await.default_mode_id(view::CSV_VIEW_MODE_ID)
+        .await.window_kind_def(main::definition().await)
+        .await.default_layout(view::layout())
         .build_definition()
 }
 //#endregion 🔖️Manifest

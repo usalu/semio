@@ -56,7 +56,7 @@ impl ArtifactDeserializer for SemioImageFromPng {
             schema: STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA.into(),
             width: from.width,
             height: from.height,
-            colorspace: colorspace_from_png(from.color_type),
+            colorspace: colorspace_from_png(from.color_type).await,
             bit_depth: from.bit_depth,
             frames: vec![SemioImageFrame { delay_ms: 0, rgba8: from.pixels.clone() }],
             icc: None,

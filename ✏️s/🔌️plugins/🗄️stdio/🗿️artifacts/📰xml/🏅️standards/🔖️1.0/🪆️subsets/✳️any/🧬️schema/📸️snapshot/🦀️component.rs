@@ -76,7 +76,7 @@ pub struct XmlDoctype {
 
 impl From<&str> for XmlDoctype {
     fn from(value: &str) -> Self {
-        parse_doctype(value).expect("valid XML document type literal")
+        semio_framework_plugin::resolve_ready(parse_doctype(value)).expect("valid XML document type literal")
     }
 }
 
@@ -138,12 +138,12 @@ impl XmlSnapshot {
     /// 📥️ Parses XML into its lossless logical model.
     pub async fn import_utf8(bytes: &[u8]) -> Result<Self, String> {
         let text = std::str::from_utf8(bytes).map_err(|error| error.to_string())?;
-        Ok(Self { schema: STDIO_XML_DOCUMENT_SCHEMA.into(), doc: xml_document_from_text(text)? })
+        Ok(Self { schema: STDIO_XML_DOCUMENT_SCHEMA.into(), doc: xml_document_from_text(text).await? })
     }
 
     /// 📤️ Deterministically materializes XML from the logical model.
     pub async fn export_utf8(&self) -> Result<Vec<u8>, String> {
-        Ok(xml_document_to_text(&self.doc).into_bytes())
+        Ok(xml_document_to_text(&self.doc).await.into_bytes())
     }
 }
 //#endregion 🔖️Snapshot
@@ -331,7 +331,7 @@ async fn xml_node_to_text(node: &XmlNode, depth: usize, out: &mut String) {
                 let closing_width = if index + 1 == attrs.len() {
                     match children.as_slice() {
                         [] => 2,
-                        [XmlNode::Text { text }] => xml_escape_text(text).chars().count() + name.len() + 4,
+                        [XmlNode::Text { text }] => xml_escape_text(text).await.chars().count() + name.len() + 4,
                         _ => 1,
                     }
                 } else {
@@ -366,10 +366,10 @@ pub async fn xml_document_from_text(text: &str) -> Result<XmlDocument, String> {
         return Ok(XmlDocument::default());
     }
     let mut pos = 0;
-    let declaration = parse_xml_declaration_prolog(trimmed, &mut pos)?;
-    let (doctype, prolog) = skip_misc(trimmed, &mut pos)?;
-    let root = parse_node(trimmed, &mut pos)?;
-    let _ = skip_misc(trimmed, &mut pos)?;
+    let declaration = parse_xml_declaration_prolog(trimmed, &mut pos).await?;
+    let (doctype, prolog) = skip_misc(trimmed, &mut pos).await?;
+    let root = parse_node(trimmed, &mut pos).await?;
+    let _ = skip_misc(trimmed, &mut pos).await?;
     if pos < trimmed.len() {
         return Err("trailing content after root element".into());
     }
@@ -400,13 +400,13 @@ async fn parse_xml_declaration_prolog(s: &str, pos: &mut usize) -> Result<Option
         if s[*pos..].starts_with("?>") {
             break;
         }
-        let name = parse_name(s, pos)?;
+        let name = parse_name(s, pos).await?;
         skip_ws(s, pos);
         if s[*pos..].chars().next() != Some('=') {
             return Err("expected = in xml declaration".into());
         }
         *pos += 1;
-        let value = xml_unescape_text(&parse_attr_value(s, pos)?)?;
+        let value = xml_unescape_text(&parse_attr_value(s, pos).await?).await?;
         match name.as_str() {
             "version" => version = Some(value),
             "encoding" => encoding = Some(value),
@@ -426,7 +426,7 @@ async fn skip_misc(s: &str, pos: &mut usize) -> Result<(Option<XmlDoctype>, Vec<
         skip_ws(s, pos);
         if s[*pos..].starts_with("<?") {
             *pos += 2;
-            let target = parse_name(s, pos)?;
+            let target = parse_name(s, pos).await?;
             skip_ws(s, pos);
             let end = s[*pos..].find("?>").ok_or("unclosed processing instruction")?;
             let data = s[*pos..*pos + end].to_string();
@@ -461,7 +461,7 @@ async fn skip_misc(s: &str, pos: &mut usize) -> Result<(Option<XmlDoctype>, Vec<
                 }
                 *pos += 1;
             }
-            doctype = Some(parse_doctype(&s[start..*pos])?);
+            doctype = Some(parse_doctype(&s[start..*pos]).await?);
             continue;
         }
         break;
@@ -472,15 +472,15 @@ async fn skip_misc(s: &str, pos: &mut usize) -> Result<(Option<XmlDoctype>, Vec<
 async fn parse_doctype(text: &str) -> Result<XmlDoctype, String> {
     let mut pos = "<!DOCTYPE".len();
     skip_ws(text, &mut pos);
-    let name = parse_name(text, &mut pos)?;
+    let name = parse_name(text, &mut pos).await?;
     skip_ws(text, &mut pos);
     let external_id = if text[pos..].starts_with("SYSTEM") {
         pos += "SYSTEM".len();
-        Some(XmlExternalId::System { system_id: xml_unescape_text(&parse_attr_value(text, &mut pos)?)? })
+        Some(XmlExternalId::System { system_id: xml_unescape_text(&parse_attr_value(text, &mut pos).await?).await? })
     } else if text[pos..].starts_with("PUBLIC") {
         pos += "PUBLIC".len();
-        let public_id = xml_unescape_text(&parse_attr_value(text, &mut pos)?)?;
-        let system_id = xml_unescape_text(&parse_attr_value(text, &mut pos)?)?;
+        let public_id = xml_unescape_text(&parse_attr_value(text, &mut pos).await?).await?;
+        let system_id = xml_unescape_text(&parse_attr_value(text, &mut pos).await?).await?;
         Some(XmlExternalId::Public { public_id, system_id })
     } else {
         None
@@ -505,8 +505,8 @@ async fn parse_doctype(text: &str) -> Result<XmlDoctype, String> {
                 pos += 1;
                 skip_ws(text, &mut pos);
             }
-            let entity_name = parse_name(text, &mut pos)?;
-            let value = xml_unescape_text(&parse_attr_value(text, &mut pos)?)?;
+            let entity_name = parse_name(text, &mut pos).await?;
+            let value = xml_unescape_text(&parse_attr_value(text, &mut pos).await?).await?;
             skip_ws(text, &mut pos);
             if !text[pos..].starts_with('>') {
                 return Err("expected > after XML entity declaration".into());
@@ -540,7 +540,7 @@ async fn parse_name(s: &str, pos: &mut usize) -> Result<String, String> {
     *pos += 1;
     while *pos < s.len() {
         let ch = s[*pos..].chars().next().unwrap();
-        if is_name_char(ch) {
+        if is_name_char(ch).await {
             *pos += ch.len_utf8();
         } else {
             break;
@@ -554,7 +554,7 @@ async fn is_name_start(ch: char) -> bool {
 }
 
 async fn is_name_char(ch: char) -> bool {
-    is_name_start(ch) || ch.is_ascii_digit() || ch == '-' || ch == '.'
+    is_name_start(ch).await || ch.is_ascii_digit() || ch == '-' || ch == '.'
 }
 
 async fn parse_attr_value(s: &str, pos: &mut usize) -> Result<String, String> {
@@ -584,13 +584,13 @@ async fn parse_attrs(s: &str, pos: &mut usize) -> Result<Vec<XmlAttr>, String> {
         if *pos >= s.len() || s[*pos..].starts_with(">") || s[*pos..].starts_with("/>") {
             break;
         }
-        let name = parse_name(s, pos)?;
+        let name = parse_name(s, pos).await?;
         skip_ws(s, pos);
         if s[*pos..].chars().next() != Some('=') {
             return Err("expected = in attribute".into());
         }
         *pos += 1;
-        let value = xml_unescape_text(&parse_attr_value(s, pos)?)?;
+        let value = xml_unescape_text(&parse_attr_value(s, pos).await?).await?;
         attrs.push(XmlAttr { name, value });
     }
     Ok(attrs)
@@ -604,8 +604,8 @@ async fn parse_node(s: &str, pos: &mut usize) -> Result<XmlNode, String> {
         return Err("unexpected closing tag".into());
     }
     *pos += 1;
-    let name = parse_name(s, pos)?;
-    let attrs = parse_attrs(s, pos)?;
+    let name = parse_name(s, pos).await?;
+    let attrs = parse_attrs(s, pos).await?;
     skip_ws(s, pos);
     if s[*pos..].starts_with("/>") {
         *pos += 2;
@@ -622,7 +622,7 @@ async fn parse_node(s: &str, pos: &mut usize) -> Result<XmlNode, String> {
         }
         if s[*pos..].starts_with("</") {
             *pos += 2;
-            let close = parse_name(s, pos)?;
+            let close = parse_name(s, pos).await?;
             skip_ws(s, pos);
             if !s[*pos..].starts_with('>') {
                 return Err("expected > on closing tag".into());
@@ -651,7 +651,7 @@ async fn parse_node(s: &str, pos: &mut usize) -> Result<XmlNode, String> {
         }
         if s[*pos..].starts_with("<?") {
             *pos += 2;
-            let target = parse_name(s, pos)?;
+            let target = parse_name(s, pos).await?;
             skip_ws(s, pos);
             let end = s[*pos..].find("?>").ok_or("unclosed processing instruction")?;
             let data = s[*pos..*pos + end].to_string();
@@ -660,7 +660,7 @@ async fn parse_node(s: &str, pos: &mut usize) -> Result<XmlNode, String> {
             continue;
         }
         if s[*pos..].starts_with('<') {
-            children.push(parse_node(s, pos)?);
+            children.push(parse_node(s, pos).await?);
             continue;
         }
         let start = *pos;
@@ -669,7 +669,7 @@ async fn parse_node(s: &str, pos: &mut usize) -> Result<XmlNode, String> {
         }
         let raw = &s[start..*pos];
         if !raw.is_empty() {
-            let text = xml_unescape_text(raw)?;
+            let text = xml_unescape_text(raw).await?;
             children.push(XmlNode::Text { text });
         }
     }
@@ -686,13 +686,13 @@ impl store::ArtifactDsl for XmlSnapshot {
 
     async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         match store::semio_format::split_text_preamble(text) {
-            Ok((_, body)) => crate::artifacts::xml::schema::mutations::dec_xml_snapshot(body.trim()).map_err(|e| store::TextError::new(format!("xml state parse: {e}"), dsl::TextSpan::at(1, 1))),
-            Err(_) => Self::import_utf8(text.as_bytes()).map_err(|e| store::TextError::new(format!("xml parse: {e}"), dsl::TextSpan::at(1, 1))),
+            Ok((_, body)) => crate::artifacts::xml::schema::mutations::dec_xml_snapshot(body.trim()).await.map_err(|e| store::TextError::new(format!("xml state parse: {e}"), dsl::TextSpan::at(1, 1))),
+            Err(_) => Self::import_utf8(text.as_bytes()).await.map_err(|e| store::TextError::new(format!("xml parse: {e}"), dsl::TextSpan::at(1, 1))),
         }
     }
     async fn print_dsl(&self) -> String {
         let body = crate::artifacts::xml::schema::mutations::enc_xml_snapshot(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -710,7 +710,7 @@ impl store::ArtifactPack for XmlSnapshot {
         let _ = options;
         let mut raw = vec![1];
         crate::artifacts::xml::schema::mutations::enc_xml_snapshot_bin(self, &mut raw);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
     async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
@@ -719,12 +719,12 @@ impl store::ArtifactPack for XmlSnapshot {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
-        let mut reader = store::ByteReader::new(&inner);
-        let version = reader.read_u8().map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let mut reader = store::ByteReader::new(&inner).await;
+        let version = reader.read_u8().await.map_err(|e| store::PackError::Schema(e.to_string()))?;
         if version != 1 {
             return Err(store::PackError::Schema(format!("unsupported xml snapshot state version {version}")));
         }
-        crate::artifacts::xml::schema::mutations::dec_xml_snapshot_bin(&mut reader).map_err(store::PackError::Schema)
+        crate::artifacts::xml::schema::mutations::dec_xml_snapshot_bin(&mut reader).await.map_err(store::PackError::Schema)
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs

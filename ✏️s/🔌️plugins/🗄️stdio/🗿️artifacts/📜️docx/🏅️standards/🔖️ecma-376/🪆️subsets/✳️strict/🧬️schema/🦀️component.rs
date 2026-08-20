@@ -28,13 +28,13 @@ pub mod derived_construction {
     /// namespace, root `conformance="strict"` attribute, and strict officeDocument relationship base
     /// written from the start instead of the transitional ones.
     async fn build_minimal_strict_docx(document: DocxDocument) -> DocxSnapshot {
-        let mut opc = OpcPackage::empty();
+        let mut opc = OpcPackage::empty().await;
         opc.content_types.set_default("rels", RELS_CONTENT_TYPE);
         opc.content_types.set_default("xml", "application/xml");
-        let bytes = xml_document_to_text(&document_to_strict_xml(&document)).into_bytes();
-        opc.set_part(MAIN_DOCUMENT_PART, MAIN_DOCUMENT_CONTENT_TYPE, bytes);
-        opc.add_relationship("", "rId1", &format!("{STRICT_REL_BASE}/officeDocument"), MAIN_DOCUMENT_PART);
-        DocxSnapshot::from_parts(opc, document)
+        let bytes = xml_document_to_text(&document_to_strict_xml(&document)).await.into_bytes();
+        opc.set_part(MAIN_DOCUMENT_PART, MAIN_DOCUMENT_CONTENT_TYPE, bytes).await;
+        opc.add_relationship("", "rId1", &format!("{STRICT_REL_BASE}/officeDocument"), MAIN_DOCUMENT_PART).await;
+        DocxSnapshot::from_parts(opc, document).await
     }
 
     /// ✍️ Same paragraph/run -> XML shape as the ✳️any subset's `engine::document_to_xml`, just with
@@ -101,18 +101,18 @@ pub mod derived_construction {
         /// ➕️ Appends a paragraph, re-serializing the strict-namespaced `word/document.xml` part.
         pub async fn add_paragraph(mut self, paragraph: DocxParagraph) -> Self {
             self.snapshot.document.body.push(crate::artifacts::docx::schema::snapshot::DocxBlock::Paragraph(paragraph));
-            self.snapshot = build_minimal_strict_docx(self.snapshot.document);
+            self.snapshot = build_minimal_strict_docx(self.snapshot.document).await;
             self
         }
 
         /// ➕️ Appends a single-run plain-text paragraph.
         pub async fn add_text_paragraph(self, text: impl Into<String>) -> Self {
-            self.add_paragraph(DocxParagraph::text(text.into()))
+            self.add_paragraph(DocxParagraph::text(text.into()).await).await
         }
 
         /// ➕️ Appends a paragraph made of the given runs (basic bold/italic/underline formatting).
         pub async fn add_runs(self, runs: Vec<DocxRun>) -> Self {
-            self.add_paragraph(DocxParagraph { runs, style: None, extra_paragraph_properties: Vec::new() })
+            self.add_paragraph(DocxParagraph { runs, style: None, extra_paragraph_properties: Vec::new() }).await
         }
     }
 
@@ -122,7 +122,7 @@ pub mod derived_construction {
         type Diff = DocxDiff;
 
         async fn empty() -> Self {
-            Self { snapshot: build_minimal_strict_docx(DocxDocument::default()) }
+            Self { snapshot: build_minimal_strict_docx(DocxDocument::default()).await }
         }
 
         async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
@@ -130,20 +130,20 @@ pub mod derived_construction {
         }
 
         async fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self::from_snapshot(<DocxSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+            Ok(Self::from_snapshot(<DocxSnapshot as store::ArtifactDsl>::parse_dsl(text).await?).await)
         }
 
         async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<DocxSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+            Ok(Self::from_snapshot(<DocxSnapshot as store::ArtifactPack>::decode_pack(bytes).await?).await)
         }
 
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::docx::schema::mutations::apply_docx_mutation(&mut self.snapshot, &mutation);
-            (self, diff)
+            (self, diff.await)
         }
 
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            self.snapshot = <DocxDiff as protocol::MutationDiff<DocxSnapshot>>::apply(&diff, &self.snapshot)?;
+            self.snapshot = <DocxDiff as protocol::MutationDiff<DocxSnapshot>>::apply(&diff, &self.snapshot).await?;
             Ok(self)
         }
 
@@ -227,9 +227,9 @@ pub mod derived_analysis {
     /// `CODE_REL_BASE` below checks for) -- matching by suffix here keeps this lookup honest for both
     /// conformance classes instead of silently failing to find the main part on any strict document.
     async fn main_document_part<'a>(opc: &'a OpcPackage) -> Option<(&'a OpcPart, String)> {
-        let rel = opc.relationships_for("").iter().find(|r| r.rel_type.ends_with("/officeDocument"))?;
+        let rel = opc.relationships_for("").await.iter().find(|r| r.rel_type.ends_with("/officeDocument"))?;
         let path = resolve_relationship_target("", &rel.target);
-        opc.part(&path).map(|p| (p, path))
+        opc.part(&path).await.map(|p| (p, path))
     }
 
     async fn part_contains(bytes: &[u8], needle: &str) -> bool {
@@ -252,7 +252,7 @@ pub mod derived_analysis {
         let opc = &snapshot.opc;
         let mut out = Vec::new();
 
-        match main_document_part(opc) {
+        match main_document_part(opc).await {
             Some((part, path)) => {
                 if !part_contains(&part.bytes, STRICT_MAIN_NS) {
                     out.push(hard(CODE_MAIN_NS_MISSING, format!("main document part {path} does not declare the strict WordprocessingML namespace {STRICT_MAIN_NS}")));
@@ -265,13 +265,13 @@ pub mod derived_analysis {
         }
 
         for part in &opc.parts {
-            if part_contains(&part.bytes, TRANSITIONAL_MAIN_NS) {
+            if part_contains(&part.bytes, TRANSITIONAL_MAIN_NS).await {
                 out.push(hard(CODE_TRANSITIONAL_NS_PRESENT, format!("part {} contains the transitional WordprocessingML namespace {TRANSITIONAL_MAIN_NS} -- strict conformance forbids mixed namespaces", part.path)));
             }
-            if part_contains(&part.bytes, VML_NS) {
+            if part_contains(&part.bytes, VML_NS).await {
                 out.push(hard(CODE_VML_PRESENT, format!("part {} contains the VML namespace {VML_NS} -- VML is transitional-only markup, forbidden under strict conformance", part.path)));
             }
-            if part_contains(&part.bytes, "mc:AlternateContent") {
+            if part_contains(&part.bytes, "mc:AlternateContent").await {
                 out.push(soft(CODE_ALTERNATE_CONTENT, format!("part {} contains mc:AlternateContent compatibility markup", part.path)));
             }
         }
@@ -301,15 +301,15 @@ pub mod derived_analysis {
         const DIALECT: Dialect = DIALECT;
 
         async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
-            DocxAnyAnalyzer::sniff(source)
+            DocxAnyAnalyzer::sniff(source).await
         }
 
         async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
-            let inner = DocxAnyAnalyzer::analyze(sources);
+            let inner = DocxAnyAnalyzer::analyze(sources).await;
             let mut diagnostics = inner.diagnostics.clone();
             let mut confidence = inner.confidence;
             if let Some(snapshot) = &inner.parts.snapshot {
-                let checks = check_strict_conformance(snapshot);
+                let checks = check_strict_conformance(snapshot).await;
                 if checks.iter().any(|d| matches!(d.severity, Severity::Error | Severity::Fatal)) {
                     confidence = IoConfidence::Low;
                 }

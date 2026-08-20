@@ -37,7 +37,7 @@ impl ArtifactDeserializer for SemioAudioFromMp3 {
         let mut tags = Vec::new();
         if let Some(id3v2) = &from.id3v2 {
             for frame in &id3v2.frames {
-                tags.push(SemioAudioTag { key: frame.id.clone(), value: decode_id3_text(&frame.data) });
+                tags.push(SemioAudioTag { key: frame.id.clone(), value: decode_id3_text(&frame.data).await });
             }
         }
         if let Some(id3v1) = &from.id3v1 {

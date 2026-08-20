@@ -35,7 +35,7 @@ pub mod derived_composition {
             if native.is_empty() {
                 return Err(ComposeError { message: "GifComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() });
             }
-            let analysis = GifAnalyzer::analyze(&native);
+            let analysis = GifAnalyzer::analyze(&native).await;
             let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError { message: "GifComposerComposition: analysis produced no snapshot".into(), diagnostics: analysis.diagnostics.clone() })?;
             Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics })
         }
@@ -138,11 +138,11 @@ pub async fn lzw_encode(indices: &[u8], min_code_size: u8) -> Vec<u8> {
     let mut code_size: u32 = min_code_size as u32 + 1;
     let mut next_code: u32 = end_code + 1;
     let mut dict: HashMap<(i64, u8), u32> = HashMap::new();
-    let mut bw = BitWriter::new();
-    bw.write_bits(clear_code, code_size as u8);
+    let mut bw = BitWriter::new().await;
+    bw.write_bits(clear_code, code_size as u8).await;
     if indices.is_empty() {
-        bw.write_bits(end_code, code_size as u8);
-        return bw.finish();
+        bw.write_bits(end_code, code_size as u8).await;
+        return bw.finish().await;
     }
     let mut current: i64 = indices[0] as i64;
     // 🐛→✅ Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION: tracks
@@ -154,7 +154,7 @@ pub async fn lzw_encode(indices: &[u8], min_code_size: u8) -> Vec<u8> {
         if let Some(&code) = dict.get(&key) {
             current = code as i64;
         } else {
-            bw.write_bits(current as u32, code_size as u8);
+            bw.write_bits(current as u32, code_size as u8).await;
             wrote_since_clear = true;
             dict.insert(key, next_code);
             next_code += 1;
@@ -162,7 +162,7 @@ pub async fn lzw_encode(indices: &[u8], min_code_size: u8) -> Vec<u8> {
                 code_size += 1;
             }
             if next_code >= 4096 {
-                bw.write_bits(clear_code, code_size as u8);
+                bw.write_bits(clear_code, code_size as u8).await;
                 dict.clear();
                 code_size = min_code_size as u32 + 1;
                 next_code = end_code + 1;
@@ -171,7 +171,7 @@ pub async fn lzw_encode(indices: &[u8], min_code_size: u8) -> Vec<u8> {
             current = sym as i64;
         }
     }
-    bw.write_bits(current as u32, code_size as u8);
+    bw.write_bits(current as u32, code_size as u8).await;
     // 🐛→✅ A real, previously-latent bug (found via this ticket's field_sweep-style test data —
     // a plain period-2 alternating sequence, never exercised by the pre-existing pseudo-random/
     // solid-run test suite): `lzw_decode` performs an insert-then-maybe-grow step for EVERY code
@@ -191,8 +191,8 @@ pub async fn lzw_encode(indices: &[u8], min_code_size: u8) -> Vec<u8> {
             code_size += 1;
         }
     }
-    bw.write_bits(end_code, code_size as u8);
-    bw.finish()
+    bw.write_bits(end_code, code_size as u8).await;
+    bw.finish().await
 }
 
 /// 🧬️ GIF-variant LZW decode; see [`lzw_encode`] for the growth-threshold asymmetry.
@@ -203,7 +203,7 @@ pub async fn lzw_decode(data: &[u8], min_code_size: u8) -> Result<Vec<u8>, Strin
     let clear_code: u32 = 1 << min_code_size;
     let end_code: u32 = clear_code + 1;
     let mut code_size: u32 = min_code_size as u32 + 1;
-    let mut br = BitReader::new(data);
+    let mut br = BitReader::new(data).await;
     let base_len = (clear_code + 2) as usize;
     let mut table: Vec<Vec<u8>> = (0..clear_code).map(|i| vec![i as u8]).collect();
     table.push(Vec::new());
@@ -211,7 +211,7 @@ pub async fn lzw_decode(data: &[u8], min_code_size: u8) -> Result<Vec<u8>, Strin
     let mut out = Vec::new();
     let mut prev: Option<Vec<u8>> = None;
     loop {
-        let code = br.read_bits(code_size as u8)?;
+        let code = br.read_bits(code_size as u8).await?;
         if code == clear_code {
             table.truncate(base_len);
             code_size = min_code_size as u32 + 1;
@@ -465,7 +465,7 @@ pub async fn encode_gif(snap: &GifSnapshot) -> Result<Vec<u8>, String> {
     let gct_bytes = snap.gct.as_ref().map(color_table_to_bytes);
     match &gct_bytes {
         Some(colors) => {
-            let size_field = validated_color_table_size_field(colors.len(), "gif87a: global")?;
+            let size_field = validated_color_table_size_field(colors.len(), "gif87a: global").await?;
             let sorted = snap.gct.as_ref().map(|t| t.sorted).unwrap_or(false);
             out.push(0x80 | (sorted as u8) << 3 | size_field);
         }
@@ -501,7 +501,7 @@ pub async fn encode_gif(snap: &GifSnapshot) -> Result<Vec<u8>, String> {
         let mut ipacked = (image.interlace as u8) << 6;
         let min_code_size;
         if let Some(colors) = &local_bytes {
-            let size_field = validated_color_table_size_field(colors.len(), &format!("gif87a: image {index} local"))?;
+            let size_field = validated_color_table_size_field(colors.len(), &format!("gif87a: image {index} local")).await?;
             let sorted = image.lct.as_ref().map(|t| t.sorted).unwrap_or(false);
             ipacked |= 0x80 | (sorted as u8) << 5 | size_field;
             min_code_size = min_code_size_for(colors.len());
@@ -512,9 +512,9 @@ pub async fn encode_gif(snap: &GifSnapshot) -> Result<Vec<u8>, String> {
         if let Some(colors) = &local_bytes {
             write_color_table(&mut out, colors);
         }
-        let on_disk_indices = if image.interlace { interlace_rows(&image.indices, image.width as usize, image.height as usize) } else { image.indices.clone() };
-        out.push(min_code_size);
-        out.extend_from_slice(&pack_sub_blocks(&lzw_encode(&on_disk_indices, min_code_size)));
+        let on_disk_indices = if image.interlace { interlace_rows(&image.indices, image.width as usize, image.height as usize).await } else { image.indices.clone() };
+        out.push(min_code_size.await);
+        out.extend_from_slice(&pack_sub_blocks(&lzw_encode(&on_disk_indices, min_code_size.await)));
     }
     out.push(0x3B);
     Ok(out)
@@ -529,7 +529,7 @@ async fn validated_color_table_size_field(len: usize, what: &str) -> Result<u8, 
     if len > 256 {
         return Err(format!("{what} color table length {len} exceeds the on-disk maximum of 256"));
     }
-    Ok(color_table_size_field(len))
+    Ok(color_table_size_field(len).await)
 }
 
 pub async fn decode_gif(data: &[u8]) -> Result<GifSnapshot, String> {
@@ -544,7 +544,7 @@ pub async fn decode_gif(data: &[u8]) -> Result<GifSnapshot, String> {
     let mut pos = 13usize;
     let gct = if (screen_packed & 0x80) != 0 {
         let sorted = (screen_packed & 0x08) != 0;
-        Some(color_table_from_bytes(read_color_table(data, &mut pos, screen_packed & 0x07)?, sorted))
+        Some(color_table_from_bytes(read_color_table(data, &mut pos, screen_packed & 0x07).await?, sorted))
     } else {
         None
     };
@@ -566,22 +566,22 @@ pub async fn decode_gif(data: &[u8]) -> Result<GifSnapshot, String> {
                 pos += 10;
                 let local = if (ipacked & 0x80) != 0 {
                     let sorted = (ipacked & 0x20) != 0;
-                    Some(color_table_from_bytes(read_color_table(data, &mut pos, ipacked & 0x07)?, sorted))
+                    Some(color_table_from_bytes(read_color_table(data, &mut pos, ipacked & 0x07).await?, sorted))
                 } else {
                     None
                 };
                 let table = local.as_ref().or(gct.as_ref()).ok_or("gif87a: image has no color table (neither global nor local)")?;
                 let min_code_size = *data.get(pos).ok_or("truncated gif87a: missing lzw minimum code size")?;
                 pos += 1;
-                let sub = unpack_sub_blocks(data, &mut pos)?;
-                let mut indices = lzw_decode(&sub, min_code_size)?;
+                let sub = unpack_sub_blocks(data, &mut pos).await?;
+                let mut indices = lzw_decode(&sub, min_code_size).await?;
                 let expected = (iw as usize) * (ih as usize);
                 if indices.len() < expected {
                     return Err("gif87a: lzw stream decoded fewer pixels than the image needs".into());
                 }
                 indices.truncate(expected);
                 if interlaced {
-                    indices = deinterlace_rows(&indices, iw as usize, ih as usize);
+                    indices = deinterlace_rows(&indices, iw as usize, ih as usize).await;
                 }
                 let _ = table;
                 images.push(GifImage { left, top, width: iw, height: ih, interlace: interlaced, lct: local, indices });
@@ -645,18 +645,18 @@ pub async fn sniff_magic(source: &semio_framework_plugin::AnalyzeSource<'_>, mag
 //#region 🔖️Register
 pub async fn register() {
     crate::artifacts::gif::io_registry::register();
-    ::schema::register_artifact_schema_descriptor(crate::artifacts::gif::standards::v87a::subsets::any::schema::gif_artifact_schema_descriptor());
+    ::schema::register_artifact_schema_descriptor(crate::artifacts::gif::standards::v87a::subsets::any::schema::gif_artifact_schema_descriptor().await);
     register_artifact_inferences();
     register_pilot_languages();
     register_schema_specs();
-    let _ = store::register_document_codec(store::ArtifactCodec::of::<GifSnapshot, GifMutation>(STDIO_GIF_DOCUMENT_SCHEMA));
+    let _ = store::register_document_codec(store::ArtifactCodec::of::<GifSnapshot, GifMutation>(STDIO_GIF_DOCUMENT_SCHEMA).await);
 }
 
 /// 💡️ Registers `s.stdio.gif.inference`'s facet leaves into the OS-wide inference catalog —
 /// sibling to `register_artifact_schema_descriptor` above (separate registry, ticket
 /// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
 pub async fn register_artifact_inferences() {
-    ::schema::register_artifact_inference_descriptor(crate::artifacts::gif::standards::v87a::subsets::any::schema::inferences::gif_artifact_inference_descriptor());
+    ::schema::register_artifact_inference_descriptor(crate::artifacts::gif::standards::v87a::subsets::any::schema::inferences::gif_artifact_inference_descriptor().await);
 }
 
 /// 📌️ P2-FG2: 5-role `LanguageSpec` registration (Document/Ops/Diff/Pack/Spr), per the
@@ -1074,7 +1074,8 @@ pub mod io_registry {
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 
-    pub async fn entries() -> &'static [ComposerEntry] {
+    // 🚫️async: E1 pure table accessor consumed by OnceLock::get_or_init's sync closure — see R9
+    pub fn entries() -> &'static [ComposerEntry] {
         ENTRIES.get_or_init(|| vec![composer_entry_of::<GifRawAnyComposer>()]).as_slice()
     }
 }

@@ -103,7 +103,7 @@ pub mod spatial {
     impl<T> Bvh<T> {
         /// 🏗️ Builds a BVH from AABB-bounded items via recursive median split on the longest axis.
         pub async fn build(items: Vec<(Aabb, T)>) -> Self {
-            Self { root: Self::build_node(items) }
+            Self { root: Self::build_node(items).await }
         }
 
         async fn build_node(mut items: Vec<(Aabb, T)>) -> Option<Node<T>> {
@@ -122,8 +122,8 @@ pub mod spatial {
             let mid = items.len() / 2;
             let right_items = items.split_off(mid);
             // 🛡️ len >= 2 here implies mid = len/2 is in 1..=len-1, so both the retained `items` (left, len == mid) and `right_items` (len - mid) are non-empty — `build_node` only returns `None` for an empty input.
-            let left = Self::build_node(items).expect("checked non-empty left partition");
-            let right = Self::build_node(right_items).expect("checked non-empty right partition");
+            let left = Self::build_node(items).await.expect("checked non-empty left partition");
+            let right = Self::build_node(right_items).await.expect("checked non-empty right partition");
             Some(Node::Branch { aabb: bounds, left: Box::new(left), right: Box::new(right) })
         }
 
@@ -138,7 +138,7 @@ pub mod spatial {
 
         async fn visit_nearest<'a>(node: Option<&'a Node<T>>, point: Vec3, best: &mut Option<(&'a T, f64)>) {
             let Some(node) = node else { return };
-            let bound_dist = aabb_point_distance_sq(node.aabb(), point);
+            let bound_dist = aabb_point_distance_sq(node.aabb().await, point);
             if let Some((_, best_dist)) = best {
                 if bound_dist > *best_dist {
                     return;
@@ -151,7 +151,7 @@ pub mod spatial {
                         Some((_, best_dist)) => bound_dist < *best_dist,
                     };
                     if is_better {
-                        *best = Some((item, bound_dist));
+                        *best = Some((item, bound_dist.await));
                     }
                 }
                 Node::Branch { left, right, .. } => {
@@ -170,7 +170,7 @@ pub mod spatial {
 
         async fn visit_ray<'a>(node: Option<&'a Node<T>>, origin: Vec3, dir: Vec3, hits: &mut Vec<&'a T>) {
             let Some(node) = node else { return };
-            if !aabb_ray_hits(node.aabb(), origin, dir) {
+            if !aabb_ray_hits(node.aabb().await, origin, dir) {
                 return;
             }
             match node {
@@ -191,7 +191,7 @@ pub mod spatial {
 
         async fn visit_overlap<'a>(node: Option<&'a Node<T>>, query: &Aabb, hits: &mut Vec<&'a T>) {
             let Some(node) = node else { return };
-            if !aabb_overlaps(node.aabb(), query) {
+            if !aabb_overlaps(node.aabb().await, query) {
                 return;
             }
             match node {
@@ -271,7 +271,7 @@ use spatial::Bvh;
 // #region 🔖️Bounds
 async fn aabb_from_point(p: Pnt3) -> Aabb {
     let v = p.to_array();
-    Aabb { min: v, max: v }
+    Aabb { min: v.await, max: v.await }
 }
 
 async fn aabb_extend(mut a: Aabb, p: Pnt3) -> Aabb {
@@ -287,7 +287,7 @@ async fn aabb_extend(mut a: Aabb, p: Pnt3) -> Aabb {
 
 async fn sample_curve_segment(curve: &Curve3, t0: f64, t1: f64, samples: usize) -> Vec<Pnt3> {
     if samples <= 1 {
-        return vec![curve.eval(t0), curve.eval(t1)];
+        return vec![curve.eval(t0).await, curve.eval(t1).await];
     }
     let n = samples.max(2);
     (0..n).map(|i| curve.eval(t0 + (t1 - t0) * (i as f64) / ((n - 1) as f64))).collect()
@@ -295,47 +295,47 @@ async fn sample_curve_segment(curve: &Curve3, t0: f64, t1: f64, samples: usize) 
 
 /// 📦 Conservative world-space AABB for one edge's used curve segment.
 pub async fn edge_aabb(body: &Body, edge: EdgeId) -> Result<Aabb, KernelError> {
-    let edge_rec = body.edges.get(edge).ok_or_else(|| KernelError::MissingEntity(edge.to_string()))?;
-    let curve = body.curves3.get(edge_rec.curve).ok_or_else(|| KernelError::MissingEntity(format!("curve-{}", edge_rec.curve)))?;
+    let edge_rec = body.edges.get(edge).await.ok_or_else(|| KernelError::MissingEntity(edge.to_string()))?;
+    let curve = body.curves3.get(edge_rec.curve).await.ok_or_else(|| KernelError::MissingEntity(format!("curve-{}", edge_rec.curve)))?;
     let (t0, t1) = edge_rec.range;
     let sample_count = match curve {
         Curve3::Line { .. } => 2,
         _ => 12,
     };
-    let points = sample_curve_segment(curve, t0, t1, sample_count);
+    let points = sample_curve_segment(curve, t0, t1, sample_count).await;
     let Some(first) = points.first() else {
         return Err(KernelError::Operation("edge produced no samples".into()));
     };
     let mut box_ = aabb_from_point(*first);
     for p in points.iter().skip(1) {
-        box_ = aabb_extend(box_, *p);
+        box_ = aabb_extend(box_.await, *p);
     }
-    Ok(box_)
+    Ok(box_.await)
 }
 
 /// 📦 Conservative world-space AABB for one face from its loop vertices and edge curve samples.
 pub async fn face_aabb(body: &Body, face: FaceId) -> Result<Aabb, KernelError> {
-    let coedges = body.face_coedges(face);
+    let coedges = body.face_coedges(face).await;
     if coedges.is_empty() {
         return Err(KernelError::Operation(format!("face {face} has no boundary")));
     }
     let mut vertices: Vec<Pnt3> = Vec::new();
     for coedge_id in coedges {
-        let coedge = body.coedges.get(coedge_id).ok_or_else(|| KernelError::MissingEntity(coedge_id.to_string()))?;
-        let edge_rec = body.edges.get(coedge.edge).ok_or_else(|| KernelError::MissingEntity(coedge.edge.to_string()))?;
-        let v0 = body.vertices.get(edge_rec.v0).ok_or_else(|| KernelError::MissingEntity(edge_rec.v0.to_string()))?;
-        let v1 = body.vertices.get(edge_rec.v1).ok_or_else(|| KernelError::MissingEntity(edge_rec.v1.to_string()))?;
+        let coedge = body.coedges.get(coedge_id).await.ok_or_else(|| KernelError::MissingEntity(coedge_id.to_string()))?;
+        let edge_rec = body.edges.get(coedge.edge).await.ok_or_else(|| KernelError::MissingEntity(coedge.edge.to_string()))?;
+        let v0 = body.vertices.get(edge_rec.v0).await.ok_or_else(|| KernelError::MissingEntity(edge_rec.v0.to_string()))?;
+        let v1 = body.vertices.get(edge_rec.v1).await.ok_or_else(|| KernelError::MissingEntity(edge_rec.v1.to_string()))?;
         vertices.push(v0.position);
         vertices.push(v1.position);
-        let curve = body.curves3.get(edge_rec.curve).ok_or_else(|| KernelError::MissingEntity(format!("curve-{}", edge_rec.curve)))?;
+        let curve = body.curves3.get(edge_rec.curve).await.ok_or_else(|| KernelError::MissingEntity(format!("curve-{}", edge_rec.curve)))?;
         let (t0, t1) = edge_rec.range;
         vertices.extend(sample_curve_segment(curve, t0, t1, 4));
     }
     let mut box_ = aabb_from_point(vertices[0]);
     for p in vertices.iter().skip(1) {
-        box_ = aabb_extend(box_, *p);
+        box_ = aabb_extend(box_.await, *p);
     }
-    Ok(box_)
+    Ok(box_.await)
 }
 // #endregion 🔖️Bounds
 
@@ -357,7 +357,7 @@ pub enum BvhIndex {
 }
 
 async fn require_solid(body: &Body, solid: SolidId) -> Result<(), KernelError> {
-    if body.solids.get(solid).is_some() {
+    if body.solids.get(solid).await.is_some() {
         Ok(())
     } else {
         Err(KernelError::MissingEntity(solid.to_string()))
@@ -368,7 +368,7 @@ async fn solid_unique_edges(body: &Body, solid: SolidId) -> Vec<EdgeId> {
     let mut seen = std::collections::HashSet::new();
     for face in body.solid_faces(solid) {
         for coedge in body.face_coedges(face) {
-            if let Some(c) = body.coedges.get(coedge) {
+            if let Some(c) = body.coedges.get(coedge).await {
                 seen.insert(c.edge);
             }
         }
@@ -378,26 +378,26 @@ async fn solid_unique_edges(body: &Body, solid: SolidId) -> Vec<EdgeId> {
 
 /// 🏗️ Builds a face BVH over every face referenced by `solid`.
 pub async fn build_face_bvh(body: &Body, solid: SolidId) -> Result<FaceBvh, KernelError> {
-    require_solid(body, solid)?;
+    require_solid(body, solid).await?;
     let mut items = Vec::new();
     for face in body.solid_faces(solid) {
-        if let Ok(aabb) = face_aabb(body, face) {
+        if let Ok(aabb) = face_aabb(body, face).await {
             items.push((aabb, face));
         }
     }
-    Ok(FaceBvh { bvh: Bvh::build(items) })
+    Ok(FaceBvh { bvh: Bvh::build(items).await })
 }
 
 /// 🏗️ Builds an edge BVH over every edge incident to `solid`'s faces.
 pub async fn build_edge_bvh(body: &Body, solid: SolidId) -> Result<EdgeBvh, KernelError> {
-    require_solid(body, solid)?;
+    require_solid(body, solid).await?;
     let mut items = Vec::new();
     for edge in solid_unique_edges(body, solid) {
-        if let Ok(aabb) = edge_aabb(body, edge) {
+        if let Ok(aabb) = edge_aabb(body, edge).await {
             items.push((aabb, edge));
         }
     }
-    Ok(EdgeBvh { bvh: Bvh::build(items) })
+    Ok(EdgeBvh { bvh: Bvh::build(items).await })
 }
 
 impl FaceBvh {
@@ -413,7 +413,7 @@ impl FaceBvh {
 
     /// 📍 Face id whose leaf bound is nearest to `point` (AABB distance).
     pub async fn query_nearest(&self, point: Vec3) -> Option<FaceId> {
-        self.bvh.query_point_nearest(point).copied()
+        self.bvh.query_point_nearest(point).await.copied()
     }
 }
 
@@ -430,7 +430,7 @@ impl EdgeBvh {
 
     /// 📍 Edge id whose leaf bound is nearest to `point` (AABB distance).
     pub async fn query_nearest(&self, point: Vec3) -> Option<EdgeId> {
-        self.bvh.query_point_nearest(point).copied()
+        self.bvh.query_point_nearest(point).await.copied()
     }
 }
 // #endregion 🔖️Index

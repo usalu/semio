@@ -12,7 +12,7 @@ pub async fn inverse(payload: &GroupNodes, base: &SemioDrawingSnapshot) -> Vec<S
     if !is_contiguous_ascending(&payload.indices) {
         return Vec::new();
     }
-    match node_at(base, &payload.parent) {
+    match node_at(base, &payload.parent).await {
         Some(DrawNode::Group { children, .. }) if payload.indices.iter().all(|&i| i < children.len()) => {
             let mut path = payload.parent.path.clone();
             path.push(payload.indices[0]);

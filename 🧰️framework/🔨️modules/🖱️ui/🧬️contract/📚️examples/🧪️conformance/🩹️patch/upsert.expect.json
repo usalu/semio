@@ -1,0 +1,48 @@
+{
+  "case": "upsert",
+  "kind": "patch",
+  "description": "UiPatchOp::Upsert overwrites node 1's entire record in place — key, component, layout and style all change together, unlike SetComponent's single-field update.",
+  "outcome": "accept",
+  "limits": null,
+  "baseRevision": 0,
+  "resultRevision": 1,
+  "tree": {
+    "root": 0,
+    "nodeCount": 2,
+    "shape": [
+      {
+        "id": 0,
+        "key": "root",
+        "type": "container",
+        "children": [
+          1
+        ]
+      },
+      {
+        "id": 1,
+        "key": "a-replaced",
+        "type": "button",
+        "children": []
+      }
+    ]
+  },
+  "accessibility": [
+    {
+      "id": 0,
+      "label": null,
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    },
+    {
+      "id": 1,
+      "label": "Now upserted",
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    }
+  ],
+  "actionIds": []
+}

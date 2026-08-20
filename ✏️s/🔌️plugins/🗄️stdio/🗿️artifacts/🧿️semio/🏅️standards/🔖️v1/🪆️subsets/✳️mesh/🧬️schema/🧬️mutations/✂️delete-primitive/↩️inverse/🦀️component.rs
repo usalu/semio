@@ -9,7 +9,7 @@ use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::Sem
 
 //#region 🔖️Inverse
 pub async fn inverse(payload: &DeletePrimitive, base: &SemioMeshSnapshot) -> Vec<SemioMeshMutation> {
-    let Some(mesh) = mesh_at(base, &payload.mesh_id) else {
+    let Some(mesh) = mesh_at(base, &payload.mesh_id).await else {
         return Vec::new();
     };
     let Some(pos) = mesh.primitives.iter().position(|p| p.id == payload.primitive_id) else {

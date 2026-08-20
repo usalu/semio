@@ -65,25 +65,25 @@ impl<'a> ByteReader<'a> {
         Ok(slice)
     }
     pub async fn skip(&mut self, n: usize) -> Result<(), BoxError> {
-        self.take(n).map(|_| ())
+        self.take(n).await.map(|_| ())
     }
     pub async fn u8(&mut self) -> Result<u8, BoxError> {
-        Ok(self.take(1)?[0])
+        Ok(self.take(1).await?[0])
     }
     pub async fn u16_be(&mut self) -> Result<u16, BoxError> {
-        Ok(u16::from_be_bytes(self.take(2)?.try_into().unwrap()))
+        Ok(u16::from_be_bytes(self.take(2).await?.try_into().unwrap()))
     }
     pub async fn u32_be(&mut self) -> Result<u32, BoxError> {
-        Ok(u32::from_be_bytes(self.take(4)?.try_into().unwrap()))
+        Ok(u32::from_be_bytes(self.take(4).await?.try_into().unwrap()))
     }
     pub async fn u64_be(&mut self) -> Result<u64, BoxError> {
-        Ok(u64::from_be_bytes(self.take(8)?.try_into().unwrap()))
+        Ok(u64::from_be_bytes(self.take(8).await?.try_into().unwrap()))
     }
     pub async fn i32_be(&mut self) -> Result<i32, BoxError> {
-        Ok(i32::from_be_bytes(self.take(4)?.try_into().unwrap()))
+        Ok(i32::from_be_bytes(self.take(4).await?.try_into().unwrap()))
     }
     pub async fn fourcc(&mut self) -> Result<FourCc, BoxError> {
-        Ok(FourCc(self.take(4)?.try_into().unwrap()))
+        Ok(FourCc(self.take(4).await?.try_into().unwrap()))
     }
 }
 //#endregion 🔖️Bytes
@@ -113,17 +113,17 @@ impl<'a> Iterator for Mp4BoxIter<'a> {
         if self.pos >= self.data.len() {
             return None;
         }
-        let mut r = ByteReader::new(&self.data[self.pos..]);
-        let size32 = match r.u32_be() {
+        let mut r = semio_framework_plugin::resolve_ready(ByteReader::new(&self.data[self.pos..]));
+        let size32 = match semio_framework_plugin::resolve_ready(r.u32_be()) {
             Ok(v) => v,
             Err(e) => return Some(Err(e)),
         };
-        let kind = match r.fourcc() {
+        let kind = match semio_framework_plugin::resolve_ready(r.fourcc()) {
             Ok(v) => v,
             Err(e) => return Some(Err(e)),
         };
         let (box_len, header_len) = if size32 == 1 {
-            match r.u64_be() {
+            match semio_framework_plugin::resolve_ready(r.u64_be()) {
                 Ok(v) => (v as usize, 16usize),
                 Err(e) => return Some(Err(e)),
             }
@@ -170,7 +170,7 @@ pub async fn find_boxes<'a>(data: &'a [u8], want: &[u8; 4]) -> Result<Vec<&'a [u
 
 /// 🔍️ Like [`find_box`] but a missing box is itself the error (moved from `require_box`).
 pub async fn require_box<'a>(data: &'a [u8], want: &[u8; 4], ctx: &'static str) -> Result<&'a [u8], BoxError> {
-    find_box(data, want)?.ok_or(BoxError::Bad(ctx))
+    find_box(data, want).await?.ok_or(BoxError::Bad(ctx))
 }
 //#endregion 🔖️Iter
 

@@ -147,7 +147,7 @@ async fn absorb_pair(d1: &TxtLinesDiff, d2: &TxtLinesDiff) -> TxtLinesDiff {
 
     let base_labels: Vec<Lbl> = (0..l1).map(Lbl::Base).collect();
     let d1_added: Vec<(usize, Lbl)> = d1.added.iter().enumerate().map(|(j, a)| (a.index, Lbl::Added1(j))).collect();
-    let mut mid_labels = simulate_labels(base_labels, &d1.removed, &d1_added);
+    let mut mid_labels = simulate_labels(base_labels, &d1.removed, &d1_added).await;
 
     // 🔍️ Record each label's MID position (before any d2-triggered padding) -- this is exactly
     // the φ(base_index)/mid_index_of(Added1(j)) transport the recipe calls for.
@@ -239,12 +239,12 @@ pub struct TxtDiff {
 impl MutationDiff<TxtSnapshot> for TxtDiff {
     async fn apply(&self, base: &TxtSnapshot) -> MutationApplyResult<TxtSnapshot> {
         if let Some(lines) = &self.lines {
-            validate_txt_lines(base.lines.len(), lines)?;
+            validate_txt_lines(base.lines.len(), lines).await?;
         }
         Ok(TxtSnapshot {
             schema: base.schema.clone(),
             lines: match &self.lines {
-                Some(ld) => ld.apply(&base.lines),
+                Some(ld) => ld.apply(&base.lines).await,
                 None => base.lines.clone(),
             },
             trailing_newline: self.trailing_newline.unwrap_or(base.trailing_newline),
@@ -266,8 +266,8 @@ impl MutationDiff<TxtSnapshot> for TxtDiff {
             (Some(l1), None) => Some(l1),
             (None, Some(l2)) => Some(l2),
             (Some(l1), Some(l2)) => {
-                let merged = absorb_pair(&l1, &l2);
-                if merged.is_empty() {
+                let merged = absorb_pair(&l1, &l2).await;
+                if merged.is_empty().await {
                     None
                 } else {
                     Some(merged)
@@ -281,26 +281,26 @@ async fn validate_txt_lines(base_len: usize, diff: &TxtLinesDiff) -> MutationApp
     let mut removed = HashSet::new();
     for &index in &diff.removed {
         if index >= base_len {
-            return Err(MutationApplyError::new("mutation.apply.invalid-index", "removed line index is outside the base snapshot").at(["lines", "removed"]));
+            return Err(MutationApplyError::new("mutation.apply.invalid-index", "removed line index is outside the base snapshot").await.at(["lines", "removed"]).await);
         }
         if !removed.insert(index) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "line is removed more than once").at(["lines", "removed"]));
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "line is removed more than once").await.at(["lines", "removed"]).await);
         }
     }
     let mut modified = HashSet::new();
     for entry in &diff.modified {
         if entry.index >= base_len {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "modified line does not exist").at(["lines", "modified"]));
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "modified line does not exist").await.at(["lines", "modified"]).await);
         }
         if !modified.insert(entry.index) || removed.contains(&entry.index) {
-            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "line cannot be both removed and modified").at(["lines", "modified"]));
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "line cannot be both removed and modified").await.at(["lines", "modified"]).await);
         }
     }
     let final_len = base_len.saturating_sub(diff.removed.len()).saturating_add(diff.added.len());
     let mut additions = HashSet::new();
     for entry in &diff.added {
         if entry.index > final_len || !additions.insert(entry.index) {
-            return Err(MutationApplyError::new("mutation.apply.invalid-index", "added line index is invalid or duplicated").at(["lines", "added"]));
+            return Err(MutationApplyError::new("mutation.apply.invalid-index", "added line index is invalid or duplicated").await.at(["lines", "added"]).await);
         }
     }
     Ok(())
@@ -311,15 +311,15 @@ impl DiffAlgebra<TxtSnapshot> for TxtDiff {
     /// correct against `TxtSnapshot`): `next = self.apply(base)`, so `between(next, base)` is
     /// by definition the diff that restores `base` from `next`.
     async fn inverse(&self, base: &TxtSnapshot) -> Self {
-        let next = self.apply(base).unwrap();
-        Self::between(&next, base)
+        let next = self.apply(base).await.unwrap();
+        Self::between(&next, base).await
     }
 
     async fn between(base: &TxtSnapshot, other: &TxtSnapshot) -> Self {
         let trailing_newline = if base.trailing_newline != other.trailing_newline { Some(other.trailing_newline) } else { None };
         let line_ending = if base.line_ending != other.line_ending { Some(other.line_ending) } else { None };
-        let lines_diff = TxtLinesDiff::between(&base.lines, &other.lines);
-        let lines = if lines_diff.is_empty() { None } else { Some(lines_diff) };
+        let lines_diff = TxtLinesDiff::between(&base.lines, &other.lines).await;
+        let lines = if lines_diff.is_empty().await { None } else { Some(lines_diff) };
         TxtDiff { trailing_newline, line_ending, lines }
     }
 
@@ -331,7 +331,7 @@ impl DiffAlgebra<TxtSnapshot> for TxtDiff {
 /// 🧩 Builds the sparse field-by-field diff for a `SetSnapshot` mutation -- no full-replace
 /// slot, same `between` machinery every other mutation's diff ultimately composes from.
 pub async fn diff_set_snapshot(base: &TxtSnapshot, snapshot: &TxtSnapshot) -> TxtDiff {
-    TxtDiff::between(base, snapshot)
+    TxtDiff::between(base, snapshot).await
 }
 //#endregion 🔖️Diff
 

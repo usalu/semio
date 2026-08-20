@@ -170,7 +170,7 @@ async fn ifc_value_from_part21(v: &Part21Value) -> IfcValue {
         Part21Value::Str(s) => IfcValue::String(s.clone()),
         Part21Value::Enum(s) => IfcValue::Enum(s.clone()),
         Part21Value::Int(i) => IfcValue::Integer(*i),
-        Part21Value::Real(r) => IfcValue::Real(r.to_f64().unwrap_or_default()),
+        Part21Value::Real(r) => IfcValue::Real(r.to_f64().await.unwrap_or_default()),
         Part21Value::List(items) => IfcValue::Aggregate(items.iter().map(ifc_value_from_part21).collect()),
         Part21Value::Typed(name, items) => IfcValue::TypedValue(name.clone(), items.iter().map(ifc_value_from_part21).collect()),
         Part21Value::Unset => IfcValue::Unset,
@@ -227,12 +227,12 @@ async fn instance_from_ifc_entity(e: &IfcEntity) -> Part21Instance {
 /// (codecs below) and by the derived spatial analyzer (`engine::spatial::analyze_spatial`), which
 /// still walks the generic graph shape for its relationship-graph traversal.
 pub async fn to_part21_document(snapshot: &IfcSnapshot) -> Part21Document {
-    Part21Document { header: part21_header_from_ifc(&snapshot.header), instances: snapshot.entities.iter().map(instance_from_ifc_entity).collect() }
+    Part21Document { header: part21_header_from_ifc(&snapshot.header).await, instances: snapshot.entities.iter().map(instance_from_ifc_entity).collect() }
 }
 
 /// 📥️ Builds an `IfcSnapshot` from a parsed generic Part-21 graph.
 pub async fn from_part21_document(schema: impl Into<String>, doc: &Part21Document) -> IfcSnapshot {
-    IfcSnapshot { schema: schema.into(), header: ifc_header_from_part21(&doc.header), entities: doc.instances.iter().map(ifc_entity_from_instance).collect() }
+    IfcSnapshot { schema: schema.into(), header: ifc_header_from_part21(&doc.header).await, entities: doc.instances.iter().map(ifc_entity_from_instance).collect() }
 }
 //#endregion 🔖️Part21Conversion
 
@@ -248,12 +248,12 @@ impl store::ArtifactDsl for IfcSnapshot {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        let document = parse_part21(body).map_err(|e| store::TextError::new(format!("ifc parse: {e}"), dsl::TextSpan::at(1, 1)))?;
-        Ok(from_part21_document(STDIO_IFC_DOCUMENT_SCHEMA, &document))
+        let document = parse_part21(body).await.map_err(|e| store::TextError::new(format!("ifc parse: {e}"), dsl::TextSpan::at(1, 1)))?;
+        Ok(from_part21_document(STDIO_IFC_DOCUMENT_SCHEMA, &document).await)
     }
     async fn print_dsl(&self) -> String {
         let body = write_part21(&to_part21_document(self));
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -261,8 +261,8 @@ impl store::ArtifactDsl for IfcSnapshot {
 impl store::ArtifactPack for IfcSnapshot {
     async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
-        let raw = write_part21(&to_part21_document(self)).into_bytes();
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let raw = write_part21(&to_part21_document(self)).await.into_bytes();
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
     async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
@@ -272,8 +272,8 @@ impl store::ArtifactPack for IfcSnapshot {
         }
         let _ = options;
         let text = String::from_utf8(inner).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        let document = parse_part21(&text).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        Ok(from_part21_document(STDIO_IFC_DOCUMENT_SCHEMA, &document))
+        let document = parse_part21(&text).await.map_err(|e| store::PackError::Schema(e.to_string()))?;
+        Ok(from_part21_document(STDIO_IFC_DOCUMENT_SCHEMA, &document).await)
     }
 }
 //#endregion 🔖️Part21Codec

@@ -26,7 +26,7 @@ pub struct PlyInference {
 
 impl protocol::Inference<PlySnapshot> for PlyInference {
     async fn infer(snapshot: &PlySnapshot) -> Self {
-        Self { bounds: compute_ply_bounds(snapshot) }
+        Self { bounds: compute_ply_bounds(snapshot).await }
     }
 }
 

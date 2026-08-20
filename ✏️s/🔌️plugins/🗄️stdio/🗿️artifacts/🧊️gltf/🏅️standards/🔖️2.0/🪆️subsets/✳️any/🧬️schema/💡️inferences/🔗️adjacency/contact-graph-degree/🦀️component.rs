@@ -18,19 +18,19 @@ pub async fn descriptor() -> GltfInferenceLeafDescriptor {
 }
 
 pub(crate) async fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<u64> {
-    unavailable(GltfUnit::Unitless, GltfAvailability::Unavailable, Vec::new(), context.sample_count, Some(context.topology))
+    unavailable(GltfUnit::Unitless, GltfAvailability::Unavailable, Vec::new(), context.sample_count, Some(context.topology)).await
 }
 
 pub(crate) async fn from_assembly(part_count: usize, contacts: u64, sample_count: usize, topology: Topology) -> GltfMeasure<u64> {
     if part_count <= 1 {
-        exact(0, GltfUnit::Unitless, sample_count, Some(topology))
+        exact(0, GltfUnit::Unitless, sample_count, Some(topology)).await
     } else {
-        estimate(2 * contacts / part_count as u64, GltfUnit::Unitless, sample_count, Some(topology))
+        estimate(2 * contacts / part_count as u64, GltfUnit::Unitless, sample_count, Some(topology)).await
     }
 }
 
 pub async fn unavailable_measure(ids: &[String]) -> GltfMeasure<u64> {
-    unavailable(GltfUnit::Unitless, GltfAvailability::Unavailable, ids.to_vec(), 0, None)
+    unavailable(GltfUnit::Unitless, GltfAvailability::Unavailable, ids.to_vec(), 0, None).await
 }
 
 pub async fn encode_result(indicators: &GltfEntityIndicators) -> Result<serde_json::Value, serde_json::Error> {

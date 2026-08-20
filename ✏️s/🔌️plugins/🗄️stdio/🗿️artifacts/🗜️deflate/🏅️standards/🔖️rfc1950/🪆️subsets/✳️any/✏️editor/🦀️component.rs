@@ -40,28 +40,28 @@ impl protocol::OpText for DeflateEditorCommand {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
-                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
+                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline }).await?;
+                return <Self as dsl::DslVariants>::from_named_record(keyword, &record).await;
             }
         }
         Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
     }
     async fn print_op(&self) -> String {
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
+        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self).await;
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
+        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline).await
     }
 }
 
 impl protocol::OpBinary for DeflateEditorCommand {
     async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
+        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self).await;
         let variants = <Self as dsl::DslVariants>::variants();
         let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
         let spec = (variants[ordinal].1)();
-        let body = store::pack_rt::encode_record_body(&spec, &record, &store::PackEncodeOptions::default()).map_err(protocol::ProtocolError::from)?;
+        let body = store::pack_rt::encode_record_body(&spec, &record, &store::PackEncodeOptions::default()).await.map_err(protocol::ProtocolError::from)?;
         let mut out = Vec::with_capacity(body.len() + 3);
         out.push(OP_BINARY_FORMAT);
         store::pack_rt::write_varint_u64(&mut out, ordinal as u64);
@@ -70,18 +70,18 @@ impl protocol::OpBinary for DeflateEditorCommand {
     }
     async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
-        let mut reader = store::pack_rt::ByteReader::new(bytes);
-        let format = reader.read_u8()?;
+        let mut reader = store::pack_rt::ByteReader::new(bytes).await;
+        let format = reader.read_u8().await?;
         if format != OP_BINARY_FORMAT {
             return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {format}") });
         }
-        let ordinal = reader.read_varint_u64()?;
+        let ordinal = reader.read_varint_u64().await?;
         let variants = <Self as dsl::DslVariants>::variants();
         let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
         let spec = spec_fn();
         let body = &bytes[reader.position()..];
-        let (record, _report) = store::pack_rt::decode_record_body(body, &spec, &store::PackDecodeOptions::default()).map_err(protocol::ProtocolError::from)?;
-        <Self as dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
+        let (record, _report) = store::pack_rt::decode_record_body(body, &spec, &store::PackDecodeOptions::default()).await.map_err(protocol::ProtocolError::from)?;
+        <Self as dsl::DslVariants>::from_named_record(keyword, &record).await.map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: semio_framework_plugin::resolve_ready(reader.position()) as u64, detail: error.to_string() })
     }
 }
 //#endregion 🔖️OpCodec
@@ -104,7 +104,7 @@ async fn parse_header_summary(text: &str) -> Option<(u8, u8, crate::artifacts::d
     }
     let method = fields.get("method")?.parse::<u8>().ok()?;
     let window_bits = fields.get("windowBits")?.parse::<u8>().ok()?;
-    let level_hint = main::parse_level_hint(fields.get("levelHint")?)?;
+    let level_hint = main::parse_level_hint(fields.get("levelHint")?).await?;
     let dict_id = match fields.get("presetDictionary").copied() {
         None | Some("none") => None,
         Some(other) => Some(other.parse::<u32>().ok()?),
@@ -143,7 +143,7 @@ impl ArtifactEditor for DeflateEditor {
     /// a partial apply.
     async fn handle(command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &semio_framework_plugin::app::InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Self::Mutation>, Fault> {
         let DeflateEditorCommand::ReplaceText { text } = command;
-        let Some((method, window_bits, level_hint, dict_id)) = parse_header_summary(text) else { return Ok(Emit::default()) };
+        let Some((method, window_bits, level_hint, dict_id)) = parse_header_summary(text).await else { return Ok(Emit::default()) };
         Ok(Emit {
             artifact_mutations: vec![DeflateMutation::SetCompressionParams { method, window_bits, level_hint }, DeflateMutation::SetPresetDictionary { dict_id }],
             description: Some("Set compression header".into()),
@@ -153,8 +153,8 @@ impl ArtifactEditor for DeflateEditor {
 
     async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
-            main::BODY_KEY => main::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
+            main::BODY_KEY => main::render(doc.snapshot).await,
+            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))).await,
         }
     }
 }
@@ -163,12 +163,12 @@ impl ArtifactEditor for DeflateEditor {
 //#region 🔖️Manifest
 pub async fn create_deflate_editor() -> semio_framework_plugin::AppDefinition {
     Editor::builder(DEFLATE_EDITOR_DIALECT)
-        .document(["stdio", "deflate"])
-        .icon_id("package")
-        .mode_def(edit::definition())
-        .default_mode_id(edit::DEFLATE_EDIT_MODE_ID)
-        .window_kind_def(main::definition())
-        .default_layout(edit::layout())
+        .await.document(["stdio", "deflate"])
+        .await.icon_id("package")
+        .await.mode_def(edit::definition().await)
+        .await.default_mode_id(edit::DEFLATE_EDIT_MODE_ID)
+        .await.window_kind_def(main::definition().await)
+        .await.default_layout(edit::layout())
         .build_definition()
 }
 //#endregion 🔖️Manifest

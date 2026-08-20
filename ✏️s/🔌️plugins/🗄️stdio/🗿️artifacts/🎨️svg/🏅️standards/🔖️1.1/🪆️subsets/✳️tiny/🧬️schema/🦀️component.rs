@@ -34,20 +34,20 @@ pub mod derived_construction {
         }
 
         async fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self::from_snapshot(<SvgSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+            Ok(Self::from_snapshot(<SvgSnapshot as store::ArtifactDsl>::parse_dsl(text).await?).await)
         }
 
         async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<SvgSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+            Ok(Self::from_snapshot(<SvgSnapshot as store::ArtifactPack>::decode_pack(bytes).await?).await)
         }
 
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::svg::schema::mutations::apply_svg_mutation(&mut self.snapshot, &mutation);
-            (self, diff)
+            (self, diff.await)
         }
 
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            self.snapshot = <SvgDiff as protocol::MutationDiff<SvgSnapshot>>::apply(&diff, &self.snapshot)?;
+            self.snapshot = <SvgDiff as protocol::MutationDiff<SvgSnapshot>>::apply(&diff, &self.snapshot).await?;
             Ok(self)
         }
 
@@ -138,7 +138,7 @@ pub mod derived_analysis {
     }
 
     async fn is_blocked_element(name: &str) -> bool {
-        let ln = local_name(name);
+        let ln = local_name(name).await;
         BLOCKED_ELEMENTS.contains(&ln) || ln.starts_with("fe")
     }
 
@@ -169,16 +169,16 @@ pub mod derived_analysis {
     /// blocklisted attributes, and external `href`/`xlink:href` values.
     async fn walk(node: &XmlNode, out: &mut Vec<Diagnostic>) {
         if let XmlNode::Element { name, attrs, children } = node {
-            if is_blocked_element(name) {
-                out.push(hard(CODE_ELEMENT, format!("element <{name}> is outside SVG Tiny 1.1's vocabulary -- REC-SVGMobile-20030114 excludes it")));
+            if is_blocked_element(name).await {
+                out.push(hard(CODE_ELEMENT, format!("element <{name}> is outside SVG Tiny 1.1's vocabulary -- REC-SVGMobile-20030114 excludes it")).await);
             }
             for a in attrs {
                 let ln = local_name(&a.name);
                 if BLOCKED_ATTRS.contains(&ln) {
-                    out.push(hard(CODE_ATTRIBUTE, format!("attribute '{}' on <{name}> is forbidden anywhere in SVG Tiny 1.1", a.name)));
+                    out.push(hard(CODE_ATTRIBUTE, format!("attribute '{}' on <{name}> is forbidden anywhere in SVG Tiny 1.1", a.name)).await);
                 }
-                if ln == "href" && is_external_href(&a.value) {
-                    out.push(soft(CODE_EXTERNAL_HREF, format!("<{name}> {}=\"{}\" looks like an external document reference -- SVG Tiny 1.1 restricts references to the same document", a.name, a.value)));
+                if ln == "href" && is_external_href(&a.value).await {
+                    out.push(soft(CODE_EXTERNAL_HREF, format!("<{name}> {}=\"{}\" looks like an external document reference -- SVG Tiny 1.1 restricts references to the same document", a.name, a.value)).await);
                 }
             }
             for c in children {
@@ -204,11 +204,11 @@ pub mod derived_analysis {
         let Some(root) = &snapshot.doc.root else { return out };
         walk(root, &mut out);
         if let XmlNode::Element { name, .. } = root {
-            let attrs = root_attrs(root);
+            let attrs = root_attrs(root).await;
             let base_profile_ok = attrs.iter().any(|a| a.name == "baseProfile" && a.value == "tiny");
             let version_ok = attrs.iter().any(|a| a.name == "version" && a.value == "1.1");
             if !base_profile_ok || !version_ok {
-                out.push(soft(CODE_BASE_PROFILE, format!("root <{name}> is missing baseProfile=\"tiny\"/version=\"1.1\" -- SVG Tiny 1.1 documents should declare their profile")));
+                out.push(soft(CODE_BASE_PROFILE, format!("root <{name}> is missing baseProfile=\"tiny\"/version=\"1.1\" -- SVG Tiny 1.1 documents should declare their profile")).await);
             }
         }
         out
@@ -228,15 +228,15 @@ pub mod derived_analysis {
         const DIALECT: Dialect = DIALECT;
 
         async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
-            SvgAnyAnalyzer::sniff(source)
+            SvgAnyAnalyzer::sniff(source).await
         }
 
         async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
-            let inner = SvgAnyAnalyzer::analyze(sources);
+            let inner = SvgAnyAnalyzer::analyze(sources).await;
             let mut diagnostics = inner.diagnostics.clone();
             let mut confidence = inner.confidence;
             if let Some(snapshot) = &inner.parts.snapshot {
-                let checks = check_svg_tiny_conformance(snapshot);
+                let checks = check_svg_tiny_conformance(snapshot).await;
                 if checks.iter().any(|d| matches!(d.severity, Severity::Error | Severity::Fatal)) {
                     confidence = IoConfidence::Low;
                 }

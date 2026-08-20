@@ -49,8 +49,8 @@ async fn arc_path(cx: f64, cy: f64, r: f64, start_deg: f64, end_deg: f64) -> Vec
 async fn draw_node_from_entity(e: &DxfEntity) -> Option<DrawNode> {
     match e {
         DxfEntity::Line { start, end, .. } => Some(DrawNode::Path { segments: vec![PathSegment::MoveTo { to: SemioPoint2 { x: start[0], y: start[1] } }, PathSegment::LineTo { to: SemioPoint2 { x: end[0], y: end[1] } }], style: None }),
-        DxfEntity::Circle { center, radius, .. } => Some(DrawNode::Path { segments: ellipse_path(center[0], center[1], *radius), style: None }),
-        DxfEntity::Arc { center, radius, start_angle, end_angle, .. } => Some(DrawNode::Path { segments: arc_path(center[0], center[1], *radius, *start_angle, *end_angle), style: None }),
+        DxfEntity::Circle { center, radius, .. } => Some(DrawNode::Path { segments: ellipse_path(center[0], center[1], *radius).await, style: None }),
+        DxfEntity::Arc { center, radius, start_angle, end_angle, .. } => Some(DrawNode::Path { segments: arc_path(center[0], center[1], *radius, *start_angle, *end_angle).await, style: None }),
         DxfEntity::Polyline { vertices, closed, .. } => {
             let mut segments: Vec<PathSegment> = vertices
                 .iter()
@@ -107,8 +107,8 @@ impl ArtifactDeserializer for SemioDrawingFromDxf {
         let mut order: Vec<String> = Vec::new();
         let mut buckets: std::collections::HashMap<String, Vec<DrawNode>> = std::collections::HashMap::new();
         for e in &from.entities {
-            let Some(node) = draw_node_from_entity(e) else { continue };
-            let layer = entity_layer(e).unwrap_or("0").to_string();
+            let Some(node) = draw_node_from_entity(e).await else { continue };
+            let layer = entity_layer(e).await.unwrap_or("0").to_string();
             if !buckets.contains_key(&layer) {
                 order.push(layer.clone());
             }

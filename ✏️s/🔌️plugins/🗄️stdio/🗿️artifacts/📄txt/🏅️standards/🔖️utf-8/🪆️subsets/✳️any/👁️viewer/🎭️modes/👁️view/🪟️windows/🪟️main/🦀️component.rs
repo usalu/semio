@@ -14,18 +14,18 @@ pub const BODY_KEY: &str = TextWindowKit::KIND_ID;
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::txt::create_txt_viewer`.
 pub async fn definition() -> WindowKindDefinition {
-    WindowKindDefinition { label: LocalizedLabel::native("Text", "Text"), icon_id: "type".into(), ..TextWindowKit::window_kind() }
+    WindowKindDefinition { label: LocalizedLabel::native("Text", "Text"), icon_id: "type".into(), ..TextWindowKit::window_kind().await }
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
 /// 👁️ Pure `TxtSnapshot -> UiNode` read: same join as the editor's own render, `read_only: true`.
 pub async fn render(document: &TxtSnapshot) -> UiNode {
-    let mut text = document.lines.join(document.line_ending.as_str());
+    let mut text = document.lines.join(document.line_ending.as_str().await);
     if document.trailing_newline && !document.lines.is_empty() {
-        text.push_str(document.line_ending.as_str());
+        text.push_str(document.line_ending.as_str().await);
     }
-    TextWindowKit::render(&TextView { text, language: Some("text".into()), read_only: true })
+    TextWindowKit::render(&TextView { text, language: Some("text".into()), read_only: true }).await
 }
 //#endregion 🔖️Render
 

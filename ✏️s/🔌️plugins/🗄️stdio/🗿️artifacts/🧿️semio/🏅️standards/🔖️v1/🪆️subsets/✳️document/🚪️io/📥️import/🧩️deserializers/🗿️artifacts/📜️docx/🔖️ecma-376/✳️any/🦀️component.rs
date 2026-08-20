@@ -40,8 +40,8 @@ async fn map_table(t: &DocxTable) -> DocBlock {
 
 async fn map_block(block: &DocxBlock) -> DocBlock {
     match block {
-        DocxBlock::Paragraph(p) => map_paragraph(p),
-        DocxBlock::Table(t) => map_table(t),
+        DocxBlock::Paragraph(p) => map_paragraph(p).await,
+        DocxBlock::Table(t) => map_table(t).await,
     }
 }
 //#endregion 🔖️FieldMapping

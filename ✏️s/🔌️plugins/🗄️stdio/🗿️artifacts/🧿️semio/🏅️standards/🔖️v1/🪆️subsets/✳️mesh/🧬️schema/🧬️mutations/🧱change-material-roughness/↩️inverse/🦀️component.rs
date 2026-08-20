@@ -8,7 +8,7 @@ use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::Sem
 
 //#region 🔖️Inverse
 pub async fn inverse(payload: &ChangeMaterialRoughness, base: &SemioMeshSnapshot) -> Vec<SemioMeshMutation> {
-    match material_at(base, &payload.id) {
+    match material_at(base, &payload.id).await {
         Some(material) => vec![SemioMeshMutation::ChangeMaterialRoughness(ChangeMaterialRoughness { id: payload.id.clone(), new_roughness: material.roughness })],
         None => Vec::new(),
     }

@@ -1,0 +1,34 @@
+{
+  "surface": "conformance.rejection",
+  "baseRevision": 0,
+  "revision": 1,
+  "ops": [
+    {
+      "type": "upsert",
+      "id": 0,
+      "key": "root",
+      "component": {
+        "type": "container"
+      },
+      "layout": {
+        "kind": "stack",
+        "axis": "vertical",
+        "gap": "none",
+        "padding": {
+          "all": "none"
+        },
+        "align": "stretch",
+        "justify": "start",
+        "grow": false,
+        "wrap": false
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {},
+      "children": [
+        1,
+        404
+      ]
+    }
+  ]
+}

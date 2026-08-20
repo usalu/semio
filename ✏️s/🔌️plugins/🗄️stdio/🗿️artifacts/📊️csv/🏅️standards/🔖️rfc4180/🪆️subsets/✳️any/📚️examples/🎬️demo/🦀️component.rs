@@ -11,7 +11,7 @@ pub const PRIMARY_TEXT: &str = include_str!("🖼️assets/🗣️example.dsl.se
 /// 📄️ Genuine RFC 4180 bytes for the demo snapshot (`encode_csv(demo_csv_snapshot())`).
 pub const NATIVE_BYTES: &[u8] = include_str!("🖼️assets/📊️example.csv").as_bytes();
 pub async fn source() -> ExampleSource {
-    ExampleSource::new(ID, label(), PRIMARY_TEXT, ICON)
+    ExampleSource::new(ID, label(), PRIMARY_TEXT, ICON).await
 }
 
 //#region 🔖️P2P1BinaryFixtures

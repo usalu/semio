@@ -24,7 +24,7 @@ pub struct PptxInference {
 
 impl protocol::Inference<PptxSnapshot> for PptxInference {
     async fn infer(snapshot: &PptxSnapshot) -> Self {
-        Self { outline: PptxOutline::compute(snapshot) }
+        Self { outline: PptxOutline::compute(snapshot).await }
     }
 }
 

@@ -95,8 +95,8 @@ async fn expand_knots(mults: &[StepValue], vals: &[StepValue]) -> Option<Vec<f64
     }
     let mut out = Vec::new();
     for (m, v) in mults.iter().zip(vals.iter()) {
-        let m = as_int(m)?;
-        let v = as_real(v)?;
+        let m = as_int(m).await?;
+        let v = as_real(v).await?;
         if m < 0 {
             return None;
         }
@@ -122,8 +122,8 @@ impl<'a> Resolver<'a> {
         self.by_id.get(&id).copied()
     }
     async fn point(&self, id: u64) -> Result<SemioPoint3, String> {
-        let e = self.get(id).ok_or_else(|| format!("dangling CARTESIAN_POINT reference #{id}"))?;
-        let args = args_for_type(e, "CARTESIAN_POINT").ok_or_else(|| format!("#{id} is not a CARTESIAN_POINT"))?;
+        let e = self.get(id).await.ok_or_else(|| format!("dangling CARTESIAN_POINT reference #{id}"))?;
+        let args = args_for_type(e, "CARTESIAN_POINT").await.ok_or_else(|| format!("#{id} is not a CARTESIAN_POINT"))?;
         let coords = args.get(1).and_then(as_agg).ok_or_else(|| format!("CARTESIAN_POINT #{id}: coordinates not a list"))?;
         Ok(SemioPoint3 {
             x: coords.first().and_then(as_real).ok_or_else(|| format!("CARTESIAN_POINT #{id}: missing x"))?,
@@ -132,8 +132,8 @@ impl<'a> Resolver<'a> {
         })
     }
     async fn direction(&self, id: u64) -> Result<SemioPoint3, String> {
-        let e = self.get(id).ok_or_else(|| format!("dangling DIRECTION reference #{id}"))?;
-        let args = args_for_type(e, "DIRECTION").ok_or_else(|| format!("#{id} is not a DIRECTION"))?;
+        let e = self.get(id).await.ok_or_else(|| format!("dangling DIRECTION reference #{id}"))?;
+        let args = args_for_type(e, "DIRECTION").await.ok_or_else(|| format!("#{id} is not a DIRECTION"))?;
         let coords = args.get(1).and_then(as_agg).ok_or_else(|| format!("DIRECTION #{id}: ratios not a list"))?;
         Ok(SemioPoint3 {
             x: coords.first().and_then(as_real).ok_or_else(|| format!("DIRECTION #{id}: missing x"))?,
@@ -142,18 +142,18 @@ impl<'a> Resolver<'a> {
         })
     }
     async fn vector_direction(&self, id: u64) -> Result<SemioPoint3, String> {
-        let e = self.get(id).ok_or_else(|| format!("dangling VECTOR reference #{id}"))?;
-        let args = args_for_type(e, "VECTOR").ok_or_else(|| format!("#{id} is not a VECTOR"))?;
+        let e = self.get(id).await.ok_or_else(|| format!("dangling VECTOR reference #{id}"))?;
+        let args = args_for_type(e, "VECTOR").await.ok_or_else(|| format!("#{id} is not a VECTOR"))?;
         let dir_ref = args.get(1).and_then(as_ref_id).ok_or_else(|| format!("VECTOR #{id}: orientation not a reference"))?;
-        self.direction(dir_ref)
+        self.direction(dir_ref).await
     }
     async fn axis_placement(&self, id: u64) -> Result<(SemioPoint3, SemioPoint3), String> {
-        let e = self.get(id).ok_or_else(|| format!("dangling AXIS2_PLACEMENT_3D reference #{id}"))?;
-        let args = args_for_type(e, "AXIS2_PLACEMENT_3D").ok_or_else(|| format!("#{id} is not an AXIS2_PLACEMENT_3D"))?;
+        let e = self.get(id).await.ok_or_else(|| format!("dangling AXIS2_PLACEMENT_3D reference #{id}"))?;
+        let args = args_for_type(e, "AXIS2_PLACEMENT_3D").await.ok_or_else(|| format!("#{id} is not an AXIS2_PLACEMENT_3D"))?;
         let loc_ref = args.get(1).and_then(as_ref_id).ok_or_else(|| format!("AXIS2_PLACEMENT_3D #{id}: location not a reference"))?;
-        let origin = self.point(loc_ref)?;
+        let origin = self.point(loc_ref).await?;
         let axis = match args.get(2).and_then(as_ref_id) {
-            Some(r) => self.direction(r)?,
+            Some(r) => self.direction(r).await?,
             None => SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 },
         };
         Ok((origin, axis))
@@ -162,40 +162,40 @@ impl<'a> Resolver<'a> {
     /// 🧵️ `LINE`/`CIRCLE`/`ELLIPSE`/`B_SPLINE_CURVE_WITH_KNOTS` (+ `RATIONAL_B_SPLINE_CURVE`) ->
     /// `BrepCurve`. `Err` for any other curve entity — see module doc comment.
     async fn curve(&self, id: u64) -> Result<BrepCurve, String> {
-        let e = self.get(id).ok_or_else(|| format!("dangling curve reference #{id}"))?;
-        if let Some(args) = args_for_type(e, "LINE") {
+        let e = self.get(id).await.ok_or_else(|| format!("dangling curve reference #{id}"))?;
+        if let Some(args) = args_for_type(e, "LINE").await {
             let point_ref = args.get(1).and_then(as_ref_id).ok_or_else(|| format!("LINE #{id}: pnt not a reference"))?;
             let vector_ref = args.get(2).and_then(as_ref_id).ok_or_else(|| format!("LINE #{id}: dir not a reference"))?;
-            return Ok(BrepCurve::Line { origin: self.point(point_ref)?, direction: self.vector_direction(vector_ref)? });
+            return Ok(BrepCurve::Line { origin: self.point(point_ref).await?, direction: self.vector_direction(vector_ref).await? });
         }
-        if let Some(args) = args_for_type(e, "CIRCLE") {
+        if let Some(args) = args_for_type(e, "CIRCLE").await {
             let pos_ref = args.get(1).and_then(as_ref_id).ok_or_else(|| format!("CIRCLE #{id}: position not a reference"))?;
-            let (center, axis) = self.axis_placement(pos_ref)?;
+            let (center, axis) = self.axis_placement(pos_ref).await?;
             let radius = args.get(2).and_then(as_real).ok_or_else(|| format!("CIRCLE #{id}: radius not numeric"))?;
             return Ok(BrepCurve::Circle { center, axis, radius });
         }
-        if let Some(args) = args_for_type(e, "ELLIPSE") {
+        if let Some(args) = args_for_type(e, "ELLIPSE").await {
             let pos_ref = args.get(1).and_then(as_ref_id).ok_or_else(|| format!("ELLIPSE #{id}: position not a reference"))?;
-            let (center, axis) = self.axis_placement(pos_ref)?;
+            let (center, axis) = self.axis_placement(pos_ref).await?;
             let semi1 = args.get(2).and_then(as_real).ok_or_else(|| format!("ELLIPSE #{id}: semi_axis_1 not numeric"))?;
             let semi2 = args.get(3).and_then(as_real).ok_or_else(|| format!("ELLIPSE #{id}: semi_axis_2 not numeric"))?;
             return Ok(BrepCurve::Ellipse { center, axis, radius_major: semi1.max(semi2), radius_minor: semi1.min(semi2) });
         }
-        if let Some(args) = args_for_type(e, "B_SPLINE_CURVE_WITH_KNOTS") {
+        if let Some(args) = args_for_type(e, "B_SPLINE_CURVE_WITH_KNOTS").await {
             let degree = args.get(1).and_then(as_int).ok_or_else(|| format!("B_SPLINE_CURVE_WITH_KNOTS #{id}: degree not integer"))? as u32;
             let cp_refs = args.get(2).and_then(as_agg).ok_or_else(|| format!("B_SPLINE_CURVE_WITH_KNOTS #{id}: control_points_list not a list"))?;
             let mut control_points = Vec::with_capacity(cp_refs.len());
             for cp in cp_refs {
-                let r = as_ref_id(cp).ok_or_else(|| format!("B_SPLINE_CURVE_WITH_KNOTS #{id}: control point not a reference"))?;
-                control_points.push(self.point(r)?);
+                let r = as_ref_id(cp).await.ok_or_else(|| format!("B_SPLINE_CURVE_WITH_KNOTS #{id}: control point not a reference"))?;
+                control_points.push(self.point(r).await?);
             }
             let mults = args.get(6).and_then(as_agg).ok_or_else(|| format!("B_SPLINE_CURVE_WITH_KNOTS #{id}: knot_multiplicities not a list"))?;
             let vals = args.get(7).and_then(as_agg).ok_or_else(|| format!("B_SPLINE_CURVE_WITH_KNOTS #{id}: knots not a list"))?;
-            let knots = expand_knots(mults, vals).ok_or_else(|| format!("B_SPLINE_CURVE_WITH_KNOTS #{id}: malformed knot vector"))?;
-            let weights = match args_for_type(e, "RATIONAL_B_SPLINE_CURVE") {
+            let knots = expand_knots(mults, vals).await.ok_or_else(|| format!("B_SPLINE_CURVE_WITH_KNOTS #{id}: malformed knot vector"))?;
+            let weights = match args_for_type(e, "RATIONAL_B_SPLINE_CURVE").await {
                 Some(wargs) => {
                     let wagg = wargs.first().and_then(as_agg).ok_or_else(|| format!("RATIONAL_B_SPLINE_CURVE #{id}: weights_data not a list"))?;
-                    wagg.iter().map(|w| as_real(w).ok_or_else(|| format!("RATIONAL_B_SPLINE_CURVE #{id}: weight not numeric"))).collect::<Result<Vec<_>, _>>()?
+                    wagg.iter().map(|w| semio_framework_plugin::resolve_ready(as_real(w)).ok_or_else(|| format!("RATIONAL_B_SPLINE_CURVE #{id}: weight not numeric"))).collect::<Result<Vec<_>, _>>()?
                 }
                 None => vec![1.0; control_points.len()],
             };
@@ -208,50 +208,50 @@ impl<'a> Resolver<'a> {
     /// `TOROIDAL_SURFACE`/`B_SPLINE_SURFACE_WITH_KNOTS` (+ `RATIONAL_B_SPLINE_SURFACE`) ->
     /// `BrepSurface`. `Err` for any other surface entity — see module doc comment.
     async fn surface(&self, id: u64) -> Result<BrepSurface, String> {
-        let e = self.get(id).ok_or_else(|| format!("dangling surface reference #{id}"))?;
-        if let Some(args) = args_for_type(e, "PLANE") {
+        let e = self.get(id).await.ok_or_else(|| format!("dangling surface reference #{id}"))?;
+        if let Some(args) = args_for_type(e, "PLANE").await {
             let pos_ref = args.get(1).and_then(as_ref_id).ok_or_else(|| format!("PLANE #{id}: position not a reference"))?;
-            let (origin, normal) = self.axis_placement(pos_ref)?;
+            let (origin, normal) = self.axis_placement(pos_ref).await?;
             return Ok(BrepSurface::Plane { origin, normal });
         }
-        if let Some(args) = args_for_type(e, "CYLINDRICAL_SURFACE") {
+        if let Some(args) = args_for_type(e, "CYLINDRICAL_SURFACE").await {
             let pos_ref = args.get(1).and_then(as_ref_id).ok_or_else(|| format!("CYLINDRICAL_SURFACE #{id}: position not a reference"))?;
-            let (origin, axis) = self.axis_placement(pos_ref)?;
+            let (origin, axis) = self.axis_placement(pos_ref).await?;
             let radius = args.get(2).and_then(as_real).ok_or_else(|| format!("CYLINDRICAL_SURFACE #{id}: radius not numeric"))?;
             return Ok(BrepSurface::Cylinder { origin, axis, radius });
         }
-        if let Some(args) = args_for_type(e, "CONICAL_SURFACE") {
+        if let Some(args) = args_for_type(e, "CONICAL_SURFACE").await {
             let pos_ref = args.get(1).and_then(as_ref_id).ok_or_else(|| format!("CONICAL_SURFACE #{id}: position not a reference"))?;
-            let (origin, axis) = self.axis_placement(pos_ref)?;
+            let (origin, axis) = self.axis_placement(pos_ref).await?;
             let radius = args.get(2).and_then(as_real).ok_or_else(|| format!("CONICAL_SURFACE #{id}: radius not numeric"))?;
             let half_angle = args.get(3).and_then(as_real).ok_or_else(|| format!("CONICAL_SURFACE #{id}: semi_angle not numeric"))?;
             return Ok(BrepSurface::Cone { origin, axis, radius, half_angle });
         }
-        if let Some(args) = args_for_type(e, "SPHERICAL_SURFACE") {
+        if let Some(args) = args_for_type(e, "SPHERICAL_SURFACE").await {
             let pos_ref = args.get(1).and_then(as_ref_id).ok_or_else(|| format!("SPHERICAL_SURFACE #{id}: position not a reference"))?;
-            let (center, _axis) = self.axis_placement(pos_ref)?;
+            let (center, _axis) = self.axis_placement(pos_ref).await?;
             let radius = args.get(2).and_then(as_real).ok_or_else(|| format!("SPHERICAL_SURFACE #{id}: radius not numeric"))?;
             return Ok(BrepSurface::Sphere { center, radius });
         }
-        if let Some(args) = args_for_type(e, "TOROIDAL_SURFACE") {
+        if let Some(args) = args_for_type(e, "TOROIDAL_SURFACE").await {
             let pos_ref = args.get(1).and_then(as_ref_id).ok_or_else(|| format!("TOROIDAL_SURFACE #{id}: position not a reference"))?;
-            let (center, axis) = self.axis_placement(pos_ref)?;
+            let (center, axis) = self.axis_placement(pos_ref).await?;
             let major_radius = args.get(2).and_then(as_real).ok_or_else(|| format!("TOROIDAL_SURFACE #{id}: major_radius not numeric"))?;
             let minor_radius = args.get(3).and_then(as_real).ok_or_else(|| format!("TOROIDAL_SURFACE #{id}: minor_radius not numeric"))?;
             return Ok(BrepSurface::Torus { center, axis, major_radius, minor_radius });
         }
-        if let Some(args) = args_for_type(e, "B_SPLINE_SURFACE_WITH_KNOTS") {
+        if let Some(args) = args_for_type(e, "B_SPLINE_SURFACE_WITH_KNOTS").await {
             let degree_u = args.get(1).and_then(as_int).ok_or_else(|| format!("B_SPLINE_SURFACE_WITH_KNOTS #{id}: u_degree not integer"))? as u32;
             let degree_v = args.get(2).and_then(as_int).ok_or_else(|| format!("B_SPLINE_SURFACE_WITH_KNOTS #{id}: v_degree not integer"))? as u32;
             let rows = args.get(3).and_then(as_agg).ok_or_else(|| format!("B_SPLINE_SURFACE_WITH_KNOTS #{id}: control_points_list not a list"))?;
             let mut control_points = Vec::new();
             let mut v_count = 0u32;
             for row in rows {
-                let row_agg = as_agg(row).ok_or_else(|| format!("B_SPLINE_SURFACE_WITH_KNOTS #{id}: control point row not a list"))?;
+                let row_agg = as_agg(row).await.ok_or_else(|| format!("B_SPLINE_SURFACE_WITH_KNOTS #{id}: control point row not a list"))?;
                 v_count = row_agg.len() as u32;
                 for cell in row_agg {
-                    let r = as_ref_id(cell).ok_or_else(|| format!("B_SPLINE_SURFACE_WITH_KNOTS #{id}: control point not a reference"))?;
-                    control_points.push(self.point(r)?);
+                    let r = as_ref_id(cell).await.ok_or_else(|| format!("B_SPLINE_SURFACE_WITH_KNOTS #{id}: control point not a reference"))?;
+                    control_points.push(self.point(r).await?);
                 }
             }
             let u_count = rows.len() as u32;
@@ -259,16 +259,16 @@ impl<'a> Resolver<'a> {
             let v_mults = args.get(9).and_then(as_agg).ok_or_else(|| format!("B_SPLINE_SURFACE_WITH_KNOTS #{id}: v_multiplicities not a list"))?;
             let u_knot_vals = args.get(10).and_then(as_agg).ok_or_else(|| format!("B_SPLINE_SURFACE_WITH_KNOTS #{id}: u_knots not a list"))?;
             let v_knot_vals = args.get(11).and_then(as_agg).ok_or_else(|| format!("B_SPLINE_SURFACE_WITH_KNOTS #{id}: v_knots not a list"))?;
-            let knots_u = expand_knots(u_mults, u_knot_vals).ok_or_else(|| format!("B_SPLINE_SURFACE_WITH_KNOTS #{id}: malformed u knot vector"))?;
-            let knots_v = expand_knots(v_mults, v_knot_vals).ok_or_else(|| format!("B_SPLINE_SURFACE_WITH_KNOTS #{id}: malformed v knot vector"))?;
-            let weights = match args_for_type(e, "RATIONAL_B_SPLINE_SURFACE") {
+            let knots_u = expand_knots(u_mults, u_knot_vals).await.ok_or_else(|| format!("B_SPLINE_SURFACE_WITH_KNOTS #{id}: malformed u knot vector"))?;
+            let knots_v = expand_knots(v_mults, v_knot_vals).await.ok_or_else(|| format!("B_SPLINE_SURFACE_WITH_KNOTS #{id}: malformed v knot vector"))?;
+            let weights = match args_for_type(e, "RATIONAL_B_SPLINE_SURFACE").await {
                 Some(wargs) => {
                     let wrows = wargs.first().and_then(as_agg).ok_or_else(|| format!("RATIONAL_B_SPLINE_SURFACE #{id}: weights_data not a list"))?;
                     let mut flat = Vec::new();
                     for wrow in wrows {
-                        let wrow_agg = as_agg(wrow).ok_or_else(|| format!("RATIONAL_B_SPLINE_SURFACE #{id}: weight row not a list"))?;
+                        let wrow_agg = as_agg(wrow).await.ok_or_else(|| format!("RATIONAL_B_SPLINE_SURFACE #{id}: weight row not a list"))?;
                         for w in wrow_agg {
-                            flat.push(as_real(w).ok_or_else(|| format!("RATIONAL_B_SPLINE_SURFACE #{id}: weight not numeric"))?);
+                            flat.push(as_real(w).await.ok_or_else(|| format!("RATIONAL_B_SPLINE_SURFACE #{id}: weight not numeric"))?);
                         }
                     }
                     flat
@@ -301,7 +301,7 @@ impl ArtifactDeserializer for SemioBrepFromStep {
     const INTO: Dialect = SEMIO_BREP_DIALECT;
 
     async fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
-        let resolver = Resolver::new(from);
+        let resolver = Resolver::new(from).await;
         let mut vertices = Vec::new();
         let mut edges = Vec::new();
         let mut loops = Vec::new();
@@ -310,48 +310,48 @@ impl ArtifactDeserializer for SemioBrepFromStep {
         let mut solids = Vec::new();
 
         for e in &from.entities {
-            if has_type(e, "VERTEX_POINT") {
-                let args = args_for_type(e, "VERTEX_POINT").expect("has_type just confirmed VERTEX_POINT");
+            if has_type(e, "VERTEX_POINT").await {
+                let args = args_for_type(e, "VERTEX_POINT").await.expect("has_type just confirmed VERTEX_POINT");
                 let point_ref = args.get(1).and_then(as_ref_id).ok_or_else(|| step_err(format!("VERTEX_POINT #{}: vertex_geometry not a reference", e.id)))?;
-                let point = resolver.point(point_ref).map_err(step_err)?;
+                let point = resolver.point(point_ref).await.map_err(step_err)?;
                 vertices.push(BrepVertex { id: format!("v{}", e.id), point });
             }
-            if has_type(e, "EDGE_CURVE") {
-                let args = args_for_type(e, "EDGE_CURVE").expect("has_type just confirmed EDGE_CURVE");
+            if has_type(e, "EDGE_CURVE").await {
+                let args = args_for_type(e, "EDGE_CURVE").await.expect("has_type just confirmed EDGE_CURVE");
                 let start_ref = args.get(1).and_then(as_ref_id).ok_or_else(|| step_err(format!("EDGE_CURVE #{}: edge_start not a reference", e.id)))?;
                 let end_ref = args.get(2).and_then(as_ref_id).ok_or_else(|| step_err(format!("EDGE_CURVE #{}: edge_end not a reference", e.id)))?;
                 let curve_ref = args.get(3).and_then(as_ref_id).ok_or_else(|| step_err(format!("EDGE_CURVE #{}: edge_geometry not a reference", e.id)))?;
-                let curve = resolver.curve(curve_ref).map_err(step_err)?;
+                let curve = resolver.curve(curve_ref).await.map_err(step_err)?;
                 edges.push(BrepEdge { id: format!("e{}", e.id), start_vertex: format!("v{start_ref}"), end_vertex: format!("v{end_ref}"), curve });
             }
-            if has_type(e, "EDGE_LOOP") {
-                let args = args_for_type(e, "EDGE_LOOP").expect("has_type just confirmed EDGE_LOOP");
+            if has_type(e, "EDGE_LOOP").await {
+                let args = args_for_type(e, "EDGE_LOOP").await.expect("has_type just confirmed EDGE_LOOP");
                 let edge_refs = args.get(1).and_then(as_agg).ok_or_else(|| step_err(format!("EDGE_LOOP #{}: edge_list not a list", e.id)))?;
                 let mut members = Vec::with_capacity(edge_refs.len());
                 for oe in edge_refs {
-                    let oe_id = as_ref_id(oe).ok_or_else(|| step_err(format!("EDGE_LOOP #{}: edge_list entry not a reference", e.id)))?;
-                    let oe_entity = resolver.get(oe_id).ok_or_else(|| step_err(format!("EDGE_LOOP #{}: dangling ORIENTED_EDGE #{oe_id}", e.id)))?;
-                    let oe_args = args_for_type(oe_entity, "ORIENTED_EDGE").ok_or_else(|| step_err(format!("EDGE_LOOP #{}: #{oe_id} is not an ORIENTED_EDGE", e.id)))?;
+                    let oe_id = as_ref_id(oe).await.ok_or_else(|| step_err(format!("EDGE_LOOP #{}: edge_list entry not a reference", e.id)))?;
+                    let oe_entity = resolver.get(oe_id).await.ok_or_else(|| step_err(format!("EDGE_LOOP #{}: dangling ORIENTED_EDGE #{oe_id}", e.id)))?;
+                    let oe_args = args_for_type(oe_entity, "ORIENTED_EDGE").await.ok_or_else(|| step_err(format!("EDGE_LOOP #{}: #{oe_id} is not an ORIENTED_EDGE", e.id)))?;
                     let edge_ref = oe_args.get(3).and_then(as_ref_id).ok_or_else(|| step_err(format!("ORIENTED_EDGE #{oe_id}: edge_element not a reference")))?;
                     let orientation = matches!(oe_args.get(4), Some(StepValue::Enum(s)) if s == "T");
                     members.push(BrepLoopEdge { edge: format!("e{edge_ref}"), orientation });
                 }
                 loops.push(BrepLoop { id: format!("l{}", e.id), edges: members });
             }
-            if has_type(e, "ADVANCED_FACE") {
-                let args = args_for_type(e, "ADVANCED_FACE").expect("has_type just confirmed ADVANCED_FACE");
+            if has_type(e, "ADVANCED_FACE").await {
+                let args = args_for_type(e, "ADVANCED_FACE").await.expect("has_type just confirmed ADVANCED_FACE");
                 let bound_refs = args.get(1).and_then(as_agg).ok_or_else(|| step_err(format!("ADVANCED_FACE #{}: bounds not a list", e.id)))?;
                 let mut outer_loop: Option<String> = None;
                 let mut inner_loops = Vec::new();
                 for bound in bound_refs {
-                    let bound_id = as_ref_id(bound).ok_or_else(|| step_err(format!("ADVANCED_FACE #{}: bound entry not a reference", e.id)))?;
-                    let bound_entity = resolver.get(bound_id).ok_or_else(|| step_err(format!("ADVANCED_FACE #{}: dangling bound #{bound_id}", e.id)))?;
+                    let bound_id = as_ref_id(bound).await.ok_or_else(|| step_err(format!("ADVANCED_FACE #{}: bound entry not a reference", e.id)))?;
+                    let bound_entity = resolver.get(bound_id).await.ok_or_else(|| step_err(format!("ADVANCED_FACE #{}: dangling bound #{bound_id}", e.id)))?;
                     let is_outer = has_type(bound_entity, "FACE_OUTER_BOUND");
                     let bound_args =
-                        args_for_type(bound_entity, "FACE_OUTER_BOUND").or_else(|| args_for_type(bound_entity, "FACE_BOUND")).ok_or_else(|| step_err(format!("ADVANCED_FACE #{}: #{bound_id} is neither FACE_BOUND nor FACE_OUTER_BOUND", e.id)))?;
+                        args_for_type(bound_entity, "FACE_OUTER_BOUND").await.or_else(|| args_for_type(bound_entity, "FACE_BOUND")).ok_or_else(|| step_err(format!("ADVANCED_FACE #{}: #{bound_id} is neither FACE_BOUND nor FACE_OUTER_BOUND", e.id)))?;
                     let loop_ref = bound_args.get(1).and_then(as_ref_id).ok_or_else(|| step_err(format!("bound #{bound_id}: bound not a reference")))?;
                     let loop_id = format!("l{loop_ref}");
-                    if is_outer || outer_loop.is_none() {
+                    if is_outer.await || outer_loop.is_none() {
                         if outer_loop.is_some() {
                             inner_loops.push(loop_id);
                         } else {
@@ -363,28 +363,28 @@ impl ArtifactDeserializer for SemioBrepFromStep {
                 }
                 let outer_loop = outer_loop.ok_or_else(|| step_err(format!("ADVANCED_FACE #{}: no bound resolved to an outer loop", e.id)))?;
                 let surface_ref = args.get(2).and_then(as_ref_id).ok_or_else(|| step_err(format!("ADVANCED_FACE #{}: face_geometry not a reference", e.id)))?;
-                let surface = resolver.surface(surface_ref).map_err(step_err)?;
+                let surface = resolver.surface(surface_ref).await.map_err(step_err)?;
                 let orientation = matches!(args.get(3), Some(StepValue::Enum(s)) if s == "T");
                 faces.push(BrepFace { id: format!("f{}", e.id), outer_loop, inner_loops, surface, orientation });
             }
-            if has_type(e, "CLOSED_SHELL") || has_type(e, "OPEN_SHELL") {
-                let args = args_for_type(e, "CLOSED_SHELL").or_else(|| args_for_type(e, "OPEN_SHELL")).expect("has_type just confirmed a shell type");
+            if has_type(e, "CLOSED_SHELL").await || has_type(e, "OPEN_SHELL").await {
+                let args = args_for_type(e, "CLOSED_SHELL").await.or_else(|| args_for_type(e, "OPEN_SHELL")).expect("has_type just confirmed a shell type");
                 let face_refs = args.get(1).and_then(as_agg).ok_or_else(|| step_err(format!("shell #{}: cfs_faces not a list", e.id)))?;
                 let mut members = Vec::with_capacity(face_refs.len());
                 for f in face_refs {
-                    let f_ref = as_ref_id(f).ok_or_else(|| step_err(format!("shell #{}: face entry not a reference", e.id)))?;
+                    let f_ref = as_ref_id(f).await.ok_or_else(|| step_err(format!("shell #{}: face entry not a reference", e.id)))?;
                     members.push(BrepShellFace { face: format!("f{f_ref}"), orientation: true });
                 }
                 shells.push(BrepShell { id: format!("s{}", e.id), faces: members });
             }
-            if has_type(e, "MANIFOLD_SOLID_BREP") {
-                let args = args_for_type(e, "MANIFOLD_SOLID_BREP").expect("has_type just confirmed MANIFOLD_SOLID_BREP");
+            if has_type(e, "MANIFOLD_SOLID_BREP").await {
+                let args = args_for_type(e, "MANIFOLD_SOLID_BREP").await.expect("has_type just confirmed MANIFOLD_SOLID_BREP");
                 let outer_ref = args.get(1).and_then(as_ref_id).ok_or_else(|| step_err(format!("MANIFOLD_SOLID_BREP #{}: outer not a reference", e.id)))?;
                 let mut members = vec![BrepSolidShell { shell: format!("s{outer_ref}"), is_void: false }];
-                if let Some(vargs) = args_for_type(e, "BREP_WITH_VOIDS") {
+                if let Some(vargs) = args_for_type(e, "BREP_WITH_VOIDS").await {
                     let void_refs = vargs.first().and_then(as_agg).ok_or_else(|| step_err(format!("BREP_WITH_VOIDS on #{}: voids not a list", e.id)))?;
                     for v in void_refs {
-                        let v_ref = as_ref_id(v).ok_or_else(|| step_err(format!("BREP_WITH_VOIDS on #{}: void entry not a reference", e.id)))?;
+                        let v_ref = as_ref_id(v).await.ok_or_else(|| step_err(format!("BREP_WITH_VOIDS on #{}: void entry not a reference", e.id)))?;
                         members.push(BrepSolidShell { shell: format!("s{v_ref}"), is_void: true });
                     }
                 }

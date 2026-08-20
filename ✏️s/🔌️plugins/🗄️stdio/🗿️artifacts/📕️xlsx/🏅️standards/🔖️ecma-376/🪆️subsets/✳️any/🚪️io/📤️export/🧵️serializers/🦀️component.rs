@@ -20,7 +20,7 @@ async fn sst_to_xml(shared: &[String]) -> XmlDocument {
     let children =
         shared.iter().map(|s| XmlNode::Element { name: "si".into(), attrs: vec![], children: vec![XmlNode::Element { name: "t".into(), attrs: vec![attr("xml:space", "preserve")], children: vec![XmlNode::Text { text: s.clone() }] }] }).collect();
     XmlDocument {
-        root: Some(XmlNode::Element { name: "sst".into(), attrs: vec![attr("xmlns", SML_NS), attr("count", &shared.len().to_string()), attr("uniqueCount", &shared.len().to_string())], children }),
+        root: Some(XmlNode::Element { name: "sst".into(), attrs: vec![attr("xmlns", SML_NS).await, attr("count", &shared.len().to_string()).await, attr("uniqueCount", &shared.len().to_string()).await], children }),
         doctype: None,
         declaration: None,
         prolog: Vec::new(),
@@ -38,7 +38,7 @@ async fn workbook_to_xml(workbook: &XlsxWorkbook, rids: &[String]) -> XmlDocumen
         .map(|(i, (sheet, rid))| XmlNode::Element { name: "sheet".into(), attrs: vec![attr("name", &sheet.name), attr("sheetId", &(i + 1).to_string()), attr("r:id", rid)], children: vec![] })
         .collect();
     XmlDocument {
-        root: Some(XmlNode::Element { name: "workbook".into(), attrs: vec![attr("xmlns", SML_NS), attr("xmlns:r", super::super::super::R_NS)], children: vec![XmlNode::Element { name: "sheets".into(), attrs: vec![], children: sheets }] }),
+        root: Some(XmlNode::Element { name: "workbook".into(), attrs: vec![attr("xmlns", SML_NS).await, attr("xmlns:r", super::super::super::R_NS).await], children: vec![XmlNode::Element { name: "sheets".into(), attrs: vec![], children: sheets }] }),
         doctype: None,
         declaration: None,
         prolog: Vec::new(),
@@ -52,7 +52,7 @@ async fn v_element(text: &str) -> XmlNode {
 }
 
 async fn is_element(text: &str) -> XmlNode {
-    XmlNode::Element { name: "is".into(), attrs: vec![], children: vec![XmlNode::Element { name: "t".into(), attrs: vec![attr("xml:space", "preserve")], children: vec![XmlNode::Text { text: text.into() }] }] }
+    XmlNode::Element { name: "is".into(), attrs: vec![], children: vec![XmlNode::Element { name: "t".into(), attrs: vec![attr("xml:space", "preserve").await], children: vec![XmlNode::Text { text: text.into() }] }] }
 }
 
 async fn f_element(expr: &str) -> XmlNode {
@@ -72,10 +72,10 @@ async fn format_number(n: f64) -> String {
 /// formula's cached value is never itself a formula in a spec-conformant document).
 async fn cached_value_xml(cached: &XlsxCellValue) -> (Option<crate::artifacts::xml::schema::snapshot::XmlAttr>, Option<XmlNode>) {
     match cached {
-        XlsxCellValue::Number(n) => (None, Some(v_element(&format_number(*n)))),
-        XlsxCellValue::SharedString(idx) => (Some(attr("t", "s")), Some(v_element(&idx.to_string()))),
-        XlsxCellValue::InlineString(s) => (Some(attr("t", "str")), Some(v_element(s))),
-        XlsxCellValue::Boolean(b) => (Some(attr("t", "b")), Some(v_element(if *b { "1" } else { "0" }))),
+        XlsxCellValue::Number(n) => (None, Some(v_element(&format_number(*n)).await)),
+        XlsxCellValue::SharedString(idx) => (Some(attr("t", "s").await), Some(v_element(&idx.to_string()).await)),
+        XlsxCellValue::InlineString(s) => (Some(attr("t", "str").await), Some(v_element(s).await)),
+        XlsxCellValue::Boolean(b) => (Some(attr("t", "b").await), Some(v_element(if *b { "1" } else { "0" }).await)),
         XlsxCellValue::Formula { .. } => (None, None),
         XlsxCellValue::Empty => (None, None),
     }
@@ -85,23 +85,23 @@ async fn cell_to_xml(cell: &XlsxCell) -> XmlNode {
     let r = format!("{}{}", super::super::super::column_letter(cell.col), cell.row);
     let mut attrs = vec![attr("r", &r)];
     match &cell.value {
-        XlsxCellValue::Number(n) => XmlNode::Element { name: "c".into(), attrs, children: vec![v_element(&format_number(*n))] },
+        XlsxCellValue::Number(n) => XmlNode::Element { name: "c".into(), attrs, children: vec![v_element(&format_number(*n)).await] },
         XlsxCellValue::SharedString(idx) => {
             attrs.push(attr("t", "s"));
-            XmlNode::Element { name: "c".into(), attrs, children: vec![v_element(&idx.to_string())] }
+            XmlNode::Element { name: "c".into(), attrs, children: vec![v_element(&idx.to_string()).await] }
         }
         XlsxCellValue::InlineString(s) => {
             attrs.push(attr("t", "inlineStr"));
-            XmlNode::Element { name: "c".into(), attrs, children: vec![is_element(s)] }
+            XmlNode::Element { name: "c".into(), attrs, children: vec![is_element(s).await] }
         }
         XlsxCellValue::Boolean(b) => {
             attrs.push(attr("t", "b"));
-            XmlNode::Element { name: "c".into(), attrs, children: vec![v_element(if *b { "1" } else { "0" })] }
+            XmlNode::Element { name: "c".into(), attrs, children: vec![v_element(if *b { "1" } else { "0" }).await] }
         }
         XlsxCellValue::Formula { expr, cached } => {
             let mut children = vec![f_element(expr)];
             if let Some(cached) = cached {
-                let (t_attr, v_node) = cached_value_xml(cached);
+                let (t_attr, v_node) = cached_value_xml(cached).await;
                 if let Some(t_attr) = t_attr {
                     attrs.push(t_attr);
                 }
@@ -132,7 +132,7 @@ async fn worksheet_to_xml(sheet: &XlsxSheet) -> XmlDocument {
         })
         .collect();
     XmlDocument {
-        root: Some(XmlNode::Element { name: "worksheet".into(), attrs: vec![attr("xmlns", SML_NS)], children: vec![XmlNode::Element { name: "sheetData".into(), attrs: vec![], children: rows }] }),
+        root: Some(XmlNode::Element { name: "worksheet".into(), attrs: vec![attr("xmlns", SML_NS).await], children: vec![XmlNode::Element { name: "sheetData".into(), attrs: vec![], children: rows }] }),
         doctype: None,
         declaration: None,
         prolog: Vec::new(),
@@ -163,7 +163,7 @@ async fn regenerate_workbook_parts(opc: &mut OpcPackage, workbook: &XlsxWorkbook
     let mut sheet_bytes = Vec::with_capacity(workbook.sheets.len());
     for sheet in &workbook.sheets {
         let xml = worksheet_to_xml(sheet);
-        sheet_bytes.push(xml_document_to_text(&xml).into_bytes());
+        sheet_bytes.push(xml_document_to_text(&xml).await.into_bytes());
     }
 
     let mut rids = Vec::with_capacity(workbook.sheets.len());
@@ -176,13 +176,13 @@ async fn regenerate_workbook_parts(opc: &mut OpcPackage, workbook: &XlsxWorkbook
     workbook_rels.push(OpcRelationship { id: format!("rId{}", workbook.sheets.len() + 1), rel_type: REL_TYPE_SHARED_STRINGS.into(), target: "sharedStrings.xml".into(), target_mode: OpcTargetMode::Internal });
     opc.relationships.insert(WORKBOOK_PART.to_string(), workbook_rels);
 
-    let workbook_bytes = xml_document_to_text(&workbook_to_xml(workbook, &rids)).into_bytes();
+    let workbook_bytes = xml_document_to_text(&workbook_to_xml(workbook, &rids)).await.into_bytes();
     opc.set_part(WORKBOOK_PART, WORKBOOK_CONTENT_TYPE, workbook_bytes);
 
     // 🩹 `workbook.shared_strings` IS the SST — cells already carry `SharedString(idx)` indices
     // into it, so this is a direct serialize, never a text-dedup rebuild (the #1 xlsx gotcha this
     // engine used to paper over by eagerly resolving text; see the module doc comment).
-    let sst_bytes = xml_document_to_text(&sst_to_xml(&workbook.shared_strings)).into_bytes();
+    let sst_bytes = xml_document_to_text(&sst_to_xml(&workbook.shared_strings)).await.into_bytes();
     opc.set_part(SHARED_STRINGS_PART, SHARED_STRINGS_CONTENT_TYPE, sst_bytes);
 
     for (i, bytes) in sheet_bytes.into_iter().enumerate() {
@@ -190,7 +190,7 @@ async fn regenerate_workbook_parts(opc: &mut OpcPackage, workbook: &XlsxWorkbook
         opc.set_part(&path, WORKSHEET_CONTENT_TYPE, bytes);
     }
 
-    if opc.relationships_for("").iter().all(|r| r.rel_type != REL_TYPE_OFFICE_DOCUMENT) {
+    if opc.relationships_for("").await.iter().all(|r| r.rel_type != REL_TYPE_OFFICE_DOCUMENT) {
         opc.add_relationship("", "rId1", REL_TYPE_OFFICE_DOCUMENT, WORKBOOK_PART);
     }
 }
@@ -201,12 +201,12 @@ async fn regenerate_workbook_parts(opc: &mut OpcPackage, workbook: &XlsxWorkbook
 pub async fn build_minimal_xlsx(workbook: XlsxWorkbook) -> XlsxSnapshot {
     let mut opc = OpcPackage::empty();
     regenerate_workbook_parts(&mut opc, &workbook);
-    XlsxSnapshot::from_parts(opc, workbook)
+    XlsxSnapshot::from_parts(opc.await, workbook).await
 }
 
 pub async fn encode_xlsx(snap: &XlsxSnapshot) -> Result<Vec<u8>, XlsxError> {
     let mut opc = snap.opc.clone();
     regenerate_workbook_parts(&mut opc, &snap.workbook);
-    Ok(crate::artifacts::zip::opc::encode_opc_with_package_order(&opc)?)
+    Ok(crate::artifacts::zip::opc::encode_opc_with_package_order(&opc).await?)
 }
 //#endregion 🔖️Codec

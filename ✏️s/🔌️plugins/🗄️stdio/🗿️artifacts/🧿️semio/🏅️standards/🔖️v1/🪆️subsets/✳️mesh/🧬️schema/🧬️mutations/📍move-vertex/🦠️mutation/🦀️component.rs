@@ -18,10 +18,10 @@ impl protocol::MutationKind<SemioMeshSnapshot, SemioMeshMutation> for MoveVertex
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "vertex", kind: "move-vertex", record: "MovedVertex" };
 
     async fn diff(&self, base: &SemioMeshSnapshot) -> protocol::MutationOutcome<<SemioMeshMutation as protocol::Mutation<SemioMeshSnapshot>>::Diff> {
-        super::diff::diff(self, base)
+        super::diff::diff(self, base).await
     }
     async fn inverse(&self, base: &SemioMeshSnapshot) -> Vec<SemioMeshMutation> {
-        super::inverse::inverse(self, base)
+        super::inverse::inverse(self, base).await
     }
     async fn label(&self) -> String {
         format!("Move vertex {} of primitive \"{}\" in mesh \"{}\" to ({}, {}, {})", self.vertex_index, self.primitive_id, self.mesh_id, self.new_point.x, self.new_point.y, self.new_point.z)

@@ -26,7 +26,7 @@ impl ArtifactDeserializer for SemioValueFromJson {
     const INTO: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("value") };
 
     async fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
-        Ok(SemioValueSnapshot { schema: STDIO_SEMIOVALUE_DOCUMENT_SCHEMA.into(), root: semio_value_from_json(&from.value), nodes: Vec::new() })
+        Ok(SemioValueSnapshot { schema: STDIO_SEMIOVALUE_DOCUMENT_SCHEMA.into(), root: semio_value_from_json(&from.value).await, nodes: Vec::new() })
     }
 }
 
@@ -44,7 +44,7 @@ pub async fn semio_value_from_json(v: &JsonValue) -> SemioValue {
         JsonValue::Null => SemioValue::Null,
         JsonValue::Bool { value } => SemioValue::Bool { value: *value },
         JsonValue::Number { lexeme } => {
-            if is_float_lexeme(lexeme) {
+            if is_float_lexeme(lexeme).await {
                 SemioValue::Float { lexeme: lexeme.clone() }
             } else {
                 SemioValue::Int { lexeme: lexeme.clone() }
@@ -52,7 +52,7 @@ pub async fn semio_value_from_json(v: &JsonValue) -> SemioValue {
         }
         JsonValue::String { value } => SemioValue::Str { value: value.clone() },
         JsonValue::Array { items } => SemioValue::List { items: items.iter().map(semio_value_from_json).collect() },
-        JsonValue::Object { members } => SemioValue::Map { entries: members.iter().map(|m| SemioValueEntry { key: m.key.clone(), value: semio_value_from_json(&m.value) }).collect() },
+        JsonValue::Object { members } => SemioValue::Map { entries: members.iter().map(|m| SemioValueEntry { key: m.key.clone(), value: semio_framework_plugin::resolve_ready(semio_value_from_json(&m.value)) }).collect() },
     }
 }
 //#endregion 🔖️Convert

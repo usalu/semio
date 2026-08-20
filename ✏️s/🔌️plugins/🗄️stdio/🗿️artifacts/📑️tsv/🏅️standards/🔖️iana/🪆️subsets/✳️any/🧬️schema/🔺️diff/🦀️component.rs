@@ -177,8 +177,8 @@ pub struct TsvDiff {
 
 impl MutationDiff<TsvSnapshot> for TsvDiff {
     async fn apply(&self, base: &TsvSnapshot) -> MutationApplyResult<TsvSnapshot> {
-        validate_tsv_diff(self, base)?;
-        Ok(apply_tsv_diff_unchecked(self, base))
+        validate_tsv_diff(self, base).await?;
+        Ok(apply_tsv_diff_unchecked(self, base).await)
     }
 
     async fn absorb(&mut self, other: Self) {
@@ -199,7 +199,7 @@ impl MutationDiff<TsvSnapshot> for TsvDiff {
             }
             Some(d1) => d1,
         };
-        self.records = Some(absorb_records(d1, d2));
+        self.records = Some(absorb_records(d1, d2).await);
     }
 }
 
@@ -208,26 +208,26 @@ async fn validate_tsv_diff(diff: &TsvDiff, base: &TsvSnapshot) -> MutationApplyR
     let mut removed = std::collections::HashSet::new();
     for &index in &records.removed {
         if index >= base.records.len() {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "row removal target does not exist"));
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "row removal target does not exist").await);
         }
         if !removed.insert(index) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "row removal target is repeated"));
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "row removal target is repeated").await);
         }
     }
     let mut modified = std::collections::HashSet::new();
     for entry in &records.modified {
         if entry.index >= base.records.len() {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "row modification target does not exist"));
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "row modification target does not exist").await);
         }
         if removed.contains(&entry.index) {
-            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "row modification targets a removed item"));
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "row modification targets a removed item").await);
         }
         if !modified.insert(entry.index) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "row modification target is repeated"));
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "row modification target is repeated").await);
         }
         if let Some(fields) = &entry.diff.fields {
             if fields.len() > base.records[entry.index].len() {
-                return Err(MutationApplyError::new("mutation.apply.invalid-index", "row field patch exceeds the base row"));
+                return Err(MutationApplyError::new("mutation.apply.invalid-index", "row field patch exceeds the base row").await);
             }
         }
     }
@@ -235,10 +235,10 @@ async fn validate_tsv_diff(diff: &TsvDiff, base: &TsvSnapshot) -> MutationApplyR
     let mut added = std::collections::HashSet::new();
     for entry in &records.added {
         if entry.index > final_len {
-            return Err(MutationApplyError::new("mutation.apply.invalid-index", "row addition is outside the final collection"));
+            return Err(MutationApplyError::new("mutation.apply.invalid-index", "row addition is outside the final collection").await);
         }
         if !added.insert(entry.index) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "row addition occupies a repeated final position"));
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "row addition occupies a repeated final position").await);
         }
     }
     Ok(())
@@ -255,7 +255,7 @@ async fn apply_tsv_diff_unchecked(diff: &TsvDiff, base: &TsvSnapshot) -> TsvSnap
     if let Some(rdiff) = &diff.records {
         for m in &rdiff.modified {
             if let Some(row) = next.records.get_mut(m.index) {
-                *row = m.diff.apply(row);
+                *row = m.diff.apply(row).await;
             }
         }
         let mut removed_desc = rdiff.removed.clone();
@@ -287,7 +287,7 @@ async fn absorb_records(d1: TsvRowsDiff, d2: TsvRowsDiff) -> TsvRowsDiff {
     };
     let needed_mid_len = d2.removed.iter().copied().chain(d2.modified.iter().map(|m| m.index)).max().map(|m| m + 1).unwrap_or(0);
     let base_len = base_len_hint(&d1.removed, d1.modified.iter().map(|m| m.index), d1_added_indices.iter().copied()).max((needed_mid_len + removed_count).saturating_sub(d1.added.len()));
-    let mid_slots = simulate_slots(base_len, &d1.removed, &d1_added_indices);
+    let mid_slots = simulate_slots(base_len, &d1.removed, &d1_added_indices).await;
 
     let mut final_removed: Vec<usize> = d1.removed.clone();
     let mut modified_map: BTreeMap<usize, TsvRowDiff> = d1.modified.into_iter().map(|m| (m.index, m.diff)).collect();
@@ -312,7 +312,7 @@ async fn absorb_records(d1: TsvRowsDiff, d2: TsvRowsDiff) -> TsvRowsDiff {
             }
             Some(Slot::Added(ai)) => {
                 if let Some(added) = added_alive[*ai].as_mut() {
-                    added.row = m2.diff.apply(&added.row);
+                    added.row = m2.diff.apply(&added.row).await;
                 }
             }
             None => {}
@@ -337,7 +337,7 @@ async fn absorb_records(d1: TsvRowsDiff, d2: TsvRowsDiff) -> TsvRowsDiff {
         .collect();
     let d2_added_indices: Vec<usize> = d2.added.iter().map(|a| a.index).collect();
     let mid_len = d2.removed.iter().copied().chain(d2.modified.iter().map(|m| m.index)).chain(alive_mid_positions.iter().copied()).chain(d2_added_indices.iter().copied()).max().map(|m| m + 1).unwrap_or(0);
-    let after_slots = simulate_slots(mid_len, &d2.removed, &d2_added_indices);
+    let after_slots = simulate_slots(mid_len, &d2.removed, &d2_added_indices).await;
     let mut mid_to_after: HashMap<usize, usize> = HashMap::new();
     for (pos, slot) in after_slots.iter().enumerate() {
         if let Slot::Base(m) = slot {
@@ -365,7 +365,7 @@ async fn absorb_records(d1: TsvRowsDiff, d2: TsvRowsDiff) -> TsvRowsDiff {
 impl DiffAlgebra<TsvSnapshot> for TsvDiff {
     async fn inverse(&self, base: &TsvSnapshot) -> Self {
         let applied = apply_tsv_diff_unchecked(self, base);
-        Self::between(&applied, base)
+        Self::between(&applied, base).await
     }
 
     async fn between(base: &TsvSnapshot, other: &TsvSnapshot) -> Self {
@@ -383,8 +383,8 @@ impl DiffAlgebra<TsvSnapshot> for TsvDiff {
                 continue;
             }
             if b.len() == o.len() {
-                let d = TsvRowDiff::between(b, o);
-                if !d.is_empty() {
+                let d = TsvRowDiff::between(b, o).await;
+                if !d.is_empty().await {
                     modified.push(TsvRowModified { index: i, diff: d });
                 }
             } else {
@@ -410,7 +410,7 @@ impl DiffAlgebra<TsvSnapshot> for TsvDiff {
 
 /// 🧩 Builds a set-snapshot diff (sparse field-by-field delta, never a full-replace slot).
 pub async fn diff_set_snapshot(base: &TsvSnapshot, next: &TsvSnapshot) -> TsvDiff {
-    TsvDiff::between(base, next)
+    TsvDiff::between(base, next).await
 }
 //#endregion 🔖️Diff
 
@@ -466,8 +466,8 @@ pub(crate) async fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String
     }
 }
 pub(crate) async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
-    let inner = strip_brackets(s)?;
-    match split_top_level(inner, ',').as_slice() {
+    let inner = strip_brackets(s).await?;
+    match split_top_level(inner, ',').await.as_slice() {
         ["0"] => Ok(None),
         [tag, value] if *tag == "1" => Ok(Some(dec(value)?)),
         other => Err(format!("option decode: bad shape {other:?}")),
@@ -477,16 +477,16 @@ pub(crate) async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, St
 
 //#region 🔖️ValueCodecs
 pub(crate) async fn enc_str(s: &str) -> String {
-    hex_encode(s.as_bytes())
+    hex_encode(s.as_bytes()).await
 }
 pub(crate) async fn dec_str(s: &str) -> Result<String, String> {
-    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
+    String::from_utf8(hex_decode(s).await?).map_err(|e| e.to_string())
 }
 pub(crate) async fn enc_row(r: &[String]) -> String {
     format!("[{}]", r.iter().map(|f| enc_str(f)).collect::<Vec<_>>().join(","))
 }
 pub(crate) async fn dec_row(s: &str) -> Result<Vec<String>, String> {
-    split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_str).collect()
+    split_top_level(strip_brackets(s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_str).collect()
 }
 pub(crate) async fn enc_line_ending(l: LineEnding) -> &'static str {
     match l {
@@ -505,10 +505,10 @@ pub(crate) async fn dec_line_ending(s: &str) -> Result<LineEnding, String> {
 
 //#region 🔖️DiffValueCodecs
 async fn enc_row_diff(d: &TsvRowDiff) -> String {
-    encode_option(&d.fields, |fields| format!("[{}]", fields.iter().map(|f| encode_option(f, |v| enc_str(v))).collect::<Vec<_>>().join(",")))
+    encode_option(&d.fields, |fields| format!("[{}]", fields.iter().map(|f| encode_option(f, |v| enc_str(v))).collect::<Vec<_>>().join(","))).await
 }
 async fn dec_row_diff(s: &str) -> Result<TsvRowDiff, String> {
-    let fields = decode_option(s, |inner| split_top_level(strip_brackets(inner)?, ',').into_iter().filter(|s| !s.is_empty()).map(|p| decode_option(p, dec_str)).collect::<Result<Vec<_>, String>>())?;
+    let fields = decode_option(s, |inner| split_top_level(strip_brackets(inner)?, ',').into_iter().filter(|s| !s.is_empty()).map(|p| decode_option(p, dec_str)).collect::<Result<Vec<_>, String>>()).await?;
     Ok(TsvRowDiff { fields })
 }
 
@@ -519,10 +519,10 @@ async fn enc_records_diff(d: &TsvRowsDiff) -> String {
     format!("records{{[{removed}];[{modified}];[{added}]}}")
 }
 async fn dec_records_diff(body: &str) -> Result<TsvRowsDiff, String> {
-    let three = split_top_level(body, ';');
+    let three = split_top_level(body, ';').await;
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("records: expected 3 sections, got {}", three.len())) };
-    let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
-    let modified = split_top_level(strip_brackets(modified_s)?, ',')
+    let removed = split_top_level(strip_brackets(removed_s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
+    let modified = split_top_level(strip_brackets(modified_s).await?, ',')
         .into_iter()
         .filter(|s| !s.is_empty())
         .map(|entry| {
@@ -530,7 +530,7 @@ async fn dec_records_diff(body: &str) -> Result<TsvRowsDiff, String> {
             Ok(TsvRowModified { index: parse_usize(idx)?, diff: dec_row_diff(rest)? })
         })
         .collect::<Result<Vec<_>, String>>()?;
-    let added = split_top_level(strip_brackets(added_s)?, ',')
+    let added = split_top_level(strip_brackets(added_s).await?, ',')
         .into_iter()
         .filter(|s| !s.is_empty())
         .map(|entry| {
@@ -552,7 +552,7 @@ async fn print_tsv_diff(d: &TsvDiff) -> String {
         tokens.push(format!("line-ending={}", enc_line_ending(v)));
     }
     if let Some(v) = &d.records {
-        tokens.push(enc_records_diff(v));
+        tokens.push(enc_records_diff(v).await);
     }
     tokens.join(" ")
 }
@@ -565,9 +565,9 @@ async fn parse_tsv_diff(line: &str) -> Result<TsvDiff, String> {
         if let Some(rest) = token.strip_prefix("trailing-newline=") {
             d.trailing_newline = Some(rest == "1");
         } else if let Some(rest) = token.strip_prefix("line-ending=") {
-            d.line_ending = Some(dec_line_ending(rest)?);
+            d.line_ending = Some(dec_line_ending(rest).await?);
         } else if let Some(rest) = token.strip_prefix("records{") {
-            d.records = Some(dec_records_diff(rest.strip_suffix('}').ok_or_else(|| "records: missing closing brace".to_string())?)?);
+            d.records = Some(dec_records_diff(rest.strip_suffix('}').ok_or_else(|| "records: missing closing brace".to_string())?).await?);
         } else {
             return Err(format!("tsv diff: unknown token {token:?}"));
         }
@@ -577,19 +577,19 @@ async fn parse_tsv_diff(line: &str) -> Result<TsvDiff, String> {
 
 impl DiffCodec for TsvDiff {
     async fn print_diff(&self) -> String {
-        print_tsv_diff(self)
+        print_tsv_diff(self).await
     }
     async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
-        parse_tsv_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_tsv_diff(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// ⚡️ Binary = the text bytes verbatim, same simplification csv's/gif89a's hand-rolled
     /// `DiffCodec`s use.
     async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(self.print_diff().into_bytes())
+        Ok(self.print_diff().await.into_bytes())
     }
     async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "diff utf8", offset: 0, detail: e.to_string() })?;
-        Self::parse_diff(line).map_err(|e| protocol::ProtocolError::Malformed { what: "diff text", offset: 0, detail: e.to_string() })
+        Self::parse_diff(line).await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff text", offset: 0, detail: e.to_string() })
     }
 }
 //#endregion 🔖️TopLevel

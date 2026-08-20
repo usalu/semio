@@ -34,18 +34,18 @@ pub const DOCX_ARTIFACT_SCHEMA_ID: &str = "s.stdio.docx";
 /// zero residual `.setup()` calls.
 /// 🧩️ Binds this executable root to its sole schema-owned definition.
 pub async fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
-    crate::registry::runtime_assembly("docx", definition, declaration)
+    crate::registry::runtime_assembly("docx", definition, declaration).await
 }
 
 pub async fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
-    let formats = crate::registry::format_descriptors_for("docx")?;
+    let formats = crate::registry::format_descriptors_for("docx").await?;
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
-        .schema(crate::artifacts::docx::schema::docx_artifact_schema_descriptor())
-        .formats(formats)
-        .inferences([crate::artifacts::docx::standards::v_ecma_376::subsets::any::schema::inferences::docx_artifact_inference_descriptor()])
-        .composers(crate::artifacts::docx::engine::io_registry::entries())
-        .subset_validators(docx_subset_validators())
-        .languages(pilot_languages())
+        .await.schema(crate::artifacts::docx::schema::docx_artifact_schema_descriptor().await)
+        .await.formats(formats)
+        .await.inferences([crate::artifacts::docx::standards::v_ecma_376::subsets::any::schema::inferences::docx_artifact_inference_descriptor()])
+        .await.composers(crate::artifacts::docx::engine::io_registry::entries())
+        .await.subset_validators(docx_subset_validators().await)
+        .await.languages(pilot_languages())
         .document_codec_bare::<DocxSnapshot, DocxMutation>(STDIO_DOCX_DOCUMENT_SCHEMA)
         .try_build()
 }
@@ -156,7 +156,8 @@ pub mod io_registry {
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 
-    pub async fn entries() -> &'static [&'static ComposerEntry] {
+    // 🚫️async: E1 pure table accessor consumed by OnceLock::get_or_init's sync closure — see R9
+    pub fn entries() -> &'static [&'static ComposerEntry] {
         ENTRIES.get_or_init(|| v_ecma_376::entries().iter().collect()).as_slice()
     }
 

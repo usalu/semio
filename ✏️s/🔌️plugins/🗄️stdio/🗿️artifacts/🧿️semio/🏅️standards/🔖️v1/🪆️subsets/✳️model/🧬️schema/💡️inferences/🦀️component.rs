@@ -28,7 +28,7 @@ pub struct SemioModelInference {
 
 impl protocol::Inference<SemioModelSnapshot> for SemioModelInference {
     async fn infer(snapshot: &SemioModelSnapshot) -> Self {
-        Self { bounds: compute_semio_model_bounds(snapshot) }
+        Self { bounds: compute_semio_model_bounds(snapshot).await }
     }
 }
 

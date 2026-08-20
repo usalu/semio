@@ -40,13 +40,13 @@ pub enum Ifc2x3Mutation {
 /// ▶️ Applies `mutation` to `snapshot`, returning the diff (computed against the PRE-mutation
 /// state, per `Mutation::diff`'s contract).
 pub async fn apply_ifc2x3_mutation(snapshot: &mut Ifc2x3Snapshot, mutation: &Ifc2x3Mutation) -> protocol::MutationOutcome<Ifc2x3Diff> {
-    let outcome = <Ifc2x3Mutation as Mutation<Ifc2x3Snapshot>>::diff(mutation, snapshot);
-    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
+    let outcome = <Ifc2x3Mutation as Mutation<Ifc2x3Snapshot>>::diff(mutation, snapshot).await;
+    match protocol::MutationDiff::apply(outcome.diff().await, snapshot).await {
         Ok(next) => {
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).await.absorb_messages(outcome.messages().await.to_vec()).await,
     }
 }
 //#endregion 🔖️Apply
@@ -58,9 +58,9 @@ impl Mutation<Ifc2x3Snapshot> for Ifc2x3Mutation {
     async fn diff(&self, base: &Ifc2x3Snapshot) -> protocol::MutationOutcome<Self::Diff> {
         let mut next = base.clone();
         match self {
-            Ifc2x3Mutation::NoMutation => return protocol::MutationOutcome::new(Ifc2x3Diff::default()),
+            Ifc2x3Mutation::NoMutation => return protocol::MutationOutcome::new(Ifc2x3Diff::default()).await,
             Ifc2x3Mutation::SetSnapshot { snapshot } => {
-                crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::validate_ifc2x3_snapshot(snapshot).expect("IFC2X3 SetSnapshot must carry a valid logical model");
+                crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::validate_ifc2x3_snapshot(snapshot).await.expect("IFC2X3 SetSnapshot must carry a valid logical model");
                 return protocol::MutationOutcome::new(Ifc2x3Diff::between(base, snapshot));
             }
             Ifc2x3Mutation::UpsertInstance { instance } => match next.document.instances.iter_mut().find(|candidate| candidate.id == instance.id) {
@@ -107,11 +107,11 @@ async fn enc_ifc2x3_snapshot_into(s: &Ifc2x3Snapshot, out: &mut String) {
     out.push(']');
 }
 async fn dec_ifc2x3_snapshot(s: &str) -> Result<Ifc2x3Snapshot, String> {
-    let fields = split_top_level(strip_brackets(s)?, ',');
+    let fields = split_top_level(strip_brackets(s).await?, ',').await;
     let [schema, header, instances, edm_preamble] = fields.as_slice() else {
         return Err(format!("ifc2x3 snapshot: expected 4 fields, got {}", fields.len()));
     };
-    Ok(Ifc2x3Snapshot { schema: dec_str(schema)?, document: Part21Document { header: dec_part21_header(header)?, instances: dec_instance_list(instances)? }, edm_preamble: dec_optional_edm_preamble(edm_preamble)? })
+    Ok(Ifc2x3Snapshot { schema: dec_str(schema).await?, document: Part21Document { header: dec_part21_header(header).await?, instances: dec_instance_list(instances).await? }, edm_preamble: dec_optional_edm_preamble(edm_preamble).await? })
 }
 
 async fn print_ifc2x3_mutation(m: &Ifc2x3Mutation) -> String {
@@ -135,20 +135,20 @@ async fn parse_ifc2x3_mutation(line: &str) -> Result<Ifc2x3Mutation, String> {
     let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
     let (arg_key, arg_val) = rest.split_once('=').ok_or_else(|| format!("ifc2x3 mutation: missing arg for {keyword:?}"))?;
     match (keyword, arg_key) {
-        ("set-snapshot", "snapshot") => Ok(Ifc2x3Mutation::SetSnapshot { snapshot: dec_ifc2x3_snapshot(arg_val)? }),
-        ("upsert-instance", "instance") => Ok(Ifc2x3Mutation::UpsertInstance { instance: dec_part21_instance(arg_val)? }),
+        ("set-snapshot", "snapshot") => Ok(Ifc2x3Mutation::SetSnapshot { snapshot: dec_ifc2x3_snapshot(arg_val).await? }),
+        ("upsert-instance", "instance") => Ok(Ifc2x3Mutation::UpsertInstance { instance: dec_part21_instance(arg_val).await? }),
         ("remove-instance", "id") => Ok(Ifc2x3Mutation::RemoveInstance { id: arg_val.parse().map_err(|e: std::num::ParseIntError| e.to_string())? }),
-        ("set-header", "header") => Ok(Ifc2x3Mutation::SetHeader { header: dec_part21_header(arg_val)? }),
+        ("set-header", "header") => Ok(Ifc2x3Mutation::SetHeader { header: dec_part21_header(arg_val).await? }),
         (other, _) => Err(format!("ifc2x3 mutation: unknown keyword {other:?}")),
     }
 }
 
 impl protocol::OpText for Ifc2x3Mutation {
     async fn print_op(&self) -> String {
-        print_ifc2x3_mutation(self)
+        print_ifc2x3_mutation(self).await
     }
     async fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_ifc2x3_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_ifc2x3_mutation(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
 
@@ -174,16 +174,16 @@ async fn enc_ifc2x3_snapshot_bin(s: &Ifc2x3Snapshot, out: &mut Vec<u8>) {
     }
 }
 async fn dec_ifc2x3_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<Ifc2x3Snapshot, String> {
-    let schema = read_str_bin(reader)?;
-    let header = dec_part21_header_bin(reader)?;
-    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let schema = read_str_bin(reader).await?;
+    let header = dec_part21_header_bin(reader).await?;
+    let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut instances = Vec::with_capacity(count as usize);
     for _ in 0..count {
-        instances.push(dec_part21_instance_bin(reader)?);
+        instances.push(dec_part21_instance_bin(reader).await?);
     }
-    let edm_preamble = match reader.read_u8().map_err(|e| e.to_string())? {
+    let edm_preamble = match reader.read_u8().await.map_err(|e| e.to_string())? {
         0 => None,
-        1 => Some(dec_edm_preamble_bin(reader)?),
+        1 => Some(dec_edm_preamble_bin(reader).await?),
         tag => return Err(format!("ifc2x3 snapshot: invalid EDM preamble presence {tag}")),
     };
     Ok(Ifc2x3Snapshot { schema, document: Part21Document { header, instances }, edm_preamble })
@@ -209,44 +209,44 @@ impl protocol::OpBinary for Ifc2x3Mutation {
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
         match self {
             Ifc2x3Mutation::NoMutation => {}
-            Ifc2x3Mutation::SetSnapshot { snapshot } => enc_ifc2x3_snapshot_bin(snapshot, &mut out),
-            Ifc2x3Mutation::UpsertInstance { instance } => enc_part21_instance_bin(instance, &mut out),
-            Ifc2x3Mutation::RemoveInstance { id } => store::pack_rt::write_varint_u64(&mut out, *id),
-            Ifc2x3Mutation::SetHeader { header } => enc_part21_header_bin(header, &mut out),
+            Ifc2x3Mutation::SetSnapshot { snapshot } => enc_ifc2x3_snapshot_bin(snapshot, &mut out).await,
+            Ifc2x3Mutation::UpsertInstance { instance } => enc_part21_instance_bin(instance, &mut out).await,
+            Ifc2x3Mutation::RemoveInstance { id } => store::pack_rt::write_varint_u64(&mut out, *id).await,
+            Ifc2x3Mutation::SetHeader { header } => enc_part21_header_bin(header, &mut out).await,
         }
         Ok(out)
     }
 
     async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let mut reader = store::ByteReader::new(bytes);
+        let mut reader = store::ByteReader::new(bytes).await;
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
-        let format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
+        let format = reader.read_u8().await.map_err(|e| malformed("op format", 0, e.to_string()))?;
         if format != store::pack_rt::OP_BINARY_FORMAT {
             return Err(malformed("op format", 0, format!("unsupported format {format}")));
         }
-        let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
+        let tag = reader.read_u8().await.map_err(|e| malformed("op tag", 1, e.to_string()))?;
         let mutation = match tag {
             0 => Ifc2x3Mutation::NoMutation,
             1 => {
-                let snapshot = dec_ifc2x3_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", reader.position(), e))?;
+                let snapshot = dec_ifc2x3_snapshot_bin(&mut reader).await.map_err(|e| malformed("op snapshot", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ifc2x3Mutation::SetSnapshot { snapshot }
             }
             2 => {
-                let instance = dec_part21_instance_bin(&mut reader).map_err(|e| malformed("op instance", reader.position(), e))?;
+                let instance = dec_part21_instance_bin(&mut reader).await.map_err(|e| malformed("op instance", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ifc2x3Mutation::UpsertInstance { instance }
             }
             3 => {
-                let id = reader.read_varint_u64().map_err(|e| malformed("op id", reader.position(), e.to_string()))?;
+                let id = reader.read_varint_u64().await.map_err(|e| malformed("op id", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
                 Ifc2x3Mutation::RemoveInstance { id }
             }
             4 => {
-                let header = dec_part21_header_bin(&mut reader).map_err(|e| malformed("op header", reader.position(), e))?;
+                let header = dec_part21_header_bin(&mut reader).await.map_err(|e| malformed("op header", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ifc2x3Mutation::SetHeader { header }
             }
             other => return Err(malformed("op tag", 1, format!("unknown tag {other}"))),
         };
         if reader.remaining() != 0 {
-            return Err(malformed("op trailing bytes", reader.position(), format!("{} trailing bytes", reader.remaining())));
+            return Err(malformed("op trailing bytes", reader.position().await, format!("{} trailing bytes", reader.remaining())));
         }
         Ok(mutation)
     }

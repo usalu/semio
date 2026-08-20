@@ -25,7 +25,7 @@ pub struct SemioAudioInference {
 
 impl protocol::Inference<SemioAudioSnapshot> for SemioAudioInference {
     async fn infer(snapshot: &SemioAudioSnapshot) -> Self {
-        Self { duration: compute_semio_audio_duration(snapshot) }
+        Self { duration: compute_semio_audio_duration(snapshot).await }
     }
 }
 

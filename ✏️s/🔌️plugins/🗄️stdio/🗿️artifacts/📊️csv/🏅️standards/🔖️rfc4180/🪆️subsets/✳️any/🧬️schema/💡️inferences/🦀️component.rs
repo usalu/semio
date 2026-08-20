@@ -24,7 +24,7 @@ pub struct CsvInference {
 
 impl protocol::Inference<CsvSnapshot> for CsvInference {
     async fn infer(snapshot: &CsvSnapshot) -> Self {
-        Self { outline: CsvOutline::compute(snapshot) }
+        Self { outline: CsvOutline::compute(snapshot).await }
     }
 }
 

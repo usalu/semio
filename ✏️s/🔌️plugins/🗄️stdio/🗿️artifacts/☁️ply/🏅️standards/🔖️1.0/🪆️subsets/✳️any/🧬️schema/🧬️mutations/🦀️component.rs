@@ -73,13 +73,13 @@ pub enum PlyMutation {
 /// ▶️ Applies `mutation` to `snapshot`: the diff is the single semantics source
 /// (`let d = mutation.diff(&*snapshot); *snapshot = d.apply(snapshot); d`).
 pub async fn apply_ply_mutation(snapshot: &mut PlySnapshot, mutation: &PlyMutation) -> protocol::MutationOutcome<PlyDiff> {
-    let outcome = <PlyMutation as Mutation<PlySnapshot>>::diff(mutation, snapshot);
-    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
+    let outcome = <PlyMutation as Mutation<PlySnapshot>>::diff(mutation, snapshot).await;
+    match protocol::MutationDiff::apply(outcome.diff().await, snapshot).await {
         Ok(next) => {
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).await.absorb_messages(outcome.messages().await.to_vec()).await,
     }
 }
 //#endregion 🔖️Apply
@@ -92,23 +92,23 @@ impl Mutation<PlySnapshot> for PlyMutation {
     async fn diff(&self, base: &PlySnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             PlyMutation::NoMutation => PlyDiff::default(),
-            PlyMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
-            PlyMutation::SetFormat { format } => diff_set_format(*format),
+            PlyMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot).await,
+            PlyMutation::SetFormat { format } => diff_set_format(*format).await,
             PlyMutation::InsertComment { index, comment } => {
                 let mut comments = base.comments.clone();
                 let at = (*index).min(comments.len());
                 comments.insert(at, comment.clone());
-                diff_set_comments(comments)
+                diff_set_comments(comments).await
             }
             PlyMutation::RemoveComment { index } => {
                 let mut comments = base.comments.clone();
                 if *index < comments.len() {
                     comments.remove(*index);
                 }
-                diff_set_comments(comments)
+                diff_set_comments(comments).await
             }
-            PlyMutation::AddElement { index, element } => diff_add_element(*index, element.clone()),
-            PlyMutation::RemoveElement { name } => diff_remove_element(name),
+            PlyMutation::AddElement { index, element } => diff_add_element(*index, element.clone()).await,
+            PlyMutation::RemoveElement { name } => diff_remove_element(name).await,
             PlyMutation::InsertRow { element_name, index, row } => diff_insert_row(element_name, *index, row.clone()),
             PlyMutation::RemoveRow { element_name, index } => diff_remove_row(element_name, *index),
             PlyMutation::SetRowProperty { element_name, row_index, property_name, value } => diff_set_row_property(element_name, *row_index, property_name, value.clone()),
@@ -170,14 +170,14 @@ async fn enc_snapshot(s: &PlySnapshot) -> String {
     format!("[{},{},[{}],[{}]]", enc_str(&s.schema), enc_format(s.format), s.comments.iter().map(|c| enc_str(c)).collect::<Vec<_>>().join(","), s.elements.iter().map(enc_element).collect::<Vec<_>>().join(","),)
 }
 async fn dec_snapshot(s: &str) -> Result<PlySnapshot, String> {
-    let inner = strip_brackets(s)?;
-    let parts = split_top_level(inner, ',');
+    let inner = strip_brackets(s).await?;
+    let parts = split_top_level(inner, ',').await;
     let [schema, format, comments, elements] = parts.as_slice() else { return Err(format!("ply snapshot: expected 4 fields, got {}", parts.len())) };
     Ok(PlySnapshot {
-        schema: dec_str(schema)?,
-        format: dec_format(format)?,
-        comments: split_top_level(strip_brackets(comments)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_str).collect::<Result<Vec<_>, String>>()?,
-        elements: split_top_level(strip_brackets(elements)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_element).collect::<Result<Vec<_>, String>>()?,
+        schema: dec_str(schema).await?,
+        format: dec_format(format).await?,
+        comments: split_top_level(strip_brackets(comments).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_str).collect::<Result<Vec<_>, String>>()?,
+        elements: split_top_level(strip_brackets(elements).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_element).collect::<Result<Vec<_>, String>>()?,
     })
 }
 
@@ -204,25 +204,25 @@ async fn parse_ply_mutation(line: &str) -> Result<PlyMutation, String> {
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("ply mutation: missing arg '{k}' for '{keyword}'"));
     let usize_arg = |k: &str| -> Result<usize, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
     match keyword {
-        "set-snapshot" => Ok(PlyMutation::SetSnapshot { snapshot: dec_snapshot(arg("snapshot")?)? }),
-        "set-format" => Ok(PlyMutation::SetFormat { format: dec_format(arg("format")?)? }),
-        "insert-comment" => Ok(PlyMutation::InsertComment { index: usize_arg("index")?, comment: dec_str(arg("comment")?)? }),
+        "set-snapshot" => Ok(PlyMutation::SetSnapshot { snapshot: dec_snapshot(arg("snapshot")?).await? }),
+        "set-format" => Ok(PlyMutation::SetFormat { format: dec_format(arg("format")?).await? }),
+        "insert-comment" => Ok(PlyMutation::InsertComment { index: usize_arg("index")?, comment: dec_str(arg("comment")?).await? }),
         "remove-comment" => Ok(PlyMutation::RemoveComment { index: usize_arg("index")? }),
-        "add-element" => Ok(PlyMutation::AddElement { index: usize_arg("index")?, element: dec_element(arg("element")?)? }),
-        "remove-element" => Ok(PlyMutation::RemoveElement { name: dec_str(arg("name")?)? }),
-        "insert-row" => Ok(PlyMutation::InsertRow { element_name: dec_str(arg("element-name")?)?, index: usize_arg("index")?, row: dec_row(arg("row")?)? }),
-        "remove-row" => Ok(PlyMutation::RemoveRow { element_name: dec_str(arg("element-name")?)?, index: usize_arg("index")? }),
-        "set-row-property" => Ok(PlyMutation::SetRowProperty { element_name: dec_str(arg("element-name")?)?, row_index: usize_arg("row-index")?, property_name: dec_str(arg("property-name")?)?, value: dec_value(arg("value")?)? }),
+        "add-element" => Ok(PlyMutation::AddElement { index: usize_arg("index")?, element: dec_element(arg("element")?).await? }),
+        "remove-element" => Ok(PlyMutation::RemoveElement { name: dec_str(arg("name")?).await? }),
+        "insert-row" => Ok(PlyMutation::InsertRow { element_name: dec_str(arg("element-name")?).await?, index: usize_arg("index")?, row: dec_row(arg("row")?).await? }),
+        "remove-row" => Ok(PlyMutation::RemoveRow { element_name: dec_str(arg("element-name")?).await?, index: usize_arg("index")? }),
+        "set-row-property" => Ok(PlyMutation::SetRowProperty { element_name: dec_str(arg("element-name")?).await?, row_index: usize_arg("row-index")?, property_name: dec_str(arg("property-name")?).await?, value: dec_value(arg("value")?).await? }),
         other => Err(format!("ply mutation: unknown keyword {other:?}")),
     }
 }
 
 impl OpText for PlyMutation {
     async fn print_op(&self) -> String {
-        print_ply_mutation(self)
+        print_ply_mutation(self).await
     }
     async fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_ply_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_ply_mutation(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
 
@@ -255,80 +255,80 @@ async fn op_pack_err(e: dsl::PackError) -> protocol::ProtocolError {
 
 impl OpBinary for PlyMutation {
     async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        let mut w = dsl::ByteWriter::new();
-        w.write_u8(store::pack_rt::OP_BINARY_FORMAT);
-        w.write_u8(op_tag(self));
+        let mut w = dsl::ByteWriter::new().await;
+        w.write_u8(store::pack_rt::OP_BINARY_FORMAT).await;
+        w.write_u8(op_tag(self).await).await;
         match self {
             PlyMutation::NoMutation => {}
-            PlyMutation::SetSnapshot { snapshot } => write_bin_snapshot(&mut w, snapshot),
+            PlyMutation::SetSnapshot { snapshot } => write_bin_snapshot(&mut w, snapshot).await,
             PlyMutation::SetFormat { format } => {
                 crate::artifacts::ply::schema::diff::write_bin_format(&mut w, *format);
             }
             PlyMutation::InsertComment { index, comment } => {
-                w.write_varint_u64(*index as u64);
+                w.write_varint_u64(*index as u64).await;
                 write_bin_str(&mut w, comment);
             }
-            PlyMutation::RemoveComment { index } => w.write_varint_u64(*index as u64),
+            PlyMutation::RemoveComment { index } => w.write_varint_u64(*index as u64).await,
             PlyMutation::AddElement { index, element } => {
-                w.write_varint_u64(*index as u64);
+                w.write_varint_u64(*index as u64).await;
                 write_bin_element(&mut w, element);
             }
-            PlyMutation::RemoveElement { name } => write_bin_str(&mut w, name),
+            PlyMutation::RemoveElement { name } => write_bin_str(&mut w, name).await,
             PlyMutation::InsertRow { element_name, index, row } => {
                 write_bin_str(&mut w, element_name);
-                w.write_varint_u64(*index as u64);
+                w.write_varint_u64(*index as u64).await;
                 write_bin_row(&mut w, row);
             }
             PlyMutation::RemoveRow { element_name, index } => {
                 write_bin_str(&mut w, element_name);
-                w.write_varint_u64(*index as u64);
+                w.write_varint_u64(*index as u64).await;
             }
             PlyMutation::SetRowProperty { element_name, row_index, property_name, value } => {
                 write_bin_str(&mut w, element_name);
-                w.write_varint_u64(*row_index as u64);
+                w.write_varint_u64(*row_index as u64).await;
                 write_bin_str(&mut w, property_name);
                 write_bin_value(&mut w, value);
             }
         }
-        Ok(w.into_bytes())
+        Ok(w.into_bytes().await)
     }
 
     async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let mut r = dsl::ByteReader::new(bytes);
-        let _format = r.read_u8().map_err(op_pack_err)?;
-        let tag = r.read_u8().map_err(op_pack_err)?;
+        let mut r = dsl::ByteReader::new(bytes).await;
+        let _format = r.read_u8().await.map_err(op_pack_err)?;
+        let tag = r.read_u8().await.map_err(op_pack_err)?;
         match tag {
             0 => Ok(PlyMutation::NoMutation),
-            1 => Ok(PlyMutation::SetSnapshot { snapshot: read_bin_snapshot(&mut r).map_err(op_pack_err)? }),
-            2 => Ok(PlyMutation::SetFormat { format: crate::artifacts::ply::schema::diff::read_bin_format(&mut r).map_err(op_pack_err)? }),
+            1 => Ok(PlyMutation::SetSnapshot { snapshot: read_bin_snapshot(&mut r).await.map_err(op_pack_err)? }),
+            2 => Ok(PlyMutation::SetFormat { format: crate::artifacts::ply::schema::diff::read_bin_format(&mut r).await.map_err(op_pack_err)? }),
             3 => {
-                let index = r.read_varint_u64().map_err(op_pack_err)? as usize;
-                let comment = read_bin_str(&mut r).map_err(op_pack_err)?;
+                let index = r.read_varint_u64().await.map_err(op_pack_err)? as usize;
+                let comment = read_bin_str(&mut r).await.map_err(op_pack_err)?;
                 Ok(PlyMutation::InsertComment { index, comment })
             }
-            4 => Ok(PlyMutation::RemoveComment { index: r.read_varint_u64().map_err(op_pack_err)? as usize }),
+            4 => Ok(PlyMutation::RemoveComment { index: r.read_varint_u64().await.map_err(op_pack_err)? as usize }),
             5 => {
-                let index = r.read_varint_u64().map_err(op_pack_err)? as usize;
-                let element = read_bin_element(&mut r).map_err(op_pack_err)?;
+                let index = r.read_varint_u64().await.map_err(op_pack_err)? as usize;
+                let element = read_bin_element(&mut r).await.map_err(op_pack_err)?;
                 Ok(PlyMutation::AddElement { index, element })
             }
-            6 => Ok(PlyMutation::RemoveElement { name: read_bin_str(&mut r).map_err(op_pack_err)? }),
+            6 => Ok(PlyMutation::RemoveElement { name: read_bin_str(&mut r).await.map_err(op_pack_err)? }),
             7 => {
-                let element_name = read_bin_str(&mut r).map_err(op_pack_err)?;
-                let index = r.read_varint_u64().map_err(op_pack_err)? as usize;
-                let row = read_bin_row(&mut r).map_err(op_pack_err)?;
+                let element_name = read_bin_str(&mut r).await.map_err(op_pack_err)?;
+                let index = r.read_varint_u64().await.map_err(op_pack_err)? as usize;
+                let row = read_bin_row(&mut r).await.map_err(op_pack_err)?;
                 Ok(PlyMutation::InsertRow { element_name, index, row })
             }
             8 => {
-                let element_name = read_bin_str(&mut r).map_err(op_pack_err)?;
-                let index = r.read_varint_u64().map_err(op_pack_err)? as usize;
+                let element_name = read_bin_str(&mut r).await.map_err(op_pack_err)?;
+                let index = r.read_varint_u64().await.map_err(op_pack_err)? as usize;
                 Ok(PlyMutation::RemoveRow { element_name, index })
             }
             9 => {
-                let element_name = read_bin_str(&mut r).map_err(op_pack_err)?;
-                let row_index = r.read_varint_u64().map_err(op_pack_err)? as usize;
-                let property_name = read_bin_str(&mut r).map_err(op_pack_err)?;
-                let value = read_bin_value(&mut r).map_err(op_pack_err)?;
+                let element_name = read_bin_str(&mut r).await.map_err(op_pack_err)?;
+                let row_index = r.read_varint_u64().await.map_err(op_pack_err)? as usize;
+                let property_name = read_bin_str(&mut r).await.map_err(op_pack_err)?;
+                let value = read_bin_value(&mut r).await.map_err(op_pack_err)?;
                 Ok(PlyMutation::SetRowProperty { element_name, row_index, property_name, value })
             }
             other => Err(protocol::ProtocolError::Malformed { what: "ply op tag", offset: 1, detail: format!("unknown tag {other}") }),

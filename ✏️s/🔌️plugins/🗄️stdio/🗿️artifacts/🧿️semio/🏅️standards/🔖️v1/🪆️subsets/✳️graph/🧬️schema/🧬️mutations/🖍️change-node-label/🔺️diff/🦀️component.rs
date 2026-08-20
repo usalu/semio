@@ -8,14 +8,14 @@ use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::Se
 //#region 🔖️Diff
 pub async fn diff(payload: &ChangeNodeLabel, base: &SemioGraphSnapshot) -> protocol::MutationOutcome<SemioGraphDiff> {
     let Some(node) = base.nodes.iter().find(|n| n.id == payload.id) else {
-        return protocol::MutationOutcome::error("mutation.target-missing", format!("Node \"{}\" does not exist.", payload.id.value), [payload.id.value.clone()]);
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Node \"{}\" does not exist.", payload.id.value), [payload.id.value.clone()]).await;
     };
     if node.label == payload.new_label {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Node \"{}\" label is already \"{}\".", payload.id.value, payload.new_label));
+        return protocol::MutationOutcome::empty().await.warn("mutation.no-op", format!("Node \"{}\" label is already \"{}\".", payload.id.value, payload.new_label)).await;
     }
     let mut nodes = base.nodes.clone();
     let node = nodes.iter_mut().find(|n| n.id == payload.id).expect("checked above");
     node.label = payload.new_label.clone();
-    protocol::MutationOutcome::new(SemioGraphDiff { nodes: Some(SemioGraphNodeList { values: nodes }), edges: None })
+    protocol::MutationOutcome::new(SemioGraphDiff { nodes: Some(SemioGraphNodeList { values: nodes }), edges: None }).await
 }
 //#endregion 🔖️Diff

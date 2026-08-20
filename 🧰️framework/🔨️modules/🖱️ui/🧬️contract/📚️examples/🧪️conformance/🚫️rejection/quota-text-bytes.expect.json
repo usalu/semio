@@ -1,0 +1,21 @@
+{
+  "case": "quota-text-bytes",
+  "kind": "rejection",
+  "description": "SetComponent's new Text value is 12 bytes, exceeding UiDocumentLimits::max_text_bytes (set to 4 for this fixture) — rejected as QuotaExceeded(TextBytes).",
+  "outcome": "reject",
+  "limits": {
+    "maxNodes": 20000,
+    "maxDepth": 128,
+    "maxChildren": 4096,
+    "maxTextBytes": 4,
+    "maxPatchOps": 4096,
+    "maxPatchBytes": 1048576
+  },
+  "baseRevision": 0,
+  "patchRejection": {
+    "type": "quotaExceeded",
+    "quota": "textBytes",
+    "actual": 12,
+    "max": 4
+  }
+}

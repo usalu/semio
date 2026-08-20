@@ -1,0 +1,13 @@
+{
+  "case": "stale-base-revision",
+  "kind": "rejection",
+  "description": "A patch whose base_revision (99) does not match the receiver's actual revision (0) is rejected whole before any op runs.",
+  "outcome": "reject",
+  "limits": null,
+  "baseRevision": 0,
+  "patchRejection": {
+    "type": "revisionMismatch",
+    "expected": 0,
+    "actual": 99
+  }
+}

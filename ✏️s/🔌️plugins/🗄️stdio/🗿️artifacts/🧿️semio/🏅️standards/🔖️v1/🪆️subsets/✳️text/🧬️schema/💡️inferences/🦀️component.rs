@@ -27,7 +27,7 @@ pub struct SemioTextInference {
 
 impl protocol::Inference<SemioTextSnapshot> for SemioTextInference {
     async fn infer(snapshot: &SemioTextSnapshot) -> Self {
-        Self { profile: compute_semio_text_profile(snapshot) }
+        Self { profile: compute_semio_text_profile(snapshot).await }
     }
 }
 

@@ -5,8 +5,8 @@ use crate::artifacts::txt::TxtSnapshot;
 pub async fn register() {}
 pub async fn serialize(from: &JsonSnapshot) -> Result<TxtSnapshot, store::PackError> {
     let text = write_json_pretty(&from.value);
-    Ok(TxtSnapshot::from_body(&text))
+    Ok(TxtSnapshot::from_body(&text).await)
 }
 pub async fn serialize_text(from: &JsonSnapshot) -> Result<String, store::PackError> {
-    Ok(store::ArtifactDsl::print_dsl(&serialize(from)?))
+    Ok(store::ArtifactDsl::print_dsl(&serialize(from).await?).await)
 }

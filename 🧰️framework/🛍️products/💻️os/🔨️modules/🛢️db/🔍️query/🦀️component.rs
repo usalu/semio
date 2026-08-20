@@ -148,6 +148,7 @@ pub fn compare_values(a: &Value, b: &Value) -> Ordering {
 
 /// @emoji 🧵️ A best-effort text rendering of any `Value`, used only by `Predicate::FullText`'s
 /// index-free fallback match (see that variant's doc).
+// 🚫️async: E1 pure, self-recursive accessor consumed by a sync Iterator::map — see R9
 fn stringify_value(value: &Value) -> String {
     match value {
         Value::Null => String::new(),
@@ -456,31 +457,31 @@ pub struct Query {
 }
 
 impl Query {
-    pub fn new() -> Query {
+    pub async fn new() -> Query {
         Query::default()
     }
 
-    pub fn select(mut self, select: Select) -> Query {
+    pub async fn select(mut self, select: Select) -> Query {
         self.select = select;
         self
     }
 
-    pub fn filter(mut self, predicate: Predicate) -> Query {
+    pub async fn filter(mut self, predicate: Predicate) -> Query {
         self.filter = Some(predicate);
         self
     }
 
-    pub fn sort(mut self, sort: Vec<SortKey>) -> Query {
+    pub async fn sort(mut self, sort: Vec<SortKey>) -> Query {
         self.sort = sort;
         self
     }
 
-    pub fn limit(mut self, limit: u64) -> Query {
+    pub async fn limit(mut self, limit: u64) -> Query {
         self.limit = Some(limit);
         self
     }
 
-    pub fn offset(mut self, offset: u64) -> Query {
+    pub async fn offset(mut self, offset: u64) -> Query {
         self.offset = Some(offset);
         self
     }
@@ -509,6 +510,7 @@ impl Default for QueryLimits {
 /// element/key bytes. Only used to enforce `QueryLimits::max_result_bytes`, so slight
 /// under/over-estimation (e.g. `Value` enum tag overhead is ignored) is acceptable; being cheap and
 /// allocation-free is what matters.
+// 🚫️async: E1 pure, self-recursive accessor consumed by a sync Iterator::map — see R9
 fn value_byte_estimate(value: &Value) -> u64 {
     match value {
         Value::Null | Value::Bool(_) => 1,
@@ -520,6 +522,7 @@ fn value_byte_estimate(value: &Value) -> u64 {
     }
 }
 
+// 🚫️async: E1 pure accessor consumed by a sync Iterator::map — see R9
 fn estimate_result_bytes(rows: &[(RowId, Value)]) -> u64 {
     rows.iter().map(|(_, value)| 8 + value_byte_estimate(value)).sum()
 }
@@ -538,12 +541,12 @@ pub struct RowId(pub u64);
 /// scan), or one row by id (for a pushdown candidate list). No `Send + Sync` bound — see the module
 /// doc's note on `db_state`'s `Rc`-based structures.
 pub trait QuerySource {
-    fn scan(&self) -> Box<dyn Iterator<Item = (RowId, Value)> + '_>;
+    async fn scan(&self) -> Box<dyn Iterator<Item = (RowId, Value)> + '_>;
 
     /// @emoji 🎯️ Default: linear `scan` + find. Override when a cheaper direct lookup exists (e.g.
     /// `PVec`'s below, which is index-addressed).
-    fn get(&self, id: RowId) -> Option<Value> {
-        self.scan().find(|(row_id, _)| *row_id == id).map(|(_, value)| value)
+    async fn get(&self, id: RowId) -> Option<Value> {
+        self.scan().await.find(|(row_id, _)| *row_id == id).map(|(_, value)| value)
     }
 }
 
@@ -552,11 +555,11 @@ pub trait QuerySource {
 /// structures — a caller with a richer per-document schema (`db_artifact`) supplies its own
 /// `QuerySource` over whatever `PMap`/`PTree`/overlay shape it actually stores.
 impl QuerySource for PVec<Value> {
-    fn scan(&self) -> Box<dyn Iterator<Item = (RowId, Value)> + '_> {
+    async fn scan(&self) -> Box<dyn Iterator<Item = (RowId, Value)> + '_> {
         Box::new(self.iter().enumerate().map(|(index, value)| (RowId(index as u64), value.clone())))
     }
 
-    fn get(&self, id: RowId) -> Option<Value> {
+    async fn get(&self, id: RowId) -> Option<Value> {
         PVec::get(self, id.0 as usize).cloned()
     }
 }
@@ -580,7 +583,7 @@ impl FullTextLookup for NoFullTextLookup {
     }
 }
 
-impl<'index> FullTextLookup for FullTextIndex<'index> {
+impl<'index, S: db_storage::IndexStorage> FullTextLookup for FullTextIndex<'index, S> {
     async fn search(&self, term: &str) -> Result<Vec<RowId>, DbError> { Ok(FullTextIndex::search(self, term).await?.into_iter().map(RowId).collect()) }
 }
 //#endregion 🔖️QuerySource
@@ -689,6 +692,8 @@ fn decode_value(cursor: &mut ValueCursor<'_>) -> Result<Value, DbError> {
             check_len(count, MAX_PROJECTION_VALUE_ELEMENTS, "db_query::projection_value_list_len")?;
             let mut items = Vec::with_capacity(count.min(1024) as usize);
             for _ in 0..count {
+                // 🔀️ `decode_value` recurses into itself for nested `List`/`Map` elements —
+                // `Box::pin` breaks the otherwise-infinitely-sized future (E0733).
                 items.push(decode_value(cursor)?);
             }
             Ok(Value::List(items))
@@ -715,13 +720,13 @@ fn decode_value(cursor: &mut ValueCursor<'_>) -> Result<Value, DbError> {
 /// and get this crate's query/planner/live-diff machinery for free over its checkpointed state, via
 /// `projection_query_source` below.
 impl ProjectionState for Value {
-    fn encode(&self) -> Vec<u8> {
+    async fn encode(&self) -> Vec<u8> {
         let mut out = Vec::new();
         encode_value(self, &mut out);
         out
     }
 
-    fn decode(bytes: &[u8]) -> Result<Value, DbError> {
+    async fn decode(bytes: &[u8]) -> Result<Value, DbError> {
         let mut cursor = ValueCursor { bytes, pos: 0 };
         let value = decode_value(&mut cursor)?;
         if cursor.pos != bytes.len() {
@@ -739,7 +744,7 @@ impl ProjectionState for Value {
 pub struct ProjectionSource(Vec<(RowId, Value)>);
 
 impl ProjectionSource {
-    pub fn from_value(value: Value) -> ProjectionSource {
+    pub async fn from_value(value: Value) -> ProjectionSource {
         match value {
             Value::List(items) => ProjectionSource(items.into_iter().enumerate().map(|(index, item)| (RowId(index as u64), item)).collect()),
             Value::Map(map) => ProjectionSource(map.into_values().enumerate().map(|(index, item)| (RowId(index as u64), item)).collect()),
@@ -747,17 +752,17 @@ impl ProjectionSource {
         }
     }
 
-    pub fn len(&self) -> usize {
+    pub async fn len(&self) -> usize {
         self.0.len()
     }
 
-    pub fn is_empty(&self) -> bool {
+    pub async fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
 }
 
 impl QuerySource for ProjectionSource {
-    fn scan(&self) -> Box<dyn Iterator<Item = (RowId, Value)> + '_> {
+    async fn scan(&self) -> Box<dyn Iterator<Item = (RowId, Value)> + '_> {
         Box::new(self.0.iter().cloned())
     }
 }
@@ -769,8 +774,8 @@ impl QuerySource for ProjectionSource {
 /// `ProjectionState`-encoded bytes with any version-prefix framing already stripped by
 /// `ProjectionEngine` itself) into a `ProjectionSource` this crate's `execute`/`LiveQuery` can run
 /// over. See the module doc for why this takes raw bytes rather than a `&ProjectionEngine` reference.
-pub fn projection_query_source(state_bytes: &[u8]) -> Result<ProjectionSource, DbError> {
-    Ok(ProjectionSource::from_value(Value::decode(state_bytes)?))
+pub async fn projection_query_source(state_bytes: &[u8]) -> Result<ProjectionSource, DbError> {
+    Ok(ProjectionSource::from_value(Value::decode(state_bytes).await?).await)
 }
 //#endregion 🔖️ProjectionBridge
 
@@ -793,7 +798,7 @@ pub enum QueryPlanKind {
 }
 
 impl QueryPlan {
-    pub fn kind(&self) -> QueryPlanKind {
+    pub async fn kind(&self) -> QueryPlanKind {
         match self {
             QueryPlan::FullScan => QueryPlanKind::FullScan,
             QueryPlan::FullTextPushdown { .. } => QueryPlanKind::FullTextPushdown,
@@ -807,6 +812,7 @@ impl QueryPlan {
 /// as `FullScan` (pushdown under `Or`/`Not` would need to reason about set complement/union, which
 /// this planner does not attempt) — a real limitation, not a bug: `FullScan` is always correct, only
 /// potentially slower.
+// 🚫️async: E1 pure, self-recursive accessor consumed by a sync Iterator::find_map — see R9
 fn extract_full_text_term(predicate: &Predicate) -> Option<String> {
     match predicate {
         Predicate::FullText(_, term) => Some(term.clone()),
@@ -849,14 +855,19 @@ pub struct QueryResult {
 /// down surfaces `DbError::InvalidArgument` rather than silently falling back to a full scan (a
 /// caller that owns a `FullTextLookup` should always pass it — silent fallback would hide a
 /// wiring bug as a performance regression instead of a compile/runtime-visible one).
-pub async fn execute(query: &Query, source: &dyn QuerySource, fulltext: Option<&impl FullTextLookup>, limits: &QueryLimits) -> Result<QueryResult, DbError> {
+// 🔀️ `source: &impl QuerySource` (was `&dyn`) — same R11(a) treatment `FullTextLookup` already got
+// on this trait's neighbor above: `QuerySource::scan`'s `async fn` broke `dyn` object-safety, and
+// every call site here already passes exactly one concrete type (`PVec<Value>`, `ProjectionSource`,
+// or `db_artifact`'s own `StateQuerySource`), never a runtime-chosen mix — parameter-position
+// generic, no design question.
+pub async fn execute(query: &Query, source: &impl QuerySource, fulltext: Option<&impl FullTextLookup>, limits: &QueryLimits) -> Result<QueryResult, DbError> {
     let chosen_plan = plan(query);
     let mut scanned: u64 = 0;
     let mut matched: Vec<(RowId, Value)> = Vec::new();
 
     match &chosen_plan {
         QueryPlan::FullScan => {
-            for (id, value) in source.scan() {
+            for (id, value) in source.scan().await {
                 scanned += 1;
                 check_len(scanned, limits.max_scan_rows, "db_query::rows_scanned")?;
                 if query.filter.as_ref().is_none_or(|predicate| eval_predicate(predicate, &value)) {
@@ -867,7 +878,7 @@ pub async fn execute(query: &Query, source: &dyn QuerySource, fulltext: Option<&
         QueryPlan::FullTextPushdown { term } => {
             let lookup = fulltext.ok_or_else(|| DbError::InvalidArgument("query planned a full-text pushdown but no FullTextLookup was supplied".to_string()))?;
             for id in lookup.search(term).await? {
-                let Some(value) = source.get(id) else { continue };
+                let Some(value) = source.get(id).await else { continue };
                 scanned += 1;
                 check_len(scanned, limits.max_scan_rows, "db_query::rows_scanned")?;
                 if query.filter.as_ref().is_none_or(|predicate| eval_predicate(predicate, &value)) {
@@ -893,7 +904,7 @@ pub async fn execute(query: &Query, source: &dyn QuerySource, fulltext: Option<&
     check_len(estimate_result_bytes(&projected), limits.max_result_bytes, "db_query::result_bytes")?;
 
     let rows_returned = projected.len() as u64;
-    Ok(QueryResult { rows: projected, diagnostics: QueryDiagnostics { plan: chosen_plan.kind(), rows_scanned: scanned, rows_matched, rows_returned } })
+    Ok(QueryResult { rows: projected, diagnostics: QueryDiagnostics { plan: chosen_plan.kind().await, rows_scanned: scanned, rows_matched, rows_returned } })
 }
 //#endregion 🔖️Execute
 
@@ -909,7 +920,7 @@ pub struct QueryStream {
 }
 
 impl QueryResult {
-    pub fn into_stream(self) -> QueryStream {
+    pub async fn into_stream(self) -> QueryStream {
         QueryStream { rows: self.rows.into_iter(), diagnostics: self.diagnostics }
     }
 }
@@ -976,15 +987,15 @@ impl<'a> pack::InferredField<QuerySnapshot<'a>> for QueryResultField {
     /// list is honest here — `infer_field_after_diff`'s tier-1 `DiffRegions` gate is deliberately
     /// never used by `LiveQuery::refresh` (below) for the same reason `plan` can't own `execute`'s
     /// error paths: a wildcard is the honest declaration, not a narrowed guess.
-    fn reads() -> &'static [&'static str] {
+    async fn reads() -> &'static [&'static str] {
         &["*"]
     }
 
-    fn plan(snapshot: &QuerySnapshot<'a>) -> Vec<pack::InferenceStep<RowId>> {
+    async fn plan(snapshot: &QuerySnapshot<'a>) -> Vec<pack::InferenceStep<RowId>> {
         snapshot.rows.keys().map(|id| pack::InferenceStep { key: *id, parents: Vec::new() }).collect()
     }
 
-    fn dep_input(snapshot: &QuerySnapshot<'a>, key: &RowId, _parents: &[RowId]) -> Vec<u8> {
+    async fn dep_input(snapshot: &QuerySnapshot<'a>, key: &RowId, _parents: &[RowId]) -> Vec<u8> {
         let mut bytes = Vec::new();
         if let Some(value) = snapshot.rows.get(key) {
             encode_value(value, &mut bytes);
@@ -992,7 +1003,7 @@ impl<'a> pack::InferredField<QuerySnapshot<'a>> for QueryResultField {
         bytes
     }
 
-    fn compute(snapshot: &QuerySnapshot<'a>, key: &RowId, _parents: &[Value]) -> Value {
+    async fn compute(snapshot: &QuerySnapshot<'a>, key: &RowId, _parents: &[Value]) -> Value {
         snapshot.rows.get(key).cloned().unwrap_or(Value::Null)
     }
 }
@@ -1017,15 +1028,15 @@ pub struct LiveQuery {
 }
 
 impl LiveQuery {
-    pub fn new(spec: LiveQuerySpec) -> LiveQuery {
-        LiveQuery { spec, snapshot: BTreeMap::new(), cache: pack::InferenceCache::new(pack::InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() }) }
+    pub async fn new(spec: LiveQuerySpec) -> LiveQuery {
+        LiveQuery { spec, snapshot: BTreeMap::new(), cache: pack::InferenceCache::new(pack::InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() }).await }
     }
 
-    pub fn spec(&self) -> &LiveQuerySpec {
+    pub async fn spec(&self) -> &LiveQuerySpec {
         &self.spec
     }
 
-    pub fn snapshot(&self) -> &BTreeMap<RowId, Value> {
+    pub async fn snapshot(&self) -> &BTreeMap<RowId, Value> {
         &self.snapshot
     }
 
@@ -1038,11 +1049,12 @@ impl LiveQuery {
     /// `LiveQuery`'s own `InferenceCache`) instead of being read directly off `result.rows` — a
     /// row whose content is byte-identical to one already seen by this cache is served from the
     /// cache rather than re-materialized, per `QueryResultField`'s doc above.
-    pub async fn refresh(&mut self, source: &dyn QuerySource, fulltext: Option<&impl FullTextLookup>, limits: &QueryLimits) -> Result<QueryDiff, DbError> {
+    // 🔀️ `source: &impl QuerySource` (was `&dyn`) — same rationale as `execute`.
+    pub async fn refresh(&mut self, source: &impl QuerySource, fulltext: Option<&impl FullTextLookup>, limits: &QueryLimits) -> Result<QueryDiff, DbError> {
         let result = execute(&self.spec.query, source, fulltext, limits).await?;
         let rows: BTreeMap<RowId, Value> = result.rows.into_iter().collect();
         let query_snapshot = QuerySnapshot { rows: &rows };
-        let new_snapshot = pack::infer_field::<QuerySnapshot<'_>, QueryResultField>(&query_snapshot, Some(&mut self.cache));
+        let new_snapshot = pack::infer_field::<QuerySnapshot<'_>, QueryResultField>(&query_snapshot, Some(&mut self.cache)).await;
 
         let mut diff = QueryDiff::default();
         for (id, value) in &new_snapshot {
@@ -1069,7 +1081,7 @@ impl LiveQuery {
 mod tests {
     use super::*;
 
-    fn sample_row(name: &str, age: i64, tags: Vec<&str>) -> Value {
+    async fn sample_row(name: &str, age: i64, tags: Vec<&str>) -> Value {
         let mut map = BTreeMap::new();
         map.insert("name".to_string(), Value::Text(name.to_string()));
         map.insert("age".to_string(), Value::Int(age));
@@ -1077,11 +1089,11 @@ mod tests {
         Value::Map(map)
     }
 
-    fn sample_source() -> PVec<Value> {
+    async fn sample_source() -> PVec<Value> {
         let mut vec = PVec::new();
-        vec = vec.push_back(sample_row("alice", 30, vec!["admin", "eng"]));
-        vec = vec.push_back(sample_row("bob", 25, vec!["eng"]));
-        vec = vec.push_back(sample_row("cara", 40, vec!["admin"]));
+        vec = vec.push_back(sample_row("alice", 30, vec!["admin", "eng"]).await);
+        vec = vec.push_back(sample_row("bob", 25, vec!["eng"]).await);
+        vec = vec.push_back(sample_row("cara", 40, vec!["admin"]).await);
         vec
     }
 
@@ -1089,36 +1101,36 @@ mod tests {
     mod value {
         use super::*;
 
-        #[test]
-        fn path_get_walks_nested_map_and_list() {
-            let row = sample_row("alice", 30, vec!["admin", "eng"]);
+        #[semio_framework_async_macros::async_test]
+        async fn path_get_walks_nested_map_and_list() {
+            let row = sample_row("alice", 30, vec!["admin", "eng"]).await;
             assert_eq!(Path::field("name").get(&row), Some(&Value::Text("alice".to_string())));
             assert_eq!(Path::parse("tags.0").get(&row), Some(&Value::Text("admin".to_string())));
             assert_eq!(Path::parse("missing").get(&row), None);
             assert_eq!(Path::empty().get(&row), Some(&row));
         }
 
-        #[test]
-        fn path_get_rejects_type_mismatch() {
-            let row = sample_row("alice", 30, vec!["admin"]);
+        #[semio_framework_async_macros::async_test]
+        async fn path_get_rejects_type_mismatch() {
+            let row = sample_row("alice", 30, vec!["admin"]).await;
             assert_eq!(Path::parse("name.0").get(&row), None);
             assert_eq!(Path::parse("age.field").get(&row), None);
         }
 
-        #[test]
-        fn compare_values_orders_numerics_across_int_and_float() {
+        #[semio_framework_async_macros::async_test]
+        async fn compare_values_orders_numerics_across_int_and_float() {
             assert_eq!(compare_values(&Value::Int(1), &Value::Float(1.5)), Ordering::Less);
             assert_eq!(compare_values(&Value::Float(2.0), &Value::Int(2)), Ordering::Equal);
         }
 
-        #[test]
-        fn compare_values_falls_back_to_rank_across_variants() {
+        #[semio_framework_async_macros::async_test]
+        async fn compare_values_falls_back_to_rank_across_variants() {
             assert_eq!(compare_values(&Value::Null, &Value::Bool(false)), Ordering::Less);
             assert_eq!(compare_values(&Value::Text("z".to_string()), &Value::Int(0)), Ordering::Greater);
         }
 
-        #[test]
-        fn path_display_round_trips_through_parse() {
+        #[semio_framework_async_macros::async_test]
+        async fn path_display_round_trips_through_parse() {
             let path = Path::parse("a.b.3");
             assert_eq!(path.to_string(), "a.b.3");
         }
@@ -1129,22 +1141,22 @@ mod tests {
     mod query {
         use super::*;
 
-        #[test]
-        fn eq_predicate_matches_and_rejects() {
-            let row = sample_row("alice", 30, vec!["admin"]);
+        #[semio_framework_async_macros::async_test]
+        async fn eq_predicate_matches_and_rejects() {
+            let row = sample_row("alice", 30, vec!["admin"]).await;
             assert!(eval_predicate(&Predicate::Eq(Path::field("age"), Value::Int(30)), &row));
             assert!(!eval_predicate(&Predicate::Eq(Path::field("age"), Value::Int(31)), &row));
         }
 
-        #[test]
-        fn ne_treats_missing_path_as_failing() {
-            let row = sample_row("alice", 30, vec!["admin"]);
+        #[semio_framework_async_macros::async_test]
+        async fn ne_treats_missing_path_as_failing() {
+            let row = sample_row("alice", 30, vec!["admin"]).await;
             assert!(!eval_predicate(&Predicate::Ne(Path::field("missing"), Value::Int(1)), &row));
         }
 
-        #[test]
-        fn and_or_not_compose() {
-            let row = sample_row("alice", 30, vec!["admin"]);
+        #[semio_framework_async_macros::async_test]
+        async fn and_or_not_compose() {
+            let row = sample_row("alice", 30, vec!["admin"]).await;
             let is_admin = Predicate::Contains(Path::field("tags"), Value::from("admin"));
             let is_old = Predicate::Gte(Path::field("age"), Value::Int(40));
             assert!(eval_predicate(&Predicate::And(vec![is_admin.clone()]), &row));
@@ -1153,16 +1165,16 @@ mod tests {
             assert!(eval_predicate(&Predicate::Not(Box::new(is_old)), &row));
         }
 
-        #[test]
-        fn full_text_matches_case_insensitively_over_whole_document() {
-            let row = sample_row("Alice", 30, vec!["admin"]);
+        #[semio_framework_async_macros::async_test]
+        async fn full_text_matches_case_insensitively_over_whole_document() {
+            let row = sample_row("Alice", 30, vec!["admin"]).await;
             assert!(eval_predicate(&Predicate::FullText(Path::empty(), "ALICE".to_string()), &row));
             assert!(!eval_predicate(&Predicate::FullText(Path::empty(), "dave".to_string()), &row));
         }
 
-        #[test]
-        fn select_paths_projects_a_map_keyed_by_dotted_path() {
-            let row = sample_row("alice", 30, vec!["admin"]);
+        #[semio_framework_async_macros::async_test]
+        async fn select_paths_projects_a_map_keyed_by_dotted_path() {
+            let row = sample_row("alice", 30, vec!["admin"]).await;
             let projected = Select::Paths(vec![Path::field("name")]).project(&row);
             match projected {
                 Value::Map(map) => assert_eq!(map.get("name"), Some(&Value::Text("alice".to_string()))),
@@ -1176,7 +1188,7 @@ mod tests {
     mod projection_bridge {
         use super::*;
 
-        fn nested_sample() -> Value {
+        async fn nested_sample() -> Value {
             let mut inner = BTreeMap::new();
             inner.insert("nickname".to_string(), Value::Text("ally".to_string()));
             inner.insert("verified".to_string(), Value::Bool(true));
@@ -1190,60 +1202,60 @@ mod tests {
             Value::Map(row)
         }
 
-        #[test]
-        fn value_projection_state_round_trips_every_variant_including_nesting() {
-            let value = nested_sample();
-            let decoded = Value::decode(&ProjectionState::encode(&value)).expect("round trip decodes");
+        #[semio_framework_async_macros::async_test]
+        async fn value_projection_state_round_trips_every_variant_including_nesting() {
+            let value = nested_sample().await;
+            let decoded = Value::decode(&ProjectionState::encode(&value).await).await.expect("round trip decodes");
             assert_eq!(decoded, value);
         }
 
-        #[test]
-        fn value_projection_state_round_trips_null_and_empty_containers() {
+        #[semio_framework_async_macros::async_test]
+        async fn value_projection_state_round_trips_null_and_empty_containers() {
             for value in [Value::Null, Value::List(Vec::new()), Value::Map(BTreeMap::new())] {
-                assert_eq!(Value::decode(&ProjectionState::encode(&value)).unwrap(), value);
+                assert_eq!(Value::decode(&ProjectionState::encode(&value).await).await.unwrap(), value);
             }
         }
 
-        #[test]
-        fn decode_rejects_truncated_bytes_and_unknown_tag_without_panicking() {
-            assert!(matches!(Value::decode(&[4u8, 5, 0, 0, 0]), Err(DbError::Corrupt(_))), "declared text len 5 but no bytes follow");
-            assert!(matches!(Value::decode(&[200u8]), Err(DbError::Corrupt(_))), "tag 200 is not a valid Value variant");
-            assert!(matches!(Value::decode(&[]), Err(DbError::Corrupt(_))));
+        #[semio_framework_async_macros::async_test]
+        async fn decode_rejects_truncated_bytes_and_unknown_tag_without_panicking() {
+            assert!(matches!(Value::decode(&[4u8, 5, 0, 0, 0]).await, Err(DbError::Corrupt(_))), "declared text len 5 but no bytes follow");
+            assert!(matches!(Value::decode(&[200u8]).await, Err(DbError::Corrupt(_))), "tag 200 is not a valid Value variant");
+            assert!(matches!(Value::decode(&[]).await, Err(DbError::Corrupt(_))));
         }
 
-        #[test]
-        fn decode_rejects_trailing_bytes_after_a_complete_value() {
-            let mut bytes = ProjectionState::encode(&Value::Bool(true));
+        #[semio_framework_async_macros::async_test]
+        async fn decode_rejects_trailing_bytes_after_a_complete_value() {
+            let mut bytes = ProjectionState::encode(&Value::Bool(true)).await;
             bytes.push(0xFF);
-            assert!(matches!(Value::decode(&bytes), Err(DbError::Corrupt(_))));
+            assert!(matches!(Value::decode(&bytes).await, Err(DbError::Corrupt(_))));
         }
 
-        #[test]
-        fn decode_value_rejects_an_over_large_declared_element_count_before_allocating() {
+        #[semio_framework_async_macros::async_test]
+        async fn decode_value_rejects_an_over_large_declared_element_count_before_allocating() {
             let mut list_bytes = vec![6u8];
             list_bytes.extend_from_slice(&((MAX_PROJECTION_VALUE_ELEMENTS + 1) as u32).to_le_bytes());
-            assert!(matches!(Value::decode(&list_bytes), Err(DbError::LimitExceeded(_))));
+            assert!(matches!(Value::decode(&list_bytes).await, Err(DbError::LimitExceeded(_))));
 
             let mut map_bytes = vec![7u8];
             map_bytes.extend_from_slice(&((MAX_PROJECTION_VALUE_ELEMENTS + 1) as u32).to_le_bytes());
-            assert!(matches!(Value::decode(&map_bytes), Err(DbError::LimitExceeded(_))));
+            assert!(matches!(Value::decode(&map_bytes).await, Err(DbError::LimitExceeded(_))));
         }
 
-        #[test]
-        fn projection_source_shapes_list_map_and_scalar_values_into_rows() {
-            let list_source = ProjectionSource::from_value(Value::List(vec![Value::from(1i64), Value::from(2i64)]));
-            assert_eq!(list_source.len(), 2);
-            assert_eq!(list_source.scan().collect::<Vec<_>>(), vec![(RowId(0), Value::from(1i64)), (RowId(1), Value::from(2i64))]);
+        #[semio_framework_async_macros::async_test]
+        async fn projection_source_shapes_list_map_and_scalar_values_into_rows() {
+            let list_source = ProjectionSource::from_value(Value::List(vec![Value::from(1i64), Value::from(2i64)])).await;
+            assert_eq!(list_source.len().await, 2);
+            assert_eq!(list_source.scan().await.collect::<Vec<_>>(), vec![(RowId(0), Value::from(1i64)), (RowId(1), Value::from(2i64))]);
 
             let mut map = BTreeMap::new();
             map.insert("a".to_string(), Value::from("first"));
             map.insert("b".to_string(), Value::from("second"));
-            let map_source = ProjectionSource::from_value(Value::Map(map));
-            assert_eq!(map_source.scan().collect::<Vec<_>>(), vec![(RowId(0), Value::from("first")), (RowId(1), Value::from("second"))]);
+            let map_source = ProjectionSource::from_value(Value::Map(map)).await;
+            assert_eq!(map_source.scan().await.collect::<Vec<_>>(), vec![(RowId(0), Value::from("first")), (RowId(1), Value::from("second"))]);
 
-            let scalar_source = ProjectionSource::from_value(Value::Int(42));
-            assert!(!scalar_source.is_empty());
-            assert_eq!(scalar_source.scan().collect::<Vec<_>>(), vec![(RowId(0), Value::Int(42))]);
+            let scalar_source = ProjectionSource::from_value(Value::Int(42)).await;
+            assert!(!scalar_source.is_empty().await);
+            assert_eq!(scalar_source.scan().await.collect::<Vec<_>>(), vec![(RowId(0), Value::Int(42))]);
         }
 
         /// @emoji ⚖️ The end-to-end law this bridge exists for: bytes a caller retrieved from
@@ -1252,21 +1264,21 @@ mod tests {
         /// real `ProjectionEngine` without a `protocol::MutationEnvelope` — see the module doc)
         /// decode through `projection_query_source` into a `QuerySource` this crate's ordinary
         /// `execute` runs over identically to any other source.
-        #[test]
-        fn projection_query_source_decodes_bytes_into_a_queryable_source() {
-            let rows = Value::List(vec![sample_row("alice", 30, vec!["admin", "eng"]), sample_row("bob", 25, vec!["eng"])]);
-            let state_bytes = ProjectionState::encode(&rows);
+        #[semio_framework_async_macros::async_test]
+        async fn projection_query_source_decodes_bytes_into_a_queryable_source() {
+            let rows = Value::List(vec![sample_row("alice", 30, vec!["admin", "eng"]).await, sample_row("bob", 25, vec!["eng"]).await]);
+            let state_bytes = ProjectionState::encode(&rows).await;
 
-            let source = projection_query_source(&state_bytes).expect("decodes");
-            let query = Query::new().filter(Predicate::Gte(Path::field("age"), Value::Int(30)));
+            let source = projection_query_source(&state_bytes).await.expect("decodes");
+            let query = Query::new().await.filter(Predicate::Gte(Path::field("age"), Value::Int(30))).await;
             let result = db_actor::block_on(execute(&query, &source, None::<&db_query::NoFullTextLookup>, &QueryLimits::default())).expect("query succeeds");
             assert_eq!(result.rows.len(), 1);
             assert_eq!(Path::field("name").get(&result.rows[0].1), Some(&Value::Text("alice".to_string())));
         }
 
-        #[test]
-        fn projection_query_source_surfaces_corrupt_bytes_as_an_error_not_a_panic() {
-            assert!(matches!(projection_query_source(&[200u8]), Err(DbError::Corrupt(_))));
+        #[semio_framework_async_macros::async_test]
+        async fn projection_query_source_surfaces_corrupt_bytes_as_an_error_not_a_panic() {
+            assert!(matches!(projection_query_source(&[200u8]).await, Err(DbError::Corrupt(_))));
         }
     }
     //#endregion 🔖️ProjectionBridge
@@ -1275,10 +1287,10 @@ mod tests {
     mod execute_tests {
         use super::*;
 
-        #[test]
-        fn full_scan_filters_sorts_and_paginates() {
-            let source = sample_source();
-            let query = Query::new().filter(Predicate::Gte(Path::field("age"), Value::Int(25))).sort(vec![SortKey::descending(Path::field("age"))]).limit(2);
+        #[semio_framework_async_macros::async_test]
+        async fn full_scan_filters_sorts_and_paginates() {
+            let source = sample_source().await;
+            let query = Query::new().await.filter(Predicate::Gte(Path::field("age"), Value::Int(25))).await.sort(vec![SortKey::descending(Path::field("age"))]).await.limit(2).await;
             let result = db_actor::block_on(execute(&query, &source, None::<&db_query::NoFullTextLookup>, &QueryLimits::default())).expect("query succeeds");
             assert_eq!(result.diagnostics.plan, QueryPlanKind::FullScan);
             assert_eq!(result.diagnostics.rows_matched, 3);
@@ -1294,29 +1306,29 @@ mod tests {
             assert_eq!(names, vec!["cara".to_string(), "alice".to_string()]);
         }
 
-        #[test]
-        fn offset_skips_matched_rows_before_limit_applies() {
-            let source = sample_source();
-            let query = Query::new().sort(vec![SortKey::ascending(Path::field("age"))]).offset(1).limit(1);
+        #[semio_framework_async_macros::async_test]
+        async fn offset_skips_matched_rows_before_limit_applies() {
+            let source = sample_source().await;
+            let query = Query::new().await.sort(vec![SortKey::ascending(Path::field("age"))]).await.offset(1).await.limit(1).await;
             let result = db_actor::block_on(execute(&query, &source, None::<&db_query::NoFullTextLookup>, &QueryLimits::default())).expect("query succeeds");
             assert_eq!(result.rows.len(), 1);
             assert_eq!(Path::field("name").get(&result.rows[0].1), Some(&Value::Text("alice".to_string())));
         }
 
-        #[test]
-        fn max_result_rows_limit_is_enforced() {
-            let source = sample_source();
+        #[semio_framework_async_macros::async_test]
+        async fn max_result_rows_limit_is_enforced() {
+            let source = sample_source().await;
             let limits = QueryLimits { max_result_rows: 1, ..QueryLimits::default() };
-            let error = db_actor::block_on(execute(&Query::new(), &source, None::<&db_query::NoFullTextLookup>, &limits)).unwrap_err();
+            let error = db_actor::block_on(execute(&Query::new().await, &source, None::<&db_query::NoFullTextLookup>, &limits)).unwrap_err();
             assert!(matches!(error, DbError::LimitExceeded(_)));
         }
 
-        #[test]
-        fn into_stream_yields_the_same_rows_as_the_result() {
-            let source = sample_source();
-            let result = db_actor::block_on(execute(&Query::new(), &source, None::<&db_query::NoFullTextLookup>, &QueryLimits::default())).expect("query succeeds");
+        #[semio_framework_async_macros::async_test]
+        async fn into_stream_yields_the_same_rows_as_the_result() {
+            let source = sample_source().await;
+            let result = db_actor::block_on(execute(&Query::new().await, &source, None::<&db_query::NoFullTextLookup>, &QueryLimits::default())).expect("query succeeds");
             let expected_len = result.rows.len();
-            let stream = result.into_stream();
+            let stream = result.into_stream().await;
             assert_eq!(stream.count(), expected_len);
         }
 
@@ -1327,10 +1339,10 @@ mod tests {
             async fn search(&self, term: &str) -> Result<Vec<RowId>, DbError> {Ok(self.0.get(term).cloned().unwrap_or_default())}
         }
 
-        #[test]
-        fn full_text_pushdown_without_a_lookup_is_an_error() {
-            let source = sample_source();
-            let query = Query::new().filter(Predicate::FullText(Path::empty(), "alice".to_string()));
+        #[semio_framework_async_macros::async_test]
+        async fn full_text_pushdown_without_a_lookup_is_an_error() {
+            let source = sample_source().await;
+            let query = Query::new().await.filter(Predicate::FullText(Path::empty(), "alice".to_string())).await;
             let error = db_actor::block_on(execute(&query, &source, None::<&db_query::NoFullTextLookup>, &QueryLimits::default())).unwrap_err();
             assert!(matches!(error, DbError::InvalidArgument(_)));
         }
@@ -1342,25 +1354,25 @@ mod tests {
         use super::execute_tests::FakeFullText;
         use super::*;
 
-        #[test]
-        fn plan_recognizes_bare_and_conjoined_full_text_predicates() {
-            let bare = Query::new().filter(Predicate::FullText(Path::empty(), "x".to_string()));
+        #[semio_framework_async_macros::async_test]
+        async fn plan_recognizes_bare_and_conjoined_full_text_predicates() {
+            let bare = Query::new().await.filter(Predicate::FullText(Path::empty(), "x".to_string())).await;
             assert_eq!(plan(&bare), QueryPlan::FullTextPushdown { term: "x".to_string() });
 
-            let conjoined = Query::new().filter(Predicate::And(vec![Predicate::Eq(Path::field("age"), Value::Int(1)), Predicate::FullText(Path::empty(), "y".to_string())]));
+            let conjoined = Query::new().await.filter(Predicate::And(vec![Predicate::Eq(Path::field("age"), Value::Int(1)), Predicate::FullText(Path::empty(), "y".to_string())])).await;
             assert_eq!(plan(&conjoined), QueryPlan::FullTextPushdown { term: "y".to_string() });
 
-            let disjoined = Query::new().filter(Predicate::Or(vec![Predicate::FullText(Path::empty(), "z".to_string())]));
+            let disjoined = Query::new().await.filter(Predicate::Or(vec![Predicate::FullText(Path::empty(), "z".to_string())])).await;
             assert_eq!(plan(&disjoined), QueryPlan::FullScan);
         }
 
         /// @emoji ⚖️ The correctness law `QueryPlan::FullTextPushdown`'s doc promises: a pushdown
         /// plan and a full scan must agree exactly, for the same query, modulo which rows the
         /// (possibly stale/approximate) full-text index happens to surface as candidates.
-        #[test]
-        fn pushdown_matches_full_scan_when_the_index_is_exhaustive() {
-            let source = sample_source();
-            let query = Query::new().filter(Predicate::FullText(Path::empty(), "admin".to_string()));
+        #[semio_framework_async_macros::async_test]
+        async fn pushdown_matches_full_scan_when_the_index_is_exhaustive() {
+            let source = sample_source().await;
+            let query = Query::new().await.filter(Predicate::FullText(Path::empty(), "admin".to_string())).await;
 
             let full_scan_result = db_actor::block_on(execute(&query, &source, None::<&db_query::NoFullTextLookup>, &QueryLimits::default()));
             assert!(matches!(full_scan_result, Err(DbError::InvalidArgument(_))));
@@ -1399,50 +1411,50 @@ mod tests {
             async fn frontier_for_commit(&self, commit_id: &str) -> Result<Frontier, DbError> {self.commits.get(commit_id).cloned().ok_or_else(|| DbError::NotFound(commit_id.to_string()))}
         }
 
-        fn frontier_at(seq: u64) -> Frontier {
+        async fn frontier_at(seq: u64) -> Frontier {
             Frontier { document: ArtifactId::from("doc-1"), head_seq: seq, commit_seq: seq, chain_hash: [0u8; 32], epoch: 0 }
         }
 
-        #[test]
-        fn canonical_resolves_to_current_frontier() {
-            let resolver = FakeResolver { current: frontier_at(5), commits: BTreeMap::new() };
+        #[semio_framework_async_macros::async_test]
+        async fn canonical_resolves_to_current_frontier() {
+            let resolver = FakeResolver { current: frontier_at(5).await, commits: BTreeMap::new() };
             let resolved = db_actor::block_on(resolve_consistency(&Consistency::Canonical, &resolver)).expect("resolves");
-            assert_eq!(resolved.frontier, frontier_at(5));
+            assert_eq!(resolved.frontier, frontier_at(5).await);
             assert!(!resolved.historical);
             assert_eq!(resolved.preview_id, None);
         }
 
-        #[test]
-        fn at_least_succeeds_when_dominated_and_fails_otherwise() {
-            let resolver = FakeResolver { current: frontier_at(5), commits: BTreeMap::new() };
-            assert!(db_actor::block_on(resolve_consistency(&Consistency::AtLeast(frontier_at(3)), &resolver)).is_ok());
-            let error = db_actor::block_on(resolve_consistency(&Consistency::AtLeast(frontier_at(10)), &resolver)).unwrap_err();
+        #[semio_framework_async_macros::async_test]
+        async fn at_least_succeeds_when_dominated_and_fails_otherwise() {
+            let resolver = FakeResolver { current: frontier_at(5).await, commits: BTreeMap::new() };
+            assert!(db_actor::block_on(resolve_consistency(&Consistency::AtLeast(frontier_at(3).await), &resolver)).is_ok());
+            let error = db_actor::block_on(resolve_consistency(&Consistency::AtLeast(frontier_at(10).await), &resolver)).unwrap_err();
             assert!(matches!(error, DbError::Unavailable(_)));
         }
 
-        #[test]
-        fn exact_requires_a_bytewise_match() {
-            let resolver = FakeResolver { current: frontier_at(5), commits: BTreeMap::new() };
-            assert!(db_actor::block_on(resolve_consistency(&Consistency::Exact(frontier_at(5)), &resolver)).is_ok());
-            assert!(db_actor::block_on(resolve_consistency(&Consistency::Exact(frontier_at(6)), &resolver)).is_err());
+        #[semio_framework_async_macros::async_test]
+        async fn exact_requires_a_bytewise_match() {
+            let resolver = FakeResolver { current: frontier_at(5).await, commits: BTreeMap::new() };
+            assert!(db_actor::block_on(resolve_consistency(&Consistency::Exact(frontier_at(5).await), &resolver)).is_ok());
+            assert!(db_actor::block_on(resolve_consistency(&Consistency::Exact(frontier_at(6).await), &resolver)).is_err());
         }
 
-        #[test]
-        fn historical_resolves_via_commit_lookup() {
+        #[semio_framework_async_macros::async_test]
+        async fn historical_resolves_via_commit_lookup() {
             let mut commits = BTreeMap::new();
-            commits.insert("ck-abc".to_string(), frontier_at(2));
-            let resolver = FakeResolver { current: frontier_at(5), commits };
+            commits.insert("ck-abc".to_string(), frontier_at(2).await);
+            let resolver = FakeResolver { current: frontier_at(5).await, commits };
             let resolved = db_actor::block_on(resolve_consistency(&Consistency::Historical("ck-abc".to_string()), &resolver)).expect("resolves");
-            assert_eq!(resolved.frontier, frontier_at(2));
+            assert_eq!(resolved.frontier, frontier_at(2).await);
             assert!(resolved.historical);
 
             let error = db_actor::block_on(resolve_consistency(&Consistency::Historical("ck-missing".to_string()), &resolver)).unwrap_err();
             assert!(matches!(error, DbError::NotFound(_)));
         }
 
-        #[test]
-        fn speculative_and_preview_augmented_carry_the_preview_id() {
-            let resolver = FakeResolver { current: frontier_at(5), commits: BTreeMap::new() };
+        #[semio_framework_async_macros::async_test]
+        async fn speculative_and_preview_augmented_carry_the_preview_id() {
+            let resolver = FakeResolver { current: frontier_at(5).await, commits: BTreeMap::new() };
             let speculative = db_actor::block_on(resolve_consistency(&Consistency::Speculative("pv-1".to_string()), &resolver)).expect("resolves");
             assert_eq!(speculative.preview_id, Some("pv-1".to_string()));
             let augmented = db_actor::block_on(resolve_consistency(&Consistency::PreviewAugmented("pv-2".to_string()), &resolver)).expect("resolves");
@@ -1455,7 +1467,7 @@ mod tests {
     mod live_query {
         use super::*;
 
-        fn source_with(rows: Vec<Value>) -> PVec<Value> {
+        async fn source_with(rows: Vec<Value>) -> PVec<Value> {
             let mut vec = PVec::new();
             for row in rows {
                 vec = vec.push_back(row);
@@ -1468,24 +1480,24 @@ mod tests {
         /// by any notion of row identity: replacing `bob` with `cara` at the same index is an
         /// `updated` row, not a `removed` + `added` pair. This test exercises all three by keeping
         /// the vector's length changes and value changes at distinct positions.
-        #[test]
-        fn refresh_reports_added_removed_and_updated_rows() {
-            let spec = LiveQuerySpec { query: Query::new(), consistency: Consistency::Canonical };
-            let mut live = LiveQuery::new(spec);
+        #[semio_framework_async_macros::async_test]
+        async fn refresh_reports_added_removed_and_updated_rows() {
+            let spec = LiveQuerySpec { query: Query::new().await, consistency: Consistency::Canonical };
+            let mut live = LiveQuery::new(spec).await;
 
-            let first = source_with(vec![sample_row("alice", 30, vec!["admin"]), sample_row("bob", 25, vec!["eng"])]);
+            let first = source_with(vec![sample_row("alice", 30, vec!["admin"]).await, sample_row("bob", 25, vec!["eng"]).await]).await;
             let diff = db_actor::block_on(live.refresh(&first, None::<&db_query::NoFullTextLookup>, &QueryLimits::default())).expect("refresh succeeds");
             assert_eq!(diff.added.len(), 2);
             assert!(diff.removed.is_empty());
             assert!(diff.updated.is_empty());
 
-            let second = source_with(vec![sample_row("alice", 31, vec!["admin"]), sample_row("bob", 25, vec!["eng"]), sample_row("cara", 40, vec!["admin"])]);
+            let second = source_with(vec![sample_row("alice", 31, vec!["admin"]).await, sample_row("bob", 25, vec!["eng"]).await, sample_row("cara", 40, vec!["admin"]).await]).await;
             let diff = db_actor::block_on(live.refresh(&second, None::<&db_query::NoFullTextLookup>, &QueryLimits::default())).expect("refresh succeeds");
             assert_eq!(diff.added.len(), 1);
             assert!(diff.removed.is_empty());
             assert_eq!(diff.updated.len(), 1);
 
-            let third = source_with(vec![sample_row("alice", 31, vec!["admin"])]);
+            let third = source_with(vec![sample_row("alice", 31, vec!["admin"]).await]).await;
             let diff = db_actor::block_on(live.refresh(&third, None::<&db_query::NoFullTextLookup>, &QueryLimits::default())).expect("refresh succeeds");
             assert!(diff.added.is_empty());
             assert_eq!(diff.removed.len(), 2);
@@ -1494,16 +1506,16 @@ mod tests {
 
         /// @emoji ⚖️ The round-trip law `LiveQuery`'s doc promises: old snapshot ⊕ diff == new
         /// snapshot, exactly.
-        #[test]
-        fn diff_applied_to_old_snapshot_reconstructs_new_snapshot() {
-            let spec = LiveQuerySpec { query: Query::new(), consistency: Consistency::Canonical };
-            let mut live = LiveQuery::new(spec);
+        #[semio_framework_async_macros::async_test]
+        async fn diff_applied_to_old_snapshot_reconstructs_new_snapshot() {
+            let spec = LiveQuerySpec { query: Query::new().await, consistency: Consistency::Canonical };
+            let mut live = LiveQuery::new(spec).await;
 
-            let first = source_with(vec![sample_row("alice", 30, vec!["admin"]), sample_row("bob", 25, vec!["eng"])]);
+            let first = source_with(vec![sample_row("alice", 30, vec!["admin"]).await, sample_row("bob", 25, vec!["eng"]).await]).await;
             db_actor::block_on(live.refresh(&first, None::<&db_query::NoFullTextLookup>, &QueryLimits::default())).expect("refresh succeeds");
-            let mut reconstructed = live.snapshot().clone();
+            let mut reconstructed = live.snapshot().await.clone();
 
-            let second = source_with(vec![sample_row("alice", 31, vec!["admin"]), sample_row("cara", 40, vec!["admin"])]);
+            let second = source_with(vec![sample_row("alice", 31, vec!["admin"]).await, sample_row("cara", 40, vec!["admin"]).await]).await;
             let diff = db_actor::block_on(live.refresh(&second, None::<&db_query::NoFullTextLookup>, &QueryLimits::default())).expect("refresh succeeds");
 
             for id in &diff.removed {
@@ -1513,7 +1525,7 @@ mod tests {
                 reconstructed.insert(*id, value.clone());
             }
 
-            assert_eq!(&reconstructed, live.snapshot());
+            assert_eq!(&reconstructed, live.snapshot().await);
         }
 
         //#region 🧪️IncrementalityLaw
@@ -1527,28 +1539,28 @@ mod tests {
         /// `LiveQuery`'s doc on why `refresh`'s row values are no longer readable any other way)
         /// rather than through `pack::infer_field` in isolation, so the law is proven against the
         /// real public `refresh` path, not a hand-assembled `QuerySnapshot`.
-        #[test]
-        fn refresh_leaves_unrelated_rows_cache_warm_and_misses_only_the_changed_row() {
-            let spec = LiveQuerySpec { query: Query::new(), consistency: Consistency::Canonical };
-            let mut live = LiveQuery::new(spec);
+        #[semio_framework_async_macros::async_test]
+        async fn refresh_leaves_unrelated_rows_cache_warm_and_misses_only_the_changed_row() {
+            let spec = LiveQuerySpec { query: Query::new().await, consistency: Consistency::Canonical };
+            let mut live = LiveQuery::new(spec).await;
 
-            let first = source_with(vec![sample_row("alice", 30, vec!["admin"]), sample_row("bob", 25, vec!["eng"]), sample_row("cara", 40, vec!["admin"])]);
+            let first = source_with(vec![sample_row("alice", 30, vec!["admin"]).await, sample_row("bob", 25, vec!["eng"]).await, sample_row("cara", 40, vec!["admin"]).await]).await;
             db_actor::block_on(live.refresh(&first, None::<&db_query::NoFullTextLookup>, &QueryLimits::default())).expect("refresh succeeds");
 
             // An identical re-refresh: every row's dep_hash is unchanged, so every row is a cache hit.
-            let before = live.cache.stats();
+            let before = live.cache.stats().await;
             let diff = db_actor::block_on(live.refresh(&first, None::<&db_query::NoFullTextLookup>, &QueryLimits::default())).expect("refresh succeeds");
-            let after = live.cache.stats();
+            let after = live.cache.stats().await;
             assert!(diff.added.is_empty() && diff.removed.is_empty() && diff.updated.is_empty(), "an unchanged source must produce an empty diff");
             assert_eq!(after.misses, before.misses, "an unchanged refresh must produce zero new misses");
             assert_eq!(after.hits - before.hits, 3, "all three rows must be served from the warm cache");
 
             // Only bob's row changes (same position, same length — isolates a value change from a
             // position-based added/removed churn).
-            let third = source_with(vec![sample_row("alice", 30, vec!["admin"]), sample_row("bob", 26, vec!["eng"]), sample_row("cara", 40, vec!["admin"])]);
-            let before = live.cache.stats();
+            let third = source_with(vec![sample_row("alice", 30, vec!["admin"]).await, sample_row("bob", 26, vec!["eng"]).await, sample_row("cara", 40, vec!["admin"]).await]).await;
+            let before = live.cache.stats().await;
             let diff = db_actor::block_on(live.refresh(&third, None::<&db_query::NoFullTextLookup>, &QueryLimits::default())).expect("refresh succeeds");
-            let after = live.cache.stats();
+            let after = live.cache.stats().await;
             assert_eq!(diff.updated.len(), 1, "only bob's row changed");
             assert!(diff.added.is_empty() && diff.removed.is_empty());
             assert_eq!(after.misses - before.misses, 1, "only bob's row may miss when only bob's own content changed");
@@ -1562,16 +1574,16 @@ mod tests {
     mod limits {
         use super::*;
 
-        #[test]
-        fn default_result_bytes_matches_db_core_query_budget() {
+        #[semio_framework_async_macros::async_test]
+        async fn default_result_bytes_matches_db_core_query_budget() {
             assert_eq!(QueryLimits::default().max_result_bytes, DbLimits::default().max_query_bytes);
         }
 
-        #[test]
-        fn max_scan_rows_is_enforced_even_when_nothing_matches() {
-            let source = sample_source();
+        #[semio_framework_async_macros::async_test]
+        async fn max_scan_rows_is_enforced_even_when_nothing_matches() {
+            let source = sample_source().await;
             let limits = QueryLimits { max_scan_rows: 1, ..QueryLimits::default() };
-            let query = Query::new().filter(Predicate::Eq(Path::field("age"), Value::Int(999)));
+            let query = Query::new().await.filter(Predicate::Eq(Path::field("age"), Value::Int(999))).await;
             let error = db_actor::block_on(execute(&query, &source, None::<&db_query::NoFullTextLookup>, &limits)).unwrap_err();
             assert!(matches!(error, DbError::LimitExceeded(_)));
         }

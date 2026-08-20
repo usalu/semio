@@ -11,9 +11,9 @@ pub async fn diff(payload: &DeleteObject, base: &SemioKitSnapshot) -> protocol::
             "mutation.target-missing",
             format!("Object child \"{}\" does not exist.", payload.child_id),
             [payload.child_id.clone()],
-        );
+        ).await;
     }
     let objects: Vec<_> = base.objects.iter().filter(|c| c.child_id != payload.child_id).cloned().collect();
-    protocol::MutationOutcome::new(SemioKitDiff { objects: Some(SemioKitObjectChildList { values: objects }), ..Default::default() })
+    protocol::MutationOutcome::new(SemioKitDiff { objects: Some(SemioKitObjectChildList { values: objects }), ..Default::default() }).await
 }
 //#endregion 🔖️Diff

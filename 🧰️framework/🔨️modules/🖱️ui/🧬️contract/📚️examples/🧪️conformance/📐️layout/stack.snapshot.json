@@ -1,0 +1,49 @@
+{
+  "surface": "conformance.layout.stack",
+  "revision": 0,
+  "root": 0,
+  "nodes": [
+    {
+      "id": 0,
+      "key": "#0",
+      "component": {
+        "type": "container"
+      },
+      "layout": {
+        "kind": "stack",
+        "axis": "vertical",
+        "gap": "md",
+        "padding": {
+          "all": "sm"
+        },
+        "align": "center",
+        "justify": "spaceBetween",
+        "grow": true,
+        "wrap": false
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {},
+      "children": [
+        1
+      ]
+    },
+    {
+      "id": 1,
+      "key": "#0",
+      "component": {
+        "type": "text",
+        "value": "Content"
+      },
+      "layout": {
+        "kind": "leaf",
+        "width": "hug",
+        "height": "hug"
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {}
+    }
+  ],
+  "layoutEpoch": 0
+}

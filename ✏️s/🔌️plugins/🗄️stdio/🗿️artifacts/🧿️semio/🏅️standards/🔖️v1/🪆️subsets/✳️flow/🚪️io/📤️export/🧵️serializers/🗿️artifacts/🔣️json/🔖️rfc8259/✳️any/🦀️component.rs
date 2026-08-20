@@ -23,29 +23,29 @@ async fn obj(members: Vec<JsonMember>) -> JsonValue {
 }
 
 async fn point_to_json(p: &SemioPoint2) -> JsonValue {
-    obj(vec![member("x", num_val(p.x)), member("y", num_val(p.y))])
+    obj(vec![member("x", num_val(p.x).await).await, member("y", num_val(p.y).await).await]).await
 }
 
 async fn param_to_json(p: &FlowParam) -> JsonValue {
-    obj(vec![member("key", str_val(&p.key)), member("value", str_val(&p.value))])
+    obj(vec![member("key", str_val(&p.key).await).await, member("value", str_val(&p.value).await).await]).await
 }
 
 async fn port_ref_to_json(p: &PortRef) -> JsonValue {
-    obj(vec![member("node", str_val(&p.node)), member("port", str_val(&p.port))])
+    obj(vec![member("node", str_val(&p.node).await).await, member("port", str_val(&p.port).await).await]).await
 }
 
 async fn node_to_json(n: &FlowNode) -> JsonValue {
     obj(vec![
-        member("id", str_val(&n.id)),
-        member("kind", str_val(&n.kind)),
-        member("label", str_val(&n.label)),
-        member("params", JsonValue::Array { items: n.params.iter().map(param_to_json).collect() }),
-        member("position", point_to_json(&n.position)),
-    ])
+        member("id", str_val(&n.id).await).await,
+        member("kind", str_val(&n.kind).await).await,
+        member("label", str_val(&n.label).await).await,
+        member("params", JsonValue::Array { items: n.params.iter().map(param_to_json).collect() }).await,
+        member("position", point_to_json(&n.position).await).await,
+    ]).await
 }
 
 async fn edge_to_json(e: &FlowEdge) -> JsonValue {
-    obj(vec![member("id", str_val(&e.id)), member("from", port_ref_to_json(&e.from)), member("to", port_ref_to_json(&e.to)), member("kind", str_val(&e.kind))])
+    obj(vec![member("id", str_val(&e.id).await).await, member("from", port_ref_to_json(&e.from).await).await, member("to", port_ref_to_json(&e.to).await).await, member("kind", str_val(&e.kind).await).await]).await
 }
 //#endregion 🔖️FieldMapping
 
@@ -59,7 +59,7 @@ impl ArtifactSerializer for SemioFlowToJson {
     const INTO: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId::ANY };
 
     async fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
-        let value = obj(vec![member("nodes", JsonValue::Array { items: from.nodes.iter().map(node_to_json).collect() }), member("edges", JsonValue::Array { items: from.edges.iter().map(edge_to_json).collect() })]);
+        let value = obj(vec![member("nodes", JsonValue::Array { items: from.nodes.iter().map(node_to_json).collect() }).await, member("edges", JsonValue::Array { items: from.edges.iter().map(edge_to_json).collect() }).await]);
         Ok(JsonSnapshot { schema: crate::artifacts::json::STDIO_JSON_DOCUMENT_SCHEMA.into(), value })
     }
 }

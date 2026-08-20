@@ -1,0 +1,66 @@
+warning: unused import: `dispatch::*`
+  --> 🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/📦️glue.rs:43:9
+   |
+43 | pub use dispatch::*;
+   |         ^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `reconcile::*`
+  --> 🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/📦️glue.rs:49:9
+   |
+49 | pub use reconcile::*;
+   |         ^^^^^^^^^^^^
+
+warning: unused import: `transaction::*`
+  --> 🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/📦️glue.rs:51:9
+   |
+51 | pub use transaction::*;
+   |         ^^^^^^^^^^^^^^
+
+warning: method `restore_after_lease` is never used
+   --> 🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/🦀️entity.rs:321:8
+    |
+272 | impl EntityStore {
+    | ---------------- method in this implementation
+...
+321 |     fn restore_after_lease<T: 'static>(&mut self, id: EntityId, value: Box<T>) {
+    |        ^^^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-ui-runtime` (lib) generated 4 warnings (run `cargo fix --lib -p semio-framework-ui-runtime` to apply 3 suggestions)
+    Finished `dev` profile [unoptimized] target(s) in 0.18s
+warning: unused import: `dispatch::*`
+  --> 🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/📦️glue.rs:43:9
+   |
+43 | pub use dispatch::*;
+   |         ^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `reconcile::*`
+  --> 🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/📦️glue.rs:49:9
+   |
+49 | pub use reconcile::*;
+   |         ^^^^^^^^^^^^
+
+warning: unused import: `transaction::*`
+  --> 🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/📦️glue.rs:51:9
+   |
+51 | pub use transaction::*;
+   |         ^^^^^^^^^^^^^^
+
+warning: method `restore_after_lease` is never used
+   --> 🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/🦀️entity.rs:321:8
+    |
+272 | impl EntityStore {
+    | ---------------- method in this implementation
+...
+321 |     fn restore_after_lease<T: 'static>(&mut self, id: EntityId, value: Box<T>) {
+    |        ^^^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-ui-runtime` (lib) generated 4 warnings (run `cargo fix --lib -p semio-framework-ui-runtime` to apply 3 suggestions)
+    Finished `dev` profile [unoptimized] target(s) in 0.16s

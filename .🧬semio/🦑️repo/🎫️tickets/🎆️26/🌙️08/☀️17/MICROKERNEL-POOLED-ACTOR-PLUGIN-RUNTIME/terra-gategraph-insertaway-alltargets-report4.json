@@ -1,0 +1,73 @@
+{
+  "crate": "semio-framework-graph",
+  "history": [],
+  "residual_errors": 52,
+  "ambiguous": [],
+  "other": [
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2463",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2464",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2613",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2615",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2842",
+      "code": "E0382",
+      "msg": "use of moved value: `spans`"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2843",
+      "code": "E0382",
+      "msg": "use of moved value: `spans`"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2844",
+      "code": "E0382",
+      "msg": "use of moved value: `spans`"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2845",
+      "code": "E0382",
+      "msg": "use of moved value: `spans`"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2846",
+      "code": "E0382",
+      "msg": "use of moved value: `spans`"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:3038",
+      "code": "E0382",
+      "msg": "use of moved value: `tokens`"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2717",
+      "code": "E0382",
+      "msg": "use of moved value: `node_kinds`"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2724",
+      "code": "E0382",
+      "msg": "use of moved value: `props`"
+    },
+    {
+      "at": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:544",
+      "code": "E0382",
+      "msg": "use of moved value: `text`"
+    }
+  ]
+}

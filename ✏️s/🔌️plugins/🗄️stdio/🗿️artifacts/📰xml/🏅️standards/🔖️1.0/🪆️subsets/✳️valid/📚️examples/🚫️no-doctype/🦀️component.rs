@@ -11,7 +11,7 @@ pub const PRIMARY_TEXT: &str = include_str!("🖼️assets/💥️broken.xml");
 pub const EXPECTED_HARD_CODES: &[&str] = &["stdio.xml.valid.doctype-missing"];
 
 pub async fn source() -> ExampleSource {
-    ExampleSource::new(ID, label(), PRIMARY_TEXT, ICON)
+    ExampleSource::new(ID, label(), PRIMARY_TEXT, ICON).await
 }
 
 #[cfg(test)]

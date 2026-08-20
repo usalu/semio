@@ -23,7 +23,7 @@ pub struct TiffInference {
 
 impl protocol::Inference<TiffSnapshot> for TiffInference {
     async fn infer(snapshot: &TiffSnapshot) -> Self {
-        Self { dimensions: compute_tiff_dimensions(snapshot) }
+        Self { dimensions: compute_tiff_dimensions(snapshot).await }
     }
 }
 

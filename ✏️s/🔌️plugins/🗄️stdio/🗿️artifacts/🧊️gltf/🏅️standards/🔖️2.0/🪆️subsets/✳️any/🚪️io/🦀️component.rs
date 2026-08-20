@@ -66,7 +66,7 @@ pub async fn decode_data_uri(uri: &str) -> Result<Vec<u8>, String> {
     if !meta.ends_with(";base64") {
         return Err(format!("unsupported data uri encoding (expected ';base64', got {meta:?})"));
     }
-    b64_decode(payload)
+    b64_decode(payload).await
 }
 
 /// 🌐️ Encodes `bytes` as a `data:<media_type>;base64,<payload>` URI.
@@ -198,7 +198,7 @@ impl Serialize for GltfComponentType {
 impl<'de> Deserialize<'de> for GltfComponentType {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let code = u64::deserialize(deserializer)?;
-        Self::from_code(code).map_err(serde::de::Error::custom)
+        semio_framework_plugin::resolve_ready(Self::from_code(code)).map_err(serde::de::Error::custom)
     }
 }
 
@@ -212,7 +212,7 @@ impl Serialize for GltfAccessorType {
 impl<'de> Deserialize<'de> for GltfAccessorType {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let s = String::deserialize(deserializer)?;
-        Self::from_str(&s).map_err(serde::de::Error::custom)
+        semio_framework_plugin::resolve_ready(Self::from_str(&s)).map_err(serde::de::Error::custom)
     }
 }
 //#endregion 🔖️AccessorModelSerde
@@ -238,8 +238,8 @@ async fn read_elements(bytes: &[u8], base_offset: usize, component_type: GltfCom
     let mut out = Vec::with_capacity(count * nc);
     for i in 0..count {
         let elem_off = base_offset + i * stride;
-        for c in 0..nc {
-            out.push(component_type.read_at(bytes, elem_off + c * component_type.byte_size())?);
+        for c in 0..nc.await {
+            out.push(component_type.read_at(bytes, elem_off + c * component_type.byte_size()).await?);
         }
     }
     Ok(out)
@@ -275,14 +275,14 @@ pub async fn decode_accessor(document: &GltfDocument, buffers: &[Vec<u8>], acces
 
     let mut components = vec![0.0f64; count * nc];
     if let Some(bv_idx) = acc.buffer_view {
-        components = read_bufferview_elements(document, buffers, bv_idx, acc.byte_offset, component_type, accessor_type, count)?;
+        components = read_bufferview_elements(document, buffers, bv_idx, acc.byte_offset, component_type, accessor_type, count).await?;
     }
 
     if let Some(sparse) = &acc.sparse {
         let sparse_count = sparse.count;
         let indices_component = sparse.indices.component_type;
-        let indices = read_bufferview_elements(document, buffers, sparse.indices.buffer_view, sparse.indices.byte_offset, indices_component, GltfAccessorType::Scalar, sparse_count)?;
-        let values = read_bufferview_elements(document, buffers, sparse.values.buffer_view, sparse.values.byte_offset, component_type, accessor_type, sparse_count)?;
+        let indices = read_bufferview_elements(document, buffers, sparse.indices.buffer_view, sparse.indices.byte_offset, indices_component, GltfAccessorType::Scalar, sparse_count).await?;
+        let values = read_bufferview_elements(document, buffers, sparse.values.buffer_view, sparse.values.byte_offset, component_type, accessor_type, sparse_count).await?;
 
         for i in 0..sparse_count {
             let idx = indices[i] as usize;
@@ -295,7 +295,7 @@ pub async fn decode_accessor(document: &GltfDocument, buffers: &[Vec<u8>], acces
     }
 
     if normalized {
-        normalize_components(component_type, &mut components)?;
+        normalize_components(component_type, &mut components).await?;
     }
 
     Ok(GltfDecodedAccessor { component_type, accessor_type, count, normalized, components })
@@ -310,7 +310,7 @@ async fn read_bufferview_elements(document: &GltfDocument, buffers: &[Vec<u8>], 
     if bytes.is_empty() {
         return Err(format!("buffer {} bytes unavailable (external uri not resolvable, or empty embedded buffer)", bv.buffer));
     }
-    read_elements(bytes, bv.byte_offset + extra_offset, component_type, accessor_type, count, bv.byte_stride)
+    read_elements(bytes, bv.byte_offset + extra_offset, component_type, accessor_type, count, bv.byte_stride).await
 }
 //#endregion 🔖️AccessorModel
 
@@ -340,7 +340,7 @@ async fn resolve_document_buffers(document: &GltfDocument, embedded_bin: Option<
         .iter()
         .enumerate()
         .map(|(i, buf)| match buf.uri.as_deref() {
-            Some(uri) => decode_data_uri(uri).unwrap_or_default(),
+            Some(uri) => semio_framework_plugin::resolve_ready(decode_data_uri(uri)).unwrap_or_default(),
             None if i == 0 => embedded_bin.map(|b| b.to_vec()).unwrap_or_default(),
             None => Vec::new(),
         })
@@ -354,7 +354,7 @@ async fn resolve_document_buffers(document: &GltfDocument, embedded_bin: Option<
 pub async fn parse_gltf_document(bytes: &[u8]) -> Result<GltfSnapshot, String> {
     let text = std::str::from_utf8(bytes).map_err(|e| format!("gltf json is not valid utf-8: {e}"))?;
     let document: GltfDocument = serde_json::from_str(text).map_err(|e| format!("gltf json parse error: {e}"))?;
-    validate_document(&document)?;
+    validate_document(&document).await?;
     let buffers = resolve_document_buffers(&document, None);
     Ok(GltfSnapshot { schema: STDIO_GLTF_DOCUMENT_SCHEMA.into(), document, buffers, source_form: GltfSourceForm::Json })
 }
@@ -369,7 +369,7 @@ pub async fn serialize_gltf_document(snapshot: &GltfSnapshot) -> Vec<u8> {
     for (i, buf) in document.buffers.iter_mut().enumerate() {
         if buf.uri.is_none() {
             if let Some(bytes) = snapshot.buffers.get(i) {
-                buf.uri = Some(encode_data_uri("application/octet-stream", bytes));
+                buf.uri = Some(encode_data_uri("application/octet-stream", bytes).await);
             }
         }
     }
@@ -393,7 +393,7 @@ async fn align4(len: usize) -> usize {
 /// zero-padded `0x00`). Fixes the prior bug: the total-length header field now includes BOTH
 /// chunks' padding (it previously omitted the BIN chunk's padding bytes from the count).
 pub async fn encode_glb(snapshot: &GltfSnapshot) -> Result<Vec<u8>, String> {
-    validate_document(&snapshot.document)?;
+    validate_document(&snapshot.document).await?;
     let mut document = snapshot.document.clone();
     let embed_bin = document.buffers.first().map(|b| b.uri.is_none()).unwrap_or(false);
     let bin: Option<&[u8]> = if embed_bin { snapshot.buffers.first().map(|v| v.as_slice()) } else { None };
@@ -470,7 +470,7 @@ pub async fn decode_glb(bytes: &[u8]) -> Result<GltfSnapshot, String> {
     // used NUL or trimmed whitespace -- trim both so lenient real-world files still parse.
     let json_text = std::str::from_utf8(json_chunk).map_err(|e| format!("glb: JSON chunk is not valid utf-8: {e}"))?;
     let document: GltfDocument = serde_json::from_str(json_text.trim_end_matches(['\0', ' ', '\t', '\n', '\r'])).map_err(|e| format!("glb: JSON chunk parse error: {e}"))?;
-    validate_document(&document)?;
+    validate_document(&document).await?;
 
     // The BIN chunk's declared length is 4-byte-padded; the true buffer content length is
     // `document.buffers[0].byteLength` (padding is trailing filler, never real payload).
@@ -523,7 +523,7 @@ pub mod derived_composition {
             if native.is_empty() {
                 return Err(ComposeError { message: "GltfComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() });
             }
-            let analysis = GltfAnalyzer::analyze(&native);
+            let analysis = GltfAnalyzer::analyze(&native).await;
             let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError { message: "GltfComposerComposition: analysis produced no snapshot".into(), diagnostics: analysis.diagnostics.clone() })?;
             Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics })
         }
@@ -1033,7 +1033,8 @@ pub mod io_registry {
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 
-    pub async fn entries() -> &'static [ComposerEntry] {
+    // 🚫️async: E1 pure table accessor consumed by OnceLock::get_or_init's sync closure — see R9
+    pub fn entries() -> &'static [ComposerEntry] {
         ENTRIES.get_or_init(|| vec![composer_entry_of::<GltfRawAnyComposer>()]).as_slice()
     }
 }

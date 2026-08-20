@@ -14,7 +14,7 @@ pub const BODY_KEY: &str = TextWindowKit::KIND_ID;
 //#region 🔖️Definition
 /// 🧱️ Stitched into the editor manifest by `crate::editor::txt::create_txt_editor`.
 pub async fn definition() -> WindowKindDefinition {
-    WindowKindDefinition { label: LocalizedLabel::native("Text", "Text"), icon_id: "type".into(), ..TextWindowKit::editable_window_kind() }
+    WindowKindDefinition { label: LocalizedLabel::native("Text", "Text"), icon_id: "type".into(), ..TextWindowKit::editable_window_kind().await }
 }
 //#endregion 🔖️Definition
 
@@ -23,11 +23,11 @@ pub async fn definition() -> WindowKindDefinition {
 /// trailing terminator when `trailing_newline` is set — the exact same join the artifact's own
 /// codec uses to re-serialize, so what's shown here IS what re-encoding would emit.
 pub async fn render(document: &TxtSnapshot) -> UiNode {
-    let mut text = document.lines.join(document.line_ending.as_str());
+    let mut text = document.lines.join(document.line_ending.as_str().await);
     if document.trailing_newline && !document.lines.is_empty() {
-        text.push_str(document.line_ending.as_str());
+        text.push_str(document.line_ending.as_str().await);
     }
-    TextWindowKit::render(&TextView { text, language: Some("text".into()), read_only: false })
+    TextWindowKit::render(&TextView { text, language: Some("text".into()), read_only: false }).await
 }
 //#endregion 🔖️Render
 

@@ -54,8 +54,8 @@ async fn xfrm_node(position: &PptxTransform) -> XmlNode {
         name: "a:xfrm".into(),
         attrs: vec![],
         children: vec![
-            XmlNode::Element { name: "a:off".into(), attrs: vec![attr("x", &position.x.to_string()), attr("y", &position.y.to_string())], children: vec![] },
-            XmlNode::Element { name: "a:ext".into(), attrs: vec![attr("cx", &position.cx.to_string()), attr("cy", &position.cy.to_string())], children: vec![] },
+            XmlNode::Element { name: "a:off".into(), attrs: vec![attr("x", &position.x.to_string()).await, attr("y", &position.y.to_string()).await], children: vec![] },
+            XmlNode::Element { name: "a:ext".into(), attrs: vec![attr("cx", &position.cx.to_string()).await, attr("cy", &position.cy.to_string()).await], children: vec![] },
         ],
     }
 }
@@ -73,13 +73,13 @@ async fn shape_to_xml(shape: &PptxShape, id: u32) -> XmlNode {
                     name: "p:nvSpPr".into(),
                     attrs: vec![],
                     children: vec![
-                        XmlNode::Element { name: "p:cNvPr".into(), attrs: vec![attr("id", &id.to_string()), attr("name", &format!("TextBox {id}"))], children: vec![] },
-                        XmlNode::Element { name: "p:cNvSpPr".into(), attrs: vec![attr("txBox", "1")], children: vec![] },
+                        XmlNode::Element { name: "p:cNvPr".into(), attrs: vec![attr("id", &id.to_string()).await, attr("name", &format!("TextBox {id}")).await], children: vec![] },
+                        XmlNode::Element { name: "p:cNvSpPr".into(), attrs: vec![attr("txBox", "1").await], children: vec![] },
                         XmlNode::Element { name: "p:nvPr".into(), attrs: vec![], children: vec![] },
                     ],
                 },
-                XmlNode::Element { name: "p:spPr".into(), attrs: vec![], children: vec![xfrm_node(position)] },
-                XmlNode::Element { name: "p:txBody".into(), attrs: vec![], children: text_frame_to_xml(text_frame) },
+                XmlNode::Element { name: "p:spPr".into(), attrs: vec![], children: vec![xfrm_node(position).await] },
+                XmlNode::Element { name: "p:txBody".into(), attrs: vec![], children: text_frame_to_xml(text_frame).await },
             ],
         },
         PptxShape::Placeholder { kind, text_frame, position } => XmlNode::Element {
@@ -90,13 +90,13 @@ async fn shape_to_xml(shape: &PptxShape, id: u32) -> XmlNode {
                     name: "p:nvSpPr".into(),
                     attrs: vec![],
                     children: vec![
-                        XmlNode::Element { name: "p:cNvPr".into(), attrs: vec![attr("id", &id.to_string()), attr("name", &format!("Placeholder {id}"))], children: vec![] },
+                        XmlNode::Element { name: "p:cNvPr".into(), attrs: vec![attr("id", &id.to_string()).await, attr("name", &format!("Placeholder {id}")).await], children: vec![] },
                         XmlNode::Element { name: "p:cNvSpPr".into(), attrs: vec![], children: vec![] },
-                        XmlNode::Element { name: "p:nvPr".into(), attrs: vec![], children: vec![XmlNode::Element { name: "p:ph".into(), attrs: vec![attr("type", kind)], children: vec![] }] },
+                        XmlNode::Element { name: "p:nvPr".into(), attrs: vec![], children: vec![XmlNode::Element { name: "p:ph".into(), attrs: vec![attr("type", kind).await], children: vec![] }] },
                     ],
                 },
-                XmlNode::Element { name: "p:spPr".into(), attrs: vec![], children: vec![xfrm_node(position)] },
-                XmlNode::Element { name: "p:txBody".into(), attrs: vec![], children: text_frame_to_xml(text_frame) },
+                XmlNode::Element { name: "p:spPr".into(), attrs: vec![], children: vec![xfrm_node(position).await] },
+                XmlNode::Element { name: "p:txBody".into(), attrs: vec![], children: text_frame_to_xml(text_frame).await },
             ],
         },
         PptxShape::Picture { blip_rel_id, position } => XmlNode::Element {
@@ -107,7 +107,7 @@ async fn shape_to_xml(shape: &PptxShape, id: u32) -> XmlNode {
                     name: "p:nvPicPr".into(),
                     attrs: vec![],
                     children: vec![
-                        XmlNode::Element { name: "p:cNvPr".into(), attrs: vec![attr("id", &id.to_string()), attr("name", &format!("Picture {id}"))], children: vec![] },
+                        XmlNode::Element { name: "p:cNvPr".into(), attrs: vec![attr("id", &id.to_string()).await, attr("name", &format!("Picture {id}")).await], children: vec![] },
                         XmlNode::Element { name: "p:cNvPicPr".into(), attrs: vec![], children: vec![] },
                         XmlNode::Element { name: "p:nvPr".into(), attrs: vec![], children: vec![] },
                     ],
@@ -116,14 +116,14 @@ async fn shape_to_xml(shape: &PptxShape, id: u32) -> XmlNode {
                     name: "p:blipFill".into(),
                     attrs: vec![],
                     children: vec![
-                        XmlNode::Element { name: "a:blip".into(), attrs: vec![attr("r:embed", blip_rel_id)], children: vec![] },
+                        XmlNode::Element { name: "a:blip".into(), attrs: vec![attr("r:embed", blip_rel_id).await], children: vec![] },
                         XmlNode::Element { name: "a:stretch".into(), attrs: vec![], children: vec![XmlNode::Element { name: "a:fillRect".into(), attrs: vec![], children: vec![] }] },
                     ],
                 },
                 XmlNode::Element {
                     name: "p:spPr".into(),
                     attrs: vec![],
-                    children: vec![xfrm_node(position), XmlNode::Element { name: "a:prstGeom".into(), attrs: vec![attr("prst", "rect")], children: vec![XmlNode::Element { name: "a:avLst".into(), attrs: vec![], children: vec![] }] }],
+                    children: vec![xfrm_node(position).await, XmlNode::Element { name: "a:prstGeom".into(), attrs: vec![attr("prst", "rect").await], children: vec![XmlNode::Element { name: "a:avLst".into(), attrs: vec![], children: vec![] }] }],
                 },
             ],
         },
@@ -139,7 +139,7 @@ async fn slide_to_xml(slide: &PptxSlide) -> XmlDocument {
             name: "p:nvGrpSpPr".into(),
             attrs: vec![],
             children: vec![
-                XmlNode::Element { name: "p:cNvPr".into(), attrs: vec![attr("id", "1"), attr("name", "")], children: vec![] },
+                XmlNode::Element { name: "p:cNvPr".into(), attrs: vec![attr("id", "1").await, attr("name", "").await], children: vec![] },
                 XmlNode::Element { name: "p:cNvGrpSpPr".into(), attrs: vec![], children: vec![] },
                 XmlNode::Element { name: "p:nvPr".into(), attrs: vec![], children: vec![] },
             ],
@@ -148,14 +148,14 @@ async fn slide_to_xml(slide: &PptxSlide) -> XmlDocument {
     ];
     // 🔢 ids start at 2 -- id 1 is reserved for the group's own `p:cNvPr` above.
     for (i, shape) in slide.shapes.iter().enumerate() {
-        sp_tree_children.push(shape_to_xml(shape, i as u32 + 2));
+        sp_tree_children.push(shape_to_xml(shape, i as u32 + 2).await);
     }
 
     XmlDocument {
         prolog: Vec::new(),
         root: Some(XmlNode::Element {
             name: "p:sld".into(),
-            attrs: vec![attr("xmlns:a", A_NS), attr("xmlns:p", P_NS)],
+            attrs: vec![attr("xmlns:a", A_NS).await, attr("xmlns:p", P_NS).await],
             children: vec![XmlNode::Element { name: "p:cSld".into(), attrs: vec![], children: vec![XmlNode::Element { name: "p:spTree".into(), attrs: vec![], children: sp_tree_children }] }],
         }),
         doctype: None,
@@ -171,9 +171,9 @@ async fn presentation_to_xml(master_rid: &str, sld_id_entries: &[(u32, String)])
         prolog: Vec::new(),
         root: Some(XmlNode::Element {
             name: "p:presentation".into(),
-            attrs: vec![attr("xmlns:a", A_NS), attr("xmlns:p", P_NS), attr("xmlns:r", R_NS)],
+            attrs: vec![attr("xmlns:a", A_NS).await, attr("xmlns:p", P_NS).await, attr("xmlns:r", R_NS).await],
             children: vec![
-                XmlNode::Element { name: "p:sldMasterIdLst".into(), attrs: vec![], children: vec![XmlNode::Element { name: "p:sldMasterId".into(), attrs: vec![attr("id", "2147483648"), attr("r:id", master_rid)], children: vec![] }] },
+                XmlNode::Element { name: "p:sldMasterIdLst".into(), attrs: vec![], children: vec![XmlNode::Element { name: "p:sldMasterId".into(), attrs: vec![attr("id", "2147483648").await, attr("r:id", master_rid).await], children: vec![] }] },
                 XmlNode::Element { name: "p:sldIdLst".into(), attrs: vec![], children: sld_ids },
             ],
         }),
@@ -205,20 +205,20 @@ async fn regenerate_presentation_parts(opc: &mut OpcPackage, presentation: &Pptx
     opc.content_types.set_default("rels", crate::artifacts::zip::opc::RELS_CONTENT_TYPE);
     opc.content_types.set_default("xml", "application/xml");
 
-    if opc.part(SLIDE_MASTER_PART).is_none() {
+    if opc.part(SLIDE_MASTER_PART).await.is_none() {
         opc.set_part(SLIDE_MASTER_PART, SLIDE_MASTER_CONTENT_TYPE, MINIMAL_SLIDE_MASTER_XML.as_bytes().to_vec());
         opc.add_relationship(SLIDE_MASTER_PART, "rId1", REL_TYPE_SLIDE_LAYOUT, "../slideLayouts/slideLayout1.xml");
         opc.add_relationship(SLIDE_MASTER_PART, "rId2", REL_TYPE_THEME, "../theme/theme1.xml");
     }
-    if opc.part(SLIDE_LAYOUT_PART).is_none() {
+    if opc.part(SLIDE_LAYOUT_PART).await.is_none() {
         opc.set_part(SLIDE_LAYOUT_PART, SLIDE_LAYOUT_CONTENT_TYPE, MINIMAL_SLIDE_LAYOUT_XML.as_bytes().to_vec());
         opc.add_relationship(SLIDE_LAYOUT_PART, "rId1", REL_TYPE_SLIDE_MASTER, "../slideMasters/slideMaster1.xml");
     }
-    if opc.part(THEME_PART).is_none() {
+    if opc.part(THEME_PART).await.is_none() {
         opc.set_part(THEME_PART, THEME_CONTENT_TYPE, MINIMAL_THEME_XML.as_bytes().to_vec());
     }
 
-    let master_rel = opc.relationships_for(PRESENTATION_PART).iter().find(|r| r.rel_type == REL_TYPE_SLIDE_MASTER).cloned().unwrap_or(OpcRelationship {
+    let master_rel = opc.relationships_for(PRESENTATION_PART).await.iter().find(|r| r.rel_type == REL_TYPE_SLIDE_MASTER).cloned().unwrap_or(OpcRelationship {
         id: "rId1".into(),
         rel_type: REL_TYPE_SLIDE_MASTER.into(),
         target: "slideMasters/slideMaster1.xml".into(),
@@ -231,7 +231,7 @@ async fn regenerate_presentation_parts(opc: &mut OpcPackage, presentation: &Pptx
     for (i, slide) in presentation.slides.iter().enumerate() {
         let path = format!("ppt/slides/slide{}.xml", i + 1);
         let xml = slide_to_xml(slide);
-        opc.set_part(&path, SLIDE_CONTENT_TYPE, xml_document_to_text(&xml).into_bytes());
+        opc.set_part(&path, SLIDE_CONTENT_TYPE, xml_document_to_text(&xml).await.into_bytes());
         let rid = format!("rId{}", i + 2); // rId1 reserved for the slide-master relationship
         pres_rels.push(OpcRelationship { id: rid.clone(), rel_type: REL_TYPE_SLIDE.into(), target: format!("slides/slide{}.xml", i + 1), target_mode: OpcTargetMode::Internal });
         sld_id_entries.push((256 + i as u32, rid));
@@ -239,10 +239,10 @@ async fn regenerate_presentation_parts(opc: &mut OpcPackage, presentation: &Pptx
     }
     opc.relationships.insert(PRESENTATION_PART.to_string(), pres_rels);
 
-    let presentation_bytes = xml_document_to_text(&presentation_to_xml(&master_rid, &sld_id_entries)).into_bytes();
+    let presentation_bytes = xml_document_to_text(&presentation_to_xml(&master_rid, &sld_id_entries)).await.into_bytes();
     opc.set_part(PRESENTATION_PART, PRESENTATION_CONTENT_TYPE, presentation_bytes);
 
-    if resolve_office_document_relationship(opc).is_none() {
+    if resolve_office_document_relationship(opc).await.is_none() {
         opc.add_relationship("", "rId1", REL_TYPE_OFFICE_DOCUMENT, PRESENTATION_PART);
     }
 }
@@ -251,13 +251,13 @@ async fn regenerate_presentation_parts(opc: &mut OpcPackage, presentation: &Pptx
 /// `[Content_Types].xml`, root `_rels/.rels`, `ppt/presentation.xml` + its relationships, every
 /// slide, and a synthesized slideMaster/slideLayout/theme chain real readers expect to exist.
 pub async fn build_minimal_pptx(presentation: PptxPresentation) -> PptxSnapshot {
-    let draft = PptxSnapshot::from_parts(OpcPackage::empty(), Vec::new(), presentation);
-    let bytes = encode_pptx(&draft).expect("minimal logical pptx materialization");
-    crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::import::deserializers::decode_pptx(&bytes).expect("minimal logical pptx decode")
+    let draft = PptxSnapshot::from_parts(OpcPackage::empty().await, Vec::new(), presentation);
+    let bytes = encode_pptx(&draft).await.expect("minimal logical pptx materialization");
+    crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::import::deserializers::decode_pptx(&bytes).await.expect("minimal logical pptx decode")
 }
 
 async fn xml_document_to_pptx_text(path: &str, document: &XmlDocument) -> String {
-    let mut text = crate::artifacts::zip::opc::xml_document_to_opc_text(document);
+    let mut text = crate::artifacts::zip::opc::xml_document_to_opc_text(document).await;
     if path == "docProps/app.xml" {
         text = text.replace("<Template/>", "<Template></Template>");
     }
@@ -378,7 +378,7 @@ pub async fn encode_pptx(snap: &PptxSnapshot) -> Result<Vec<u8>, PptxError> {
         if !xml_paths.insert(part.path.as_str()) {
             return Err(PptxError::Malformed(format!("duplicate logical XML part {}", part.path)));
         }
-        let bytes = xml_document_to_pptx_text(&part.path, &part.document).into_bytes();
+        let bytes = xml_document_to_pptx_text(&part.path, &part.document).await.into_bytes();
         if opc.content_types.resolve(&part.path) == Some(part.content_type.as_str()) {
             if let Some(existing) = opc.parts.iter_mut().find(|candidate| candidate.path == part.path) {
                 existing.content_type = part.content_type.clone();
@@ -391,19 +391,19 @@ pub async fn encode_pptx(snap: &PptxSnapshot) -> Result<Vec<u8>, PptxError> {
         }
     }
     for part in &snap.opc.parts {
-        if pptx_part_is_xml(&part.path, &part.content_type) {
+        if pptx_part_is_xml(&part.path, &part.content_type).await {
             return Err(PptxError::Malformed(format!("XML part {} is stored as opaque OPC bytes", part.path)));
         }
         if xml_paths.contains(part.path.as_str()) {
             return Err(PptxError::Malformed(format!("part {} has both XML and binary authorities", part.path)));
         }
     }
-    let presentation_path = resolve_office_document_relationship(&opc);
+    let presentation_path = resolve_office_document_relationship(&opc).await;
     let has_authoritative_presentation_xml = presentation_path.as_ref().is_some_and(|path| snap.xml_parts.iter().any(|part| &part.path == path));
-    let presentation_changed = has_authoritative_presentation_xml && crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::import::deserializers::project_presentation(&snap.opc, &snap.xml_parts)? != snap.presentation;
+    let presentation_changed = has_authoritative_presentation_xml && crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::import::deserializers::project_presentation(&snap.opc, &snap.xml_parts).await? != snap.presentation;
     if !has_authoritative_presentation_xml || presentation_changed {
         regenerate_presentation_parts(&mut opc, &snap.presentation);
     }
-    Ok(crate::artifacts::zip::opc::encode_opc_with_path_order(&opc, order_pptx_paths)?)
+    Ok(crate::artifacts::zip::opc::encode_opc_with_path_order(&opc, order_pptx_paths).await?)
 }
 //#endregion 🔖️Codec

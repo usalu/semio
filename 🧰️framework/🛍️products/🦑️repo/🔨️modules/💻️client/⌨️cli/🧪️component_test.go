@@ -17972,6 +17972,62 @@ func TestFinishTicketPurgesOversizedArtifacts(t *testing.T) {
 	assertExists(ticketJSON)
 }
 
+func TestPurgeAllOversizedTicketArtifacts(t *testing.T) {
+	tmpDir := t.TempDir()
+	oldRoot := rootDir
+	rootDir = tmpDir
+	defer func() { rootDir = oldRoot }()
+
+	now := time.Now().UTC()
+	year := now.Year() % 100
+	month := int(now.Month())
+	day := now.Day()
+	slug := "TEST-TICKET"
+	ticketDir := filepath.Join(tmpDir, ".🧬semio", "🦑️repo", "🎫️tickets", FormatYearDir(year), FormatMonthDir(month), FormatDayDir(day), slug)
+	if err := os.MkdirAll(ticketDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	ticketJSON := filepath.Join(ticketDir, "🎫️ticket.json")
+	if err := os.WriteFile(ticketJSON, []byte(`{"title":"Test Ticket","goal":"TEST/GOAL"}`), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	ticket := &Ticket{
+		Year:       year,
+		Month:      month,
+		Day:        day,
+		Slug:       slug,
+		Title:      "Test Ticket",
+		Status:     TicketStatusOpen,
+		FolderPath: ticketDir,
+		JsonPath:   ticketJSON,
+	}
+	if err := SaveTicket(ticket); err != nil {
+		t.Fatal(err)
+	}
+
+	const mib = 1024 * 1024
+	writeSparseTicketArtifact(t, filepath.Join(ticketDir, "large.bin"), 5*mib+1)
+	writeSparseTicketArtifact(t, filepath.Join(ticketDir, "huge-dir", "blob.bin"), 10*mib+1)
+
+	count, err := PurgeAllOversizedTicketArtifacts()
+	if err != nil {
+		t.Fatalf("PurgeAllOversizedTicketArtifacts failed: %v", err)
+	}
+	if count != 1 {
+		t.Fatalf("purged ticket count = %d, want 1", count)
+	}
+	if _, err := os.Stat(filepath.Join(ticketDir, "large.bin")); !os.IsNotExist(err) {
+		t.Fatalf("expected deleted large.bin")
+	}
+	if _, err := os.Stat(filepath.Join(ticketDir, "huge-dir")); !os.IsNotExist(err) {
+		t.Fatalf("expected deleted huge-dir")
+	}
+	if _, err := os.Stat(ticketJSON); err != nil {
+		t.Fatalf("expected kept ticket.json: %v", err)
+	}
+}
+
 func readTicketJSON(t *testing.T, ticketJSON string) map[string]interface{} {
 	t.Helper()
 	data, err := os.ReadFile(ticketJSON)

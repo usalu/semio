@@ -53,11 +53,11 @@ impl protocol::OpText for DocxStrictEditorCommand {
 
 impl protocol::OpBinary for DocxStrictEditorCommand {
     async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(<Self as protocol::OpText>::print_op(self).into_bytes())
+        Ok(<Self as protocol::OpText>::print_op(self).await.into_bytes())
     }
     async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let line = String::from_utf8(bytes.to_vec()).map_err(|error| protocol::ProtocolError::Malformed { what: "docx strict editor command utf8", offset: 0, detail: error.to_string() })?;
-        <Self as protocol::OpText>::parse_op(&line).map_err(|error| protocol::ProtocolError::Malformed { what: "docx strict editor command", offset: 0, detail: error.to_string() })
+        <Self as protocol::OpText>::parse_op(&line).await.map_err(|error| protocol::ProtocolError::Malformed { what: "docx strict editor command", offset: 0, detail: error.to_string() })
     }
 }
 //#endregion 🔖️Command
@@ -116,7 +116,7 @@ impl ArtifactEditor for DocxStrictEditor {
     ) -> Result<Emit<Self::Mutation>, Fault> {
         let DocxStrictEditorCommand::SetPage { index, text } = command;
         let index = *index as usize;
-        match build_set_page_mutation(doc.snapshot, index, text) {
+        match build_set_page_mutation(doc.snapshot, index, text).await {
             Some(mutation) => Ok(Emit { artifact_mutations: vec![mutation], description: Some(format!("Set page {index}")), ..Default::default() }),
             None => Ok(Emit::default()),
         }
@@ -124,8 +124,8 @@ impl ArtifactEditor for DocxStrictEditor {
 
     async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
-            main::BODY_KEY => main::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
+            main::BODY_KEY => main::render(doc.snapshot).await,
+            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))).await,
         }
     }
 }
@@ -134,12 +134,12 @@ impl ArtifactEditor for DocxStrictEditor {
 //#region 🔖️Manifest
 pub async fn create_docx_strict_editor() -> semio_framework_plugin::AppDefinition {
     Editor::builder(DOCX_STRICT_EDITOR_DIALECT)
-        .document(["semio", "stdio", "docx"])
-        .icon_id("file-text")
-        .mode_def(edit::definition())
-        .default_mode_id(edit::DOCX_STRICT_EDIT_MODE_ID)
-        .window_kind_def(main::definition())
-        .default_layout(edit::layout())
+        .await.document(["semio", "stdio", "docx"])
+        .await.icon_id("file-text")
+        .await.mode_def(edit::definition().await)
+        .await.default_mode_id(edit::DOCX_STRICT_EDIT_MODE_ID)
+        .await.window_kind_def(main::definition().await)
+        .await.default_layout(edit::layout())
         .build_definition()
 }
 //#endregion 🔖️Manifest

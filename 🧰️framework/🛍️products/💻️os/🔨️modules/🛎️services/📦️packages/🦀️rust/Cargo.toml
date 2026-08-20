@@ -39,3 +39,8 @@ tokio = { workspace = true, features = ["rt-multi-thread", "sync", "time", "macr
 # exercising `StorageScheduler`/`EventRouter`/`TimerWheel` against the trait without real tokio.
 semio-framework-async = { workspace = true, features = ["testkit"] }
 tokio = { workspace = true, features = ["rt-multi-thread", "sync", "time", "test-util", "macros"] }
+# 🧵️ gate-services (universal-async residue sweep): `ThreadBudget::from_plan`/`checkout`/`remaining`
+# and every `HostAsyncRuntime` method this file's tests exercise are now `async fn` — every test
+# needs a real async-test harness. Path dependency, same pattern `🎭️actor`'s Cargo.toml already uses
+# for this macro crate.
+semio-framework-async-macros = { path = "../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

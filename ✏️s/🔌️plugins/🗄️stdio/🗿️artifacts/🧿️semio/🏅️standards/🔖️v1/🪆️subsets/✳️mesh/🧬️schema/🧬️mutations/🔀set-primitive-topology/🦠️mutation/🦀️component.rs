@@ -17,10 +17,10 @@ impl protocol::MutationKind<SemioMeshSnapshot, SemioMeshMutation> for SetPrimiti
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "primitive", kind: "set-primitive-topology", record: "SetPrimitiveTopology" };
 
     async fn diff(&self, base: &SemioMeshSnapshot) -> protocol::MutationOutcome<<SemioMeshMutation as protocol::Mutation<SemioMeshSnapshot>>::Diff> {
-        super::diff::diff(self, base)
+        super::diff::diff(self, base).await
     }
     async fn inverse(&self, base: &SemioMeshSnapshot) -> Vec<SemioMeshMutation> {
-        super::inverse::inverse(self, base)
+        super::inverse::inverse(self, base).await
     }
     async fn label(&self) -> String {
         format!("Set primitive \"{}\" topology in mesh \"{}\"", self.primitive_id, self.mesh_id)

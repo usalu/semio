@@ -78,7 +78,7 @@ impl Mutation<SemioImageSnapshot> for SemioImageMutation {
     async fn diff(&self, base: &SemioImageSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             SemioImageMutation::NoMutation => SemioImageDiff::default(),
-            SemioImageMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
+            SemioImageMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot).await,
             SemioImageMutation::SetDimensions { width, height } => SemioImageDiff { width: (base.width != *width).then_some(*width), height: (base.height != *height).then_some(*height), ..Default::default() },
             SemioImageMutation::SetColorspace { colorspace } => SemioImageDiff { colorspace: (base.colorspace != *colorspace).then_some(*colorspace), ..Default::default() },
             SemioImageMutation::SetBitDepth { bit_depth } => SemioImageDiff { bit_depth: (base.bit_depth != *bit_depth).then_some(*bit_depth), ..Default::default() },
@@ -104,7 +104,7 @@ impl Mutation<SemioImageSnapshot> for SemioImageMutation {
                 SemioImageDiff { metadata: Some(metadata), ..Default::default() }
             }
             SemioImageMutation::RemoveMetadataEntry { key } => SemioImageDiff { metadata: Some(SemioImageMetadataDiff { removed: vec![key.clone()], ..Default::default() }), ..Default::default() },
-        })
+        }).await
     }
 
     async fn inverse(&self, base: &SemioImageSnapshot) -> Vec<Self> {
@@ -144,8 +144,8 @@ impl Mutation<SemioImageSnapshot> for SemioImageMutation {
 /// ▶️ Applies a mutation to `snapshot` in place, returning the diff (mirrors gif's
 /// `apply_gif_mutation` convention — used by the builder's `mutate()` and every triad leaf).
 pub async fn apply_semio_image_mutation(snapshot: &mut SemioImageSnapshot, mutation: &SemioImageMutation) -> protocol::MutationOutcome<SemioImageDiff> {
-    let outcome = <SemioImageMutation as Mutation<SemioImageSnapshot>>::diff(mutation, snapshot);
-    outcome.apply_to(snapshot)
+    let outcome = <SemioImageMutation as Mutation<SemioImageSnapshot>>::diff(mutation, snapshot).await;
+    outcome.apply_to(snapshot).await
 }
 //#endregion 🔖️Mutation
 
@@ -164,19 +164,19 @@ async fn enc_snapshot(s: &SemioImageSnapshot) -> String {
     format!("[{},{},{},{},{},[{}],[{}]]", s.width, s.height, enc_colorspace(s.colorspace), s.bit_depth, encode_option(&s.icc, |b| b.iter().map(|x| format!("{x:02x}")).collect::<String>()), frames, metadata,)
 }
 async fn dec_snapshot(s: &str) -> Result<SemioImageSnapshot, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [width, height, colorspace, bit_depth, icc, frames, metadata] = parts.as_slice() else {
         return Err(format!("snapshot: expected 7 fields, got {}", parts.len()));
     };
-    let frames = split_top_level(strip_brackets(frames)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_frame).collect::<Result<Vec<_>, String>>()?;
-    let metadata = split_top_level(strip_brackets(metadata)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_metadata_entry).collect::<Result<Vec<_>, String>>()?;
+    let frames = split_top_level(strip_brackets(frames).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_frame).collect::<Result<Vec<_>, String>>()?;
+    let metadata = split_top_level(strip_brackets(metadata).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_metadata_entry).collect::<Result<Vec<_>, String>>()?;
     Ok(SemioImageSnapshot {
         schema: crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA.into(),
         width: width.parse().map_err(|e: std::num::ParseIntError| e.to_string())?,
         height: height.parse().map_err(|e: std::num::ParseIntError| e.to_string())?,
-        colorspace: dec_colorspace(colorspace)?,
+        colorspace: dec_colorspace(colorspace).await?,
         bit_depth: bit_depth.parse().map_err(|e: std::num::ParseIntError| e.to_string())?,
-        icc: decode_option(icc, |h| (0..h.len()).step_by(2).map(|i| u8::from_str_radix(&h[i..i + 2], 16).map_err(|e| e.to_string())).collect())?,
+        icc: decode_option(icc, |h| (0..h.len()).step_by(2).map(|i| u8::from_str_radix(&h[i..i + 2], 16).map_err(|e| e.to_string())).collect()).await?,
         frames,
         metadata,
     })
@@ -194,7 +194,7 @@ async fn enc_str(s: &str) -> String {
     s.bytes().map(|b| format!("{b:02x}")).collect()
 }
 async fn dec_str(s: &str) -> Result<String, String> {
-    String::from_utf8(dec_bytes(s)?).map_err(|e| e.to_string())
+    String::from_utf8(dec_bytes(s).await?).map_err(|e| e.to_string())
 }
 
 async fn print_image_mutation(m: &SemioImageMutation) -> String {
@@ -221,50 +221,50 @@ async fn parse_image_mutation(line: &str) -> Result<SemioImageMutation, String> 
     }
     let (tag, rest) = line.split_once(':').ok_or_else(|| format!("mutation: missing tag separator in {line:?}"))?;
     match tag {
-        "setSnapshot" => Ok(SemioImageMutation::SetSnapshot { snapshot: dec_snapshot(rest)? }),
+        "setSnapshot" => Ok(SemioImageMutation::SetSnapshot { snapshot: dec_snapshot(rest).await? }),
         "setDimensions" => {
-            let parts = split_top_level(rest, ',');
+            let parts = split_top_level(rest, ',').await;
             let [w, h] = parts.as_slice() else { return Err(format!("setDimensions: expected 2 fields, got {}", parts.len())) };
             Ok(SemioImageMutation::SetDimensions { width: w.parse().map_err(|e: std::num::ParseIntError| e.to_string())?, height: h.parse().map_err(|e: std::num::ParseIntError| e.to_string())? })
         }
-        "setColorspace" => Ok(SemioImageMutation::SetColorspace { colorspace: dec_colorspace(rest)? }),
+        "setColorspace" => Ok(SemioImageMutation::SetColorspace { colorspace: dec_colorspace(rest).await? }),
         "setBitDepth" => Ok(SemioImageMutation::SetBitDepth { bit_depth: rest.parse().map_err(|e: std::num::ParseIntError| e.to_string())? }),
-        "setIcc" => Ok(SemioImageMutation::SetIcc { icc: decode_option(rest, dec_bytes)? }),
+        "setIcc" => Ok(SemioImageMutation::SetIcc { icc: decode_option(rest, dec_bytes).await? }),
         "insertFrame" => {
             let (idx, frame) = rest.split_once(',').ok_or_else(|| "insertFrame: missing comma".to_string())?;
-            Ok(SemioImageMutation::InsertFrame { index: idx.parse().map_err(|e: std::num::ParseIntError| e.to_string())?, frame: dec_frame(frame)? })
+            Ok(SemioImageMutation::InsertFrame { index: idx.parse().map_err(|e: std::num::ParseIntError| e.to_string())?, frame: dec_frame(frame).await? })
         }
         "removeFrame" => Ok(SemioImageMutation::RemoveFrame { index: rest.parse().map_err(|e: std::num::ParseIntError| e.to_string())? }),
         "moveFrame" => {
-            let parts = split_top_level(rest, ',');
+            let parts = split_top_level(rest, ',').await;
             let [from, to] = parts.as_slice() else { return Err(format!("moveFrame: expected 2 fields, got {}", parts.len())) };
             Ok(SemioImageMutation::MoveFrame { from: from.parse().map_err(|e: std::num::ParseIntError| e.to_string())?, to: to.parse().map_err(|e: std::num::ParseIntError| e.to_string())? })
         }
         "setFrameDelay" => {
-            let parts = split_top_level(rest, ',');
+            let parts = split_top_level(rest, ',').await;
             let [idx, delay] = parts.as_slice() else { return Err(format!("setFrameDelay: expected 2 fields, got {}", parts.len())) };
             Ok(SemioImageMutation::SetFrameDelay { index: idx.parse().map_err(|e: std::num::ParseIntError| e.to_string())?, delay_ms: delay.parse().map_err(|e: std::num::ParseIntError| e.to_string())? })
         }
         "setFramePixels" => {
             let (idx, rgba) = rest.split_once(',').ok_or_else(|| "setFramePixels: missing comma".to_string())?;
-            Ok(SemioImageMutation::SetFramePixels { index: idx.parse().map_err(|e: std::num::ParseIntError| e.to_string())?, rgba8: dec_bytes(rgba)? })
+            Ok(SemioImageMutation::SetFramePixels { index: idx.parse().map_err(|e: std::num::ParseIntError| e.to_string())?, rgba8: dec_bytes(rgba).await? })
         }
         "setMetadataEntry" => {
-            let parts = split_top_level(rest, ',');
+            let parts = split_top_level(rest, ',').await;
             let [key, value] = parts.as_slice() else { return Err(format!("setMetadataEntry: expected 2 fields, got {}", parts.len())) };
-            Ok(SemioImageMutation::SetMetadataEntry { key: dec_str(key)?, value: dec_str(value)? })
+            Ok(SemioImageMutation::SetMetadataEntry { key: dec_str(key).await?, value: dec_str(value).await? })
         }
-        "removeMetadataEntry" => Ok(SemioImageMutation::RemoveMetadataEntry { key: dec_str(rest)? }),
+        "removeMetadataEntry" => Ok(SemioImageMutation::RemoveMetadataEntry { key: dec_str(rest).await? }),
         other => Err(format!("mutation: unknown tag {other:?}")),
     }
 }
 
 impl OpText for SemioImageMutation {
     async fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_image_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_image_mutation(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     async fn print_op(&self) -> String {
-        print_image_mutation(self)
+        print_image_mutation(self).await
     }
 }
 
@@ -294,7 +294,7 @@ async fn variant_ordinal(m: &SemioImageMutation) -> u8 {
 /// byte already carries the keyword, so the text keyword itself (and its `:` separator) is
 /// redundant in the binary payload.
 async fn print_image_mutation_args(m: &SemioImageMutation) -> String {
-    match print_image_mutation(m).split_once(':') {
+    match print_image_mutation(m).await.split_once(':') {
         Some((_, rest)) => rest.to_string(),
         None => String::new(),
     }
@@ -308,8 +308,8 @@ async fn print_image_mutation_args(m: &SemioImageMutation) -> String {
 impl protocol::OpBinary for SemioImageMutation {
     async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
-        let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self)];
-        out.extend_from_slice(print_image_mutation_args(self).as_bytes());
+        let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self).await];
+        out.extend_from_slice(print_image_mutation_args(self).await.as_bytes());
         Ok(out)
     }
     async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
@@ -324,7 +324,7 @@ impl protocol::OpBinary for SemioImageMutation {
         let keyword = OP_KEYWORDS.get(tag as usize).ok_or_else(|| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("tag {tag} out of range for {} declared variants", OP_KEYWORDS.len()) })?;
         let args = std::str::from_utf8(&bytes[2..]).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 2, detail: e.to_string() })?;
         let line = if args.is_empty() { keyword.to_string() } else { format!("{keyword}:{args}") };
-        Self::parse_op(&line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 2, detail: e.to_string() })
+        Self::parse_op(&line).await.map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 2, detail: e.to_string() })
     }
 }
 //#endregion 🔖️OpCodecs

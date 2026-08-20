@@ -124,10 +124,18 @@ impl Default for SharedEngineConfig {
 /// `OnDemand` allocation — the fallback knob §2 asks for — if the pooling allocator rejects `cfg` on
 /// this host (e.g. insufficient virtual address space, or a hardened container); the returned `bool`
 /// reports which strategy actually got used, for logging/metrics.
-pub fn build_shared_engine(cfg: SharedEngineConfig) -> Result<(Engine, bool), PluginHostError> {
+pub async fn build_shared_engine(cfg: SharedEngineConfig) -> Result<(Engine, bool), PluginHostError> {
     let build = |pooling: bool| -> wasmtime::Result<Engine> {
         let mut config = Config::new();
         config.wasm_component_model(true);
+        // 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (B1 world-collapse): NOT optional. `world
+        // actor` imports `host-async`, whose 24 `async func`s only lift/lower under the
+        // component-model async ABI; and S7's categorical finding runs the other way too — with
+        // this on, a plain sync `func` export becomes uncallable, which is exactly why all seven of
+        // the world's exports gained `async` in the same edit. `Config::concurrency_support` (what
+        // `Store::run_concurrent` and `StreamReader` need) defaults to `true` and is left alone —
+        // wasmtime rejects a Config that enables component-model-async while disabling it.
+        config.wasm_component_model_async(true);
         config.consume_fuel(true);
         config.epoch_interruption(true);
         if pooling {
@@ -174,6 +182,9 @@ pub struct EpochTicker {
 }
 
 impl EpochTicker {
+    // 🚫️async: R9 — spawns a real OS thread but the SPAWN CALL ITSELF returns immediately (zero
+    // `.await`s in this fn's own body; the thread body, not this fn, runs the loop), and both call
+    // sites already use it synchronously.
     pub fn start(engine: &Engine) -> Self {
         let stop = Arc::new(std::sync::atomic::AtomicBool::new(false));
         let stop_thread = Arc::clone(&stop);
@@ -254,12 +265,12 @@ impl ResourceLimiter for BudgetLimiter {
 /// `<engine-config-hash>/<package-hash>.cwasm` under `~/.semio/cache/wasmtime/`. Both hashes are
 /// plain `[u8; 32]` (blake3) rather than A1's `PackageHash` newtype — `compiled_cache_path` becomes a
 /// one-line call with `package_hash.0` once that crate is a workspace member.
-pub fn default_compiled_cache_root() -> PathBuf {
+pub async fn default_compiled_cache_root() -> PathBuf {
     let home = std::env::var("SEMIO_HOME").or_else(|_| std::env::var("HOME")).or_else(|_| std::env::var("USERPROFILE")).unwrap_or_else(|_| ".".to_string());
     PathBuf::from(home).join(".semio").join("cache").join("wasmtime")
 }
 
-pub fn shared_engine_config_hash(cfg: &SharedEngineConfig, pooling_active: bool) -> [u8; 32] {
+pub async fn shared_engine_config_hash(cfg: &SharedEngineConfig, pooling_active: bool) -> [u8; 32] {
     let descriptor = format!(
         "wasmtime=47.0.3;component_model=1;fuel=1;epoch=1;pooling={};instances={};max_memory={};keep_resident={}",
         pooling_active, cfg.total_component_instances, cfg.max_memory_bytes, cfg.linear_memory_keep_resident_bytes
@@ -267,11 +278,13 @@ pub fn shared_engine_config_hash(cfg: &SharedEngineConfig, pooling_active: bool)
     *blake3::hash(descriptor.as_bytes()).as_bytes()
 }
 
+// 🚫️async: E1 pure formatter consumed by `impl Debug for CompiledHandle` (external trait,
+// sync-only) — R9.
 fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|byte| format!("{byte:02x}")).collect()
 }
 
-pub fn compiled_cache_path(cache_root: &Path, engine_config_hash: &[u8; 32], package_hash: &[u8; 32]) -> PathBuf {
+pub async fn compiled_cache_path(cache_root: &Path, engine_config_hash: &[u8; 32], package_hash: &[u8; 32]) -> PathBuf {
     cache_root.join(hex_encode(engine_config_hash)).join(format!("{}.cwasm", hex_encode(package_hash)))
 }
 
@@ -280,14 +293,14 @@ pub fn compiled_cache_path(cache_root: &Path, engine_config_hash: &[u8; 32], pac
 /// (same config, so same compiled ABI) — a hostile or stale `.cwasm` is a sandbox escape, not a
 /// cache-miss. Any I/O or deserialize error is treated as a cache miss (`None`), never surfaced as a
 /// fault: recompiling from the original component bytes is always the safe fallback.
-pub fn load_compiled_component(engine: &Engine, path: &Path) -> Option<Component> {
+pub async fn load_compiled_component(engine: &Engine, path: &Path) -> Option<Component> {
     if !path.exists() {
         return None;
     }
     unsafe { Component::deserialize_file(engine, path).ok() }
 }
 
-pub fn store_compiled_component(component: &Component, path: &Path) -> std::io::Result<()> {
+pub async fn store_compiled_component(component: &Component, path: &Path) -> std::io::Result<()> {
     if let Some(parent) = path.parent() {
         std::fs::create_dir_all(parent)?;
     }
@@ -299,22 +312,22 @@ pub fn store_compiled_component(component: &Component, path: &Path) -> std::io::
 mod shared_wasmtime_engine_tests {
     use super::*;
 
-    #[test]
-    fn build_shared_engine_defaults_to_pooling() {
-        let (_engine, pooling_active) = build_shared_engine(SharedEngineConfig::default()).expect("pooling engine builds on this host");
+    #[semio_framework_async_macros::async_test]
+    async fn build_shared_engine_defaults_to_pooling() {
+        let (_engine, pooling_active) = build_shared_engine(SharedEngineConfig::default()).await.expect("pooling engine builds on this host");
         assert!(pooling_active, "pooling allocator should be available in test/CI containers");
     }
 
-    #[test]
-    fn build_shared_engine_forced_on_demand_reports_on_demand() {
+    #[semio_framework_async_macros::async_test]
+    async fn build_shared_engine_forced_on_demand_reports_on_demand() {
         let cfg = SharedEngineConfig { force_on_demand: true, ..SharedEngineConfig::default() };
-        let (_engine, pooling_active) = build_shared_engine(cfg).expect("on-demand engine always builds");
+        let (_engine, pooling_active) = build_shared_engine(cfg).await.expect("on-demand engine always builds");
         assert!(!pooling_active);
     }
 
-    #[test]
-    fn epoch_ticker_starts_and_stops_cleanly_around_a_deadline_bearing_store() {
-        let (engine, _pooling_active) = build_shared_engine(SharedEngineConfig::default()).expect("engine builds");
+    #[semio_framework_async_macros::async_test]
+    async fn epoch_ticker_starts_and_stops_cleanly_around_a_deadline_bearing_store() {
+        let (engine, _pooling_active) = build_shared_engine(SharedEngineConfig::default()).await.expect("engine builds");
         let mut store = Store::new(&engine, ());
         store.set_epoch_deadline(1);
         store.set_fuel(1_000).expect("consume_fuel is enabled on the shared engine");
@@ -323,40 +336,40 @@ mod shared_wasmtime_engine_tests {
         drop(ticker);
     }
 
-    #[test]
-    fn shared_engine_config_hash_is_deterministic_and_config_sensitive() {
+    #[semio_framework_async_macros::async_test]
+    async fn shared_engine_config_hash_is_deterministic_and_config_sensitive() {
         let cfg = SharedEngineConfig::default();
-        let a = shared_engine_config_hash(&cfg, true);
-        let b = shared_engine_config_hash(&cfg, true);
+        let a = shared_engine_config_hash(&cfg, true).await;
+        let b = shared_engine_config_hash(&cfg, true).await;
         assert_eq!(a, b);
-        let c = shared_engine_config_hash(&cfg, false);
+        let c = shared_engine_config_hash(&cfg, false).await;
         assert_ne!(a, c, "pooling vs on-demand must be different cache namespaces");
     }
 
-    #[test]
-    fn compiled_cache_path_is_namespaced_by_both_hashes() {
+    #[semio_framework_async_macros::async_test]
+    async fn compiled_cache_path_is_namespaced_by_both_hashes() {
         let root = Path::new("/tmp/semio-cache-test");
         let engine_hash = [1u8; 32];
         let package_hash = [2u8; 32];
-        let path = compiled_cache_path(root, &engine_hash, &package_hash);
+        let path = compiled_cache_path(root, &engine_hash, &package_hash).await;
         assert!(path.starts_with(root));
         assert!(path.to_string_lossy().ends_with(&format!("{}.cwasm", hex_encode(&package_hash))));
     }
 
-    #[test]
-    fn compiled_component_round_trips_through_cache_for_a_real_wasm_file() {
+    #[semio_framework_async_macros::async_test]
+    async fn compiled_component_round_trips_through_cache_for_a_real_wasm_file() {
         let wasm_path = Path::new("🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/🔌️plugin-modules/stdio/semio_s_plugin_stdio_component.core.wasm");
         if !wasm_path.exists() {
             return;
         }
-        let (engine, _pooling_active) = build_shared_engine(SharedEngineConfig::default()).expect("engine builds");
+        let (engine, _pooling_active) = build_shared_engine(SharedEngineConfig::default()).await.expect("engine builds");
         let wasm_bytes = std::fs::read(wasm_path).expect("read real stdio.wasm");
         let component = Component::from_binary(&engine, &wasm_bytes).expect("compile real stdio.wasm as a component");
         let cache_dir = std::env::temp_dir().join(format!("semio-compiled-cache-test-{}", std::process::id()));
-        let cache_path = compiled_cache_path(&cache_dir, &shared_engine_config_hash(&SharedEngineConfig::default(), true), &[3u8; 32]);
-        assert!(load_compiled_component(&engine, &cache_path).is_none(), "cache must start empty");
-        store_compiled_component(&component, &cache_path).expect("write compiled cache entry");
-        let restored = load_compiled_component(&engine, &cache_path).expect("cache hit after writing");
+        let cache_path = compiled_cache_path(&cache_dir, &shared_engine_config_hash(&SharedEngineConfig::default(), true).await, &[3u8; 32]).await;
+        assert!(load_compiled_component(&engine, &cache_path).await.is_none(), "cache must start empty");
+        store_compiled_component(&component, &cache_path).await.expect("write compiled cache entry");
+        let restored = load_compiled_component(&engine, &cache_path).await.expect("cache hit after writing");
         drop(restored);
         let _ = std::fs::remove_dir_all(&cache_dir);
     }
@@ -510,8 +523,8 @@ pub enum TurnFault {
 /// suspending backend (`WasmtimeAsyncRuntime`/`AsyncActor`, a sibling packet) joins this enum, ITS
 /// call sites drive it some other way (a real task per actor), never `block_on` on a hot path.
 pub trait GuestRuntime: Send + Sync {
-    fn compile(&self, package: &PackageRef, bytes: &[u8]) -> Result<CompiledHandle, PluginHostError>;
-    fn instantiate(&self, compiled: &CompiledHandle, actor: RuntimeActorId, caps: &[BrokerCapabilityGrant], budget: &Budget) -> Result<GuestInstance, PluginHostError>;
+    async fn compile(&self, package: &PackageRef, bytes: &[u8]) -> Result<CompiledHandle, PluginHostError>;
+    async fn instantiate(&self, compiled: &CompiledHandle, actor: RuntimeActorId, caps: &[BrokerCapabilityGrant], budget: &Budget) -> Result<GuestInstance, PluginHostError>;
     async fn execute_turn(&self, inst: &mut GuestInstance, events: &[Event], budget: Budget) -> Result<TurnResult, TurnFault>;
     /// 🧬️ `jobs.wit`'s `start-job` export — added past `design-runtime.md` §2's literal trait listing
     /// because that listing omits it even though `jobs.wit` declares three functions
@@ -526,7 +539,7 @@ pub trait GuestRuntime: Send + Sync {
     async fn cancel_job(&self, inst: &mut GuestInstance, job: u64) -> Result<(), TurnFault>;
     async fn checkpoint(&self, inst: &mut GuestInstance) -> Result<Vec<u8>, PluginHostError>;
     async fn restore(&self, inst: &mut GuestInstance, state: &[u8]) -> Result<(), PluginHostError>;
-    fn drop_instance(&self, inst: GuestInstance);
+    async fn drop_instance(&self, inst: GuestInstance);
 }
 
 //#region 🔖️MockGuestRuntime
@@ -574,60 +587,60 @@ impl Default for MockGuestRuntime {
 
 #[cfg(test)]
 impl MockGuestRuntime {
-    pub fn new() -> Self {
+    pub async fn new() -> Self {
         Self::default()
     }
 
-    pub fn now_ms(&self) -> i64 {
+    pub async fn now_ms(&self) -> i64 {
         self.now_ms.load(std::sync::atomic::Ordering::SeqCst)
     }
 
-    pub fn set_now_ms(&self, ms: i64) {
+    pub async fn set_now_ms(&self, ms: i64) {
         self.now_ms.store(ms, std::sync::atomic::Ordering::SeqCst);
     }
 
-    pub fn advance_ms(&self, delta: i64) {
+    pub async fn advance_ms(&self, delta: i64) {
         self.now_ms.fetch_add(delta, std::sync::atomic::Ordering::SeqCst);
     }
 
-    fn queue_for(&self, actor: RuntimeActorId) -> std::sync::MutexGuard<'_, HashMap<u64, VecDeque<ScriptedOutcome>>> {
+    async fn queue_for(&self, actor: RuntimeActorId) -> std::sync::MutexGuard<'_, HashMap<u64, VecDeque<ScriptedOutcome>>> {
         let mut scripts = self.scripts.lock().expect("mock runtime lock poisoned");
         scripts.entry(actor.0).or_default();
         scripts
     }
 
-    pub fn script_turn(&self, actor: RuntimeActorId, result: TurnResult) {
-        self.queue_for(actor).get_mut(&actor.0).expect("just inserted").push_back(ScriptedOutcome::Turn(result));
+    pub async fn script_turn(&self, actor: RuntimeActorId, result: TurnResult) {
+        self.queue_for(actor).await.get_mut(&actor.0).expect("just inserted").push_back(ScriptedOutcome::Turn(result));
     }
 
-    pub fn script_job_step(&self, actor: RuntimeActorId, step: JobStep) {
-        self.queue_for(actor).get_mut(&actor.0).expect("just inserted").push_back(ScriptedOutcome::Job(step));
+    pub async fn script_job_step(&self, actor: RuntimeActorId, step: JobStep) {
+        self.queue_for(actor).await.get_mut(&actor.0).expect("just inserted").push_back(ScriptedOutcome::Job(step));
     }
 
-    pub fn script_fault(&self, actor: RuntimeActorId, message: impl Into<String>) {
-        self.queue_for(actor).get_mut(&actor.0).expect("just inserted").push_back(ScriptedOutcome::Fault(message.into()));
+    pub async fn script_fault(&self, actor: RuntimeActorId, message: impl Into<String>) {
+        self.queue_for(actor).await.get_mut(&actor.0).expect("just inserted").push_back(ScriptedOutcome::Fault(message.into()));
     }
 
     /// 🏁️ A plain `Idle`, no-effects, no-patches turn result — convenience for tests that only
     /// care about scheduling/backpressure, not turn content.
-    pub fn idle_turn() -> TurnResult {
+    pub async fn idle_turn() -> TurnResult {
         TurnResult { ui_patches: Vec::new(), effects: Vec::new(), next_wake: None, status: TurnStatus::Idle, fuel_used: 0 }
     }
 
     /// 📼️ Every `events` slice `execute_turn` has been called with for `actor`, flattened across
     /// every call, in order — see `observed_events`'s own doc comment for why this exists.
-    pub fn observed_events(&self, actor: RuntimeActorId) -> Vec<Event> {
+    pub async fn observed_events(&self, actor: RuntimeActorId) -> Vec<Event> {
         self.observed_events.lock().expect("mock runtime lock poisoned").get(&actor.0).cloned().unwrap_or_default()
     }
 }
 
 #[cfg(test)]
 impl GuestRuntime for MockGuestRuntime {
-    fn compile(&self, package: &PackageRef, _bytes: &[u8]) -> Result<CompiledHandle, PluginHostError> {
+    async fn compile(&self, package: &PackageRef, _bytes: &[u8]) -> Result<CompiledHandle, PluginHostError> {
         Ok(CompiledHandle { package_hash: package.hash.0, component: None })
     }
 
-    fn instantiate(&self, _compiled: &CompiledHandle, actor: RuntimeActorId, _caps: &[BrokerCapabilityGrant], _budget: &Budget) -> Result<GuestInstance, PluginHostError> {
+    async fn instantiate(&self, _compiled: &CompiledHandle, actor: RuntimeActorId, _caps: &[BrokerCapabilityGrant], _budget: &Budget) -> Result<GuestInstance, PluginHostError> {
         drop(self.queue_for(actor));
         Ok(GuestInstance { actor, state: GuestInstanceState::Mock(MockInstanceState::default()) })
     }
@@ -695,7 +708,7 @@ impl GuestRuntime for MockGuestRuntime {
         Ok(())
     }
 
-    fn drop_instance(&self, inst: GuestInstance) {
+    async fn drop_instance(&self, inst: GuestInstance) {
         self.scripts.lock().map(|mut scripts| scripts.remove(&inst.actor.0)).ok();
     }
 }
@@ -704,23 +717,23 @@ impl GuestRuntime for MockGuestRuntime {
 mod mock_guest_runtime_tests {
     use super::*;
 
-    fn hash(byte: u8) -> PackageHash {
+    async fn hash(byte: u8) -> PackageHash {
         PackageHash([byte; 32])
     }
 
-    #[test]
-    fn scripted_turn_is_returned_exactly_once_fifo() {
-        let runtime = MockGuestRuntime::new();
-        let compiled = runtime.compile(&PackageRef { package: PackageId("stdio".to_string()), hash: hash(1) }, &[]).expect("compile");
+    #[semio_framework_async_macros::async_test]
+    async fn scripted_turn_is_returned_exactly_once_fifo() {
+        let runtime = MockGuestRuntime::new().await;
+        let compiled = runtime.compile(&PackageRef { package: PackageId("stdio".to_string()), hash: hash(1).await }, &[]).await.expect("compile");
         let actor = RuntimeActorId(42);
-        let mut inst = runtime.instantiate(&compiled, actor, &[], &Budget { fuel: 1000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).expect("instantiate");
+        let mut inst = runtime.instantiate(&compiled, actor, &[], &Budget { fuel: 1000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).await.expect("instantiate");
 
-        let mut first = MockGuestRuntime::idle_turn();
+        let mut first = MockGuestRuntime::idle_turn().await;
         first.fuel_used = 7;
-        let mut second = MockGuestRuntime::idle_turn();
+        let mut second = MockGuestRuntime::idle_turn().await;
         second.fuel_used = 9;
-        runtime.script_turn(actor, first);
-        runtime.script_turn(actor, second);
+        runtime.script_turn(actor, first).await;
+        runtime.script_turn(actor, second).await;
 
         // 👶️ host-dedyn: `#[test] fn` is a sanctioned `block_on` entry point (R4 clause 5) — this
         // test drives `GuestRuntime`'s async methods directly against the concrete `MockGuestRuntime`
@@ -731,58 +744,58 @@ mod mock_guest_runtime_tests {
         assert_eq!(got_second.fuel_used, 9);
     }
 
-    #[test]
-    fn exhausted_script_queue_is_a_loud_error_not_a_fabricated_idle_turn() {
-        let runtime = MockGuestRuntime::new();
-        let compiled = runtime.compile(&PackageRef { package: PackageId("cad".to_string()), hash: hash(2) }, &[]).expect("compile");
+    #[semio_framework_async_macros::async_test]
+    async fn exhausted_script_queue_is_a_loud_error_not_a_fabricated_idle_turn() {
+        let runtime = MockGuestRuntime::new().await;
+        let compiled = runtime.compile(&PackageRef { package: PackageId("cad".to_string()), hash: hash(2).await }, &[]).await.expect("compile");
         let actor = RuntimeActorId(7);
-        let mut inst = runtime.instantiate(&compiled, actor, &[], &Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).expect("instantiate");
+        let mut inst = runtime.instantiate(&compiled, actor, &[], &Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).await.expect("instantiate");
         let error = semio_framework_async::block_on(runtime.execute_turn(&mut inst, &[], Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 })).expect_err("no script queued");
         assert!(matches!(error, TurnFault::Exhausted));
     }
 
-    #[test]
-    fn scripted_fault_surfaces_as_trapped() {
-        let runtime = MockGuestRuntime::new();
-        let compiled = runtime.compile(&PackageRef { package: PackageId("block".to_string()), hash: hash(3) }, &[]).expect("compile");
+    #[semio_framework_async_macros::async_test]
+    async fn scripted_fault_surfaces_as_trapped() {
+        let runtime = MockGuestRuntime::new().await;
+        let compiled = runtime.compile(&PackageRef { package: PackageId("block".to_string()), hash: hash(3).await }, &[]).await.expect("compile");
         let actor = RuntimeActorId(9);
-        let mut inst = runtime.instantiate(&compiled, actor, &[], &Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).expect("instantiate");
-        runtime.script_fault(actor, "epoch deadline exceeded");
+        let mut inst = runtime.instantiate(&compiled, actor, &[], &Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).await.expect("instantiate");
+        runtime.script_fault(actor, "epoch deadline exceeded").await;
         let error = semio_framework_async::block_on(runtime.execute_turn(&mut inst, &[], Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 })).expect_err("scripted fault");
         assert!(matches!(error, TurnFault::Trapped(message) if message == "epoch deadline exceeded"));
     }
 
-    #[test]
-    fn checkpoint_then_restore_round_trips_through_a_fresh_instance() {
-        let runtime = MockGuestRuntime::new();
-        let compiled = runtime.compile(&PackageRef { package: PackageId("puzzle".to_string()), hash: hash(4) }, &[]).expect("compile");
+    #[semio_framework_async_macros::async_test]
+    async fn checkpoint_then_restore_round_trips_through_a_fresh_instance() {
+        let runtime = MockGuestRuntime::new().await;
+        let compiled = runtime.compile(&PackageRef { package: PackageId("puzzle".to_string()), hash: hash(4).await }, &[]).await.expect("compile");
         let actor = RuntimeActorId(11);
-        let mut inst = runtime.instantiate(&compiled, actor, &[], &Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).expect("instantiate");
+        let mut inst = runtime.instantiate(&compiled, actor, &[], &Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).await.expect("instantiate");
         let snapshot = semio_framework_async::block_on(runtime.checkpoint(&mut inst)).expect("checkpoint");
 
-        let mut restored = runtime.instantiate(&compiled, actor, &[], &Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).expect("re-instantiate");
+        let mut restored = runtime.instantiate(&compiled, actor, &[], &Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).await.expect("re-instantiate");
         semio_framework_async::block_on(runtime.restore(&mut restored, &snapshot)).expect("restore");
         let GuestInstanceState::Mock(state) = &restored.state else { panic!("expected a Mock instance") };
         assert_eq!(state.checkpoint.as_deref(), Some(snapshot.as_slice()));
     }
 
-    #[test]
-    fn controllable_clock_advances_deterministically() {
-        let runtime = MockGuestRuntime::new();
-        runtime.set_now_ms(1_000);
-        assert_eq!(runtime.now_ms(), 1_000);
-        runtime.advance_ms(250);
-        assert_eq!(runtime.now_ms(), 1_250);
+    #[semio_framework_async_macros::async_test]
+    async fn controllable_clock_advances_deterministically() {
+        let runtime = MockGuestRuntime::new().await;
+        runtime.set_now_ms(1_000).await;
+        assert_eq!(runtime.now_ms().await, 1_000);
+        runtime.advance_ms(250).await;
+        assert_eq!(runtime.now_ms().await, 1_250);
     }
 
-    #[test]
-    fn drop_instance_forgets_the_actors_script_queue() {
-        let runtime = MockGuestRuntime::new();
-        let compiled = runtime.compile(&PackageRef { package: PackageId("layout".to_string()), hash: hash(5) }, &[]).expect("compile");
+    #[semio_framework_async_macros::async_test]
+    async fn drop_instance_forgets_the_actors_script_queue() {
+        let runtime = MockGuestRuntime::new().await;
+        let compiled = runtime.compile(&PackageRef { package: PackageId("layout".to_string()), hash: hash(5).await }, &[]).await.expect("compile");
         let actor = RuntimeActorId(13);
-        let inst = runtime.instantiate(&compiled, actor, &[], &Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).expect("instantiate");
-        runtime.script_turn(actor, MockGuestRuntime::idle_turn());
-        runtime.drop_instance(inst);
+        let inst = runtime.instantiate(&compiled, actor, &[], &Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).await.expect("instantiate");
+        runtime.script_turn(actor, MockGuestRuntime::idle_turn().await).await;
+        runtime.drop_instance(inst).await;
         assert!(!runtime.scripts.lock().expect("lock").contains_key(&actor.0));
     }
 }
@@ -796,20 +809,31 @@ mod mock_guest_runtime_tests {
 /// now unconditionally broken independent of this packet (their `world` names no longer exist in
 /// `📜️world.wit`, which declares only `world actor`), a finding recorded in
 /// `📓️terra-B1-host-native-report.md`.
-mod actor_bindings {
-    // 🐛️ `additional_derives` must NOT include `Debug`: wasmtime-wit-bindgen 22.0.1's
-    // `type_record`/`print_rust_enum` always emit a hand-written `impl core::fmt::Debug`
-    // for every WIT `record`/`variant`/`enum` regardless of `additional_derives`, so
-    // requesting `Debug` again here produces `E0119: conflicting implementations of trait
-    // `Debug`` for every generated type. `Debug` is already available on all of them.
+pub(crate) mod actor_bindings {
+    // 🐛️ `additional_derives` carries NEITHER `Debug` NOR `Clone`, each for its own reason.
+    // `Debug`: wasmtime-wit-bindgen's `type_record`/`print_rust_enum` always emit a hand-written
+    // `impl core::fmt::Debug` for every WIT `record`/`variant`/`enum` regardless of
+    // `additional_derives`, so requesting it produces `E0119: conflicting implementations` for
+    // every generated type — it is already available on all of them.
+    // `Clone`: MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (B1 world-collapse) — `world actor` now
+    // imports `host-async`, which carries `stream<u8>` (`blob-read`, `http-fetch`'s
+    // `http-response.body`). That lowers to `StreamReader<u8>`, a one-shot resource handle that is
+    // deliberately not `Clone`, and `additional_derives` applies blanket to every generated type
+    // rather than only the plain data records. Nothing in this crate cloned a generated `wit_*`
+    // value (verified by grep before removing the derive — every `.clone()` near a `wit_*`
+    // constructor is on the KERNEL-side `String`/`Vec<u8>` being moved INTO it).
+    //
+    // 🧬️ This is the crate's ONE `bindgen!` invocation for `semio:framework` — `⏳️imports.rs`'s 24
+    // `host-async` implementations re-export this module rather than generating a second, nominally
+    // distinct copy of every type (which is what the two-world split forced before the collapse).
     wasmtime::component::bindgen!({
         world: "actor",
         path: "../../../🧬️schema",
-        additional_derives: [Clone],
     });
 }
 
-use actor_bindings::semio::framework::{capabilities as wit_capabilities, effects as wit_effects, events as wit_events, types as wit_types, ui as wit_ui};
+use actor_bindings::semio::framework::{capabilities as wit_capabilities, effects as wit_effects, events as wit_events, host_async as wit_host_async, types as wit_types, ui as wit_ui};
+use wasmtime::component::Accessor;
 // 🧬️ `reactor`/`jobs` are `export`s of `world actor` (design-runtime.md §2's `execute_turn`/`step_job`
 // exports), not `import`s, so their generated bindings live under `exports::` — unlike `pure`'s
 // argument/return types (`capabilities`/`effects`/`events`/`types`/`ui`), which sit at the top level.
@@ -824,8 +848,14 @@ struct ActorHostState {
     actor: RuntimeActorId,
     #[allow(dead_code)]
     caps: Vec<BrokerCapabilityGrant>,
-    #[allow(dead_code)]
-    effect_sink: Vec<Effect>,
+    /// 🚪️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (B1 world-collapse): where `host-async.emit`'s
+    /// fire-and-forget effects land mid-turn. Held as the WIT variant, NOT the kernel `Effect`:
+    /// `emit` is declared sync in the WIT (a deliberate one-way door), `wit_effect_to_kernel` is
+    /// genuinely `async`, and pushing the raw variant lets `execute_turn` do the conversion where
+    /// it can actually `.await` — no `block_on` bridge on a wasm host path (R4 forbids one there).
+    emit_sink: Vec<wit_effects::Effect>,
+    /// 🚪️ The `emit-patch` counterpart. Drained by `execute_turn` alongside `emit_sink`.
+    emit_patch_sink: Vec<wit_ui::UiPatch>,
     #[allow(dead_code)]
     asset_map: HashMap<String, Vec<u8>>,
     limiter: BudgetLimiter,
@@ -850,6 +880,9 @@ impl WasiView for ActorHostState {
 /// 🧬️ `pure` (`📜️wit/📜️pure.wit`) is `world actor`'s ONLY import — `log`/`now-ms`/`trace-span`,
 /// none fallible, none async.
 impl actor_bindings::semio::framework::pure::Host for ActorHostState {
+    // 🚫️async: E1 — `wasmtime::component::bindgen!` generates this `Host` trait from the WIT
+    // interface, which declares `log`/`now-ms`/`trace-span` sync (see doc comment above); the
+    // trait's signature is external and fixed, not chosen by this repo. See R9/R2 E1.
     fn log(&mut self, level: String, message: String) {
         eprintln!("[actor:{}:{level}] {message}", self.plugin_id);
     }
@@ -862,6 +895,172 @@ impl actor_bindings::semio::framework::pure::Host for ActorHostState {
         eprintln!("[actor:{}:trace] {name}", self.plugin_id);
     }
 }
+
+/// 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (B1 world-collapse): the five type-only interfaces.
+/// `Actor::add_to_linker` — the whole-world linker call the collapse requires (see
+/// `WasmtimeRuntime::new`) — demands a `Host` impl for every interface `wit-parser` surfaces as an
+/// import, including the ones present ONLY because an exported function's signature references
+/// their types. Those traits declare no methods at all (the schema-parity test's
+/// `functional_import_names`/`type_only_import_names` split asserts exactly this distinction), so
+/// each impl is empty by construction, not by omission.
+impl wit_types::Host for ActorHostState {}
+impl wit_capabilities::Host for ActorHostState {}
+impl wit_effects::Host for ActorHostState {}
+impl wit_events::Host for ActorHostState {}
+impl wit_ui::Host for ActorHostState {}
+
+/// 🪧️ `ui.wit`'s `resource surface` is an empty MARKER resource — declared purely so the design
+/// table's vocabulary has a nominal type, referenced by no function signature in the world (see
+/// `interface ui`'s own doc comment). `bindgen!` still generates a `HostSurface` trait with the
+/// mandatory `drop`, so this impl exists to satisfy the linker and can never actually be called:
+/// no host function hands a `Surface` handle to the guest, so no handle exists to drop.
+impl wit_ui::HostSurface for ActorHostState {
+    // 🚫️async: E1 — `bindgen!` fixes this signature (the resource-destructor hook wasmtime calls
+    // when a guest handle goes out of scope); it is not chosen by this repo. See R9/R2 E1.
+    fn drop(&mut self, _rep: wasmtime::component::Resource<wit_ui::Surface>) -> wasmtime::Result<()> {
+        Ok(())
+    }
+}
+
+//#region 🚪️host-async on the poll-backed runtime
+/// 🚪️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (B1 world-collapse): `emit`/`emit-patch`, the two
+/// deliberate one-way doors. On THIS runtime they are fully functional — the sinks are drained by
+/// `execute_turn` at the end of the same turn and merged into the `TurnResult`, which is precisely
+/// the poll world's own delivery mechanism, so an `emit`ed effect reaches the host through exactly
+/// the path an effect returned from `poll` would.
+impl wit_host_async::Host for ActorHostState {
+    // 🚫️async: E1 — `bindgen!` declares `emit`/`emit-patch` sync because the WIT does (see
+    // `host-async`'s own doc comment on why these two stay fire-and-forget). Both bodies are a
+    // single `Vec::push` with no suspension point, so nothing is lost: the ASYNC half of the work
+    // (`wit_effect_to_kernel`) is deferred to `execute_turn`, which can await it properly.
+    fn emit(&mut self, value: wit_effects::Effect) {
+        self.emit_sink.push(value);
+    }
+
+    fn emit_patch(&mut self, patch: wit_ui::UiPatch) {
+        self.emit_patch_sink.push(patch);
+    }
+}
+
+/// 🧯️ The fault every direct `host-async` await resolves to under [`WasmtimeRuntime`] — the
+/// poll-backed runtime, whose contract is one call in, one `turn-result` out.
+///
+/// This is a real semantic boundary, not a stub: a `host-async` import must resolve DURING the
+/// guest's own call, but this runtime answers host operations by returning the effect in the
+/// `turn-result` and delivering an `event.completed` on a LATER `poll`. There is no point in the
+/// turn at which such a future could complete, so failing loudly with a typed fault is the only
+/// honest answer — silently parking would deadlock the turn, and trapping would kill the actor.
+/// The runtime that DOES serve these awaits is the one built on `⏳️imports.rs`'s
+/// `AsyncActorHostState` (24 real implementations, dispatching straight onto `AsyncServices`),
+/// mounted by the `async-plugin-runtime` packet.
+async fn poll_backed_direct_await_fault(name: &str) -> Vec<u8> {
+    dsl::encode_fault_bytes(&dsl::Fault::new(
+        dsl::FaultOrigin::Os,
+        dsl::FaultCode::new("host-async.poll-backed"),
+        format!("host-async {name} cannot be awaited directly on the poll-backed WasmtimeRuntime — emit the matching `effect` from `poll` and await its `event.completed` on a later turn"),
+    ))
+}
+
+/// ⏳️ The 24 awaitable imports. Every one delegates to [`poll_backed_direct_await_fault`] — see its
+/// doc for why that is the correct behaviour here rather than a gap.
+impl wit_host_async::HostWithStore<ActorHostState> for wasmtime::component::HasSelf<ActorHostState> {
+    async fn storage_read(_accessor: &Accessor<ActorHostState, Self>, _params: wit_effects::StorageReadParams) -> Result<Option<Vec<u8>>, Vec<u8>> {
+        Err(poll_backed_direct_await_fault("storage-read").await)
+    }
+
+    async fn storage_write(_accessor: &Accessor<ActorHostState, Self>, _params: wit_effects::StorageWriteParams) -> Result<(), Vec<u8>> {
+        Err(poll_backed_direct_await_fault("storage-write").await)
+    }
+
+    async fn storage_delete(_accessor: &Accessor<ActorHostState, Self>, _params: wit_effects::StorageDeleteParams) -> Result<(), Vec<u8>> {
+        Err(poll_backed_direct_await_fault("storage-delete").await)
+    }
+
+    async fn blob_load(_accessor: &Accessor<ActorHostState, Self>, _params: wit_effects::BlobLoadParams) -> Result<Vec<u8>, Vec<u8>> {
+        Err(poll_backed_direct_await_fault("blob-load").await)
+    }
+
+    async fn blob_write(_accessor: &Accessor<ActorHostState, Self>, _params: wit_effects::BlobWriteParams) -> Result<Vec<u8>, Vec<u8>> {
+        Err(poll_backed_direct_await_fault("blob-write").await)
+    }
+
+    async fn blob_read(_accessor: &Accessor<ActorHostState, Self>, _hash: String) -> Result<wasmtime::component::StreamReader<u8>, Vec<u8>> {
+        Err(poll_backed_direct_await_fault("blob-read").await)
+    }
+
+    async fn http_fetch(_accessor: &Accessor<ActorHostState, Self>, _params: wit_effects::HttpParams) -> Result<wit_host_async::HttpResponse, Vec<u8>> {
+        Err(poll_backed_direct_await_fault("http-fetch").await)
+    }
+
+    async fn document_read(_accessor: &Accessor<ActorHostState, Self>, _params: wit_effects::DocumentReadParams) -> Result<Vec<u8>, Vec<u8>> {
+        Err(poll_backed_direct_await_fault("document-read").await)
+    }
+
+    async fn document_write(_accessor: &Accessor<ActorHostState, Self>, _params: wit_effects::DocumentWriteParams) -> Result<Vec<u8>, Vec<u8>> {
+        Err(poll_backed_direct_await_fault("document-write").await)
+    }
+
+    async fn link_resolve(_accessor: &Accessor<ActorHostState, Self>, _link: Vec<u8>) -> Result<Vec<u8>, Vec<u8>> {
+        Err(poll_backed_direct_await_fault("link-resolve").await)
+    }
+
+    async fn registry_query(_accessor: &Accessor<ActorHostState, Self>, _params: wit_effects::RegistryQueryParams) -> Result<Vec<u8>, Vec<u8>> {
+        Err(poll_backed_direct_await_fault("registry-query").await)
+    }
+
+    async fn io_compose(_accessor: &Accessor<ActorHostState, Self>, _params: wit_effects::IoComposeParams) -> Result<Vec<u8>, Vec<u8>> {
+        Err(poll_backed_direct_await_fault("io-compose").await)
+    }
+
+    async fn io_run(_accessor: &Accessor<ActorHostState, Self>, _params: wit_effects::IoRunParams) -> Result<Vec<u8>, Vec<u8>> {
+        Err(poll_backed_direct_await_fault("io-run").await)
+    }
+
+    async fn cache_derive(_accessor: &Accessor<ActorHostState, Self>, _params: wit_effects::CacheDeriveParams) -> Result<Vec<u8>, Vec<u8>> {
+        Err(poll_backed_direct_await_fault("cache-derive").await)
+    }
+
+    async fn cache_read(_accessor: &Accessor<ActorHostState, Self>, _params: wit_effects::CacheReadParams) -> Result<Vec<u8>, Vec<u8>> {
+        Err(poll_backed_direct_await_fault("cache-read").await)
+    }
+
+    async fn invoke_extension(_accessor: &Accessor<ActorHostState, Self>, _params: wit_effects::InvokeExtensionParams) -> Result<Vec<u8>, Vec<u8>> {
+        Err(poll_backed_direct_await_fault("invoke-extension").await)
+    }
+
+    async fn open_window(_accessor: &Accessor<ActorHostState, Self>, _params: wit_effects::OpenWindowParams) -> Result<Vec<u8>, Vec<u8>> {
+        Err(poll_backed_direct_await_fault("open-window").await)
+    }
+
+    async fn open_dialog(_accessor: &Accessor<ActorHostState, Self>, _params: wit_effects::OpenDialogParams) -> Result<Vec<u8>, Vec<u8>> {
+        Err(poll_backed_direct_await_fault("open-dialog").await)
+    }
+
+    async fn dispatch_action(_accessor: &Accessor<ActorHostState, Self>, _params: wit_effects::DispatchActionParams) -> Result<Vec<u8>, Vec<u8>> {
+        Err(poll_backed_direct_await_fault("dispatch-action").await)
+    }
+
+    async fn spawn_plugin_instance(_accessor: &Accessor<ActorHostState, Self>, _params: wit_effects::SpawnPluginInstanceParams) -> Result<Vec<u8>, Vec<u8>> {
+        Err(poll_backed_direct_await_fault("spawn-plugin-instance").await)
+    }
+
+    async fn request_file_open(_accessor: &Accessor<ActorHostState, Self>, _params: wit_effects::RequestFileOpenParams) -> Result<Vec<u8>, Vec<u8>> {
+        Err(poll_backed_direct_await_fault("request-file-open").await)
+    }
+
+    async fn request_media_frames(_accessor: &Accessor<ActorHostState, Self>, _params: wit_effects::RequestMediaFramesParams) -> Result<Vec<u8>, Vec<u8>> {
+        Err(poll_backed_direct_await_fault("request-media-frames").await)
+    }
+
+    async fn request_capability(_accessor: &Accessor<ActorHostState, Self>, _params: wit_effects::RequestCapabilityParams) -> Result<Vec<u8>, Vec<u8>> {
+        Err(poll_backed_direct_await_fault("request-capability").await)
+    }
+
+    async fn spawn_job(_accessor: &Accessor<ActorHostState, Self>, _job: u64, _kind: String, _input: Vec<u8>, _placement: wit_effects::JobPlacement) -> Result<Vec<u8>, Vec<u8>> {
+        Err(poll_backed_direct_await_fault("spawn-job").await)
+    }
+}
+//#endregion 🚪️host-async on the poll-backed runtime
 
 struct WasmtimeInstanceState {
     store: Store<ActorHostState>,
@@ -887,32 +1086,44 @@ pub struct WasmtimeRuntime {
 }
 
 impl WasmtimeRuntime {
-    pub fn new(cfg: SharedEngineConfig) -> Result<Self, PluginHostError> {
-        let (engine, pooling_active) = build_shared_engine(cfg)?;
+    pub async fn new(cfg: SharedEngineConfig) -> Result<Self, PluginHostError> {
+        let (engine, pooling_active) = build_shared_engine(cfg).await?;
         let epoch_ticker = EpochTicker::start(&engine);
         let mut linker = Linker::new(&engine);
-        actor_bindings::semio::framework::pure::add_to_linker::<ActorHostState, wasmtime::component::HasSelf<ActorHostState>>(&mut linker, |state: &mut ActorHostState| state).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
-        wasmtime_wasi::p2::add_to_linker_sync(&mut linker).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
-        let engine_config_hash = shared_engine_config_hash(&cfg, pooling_active);
-        Ok(Self { engine, _epoch_ticker: epoch_ticker, linker, cache_root: default_compiled_cache_root(), engine_config_hash, next_instance_id: std::sync::atomic::AtomicU32::new(1) })
+        // 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (B1 world-collapse): `Actor::add_to_linker`
+        // defines BOTH of the collapsed world's imports in one call (`pure` + `host-async`) —
+        // adding only `pure` now leaves 24 imports unresolved and every instantiation fails with
+        // "a matching implementation was not found in the linker".
+        actor_bindings::Actor::add_to_linker::<ActorHostState, wasmtime::component::HasSelf<ActorHostState>>(&mut linker, |state: &mut ActorHostState| state).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
+        // 🌐️ `add_to_linker_async`, not `_sync`: the Store is component-model-async now, and the
+        // sync WASI shim installs host functions that cannot be called from an async-lifted guest.
+        wasmtime_wasi::p2::add_to_linker_async(&mut linker).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
+        let engine_config_hash = shared_engine_config_hash(&cfg, pooling_active).await;
+        Ok(Self { engine, _epoch_ticker: epoch_ticker, linker, cache_root: default_compiled_cache_root().await, engine_config_hash, next_instance_id: std::sync::atomic::AtomicU32::new(1) })
     }
 }
 
 impl GuestRuntime for WasmtimeRuntime {
-    fn compile(&self, package: &PackageRef, bytes: &[u8]) -> Result<CompiledHandle, PluginHostError> {
-        let cache_path = compiled_cache_path(&self.cache_root, &self.engine_config_hash, &package.hash.0);
-        if let Some(component) = load_compiled_component(&self.engine, &cache_path) {
+    async fn compile(&self, package: &PackageRef, bytes: &[u8]) -> Result<CompiledHandle, PluginHostError> {
+        let cache_path = compiled_cache_path(&self.cache_root, &self.engine_config_hash, &package.hash.0).await;
+        if let Some(component) = load_compiled_component(&self.engine, &cache_path).await {
             return Ok(CompiledHandle { package_hash: package.hash.0, component: Some(Arc::new(component)) });
         }
         let component = Component::from_binary(&self.engine, bytes).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
-        let _ = store_compiled_component(&component, &cache_path);
+        // 🚫️async: R13/R14 corollary — `let _ = <async call>;` used to suppress the lint while
+        // silently dropping this call's future: the on-disk compilation cache write never ran, so
+        // `compile` was recompiling from wasm bytes on every single call regardless of
+        // `load_compiled_component`'s cache-hit path above. Best-effort by design (a failed cache
+        // write must not fail `compile` itself), so the `Result` still discards, only the future
+        // is now actually driven.
+        let _ = store_compiled_component(&component, &cache_path).await;
         Ok(CompiledHandle { package_hash: package.hash.0, component: Some(Arc::new(component)) })
     }
 
-    fn instantiate(&self, compiled: &CompiledHandle, actor: RuntimeActorId, caps: &[BrokerCapabilityGrant], budget: &Budget) -> Result<GuestInstance, PluginHostError> {
+    async fn instantiate(&self, compiled: &CompiledHandle, actor: RuntimeActorId, caps: &[BrokerCapabilityGrant], budget: &Budget) -> Result<GuestInstance, PluginHostError> {
         let component = compiled.component.as_ref().ok_or_else(|| PluginHostError::Plugin("CompiledHandle has no wasmtime Component — built by MockGuestRuntime::compile, not WasmtimeRuntime::compile".to_string()))?;
         let instance_id = self.next_instance_id.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-        let host_state = ActorHostState { plugin_id: format!("actor-{}", actor.0), actor, caps: caps.to_vec(), effect_sink: Vec::new(), asset_map: HashMap::new(), limiter: BudgetLimiter::default(), wasi_ctx: WasiCtxBuilder::new().build(), resource_table: ResourceTable::new() };
+        let host_state = ActorHostState { plugin_id: format!("actor-{}", actor.0), actor, caps: caps.to_vec(), emit_sink: Vec::new(), emit_patch_sink: Vec::new(), asset_map: HashMap::new(), limiter: BudgetLimiter::default(), wasi_ctx: WasiCtxBuilder::new().build(), resource_table: ResourceTable::new() };
         let mut store = Store::new(&self.engine, host_state);
         store.limiter(|state| &mut state.limiter as &mut dyn ResourceLimiter);
         store.set_fuel(budget.fuel).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
@@ -923,22 +1134,37 @@ impl GuestRuntime for WasmtimeRuntime {
         // here anyway — every subsequent call goes through `bindings`' own typed accessors) and
         // returns bare `Actor` instead. See `path2.rs`'s expanded bindgen output in
         // `wasmtime-internal-component-macro-47.0.3/tests/expanded/` for the confirmed new shape.
-        let bindings = actor_bindings::Actor::instantiate(&mut store, component, &self.linker).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
+        //
+        // 🧬️ B1 world-collapse: `instantiate_async`, not `instantiate` — the world's `host-async`
+        // imports are async host functions, and the sync entry point refuses a Store whose linker
+        // carries any.
+        let bindings = actor_bindings::Actor::instantiate_async(&mut store, component, &self.linker).await.map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
         Ok(GuestInstance { actor, state: GuestInstanceState::Wasmtime(WasmtimeInstanceState { store, bindings, instance_id }) })
     }
 
     async fn execute_turn(&self, inst: &mut GuestInstance, events: &[Event], budget: Budget) -> Result<TurnResult, TurnFault> {
-        // 👶️ host-dedyn: identical body to before this packet (fuel/epoch setup, the fuel/epoch
-        // trap-message sniffing, effect conversion, `TurnResult` shape all byte-for-byte unchanged)
-        // — no suspension point, so this resolves on its very first poll.
         let GuestInstanceState::Wasmtime(state) = &mut inst.state else {
             return Err(TurnFault::Trapped("execute_turn called on a non-wasmtime GuestInstance".to_string()));
         };
-        state.store.set_fuel(budget.fuel).map_err(|error| TurnFault::Host(PluginHostError::Wasmtime(error.to_string())))?;
-        state.store.set_epoch_deadline(budget.deadline_ms as u64);
+        let WasmtimeInstanceState { store, bindings, instance_id } = state;
+        store.set_fuel(budget.fuel).map_err(|error| TurnFault::Host(PluginHostError::Wasmtime(error.to_string())))?;
+        store.set_epoch_deadline(budget.deadline_ms as u64);
         let wit_budget = wit_reactor::Budget { fuel: budget.fuel, deadline_ms: budget.deadline_ms, max_effects: budget.max_effects, max_patch_bytes: budget.max_patch_bytes, max_frames: budget.max_frames };
-        let wit_events: Vec<wit_events::Event> = events.iter().map(|event| kernel_event_to_wit(event, state.instance_id)).collect();
-        let call_result = state.bindings.semio_framework_reactor().call_poll(&mut state.store, &wit_events, wit_budget);
+        // 🚫️async: R10 residue shape 1 — `kernel_event_to_wit` is async, hoisted out of the sync
+        // `Iterator::map` closure via a plain loop.
+        let mut wit_events: Vec<wit_events::Event> = Vec::with_capacity(events.len());
+        for event in events {
+            wit_events.push(kernel_event_to_wit(event, *instance_id).await);
+        }
+        // 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (B1 world-collapse): `poll` is `async func`
+        // now, so it is driven through `Store::run_concurrent`'s `Accessor` rather than called
+        // directly against `&mut Store` — that is the ONLY shape wasmtime offers for an async-lifted
+        // export, and it is what lets the guest suspend on a `host-async` import mid-turn without
+        // unwinding the call. Args are owned (moved into the concurrent task), not borrowed.
+        let call_result = store
+            .run_concurrent(async |accessor| bindings.semio_framework_reactor().call_poll(accessor, wit_events, wit_budget).await)
+            .await
+            .and_then(|inner| inner);
         let poll_result = match call_result {
             Ok(inner) => inner,
             Err(trap) => {
@@ -954,9 +1180,20 @@ impl GuestRuntime for WasmtimeRuntime {
             }
         };
         let wit_turn_result = poll_result.map_err(|error| TurnFault::Trapped(format!("{error:?}")))?;
-        let mut effects = Vec::with_capacity(wit_turn_result.effects.len());
-        for effect in wit_turn_result.effects {
-            effects.push(wit_effect_to_kernel(effect).map_err(TurnFault::Host)?);
+        // 🚪️ B1 world-collapse: everything the guest pushed through `host-async.emit` during THIS
+        // turn is delivered on the same `turn-result` as the effects it returned — one merged list,
+        // emitted-first (they happened earlier in the turn, by construction).
+        let emitted: Vec<wit_effects::Effect> = std::mem::take(&mut store.data_mut().emit_sink);
+        // 🚧️ `emit_patch_sink` is drained and DISCARDED, deliberately and visibly: this runtime's
+        // `ui_patches` is `Vec::new()` unconditionally (see the note on that field below — the
+        // WIT `patch-op` ↔ kernel `PatchOp` path/node encoding is still unagreed), so an emitted
+        // patch has nowhere correct to go yet. Draining rather than accumulating keeps a long-lived
+        // actor from growing an unbounded sink; the moment `ui_patches` is real, both halves get
+        // marshaled together here.
+        let _emitted_patches: Vec<wit_ui::UiPatch> = std::mem::take(&mut store.data_mut().emit_patch_sink);
+        let mut effects = Vec::with_capacity(emitted.len() + wit_turn_result.effects.len());
+        for effect in emitted.into_iter().chain(wit_turn_result.effects) {
+            effects.push(wit_effect_to_kernel(effect).await.map_err(TurnFault::Host)?);
         }
         Ok(TurnResult {
             // 🚧️ UI patch marshaling (WIT `patch-op`'s `path: list<u32>` + `node: pack` vs kernel
@@ -966,19 +1203,25 @@ impl GuestRuntime for WasmtimeRuntime {
             ui_patches: Vec::new(),
             effects,
             next_wake: wit_turn_result.next_wake,
-            status: wit_turn_status_to_kernel(wit_turn_result.status),
+            status: wit_turn_status_to_kernel(wit_turn_result.status).await,
             fuel_used: wit_turn_result.fuel_used,
         })
     }
 
+    // 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (B1 world-collapse): every export below is
+    // `async func` in the WIT now, so each goes through `Store::run_concurrent` + `Accessor` — the
+    // same shape `execute_turn` uses, and the only one wasmtime offers for an async-lifted export.
+    // The doubled `Result` is unchanged in meaning: outer = trap, inner = `plugin-error`.
     async fn start_job(&self, inst: &mut GuestInstance, job: u64, kind: &str, input: Vec<u8>) -> Result<(), TurnFault> {
         let GuestInstanceState::Wasmtime(state) = &mut inst.state else {
             return Err(TurnFault::Trapped("start_job called on a non-wasmtime GuestInstance".to_string()));
         };
-        state
-            .bindings
-            .semio_framework_jobs()
-            .call_start_job(&mut state.store, job, kind, &input)
+        let WasmtimeInstanceState { store, bindings, .. } = state;
+        let kind = kind.to_string();
+        store
+            .run_concurrent(async |accessor| bindings.semio_framework_jobs().call_start_job(accessor, job, kind, input).await)
+            .await
+            .map_err(|error| TurnFault::Trapped(error.to_string()))?
             .map_err(|error| TurnFault::Trapped(error.to_string()))?
             .map_err(|error| TurnFault::Trapped(format!("{error:?}")))
     }
@@ -987,13 +1230,14 @@ impl GuestRuntime for WasmtimeRuntime {
         let GuestInstanceState::Wasmtime(state) = &mut inst.state else {
             return Err(TurnFault::Trapped("step_job called on a non-wasmtime GuestInstance".to_string()));
         };
-        state.store.set_fuel(budget.fuel).map_err(|error| TurnFault::Host(PluginHostError::Wasmtime(error.to_string())))?;
-        state.store.set_epoch_deadline(budget.deadline_ms as u64);
+        let WasmtimeInstanceState { store, bindings, .. } = state;
+        store.set_fuel(budget.fuel).map_err(|error| TurnFault::Host(PluginHostError::Wasmtime(error.to_string())))?;
+        store.set_epoch_deadline(budget.deadline_ms as u64);
         let wit_budget = wit_jobs::JobBudget { fuel: budget.fuel, deadline_ms: budget.deadline_ms };
-        let step = state
-            .bindings
-            .semio_framework_jobs()
-            .call_step_job(&mut state.store, job, wit_budget)
+        let step = store
+            .run_concurrent(async |accessor| bindings.semio_framework_jobs().call_step_job(accessor, job, wit_budget).await)
+            .await
+            .map_err(|error| TurnFault::Trapped(error.to_string()))?
             .map_err(|error| TurnFault::Trapped(error.to_string()))?
             .map_err(|error| TurnFault::Trapped(format!("{error:?}")))?;
         Ok(match step {
@@ -1007,21 +1251,26 @@ impl GuestRuntime for WasmtimeRuntime {
         let GuestInstanceState::Wasmtime(state) = &mut inst.state else {
             return Err(TurnFault::Trapped("cancel_job called on a non-wasmtime GuestInstance".to_string()));
         };
-        // 🧬️ `jobs.wit`'s `cancel-job: func(job: u64);` has no `result<_, plugin-error>` wrapper
-        // (unlike `start-job`/`step-job`) — only the outer `wasmtime::Result` (trap-level) can
-        // fail, so this is a single `.map_err`, not the double `.map_err(..).map_err(..)`
-        // `start_job`/`step_job` need.
-        state.bindings.semio_framework_jobs().call_cancel_job(&mut state.store, job).map_err(|error| TurnFault::Trapped(error.to_string()))
+        let WasmtimeInstanceState { store, bindings, .. } = state;
+        // 🧬️ `jobs.wit`'s `cancel-job: async func(job: u64);` has no `result<_, plugin-error>`
+        // wrapper (unlike `start-job`/`step-job`), so only the trap-level results can fail: one
+        // from `run_concurrent` itself, one from the call.
+        store
+            .run_concurrent(async |accessor| bindings.semio_framework_jobs().call_cancel_job(accessor, job).await)
+            .await
+            .map_err(|error| TurnFault::Trapped(error.to_string()))?
+            .map_err(|error| TurnFault::Trapped(error.to_string()))
     }
 
     async fn checkpoint(&self, inst: &mut GuestInstance) -> Result<Vec<u8>, PluginHostError> {
         let GuestInstanceState::Wasmtime(state) = &mut inst.state else {
             return Err(PluginHostError::Plugin("checkpoint called on a non-wasmtime GuestInstance".to_string()));
         };
-        state
-            .bindings
-            .semio_framework_checkpoint()
-            .call_checkpoint(&mut state.store)
+        let WasmtimeInstanceState { store, bindings, .. } = state;
+        store
+            .run_concurrent(async |accessor| bindings.semio_framework_checkpoint().call_checkpoint(accessor).await)
+            .await
+            .map_err(|error| PluginHostError::Wasmtime(error.to_string()))?
             .map_err(|error| PluginHostError::Wasmtime(error.to_string()))?
             .map_err(|error| PluginHostError::Plugin(format!("{error:?}")))
     }
@@ -1030,15 +1279,17 @@ impl GuestRuntime for WasmtimeRuntime {
         let GuestInstanceState::Wasmtime(state) = &mut inst.state else {
             return Err(PluginHostError::Plugin("restore called on a non-wasmtime GuestInstance".to_string()));
         };
-        state
-            .bindings
-            .semio_framework_checkpoint()
-            .call_restore(&mut state.store, state_bytes)
+        let WasmtimeInstanceState { store, bindings, .. } = state;
+        let state_bytes = state_bytes.to_vec();
+        store
+            .run_concurrent(async |accessor| bindings.semio_framework_checkpoint().call_restore(accessor, state_bytes).await)
+            .await
+            .map_err(|error| PluginHostError::Wasmtime(error.to_string()))?
             .map_err(|error| PluginHostError::Wasmtime(error.to_string()))?
             .map_err(|error| PluginHostError::Plugin(format!("{error:?}")))
     }
 
-    fn drop_instance(&self, _inst: GuestInstance) {
+    async fn drop_instance(&self, _inst: GuestInstance) {
         // 🗑️ `Store<ActorHostState>` and its `Component` `Arc` drop with `_inst` — nothing else to
         // release; the pooling allocator reclaims the instance's slab on `Store` drop.
     }
@@ -1074,23 +1325,23 @@ pub enum GuestRuntimes {
 }
 
 impl GuestRuntime for GuestRuntimes {
-    fn compile(&self, package: &PackageRef, bytes: &[u8]) -> Result<CompiledHandle, PluginHostError> {
+    async fn compile(&self, package: &PackageRef, bytes: &[u8]) -> Result<CompiledHandle, PluginHostError> {
         match self {
-            Self::Wasmtime(r) => r.compile(package, bytes),
+            Self::Wasmtime(r) => r.compile(package, bytes).await,
             #[cfg(test)]
-            Self::Mock(r) => r.compile(package, bytes),
+            Self::Mock(r) => r.compile(package, bytes).await,
             #[cfg(test)]
-            Self::Recording(r) => r.compile(package, bytes),
+            Self::Recording(r) => r.compile(package, bytes).await,
         }
     }
 
-    fn instantiate(&self, compiled: &CompiledHandle, actor: RuntimeActorId, caps: &[BrokerCapabilityGrant], budget: &Budget) -> Result<GuestInstance, PluginHostError> {
+    async fn instantiate(&self, compiled: &CompiledHandle, actor: RuntimeActorId, caps: &[BrokerCapabilityGrant], budget: &Budget) -> Result<GuestInstance, PluginHostError> {
         match self {
-            Self::Wasmtime(r) => r.instantiate(compiled, actor, caps, budget),
+            Self::Wasmtime(r) => r.instantiate(compiled, actor, caps, budget).await,
             #[cfg(test)]
-            Self::Mock(r) => r.instantiate(compiled, actor, caps, budget),
+            Self::Mock(r) => r.instantiate(compiled, actor, caps, budget).await,
             #[cfg(test)]
-            Self::Recording(r) => r.instantiate(compiled, actor, caps, budget),
+            Self::Recording(r) => r.instantiate(compiled, actor, caps, budget).await,
         }
     }
 
@@ -1154,13 +1405,13 @@ impl GuestRuntime for GuestRuntimes {
         }
     }
 
-    fn drop_instance(&self, inst: GuestInstance) {
+    async fn drop_instance(&self, inst: GuestInstance) {
         match self {
-            Self::Wasmtime(r) => r.drop_instance(inst),
+            Self::Wasmtime(r) => r.drop_instance(inst).await,
             #[cfg(test)]
-            Self::Mock(r) => r.drop_instance(inst),
+            Self::Mock(r) => r.drop_instance(inst).await,
             #[cfg(test)]
-            Self::Recording(r) => r.drop_instance(inst),
+            Self::Recording(r) => r.drop_instance(inst).await,
         }
     }
 }
@@ -1192,25 +1443,25 @@ impl From<Arc<shard::RecordingRuntime>> for GuestRuntimes {
 /// (packet A3) surfaced while writing this and are called out inline + in
 /// `📓️terra-B1-host-native-report.md`'s `## blocked-on` (most notably: `📜️wit/📜️effects.wit`'s
 /// `io-run` effect has no `Effect::IoRun` counterpart yet).
-fn decode_dsl(bytes: &[u8]) -> Option<DslValue> {
+async fn decode_dsl(bytes: &[u8]) -> Option<DslValue> {
     if bytes.is_empty() {
         return None;
     }
-    store::pack_rt::decode_wire_value(bytes).ok()
+    store::pack_rt::decode_wire_value(bytes).await.ok()
 }
 
-fn decode_json<T: serde::de::DeserializeOwned>(bytes: &[u8]) -> Option<T> {
+async fn decode_json<T: serde::de::DeserializeOwned>(bytes: &[u8]) -> Option<T> {
     if bytes.is_empty() {
         return None;
     }
     serde_json::from_slice(bytes).ok()
 }
 
-fn encode_json<T: serde::Serialize>(value: &T) -> Vec<u8> {
+async fn encode_json<T: serde::Serialize>(value: &T) -> Vec<u8> {
     serde_json::to_vec(value).unwrap_or_default()
 }
 
-fn wit_message_endpoint_to_kernel(endpoint: wit_types::MessageEndpoint) -> MessageEndpoint {
+async fn wit_message_endpoint_to_kernel(endpoint: wit_types::MessageEndpoint) -> MessageEndpoint {
     match endpoint {
         wit_types::MessageEndpoint::Shell(instance) => MessageEndpoint::Shell { instance: semio_framework::kernel::PluginInstanceId(instance.to_string()) },
         wit_types::MessageEndpoint::Backbone(uri) => MessageEndpoint::Backbone { uri },
@@ -1220,7 +1471,7 @@ fn wit_message_endpoint_to_kernel(endpoint: wit_types::MessageEndpoint) -> Messa
     }
 }
 
-fn kernel_message_endpoint_to_wit(endpoint: &MessageEndpoint) -> wit_types::MessageEndpoint {
+async fn kernel_message_endpoint_to_wit(endpoint: &MessageEndpoint) -> wit_types::MessageEndpoint {
     match endpoint {
         MessageEndpoint::Shell { instance } => wit_types::MessageEndpoint::Shell(instance.0.parse().unwrap_or(0)),
         MessageEndpoint::Backbone { uri } => wit_types::MessageEndpoint::Backbone(uri.clone()),
@@ -1230,14 +1481,14 @@ fn kernel_message_endpoint_to_wit(endpoint: &MessageEndpoint) -> wit_types::Mess
     }
 }
 
-fn kernel_request_outcome_to_wit(result: &RequestOutcome) -> wit_events::CompletionResult {
+async fn kernel_request_outcome_to_wit(result: &RequestOutcome) -> wit_events::CompletionResult {
     match result {
         RequestOutcome::Ok(bytes) => wit_events::CompletionResult::Ok(bytes.clone()),
         RequestOutcome::Err(bytes) => wit_events::CompletionResult::Fault(bytes.clone()),
     }
 }
 
-fn wit_turn_status_to_kernel(status: wit_reactor::TurnStatus) -> TurnStatus {
+async fn wit_turn_status_to_kernel(status: wit_reactor::TurnStatus) -> TurnStatus {
     match status {
         wit_reactor::TurnStatus::Idle => TurnStatus::Idle,
         wit_reactor::TurnStatus::MoreWork => TurnStatus::MoreWork,
@@ -1252,38 +1503,47 @@ fn wit_turn_status_to_kernel(status: wit_reactor::TurnStatus) -> TurnStatus {
 /// 🐛️ Guest → host: WIT `effect` (`📜️wit/📜️effects.wit`) to `semio_framework::kernel::Effect`.
 /// `Err` is returned (never a silently-wrong `Effect`) for `io-run` — the one variant with no
 /// kernel counterpart yet (`## blocked-on` in the report).
-fn wit_effect_to_kernel(effect: wit_effects::Effect) -> Result<Effect, PluginHostError> {
+async fn wit_effect_to_kernel(effect: wit_effects::Effect) -> Result<Effect, PluginHostError> {
     use wit_effects::Effect as E;
     Ok(match effect {
-        E::SendMessage(inner) => Effect::SendMessage { target: kernel_message_endpoint_to_wit_reverse(inner.target), payload: inner.payload },
+        E::SendMessage(inner) => Effect::SendMessage { target: kernel_message_endpoint_to_wit_reverse(inner.target).await, payload: inner.payload },
         E::PublishEvent(inner) => Effect::PublishEvent { topic: inner.topic, payload: inner.payload },
         E::BlobLoad(inner) => Effect::BlobLoad { req: RequestId(inner.req), hash: inner.params.hash },
         E::BlobWrite(inner) => Effect::BlobWrite {
             req: RequestId(inner.req),
-            media_type: decode_json(&inner.params.media_type).unwrap_or(semio_framework::MediaType { class: semio_framework::MediaClass::Data, form: semio_framework::MediaForm::Value }),
+            media_type: decode_json(&inner.params.media_type).await.unwrap_or(semio_framework::MediaType { class: semio_framework::MediaClass::Data, form: semio_framework::MediaForm::Value }),
             bytes: inner.params.bytes,
         },
         E::HttpRequest(inner) => Effect::HttpRequest { req: RequestId(inner.req), method: inner.params.method, url: inner.params.url, headers: inner.params.headers, body: inner.params.body, stream: inner.params.streaming },
         E::DocumentRead(inner) => Effect::DocumentRead { req: RequestId(inner.req), doc: ArtifactHandle(inner.params.doc as u128), lane: inner.params.lane },
         E::DocumentWrite(inner) => Effect::DocumentWrite { req: RequestId(inner.req), doc: ArtifactHandle(inner.params.doc as u128), lane: inner.params.lane, ops: inner.params.ops },
         E::LinkResolve(inner) => Effect::LinkResolve { req: RequestId(inner.req), link: String::from_utf8_lossy(&inner.link).into_owned() },
-        E::RegistryQuery(inner) => Effect::RegistryQuery { req: RequestId(inner.req), kind: inner.params.kind, filter: decode_dsl(&inner.params.filter) },
+        E::RegistryQuery(inner) => Effect::RegistryQuery { req: RequestId(inner.req), kind: inner.params.kind, filter: decode_dsl(&inner.params.filter).await },
         E::IoCompose(inner) => Effect::IoCompose {
             req: RequestId(inner.req),
             key: String::from_utf8_lossy(&inner.params.key).into_owned(),
-            sources: decode_json(&inner.params.sources).unwrap_or_default(),
+            sources: decode_json(&inner.params.sources).await.unwrap_or_default(),
         },
         // 🚧️ blocked-on-A3: no `Effect::IoRun` variant exists yet (`## blocked-on` in the report).
         E::IoRun(_inner) => return Err(PluginHostError::Plugin("effect io-run has no semio_framework::kernel::Effect variant yet (needs A3 to add Effect::IoRun) — see 📓️terra-B1-host-native-report.md".to_string())),
         E::CacheDerive(inner) => Effect::CacheDerive { req: RequestId(inner.req), engine_id: inner.params.engine_id, input: inner.params.input },
         E::CacheRead(inner) => Effect::CacheRead { req: RequestId(inner.req), engine_id: inner.params.engine_id, key: String::from_utf8_lossy(&inner.params.key).into_owned() },
-        E::OpenWindow(inner) => Effect::OpenWindow { req: RequestId(inner.req), kind: WindowKindId(inner.params.kind), params: decode_dsl(&inner.params.params).unwrap_or(DslValue::Null) },
+        E::OpenWindow(inner) => Effect::OpenWindow { req: RequestId(inner.req), kind: WindowKindId(inner.params.kind), params: decode_dsl(&inner.params.params).await.unwrap_or(DslValue::Null) },
         E::CloseWindow(inner) => Effect::CloseWindow { window: WindowHandle(inner.window as u128) },
-        E::DispatchAction(inner) => Effect::DispatchAction { req: RequestId(inner.req), action: inner.params.action, args: inner.params.args.and_then(|bytes| decode_dsl(&bytes)), delay_ms: inner.params.delay_ms },
+        // 🚫️async: R10 residue shape 1 — `decode_dsl` is async, hoisted out of `Option::and_then`'s
+        // sync closure below (and at every other `.args.and_then(|bytes| decode_dsl(&bytes))` site
+        // in this match).
+        E::DispatchAction(inner) => {
+            let args = match inner.params.args {
+                Some(bytes) => decode_dsl(&bytes).await,
+                None => None,
+            };
+            Effect::DispatchAction { req: RequestId(inner.req), action: inner.params.action, args, delay_ms: inner.params.delay_ms }
+        }
         E::InvokeExtension(inner) => Effect::InvokeExtension { req: RequestId(inner.req), extension_id: inner.params.extension_id, capability: inner.params.capability, request_json: String::from_utf8_lossy(&inner.params.payload).into_owned() },
         E::Notify(inner) => Effect::Notify { message: inner.message },
         E::ClipboardWrite(inner) => Effect::ClipboardWrite {
-            fragment: decode_json(&inner.fragment).ok_or_else(|| PluginHostError::Plugin("clipboard-write-effect.fragment failed to decode as JSON ClipboardFragment".to_string()))?,
+            fragment: decode_json(&inner.fragment).await.ok_or_else(|| PluginHostError::Plugin("clipboard-write-effect.fragment failed to decode as JSON ClipboardFragment".to_string()))?,
         },
         E::Navigate(inner) => Effect::Navigate { uri: inner.uri },
         E::OpenExternalUrl(inner) => Effect::OpenExternalUrl { url: inner.url },
@@ -1296,29 +1556,47 @@ fn wit_effect_to_kernel(effect: wit_effects::Effect) -> Result<Effect, PluginHos
             document_selected_ids: inner.document_selected_ids,
             document_highlighted_ids: inner.document_highlighted_ids,
         },
-        E::ReplayShellCommand(inner) => Effect::ReplayShellCommand { action_id: inner.action_id, args: inner.args.and_then(|bytes| decode_dsl(&bytes)) },
+        E::ReplayShellCommand(inner) => {
+            let args = match inner.args {
+                Some(bytes) => decode_dsl(&bytes).await,
+                None => None,
+            };
+            Effect::ReplayShellCommand { action_id: inner.action_id, args }
+        }
         E::SpawnPluginInstance(inner) => Effect::SpawnPluginInstance { req: RequestId(inner.req), plugin_id: inner.params.plugin_id, app_id: inner.params.app_id, os_instance_id: inner.params.os_instance_id, label: inner.params.label, document_json: inner.params.document_json },
         E::OpenPluginInstance(inner) => Effect::OpenPluginInstance { plugin_id: inner.plugin_id, app_id: inner.app_id, os_instance_id: inner.os_instance_id },
-        E::OpenDialog(inner) => Effect::OpenDialog { req: RequestId(inner.req), dialog_id: inner.params.dialog_id, args: inner.params.args.and_then(|bytes| decode_dsl(&bytes)) },
-        E::IconRenderExport(inner) => Effect::IconRenderExport { items: decode_json(&inner.items).unwrap_or_default() },
+        E::OpenDialog(inner) => {
+            let args = match inner.params.args {
+                Some(bytes) => decode_dsl(&bytes).await,
+                None => None,
+            };
+            Effect::OpenDialog { req: RequestId(inner.req), dialog_id: inner.params.dialog_id, args }
+        }
+        E::IconRenderExport(inner) => Effect::IconRenderExport { items: decode_json(&inner.items).await.unwrap_or_default() },
         E::DownloadMediaExport(inner) => Effect::DownloadMediaExport { filename: inner.filename, mime_type: inner.mime_type, data: inner.data, encoding: inner.encoding },
         E::RequestFileOpen(inner) => Effect::RequestFileOpen { req: RequestId(inner.req), accept: inner.params.accept, read_as: inner.params.read_as, import_action: String::new(), multiple: inner.params.multiple },
-        E::RequestMediaFrames(inner) => Effect::RequestMediaFrames {
-            req: RequestId(inner.req),
-            accept: inner.params.accept,
-            frame_action: String::new(),
-            done_action: String::new(),
-            fallback_action: String::new(),
-            sample_stride: inner.params.sample_stride,
-            max_frames: inner.params.max_frames,
-            max_long_edge_px: inner.params.max_long_edge_px,
-            fps_hint: inner.params.fps_hint,
-            // 🧬️ A2b narrowed `request-media-frames-effect.payload` from `option<pack>` to
-            // `option<string>` (correctly honoring the kernel as SSOT) — already a `String`, no
-            // decode needed.
-            payload: inner.params.payload,
-            args: inner.params.args.and_then(|bytes| decode_dsl(&bytes)),
-        },
+        E::RequestMediaFrames(inner) => {
+            let args = match inner.params.args {
+                Some(bytes) => decode_dsl(&bytes).await,
+                None => None,
+            };
+            Effect::RequestMediaFrames {
+                req: RequestId(inner.req),
+                accept: inner.params.accept,
+                frame_action: String::new(),
+                done_action: String::new(),
+                fallback_action: String::new(),
+                sample_stride: inner.params.sample_stride,
+                max_frames: inner.params.max_frames,
+                max_long_edge_px: inner.params.max_long_edge_px,
+                fps_hint: inner.params.fps_hint,
+                // 🧬️ A2b narrowed `request-media-frames-effect.payload` from `option<pack>` to
+                // `option<string>` (correctly honoring the kernel as SSOT) — already a `String`, no
+                // decode needed.
+                payload: inner.params.payload,
+                args,
+            }
+        }
         E::LoadDocument(inner) => Effect::LoadDocument { pack: inner.doc_pack, spr: inner.spr },
         E::RequestSync => Effect::RequestSync,
         E::SetTimer(inner) => Effect::SetTimer { id: inner.id, after_ms: inner.after_ms as u64, repeat: inner.repeat },
@@ -1342,11 +1620,11 @@ fn wit_effect_to_kernel(effect: wit_effects::Effect) -> Result<Effect, PluginHos
 /// `use types.{message-endpoint}` in `effects.wit`) — same generated Rust type as
 /// `wit_message_endpoint_to_kernel` above takes, just named to keep the giant match arm list above
 /// readable.
-fn kernel_message_endpoint_to_wit_reverse(endpoint: wit_types::MessageEndpoint) -> MessageEndpoint {
-    wit_message_endpoint_to_kernel(endpoint)
+async fn kernel_message_endpoint_to_wit_reverse(endpoint: wit_types::MessageEndpoint) -> MessageEndpoint {
+    wit_message_endpoint_to_kernel(endpoint).await
 }
 
-fn wit_surface_ref(instance_id: u32, surface: &str) -> wit_ui::SurfaceRef {
+async fn wit_surface_ref(instance_id: u32, surface: &str) -> wit_ui::SurfaceRef {
     // 🌉️ Convention (not yet confirmed with A2/A3 — `## blocked-on`): kernel's `Event`/`Effect`
     // surface fields are a plain `String`; WIT's `surface-ref` is a structured `{instance, surface:
     // u32}`. Treated here as the decimal string of the WIT `surface: u32`, `instance` supplied from
@@ -1357,43 +1635,51 @@ fn wit_surface_ref(instance_id: u32, surface: &str) -> wit_ui::SurfaceRef {
 /// 🏁️ Host → guest: `semio_framework::kernel::Event` to WIT `event` (`📜️wit/📜️events.wit`).
 /// `instance_id` fills the WIT `instance` field several kernel lifecycle variants dropped (see
 /// `WasmtimeInstanceState::instance_id`'s docstring).
-fn kernel_event_to_wit(event: &Event, instance_id: u32) -> wit_events::Event {
+async fn kernel_event_to_wit(event: &Event, instance_id: u32) -> wit_events::Event {
     match event {
-        Event::InstanceOpen { instance, app_id, actor, config, assets, capabilities, quotas } => wit_events::Event::InstanceOpen(wit_events::InstanceOpenEvent {
-            instance: instance.0.parse().unwrap_or(instance_id),
-            app_id: app_id.0.clone(),
-            actor: actor.clone(),
-            config: config.clone(),
-            assets: assets.clone(),
-            capabilities: capabilities.iter().map(kernel_broker_grant_to_wit).collect(),
-            quotas: encode_json(quotas),
-        }),
+        Event::InstanceOpen { instance, app_id, actor, config, assets, capabilities, quotas } => {
+            // 🚫️async: R10 residue shape 1 — `kernel_broker_grant_to_wit` is async, hoisted out of
+            // the sync `Iterator::map` via a plain loop.
+            let mut wit_capabilities = Vec::with_capacity(capabilities.len());
+            for capability in capabilities {
+                wit_capabilities.push(kernel_broker_grant_to_wit(capability).await);
+            }
+            wit_events::Event::InstanceOpen(wit_events::InstanceOpenEvent {
+                instance: instance.0.parse().unwrap_or(instance_id),
+                app_id: app_id.0.clone(),
+                actor: actor.clone(),
+                config: config.clone(),
+                assets: assets.clone(),
+                capabilities: wit_capabilities,
+                quotas: encode_json(quotas).await,
+            })
+        }
         Event::InstanceClose => wit_events::Event::InstanceClose(wit_events::InstanceCloseEvent { instance: instance_id }),
-        Event::Activate { reason } => wit_events::Event::Activate(wit_events::ActivateEvent { instance: instance_id, reason: kernel_activation_event_to_wit(reason) }),
+        Event::Activate { reason } => wit_events::Event::Activate(wit_events::ActivateEvent { instance: instance_id, reason: kernel_activation_event_to_wit(reason).await }),
         Event::SuspendRequest => wit_events::Event::SuspendRequest(wit_events::SuspendRequestEvent { instance: instance_id }),
-        Event::CapabilityChanged { change } => wit_events::Event::CapabilityChanged(wit_events::CapabilityChangedEvent { instance: instance_id, change: kernel_capability_change_to_wit(change) }),
-        Event::QuotaChanged { quotas } => wit_events::Event::QuotaChanged(wit_events::QuotaChangedEvent { instance: instance_id, quotas: encode_json(quotas) }),
+        Event::CapabilityChanged { change } => wit_events::Event::CapabilityChanged(wit_events::CapabilityChangedEvent { instance: instance_id, change: kernel_capability_change_to_wit(change).await }),
+        Event::QuotaChanged { quotas } => wit_events::Event::QuotaChanged(wit_events::QuotaChangedEvent { instance: instance_id, quotas: encode_json(quotas).await }),
         Event::AppCommandEvent { instance, seq, command } => wit_events::Event::AppCommand(wit_events::AppCommandEvent { instance: instance.0.parse().unwrap_or(instance_id), seq: *seq, command: command.clone() }),
-        Event::SurfaceVisible { surface } => wit_events::Event::SurfaceVisible(wit_events::SurfaceVisibleEvent { surface: wit_surface_ref(instance_id, surface) }),
-        Event::SurfaceHidden { surface } => wit_events::Event::SurfaceHidden(wit_events::SurfaceHiddenEvent { surface: wit_surface_ref(instance_id, surface) }),
-        Event::SurfaceResized { surface, width, height } => wit_events::Event::SurfaceResized(wit_events::SurfaceResizedEvent { surface: wit_surface_ref(instance_id, surface), width: *width, height: *height }),
-        Event::PatchAck { surface, revision } => wit_events::Event::PatchAck(wit_events::PatchAckEvent { surface: wit_surface_ref(instance_id, surface), revision: *revision }),
-        Event::PatchRejected { surface, revision, reason } => wit_events::Event::PatchRejected(wit_events::PatchRejectedEvent { surface: wit_surface_ref(instance_id, surface), revision: *revision, reason: reason.clone() }),
-        Event::Completed { req, result } => wit_events::Event::Completed(wit_events::CompletedEvent { req: req.0, outcome: kernel_request_outcome_to_wit(result) }),
+        Event::SurfaceVisible { surface } => wit_events::Event::SurfaceVisible(wit_events::SurfaceVisibleEvent { surface: wit_surface_ref(instance_id, surface).await }),
+        Event::SurfaceHidden { surface } => wit_events::Event::SurfaceHidden(wit_events::SurfaceHiddenEvent { surface: wit_surface_ref(instance_id, surface).await }),
+        Event::SurfaceResized { surface, width, height } => wit_events::Event::SurfaceResized(wit_events::SurfaceResizedEvent { surface: wit_surface_ref(instance_id, surface).await, width: *width, height: *height }),
+        Event::PatchAck { surface, revision } => wit_events::Event::PatchAck(wit_events::PatchAckEvent { surface: wit_surface_ref(instance_id, surface).await, revision: *revision }),
+        Event::PatchRejected { surface, revision, reason } => wit_events::Event::PatchRejected(wit_events::PatchRejectedEvent { surface: wit_surface_ref(instance_id, surface).await, revision: *revision, reason: reason.clone() }),
+        Event::Completed { req, result } => wit_events::Event::Completed(wit_events::CompletedEvent { req: req.0, outcome: kernel_request_outcome_to_wit(result).await }),
         Event::HttpChunk { req, bytes, done } => wit_events::Event::HttpChunk(wit_events::HttpChunkEvent { req: req.0, params: wit_events::HttpChunkParams { bytes: bytes.clone(), done: *done } }),
         Event::JobProgress { job, progress } => wit_events::Event::JobProgress(wit_events::JobProgressEvent { job: *job, progress: progress.clone().unwrap_or_default() }),
-        Event::JobCompleted { job, result } => wit_events::Event::JobCompleted(wit_events::JobCompletedEvent { job: *job, outcome: kernel_request_outcome_to_wit(result) }),
-        Event::Message { source, payload } => wit_events::Event::Message(wit_events::MessageEvent { source: kernel_message_endpoint_to_wit(source), payload: payload.clone() }),
+        Event::JobCompleted { job, result } => wit_events::Event::JobCompleted(wit_events::JobCompletedEvent { job: *job, outcome: kernel_request_outcome_to_wit(result).await }),
+        Event::Message { source, payload } => wit_events::Event::Message(wit_events::MessageEvent { source: kernel_message_endpoint_to_wit(source).await, payload: payload.clone() }),
         Event::Timer { id } => wit_events::Event::Timer(wit_events::TimerEvent { id: *id }),
         Event::Wake => wit_events::Event::Wake,
         // 🐛️ WIT `request-event.from` was renamed `origin` — `from` is WIT-reserved (the SAME
         // reserved-keyword class B1's report already fixed for `stream`/`result`; this one was
         // fixed by A2 between B1's last pass and now, per the packet brief's "guest side is green").
-        Event::Request { req, from, capability, payload } => wit_events::Event::Request(wit_events::RequestEvent { req: req.0, params: wit_events::RequestParams { origin: kernel_message_endpoint_to_wit(from), capability: capability.clone(), payload: payload.clone() } }),
+        Event::Request { req, from, capability, payload } => wit_events::Event::Request(wit_events::RequestEvent { req: req.0, params: wit_events::RequestParams { origin: kernel_message_endpoint_to_wit(from).await, capability: capability.clone(), payload: payload.clone() } }),
     }
 }
 
-fn kernel_activation_event_to_wit(reason: &semio_framework::kernel::ActivationEvent) -> wit_events::ActivationEvent {
+async fn kernel_activation_event_to_wit(reason: &semio_framework::kernel::ActivationEvent) -> wit_events::ActivationEvent {
     use semio_framework::kernel::ActivationEvent as A;
     match reason {
         A::OnCommand { id } => wit_events::ActivationEvent::OnCommand(id.clone()),
@@ -1405,16 +1691,16 @@ fn kernel_activation_event_to_wit(reason: &semio_framework::kernel::ActivationEv
     }
 }
 
-fn kernel_capability_change_to_wit(change: &semio_framework::kernel::CapabilityChange) -> wit_capabilities::CapabilityChange {
+async fn kernel_capability_change_to_wit(change: &semio_framework::kernel::CapabilityChange) -> wit_capabilities::CapabilityChange {
     use semio_framework::kernel::CapabilityChange as C;
     match change {
-        C::Granted { id: _, grant } => wit_capabilities::CapabilityChange::Granted(kernel_broker_grant_to_wit(grant)),
+        C::Granted { id: _, grant } => wit_capabilities::CapabilityChange::Granted(kernel_broker_grant_to_wit(grant).await),
         C::Revoked { id } => wit_capabilities::CapabilityChange::Revoked(id.0.clone()),
-        C::Narrowed { id: _, grant } => wit_capabilities::CapabilityChange::Narrowed(kernel_broker_grant_to_wit(grant)),
+        C::Narrowed { id: _, grant } => wit_capabilities::CapabilityChange::Narrowed(kernel_broker_grant_to_wit(grant).await),
     }
 }
 
-fn kernel_broker_grant_to_wit(grant: &BrokerCapabilityGrant) -> wit_capabilities::CapabilityGrant {
+async fn kernel_broker_grant_to_wit(grant: &BrokerCapabilityGrant) -> wit_capabilities::CapabilityGrant {
     wit_capabilities::CapabilityGrant {
         token: wit_capabilities::CapabilityToken { id: grant.id.0.clone(), token: grant.token.0 as u64 },
         scope: grant.scope.clone(),
@@ -1427,21 +1713,21 @@ fn kernel_broker_grant_to_wit(grant: &BrokerCapabilityGrant) -> wit_capabilities
 mod wasmtime_runtime_tests {
     use super::*;
 
-    #[test]
-    fn compile_accepts_a_real_component_and_caches_it() {
+    #[semio_framework_async_macros::async_test]
+    async fn compile_accepts_a_real_component_and_caches_it() {
         let wasm_path = Path::new("🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/🔌️plugin-modules/stdio/semio_s_plugin_stdio_component.core.wasm");
         if !wasm_path.exists() {
             return;
         }
-        let runtime = WasmtimeRuntime::new(SharedEngineConfig::default()).expect("engine builds");
+        let runtime = WasmtimeRuntime::new(SharedEngineConfig::default()).await.expect("engine builds");
         let bytes = std::fs::read(wasm_path).expect("read real stdio.wasm");
         let package = PackageRef { package: PackageId("stdio".to_string()), hash: PackageHash([9u8; 32]) };
-        let compiled = runtime.compile(&package, &bytes).expect("a real wasip2 component compiles even though it does not export the new `actor` world yet");
+        let compiled = runtime.compile(&package, &bytes).await.expect("a real wasip2 component compiles even though it does not export the new `actor` world yet");
         assert!(compiled.component.is_some());
     }
 
-    #[test]
-    fn instantiate_rejects_a_component_that_does_not_export_the_actor_world() {
+    #[semio_framework_async_macros::async_test]
+    async fn instantiate_rejects_a_component_that_does_not_export_the_actor_world() {
         // 🧬️ No `.wasm` in this repo exports `world actor` yet (A2's guest SDK rewrite / the W3
         // plugin migrations haven't landed) — this asserts the HONEST negative: `instantiate`
         // rejects a real, valid, but wrong-ABI component rather than silently mis-binding it.
@@ -1449,34 +1735,34 @@ mod wasmtime_runtime_tests {
         if !wasm_path.exists() {
             return;
         }
-        let runtime = WasmtimeRuntime::new(SharedEngineConfig::default()).expect("engine builds");
+        let runtime = WasmtimeRuntime::new(SharedEngineConfig::default()).await.expect("engine builds");
         let bytes = std::fs::read(wasm_path).expect("read real stdio.wasm");
         let package = PackageRef { package: PackageId("stdio".to_string()), hash: PackageHash([10u8; 32]) };
-        let compiled = runtime.compile(&package, &bytes).expect("compiles as a component");
+        let compiled = runtime.compile(&package, &bytes).await.expect("compiles as a component");
         let budget = Budget { fuel: 1_000_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 };
-        let error = runtime.instantiate(&compiled, RuntimeActorId(1), &[], &budget).expect_err("stdio.wasm does not export `reactor`/`jobs`/`checkpoint`/`describe`");
+        let error = runtime.instantiate(&compiled, RuntimeActorId(1), &[], &budget).await.expect_err("stdio.wasm does not export `reactor`/`jobs`/`checkpoint`/`describe`");
         let _ = error;
     }
 
-    #[test]
-    fn wit_turn_status_conversion_is_a_plain_rename() {
-        assert_eq!(wit_turn_status_to_kernel(wit_reactor::TurnStatus::Idle), TurnStatus::Idle);
-        assert_eq!(wit_turn_status_to_kernel(wit_reactor::TurnStatus::MoreWork), TurnStatus::MoreWork);
-        assert!(matches!(wit_turn_status_to_kernel(wit_reactor::TurnStatus::Faulted(vec![1, 2, 3])), TurnStatus::Faulted(bytes) if bytes == vec![1, 2, 3]));
+    #[semio_framework_async_macros::async_test]
+    async fn wit_turn_status_conversion_is_a_plain_rename() {
+        assert_eq!(wit_turn_status_to_kernel(wit_reactor::TurnStatus::Idle).await, TurnStatus::Idle);
+        assert_eq!(wit_turn_status_to_kernel(wit_reactor::TurnStatus::MoreWork).await, TurnStatus::MoreWork);
+        assert!(matches!(wit_turn_status_to_kernel(wit_reactor::TurnStatus::Faulted(vec![1, 2, 3])).await, TurnStatus::Faulted(bytes) if bytes == vec![1, 2, 3]));
     }
 
-    #[test]
-    fn message_endpoint_round_trips_through_wit_and_back() {
+    #[semio_framework_async_macros::async_test]
+    async fn message_endpoint_round_trips_through_wit_and_back() {
         let original = MessageEndpoint::Topic { name: "os.runtime.metrics".to_string() };
         let wit = kernel_message_endpoint_to_wit(&original);
-        let back = wit_message_endpoint_to_kernel(wit);
-        assert_eq!(original, back);
+        let back = wit_message_endpoint_to_kernel(wit.await);
+        assert_eq!(original, back.await);
     }
 
-    #[test]
-    fn io_run_effect_is_a_reported_error_not_a_silent_mismap() {
+    #[semio_framework_async_macros::async_test]
+    async fn io_run_effect_is_a_reported_error_not_a_silent_mismap() {
         let effect = wit_effects::Effect::IoRun(wit_effects::IoRunEffect { req: 1, params: wit_effects::IoRunParams { source: "a".to_string(), target: "b".to_string(), payload: vec![] } });
-        let result = wit_effect_to_kernel(effect);
+        let result = wit_effect_to_kernel(effect).await;
         assert!(result.is_err(), "io-run must surface as an error until Effect::IoRun exists");
     }
 }
@@ -1506,7 +1792,7 @@ pub struct PluginInstanceHandle {
 }
 
 impl PluginInstanceHandle {
-    pub fn new(actor: RuntimeActorId, runtime: Arc<GuestRuntimes>, instance: GuestInstance) -> Self {
+    pub async fn new(actor: RuntimeActorId, runtime: Arc<GuestRuntimes>, instance: GuestInstance) -> Self {
         Self { actor, runtime, instance: Mutex::new(instance), next_job_id: std::sync::atomic::AtomicU64::new(1) }
     }
 
@@ -1515,7 +1801,7 @@ impl PluginInstanceHandle {
     /// instance than whichever turn's effect triggered it (never re-entrant into an in-flight turn's
     /// own `Store`, which is the deadlock `IoRouter::run_io`'s own doc comment already guards against
     /// one layer up, at route-resolution time).
-    fn run_job_to_completion(&self, kind: &str, input: Vec<u8>) -> Result<Vec<u8>, PluginHostError> {
+    async fn run_job_to_completion(&self, kind: &str, input: Vec<u8>) -> Result<Vec<u8>, PluginHostError> {
         let job = self.next_job_id.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         let mut instance = self.instance.lock().map_err(|_| PluginHostError::LockPoisoned("plugin instance handle"))?;
         // 🚫️async: E5 executor bridge. `run_job_to_completion` is called from inside a wasmtime
@@ -1541,19 +1827,19 @@ impl PluginInstanceHandle {
     /// `WasmPluginRuntime::io_run`'s); `input` bundles what used to be three separate export
     /// parameters into the one JSON `(source, target, IoPayload)` tuple `jobs.wit`'s doc comment
     /// specifies, since a job only carries one opaque `list<u8>`.
-    pub fn io_run(&self, from: &str, into: &str, payload: Vec<u8>) -> Result<Vec<u8>, PluginHostError> {
+    pub async fn io_run(&self, from: &str, into: &str, payload: Vec<u8>) -> Result<Vec<u8>, PluginHostError> {
         let io_payload: semio_framework::io_schema::IoPayload = serde_json::from_slice(&payload)?;
         let input = serde_json::to_vec(&(from, into, io_payload))?;
-        self.run_job_to_completion("semio.io-run", input)
+        self.run_job_to_completion("semio.io-run", input).await
     }
 
     /// 🔍️ Sniffs this plugin's own `(from, into)` hop — the absorbed `io-sniff` guest export, now
     /// `semio.io-sniff`. Returns the raw `io_schema::Confidence::rank()` byte (`0`=None..`3`=High),
     /// mirroring the deleted `WasmPluginRuntime::io_sniff`'s return shape exactly.
-    pub fn io_sniff(&self, from: &str, into: &str, payload: &[u8]) -> Result<u8, PluginHostError> {
+    pub async fn io_sniff(&self, from: &str, into: &str, payload: &[u8]) -> Result<u8, PluginHostError> {
         let io_payload: semio_framework::io_schema::IoPayload = serde_json::from_slice(payload)?;
         let input = serde_json::to_vec(&(from, into, io_payload))?;
-        let result = self.run_job_to_completion("semio.io-sniff", input)?;
+        let result = self.run_job_to_completion("semio.io-sniff", input).await?;
         result.first().copied().ok_or_else(|| PluginHostError::Plugin("semio.io-sniff job returned an empty result".to_string()))
     }
 
@@ -1562,8 +1848,8 @@ impl PluginInstanceHandle {
     /// result are the SAME JSON `io_schema::ArtifactInferenceRequest`/`ArtifactInferenceResult` bytes
     /// the deleted `WasmPluginRuntime::artifact_infer` used — no tuple wrapping needed, since that
     /// call already took exactly one opaque payload.
-    pub fn infer(&self, request: &[u8]) -> Result<Vec<u8>, PluginHostError> {
-        self.run_job_to_completion("semio.infer", request.to_vec())
+    pub async fn infer(&self, request: &[u8]) -> Result<Vec<u8>, PluginHostError> {
+        self.run_job_to_completion("semio.infer", request.to_vec()).await
     }
 
     /// 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (cold-kinds): executes one guest mutation-plan
@@ -1572,8 +1858,8 @@ impl PluginInstanceHandle {
     /// builds via `encode_wire_dsl`/decodes via `decode_wire_dsl` (this region's own helpers,
     /// `HostArtifactMutationPlanRequest`/`Result`'s field-for-field guest mirror) — no tuple
     /// wrapping needed, mirroring `infer`'s own doc note above.
-    pub fn mutation_plan(&self, request: &[u8]) -> Result<Vec<u8>, PluginHostError> {
-        self.run_job_to_completion("semio.mutation-plan", request.to_vec())
+    pub async fn mutation_plan(&self, request: &[u8]) -> Result<Vec<u8>, PluginHostError> {
+        self.run_job_to_completion("semio.mutation-plan", request.to_vec()).await
     }
 
     /// 🔀️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (cold-kinds): executes one guest versioned
@@ -1585,9 +1871,9 @@ impl PluginInstanceHandle {
     /// established idiom). The caller that resolves WHICH `PluginInstanceHandle` to migrate through
     /// belongs to the pending runtime/db refactor (this method only provides the dispatch, not its
     /// call site — see this packet's report `## lease-requests`).
-    pub fn migrate(&self, from: &str, to: &str, pack: Vec<u8>) -> Result<Vec<u8>, PluginHostError> {
+    pub async fn migrate(&self, from: &str, to: &str, pack: Vec<u8>) -> Result<Vec<u8>, PluginHostError> {
         let input = serde_json::to_vec(&(from, to, pack))?;
-        self.run_job_to_completion("semio.migrate", input)
+        self.run_job_to_completion("semio.migrate", input).await
     }
 
     /// 🧩️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (cold-kinds): routes to this plugin's own
@@ -1600,14 +1886,14 @@ impl PluginInstanceHandle {
     /// `IoRouter::compose` already resolved ownership from; `sources_bytes` passes through
     /// byte-for-byte. This wire shape is provisional until `compose-await`'s own guest decode is
     /// defined — coordinate any format change with that packet before altering it here.
-    pub fn compose(&self, key_bytes: &[u8], sources_bytes: &[u8]) -> Result<Vec<u8>, PluginHostError> {
+    pub async fn compose(&self, key_bytes: &[u8], sources_bytes: &[u8]) -> Result<Vec<u8>, PluginHostError> {
         #[derive(serde::Serialize)]
         struct ComposeInput<'a> {
             key: &'a [u8],
             sources: &'a [u8],
         }
         let input = serde_json::to_vec(&ComposeInput { key: key_bytes, sources: sources_bytes })?;
-        self.run_job_to_completion("semio.compose", input)
+        self.run_job_to_completion("semio.compose", input).await
     }
 }
 
@@ -1624,6 +1910,9 @@ impl std::fmt::Debug for PluginInstanceHandle {
 /// the resulting "never used" warning on a plain (non-test) `--lib` build without hiding a REAL
 /// dead-code case under a blanket `#[allow]`.
 #[cfg_attr(not(test), allow(dead_code))]
+// 🚫️async: E1 — pure in-memory encoder, no suspension point; reverted per R9 (its only
+// consumer FakeCluster::exchange must itself be sync to satisfy run_transaction/undo_group
+// production FnMut(...) -> Result<...> closure signature).
 fn host_fault_bytes(code: impl Into<String>, message: impl Into<String>) -> Vec<u8> {
     let code = code.into();
     dsl::encode_fault_bytes(&dsl::Fault::new(dsl::FaultOrigin::Os, dsl::FaultCode::new(code), message))
@@ -1651,6 +1940,7 @@ pub struct RuntimeMetricsPublisher {
 }
 
 impl RuntimeMetricsPublisher {
+    // 🚫️async: E1 pure constructor consumed by `impl Default` (external trait, sync-only) — R9.
     pub fn new() -> Self {
         Self { last_published_ms: None }
     }
@@ -1660,19 +1950,21 @@ impl RuntimeMetricsPublisher {
     /// else `None`. `shard_heartbeats` maps each live `ShardId` to its transport's last
     /// `ShardTransport::heartbeat()` reading — the overlay `Kernel::shard_metrics_samples` cannot do
     /// itself (see this struct's doc comment).
-    pub fn maybe_sample(&mut self, kernel: &semio_framework_actor::Kernel, now_ms: u64, shard_heartbeats: &HashMap<semio_framework_actor::ShardId, u64>) -> Option<Vec<u8>> {
-        if !semio_framework_actor::runtime_metrics_due(self.last_published_ms, now_ms) {
+    pub async fn maybe_sample(&mut self, kernel: &semio_framework_actor::Kernel, now_ms: u64, shard_heartbeats: &HashMap<semio_framework_actor::ShardId, u64>) -> Option<Vec<u8>> {
+        if !semio_framework_actor::runtime_metrics_due(self.last_published_ms, now_ms).await {
             return None;
         }
         self.last_published_ms = Some(now_ms);
-        let mut snapshot = kernel.runtime_metrics_snapshot(now_ms);
+        // 🚫️async: R10 residue shape 2 — a future is consumed by a single `.await`; awaited once
+        // here instead of once inside the loop and again (moved) at `pack_encode` below.
+        let mut snapshot = kernel.runtime_metrics_snapshot(now_ms).await;
         for shard in &mut snapshot.shards {
             if let Some(&last_beat) = shard_heartbeats.get(&shard.shard) {
                 shard.metrics.heartbeat_age_ms = now_ms.saturating_sub(last_beat) as u32;
             }
         }
         let mut out = Vec::new();
-        snapshot.pack_encode(&mut out);
+        snapshot.pack_encode(&mut out).await;
         Some(out)
     }
 }
@@ -1689,39 +1981,39 @@ mod runtime_metrics_publisher_tests {
     use semio_framework_actor::{ActivationEvent, ActorKind, Envelope, Kernel, Lane, Origin, PackageId, Payload, ShardId, ShardKind, TurnResult, TurnStatus, Usage};
     use std::collections::HashMap;
 
-    fn env(to: semio_framework_actor::ActorId, lane: Lane, seq: u64) -> Envelope {
+    async fn env(to: semio_framework_actor::ActorId, lane: Lane, seq: u64) -> Envelope {
         Envelope { to, from: Origin::Kernel, lane, seq, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::Event { bytes: vec![1] } }
     }
 
-    fn ok_turn() -> TurnResult {
+    async fn ok_turn() -> TurnResult {
         TurnResult { ui_patches: vec![], effects: vec![], next_wake: None, status: TurnStatus::Idle, usage: Usage { fuel: 10, wall_us: 5, memory_bytes: 512 } }
     }
 
     /// 📈️ Drives a real `Kernel` (not a fake) through one turn, confirms the 2Hz gate (500ms), and
     /// decodes the published bytes back into a `RuntimeMetricsSnapshot` to prove the payload round-
     /// trips and carries the heartbeat overlay this file is responsible for.
-    #[test]
-    fn maybe_sample_gates_at_2hz_and_overlays_heartbeat_age_from_the_host() {
-        let mut kernel = Kernel::new(ShardKind::Thread, 1, 0, 4);
-        let actor = kernel.activate(PackageId("s.cad".into()), 1, ActorKind::PluginApp { plugin: PackageId("s.cad".into()), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, None, ActivationEvent::Manual);
-        kernel.submit(&env(actor, Lane::Interactive, 1));
-        kernel.tick(0);
-        kernel.complete(actor, &ok_turn(), 0).unwrap();
+    #[semio_framework_async_macros::async_test]
+    async fn maybe_sample_gates_at_2hz_and_overlays_heartbeat_age_from_the_host() {
+        let mut kernel = Kernel::new(ShardKind::Thread, 1, 0, 4).await;
+        let actor = kernel.activate(PackageId("s.cad".into()), 1, ActorKind::PluginApp { plugin: PackageId("s.cad".into()), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, None, ActivationEvent::Manual).await;
+        kernel.submit(&env(actor, Lane::Interactive, 1).await).await;
+        kernel.tick(0).await;
+        kernel.complete(actor, &ok_turn().await, 0).await.unwrap();
 
         let mut publisher = RuntimeMetricsPublisher::new();
         let heartbeats: HashMap<ShardId, u64> = [(ShardId(0), 400u64)].into_iter().collect();
 
-        let first = publisher.maybe_sample(&kernel, 1_000, &heartbeats).expect("never published yet must be due");
+        let first = publisher.maybe_sample(&kernel, 1_000, &heartbeats).await.expect("never published yet must be due");
         let mut pos = 0usize;
-        let decoded = semio_framework_actor::RuntimeMetricsSnapshot::pack_decode(&first, &mut pos).unwrap();
+        let decoded = semio_framework_actor::RuntimeMetricsSnapshot::pack_decode(&first, &mut pos).await.unwrap();
         assert_eq!(pos, first.len());
         assert_eq!(decoded.actors.len(), 1);
         assert_eq!(decoded.actors[0].metrics.turns, 1);
         let shard_row = decoded.shards.iter().find(|row| row.shard == ShardId(0)).expect("shard 0 row present");
         assert_eq!(shard_row.metrics.heartbeat_age_ms, 600, "1_000 - 400 heartbeat overlay");
 
-        assert!(publisher.maybe_sample(&kernel, 1_200, &heartbeats).is_none(), "200ms since last publish is inside the 500ms window");
-        assert!(publisher.maybe_sample(&kernel, 1_500, &heartbeats).is_some(), "exactly the 500ms interval must fire again");
+        assert!(publisher.maybe_sample(&kernel, 1_200, &heartbeats).await.is_none(), "200ms since last publish is inside the 500ms window");
+        assert!(publisher.maybe_sample(&kernel, 1_500, &heartbeats).await.is_some(), "exactly the 500ms interval must fire again");
     }
 
     //#region 🔖️ScaleFixture
@@ -1758,13 +2050,13 @@ mod runtime_metrics_publisher_tests {
     /// 🧮️ `"scale-fixture-plugin-0007"` → `7` — every record's OWN `plugin_ordinal` for `Kernel::
     /// activate` is its ancestor plugin's numeric suffix (extensions share their parent plugin's
     /// ordinal, matching `ActorId`'s bit-packed "which plugin family" semantics).
-    fn plugin_ordinal_from_id(plugin_id: &str) -> u16 {
+    async fn plugin_ordinal_from_id(plugin_id: &str) -> u16 {
         plugin_id.rsplit('-').next().and_then(|suffix| suffix.parse::<u16>().ok()).unwrap_or(0)
     }
 
     /// 🛣️ Deterministic, arbitrary profile→lane mapping — realism, not a claimed design contract (the
     /// scale fixture itself is silent on lane assignment).
-    fn lane_for_profile(profile: &str) -> Lane {
+    async fn lane_for_profile(profile: &str) -> Lane {
         match profile {
             "ui" | "stateful" => Lane::Interactive,
             "cpu" | "crash" => Lane::UserVisible,
@@ -1778,13 +2070,13 @@ mod runtime_metrics_publisher_tests {
     /// deterministic sample through `submit`/`tick`/`complete` (including a `Faulted` turn for the
     /// `"crash"` profile), then asserts `RuntimeMetricsPublisher::maybe_sample`'s decoded snapshot
     /// reflects it — row count, package count, and the specific driven actors' turns/traps.
-    #[test]
-    fn runtime_metrics_publisher_reflects_the_2550_record_scale_fixture_registry() {
+    #[semio_framework_async_macros::async_test]
+    async fn runtime_metrics_publisher_reflects_the_2550_record_scale_fixture_registry() {
         let registry: ScaleFixtureRegistry = serde_json::from_str(SCALE_FIXTURE_REGISTRY_JSON).expect("scale fixture registry must be valid JSON matching the documented shape");
         assert_eq!(registry.record_count as usize, registry.records.len(), "recordCount header must match the actual records array length");
         assert_eq!(registry.record_count, 2550, "the documented 50 plugins x (1 + 50 extensions) fixture shape");
 
-        let mut kernel = Kernel::new(ShardKind::Thread, 8, 0, 256);
+        let mut kernel = Kernel::new(ShardKind::Thread, 8, 0, 256).await;
         let mut actor_ids = HashMap::new();
         let mut crash_profile_actor = None;
 
@@ -1797,7 +2089,7 @@ mod runtime_metrics_publisher_tests {
             } else {
                 (PackageId(plugin_id.to_string()), ActorKind::Extension { plugin: PackageId(plugin_id.to_string()), extension_id: record.id.clone() })
             };
-            let actor = kernel.activate(package, ordinal, kind, lane, None, ActivationEvent::Manual);
+            let actor = kernel.activate(package, ordinal.await, kind, lane.await, None, ActivationEvent::Manual).await;
             if record.scale_fixture.profile == "crash" && crash_profile_actor.is_none() {
                 crash_profile_actor = Some(actor);
             }
@@ -1809,20 +2101,20 @@ mod runtime_metrics_publisher_tests {
         // first plugin gets a clean turn, the first "crash" profile actor gets a `Faulted` turn.
         let first_record = &registry.records[0];
         let first_actor = actor_ids[&first_record.id];
-        kernel.submit(&env(first_actor, lane_for_profile(&first_record.scale_fixture.profile), 1));
-        kernel.tick(0);
-        kernel.complete(first_actor, &ok_turn(), 1).unwrap();
+        kernel.submit(&env(first_actor, lane_for_profile(&first_record.scale_fixture.profile).await, 1).await).await;
+        kernel.tick(0).await;
+        kernel.complete(first_actor, &ok_turn().await, 1).await.unwrap();
 
         let crash_actor = crash_profile_actor.expect("fixture has at least one \"crash\" profile record");
-        kernel.submit(&env(crash_actor, Lane::UserVisible, 1));
-        kernel.tick(1);
+        kernel.submit(&env(crash_actor, Lane::UserVisible, 1).await).await;
+        kernel.tick(1).await;
         let faulted = TurnResult { ui_patches: vec![], effects: vec![], next_wake: None, status: TurnStatus::Faulted { detail: b"scale-fixture crash profile".to_vec() }, usage: Usage { fuel: 5, wall_us: 3, memory_bytes: 256 } };
-        kernel.complete(crash_actor, &faulted, 2).unwrap();
+        kernel.complete(crash_actor, &faulted, 2).await.unwrap();
 
         let mut publisher = RuntimeMetricsPublisher::new();
-        let payload = publisher.maybe_sample(&kernel, 10_000, &HashMap::new()).expect("first sample is always due");
+        let payload = publisher.maybe_sample(&kernel, 10_000, &HashMap::new()).await.expect("first sample is always due");
         let mut pos = 0usize;
-        let snapshot = semio_framework_actor::RuntimeMetricsSnapshot::pack_decode(&payload, &mut pos).unwrap();
+        let snapshot = semio_framework_actor::RuntimeMetricsSnapshot::pack_decode(&payload, &mut pos).await.unwrap();
         assert_eq!(pos, payload.len());
 
         assert_eq!(snapshot.kernel.actors, 2550);
@@ -1859,17 +2151,17 @@ pub struct SessionLanePack {
 
 impl SessionLanePack {
     /// 🏗️ Empty lane (no snapshot yet).
-    pub fn empty() -> Self {
+    pub async fn empty() -> Self {
         Self::default()
     }
 
     /// 🏗️ From a full pack+spr+ops snapshot.
-    pub fn from_files(pack: Vec<u8>, spr: Vec<u8>, ops: String) -> Self {
+    pub async fn from_files(pack: Vec<u8>, spr: Vec<u8>, ops: String) -> Self {
         Self { pack, spr, ops, pending_binary_ops: Vec::new() }
     }
 
     /// 📥 Replaces this lane's opaque snapshot.
-    pub fn adopt(&mut self, pack: Vec<u8>, spr: Vec<u8>, ops: String) {
+    pub async fn adopt(&mut self, pack: Vec<u8>, spr: Vec<u8>, ops: String) {
         self.pack = pack;
         self.spr = spr;
         self.ops = ops;
@@ -1877,7 +2169,7 @@ impl SessionLanePack {
     }
 
     /// 🧾 Applies guest `AppFrame::Emit` op bytes onto this lane via `ArtifactCodec` when `schema` is set.
-    pub fn apply_emit_ops(&mut self, schema: Option<&str>, ops: Vec<u8>) {
+    pub async fn apply_emit_ops(&mut self, schema: Option<&str>, ops: Vec<u8>) {
         if ops.is_empty() {
             return;
         }
@@ -1885,7 +2177,7 @@ impl SessionLanePack {
             self.pending_binary_ops = ops;
             return;
         };
-        let Ok(Some(codec)) = store::document_codec(schema) else {
+        let Ok(Some(codec)) = store::document_codec(schema).await else {
             self.pending_binary_ops = ops;
             return;
         };
@@ -1893,7 +2185,7 @@ impl SessionLanePack {
             self.pending_binary_ops = ops;
             return;
         }
-        match (codec.apply_ops_binary)(&self.pack, &self.spr, &ops) {
+        match (codec.apply_ops_binary)(&self.pack, &self.spr, &ops).await {
             Ok((pack, spr, ops_text)) => {
                 self.pack = pack;
                 self.spr = spr;
@@ -1907,7 +2199,7 @@ impl SessionLanePack {
     }
 
     /// 📭 True when no pack bytes have been adopted.
-    pub fn is_empty(&self) -> bool {
+    pub async fn is_empty(&self) -> bool {
         self.pack.is_empty() && self.spr.is_empty()
     }
 }
@@ -1946,7 +2238,7 @@ pub struct ArtifactSession {
 
 impl ArtifactSession {
     /// 🏗️ Empty per-instance session (no packs yet).
-    pub fn new() -> Self {
+    pub async fn new() -> Self {
         Self::default()
     }
 }
@@ -1960,26 +2252,26 @@ impl ArtifactSession {
 /// decode to a message-free report under this session's own tracked policy rather than erroring —
 /// callers that need to distinguish "no report" from "empty report" should check `bytes.is_empty()`
 /// themselves first.
-pub fn decode_dispatch_report(bytes: &[u8]) -> Result<protocol::DispatchReport, PluginHostError> {
+pub async fn decode_dispatch_report(bytes: &[u8]) -> Result<protocol::DispatchReport, PluginHostError> {
     if bytes.is_empty() {
         return Ok(protocol::DispatchReport { policy: protocol::MergePolicy::default(), worst: None, messages: Vec::new() });
     }
-    let value = store::pack_rt::decode_wire_value(bytes).map_err(|error| PluginHostError::Plugin(error.to_string()))?;
+    let value = store::pack_rt::decode_wire_value(bytes).await.map_err(|error| PluginHostError::Plugin(error.to_string()))?;
     dsl::from_dsl_value(value).map_err(PluginHostError::Plugin)
 }
 
 /// 🔀 Decodes a packed `protocol::MergeReport` — `AppFrame::MergeReport.report`.
-pub fn decode_merge_report(bytes: &[u8]) -> Result<protocol::MergeReport, PluginHostError> {
-    let value = store::pack_rt::decode_wire_value(bytes).map_err(|error| PluginHostError::Plugin(error.to_string()))?;
+pub async fn decode_merge_report(bytes: &[u8]) -> Result<protocol::MergeReport, PluginHostError> {
+    let value = store::pack_rt::decode_wire_value(bytes).await.map_err(|error| PluginHostError::Plugin(error.to_string()))?;
     dsl::from_dsl_value(value).map_err(PluginHostError::Plugin)
 }
 
 /// ⚔️ Decodes a packed `Vec<protocol::Conflict>` — `AppFrame::Conflicts.conflicts`.
-pub fn decode_conflicts(bytes: &[u8]) -> Result<Vec<protocol::Conflict>, PluginHostError> {
+pub async fn decode_conflicts(bytes: &[u8]) -> Result<Vec<protocol::Conflict>, PluginHostError> {
     if bytes.is_empty() {
         return Ok(Vec::new());
     }
-    let value = store::pack_rt::decode_wire_value(bytes).map_err(|error| PluginHostError::Plugin(error.to_string()))?;
+    let value = store::pack_rt::decode_wire_value(bytes).await.map_err(|error| PluginHostError::Plugin(error.to_string()))?;
     dsl::from_dsl_value(value).map_err(PluginHostError::Plugin)
 }
 
@@ -2022,7 +2314,7 @@ struct IoEntryRoute {
 
 /// 🌉️ Inverse of `io_schema::Confidence::rank()` — the WIT `io-sniff` guest export returns a raw
 /// `u8` rank byte, so the host reconstructs the typed `Confidence` from it before merging.
-fn rank_to_io_confidence(rank: u8) -> semio_framework::io_schema::Confidence {
+async fn rank_to_io_confidence(rank: u8) -> semio_framework::io_schema::Confidence {
     match rank {
         3 => semio_framework::io_schema::Confidence::High,
         2 => semio_framework::io_schema::Confidence::Medium,
@@ -2034,7 +2326,7 @@ fn rank_to_io_confidence(rank: u8) -> semio_framework::io_schema::Confidence {
 /// 🌉️ Inverse of `io_schema::IoFidelity::rank()` — mirrors `io::io_mechanism::rank_to_fidelity`
 /// (this file cannot import that private fn from `🚪️io/**`, out of this wave's boundary, so the
 /// tiny 4-arm match is duplicated here rather than requesting a visibility patch for one line).
-fn rank_to_io_fidelity(rank: u8) -> semio_framework::io_schema::IoFidelity {
+async fn rank_to_io_fidelity(rank: u8) -> semio_framework::io_schema::IoFidelity {
     match rank {
         3 => semio_framework::io_schema::IoFidelity::Exact,
         2 => semio_framework::io_schema::IoFidelity::Canonical,
@@ -2048,10 +2340,21 @@ fn rank_to_io_fidelity(rank: u8) -> semio_framework::io_schema::IoFidelity {
 /// a DIFFERENT data structure (owner-aware, built from N plugins' wire rosters) than the guest-local
 /// `io_mechanism`'s own `&'static IoEntry` registry; the algorithm is identical, only the storage
 /// differs.
-fn io_route_rank(hops: &[semio_framework::io_schema::IoEntryDescriptor]) -> (std::cmp::Reverse<u8>, usize, String) {
-    let min_fidelity = hops.iter().map(|hop| hop.fidelity.rank()).min().unwrap_or(0);
-    let joined = hops.iter().map(|hop| hop.into.to_coordinate()).collect::<Vec<_>>().join(",");
-    (std::cmp::Reverse(min_fidelity), hops.len(), joined)
+async fn io_route_rank(hops: &[semio_framework::io_schema::IoEntryDescriptor]) -> (std::cmp::Reverse<u8>, usize, String) {
+    // 🚫️async: R10 residue shape 1 — `IoFidelity::rank`/`ArtifactDialect::to_coordinate` are
+    // external `🚪️io` async accessors that cannot be awaited inside `Iterator::map`'s sync
+    // closure, so both are hoisted into plain loops instead.
+    let mut min_fidelity: Option<u8> = None;
+    for hop in hops {
+        let rank = hop.fidelity.rank().await;
+        min_fidelity = Some(min_fidelity.map_or(rank, |current| current.min(rank)));
+    }
+    let mut coordinates = Vec::with_capacity(hops.len());
+    for hop in hops {
+        coordinates.push(hop.into.to_coordinate().await);
+    }
+    let joined = coordinates.join(",");
+    (std::cmp::Reverse(min_fidelity.unwrap_or(0)), hops.len(), joined)
 }
 
 /// 🌉️ Breadth-bounded, cycle-free DFS enumeration of every simple path `from -> into` up to
@@ -2060,7 +2363,7 @@ fn io_route_rank(hops: &[semio_framework::io_schema::IoEntryDescriptor]) -> (std
 /// plus sorting the FULL candidate set at the end in `resolve_io_route` (never short-circuiting on
 /// the first hit) is what makes the result independent of plugin load order — proven by
 /// `io_router_route_is_deterministic_across_load_order` below.
-fn walk_io_routes(
+async fn walk_io_routes(
     graph: &BTreeMap<IoEntryKey, IoEntryRoute>,
     current: &semio_framework::io_schema::ArtifactDialect,
     into: &semio_framework::io_schema::ArtifactDialect,
@@ -2082,7 +2385,7 @@ fn walk_io_routes(
             candidates.push(path.clone());
         } else {
             visited.insert(hop_into.clone());
-            walk_io_routes(graph, hop_into, into, remaining_hops - 1, path, visited, candidates);
+            Box::pin(walk_io_routes(graph, hop_into, into, remaining_hops - 1, path, visited, candidates)).await;
             visited.remove(hop_into);
         }
         path.pop();
@@ -2093,22 +2396,34 @@ fn walk_io_routes(
 /// multi-plugin graph instead of one plugin's own local registry. Pure — no lock, no wasm call —
 /// so it is directly unit-testable with a synthetic graph (`io_router_route_is_deterministic_
 /// across_load_order`, `io_router_route_prefers_higher_minimum_fidelity`, below).
-fn resolve_io_route(graph: &BTreeMap<IoEntryKey, IoEntryRoute>, from: &semio_framework::io_schema::ArtifactDialect, into: &semio_framework::io_schema::ArtifactDialect, max_hops: u8) -> Result<semio_framework::io_schema::IoRoute, PluginHostError> {
+async fn resolve_io_route(graph: &BTreeMap<IoEntryKey, IoEntryRoute>, from: &semio_framework::io_schema::ArtifactDialect, into: &semio_framework::io_schema::ArtifactDialect, max_hops: u8) -> Result<semio_framework::io_schema::IoRoute, PluginHostError> {
     let max_hops = max_hops.min(3);
     if max_hops == 0 {
-        return Err(PluginHostError::Plugin(format!("io_routes {} -> {}: max_hops clamped to 0", from.to_coordinate(), into.to_coordinate())));
+        return Err(PluginHostError::Plugin(format!("io_routes {} -> {}: max_hops clamped to 0", from.to_coordinate().await, into.to_coordinate().await)));
     }
     let mut candidates: Vec<Vec<semio_framework::io_schema::IoEntryDescriptor>> = Vec::new();
     let mut path: Vec<semio_framework::io_schema::IoEntryDescriptor> = Vec::new();
     let mut visited: BTreeSet<semio_framework::io_schema::ArtifactDialect> = BTreeSet::new();
     visited.insert(from.clone());
-    walk_io_routes(graph, from, into, max_hops, &mut path, &mut visited, &mut candidates);
+    walk_io_routes(graph, from, into, max_hops, &mut path, &mut visited, &mut candidates).await;
     if candidates.is_empty() {
-        return Err(PluginHostError::Plugin(format!("no io route from {} to {} within {max_hops} hops", from.to_coordinate(), into.to_coordinate())));
+        return Err(PluginHostError::Plugin(format!("no io route from {} to {} within {max_hops} hops", from.to_coordinate().await, into.to_coordinate().await)));
     }
-    candidates.sort_by(|a, b| io_route_rank(a).cmp(&io_route_rank(b)));
-    let best = candidates.into_iter().next().expect("candidates checked non-empty above");
-    let fidelity = rank_to_io_fidelity(best.iter().map(|hop| hop.fidelity.rank()).min().expect("a route has at least one hop"));
+    // 🚫️async: R10 residue shape 1 — `io_route_rank` is async, so ranks are precomputed before
+    // the sync `sort_by` comparator rather than called from inside it.
+    let mut ranked: Vec<(_, Vec<semio_framework::io_schema::IoEntryDescriptor>)> = Vec::with_capacity(candidates.len());
+    for candidate in candidates {
+        let rank = io_route_rank(&candidate).await;
+        ranked.push((rank, candidate));
+    }
+    ranked.sort_by(|a, b| a.0.cmp(&b.0));
+    let best = ranked.into_iter().next().expect("candidates checked non-empty above").1;
+    let mut min_rank: Option<u8> = None;
+    for hop in &best {
+        let rank = hop.fidelity.rank().await;
+        min_rank = Some(min_rank.map_or(rank, |current| current.min(rank)));
+    }
+    let fidelity = rank_to_io_fidelity(min_rank.expect("a route has at least one hop")).await;
     Ok(semio_framework::io_schema::IoRoute { hops: best, fidelity })
 }
 
@@ -2117,7 +2432,7 @@ fn resolve_io_route(graph: &BTreeMap<IoEntryKey, IoEntryRoute>, from: &semio_fra
 /// claim a `(from, into)` key a DIFFERENT plugin already owns? `None` means the merge is safe
 /// (either a brand-new key, or `plugin_id` re-claiming its OWN key — idempotent). Extracted as its
 /// own function so the conflict rule is unit-testable without a real `Arc<WasmPluginRuntime>`.
-fn io_entries_conflict(existing: &BTreeMap<IoEntryKey, IoEntryRoute>, plugin_id: &str, incoming: &[semio_framework::io_schema::IoEntryDescriptor]) -> Option<PluginHostError> {
+async fn io_entries_conflict(existing: &BTreeMap<IoEntryKey, IoEntryRoute>, plugin_id: &str, incoming: &[semio_framework::io_schema::IoEntryDescriptor]) -> Option<PluginHostError> {
     for descriptor in incoming {
         let key: IoEntryKey = (descriptor.from.clone(), descriptor.into.clone());
         if let Some(current) = existing.get(&key) {
@@ -2134,7 +2449,7 @@ fn io_entries_conflict(existing: &BTreeMap<IoEntryKey, IoEntryRoute>, plugin_id:
 /// error message, or `None` if the whole route is safe to execute. Extracted as its own function so
 /// the guard is unit-testable without a real `Arc<WasmPluginRuntime>` (`run_io` needs one for every
 /// OTHER hop it actually executes; this predicate needs none).
-fn route_reenters_calling_plugin<'route>(
+async fn route_reenters_calling_plugin<'route>(
     graph: &BTreeMap<IoEntryKey, IoEntryRoute>,
     route: &'route semio_framework::io_schema::IoRoute,
     calling_plugin_id: &str,
@@ -2160,7 +2475,7 @@ impl IoRouter {
     /// CALLER's job to decode and pass in — this function makes no wasm call at all. Both graphs
     /// preflight BEFORE either commits — a conflict in either leaves BOTH untouched, matching this
     /// file's existing all-or-nothing registration shape.
-    pub fn register_plugin(
+    pub async fn register_plugin(
         &self,
         plugin_id: &str,
         handle: Arc<PluginInstanceHandle>,
@@ -2203,7 +2518,7 @@ impl IoRouter {
                 }
             }
         }
-        if let Some(conflict) = io_entries_conflict(&state.io_entries, plugin_id, io_entries) {
+        if let Some(conflict) = io_entries_conflict(&state.io_entries, plugin_id, io_entries).await {
             return Err(conflict);
         }
         state.runtimes.entry(plugin_id.to_owned()).or_insert(handle);
@@ -2219,7 +2534,7 @@ impl IoRouter {
 
     /// 📊️ `N plugins / M keys` — logged at boot so a dev-boot smoke test can confirm the router
     /// actually picked up more than zero cross-plugin routes.
-    pub fn stats(&self) -> Result<(usize, usize), PluginHostError> {
+    pub async fn stats(&self) -> Result<(usize, usize), PluginHostError> {
         let state = self.state.lock().map_err(|_| PluginHostError::LockPoisoned("io router"))?;
         Ok((state.runtimes.len(), state.routes.len()))
     }
@@ -2238,7 +2553,7 @@ impl IoRouter {
     /// (a real, dynamic failure reflecting actual guest state) rather than the previous hand-written
     /// permanent host refusal. Once `compose-await` lands, this exact code starts succeeding with no
     /// further host change.
-    pub fn compose(&self, calling_plugin_id: &str, key_bytes: &[u8], sources_bytes: &[u8]) -> Result<Vec<u8>, PluginHostError> {
+    pub async fn compose(&self, calling_plugin_id: &str, key_bytes: &[u8], sources_bytes: &[u8]) -> Result<Vec<u8>, PluginHostError> {
         let key: semio_framework::IoKey = serde_json::from_slice(key_bytes)?;
         let state = self.state.lock().map_err(|_| PluginHostError::LockPoisoned("io router"))?;
         let owner = state
@@ -2251,12 +2566,12 @@ impl IoRouter {
         }
         let handle = state.runtimes.get(&owner).cloned().ok_or_else(|| PluginHostError::Plugin(format!("plugin `{owner}` owns this key but its instance handle is not registered with the router")))?;
         drop(state);
-        handle.compose(key_bytes, sources_bytes)
+        handle.compose(key_bytes, sources_bytes).await
     }
 
     /// 📚️ Every dialect ANY loaded plugin can move `artifact_kind` through in `direction`
     /// ("import"|"export"), JSON `Vec<ArtifactDialect>` bytes.
-    pub fn dialects(&self, artifact_kind: &str, direction: &str) -> Result<Vec<u8>, PluginHostError> {
+    pub async fn dialects(&self, artifact_kind: &str, direction: &str) -> Result<Vec<u8>, PluginHostError> {
         let direction = match direction {
             "import" => semio_framework::IoDirection::Import,
             "export" => semio_framework::IoDirection::Export,
@@ -2275,11 +2590,11 @@ impl IoRouter {
     /// 🌉️ CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM (W1-D): resolves the deterministic, ≤3-hop,
     /// cycle-free route `from -> into` over the merged `io_entries` graph — the WIT `io-routes`
     /// host import. JSON `io_schema::IoRoute` bytes.
-    pub fn io_routes(&self, from: &str, into: &str) -> Result<Vec<u8>, PluginHostError> {
-        let from = semio_framework::io_schema::ArtifactDialect::parse_coordinate(from).map_err(PluginHostError::Plugin)?;
-        let into = semio_framework::io_schema::ArtifactDialect::parse_coordinate(into).map_err(PluginHostError::Plugin)?;
+    pub async fn io_routes(&self, from: &str, into: &str) -> Result<Vec<u8>, PluginHostError> {
+        let from = semio_framework::io_schema::ArtifactDialect::parse_coordinate(from).await.map_err(PluginHostError::Plugin)?;
+        let into = semio_framework::io_schema::ArtifactDialect::parse_coordinate(into).await.map_err(PluginHostError::Plugin)?;
         let state = self.state.lock().map_err(|_| PluginHostError::LockPoisoned("io router"))?;
-        let route = resolve_io_route(&state.io_entries, &from, &into, 3)?;
+        let route = resolve_io_route(&state.io_entries, &from, &into, 3).await?;
         drop(state);
         serde_json::to_vec(&route).map_err(PluginHostError::Json)
     }
@@ -2293,35 +2608,39 @@ impl IoRouter {
     /// `std::sync::Mutex`. This generalizes `compose`'s one-hop self-route refusal (above) to a
     /// resolved route of up to 3 hops; the guard is an up-front scan, not a per-hop check, so a
     /// route is either run in full or not run at all — no partial execution on a refusal.
-    pub fn run_io(&self, calling_plugin_id: &str, from: &str, into: &str, payload: Vec<u8>) -> Result<Vec<u8>, PluginHostError> {
-        let from_dialect = semio_framework::io_schema::ArtifactDialect::parse_coordinate(from).map_err(PluginHostError::Plugin)?;
-        let into_dialect = semio_framework::io_schema::ArtifactDialect::parse_coordinate(into).map_err(PluginHostError::Plugin)?;
+    pub async fn run_io(&self, calling_plugin_id: &str, from: &str, into: &str, payload: Vec<u8>) -> Result<Vec<u8>, PluginHostError> {
+        let from_dialect = semio_framework::io_schema::ArtifactDialect::parse_coordinate(from).await.map_err(PluginHostError::Plugin)?;
+        let into_dialect = semio_framework::io_schema::ArtifactDialect::parse_coordinate(into).await.map_err(PluginHostError::Plugin)?;
         let hops = {
             let state = self.state.lock().map_err(|_| PluginHostError::LockPoisoned("io router"))?;
-            let route = resolve_io_route(&state.io_entries, &from_dialect, &into_dialect, 3)?;
-            if let Some(reentrant_hop) = route_reenters_calling_plugin(&state.io_entries, &route, calling_plugin_id) {
+            let route = resolve_io_route(&state.io_entries, &from_dialect, &into_dialect, 3).await?;
+            if let Some(reentrant_hop) = route_reenters_calling_plugin(&state.io_entries, &route, calling_plugin_id).await {
                 return Err(PluginHostError::Plugin(format!(
                     "io-run refused: hop {} -> {} is owned by the calling plugin `{calling_plugin_id}` itself — executing it would re-enter that plugin's own in-flight, non-reentrant store lock",
-                    reentrant_hop.0.to_coordinate(),
-                    reentrant_hop.1.to_coordinate()
+                    reentrant_hop.0.to_coordinate().await,
+                    reentrant_hop.1.to_coordinate().await
                 )));
             }
             let mut hops = Vec::with_capacity(route.hops.len());
             for hop in &route.hops {
                 let key: IoEntryKey = (hop.from.clone(), hop.into.clone());
+                // 🚫️async: R10 residue shape 1 — `to_coordinate` is external/async, hoisted out of
+                // the `ok_or_else` sync closures below.
+                let from_coord = hop.from.to_coordinate().await;
+                let into_coord = hop.into.to_coordinate().await;
                 let owner = state
                     .io_entries
                     .get(&key)
                     .map(|entry| entry.owner.clone())
-                    .ok_or_else(|| PluginHostError::Plugin(format!("io-run: hop {} -> {} vanished from the router between resolve and execute", hop.from.to_coordinate(), hop.into.to_coordinate())))?;
-                let runtime = state.runtimes.get(&owner).cloned().ok_or_else(|| PluginHostError::Plugin(format!("plugin `{owner}` owns hop {} -> {} but its runtime is not registered with the router", hop.from.to_coordinate(), hop.into.to_coordinate())))?;
-                hops.push((hop.from.to_coordinate(), hop.into.to_coordinate(), runtime));
+                    .ok_or_else(|| PluginHostError::Plugin(format!("io-run: hop {from_coord} -> {into_coord} vanished from the router between resolve and execute")))?;
+                let runtime = state.runtimes.get(&owner).cloned().ok_or_else(|| PluginHostError::Plugin(format!("plugin `{owner}` owns hop {from_coord} -> {into_coord} but its runtime is not registered with the router")))?;
+                hops.push((from_coord, into_coord, runtime));
             }
             hops
         };
         let mut current = payload;
         for (from_coordinate, into_coordinate, runtime) in hops {
-            current = runtime.io_run(&from_coordinate, &into_coordinate, current)?;
+            current = runtime.io_run(&from_coordinate, &into_coordinate, current).await?;
         }
         Ok(current)
     }
@@ -2332,7 +2651,7 @@ impl IoRouter {
     /// multiple plugins, so this SKIPS rather than refuses the whole call). JSON `Vec<(ArtifactDialect,
     /// Confidence)>` bytes, sorted confidence descending then coordinate ascending — same shape and
     /// order `io::io_mechanism::io_identify` produces for the guest-local case.
-    pub fn identify(&self, calling_plugin_id: &str, payload_bytes: Vec<u8>) -> Result<Vec<u8>, PluginHostError> {
+    pub async fn identify(&self, calling_plugin_id: &str, payload_bytes: Vec<u8>) -> Result<Vec<u8>, PluginHostError> {
         let payload: semio_framework::io_schema::IoPayload = serde_json::from_slice(&payload_bytes).map_err(PluginHostError::Json)?;
         let carrier = semio_framework::io_schema::ArtifactDialect::from(match &payload {
             semio_framework::io_schema::IoPayload::Binary(_) => semio_framework::io_schema::CARRIER_BINARY,
@@ -2353,13 +2672,24 @@ impl IoRouter {
                 let state = self.state.lock().map_err(|_| PluginHostError::LockPoisoned("io router"))?;
                 state.runtimes.get(&owner).cloned().ok_or_else(|| PluginHostError::Plugin(format!("plugin `{owner}` owns a carrier io entry but its runtime is not registered with the router")))?
             };
-            let rank = runtime.io_sniff(&carrier.to_coordinate(), &into.to_coordinate(), &payload_bytes)?;
-            let confidence = rank_to_io_confidence(rank);
+            let carrier_coord = carrier.to_coordinate().await;
+            let into_coord = into.to_coordinate().await;
+            let rank = runtime.io_sniff(&carrier_coord, &into_coord, &payload_bytes).await?;
+            let confidence = rank_to_io_confidence(rank).await;
             if confidence != semio_framework::io_schema::Confidence::None {
                 found.push((into, confidence));
             }
         }
-        found.sort_by(|a, b| b.1.rank().cmp(&a.1.rank()).then_with(|| a.0.to_coordinate().cmp(&b.0.to_coordinate())));
+        // 🚫️async: R10 residue shape 1 — `Confidence::rank`/`ArtifactDialect::to_coordinate` are
+        // external async accessors, so the sort key is precomputed before the sync `sort_by`.
+        let mut decorated = Vec::with_capacity(found.len());
+        for (dialect, confidence) in found {
+            let rank = confidence.rank().await;
+            let coord = dialect.to_coordinate().await;
+            decorated.push((rank, coord, dialect, confidence));
+        }
+        decorated.sort_by(|a, b| b.0.cmp(&a.0).then_with(|| a.1.cmp(&b.1)));
+        let found: Vec<(semio_framework::io_schema::ArtifactDialect, semio_framework::io_schema::Confidence)> = decorated.into_iter().map(|(_, _, dialect, confidence)| (dialect, confidence)).collect();
         serde_json::to_vec(&found).map_err(PluginHostError::Json)
     }
 
@@ -2369,7 +2699,7 @@ impl IoRouter {
     /// `PluginRuntimeConflict` check would otherwise reject the new `Arc` as a different pointer for
     /// an already-registered plugin id) and before an unload actually drops the runtime. Also drops
     /// every NEW-mechanism `io_entries` row `plugin_id` owns (W1-D).
-    pub fn unregister_plugin(&self, plugin_id: &str) -> Result<(), PluginHostError> {
+    pub async fn unregister_plugin(&self, plugin_id: &str) -> Result<(), PluginHostError> {
         let mut state = self.state.lock().map_err(|_| PluginHostError::LockPoisoned("io router"))?;
         state.runtimes.remove(plugin_id);
         state.routes.retain(|_, owner| owner != plugin_id);
@@ -2503,7 +2833,7 @@ impl ArtifactInferenceRouter {
     /// not being a `world actor` export any more than the old `plugin` interface's own list-* exports
     /// were (`describe.wit`'s doc comment) — the caller decodes `describe()`'s `PackageDescriptor`
     /// and passes the roster in; `handle` is kept only for later `infer()` dispatch.
-    pub fn register_plugin(&self, plugin_id: &str, dependencies: &[semio_framework::PluginDependency], handle: Arc<PluginInstanceHandle>, roster_wire_bytes: &[u8]) -> Result<(), PluginHostError> {
+    pub async fn register_plugin(&self, plugin_id: &str, dependencies: &[semio_framework::PluginDependency], handle: Arc<PluginInstanceHandle>, roster_wire_bytes: &[u8]) -> Result<(), PluginHostError> {
         let metadata: Vec<GuestArtifactInferenceMetadata> = serde_json::from_slice(roster_wire_bytes)?;
         for item in &metadata {
             if let Some(contributor) = &item.contributor {
@@ -2530,19 +2860,19 @@ impl ArtifactInferenceRouter {
             }
             candidate.insert(key, (plugin_id.to_string(), item.clone()));
         }
-        validate_inference_dependency_graph(&candidate)?;
+        validate_inference_dependency_graph(&candidate).await?;
         *routes = candidate;
         drop(routes);
         self.runtimes.lock().map_err(|_| PluginHostError::LockPoisoned("artifact inference runtimes"))?.insert(plugin_id.to_string(), handle);
         Ok(())
     }
 
-    pub fn metadata(&self) -> Result<Vec<GuestArtifactInferenceMetadata>, PluginHostError> {
+    pub async fn metadata(&self) -> Result<Vec<GuestArtifactInferenceMetadata>, PluginHostError> {
         Ok(self.routes.lock().map_err(|_| PluginHostError::LockPoisoned("artifact inference routes"))?.values().map(|(_, item)| item.clone()).collect())
     }
 
-    pub fn infer(&self, request: &[u8]) -> Result<Vec<u8>, PluginHostError> {
-        self.infer_with_visited(request, &mut Vec::new())
+    pub async fn infer(&self, request: &[u8]) -> Result<Vec<u8>, PluginHostError> {
+        self.infer_with_visited(request, &mut Vec::new()).await
     }
 
     /// 🕸️ Contract §6: before dispatching to the owner/contributor's own `artifact-infer`, resolves
@@ -2554,7 +2884,7 @@ impl ArtifactInferenceRouter {
     /// registered graph can still recurse infinitely if two rows' `depends_on` disagree with what
     /// was toposorted (e.g. a hot-reloaded plugin), so this is real defense-in-depth, not
     /// redundant.
-    fn infer_with_visited(&self, request: &[u8], visited: &mut Vec<String>) -> Result<Vec<u8>, PluginHostError> {
+    async fn infer_with_visited(&self, request: &[u8], visited: &mut Vec<String>) -> Result<Vec<u8>, PluginHostError> {
         let mut route: InferenceRouteRequest = serde_json::from_slice(request)?;
         if visited.contains(&route.inference_schema) {
             return Err(PluginHostError::Plugin(format!("inference dependency cycle at call time: {} -> {}", visited.join(" -> "), route.inference_schema)));
@@ -2575,9 +2905,12 @@ impl ArtifactInferenceRouter {
                     let routes = self.routes.lock().map_err(|_| PluginHostError::LockPoisoned("artifact inference routes"))?;
                     routes.get(&(route.artifact_kind.clone(), dependency_schema.clone())).map(|(_, metadata)| metadata.clone()).ok_or_else(|| PluginHostError::Plugin(format!("inference `{}` declares depends_on `{dependency_schema}` which is not registered for artifact kind `{}`", route.inference_schema, route.artifact_kind)))?
                 };
-                let dependency_request = build_dependency_inference_request(&route, &dependency_metadata);
+                let dependency_request = build_dependency_inference_request(&route, &dependency_metadata).await;
                 let dependency_request_bytes = serde_json::to_vec(&dependency_request).map_err(PluginHostError::Json)?;
-                let dependency_result_bytes = self.infer_with_visited(&dependency_request_bytes, visited)?;
+                // 🚫️async: R10 residue shape 3 — genuinely self-recursive (this fn really does
+                // await real plugin-runtime I/O via `handle.infer` below, so R9 does not apply);
+                // `Box::pin` breaks the otherwise-infinite future size, per rustc's own E0733 hint.
+                let dependency_result_bytes = Box::pin(self.infer_with_visited(&dependency_request_bytes, visited)).await?;
                 dependencies.push((dependency_schema.clone(), dependency_result_bytes));
             }
             visited.pop();
@@ -2586,14 +2919,14 @@ impl ArtifactInferenceRouter {
 
         let request = serde_json::to_vec(&route).map_err(PluginHostError::Json)?;
         let handle = self.runtimes.lock().map_err(|_| PluginHostError::LockPoisoned("artifact inference runtimes"))?.get(&owner).cloned().ok_or_else(|| PluginHostError::Plugin(format!("inference owner `{owner}` is not loaded")))?;
-        let result = handle.infer(&request)?;
+        let result = handle.infer(&request).await?;
         let echoed: InferenceRouteResult = serde_json::from_slice(&result)?;
-        validate_inference_echo(&route, &echoed)?;
+        validate_inference_echo(&route, &echoed).await?;
         Ok(result)
     }
 
     /// ✂️ Drops every route reported by `plugin_id` — called on unload/hot-reload.
-    pub fn unregister_plugin(&self, plugin_id: &str) -> Result<(), PluginHostError> {
+    pub async fn unregister_plugin(&self, plugin_id: &str) -> Result<(), PluginHostError> {
         self.routes.lock().map_err(|_| PluginHostError::LockPoisoned("artifact inference routes"))?.retain(|_, (owner, _)| owner != plugin_id);
         self.runtimes.lock().map_err(|_| PluginHostError::LockPoisoned("artifact inference runtimes"))?.remove(plugin_id);
         Ok(())
@@ -2605,7 +2938,7 @@ impl ArtifactInferenceRouter {
 /// `artifact_kind`, per `GuestArtifactInferenceMetadata`'s own field doc). Genuinely new logic —
 /// distinct from W0-C's plugin-manifest toposort, a different domain (inference schemas within one
 /// artifact kind, not plugins).
-fn validate_inference_dependency_graph(routes: &BTreeMap<(String, String), (String, GuestArtifactInferenceMetadata)>) -> Result<(), PluginHostError> {
+async fn validate_inference_dependency_graph(routes: &BTreeMap<(String, String), (String, GuestArtifactInferenceMetadata)>) -> Result<(), PluginHostError> {
     let mut adjacency: BTreeMap<(&str, &str), Vec<&str>> = BTreeMap::new();
     for ((artifact_kind, inference_schema), (_, item)) in routes {
         adjacency.entry((artifact_kind.as_str(), inference_schema.as_str())).or_default().extend(item.depends_on.iter().map(|dep| dep.as_str()));
@@ -2617,6 +2950,10 @@ fn validate_inference_dependency_graph(routes: &BTreeMap<(String, String), (Stri
         Done,
     }
 
+    // 🚫️async: R10 residue shape 3 — self-recursive, and per E1's own principle: pure in-memory
+    // BTreeMap/Vec recursion with no suspension point anywhere in the body, so async here would
+    // ALSO need `Box::pin` at the recursive call just to compile, for zero behavioural benefit.
+    // Reverted to sync rather than boxed — R9.
     fn visit<'a>(artifact_kind: &'a str, node: &'a str, adjacency: &BTreeMap<(&'a str, &'a str), Vec<&'a str>>, marks: &mut BTreeMap<(&'a str, &'a str), Mark>, stack: &mut Vec<&'a str>) -> Result<(), PluginHostError> {
         match marks.get(&(artifact_kind, node)) {
             Some(Mark::Done) => return Ok(()),
@@ -2650,7 +2987,7 @@ fn validate_inference_dependency_graph(routes: &BTreeMap<(String, String), (Stri
 /// are inherited from the parent request — the same underlying artifact source, viewed through a
 /// different inference facet. `previous_state` always starts fresh (`None`): each dependency
 /// resolves its own current result, not a cached delta.
-fn build_dependency_inference_request(base: &InferenceRouteRequest, dependency: &GuestArtifactInferenceMetadata) -> InferenceRouteRequest {
+async fn build_dependency_inference_request(base: &InferenceRouteRequest, dependency: &GuestArtifactInferenceMetadata) -> InferenceRouteRequest {
     InferenceRouteRequest {
         wire_version: base.wire_version,
         owner: dependency.owner.clone(),
@@ -2676,7 +3013,7 @@ fn build_dependency_inference_request(base: &InferenceRouteRequest, dependency: 
     }
 }
 
-fn validate_inference_echo(request: &InferenceRouteRequest, result: &InferenceRouteResult) -> Result<(), PluginHostError> {
+async fn validate_inference_echo(request: &InferenceRouteRequest, result: &InferenceRouteResult) -> Result<(), PluginHostError> {
     if result.wire_version != request.wire_version
         || result.owner != request.owner
         || result.artifact_kind != request.artifact_kind
@@ -2714,8 +3051,8 @@ impl Default for ArtifactInferenceRouter {
 mod artifact_inference_router_tests {
     use super::*;
 
-    #[test]
-    fn only_exactly_echoed_guest_results_are_publishable() {
+    #[semio_framework_async_macros::async_test]
+    async fn only_exactly_echoed_guest_results_are_publishable() {
         let request = InferenceRouteRequest {
             wire_version: 2,
             owner: "s.test".into(),
@@ -2764,9 +3101,9 @@ mod artifact_inference_router_tests {
             complete: true,
             actual_cache_mode: request.requested_cache_mode.clone(),
         };
-        assert!(validate_inference_echo(&request, &valid).is_ok());
+        assert!(validate_inference_echo(&request, &valid).await.is_ok());
         let stale = InferenceRouteResult { generation: 8, ..valid };
-        assert!(matches!(validate_inference_echo(&request, &stale), Err(PluginHostError::Plugin(_))));
+        assert!(matches!(validate_inference_echo(&request, &stale).await, Err(PluginHostError::Plugin(_))));
     }
 }
 //#endregion 💡️InferenceRouter
@@ -2801,7 +3138,7 @@ impl PluginGraph {
         Self { state: Mutex::new(BTreeMap::new()) }
     }
 
-    fn lock(&self) -> Result<std::sync::MutexGuard<'_, BTreeMap<String, PluginManifest>>, PluginGraphError> {
+    async fn lock(&self) -> Result<std::sync::MutexGuard<'_, BTreeMap<String, PluginManifest>>, PluginGraphError> {
         self.state.lock().map_err(|_| PluginGraphError::LockPoisoned)
     }
 
@@ -2810,8 +3147,8 @@ impl PluginGraph {
     /// Load-time registration already rejects all three, but a transaction can still meet them at
     /// dispatch time — an owner unloaded after registration, or a contributor loaded against a
     /// different build — so the transaction path asks again rather than assuming.
-    pub fn contribution_block(&self, contributor: &str, owner: &str) -> Result<Option<(&'static str, String)>, PluginGraphError> {
-        let state = self.lock()?;
+    pub async fn contribution_block(&self, contributor: &str, owner: &str) -> Result<Option<(&'static str, String)>, PluginGraphError> {
+        let state = self.lock().await?;
         let Some(contributor_manifest) = state.get(contributor) else {
             return Ok(Some(("transaction.dependency-missing", format!("contributor `{contributor}` is not loaded"))));
         };
@@ -2831,8 +3168,8 @@ impl PluginGraph {
     /// ✅️ Registers (or replaces) `manifest`'s entry, re-validating the WHOLE resulting graph
     /// before committing — an invalid addition (missing dependency, version mismatch, cycle)
     /// leaves the previously-registered set untouched.
-    pub fn register(&self, manifest: PluginManifest) -> Result<(), PluginGraphError> {
-        let mut state = self.lock()?;
+    pub async fn register(&self, manifest: PluginManifest) -> Result<(), PluginGraphError> {
+        let mut state = self.lock().await?;
         let mut candidate = state.clone();
         candidate.insert(manifest.plugin_id.clone(), manifest);
         let list: Vec<PluginManifest> = candidate.values().cloned().collect();
@@ -2840,7 +3177,7 @@ impl PluginGraph {
         // CYCLE — per W0-C's own report: "a real cycle among present plugins passes validation and
         // is caught by the toposort leftover-set walk". `validate_dependency_graph` alone only
         // catches missing-dependency/version-mismatch.
-        semio_framework::resolve_load_order(&list)?;
+        semio_framework::resolve_load_order(&list).await?;
         *state = candidate;
         Ok(())
     }
@@ -2849,24 +3186,24 @@ impl PluginGraph {
     /// replaced by `new_manifest` — in particular every OTHER plugin's dependency ON `plugin_id`
     /// is re-checked against `new_manifest.version`, so a reload that would break a live
     /// dependent's contribution is rejected before the swap. Does not mutate on failure.
-    pub fn prepare_hot_reload(&self, new_manifest: &PluginManifest) -> Result<(), PluginGraphError> {
-        let state = self.lock()?;
+    pub async fn prepare_hot_reload(&self, new_manifest: &PluginManifest) -> Result<(), PluginGraphError> {
+        let state = self.lock().await?;
         let mut candidate = state.clone();
         candidate.insert(new_manifest.plugin_id.clone(), new_manifest.clone());
         let list: Vec<PluginManifest> = candidate.values().cloned().collect();
-        semio_framework::resolve_load_order(&list)?;
+        semio_framework::resolve_load_order(&list).await?;
         Ok(())
     }
 
     /// ✅️ Commits `new_manifest` after `prepare_hot_reload` has already validated it.
-    pub fn commit_hot_reload(&self, new_manifest: PluginManifest) -> Result<(), PluginGraphError> {
-        self.register(new_manifest)
+    pub async fn commit_hot_reload(&self, new_manifest: PluginManifest) -> Result<(), PluginGraphError> {
+        self.register(new_manifest).await
     }
 
     /// 🔒️ Contract §4.5 unload half: refuses while any OTHER registered plugin still depends on
     /// `plugin_id` (typed `UnloadBlocked`, names every blocking dependent).
-    pub fn guard_unload(&self, plugin_id: &str) -> Result<(), PluginGraphError> {
-        let blockers = self.dependents(plugin_id)?;
+    pub async fn guard_unload(&self, plugin_id: &str) -> Result<(), PluginGraphError> {
+        let blockers = self.dependents(plugin_id).await?;
         if !blockers.is_empty() {
             return Err(PluginGraphError::UnloadBlocked { plugin_id: plugin_id.to_string(), dependents: blockers });
         }
@@ -2874,32 +3211,32 @@ impl PluginGraph {
     }
 
     /// ✂️ Removes `plugin_id`'s registration — callers MUST call `guard_unload` first.
-    pub fn unregister(&self, plugin_id: &str) -> Result<(), PluginGraphError> {
-        let mut state = self.lock()?;
+    pub async fn unregister(&self, plugin_id: &str) -> Result<(), PluginGraphError> {
+        let mut state = self.lock().await?;
         state.remove(plugin_id).ok_or_else(|| PluginGraphError::Unknown { plugin_id: plugin_id.to_string() })?;
         Ok(())
     }
 
     /// 🔢️ Deterministic dependency-respecting load order over every currently registered plugin.
-    pub fn load_order(&self) -> Result<Vec<String>, PluginGraphError> {
-        let state = self.lock()?;
+    pub async fn load_order(&self) -> Result<Vec<String>, PluginGraphError> {
+        let state = self.lock().await?;
         let list: Vec<PluginManifest> = state.values().cloned().collect();
-        Ok(semio_framework::resolve_load_order(&list)?)
+        Ok(semio_framework::resolve_load_order(&list).await?)
     }
 
     /// 👥️ Direct dependents of `plugin_id`, sorted.
-    pub fn dependents(&self, plugin_id: &str) -> Result<Vec<String>, PluginGraphError> {
-        let state = self.lock()?;
+    pub async fn dependents(&self, plugin_id: &str) -> Result<Vec<String>, PluginGraphError> {
+        let state = self.lock().await?;
         let list: Vec<PluginManifest> = state.values().cloned().collect();
-        Ok(semio_framework::dependents(&list, plugin_id))
+        Ok(semio_framework::dependents(&list, plugin_id).await)
     }
 
-    pub fn manifest(&self, plugin_id: &str) -> Result<Option<PluginManifest>, PluginGraphError> {
-        Ok(self.lock()?.get(plugin_id).cloned())
+    pub async fn manifest(&self, plugin_id: &str) -> Result<Option<PluginManifest>, PluginGraphError> {
+        Ok(self.lock().await?.get(plugin_id).cloned())
     }
 
-    pub fn is_registered(&self, plugin_id: &str) -> Result<bool, PluginGraphError> {
-        Ok(self.lock()?.contains_key(plugin_id))
+    pub async fn is_registered(&self, plugin_id: &str) -> Result<bool, PluginGraphError> {
+        Ok(self.lock().await?.contains_key(plugin_id))
     }
 }
 
@@ -2913,7 +3250,11 @@ impl Default for PluginGraph {
 mod plugin_graph_tests {
     use super::*;
 
-    fn manifest(plugin_id: &str, version: &str, deps: &[(&str, &str)]) -> PluginManifest {
+    async fn manifest(plugin_id: &str, version: &str, deps: &[(&str, &str)]) -> PluginManifest {
+        let mut dependencies = Vec::with_capacity(deps.len());
+        for (id, req) in deps {
+            dependencies.push(semio_framework::PluginDependency::new(*id, semio_framework::VersionReq::parse(req).unwrap()).await);
+        }
         PluginManifest {
             plugin_id: plugin_id.to_string(),
             label: plugin_id.to_string(),
@@ -2924,7 +3265,7 @@ mod plugin_graph_tests {
             topic_contributions: vec![],
             commands: vec![],
             artifact_kinds: vec![],
-            dependencies: deps.iter().map(|(id, req)| semio_framework::PluginDependency::new(*id, semio_framework::VersionReq::parse(req).unwrap())).collect(),
+            dependencies,
             contributions: vec![],
         }
     }
@@ -2932,17 +3273,17 @@ mod plugin_graph_tests {
     /// 🔗️ The three ways a contribution can be blocked at DISPATCH time are distinguishable — the
     /// frozen taxonomy has separate codes for them, and collapsing "owner gone" into
     /// "not permitted" would tell an operator to fix a declaration that is already correct.
-    #[test]
-    fn contribution_block_separates_missing_owner_from_version_mismatch_from_undeclared() {
+    #[semio_framework_async_macros::async_test]
+    async fn contribution_block_separates_missing_owner_from_version_mismatch_from_undeclared() {
         let graph = PluginGraph::new();
-        graph.register(manifest("cad", "1.0.0", &[])).unwrap();
-        graph.register(manifest("aec", "1.0.0", &[("cad", "^1.0.0")])).unwrap();
-        assert_eq!(graph.contribution_block("aec", "cad").unwrap(), None, "a declared, satisfied dependency blocks nothing");
+        graph.register(manifest("cad", "1.0.0", &[]).await).await.unwrap();
+        graph.register(manifest("aec", "1.0.0", &[("cad", "^1.0.0")]).await).await.unwrap();
+        assert_eq!(graph.contribution_block("aec", "cad").await.unwrap(), None, "a declared, satisfied dependency blocks nothing");
 
-        let (code, _) = graph.contribution_block("ghost", "cad").unwrap().expect("an unloaded contributor is blocked");
+        let (code, _) = graph.contribution_block("ghost", "cad").await.unwrap().expect("an unloaded contributor is blocked");
         assert_eq!(code, "transaction.dependency-missing");
 
-        let (code, _) = graph.contribution_block("cad", "aec").unwrap().expect("an undeclared dependency is blocked");
+        let (code, _) = graph.contribution_block("cad", "aec").await.unwrap().expect("an undeclared dependency is blocked");
         assert_eq!(code, "transaction.contribution-not-permitted");
 
         // 🛡️ The version branch is defence-in-depth, and this asserts WHY it cannot fire today rather
@@ -2951,65 +3292,65 @@ mod plugin_graph_tests {
         // its invariant. The branch stays because `contribution_block` is called per transaction, and
         // a future load path that mutates the set without that re-validation would otherwise hand a
         // contributor an owner it was never compiled against.
-        let drift = graph.register(manifest("cad", "2.0.0", &[])).unwrap_err();
+        let drift = graph.register(manifest("cad", "2.0.0", &[]).await).await.unwrap_err();
         assert!(matches!(drift, PluginGraphError::Graph(semio_framework::DependencyGraphError::VersionMismatch { .. })));
-        assert_eq!(graph.contribution_block("aec", "cad").unwrap(), None, "the refused swap must leave the satisfied dependency intact");
+        assert_eq!(graph.contribution_block("aec", "cad").await.unwrap(), None, "the refused swap must leave the satisfied dependency intact");
     }
 
-    #[test]
-    fn load_order_respects_a_real_dependency_edge() {
+    #[semio_framework_async_macros::async_test]
+    async fn load_order_respects_a_real_dependency_edge() {
         let graph = PluginGraph::new();
-        graph.register(manifest("base", "1.0.0", &[])).unwrap();
-        graph.register(manifest("dependent", "1.0.0", &[("base", "^1.0.0")])).unwrap();
-        assert_eq!(graph.load_order().unwrap(), vec!["base".to_string(), "dependent".to_string()]);
-        assert_eq!(graph.dependents("base").unwrap(), vec!["dependent".to_string()]);
+        graph.register(manifest("base", "1.0.0", &[]).await).await.unwrap();
+        graph.register(manifest("dependent", "1.0.0", &[("base", "^1.0.0")]).await).await.unwrap();
+        assert_eq!(graph.load_order().await.unwrap(), vec!["base".to_string(), "dependent".to_string()]);
+        assert_eq!(graph.dependents("base").await.unwrap(), vec!["dependent".to_string()]);
     }
 
-    #[test]
-    fn register_rejects_a_missing_dependency() {
+    #[semio_framework_async_macros::async_test]
+    async fn register_rejects_a_missing_dependency() {
         let graph = PluginGraph::new();
-        let error = graph.register(manifest("dependent", "1.0.0", &[("missing", "*")])).unwrap_err();
+        let error = graph.register(manifest("dependent", "1.0.0", &[("missing", "*")]).await).await.unwrap_err();
         assert!(matches!(error, PluginGraphError::Graph(semio_framework::DependencyGraphError::MissingDependency { .. })));
-        assert!(!graph.is_registered("dependent").unwrap(), "a rejected registration must not partially commit");
+        assert!(!graph.is_registered("dependent").await.unwrap(), "a rejected registration must not partially commit");
     }
 
-    #[test]
-    fn register_rejects_a_version_mismatch() {
+    #[semio_framework_async_macros::async_test]
+    async fn register_rejects_a_version_mismatch() {
         let graph = PluginGraph::new();
-        graph.register(manifest("base", "1.0.0", &[])).unwrap();
-        let error = graph.register(manifest("dependent", "1.0.0", &[("base", "^2.0.0")])).unwrap_err();
+        graph.register(manifest("base", "1.0.0", &[]).await).await.unwrap();
+        let error = graph.register(manifest("dependent", "1.0.0", &[("base", "^2.0.0")]).await).await.unwrap_err();
         assert!(matches!(error, PluginGraphError::Graph(semio_framework::DependencyGraphError::VersionMismatch { .. })));
     }
 
-    #[test]
-    fn a_later_registration_that_would_close_a_cycle_is_rejected() {
+    #[semio_framework_async_macros::async_test]
+    async fn a_later_registration_that_would_close_a_cycle_is_rejected() {
         let graph = PluginGraph::new();
-        graph.register(manifest("a", "1.0.0", &[])).unwrap();
-        graph.register(manifest("b", "1.0.0", &[("a", "*")])).unwrap();
+        graph.register(manifest("a", "1.0.0", &[]).await).await.unwrap();
+        graph.register(manifest("b", "1.0.0", &[("a", "*")]).await).await.unwrap();
         // Re-registering "a" (as if hot-reloading it) to depend on "b" would close a -> b -> a.
-        let error = graph.register(manifest("a", "1.0.0", &[("b", "*")])).unwrap_err();
+        let error = graph.register(manifest("a", "1.0.0", &[("b", "*")]).await).await.unwrap_err();
         assert!(matches!(error, PluginGraphError::Graph(semio_framework::DependencyGraphError::Cycle { .. })));
     }
 
-    #[test]
-    fn unload_is_refused_while_a_dependent_is_registered() {
+    #[semio_framework_async_macros::async_test]
+    async fn unload_is_refused_while_a_dependent_is_registered() {
         let graph = PluginGraph::new();
-        graph.register(manifest("base", "1.0.0", &[])).unwrap();
-        graph.register(manifest("dependent", "1.0.0", &[("base", "^1.0.0")])).unwrap();
-        let error = graph.guard_unload("base").unwrap_err();
+        graph.register(manifest("base", "1.0.0", &[]).await).await.unwrap();
+        graph.register(manifest("dependent", "1.0.0", &[("base", "^1.0.0")]).await).await.unwrap();
+        let error = graph.guard_unload("base").await.unwrap_err();
         assert!(matches!(error, PluginGraphError::UnloadBlocked { .. }));
-        graph.unregister("dependent").unwrap();
-        graph.guard_unload("base").expect("no dependents left, unload must now be permitted");
+        graph.unregister("dependent").await.unwrap();
+        graph.guard_unload("base").await.expect("no dependents left, unload must now be permitted");
     }
 
-    #[test]
-    fn hot_reload_is_rejected_when_it_would_break_a_live_dependents_version_requirement() {
+    #[semio_framework_async_macros::async_test]
+    async fn hot_reload_is_rejected_when_it_would_break_a_live_dependents_version_requirement() {
         let graph = PluginGraph::new();
-        graph.register(manifest("base", "1.0.0", &[])).unwrap();
-        graph.register(manifest("dependent", "1.0.0", &[("base", "^1.0.0")])).unwrap();
-        let error = graph.prepare_hot_reload(&manifest("base", "2.0.0", &[])).unwrap_err();
+        graph.register(manifest("base", "1.0.0", &[]).await).await.unwrap();
+        graph.register(manifest("dependent", "1.0.0", &[("base", "^1.0.0")]).await).await.unwrap();
+        let error = graph.prepare_hot_reload(&manifest("base", "2.0.0", &[]).await).await.unwrap_err();
         assert!(matches!(error, PluginGraphError::Graph(semio_framework::DependencyGraphError::VersionMismatch { .. })));
-        graph.prepare_hot_reload(&manifest("base", "1.1.0", &[])).expect("a caret-compatible bump must still validate");
+        graph.prepare_hot_reload(&manifest("base", "1.1.0", &[]).await).await.expect("a caret-compatible bump must still validate");
     }
 }
 //#endregion 🔖️PluginGraph
@@ -3063,15 +3404,15 @@ pub struct HostArtifactMutationPlanResult {
 /// idiom `WasmPluginRuntime::read_manifest` already uses, mirrored here for the two new
 /// `contributor` wire calls (contract §6): the guest's own `encode_wire_serialized` (`🔌️plugin/
 /// 🦀️component.rs`) is `store::pack_rt::encode_wire_value(&to_dsl_value(value))`, NOT plain JSON.
-fn decode_wire_dsl<T: serde::de::DeserializeOwned>(bytes: &[u8]) -> Result<T, PluginHostError> {
-    let value = store::pack_rt::decode_wire_value(bytes).map_err(|error| PluginHostError::Plugin(error.to_string()))?;
+async fn decode_wire_dsl<T: serde::de::DeserializeOwned>(bytes: &[u8]) -> Result<T, PluginHostError> {
+    let value = store::pack_rt::decode_wire_value(bytes).await.map_err(|error| PluginHostError::Plugin(error.to_string()))?;
     let value = store::pack_rt::renormalize_whole_number_floats(value);
     dsl::from_dsl_value(value).map_err(PluginHostError::Plugin)
 }
 
-fn encode_wire_dsl<T: serde::Serialize>(value: &T) -> Result<Vec<u8>, PluginHostError> {
+async fn encode_wire_dsl<T: serde::Serialize>(value: &T) -> Result<Vec<u8>, PluginHostError> {
     let dsl_value = dsl::to_dsl_value(value).map_err(PluginHostError::Plugin)?;
-    Ok(store::pack_rt::encode_wire_value(&dsl_value))
+    Ok(store::pack_rt::encode_wire_value(&dsl_value).await)
 }
 
 /// 🎯️ Contract §5.3: who answers a `(artifact_kind, mutation_id)` mutation — the artifact kind's
@@ -3105,9 +3446,9 @@ impl ArtifactMutationRouter {
     /// payload), registers every row (see `register_roster` for the gating rules), and keeps
     /// `handle` for `plan`'s later dispatch — mirrors `ArtifactInferenceRouter::register_plugin`'s
     /// exact 4-argument shape (`plugin_id, dependencies, handle, roster_wire_bytes`).
-    pub fn register_plugin(&self, plugin_id: &str, dependencies: &[semio_framework::PluginDependency], handle: Arc<PluginInstanceHandle>, roster_wire_bytes: &[u8]) -> Result<(), PluginHostError> {
-        let roster: Vec<HostMutationRosterEntry> = decode_wire_dsl(roster_wire_bytes)?;
-        self.register_roster_with_runtime(plugin_id, dependencies, handle, roster)
+    pub async fn register_plugin(&self, plugin_id: &str, dependencies: &[semio_framework::PluginDependency], handle: Arc<PluginInstanceHandle>, roster_wire_bytes: &[u8]) -> Result<(), PluginHostError> {
+        let roster: Vec<HostMutationRosterEntry> = decode_wire_dsl(roster_wire_bytes).await?;
+        self.register_roster_with_runtime(plugin_id, dependencies, handle, roster).await
     }
 
     /// 🔌️ The PRODUCTION registration entry point: typed roster rows plus the instance handle that
@@ -3121,8 +3462,8 @@ impl ArtifactMutationRouter {
     /// that. Registering the runtime is therefore a wrapper around the pure core, never a second
     /// call a caller could forget — which is exactly how `runtimes` sat empty in production while
     /// every routing test passed.
-    pub fn register_roster_with_runtime(&self, plugin_id: &str, dependencies: &[semio_framework::PluginDependency], handle: Arc<PluginInstanceHandle>, roster: Vec<HostMutationRosterEntry>) -> Result<(), PluginHostError> {
-        self.register_roster(plugin_id, dependencies, roster)?;
+    pub async fn register_roster_with_runtime(&self, plugin_id: &str, dependencies: &[semio_framework::PluginDependency], handle: Arc<PluginInstanceHandle>, roster: Vec<HostMutationRosterEntry>) -> Result<(), PluginHostError> {
+        self.register_roster(plugin_id, dependencies, roster).await?;
         self.runtimes.lock().map_err(|_| PluginHostError::LockPoisoned("mutation router runtimes"))?.insert(plugin_id.to_string(), handle);
         Ok(())
     }
@@ -3133,7 +3474,7 @@ impl ArtifactMutationRouter {
     /// rule 1: `entry.contributor` must equal the reporting `plugin_id`, and `artifact_kind`'s
     /// owning plugin must be a DIRECT entry of `dependencies`. An OWNER row (both `None`) is keyed
     /// by the reporting plugin's own id and gated only by the ordinary conflict rule.
-    pub fn register_roster(&self, plugin_id: &str, dependencies: &[semio_framework::PluginDependency], roster: Vec<HostMutationRosterEntry>) -> Result<(), PluginHostError> {
+    pub async fn register_roster(&self, plugin_id: &str, dependencies: &[semio_framework::PluginDependency], roster: Vec<HostMutationRosterEntry>) -> Result<(), PluginHostError> {
         let mut candidate_inserts = Vec::new();
         for entry in roster {
             let owner_of_kind = match (&entry.contributor, &entry.artifact_kind) {
@@ -3141,7 +3482,7 @@ impl ArtifactMutationRouter {
                     if contributor != plugin_id {
                         return Err(PluginHostError::Plugin(format!("mutation roster row {:?} claims contributor `{contributor}` but was reported by plugin `{plugin_id}`", entry.mutation_id)));
                     }
-                    let owner_plugin = semio_framework::io::ArtifactKindId::parse(artifact_kind).map_err(PluginHostError::Plugin)?.plugin().to_string();
+                    let owner_plugin = semio_framework::io::ArtifactKindId::parse(artifact_kind).await.map_err(PluginHostError::Plugin)?.plugin().await.to_string();
                     if !dependencies.iter().any(|dependency| dependency.plugin_id == owner_plugin) {
                         return Err(PluginHostError::Plugin(format!("plugin `{plugin_id}` contributes a mutation on `{artifact_kind}` (owner `{owner_plugin}`) without declaring `{owner_plugin}` as a dependency (contract §4 rule 1)")));
                     }
@@ -3177,7 +3518,7 @@ impl ArtifactMutationRouter {
     /// `(artifact_kind, mutation_id)` key (a contributed row on this exact kind), then falls back
     /// to `(ArtifactKindId::parse(artifact_kind).plugin(), mutation_id)` — the artifact kind's own
     /// owning plugin's roster.
-    pub fn resolve(&self, artifact_kind: &str, mutation_id: &str) -> Result<MutationOwnership, PluginHostError> {
+    pub async fn resolve(&self, artifact_kind: &str, mutation_id: &str) -> Result<MutationOwnership, PluginHostError> {
         let routes = self.routes.lock().map_err(|_| PluginHostError::LockPoisoned("mutation router"))?;
         if let Some((plugin_id, entry)) = routes.get(&(artifact_kind.to_string(), mutation_id.to_string())) {
             return Ok(match &entry.contributor {
@@ -3185,8 +3526,8 @@ impl ArtifactMutationRouter {
                 None => MutationOwnership::Owner { plugin_id: plugin_id.clone() },
             });
         }
-        if let Ok(parsed) = semio_framework::io::ArtifactKindId::parse(artifact_kind) {
-            if let Some((plugin_id, _entry)) = routes.get(&(parsed.plugin().to_string(), mutation_id.to_string())) {
+        if let Ok(parsed) = semio_framework::io::ArtifactKindId::parse(artifact_kind).await {
+            if let Some((plugin_id, _entry)) = routes.get(&(parsed.plugin().await.to_string(), mutation_id.to_string())) {
                 return Ok(MutationOwnership::Owner { plugin_id: plugin_id.clone() });
             }
         }
@@ -3195,7 +3536,7 @@ impl ArtifactMutationRouter {
 
     /// 📚️ Every registered roster row — surfaced for the dev-boot smoke line and for tests
     /// ("assert the contributed roster is visible").
-    pub fn roster(&self) -> Result<Vec<HostMutationRosterEntry>, PluginHostError> {
+    pub async fn roster(&self) -> Result<Vec<HostMutationRosterEntry>, PluginHostError> {
         Ok(self.routes.lock().map_err(|_| PluginHostError::LockPoisoned("mutation router"))?.values().map(|(_, entry)| entry.clone()).collect())
     }
 
@@ -3206,19 +3547,19 @@ impl ArtifactMutationRouter {
     /// (`request_bytes`/the return are both the DSL wire form `HostArtifactMutationPlanRequest`/
     /// `Result` already use elsewhere in this region — `PluginInstanceHandle::mutation_plan` passes
     /// them straight through, no re-encoding).
-    pub fn plan(&self, request_bytes: &[u8]) -> Result<Vec<u8>, PluginHostError> {
-        let request: HostArtifactMutationPlanRequest = decode_wire_dsl(request_bytes)?;
-        let plugin_id = match self.resolve(&request.artifact_kind, &request.mutation_id)? {
+    pub async fn plan(&self, request_bytes: &[u8]) -> Result<Vec<u8>, PluginHostError> {
+        let request: HostArtifactMutationPlanRequest = decode_wire_dsl(request_bytes).await?;
+        let plugin_id = match self.resolve(&request.artifact_kind, &request.mutation_id).await? {
             MutationOwnership::Contributed { plugin_id } | MutationOwnership::Owner { plugin_id } => plugin_id,
         };
         let handle = self.runtimes.lock().map_err(|_| PluginHostError::LockPoisoned("mutation router runtimes"))?.get(&plugin_id).cloned().ok_or_else(|| PluginHostError::Plugin(format!("mutation plan owner `{plugin_id}` is not loaded")))?;
-        handle.mutation_plan(request_bytes)
+        handle.mutation_plan(request_bytes).await
     }
 
     /// ✂️ Drops every route reported by `plugin_id` (owner rows keyed under its own id, contributed
     /// rows it reported under an owner artifact kind) and its runtime handle — called on
     /// unload/hot-reload.
-    pub fn unregister_plugin(&self, plugin_id: &str) -> Result<(), PluginHostError> {
+    pub async fn unregister_plugin(&self, plugin_id: &str) -> Result<(), PluginHostError> {
         let mut routes = self.routes.lock().map_err(|_| PluginHostError::LockPoisoned("mutation router"))?;
         routes.retain(|_, (owner_plugin, entry)| {
             let reporter = entry.contributor.as_deref().unwrap_or(owner_plugin.as_str());
@@ -3240,11 +3581,11 @@ impl Default for ArtifactMutationRouter {
 mod artifact_mutation_router_tests {
     use super::*;
 
-    fn owner_entry(mutation_id: &str) -> HostMutationRosterEntry {
+    async fn owner_entry(mutation_id: &str) -> HostMutationRosterEntry {
         HostMutationRosterEntry { mutation_id: mutation_id.to_string(), verb: "set".into(), entity: "widget".into(), kind: "set-color".into(), record: "widget.doc".into(), contributor: None, artifact_kind: None }
     }
 
-    fn contributed_entry(mutation_id: &str, contributor: &str, artifact_kind: &str) -> HostMutationRosterEntry {
+    async fn contributed_entry(mutation_id: &str, contributor: &str, artifact_kind: &str) -> HostMutationRosterEntry {
         HostMutationRosterEntry { mutation_id: mutation_id.to_string(), verb: "annotate".into(), entity: "widget".into(), kind: "annotate".into(), record: "widget.doc".into(), contributor: Some(contributor.to_string()), artifact_kind: Some(artifact_kind.to_string()) }
     }
 
@@ -3253,52 +3594,52 @@ mod artifact_mutation_router_tests {
     // match the real grammar (a real loaded plugin's `manifest.plugin_id` is its Cargo component
     // metadata id, e.g. `"cad"`, never `"s.cad"`; only a canonical artifact kind string carries the
     // `s.` prefix).
-    #[test]
-    fn owner_and_contributed_rows_both_resolve_correctly() {
+    #[semio_framework_async_macros::async_test]
+    async fn owner_and_contributed_rows_both_resolve_correctly() {
         let router = ArtifactMutationRouter::new();
-        router.register_roster("owner", &[], vec![owner_entry("widget.doc#set-color")]).unwrap();
+        router.register_roster("owner", &[], vec![owner_entry("widget.doc#set-color").await]).await.unwrap();
         let dependency = semio_framework::PluginDependency::new("owner", semio_framework::VersionReq::Any);
-        router.register_roster("contributor", &[dependency], vec![contributed_entry("widget.doc#contributor:annotate", "contributor", "s.owner.widget")]).unwrap();
+        router.register_roster("contributor", &[dependency.await], vec![contributed_entry("widget.doc#contributor:annotate", "contributor", "s.owner.widget").await]).await.unwrap();
 
-        assert_eq!(router.resolve("s.owner.widget", "widget.doc#set-color").unwrap(), MutationOwnership::Owner { plugin_id: "owner".into() });
-        assert_eq!(router.resolve("s.owner.widget", "widget.doc#contributor:annotate").unwrap(), MutationOwnership::Contributed { plugin_id: "contributor".into() });
-        assert_eq!(router.roster().unwrap().len(), 2, "both the owner and the contributed row must be visible");
+        assert_eq!(router.resolve("s.owner.widget", "widget.doc#set-color").await.unwrap(), MutationOwnership::Owner { plugin_id: "owner".into() });
+        assert_eq!(router.resolve("s.owner.widget", "widget.doc#contributor:annotate").await.unwrap(), MutationOwnership::Contributed { plugin_id: "contributor".into() });
+        assert_eq!(router.roster().await.unwrap().len(), 2, "both the owner and the contributed row must be visible");
     }
 
-    #[test]
-    fn a_contribution_onto_a_non_dependency_is_rejected() {
+    #[semio_framework_async_macros::async_test]
+    async fn a_contribution_onto_a_non_dependency_is_rejected() {
         let router = ArtifactMutationRouter::new();
-        router.register_roster("owner", &[], vec![owner_entry("widget.doc#set-color")]).unwrap();
-        let error = router.register_roster("contributor", &[], vec![contributed_entry("widget.doc#contributor:annotate", "contributor", "s.owner.widget")]).unwrap_err();
+        router.register_roster("owner", &[], vec![owner_entry("widget.doc#set-color").await]).await.unwrap();
+        let error = router.register_roster("contributor", &[], vec![contributed_entry("widget.doc#contributor:annotate", "contributor", "s.owner.widget").await]).await.unwrap_err();
         assert!(matches!(error, PluginHostError::Plugin(_)));
     }
 
-    #[test]
-    fn conflicting_owner_rows_are_rejected_unless_byte_identical() {
+    #[semio_framework_async_macros::async_test]
+    async fn conflicting_owner_rows_are_rejected_unless_byte_identical() {
         let router = ArtifactMutationRouter::new();
-        router.register_roster("a", &[], vec![owner_entry("widget.doc#set-color")]).unwrap();
-        let error = router.register_roster("a", &[], vec![HostMutationRosterEntry { verb: "different".into(), ..owner_entry("widget.doc#set-color") }]).unwrap_err();
+        router.register_roster("a", &[], vec![owner_entry("widget.doc#set-color").await]).await.unwrap();
+        let error = router.register_roster("a", &[], vec![HostMutationRosterEntry { verb: "different".into(), ..owner_entry("widget.doc#set-color").await }]).await.unwrap_err();
         assert!(matches!(error, PluginHostError::Plugin(_)));
-        router.register_roster("a", &[], vec![owner_entry("widget.doc#set-color")]).expect("byte-identical re-registration is idempotent");
+        router.register_roster("a", &[], vec![owner_entry("widget.doc#set-color").await]).await.expect("byte-identical re-registration is idempotent");
     }
 
-    #[test]
-    fn unregister_drops_only_that_plugins_rows() {
+    #[semio_framework_async_macros::async_test]
+    async fn unregister_drops_only_that_plugins_rows() {
         let router = ArtifactMutationRouter::new();
-        router.register_roster("owner", &[], vec![owner_entry("widget.doc#set-color")]).unwrap();
+        router.register_roster("owner", &[], vec![owner_entry("widget.doc#set-color").await]).await.unwrap();
         let dependency = semio_framework::PluginDependency::new("owner", semio_framework::VersionReq::Any);
-        router.register_roster("contributor", &[dependency], vec![contributed_entry("widget.doc#contributor:annotate", "contributor", "s.owner.widget")]).unwrap();
-        router.unregister_plugin("contributor").unwrap();
-        assert_eq!(router.roster().unwrap().len(), 1);
-        assert!(router.resolve("s.owner.widget", "widget.doc#set-color").is_ok());
+        router.register_roster("contributor", &[dependency.await], vec![contributed_entry("widget.doc#contributor:annotate", "contributor", "s.owner.widget").await]).await.unwrap();
+        router.unregister_plugin("contributor").await.unwrap();
+        assert_eq!(router.roster().await.unwrap().len(), 1);
+        assert!(router.resolve("s.owner.widget", "widget.doc#set-color").await.is_ok());
     }
 
-    fn mock_handle(actor: RuntimeActorId) -> (Arc<MockGuestRuntime>, Arc<PluginInstanceHandle>) {
-        let mock = Arc::new(MockGuestRuntime::new());
+    async fn mock_handle(actor: RuntimeActorId) -> (Arc<MockGuestRuntime>, Arc<PluginInstanceHandle>) {
+        let mock = Arc::new(MockGuestRuntime::new().await);
         let budget = Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 };
-        let compiled = mock.compile(&PackageRef { package: PackageId("mutplan".to_string()), hash: PackageHash([7u8; 32]) }, &[]).expect("mock compile");
-        let instance = mock.instantiate(&compiled, actor, &[], &budget).expect("mock instantiate");
-        let handle = Arc::new(PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock.clone())), instance));
+        let compiled = mock.compile(&PackageRef { package: PackageId("mutplan".to_string()), hash: PackageHash([7u8; 32]) }, &[]).await.expect("mock compile");
+        let instance = mock.instantiate(&compiled, actor, &[], &budget).await.expect("mock instantiate");
+        let handle = Arc::new(PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock.clone())), instance).await);
         (mock, handle)
     }
 
@@ -3307,30 +3648,30 @@ mod artifact_mutation_router_tests {
     /// `semio.mutation-plan` job to completion (`MockGuestRuntime`-backed, not mocked-away resolution
     /// alone) — proves this router's new `runtimes` field/`plan` method actually reach a handle, not
     /// just that `resolve` still works.
-    #[test]
-    fn plan_drives_the_registered_owners_mutation_plan_job_to_completion() {
+    #[semio_framework_async_macros::async_test]
+    async fn plan_drives_the_registered_owners_mutation_plan_job_to_completion() {
         let router = ArtifactMutationRouter::new();
-        let (mock, handle) = mock_handle(RuntimeActorId(300));
-        let roster_bytes = encode_wire_dsl(&vec![owner_entry("widget.doc#set-color")]).expect("encode roster");
-        router.register_plugin("owner", &[], handle, &roster_bytes).expect("register_plugin must register the roster AND keep the handle");
+        let (mock, handle) = mock_handle(RuntimeActorId(300)).await;
+        let roster_bytes = encode_wire_dsl(&vec![owner_entry("widget.doc#set-color").await]).await.expect("encode roster");
+        router.register_plugin("owner", &[], handle, &roster_bytes).await.expect("register_plugin must register the roster AND keep the handle");
 
         let request = HostArtifactMutationPlanRequest { artifact_kind: "s.owner.widget".to_string(), mutation_id: "widget.doc#set-color".to_string(), revision: 1, generation: 1, snapshot_pack: vec![1, 2, 3], payload: vec![4, 5] };
-        let request_bytes = encode_wire_dsl(&request).expect("encode request");
+        let request_bytes = encode_wire_dsl(&request).await.expect("encode request");
         let expected_result = HostArtifactMutationPlanResult { artifact_kind: request.artifact_kind.clone(), mutation_id: request.mutation_id.clone(), revision: 1, generation: 1, owner_ops: vec![vec![9]], label: "mocked".to_string(), foreign: Vec::new() };
-        mock.script_job_step(RuntimeActorId(300), JobStep::Done { output: encode_wire_dsl(&expected_result).expect("encode expected result") });
+        mock.script_job_step(RuntimeActorId(300), JobStep::Done { output: encode_wire_dsl(&expected_result).await.expect("encode expected result") }).await;
 
-        let result_bytes = router.plan(&request_bytes).expect("plan must resolve ownership AND drive the job to completion");
-        let result: HostArtifactMutationPlanResult = decode_wire_dsl(&result_bytes).expect("decode plan result");
+        let result_bytes = router.plan(&request_bytes).await.expect("plan must resolve ownership AND drive the job to completion");
+        let result: HostArtifactMutationPlanResult = decode_wire_dsl(&result_bytes).await.expect("decode plan result");
         assert_eq!(result, expected_result);
     }
 
-    #[test]
-    fn plan_fails_with_a_named_error_when_the_owner_is_not_loaded() {
+    #[semio_framework_async_macros::async_test]
+    async fn plan_fails_with_a_named_error_when_the_owner_is_not_loaded() {
         let router = ArtifactMutationRouter::new();
-        router.register_roster("owner", &[], vec![owner_entry("widget.doc#set-color")]).expect("register the owner row");
+        router.register_roster("owner", &[], vec![owner_entry("widget.doc#set-color").await]).await.expect("register the owner row");
         let request = HostArtifactMutationPlanRequest { artifact_kind: "s.owner.widget".to_string(), mutation_id: "widget.doc#set-color".to_string(), revision: 1, generation: 1, snapshot_pack: Vec::new(), payload: Vec::new() };
-        let request_bytes = encode_wire_dsl(&request).expect("encode request");
-        let error = router.plan(&request_bytes).expect_err("resolve succeeds but no handle was ever registered, so plan must still fail");
+        let request_bytes = encode_wire_dsl(&request).await.expect("encode request");
+        let error = router.plan(&request_bytes).await.expect_err("resolve succeeds but no handle was ever registered, so plan must still fail");
         assert!(matches!(error, PluginHostError::Plugin(message) if message.contains("not loaded")), "unexpected error");
     }
 }
@@ -3370,7 +3711,7 @@ impl InstanceDirectory {
     /// binding for the SAME `artifact_id` — a `Hello`/`LoadDocument` re-bind on the same instance
     /// is expected to be idempotent, not an error (unlike the mutation/inference routers' conflict
     /// rule, this is a live pointer table, not a registration ledger).
-    pub fn bind(&self, artifact_id: &str, plugin_id: &str, instance_id: u32, artifact_kind: &str) -> Result<(), PluginHostError> {
+    pub async fn bind(&self, artifact_id: &str, plugin_id: &str, instance_id: u32, artifact_kind: &str) -> Result<(), PluginHostError> {
         let mut state = self.state.lock().map_err(|_| PluginHostError::LockPoisoned("instance directory"))?;
         if let Some(previous) = state.by_artifact_id.get(artifact_id) {
             if previous.plugin_id != plugin_id || previous.instance_id != instance_id {
@@ -3388,12 +3729,12 @@ impl InstanceDirectory {
         Ok(())
     }
 
-    pub fn resolve(&self, artifact_id: &str) -> Option<InstanceLocation> {
+    pub async fn resolve(&self, artifact_id: &str) -> Option<InstanceLocation> {
         self.state.lock().ok()?.by_artifact_id.get(artifact_id).cloned()
     }
 
     /// ✂️ Drops every binding for `(plugin_id, instance_id)` — called on `destroy_app`.
-    pub fn unbind_instance(&self, plugin_id: &str, instance_id: u32) {
+    pub async fn unbind_instance(&self, plugin_id: &str, instance_id: u32) {
         let Ok(mut state) = self.state.lock() else { return };
         if let Some(refs) = state.by_instance.remove(&(plugin_id.to_string(), instance_id)) {
             for artifact_id in refs {
@@ -3402,7 +3743,7 @@ impl InstanceDirectory {
         }
     }
 
-    pub fn artifact_ids_for_instance(&self, plugin_id: &str, instance_id: u32) -> Vec<String> {
+    pub async fn artifact_ids_for_instance(&self, plugin_id: &str, instance_id: u32) -> Vec<String> {
         self.state.lock().ok().and_then(|state| state.by_instance.get(&(plugin_id.to_string(), instance_id)).cloned()).unwrap_or_default()
     }
 }
@@ -3417,23 +3758,23 @@ impl Default for InstanceDirectory {
 mod instance_directory_tests {
     use super::*;
 
-    #[test]
-    fn bind_resolve_and_unbind_round_trip() {
+    #[semio_framework_async_macros::async_test]
+    async fn bind_resolve_and_unbind_round_trip() {
         let directory = InstanceDirectory::new();
-        directory.bind("artifacts/node-a", "s.cad", 7, "s.cad.document").unwrap();
-        let location = directory.resolve("artifacts/node-a").expect("bound artifact must resolve");
+        directory.bind("artifacts/node-a", "s.cad", 7, "s.cad.document").await.unwrap();
+        let location = directory.resolve("artifacts/node-a").await.expect("bound artifact must resolve");
         assert_eq!(location, InstanceLocation { plugin_id: "s.cad".into(), instance_id: 7, artifact_kind: "s.cad.document".into() });
-        directory.unbind_instance("s.cad", 7);
-        assert!(directory.resolve("artifacts/node-a").is_none());
+        directory.unbind_instance("s.cad", 7).await;
+        assert!(directory.resolve("artifacts/node-a").await.is_none());
     }
 
-    #[test]
-    fn rebinding_the_same_artifact_id_replaces_the_prior_location() {
+    #[semio_framework_async_macros::async_test]
+    async fn rebinding_the_same_artifact_id_replaces_the_prior_location() {
         let directory = InstanceDirectory::new();
-        directory.bind("artifacts/node-a", "s.cad", 1, "s.cad.document").unwrap();
-        directory.bind("artifacts/node-a", "s.cad", 2, "s.cad.document").unwrap();
-        assert_eq!(directory.resolve("artifacts/node-a").unwrap().instance_id, 2);
-        assert!(directory.artifact_ids_for_instance("s.cad", 1).is_empty(), "the stale instance no longer owns this artifact id");
+        directory.bind("artifacts/node-a", "s.cad", 1, "s.cad.document").await.unwrap();
+        directory.bind("artifacts/node-a", "s.cad", 2, "s.cad.document").await.unwrap();
+        assert_eq!(directory.resolve("artifacts/node-a").await.unwrap().instance_id, 2);
+        assert!(directory.artifact_ids_for_instance("s.cad", 1).await.is_empty(), "the stale instance no longer owns this artifact id");
     }
 }
 //#endregion 🔖️InstanceDirectory
@@ -3465,11 +3806,11 @@ pub enum TransactionError {
 }
 
 impl TransactionError {
-    pub fn rejected(code: &str, message: impl Into<String>) -> Self {
+    pub async fn rejected(code: &str, message: impl Into<String>) -> Self {
         Self::Rejected { code: code.to_string(), message: message.into() }
     }
 
-    pub fn code(&self) -> &str {
+    pub async fn code(&self) -> &str {
         match self {
             TransactionError::Rejected { code, .. } => code,
             TransactionError::Host(_) => "transaction.commit-failed",
@@ -3477,7 +3818,7 @@ impl TransactionError {
     }
 }
 
-fn payload_hash_of(bytes: &[u8]) -> protocol::PayloadHash {
+async fn payload_hash_of(bytes: &[u8]) -> protocol::PayloadHash {
     protocol::PayloadHash(*blake3::hash(bytes).as_bytes())
 }
 
@@ -3505,12 +3846,12 @@ impl HostTransactionCoordinator {
         Self { seq: std::sync::atomic::AtomicU64::new(1) }
     }
 
-    fn next_seq(&self) -> u64 {
+    async fn next_seq(&self) -> u64 {
         self.seq.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
     }
 
-    fn mint_txn_id(&self, initiator: &TransactionMember) -> String {
-        format!("txn-{}-{}-{}", initiator.plugin_id, initiator.instance_id, self.next_seq())
+    async fn mint_txn_id(&self, initiator: &TransactionMember) -> String {
+        format!("txn-{}-{}-{}", initiator.plugin_id, initiator.instance_id, self.next_seq().await)
     }
 
     /// 🎯️ Contract §5 steps 1-6: resolves every `foreign` step to a live instance via
@@ -3524,7 +3865,7 @@ impl HostTransactionCoordinator {
     /// `WasmPluginRuntime`s (production, see `🏃️run/🦀️component.rs`) or an in-process fake
     /// (tests) without either depending on the other.
     #[allow(clippy::too_many_arguments)]
-    pub fn run_transaction(
+    pub async fn run_transaction(
         &self,
         instances: &InstanceDirectory,
         mutation_router: &ArtifactMutationRouter,
@@ -3535,14 +3876,18 @@ impl HostTransactionCoordinator {
         description: String,
         foreign: Vec<protocol::ForeignStep>,
     ) -> Result<TransactionOutcome, TransactionError> {
-        let txn_id = self.mint_txn_id(&initiator);
+        let txn_id = self.mint_txn_id(&initiator).await;
 
-        let initiator_target = instances
-            .artifact_ids_for_instance(&initiator.plugin_id, initiator.instance_id)
-            .into_iter()
-            .next()
-            .and_then(|artifact_id| instances.resolve(&artifact_id).map(|location| protocol::ForeignTarget { artifact_id, artifact_kind: location.artifact_kind, dialect: None }))
-            .unwrap_or_else(|| protocol::ForeignTarget { artifact_id: String::new(), artifact_kind: String::new(), dialect: None });
+        // 🚫️async: R10 residue shape 1 — `Option::and_then` takes a sync closure, so the
+        // `resolve(...).await` that used to live inside it is hoisted out here instead.
+        let initiator_artifact_id = instances.artifact_ids_for_instance(&initiator.plugin_id, initiator.instance_id).await.into_iter().next();
+        let initiator_target = match initiator_artifact_id {
+            Some(artifact_id) => match instances.resolve(&artifact_id).await {
+                Some(location) => protocol::ForeignTarget { artifact_id, artifact_kind: location.artifact_kind, dialect: None },
+                None => protocol::ForeignTarget { artifact_id: String::new(), artifact_kind: String::new(), dialect: None },
+            },
+            None => protocol::ForeignTarget { artifact_id: String::new(), artifact_kind: String::new(), dialect: None },
+        };
 
         let mut discovery_order: Vec<TransactionMember> = vec![initiator.clone()];
         let mut drafts: BTreeMap<(String, u32), MemberDraft> = BTreeMap::new();
@@ -3555,17 +3900,25 @@ impl HostTransactionCoordinator {
         while !frontier.is_empty() {
             depth += 1;
             if depth > protocol::MAX_PLAN_DEPTH {
-                return Err(TransactionError::rejected("transaction.depth-exceeded", format!("transaction `{txn_id}` exceeded MAX_PLAN_DEPTH ({})", protocol::MAX_PLAN_DEPTH)));
+                return Err(TransactionError::rejected("transaction.depth-exceeded", format!("transaction `{txn_id}` exceeded MAX_PLAN_DEPTH ({})", protocol::MAX_PLAN_DEPTH)).await);
             }
             let mut next_frontier: Vec<protocol::ForeignStep> = Vec::new();
             for step in frontier {
                 let cycle_key = (step.target.artifact_id.clone(), step.mutation_id.0.clone(), *blake3::hash(&step.payload).as_bytes());
                 if !visited.insert(cycle_key) {
-                    return Err(TransactionError::rejected("transaction.cycle", format!("transaction `{txn_id}` revisited {}/{}", step.target.artifact_id, step.mutation_id.0)));
+                    return Err(TransactionError::rejected("transaction.cycle", format!("transaction `{txn_id}` revisited {}/{}", step.target.artifact_id, step.mutation_id.0)).await);
                 }
 
-                let location = instances.resolve(&step.target.artifact_id).ok_or_else(|| TransactionError::rejected("transaction.unknown-target", format!("no live instance bound to artifact id `{}`", step.target.artifact_id)))?;
-                let ownership = mutation_router.resolve(&location.artifact_kind, &step.mutation_id.0).map_err(|error| TransactionError::rejected("transaction.unknown-mutation", error.to_string()))?;
+                // 🚫️async: R10 residue shape 1 — `TransactionError::rejected` is async, hoisted
+                // out of `ok_or_else`/`map_err`'s sync closures via explicit matches.
+                let location = match instances.resolve(&step.target.artifact_id).await {
+                    Some(location) => location,
+                    None => return Err(TransactionError::rejected("transaction.unknown-target", format!("no live instance bound to artifact id `{}`", step.target.artifact_id)).await),
+                };
+                let ownership = match mutation_router.resolve(&location.artifact_kind, &step.mutation_id.0).await {
+                    Ok(ownership) => ownership,
+                    Err(error) => return Err(TransactionError::rejected("transaction.unknown-mutation", error.to_string()).await),
+                };
 
                 let member = TransactionMember { plugin_id: location.plugin_id.clone(), instance_id: location.instance_id };
                 let key = (member.plugin_id.clone(), member.instance_id);
@@ -3580,7 +3933,7 @@ impl HostTransactionCoordinator {
                     }
                     MutationOwnership::Contributed { plugin_id: contributor } => {
                         let plan = plan_contributed(&contributor, &location.artifact_kind, &step.mutation_id.0, &member, &step.payload)?;
-                        let origin = protocol::MutationOrigin::Contributed { plugin_id: contributor.clone(), mutation_id: step.mutation_id.clone(), payload_hash: payload_hash_of(&step.payload) };
+                        let origin = protocol::MutationOrigin::Contributed { plugin_id: contributor.clone(), mutation_id: step.mutation_id.clone(), payload_hash: payload_hash_of(&step.payload).await };
                         let draft = drafts.entry(key).or_insert_with(|| MemberDraft { prepared_ops: Vec::new(), label: plan.label.clone(), origin: origin.clone() });
                         draft.prepared_ops.extend(plan.owner_ops);
                         draft.origin = origin;
@@ -3598,14 +3951,14 @@ impl HostTransactionCoordinator {
         for member in &discovery_order {
             let key = (member.plugin_id.clone(), member.instance_id);
             let draft = drafts.get(&key).expect("every discovered member has a draft");
-            let origin_bytes = match encode_wire_dsl(&draft.origin) {
+            let origin_bytes = match encode_wire_dsl(&draft.origin).await {
                 Ok(bytes) => bytes,
                 Err(error) => {
                     rejection = Some(TransactionError::Host(error));
                     break;
                 }
             };
-            let command = protocol::AppCommand::TransactionPrepare { seq: self.next_seq(), txn_id: txn_id.clone(), mutation_id: String::new(), payload: Vec::new(), prepared_ops: draft.prepared_ops.clone(), label: draft.label.clone(), origin: origin_bytes };
+            let command = protocol::AppCommand::TransactionPrepare { seq: self.next_seq().await, txn_id: txn_id.clone(), mutation_id: String::new(), payload: Vec::new(), prepared_ops: draft.prepared_ops.clone(), label: draft.label.clone(), origin: origin_bytes };
             let frames = match exchange(&member.plugin_id, member.instance_id, command) {
                 Ok(frames) => frames,
                 Err(error) => {
@@ -3624,11 +3977,11 @@ impl HostTransactionCoordinator {
                 }
                 Some(rejection_bytes) => {
                     let fault = dsl::decode_fault_bytes(&rejection_bytes);
-                    rejection = Some(TransactionError::rejected("transaction.member-rejected", format!("{}/{} rejected prepare (`{}`): {}", member.plugin_id, member.instance_id, fault.code.0, fault.message)));
+                    rejection = Some(TransactionError::rejected("transaction.member-rejected", format!("{}/{} rejected prepare (`{}`): {}", member.plugin_id, member.instance_id, fault.code.0, fault.message)).await);
                     break;
                 }
                 None => {
-                    rejection = Some(TransactionError::rejected("transaction.member-rejected", format!("{}/{} sent no TransactionPrepared reply", member.plugin_id, member.instance_id)));
+                    rejection = Some(TransactionError::rejected("transaction.member-rejected", format!("{}/{} sent no TransactionPrepared reply", member.plugin_id, member.instance_id)).await);
                     break;
                 }
             }
@@ -3636,7 +3989,7 @@ impl HostTransactionCoordinator {
 
         if let Some(error) = rejection {
             for member in prepared.iter().rev() {
-                let _ = exchange(&member.plugin_id, member.instance_id, protocol::AppCommand::TransactionRollback { seq: self.next_seq(), txn_id: txn_id.clone() });
+                let _ = exchange(&member.plugin_id, member.instance_id, protocol::AppCommand::TransactionRollback { seq: self.next_seq().await, txn_id: txn_id.clone() });
             }
             return Err(error);
         }
@@ -3646,7 +3999,7 @@ impl HostTransactionCoordinator {
         let mut edit_id_by_member: BTreeMap<(String, u32), String> = BTreeMap::new();
         let mut commit_error: Option<TransactionError> = None;
         for member in discovery_order.iter().rev() {
-            let command = protocol::AppCommand::TransactionCommit { seq: self.next_seq(), txn_id: txn_id.clone() };
+            let command = protocol::AppCommand::TransactionCommit { seq: self.next_seq().await, txn_id: txn_id.clone() };
             let outcome = exchange(&member.plugin_id, member.instance_id, command).ok().and_then(|frames| {
                 frames.into_iter().find_map(|frame| match frame {
                     protocol::AppFrame::TransactionCommitted { txn_id: reply_txn, edit_id } if reply_txn == txn_id => Some(edit_id),
@@ -3659,7 +4012,7 @@ impl HostTransactionCoordinator {
                     committed.push(member.clone());
                 }
                 None => {
-                    commit_error = Some(TransactionError::rejected("transaction.commit-failed", format!("{}/{} failed to commit txn `{txn_id}`", member.plugin_id, member.instance_id)));
+                    commit_error = Some(TransactionError::rejected("transaction.commit-failed", format!("{}/{} failed to commit txn `{txn_id}`", member.plugin_id, member.instance_id)).await);
                     break;
                 }
             }
@@ -3667,10 +4020,10 @@ impl HostTransactionCoordinator {
 
         if let Some(error) = commit_error {
             for member in &committed {
-                let _ = exchange(&member.plugin_id, member.instance_id, protocol::AppCommand::TransactionUndo { seq: self.next_seq(), group_id: txn_id.clone() });
+                let _ = exchange(&member.plugin_id, member.instance_id, protocol::AppCommand::TransactionUndo { seq: self.next_seq().await, group_id: txn_id.clone() });
             }
             for member in discovery_order.iter().filter(|member| !committed.contains(member)) {
-                let _ = exchange(&member.plugin_id, member.instance_id, protocol::AppCommand::TransactionRollback { seq: self.next_seq(), txn_id: txn_id.clone() });
+                let _ = exchange(&member.plugin_id, member.instance_id, protocol::AppCommand::TransactionRollback { seq: self.next_seq().await, txn_id: txn_id.clone() });
             }
             return Err(error);
         }
@@ -3682,15 +4035,15 @@ impl HostTransactionCoordinator {
     /// 🔁️ Contract §5.7: fans `TransactionUndo{group_id}` out to every member, best-effort (a
     /// member whose tail has since moved on independently errors on ITS side, not here — a host
     /// must not assume success for every member).
-    pub fn undo_group(&self, mut exchange: impl FnMut(&str, u32, protocol::AppCommand) -> Result<Vec<protocol::AppFrame>, TransactionError>, members: &[TransactionMember], group_id: &str) {
+    pub async fn undo_group(&self, mut exchange: impl FnMut(&str, u32, protocol::AppCommand) -> Result<Vec<protocol::AppFrame>, TransactionError>, members: &[TransactionMember], group_id: &str) {
         for member in members {
-            let _ = exchange(&member.plugin_id, member.instance_id, protocol::AppCommand::TransactionUndo { seq: self.next_seq(), group_id: group_id.to_string() });
+            let _ = exchange(&member.plugin_id, member.instance_id, protocol::AppCommand::TransactionUndo { seq: self.next_seq().await, group_id: group_id.to_string() });
         }
     }
 
-    pub fn redo_group(&self, mut exchange: impl FnMut(&str, u32, protocol::AppCommand) -> Result<Vec<protocol::AppFrame>, TransactionError>, members: &[TransactionMember], group_id: &str) {
+    pub async fn redo_group(&self, mut exchange: impl FnMut(&str, u32, protocol::AppCommand) -> Result<Vec<protocol::AppFrame>, TransactionError>, members: &[TransactionMember], group_id: &str) {
         for member in members {
-            let _ = exchange(&member.plugin_id, member.instance_id, protocol::AppCommand::TransactionRedo { seq: self.next_seq(), group_id: group_id.to_string() });
+            let _ = exchange(&member.plugin_id, member.instance_id, protocol::AppCommand::TransactionRedo { seq: self.next_seq().await, group_id: group_id.to_string() });
         }
     }
 }
@@ -3727,6 +4080,8 @@ mod host_transaction_coordinator_tests {
     }
 
     impl FakeCluster {
+        // 🚫️async: E1 — pure in-memory RefCell fake, no suspension point; reverted per R9
+        // (run_transaction/undo_group require a SYNC FnMut(...) -> Result<...> closure).
         fn exchange(&self, plugin_id: &str, instance_id: u32, command: protocol::AppCommand) -> Result<Vec<protocol::AppFrame>, TransactionError> {
             let mut instances = self.instances.borrow_mut();
             let instance = instances.entry((plugin_id.to_string(), instance_id)).or_default();
@@ -3767,22 +4122,22 @@ mod host_transaction_coordinator_tests {
         }
     }
 
-    fn dependency(id: &str) -> semio_framework::PluginDependency {
-        semio_framework::PluginDependency::new(id, semio_framework::VersionReq::Any)
+    async fn dependency(id: &str) -> semio_framework::PluginDependency {
+        semio_framework::PluginDependency::new(id, semio_framework::VersionReq::Any).await
     }
 
-    #[test]
-    fn a_two_member_transaction_commits_and_group_undo_restores_both() {
+    #[semio_framework_async_macros::async_test]
+    async fn a_two_member_transaction_commits_and_group_undo_restores_both() {
         let cluster = FakeCluster::default();
         let instances = InstanceDirectory::new();
-        instances.bind("artifacts/initiator", "s.a", 1, "s.a.widget").unwrap();
-        instances.bind("artifacts/target", "s.b", 2, "s.b.widget").unwrap();
+        instances.bind("artifacts/initiator", "s.a", 1, "s.a.widget").await.unwrap();
+        instances.bind("artifacts/target", "s.b", 2, "s.b.widget").await.unwrap();
 
         let router = ArtifactMutationRouter::new();
         // 🪪️ `io::ArtifactKindId::parse("s.b.widget").plugin()` == "b" (bare middle segment) — the
         // CONTRIBUTED row must be registered under the CONTRIBUTOR's own bare plugin id ("a"), with
         // "b" (matching the artifact kind's real owner) as its declared dependency.
-        router.register_roster("a", &[dependency("b")], vec![HostMutationRosterEntry { mutation_id: "s.b.widget#a:annotate".into(), verb: "annotate".into(), entity: "widget".into(), kind: "annotate".into(), record: "widget.doc".into(), contributor: Some("a".into()), artifact_kind: Some("s.b.widget".into()) }]).unwrap();
+        router.register_roster("a", &[dependency("b").await], vec![HostMutationRosterEntry { mutation_id: "s.b.widget#a:annotate".into(), verb: "annotate".into(), entity: "widget".into(), kind: "annotate".into(), record: "widget.doc".into(), contributor: Some("a".into()), artifact_kind: Some("s.b.widget".into()) }]).await.unwrap();
 
         let coordinator = HostTransactionCoordinator::new();
         let foreign = vec![protocol::ForeignStep { target: protocol::ForeignTarget { artifact_id: "artifacts/target".into(), artifact_kind: "s.b.widget".into(), dialect: None }, mutation_id: protocol::SchemaId("s.b.widget#a:annotate".into()), payload: vec![9, 9], label: "annotate".into() }];
@@ -3798,7 +4153,7 @@ mod host_transaction_coordinator_tests {
                 "propose annotate".into(),
                 foreign,
             )
-            .expect("a well-formed two-member transaction must commit");
+            .await.expect("a well-formed two-member transaction must commit");
 
         assert_eq!(outcome.members.len(), 2);
         assert_eq!(outcome.members[0], TransactionMember { plugin_id: "s.a".into(), instance_id: 1 }, "member 0 is the initiator");
@@ -3811,52 +4166,52 @@ mod host_transaction_coordinator_tests {
             assert_eq!(instances_map.get(&("s.b".to_string(), 2)).unwrap().edits.len(), 1);
         }
 
-        coordinator.undo_group(|plugin_id, instance_id, command| cluster.exchange(plugin_id, instance_id, command), &outcome.members, &outcome.txn_id);
+        coordinator.undo_group(|plugin_id, instance_id, command| cluster.exchange(plugin_id, instance_id, command), &outcome.members, &outcome.txn_id).await;
         let instances_map = cluster.instances.borrow();
         assert!(instances_map.get(&("s.a".to_string(), 1)).unwrap().undone.contains(&outcome.txn_id), "initiator must be undone");
         assert!(instances_map.get(&("s.b".to_string(), 2)).unwrap().undone.contains(&outcome.txn_id), "the contributed target must ALSO be undone (group undo restores both members)");
     }
 
-    #[test]
-    fn an_unknown_target_is_rejected_before_any_prepare_is_sent() {
+    #[semio_framework_async_macros::async_test]
+    async fn an_unknown_target_is_rejected_before_any_prepare_is_sent() {
         let cluster = FakeCluster::default();
         let instances = InstanceDirectory::new();
-        instances.bind("artifacts/initiator", "s.a", 1, "s.a.widget").unwrap();
+        instances.bind("artifacts/initiator", "s.a", 1, "s.a.widget").await.unwrap();
         let router = ArtifactMutationRouter::new();
         let coordinator = HostTransactionCoordinator::new();
         let foreign = vec![protocol::ForeignStep { target: protocol::ForeignTarget { artifact_id: "artifacts/nowhere".into(), artifact_kind: "s.b.widget".into(), dialect: None }, mutation_id: protocol::SchemaId("s.b.widget#a:annotate".into()), payload: vec![1], label: "x".into() }];
         let error = coordinator
             .run_transaction(&instances, &router, |plugin_id, instance_id, command| cluster.exchange(plugin_id, instance_id, command), |_, _, _, _, _| unreachable!("no contributed step to plan"), TransactionMember { plugin_id: "s.a".into(), instance_id: 1 }, vec![vec![1]], "x".into(), foreign)
-            .unwrap_err();
-        assert_eq!(error.code(), "transaction.unknown-target");
+            .await.unwrap_err();
+        assert_eq!(error.code().await, "transaction.unknown-target");
     }
 
-    #[test]
-    fn an_unknown_mutation_is_rejected() {
+    #[semio_framework_async_macros::async_test]
+    async fn an_unknown_mutation_is_rejected() {
         let cluster = FakeCluster::default();
         let instances = InstanceDirectory::new();
-        instances.bind("artifacts/initiator", "s.a", 1, "s.a.widget").unwrap();
-        instances.bind("artifacts/target", "s.b", 2, "s.b.widget").unwrap();
+        instances.bind("artifacts/initiator", "s.a", 1, "s.a.widget").await.unwrap();
+        instances.bind("artifacts/target", "s.b", 2, "s.b.widget").await.unwrap();
         let router = ArtifactMutationRouter::new();
         let coordinator = HostTransactionCoordinator::new();
         let foreign = vec![protocol::ForeignStep { target: protocol::ForeignTarget { artifact_id: "artifacts/target".into(), artifact_kind: "s.b.widget".into(), dialect: None }, mutation_id: protocol::SchemaId("s.b.widget#unregistered".into()), payload: vec![1], label: "x".into() }];
         let error = coordinator
             .run_transaction(&instances, &router, |plugin_id, instance_id, command| cluster.exchange(plugin_id, instance_id, command), |_, _, _, _, _| unreachable!("owner route, never contributed"), TransactionMember { plugin_id: "s.a".into(), instance_id: 1 }, vec![vec![1]], "x".into(), foreign)
-            .unwrap_err();
-        assert_eq!(error.code(), "transaction.unknown-mutation");
+            .await.unwrap_err();
+        assert_eq!(error.code().await, "transaction.unknown-mutation");
     }
 
-    #[test]
-    fn a_cycle_is_rejected() {
+    #[semio_framework_async_macros::async_test]
+    async fn a_cycle_is_rejected() {
         let cluster = FakeCluster::default();
         let instances = InstanceDirectory::new();
-        instances.bind("artifacts/initiator", "s.a", 1, "s.a.widget").unwrap();
-        instances.bind("artifacts/target", "s.b", 2, "s.b.widget").unwrap();
+        instances.bind("artifacts/initiator", "s.a", 1, "s.a.widget").await.unwrap();
+        instances.bind("artifacts/target", "s.b", 2, "s.b.widget").await.unwrap();
         let router = ArtifactMutationRouter::new();
         // 🪪️ `io::ArtifactKindId::parse("s.b.widget").plugin()` == "b" (bare middle segment) — the
         // CONTRIBUTED row must be registered under the CONTRIBUTOR's own bare plugin id ("a"), with
         // "b" (matching the artifact kind's real owner) as its declared dependency.
-        router.register_roster("a", &[dependency("b")], vec![HostMutationRosterEntry { mutation_id: "s.b.widget#a:annotate".into(), verb: "annotate".into(), entity: "widget".into(), kind: "annotate".into(), record: "widget.doc".into(), contributor: Some("a".into()), artifact_kind: Some("s.b.widget".into()) }]).unwrap();
+        router.register_roster("a", &[dependency("b").await], vec![HostMutationRosterEntry { mutation_id: "s.b.widget#a:annotate".into(), verb: "annotate".into(), entity: "widget".into(), kind: "annotate".into(), record: "widget.doc".into(), contributor: Some("a".into()), artifact_kind: Some("s.b.widget".into()) }]).await.unwrap();
         let coordinator = HostTransactionCoordinator::new();
         let step = protocol::ForeignStep { target: protocol::ForeignTarget { artifact_id: "artifacts/target".into(), artifact_kind: "s.b.widget".into(), dialect: None }, mutation_id: protocol::SchemaId("s.b.widget#a:annotate".into()), payload: vec![7], label: "x".into() };
         // The contributed plan returns the SAME step again -> a real cycle by (artifact_id, mutation_id, payload_hash).
@@ -3872,16 +4227,16 @@ mod host_transaction_coordinator_tests {
                 "x".into(),
                 vec![step],
             )
-            .unwrap_err();
-        assert_eq!(error.code(), "transaction.cycle");
+            .await.unwrap_err();
+        assert_eq!(error.code().await, "transaction.cycle");
     }
 
-    #[test]
-    fn a_member_rejection_rolls_back_every_already_prepared_member() {
+    #[semio_framework_async_macros::async_test]
+    async fn a_member_rejection_rolls_back_every_already_prepared_member() {
         let cluster = FakeCluster::default();
         let instances = InstanceDirectory::new();
-        instances.bind("artifacts/initiator", "s.a", 1, "s.a.widget").unwrap();
-        instances.bind("artifacts/target", "s.b", 2, "s.b.widget").unwrap();
+        instances.bind("artifacts/initiator", "s.a", 1, "s.a.widget").await.unwrap();
+        instances.bind("artifacts/target", "s.b", 2, "s.b.widget").await.unwrap();
         // Pre-occupy s.b/2's pending slot so its OWN prepare hits `transaction.instance-busy`
         // for real, through the fake's genuine busy-check — not a stubbed rejection.
         cluster.instances.borrow_mut().entry(("s.b".to_string(), 2)).or_default().pending = Some(("someone-elses-txn".into(), vec![]));
@@ -3890,7 +4245,7 @@ mod host_transaction_coordinator_tests {
         // 🪪️ `io::ArtifactKindId::parse("s.b.widget").plugin()` == "b" (bare middle segment) — the
         // CONTRIBUTED row must be registered under the CONTRIBUTOR's own bare plugin id ("a"), with
         // "b" (matching the artifact kind's real owner) as its declared dependency.
-        router.register_roster("a", &[dependency("b")], vec![HostMutationRosterEntry { mutation_id: "s.b.widget#a:annotate".into(), verb: "annotate".into(), entity: "widget".into(), kind: "annotate".into(), record: "widget.doc".into(), contributor: Some("a".into()), artifact_kind: Some("s.b.widget".into()) }]).unwrap();
+        router.register_roster("a", &[dependency("b").await], vec![HostMutationRosterEntry { mutation_id: "s.b.widget#a:annotate".into(), verb: "annotate".into(), entity: "widget".into(), kind: "annotate".into(), record: "widget.doc".into(), contributor: Some("a".into()), artifact_kind: Some("s.b.widget".into()) }]).await.unwrap();
         let coordinator = HostTransactionCoordinator::new();
         let foreign = vec![protocol::ForeignStep { target: protocol::ForeignTarget { artifact_id: "artifacts/target".into(), artifact_kind: "s.b.widget".into(), dialect: None }, mutation_id: protocol::SchemaId("s.b.widget#a:annotate".into()), payload: vec![1], label: "x".into() }];
 
@@ -3905,25 +4260,25 @@ mod host_transaction_coordinator_tests {
                 "x".into(),
                 foreign,
             )
-            .unwrap_err();
-        assert_eq!(error.code(), "transaction.member-rejected");
+            .await.unwrap_err();
+        assert_eq!(error.code().await, "transaction.member-rejected");
         let instances_map = cluster.instances.borrow();
         assert!(instances_map.get(&("s.a".to_string(), 1)).unwrap().pending.is_none(), "the initiator, prepared before the rejection, must have been rolled back");
     }
 
-    #[test]
-    fn a_chain_deeper_than_max_plan_depth_is_rejected() {
+    #[semio_framework_async_macros::async_test]
+    async fn a_chain_deeper_than_max_plan_depth_is_rejected() {
         let cluster = FakeCluster::default();
         let instances = InstanceDirectory::new();
-        instances.bind("artifacts/initiator", "s.a", 1, "s.a.widget").unwrap();
+        instances.bind("artifacts/initiator", "s.a", 1, "s.a.widget").await.unwrap();
         for i in 0..10u8 {
-            instances.bind(&format!("artifacts/target-{i}"), "s.b", 100 + i as u32, "s.b.widget").unwrap();
+            instances.bind(&format!("artifacts/target-{i}"), "s.b", 100 + i as u32, "s.b.widget").await.unwrap();
         }
         let router = ArtifactMutationRouter::new();
         // 🪪️ `io::ArtifactKindId::parse("s.b.widget").plugin()` == "b" (bare middle segment) — the
         // CONTRIBUTED row must be registered under the CONTRIBUTOR's own bare plugin id ("a"), with
         // "b" (matching the artifact kind's real owner) as its declared dependency.
-        router.register_roster("a", &[dependency("b")], vec![HostMutationRosterEntry { mutation_id: "s.b.widget#a:annotate".into(), verb: "annotate".into(), entity: "widget".into(), kind: "annotate".into(), record: "widget.doc".into(), contributor: Some("a".into()), artifact_kind: Some("s.b.widget".into()) }]).unwrap();
+        router.register_roster("a", &[dependency("b").await], vec![HostMutationRosterEntry { mutation_id: "s.b.widget#a:annotate".into(), verb: "annotate".into(), entity: "widget".into(), kind: "annotate".into(), record: "widget.doc".into(), contributor: Some("a".into()), artifact_kind: Some("s.b.widget".into()) }]).await.unwrap();
         let coordinator = HostTransactionCoordinator::new();
         let foreign = vec![protocol::ForeignStep { target: protocol::ForeignTarget { artifact_id: "artifacts/target-0".into(), artifact_kind: "s.b.widget".into(), dialect: None }, mutation_id: protocol::SchemaId("s.b.widget#a:annotate".into()), payload: vec![0], label: "x".into() }];
         // Each level's contributed plan hands back ONE new foreign step targeting the NEXT (distinct)
@@ -3944,8 +4299,8 @@ mod host_transaction_coordinator_tests {
                 "x".into(),
                 foreign,
             )
-            .unwrap_err();
-        assert_eq!(error.code(), "transaction.depth-exceeded");
+            .await.unwrap_err();
+        assert_eq!(error.code().await, "transaction.depth-exceeded");
     }
 }
 //#endregion 🎯️TransactionCoordinator
@@ -3996,7 +4351,7 @@ impl AppRouter {
 
     /// 🧪️ `register_plugin` split out for direct manifest-driven testing (no wasmtime component
     /// needed to exercise the two frozen conflict/gate faults) — pure aside from the `Mutex` lock.
-    pub fn register_manifest(&self, plugin_id: &str, manifest: &PluginManifest) -> Result<(), semio_framework::Fault> {
+    pub async fn register_manifest(&self, plugin_id: &str, manifest: &PluginManifest) -> Result<(), semio_framework::Fault> {
         let mut state = self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         let dependencies: BTreeSet<String> = manifest.dependencies.iter().map(|dependency| dependency.plugin_id.clone()).collect();
         state.dependencies.insert(plugin_id.to_string(), dependencies);
@@ -4011,7 +4366,7 @@ impl AppRouter {
                     return Err(semio_framework::Fault::new(
                         semio_framework::FaultOrigin::Framework,
                         semio_framework::FaultCode::new("surface.contribution-not-permitted"),
-                        format!("plugin `{plugin_id}` declares a surface for `{}` (owned by `{owner}`) without listing `{owner}` in its dependencies", app.dialect.to_coordinate()),
+                        format!("plugin `{plugin_id}` declares a surface for `{}` (owned by `{owner}`) without listing `{owner}` in its dependencies", app.dialect.to_coordinate().await),
                     ));
                 }
             }
@@ -4031,7 +4386,7 @@ impl AppRouter {
     /// 📚️ Every `AppRef` serving `(dialect, role)`, deterministically ordered: the dialect's owner
     /// plugin's surface first (if it has one), then the rest sorted `plugin_id` asc / `app_id` asc
     /// (contract §3).
-    pub fn surfaces_for(&self, dialect: &semio_framework::ArtifactDialect, role: semio_framework::AppRole) -> Vec<semio_framework::AppRef> {
+    pub async fn surfaces_for(&self, dialect: &semio_framework::ArtifactDialect, role: semio_framework::AppRole) -> Vec<semio_framework::AppRef> {
         let state = self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         let owner = state.owners.get(&dialect.artifact_kind).cloned();
         let mut refs = state.surfaces.get(&(dialect.clone(), role)).cloned().unwrap_or_default();
@@ -4049,7 +4404,7 @@ impl AppRouter {
 
     /// 🎯️ The dialect's owner plugin id, if any plugin has claimed `artifact_kind` (via its own
     /// `PluginManifest.artifact_kinds`, or by being first to declare ANY surface for it).
-    pub fn owner_of(&self, artifact_kind: &str) -> Option<String> {
+    pub async fn owner_of(&self, artifact_kind: &str) -> Option<String> {
         self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner).owners.get(artifact_kind).cloned()
     }
 
@@ -4060,7 +4415,7 @@ impl AppRouter {
     /// ownership on its own; clearing the entry here would let whichever OTHER plugin happens to be
     /// registered next silently inherit ownership mid-reload — worse than a momentarily-stale owner
     /// pointing at a plugin with zero live surfaces (which `owned_surface_gaps` would then flag).
-    pub fn unregister_plugin(&self, plugin_id: &str) {
+    pub async fn unregister_plugin(&self, plugin_id: &str) {
         let mut state = self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         state.dependencies.remove(plugin_id);
         for refs in state.surfaces.values_mut() {
@@ -4079,7 +4434,7 @@ impl AppRouter {
     /// subsets, including ones with zero surfaces at all) is `policySubsetSurfaceCompletenessBreaches`'s
     /// job in `📜️script.ts`, not a host runtime concern — a wasm plugin host cannot walk the repo
     /// filesystem.
-    pub fn owned_surface_gaps(&self) -> Vec<semio_framework::Fault> {
+    pub async fn owned_surface_gaps(&self) -> Vec<semio_framework::Fault> {
         let state = self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         let mut dialects: Vec<semio_framework::ArtifactDialect> = state.surfaces.keys().map(|(dialect, _)| dialect.clone()).collect();
         dialects.sort();
@@ -4093,7 +4448,7 @@ impl AppRouter {
                     gaps.push(semio_framework::Fault::new(
                         semio_framework::FaultOrigin::Framework,
                         semio_framework::FaultCode::new("surface.missing-owner-surface"),
-                        format!("`{}` (owned by `{owner}`) has no registered {} surface", dialect.to_coordinate(), role.as_str()),
+                        format!("`{}` (owned by `{owner}`) has no registered {} surface", dialect.to_coordinate().await, role.as_str().await),
                     ));
                 }
             }
@@ -4112,7 +4467,7 @@ impl Default for AppRouter {
 mod app_router_tests {
     use super::*;
 
-    fn fixture_artifact_kind(id: &str) -> semio_framework::ArtifactKindSpec {
+    async fn fixture_artifact_kind(id: &str) -> semio_framework::ArtifactKindSpec {
         semio_framework::ArtifactKindSpec {
             id: id.into(),
             name: id.into(),
@@ -4129,7 +4484,7 @@ mod app_router_tests {
         }
     }
 
-    pub(super) fn fixture_app(id: &str, dialect: semio_framework::ArtifactDialect, role: semio_framework::AppRole) -> semio_framework::AppDefinition {
+    pub(super) async fn fixture_app(id: &str, dialect: semio_framework::ArtifactDialect, role: semio_framework::AppRole) -> semio_framework::AppDefinition {
         semio_framework::AppDefinition {
             id: id.into(),
             role,
@@ -4172,13 +4527,17 @@ mod app_router_tests {
             media_inputs: Vec::new(),
             media_outputs: Vec::new(),
             artifact_kinds: Vec::new(),
-            config: semio_framework::ConfigSpec::empty(),
-            command_grammar: semio_framework::CommandGrammar::empty(),
-            io: semio_framework::AppIo::from_document(id, semio_framework::MediaType { class: semio_framework::MediaClass::Data, form: semio_framework::MediaForm::Value }, semio_framework::ArtifactPresentation { id: id.into(), name: id.into(), dimension: String::new(), component_kind: id.into() }),
+            config: semio_framework::ConfigSpec::empty().await,
+            command_grammar: semio_framework::CommandGrammar::empty().await,
+            io: semio_framework::AppIo::from_document(id, semio_framework::MediaType { class: semio_framework::MediaClass::Data, form: semio_framework::MediaForm::Value }, semio_framework::ArtifactPresentation { id: id.into(), name: id.into(), dimension: String::new(), component_kind: id.into() }).await,
         }
     }
 
-    fn fixture_manifest(plugin_id: &str, dependencies: Vec<&str>, artifact_kinds: Vec<semio_framework::ArtifactKindSpec>, apps: Vec<semio_framework::AppDefinition>) -> PluginManifest {
+    async fn fixture_manifest(plugin_id: &str, dependency_ids: Vec<&str>, artifact_kinds: Vec<semio_framework::ArtifactKindSpec>, apps: Vec<semio_framework::AppDefinition>) -> PluginManifest {
+        let mut dependencies = Vec::with_capacity(dependency_ids.len());
+        for id in dependency_ids {
+            dependencies.push(semio_framework::PluginDependency::new(id, semio_framework::VersionReq::Any).await);
+        }
         PluginManifest {
             plugin_id: plugin_id.into(),
             label: plugin_id.into(),
@@ -4189,80 +4548,80 @@ mod app_router_tests {
             topic_contributions: Vec::new(),
             commands: Vec::new(),
             artifact_kinds,
-            dependencies: dependencies.into_iter().map(|id| semio_framework::PluginDependency::new(id, semio_framework::VersionReq::Any)).collect(),
+            dependencies,
             contributions: Vec::new(),
         }
     }
 
-    pub(super) fn dialect(subset: &str) -> semio_framework::ArtifactDialect {
+    pub(super) async fn dialect(subset: &str) -> semio_framework::ArtifactDialect {
         semio_framework::ArtifactDialect { artifact_kind: "s.cad.cad".into(), standard: "1".into(), subset: subset.into() }
     }
 
-    fn register(router: &AppRouter, plugin_id: &str, dependencies: Vec<&str>, artifact_kinds: Vec<semio_framework::ArtifactKindSpec>, apps: Vec<semio_framework::AppDefinition>) -> Result<(), semio_framework::Fault> {
-        router.register_manifest(plugin_id, &fixture_manifest(plugin_id, dependencies, artifact_kinds, apps))
+    async fn register(router: &AppRouter, plugin_id: &str, dependencies: Vec<&str>, artifact_kinds: Vec<semio_framework::ArtifactKindSpec>, apps: Vec<semio_framework::AppDefinition>) -> Result<(), semio_framework::Fault> {
+        router.register_manifest(plugin_id, &fixture_manifest(plugin_id, dependencies, artifact_kinds, apps).await).await
     }
 
-    #[test]
-    fn owner_surface_sorts_first_then_plugin_id_then_app_id() {
+    #[semio_framework_async_macros::async_test]
+    async fn owner_surface_sorts_first_then_plugin_id_then_app_id() {
         let router = AppRouter::new();
-        let editor_dialect = dialect("*");
-        register(&router, "cad", vec![], vec![fixture_artifact_kind("s.cad.cad")], vec![fixture_app("s.cad.cad@1/*#editor", editor_dialect.clone(), semio_framework::AppRole::Editor)]).expect("owner registers");
-        register(&router, "aec-building", vec!["cad"], vec![], vec![fixture_app("s.cad.cad@1/1#editor", dialect("1"), semio_framework::AppRole::Editor)]).expect("a distinct subset's editor, contributed by a dependent, does not conflict");
-        let refs = router.surfaces_for(&editor_dialect, semio_framework::AppRole::Editor);
+        let editor_dialect = dialect("*").await;
+        register(&router, "cad", vec![], vec![fixture_artifact_kind("s.cad.cad").await], vec![fixture_app("s.cad.cad@1/*#editor", editor_dialect.clone(), semio_framework::AppRole::Editor).await]).await.expect("owner registers");
+        register(&router, "aec-building", vec!["cad"], vec![], vec![fixture_app("s.cad.cad@1/1#editor", dialect("1").await, semio_framework::AppRole::Editor).await]).await.expect("a distinct subset's editor, contributed by a dependent, does not conflict");
+        let refs = router.surfaces_for(&editor_dialect, semio_framework::AppRole::Editor).await;
         assert_eq!(refs, vec![semio_framework::AppRef { plugin_id: "cad".into(), app_id: "s.cad.cad@1/*#editor".into() }]);
-        assert_eq!(router.owner_of("s.cad.cad"), Some("cad".to_string()));
+        assert_eq!(router.owner_of("s.cad.cad").await, Some("cad".to_string()));
     }
 
-    #[test]
-    fn duplicate_app_ref_is_a_conflict() {
+    #[semio_framework_async_macros::async_test]
+    async fn duplicate_app_ref_is_a_conflict() {
         let router = AppRouter::new();
-        let editor_dialect = dialect("*");
-        let app = fixture_app("s.cad.cad@1/*#editor", editor_dialect.clone(), semio_framework::AppRole::Editor);
-        register(&router, "cad", vec![], vec![fixture_artifact_kind("s.cad.cad")], vec![app.clone()]).expect("first registration succeeds");
-        let error = register(&router, "cad", vec![], vec![], vec![app]).expect_err("re-registering the same AppRef must conflict");
+        let editor_dialect = dialect("*").await;
+        let app = fixture_app("s.cad.cad@1/*#editor", editor_dialect.clone(), semio_framework::AppRole::Editor).await;
+        register(&router, "cad", vec![], vec![fixture_artifact_kind("s.cad.cad").await], vec![app.clone()]).await.expect("first registration succeeds");
+        let error = register(&router, "cad", vec![], vec![], vec![app]).await.expect_err("re-registering the same AppRef must conflict");
         assert_eq!(error.code.0, "surface.conflict");
     }
 
-    #[test]
-    fn contribution_without_a_declared_dependency_is_rejected() {
+    #[semio_framework_async_macros::async_test]
+    async fn contribution_without_a_declared_dependency_is_rejected() {
         let router = AppRouter::new();
-        let editor_dialect = dialect("*");
-        register(&router, "cad", vec![], vec![fixture_artifact_kind("s.cad.cad")], vec![]).expect("owner claims the kind with zero apps");
-        let error = register(&router, "norm", vec![], vec![], vec![fixture_app("s.cad.cad@1/*#viewer", editor_dialect, semio_framework::AppRole::Viewer)]).expect_err("a non-owner plugin without a dependency on the owner must be rejected");
+        let editor_dialect = dialect("*").await;
+        register(&router, "cad", vec![], vec![fixture_artifact_kind("s.cad.cad").await], vec![]).await.expect("owner claims the kind with zero apps");
+        let error = register(&router, "norm", vec![], vec![], vec![fixture_app("s.cad.cad@1/*#viewer", editor_dialect, semio_framework::AppRole::Viewer).await]).await.expect_err("a non-owner plugin without a dependency on the owner must be rejected");
         assert_eq!(error.code.0, "surface.contribution-not-permitted");
     }
 
-    #[test]
-    fn contribution_with_a_declared_dependency_is_admitted_and_sorted_after_the_owner() {
+    #[semio_framework_async_macros::async_test]
+    async fn contribution_with_a_declared_dependency_is_admitted_and_sorted_after_the_owner() {
         let router = AppRouter::new();
-        let editor_dialect = dialect("*");
-        register(&router, "cad", vec![], vec![fixture_artifact_kind("s.cad.cad")], vec![fixture_app("s.cad.cad@1/*#editor", editor_dialect.clone(), semio_framework::AppRole::Editor)]).expect("owner registers its editor");
-        register(&router, "norm", vec!["cad"], vec![], vec![fixture_app("s.cad.cad@1/*#viewer", editor_dialect.clone(), semio_framework::AppRole::Viewer)]).expect("norm depends on cad, so contributing a viewer for cad's dialect is permitted");
-        let viewers = router.surfaces_for(&editor_dialect, semio_framework::AppRole::Viewer);
+        let editor_dialect = dialect("*").await;
+        register(&router, "cad", vec![], vec![fixture_artifact_kind("s.cad.cad").await], vec![fixture_app("s.cad.cad@1/*#editor", editor_dialect.clone(), semio_framework::AppRole::Editor).await]).await.expect("owner registers its editor");
+        register(&router, "norm", vec!["cad"], vec![], vec![fixture_app("s.cad.cad@1/*#viewer", editor_dialect.clone(), semio_framework::AppRole::Viewer).await]).await.expect("norm depends on cad, so contributing a viewer for cad's dialect is permitted");
+        let viewers = router.surfaces_for(&editor_dialect, semio_framework::AppRole::Viewer).await;
         assert_eq!(viewers, vec![semio_framework::AppRef { plugin_id: "norm".into(), app_id: "s.cad.cad@1/*#viewer".into() }]);
     }
 
-    #[test]
-    fn owned_surface_gaps_reports_the_missing_role_only() {
+    #[semio_framework_async_macros::async_test]
+    async fn owned_surface_gaps_reports_the_missing_role_only() {
         let router = AppRouter::new();
-        let editor_dialect = dialect("*");
-        register(&router, "cad", vec![], vec![fixture_artifact_kind("s.cad.cad")], vec![fixture_app("s.cad.cad@1/*#editor", editor_dialect, semio_framework::AppRole::Editor)]).expect("owner registers only an editor");
-        let gaps = router.owned_surface_gaps();
+        let editor_dialect = dialect("*").await;
+        register(&router, "cad", vec![], vec![fixture_artifact_kind("s.cad.cad").await], vec![fixture_app("s.cad.cad@1/*#editor", editor_dialect, semio_framework::AppRole::Editor).await]).await.expect("owner registers only an editor");
+        let gaps = router.owned_surface_gaps().await;
         assert_eq!(gaps.len(), 1);
         assert_eq!(gaps[0].code.0, "surface.missing-owner-surface");
         assert!(gaps[0].message.contains("viewer"));
     }
 
-    #[test]
-    fn unregister_plugin_drops_its_surfaces_but_keeps_its_ownership_claim() {
+    #[semio_framework_async_macros::async_test]
+    async fn unregister_plugin_drops_its_surfaces_but_keeps_its_ownership_claim() {
         let router = AppRouter::new();
-        let editor_dialect = dialect("*");
-        register(&router, "cad", vec![], vec![fixture_artifact_kind("s.cad.cad")], vec![fixture_app("s.cad.cad@1/*#editor", editor_dialect.clone(), semio_framework::AppRole::Editor)]).expect("owner registers");
-        router.unregister_plugin("cad");
-        assert!(router.surfaces_for(&editor_dialect, semio_framework::AppRole::Editor).is_empty(), "the surface itself is gone");
-        assert_eq!(router.owner_of("s.cad.cad"), Some("cad".to_string()), "ownership claim survives so a re-registering hot-reload reclaims it, not a stray contributor");
-        register(&router, "cad", vec![], vec![fixture_artifact_kind("s.cad.cad")], vec![fixture_app("s.cad.cad@1/*#editor", editor_dialect.clone(), semio_framework::AppRole::Editor)]).expect("re-registering after unregister succeeds (no stale conflict)");
-        assert_eq!(router.surfaces_for(&editor_dialect, semio_framework::AppRole::Editor), vec![semio_framework::AppRef { plugin_id: "cad".into(), app_id: "s.cad.cad@1/*#editor".into() }]);
+        let editor_dialect = dialect("*").await;
+        register(&router, "cad", vec![], vec![fixture_artifact_kind("s.cad.cad").await], vec![fixture_app("s.cad.cad@1/*#editor", editor_dialect.clone(), semio_framework::AppRole::Editor).await]).await.expect("owner registers");
+        router.unregister_plugin("cad").await;
+        assert!(router.surfaces_for(&editor_dialect, semio_framework::AppRole::Editor).await.is_empty(), "the surface itself is gone");
+        assert_eq!(router.owner_of("s.cad.cad").await, Some("cad".to_string()), "ownership claim survives so a re-registering hot-reload reclaims it, not a stray contributor");
+        register(&router, "cad", vec![], vec![fixture_artifact_kind("s.cad.cad").await], vec![fixture_app("s.cad.cad@1/*#editor", editor_dialect.clone(), semio_framework::AppRole::Editor).await]).await.expect("re-registering after unregister succeeds (no stale conflict)");
+        assert_eq!(router.surfaces_for(&editor_dialect, semio_framework::AppRole::Editor).await, vec![semio_framework::AppRef { plugin_id: "cad".into(), app_id: "s.cad.cad@1/*#editor".into() }]);
     }
 
     /// 🔗️ Lane 1-D parity reconciliation (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET,
@@ -4272,15 +4631,15 @@ mod app_router_tests {
     /// which builds the identical manifests through `AppRouter.build`/`resolveOpeningApp`. Both
     /// sides must produce identical `surfaces_for` ordering and identical fault codes — run both,
     /// paste both outputs into the report, per the ticket's verification rule.
-    #[test]
-    fn w1_d_parity_fixture_owner_two_contributors_duplicate_and_unknown_dialect() {
+    #[semio_framework_async_macros::async_test]
+    async fn w1_d_parity_fixture_owner_two_contributors_duplicate_and_unknown_dialect() {
         let router = AppRouter::new();
-        let editor_dialect = dialect("*");
-        register(&router, "cad", vec![], vec![fixture_artifact_kind("s.cad.cad")], vec![fixture_app("s.cad.cad@1/*#editor", editor_dialect.clone(), semio_framework::AppRole::Editor)]).expect("owner registers");
-        register(&router, "norm", vec!["cad"], vec![], vec![fixture_app("s.cad.cad@1/*#editor-norm", editor_dialect.clone(), semio_framework::AppRole::Editor)]).expect("norm depends on cad, contributes a second editor");
-        register(&router, "aec-building", vec!["cad"], vec![], vec![fixture_app("s.cad.cad@1/*#editor-aec", editor_dialect.clone(), semio_framework::AppRole::Editor)]).expect("aec-building depends on cad, contributes a third editor");
+        let editor_dialect = dialect("*").await;
+        register(&router, "cad", vec![], vec![fixture_artifact_kind("s.cad.cad").await], vec![fixture_app("s.cad.cad@1/*#editor", editor_dialect.clone(), semio_framework::AppRole::Editor).await]).await.expect("owner registers");
+        register(&router, "norm", vec!["cad"], vec![], vec![fixture_app("s.cad.cad@1/*#editor-norm", editor_dialect.clone(), semio_framework::AppRole::Editor).await]).await.expect("norm depends on cad, contributes a second editor");
+        register(&router, "aec-building", vec!["cad"], vec![], vec![fixture_app("s.cad.cad@1/*#editor-aec", editor_dialect.clone(), semio_framework::AppRole::Editor).await]).await.expect("aec-building depends on cad, contributes a third editor");
 
-        let refs = router.surfaces_for(&editor_dialect, semio_framework::AppRole::Editor);
+        let refs = router.surfaces_for(&editor_dialect, semio_framework::AppRole::Editor).await;
         assert_eq!(
             refs,
             vec![
@@ -4291,11 +4650,11 @@ mod app_router_tests {
             "owner first, then contributors pluginId-ascending (aec-building < norm)"
         );
 
-        let duplicate = register(&router, "aec-building", vec!["cad"], vec![], vec![fixture_app("s.cad.cad@1/*#editor-aec", editor_dialect.clone(), semio_framework::AppRole::Editor)]).expect_err("re-registering the same AppRef must conflict");
+        let duplicate = register(&router, "aec-building", vec!["cad"], vec![], vec![fixture_app("s.cad.cad@1/*#editor-aec", editor_dialect.clone(), semio_framework::AppRole::Editor).await]).await.expect_err("re-registering the same AppRef must conflict");
         assert_eq!(duplicate.code.0, "surface.conflict");
 
-        let unknown_dialect = dialect("does-not-exist");
-        let unknown = OpeningResolver::resolve(&router, &unknown_dialect, semio_framework::AppRole::Editor, None).expect_err("no surface registered for this subset");
+        let unknown_dialect = dialect("does-not-exist").await;
+        let unknown = OpeningResolver::resolve(&router, &unknown_dialect, semio_framework::AppRole::Editor, None).await.expect_err("no surface registered for this subset");
         assert_eq!(unknown.code.0, "surface.unknown-dialect");
     }
 }
@@ -4316,8 +4675,10 @@ mod app_router_tests {
 pub struct OpeningResolver;
 
 impl OpeningResolver {
-    pub fn resolve(router: &AppRouter, dialect: &semio_framework::ArtifactDialect, role: semio_framework::AppRole, user_default: Option<&semio_framework::AppRef>) -> Result<semio_framework::AppRef, semio_framework::Fault> {
-        let candidates = router.surfaces_for(dialect, role);
+    pub async fn resolve(router: &AppRouter, dialect: &semio_framework::ArtifactDialect, role: semio_framework::AppRole, user_default: Option<&semio_framework::AppRef>) -> Result<semio_framework::AppRef, semio_framework::Fault> {
+        // 🚫️async: R10 residue shape 2 — a future is consumed by one `.await`; awaited once here
+        // instead of once inside the `if let` and again (moved) at `.into_iter()` below.
+        let candidates = router.surfaces_for(dialect, role).await;
         if let Some(default_ref) = user_default {
             if candidates.contains(default_ref) {
                 return Ok(default_ref.clone());
@@ -4329,7 +4690,7 @@ impl OpeningResolver {
         Err(semio_framework::Fault::new(
             semio_framework::FaultOrigin::Framework,
             semio_framework::FaultCode::new("surface.unknown-dialect"),
-            format!("no {} surface registered for `{}`", role.as_str(), dialect.to_coordinate()),
+            format!("no {} surface registered for `{}`", role.as_str().await, dialect.to_coordinate().await),
         ))
     }
 }
@@ -4339,11 +4700,11 @@ mod opening_resolver_tests {
     use super::app_router_tests::{dialect, fixture_app};
     use super::*;
 
-    #[test]
-    fn step1_explicit_default_still_in_router_wins() {
+    #[semio_framework_async_macros::async_test]
+    async fn step1_explicit_default_still_in_router_wins() {
         let router = AppRouter::new();
-        let editor_dialect = dialect("*");
-        router.register_manifest("cad", &PluginManifest { plugin_id: "cad".into(), label: "cad".into(), version: "0.1.0".into(), apps: vec![fixture_app("s.cad.cad@1/*#editor", editor_dialect.clone(), semio_framework::AppRole::Editor)], examples: Vec::new(), capabilities: Vec::new(), topic_contributions: Vec::new(), commands: Vec::new(), artifact_kinds: Vec::new(), dependencies: Vec::new(), contributions: Vec::new() }).expect("owner registers");
+        let editor_dialect = dialect("*").await;
+        router.register_manifest("cad", &PluginManifest { plugin_id: "cad".into(), label: "cad".into(), version: "0.1.0".into(), apps: vec![fixture_app("s.cad.cad@1/*#editor", editor_dialect.clone(), semio_framework::AppRole::Editor).await], examples: Vec::new(), capabilities: Vec::new(), topic_contributions: Vec::new(), commands: Vec::new(), artifact_kinds: Vec::new(), dependencies: Vec::new(), contributions: Vec::new() }).await.expect("owner registers");
         router
             .register_manifest(
                 "norm",
@@ -4351,37 +4712,37 @@ mod opening_resolver_tests {
                     plugin_id: "norm".into(),
                     label: "norm".into(),
                     version: "0.1.0".into(),
-                    apps: vec![fixture_app("s.cad.cad@1/*#editor-alt", editor_dialect.clone(), semio_framework::AppRole::Editor)],
+                    apps: vec![fixture_app("s.cad.cad@1/*#editor-alt", editor_dialect.clone(), semio_framework::AppRole::Editor).await],
                     examples: Vec::new(),
                     capabilities: Vec::new(),
                     topic_contributions: Vec::new(),
                     commands: Vec::new(),
                     artifact_kinds: Vec::new(),
-                    dependencies: vec![semio_framework::PluginDependency::new("cad", semio_framework::VersionReq::Any)],
+                    dependencies: vec![semio_framework::PluginDependency::new("cad", semio_framework::VersionReq::Any).await],
                     contributions: Vec::new(),
                 },
             )
-            .expect("norm contributes a second editor for the same dialect");
+            .await.expect("norm contributes a second editor for the same dialect");
         let pinned = semio_framework::AppRef { plugin_id: "norm".into(), app_id: "s.cad.cad@1/*#editor-alt".into() };
-        let resolved = OpeningResolver::resolve(&router, &editor_dialect, semio_framework::AppRole::Editor, Some(&pinned)).expect("pinned default resolves");
+        let resolved = OpeningResolver::resolve(&router, &editor_dialect, semio_framework::AppRole::Editor, Some(&pinned)).await.expect("pinned default resolves");
         assert_eq!(resolved, pinned);
     }
 
-    #[test]
-    fn step2_and_step3_collapse_to_the_owner_surface_when_default_is_stale() {
+    #[semio_framework_async_macros::async_test]
+    async fn step2_and_step3_collapse_to_the_owner_surface_when_default_is_stale() {
         let router = AppRouter::new();
-        let editor_dialect = dialect("*");
-        router.register_manifest("cad", &PluginManifest { plugin_id: "cad".into(), label: "cad".into(), version: "0.1.0".into(), apps: vec![fixture_app("s.cad.cad@1/*#editor", editor_dialect.clone(), semio_framework::AppRole::Editor)], examples: Vec::new(), capabilities: Vec::new(), topic_contributions: Vec::new(), commands: Vec::new(), artifact_kinds: Vec::new(), dependencies: Vec::new(), contributions: Vec::new() }).expect("owner registers");
+        let editor_dialect = dialect("*").await;
+        router.register_manifest("cad", &PluginManifest { plugin_id: "cad".into(), label: "cad".into(), version: "0.1.0".into(), apps: vec![fixture_app("s.cad.cad@1/*#editor", editor_dialect.clone(), semio_framework::AppRole::Editor).await], examples: Vec::new(), capabilities: Vec::new(), topic_contributions: Vec::new(), commands: Vec::new(), artifact_kinds: Vec::new(), dependencies: Vec::new(), contributions: Vec::new() }).await.expect("owner registers");
         let stale_default = semio_framework::AppRef { plugin_id: "gone".into(), app_id: "s.cad.cad@1/*#editor".into() };
-        let resolved = OpeningResolver::resolve(&router, &editor_dialect, semio_framework::AppRole::Editor, Some(&stale_default)).expect("falls through to owner surface");
+        let resolved = OpeningResolver::resolve(&router, &editor_dialect, semio_framework::AppRole::Editor, Some(&stale_default)).await.expect("falls through to owner surface");
         assert_eq!(resolved, semio_framework::AppRef { plugin_id: "cad".into(), app_id: "s.cad.cad@1/*#editor".into() });
     }
 
-    #[test]
-    fn step3_first_entry_when_the_owner_has_no_surface_for_this_role() {
+    #[semio_framework_async_macros::async_test]
+    async fn step3_first_entry_when_the_owner_has_no_surface_for_this_role() {
         let router = AppRouter::new();
-        let editor_dialect = dialect("*");
-        router.register_manifest("cad", &PluginManifest { plugin_id: "cad".into(), label: "cad".into(), version: "0.1.0".into(), apps: Vec::new(), examples: Vec::new(), capabilities: Vec::new(), topic_contributions: Vec::new(), commands: Vec::new(), artifact_kinds: Vec::new(), dependencies: Vec::new(), contributions: Vec::new() }).expect("owner claims nothing yet, zero apps");
+        let editor_dialect = dialect("*").await;
+        router.register_manifest("cad", &PluginManifest { plugin_id: "cad".into(), label: "cad".into(), version: "0.1.0".into(), apps: Vec::new(), examples: Vec::new(), capabilities: Vec::new(), topic_contributions: Vec::new(), commands: Vec::new(), artifact_kinds: Vec::new(), dependencies: Vec::new(), contributions: Vec::new() }).await.expect("owner claims nothing yet, zero apps");
         router
             .register_manifest(
                 "norm",
@@ -4389,7 +4750,7 @@ mod opening_resolver_tests {
                     plugin_id: "norm".into(),
                     label: "norm".into(),
                     version: "0.1.0".into(),
-                    apps: vec![fixture_app("s.cad.cad@1/*#viewer", editor_dialect.clone(), semio_framework::AppRole::Viewer)],
+                    apps: vec![fixture_app("s.cad.cad@1/*#viewer", editor_dialect.clone(), semio_framework::AppRole::Viewer).await],
                     examples: Vec::new(),
                     capabilities: Vec::new(),
                     topic_contributions: Vec::new(),
@@ -4399,16 +4760,16 @@ mod opening_resolver_tests {
                     contributions: Vec::new(),
                 },
             )
-            .expect("s.cad.cad has no owner yet, so norm becomes it by being first to declare a surface for it");
-        let resolved = OpeningResolver::resolve(&router, &editor_dialect, semio_framework::AppRole::Viewer, None).expect("first (only) entry resolves");
+            .await.expect("s.cad.cad has no owner yet, so norm becomes it by being first to declare a surface for it");
+        let resolved = OpeningResolver::resolve(&router, &editor_dialect, semio_framework::AppRole::Viewer, None).await.expect("first (only) entry resolves");
         assert_eq!(resolved, semio_framework::AppRef { plugin_id: "norm".into(), app_id: "s.cad.cad@1/*#viewer".into() });
     }
 
-    #[test]
-    fn step4_unknown_dialect_when_the_router_has_nothing() {
+    #[semio_framework_async_macros::async_test]
+    async fn step4_unknown_dialect_when_the_router_has_nothing() {
         let router = AppRouter::new();
-        let editor_dialect = dialect("*");
-        let error = OpeningResolver::resolve(&router, &editor_dialect, semio_framework::AppRole::Editor, None).expect_err("empty router must fault");
+        let editor_dialect = dialect("*").await;
+        let error = OpeningResolver::resolve(&router, &editor_dialect, semio_framework::AppRole::Editor, None).await.expect_err("empty router must fault");
         assert_eq!(error.code.0, "surface.unknown-dialect");
     }
 }
@@ -4425,7 +4786,7 @@ mod tests {
     /// directly, no `PluginInstanceHandle`/real wasm component needed — so these run on every
     /// CI/dev machine, unlike `//#region 🔖️IoRouterPostTurnRelay` below. Unchanged from before the
     /// `WasmPluginRuntime` deletion — never depended on it.
-    fn io_dialect(kind: &str, standard: &str, subset: &str) -> semio_framework::io_schema::ArtifactDialect {
+    async fn io_dialect(kind: &str, standard: &str, subset: &str) -> semio_framework::io_schema::ArtifactDialect {
         semio_framework::io_schema::ArtifactDialect { artifact_kind: kind.to_string(), standard: standard.to_string(), subset: subset.to_string() }
     }
 
@@ -4442,10 +4803,10 @@ mod tests {
     /// through the TS `IoEntryGraph` — both sides must resolve `binary@raw/* -> gif@89a/*` to the
     /// SAME 2-hop route via `stdio`'s `Exact` hop then `gif`'s `Canonical` migration hop, per
     /// `📓️w1-d-report.md`.
-    fn io_router_w1d_fixture_entries() -> Vec<(&'static str, semio_framework::io_schema::IoEntryDescriptor)> {
-        let binary_raw = io_dialect("s.stdio.binary", "raw", "*");
-        let gif_87a = io_dialect("s.stdio.gif", "87a", "*");
-        let gif_89a = io_dialect("s.stdio.gif", "89a", "*");
+    async fn io_router_w1d_fixture_entries() -> Vec<(&'static str, semio_framework::io_schema::IoEntryDescriptor)> {
+        let binary_raw = io_dialect("s.stdio.binary", "raw", "*").await;
+        let gif_87a = io_dialect("s.stdio.gif", "87a", "*").await;
+        let gif_89a = io_dialect("s.stdio.gif", "89a", "*").await;
         vec![
             ("stdio", semio_framework::io_schema::IoEntryDescriptor { from: binary_raw.clone(), into: gif_87a.clone(), fidelity: semio_framework::io_schema::IoFidelity::Exact, sniffs: true }),
             ("gif", semio_framework::io_schema::IoEntryDescriptor { from: gif_87a, into: gif_89a.clone(), fidelity: semio_framework::io_schema::IoFidelity::Canonical, sniffs: false }),
@@ -4456,7 +4817,7 @@ mod tests {
     /// 🏗️ `IoRouter::register_plugin`'s io-entries merge, without needing a real
     /// `PluginInstanceHandle` — builds the SAME `BTreeMap<IoEntryKey, IoEntryRoute>` shape
     /// directly from `(owner, descriptor)` rows, inserted in WHATEVER order `rows` lists them.
-    fn build_io_entry_graph(rows: &[(&'static str, semio_framework::io_schema::IoEntryDescriptor)]) -> BTreeMap<IoEntryKey, IoEntryRoute> {
+    async fn build_io_entry_graph(rows: &[(&'static str, semio_framework::io_schema::IoEntryDescriptor)]) -> BTreeMap<IoEntryKey, IoEntryRoute> {
         let mut graph = BTreeMap::new();
         for (owner, descriptor) in rows {
             let key: IoEntryKey = (descriptor.from.clone(), descriptor.into.clone());
@@ -4468,19 +4829,19 @@ mod tests {
     /// 🎯️ "Register two mock plugins in both orders" — the ticket's own determinism proof
     /// requirement. `fixture()` order is `stdio, gif, gif`; `reversed` is the exact reverse. Both
     /// graphs, and both resolved routes, must be byte-identical.
-    #[test]
-    fn io_router_route_is_deterministic_across_load_order() {
-        let forward = io_router_w1d_fixture_entries();
+    #[semio_framework_async_macros::async_test]
+    async fn io_router_route_is_deterministic_across_load_order() {
+        let forward = io_router_w1d_fixture_entries().await;
         let mut reversed = forward.clone();
         reversed.reverse();
-        let graph_forward = build_io_entry_graph(&forward);
-        let graph_reversed = build_io_entry_graph(&reversed);
+        let graph_forward = build_io_entry_graph(&forward).await;
+        let graph_reversed = build_io_entry_graph(&reversed).await;
         assert_eq!(graph_forward, graph_reversed, "the merged graph itself must not depend on registration order");
 
-        let binary_raw = io_dialect("s.stdio.binary", "raw", "*");
-        let gif_89a = io_dialect("s.stdio.gif", "89a", "*");
-        let route_forward = resolve_io_route(&graph_forward, &binary_raw, &gif_89a, 3).expect("forward-order route resolves");
-        let route_reversed = resolve_io_route(&graph_reversed, &binary_raw, &gif_89a, 3).expect("reversed-order route resolves");
+        let binary_raw = io_dialect("s.stdio.binary", "raw", "*").await;
+        let gif_89a = io_dialect("s.stdio.gif", "89a", "*").await;
+        let route_forward = resolve_io_route(&graph_forward, &binary_raw, &gif_89a, 3).await.expect("forward-order route resolves");
+        let route_reversed = resolve_io_route(&graph_reversed, &binary_raw, &gif_89a, 3).await.expect("reversed-order route resolves");
         assert_eq!(route_forward, route_reversed, "the resolved route must not depend on registration order");
         assert_eq!(route_forward.hops.len(), 2, "the winning route is the 2-hop stdio->gif87a->gif89a path, not the 1-hop lossy shortcut");
     }
@@ -4488,12 +4849,12 @@ mod tests {
     /// ⚖️ Proves the ranking rule's FIRST tie-break: highest minimum fidelity beats fewest hops.
     /// The 1-hop `binary->gif89a` shortcut (Lossy) loses to the 2-hop `binary->gif87a->gif89a`
     /// path (min fidelity Canonical) even though it has fewer hops.
-    #[test]
-    fn io_router_route_prefers_higher_minimum_fidelity_over_fewer_hops() {
-        let graph = build_io_entry_graph(&io_router_w1d_fixture_entries());
-        let binary_raw = io_dialect("s.stdio.binary", "raw", "*");
-        let gif_89a = io_dialect("s.stdio.gif", "89a", "*");
-        let route = resolve_io_route(&graph, &binary_raw, &gif_89a, 3).expect("route resolves");
+    #[semio_framework_async_macros::async_test]
+    async fn io_router_route_prefers_higher_minimum_fidelity_over_fewer_hops() {
+        let graph = build_io_entry_graph(&io_router_w1d_fixture_entries().await).await;
+        let binary_raw = io_dialect("s.stdio.binary", "raw", "*").await;
+        let gif_89a = io_dialect("s.stdio.gif", "89a", "*").await;
+        let route = resolve_io_route(&graph, &binary_raw, &gif_89a, 3).await.expect("route resolves");
         assert_eq!(route.fidelity, semio_framework::io_schema::IoFidelity::Canonical);
         assert_eq!(route.hops.len(), 2);
         assert_eq!(route.hops[0].from, binary_raw);
@@ -4501,12 +4862,12 @@ mod tests {
     }
 
     /// 🌉️ `max_hops` bound is honored: clamped to 1, only the direct (Lossy) shortcut is reachable.
-    #[test]
-    fn io_router_route_respects_max_hops() {
-        let graph = build_io_entry_graph(&io_router_w1d_fixture_entries());
-        let binary_raw = io_dialect("s.stdio.binary", "raw", "*");
-        let gif_89a = io_dialect("s.stdio.gif", "89a", "*");
-        let route = resolve_io_route(&graph, &binary_raw, &gif_89a, 1).expect("1-hop route resolves");
+    #[semio_framework_async_macros::async_test]
+    async fn io_router_route_respects_max_hops() {
+        let graph = build_io_entry_graph(&io_router_w1d_fixture_entries().await).await;
+        let binary_raw = io_dialect("s.stdio.binary", "raw", "*").await;
+        let gif_89a = io_dialect("s.stdio.gif", "89a", "*").await;
+        let route = resolve_io_route(&graph, &binary_raw, &gif_89a, 1).await.expect("1-hop route resolves");
         assert_eq!(route.hops.len(), 1);
         assert_eq!(route.fidelity, semio_framework::io_schema::IoFidelity::Lossy);
     }
@@ -4514,17 +4875,17 @@ mod tests {
     /// 🔒️ `route_reenters_calling_plugin` — the pure predicate behind `run_io`'s guard. A route
     /// with NO hop owned by the caller is safe (`None`); a route where the caller owns even ONE
     /// hop is refused, naming that hop.
-    #[test]
-    fn io_router_run_io_reentrancy_guard_predicate() {
-        let graph = build_io_entry_graph(&io_router_w1d_fixture_entries());
-        let binary_raw = io_dialect("s.stdio.binary", "raw", "*");
-        let gif_89a = io_dialect("s.stdio.gif", "89a", "*");
-        let route = resolve_io_route(&graph, &binary_raw, &gif_89a, 3).expect("route resolves");
-        assert_eq!(route_reenters_calling_plugin(&graph, &route, "norm"), None, "a plugin owning neither hop is safe");
-        let hop = route_reenters_calling_plugin(&graph, &route, "stdio").expect("stdio owns the first hop of this route");
+    #[semio_framework_async_macros::async_test]
+    async fn io_router_run_io_reentrancy_guard_predicate() {
+        let graph = build_io_entry_graph(&io_router_w1d_fixture_entries().await).await;
+        let binary_raw = io_dialect("s.stdio.binary", "raw", "*").await;
+        let gif_89a = io_dialect("s.stdio.gif", "89a", "*").await;
+        let route = resolve_io_route(&graph, &binary_raw, &gif_89a, 3).await.expect("route resolves");
+        assert_eq!(route_reenters_calling_plugin(&graph, &route, "norm").await, None, "a plugin owning neither hop is safe");
+        let hop = route_reenters_calling_plugin(&graph, &route, "stdio").await.expect("stdio owns the first hop of this route");
         assert_eq!(hop.0, &binary_raw);
-        assert_eq!(hop.1, &io_dialect("s.stdio.gif", "87a", "*"));
-        let hop = route_reenters_calling_plugin(&graph, &route, "gif").expect("gif owns the second hop of this route");
+        assert_eq!(hop.1, &io_dialect("s.stdio.gif", "87a", "*").await);
+        let hop = route_reenters_calling_plugin(&graph, &route, "gif").await.expect("gif owns the second hop of this route");
         assert_eq!(hop.1, &gif_89a);
     }
 
@@ -4533,15 +4894,15 @@ mod tests {
     /// the OLD graph's `IoRouteConflict`, generalized to the NEW `IoEntryRouteConflict`. Exercises
     /// `io_entries_conflict` directly — the SAME function `register_plugin` calls — so this proves
     /// the real preflight rule, not a re-derivation of it, without needing a live wasm component.
-    #[test]
-    fn io_router_register_plugin_rejects_conflicting_io_entry_ownership() {
-        let graph = build_io_entry_graph(&[("stdio", semio_framework::io_schema::IoEntryDescriptor { from: io_dialect("s.stdio.binary", "raw", "*"), into: io_dialect("s.stdio.gif", "87a", "*"), fidelity: semio_framework::io_schema::IoFidelity::Exact, sniffs: true })]);
+    #[semio_framework_async_macros::async_test]
+    async fn io_router_register_plugin_rejects_conflicting_io_entry_ownership() {
+        let graph = build_io_entry_graph(&[("stdio", semio_framework::io_schema::IoEntryDescriptor { from: io_dialect("s.stdio.binary", "raw", "*").await, into: io_dialect("s.stdio.gif", "87a", "*").await, fidelity: semio_framework::io_schema::IoFidelity::Exact, sniffs: true })]).await;
 
-        let same_plugin_reclaim = vec![semio_framework::io_schema::IoEntryDescriptor { from: io_dialect("s.stdio.binary", "raw", "*"), into: io_dialect("s.stdio.gif", "87a", "*"), fidelity: semio_framework::io_schema::IoFidelity::Exact, sniffs: true }];
-        assert!(io_entries_conflict(&graph, "stdio", &same_plugin_reclaim).is_none(), "the SAME plugin reclaiming its own key must not conflict");
+        let same_plugin_reclaim = vec![semio_framework::io_schema::IoEntryDescriptor { from: io_dialect("s.stdio.binary", "raw", "*").await, into: io_dialect("s.stdio.gif", "87a", "*").await, fidelity: semio_framework::io_schema::IoFidelity::Exact, sniffs: true }];
+        assert!(io_entries_conflict(&graph, "stdio", &same_plugin_reclaim).await.is_none(), "the SAME plugin reclaiming its own key must not conflict");
 
-        let different_plugin_claim = vec![semio_framework::io_schema::IoEntryDescriptor { from: io_dialect("s.stdio.binary", "raw", "*"), into: io_dialect("s.stdio.gif", "87a", "*"), fidelity: semio_framework::io_schema::IoFidelity::Lossy, sniffs: false }];
-        let conflict = io_entries_conflict(&graph, "gif", &different_plugin_claim).expect("a second plugin claiming the same key must conflict");
+        let different_plugin_claim = vec![semio_framework::io_schema::IoEntryDescriptor { from: io_dialect("s.stdio.binary", "raw", "*").await, into: io_dialect("s.stdio.gif", "87a", "*").await, fidelity: semio_framework::io_schema::IoFidelity::Lossy, sniffs: false }];
+        let conflict = io_entries_conflict(&graph, "gif", &different_plugin_claim).await.expect("a second plugin claiming the same key must conflict");
         assert!(matches!(conflict, PluginHostError::IoEntryRouteConflict { ref existing_plugin, ref incoming_plugin, .. } if existing_plugin == "stdio" && incoming_plugin == "gif"));
     }
     //#endregion 🔖️IoRouterW1d
@@ -4555,8 +4916,8 @@ mod tests {
     /// section). This is the honest replacement for the old
     /// `wasm_plugin_runtime_loads_real_plugin_component_if_present` test, which asserted the
     /// opposite (a real load SUCCEEDING) against the OLD `plugin-world` ABI that no longer exists.
-    #[test]
-    fn wasmtime_runtime_compiles_real_stdio_and_cad_but_neither_exports_actor_yet() {
+    #[semio_framework_async_macros::async_test]
+    async fn wasmtime_runtime_compiles_real_stdio_and_cad_but_neither_exports_actor_yet() {
         let stdio_path = Path::new("🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/🔌️plugin-modules/stdio/semio_s_plugin_stdio_component.core.wasm");
         let cad_path = Path::new("🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/🔌️plugin-modules/cad/semio_s_plugin_cad_component.core.wasm");
         if !stdio_path.exists() || !cad_path.exists() {
@@ -4564,13 +4925,13 @@ mod tests {
             // fresh clone / no-wasm-toolchain CI run.
             return;
         }
-        let runtime = WasmtimeRuntime::new(SharedEngineConfig::default()).expect("engine builds");
+        let runtime = WasmtimeRuntime::new(SharedEngineConfig::default()).await.expect("engine builds");
         let budget = Budget { fuel: 1_000_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 };
         for (name, path) in [("stdio", stdio_path), ("cad", cad_path)] {
             let bytes = std::fs::read(path).unwrap_or_else(|error| panic!("read real {name}.wasm: {error}"));
             let package = PackageRef { package: PackageId(name.to_string()), hash: PackageHash([name.len() as u8; 32]) };
-            let compiled = runtime.compile(&package, &bytes).unwrap_or_else(|error| panic!("real {name}.wasm compiles as a component: {error}"));
-            let error = runtime.instantiate(&compiled, RuntimeActorId(1), &[], &budget).expect_err(&format!("{name}.wasm does not export `reactor`/`jobs`/`checkpoint`/`describe` yet"));
+            let compiled = runtime.compile(&package, &bytes).await.unwrap_or_else(|error| panic!("real {name}.wasm compiles as a component: {error}"));
+            let error = runtime.instantiate(&compiled, RuntimeActorId(1), &[], &budget).await.expect_err(&format!("{name}.wasm does not export `reactor`/`jobs`/`checkpoint`/`describe` yet"));
             let _ = error;
         }
     }
@@ -4581,68 +4942,68 @@ mod tests {
     /// yet. `step_job`'s FIRST scripted outcome is `Running`, forcing `run_job_to_completion`'s loop
     /// to actually iterate at least once before the scripted `Done` — proves this is a real loop, not
     /// a single call that happens to work.
-    #[test]
-    fn plugin_instance_handle_drives_io_run_job_to_completion_through_a_running_step() {
-        let mock = Arc::new(MockGuestRuntime::new());
+    #[semio_framework_async_macros::async_test]
+    async fn plugin_instance_handle_drives_io_run_job_to_completion_through_a_running_step() {
+        let mock = Arc::new(MockGuestRuntime::new().await);
         let actor = RuntimeActorId(100);
-        let compiled = mock.compile(&PackageRef { package: PackageId("gif".to_string()), hash: PackageHash([1u8; 32]) }, &[]).expect("mock compile");
-        let instance = mock.instantiate(&compiled, actor, &[], &Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).expect("mock instantiate");
-        mock.script_job_step(actor, JobStep::Running { progress: None });
+        let compiled = mock.compile(&PackageRef { package: PackageId("gif".to_string()), hash: PackageHash([1u8; 32]) }, &[]).await.expect("mock compile");
+        let instance = mock.instantiate(&compiled, actor, &[], &Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).await.expect("mock instantiate");
+        mock.script_job_step(actor, JobStep::Running { progress: None }).await;
         let io_payload = semio_framework::io_schema::IoPayload::Text("87a-bytes".to_string());
-        mock.script_job_step(actor, JobStep::Done { output: serde_json::to_vec(&io_payload).expect("encode expected result") });
-        let handle = PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock.clone())), instance);
+        mock.script_job_step(actor, JobStep::Done { output: serde_json::to_vec(&io_payload).expect("encode expected result") }).await;
+        let handle = PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock.clone())), instance).await;
 
         let payload_bytes = serde_json::to_vec(&semio_framework::io_schema::IoPayload::Text("raw-bytes".to_string())).expect("encode payload");
-        let result = handle.io_run("s.stdio.gif@87a/*", "s.stdio.gif@89a/*", payload_bytes).expect("job-backed io_run must drive start-job + step-job to Done");
+        let result = handle.io_run("s.stdio.gif@87a/*", "s.stdio.gif@89a/*", payload_bytes).await.expect("job-backed io_run must drive start-job + step-job to Done");
         let decoded: semio_framework::io_schema::IoPayload = serde_json::from_slice(&result).expect("decode io_run result");
         assert_eq!(decoded, io_payload);
     }
 
     /// 🔍️ `PluginInstanceHandle::io_sniff` decodes the single confidence-rank byte `semio.io-sniff`
     /// returns — mirrors the deleted `WasmPluginRuntime::io_sniff`'s exact return contract.
-    #[test]
-    fn plugin_instance_handle_io_sniff_decodes_the_confidence_byte() {
-        let mock = Arc::new(MockGuestRuntime::new());
+    #[semio_framework_async_macros::async_test]
+    async fn plugin_instance_handle_io_sniff_decodes_the_confidence_byte() {
+        let mock = Arc::new(MockGuestRuntime::new().await);
         let actor = RuntimeActorId(101);
-        let compiled = mock.compile(&PackageRef { package: PackageId("stdio".to_string()), hash: PackageHash([2u8; 32]) }, &[]).expect("mock compile");
-        let instance = mock.instantiate(&compiled, actor, &[], &Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).expect("mock instantiate");
-        mock.script_job_step(actor, JobStep::Done { output: vec![3u8] });
-        let handle = PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock.clone())), instance);
+        let compiled = mock.compile(&PackageRef { package: PackageId("stdio".to_string()), hash: PackageHash([2u8; 32]) }, &[]).await.expect("mock compile");
+        let instance = mock.instantiate(&compiled, actor, &[], &Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).await.expect("mock instantiate");
+        mock.script_job_step(actor, JobStep::Done { output: vec![3u8] }).await;
+        let handle = PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock.clone())), instance).await;
 
         let payload_bytes = serde_json::to_vec(&semio_framework::io_schema::IoPayload::Binary(vec![0xFF])).expect("encode payload");
-        let rank = handle.io_sniff("s.stdio.binary@raw/*", "s.stdio.gif@87a/*", &payload_bytes).expect("job-backed io_sniff must decode a Done result");
+        let rank = handle.io_sniff("s.stdio.binary@raw/*", "s.stdio.gif@87a/*", &payload_bytes).await.expect("job-backed io_sniff must decode a Done result");
         assert_eq!(rank, 3);
     }
 
     /// 🔀️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (cold-kinds): `PluginInstanceHandle::migrate`
     /// drives `semio.migrate` through a `Running` slice before `Done`, exactly like the `io_run`
     /// test above — proves this is a real `start-job`/`step-job` loop, not a single call.
-    #[test]
-    fn plugin_instance_handle_migrate_drives_the_semio_migrate_job_to_completion() {
-        let mock = Arc::new(MockGuestRuntime::new());
+    #[semio_framework_async_macros::async_test]
+    async fn plugin_instance_handle_migrate_drives_the_semio_migrate_job_to_completion() {
+        let mock = Arc::new(MockGuestRuntime::new().await);
         let actor = RuntimeActorId(102);
-        let compiled = mock.compile(&PackageRef { package: PackageId("stdio".to_string()), hash: PackageHash([9u8; 32]) }, &[]).expect("mock compile");
-        let instance = mock.instantiate(&compiled, actor, &[], &Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).expect("mock instantiate");
-        mock.script_job_step(actor, JobStep::Running { progress: None });
-        mock.script_job_step(actor, JobStep::Done { output: vec![1, 2, 3, 0xAB] });
-        let handle = PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock.clone())), instance);
+        let compiled = mock.compile(&PackageRef { package: PackageId("stdio".to_string()), hash: PackageHash([9u8; 32]) }, &[]).await.expect("mock compile");
+        let instance = mock.instantiate(&compiled, actor, &[], &Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).await.expect("mock instantiate");
+        mock.script_job_step(actor, JobStep::Running { progress: None }).await;
+        mock.script_job_step(actor, JobStep::Done { output: vec![1, 2, 3, 0xAB] }).await;
+        let handle = PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock.clone())), instance).await;
 
-        let result = handle.migrate("s.stdio.gif@87a/*", "s.stdio.gif@89a/*", vec![1, 2, 3]).expect("job-backed migrate must drive start-job + step-job to Done");
+        let result = handle.migrate("s.stdio.gif@87a/*", "s.stdio.gif@89a/*", vec![1, 2, 3]).await.expect("job-backed migrate must drive start-job + step-job to Done");
         assert_eq!(result, vec![1, 2, 3, 0xAB]);
     }
 
     /// 🧬️ `PluginInstanceHandle::mutation_plan` passes DSL wire-pack bytes straight through, both
     /// directions — no re-encoding at this layer (that's `ArtifactMutationRouter::plan`'s job).
-    #[test]
-    fn plugin_instance_handle_mutation_plan_passes_wire_bytes_through_to_done() {
-        let mock = Arc::new(MockGuestRuntime::new());
+    #[semio_framework_async_macros::async_test]
+    async fn plugin_instance_handle_mutation_plan_passes_wire_bytes_through_to_done() {
+        let mock = Arc::new(MockGuestRuntime::new().await);
         let actor = RuntimeActorId(103);
-        let compiled = mock.compile(&PackageRef { package: PackageId("stdio".to_string()), hash: PackageHash([10u8; 32]) }, &[]).expect("mock compile");
-        let instance = mock.instantiate(&compiled, actor, &[], &Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).expect("mock instantiate");
-        mock.script_job_step(actor, JobStep::Done { output: b"planned".to_vec() });
-        let handle = PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock.clone())), instance);
+        let compiled = mock.compile(&PackageRef { package: PackageId("stdio".to_string()), hash: PackageHash([10u8; 32]) }, &[]).await.expect("mock compile");
+        let instance = mock.instantiate(&compiled, actor, &[], &Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).await.expect("mock instantiate");
+        mock.script_job_step(actor, JobStep::Done { output: b"planned".to_vec() }).await;
+        let handle = PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock.clone())), instance).await;
 
-        let result = handle.mutation_plan(b"request-wire-bytes").expect("job-backed mutation_plan must drive start-job + step-job to Done");
+        let result = handle.mutation_plan(b"request-wire-bytes").await.expect("job-backed mutation_plan must drive start-job + step-job to Done");
         assert_eq!(result, b"planned");
     }
 
@@ -4658,30 +5019,30 @@ mod tests {
     /// mechanism (`run_io`, which has a real `jobs.wit` job kind) rather than the OLD `IoKey`-keyed
     /// `compose` (which does not — see `IoRouter::compose`'s own doc comment on why that dispatch is
     /// not yet wired).
-    #[test]
-    fn io_router_run_io_crosses_two_real_plugin_instance_handles() {
+    #[semio_framework_async_macros::async_test]
+    async fn io_router_run_io_crosses_two_real_plugin_instance_handles() {
         let router = IoRouter::new();
         let budget = Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 };
 
-        let stdio_mock = Arc::new(MockGuestRuntime::new());
+        let stdio_mock = Arc::new(MockGuestRuntime::new().await);
         let stdio_actor = RuntimeActorId(200);
-        let stdio_compiled = stdio_mock.compile(&PackageRef { package: PackageId("stdio".to_string()), hash: PackageHash([3u8; 32]) }, &[]).expect("stdio mock compile");
-        let stdio_instance = stdio_mock.instantiate(&stdio_compiled, stdio_actor, &[], &budget).expect("stdio mock instantiate");
+        let stdio_compiled = stdio_mock.compile(&PackageRef { package: PackageId("stdio".to_string()), hash: PackageHash([3u8; 32]) }, &[]).await.expect("stdio mock compile");
+        let stdio_instance = stdio_mock.instantiate(&stdio_compiled, stdio_actor, &[], &budget).await.expect("stdio mock instantiate");
         let midpoint = semio_framework::io_schema::IoPayload::Text("midpoint".to_string());
-        stdio_mock.script_job_step(stdio_actor, JobStep::Done { output: serde_json::to_vec(&midpoint).expect("encode midpoint") });
-        let stdio_handle = Arc::new(PluginInstanceHandle::new(stdio_actor, Arc::new(GuestRuntimes::Mock(stdio_mock)), stdio_instance));
+        stdio_mock.script_job_step(stdio_actor, JobStep::Done { output: serde_json::to_vec(&midpoint).expect("encode midpoint") }).await;
+        let stdio_handle = Arc::new(PluginInstanceHandle::new(stdio_actor, Arc::new(GuestRuntimes::Mock(stdio_mock)), stdio_instance).await);
 
-        let gif_mock = Arc::new(MockGuestRuntime::new());
+        let gif_mock = Arc::new(MockGuestRuntime::new().await);
         let gif_actor = RuntimeActorId(201);
-        let gif_compiled = gif_mock.compile(&PackageRef { package: PackageId("gif".to_string()), hash: PackageHash([4u8; 32]) }, &[]).expect("gif mock compile");
-        let gif_instance = gif_mock.instantiate(&gif_compiled, gif_actor, &[], &budget).expect("gif mock instantiate");
+        let gif_compiled = gif_mock.compile(&PackageRef { package: PackageId("gif".to_string()), hash: PackageHash([4u8; 32]) }, &[]).await.expect("gif mock compile");
+        let gif_instance = gif_mock.instantiate(&gif_compiled, gif_actor, &[], &budget).await.expect("gif mock instantiate");
         let final_payload = semio_framework::io_schema::IoPayload::Text("final".to_string());
-        gif_mock.script_job_step(gif_actor, JobStep::Done { output: serde_json::to_vec(&final_payload).expect("encode final") });
-        let gif_handle = Arc::new(PluginInstanceHandle::new(gif_actor, Arc::new(GuestRuntimes::Mock(gif_mock)), gif_instance));
+        gif_mock.script_job_step(gif_actor, JobStep::Done { output: serde_json::to_vec(&final_payload).expect("encode final") }).await;
+        let gif_handle = Arc::new(PluginInstanceHandle::new(gif_actor, Arc::new(GuestRuntimes::Mock(gif_mock)), gif_instance).await);
 
-        let binary_raw = io_dialect("s.stdio.binary", "raw", "*");
-        let gif_87a = io_dialect("s.stdio.gif", "87a", "*");
-        let gif_89a = io_dialect("s.stdio.gif", "89a", "*");
+        let binary_raw = io_dialect("s.stdio.binary", "raw", "*").await;
+        let gif_87a = io_dialect("s.stdio.gif", "87a", "*").await;
+        let gif_89a = io_dialect("s.stdio.gif", "89a", "*").await;
         router
             .register_plugin(
                 "stdio",
@@ -4689,16 +5050,16 @@ mod tests {
                 &[],
                 &[semio_framework::io_schema::IoEntryDescriptor { from: binary_raw.clone(), into: gif_87a.clone(), fidelity: semio_framework::io_schema::IoFidelity::Exact, sniffs: false }],
             )
-            .expect("register stdio");
+            .await.expect("register stdio");
         router
             .register_plugin("gif", gif_handle, &[], &[semio_framework::io_schema::IoEntryDescriptor { from: gif_87a, into: gif_89a.clone(), fidelity: semio_framework::io_schema::IoFidelity::Canonical, sniffs: false }])
-            .expect("register gif");
+            .await.expect("register gif");
 
-        let (plugins, _keys) = router.stats().expect("router stats");
+        let (plugins, _keys) = router.stats().await.expect("router stats");
         assert_eq!(plugins, 2, "both plugin instance handles must be registered with the shared router");
 
         let start_payload = serde_json::to_vec(&semio_framework::io_schema::IoPayload::Text("start".to_string())).expect("encode start payload");
-        let result_bytes = router.run_io("norm", &binary_raw.to_coordinate(), &gif_89a.to_coordinate(), start_payload).expect("2-hop run_io crossing stdio then gif must succeed");
+        let result_bytes = router.run_io("norm", &binary_raw.to_coordinate().await, &gif_89a.to_coordinate().await, start_payload).await.expect("2-hop run_io crossing stdio then gif must succeed");
         let decoded: semio_framework::io_schema::IoPayload = serde_json::from_slice(&result_bytes).expect("decode final run_io result");
         assert_eq!(decoded, final_payload, "the SECOND hop's (gif's) scripted result must be what comes out — proves the chain really crossed both instance handles in order");
     }
@@ -4711,20 +5072,20 @@ mod tests {
     /// `Done` here proves the host-side plumbing — resolve ownership, find the handle,
     /// `start-job`/`step-job` to completion — is fully real end to end; the real guest kind
     /// `"semio.compose"` itself is `compose-await`'s to register.
-    #[test]
-    fn io_router_compose_resolves_ownership_and_drives_the_semio_compose_job_to_completion() {
+    #[semio_framework_async_macros::async_test]
+    async fn io_router_compose_resolves_ownership_and_drives_the_semio_compose_job_to_completion() {
         let router = IoRouter::new();
-        let mock = Arc::new(MockGuestRuntime::new());
+        let mock = Arc::new(MockGuestRuntime::new().await);
         let actor = RuntimeActorId(202);
         let budget = Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 };
-        let compiled = mock.compile(&PackageRef { package: PackageId("cad".to_string()), hash: PackageHash([5u8; 32]) }, &[]).expect("mock compile");
-        let instance = mock.instantiate(&compiled, actor, &[], &budget).expect("mock instantiate");
-        mock.script_job_step(actor, JobStep::Running { progress: None });
-        mock.script_job_step(actor, JobStep::Done { output: b"composed".to_vec() });
-        let handle = Arc::new(PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock)), instance));
+        let compiled = mock.compile(&PackageRef { package: PackageId("cad".to_string()), hash: PackageHash([5u8; 32]) }, &[]).await.expect("mock compile");
+        let instance = mock.instantiate(&compiled, actor, &[], &budget).await.expect("mock instantiate");
+        mock.script_job_step(actor, JobStep::Running { progress: None }).await;
+        mock.script_job_step(actor, JobStep::Done { output: b"composed".to_vec() }).await;
+        let handle = Arc::new(PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock)), instance).await);
 
         let dialects = vec![(semio_framework::ArtifactDialect { artifact_kind: "s.cad".to_string(), standard: "1".to_string(), subset: "*".to_string() }, vec![semio_framework::ArtifactDialect { artifact_kind: "s.stdio.step".to_string(), standard: "ap214".to_string(), subset: "*".to_string() }])];
-        router.register_plugin("cad", handle, &dialects, &[]).expect("register cad");
+        router.register_plugin("cad", handle, &dialects, &[]).await.expect("register cad");
 
         // 🧭️ Key orientation matches what `register_plugin` actually derives from a `(writes, reads)`
         // pair: the Export route is keyed on the READ dialect with the WRITE dialect as its format
@@ -4740,24 +5101,24 @@ mod tests {
             format_subset: "*".to_string(),
         };
         let key_bytes = serde_json::to_vec(&key).expect("encode io key");
-        let result = router.compose("stdio", &key_bytes, b"sources").expect("compose must resolve ownership AND drive the job to completion, not hard-error");
+        let result = router.compose("stdio", &key_bytes, b"sources").await.expect("compose must resolve ownership AND drive the job to completion, not hard-error");
         assert_eq!(result, b"composed", "the SCRIPTED job outcome must be what comes out, proving real start-job/step-job dispatch reached the resolved owner's handle");
     }
 
     /// 🧬️ `IoRouter::compose` still refuses to route back into the calling plugin itself — that
     /// guard runs BEFORE dispatch, so it must fire even though dispatch is now real.
-    #[test]
-    fn io_router_compose_still_refuses_to_route_back_into_the_calling_plugin() {
+    #[semio_framework_async_macros::async_test]
+    async fn io_router_compose_still_refuses_to_route_back_into_the_calling_plugin() {
         let router = IoRouter::new();
-        let mock = Arc::new(MockGuestRuntime::new());
+        let mock = Arc::new(MockGuestRuntime::new().await);
         let actor = RuntimeActorId(203);
         let budget = Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 };
-        let compiled = mock.compile(&PackageRef { package: PackageId("cad".to_string()), hash: PackageHash([6u8; 32]) }, &[]).expect("mock compile");
-        let instance = mock.instantiate(&compiled, actor, &[], &budget).expect("mock instantiate");
-        let handle = Arc::new(PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock)), instance));
+        let compiled = mock.compile(&PackageRef { package: PackageId("cad".to_string()), hash: PackageHash([6u8; 32]) }, &[]).await.expect("mock compile");
+        let instance = mock.instantiate(&compiled, actor, &[], &budget).await.expect("mock instantiate");
+        let handle = Arc::new(PluginInstanceHandle::new(actor, Arc::new(GuestRuntimes::Mock(mock)), instance).await);
 
         let dialects = vec![(semio_framework::ArtifactDialect { artifact_kind: "s.cad".to_string(), standard: "1".to_string(), subset: "*".to_string() }, vec![semio_framework::ArtifactDialect { artifact_kind: "s.stdio.step".to_string(), standard: "ap214".to_string(), subset: "*".to_string() }])];
-        router.register_plugin("cad", handle, &dialects, &[]).expect("register cad");
+        router.register_plugin("cad", handle, &dialects, &[]).await.expect("register cad");
 
         let key = semio_framework::IoKey {
             artifact_kind: "s.stdio.step".to_string(),
@@ -4769,7 +5130,7 @@ mod tests {
             format_subset: "*".to_string(),
         };
         let key_bytes = serde_json::to_vec(&key).expect("encode io key");
-        let error = router.compose("cad", &key_bytes, b"sources").expect_err("a plugin routing to its own key must be refused, not dispatched");
+        let error = router.compose("cad", &key_bytes, b"sources").await.expect_err("a plugin routing to its own key must be refused, not dispatched");
         assert!(error.to_string().contains("routing to itself"), "unexpected message: {error}");
     }
     //#endregion 🔖️IoRouterPostTurnRelay

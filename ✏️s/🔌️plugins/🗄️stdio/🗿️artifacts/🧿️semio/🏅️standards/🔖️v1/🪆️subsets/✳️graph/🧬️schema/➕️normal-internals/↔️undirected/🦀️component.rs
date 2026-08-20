@@ -11,21 +11,21 @@ pub struct UndirectedGraph(Storage<Normal, Undirected>);
 impl UndirectedGraph {
     /// 🆕️ Empty undirected graph; id allocators start at `0` and are monotone.
     pub async fn new() -> Self {
-        Self(Storage::new())
+        Self(Storage::new().await)
     }
 
     /// 🏗️ Materializes an owned `UndirectedGraph` by copying every node/edge/graph attribute out of a borrowed view — used by `subgraph`/`edge_subgraph` to avoid exposing the borrowed view types in the public API.
     async fn from_view<V: GraphView + AttrView>(view: &V) -> Self {
-        let mut storage = Storage::<Normal, Undirected>::new();
+        let mut storage = Storage::<Normal, Undirected>::new().await;
         for node in view.nodes() {
-            let attrs = view.node_attrs(node).cloned().unwrap_or_default();
-            storage.add_node_with_id(node, attrs);
+            let attrs = view.node_attrs(node).await.cloned().unwrap_or_default();
+            storage.add_node_with_id(node, attrs).await;
         }
         for edge in view.edges() {
-            let attrs = view.edge_attrs(edge.id).cloned().unwrap_or_default();
-            storage.add_edge_with(edge.u, edge.v, attrs);
+            let attrs = view.edge_attrs(edge.id).await.cloned().unwrap_or_default();
+            storage.add_edge_with(edge.u, edge.v, attrs).await;
         }
-        storage.graph_attrs_mut().extend(view.graph_attrs().clone());
+        storage.graph_attrs_mut().await.extend(view.graph_attrs().clone());
         Self(storage)
     }
 }
@@ -35,17 +35,17 @@ impl UndirectedGraph {
 impl UndirectedGraph {
     /// ➕️ Allocates a fresh node with no attributes.
     pub async fn add_node(&mut self) -> NodeId {
-        self.0.add_node()
+        self.0.add_node().await
     }
 
     /// ➕️ Allocates a fresh node with the given attributes.
     pub async fn add_node_with(&mut self, attrs: PropertyBag) -> NodeId {
-        self.0.add_node_with(attrs)
+        self.0.add_node_with(attrs).await
     }
 
     /// 🆔️ Inserts (or upserts attrs into) a node at a caller-supplied id.
     pub async fn add_node_with_id(&mut self, id: NodeId, attrs: PropertyBag) -> NodeId {
-        self.0.add_node_with_id(id, attrs)
+        self.0.add_node_with_id(id, attrs).await
     }
 
     /// 📦️ NetworkX `add_nodes_from`: ensures every id exists, leaving already-present nodes' attrs untouched.
@@ -55,7 +55,7 @@ impl UndirectedGraph {
 
     /// 🗑️ Removes a node, cascading to its incident edges.
     pub async fn remove_node(&mut self, id: NodeId) -> bool {
-        self.0.remove_node(id)
+        self.0.remove_node(id).await
     }
 
     /// 🗑️ NetworkX `remove_nodes_from`: removes every given id, ignoring ones that don't exist.
@@ -67,17 +67,17 @@ impl UndirectedGraph {
 
     /// 🔎️ Whether `id` is a live node.
     pub async fn has_node(&self, id: NodeId) -> bool {
-        self.0.contains_node(id)
+        self.0.contains_node(id).await
     }
 
     /// 🔢️ Node count.
     pub async fn number_of_nodes(&self) -> usize {
-        self.0.node_count()
+        self.0.node_count().await
     }
 
     /// 📐️ Alias for `number_of_nodes` (NetworkX `G.order()`).
     pub async fn order(&self) -> usize {
-        self.number_of_nodes()
+        self.number_of_nodes().await
     }
 
     /// 📇️ Every node id, in ascending order.
@@ -91,12 +91,12 @@ impl UndirectedGraph {
 impl UndirectedGraph {
     /// ➕️ Adds (or, if the pair is already connected, upserts) an edge with no attributes.
     pub async fn add_edge(&mut self, u: NodeId, v: NodeId) -> EdgeId {
-        self.0.add_edge(u, v)
+        self.0.add_edge(u, v).await
     }
 
     /// ➕️ Adds (or upserts attrs into) an edge between `u` and `v`.
     pub async fn add_edge_with(&mut self, u: NodeId, v: NodeId, attrs: PropertyBag) -> EdgeId {
-        self.0.add_edge_with(u, v, attrs)
+        self.0.add_edge_with(u, v, attrs).await
     }
 
     /// 📦️ NetworkX `add_edges_from`.
@@ -120,7 +120,7 @@ impl UndirectedGraph {
     pub async fn remove_edge(&mut self, u: NodeId, v: NodeId) -> bool {
         let existing = self.0.edges_between(u, v).next().map(|edge| edge.id);
         match existing {
-            Some(id) => self.0.remove_edge(id),
+            Some(id) => self.0.remove_edge(id).await,
             None => false,
         }
     }
@@ -132,7 +132,7 @@ impl UndirectedGraph {
 
     /// 🔢️ Edge count.
     pub async fn number_of_edges(&self) -> usize {
-        self.0.edge_count()
+        self.0.edge_count().await
     }
 
     /// 📏️ NetworkX `size(weight=...)`: unweighted is the edge count, weighted is the sum of edge weights.
@@ -193,7 +193,7 @@ impl UndirectedGraph {
 
     /// 🔢️ Degree of `node`; a self-loop counts twice, matching NetworkX.
     pub async fn degree(&self, node: NodeId) -> usize {
-        self.0.degree(node)
+        self.0.degree(node).await
     }
 
     /// ⚖️ Sum of the named attribute over every incident edge, defaulting to `1.0` per edge when the attribute is missing (a self-loop is summed twice, matching `degree`).
@@ -229,30 +229,30 @@ impl UndirectedGraph {
     /// ✂️ Owned copy restricted to `nodes` (an edge survives only when both endpoints are kept) — an explicit copy rather than NetworkX's aliasing view.
     pub async fn subgraph(&self, nodes: impl IntoIterator<Item = NodeId>) -> Self {
         let view = SubgraphView::new(&self.0, nodes);
-        Self::from_view(&view)
+        Self::from_view(&view).await
     }
 
     /// ✂️ Owned copy restricted to `edges` (nodes become exactly those edges' endpoints) — an explicit copy rather than NetworkX's aliasing view.
     pub async fn edge_subgraph(&self, edges: impl IntoIterator<Item = EdgeId>) -> Self {
         let view = EdgeSubgraphView::new(&self.0, edges);
-        Self::from_view(&view)
+        Self::from_view(&view).await
     }
 
     /// ➡️ NetworkX `to_directed`: each undirected edge becomes two directed edges (one per direction); a self-loop becomes a single directed self-loop since both directions coincide. Returns the raw `Storage` — the `DirectedGraph` facade lives in a sibling crate this crate deliberately doesn't depend on, to avoid a circular dependency.
     pub async fn to_directed(&self) -> Storage<Normal, Directed> {
-        let mut storage = Storage::<Normal, Directed>::new();
+        let mut storage = Storage::<Normal, Directed>::new().await;
         for node in self.0.nodes() {
-            let attrs = self.0.node_attrs(node).cloned().unwrap_or_default();
-            storage.add_node_with_id(node, attrs);
+            let attrs = self.0.node_attrs(node).await.cloned().unwrap_or_default();
+            storage.add_node_with_id(node, attrs).await;
         }
         for edge in self.0.edges() {
-            let attrs = self.0.edge_attrs(edge.id).cloned().unwrap_or_default();
-            storage.add_edge_with(edge.u, edge.v, attrs.clone());
+            let attrs = self.0.edge_attrs(edge.id).await.cloned().unwrap_or_default();
+            storage.add_edge_with(edge.u, edge.v, attrs.clone()).await;
             if edge.u != edge.v {
-                storage.add_edge_with(edge.v, edge.u, attrs);
+                storage.add_edge_with(edge.v, edge.u, attrs).await;
             }
         }
-        storage.graph_attrs_mut().extend(self.0.graph_attrs().clone());
+        storage.graph_attrs_mut().await.extend(self.0.graph_attrs().clone());
         storage
     }
 
@@ -273,7 +273,7 @@ impl UndirectedGraph {
     /// 🏷️ NetworkX `set_node_attributes`: merges `attrs` into each named node; ids absent from the graph are silently skipped.
     pub async fn set_node_attributes(&mut self, values: impl IntoIterator<Item = (NodeId, PropertyBag)>) {
         for (node, attrs) in values {
-            if let Some(existing) = self.0.node_attrs_mut(node) {
+            if let Some(existing) = self.0.node_attrs_mut(node).await {
                 existing.extend(attrs);
             }
         }
@@ -281,7 +281,7 @@ impl UndirectedGraph {
 
     /// 🏷️ NetworkX `get_node_attributes(name)`: every node carrying `name`, mapped to its value.
     pub async fn get_node_attributes(&self, name: &str) -> BTreeMap<NodeId, PropertyValue> {
-        self.0.nodes().filter_map(|node| self.0.node_attrs(node).and_then(|attrs| attrs.get(name)).map(|value| (node, value.clone()))).collect()
+        self.0.nodes().filter_map(|node| semio_framework_plugin::resolve_ready(self.0.node_attrs(node)).and_then(|attrs| attrs.get(name)).map(|value| (node, value.clone()))).collect()
     }
 
     /// 🏷️ NetworkX `set_edge_attributes`: merges `attrs` into the edge between each `(u, v)`; pairs without an edge are silently skipped.
@@ -289,7 +289,7 @@ impl UndirectedGraph {
         for (u, v, attrs) in values {
             let edge_id = self.0.edges_between(u, v).next().map(|edge| edge.id);
             if let Some(id) = edge_id {
-                if let Some(existing) = self.0.edge_attrs_mut(id) {
+                if let Some(existing) = self.0.edge_attrs_mut(id).await {
                     existing.extend(attrs);
                 }
             }
@@ -301,7 +301,7 @@ impl UndirectedGraph {
         self.0
             .edges()
             .filter_map(|edge| {
-                self.0.edge_attrs(edge.id).and_then(|attrs| attrs.get(name)).map(|value| {
+                semio_framework_plugin::resolve_ready(self.0.edge_attrs(edge.id)).and_then(|attrs| attrs.get(name)).map(|value| {
                     let key = if edge.u <= edge.v { (edge.u, edge.v) } else { (edge.v, edge.u) };
                     (key, value.clone())
                 })
@@ -311,12 +311,12 @@ impl UndirectedGraph {
 
     /// 🏷️ NetworkX graph `name` attribute, read from `graph_attrs["name"]`.
     pub async fn name(&self) -> Option<String> {
-        self.0.graph_attrs().get("name").and_then(PropertyValue::as_str).map(str::to_owned)
+        self.0.graph_attrs().await.get("name").and_then(PropertyValue::as_str).map(str::to_owned)
     }
 
     /// 🏷️ Sets the NetworkX graph `name` attribute.
     pub async fn set_name(&mut self, name: String) {
-        self.0.graph_attrs_mut().insert("name".to_string(), PropertyValue::String(name));
+        self.0.graph_attrs_mut().await.insert("name".to_string(), PropertyValue::String(name));
     }
 }
 // #endregion 🔖️Attributes
@@ -391,16 +391,16 @@ impl UndirectedGraph {
 /// 🪟️ Delegates the structural view to the inner `Storage` so later-wave algorithm crates can operate on `&UndirectedGraph` directly.
 impl GraphView for UndirectedGraph {
     async fn node_count(&self) -> usize {
-        self.0.node_count()
+        self.0.node_count().await
     }
     async fn nodes(&self) -> impl Iterator<Item = NodeId> {
         self.0.nodes()
     }
     async fn contains_node(&self, node: NodeId) -> bool {
-        self.0.contains_node(node)
+        self.0.contains_node(node).await
     }
     async fn edge_count(&self) -> usize {
-        self.0.edge_count()
+        self.0.edge_count().await
     }
     async fn edges(&self) -> impl Iterator<Item = EdgeRef> {
         self.0.edges()
@@ -415,19 +415,19 @@ impl GraphView for UndirectedGraph {
         self.0.in_neighbors(node)
     }
     async fn degree(&self, node: NodeId) -> usize {
-        self.0.degree(node)
+        self.0.degree(node).await
     }
     async fn out_degree(&self, node: NodeId) -> usize {
-        self.0.out_degree(node)
+        self.0.out_degree(node).await
     }
     async fn in_degree(&self, node: NodeId) -> usize {
-        self.0.in_degree(node)
+        self.0.in_degree(node).await
     }
     async fn is_directed(&self) -> bool {
-        self.0.is_directed()
+        self.0.is_directed().await
     }
     async fn is_multigraph(&self) -> bool {
-        self.0.is_multigraph()
+        self.0.is_multigraph().await
     }
     async fn edges_between(&self, u: NodeId, v: NodeId) -> impl Iterator<Item = EdgeRef> {
         self.0.edges_between(u, v)
@@ -437,20 +437,20 @@ impl GraphView for UndirectedGraph {
 /// 🏷️ Delegates attribute lookup to the inner `Storage`.
 impl AttrView for UndirectedGraph {
     async fn node_attrs(&self, node: NodeId) -> Option<&PropertyBag> {
-        self.0.node_attrs(node)
+        self.0.node_attrs(node).await
     }
     async fn edge_attrs(&self, edge: EdgeId) -> Option<&PropertyBag> {
-        self.0.edge_attrs(edge)
+        self.0.edge_attrs(edge).await
     }
     async fn graph_attrs(&self) -> &PropertyBag {
-        self.0.graph_attrs()
+        self.0.graph_attrs().await
     }
 }
 
 /// ⚖️ Delegates edge weight lookup (`PropertyBag["weight"]`, defaulting to `1.0`) to the inner `Storage`.
 impl EdgeWeights for UndirectedGraph {
     async fn weight(&self, edge: EdgeRef) -> f64 {
-        self.0.weight(edge)
+        self.0.weight(edge).await
     }
 }
 // #endregion 🔖️ViewDelegation

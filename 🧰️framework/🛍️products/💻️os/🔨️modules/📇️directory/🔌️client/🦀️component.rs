@@ -437,7 +437,7 @@ pub mod native {
 
     type TungsteniteStream = tokio_tungstenite::WebSocketStream<tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>>;
 
-    struct TungsteniteConnection(TungsteniteStream);
+    pub struct TungsteniteConnection(TungsteniteStream);
 
     #[async_trait::async_trait(?Send)]
     impl DirectoryWsConnection for TungsteniteConnection {
@@ -500,7 +500,7 @@ pub mod native {
     impl<R: HostAsyncRuntime + 'static> DirectoryTransport for NativeDirectoryTransport<R> {
         type Ws = TungsteniteConnection;
         async fn http(&self, ctx: &OperationContext, method: HttpMethod, url: &str, bearer: Option<&str>, body: Option<Vec<u8>>) -> Result<HttpResponse, TransportError> {
-            if ctx.cancel.is_cancelled() {
+            if ctx.cancel.is_cancelled().await {
                 return Err(TransportError::Cancelled);
             }
             let mut headers = Vec::new();
@@ -508,19 +508,25 @@ pub mod native {
                 headers.push(("Authorization".to_string(), format!("Bearer {token}")));
             }
             let request = PoolHttpRequest { method: http_method_str(method).to_string(), url: url.to_string(), headers, body: body.unwrap_or_default() };
-            self.http_pool
+            match self
+                .http_pool
                 .request(self.runtime.as_ref(), &self.scope, ctx.clone(), self.package.clone(), self.actor, request)
                 .await
-                .map(|response| HttpResponse { status: response.status, body: response.body })
-                .map_err(|error| match error {
-                    HttpPoolError::Compute(ComputeError::DeadlineExceeded) => TransportError::DeadlineExceeded,
-                    HttpPoolError::Compute(ComputeError::WorkerLost) if ctx.cancel.is_cancelled() => TransportError::Cancelled,
-                    other => TransportError::Io(other.to_string()),
-                })
+            {
+                Ok(response) => Ok(HttpResponse { status: response.status, body: response.body }),
+                Err(error) => {
+                    let cancelled = matches!(error, HttpPoolError::Compute(ComputeError::WorkerLost)) && ctx.cancel.is_cancelled().await;
+                    Err(match error {
+                        HttpPoolError::Compute(ComputeError::DeadlineExceeded) => TransportError::DeadlineExceeded,
+                        _ if cancelled => TransportError::Cancelled,
+                        other => TransportError::Io(other.to_string()),
+                    })
+                }
+            }
         }
 
         async fn open_ws(&self, ctx: &OperationContext, url: &str) -> Result<Self::Ws, TransportError> {
-            if ctx.cancel.is_cancelled() {
+            if ctx.cancel.is_cancelled().await {
                 return Err(TransportError::Cancelled);
             }
             let (stream, _response) = tokio_tungstenite::connect_async(url).await.map_err(|error| TransportError::Io(error.to_string()))?;
@@ -555,7 +561,7 @@ pub mod browser {
     impl DirectoryTransport for BrowserDirectoryTransport {
         type Ws = BrowserWsConnection;
         async fn http(&self, ctx: &OperationContext, method: HttpMethod, url: &str, bearer: Option<&str>, body: Option<Vec<u8>>) -> Result<HttpResponse, TransportError> {
-            if ctx.cancel.is_cancelled() {
+            if ctx.cancel.is_cancelled().await {
                 return Err(TransportError::Cancelled);
             }
             let window = web_sys::window().ok_or_else(|| TransportError::Io("no window".to_string()))?;
@@ -582,7 +588,7 @@ pub mod browser {
         }
 
         async fn open_ws(&self, ctx: &OperationContext, url: &str) -> Result<Self::Ws, TransportError> {
-            if ctx.cancel.is_cancelled() {
+            if ctx.cancel.is_cancelled().await {
                 return Err(TransportError::Cancelled);
             }
             let socket = WebSocket::new(url).map_err(|error| TransportError::Io(format!("{error:?}")))?;
@@ -598,7 +604,7 @@ pub mod browser {
         }
     }
 
-    struct BrowserWsConnection {
+    pub struct BrowserWsConnection {
         socket: WebSocket,
         _onmessage: Closure<dyn FnMut(MessageEvent)>,
         incoming_rx: tokio::sync::mpsc::UnboundedReceiver<String>,
@@ -725,26 +731,26 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn ws_url_switches_scheme_and_encodes_query() {
-        assert_eq!(directory_ws_url("http://127.0.0.1:8787", "tok en", 0), "ws://127.0.0.1:8787/directory/ws?token=tok%20en&since=0");
-        assert_eq!(directory_ws_url("https://hub.example", "abc", 42), "wss://hub.example/directory/ws?token=abc&since=42");
+        assert_eq!(directory_ws_url("http://127.0.0.1:8787", "tok en", 0).await, "ws://127.0.0.1:8787/directory/ws?token=tok%20en&since=0");
+        assert_eq!(directory_ws_url("https://hub.example", "abc", 42).await, "wss://hub.example/directory/ws?token=abc&since=42");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn backoff_doubles_and_caps() {
-        assert_eq!(next_backoff_ms(500), 1000);
-        assert_eq!(next_backoff_ms(20_000), 30_000);
-        assert_eq!(next_backoff_ms(30_000), 30_000);
-        assert_eq!(next_backoff_ms(0), HUB_RECONNECT_MIN_MS);
+        assert_eq!(next_backoff_ms(500).await, 1000);
+        assert_eq!(next_backoff_ms(20_000).await, 30_000);
+        assert_eq!(next_backoff_ms(30_000).await, 30_000);
+        assert_eq!(next_backoff_ms(0).await, HUB_RECONNECT_MIN_MS);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn spaces_decodes_and_sends_bearer() {
         let transport = FakeTransport::default();
-        transport.push_response(FakeTransport::json_response(200, &serde_json::json!([])).await);
-        let client = DirectoryClient::new(transport.clone(), "http://hub.local");
-        client.await.set_token(Some("tok".to_string()));
+        transport.push_response(FakeTransport::json_response(200, &serde_json::json!([])).await).await;
+        let client = DirectoryClient::new(transport.clone(), "http://hub.local").await;
+        client.set_token(Some("tok".to_string())).await;
 
-        let spaces = futures_lite::future::block_on(client.await.spaces(&root_ctx())).expect("decodes");
+        let spaces = futures_lite::future::block_on(client.spaces(&root_ctx().await)).expect("decodes");
         assert!(spaces.is_empty());
         let requests = transport.requests.lock().unwrap();
         assert_eq!(requests[0].url, "http://hub.local/directory/spaces");
@@ -754,38 +760,38 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn unauthorized_status_maps_to_unauthorized_error() {
         let transport = FakeTransport::default();
-        transport.push_response(Ok(HttpResponse { status: 401, body: Vec::new() }));
+        transport.push_response(Ok(HttpResponse { status: 401, body: Vec::new() })).await;
         let client = DirectoryClient::new(transport, "http://hub.local");
 
-        let error = futures_lite::future::block_on(client.await.me(&root_ctx())).expect_err("401 is unauthorized");
+        let error = futures_lite::future::block_on(client.await.me(&root_ctx().await)).expect_err("401 is unauthorized");
         assert!(matches!(error, DirectoryClientError::Unauthorized));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn stream_reconnects_and_resumes_from_last_seq() {
         let transport = FakeTransport::default();
-        transport.push_ws(Err(TransportError::Io("refused".to_string())));
+        transport.push_ws(Err(TransportError::Io("refused".to_string()))).await;
         let event = serde_json::json!({ "kind": "event", "event": { "seq": 7, "id": "e1", "hlc": { "physicalMs": 1, "logical": 0 }, "actor": { "kind": "system", "id": "sys" }, "body": { "kind": "space.archived", "spaceId": "sp-1" }, "recordedAtMs": 1 } }).to_string();
-        transport.push_ws(Ok(std::collections::VecDeque::from([Ok(Some(event)), Ok(None)])));
-        transport.push_ws(Err(TransportError::Io("refused again".to_string())));
+        transport.push_ws(Ok(std::collections::VecDeque::from([Ok(Some(event)), Ok(None)]))).await;
+        transport.push_ws(Err(TransportError::Io("refused again".to_string()))).await;
 
-        let client = DirectoryClient::new(transport.clone(), "http://hub.local");
-        client.await.set_token(Some("tok".to_string()));
-        let mut stream = client.await.stream(0);
+        let client = DirectoryClient::new(transport.clone(), "http://hub.local").await;
+        client.set_token(Some("tok".to_string())).await;
+        let mut stream = client.stream(0).await;
 
-        assert_eq!(futures_lite::future::block_on(stream.await.recv(&root_ctx())), Some(DirectoryStreamEvent::Reconnecting { after_ms: HUB_RECONNECT_MIN_MS }), "call 1: the first dial fails outright");
-        match futures_lite::future::block_on(stream.await.recv(&root_ctx())) {
+        assert_eq!(futures_lite::future::block_on(stream.recv(&root_ctx().await)), Some(DirectoryStreamEvent::Reconnecting { after_ms: HUB_RECONNECT_MIN_MS }), "call 1: the first dial fails outright");
+        match futures_lite::future::block_on(stream.recv(&root_ctx().await)) {
             Some(DirectoryStreamEvent::Message(DirectoryStreamMessage::Event { event })) => assert_eq!(event.seq, 7),
             other => panic!("call 2: expected the decoded event from the second (successful) dial, got {other:?}"),
         }
-        assert_eq!(stream.await.since(), 7);
+        assert_eq!(stream.since().await, 7);
         assert_eq!(
-            futures_lite::future::block_on(stream.await.recv(&root_ctx())),
+            futures_lite::future::block_on(stream.recv(&root_ctx().await)),
             Some(DirectoryStreamEvent::Reconnecting { after_ms: HUB_RECONNECT_MIN_MS }),
             "call 3: the live connection's next frame is Ok(None) (peer closed) — reported WITHOUT a new dial yet, backoff still at the floor because the prior dial succeeded"
         );
         assert_eq!(
-            futures_lite::future::block_on(stream.await.recv(&root_ctx())),
+            futures_lite::future::block_on(stream.recv(&root_ctx().await)),
             Some(DirectoryStreamEvent::Reconnecting { after_ms: next_backoff_ms(HUB_RECONNECT_MIN_MS).await }),
             "call 4: NOW the third dial actually happens (lazily, on this call) and fails, so the reported backoff has already advanced past the floor"
         );
@@ -802,10 +808,10 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn a_request_with_an_already_cancelled_context_never_reaches_the_transport() {
         let transport = FakeTransport::default();
-        transport.push_response(FakeTransport::json_response(200, &serde_json::json!([])).await);
+        transport.push_response(FakeTransport::json_response(200, &serde_json::json!([])).await).await;
         let client = DirectoryClient::new(transport.clone(), "http://hub.local");
-        let ctx = root_ctx();
-        ctx.await.cancel.cancel();
+        let ctx = root_ctx().await;
+        ctx.cancel.cancel().await;
 
         let result = futures_lite::future::block_on(client.await.spaces(&ctx));
         assert!(matches!(result, Err(DirectoryClientError::Cancelled)), "got {result:?}");
@@ -822,14 +828,14 @@ mod tests {
     async fn an_in_flight_request_is_cancelled_when_its_context_is_cancelled() {
         let transport = FakeTransport::default();
         transport.yields_before_response.store(2, std::sync::atomic::Ordering::SeqCst);
-        transport.push_response(FakeTransport::json_response(200, &serde_json::json!([])).await);
-        let client = DirectoryClient::new(transport.clone(), "http://hub.local");
-        let ctx = root_ctx();
+        transport.push_response(FakeTransport::json_response(200, &serde_json::json!([])).await).await;
+        let client = DirectoryClient::new(transport.clone(), "http://hub.local").await;
+        let ctx = root_ctx().await;
 
-        let request_fut = client.await.spaces(&ctx);
+        let request_fut = client.spaces(&ctx);
         let canceller_fut = async {
             futures_lite::future::yield_now().await;
-            ctx.await.cancel.cancel();
+            ctx.cancel.cancel().await;
         };
         let (result, ()) = futures_lite::future::block_on(futures_lite::future::zip(request_fut, canceller_fut));
         assert!(matches!(result, Err(DirectoryClientError::Transport(TransportError::Cancelled))), "an in-flight request must observe cancellation, got {result:?}");
@@ -841,13 +847,13 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn cancelling_the_context_closes_an_open_stream() {
         let transport = FakeTransport::default();
-        let client = DirectoryClient::new(transport, "http://hub.local");
-        let mut stream = client.await.stream(0);
-        let ctx = root_ctx();
-        ctx.await.cancel.cancel();
+        let client = DirectoryClient::new(transport, "http://hub.local").await;
+        let mut stream = client.stream(0).await;
+        let ctx = root_ctx().await;
+        ctx.cancel.cancel().await;
 
-        assert_eq!(futures_lite::future::block_on(stream.await.recv(&ctx)), None, "a cancelled context must end the stream, never dial");
-        assert_eq!(futures_lite::future::block_on(stream.await.recv(&root_ctx())), None, "close() is sticky — a fresh, live context does not resurrect the stream");
+        assert_eq!(futures_lite::future::block_on(stream.recv(&ctx)), None, "a cancelled context must end the stream, never dial");
+        assert_eq!(futures_lite::future::block_on(stream.recv(&root_ctx().await)), None, "close() is sticky — a fresh, live context does not resurrect the stream");
     }
     //#endregion 🔖️CancellationTests
 }

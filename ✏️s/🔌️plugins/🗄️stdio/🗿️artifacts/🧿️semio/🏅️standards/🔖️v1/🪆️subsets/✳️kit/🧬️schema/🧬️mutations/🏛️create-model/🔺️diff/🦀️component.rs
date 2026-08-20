@@ -11,10 +11,10 @@ pub async fn diff(payload: &CreateModel, base: &SemioKitSnapshot) -> protocol::M
             "mutation.duplicate-id",
             format!("A model child with id \"{}\" already exists.", payload.child_id),
             [payload.child_id.clone()],
-        );
+        ).await;
     }
     let mut models = base.models.clone();
-    models.push(store::ArtifactChild::new(payload.child_id.clone(), payload.target.clone()));
-    protocol::MutationOutcome::new(SemioKitDiff { models: Some(SemioKitModelChildList { values: models }), ..Default::default() })
+    models.push(store::ArtifactChild::new(payload.child_id.clone(), payload.target.clone()).await);
+    protocol::MutationOutcome::new(SemioKitDiff { models: Some(SemioKitModelChildList { values: models }), ..Default::default() }).await
 }
 //#endregion 🔖️Diff

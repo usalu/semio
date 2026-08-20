@@ -28,7 +28,7 @@ pub struct DeflateInference {
 
 impl protocol::Inference<DeflateSnapshot> for DeflateInference {
     async fn infer(snapshot: &DeflateSnapshot) -> Self {
-        Self { window: compute_deflate_window(snapshot) }
+        Self { window: compute_deflate_window(snapshot).await }
     }
 }
 

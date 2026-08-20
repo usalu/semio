@@ -20,11 +20,11 @@ pub async fn descriptor() -> GltfInferenceLeafDescriptor {
 }
 
 pub(crate) async fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<f64> {
-    unavailable(GltfUnit::CubicMetre, GltfAvailability::Unavailable, Vec::new(), context.sample_count, Some(context.topology))
+    unavailable(GltfUnit::CubicMetre, GltfAvailability::Unavailable, Vec::new(), context.sample_count, Some(context.topology)).await
 }
 
 pub(crate) async fn infer_pair(pair: &GltfPairGeometry) -> GltfMeasure<f64> {
-    pair.overlap.map(|(volume, samples)| estimate(volume, GltfUnit::CubicMetre, samples, None)).unwrap_or_else(|| unavailable(GltfUnit::CubicMetre, GltfAvailability::Unavailable, Vec::new(), pair.sample_count, None))
+    pair.overlap.map(|(volume, samples)| estimate(volume, GltfUnit::CubicMetre, samples, None)).unwrap_or_else(|| unavailable(GltfUnit::CubicMetre, GltfAvailability::Unavailable, Vec::new(), pair.sample_count, None)).await
 }
 
 pub(crate) async fn from_assembly(volume: f64, complete: bool, pair_count: usize, sample_count: usize, topology: Topology) -> Option<GltfMeasure<f64>> {
@@ -32,7 +32,7 @@ pub(crate) async fn from_assembly(volume: f64, complete: bool, pair_count: usize
 }
 
 pub async fn unavailable_measure(ids: &[String]) -> GltfMeasure<f64> {
-    unavailable(GltfUnit::CubicMetre, GltfAvailability::Unavailable, ids.to_vec(), 0, None)
+    unavailable(GltfUnit::CubicMetre, GltfAvailability::Unavailable, ids.to_vec(), 0, None).await
 }
 
 pub async fn encode_result(indicators: &GltfEntityIndicators) -> Result<serde_json::Value, serde_json::Error> {

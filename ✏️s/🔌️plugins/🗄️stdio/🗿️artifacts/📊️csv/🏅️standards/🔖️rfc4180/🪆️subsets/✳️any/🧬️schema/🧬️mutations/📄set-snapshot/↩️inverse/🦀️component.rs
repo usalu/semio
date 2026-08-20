@@ -4,5 +4,5 @@ use protocol::Mutation;
 
 /// ↩️ Inverse of set-snapshot.
 pub async fn inverse(base: &CsvSnapshot, mutation: &CsvMutation) -> Vec<CsvMutation> {
-    <CsvMutation as Mutation<CsvSnapshot>>::inverse(mutation, base)
+    <CsvMutation as Mutation<CsvSnapshot>>::inverse(mutation, base).await
 }

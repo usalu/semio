@@ -1,0 +1,25 @@
+{
+  "surface": "conformance.component.state-activity-waiting",
+  "revision": 0,
+  "root": 0,
+  "nodes": [
+    {
+      "id": 0,
+      "key": "#0",
+      "component": {
+        "type": "toggle",
+        "on": false,
+        "icon": "toggle"
+      },
+      "layout": {
+        "kind": "leaf",
+        "width": "hug",
+        "height": "hug"
+      },
+      "style": {},
+      "activity": "waiting",
+      "accessibility": {}
+    }
+  ],
+  "layoutEpoch": 0
+}

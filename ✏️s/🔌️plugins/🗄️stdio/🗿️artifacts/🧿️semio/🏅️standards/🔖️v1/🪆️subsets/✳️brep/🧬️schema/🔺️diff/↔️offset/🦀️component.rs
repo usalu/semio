@@ -28,18 +28,18 @@ pub async fn offset_face(body: &mut Body, face: FaceId, distance: f64, rec: &mut
     if !distance.is_finite() {
         return Err(KernelError::InvalidInput("offset distance must be finite".into()));
     }
-    let face_data = body.faces.get(face).ok_or_else(|| KernelError::MissingEntity(format!("face {face}")))?.clone();
-    let surface = body.surfaces.get(face_data.surface).ok_or_else(|| KernelError::MissingEntity(format!("surface {}", face_data.surface)))?.clone();
+    let face_data = body.faces.get(face).await.ok_or_else(|| KernelError::MissingEntity(format!("face {face}")))?.clone();
+    let surface = body.surfaces.get(face_data.surface).await.ok_or_else(|| KernelError::MissingEntity(format!("surface {}", face_data.surface)))?.clone();
     let Surface::Plane { frame } = surface else {
         return Err(KernelError::InvalidInput("offset_face requires a planar face".into()));
     };
-    let polygon = face_outer_polygon(body, face)?;
+    let polygon = face_outer_polygon(body, face).await?;
     let mut normal = frame.z;
     if face_data.flipped {
         normal = -normal;
     }
     let offset_pts: Vec<Pnt3> = polygon.iter().map(|p| Pnt3::new(p.x + normal.x * distance, p.y + normal.y * distance, p.z + normal.z * distance)).collect();
-    make_planar_face_from_points(body, &offset_pts, rec)
+    make_planar_face_from_points(body, &offset_pts, rec).await
 }
 
 /// ↔️ Thicken a planar face into a solid prism of thickness `distance`.
@@ -47,16 +47,16 @@ pub async fn thicken_face(body: &mut Body, face: FaceId, distance: f64, rec: &mu
     if !distance.is_finite() || distance.abs() <= 1e-15 {
         return Err(KernelError::InvalidInput("thicken distance must be non-zero".into()));
     }
-    let face_data = body.faces.get(face).ok_or_else(|| KernelError::MissingEntity(format!("face {face}")))?.clone();
-    let surface = body.surfaces.get(face_data.surface).ok_or_else(|| KernelError::MissingEntity(format!("surface {}", face_data.surface)))?.clone();
+    let face_data = body.faces.get(face).await.ok_or_else(|| KernelError::MissingEntity(format!("face {face}")))?.clone();
+    let surface = body.surfaces.get(face_data.surface).await.ok_or_else(|| KernelError::MissingEntity(format!("surface {}", face_data.surface)))?.clone();
     let Surface::Plane { frame } = surface else {
-        return thicken_face_hull(body, face, distance, rec);
+        return thicken_face_hull(body, face, distance, rec).await;
     };
     let mut normal = frame.z;
     if face_data.flipped {
         normal = -normal;
     }
-    extrude_face(body, face, normal, distance.abs(), rec).or_else(|_| thicken_face_hull(body, face, distance, rec))
+    extrude_face(body, face, normal, distance.abs(), rec).await.or_else(|_| thicken_face_hull(body, face, distance, rec))
 }
 
 /// ↔️ Uniform solid offset (positive expands, negative shrinks).
@@ -64,28 +64,28 @@ pub async fn offset_solid(body: &mut Body, solid: SolidId, distance: f64, rec: &
     if !distance.is_finite() {
         return Err(KernelError::InvalidInput("offset distance must be finite".into()));
     }
-    if body.solids.get(solid).is_none() {
+    if body.solids.get(solid).await.is_none() {
         return Err(KernelError::MissingEntity(format!("solid {solid}")));
     }
     if distance.abs() <= 1e-15 {
-        return shell_copy_solid(body, solid, rec);
+        return shell_copy_solid(body, solid, rec).await;
     }
     let tol = 1e-6;
-    if looks_like_box(body, solid)? {
-        let bb = solid_bounding_box(body, solid)?;
+    if looks_like_box(body, solid).await? {
+        let bb = solid_bounding_box(body, solid).await?;
         let inflated = inflate_aabb(&bb, distance);
         if aabb_volume(&inflated) <= tol {
             return Err(KernelError::Operation("offset collapsed the solid".into()));
         }
-        return make_box_from_aabb(body, &inflated, rec);
+        return make_box_from_aabb(body, &inflated, rec).await;
     }
-    let bb = solid_bounding_box(body, solid)?;
-    let mut points = mesh_offset_points(body, solid, distance, tol)?;
+    let bb = solid_bounding_box(body, solid).await?;
+    let mut points = mesh_offset_points(body, solid, distance, tol).await?;
     points.extend(aabb_corners(&inflate_aabb(&bb, distance)));
     if points.len() < 4 {
         return Err(KernelError::Operation("offset produced insufficient points".into()));
     }
-    make_convex_hull(body, &points, rec)
+    make_convex_hull(body, &points, rec).await
 }
 
 /// ↔️ Hollow shell of `solid` with wall thickness `thickness`.
@@ -93,36 +93,36 @@ pub async fn shell_solid(body: &mut Body, solid: SolidId, thickness: f64, rec: &
     if !thickness.is_finite() || thickness <= 1e-15 {
         return Err(KernelError::InvalidInput("shell thickness must be positive".into()));
     }
-    if body.solids.get(solid).is_none() {
+    if body.solids.get(solid).await.is_none() {
         return Err(KernelError::MissingEntity(format!("solid {solid}")));
     }
     let tol = 1e-6;
-    let inner = offset_solid(body, solid, -thickness, rec)?;
-    match boolean_solid(body, solid, inner, BooleanOp::Cut, tol, rec) {
+    let inner = offset_solid(body, solid, -thickness, rec).await?;
+    match boolean_solid(body, solid, inner, BooleanOp::Cut, tol, rec).await {
         Ok(id) => Ok(id),
-        Err(_) => solid_with_void_shell(body, solid, inner, rec),
+        Err(_) => solid_with_void_shell(body, solid, inner, rec).await,
     }
 }
 
 /// ↔️ Shell a solid and leave the listed faces open by cutting through-face openings.
 pub async fn shell_solid_with_open_faces(body: &mut Body, solid: SolidId, thickness: f64, open_faces: &[FaceId], rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
-    let shelled = shell_solid(body, solid, thickness, rec)?;
+    let shelled = shell_solid(body, solid, thickness, rec).await?;
     if open_faces.is_empty() {
         return Ok(shelled);
     }
     let tol = 1e-6_f64.max(thickness * 1e-3);
     let mut result = shelled;
     for &face in open_faces {
-        let corners = face_corners(body, face);
+        let corners = face_corners(body, face).await;
         if corners.len() < 3 {
             continue;
         }
-        let normal = face_normal_hint(&corners).unwrap_or(Vec3::new(0.0, 0.0, 1.0));
-        let n = normal.normalized().unwrap_or(Vec3::new(0.0, 0.0, 1.0));
+        let normal = face_normal_hint(&corners).await.unwrap_or(Vec3::new(0.0, 0.0, 1.0).await);
+        let n = normal.normalized().await.unwrap_or(Vec3::new(0.0, 0.0, 1.0).await);
         let half = thickness * 2.0 + tol * 10.0;
         let extruded: Vec<Pnt3> = corners.iter().flat_map(|p| [*p + n * half, *p - n * half]).collect();
-        if let Ok(cutter) = make_convex_hull(body, &extruded, rec) {
-            if let Ok(cut) = boolean_solid(body, result, cutter, BooleanOp::Cut, tol, rec) {
+        if let Ok(cutter) = make_convex_hull(body, &extruded, rec).await {
+            if let Ok(cut) = boolean_solid(body, result, cutter, BooleanOp::Cut, tol, rec).await {
                 result = cut;
             }
         }
@@ -132,7 +132,7 @@ pub async fn shell_solid_with_open_faces(body: &mut Body, solid: SolidId, thickn
 
 async fn face_corners(body: &Body, face: FaceId) -> Vec<Pnt3> {
     let mut pts = Vec::new();
-    let Some(face_data) = body.faces.get(face) else {
+    let Some(face_data) = body.faces.get(face).await else {
         return pts;
     };
     let mut loops = Vec::new();
@@ -142,8 +142,8 @@ async fn face_corners(body: &Body, face: FaceId) -> Vec<Pnt3> {
     loops.extend(face_data.inners.iter().copied());
     for loop_id in loops {
         for coedge in body.loop_coedges(loop_id) {
-            if let Some((start, _)) = body.coedge_endpoints(coedge) {
-                if let Some(v) = body.vertices.get(start) {
+            if let Some((start, _)) = body.coedge_endpoints(coedge).await {
+                if let Some(v) = body.vertices.get(start).await {
                     pts.push(v.position);
                 }
             }
@@ -158,12 +158,12 @@ async fn face_normal_hint(pts: &[Pnt3]) -> Option<Vec3> {
     }
     let a = pts[1] - pts[0];
     let b = pts[2] - pts[0];
-    Some(a.cross(b))
+    Some(a.cross(b).await)
 }
 
 /// ↔️ Apply draft angle `angle_rad` to `face` of `solid` (MVP: AABB shear for boxes).
 pub async fn draft_angle(body: &mut Body, solid: SolidId, _face: FaceId, angle_rad: f64, pull_dir: Vec3, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
-    if body.solids.get(solid).is_none() {
+    if body.solids.get(solid).await.is_none() {
         return Err(KernelError::MissingEntity(format!("solid {solid}")));
     }
     if angle_rad.abs() <= 1e-15 {
@@ -172,13 +172,13 @@ pub async fn draft_angle(body: &mut Body, solid: SolidId, _face: FaceId, angle_r
     if !angle_rad.is_finite() {
         return Err(KernelError::InvalidInput("draft angle must be finite".into()));
     }
-    let pull = pull_dir.normalized().ok_or_else(|| KernelError::InvalidInput("pull direction must be non-zero".into()))?;
-    if looks_like_box(body, solid)? {
-        let bb = solid_bounding_box(body, solid)?;
+    let pull = pull_dir.normalized().await.ok_or_else(|| KernelError::InvalidInput("pull direction must be non-zero".into()))?;
+    if looks_like_box(body, solid).await? {
+        let bb = solid_bounding_box(body, solid).await?;
         let sheared = shear_aabb_corners(&bb, pull, angle_rad);
-        return make_convex_hull(body, &sheared, rec);
+        return make_convex_hull(body, &sheared, rec).await;
     }
-    shell_copy_solid(body, solid, rec)
+    shell_copy_solid(body, solid, rec).await
 }
 
 // #endregion 🔖️Api
@@ -186,13 +186,13 @@ pub async fn draft_angle(body: &mut Body, solid: SolidId, _face: FaceId, angle_r
 // #region 🧮Aabb
 
 async fn looks_like_box(body: &Body, solid: SolidId) -> Result<bool, KernelError> {
-    let faces = body.solid_faces(solid);
+    let faces = body.solid_faces(solid).await;
     if faces.len() != 6 {
         return Ok(false);
     }
-    let bb = solid_bounding_box(body, solid)?;
+    let bb = solid_bounding_box(body, solid).await?;
     let v_bb = aabb_volume(&bb);
-    let v = solid_volume(body, solid, 1e-4)?;
+    let v = solid_volume(body, solid, 1e-4).await?;
     Ok((v - v_bb).abs() <= 1e-3 * (1.0 + v_bb))
 }
 
@@ -201,17 +201,17 @@ async fn aabb_volume(bb: &AxisAlignedBox) -> f64 {
 }
 
 async fn inflate_aabb(bb: &AxisAlignedBox, distance: f64) -> AxisAlignedBox {
-    AxisAlignedBox { min: Pnt3::new(bb.min.x - distance, bb.min.y - distance, bb.min.z - distance), max: Pnt3::new(bb.max.x + distance, bb.max.y + distance, bb.max.z + distance) }
+    AxisAlignedBox { min: Pnt3::new(bb.min.x - distance, bb.min.y - distance, bb.min.z - distance).await, max: Pnt3::new(bb.max.x + distance, bb.max.y + distance, bb.max.z + distance).await }
 }
 
 async fn aabb_corners(bb: &AxisAlignedBox) -> [Pnt3; 8] {
     [
-        Pnt3::new(bb.min.x, bb.min.y, bb.min.z),
-        Pnt3::new(bb.max.x, bb.min.y, bb.min.z),
-        Pnt3::new(bb.max.x, bb.max.y, bb.min.z),
-        Pnt3::new(bb.min.x, bb.max.y, bb.min.z),
-        Pnt3::new(bb.min.x, bb.min.y, bb.max.z),
-        Pnt3::new(bb.max.x, bb.min.y, bb.max.z),
+        Pnt3::new(bb.min.x, bb.min.y, bb.min.z).await,
+        Pnt3::new(bb.max.x, bb.min.y, bb.min.z).await,
+        Pnt3::new(bb.max.x, bb.max.y, bb.min.z).await,
+        Pnt3::new(bb.min.x, bb.max.y, bb.min.z).await,
+        Pnt3::new(bb.min.x, bb.min.y, bb.max.z).await,
+        Pnt3::new(bb.max.x, bb.min.y, bb.max.z).await,
         Pnt3::new(bb.max.x, bb.max.y, bb.max.z),
         Pnt3::new(bb.min.x, bb.max.y, bb.max.z),
     ]
@@ -224,22 +224,22 @@ async fn make_box_from_aabb(body: &mut Body, bb: &AxisAlignedBox, rec: &mut OpRe
     if w <= 1e-15 || d <= 1e-15 || h <= 1e-15 {
         return Err(KernelError::Operation("degenerate box".into()));
     }
-    make_convex_hull(body, &aabb_corners(bb), rec)
+    make_convex_hull(body, &aabb_corners(bb), rec).await
 }
 
 async fn shear_aabb_corners(bb: &AxisAlignedBox, pull: Vec3, angle_rad: f64) -> Vec<Pnt3> {
     let tan_a = angle_rad.tan();
-    let mut u = pull.cross(Vec3::Z);
-    if u.norm() < 1e-9 {
-        u = pull.cross(Vec3::X);
+    let mut u = pull.cross(Vec3::Z).await;
+    if u.norm().await < 1e-9 {
+        u = pull.cross(Vec3::X).await;
     }
-    let u = u.normalized().unwrap_or(Vec3::X);
-    let corners = aabb_corners(bb);
-    let min_pull = corners.iter().map(|p| p.to_vec().dot(pull)).fold(f64::INFINITY, f64::min);
+    let u = u.normalized().await.unwrap_or(Vec3::X);
+    let corners = aabb_corners(bb).await;
+    let min_pull = corners.iter().map(|p| semio_framework_plugin::resolve_ready(p.to_vec()).dot(pull)).fold(f64::INFINITY, f64::min);
     corners
         .iter()
         .map(|p| {
-            let h = p.to_vec().dot(pull) - min_pull;
+            let h = semio_framework_plugin::resolve_ready(p.to_vec()).dot(pull) - min_pull;
             let shift = u * (h * tan_a);
             Pnt3::new(p.x + shift.x, p.y + shift.y, p.z + shift.z)
         })
@@ -251,7 +251,7 @@ async fn shear_aabb_corners(bb: &AxisAlignedBox, pull: Vec3, angle_rad: f64) -> 
 // #region 🧮Mesh
 
 async fn mesh_offset_points(body: &Body, solid: SolidId, distance: f64, tol: f64) -> Result<Vec<Pnt3>, KernelError> {
-    let mesh = tessellate_solid(body, solid, tol.max(1e-3))?;
+    let mesh = tessellate_solid(body, solid, tol.max(1e-3)).await?;
     let tris = mesh_triangles(&mesh);
     let scale = 1.0 / tol.max(1e-9);
     let mut normals: HashMap<(i64, i64, i64), Vec3> = HashMap::new();
@@ -261,15 +261,15 @@ async fn mesh_offset_points(body: &Body, solid: SolidId, distance: f64, tol: f64
         let nn = n.normalized().unwrap_or(Vec3::Z);
         for p in [p0, p1, p2] {
             let key = quantize(p, scale);
-            positions.entry(key).or_insert(p);
-            let entry = normals.entry(key).or_insert(Vec3::ZERO);
-            *entry = Vec3::new(entry.x + nn.x, entry.y + nn.y, entry.z + nn.z);
+            positions.entry(key.await).or_insert(p);
+            let entry = normals.entry(key.await).or_insert(Vec3::ZERO);
+            *entry = Vec3::new(entry.x + nn.x, entry.y + nn.y, entry.z + nn.z).await;
         }
     }
     let mut out = Vec::with_capacity(normals.len());
     for (key, mut n) in normals {
-        let p = positions.get(&key).copied().unwrap_or(Pnt3::new(0.0, 0.0, 0.0));
-        if let Some(nn) = n.normalized() {
+        let p = positions.get(&key).copied().unwrap_or(Pnt3::new(0.0, 0.0, 0.0).await);
+        if let Some(nn) = n.normalized().await {
             n = nn;
         } else {
             n = Vec3::Z;
@@ -288,7 +288,7 @@ async fn mesh_points(mesh: &MeshTransfer) -> Vec<Pnt3> {
 }
 
 async fn mesh_triangles(mesh: &MeshTransfer) -> Vec<(Pnt3, Pnt3, Pnt3)> {
-    let pts = mesh_points(mesh);
+    let pts = mesh_points(mesh).await;
     if !mesh.index.is_empty() {
         return mesh
             .index
@@ -309,17 +309,17 @@ async fn mesh_triangles(mesh: &MeshTransfer) -> Vec<(Pnt3, Pnt3, Pnt3)> {
 // #region 🧮Face
 
 async fn face_outer_polygon(body: &Body, face: FaceId) -> Result<Vec<Pnt3>, KernelError> {
-    let face_data = body.faces.get(face).ok_or_else(|| KernelError::MissingEntity(format!("face {face:?}")))?;
+    let face_data = body.faces.get(face).await.ok_or_else(|| KernelError::MissingEntity(format!("face {face:?}")))?;
     let outer = face_data.outer.ok_or_else(|| KernelError::InvalidInput("face has no outer loop".into()))?;
-    let coedges = body.loop_coedges(outer);
+    let coedges = body.loop_coedges(outer).await;
     if coedges.is_empty() {
         return Err(KernelError::InvalidInput("face outer loop is empty".into()));
     }
     let mut points = Vec::new();
     for cid in coedges {
-        let coedge = body.coedges.get(cid).ok_or_else(|| KernelError::MissingEntity(format!("coedge {cid:?}")))?;
-        let edge = body.edges.get(coedge.edge).ok_or_else(|| KernelError::MissingEntity(format!("edge {:?}", coedge.edge)))?;
-        let curve = body.curves3.get(edge.curve).ok_or_else(|| KernelError::MissingEntity(format!("curve {:?}", edge.curve)))?;
+        let coedge = body.coedges.get(cid).await.ok_or_else(|| KernelError::MissingEntity(format!("coedge {cid:?}")))?;
+        let edge = body.edges.get(coedge.edge).await.ok_or_else(|| KernelError::MissingEntity(format!("edge {:?}", coedge.edge)))?;
+        let curve = body.curves3.get(edge.curve).await.ok_or_else(|| KernelError::MissingEntity(format!("curve {:?}", edge.curve)))?;
         match curve {
             Curve3::Circle { frame, radius } => {
                 let segments = 16usize.max(3);
@@ -331,8 +331,8 @@ async fn face_outer_polygon(body: &Body, face: FaceId) -> Result<Vec<Pnt3>, Kern
                 let _ = (frame, radius);
             }
             _ => {
-                let (start, _) = body.coedge_endpoints(cid).ok_or_else(|| KernelError::MissingEntity(format!("coedge endpoints {cid:?}")))?;
-                let p = body.vertices.get(start).expect("vertex").position;
+                let (start, _) = body.coedge_endpoints(cid).await.ok_or_else(|| KernelError::MissingEntity(format!("coedge endpoints {cid:?}")))?;
+                let p = body.vertices.get(start).await.expect("vertex").position;
                 points.push(p);
             }
         }
@@ -344,26 +344,26 @@ async fn face_outer_polygon(body: &Body, face: FaceId) -> Result<Vec<Pnt3>, Kern
 }
 
 async fn thicken_face_hull(body: &mut Body, face: FaceId, distance: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
-    let polygon = face_outer_polygon(body, face)?;
-    let offset_face_id = offset_face(body, face, distance, rec)?;
-    let offset_poly = face_outer_polygon(body, offset_face_id)?;
+    let polygon = face_outer_polygon(body, face).await?;
+    let offset_face_id = offset_face(body, face, distance, rec).await?;
+    let offset_poly = face_outer_polygon(body, offset_face_id).await?;
     let mut pts = polygon;
     pts.extend(offset_poly);
-    make_convex_hull(body, &pts, rec)
+    make_convex_hull(body, &pts, rec).await
 }
 
 async fn shell_copy_solid(body: &mut Body, solid: SolidId, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
     let faces = body.solid_faces(solid);
-    let shell = add_shell(body, faces, rec);
-    Ok(add_solid(body, shell, Vec::new(), rec))
+    let shell = add_shell(body, faces.await, rec);
+    Ok(add_solid(body, shell.await, Vec::new(), rec).await)
 }
 
 async fn solid_with_void_shell(body: &mut Body, outer: SolidId, inner: SolidId, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
     let outer_faces = body.solid_faces(outer);
     let inner_faces = body.solid_faces(inner);
-    let outer_shell = add_shell(body, outer_faces, rec);
-    let inner_shell = add_shell(body, inner_faces, rec);
-    Ok(add_solid(body, outer_shell, vec![inner_shell], rec))
+    let outer_shell = add_shell(body, outer_faces.await, rec);
+    let inner_shell = add_shell(body, inner_faces.await, rec);
+    Ok(add_solid(body, outer_shell.await, vec![inner_shell.await], rec).await)
 }
 
 // #endregion 🧮Face

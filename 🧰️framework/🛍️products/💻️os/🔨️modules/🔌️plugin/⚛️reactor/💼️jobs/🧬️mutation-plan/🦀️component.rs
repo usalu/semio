@@ -87,7 +87,7 @@ mod tests {
         type Diff = JobTestDiff;
         async fn diff(&self, _base: &JobTestSnapshot) -> protocol::MutationOutcome<JobTestDiff> {
             let JobTestOp::Add(delta) = self;
-            protocol::MutationOutcome::new(JobTestDiff { delta: *delta })
+            protocol::MutationOutcome::new(JobTestDiff { delta: *delta }).await
         }
         async fn inverse(&self, _base: &JobTestSnapshot) -> Vec<Self> {
             let JobTestOp::Add(delta) = self;
@@ -110,7 +110,7 @@ mod tests {
     impl protocol::CompositeMutationKind<JobTestSnapshot, JobTestOp> for JobTestMutationKind {
         const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "value", kind: "add-value", record: "AddedValue" };
         async fn plan(&self, _base: &JobTestSnapshot, planner: &mut protocol::Planner<JobTestSnapshot, JobTestOp>) -> Result<(), protocol::PlanError> {
-            planner.call(JobTestOp::Add(self.delta))
+            planner.call(JobTestOp::Add(self.delta)).await
         }
         async fn label(&self) -> String {
             format!("Add {} to value", self.delta)
@@ -122,16 +122,16 @@ mod tests {
     /// `contributed_mutation_wire_tests::commit_test_contribution` fixture recipe (that helper is
     /// private to its own test module, so this is a from-scratch copy, not a shared import).
     async fn commit_job_test_contribution(artifact_kind: &str, target_document_schema: &str, contributor: &str) -> String {
-        let contribution = crate::app::ArtifactContribution::builder(artifact_kind).mutation::<JobTestSnapshot, JobTestOp, JobTestMutationKind>(target_document_schema, 1, 1).build();
-        let (descriptor, _inferences, mutation_runtime) = contribution.resolve(contributor);
+        let contribution = crate::app::ArtifactContribution::builder(artifact_kind).await.mutation::<JobTestSnapshot, JobTestOp, JobTestMutationKind>(target_document_schema, 1, 1).await.build().await;
+        let (descriptor, _inferences, mutation_runtime) = contribution.resolve(contributor).await;
         let mutation_id = descriptor.mutations[0].mutation_id.clone();
-        crate::app::commit_contributed_mutation_services(mutation_runtime).expect("commit contributed mutation services");
+        crate::app::commit_contributed_mutation_services(mutation_runtime).await.expect("commit contributed mutation services");
         mutation_id
     }
 
     async fn request_wire_bytes(artifact_kind: &str, mutation_id: &str, payload: Vec<u8>) -> Vec<u8> {
-        let request = crate::app::WireArtifactMutationPlanRequest { artifact_kind: artifact_kind.to_string(), mutation_id: mutation_id.to_string(), revision: 42, generation: 9, snapshot_pack: JobTestSnapshot { value: 10 }.encode_pack(), payload };
-        store::pack_rt::encode_wire_value(&dsl::to_dsl_value(&request).expect("test request serializes to DslValue"))
+        let request = crate::app::WireArtifactMutationPlanRequest { artifact_kind: artifact_kind.to_string(), mutation_id: mutation_id.to_string(), revision: 42, generation: 9, snapshot_pack: JobTestSnapshot { value: 10 }.encode_pack().await, payload };
+        store::pack_rt::encode_wire_value(&dsl::to_dsl_value(&request).expect("test request serializes to DslValue")).await
     }
 
     /// 🧬️ Registers a real contributed mutation kind (not mocked away) and drives
@@ -140,12 +140,12 @@ mod tests {
     /// `Planner`, not just `job.unknown-kind`.
     #[semio_framework_async_macros::async_test]
     async fn a_two_slice_mutation_plan_job_decodes_then_dispatches_to_the_registered_kind() {
-        let mutation_id = commit_job_test_contribution("s.jobtest.mutation-echo", "jobtest.mutation-echo.document", "jobtest-contributor-a");
-        let payload = crate::app::encode_contributed_wire(&JobTestMutationKind { delta: 5 });
-        let input = request_wire_bytes("s.jobtest.mutation-echo", &mutation_id, payload);
-        start_job(300, JOB_KIND_MUTATION_PLAN, &input);
+        let mutation_id = commit_job_test_contribution("s.jobtest.mutation-echo", "jobtest.mutation-echo.document", "jobtest-contributor-a").await;
+        let payload = crate::app::encode_contributed_wire(&JobTestMutationKind { delta: 5 }).await;
+        let input = request_wire_bytes("s.jobtest.mutation-echo", &mutation_id, payload).await;
+        start_job(300, JOB_KIND_MUTATION_PLAN, &input).await;
 
-        match step_job(300, JobBudget { fuel: 1, deadline_ms: 1 }) {
+        match step_job(300, JobBudget { fuel: 1, deadline_ms: 1 }).await {
             JobStep::Running(Some(progress)) => {
                 let (artifact_kind, decoded_mutation_id): (String, String) = serde_json::from_slice(&progress).expect("slice 1 progress decodes");
                 assert_eq!(artifact_kind, "s.jobtest.mutation-echo");
@@ -156,15 +156,16 @@ mod tests {
                 panic!("slice 1 must be Running(Some(identity)), not fail: {} {}", fault.code.0, fault.message);
             }
             JobStep::Done(_) => panic!("slice 1 must not finish in one tick"),
+            JobStep::Running(None) => panic!("slice 1 must be Running(Some(identity)), not a bare Running(None)"),
         }
-        match step_job(300, JobBudget { fuel: 1, deadline_ms: 1 }) {
+        match step_job(300, JobBudget { fuel: 1, deadline_ms: 1 }).await {
             JobStep::Done(bytes) => {
-                let value = store::pack_rt::decode_wire_value(&bytes).expect("wire value decodes");
+                let value = store::pack_rt::decode_wire_value(&bytes).await.expect("wire value decodes");
                 let result: crate::app::WireArtifactMutationPlanResult = dsl::from_dsl_value(value).expect("result decodes");
                 assert_eq!(result.mutation_id, mutation_id);
                 assert_eq!(result.label, "Add 5 to value");
                 assert_eq!(result.owner_ops.len(), 1);
-                let op = JobTestOp::decode_op(&result.owner_ops[0]).expect("owner op decodes");
+                let op = JobTestOp::decode_op(&result.owner_ops[0]).await.expect("owner op decodes");
                 assert_eq!(op, JobTestOp::Add(5));
             }
             JobStep::Failed(bytes) => {
@@ -179,27 +180,27 @@ mod tests {
     /// resumed run reaches the SAME `Done` output as an uninterrupted run.
     #[semio_framework_async_macros::async_test]
     async fn mutation_plan_job_checkpoint_restore_matches_an_uninterrupted_run() {
-        let mutation_id = commit_job_test_contribution("s.jobtest.mutation-checkpoint", "jobtest.mutation-checkpoint.document", "jobtest-contributor-b");
-        let payload = crate::app::encode_contributed_wire(&JobTestMutationKind { delta: 3 });
-        let input = request_wire_bytes("s.jobtest.mutation-checkpoint", &mutation_id, payload);
+        let mutation_id = commit_job_test_contribution("s.jobtest.mutation-checkpoint", "jobtest.mutation-checkpoint.document", "jobtest-contributor-b").await;
+        let payload = crate::app::encode_contributed_wire(&JobTestMutationKind { delta: 3 }).await;
+        let input = request_wire_bytes("s.jobtest.mutation-checkpoint", &mutation_id, payload).await;
 
-        start_job(301, JOB_KIND_MUTATION_PLAN, &input);
-        step_job(301, JobBudget::default());
-        let baseline = match step_job(301, JobBudget::default()) {
+        start_job(301, JOB_KIND_MUTATION_PLAN, &input).await;
+        step_job(301, JobBudget::default()).await;
+        let baseline = match step_job(301, JobBudget::default()).await {
             JobStep::Done(bytes) => bytes,
             _ => panic!("uninterrupted run must finish Done within 2 slices"),
         };
 
-        start_job(302, JOB_KIND_MUTATION_PLAN, &input);
-        step_job(302, JobBudget::default());
-        let entries = checkpoint_jobs();
+        start_job(302, JOB_KIND_MUTATION_PLAN, &input).await;
+        step_job(302, JobBudget::default()).await;
+        let entries = checkpoint_jobs().await;
         let entry = entries.iter().find(|entry| entry.job == 302).expect("job 302 must appear in checkpoint_jobs()");
         assert_eq!(entry.checkpoint.as_deref(), Some(PHASE_DECODED));
         let checkpoint = entry.checkpoint.clone();
-        cancel_job(302);
+        cancel_job(302).await;
 
-        restore_job(302, JOB_KIND_MUTATION_PLAN, &input, checkpoint);
-        let restored_final = match step_job(302, JobBudget::default()) {
+        restore_job(302, JOB_KIND_MUTATION_PLAN, &input, checkpoint).await;
+        let restored_final = match step_job(302, JobBudget::default()).await {
             JobStep::Done(bytes) => bytes,
             _ => panic!("a restore from PHASE_DECODED must finish Done on its FIRST step_job call"),
         };
@@ -208,8 +209,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn mutation_plan_job_reports_a_named_decode_fault_on_garbage_input() {
-        start_job(303, JOB_KIND_MUTATION_PLAN, b"not a wire value");
-        match step_job(303, JobBudget::default()) {
+        start_job(303, JOB_KIND_MUTATION_PLAN, b"not a wire value").await;
+        match step_job(303, JobBudget::default()).await {
             JobStep::Failed(bytes) => {
                 let fault = dsl::decode_fault_bytes(&bytes);
                 assert_eq!(fault.code.0, "job.mutation-plan.decode");

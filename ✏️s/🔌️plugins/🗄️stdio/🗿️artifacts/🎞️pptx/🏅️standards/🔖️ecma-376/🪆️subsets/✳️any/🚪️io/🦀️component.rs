@@ -80,7 +80,7 @@ pub const REL_TYPE_OFFICE_DOCUMENT_STRICT: &str = "http://purl.oclc.org/ooxml/of
 /// authored under the Transitional or the Strict relationship-type namespace -- see
 /// `REL_TYPE_OFFICE_DOCUMENT_STRICT`.
 pub async fn resolve_office_document_relationship(opc: &crate::artifacts::zip::opc::OpcPackage) -> Option<String> {
-    opc.resolve_relationship("", crate::artifacts::zip::opc::REL_TYPE_OFFICE_DOCUMENT).or_else(|| opc.resolve_relationship("", REL_TYPE_OFFICE_DOCUMENT_STRICT))
+    opc.resolve_relationship("", crate::artifacts::zip::opc::REL_TYPE_OFFICE_DOCUMENT).await.or_else(|| opc.resolve_relationship("", REL_TYPE_OFFICE_DOCUMENT_STRICT))
 }
 
 pub async fn attr(name: &str, value: &str) -> crate::artifacts::xml::schema::snapshot::XmlAttr {
@@ -190,7 +190,7 @@ pub mod derived_composition {
             if native.is_empty() {
                 return Err(ComposeError { message: "PptxComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() });
             }
-            let analysis = PptxAnalyzer::analyze(&native);
+            let analysis = PptxAnalyzer::analyze(&native).await;
             let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError { message: "PptxComposerComposition: analysis produced no snapshot".into(), diagnostics: analysis.diagnostics.clone() })?;
             Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics })
         }
@@ -209,7 +209,8 @@ pub mod io_registry {
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 
-    pub async fn entries() -> &'static [ComposerEntry] {
+    // 🚫️async: E1 pure table accessor consumed by OnceLock::get_or_init's sync closure — see R9
+    pub fn entries() -> &'static [ComposerEntry] {
         ENTRIES.get_or_init(|| vec![composer_entry_of::<PptxRawAnyComposer>(), composer_entry_of::<PptxStrictComposer>(), composer_entry_of::<PptxTransitionalComposer>()]).as_slice()
     }
 }

@@ -11,15 +11,15 @@ pub async fn diff(payload: &RenameType, base: &SemioKitSnapshot) -> protocol::Mu
             "mutation.target-missing",
             format!("Type \"{}\" does not exist.", payload.id),
             [payload.id.clone()],
-        );
+        ).await;
     };
     if existing.name == payload.new_name {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Type \"{}\" is already named \"{}\".", payload.id, payload.new_name));
+        return protocol::MutationOutcome::empty().await.warn("mutation.no-op", format!("Type \"{}\" is already named \"{}\".", payload.id, payload.new_name)).await;
     }
     let mut types = base.types.clone();
     if let Some(t) = types.iter_mut().find(|t| t.id == payload.id) {
         t.name = payload.new_name.clone();
     }
-    protocol::MutationOutcome::new(SemioKitDiff { types: Some(SemioKitTypeList { values: types }), ..Default::default() })
+    protocol::MutationOutcome::new(SemioKitDiff { types: Some(SemioKitTypeList { values: types }), ..Default::default() }).await
 }
 //#endregion 🔖️Diff

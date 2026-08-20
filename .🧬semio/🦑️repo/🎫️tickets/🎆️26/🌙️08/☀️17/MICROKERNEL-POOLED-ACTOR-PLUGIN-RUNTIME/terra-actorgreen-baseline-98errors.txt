@@ -1,0 +1,1507 @@
+    Checking semio-framework-actor v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust)
+error: expected one of `,`, `:`, or `}`, found `.`
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:2270:97
+     |
+2270 | ...insert(id.await, ActorMeta { kind, package, capabilities: Vec::new(), budget.await, status: ActorStatus::Activating, failure: F...
+     |                     ---------                                            ------^ expected one of `,`, `:`, or `}`
+     |                     |                                                    |
+     |                     while parsing this struct                            while parsing this struct field
+     |
+help: try naming a field
+     |
+2270 |         self.actors.insert(id.await, ActorMeta { kind, package, capabilities: Vec::new(), budget: budget.await, status: ActorStatus::Activating, failure: FailureState::new().await, metrics: ActorMetrics::default(), window });
+     |                                                                                           +++++++
+
+error: expected one of `,`, `:`, or `}`, found `.`
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:2417:171
+     |
+2417 | ...me(ActorRecord { id: actor, kind: meta.kind.clone(), package: meta.package.clone(), shard, capabilities: meta.capabilities.clone(), budget: meta.budget, mailbox.awa...
+     |       -----------                                                                                                                                           -------^ expected one of `,`, `:`, or `}`
+     |       |                                                                                                                                                     |
+     |       while parsing this struct                                                                                                                             while parsing this struct field
+     |
+help: try naming a field
+     |
+2417 |         Some(ActorRecord { id: actor, kind: meta.kind.clone(), package: meta.package.clone(), shard, capabilities: meta.capabilities.clone(), budget: meta.budget, mailbox: mailbox.await, status: meta.status.clone(), failure: meta.failure.clone(), metrics: meta.metrics.clone() })
+     |                                                                                                                                                                    ++++++++
+
+error[E0728]: `await` is only allowed inside `async` functions and blocks
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1643:65
+     |
+1643 |             .filter_map(|(id, e)| e.mailbox.earliest_deadline().await.filter(|d| *d <= now_ms).map(|d| (d, *id)))
+     |                         --------- this is not `async`           ^^^^^ only allowed inside `async` functions and blocks
+
+error[E0728]: `await` is only allowed inside `async` functions and blocks
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:2431:140
+     |
+2431 | ....map(|(id, meta)| ActorMetricsSample { id: *id, package: meta.package.clone(), lane: self.scheduler.lane_of(*id).await.unwrap_o...
+     |         ------------ this is not `async`                                                                            ^^^^^ only allowed inside `async` functions and blocks
+
+error[E0605]: non-primitive cast: `impl Future<Output = usize>` as `u8`
+   --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:383:9
+    |
+383 |         self.priority_rank() as u8
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^ an `as` expression can only be used to convert between primitive types or to coerce to a specific trait object
+
+error[E0308]: mismatched types
+   --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:577:57
+    |
+577 |                 pack::write_opt(out, checkpoint, |o, v| pack::write_bytes(o, v));
+    |                                                         ^^^^^^^^^^^^^^^^^^^^^^^ expected `()`, found future
+    |
+help: consider using a semicolon here
+    |
+577 |                 pack::write_opt(out, checkpoint, |o, v| { pack::write_bytes(o, v); });
+    |                                                         +                        +++
+
+error[E0308]: mismatched types
+   --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:594:104
+    |
+594 | ...sume", |b, p| pack::read_bytes(b, p, "Payload::Resume::checkpoint")).await? }),
+    |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Result<_, PackError>`, found future
+    |
+help: try wrapping the expression in `Ok`
+    |
+594 |             2 => Ok(Payload::Resume { checkpoint: pack::read_opt(bytes, pos, "Payload::Resume", |b, p| Ok(pack::read_bytes(b, p, "Payload::Resume::checkpoint"))).await? }),
+    |                                                                                                        +++                                                     +
+
+error[E0308]: mismatched types
+   --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:641:56
+    |
+641 |         pack::write_opt(out, &self.deadline_ms, |o, v| pack::write_u64(o, *v));
+    |                                                        ^^^^^^^^^^^^^^^^^^^^^^ expected `()`, found future
+    |
+help: consider using a semicolon here
+    |
+641 |         pack::write_opt(out, &self.deadline_ms, |o, v| { pack::write_u64(o, *v); });
+    |                                                        +                       +++
+
+error[E0308]: mismatched types
+   --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:642:53
+    |
+642 |         pack::write_opt(out, &self.coalesce, |o, v| v.pack_encode(o));
+    |                                                     ^^^^^^^^^^^^^^^^ expected `()`, found future
+    |
+help: consider using a semicolon here
+    |
+642 |         pack::write_opt(out, &self.coalesce, |o, v| { v.pack_encode(o); });
+    |                                                     +                 +++
+
+error[E0308]: mismatched types
+   --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:643:54
+    |
+643 |         pack::write_opt(out, &self.cancel_of, |o, v| pack::write_u64(o, *v));
+    |                                                      ^^^^^^^^^^^^^^^^^^^^^^ expected `()`, found future
+    |
+help: consider using a semicolon here
+    |
+643 |         pack::write_opt(out, &self.cancel_of, |o, v| { pack::write_u64(o, *v); });
+    |                                                      +                       +++
+
+error[E0308]: mismatched types
+   --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:652:85
+    |
+652 |             deadline_ms: pack::read_opt(bytes, pos, "Envelope::deadline_ms", |b, p| pack::read_u64(b, p, "deadline_ms")).await?,
+    |                                                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Result<_, PackError>`, found future
+    |
+help: try wrapping the expression in `Ok`
+    |
+652 |             deadline_ms: pack::read_opt(bytes, pos, "Envelope::deadline_ms", |b, p| Ok(pack::read_u64(b, p, "deadline_ms"))).await?,
+    |                                                                                     +++                                   +
+
+error[E0271]: expected `pack_decode` to return `Result<_, PackError>`, but it returns `impl Future<Output = Result<CoalesceKey, PackError>>`
+   --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:653:72
+    |
+653 |             coalesce: pack::read_opt(bytes, pos, "Envelope::coalesce", CoalesceKey::pack_decode).await?,
+    |                       --------------                                   ^^^^^^^^^^^^^^^^^^^^^^^^ expected `Result<_, PackError>`, found future
+    |                       |
+    |                       required by a bound introduced by this call
+    |
+note: calling an async function returns a future
+   --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:653:72
+    |
+653 |             coalesce: pack::read_opt(bytes, pos, "Envelope::coalesce", CoalesceKey::pack_decode).await?,
+    |                                                                        ^^^^^^^^^^^^^^^^^^^^^^^^
+note: required by a bound in `read_opt`
+   --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:164:118
+    |
+164 | ... impl FnOnce(&[u8], &mut usize) -> Result<T, PackError>) -> Result<Option<T>, PackError> {
+    |                                       ^^^^^^^^^^^^^^^^^^^^ required by this bound in `read_opt`
+help: consider `await`ing on the `Future`
+    |
+653 |             coalesce: pack::read_opt(bytes, pos, "Envelope::coalesce", CoalesceKey::pack_decode.await).await?,
+    |                                                                                                ++++++
+
+error[E0271]: expected `pack_decode` to return `Result<_, PackError>`, but it returns `impl Future<Output = Result<CoalesceKey, PackError>>`
+   --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:653:23
+    |
+653 |             coalesce: pack::read_opt(bytes, pos, "Envelope::coalesce", CoalesceKey::pack_decode).await?,
+    |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Result<_, PackError>`, found future
+    |
+note: calling an async function returns a future
+   --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:653:23
+    |
+653 |             coalesce: pack::read_opt(bytes, pos, "Envelope::coalesce", CoalesceKey::pack_decode).await?,
+    |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+note: required by a bound in `read_opt`
+   --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:164:118
+    |
+164 | ... impl FnOnce(&[u8], &mut usize) -> Result<T, PackError>) -> Result<Option<T>, PackError> {
+    |                                       ^^^^^^^^^^^^^^^^^^^^ required by this bound in `read_opt`
+help: consider `await`ing on the `Future`
+    |
+653 |             coalesce: pack::read_opt(bytes, pos, "Envelope::coalesce", CoalesceKey::pack_decode).await.await?,
+    |                                                                                                 ++++++
+
+error[E0271]: expected `pack_decode` to return `Result<_, PackError>`, but it returns `impl Future<Output = Result<CoalesceKey, PackError>>`
+   --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:653:98
+    |
+653 |             coalesce: pack::read_opt(bytes, pos, "Envelope::coalesce", CoalesceKey::pack_decode).await?,
+    |                                                                                                  ^^^^^ expected `Result<_, PackError>`, found future
+    |
+note: calling an async function returns a future
+   --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:653:98
+    |
+653 |             coalesce: pack::read_opt(bytes, pos, "Envelope::coalesce", CoalesceKey::pack_decode).await?,
+    |                                                                                                  ^^^^^
+note: required by a bound in `read_opt`
+   --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:164:118
+    |
+164 | ... impl FnOnce(&[u8], &mut usize) -> Result<T, PackError>) -> Result<Option<T>, PackError> {
+    |                                       ^^^^^^^^^^^^^^^^^^^^ required by this bound in `read_opt`
+help: consider `await`ing on the `Future`
+    |
+653 |             coalesce: pack::read_opt(bytes, pos, "Envelope::coalesce", CoalesceKey::pack_decode).await.await?,
+    |                                                                                                       ++++++
+
+error[E0308]: mismatched types
+   --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:654:81
+    |
+654 |             cancel_of: pack::read_opt(bytes, pos, "Envelope::cancel_of", |b, p| pack::read_u64(b, p, "cancel_of")).await?,
+    |                                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Result<_, PackError>`, found future
+    |
+help: try wrapping the expression in `Ok`
+    |
+654 |             cancel_of: pack::read_opt(bytes, pos, "Envelope::cancel_of", |b, p| Ok(pack::read_u64(b, p, "cancel_of"))).await?,
+    |                                                                                 +++                                 +
+
+error[E0308]: mismatched types
+   --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:735:54
+    |
+735 |         pack::write_opt(out, &self.next_wake, |o, v| pack::write_u64(o, *v));
+    |                                                      ^^^^^^^^^^^^^^^^^^^^^^ expected `()`, found future
+    |
+help: consider using a semicolon here
+    |
+735 |         pack::write_opt(out, &self.next_wake, |o, v| { pack::write_u64(o, *v); });
+    |                                                      +                       +++
+
+error[E0308]: mismatched types
+   --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:743:83
+    |
+743 |             next_wake: pack::read_opt(bytes, pos, "TurnResult::next_wake", |b, p| pack::read_u64(b, p, "next_wake")).await?,
+    |                                                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Result<_, PackError>`, found future
+    |
+help: try wrapping the expression in `Ok`
+    |
+743 |             next_wake: pack::read_opt(bytes, pos, "TurnResult::next_wake", |b, p| Ok(pack::read_u64(b, p, "next_wake"))).await?,
+    |                                                                                   +++                                 +
+
+error[E0308]: `match` arms have incompatible types
+   --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:778:39
+    |
+771 | /         match self {
+772 | |             Backpressure::Accept => pack::write_u8(out, 0).await,
+    | |                                     ---------------------------- this is found to be of type `()`
+773 | |             Backpressure::Coalesced => pack::write_u8(out, 1).await,
+    | |                                        ---------------------------- this is found to be of type `()`
+774 | |             Backpressure::Dropped { lane } => {
+775 | |                 pack::write_u8(out, 2);
+776 | |                 lane.pack_encode(out);
+    | |                 ---------------------- this is found to be of type `()`
+777 | |             }
+778 | |             Backpressure::Rejected => pack::write_u8(out, 3),
+    | |                                       ^^^^^^^^^^^^^^^^^^^^^^ expected `()`, found future
+779 | |         }
+    | |_________- `match` arms have incompatible types
+    |
+note: calling an async function returns a future
+   --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:778:39
+    |
+778 |             Backpressure::Rejected => pack::write_u8(out, 3),
+    |                                       ^^^^^^^^^^^^^^^^^^^^^^
+help: consider `await`ing on the `Future`
+    |
+778 |             Backpressure::Rejected => pack::write_u8(out, 3).await,
+    |                                                             ++++++
+help: consider removing this semicolon and boxing the expressions
+    |
+776 ~                 Box::new(lane.pack_encode(out))
+777 |             }
+778 ~             Backpressure::Rejected => Box::new(pack::write_u8(out, 3)),
+    |
+
+error[E0277]: the type `[VecDeque<Envelope>]` cannot be indexed by `impl Future<Output = usize>`
+   --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:834:48
+    |
+834 |             if let Some(existing) = self.lanes[lane_idx].iter_mut().find(|e| e.coalesce.as_ref() == Some(&key)) {
+    |                                                ^^^^^^^^ slice indices are of type `usize` or ranges of `usize`
+    |
+    = help: the trait `SliceIndex<[VecDeque<Envelope>]>` is not implemented for `impl Future<Output = usize>`
+    = note: required for `[VecDeque<Envelope>]` to implement `Index<impl Future<Output = usize>>`
+    = note: 1 redundant requirement hidden
+    = note: required for `[VecDeque<Envelope>; 4]` to implement `Index<impl Future<Output = usize>>`
+
+error[E0369]: cannot add `{integer}` to `impl Future<Output = usize>`
+   --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:841:46
+    |
+841 |             let victim_rank = (incoming_rank + 1..4).rev().find(|&rank| !self.lanes[rank].is_empty());
+    |                                ------------- ^ - {integer}
+    |                                |
+    |                                impl Future<Output = usize>
+
+error[E0277]: the type `[VecDeque<Envelope>]` cannot be indexed by `impl Future<Output = usize>`
+   --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:847:32
+    |
+847 |                     self.lanes[incoming_rank].push_back(envelope);
+    |                                ^^^^^^^^^^^^^ slice indices are of type `usize` or ranges of `usize`
+    |
+    = help: the trait `SliceIndex<[VecDeque<Envelope>]>` is not implemented for `impl Future<Output = usize>`
+    = note: required for `[VecDeque<Envelope>]` to implement `Index<impl Future<Output = usize>>`
+    = note: 1 redundant requirement hidden
+    = note: required for `[VecDeque<Envelope>; 4]` to implement `Index<impl Future<Output = usize>>`
+
+error[E0277]: the type `[VecDeque<Envelope>]` cannot be indexed by `impl Future<Output = usize>`
+   --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:854:24
+    |
+854 |             self.lanes[envelope.lane.priority_rank()].push_back(envelope);
+    |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ slice indices are of type `usize` or ranges of `usize`
+    |
+    = help: the trait `SliceIndex<[VecDeque<Envelope>]>` is not implemented for `impl Future<Output = usize>`
+    = note: required for `[VecDeque<Envelope>]` to implement `Index<impl Future<Output = usize>>`
+    = note: 1 redundant requirement hidden
+    = note: required for `[VecDeque<Envelope>; 4]` to implement `Index<impl Future<Output = usize>>`
+
+error[E0271]: expected `pack_decode` to return `Result<_, PackError>`, but it returns `impl Future<Output = Result<Envelope, PackError>>`
+   --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:891:65
+    |
+891 |             *lane = pack::read_vec(bytes, pos, "Mailbox::lane", Envelope::pack_decode).await?.into();
+    |                     --------------                              ^^^^^^^^^^^^^^^^^^^^^ expected `Result<_, PackError>`, found future
+    |                     |
+    |                     required by a bound introduced by this call
+    |
+note: calling an async function returns a future
+   --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:891:65
+    |
+891 |             *lane = pack::read_vec(bytes, pos, "Mailbox::lane", Envelope::pack_decode).await?.into();
+    |                                                                 ^^^^^^^^^^^^^^^^^^^^^
+note: required by a bound in `read_vec`
+   --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:178:121
+    |
+178 | ...: impl FnMut(&[u8], &mut usize) -> Result<T, PackError>) -> Result<Vec<T>, PackError> {
+    |                                       ^^^^^^^^^^^^^^^^^^^^ required by this bound in `read_vec`
+help: consider `await`ing on the `Future`
+    |
+891 |             *lane = pack::read_vec(bytes, pos, "Mailbox::lane", Envelope::pack_decode.await).await?.into();
+    |                                                                                      ++++++
+
+error[E0271]: expected `pack_decode` to return `Result<_, PackError>`, but it returns `impl Future<Output = Result<Envelope, PackError>>`
+   --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:891:21
+    |
+891 |             *lane = pack::read_vec(bytes, pos, "Mailbox::lane", Envelope::pack_decode).await?.into();
+    |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Result<_, PackError>`, found future
+    |
+note: calling an async function returns a future
+   --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:891:21
+    |
+891 |             *lane = pack::read_vec(bytes, pos, "Mailbox::lane", Envelope::pack_decode).await?.into();
+    |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+note: required by a bound in `read_vec`
+   --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:178:121
+    |
+178 | ...: impl FnMut(&[u8], &mut usize) -> Result<T, PackError>) -> Result<Vec<T>, PackError> {
+    |                                       ^^^^^^^^^^^^^^^^^^^^ required by this bound in `read_vec`
+help: consider `await`ing on the `Future`
+    |
+891 |             *lane = pack::read_vec(bytes, pos, "Mailbox::lane", Envelope::pack_decode).await.await?.into();
+    |                                                                                       ++++++
+
+error[E0271]: expected `pack_decode` to return `Result<_, PackError>`, but it returns `impl Future<Output = Result<Envelope, PackError>>`
+   --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:891:88
+    |
+891 |             *lane = pack::read_vec(bytes, pos, "Mailbox::lane", Envelope::pack_decode).await?.into();
+    |                                                                                        ^^^^^ expected `Result<_, PackError>`, found future
+    |
+note: calling an async function returns a future
+   --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:891:88
+    |
+891 |             *lane = pack::read_vec(bytes, pos, "Mailbox::lane", Envelope::pack_decode).await?.into();
+    |                                                                                        ^^^^^
+note: required by a bound in `read_vec`
+   --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:178:121
+    |
+178 | ...: impl FnMut(&[u8], &mut usize) -> Result<T, PackError>) -> Result<Vec<T>, PackError> {
+    |                                       ^^^^^^^^^^^^^^^^^^^^ required by this bound in `read_vec`
+help: consider `await`ing on the `Future`
+    |
+891 |             *lane = pack::read_vec(bytes, pos, "Mailbox::lane", Envelope::pack_decode).await.await?.into();
+    |                                                                                             ++++++
+
+error[E0308]: mismatched types
+   --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:910:50
+    |
+910 |         pack::write_opt(out, &self.scope, |o, v| pack::write_bytes(o, v));
+    |                                                  ^^^^^^^^^^^^^^^^^^^^^^^ expected `()`, found future
+    |
+help: consider using a semicolon here
+    |
+910 |         pack::write_opt(out, &self.scope, |o, v| { pack::write_bytes(o, v); });
+    |                                                  +                        +++
+
+error[E0308]: mismatched types
+   --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:913:164
+    |
+913 | ...ityGrant::scope", |b, p| pack::read_bytes(b, p, "scope")).await? })
+    |                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Result<_, PackError>`, found future
+    |
+help: try wrapping the expression in `Ok`
+    |
+913 |         Ok(Self { capability: pack::read_str(bytes, pos, "CapabilityGrant::capability").await?, scope: pack::read_opt(bytes, pos, "CapabilityGrant::scope", |b, p| Ok(pack::read_bytes(b, p, "scope"))).await? })
+    |                                                                                                                                                                    +++                               +
+
+error[E0308]: `match` arms have incompatible types
+   --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:950:43
+    |
+944 | /         match self {
+945 | |             FailureSignal::DeadlineOverrun { ratio } => {
+946 | |                 pack::write_u8(out, 0);
+947 | |                 pack::write_f32(out, *ratio);
+    | |                 ----------------------------- this is found to be of type `()`
+948 | |             }
+949 | |             FailureSignal::FuelExhausted => pack::write_u8(out, 1).await,
+    | |                                             ---------------------------- this is found to be of type `()`
+950 | |             FailureSignal::MemoryLimit => pack::write_u8(out, 2),
+    | |                                           ^^^^^^^^^^^^^^^^^^^^^^ expected `()`, found future
+...   |
+961 | |             FailureSignal::ManualReset => pack::write_u8(out, 7),
+962 | |         }
+    | |_________- `match` arms have incompatible types
+    |
+note: calling an async function returns a future
+   --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:950:43
+    |
+950 |             FailureSignal::MemoryLimit => pack::write_u8(out, 2),
+    |                                           ^^^^^^^^^^^^^^^^^^^^^^
+help: consider `await`ing on the `Future`
+    |
+950 |             FailureSignal::MemoryLimit => pack::write_u8(out, 2).await,
+    |                                                                 ++++++
+
+error[E0308]: `match` arms have incompatible types
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1008:40
+     |
+ 997 | /         match self {
+ 998 | |             FailureStage::Healthy => pack::write_u8(out, 0).await,
+     | |                                      ---------------------------- this is found to be of type `()`
+ 999 | |             FailureStage::Warned => pack::write_u8(out, 1).await,
+     | |                                     ---------------------------- this is found to be of type `()`
+1000 | |             FailureStage::Throttled { factor } => {
+1001 | |                 pack::write_u8(out, 2);
+1002 | |                 pack::write_f32(out, *factor);
+     | |                 ------------------------------ this is found to be of type `()`
+...    |
+1006 | |                 pack::write_u64(out, *until);
+     | |                 ----------------------------- this is found to be of type `()`
+1007 | |             }
+1008 | |             FailureStage::Cancelled => pack::write_u8(out, 4),
+     | |                                        ^^^^^^^^^^^^^^^^^^^^^^ expected `()`, found future
+...    |
+1017 | |             FailureStage::Disabled => pack::write_u8(out, 7),
+1018 | |         }
+     | |_________- `match` arms have incompatible types
+     |
+note: calling an async function returns a future
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1008:40
+     |
+1008 |             FailureStage::Cancelled => pack::write_u8(out, 4),
+     |                                        ^^^^^^^^^^^^^^^^^^^^^^
+help: consider `await`ing on the `Future`
+     |
+1008 |             FailureStage::Cancelled => pack::write_u8(out, 4).await,
+     |                                                              ++++++
+help: consider removing this semicolon and boxing the expressions
+     |
+1006 ~                 Box::new(pack::write_u64(out, *until))
+1007 |             }
+1008 ~             FailureStage::Cancelled => Box::new(pack::write_u8(out, 4)),
+     |
+
+error[E0277]: cannot add `impl Future<Output = u64>` to `u64`
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1101:72
+     |
+1101 |                 self.stage = FailureStage::Quarantined { until: now_ms + quarantine_duration_ms(self.restart_count) };
+     |                                                                        ^ no implementation for `u64 + impl Future<Output = u64>`
+     |
+     = help: the trait `Add<impl Future<Output = u64>>` is not implemented for `u64`
+help: the following other types implement trait `Add<Rhs>`
+    --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/ops/arith.rs:98:9
+     |
+  98 |         const impl Add for $t {
+     |         ^^^^^^^^^^^^^^^^^^^^^ `u64` implements `Add`
+...
+ 113 | add_impl! { usize u8 u16 u32 u64 u128 isize i8 i16 i32 i64 i128 f16 f32 f64 f128 }
+     | ---------------------------------------------------------------------------------- in this macro invocation
+     |
+    ::: /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/internal_macros.rs:22:9
+     |
+  22 |         const impl $imp<$u> for &$t {
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ `&u64` implements `Add<u64>`
+...
+  33 |         const impl $imp<&$u> for $t {
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ `u64` implements `Add<&u64>`
+...
+  44 |         const impl $imp<&$u> for &$t {
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `&u64` implements `Add`
+     = note: this error originates in the macro `add_impl` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0277]: cannot add `impl Future<Output = u64>` to `u64`
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1111:76
+     |
+1111 |                     self.stage = FailureStage::Quarantined { until: now_ms + quarantine_duration_ms(self.restart_count) };
+     |                                                                            ^ no implementation for `u64 + impl Future<Output = u64>`
+     |
+     = help: the trait `Add<impl Future<Output = u64>>` is not implemented for `u64`
+help: the following other types implement trait `Add<Rhs>`
+    --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/ops/arith.rs:98:9
+     |
+  98 |         const impl Add for $t {
+     |         ^^^^^^^^^^^^^^^^^^^^^ `u64` implements `Add`
+...
+ 113 | add_impl! { usize u8 u16 u32 u64 u128 isize i8 i16 i32 i64 i128 f16 f32 f64 f128 }
+     | ---------------------------------------------------------------------------------- in this macro invocation
+     |
+    ::: /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/internal_macros.rs:22:9
+     |
+  22 |         const impl $imp<$u> for &$t {
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ `&u64` implements `Add<u64>`
+...
+  33 |         const impl $imp<&$u> for $t {
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ `u64` implements `Add<&u64>`
+...
+  44 |         const impl $imp<&$u> for &$t {
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `&u64` implements `Add`
+     = note: this error originates in the macro `add_impl` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0529]: expected an array or slice, found `impl Future<Output = [u32; 2]>`
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1118:13
+     |
+1118 |         let [throttle_at, suspend_at] = lane_escalation_thresholds(lane);
+     |             ^^^^^^^^^^^^^^^^^^^^^^^^^ pattern cannot match with input type `impl Future<Output = [u32; 2]>`
+
+error[E0277]: cannot add `impl Future<Output = u64>` to `u64`
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1120:53
+     |
+1120 |             FailureStage::Suspended { until: now_ms + suspend_backoff_ms(self.warn_count) }
+     |                                                     ^ no implementation for `u64 + impl Future<Output = u64>`
+     |
+     = help: the trait `Add<impl Future<Output = u64>>` is not implemented for `u64`
+help: the following other types implement trait `Add<Rhs>`
+    --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/ops/arith.rs:98:9
+     |
+  98 |         const impl Add for $t {
+     |         ^^^^^^^^^^^^^^^^^^^^^ `u64` implements `Add`
+...
+ 113 | add_impl! { usize u8 u16 u32 u64 u128 isize i8 i16 i32 i64 i128 f16 f32 f64 f128 }
+     | ---------------------------------------------------------------------------------- in this macro invocation
+     |
+    ::: /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/internal_macros.rs:22:9
+     |
+  22 |         const impl $imp<$u> for &$t {
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ `&u64` implements `Add<u64>`
+...
+  33 |         const impl $imp<&$u> for $t {
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ `u64` implements `Add<&u64>`
+...
+  44 |         const impl $imp<&$u> for &$t {
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `&u64` implements `Add`
+     = note: this error originates in the macro `add_impl` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1231:57
+     |
+1231 |                 pack::write_opt(out, checkpoint, |o, v| pack::write_bytes(o, v));
+     |                                                         ^^^^^^^^^^^^^^^^^^^^^^^ expected `()`, found future
+     |
+help: consider using a semicolon here
+     |
+1231 |                 pack::write_opt(out, checkpoint, |o, v| { pack::write_bytes(o, v); });
+     |                                                         +                        +++
+
+error[E0308]: `match` arms have incompatible types
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1233:38
+     |
+1225 | /         match self {
+1226 | |             ActorStatus::Cold => pack::write_u8(out, 0).await,
+     | |                                  ---------------------------- this is found to be of type `()`
+1227 | |             ActorStatus::Activating => pack::write_u8(out, 1).await,
+     | |                                        ---------------------------- this is found to be of type `()`
+1228 | |             ActorStatus::Active => pack::write_u8(out, 2).await,
+     | |                                    ---------------------------- this is found to be of type `()`
+...    |
+1231 | |                 pack::write_opt(out, checkpoint, |o, v| pack::write_bytes(o, v));
+     | |                 ----------------------------------------------------------------- this is found to be of type `()`
+1232 | |             }
+1233 | |             ActorStatus::Draining => pack::write_u8(out, 4),
+     | |                                      ^^^^^^^^^^^^^^^^^^^^^^ expected `()`, found future
+...    |
+1236 | |             ActorStatus::Disabled => pack::write_u8(out, 7),
+1237 | |         }
+     | |_________- `match` arms have incompatible types
+     |
+note: calling an async function returns a future
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1233:38
+     |
+1233 |             ActorStatus::Draining => pack::write_u8(out, 4),
+     |                                      ^^^^^^^^^^^^^^^^^^^^^^
+help: consider `await`ing on the `Future`
+     |
+1233 |             ActorStatus::Draining => pack::write_u8(out, 4).await,
+     |                                                            ++++++
+help: consider removing this semicolon and boxing the expressions
+     |
+1231 ~                 Box::new(pack::write_opt(out, checkpoint, |o, v| pack::write_bytes(o, v)))
+1232 |             }
+1233 ~             ActorStatus::Draining => Box::new(pack::write_u8(out, 4)),
+     |
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1245:118
+     |
+1245 | ...s::Suspended", |b, p| pack::read_bytes(b, p, "checkpoint")).await? }),
+     |                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Result<_, PackError>`, found future
+     |
+help: try wrapping the expression in `Ok`
+     |
+1245 |             3 => Ok(ActorStatus::Suspended { checkpoint: pack::read_opt(bytes, pos, "ActorStatus::Suspended", |b, p| Ok(pack::read_bytes(b, p, "checkpoint"))).await? }),
+     |                                                                                                                      +++                                    +
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1278:57
+     |
+1278 |         pack::write_vec(out, &self.capabilities, |o, c| c.pack_encode(o));
+     |                                                         ^^^^^^^^^^^^^^^^ expected `()`, found future
+     |
+help: consider using a semicolon here
+     |
+1278 |         pack::write_vec(out, &self.capabilities, |o, c| { c.pack_encode(o); });
+     |                                                         +                 +++
+
+error[E0271]: expected `pack_decode` to return `Result<_, PackError>`, but it returns `impl Future<Output = Result<CapabilityGrant, PackError>>`
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1291:83
+     |
+1291 |             capabilities: pack::read_vec(bytes, pos, "ActorRecord::capabilities", CapabilityGrant::pack_decode).await?,
+     |                           --------------                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Result<_, PackError>`, found future
+     |                           |
+     |                           required by a bound introduced by this call
+     |
+note: calling an async function returns a future
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1291:83
+     |
+1291 |             capabilities: pack::read_vec(bytes, pos, "ActorRecord::capabilities", CapabilityGrant::pack_decode).await?,
+     |                                                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+note: required by a bound in `read_vec`
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:178:121
+     |
+ 178 | ...: impl FnMut(&[u8], &mut usize) -> Result<T, PackError>) -> Result<Vec<T>, PackError> {
+     |                                       ^^^^^^^^^^^^^^^^^^^^ required by this bound in `read_vec`
+help: consider `await`ing on the `Future`
+     |
+1291 |             capabilities: pack::read_vec(bytes, pos, "ActorRecord::capabilities", CapabilityGrant::pack_decode.await).await?,
+     |                                                                                                               ++++++
+
+error[E0271]: expected `pack_decode` to return `Result<_, PackError>`, but it returns `impl Future<Output = Result<CapabilityGrant, PackError>>`
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1291:27
+     |
+1291 |             capabilities: pack::read_vec(bytes, pos, "ActorRecord::capabilities", CapabilityGrant::pack_decode).await?,
+     |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Result<_, PackError>`, found future
+     |
+note: calling an async function returns a future
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1291:27
+     |
+1291 |             capabilities: pack::read_vec(bytes, pos, "ActorRecord::capabilities", CapabilityGrant::pack_decode).await?,
+     |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+note: required by a bound in `read_vec`
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:178:121
+     |
+ 178 | ...: impl FnMut(&[u8], &mut usize) -> Result<T, PackError>) -> Result<Vec<T>, PackError> {
+     |                                       ^^^^^^^^^^^^^^^^^^^^ required by this bound in `read_vec`
+help: consider `await`ing on the `Future`
+     |
+1291 |             capabilities: pack::read_vec(bytes, pos, "ActorRecord::capabilities", CapabilityGrant::pack_decode).await.await?,
+     |                                                                                                                ++++++
+
+error[E0271]: expected `pack_decode` to return `Result<_, PackError>`, but it returns `impl Future<Output = Result<CapabilityGrant, PackError>>`
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1291:113
+     |
+1291 |             capabilities: pack::read_vec(bytes, pos, "ActorRecord::capabilities", CapabilityGrant::pack_decode).await?,
+     |                                                                                                                 ^^^^^ expected `Result<_, PackError>`, found future
+     |
+note: calling an async function returns a future
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1291:113
+     |
+1291 |             capabilities: pack::read_vec(bytes, pos, "ActorRecord::capabilities", CapabilityGrant::pack_decode).await?,
+     |                                                                                                                 ^^^^^
+note: required by a bound in `read_vec`
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:178:121
+     |
+ 178 | ...: impl FnMut(&[u8], &mut usize) -> Result<T, PackError>) -> Result<Vec<T>, PackError> {
+     |                                       ^^^^^^^^^^^^^^^^^^^^ required by this bound in `read_vec`
+help: consider `await`ing on the `Future`
+     |
+1291 |             capabilities: pack::read_vec(bytes, pos, "ActorRecord::capabilities", CapabilityGrant::pack_decode).await.await?,
+     |                                                                                                                      ++++++
+
+error[E0716]: temporary value dropped while borrowed
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1400:40
+     |
+1400 |         let shard = self.least_loaded(&BTreeSet::new());
+     |                                        ^^^^^^^^^^^^^^^ - temporary value is freed at the end of this statement
+     |                                        |
+     |                                        creates a temporary value which is freed while still in use
+1401 |         self.assignment.insert(actor, shard.await);
+     |                                       ----- borrow later used here
+     |
+     = note: consider using a `let` binding to create a longer lived value
+
+error[E0502]: cannot borrow `self.assignment` as mutable because it is also borrowed as immutable
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1401:9
+     |
+1400 |         let shard = self.least_loaded(&BTreeSet::new());
+     |                     ---- immutable borrow occurs here
+1401 |         self.assignment.insert(actor, shard.await);
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ mutable borrow occurs here
+1402 |         shard.await
+     |         ----- immutable borrow later used here
+
+error[E0382]: use of moved value: `shard`
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1402:9
+     |
+1400 |         let shard = self.least_loaded(&BTreeSet::new());
+     |             ----- move occurs because `shard` has type `impl Future<Output = ShardId>`, which does not implement the `Copy` trait
+1401 |         self.assignment.insert(actor, shard.await);
+     |                                             ----- `shard` moved due to this await
+1402 |         shard.await
+     |         ^^^^^ value used here after move
+     |
+note: `into_future` takes ownership of the receiver `self`, which moves `shard`
+    --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/future/into_future.rs:134:20
+     |
+ 134 |     fn into_future(self) -> Self::IntoFuture;
+     |                    ^^^^
+
+error[E0502]: cannot borrow `self.assignment` as mutable because it is also borrowed as immutable
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1443:9
+     |
+1442 |         let shard = self.least_loaded(avoid);
+     |                     ---- immutable borrow occurs here
+1443 |         self.assignment.insert(actor, shard.await);
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ mutable borrow occurs here
+1444 |         shard.await
+     |         ----- immutable borrow later used here
+
+error[E0382]: use of moved value: `shard`
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1444:9
+     |
+1442 |         let shard = self.least_loaded(avoid);
+     |             ----- move occurs because `shard` has type `impl Future<Output = ShardId>`, which does not implement the `Copy` trait
+1443 |         self.assignment.insert(actor, shard.await);
+     |                                             ----- `shard` moved due to this await
+1444 |         shard.await
+     |         ^^^^^ value used here after move
+     |
+note: `into_future` takes ownership of the receiver `self`, which moves `shard`
+    --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/future/into_future.rs:134:20
+     |
+ 134 |     fn into_future(self) -> Self::IntoFuture;
+     |                    ^^^^
+
+error[E0277]: the `?` operator can only be applied to values that implement `Try`
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1495:96
+     |
+1495 | ...k((ActorId::pack_decode(b, p)?, ShardId::pack_decode(b, p)?))).await?;
+     |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^ the `?` operator cannot be applied to type `impl Future<Output = Result<ActorId, PackError>>`
+     |
+     = help: the nightly-only, unstable trait `Try` is not implemented for `impl Future<Output = Result<ActorId, PackError>>`
+note: this implements `Future` and its output type supports `?`, but the future cannot be awaited in a synchronous function
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1495:122
+     |
+1495 | ...   let assignment_pairs = pack::read_vec(bytes, pos, "ShardTable::assignment", |b, p| Ok((ActorId::pack_decode(b, p)?, ShardId:...
+     |                                                                                   ------ this is not `async`           ^
+
+error[E0277]: the `?` operator can only be applied to values that implement `Try`
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1495:125
+     |
+1495 | ...?, ShardId::pack_decode(b, p)?))).await?;
+     |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^ the `?` operator cannot be applied to type `impl Future<Output = Result<ShardId, PackError>>`
+     |
+     = help: the nightly-only, unstable trait `Try` is not implemented for `impl Future<Output = Result<ShardId, PackError>>`
+note: this implements `Future` and its output type supports `?`, but the future cannot be awaited in a synchronous function
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1495:151
+     |
+1495 | ...os, "ShardTable::assignment", |b, p| Ok((ActorId::pack_decode(b, p)?, ShardId::pack_decode(b, p)?))).await?;
+     |                                  ------ this is not `async`                                        ^
+
+error[E0277]: the `?` operator can only be applied to values that implement `Try`
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1496:97
+     |
+1496 | ...k((ShardId::pack_decode(b, p)?, ActorId::pack_decode(b, p)?))).await?;
+     |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^ the `?` operator cannot be applied to type `impl Future<Output = Result<ShardId, PackError>>`
+     |
+     = help: the nightly-only, unstable trait `Try` is not implemented for `impl Future<Output = Result<ShardId, PackError>>`
+note: this implements `Future` and its output type supports `?`, but the future cannot be awaited in a synchronous function
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1496:123
+     |
+1496 | ...   let lease_pairs = pack::read_vec(bytes, pos, "ShardTable::exclusive_leases", |b, p| Ok((ShardId::pack_decode(b, p)?, ActorId...
+     |                                                                                    ------ this is not `async`           ^
+
+error[E0277]: the `?` operator can only be applied to values that implement `Try`
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1496:126
+     |
+1496 | ...?, ActorId::pack_decode(b, p)?))).await?;
+     |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^ the `?` operator cannot be applied to type `impl Future<Output = Result<ActorId, PackError>>`
+     |
+     = help: the nightly-only, unstable trait `Try` is not implemented for `impl Future<Output = Result<ActorId, PackError>>`
+note: this implements `Future` and its output type supports `?`, but the future cannot be awaited in a synchronous function
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1496:152
+     |
+1496 | ...hardTable::exclusive_leases", |b, p| Ok((ShardId::pack_decode(b, p)?, ActorId::pack_decode(b, p)?))).await?;
+     |                                  ------ this is not `async`                                        ^
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1528:48
+     |
+1528 |         pack::write_vec(out, &self.run, |o, g| g.pack_encode(o));
+     |                                                ^^^^^^^^^^^^^^^^ expected `()`, found future
+     |
+help: consider using a semicolon here
+     |
+1528 |         pack::write_vec(out, &self.run, |o, g| { g.pack_encode(o); });
+     |                                                +                 +++
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1529:52
+     |
+1529 |         pack::write_opt(out, &self.wake_at, |o, v| pack::write_u64(o, *v));
+     |                                                    ^^^^^^^^^^^^^^^^^^^^^^ expected `()`, found future
+     |
+help: consider using a semicolon here
+     |
+1529 |         pack::write_opt(out, &self.wake_at, |o, v| { pack::write_u64(o, *v); });
+     |                                                    +                       +++
+
+error[E0271]: expected `pack_decode` to return `Result<_, PackError>`, but it returns `impl Future<Output = Result<TurnGrant, PackError>>`
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1532:68
+     |
+1532 | ...{ run: pack::read_vec(bytes, pos, "Decision::run", TurnGrant::pack_decode).await?, wake_at: pack::read_opt(bytes, pos, "Decisio...
+     |           --------------                              ^^^^^^^^^^^^^^^^^^^^^^ expected `Result<_, PackError>`, found future
+     |           |
+     |           required by a bound introduced by this call
+     |
+note: calling an async function returns a future
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1532:68
+     |
+1532 | ...   Ok(Self { run: pack::read_vec(bytes, pos, "Decision::run", TurnGrant::pack_decode).await?, wake_at: pack::read_opt(bytes, po...
+     |                                                                  ^^^^^^^^^^^^^^^^^^^^^^
+note: required by a bound in `read_vec`
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:178:121
+     |
+ 178 | ...: impl FnMut(&[u8], &mut usize) -> Result<T, PackError>) -> Result<Vec<T>, PackError> {
+     |                                       ^^^^^^^^^^^^^^^^^^^^ required by this bound in `read_vec`
+help: consider `await`ing on the `Future`
+     |
+1532 |         Ok(Self { run: pack::read_vec(bytes, pos, "Decision::run", TurnGrant::pack_decode.await).await?, wake_at: pack::read_opt(bytes, pos, "Decision::wake_at", |b, p| pack::read_u64(b, p, "wake_at")).await? })
+     |                                                                                          ++++++
+
+error[E0271]: expected `pack_decode` to return `Result<_, PackError>`, but it returns `impl Future<Output = Result<TurnGrant, PackError>>`
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1532:24
+     |
+1532 | ...{ run: pack::read_vec(bytes, pos, "Decision::run", TurnGrant::pack_decode).await?, wake_at: pack::read_opt(bytes, pos, "Decisio...
+     |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Result<_, PackError>`, found future
+     |
+note: calling an async function returns a future
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1532:24
+     |
+1532 | ...   Ok(Self { run: pack::read_vec(bytes, pos, "Decision::run", TurnGrant::pack_decode).await?, wake_at: pack::read_opt(bytes, po...
+     |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+note: required by a bound in `read_vec`
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:178:121
+     |
+ 178 | ...: impl FnMut(&[u8], &mut usize) -> Result<T, PackError>) -> Result<Vec<T>, PackError> {
+     |                                       ^^^^^^^^^^^^^^^^^^^^ required by this bound in `read_vec`
+help: consider `await`ing on the `Future`
+     |
+1532 |         Ok(Self { run: pack::read_vec(bytes, pos, "Decision::run", TurnGrant::pack_decode).await.await?, wake_at: pack::read_opt(bytes, pos, "Decision::wake_at", |b, p| pack::read_u64(b, p, "wake_at")).await? })
+     |                                                                                           ++++++
+
+error[E0271]: expected `pack_decode` to return `Result<_, PackError>`, but it returns `impl Future<Output = Result<TurnGrant, PackError>>`
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1532:92
+     |
+1532 | ...cision::run", TurnGrant::pack_decode).await?, wake_at: pack::read_opt(bytes, pos, "Decision::wake_at", |b, p| pack::read_u64(b,...
+     |                                          ^^^^^ expected `Result<_, PackError>`, found future
+     |
+note: calling an async function returns a future
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1532:92
+     |
+1532 | ...   Ok(Self { run: pack::read_vec(bytes, pos, "Decision::run", TurnGrant::pack_decode).await?, wake_at: pack::read_opt(bytes, po...
+     |                                                                                          ^^^^^
+note: required by a bound in `read_vec`
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:178:121
+     |
+ 178 | ...: impl FnMut(&[u8], &mut usize) -> Result<T, PackError>) -> Result<Vec<T>, PackError> {
+     |                                       ^^^^^^^^^^^^^^^^^^^^ required by this bound in `read_vec`
+help: consider `await`ing on the `Future`
+     |
+1532 |         Ok(Self { run: pack::read_vec(bytes, pos, "Decision::run", TurnGrant::pack_decode).await.await?, wake_at: pack::read_opt(bytes, pos, "Decision::wake_at", |b, p| pack::read_u64(b, p, "wake_at")).await? })
+     |                                                                                                 ++++++
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1532:164
+     |
+1532 | ...cision::wake_at", |b, p| pack::read_u64(b, p, "wake_at")).await? })
+     |                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Result<_, PackError>`, found future
+     |
+help: try wrapping the expression in `Ok`
+     |
+1532 |         Ok(Self { run: pack::read_vec(bytes, pos, "Decision::run", TurnGrant::pack_decode).await?, wake_at: pack::read_opt(bytes, pos, "Decision::wake_at", |b, p| Ok(pack::read_u64(b, p, "wake_at"))).await? })
+     |                                                                                                                                                                    +++                               +
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1552:54
+     |
+1552 |         pack::write_vec(out, &self.envelopes, |o, e| e.pack_encode(o));
+     |                                                      ^^^^^^^^^^^^^^^^ expected `()`, found future
+     |
+help: consider using a semicolon here
+     |
+1552 |         pack::write_vec(out, &self.envelopes, |o, e| { e.pack_encode(o); });
+     |                                                      +                 +++
+
+error[E0271]: expected `pack_decode` to return `Result<_, PackError>`, but it returns `impl Future<Output = Result<Envelope, PackError>>`
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1555:225
+     |
+1555 | ...es: pack::read_vec(bytes, pos, "TurnGrant::envelopes", Envelope::pack_decode).await? })
+     |        --------------                                     ^^^^^^^^^^^^^^^^^^^^^ expected `Result<_, PackError>`, found future
+     |        |
+     |        required by a bound introduced by this call
+     |
+note: calling an async function returns a future
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1555:225
+     |
+1555 | ...: pack::read_vec(bytes, pos, "TurnGrant::envelopes", Envelope::pack_decode).await? })
+     |                                                         ^^^^^^^^^^^^^^^^^^^^^
+note: required by a bound in `read_vec`
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:178:121
+     |
+ 178 | ...: impl FnMut(&[u8], &mut usize) -> Result<T, PackError>) -> Result<Vec<T>, PackError> {
+     |                                       ^^^^^^^^^^^^^^^^^^^^ required by this bound in `read_vec`
+help: consider `await`ing on the `Future`
+     |
+1555 |         Ok(Self { actor: ActorId::pack_decode(bytes, pos).await?, shard: ShardId::pack_decode(bytes, pos).await?, budget: Budget::pack_decode(bytes, pos).await?, envelopes: pack::read_vec(bytes, pos, "TurnGrant::envelopes", Envelope::pack_decode.await).await? })
+     |                                                                                                                                                                                                                                                      ++++++
+
+error[E0271]: expected `pack_decode` to return `Result<_, PackError>`, but it returns `impl Future<Output = Result<Envelope, PackError>>`
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1555:174
+     |
+1555 | ...es: pack::read_vec(bytes, pos, "TurnGrant::envelopes", Envelope::pack_decode).await? })
+     |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Result<_, PackError>`, found future
+     |
+note: calling an async function returns a future
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1555:174
+     |
+1555 | ...s, pos).await?, envelopes: pack::read_vec(bytes, pos, "TurnGrant::envelopes", Envelope::pack_decode).await? })
+     |                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+note: required by a bound in `read_vec`
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:178:121
+     |
+ 178 | ...: impl FnMut(&[u8], &mut usize) -> Result<T, PackError>) -> Result<Vec<T>, PackError> {
+     |                                       ^^^^^^^^^^^^^^^^^^^^ required by this bound in `read_vec`
+help: consider `await`ing on the `Future`
+     |
+1555 |         Ok(Self { actor: ActorId::pack_decode(bytes, pos).await?, shard: ShardId::pack_decode(bytes, pos).await?, budget: Budget::pack_decode(bytes, pos).await?, envelopes: pack::read_vec(bytes, pos, "TurnGrant::envelopes", Envelope::pack_decode).await.await? })
+     |                                                                                                                                                                                                                                                       ++++++
+
+error[E0271]: expected `pack_decode` to return `Result<_, PackError>`, but it returns `impl Future<Output = Result<Envelope, PackError>>`
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1555:248
+     |
+1555 | ...t::envelopes", Envelope::pack_decode).await? })
+     |                                          ^^^^^ expected `Result<_, PackError>`, found future
+     |
+note: calling an async function returns a future
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1555:248
+     |
+1555 | ...c(bytes, pos, "TurnGrant::envelopes", Envelope::pack_decode).await? })
+     |                                                                 ^^^^^
+note: required by a bound in `read_vec`
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:178:121
+     |
+ 178 | ...: impl FnMut(&[u8], &mut usize) -> Result<T, PackError>) -> Result<Vec<T>, PackError> {
+     |                                       ^^^^^^^^^^^^^^^^^^^^ required by this bound in `read_vec`
+help: consider `await`ing on the `Future`
+     |
+1555 |         Ok(Self { actor: ActorId::pack_decode(bytes, pos).await?, shard: ShardId::pack_decode(bytes, pos).await?, budget: Budget::pack_decode(bytes, pos).await?, envelopes: pack::read_vec(bytes, pos, "TurnGrant::envelopes", Envelope::pack_decode).await.await? })
+     |                                                                                                                                                                                                                                                             ++++++
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1609:9
+     |
+1609 |         self.actors.get(&actor).map(|e| e.mailbox.pressure())
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Option<f32>`, found `Option<impl Future<Output = f32>>`
+     |
+     = note: expected enum `std::option::Option<f32>`
+                found enum `std::option::Option<impl Future<Output = f32>>`
+
+error[E0605]: non-primitive cast: `impl Future<Output = u32>` as `f32`
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1627:10
+     |
+1627 |         ((entry.lane.weight() as f32) * entry.throttle.max(0.05)).round().max(1.0) as i64
+     |          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ an `as` expression can only be used to convert between primitive types or to coerce to a specific trait object
+
+error[E0600]: cannot apply unary operator `!` to type `impl Future<Output = bool>`
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1642:42
+     |
+1642 |             .filter(|(_, e)| e.active && !e.mailbox.is_empty())
+     |                                          ^^^^^^^^^^^^^^^^^^^^^ cannot apply unary operator `!`
+
+error[E0600]: cannot apply unary operator `!` to type `impl Future<Output = bool>`
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1668:163
+     |
+1668 | ... !granted_this_tick.contains(*id) && !e.mailbox.is_empty()).map(|(id, _)| *id).collect();
+     |                                         ^^^^^^^^^^^^^^^^^^^^^ cannot apply unary operator `!`
+
+error[E0277]: the trait bound `impl Future<Output = i64>: Ord` is not satisfied
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1675:117
+     |
+1675 | ...d)).map(Self::actor_weight).max().unwrap_or(1);
+     |                                ^^^ the trait `Ord` is not implemented for `impl Future<Output = i64>`
+     |
+note: the method call chain might not have had the expected associated types
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1675:93
+     |
+1668 | ...torId> = self.actors.iter().filter(|(id, e)| e.package == package && e.active && !granted_this_tick.contains(*id) && !e.mailbox.is_empty()).map(|(id, _)| *id).co...
+     |             ----------- ------ --------------------------------------------------------------------------------------------------------------- ------------------ `Iterator::Item` changed to `ActorId` here
+     |             |           |      |
+     |             |           |      `Iterator::Item` remains `(&ActorId, &ScheduledActor)` here
+     |             |           `Iterator::Item` is `(&ActorId, &ScheduledActor)` here
+     |             this expression has type `BTreeMap<ActorId, ScheduledActor>`
+...
+1675 | ...ds.iter().filter_map(|id| self.actors.get(id)).map(Self::actor_weight).max().unwrap_or(1);
+     |       ------ ------------------------------------ ^^^^^^^^^^^^^^^^^^^^^^^ `Iterator::Item` changed to `impl Future<Output = i64>` here
+     |       |      |
+     |       |      `Iterator::Item` changed to `&ScheduledActor` here
+     |       `Iterator::Item` is `&ActorId` here
+note: required by a bound in `std::iter::Iterator::max`
+    --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/iter/traits/iterator.rs:3253:21
+     |
+3250 |     fn max(self) -> Option<Self::Item>
+     |        --- required by a bound in this associated function
+...
+3253 |         Self::Item: Ord,
+     |                     ^^^ required by this bound in `Iterator::max`
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1675:133
+     |
+1675 | ...get(id)).map(Self::actor_weight).max().unwrap_or(1);
+     |                                           --------- ^ expected future, found integer
+     |                                           |
+     |                                           arguments to this method are incorrect
+     |
+     = note: expected opaque type `impl Future<Output = i64>`
+                       found type `{integer}`
+help: the return type of this call is `{integer}` due to the type of the argument passed
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1675:31
+     |
+1675 | ...uantum = pending_actor_ids.iter().filter_map(|id| self.actors.get(id)).map(Self::actor_weight).max().unwrap_or(1);
+     |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^-^
+     |                                                                                                                   |
+     |                                                                                                                   this argument influences the return type of `unwrap_or`
+note: method defined here
+    --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/option.rs:1036:18
+     |
+1036 |     pub const fn unwrap_or(self, default: T) -> T
+     |                  ^^^^^^^^^
+
+error[E0277]: cannot add-assign `impl Future<Output = i64>` to `i64`
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1677:25
+     |
+1677 |                 deficit += quantum;
+     |                         ^^ no implementation for `i64 += impl Future<Output = i64>`
+     |
+     = help: the trait `AddAssign<impl Future<Output = i64>>` is not implemented for `i64`
+help: `i64` implements trait `AddAssign<Rhs>`
+    --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/ops/arith.rs:786:9
+     |
+ 786 |         const impl AddAssign for $t {
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ `AddAssign`
+...
+ 799 | add_assign_impl! { usize u8 u16 u32 u64 u128 isize i8 i16 i32 i64 i128 f16 f32 f64 f128 }
+     | ----------------------------------------------------------------------------------------- in this macro invocation
+     |
+    ::: /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/internal_macros.rs:61:9
+     |
+  61 |         const impl $imp<&$u> for $t {
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ `AddAssign<&i64>`
+     = note: this error originates in the macro `add_assign_impl` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0600]: cannot apply unary operator `!` to type `impl Future<Output = bool>`
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1679:164
+     |
+1679 | ... !granted_this_tick.contains(*id) && !e.mailbox.is_empty()).map(|(id, _)| *id).collect();
+     |                                         ^^^^^^^^^^^^^^^^^^^^^ cannot apply unary operator `!`
+
+error[E0271]: expected `actor_weight` to return `{integer}`, but it returns `impl Future<Output = i64>`
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1682:71
+     |
+1682 |                     let weight = self.actors.get(&actor_id).map_or(1, Self::actor_weight);
+     |                                                             ------    ^^^^^^^^^^^^^^^^^^ expected integer, found future
+     |                                                             |
+     |                                                             required by a bound introduced by this call
+     |
+note: calling an async function returns a future
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1682:71
+     |
+1682 |                     let weight = self.actors.get(&actor_id).map_or(1, Self::actor_weight);
+     |                                                                       ^^^^^^^^^^^^^^^^^^
+note: required by a bound in `std::option::Option::<T>::map_or`
+    --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/option.rs:1224:33
+     |
+1222 |     pub const fn map_or<U, F>(self, default: U, f: F) -> U
+     |                  ------ required by a bound in this associated function
+1223 |     where
+1224 |         F: [const] FnOnce(T) -> U + [const] Destruct,
+     |                                 ^ required by this bound in `Option::<T>::map_or`
+help: consider `await`ing on the `Future`
+     |
+1682 |                     let weight = self.actors.get(&actor_id).map_or(1, Self::actor_weight.await);
+     |                                                                                         ++++++
+
+error[E0600]: cannot apply unary operator `!` to type `impl Future<Output = bool>`
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1699:67
+     |
+1699 | ...   let wake_at = self.actors.values().filter(|e| e.active && !e.mailbox.is_empty()).filter_map(|e| e.mailbox.earliest_deadline(...
+     |                                                                 ^^^^^^^^^^^^^^^^^^^^^ cannot apply unary operator `!`
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1699:105
+     |
+1699 | ...box.is_empty()).filter_map(|e| e.mailbox.earliest_deadline()).min();
+     |                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Option<_>`, found future
+     |
+help: try wrapping the expression in `Some`
+     |
+1699 |         let wake_at = self.actors.values().filter(|e| e.active && !e.mailbox.is_empty()).filter_map(|e| Some(e.mailbox.earliest_deadline())).min();
+     |                                                                                                         +++++                             +
+
+error[E0271]: expected `actor_weight` to return `{integer}`, but it returns `impl Future<Output = i64>`
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1711:57
+     |
+1711 |             let weight = self.actors.get(&id).map_or(1, Self::actor_weight);
+     |                                               ------    ^^^^^^^^^^^^^^^^^^ expected integer, found future
+     |                                               |
+     |                                               required by a bound introduced by this call
+     |
+note: calling an async function returns a future
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1711:57
+     |
+1711 |             let weight = self.actors.get(&id).map_or(1, Self::actor_weight);
+     |                                                         ^^^^^^^^^^^^^^^^^^
+note: required by a bound in `std::option::Option::<T>::map_or`
+    --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/option.rs:1224:33
+     |
+1222 |     pub const fn map_or<U, F>(self, default: U, f: F) -> U
+     |                  ------ required by a bound in this associated function
+1223 |     where
+1224 |         F: [const] FnOnce(T) -> U + [const] Destruct,
+     |                                 ^ required by this bound in `Option::<T>::map_or`
+help: consider `await`ing on the `Future`
+     |
+1711 |             let weight = self.actors.get(&id).map_or(1, Self::actor_weight.await);
+     |                                                                           ++++++
+
+error[E0277]: cannot subtract-assign `impl Future<Output = i64>` from `i64`
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1730:23
+     |
+1730 |         entry.deficit -= Self::actor_weight(entry);
+     |                       ^^ no implementation for `i64 -= impl Future<Output = i64>`
+     |
+     = help: the trait `SubAssign<impl Future<Output = i64>>` is not implemented for `i64`
+help: `i64` implements trait `SubAssign<Rhs>`
+    --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/ops/arith.rs:857:9
+     |
+ 857 |         const impl SubAssign for $t {
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ `SubAssign`
+...
+ 870 | sub_assign_impl! { usize u8 u16 u32 u64 u128 isize i8 i16 i32 i64 i128 f16 f32 f64 f128 }
+     | ----------------------------------------------------------------------------------------- in this macro invocation
+     |
+    ::: /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/internal_macros.rs:61:9
+     |
+  61 |         const impl $imp<&$u> for $t {
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ `SubAssign<&i64>`
+     = note: this error originates in the macro `sub_assign_impl` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0605]: non-primitive cast: `impl Future<Output = u32>` as `u64`
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1917:9
+     |
+1917 |         (self.wall_us_p95() as u64) * 100 >= budget_us * SATURATION_THRESHOLD_PERCENT
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ an `as` expression can only be used to convert between primitive types or to coerce to a specific trait object
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:2072:51
+     |
+2072 |         pack::write_vec(out, &self.actors, |o, a| a.pack_encode(o));
+     |                                                   ^^^^^^^^^^^^^^^^ expected `()`, found future
+     |
+help: consider using a semicolon here
+     |
+2072 |         pack::write_vec(out, &self.actors, |o, a| { a.pack_encode(o); });
+     |                                                   +                 +++
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:2073:51
+     |
+2073 |         pack::write_vec(out, &self.shards, |o, s| s.pack_encode(o));
+     |                                                   ^^^^^^^^^^^^^^^^ expected `()`, found future
+     |
+help: consider using a semicolon here
+     |
+2073 |         pack::write_vec(out, &self.shards, |o, s| { s.pack_encode(o); });
+     |                                                   +                 +++
+
+error[E0271]: expected `pack_decode` to return `Result<_, PackError>`, but it returns `impl Future<Output = Result<ActorMetricsSample, PackError>>`
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:2079:82
+     |
+2079 |             actors: pack::read_vec(bytes, pos, "RuntimeMetricsSnapshot::actors", ActorMetricsSample::pack_decode).await?,
+     |                     -------------- required by a bound introduced by this call   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Result<_, PackError>`, found future
+     |
+note: calling an async function returns a future
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:2079:82
+     |
+2079 |             actors: pack::read_vec(bytes, pos, "RuntimeMetricsSnapshot::actors", ActorMetricsSample::pack_decode).await?,
+     |                                                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+note: required by a bound in `read_vec`
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:178:121
+     |
+ 178 | ...: impl FnMut(&[u8], &mut usize) -> Result<T, PackError>) -> Result<Vec<T>, PackError> {
+     |                                       ^^^^^^^^^^^^^^^^^^^^ required by this bound in `read_vec`
+help: consider `await`ing on the `Future`
+     |
+2079 |             actors: pack::read_vec(bytes, pos, "RuntimeMetricsSnapshot::actors", ActorMetricsSample::pack_decode.await).await?,
+     |                                                                                                                 ++++++
+
+error[E0271]: expected `pack_decode` to return `Result<_, PackError>`, but it returns `impl Future<Output = Result<ActorMetricsSample, PackError>>`
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:2079:21
+     |
+2079 |             actors: pack::read_vec(bytes, pos, "RuntimeMetricsSnapshot::actors", ActorMetricsSample::pack_decode).await?,
+     |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Result<_, PackError>`, found future
+     |
+note: calling an async function returns a future
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:2079:21
+     |
+2079 |             actors: pack::read_vec(bytes, pos, "RuntimeMetricsSnapshot::actors", ActorMetricsSample::pack_decode).await?,
+     |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+note: required by a bound in `read_vec`
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:178:121
+     |
+ 178 | ...: impl FnMut(&[u8], &mut usize) -> Result<T, PackError>) -> Result<Vec<T>, PackError> {
+     |                                       ^^^^^^^^^^^^^^^^^^^^ required by this bound in `read_vec`
+help: consider `await`ing on the `Future`
+     |
+2079 |             actors: pack::read_vec(bytes, pos, "RuntimeMetricsSnapshot::actors", ActorMetricsSample::pack_decode).await.await?,
+     |                                                                                                                  ++++++
+
+error[E0271]: expected `pack_decode` to return `Result<_, PackError>`, but it returns `impl Future<Output = Result<ActorMetricsSample, PackError>>`
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:2079:115
+     |
+2079 |             actors: pack::read_vec(bytes, pos, "RuntimeMetricsSnapshot::actors", ActorMetricsSample::pack_decode).await?,
+     |                                                                                                                   ^^^^^ expected `Result<_, PackError>`, found future
+     |
+note: calling an async function returns a future
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:2079:115
+     |
+2079 |             actors: pack::read_vec(bytes, pos, "RuntimeMetricsSnapshot::actors", ActorMetricsSample::pack_decode).await?,
+     |                                                                                                                   ^^^^^
+note: required by a bound in `read_vec`
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:178:121
+     |
+ 178 | ...: impl FnMut(&[u8], &mut usize) -> Result<T, PackError>) -> Result<Vec<T>, PackError> {
+     |                                       ^^^^^^^^^^^^^^^^^^^^ required by this bound in `read_vec`
+help: consider `await`ing on the `Future`
+     |
+2079 |             actors: pack::read_vec(bytes, pos, "RuntimeMetricsSnapshot::actors", ActorMetricsSample::pack_decode).await.await?,
+     |                                                                                                                        ++++++
+
+error[E0271]: expected `pack_decode` to return `Result<_, PackError>`, but it returns `impl Future<Output = Result<ShardMetricsSample, PackError>>`
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:2080:82
+     |
+2080 |             shards: pack::read_vec(bytes, pos, "RuntimeMetricsSnapshot::shards", ShardMetricsSample::pack_decode).await?,
+     |                     -------------- required by a bound introduced by this call   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Result<_, PackError>`, found future
+     |
+note: calling an async function returns a future
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:2080:82
+     |
+2080 |             shards: pack::read_vec(bytes, pos, "RuntimeMetricsSnapshot::shards", ShardMetricsSample::pack_decode).await?,
+     |                                                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+note: required by a bound in `read_vec`
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:178:121
+     |
+ 178 | ...: impl FnMut(&[u8], &mut usize) -> Result<T, PackError>) -> Result<Vec<T>, PackError> {
+     |                                       ^^^^^^^^^^^^^^^^^^^^ required by this bound in `read_vec`
+help: consider `await`ing on the `Future`
+     |
+2080 |             shards: pack::read_vec(bytes, pos, "RuntimeMetricsSnapshot::shards", ShardMetricsSample::pack_decode.await).await?,
+     |                                                                                                                 ++++++
+
+error[E0271]: expected `pack_decode` to return `Result<_, PackError>`, but it returns `impl Future<Output = Result<ShardMetricsSample, PackError>>`
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:2080:21
+     |
+2080 |             shards: pack::read_vec(bytes, pos, "RuntimeMetricsSnapshot::shards", ShardMetricsSample::pack_decode).await?,
+     |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Result<_, PackError>`, found future
+     |
+note: calling an async function returns a future
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:2080:21
+     |
+2080 |             shards: pack::read_vec(bytes, pos, "RuntimeMetricsSnapshot::shards", ShardMetricsSample::pack_decode).await?,
+     |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+note: required by a bound in `read_vec`
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:178:121
+     |
+ 178 | ...: impl FnMut(&[u8], &mut usize) -> Result<T, PackError>) -> Result<Vec<T>, PackError> {
+     |                                       ^^^^^^^^^^^^^^^^^^^^ required by this bound in `read_vec`
+help: consider `await`ing on the `Future`
+     |
+2080 |             shards: pack::read_vec(bytes, pos, "RuntimeMetricsSnapshot::shards", ShardMetricsSample::pack_decode).await.await?,
+     |                                                                                                                  ++++++
+
+error[E0271]: expected `pack_decode` to return `Result<_, PackError>`, but it returns `impl Future<Output = Result<ShardMetricsSample, PackError>>`
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:2080:115
+     |
+2080 |             shards: pack::read_vec(bytes, pos, "RuntimeMetricsSnapshot::shards", ShardMetricsSample::pack_decode).await?,
+     |                                                                                                                   ^^^^^ expected `Result<_, PackError>`, found future
+     |
+note: calling an async function returns a future
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:2080:115
+     |
+2080 |             shards: pack::read_vec(bytes, pos, "RuntimeMetricsSnapshot::shards", ShardMetricsSample::pack_decode).await?,
+     |                                                                                                                   ^^^^^
+note: required by a bound in `read_vec`
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:178:121
+     |
+ 178 | ...: impl FnMut(&[u8], &mut usize) -> Result<T, PackError>) -> Result<Vec<T>, PackError> {
+     |                                       ^^^^^^^^^^^^^^^^^^^^ required by this bound in `read_vec`
+help: consider `await`ing on the `Future`
+     |
+2080 |             shards: pack::read_vec(bytes, pos, "RuntimeMetricsSnapshot::shards", ShardMetricsSample::pack_decode).await.await?,
+     |                                                                                                                        ++++++
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:2265:48
+     |
+2265 |             self.shards.pin_avoiding(id.await, &avoid).await
+     |                         ------------           ^^^^^^ expected `&BTreeSet<ShardId>`, found `&impl Future<Output = BTreeSet<ShardId>>`
+     |                         |
+     |                         arguments to this method are incorrect
+     |
+     = note: expected reference `&BTreeSet<ShardId>`
+                found reference `&impl Future<Output = BTreeSet<ShardId>>`
+note: method defined here
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1438:18
+     |
+1438 |     pub async fn pin_avoiding(&mut self, actor: ActorId, avoid: &BTreeSet<ShardId>) -> ShardId {
+     |                  ^^^^^^^^^^^^                            -------------------------
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:2280:47
+     |
+2280 | ...   self.actors.iter().filter(|(_, meta)| meta.metrics.is_saturating(&meta.budget)).filter_map(|(id, _)| self.shards.shard_of(*i...
+     |                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `bool`, found future
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:2280:110
+     |
+2280 | ...ta.budget)).filter_map(|(id, _)| self.shards.shard_of(*id)).collect()
+     |                                     ^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Option<_>`, found future
+     |
+help: try wrapping the expression in `Some`
+     |
+2280 |         self.actors.iter().filter(|(_, meta)| meta.metrics.is_saturating(&meta.budget)).filter_map(|(id, _)| Some(self.shards.shard_of(*id))).collect()
+     |                                                                                                              +++++                         +
+
+error[E0502]: cannot borrow `self.scheduler` as immutable because it is also borrowed as mutable
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:2291:37
+     |
+2284 |         let backpressure = self.scheduler.submit(envelope.clone());
+     |                            -------------- mutable borrow occurs here
+...
+2291 |             if let Some(pressure) = self.scheduler.mailbox_pressure(envelope.to).await {
+     |                                     ^^^^^^^^^^^^^^ immutable borrow occurs here
+...
+2295 |         backpressure.await
+     |         ------------ mutable borrow later used here
+
+error[E0382]: use of moved value: `backpressure`
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:2295:9
+     |
+2284 |         let backpressure = self.scheduler.submit(envelope.clone());
+     |             ------------ move occurs because `backpressure` has type `impl Future<Output = Backpressure>`, which does not implement the `Copy` trait
+2285 |         if let Some(meta) = self.actors.get_mut(&envelope.to) {
+2286 |             match backpressure.await {
+     |                                ----- `backpressure` moved due to this await
+...
+2295 |         backpressure.await
+     |         ^^^^^^^^^^^^ value used here after move
+     |
+note: `into_future` takes ownership of the receiver `self`, which moves `backpressure`
+    --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/future/into_future.rs:134:20
+     |
+ 134 |     fn into_future(self) -> Self::IntoFuture;
+     |                    ^^^^
+
+error[E0277]: cannot add `impl Future<Output = u64>` to `u64`
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:2345:80
+     |
+2345 | ...   meta.failure.stage = FailureStage::Quarantined { until: now_ms + quarantine_duration_ms(meta.failure.restart_count.max(1)) };
+     |                                                                      ^ no implementation for `u64 + impl Future<Output = u64>`
+     |
+     = help: the trait `Add<impl Future<Output = u64>>` is not implemented for `u64`
+help: the following other types implement trait `Add<Rhs>`
+    --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/ops/arith.rs:98:9
+     |
+  98 |         const impl Add for $t {
+     |         ^^^^^^^^^^^^^^^^^^^^^ `u64` implements `Add`
+...
+ 113 | add_impl! { usize u8 u16 u32 u64 u128 isize i8 i16 i32 i64 i128 f16 f32 f64 f128 }
+     | ---------------------------------------------------------------------------------- in this macro invocation
+     |
+    ::: /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/internal_macros.rs:22:9
+     |
+  22 |         const impl $imp<$u> for &$t {
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ `&u64` implements `Add<u64>`
+...
+  33 |         const impl $imp<&$u> for $t {
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ `u64` implements `Add<&u64>`
+...
+  44 |         const impl $imp<&$u> for &$t {
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `&u64` implements `Add`
+     = note: this error originates in the macro `add_impl` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0277]: a value of type `HashMap<WindowId, Arc<SceneSnapshot>>` cannot be built from an iterator over elements of type `(WindowId, impl Future<Output = Arc<SceneSnapshot>>)`
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:2399:93
+     |
+2399 |         self.scenes.iter_mut().map(|(window, store)| (*window, store.commit_frame(now_ms))).collect()
+     |                                                                                             ^^^^^^^ value of type `HashMap<WindowId, Arc<SceneSnapshot>>` cannot be built from `std::iter::Iterator<Item=(WindowId, impl Future<Output = Arc<SceneSnapshot>>)>`
+     |
+help: the trait `FromIterator<(WindowId, impl Future<Output = Arc<SceneSnapshot>>)>` is not implemented for `HashMap<WindowId, Arc<SceneSnapshot>>`
+      but trait `FromIterator<(WindowId, Arc<SceneSnapshot>)>` is implemented for it
+    --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/std/src/collections/hash/map.rs:3005:1
+     |
+3005 | / impl<K, V, S> FromIterator<(K, V)> for HashMap<K, V, S>
+3006 | | where
+3007 | |     K: Eq + Hash,
+3008 | |     S: BuildHasher + Default,
+     | |_____________________________^
+     = help: for that trait implementation, expected `Arc<SceneSnapshot>`, found `impl Future<Output = Arc<SceneSnapshot>>`
+note: the method call chain might not have had the expected associated types
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:2399:32
+     |
+2399 |         self.scenes.iter_mut().map(|(window, store)| (*window, store.commit_frame(now_ms))).collect()
+     |         ----------- ---------- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `Iterator::Item` changed to `(WindowId, impl Future<Output = Arc<SceneSnapshot>>)` here
+     |         |           |
+     |         |           `Iterator::Item` is `(&WindowId, &mut SceneStore)` here
+     |         this expression has type `HashMap<WindowId, SceneStore>`
+note: required by a bound in `collect`
+    --> /Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/iter/traits/iterator.rs:2077:19
+     |
+2077 |     fn collect<B: FromIterator<Self::Item>>(self) -> B
+     |                   ^^^^^^^^^^^^^^^^^^^^^^^^ required by this bound in `Iterator::collect`
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:2403:9
+     |
+2403 |         self.scenes.get(&window).map(|s| s.current())
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Option<Arc<SceneSnapshot>>`, found `Option<impl Future<Output = Arc<...>>>`
+     |
+     = note: expected enum `std::option::Option<Arc<SceneSnapshot>>`
+                found enum `std::option::Option<impl Future<Output = Arc<SceneSnapshot>>>`
+
+error[E0605]: non-primitive cast: `impl Future<Output = u16>` as `u32`
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:2408:67
+     |
+2408 |         KernelMetrics { actors: self.actors.len() as u32, shards: self.shards.shard_count() as u32, packages: packages.len() as u32 }
+     |                                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ an `as` expression can only be used to convert between primitive types or to coerce to a specific trait object
+
+error[E0277]: `impl Future<Output = u16>` doesn't implement `std::fmt::Display`
+   --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:288:70
+    |
+288 | ...   write!(f, "ActorId(plugin={}, kind={}, ordinal={}, gen={})", self.plugin_ordinal(), self.kind_tag(), self.ordinal(), self.gen...
+    |                                 --                                 ^^^^^^^^^^^^^^^^^^^^^ `impl Future<Output = u16>` cannot be formatted with the default formatter
+    |                                 |
+    |                                 required by this formatting parameter
+    |
+    = help: the trait `std::fmt::Display` is not implemented for `impl Future<Output = u16>`
+    = note: in format strings you may be able to use `{:?}` (or {:#?} for pretty-print) instead
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1774:9
+     |
+1773 |     fn default() -> Self {
+     |                     ---- expected `SceneStore` because of return type
+1774 |         Self::new()
+     |         ^^^^^^^^^^^ expected `SceneStore`, found future
+
+error[E0277]: `impl Future<Output = u8>` doesn't implement `std::fmt::Display`
+   --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:288:93
+    |
+288 | ..."ActorId(plugin={}, kind={}, ordinal={}, gen={})", self.plugin_ordinal(), self.kind_tag(), self.ordinal(), self.generation())
+    |                             -- required by this formatting parameter         ^^^^^^^^^^^^^^^ `impl Future<Output = u8>` cannot be formatted with the default formatter
+    |
+    = help: the trait `std::fmt::Display` is not implemented for `impl Future<Output = u8>`
+    = note: in format strings you may be able to use `{:?}` (or {:#?} for pretty-print) instead
+
+error[E0277]: `impl Future<Output = u32>` doesn't implement `std::fmt::Display`
+   --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:288:110
+    |
+288 | ...n={}, kind={}, ordinal={}, gen={})", self.plugin_ordinal(), self.kind_tag(), self.ordinal(), self.generation())
+    |                           -- required by this formatting parameter              ^^^^^^^^^^^^^^ `impl Future<Output = u32>` cannot be formatted with the default formatter
+    |
+    = help: the trait `std::fmt::Display` is not implemented for `impl Future<Output = u32>`
+    = note: in format strings you may be able to use `{:?}` (or {:#?} for pretty-print) instead
+
+error[E0277]: `impl Future<Output = u16>` doesn't implement `std::fmt::Display`
+   --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:288:126
+    |
+288 | ...}, ordinal={}, gen={})", self.plugin_ordinal(), self.kind_tag(), self.ordinal(), self.generation())
+    |                       -- required by this formatting parameter                      ^^^^^^^^^^^^^^^^^ `impl Future<Output = u16>` cannot be formatted with the default formatter
+    |
+    = help: the trait `std::fmt::Display` is not implemented for `impl Future<Output = u16>`
+    = note: in format strings you may be able to use `{:?}` (or {:#?} for pretty-print) instead
+
+error[E0308]: mismatched types
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1069:9
+     |
+1068 |     fn default() -> Self {
+     |                     ---- expected `FailureState` because of return type
+1069 |         Self::new()
+     |         ^^^^^^^^^^^ expected `FailureState`, found future
+
+error[E0277]: `impl Future<Output = u32>` doesn't implement `Debug`
+    --> 🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/../../🦀️component.rs:1866:89
+     |
+1866 | ...eld("wall_us_p95", &self.wall_us_p95()).field("stage", &self.stage).finish()
+     |                       ^^^^^^^^^^^^^^^^^^^ the trait `Debug` is not implemented for `impl Future<Output = u32>`
+     |
+     = note: required for the cast from `&impl Future<Output = u32>` to `&dyn Debug`
+
+Some errors have detailed explanations: E0271, E0277, E0308, E0369, E0382, E0502, E0529, E0600, E0605...
+For more information about an error, try `rustc --explain E0271`.
+error: could not compile `semio-framework-actor` (lib) due to 97 previous errors

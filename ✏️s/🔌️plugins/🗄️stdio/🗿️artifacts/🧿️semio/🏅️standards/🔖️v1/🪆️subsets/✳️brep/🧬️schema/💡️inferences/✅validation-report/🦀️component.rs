@@ -103,7 +103,7 @@ use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::top
 
 async fn check_loop_rings(body: &Body, issues: &mut Vec<ValidationIssue>) {
     for (loop_id, lp) in body.loops.iter() {
-        let coedges = body.loop_coedges(loop_id);
+        let coedges = body.loop_coedges(loop_id).await;
         if coedges.is_empty() {
             issues.push(ValidationIssue { entity: format!("loop-{}", loop_id.raw_index()), code: "empty-loop", message: "loop has no coedges".to_string() });
             continue;
@@ -114,13 +114,13 @@ async fn check_loop_rings(body: &Body, issues: &mut Vec<ValidationIssue>) {
         }
         let n = coedges.len();
         for i in 0..n {
-            let Some((_, end_a)) = body.coedge_endpoints(coedges[i]) else { continue };
-            let Some((start_b, _)) = body.coedge_endpoints(coedges[(i + 1) % n]) else { continue };
+            let Some((_, end_a)) = body.coedge_endpoints(coedges[i]).await else { continue };
+            let Some((start_b, _)) = body.coedge_endpoints(coedges[(i + 1) % n]).await else { continue };
             if end_a != start_b {
                 issues.push(ValidationIssue { entity: format!("loop-{}", loop_id.raw_index()), code: "loop-not-closed", message: format!("coedge {i} ends at a different vertex than coedge {} starts at", (i + 1) % n) });
             }
-            let coedge_a = body.coedges.get(coedges[i]).unwrap();
-            let coedge_b = body.coedges.get(coedges[(i + 1) % n]).unwrap();
+            let coedge_a = body.coedges.get(coedges[i]).await.unwrap();
+            let coedge_b = body.coedges.get(coedges[(i + 1) % n]).await.unwrap();
             if coedge_a.next != coedges[(i + 1) % n] || coedge_b.prev != coedges[i] {
                 issues.push(ValidationIssue { entity: format!("loop-{}", loop_id.raw_index()), code: "next-prev-mismatch", message: format!("coedge {i}'s next/prev pointers are not symmetric with its ring neighbor") });
             }
@@ -133,7 +133,7 @@ async fn check_loop_rings(body: &Body, issues: &mut Vec<ValidationIssue>) {
 /// unless a caller has opted into non-manifold handling).
 async fn check_edge_valence(body: &Body, issues: &mut Vec<ValidationIssue>) {
     for (edge_id, _) in body.edges.iter() {
-        let valence = body.edge_coedges(edge_id).len();
+        let valence = body.edge_coedges(edge_id).await.len();
         if valence > 2 {
             issues.push(ValidationIssue { entity: format!("edge-{}", edge_id.raw_index()), code: "non-manifold-edge", message: format!("edge is used by {valence} coedges (2-manifold shapes use at most 2)") });
         }
@@ -149,18 +149,18 @@ async fn check_edge_valence(body: &Body, issues: &mut Vec<ValidationIssue>) {
 async fn check_tolerance_containment(body: &Body, issues: &mut Vec<ValidationIssue>) {
     for (edge_id, edge) in body.edges.iter() {
         for v in [edge.v0, edge.v1] {
-            let Some(vertex) = body.vertices.get(v) else { continue };
-            if let Some((finer, coarser)) = crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::check_containment(&format!("vertex-{}", v.raw_index()), vertex.tol, &format!("edge-{}", edge_id.raw_index()), edge.tol) {
+            let Some(vertex) = body.vertices.get(v).await else { continue };
+            if let Some((finer, coarser)) = crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::check_containment(&format!("vertex-{}", v.raw_index()), vertex.tol, &format!("edge-{}", edge_id.raw_index()), edge.tol).await {
                 issues.push(ValidationIssue { entity: finer.clone(), code: "tolerance-containment-violated", message: format!("{finer}'s tolerance exceeds its containing {coarser}'s") });
             }
         }
     }
     for (face_id, face) in body.faces.iter() {
         for coedge_id in body.face_coedges(face_id) {
-            let Some(coedge) = body.coedges.get(coedge_id) else { continue };
-            let Some(edge) = body.edges.get(coedge.edge) else { continue };
+            let Some(coedge) = body.coedges.get(coedge_id).await else { continue };
+            let Some(edge) = body.edges.get(coedge.edge).await else { continue };
             if let Some((finer, coarser)) =
-                crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::check_containment(&format!("edge-{}", coedge.edge.raw_index()), edge.tol, &format!("face-{}", face_id.raw_index()), face.tol)
+                crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::check_containment(&format!("edge-{}", coedge.edge.raw_index()), edge.tol, &format!("face-{}", face_id.raw_index()), face.tol).await
             {
                 issues.push(ValidationIssue { entity: finer.clone(), code: "tolerance-containment-violated", message: format!("{finer}'s tolerance exceeds its containing {coarser}'s") });
             }
@@ -176,25 +176,25 @@ async fn check_tolerance_containment(body: &Body, issues: &mut Vec<ValidationIss
 async fn check_same_parameter(body: &Body, issues: &mut Vec<ValidationIssue>) {
     const SAMPLES: usize = 5;
     for (face_id, face) in body.faces.iter() {
-        let Some(surface) = body.surfaces.get(face.surface) else { continue };
+        let Some(surface) = body.surfaces.get(face.surface).await else { continue };
         for coedge_id in body.face_coedges(face_id) {
-            let Some(coedge) = body.coedges.get(coedge_id) else { continue };
+            let Some(coedge) = body.coedges.get(coedge_id).await else { continue };
             let Some(pcurve_id) = coedge.pcurve else { continue };
-            let Some(pcurve) = body.curves2.get(pcurve_id) else { continue };
-            let Some(edge) = body.edges.get(coedge.edge) else { continue };
-            let Some(curve3) = body.curves3.get(edge.curve) else { continue };
+            let Some(pcurve) = body.curves2.get(pcurve_id).await else { continue };
+            let Some(edge) = body.edges.get(coedge.edge).await else { continue };
+            let Some(curve3) = body.curves3.get(edge.curve).await else { continue };
             for i in 0..=SAMPLES {
                 let s = i as f64 / SAMPLES as f64;
                 let p = coedge.prange.0 + (coedge.prange.1 - coedge.prange.0) * s;
                 let t = edge.range.0 + (edge.range.1 - edge.range.0) * s;
                 let uv = pcurve.eval(p);
-                let via_surface = surface.eval(uv.x, uv.y);
+                let via_surface = surface.eval(uv.await.x, uv.await.y);
                 let via_curve = curve3.eval(t);
-                if via_surface.distance(via_curve) > edge.tol.value() {
+                if via_surface.await.distance(via_curve.await) > edge.tol.value() {
                     issues.push(ValidationIssue {
                         entity: format!("coedge-{}", coedge_id.raw_index()),
                         code: "same-parameter-violated",
-                        message: format!("pcurve and 3D curve disagree by {} at s={s} (tol {})", via_surface.distance(via_curve), edge.tol.value()),
+                        message: format!("pcurve and 3D curve disagree by {} at s={s} (tol {})", via_surface.await.distance(via_curve.await), edge.tol.value()),
                     });
                 }
             }

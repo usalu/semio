@@ -56,10 +56,10 @@ async fn style_to_common(style_name: Option<&str>, styles: &[DrawStyle]) -> Comm
         if let Some(s) = styles.iter().find(|s| s.name == name) {
             let mut p = PresentationAttrs::default();
             if let Some(fill) = &s.fill {
-                p.fill = Some(color_to_css(fill));
+                p.fill = Some(color_to_css(fill).await);
             }
             if let Some(stroke) = &s.stroke {
-                p.stroke = Some(color_to_css(stroke));
+                p.stroke = Some(color_to_css(stroke).await);
             }
             if let Some(sw) = s.stroke_width {
                 p.stroke_width = Some(sw.to_string());
@@ -96,10 +96,10 @@ async fn base64_encode(bytes: &[u8]) -> String {
 
 async fn svg_element_from_draw_node(node: &DrawNode, styles: &[DrawStyle]) -> SvgElement {
     match node {
-        DrawNode::Path { segments, style } => SvgElement::Path { common: style_to_common(style.as_deref(), styles), d: segments_to_commands(segments) },
-        DrawNode::Text { value, at, style } => SvgElement::Text { common: style_to_common(style.as_deref(), styles), x: Some(at.x), y: Some(at.y), children: vec![SvgElement::TextNode(value.clone())] },
+        DrawNode::Path { segments, style } => SvgElement::Path { common: style_to_common(style.as_deref(), styles).await, d: segments_to_commands(segments).await },
+        DrawNode::Text { value, at, style } => SvgElement::Text { common: style_to_common(style.as_deref(), styles).await, x: Some(at.x), y: Some(at.y), children: vec![SvgElement::TextNode(value.clone())] },
         DrawNode::Group { transform, children } => {
-            let m = semio_transform_to_matrix(transform);
+            let m = semio_transform_to_matrix(transform).await;
             SvgElement::Group {
                 common: CommonAttrs { transform: Some(vec![TransformOp::Matrix { a: m.a, b: m.b, c: m.c, d: m.d, e: m.e, f: m.f }]), ..Default::default() },
                 children: children.iter().map(|c| svg_element_from_draw_node(c, styles)).collect(),
@@ -149,7 +149,7 @@ impl ArtifactSerializer for SemioDrawingToSvg {
             xmlns: Some("http://www.w3.org/2000/svg".into()),
             children: layer_groups,
         };
-        Ok(SvgSnapshot { schema: crate::artifacts::svg::STDIO_SVG_DOCUMENT_SCHEMA.into(), doc: XmlDocument { root: Some(svg_element_to_xml_node(&root)), doctype: None, declaration: None, prolog: Vec::new() } })
+        Ok(SvgSnapshot { schema: crate::artifacts::svg::STDIO_SVG_DOCUMENT_SCHEMA.into(), doc: XmlDocument { root: Some(svg_element_to_xml_node(&root).await), doctype: None, declaration: None, prolog: Vec::new() } })
     }
 }
 //#endregion 🔖️Serializer

@@ -30,7 +30,7 @@ pub struct SemioValueInference {
 
 impl protocol::Inference<SemioValueSnapshot> for SemioValueInference {
     async fn infer(snapshot: &SemioValueSnapshot) -> Self {
-        Self { census: compute_semio_value_census(snapshot) }
+        Self { census: compute_semio_value_census(snapshot).await }
     }
 }
 

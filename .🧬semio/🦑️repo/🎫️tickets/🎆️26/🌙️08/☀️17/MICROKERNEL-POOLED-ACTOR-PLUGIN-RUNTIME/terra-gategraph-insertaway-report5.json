@@ -1,0 +1,15 @@
+{
+  "crate": "semio-framework-graph",
+  "history": [
+    {
+      "pass": 1,
+      "errors": 96,
+      "edits": 0,
+      "ambiguous": 0,
+      "other": 0
+    }
+  ],
+  "residual_errors": 96,
+  "ambiguous": [],
+  "other": []
+}

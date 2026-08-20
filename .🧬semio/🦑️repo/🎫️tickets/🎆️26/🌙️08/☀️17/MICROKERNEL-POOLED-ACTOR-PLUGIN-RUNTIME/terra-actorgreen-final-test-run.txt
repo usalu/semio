@@ -1,0 +1,91 @@
+   Compiling itoa v1.0.18
+   Compiling memchr v2.8.0
+   Compiling serde_core v1.0.228
+   Compiling zmij v1.0.21
+   Compiling thiserror v2.0.18
+   Compiling serde v1.0.228
+   Compiling serde_json v1.0.149
+   Compiling semio-framework-actor v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust)
+    Finished `test` profile [unoptimized] target(s) in 4.51s
+     Running unittests 📦️glue.rs (/private/tmp/claude-501/-Users-ueli-Documents-semio/e6a44461-bab7-421f-8a53-65123a5e9482/scratchpad/target-actorgreen/debug/deps/semio_framework_actor-1b1da3c4eaaf3b84)
+
+running 70 tests
+test component::tests::quick::failure_ladder_manual_reset_returns_to_healthy_immediately ... ok
+test component::tests::quick::actor_id_next_generation_bumps_only_generation ... ok
+test component::tests::quick::actor_id_bit_packing_round_trips_all_fields ... ok
+test component::tests::quick::failure_ladder_escalates_and_decays_back_to_healthy ... ok
+test component::tests::quick::mailbox_backpressure_rejected_when_full_and_nothing_lower_priority ... ok
+test component::tests::quick::kernel_metrics_counts_actors_shards_packages ... ok
+test component::tests::quick::kernel_request_exclusive_then_release ... ok
+test component::tests::quick::mailbox_backpressure_drops_lower_priority_lane_to_admit_interactive ... ok
+test component::tests::quick::kernel_suspend_resume_round_trip ... ok
+test component::tests::quick::deadline_preemption_runs_before_background_drr_deficit ... ok
+test component::tests::quick::kernel_activate_submit_tick_complete_round_trip ... ok
+test component::tests::quick::failure_ladder_trap_then_quarantine_is_package_wide ... ok
+test component::tests::quick::mailbox_pop_next_honors_lane_priority_over_fifo ... ok
+test component::tests::quick::interactive_actor_avoids_a_shard_saturated_by_cpu_bound_actors ... ok
+test component::tests::quick::pack_round_trip_actor_id ... ok
+test component::tests::quick::mailbox_coalesces_latest_wins_older_dropped ... ok
+test component::tests::quick::pack_round_trip_actor_kind ... ok
+test component::tests::quick::pack_round_trip_actor_metrics_sample ... ok
+test component::tests::quick::pack_round_trip_actor_metrics ... ok
+test component::tests::quick::pack_round_trip_actor_status ... ok
+test component::tests::quick::pack_round_trip_actor_record ... ok
+test component::tests::quick::pack_round_trip_backpressure ... ok
+test component::tests::quick::pack_round_trip_budget ... ok
+test component::tests::quick::pack_round_trip_capability_grant ... ok
+test component::tests::quick::pack_round_trip_coalesce_key ... ok
+test component::tests::quick::pack_round_trip_decision ... ok
+test component::tests::quick::pack_round_trip_envelope ... ok
+test component::tests::quick::pack_round_trip_failure_signal ... ok
+test component::tests::quick::pack_round_trip_failure_stage ... ok
+test component::tests::quick::pack_round_trip_failure_state ... ok
+test component::tests::quick::pack_round_trip_kernel_metrics ... ok
+test component::tests::quick::pack_round_trip_lane ... ok
+test component::tests::quick::pack_round_trip_mailbox ... ok
+test component::tests::quick::pack_round_trip_origin ... ok
+test component::tests::quick::pack_round_trip_package_hash ... ok
+test component::tests::quick::pack_round_trip_package_id ... ok
+test component::tests::quick::pack_round_trip_payload ... ok
+test component::tests::quick::pack_round_trip_runtime_metrics_snapshot ... ok
+test component::tests::quick::pack_round_trip_scene_snapshot ... ok
+test component::tests::quick::pack_round_trip_shard_id ... ok
+test component::tests::quick::pack_round_trip_shard_kind ... ok
+test component::tests::quick::pack_round_trip_shard_metrics ... ok
+test component::tests::quick::pack_round_trip_shard_metrics_sample ... ok
+test component::tests::quick::pack_round_trip_shard_table ... ok
+test component::tests::quick::pack_round_trip_turn_grant ... ok
+test component::tests::quick::pack_round_trip_turn_result ... ok
+test component::tests::quick::pack_round_trip_turn_status ... ok
+test component::tests::quick::pack_round_trip_usage ... ok
+test component::tests::quick::pack_round_trip_window_id ... ok
+test component::tests::quick::pin_is_idempotent_for_the_same_actor ... ok
+test component::tests::quick::pin_refills_the_gap_left_by_unpin ... ok
+test component::tests::quick::recv_deadline_returns_none_immediately_on_a_killed_transport ... ok
+test component::tests::quick::recv_deadline_returns_the_message_when_one_arrives_before_the_timeout ... ok
+test component::tests::quick::runtime_metrics_due_gates_at_the_2hz_interval_and_always_fires_once ... ok
+test component::tests::quick::scene_max_patch_bytes_rejects_oversized_patch ... ok
+test component::tests::quick::scene_revision_is_monotonic_and_reuses_snapshot_on_empty_commit ... ok
+test component::tests::quick::runtime_metrics_snapshot_reflects_real_kernel_activity ... ok
+test component::tests::quick::scene_ui_node_quota_truncates_and_signals ... ok
+test component::tests::quick::serde_round_trip_backpressure_dropped ... ok
+test component::tests::quick::serde_round_trip_payload_event ... ok
+test component::tests::quick::serde_round_trip_failure_signal_trap ... ok
+test component::tests::quick::serde_round_trip_payload_cancel ... ok
+test component::tests::quick::serde_round_trip_turn_status_faulted ... ok
+test component::tests::quick::shard_sizing_policy_clamps_native_and_web ... ok
+test component::tests::quick::serde_round_trip_origin_actor ... ok
+test component::tests::quick::pin_spreads_actors_of_one_plugin_across_the_pool ... ok
+test component::tests::quick::thread_transport_duplex_send_recv_and_heartbeat ... ok
+test component::tests::quick::thread_transport_kill_stops_recv ... ok
+test component::tests::quick::drr_fairness_plugin_with_50_actors_does_not_starve_plugin_with_1 ... ok
+test component::tests::quick::recv_deadline_returns_none_on_timeout ... ok
+
+test result: ok. 70 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+   Doc-tests semio_framework_actor
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

@@ -1,0 +1,275 @@
+{
+  "crate": "semio-framework-os-services",
+  "history": [
+    {
+      "pass": 1,
+      "errors": 196,
+      "edits": 109,
+      "ambiguous": 0,
+      "other": 30
+    },
+    {
+      "pass": 2,
+      "errors": 164,
+      "edits": 32,
+      "ambiguous": 0,
+      "other": 39
+    },
+    {
+      "pass": 3,
+      "errors": 151,
+      "edits": 0,
+      "ambiguous": 0,
+      "other": 49
+    }
+  ],
+  "residual_errors": 151,
+  "ambiguous": [],
+  "other": [
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2311",
+      "code": "(no code)",
+      "msg": "expected one of `,`, `:`, or `}`, found `.`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2348",
+      "code": "(no code)",
+      "msg": "expected one of `,`, `:`, or `}`, found `.`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2311",
+      "code": "(no code)",
+      "msg": "expected one of `,`, `:`, or `}`, found `.`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2348",
+      "code": "(no code)",
+      "msg": "expected one of `,`, `:`, or `}`, found `.`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1583",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1593",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1605",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1622",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1646",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1665",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1685",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1720",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1761",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1771",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1783",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1796",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1806",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1817",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1829",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1856",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1904",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1951",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1985",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2033",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2046",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2058",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2074",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2084",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2124",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2151",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2174",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2302",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2339",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2372",
+      "code": "(no code)",
+      "msg": "async functions cannot be used for tests"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2378",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = Vec<CompletionRecord>>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2379",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = Vec<CompletionRecord>>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1821",
+      "code": "E0382",
+      "msg": "use of moved value: `wheel`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1822",
+      "code": "E0382",
+      "msg": "use of moved value: `wheel`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1823",
+      "code": "E0382",
+      "msg": "use of moved value: `wheel`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1800",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1802",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1775",
+      "code": "E0382",
+      "msg": "use of moved value: `wheel`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1776",
+      "code": "E0382",
+      "msg": "use of moved value: `wheel`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1765",
+      "code": "E0382",
+      "msg": "use of moved value: `wheel`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1766",
+      "code": "E0382",
+      "msg": "use of moved value: `wheel`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1787",
+      "code": "E0382",
+      "msg": "use of moved value: `wheel`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1790",
+      "code": "E0382",
+      "msg": "use of moved value: `wheel`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1792",
+      "code": "E0382",
+      "msg": "use of moved value: `wheel`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1614",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    }
+  ]
+}

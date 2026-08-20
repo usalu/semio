@@ -1,0 +1,28 @@
+{
+  "surface": "conformance.a11y.shortcut",
+  "revision": 0,
+  "root": 0,
+  "nodes": [
+    {
+      "id": 0,
+      "key": "#0",
+      "component": {
+        "type": "button",
+        "icon": "save",
+        "label": "Save"
+      },
+      "layout": {
+        "kind": "leaf",
+        "width": "hug",
+        "height": "hug"
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {
+        "label": "Save",
+        "shortcut": "Ctrl+S"
+      }
+    }
+  ],
+  "layoutEpoch": 0
+}

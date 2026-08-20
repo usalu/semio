@@ -68,8 +68,8 @@ async fn expand_entity(min: &mut SemioPoint2, max: &mut SemioPoint2, seen: &mut 
                 expand(min, max, seen, *v);
             }
         }
-        CadEntity::Text { position, .. } => expand(min, max, seen, *position),
-        CadEntity::Insert { insertion_point, .. } => expand(min, max, seen, *insertion_point),
+        CadEntity::Text { position, .. } => expand(min, max, seen, *position).await,
+        CadEntity::Insert { insertion_point, .. } => expand(min, max, seen, *insertion_point).await,
         CadEntity::Solid { p1, p2, p3, p4 } => {
             for p in [p1, p2, p3, p4] {
                 expand(min, max, seen, *p);

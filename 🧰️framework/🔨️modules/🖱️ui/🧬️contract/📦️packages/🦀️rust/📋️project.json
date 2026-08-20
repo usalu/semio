@@ -1,0 +1,67 @@
+{
+  "name": "@semio-tech/ui-contract-rs",
+  "$schema": "../../../../../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": true
+      }
+    },
+    "test-quick": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test quick",
+        "forwardAllArgs": true
+      }
+    },
+    "test-long": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test long",
+        "forwardAllArgs": true
+      }
+    },
+    "test-exhaustive": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test exhaustive",
+        "forwardAllArgs": true
+      }
+    },
+    "conformance": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts conformance",
+        "forwardAllArgs": true
+      }
+    },
+    "check-wasm": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts check-wasm"
+      }
+    },
+    "generate": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts generate"
+      }
+    },
+    "check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts check"
+      }
+    }
+  }
+}

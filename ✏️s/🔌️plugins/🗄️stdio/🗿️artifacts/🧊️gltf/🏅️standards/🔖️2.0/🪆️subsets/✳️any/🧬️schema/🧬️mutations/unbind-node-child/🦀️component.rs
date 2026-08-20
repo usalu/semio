@@ -24,26 +24,26 @@ async fn path(parent: usize, position: usize) -> String {
     format!("document/nodes/{}/children/{}", parent, position)
 }
 async fn plan(bytes: &[u8], base: &GltfSnapshot) -> Result<GltfMutationLeafPlan, GltfMutationLeafError> {
-    let payload: mutation::GltfUnbindNodeChildPayload = decode(bytes)?;
-    let diff = diff::derive(&payload, base).map_err(rejection)?;
-    let inverse = inverse::derive(&payload, base).map_err(rejection)?;
-    Ok(GltfMutationLeafPlan { diff_payload: encode(&diff)?, inverse_payload: encode(&inverse)?, touched_paths: vec![path(diff.parent, diff.position)] })
+    let payload: mutation::GltfUnbindNodeChildPayload = decode(bytes).await?;
+    let diff = diff::derive(&payload, base).await.map_err(rejection)?;
+    let inverse = inverse::derive(&payload, base).await.map_err(rejection)?;
+    Ok(GltfMutationLeafPlan { diff_payload: encode(&diff).await?, inverse_payload: encode(&inverse).await?, touched_paths: vec![path(diff.parent, diff.position).await] })
 }
 async fn plan_inverse(bytes: &[u8], base: &GltfSnapshot) -> Result<GltfMutationLeafPlan, GltfMutationLeafError> {
-    let inverse: inverse::GltfUnbindNodeChildInverse = decode(bytes)?;
-    let _ = inverse::apply(base, &inverse).map_err(rejection)?;
-    Ok(GltfMutationLeafPlan { diff_payload: encode(&inverse)?, inverse_payload: Vec::new(), touched_paths: vec![path(inverse.parent, inverse.position)] })
+    let inverse: inverse::GltfUnbindNodeChildInverse = decode(bytes).await?;
+    let _ = inverse::apply(base, &inverse).await.map_err(rejection)?;
+    Ok(GltfMutationLeafPlan { diff_payload: encode(&inverse).await?, inverse_payload: Vec::new(), touched_paths: vec![path(inverse.parent, inverse.position).await] })
 }
 async fn apply_diff(bytes: &[u8], base: &GltfSnapshot) -> Result<GltfMutationLeafApplication, GltfMutationLeafError> {
-    let diff: diff::GltfUnbindNodeChildDiff = decode(bytes)?;
+    let diff: diff::GltfUnbindNodeChildDiff = decode(bytes).await?;
     let touched_paths = vec![path(diff.parent, diff.position)];
-    let snapshot = diff::apply(base, &diff).map_err(rejection)?;
+    let snapshot = diff::apply(base, &diff).await.map_err(rejection)?;
     Ok(GltfMutationLeafApplication { snapshot, touched_paths })
 }
 async fn apply_inverse(bytes: &[u8], base: &GltfSnapshot) -> Result<GltfMutationLeafApplication, GltfMutationLeafError> {
-    let inverse: inverse::GltfUnbindNodeChildInverse = decode(bytes)?;
+    let inverse: inverse::GltfUnbindNodeChildInverse = decode(bytes).await?;
     let touched_paths = vec![path(inverse.parent, inverse.position)];
-    let snapshot = inverse::apply(base, &inverse).map_err(rejection)?;
+    let snapshot = inverse::apply(base, &inverse).await.map_err(rejection)?;
     Ok(GltfMutationLeafApplication { snapshot, touched_paths })
 }
 pub const DESCRIPTOR: GltfMutationLeafDescriptor = GltfMutationLeafDescriptor { command_id: mutation::ID, version: 1, plan, plan_inverse, apply_diff, apply_inverse };

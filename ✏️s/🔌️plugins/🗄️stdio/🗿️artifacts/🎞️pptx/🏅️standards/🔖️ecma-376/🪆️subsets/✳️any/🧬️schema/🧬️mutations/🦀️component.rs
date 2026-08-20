@@ -76,13 +76,13 @@ pub enum PptxMutation {
 /// d.apply(snapshot); d` -- the diff is the single semantics source, never a separate imperative
 /// apply path (apply-and-capture is banned).
 pub async fn apply_pptx_mutation(snapshot: &mut PptxSnapshot, mutation: &PptxMutation) -> protocol::MutationOutcome<PptxDiff> {
-    let outcome = Mutation::diff(mutation, snapshot);
-    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
+    let outcome = Mutation::diff(mutation, snapshot).await;
+    match protocol::MutationDiff::apply(outcome.diff().await, snapshot).await {
         Ok(next) => {
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).await.absorb_messages(outcome.messages().await.to_vec()).await,
     }
 }
 //#endregion 🔖️Apply
@@ -104,12 +104,12 @@ impl Mutation<PptxSnapshot> for PptxMutation {
     async fn diff(&self, base: &PptxSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             PptxMutation::NoMutation => PptxDiff::default(),
-            PptxMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
-            PptxMutation::InsertSlide { index, slide } => diff_insert_slide(*index, slide.clone()),
-            PptxMutation::RemoveSlide { index } => diff_remove_slide(*index),
-            PptxMutation::MoveSlide { from, to } => diff_move_slide(&base.presentation, *from, *to),
-            PptxMutation::InsertShape { slide_index, shape_index, shape } => diff_insert_shape(*slide_index, *shape_index, shape.clone()),
-            PptxMutation::RemoveShape { slide_index, shape_index } => diff_remove_shape(*slide_index, *shape_index),
+            PptxMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot).await,
+            PptxMutation::InsertSlide { index, slide } => diff_insert_slide(*index, slide.clone()).await,
+            PptxMutation::RemoveSlide { index } => diff_remove_slide(*index).await,
+            PptxMutation::MoveSlide { from, to } => diff_move_slide(&base.presentation, *from, *to).await,
+            PptxMutation::InsertShape { slide_index, shape_index, shape } => diff_insert_shape(*slide_index, *shape_index, shape.clone()).await,
+            PptxMutation::RemoveShape { slide_index, shape_index } => diff_remove_shape(*slide_index, *shape_index).await,
             PptxMutation::SetShapeText { slide_index, shape_index, text_frame } => diff_set_shape_text(&base.presentation, *slide_index, *shape_index, text_frame.clone()),
             PptxMutation::SetShapePosition { slide_index, shape_index, position } => diff_set_shape_position(&base.presentation, *slide_index, *shape_index, *position),
         })
@@ -120,7 +120,7 @@ impl Mutation<PptxSnapshot> for PptxMutation {
             PptxMutation::NoMutation => vec![PptxMutation::NoMutation],
             PptxMutation::SetSnapshot { .. } => vec![PptxMutation::SetSnapshot { snapshot: base.clone() }],
             PptxMutation::InsertSlide { index, .. } => vec![PptxMutation::RemoveSlide { index: *index }],
-            PptxMutation::RemoveSlide { index } => match slide_at(base, *index) {
+            PptxMutation::RemoveSlide { index } => match slide_at(base, *index).await {
                 Some(slide) => vec![PptxMutation::InsertSlide { index: *index, slide: slide.clone() }],
                 None => vec![PptxMutation::NoMutation],
             },
@@ -134,12 +134,12 @@ impl Mutation<PptxSnapshot> for PptxMutation {
                 vec![PptxMutation::MoveSlide { from: final_pos, to: *from }]
             }
             PptxMutation::InsertShape { slide_index, shape_index, .. } => vec![PptxMutation::RemoveShape { slide_index: *slide_index, shape_index: *shape_index }],
-            PptxMutation::RemoveShape { slide_index, shape_index } => match shape_at(base, *slide_index, *shape_index) {
+            PptxMutation::RemoveShape { slide_index, shape_index } => match shape_at(base, *slide_index, *shape_index).await {
                 Some(shape) => vec![PptxMutation::InsertShape { slide_index: *slide_index, shape_index: *shape_index, shape: shape.clone() }],
                 None => vec![PptxMutation::NoMutation],
             },
             PptxMutation::SetShapeText { slide_index, shape_index, .. } => {
-                let old = shape_at(base, *slide_index, *shape_index).and_then(|s| match s {
+                let old = shape_at(base, *slide_index, *shape_index).await.and_then(|s| match s {
                     PptxShape::TextBox { text_frame, .. } | PptxShape::Placeholder { text_frame, .. } => Some(text_frame.clone()),
                     _ => None,
                 });
@@ -149,7 +149,7 @@ impl Mutation<PptxSnapshot> for PptxMutation {
                 }
             }
             PptxMutation::SetShapePosition { slide_index, shape_index, .. } => {
-                let old = shape_at(base, *slide_index, *shape_index).and_then(|s| match s {
+                let old = shape_at(base, *slide_index, *shape_index).await.and_then(|s| match s {
                     PptxShape::TextBox { position, .. } | PptxShape::Picture { position, .. } | PptxShape::Placeholder { position, .. } => Some(*position),
                     PptxShape::Other { .. } => None,
                 });
@@ -190,16 +190,16 @@ struct PptxMutationRecord {
 impl OpText for PptxMutation {
     async fn print_op(&self) -> String {
         let record = match self {
-            PptxMutation::SetSnapshot { snapshot } => PptxMutationRecord { kind: "setSnapshot".into(), value: dsl::DslValue::Null, snapshot: Some(PptxSnapshotRecord::from_snapshot(snapshot).expect("serializable logical pptx snapshot")) },
+            PptxMutation::SetSnapshot { snapshot } => PptxMutationRecord { kind: "setSnapshot".into(), value: dsl::DslValue::Null, snapshot: Some(PptxSnapshotRecord::from_snapshot(snapshot).await.expect("serializable logical pptx snapshot")) },
             mutation => PptxMutationRecord { kind: "mutation".into(), value: dsl::to_dsl_value(mutation).expect("serializable logical pptx mutation"), snapshot: None },
         };
-        dsl::print(&record.__dsl_to_record(), &PptxMutationRecord::__dsl_spec(), dsl::JoinMode::Inline)
+        dsl::print(&record.__dsl_to_record(), &PptxMutationRecord::__dsl_spec(), dsl::JoinMode::Inline).await
     }
     async fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        let record = dsl::parse(line, &PptxMutationRecord::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits { max_bytes: 64 * 1024 * 1024, ..dsl::Limits::default() }, mode: dsl::SourceMode::Inline })?;
-        let model = PptxMutationRecord::__dsl_from_record(&record)?;
+        let record = dsl::parse(line, &PptxMutationRecord::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits { max_bytes: 64 * 1024 * 1024, ..dsl::Limits::default() }, mode: dsl::SourceMode::Inline }).await?;
+        let model = PptxMutationRecord::__dsl_from_record(&record).await?;
         match (model.kind.as_str(), model.snapshot) {
-            ("setSnapshot", Some(snapshot)) => snapshot.into_snapshot().map(|snapshot| PptxMutation::SetSnapshot { snapshot }).map_err(|error| store::TextError::new(error, dsl::TextSpan::at(1, 1))),
+            ("setSnapshot", Some(snapshot)) => snapshot.into_snapshot().await.map(|snapshot| PptxMutation::SetSnapshot { snapshot }).map_err(|error| store::TextError::new(error, dsl::TextSpan::at(1, 1))),
             ("mutation", None) => dsl::from_dsl_value(model.value).map_err(|error| store::TextError::new(error, dsl::TextSpan::at(1, 1))),
             _ => Err(store::TextError::new("PPTX mutation record kind/payload mismatch", dsl::TextSpan::at(1, 1))),
         }
@@ -229,11 +229,11 @@ impl OpText for PptxMutation {
 impl OpBinary for PptxMutation {
     async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let value = dsl::to_dsl_value(self).map_err(|detail| protocol::ProtocolError::Malformed { what: "pptx mutation", offset: 0, detail })?;
-        Ok(store::pack_rt::encode_wire_value(&value))
+        Ok(store::pack_rt::encode_wire_value(&value).await)
     }
 
     async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let value = store::pack_rt::decode_wire_value(bytes).map_err(|error| protocol::ProtocolError::Malformed { what: "pptx mutation", offset: 0, detail: error.to_string() })?;
+        let value = store::pack_rt::decode_wire_value(bytes).await.map_err(|error| protocol::ProtocolError::Malformed { what: "pptx mutation", offset: 0, detail: error.to_string() })?;
         dsl::from_dsl_value(value).map_err(|detail| protocol::ProtocolError::Malformed { what: "pptx mutation", offset: 0, detail })
     }
 }

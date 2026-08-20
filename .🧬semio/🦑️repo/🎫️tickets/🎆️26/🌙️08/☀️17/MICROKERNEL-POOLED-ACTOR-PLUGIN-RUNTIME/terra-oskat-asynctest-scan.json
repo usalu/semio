@@ -1,0 +1,13 @@
+{
+  "mode": "scan",
+  "roots": {
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules": {
+      "files_with_sites": 0,
+      "sites": 0
+    }
+  },
+  "total_files_with_sites": 0,
+  "total_sites": 0,
+  "manifests_needing_dev_dependency": [],
+  "manifests_touched": []
+}

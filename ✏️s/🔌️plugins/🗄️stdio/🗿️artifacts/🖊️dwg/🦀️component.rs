@@ -58,18 +58,18 @@ pub const DWG_ARTIFACT_SCHEMA_ID: &str = "s.stdio.dwg";
 /// `.artifact(...)`, exactly this ticket's own W1d precedent (puzzle's B2 OS-media-bridge case).
 /// 🧩️ Binds this executable root to its sole schema-owned definition.
 pub async fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
-    crate::registry::runtime_assembly("dwg", definition, declaration)
+    crate::registry::runtime_assembly("dwg", definition, declaration).await
 }
 
 pub async fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
-    let formats = crate::registry::format_descriptors_for("dwg")?;
+    let formats = crate::registry::format_descriptors_for("dwg").await?;
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
-        .schema(crate::artifacts::dwg::schema::dwg_artifact_schema_descriptor())
-        .formats(formats)
-        .inferences([crate::artifacts::dwg::schema::inferences::dwg_artifact_inference_descriptor()])
-        .composers(dwg_combined_composer_entries())
-        .languages(pilot_languages())
-        .document_codec_bare::<DwgSnapshot, DwgMutation>(STDIO_DWG_DOCUMENT_SCHEMA)
+        .await.schema(crate::artifacts::dwg::schema::dwg_artifact_schema_descriptor().await)
+        .await.formats(formats)
+        .await.inferences([crate::artifacts::dwg::schema::inferences::dwg_artifact_inference_descriptor()])
+        .await.composers(dwg_combined_composer_entries().await)
+        .await.languages(pilot_languages().await)
+        .await.document_codec_bare::<DwgSnapshot, DwgMutation>(STDIO_DWG_DOCUMENT_SCHEMA)
         .try_build()
 }
 
@@ -181,7 +181,8 @@ pub mod io_registry {
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 
-    pub async fn entries() -> &'static [&'static ComposerEntry] {
+    // 🚫️async: E1 pure table accessor consumed by OnceLock::get_or_init's sync closure — see R9
+    pub fn entries() -> &'static [&'static ComposerEntry] {
         ENTRIES.get_or_init(|| v_ac1018::entries().iter().chain(v_ac1024::entries().iter()).collect()).as_slice()
     }
 

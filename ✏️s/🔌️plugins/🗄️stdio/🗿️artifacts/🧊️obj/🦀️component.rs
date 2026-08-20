@@ -35,18 +35,18 @@ pub const OBJ_ARTIFACT_SCHEMA_ID: &str = "s.stdio.obj";
 /// a genuine, narrowly scoped registration gap.
 /// 🧩️ Binds this executable root to its sole schema-owned definition.
 pub async fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
-    crate::registry::runtime_assembly("obj", definition, declaration)
+    crate::registry::runtime_assembly("obj", definition, declaration).await
 }
 
 pub async fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
-    let formats = crate::registry::format_descriptors_for("obj")?;
+    let formats = crate::registry::format_descriptors_for("obj").await?;
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
-        .schema(crate::artifacts::obj::schema::obj_artifact_schema_descriptor())
-        .formats(formats)
-        .inferences([crate::artifacts::obj::schema::inferences::obj_artifact_inference_descriptor()])
-        .composers(crate::artifacts::obj::engine::io_registry::entries())
-        .languages(pilot_languages())
-        .document_codec_bare::<ObjSnapshot, ObjMutation>(STDIO_OBJ_DOCUMENT_SCHEMA)
+        .await.schema(crate::artifacts::obj::schema::obj_artifact_schema_descriptor().await)
+        .await.formats(formats)
+        .await.inferences([crate::artifacts::obj::schema::inferences::obj_artifact_inference_descriptor()])
+        .await.composers(crate::artifacts::obj::engine::io_registry::entries())
+        .await.languages(pilot_languages().await)
+        .await.document_codec_bare::<ObjSnapshot, ObjMutation>(STDIO_OBJ_DOCUMENT_SCHEMA)
         .try_build()
 }
 
@@ -142,7 +142,8 @@ pub mod io_registry {
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 
-    pub async fn entries() -> &'static [&'static ComposerEntry] {
+    // 🚫️async: E1 pure table accessor consumed by OnceLock::get_or_init's sync closure — see R9
+    pub fn entries() -> &'static [&'static ComposerEntry] {
         ENTRIES.get_or_init(|| v3_0::entries().iter().collect()).as_slice()
     }
 

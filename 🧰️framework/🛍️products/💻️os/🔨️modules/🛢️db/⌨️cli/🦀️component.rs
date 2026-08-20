@@ -42,7 +42,7 @@ use db::storage::{SnapshotStorage as _, WalStorage as _};
 /// no-argument boolean flags must strip those out of `args` first via `strip_flag` — this parser
 /// always tries to consume the next token as a value, which would otherwise swallow a following
 /// positional/flag. Mirrors `protocol_cli::parse_args`'s exact shape (same repo convention).
-fn parse_args(args: &[String]) -> (Vec<String>, HashMap<String, String>) {
+async fn parse_args(args: &[String]) -> (Vec<String>, HashMap<String, String>) {
     let mut positional = Vec::new();
     let mut flags = HashMap::new();
     let mut index = 0;
@@ -69,7 +69,7 @@ fn parse_args(args: &[String]) -> (Vec<String>, HashMap<String, String>) {
 
 /// ✂️ Pulls every occurrence of a no-value boolean `--<name>` flag out of `args` before the
 /// generic `parse_args` runs — see `parse_args`'s doc for why that's required.
-fn strip_flag(args: &[String], name: &str) -> (Vec<String>, bool) {
+async fn strip_flag(args: &[String], name: &str) -> (Vec<String>, bool) {
     let flag = format!("--{name}");
     let mut present = false;
     let mut rest = Vec::with_capacity(args.len());
@@ -83,7 +83,7 @@ fn strip_flag(args: &[String], name: &str) -> (Vec<String>, bool) {
     (rest, present)
 }
 
-fn parse_profile(flags: &HashMap<String, String>) -> Result<db::Profile, String> {
+async fn parse_profile(flags: &HashMap<String, String>) -> Result<db::Profile, String> {
     match flags.get("profile").map(String::as_str) {
         None => Ok(db::Profile::Dev),
         Some("test") => Ok(db::Profile::Test),
@@ -97,7 +97,7 @@ fn parse_profile(flags: &HashMap<String, String>) -> Result<db::Profile, String>
 /// `db_artifact::ArtifactEngine::submit`'s outcome step judges a batch's worst graded conflict/
 /// message level against (contract §C9). Replaces the deleted CRDT-era `--rule-a`/`--rule-b`/
 /// `merge:<strategy>` vocabulary (C10).
-fn parse_merge_policy(flags: &HashMap<String, String>) -> Result<protocol::MergePolicy, String> {
+async fn parse_merge_policy(flags: &HashMap<String, String>) -> Result<protocol::MergePolicy, String> {
     match flags.get("policy").map(String::as_str) {
         None => Ok(protocol::MergePolicy::default()),
         Some("laissez-faire") => Ok(protocol::MergePolicy::LaissezFaire),
@@ -113,7 +113,7 @@ fn hex32(bytes: &[u8; 32]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
 
-fn now_ms() -> u64 {
+async fn now_ms() -> u64 {
     std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |d| d.as_millis() as u64)
 }
 
@@ -127,12 +127,12 @@ fn describe_value_bytes(bytes: &[u8]) -> String {
     }
 }
 
-fn fail(context: &str, err: impl std::fmt::Display) -> i32 {
+async fn fail(context: &str, err: impl std::fmt::Display) -> i32 {
     eprintln!("db: {context}: {err}");
     1
 }
 
-fn usage(message: &str) -> i32 {
+async fn usage(message: &str) -> i32 {
     eprintln!("db: {message}");
     2
 }
@@ -174,30 +174,30 @@ fn print_health(health: &db::DbHealth) {
 //#region 🔖️Inspect
 /// 📇️ `db inspect <root> [--profile test|dev|prod]` — opens (zero-touch, creating if absent) the
 /// `Database` at `root` and prints its catalog plus a health snapshot.
-fn cmd_inspect(rest: &[String]) -> i32 {
-    let (positional, flags) = parse_args(rest);
+async fn cmd_inspect(rest: &[String]) -> i32 {
+    let (positional, flags) = parse_args(rest).await;
     let Some(root) = positional.first() else {
-        return usage("usage: db inspect <root> [--profile test|dev|prod]");
+        return usage("usage: db inspect <root> [--profile test|dev|prod]").await;
     };
-    let profile = match parse_profile(&flags) {
+    let profile = match parse_profile(&flags).await {
         Ok(profile) => profile,
-        Err(message) => return usage(&message),
+        Err(message) => return usage(&message).await,
     };
-    let database = match db::Database::open_at(Path::new(root), profile) {
+    let database = match db::Database::open_at(Path::new(root), profile).await {
         Ok(database) => database,
-        Err(err) => return fail("open", err),
+        Err(err) => return fail("open", err).await,
     };
 
-    let catalog = database.catalog();
+    let catalog = database.catalog().await;
     println!("== catalog: {root} ==");
     println!("  documents: {}", catalog.artifacts.len());
     for entry in &catalog.artifacts {
         println!("  - {} (created_at_ms={})", entry.document.0, entry.created_at_ms);
     }
-    print_health(&database.health());
+    print_health(&database.health().await);
 
-    if let Err(err) = database.shutdown(std::time::Duration::from_secs(5)) {
-        return fail("shutdown", err);
+    if let Err(err) = database.shutdown(std::time::Duration::from_secs(5)).await {
+        return fail("shutdown", err).await;
     }
     0
 }
@@ -215,32 +215,32 @@ fn print_engine_frontier(frontier: &db::db_engine::Frontier) {
 /// `ArtifactHandle` (recovering it from its WAL if not already open) and prints its current
 /// frontier plus a tail of its committed history (real: `ArtifactHandle::history` replays the WAL
 /// directly per `db_engine`'s own module doc).
-fn cmd_doc(rest: &[String]) -> i32 {
-    let (positional, flags) = parse_args(rest);
+async fn cmd_doc(rest: &[String]) -> i32 {
+    let (positional, flags) = parse_args(rest).await;
     if positional.len() < 2 {
-        return usage("usage: db doc <root> <document-id> [--profile test|dev|prod]");
+        return usage("usage: db doc <root> <document-id> [--profile test|dev|prod]").await;
     }
     let root = &positional[0];
     let id = &positional[1];
-    let profile = match parse_profile(&flags) {
+    let profile = match parse_profile(&flags).await {
         Ok(profile) => profile,
-        Err(message) => return usage(&message),
+        Err(message) => return usage(&message).await,
     };
-    let database = match db::Database::open_at(Path::new(root), profile) {
+    let database = match db::Database::open_at(Path::new(root), profile).await {
         Ok(database) => database,
-        Err(err) => return fail("open", err),
+        Err(err) => return fail("open", err).await,
     };
     let document_id = protocol::ArtifactId(id.clone());
-    let handle = match database.document(&document_id) {
+    let handle = match database.document(&document_id).await {
         Ok(handle) => handle,
-        Err(err) => return fail("document", err),
+        Err(err) => return fail("document", err).await,
     };
 
-    let outcome = match handle.frontier() {
+    let outcome = match handle.frontier().await {
         Ok(frontier) => {
             println!("== document {id} ==");
             print_engine_frontier(&frontier);
-            match handle.history() {
+            match handle.history().await {
                 Ok(history) => {
                     println!("  history entries: {}", history.entries.len());
                     for entry in history.entries.iter().rev().take(10) {
@@ -251,12 +251,12 @@ fn cmd_doc(rest: &[String]) -> i32 {
             }
             0
         }
-        Err(err) => fail("frontier", err),
+        Err(err) => fail("frontier", err).await,
     };
 
-    match database.shutdown(std::time::Duration::from_secs(5)) {
+    match database.shutdown(std::time::Duration::from_secs(5)).await {
         Ok(()) => outcome,
-        Err(err) => fail("shutdown", err),
+        Err(err) => fail("shutdown", err).await,
     }
 }
 //#endregion 🔖️Doc
@@ -314,28 +314,28 @@ fn describe_wal_record(record: &db::wal::WalRecord) -> String {
 /// (index + byte length, straight from `WalStorage`, before any decoding) then decodes every
 /// `WAL_*` record via `db::wal::replay_document`. A torn/corrupt WAL is reported honestly (with a
 /// hint pointing at `db repair`), never panics.
-fn cmd_wal_inspect(rest: &[String]) -> i32 {
-    let (positional, flags) = parse_args(rest);
+async fn cmd_wal_inspect(rest: &[String]) -> i32 {
+    let (positional, flags) = parse_args(rest).await;
     if positional.len() < 2 {
-        return usage("usage: db wal-inspect <root> <document-id> [--limit N]");
+        return usage("usage: db wal-inspect <root> <document-id> [--limit N]").await;
     }
     let root = &positional[0];
     let id = &positional[1];
     let limit = match flags.get("limit").map(|value| value.parse::<usize>()) {
         None => None,
         Some(Ok(limit)) => Some(limit),
-        Some(Err(_)) => return usage("db wal-inspect: --limit must be a non-negative integer"),
+        Some(Err(_)) => return usage("db wal-inspect: --limit must be a non-negative integer").await,
     };
 
     let storage = match open_fs_storage(Path::new(root)) {
         Ok(storage) => storage,
-        Err(err) => return fail("open", err),
+        Err(err) => return fail("open", err).await,
     };
     let document = db::db_ids::ArtifactId(id.clone());
 
     let segments = match db::actor::block_on(storage.list_segments(&document)) {
         Ok(segments) => segments,
-        Err(err) => return fail("list_segments", err),
+        Err(err) => return fail("list_segments", err).await,
     };
     println!("== wal segments: {} ==", segments.len());
     for index in &segments {
@@ -372,24 +372,24 @@ fn cmd_wal_inspect(rest: &[String]) -> i32 {
 /// generation, then decodes one (the latest, or `--generation N`) via `db::snapshot::open_latest`
 /// over `SnapshotManager::materialize_chain`'s combined lineage buffer, printing its descriptor.
 /// `--verify` additionally runs `SnapshotManager::verify` at `VerificationLevel::Full`.
-fn cmd_snapshot_inspect(rest: &[String]) -> i32 {
-    let (rest, verify) = strip_flag(rest, "verify");
-    let (positional, flags) = parse_args(&rest);
+async fn cmd_snapshot_inspect(rest: &[String]) -> i32 {
+    let (rest, verify) = strip_flag(rest, "verify").await;
+    let (positional, flags) = parse_args(&rest).await;
     if positional.len() < 2 {
-        return usage("usage: db snapshot-inspect <root> <document-id> [--generation N] [--verify]");
+        return usage("usage: db snapshot-inspect <root> <document-id> [--generation N] [--verify]").await;
     }
     let root = &positional[0];
     let id = &positional[1];
 
     let storage = match open_fs_storage(Path::new(root)) {
         Ok(storage) => storage,
-        Err(err) => return fail("open", err),
+        Err(err) => return fail("open", err).await,
     };
     let document = db::db_ids::ArtifactId(id.clone());
 
     let generations = match db::actor::block_on(storage.list_generations(&document)) {
         Ok(generations) => generations,
-        Err(err) => return fail("list_generations", err),
+        Err(err) => return fail("list_generations", err).await,
     };
     println!("== snapshot generations: {} ==", generations.len());
     for generation in &generations {
@@ -402,17 +402,17 @@ fn cmd_snapshot_inspect(rest: &[String]) -> i32 {
     let generation = match flags.get("generation").map(|value| value.parse::<u64>()) {
         None => latest,
         Some(Ok(generation)) => generation,
-        Some(Err(_)) => return usage("db snapshot-inspect: --generation must be a non-negative integer"),
+        Some(Err(_)) => return usage("db snapshot-inspect: --generation must be a non-negative integer").await,
     };
 
-    let manager = db::snapshot::SnapshotManager::new(&storage);
+    let manager = db::snapshot::SnapshotManager::new(&storage).await;
     let combined = match db::actor::block_on(manager.materialize_chain(&document, generation)) {
         Ok(combined) => combined,
-        Err(err) => return fail("materialize_chain", err),
+        Err(err) => return fail("materialize_chain", err).await,
     };
-    let handle = match db::snapshot::open_latest(&combined) {
+    let handle = match db::snapshot::open_latest(&combined).await {
         Ok(handle) => handle,
-        Err(err) => return fail("open_latest", err),
+        Err(err) => return fail("open_latest", err).await,
     };
     let descriptor = &handle.descriptor;
     println!("== generation {generation} descriptor ==");
@@ -445,9 +445,9 @@ fn cmd_snapshot_inspect(rest: &[String]) -> i32 {
 //#region 🔖️Verify
 /// 🔬️ The shared per-document check `verify` runs: a full WAL replay (rejects a torn tail) plus,
 /// if a snapshot exists, a full-level `SnapshotManager::verify` of its latest generation.
-fn verify_document(storage: &db::storage::FsStorage, document: &db::db_ids::ArtifactId) -> Result<String, db::DbError> {
+async fn verify_document(storage: &db::storage::FsStorage<db::storage::InlineRuntime>, document: &db::db_ids::ArtifactId) -> Result<String, db::DbError> {
     let records = db::actor::block_on(db::wal::replay_document(storage, document))?;
-    let manager = db::snapshot::SnapshotManager::new(storage);
+    let manager = db::snapshot::SnapshotManager::new(storage).await;
     match db::actor::block_on(manager.load_latest(document))? {
         Some((generation, _descriptor)) => {
             db::actor::block_on(manager.verify(document, generation, pack::os_pack::VerificationLevel::Full))?;
@@ -460,26 +460,26 @@ fn verify_document(storage: &db::storage::FsStorage, document: &db::db_ids::Arti
 /// 🔬️ `db verify <root> [document-id] [--profile ...]` — verifies one document, or every document
 /// in the catalog if none is given. Prints `OK <id>: <summary>` / `FAIL <id>: <reason>` per
 /// document, never panics on corrupt input; exits `1` iff any document failed.
-fn cmd_verify(rest: &[String]) -> i32 {
-    let (positional, flags) = parse_args(rest);
+async fn cmd_verify(rest: &[String]) -> i32 {
+    let (positional, flags) = parse_args(rest).await;
     let Some(root) = positional.first() else {
-        return usage("usage: db verify <root> [document-id] [--profile test|dev|prod]");
+        return usage("usage: db verify <root> [document-id] [--profile test|dev|prod]").await;
     };
-    let profile = match parse_profile(&flags) {
+    let profile = match parse_profile(&flags).await {
         Ok(profile) => profile,
-        Err(message) => return usage(&message),
+        Err(message) => return usage(&message).await,
     };
 
     let ids: Vec<String> = match positional.get(1) {
         Some(id) => vec![id.clone()],
         None => {
-            let database = match db::Database::open_at(Path::new(root), profile) {
+            let database = match db::Database::open_at(Path::new(root), profile).await {
                 Ok(database) => database,
-                Err(err) => return fail("open", err),
+                Err(err) => return fail("open", err).await,
             };
-            let ids = database.catalog().artifacts.iter().map(|entry| entry.document.0.clone()).collect();
-            if let Err(err) = database.shutdown(std::time::Duration::from_secs(5)) {
-                return fail("shutdown", err);
+            let ids = database.catalog().await.artifacts.iter().map(|entry| entry.document.0.clone()).collect();
+            if let Err(err) = database.shutdown(std::time::Duration::from_secs(5)).await {
+                return fail("shutdown", err).await;
             }
             ids
         }
@@ -491,12 +491,12 @@ fn cmd_verify(rest: &[String]) -> i32 {
 
     let storage = match open_fs_storage(Path::new(root)) {
         Ok(storage) => storage,
-        Err(err) => return fail("open", err),
+        Err(err) => return fail("open", err).await,
     };
     let mut failures = 0usize;
     for id in &ids {
         let document = db::db_ids::ArtifactId(id.clone());
-        match verify_document(&storage, &document) {
+        match verify_document(&storage, &document).await {
             Ok(summary) => println!("OK   {id}: {summary}"),
             Err(err) => {
                 println!("FAIL {id}: {err}");
@@ -516,33 +516,33 @@ fn cmd_verify(rest: &[String]) -> i32 {
 /// 🔎️ `db query <root> <document-id> <path> [more-paths...] [--profile ...]` — resolves one or
 /// more paths against `document`'s live (`Consistency::Canonical`) state through a real
 /// `ArtifactHandle::query`.
-fn cmd_query(rest: &[String]) -> i32 {
-    let (positional, flags) = parse_args(rest);
+async fn cmd_query(rest: &[String]) -> i32 {
+    let (positional, flags) = parse_args(rest).await;
     if positional.len() < 3 {
-        return usage("usage: db query <root> <document-id> <path> [more-paths...] [--profile test|dev|prod]");
+        return usage("usage: db query <root> <document-id> <path> [more-paths...] [--profile test|dev|prod]").await;
     }
     let root = &positional[0];
     let id = &positional[1];
     let paths: Vec<String> = positional[2..].to_vec();
-    let profile = match parse_profile(&flags) {
+    let profile = match parse_profile(&flags).await {
         Ok(profile) => profile,
-        Err(message) => return usage(&message),
+        Err(message) => return usage(&message).await,
     };
-    let database = match db::Database::open_at(Path::new(root), profile) {
+    let database = match db::Database::open_at(Path::new(root), profile).await {
         Ok(database) => database,
-        Err(err) => return fail("open", err),
+        Err(err) => return fail("open", err).await,
     };
     let document_id = protocol::ArtifactId(id.clone());
-    let handle = match database.document(&document_id) {
+    let handle = match database.document(&document_id).await {
         Ok(handle) => handle,
-        Err(err) => return fail("document", err),
+        Err(err) => return fail("document", err).await,
     };
 
     let query = match paths.len() {
         1 => db::Query::Get { path: paths[0].clone() },
         _ => db::Query::GetMany { paths },
     };
-    let outcome = match handle.query(query, db::Consistency::Canonical) {
+    let outcome = match handle.query(query, db::Consistency::Canonical).await {
         Ok(stream) => {
             for (path, value) in &stream.results {
                 match value {
@@ -552,12 +552,12 @@ fn cmd_query(rest: &[String]) -> i32 {
             }
             0
         }
-        Err(err) => fail("query", err),
+        Err(err) => fail("query", err).await,
     };
 
-    match database.shutdown(std::time::Duration::from_secs(5)) {
+    match database.shutdown(std::time::Duration::from_secs(5)).await {
         Ok(()) => outcome,
-        Err(err) => fail("shutdown", err),
+        Err(err) => fail("shutdown", err).await,
     }
 }
 //#endregion 🔖️Query
@@ -567,21 +567,21 @@ fn cmd_query(rest: &[String]) -> i32 {
 /// record-kind counts plus the frontier reconstructed from the last `WAL_FRONTIER` record. Distinct
 /// from `doc`, which goes through a live `ArtifactAuthority` — this is the lower-level diagnostic
 /// twin, useful precisely when the actor path itself is in question.
-fn cmd_replay(rest: &[String]) -> i32 {
-    let (positional, _flags) = parse_args(rest);
+async fn cmd_replay(rest: &[String]) -> i32 {
+    let (positional, _flags) = parse_args(rest).await;
     if positional.len() < 2 {
-        return usage("usage: db replay <root> <document-id>");
+        return usage("usage: db replay <root> <document-id>").await;
     }
     let root = &positional[0];
     let id = &positional[1];
     let storage = match open_fs_storage(Path::new(root)) {
         Ok(storage) => storage,
-        Err(err) => return fail("open", err),
+        Err(err) => return fail("open", err).await,
     };
     let document = db::db_ids::ArtifactId(id.clone());
     let records = match db::actor::block_on(db::wal::replay_document(&storage, &document)) {
         Ok(records) => records,
-        Err(err) => return fail("replay", err),
+        Err(err) => return fail("replay", err).await,
     };
 
     let mut kind_counts: std::collections::BTreeMap<&'static str, usize> = std::collections::BTreeMap::new();
@@ -617,19 +617,19 @@ fn cmd_replay(rest: &[String]) -> i32 {
 /// already discards a torn active-segment tail and rewrites it from the trusted prefix (see its own
 /// doc's "forced by `protocol::SprWriter`'s API" design-choice note) — this subcommand simply drives
 /// that recovery path and reports what it found. Idempotent on an already-clean WAL.
-fn cmd_repair(rest: &[String]) -> i32 {
-    let (positional, _flags) = parse_args(rest);
+async fn cmd_repair(rest: &[String]) -> i32 {
+    let (positional, _flags) = parse_args(rest).await;
     if positional.len() < 2 {
-        return usage("usage: db repair <root> <document-id>");
+        return usage("usage: db repair <root> <document-id>").await;
     }
     let root = &positional[0];
     let id = &positional[1];
     let storage = match open_fs_storage(Path::new(root)) {
         Ok(storage) => storage,
-        Err(err) => return fail("open", err),
+        Err(err) => return fail("open", err).await,
     };
     let document = db::db_ids::ArtifactId(id.clone());
-    match db::actor::block_on(db::wal::ArtifactWal::open(&storage, document, db::wal::GroupCommitPolicy::default(), now_ms())) {
+    match db::actor::block_on(db::wal::ArtifactWal::open(&storage, document, db::wal::GroupCommitPolicy::default(), now_ms().await)) {
         Ok((_wal, report)) => {
             println!("== repair: {id} ==");
             println!("  segments_seen: {}", report.segments_seen);
@@ -642,7 +642,7 @@ fn cmd_repair(rest: &[String]) -> i32 {
             }
             0
         }
-        Err(err) => fail("repair", err),
+        Err(err) => fail("repair", err).await,
     }
 }
 //#endregion 🔖️Repair
@@ -650,26 +650,26 @@ fn cmd_repair(rest: &[String]) -> i32 {
 //#region 🔖️Compact
 /// 🧹️ `db compact <root> <document-id> [--holder H] [--consolidate] [--profile ...]` — drives a
 /// real, fenced `db_compact::Compactor` pass via `Database::compact_document`.
-fn cmd_compact(rest: &[String]) -> i32 {
-    let (rest, consolidate) = strip_flag(rest, "consolidate");
-    let (positional, flags) = parse_args(&rest);
+async fn cmd_compact(rest: &[String]) -> i32 {
+    let (rest, consolidate) = strip_flag(rest, "consolidate").await;
+    let (positional, flags) = parse_args(&rest).await;
     if positional.len() < 2 {
-        return usage("usage: db compact <root> <document-id> [--holder H] [--consolidate] [--profile test|dev|prod]");
+        return usage("usage: db compact <root> <document-id> [--holder H] [--consolidate] [--profile test|dev|prod]").await;
     }
     let root = &positional[0];
     let id = &positional[1];
     let holder = flags.get("holder").cloned().unwrap_or_else(|| "db-cli".to_string());
-    let profile = match parse_profile(&flags) {
+    let profile = match parse_profile(&flags).await {
         Ok(profile) => profile,
-        Err(message) => return usage(&message),
+        Err(message) => return usage(&message).await,
     };
-    let database = match db::Database::open_at(Path::new(root), profile) {
+    let database = match db::Database::open_at(Path::new(root), profile).await {
         Ok(database) => database,
-        Err(err) => return fail("open", err),
+        Err(err) => return fail("open", err).await,
     };
     let document_id = protocol::ArtifactId(id.clone());
 
-    let outcome = match database.compact_document(&document_id, &holder, consolidate) {
+    let outcome = match database.compact_document(&document_id, &holder, consolidate).await {
         Ok(report) => {
             println!("== compact: {id} ==");
             println!("  wal_segments_deleted: {}", report.wal_segments_deleted);
@@ -679,12 +679,12 @@ fn cmd_compact(rest: &[String]) -> i32 {
             println!("  snapshot_generations_pruned: {}", report.snapshot_generations_pruned);
             0
         }
-        Err(err) => fail("compact", err),
+        Err(err) => fail("compact", err).await,
     };
 
-    match database.shutdown(std::time::Duration::from_secs(5)) {
+    match database.shutdown(std::time::Duration::from_secs(5)).await {
         Ok(()) => outcome,
-        Err(err) => fail("shutdown", err),
+        Err(err) => fail("shutdown", err).await,
     }
 }
 //#endregion 🔖️Compact
@@ -692,26 +692,26 @@ fn cmd_compact(rest: &[String]) -> i32 {
 //#region 🔖️HealthCmd
 /// 🩺️ `db health <root> [--profile ...]` — a real `Database::health()` snapshot. Exits `1` iff the
 /// overall status is `Unhealthy`.
-fn cmd_health(rest: &[String]) -> i32 {
-    let (positional, flags) = parse_args(rest);
+async fn cmd_health(rest: &[String]) -> i32 {
+    let (positional, flags) = parse_args(rest).await;
     let Some(root) = positional.first() else {
-        return usage("usage: db health <root> [--profile test|dev|prod]");
+        return usage("usage: db health <root> [--profile test|dev|prod]").await;
     };
-    let profile = match parse_profile(&flags) {
+    let profile = match parse_profile(&flags).await {
         Ok(profile) => profile,
-        Err(message) => return usage(&message),
+        Err(message) => return usage(&message).await,
     };
-    let database = match db::Database::open_at(Path::new(root), profile) {
+    let database = match db::Database::open_at(Path::new(root), profile).await {
         Ok(database) => database,
-        Err(err) => return fail("open", err),
+        Err(err) => return fail("open", err).await,
     };
-    let health = database.health();
+    let health = database.health().await;
     print_health(&health);
     let exit = if matches!(health.report.overall, db::observe::HealthState::Unhealthy(_)) { 1 } else { 0 };
 
-    match database.shutdown(std::time::Duration::from_secs(5)) {
+    match database.shutdown(std::time::Duration::from_secs(5)).await {
         Ok(()) => exit,
-        Err(err) => fail("shutdown", err),
+        Err(err) => fail("shutdown", err).await,
     }
 }
 //#endregion 🔖️HealthCmd
@@ -725,7 +725,8 @@ fn describe_conflict_kind(kind: &db::conflict::ConflictKind) -> String {
 }
 
 fn touched_command(command_id: &str, actor: &str, kind: &str, hlc_actor: u64, paths: &str) -> db::conflict::CommandTouch {
-    let touch = db::conflict::CommandTouch::new(protocol::MutationId(command_id.to_string()), protocol::ActorId(actor.to_string()), db::conflict::CommandKind::from(kind), protocol::HybridLogicalTimestamp::new(hlc_actor, now_ms()));
+    let timestamp = db::actor::block_on(async { protocol::HybridLogicalTimestamp::new(hlc_actor, now_ms().await).await });
+    let touch = db::conflict::CommandTouch::new(protocol::MutationId(command_id.to_string()), protocol::ActorId(actor.to_string()), db::conflict::CommandKind::from(kind), timestamp);
     paths.split(',').map(str::trim).filter(|path| !path.is_empty()).fold(touch, |touch, path| touch.touch(db::state::TouchedRegion::write(path)))
 }
 
@@ -735,13 +736,13 @@ fn touched_command(command_id: &str, actor: &str, kind: &str, hlc_actor: u64, pa
 /// answers "would these conflict"); grading a found conflict into a `protocol::Severity` (and
 /// whether a `protocol::MergePolicy` would reject it) is `db_artifact`'s job one layer up, not this
 /// detection-only simulation's (see `db_conflict`'s own module doc).
-fn cmd_conflict_simulate(rest: &[String]) -> i32 {
-    let (_positional, flags) = parse_args(rest);
+async fn cmd_conflict_simulate(rest: &[String]) -> i32 {
+    let (_positional, flags) = parse_args(rest).await;
     let Some(touch_a) = flags.get("touch-a") else {
-        return usage("usage: db conflict-simulate --touch-a p1,p2 --touch-b p2,p3 [--kind-a K] [--kind-b K]");
+        return usage("usage: db conflict-simulate --touch-a p1,p2 --touch-b p2,p3 [--kind-a K] [--kind-b K]").await;
     };
     let Some(touch_b) = flags.get("touch-b") else {
-        return usage("db conflict-simulate: --touch-b is required");
+        return usage("db conflict-simulate: --touch-b is required").await;
     };
     let kind_a = flags.get("kind-a").map_or("command-a", String::as_str);
     let kind_b = flags.get("kind-b").map_or("command-b", String::as_str);
@@ -766,10 +767,10 @@ fn cmd_conflict_simulate(rest: &[String]) -> i32 {
 /// sides' WALs, decides a bootstrap plan, and applies it (tail-append or raw snapshot copy). No
 /// network transport exists in this family yet — this is a genuine local simulation of the
 /// replication mechanism, not a stub.
-fn cmd_replica_simulate(rest: &[String]) -> i32 {
-    let (positional, _flags) = parse_args(rest);
+async fn cmd_replica_simulate(rest: &[String]) -> i32 {
+    let (positional, _flags) = parse_args(rest).await;
     if positional.len() < 3 {
-        return usage("usage: db replica-simulate <leader-root> <follower-root> <document-id>");
+        return usage("usage: db replica-simulate <leader-root> <follower-root> <document-id>").await;
     }
     let leader_root = &positional[0];
     let follower_root = &positional[1];
@@ -777,15 +778,15 @@ fn cmd_replica_simulate(rest: &[String]) -> i32 {
 
     let leader = match open_fs_storage(Path::new(leader_root)) {
         Ok(storage) => db::storage::DbBackend::Fs(storage),
-        Err(err) => return fail("open leader", err),
+        Err(err) => return fail("open leader", err).await,
     };
     let follower = match open_fs_storage(Path::new(follower_root)) {
         Ok(storage) => db::storage::DbBackend::Fs(storage),
-        Err(err) => return fail("open follower", err),
+        Err(err) => return fail("open follower", err).await,
     };
     let document = db::db_ids::ArtifactId(id.clone());
 
-    match db::actor::block_on(db::cluster::replicate_document(&leader, &follower, document, db::wal::GroupCommitPolicy::default(), now_ms())) {
+    match db::actor::block_on(db::cluster::replicate_document(&leader, &follower, document, db::wal::GroupCommitPolicy::default(), now_ms().await)) {
         Ok(db::cluster::ReplicationOutcome::UpToDate { frontier }) => {
             println!("== replica-simulate: up to date ==");
             println!("  head_seq: {}", frontier.head_seq);
@@ -803,7 +804,7 @@ fn cmd_replica_simulate(rest: &[String]) -> i32 {
             println!("  pack_hash: {}", hex32(&pack_hash));
             0
         }
-        Err(err) => fail("replicate", err),
+        Err(err) => fail("replicate", err).await,
     }
 }
 //#endregion 🔖️ReplicaSimulate
@@ -815,10 +816,10 @@ fn cmd_replica_simulate(rest: &[String]) -> i32 {
 /// auto-creates a fresh WAL if `document` has none yet (see its own doc's "Creates a fresh WAL...
 /// if `document` has no segments yet" note), so this also works as a bootstrap path for a document
 /// that was never `create_document`d through the actor API.
-fn cmd_migrate(rest: &[String]) -> i32 {
-    let (positional, flags) = parse_args(rest);
+async fn cmd_migrate(rest: &[String]) -> i32 {
+    let (positional, flags) = parse_args(rest).await;
     if positional.len() < 3 {
-        return usage("usage: db migrate <root> <document-id> <name> [--payload TEXT]");
+        return usage("usage: db migrate <root> <document-id> <name> [--payload TEXT]").await;
     }
     let root = &positional[0];
     let id = &positional[1];
@@ -827,19 +828,19 @@ fn cmd_migrate(rest: &[String]) -> i32 {
 
     let storage = match open_fs_storage(Path::new(root)) {
         Ok(storage) => storage,
-        Err(err) => return fail("open", err),
+        Err(err) => return fail("open", err).await,
     };
     let document = db::db_ids::ArtifactId(id.clone());
-    let now = now_ms();
+    let now = now_ms().await;
     let (mut wal, _report) = match db::actor::block_on(db::wal::ArtifactWal::open(&storage, document, db::wal::GroupCommitPolicy::default(), now)) {
         Ok(pair) => pair,
-        Err(err) => return fail("open wal", err),
+        Err(err) => return fail("open wal", err).await,
     };
     let bytes = format!("{name}\n{payload}").into_bytes();
     match db::actor::block_on(wal.submit(&storage, &[db::wal::WalRecord::Migration(bytes)], db::DurabilityClass::Fsync, now)) {
         Ok(receipt) => {
             if let Err(err) = db::actor::block_on(wal.force_flush(&storage)) {
-                return fail("flush", err);
+                return fail("flush", err).await;
             }
             println!("== migrate: {id} ==");
             println!("  name: {name}");
@@ -848,7 +849,7 @@ fn cmd_migrate(rest: &[String]) -> i32 {
             println!("  committed: {}", receipt.committed);
             0
         }
-        Err(err) => fail("migrate", err),
+        Err(err) => fail("migrate", err).await,
     }
 }
 //#endregion 🔖️Migrate
@@ -863,17 +864,17 @@ fn cmd_migrate(rest: &[String]) -> i32 {
 /// `std::time::Instant` rather than pulling in `db_testkit`'s `WorkloadGen`/criterion harness:
 /// `db_testkit` is a sibling crate, not part of the `db` facade's own re-export surface, and this
 /// crate's dependency footprint is the `db` facade alone (see module doc).
-fn cmd_profile(rest: &[String]) -> i32 {
-    let (positional, flags) = parse_args(rest);
+async fn cmd_profile(rest: &[String]) -> i32 {
+    let (positional, flags) = parse_args(rest).await;
     if positional.len() < 2 {
-        return usage("usage: db profile <root> <document-id> [--commands N] [--durability memory|os|fsync|quorum:N] [--policy laissez-faire|normal|vigilant] [--profile test|dev|prod]");
+        return usage("usage: db profile <root> <document-id> [--commands N] [--durability memory|os|fsync|quorum:N] [--policy laissez-faire|normal|vigilant] [--profile test|dev|prod]").await;
     }
     let root = &positional[0];
     let id = &positional[1];
     let commands: u64 = match flags.get("commands") {
         Some(value) => match value.parse() {
             Ok(commands) => commands,
-            Err(_) => return usage("db profile: --commands must be a non-negative integer"),
+            Err(_) => return usage("db profile: --commands must be a non-negative integer").await,
         },
         None => 100,
     };
@@ -885,29 +886,29 @@ fn cmd_profile(rest: &[String]) -> i32 {
         Some(other) => match other.strip_prefix("quorum:") {
             Some(n) => match n.parse::<u8>() {
                 Ok(n) => db::DurabilityClass::Quorum(n),
-                Err(_) => return usage(&format!("db profile: bad --durability quorum count '{n}'")),
+                Err(_) => return usage(&format!("db profile: bad --durability quorum count '{n}'")).await,
             },
-            None => return usage(&format!("db profile: unknown --durability '{other}' (expected memory|os|fsync|quorum:N)")),
+            None => return usage(&format!("db profile: unknown --durability '{other}' (expected memory|os|fsync|quorum:N)")).await,
         },
     };
-    let policy = match parse_merge_policy(&flags) {
+    let policy = match parse_merge_policy(&flags).await {
         Ok(policy) => policy,
-        Err(message) => return usage(&message),
+        Err(message) => return usage(&message).await,
     };
-    let profile = match parse_profile(&flags) {
+    let profile = match parse_profile(&flags).await {
         Ok(profile) => profile,
-        Err(message) => return usage(&message),
+        Err(message) => return usage(&message).await,
     };
-    let database = match db::Database::open_at(Path::new(root), profile) {
+    let database = match db::Database::open_at(Path::new(root), profile).await {
         Ok(database) => database,
-        Err(err) => return fail("open", err),
+        Err(err) => return fail("open", err).await,
     };
     let document_id = protocol::ArtifactId(id.clone());
-    let handle = match database.document(&document_id) {
+    let handle = match database.document(&document_id).await {
         Ok(handle) => handle,
-        Err(_) => match database.create_document(db::ArtifactSpec::new(document_id.clone())) {
+        Err(_) => match database.create_document(db::ArtifactSpec::new(document_id.clone()).await).await {
             Ok(handle) => handle,
-            Err(err) => return fail("create", err),
+            Err(err) => return fail("create", err).await,
         },
     };
 
@@ -918,22 +919,22 @@ fn cmd_profile(rest: &[String]) -> i32 {
         let mut backward = serde_json::Map::with_capacity(1);
         backward.insert("cli/profile/counter".to_string(), serde_json::Value::Null);
         let envelope = protocol::MutationEnvelope {
-            mutation_id: protocol::MutationId(format!("profile-{}-{counter}", now_ms())),
+            mutation_id: protocol::MutationId(format!("profile-{}-{counter}", now_ms().await)),
             document_id: document_id.clone(),
             actor: protocol::ActorId("profiler".to_string()),
             dependencies: Vec::new(),
-            diff: protocol::ArtifactDiff { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: db::document::encode_pathmap_json(&serde_json::Value::Object(forward)).unwrap_or_default() },
-            inverse: protocol::InverseMutation { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: db::document::encode_pathmap_json(&serde_json::Value::Object(backward)).unwrap_or_default() },
-            timestamp: protocol::HybridLogicalTimestamp::new(0, now_ms()),
+            diff: protocol::ArtifactDiff { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: db::document::encode_pathmap_json(&serde_json::Value::Object(forward)).await.unwrap_or_default() },
+            inverse: protocol::InverseMutation { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: db::document::encode_pathmap_json(&serde_json::Value::Object(backward)).await.unwrap_or_default() },
+            timestamp: protocol::HybridLogicalTimestamp::new(0, now_ms().await).await,
         };
-        let batch = match db::document::CommandBatch::new(vec![envelope]) {
+        let batch = match db::document::CommandBatch::new(vec![envelope]).await {
             Ok(batch) => batch,
-            Err(err) => return fail("build batch", err),
+            Err(err) => return fail("build batch", err).await,
         };
         match db::actor::block_on(handle.submit(batch, db::document::SubmitOptions { durability, policy })) {
             Ok(Ok(_receipt)) => {}
-            Ok(Err(err)) => return fail(&format!("submit rejected at command {counter}"), err),
-            Err(err) => return fail(&format!("submit failed at command {counter}"), err),
+            Ok(Err(err)) => return fail(&format!("submit rejected at command {counter}"), err).await,
+            Err(err) => return fail(&format!("submit failed at command {counter}"), err).await,
         }
     }
     let elapsed = start.elapsed();
@@ -946,15 +947,15 @@ fn cmd_profile(rest: &[String]) -> i32 {
     println!("  commands_per_sec: {per_sec:.1}");
     println!("  avg_latency_us: {avg_latency_us:.1}");
 
-    match database.shutdown(std::time::Duration::from_secs(5)) {
+    match database.shutdown(std::time::Duration::from_secs(5)).await {
         Ok(()) => 0,
-        Err(err) => fail("shutdown", err),
+        Err(err) => fail("shutdown", err).await,
     }
 }
 //#endregion 🔖️Profile
 
 //#region 🔖️Cli
-fn print_help() {
+async fn print_help() {
     eprintln!("usage: db <command> [args...]");
     eprintln!();
     eprintln!("commands:");
@@ -974,33 +975,33 @@ fn print_help() {
     eprintln!("  profile <root> <document-id> [--commands N] [--durability memory|os|fsync|quorum:N] [--policy laissez-faire|normal|vigilant] [--profile ...]");
 }
 
-pub fn main_impl(args: &[String]) -> i32 {
+pub async fn main_impl(args: &[String]) -> i32 {
     let Some((command, rest)) = args.split_first() else {
-        print_help();
+        print_help().await;
         return 2;
     };
     match command.as_str() {
-        "inspect" => cmd_inspect(rest),
-        "doc" => cmd_doc(rest),
-        "wal-inspect" => cmd_wal_inspect(rest),
-        "snapshot-inspect" => cmd_snapshot_inspect(rest),
-        "verify" => cmd_verify(rest),
-        "query" => cmd_query(rest),
-        "replay" => cmd_replay(rest),
-        "repair" => cmd_repair(rest),
-        "compact" => cmd_compact(rest),
-        "health" => cmd_health(rest),
-        "conflict-simulate" => cmd_conflict_simulate(rest),
-        "replica-simulate" => cmd_replica_simulate(rest),
-        "migrate" => cmd_migrate(rest),
-        "profile" => cmd_profile(rest),
+        "inspect" => cmd_inspect(rest).await,
+        "doc" => cmd_doc(rest).await,
+        "wal-inspect" => cmd_wal_inspect(rest).await,
+        "snapshot-inspect" => cmd_snapshot_inspect(rest).await,
+        "verify" => cmd_verify(rest).await,
+        "query" => cmd_query(rest).await,
+        "replay" => cmd_replay(rest).await,
+        "repair" => cmd_repair(rest).await,
+        "compact" => cmd_compact(rest).await,
+        "health" => cmd_health(rest).await,
+        "conflict-simulate" => cmd_conflict_simulate(rest).await,
+        "replica-simulate" => cmd_replica_simulate(rest).await,
+        "migrate" => cmd_migrate(rest).await,
+        "profile" => cmd_profile(rest).await,
         "help" | "--help" | "-h" => {
-            print_help();
+            print_help().await;
             0
         }
         other => {
             eprintln!("db: unknown subcommand '{other}'\n");
-            print_help();
+            print_help().await;
             2
         }
     }
@@ -1013,78 +1014,78 @@ mod tests {
     use super::*;
 
     //#region 🧸️Fixtures
-    fn tempdir(name: &str) -> std::path::PathBuf {
+    async fn tempdir(name: &str) -> std::path::PathBuf {
         let mut dir = std::env::temp_dir();
-        dir.push(format!("db_cli-test-{name}-{}-{}", std::process::id(), now_ms()));
+        dir.push(format!("db_cli-test-{name}-{}-{}", std::process::id(), now_ms().await));
         std::fs::create_dir_all(&dir).unwrap();
         dir
     }
 
-    fn test_envelope(id: &str, document: &protocol::ArtifactId) -> protocol::MutationEnvelope {
+    async fn test_envelope(id: &str, document: &protocol::ArtifactId) -> protocol::MutationEnvelope {
         protocol::MutationEnvelope {
             mutation_id: protocol::MutationId(id.to_string()),
             document_id: document.clone(),
             actor: protocol::ActorId("tester".to_string()),
             dependencies: Vec::new(),
-            diff: protocol::ArtifactDiff { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: db::document::encode_pathmap_json(&serde_json::json!({"greeting": "hello"})).unwrap() },
-            inverse: protocol::InverseMutation { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: db::document::encode_pathmap_json(&serde_json::json!({"greeting": null})).unwrap() },
-            timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
+            diff: protocol::ArtifactDiff { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: db::document::encode_pathmap_json(&serde_json::json!({"greeting": "hello"})).await.unwrap() },
+            inverse: protocol::InverseMutation { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: db::document::encode_pathmap_json(&serde_json::json!({"greeting": null})).await.unwrap() },
+            timestamp: protocol::HybridLogicalTimestamp::new(0, 0).await,
         }
     }
 
     /// 🌱️ Seeds `doc-1` at `root` with one committed, `Fsync`-durable transaction through the real
     /// `Database::create_document`/`ArtifactHandle::submit` round trip, then cleanly shuts down.
-    fn seed_document(root: &Path) {
-        let database = db::Database::open_at(root, db::Profile::Test).unwrap();
+    async fn seed_document(root: &Path) {
+        let database = db::Database::open_at(root, db::Profile::Test).await.unwrap();
         let document = protocol::ArtifactId("doc-1".to_string());
-        let handle = database.create_document(db::ArtifactSpec::new(document.clone())).unwrap();
-        let batch = db::document::CommandBatch::new(vec![test_envelope("op-1", &document)]).unwrap();
+        let handle = database.create_document(db::ArtifactSpec::new(document.clone()).await).await.unwrap();
+        let batch = db::document::CommandBatch::new(vec![test_envelope("op-1", &document).await]).await.unwrap();
         db::actor::block_on(handle.submit(batch, db::document::SubmitOptions { durability: db::DurabilityClass::Fsync, ..Default::default() })).unwrap().unwrap();
-        database.shutdown(std::time::Duration::from_secs(1)).unwrap();
+        database.shutdown(std::time::Duration::from_secs(1)).await.unwrap();
     }
     //#endregion 🧸️Fixtures
 
     //#region 🔖️Inspect
-    #[test]
-    fn cli_inspect_reports_an_empty_catalog_and_healthy_status_on_a_fresh_root() {
-        let root = tempdir("inspect-fresh");
-        assert_eq!(main_impl(&[String::from("inspect"), root.to_string_lossy().to_string()]), 0);
+    #[semio_framework_async_macros::async_test]
+    async fn cli_inspect_reports_an_empty_catalog_and_healthy_status_on_a_fresh_root() {
+        let root = tempdir("inspect-fresh").await;
+        assert_eq!(main_impl(&[String::from("inspect"), root.to_string_lossy().to_string()]).await, 0);
     }
     //#endregion 🔖️Inspect
 
     //#region 🔖️FullCycle
-    #[test]
-    fn cli_full_cycle_succeeds_for_a_seeded_document() {
-        let root = tempdir("full-cycle");
-        seed_document(&root);
+    #[semio_framework_async_macros::async_test]
+    async fn cli_full_cycle_succeeds_for_a_seeded_document() {
+        let root = tempdir("full-cycle").await;
+        seed_document(&root).await;
         let root_str = root.to_string_lossy().to_string();
 
-        assert_eq!(main_impl(&[String::from("doc"), root_str.clone(), String::from("doc-1")]), 0);
-        assert_eq!(main_impl(&[String::from("query"), root_str.clone(), String::from("doc-1"), String::from("greeting")]), 0);
-        assert_eq!(main_impl(&[String::from("wal-inspect"), root_str.clone(), String::from("doc-1")]), 0);
-        assert_eq!(main_impl(&[String::from("replay"), root_str.clone(), String::from("doc-1")]), 0);
-        assert_eq!(main_impl(&[String::from("verify"), root_str.clone(), String::from("doc-1")]), 0);
-        assert_eq!(main_impl(&[String::from("verify"), root_str.clone()]), 0);
-        assert_eq!(main_impl(&[String::from("repair"), root_str.clone(), String::from("doc-1")]), 0);
-        assert_eq!(main_impl(&[String::from("compact"), root_str.clone(), String::from("doc-1"), String::from("--consolidate")]), 0);
-        assert_eq!(main_impl(&[String::from("health"), root_str.clone()]), 0);
-        assert_eq!(main_impl(&[String::from("snapshot-inspect"), root_str, String::from("doc-1")]), 0);
+        assert_eq!(main_impl(&[String::from("doc"), root_str.clone(), String::from("doc-1")]).await, 0);
+        assert_eq!(main_impl(&[String::from("query"), root_str.clone(), String::from("doc-1"), String::from("greeting")]).await, 0);
+        assert_eq!(main_impl(&[String::from("wal-inspect"), root_str.clone(), String::from("doc-1")]).await, 0);
+        assert_eq!(main_impl(&[String::from("replay"), root_str.clone(), String::from("doc-1")]).await, 0);
+        assert_eq!(main_impl(&[String::from("verify"), root_str.clone(), String::from("doc-1")]).await, 0);
+        assert_eq!(main_impl(&[String::from("verify"), root_str.clone()]).await, 0);
+        assert_eq!(main_impl(&[String::from("repair"), root_str.clone(), String::from("doc-1")]).await, 0);
+        assert_eq!(main_impl(&[String::from("compact"), root_str.clone(), String::from("doc-1"), String::from("--consolidate")]).await, 0);
+        assert_eq!(main_impl(&[String::from("health"), root_str.clone()]).await, 0);
+        assert_eq!(main_impl(&[String::from("snapshot-inspect"), root_str, String::from("doc-1")]).await, 0);
     }
 
-    #[test]
-    fn cli_doc_and_query_err_cleanly_on_an_unknown_document() {
-        let root = tempdir("unknown-doc");
+    #[semio_framework_async_macros::async_test]
+    async fn cli_doc_and_query_err_cleanly_on_an_unknown_document() {
+        let root = tempdir("unknown-doc").await;
         let root_str = root.to_string_lossy().to_string();
-        assert_eq!(main_impl(&[String::from("doc"), root_str.clone(), String::from("never-created")]), 1);
-        assert_eq!(main_impl(&[String::from("query"), root_str, String::from("never-created"), String::from("x")]), 1);
+        assert_eq!(main_impl(&[String::from("doc"), root_str.clone(), String::from("never-created")]).await, 1);
+        assert_eq!(main_impl(&[String::from("query"), root_str, String::from("never-created"), String::from("x")]).await, 1);
     }
     //#endregion 🔖️FullCycle
 
     //#region 🔖️Verify
-    #[test]
-    fn cli_verify_fails_on_a_torn_wal_tail_and_repair_fixes_it() {
-        let root = tempdir("torn-tail");
-        seed_document(&root);
+    #[semio_framework_async_macros::async_test]
+    async fn cli_verify_fails_on_a_torn_wal_tail_and_repair_fixes_it() {
+        let root = tempdir("torn-tail").await;
+        seed_document(&root).await;
 
         let wal_dir = root.join("wal").join("doc-1");
         let segment_path = std::fs::read_dir(&wal_dir).unwrap().filter_map(|entry| entry.ok()).map(|entry| entry.path()).find(|path| path.extension().is_some_and(|ext| ext == "bin")).expect("expected at least one wal segment file");
@@ -1094,82 +1095,82 @@ mod tests {
         std::fs::write(&segment_path, &bytes).unwrap();
 
         let root_str = root.to_string_lossy().to_string();
-        assert_eq!(main_impl(&[String::from("verify"), root_str.clone(), String::from("doc-1")]), 1);
-        assert_eq!(main_impl(&[String::from("wal-inspect"), root_str.clone(), String::from("doc-1")]), 1);
-        assert_eq!(main_impl(&[String::from("repair"), root_str.clone(), String::from("doc-1")]), 0);
-        assert_eq!(main_impl(&[String::from("verify"), root_str, String::from("doc-1")]), 0);
+        assert_eq!(main_impl(&[String::from("verify"), root_str.clone(), String::from("doc-1")]).await, 1);
+        assert_eq!(main_impl(&[String::from("wal-inspect"), root_str.clone(), String::from("doc-1")]).await, 1);
+        assert_eq!(main_impl(&[String::from("repair"), root_str.clone(), String::from("doc-1")]).await, 0);
+        assert_eq!(main_impl(&[String::from("verify"), root_str, String::from("doc-1")]).await, 0);
     }
     //#endregion 🔖️Verify
 
     //#region 🔖️ConflictSimulate
-    #[test]
-    fn cli_conflict_simulate_detects_overlapping_writes_and_ignores_disjoint_ones() {
-        assert_eq!(main_impl(&[String::from("conflict-simulate"), String::from("--touch-a"), String::from("a/name"), String::from("--touch-b"), String::from("a/name")]), 1);
-        assert_eq!(main_impl(&[String::from("conflict-simulate"), String::from("--touch-a"), String::from("a/name"), String::from("--touch-b"), String::from("b/name")]), 0);
+    #[semio_framework_async_macros::async_test]
+    async fn cli_conflict_simulate_detects_overlapping_writes_and_ignores_disjoint_ones() {
+        assert_eq!(main_impl(&[String::from("conflict-simulate"), String::from("--touch-a"), String::from("a/name"), String::from("--touch-b"), String::from("a/name")]).await, 1);
+        assert_eq!(main_impl(&[String::from("conflict-simulate"), String::from("--touch-a"), String::from("a/name"), String::from("--touch-b"), String::from("b/name")]).await, 0);
     }
 
-    #[test]
-    fn cli_conflict_simulate_requires_both_touch_flags() {
-        assert_eq!(main_impl(&[String::from("conflict-simulate")]), 2);
-        assert_eq!(main_impl(&[String::from("conflict-simulate"), String::from("--touch-a"), String::from("a")]), 2);
+    #[semio_framework_async_macros::async_test]
+    async fn cli_conflict_simulate_requires_both_touch_flags() {
+        assert_eq!(main_impl(&[String::from("conflict-simulate")]).await, 2);
+        assert_eq!(main_impl(&[String::from("conflict-simulate"), String::from("--touch-a"), String::from("a")]).await, 2);
     }
     //#endregion 🔖️ConflictSimulate
 
     //#region 🔖️ReplicaSimulate
-    #[test]
-    fn cli_replica_simulate_copies_missing_commands_to_a_fresh_follower() {
-        let leader_root = tempdir("replica-leader");
-        let follower_root = tempdir("replica-follower");
-        seed_document(&leader_root);
+    #[semio_framework_async_macros::async_test]
+    async fn cli_replica_simulate_copies_missing_commands_to_a_fresh_follower() {
+        let leader_root = tempdir("replica-leader").await;
+        let follower_root = tempdir("replica-follower").await;
+        seed_document(&leader_root).await;
 
         let leader_str = leader_root.to_string_lossy().to_string();
         let follower_str = follower_root.to_string_lossy().to_string();
-        assert_eq!(main_impl(&[String::from("replica-simulate"), leader_str, follower_str.clone(), String::from("doc-1")]), 0);
-        assert_eq!(main_impl(&[String::from("verify"), follower_str, String::from("doc-1")]), 0);
+        assert_eq!(main_impl(&[String::from("replica-simulate"), leader_str, follower_str.clone(), String::from("doc-1")]).await, 0);
+        assert_eq!(main_impl(&[String::from("verify"), follower_str, String::from("doc-1")]).await, 0);
     }
     //#endregion 🔖️ReplicaSimulate
 
     //#region 🔖️Migrate
-    #[test]
-    fn cli_migrate_appends_a_migration_record_visible_to_wal_inspect() {
-        let root = tempdir("migrate");
+    #[semio_framework_async_macros::async_test]
+    async fn cli_migrate_appends_a_migration_record_visible_to_wal_inspect() {
+        let root = tempdir("migrate").await;
         let root_str = root.to_string_lossy().to_string();
-        assert_eq!(main_impl(&[String::from("migrate"), root_str.clone(), String::from("doc-1"), String::from("rename-field"), String::from("--payload"), String::from("old->new")]), 0);
-        assert_eq!(main_impl(&[String::from("wal-inspect"), root_str, String::from("doc-1")]), 0);
+        assert_eq!(main_impl(&[String::from("migrate"), root_str.clone(), String::from("doc-1"), String::from("rename-field"), String::from("--payload"), String::from("old->new")]).await, 0);
+        assert_eq!(main_impl(&[String::from("wal-inspect"), root_str, String::from("doc-1")]).await, 0);
     }
 
-    #[test]
-    fn cli_migrate_reports_a_usage_error_with_too_few_args() {
-        assert_eq!(main_impl(&[String::from("migrate"), String::from("root-only")]), 2);
+    #[semio_framework_async_macros::async_test]
+    async fn cli_migrate_reports_a_usage_error_with_too_few_args() {
+        assert_eq!(main_impl(&[String::from("migrate"), String::from("root-only")]).await, 2);
     }
     //#endregion 🔖️Migrate
 
     //#region 🔖️Profile
-    #[test]
-    fn cli_profile_reports_throughput_for_n_commands_on_a_fresh_document() {
-        let root = tempdir("profile");
+    #[semio_framework_async_macros::async_test]
+    async fn cli_profile_reports_throughput_for_n_commands_on_a_fresh_document() {
+        let root = tempdir("profile").await;
         let root_str = root.to_string_lossy().to_string();
-        assert_eq!(main_impl(&[String::from("profile"), root_str.clone(), String::from("doc-1"), String::from("--commands"), String::from("5"), String::from("--durability"), String::from("memory")]), 0);
+        assert_eq!(main_impl(&[String::from("profile"), root_str.clone(), String::from("doc-1"), String::from("--commands"), String::from("5"), String::from("--durability"), String::from("memory")]).await, 0);
         // 🎯️ The 5 profiled commands are real, durable commits — verified via the query subcommand
         // rather than parsing this test's own stdout (`println!` isn't easily captured in-process).
-        assert_eq!(main_impl(&[String::from("query"), root_str, String::from("doc-1"), String::from("cli/profile/counter")]), 0);
+        assert_eq!(main_impl(&[String::from("query"), root_str, String::from("doc-1"), String::from("cli/profile/counter")]).await, 0);
     }
 
-    #[test]
-    fn cli_profile_rejects_a_bad_durability_flag() {
-        let root = tempdir("profile-bad-durability");
+    #[semio_framework_async_macros::async_test]
+    async fn cli_profile_rejects_a_bad_durability_flag() {
+        let root = tempdir("profile-bad-durability").await;
         let root_str = root.to_string_lossy().to_string();
-        assert_eq!(main_impl(&[String::from("profile"), root_str, String::from("doc-1"), String::from("--durability"), String::from("bogus")]), 2);
+        assert_eq!(main_impl(&[String::from("profile"), root_str, String::from("doc-1"), String::from("--durability"), String::from("bogus")]).await, 2);
     }
     //#endregion 🔖️Profile
 
     //#region 🔖️Cli
-    #[test]
-    fn cli_help_and_unknown_subcommand() {
-        assert_eq!(main_impl(&[]), 2);
-        assert_eq!(main_impl(&[String::from("help")]), 0);
-        assert_eq!(main_impl(&[String::from("--help")]), 0);
-        assert_eq!(main_impl(&[String::from("bogus-subcommand")]), 2);
+    #[semio_framework_async_macros::async_test]
+    async fn cli_help_and_unknown_subcommand() {
+        assert_eq!(main_impl(&[]).await, 2);
+        assert_eq!(main_impl(&[String::from("help")]).await, 0);
+        assert_eq!(main_impl(&[String::from("--help")]).await, 0);
+        assert_eq!(main_impl(&[String::from("bogus-subcommand")]).await, 2);
     }
     //#endregion 🔖️Cli
 }

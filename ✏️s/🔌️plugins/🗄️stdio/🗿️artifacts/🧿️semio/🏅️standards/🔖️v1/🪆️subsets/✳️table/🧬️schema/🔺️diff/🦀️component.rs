@@ -86,7 +86,7 @@ impl protocol::command::DiffAlgebra<SemioTableSnapshot> for SemioTableDiff {
         SemioTableDiff { columns: self.columns.as_ref().map(|_| SemioTableColumnList { values: base.columns.clone() }), rows: self.rows.as_ref().map(|_| SemioTableRowList { values: base.rows.clone() }) }
     }
     async fn is_empty(&self) -> bool {
-        self.is_empty_diff()
+        self.is_empty_diff().await
     }
 }
 //#endregion 🔖️Diff
@@ -105,7 +105,7 @@ async fn enc_columns(list: &SemioTableColumnList) -> String {
 }
 async fn dec_columns(s: &str) -> Result<SemioTableColumnList, String> {
     use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::strip_brackets;
-    let values = split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_column).collect::<Result<Vec<_>, String>>()?;
+    let values = split_top_level(strip_brackets(s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_column).collect::<Result<Vec<_>, String>>()?;
     Ok(SemioTableColumnList { values })
 }
 async fn enc_rows(list: &SemioTableRowList) -> String {
@@ -113,7 +113,7 @@ async fn enc_rows(list: &SemioTableRowList) -> String {
 }
 async fn dec_rows(s: &str) -> Result<SemioTableRowList, String> {
     use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::strip_brackets;
-    let values = split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_row).collect::<Result<Vec<_>, String>>()?;
+    let values = split_top_level(strip_brackets(s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_row).collect::<Result<Vec<_>, String>>()?;
     Ok(SemioTableRowList { values })
 }
 
@@ -135,9 +135,9 @@ async fn parse_table_diff(line: &str) -> Result<SemioTableDiff, String> {
     let mut rows = None;
     for token in split_top_level(line, ';') {
         if let Some(rest) = token.strip_prefix("columns=") {
-            columns = Some(dec_columns(rest)?);
+            columns = Some(dec_columns(rest).await?);
         } else if let Some(rest) = token.strip_prefix("rows=") {
-            rows = Some(dec_rows(rest)?);
+            rows = Some(dec_rows(rest).await?);
         } else {
             return Err(format!("table diff: unknown token {token:?}"));
         }
@@ -147,10 +147,10 @@ async fn parse_table_diff(line: &str) -> Result<SemioTableDiff, String> {
 
 impl protocol::DiffCodec for SemioTableDiff {
     async fn print_diff(&self) -> String {
-        print_table_diff(self)
+        print_table_diff(self).await
     }
     async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
-        parse_table_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_table_diff(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 
     /// ⚡️ Real binary diff frame: `format u8` + `presence u8` (bit0=`columns`, bit1=`rows`) are
@@ -191,25 +191,25 @@ impl protocol::DiffCodec for SemioTableDiff {
             return Err(protocol::ProtocolError::Malformed { what: "diff format", offset: 0, detail: format!("unsupported diff format {}", bytes[0]) });
         }
         let presence = bytes[1];
-        let mut reader = store::ByteReader::new(&bytes[2..]);
+        let mut reader = store::ByteReader::new(&bytes[2..]).await;
         let columns = if presence & 0b0000_0001 != 0 {
-            let count = reader.read_varint_u64().map_err(|e| protocol::ProtocolError::Malformed { what: "diff columns count", offset: 2, detail: e.to_string() })?;
+            let count = reader.read_varint_u64().await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff columns count", offset: 2, detail: e.to_string() })?;
             let mut values = Vec::with_capacity(count as usize);
             for _ in 0..count {
-                values.push(read_column(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff column", offset: 2, detail: e })?);
+                values.push(read_column(&mut reader).await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff column", offset: 2, detail: e })?);
             }
             Some(SemioTableColumnList { values })
         } else {
             None
         };
         let rows = if presence & 0b0000_0010 != 0 {
-            let count = reader.read_varint_u64().map_err(|e| protocol::ProtocolError::Malformed { what: "diff rows count", offset: 2, detail: e.to_string() })?;
+            let count = reader.read_varint_u64().await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff rows count", offset: 2, detail: e.to_string() })?;
             let mut values = Vec::with_capacity(count as usize);
             for _ in 0..count {
-                let cell_count = reader.read_varint_u64().map_err(|e| protocol::ProtocolError::Malformed { what: "diff row cell count", offset: 2, detail: e.to_string() })?;
+                let cell_count = reader.read_varint_u64().await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff row cell count", offset: 2, detail: e.to_string() })?;
                 let mut cells = Vec::with_capacity(cell_count as usize);
                 for _ in 0..cell_count {
-                    cells.push(dec_semio_value_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff cell", offset: 2, detail: e })?);
+                    cells.push(dec_semio_value_bin(&mut reader).await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff cell", offset: 2, detail: e })?);
                 }
                 values.push(SemioTableRow { cells });
             }

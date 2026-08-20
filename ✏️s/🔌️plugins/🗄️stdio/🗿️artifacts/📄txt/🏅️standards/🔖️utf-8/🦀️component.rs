@@ -14,6 +14,6 @@ pub async fn standard() -> StandardDeclaration {
     StandardDeclaration {
         id: StandardId("utf-8"),
         media: MediaDeclaration { mimes: &["text/plain"], extensions: &["txt"] },
-        subsets: vec![subsets::any::subset()],
+        subsets: vec![subsets::any::subset().await],
     }
 }

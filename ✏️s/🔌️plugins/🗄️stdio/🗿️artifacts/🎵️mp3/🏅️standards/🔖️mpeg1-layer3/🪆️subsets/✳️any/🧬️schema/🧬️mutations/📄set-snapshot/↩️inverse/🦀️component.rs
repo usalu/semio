@@ -4,5 +4,5 @@ use protocol::Mutation;
 
 /// ↩️ Inverse of set-snapshot.
 pub async fn inverse(base: &Mp3Snapshot, mutation: &Mp3Mutation) -> Vec<Mp3Mutation> {
-    <Mp3Mutation as Mutation<Mp3Snapshot>>::inverse(mutation, base)
+    <Mp3Mutation as Mutation<Mp3Snapshot>>::inverse(mutation, base).await
 }

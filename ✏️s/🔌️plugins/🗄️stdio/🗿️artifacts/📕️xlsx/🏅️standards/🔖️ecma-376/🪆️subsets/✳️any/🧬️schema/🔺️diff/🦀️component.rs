@@ -217,27 +217,27 @@ where
     let keys: Vec<K> = items.iter().map(&key_of).collect();
     for (position, key) in diff.removed.iter().enumerate() {
         if !keys.contains(key) {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "named removal target does not exist"));
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "named removal target does not exist").await);
         }
         if diff.removed[..position].contains(key) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "named removal target is repeated"));
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "named removal target is repeated").await);
         }
     }
     for (position, modified) in diff.modified.iter().enumerate() {
         if !keys.contains(&modified.key) {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "named modification target does not exist"));
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "named modification target does not exist").await);
         }
         if diff.removed.contains(&modified.key) {
-            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "named modification targets a removed item"));
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "named modification targets a removed item").await);
         }
         if diff.modified[..position].iter().any(|candidate| candidate.key == modified.key) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "named modification target is repeated"));
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "named modification target is repeated").await);
         }
     }
     for item in &diff.added {
         let key = key_of(item);
         if keys.contains(&key) || diff.added.iter().filter(|candidate| key_of(candidate) == key).count() != 1 {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "named addition target already exists"));
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "named addition target already exists").await);
         }
     }
     items.retain(|i| !diff.removed.contains(&key_of(i)));
@@ -354,7 +354,7 @@ async fn absorb_cell_diff(mut a: XlsxCellDiff, b: XlsxCellDiff) -> XlsxCellDiff 
 }
 
 async fn diff_sheet(old: &XlsxSheet, new: &XlsxSheet) -> Option<XlsxSheetDiff> {
-    let cells = between_named(&old.cells, &new.cells, cell_key, diff_cell);
+    let cells = between_named(&old.cells, &new.cells, cell_key, diff_cell).await;
     if cells.is_none() {
         None
     } else {
@@ -364,7 +364,7 @@ async fn diff_sheet(old: &XlsxSheet, new: &XlsxSheet) -> Option<XlsxSheetDiff> {
 
 async fn apply_sheet(sheet: &mut XlsxSheet, diff: &XlsxSheetDiff) -> MutationApplyResult<()> {
     if let Some(cd) = &diff.cells {
-        apply_named(&mut sheet.cells, cd, cell_key, apply_cell).map_err(|error| error.under(["cells"]))?;
+        apply_named(&mut sheet.cells, cd, cell_key, apply_cell).await.map_err(|error| error.under(["cells"]))?;
     }
     Ok(())
 }
@@ -399,7 +399,7 @@ async fn absorb_sheet_diff(mut a: XlsxSheetDiff, b: XlsxSheetDiff) -> XlsxSheetD
     a.cells = match (a.cells.take(), b.cells) {
         (None, x) => x,
         (x, None) => x,
-        (Some(ca), Some(cb)) => Some(absorb_named(ca, cb, cell_key, absorb_cell_diff, apply_cell_for_absorb)),
+        (Some(ca), Some(cb)) => Some(absorb_named(ca, cb, cell_key, absorb_cell_diff, apply_cell_for_absorb).await),
     };
     a
 }
@@ -413,11 +413,11 @@ async fn shared_strings_pairs(strings: &[String]) -> Vec<(usize, String)> {
 }
 
 async fn diff_shared_strings(old: &[String], new: &[String]) -> Option<XlsxSharedStringsDiff> {
-    between_named(&shared_strings_pairs(old), &shared_strings_pairs(new), |(i, _)| *i, diff_shared_string)
+    between_named(&shared_strings_pairs(old), &shared_strings_pairs(new), |(i, _)| *i, diff_shared_string).await
 }
 
 async fn apply_shared_strings(strings: &mut Vec<String>, diff: &XlsxSharedStringsDiff) -> MutationApplyResult<()> {
-    let mut pairs = shared_strings_pairs(strings);
+    let mut pairs = shared_strings_pairs(strings).await;
     apply_named(
         &mut pairs,
         diff,
@@ -426,26 +426,26 @@ async fn apply_shared_strings(strings: &mut Vec<String>, diff: &XlsxSharedString
             *value = next.clone();
             Ok(())
         },
-    )?;
+    ).await?;
     pairs.sort_by_key(|(i, _)| *i);
     *strings = pairs.into_iter().map(|(_, v)| v).collect();
     Ok(())
 }
 
 async fn inverse_shared_strings(base: &[String], diff: &XlsxSharedStringsDiff) -> XlsxSharedStringsDiff {
-    inverse_named(&shared_strings_pairs(base), diff, |(i, _)| *i, |(_, v), _| v.clone())
+    inverse_named(&shared_strings_pairs(base), diff, |(i, _)| *i, |(_, v), _| v.clone()).await
 }
 
 async fn absorb_shared_strings_diff(a: XlsxSharedStringsDiff, b: XlsxSharedStringsDiff) -> XlsxSharedStringsDiff {
     // 🏷️ `D = String` here is already a whole-value replace (LWW) — absorbing two such diffs on
     // the SAME index is just "the later one wins", i.e. `b` (same pattern as docx's content-types
     // entries absorb).
-    absorb_named(a, b, |(i, _)| *i, |_av, bv| bv, |(_, v), nv| *v = nv.clone())
+    absorb_named(a, b, |(i, _)| *i, |_av, bv| bv, |(_, v), nv| *v = nv.clone()).await
 }
 
 async fn diff_workbook(base: &XlsxWorkbook, other: &XlsxWorkbook) -> Option<XlsxWorkbookDiff> {
-    let sheets = between_named(&base.sheets, &other.sheets, |s| s.name.clone(), diff_sheet);
-    let shared_strings = diff_shared_strings(&base.shared_strings, &other.shared_strings);
+    let sheets = between_named(&base.sheets, &other.sheets, |s| s.name.clone(), diff_sheet).await;
+    let shared_strings = diff_shared_strings(&base.shared_strings, &other.shared_strings).await;
     if sheets.is_none() && shared_strings.is_none() {
         None
     } else {
@@ -455,10 +455,10 @@ async fn diff_workbook(base: &XlsxWorkbook, other: &XlsxWorkbook) -> Option<Xlsx
 
 async fn apply_workbook_diff(workbook: &mut XlsxWorkbook, diff: &XlsxWorkbookDiff) -> MutationApplyResult<()> {
     if let Some(sd) = &diff.sheets {
-        apply_named(&mut workbook.sheets, sd, |s| s.name.clone(), apply_sheet).map_err(|error| error.under(["sheets"]))?;
+        apply_named(&mut workbook.sheets, sd, |s| s.name.clone(), apply_sheet).await.map_err(|error| error.under(["sheets"]))?;
     }
     if let Some(ssd) = &diff.shared_strings {
-        apply_shared_strings(&mut workbook.shared_strings, ssd).map_err(|error| error.under(["sharedStrings"]))?;
+        apply_shared_strings(&mut workbook.shared_strings, ssd).await.map_err(|error| error.under(["sharedStrings"]))?;
     }
     Ok(())
 }
@@ -472,12 +472,12 @@ async fn absorb_workbook_diff(a: XlsxWorkbookDiff, b: XlsxWorkbookDiff) -> XlsxW
         sheets: match (a.sheets, b.sheets) {
             (None, x) => x,
             (x, None) => x,
-            (Some(sa), Some(sb)) => Some(absorb_named(sa, sb, |s| s.name.clone(), absorb_sheet_diff, apply_sheet_for_absorb)),
+            (Some(sa), Some(sb)) => Some(absorb_named(sa, sb, |s| s.name.clone(), absorb_sheet_diff, apply_sheet_for_absorb).await),
         },
         shared_strings: match (a.shared_strings, b.shared_strings) {
             (None, x) => x,
             (x, None) => x,
-            (Some(a), Some(b)) => Some(absorb_shared_strings_diff(a, b)),
+            (Some(a), Some(b)) => Some(absorb_shared_strings_diff(a, b).await),
         },
     }
 }
@@ -485,7 +485,7 @@ async fn absorb_workbook_diff(a: XlsxWorkbookDiff, b: XlsxWorkbookDiff) -> XlsxW
 
 //#region 🔖️OpcDiffLogic
 async fn diff_ct_entries(old: &[(String, String)], new: &[(String, String)]) -> Option<XlsxOpcCtEntriesDiff> {
-    between_named(old, new, |(k, _)| k.clone(), |(_, ov), (_, nv)| (ov != nv).then(|| nv.clone()))
+    between_named(old, new, |(k, _)| k.clone(), |(_, ov), (_, nv)| (ov != nv).then(|| nv.clone())).await
 }
 
 async fn apply_ct_entries(entries: &mut Vec<(String, String)>, diff: &XlsxOpcCtEntriesDiff) -> MutationApplyResult<()> {
@@ -497,20 +497,20 @@ async fn apply_ct_entries(entries: &mut Vec<(String, String)>, diff: &XlsxOpcCtE
             *value = next.clone();
             Ok(())
         },
-    )
+    ).await
 }
 
 async fn inverse_ct_entries(base: &[(String, String)], diff: &XlsxOpcCtEntriesDiff) -> XlsxOpcCtEntriesDiff {
-    inverse_named(base, diff, |(k, _)| k.clone(), |(_, v), _| v.clone())
+    inverse_named(base, diff, |(k, _)| k.clone(), |(_, v), _| v.clone()).await
 }
 
 async fn absorb_ct_entries(a: XlsxOpcCtEntriesDiff, b: XlsxOpcCtEntriesDiff) -> XlsxOpcCtEntriesDiff {
-    absorb_named(a, b, |(k, _)| k.clone(), |_av, bv| bv, |(_, v), nv| *v = nv.clone())
+    absorb_named(a, b, |(k, _)| k.clone(), |_av, bv| bv, |(_, v), nv| *v = nv.clone()).await
 }
 
 async fn diff_content_types(old: &OpcContentTypes, new: &OpcContentTypes) -> Option<XlsxOpcContentTypesDiff> {
-    let defaults = diff_ct_entries(&old.defaults, &new.defaults);
-    let overrides = diff_ct_entries(&old.overrides, &new.overrides);
+    let defaults = diff_ct_entries(&old.defaults, &new.defaults).await;
+    let overrides = diff_ct_entries(&old.overrides, &new.overrides).await;
     if defaults.is_none() && overrides.is_none() {
         None
     } else {
@@ -555,7 +555,7 @@ async fn absorb_part_diff(mut a: XlsxOpcPartDiff, b: XlsxOpcPartDiff) -> XlsxOpc
 }
 
 async fn diff_parts(old: &[OpcPart], new: &[OpcPart]) -> Option<XlsxOpcPartsDiff> {
-    between_named(old, new, |p| p.path.clone(), diff_part)
+    between_named(old, new, |p| p.path.clone(), diff_part).await
 }
 
 async fn diff_rel(old: &OpcRelationship, new: &OpcRelationship) -> Option<XlsxOpcRelDiff> {
@@ -595,7 +595,7 @@ async fn absorb_rel_diff(mut a: XlsxOpcRelDiff, b: XlsxOpcRelDiff) -> XlsxOpcRel
 }
 
 async fn diff_rel_list(old: &[OpcRelationship], new: &[OpcRelationship]) -> Option<XlsxOpcRelListDiff> {
-    between_named(old, new, |r| r.id.clone(), diff_rel)
+    between_named(old, new, |r| r.id.clone(), diff_rel).await
 }
 
 async fn apply_rel_list(list: &mut Vec<OpcRelationship>, diff: &XlsxOpcRelListDiff) -> MutationApplyResult<()> {
@@ -607,7 +607,7 @@ async fn apply_rel_list(list: &mut Vec<OpcRelationship>, diff: &XlsxOpcRelListDi
             apply_rel(relationship, change);
             Ok(())
         },
-    )
+    ).await
 }
 
 async fn rel_list_with_diff_applied(list: &[OpcRelationship], diff: &XlsxOpcRelListDiff) -> Vec<OpcRelationship> {
@@ -617,11 +617,11 @@ async fn rel_list_with_diff_applied(list: &[OpcRelationship], diff: &XlsxOpcRelL
 }
 
 async fn inverse_rel_list(base: &[OpcRelationship], diff: &XlsxOpcRelListDiff) -> XlsxOpcRelListDiff {
-    inverse_named(base, diff, |r| r.id.clone(), inverse_rel)
+    inverse_named(base, diff, |r| r.id.clone(), inverse_rel).await
 }
 
 async fn absorb_rel_list_diff(a: XlsxOpcRelListDiff, b: XlsxOpcRelListDiff) -> XlsxOpcRelListDiff {
-    absorb_named(a, b, |r| r.id.clone(), absorb_rel_diff, apply_rel)
+    absorb_named(a, b, |r| r.id.clone(), absorb_rel_diff, apply_rel).await
 }
 
 async fn diff_relationships(old: &HashMap<String, Vec<OpcRelationship>>, new: &HashMap<String, Vec<OpcRelationship>>) -> Option<XlsxOpcRelationshipsDiff> {
@@ -631,7 +631,7 @@ async fn diff_relationships(old: &HashMap<String, Vec<OpcRelationship>>, new: &H
         match new.get(owner) {
             None => removed.push(owner.clone()),
             Some(nlist) => {
-                if let Some(d) = diff_rel_list(list, nlist) {
+                if let Some(d) = diff_rel_list(list, nlist).await {
                     modified.push(NamedModified { key: owner.clone(), diff: d });
                 }
             }
@@ -653,29 +653,29 @@ async fn diff_relationships(old: &HashMap<String, Vec<OpcRelationship>>, new: &H
 async fn apply_relationships(rels: &mut HashMap<String, Vec<OpcRelationship>>, diff: &XlsxOpcRelationshipsDiff) -> MutationApplyResult<()> {
     for (position, owner) in diff.removed.iter().enumerate() {
         if !rels.contains_key(owner) {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "relationship owner does not exist"));
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "relationship owner does not exist").await);
         }
         if diff.removed[..position].contains(owner) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "relationship owner removal is repeated"));
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "relationship owner removal is repeated").await);
         }
     }
     for (position, m) in diff.modified.iter().enumerate() {
         if !rels.contains_key(&m.key) {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "relationship owner does not exist"));
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "relationship owner does not exist").await);
         }
         if diff.removed.contains(&m.key) {
-            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "relationship owner is both removed and modified"));
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "relationship owner is both removed and modified").await);
         }
         if diff.modified[..position].iter().any(|candidate| candidate.key == m.key) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "relationship owner modification is repeated"));
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "relationship owner modification is repeated").await);
         }
     }
     for (position, (owner, _)) in diff.added.iter().enumerate() {
         if rels.contains_key(owner) || diff.added[..position].iter().any(|(candidate, _)| candidate == owner) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "relationship owner already exists"));
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "relationship owner already exists").await);
         }
         if diff.removed.contains(owner) || diff.modified.iter().any(|candidate| candidate.key == *owner) {
-            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "relationship owner is both changed and added"));
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "relationship owner is both changed and added").await);
         }
     }
     for owner in &diff.removed {
@@ -683,7 +683,7 @@ async fn apply_relationships(rels: &mut HashMap<String, Vec<OpcRelationship>>, d
     }
     for m in &diff.modified {
         let list = rels.get_mut(&m.key).ok_or_else(|| MutationApplyError::new("mutation.apply.missing-target", "relationship owner does not exist"))?;
-        apply_rel_list(list, &m.diff).map_err(|error| error.under(["modified"]))?;
+        apply_rel_list(list, &m.diff).await.map_err(|error| error.under(["modified"]))?;
     }
     for (owner, list) in &diff.added {
         rels.insert(owner.clone(), list.clone());
@@ -709,13 +709,13 @@ async fn inverse_relationships(base: &HashMap<String, Vec<OpcRelationship>>, dif
 }
 
 async fn absorb_relationships(d1: XlsxOpcRelationshipsDiff, d2: XlsxOpcRelationshipsDiff) -> XlsxOpcRelationshipsDiff {
-    absorb_named(d1, d2, |(owner, _)| owner.clone(), absorb_rel_list_diff, |(_, list), diff| *list = rel_list_with_diff_applied(list, diff))
+    absorb_named(d1, d2, |(owner, _)| owner.clone(), absorb_rel_list_diff, |(_, list), diff| *list = rel_list_with_diff_applied(list, diff)).await
 }
 
 async fn diff_opc(base: &OpcPackage, other: &OpcPackage) -> Option<XlsxOpcDiff> {
-    let content_types = diff_content_types(&base.content_types, &other.content_types);
-    let parts = diff_parts(&base.parts, &other.parts);
-    let relationships = diff_relationships(&base.relationships, &other.relationships);
+    let content_types = diff_content_types(&base.content_types, &other.content_types).await;
+    let parts = diff_parts(&base.parts, &other.parts).await;
+    let relationships = diff_relationships(&base.relationships, &other.relationships).await;
     if content_types.is_none() && parts.is_none() && relationships.is_none() {
         None
     } else {
@@ -726,10 +726,10 @@ async fn diff_opc(base: &OpcPackage, other: &OpcPackage) -> Option<XlsxOpcDiff> 
 async fn apply_opc_diff(opc: &mut OpcPackage, diff: &XlsxOpcDiff) -> MutationApplyResult<()> {
     if let Some(d) = &diff.content_types {
         if let Some(dd) = &d.defaults {
-            apply_ct_entries(&mut opc.content_types.defaults, dd).map_err(|error| error.under(["contentTypes", "defaults"]))?;
+            apply_ct_entries(&mut opc.content_types.defaults, dd).await.map_err(|error| error.under(["contentTypes", "defaults"]))?;
         }
         if let Some(dd) = &d.overrides {
-            apply_ct_entries(&mut opc.content_types.overrides, dd).map_err(|error| error.under(["contentTypes", "overrides"]))?;
+            apply_ct_entries(&mut opc.content_types.overrides, dd).await.map_err(|error| error.under(["contentTypes", "overrides"]))?;
         }
     }
     if let Some(d) = &diff.parts {
@@ -742,10 +742,10 @@ async fn apply_opc_diff(opc: &mut OpcPackage, diff: &XlsxOpcDiff) -> MutationApp
                 Ok(())
             },
         )
-        .map_err(|error| error.under(["parts"]))?;
+        .await.map_err(|error| error.under(["parts"]))?;
     }
     if let Some(d) = &diff.relationships {
-        apply_relationships(&mut opc.relationships, d).map_err(|error| error.under(["relationships"]))?;
+        apply_relationships(&mut opc.relationships, d).await.map_err(|error| error.under(["relationships"]))?;
     }
     Ok(())
 }
@@ -770,24 +770,24 @@ async fn absorb_opc_diff(a: XlsxOpcDiff, b: XlsxOpcDiff) -> XlsxOpcDiff {
                 defaults: match (ca.defaults, cb.defaults) {
                     (None, x) => x,
                     (x, None) => x,
-                    (Some(da), Some(db)) => Some(absorb_ct_entries(da, db)),
+                    (Some(da), Some(db)) => Some(absorb_ct_entries(da, db).await),
                 },
                 overrides: match (ca.overrides, cb.overrides) {
                     (None, x) => x,
                     (x, None) => x,
-                    (Some(da), Some(db)) => Some(absorb_ct_entries(da, db)),
+                    (Some(da), Some(db)) => Some(absorb_ct_entries(da, db).await),
                 },
             }),
         },
         parts: match (a.parts, b.parts) {
             (None, x) => x,
             (x, None) => x,
-            (Some(pa), Some(pb)) => Some(absorb_named(pa, pb, |p| p.path.clone(), absorb_part_diff, |part, diff| *part = part_with_diff_applied(part, diff))),
+            (Some(pa), Some(pb)) => Some(absorb_named(pa, pb, |p| p.path.clone(), absorb_part_diff, |part, diff| *part = part_with_diff_applied(part, diff)).await),
         },
         relationships: match (a.relationships, b.relationships) {
             (None, x) => x,
             (x, None) => x,
-            (Some(ra), Some(rb)) => Some(absorb_relationships(ra, rb)),
+            (Some(ra), Some(rb)) => Some(absorb_relationships(ra, rb).await),
         },
     }
 }
@@ -798,10 +798,10 @@ impl MutationDiff<XlsxSnapshot> for XlsxDiff {
     async fn apply(&self, base: &XlsxSnapshot) -> MutationApplyResult<XlsxSnapshot> {
         let mut next = base.clone();
         if let Some(d) = &self.opc {
-            apply_opc_diff(&mut next.opc, d).map_err(|error| error.under(["opc"]))?;
+            apply_opc_diff(&mut next.opc, d).await.map_err(|error| error.under(["opc"]))?;
         }
         if let Some(d) = &self.workbook {
-            apply_workbook_diff(&mut next.workbook, d).map_err(|error| error.under(["workbook"]))?;
+            apply_workbook_diff(&mut next.workbook, d).await.map_err(|error| error.under(["workbook"]))?;
         }
         Ok(next)
     }
@@ -810,12 +810,12 @@ impl MutationDiff<XlsxSnapshot> for XlsxDiff {
         self.opc = match (self.opc.take(), other.opc) {
             (None, x) => x,
             (x, None) => x,
-            (Some(a), Some(b)) => Some(absorb_opc_diff(a, b)),
+            (Some(a), Some(b)) => Some(absorb_opc_diff(a, b).await),
         };
         self.workbook = match (self.workbook.take(), other.workbook) {
             (None, x) => x,
             (x, None) => x,
-            (Some(a), Some(b)) => Some(absorb_workbook_diff(a, b)),
+            (Some(a), Some(b)) => Some(absorb_workbook_diff(a, b).await),
         };
     }
 }
@@ -828,7 +828,7 @@ impl DiffAlgebra<XlsxSnapshot> for XlsxDiff {
     }
 
     async fn between(base: &XlsxSnapshot, other: &XlsxSnapshot) -> Self {
-        XlsxDiff { opc: diff_opc(&base.opc, &other.opc), workbook: diff_workbook(&base.workbook, &other.workbook) }
+        XlsxDiff { opc: diff_opc(&base.opc, &other.opc).await, workbook: diff_workbook(&base.workbook, &other.workbook).await }
     }
 
     async fn is_empty(&self) -> bool {
@@ -841,7 +841,7 @@ impl DiffAlgebra<XlsxSnapshot> for XlsxDiff {
 /// 🧩 Builds the sparse field-by-field diff for a `SetSnapshot` mutation. No `snapshot:
 /// Option<XlsxSnapshot>` full-replace slot — this IS `XlsxDiff::between`.
 pub async fn diff_set_snapshot(base: &XlsxSnapshot, next: &XlsxSnapshot) -> XlsxDiff {
-    XlsxDiff::between(base, next)
+    XlsxDiff::between(base, next).await
 }
 
 /// 🧩 Builds the diff for inserting a brand-new (possibly non-empty) sheet.
@@ -942,10 +942,10 @@ pub(crate) async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
 pub(crate) async fn enc_str(s: &str) -> String {
-    hex_encode(s.as_bytes())
+    hex_encode(s.as_bytes()).await
 }
 pub(crate) async fn dec_str(s: &str) -> Result<String, String> {
-    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
+    String::from_utf8(hex_decode(s).await?).map_err(|e| e.to_string())
 }
 pub(crate) async fn parse_u32(s: &str) -> Result<u32, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
@@ -993,8 +993,8 @@ pub(crate) async fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String
     }
 }
 pub(crate) async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
-    let inner = strip_brackets(s)?;
-    match split_top_level(inner, ',').as_slice() {
+    let inner = strip_brackets(s).await?;
+    match split_top_level(inner, ',').await.as_slice() {
         ["0"] => Ok(None),
         [tag, value] if *tag == "1" => Ok(Some(dec(value)?)),
         other => Err(format!("option decode: bad shape {other:?}")),
@@ -1015,17 +1015,17 @@ async fn enc_triple<K, D, T>(triple: &NamedTripleDiff<K, D, T>, enc_key: impl Fn
     format!("[{removed}];[{modified}];[{added}]")
 }
 async fn dec_triple<K, D, T>(body: &str, dec_key: impl Fn(&str) -> Result<K, String>, dec_diff: impl Fn(&str) -> Result<D, String>, dec_item: impl Fn(&str) -> Result<T, String>) -> Result<NamedTripleDiff<K, D, T>, String> {
-    let three = split_top_level(body, ';');
+    let three = split_top_level(body, ';').await;
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("triple: expected 3 sections, got {}", three.len())) };
-    let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().map(|s| dec_key(s)).collect::<Result<Vec<_>, String>>()?;
-    let modified = split_top_level(strip_brackets(modified_s)?, ',')
+    let removed = split_top_level(strip_brackets(removed_s).await?, ',').into_iter().map(|s| dec_key(s)).collect::<Result<Vec<_>, String>>()?;
+    let modified = split_top_level(strip_brackets(modified_s).await?, ',')
         .into_iter()
         .map(|entry| {
             let (k, d) = entry.split_once(':').ok_or_else(|| format!("triple modified: missing ':' in {entry:?}"))?;
             Ok(NamedModified { key: dec_key(k)?, diff: dec_diff(d)? })
         })
         .collect::<Result<Vec<_>, String>>()?;
-    let added = split_top_level(strip_brackets(added_s)?, ',').into_iter().map(|s| dec_item(s)).collect::<Result<Vec<_>, String>>()?;
+    let added = split_top_level(strip_brackets(added_s).await?, ',').into_iter().map(|s| dec_item(s)).collect::<Result<Vec<_>, String>>()?;
     Ok(NamedTripleDiff { removed, modified, added })
 }
 //#endregion 🔖️GenericTripleCodec
@@ -1040,22 +1040,22 @@ pub(crate) async fn enc_cell_value(v: &XlsxCellValue) -> String {
         XlsxCellValue::SharedString(i) => format!("S[{i}]"),
         XlsxCellValue::InlineString(s) => format!("I[{}]", enc_str(s)),
         XlsxCellValue::Boolean(b) => format!("B[{}]", if *b { "1" } else { "0" }),
-        XlsxCellValue::Formula { expr, cached } => format!("F[{},{}]", enc_str(expr), encode_option(cached, |c| enc_cell_value(c))),
+        XlsxCellValue::Formula { expr, cached } => format!("F[{},{}]", enc_str(expr), encode_option(cached, |c| semio_framework_plugin::resolve_ready(enc_cell_value(c)))),
         XlsxCellValue::Empty => "E[]".to_string(),
     }
 }
 pub(crate) async fn dec_cell_value(s: &str) -> Result<XlsxCellValue, String> {
     let (tag, rest) = s.split_at(1);
-    let inner = strip_brackets(rest)?;
+    let inner = strip_brackets(rest).await?;
     match tag {
-        "N" => Ok(XlsxCellValue::Number(dec_f64(inner)?)),
-        "S" => Ok(XlsxCellValue::SharedString(parse_usize(inner)?)),
-        "I" => Ok(XlsxCellValue::InlineString(dec_str(inner)?)),
+        "N" => Ok(XlsxCellValue::Number(dec_f64(inner).await?)),
+        "S" => Ok(XlsxCellValue::SharedString(parse_usize(inner).await?)),
+        "I" => Ok(XlsxCellValue::InlineString(dec_str(inner).await?)),
         "B" => Ok(XlsxCellValue::Boolean(inner == "1")),
         "F" => {
-            let parts = split_top_level(inner, ',');
+            let parts = split_top_level(inner, ',').await;
             let [expr, cached] = parts.as_slice() else { return Err(format!("formula: expected 2 fields, got {}", parts.len())) };
-            Ok(XlsxCellValue::Formula { expr: dec_str(expr)?, cached: decode_option(cached, |c| dec_cell_value(c).map(Box::new))? })
+            Ok(XlsxCellValue::Formula { expr: dec_str(expr).await?, cached: decode_option(cached, |c| semio_framework_plugin::resolve_ready(dec_cell_value(c)).map(Box::new)).await? })
         }
         "E" => Ok(XlsxCellValue::Empty),
         other => Err(format!("cell value: unknown tag {other:?}")),
@@ -1065,29 +1065,29 @@ pub(crate) async fn enc_cell_key(k: &(u32, u32)) -> String {
     format!("[{},{}]", k.0, k.1)
 }
 pub(crate) async fn dec_cell_key(s: &str) -> Result<(u32, u32), String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [row, col] = parts.as_slice() else { return Err(format!("cell key: expected 2 fields, got {}", parts.len())) };
-    Ok((parse_u32(row)?, parse_u32(col)?))
+    Ok((parse_u32(row).await?, parse_u32(col).await?))
 }
 pub(crate) async fn enc_cell(c: &XlsxCell) -> String {
     format!("[{},{},{}]", c.row, c.col, enc_cell_value(&c.value))
 }
 pub(crate) async fn dec_cell(s: &str) -> Result<XlsxCell, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [row, col, value] = parts.as_slice() else { return Err(format!("cell: expected 3 fields, got {}", parts.len())) };
-    Ok(XlsxCell { row: parse_u32(row)?, col: parse_u32(col)?, value: dec_cell_value(value)? })
+    Ok(XlsxCell { row: parse_u32(row).await?, col: parse_u32(col).await?, value: dec_cell_value(value).await? })
 }
 async fn enc_cell_diff(d: &XlsxCellDiff) -> String {
-    encode_option(&d.value, |v| enc_cell_value(v))
+    encode_option(&d.value, |v| enc_cell_value(v)).await
 }
 async fn dec_cell_diff(s: &str) -> Result<XlsxCellDiff, String> {
-    Ok(XlsxCellDiff { value: decode_option(s, dec_cell_value)? })
+    Ok(XlsxCellDiff { value: decode_option(s, dec_cell_value).await? })
 }
 async fn enc_cells_diff(t: &XlsxCellsDiff) -> String {
-    enc_triple(t, enc_cell_key, enc_cell_diff, enc_cell)
+    enc_triple(t, enc_cell_key, enc_cell_diff, enc_cell).await
 }
 async fn dec_cells_diff(s: &str) -> Result<XlsxCellsDiff, String> {
-    dec_triple(s, dec_cell_key, dec_cell_diff, dec_cell)
+    dec_triple(s, dec_cell_key, dec_cell_diff, dec_cell).await
 }
 //#endregion 🔖️CellValueCodec
 
@@ -1097,44 +1097,44 @@ pub(crate) async fn enc_sheet(s: &XlsxSheet) -> String {
     format!("[{},[{}]]", enc_str(&s.name), cells)
 }
 pub(crate) async fn dec_sheet(s: &str) -> Result<XlsxSheet, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [name, cells] = parts.as_slice() else { return Err(format!("sheet: expected 2 fields, got {}", parts.len())) };
-    let cells = split_top_level(strip_brackets(cells)?, ',').into_iter().map(dec_cell).collect::<Result<Vec<_>, String>>()?;
-    Ok(XlsxSheet { name: dec_str(name)?, cells })
+    let cells = split_top_level(strip_brackets(cells).await?, ',').into_iter().map(dec_cell).collect::<Result<Vec<_>, String>>()?;
+    Ok(XlsxSheet { name: dec_str(name).await?, cells })
 }
 async fn enc_sheet_diff(d: &XlsxSheetDiff) -> String {
-    encode_option(&d.cells, |c| enc_cells_diff(c))
+    encode_option(&d.cells, |c| enc_cells_diff(c)).await
 }
 async fn dec_sheet_diff(s: &str) -> Result<XlsxSheetDiff, String> {
-    Ok(XlsxSheetDiff { cells: decode_option(s, dec_cells_diff)? })
+    Ok(XlsxSheetDiff { cells: decode_option(s, dec_cells_diff).await? })
 }
 async fn enc_sheets_diff(t: &XlsxSheetsDiff) -> String {
-    enc_triple(t, |k| enc_str(k), enc_sheet_diff, enc_sheet)
+    enc_triple(t, |k| enc_str(k), enc_sheet_diff, enc_sheet).await
 }
 async fn dec_sheets_diff(s: &str) -> Result<XlsxSheetsDiff, String> {
-    dec_triple(s, dec_str, dec_sheet_diff, dec_sheet)
+    dec_triple(s, dec_str, dec_sheet_diff, dec_sheet).await
 }
 async fn enc_shared_string_item(item: &(usize, String)) -> String {
     format!("[{},{}]", item.0, enc_str(&item.1))
 }
 async fn dec_shared_string_item(s: &str) -> Result<(usize, String), String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [idx, value] = parts.as_slice() else { return Err(format!("shared string item: expected 2 fields, got {}", parts.len())) };
-    Ok((parse_usize(idx)?, dec_str(value)?))
+    Ok((parse_usize(idx).await?, dec_str(value).await?))
 }
 async fn enc_shared_strings_diff(t: &XlsxSharedStringsDiff) -> String {
-    enc_triple(t, |k| k.to_string(), |d| enc_str(d), enc_shared_string_item)
+    enc_triple(t, |k| k.to_string(), |d| enc_str(d), enc_shared_string_item).await
 }
 async fn dec_shared_strings_diff(s: &str) -> Result<XlsxSharedStringsDiff, String> {
-    dec_triple(s, parse_usize, dec_str, dec_shared_string_item)
+    dec_triple(s, parse_usize, dec_str, dec_shared_string_item).await
 }
 async fn enc_workbook_diff(d: &XlsxWorkbookDiff) -> String {
     format!("[{},{}]", encode_option(&d.sheets, |t| enc_sheets_diff(t)), encode_option(&d.shared_strings, |t| enc_shared_strings_diff(t)))
 }
 async fn dec_workbook_diff(s: &str) -> Result<XlsxWorkbookDiff, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [sheets, shared_strings] = parts.as_slice() else { return Err(format!("workbook diff: expected 2 fields, got {}", parts.len())) };
-    Ok(XlsxWorkbookDiff { sheets: decode_option(sheets, dec_sheets_diff)?, shared_strings: decode_option(shared_strings, dec_shared_strings_diff)? })
+    Ok(XlsxWorkbookDiff { sheets: decode_option(sheets, dec_sheets_diff).await?, shared_strings: decode_option(shared_strings, dec_shared_strings_diff).await? })
 }
 //#endregion 🔖️WorkbookCodec
 
@@ -1143,45 +1143,45 @@ pub(crate) async fn enc_ct_entry(item: &(String, String)) -> String {
     format!("[{},{}]", enc_str(&item.0), enc_str(&item.1))
 }
 pub(crate) async fn dec_ct_entry(s: &str) -> Result<(String, String), String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [k, v] = parts.as_slice() else { return Err(format!("ct entry: expected 2 fields, got {}", parts.len())) };
-    Ok((dec_str(k)?, dec_str(v)?))
+    Ok((dec_str(k).await?, dec_str(v).await?))
 }
 async fn enc_ct_entries_diff(t: &XlsxOpcCtEntriesDiff) -> String {
-    enc_triple(t, |k| enc_str(k), |d| enc_str(d), enc_ct_entry)
+    enc_triple(t, |k| enc_str(k), |d| enc_str(d), enc_ct_entry).await
 }
 async fn dec_ct_entries_diff(s: &str) -> Result<XlsxOpcCtEntriesDiff, String> {
-    dec_triple(s, dec_str, dec_str, dec_ct_entry)
+    dec_triple(s, dec_str, dec_str, dec_ct_entry).await
 }
 async fn enc_content_types_diff(d: &XlsxOpcContentTypesDiff) -> String {
     format!("[{},{}]", encode_option(&d.defaults, |t| enc_ct_entries_diff(t)), encode_option(&d.overrides, |t| enc_ct_entries_diff(t)))
 }
 async fn dec_content_types_diff(s: &str) -> Result<XlsxOpcContentTypesDiff, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [defaults, overrides] = parts.as_slice() else { return Err(format!("content types diff: expected 2 fields, got {}", parts.len())) };
-    Ok(XlsxOpcContentTypesDiff { defaults: decode_option(defaults, dec_ct_entries_diff)?, overrides: decode_option(overrides, dec_ct_entries_diff)? })
+    Ok(XlsxOpcContentTypesDiff { defaults: decode_option(defaults, dec_ct_entries_diff).await?, overrides: decode_option(overrides, dec_ct_entries_diff).await? })
 }
 pub(crate) async fn enc_part(p: &OpcPart) -> String {
     format!("[{},{},{}]", enc_str(&p.path), enc_str(&p.content_type), hex_encode(&p.bytes))
 }
 pub(crate) async fn dec_part(s: &str) -> Result<OpcPart, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [path, ct, bytes] = parts.as_slice() else { return Err(format!("opc part: expected 3 fields, got {}", parts.len())) };
-    Ok(OpcPart { path: dec_str(path)?, content_type: dec_str(ct)?, bytes: hex_decode(bytes)? })
+    Ok(OpcPart { path: dec_str(path).await?, content_type: dec_str(ct).await?, bytes: hex_decode(bytes).await? })
 }
 async fn enc_part_diff(d: &XlsxOpcPartDiff) -> String {
     format!("[{},{}]", encode_option(&d.content_type, |v| enc_str(v)), encode_option(&d.bytes, |v| hex_encode(v)))
 }
 async fn dec_part_diff(s: &str) -> Result<XlsxOpcPartDiff, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [ct, bytes] = parts.as_slice() else { return Err(format!("opc part diff: expected 2 fields, got {}", parts.len())) };
-    Ok(XlsxOpcPartDiff { content_type: decode_option(ct, dec_str)?, bytes: decode_option(bytes, hex_decode)? })
+    Ok(XlsxOpcPartDiff { content_type: decode_option(ct, dec_str).await?, bytes: decode_option(bytes, hex_decode).await? })
 }
 async fn enc_parts_diff(t: &XlsxOpcPartsDiff) -> String {
-    enc_triple(t, |k| enc_str(k), enc_part_diff, enc_part)
+    enc_triple(t, |k| enc_str(k), enc_part_diff, enc_part).await
 }
 async fn dec_parts_diff(s: &str) -> Result<XlsxOpcPartsDiff, String> {
-    dec_triple(s, dec_str, dec_part_diff, dec_part)
+    dec_triple(s, dec_str, dec_part_diff, dec_part).await
 }
 pub(crate) async fn enc_target_mode(m: &OpcTargetMode) -> String {
     match m {
@@ -1200,47 +1200,47 @@ pub(crate) async fn enc_rel(r: &OpcRelationship) -> String {
     format!("[{},{},{},{}]", enc_str(&r.id), enc_str(&r.rel_type), enc_str(&r.target), enc_target_mode(&r.target_mode))
 }
 pub(crate) async fn dec_rel(s: &str) -> Result<OpcRelationship, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [id, rel_type, target, mode] = parts.as_slice() else { return Err(format!("opc rel: expected 4 fields, got {}", parts.len())) };
-    Ok(OpcRelationship { id: dec_str(id)?, rel_type: dec_str(rel_type)?, target: dec_str(target)?, target_mode: dec_target_mode(mode)? })
+    Ok(OpcRelationship { id: dec_str(id).await?, rel_type: dec_str(rel_type).await?, target: dec_str(target).await?, target_mode: dec_target_mode(mode).await? })
 }
 async fn enc_rel_diff(d: &XlsxOpcRelDiff) -> String {
     format!("[{},{},{}]", encode_option(&d.rel_type, |v| enc_str(v)), encode_option(&d.target, |v| enc_str(v)), encode_option(&d.target_mode, |v| enc_target_mode(v)),)
 }
 async fn dec_rel_diff(s: &str) -> Result<XlsxOpcRelDiff, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [rel_type, target, mode] = parts.as_slice() else { return Err(format!("opc rel diff: expected 3 fields, got {}", parts.len())) };
-    Ok(XlsxOpcRelDiff { rel_type: decode_option(rel_type, dec_str)?, target: decode_option(target, dec_str)?, target_mode: decode_option(mode, dec_target_mode)? })
+    Ok(XlsxOpcRelDiff { rel_type: decode_option(rel_type, dec_str).await?, target: decode_option(target, dec_str).await?, target_mode: decode_option(mode, dec_target_mode).await? })
 }
 async fn enc_rel_list_diff(t: &XlsxOpcRelListDiff) -> String {
-    enc_triple(t, |k| enc_str(k), enc_rel_diff, enc_rel)
+    enc_triple(t, |k| enc_str(k), enc_rel_diff, enc_rel).await
 }
 async fn dec_rel_list_diff(s: &str) -> Result<XlsxOpcRelListDiff, String> {
-    dec_triple(s, dec_str, dec_rel_diff, dec_rel)
+    dec_triple(s, dec_str, dec_rel_diff, dec_rel).await
 }
 pub(crate) async fn enc_owner_rels(item: &(String, Vec<OpcRelationship>)) -> String {
     let rels = item.1.iter().map(enc_rel).collect::<Vec<_>>().join(",");
     format!("[{},[{}]]", enc_str(&item.0), rels)
 }
 pub(crate) async fn dec_owner_rels(s: &str) -> Result<(String, Vec<OpcRelationship>), String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [owner, rels] = parts.as_slice() else { return Err(format!("owner rels: expected 2 fields, got {}", parts.len())) };
-    let rels = split_top_level(strip_brackets(rels)?, ',').into_iter().map(dec_rel).collect::<Result<Vec<_>, String>>()?;
-    Ok((dec_str(owner)?, rels))
+    let rels = split_top_level(strip_brackets(rels).await?, ',').into_iter().map(dec_rel).collect::<Result<Vec<_>, String>>()?;
+    Ok((dec_str(owner).await?, rels))
 }
 async fn enc_relationships_diff(t: &XlsxOpcRelationshipsDiff) -> String {
-    enc_triple(t, |k| enc_str(k), enc_rel_list_diff, enc_owner_rels)
+    enc_triple(t, |k| enc_str(k), enc_rel_list_diff, enc_owner_rels).await
 }
 async fn dec_relationships_diff(s: &str) -> Result<XlsxOpcRelationshipsDiff, String> {
-    dec_triple(s, dec_str, dec_rel_list_diff, dec_owner_rels)
+    dec_triple(s, dec_str, dec_rel_list_diff, dec_owner_rels).await
 }
 async fn enc_opc_diff(d: &XlsxOpcDiff) -> String {
     format!("[{},{},{}]", encode_option(&d.content_types, |v| enc_content_types_diff(v)), encode_option(&d.parts, |v| enc_parts_diff(v)), encode_option(&d.relationships, |v| enc_relationships_diff(v)),)
 }
 async fn dec_opc_diff(s: &str) -> Result<XlsxOpcDiff, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [ct, p, r] = parts.as_slice() else { return Err(format!("opc diff: expected 3 fields, got {}", parts.len())) };
-    Ok(XlsxOpcDiff { content_types: decode_option(ct, dec_content_types_diff)?, parts: decode_option(p, dec_parts_diff)?, relationships: decode_option(r, dec_relationships_diff)? })
+    Ok(XlsxOpcDiff { content_types: decode_option(ct, dec_content_types_diff).await?, parts: decode_option(p, dec_parts_diff).await?, relationships: decode_option(r, dec_relationships_diff).await? })
 }
 //#endregion 🔖️OpcCodec
 
@@ -1261,14 +1261,14 @@ pub(crate) async fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
     out.extend_from_slice(bytes);
 }
 pub(crate) async fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
+    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec())
 }
 pub(crate) async fn write_str_lp(out: &mut Vec<u8>, s: &str) {
     write_bytes_lp(out, s.as_bytes());
 }
 pub(crate) async fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
-    String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
+    String::from_utf8(read_bytes_lp(reader).await?).map_err(|e| e.to_string())
 }
 //#endregion 🔖️BinaryPrimitives
 
@@ -1284,7 +1284,7 @@ pub(crate) async fn enc_target_mode_bin(m: &OpcTargetMode, out: &mut Vec<u8>) {
     });
 }
 pub(crate) async fn dec_target_mode_bin(reader: &mut store::ByteReader<'_>) -> Result<OpcTargetMode, String> {
-    match reader.read_u8().map_err(|e| e.to_string())? {
+    match reader.read_u8().await.map_err(|e| e.to_string())? {
         0 => Ok(OpcTargetMode::Internal),
         1 => Ok(OpcTargetMode::External),
         other => Err(format!("target mode binary: bad value {other}")),
@@ -1297,9 +1297,9 @@ pub(crate) async fn enc_opc_part_bin(p: &OpcPart, out: &mut Vec<u8>) {
     write_bytes_lp(out, &p.bytes);
 }
 pub(crate) async fn dec_opc_part_bin(reader: &mut store::ByteReader<'_>) -> Result<OpcPart, String> {
-    let path = read_str_lp(reader)?;
-    let content_type = read_str_lp(reader)?;
-    let bytes = read_bytes_lp(reader)?;
+    let path = read_str_lp(reader).await?;
+    let content_type = read_str_lp(reader).await?;
+    let bytes = read_bytes_lp(reader).await?;
     Ok(OpcPart { path, content_type, bytes })
 }
 
@@ -1310,10 +1310,10 @@ pub(crate) async fn enc_rel_bin(r: &OpcRelationship, out: &mut Vec<u8>) {
     enc_target_mode_bin(&r.target_mode, out);
 }
 pub(crate) async fn dec_rel_bin(reader: &mut store::ByteReader<'_>) -> Result<OpcRelationship, String> {
-    let id = read_str_lp(reader)?;
-    let rel_type = read_str_lp(reader)?;
-    let target = read_str_lp(reader)?;
-    let target_mode = dec_target_mode_bin(reader)?;
+    let id = read_str_lp(reader).await?;
+    let rel_type = read_str_lp(reader).await?;
+    let target = read_str_lp(reader).await?;
+    let target_mode = dec_target_mode_bin(reader).await?;
     Ok(OpcRelationship { id, rel_type, target, target_mode })
 }
 
@@ -1322,8 +1322,8 @@ pub(crate) async fn enc_ct_entry_bin(e: &(String, String), out: &mut Vec<u8>) {
     write_str_lp(out, &e.1);
 }
 pub(crate) async fn dec_ct_entry_bin(reader: &mut store::ByteReader<'_>) -> Result<(String, String), String> {
-    let k = read_str_lp(reader)?;
-    let v = read_str_lp(reader)?;
+    let k = read_str_lp(reader).await?;
+    let v = read_str_lp(reader).await?;
     Ok((k, v))
 }
 
@@ -1336,11 +1336,11 @@ pub(crate) async fn enc_owner_rels_bin(e: &(String, Vec<OpcRelationship>), out: 
     }
 }
 pub(crate) async fn dec_owner_rels_bin(reader: &mut store::ByteReader<'_>) -> Result<(String, Vec<OpcRelationship>), String> {
-    let owner = read_str_lp(reader)?;
-    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let owner = read_str_lp(reader).await?;
+    let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut list = Vec::with_capacity(count as usize);
     for _ in 0..count {
-        list.push(dec_rel_bin(reader)?);
+        list.push(dec_rel_bin(reader).await?);
     }
     Ok((owner, list))
 }
@@ -1378,18 +1378,18 @@ pub(crate) async fn enc_cell_value_bin(v: &XlsxCellValue, out: &mut Vec<u8>) {
     }
 }
 pub(crate) async fn dec_cell_value_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxCellValue, String> {
-    match reader.read_u8().map_err(|e| e.to_string())? {
+    match reader.read_u8().await.map_err(|e| e.to_string())? {
         0 => {
-            let bytes = reader.read_bytes(8).map_err(|e| e.to_string())?;
+            let bytes = reader.read_bytes(8).await.map_err(|e| e.to_string())?;
             let arr: [u8; 8] = bytes.try_into().map_err(|_| "cell value binary: short f64".to_string())?;
             Ok(XlsxCellValue::Number(f64::from_le_bytes(arr)))
         }
-        1 => Ok(XlsxCellValue::SharedString(reader.read_varint_u64().map_err(|e| e.to_string())? as usize)),
-        2 => Ok(XlsxCellValue::InlineString(read_str_lp(reader)?)),
-        3 => Ok(XlsxCellValue::Boolean(reader.read_u8().map_err(|e| e.to_string())? != 0)),
+        1 => Ok(XlsxCellValue::SharedString(reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize)),
+        2 => Ok(XlsxCellValue::InlineString(read_str_lp(reader).await?)),
+        3 => Ok(XlsxCellValue::Boolean(reader.read_u8().await.map_err(|e| e.to_string())? != 0)),
         4 => {
-            let expr = read_str_lp(reader)?;
-            let cached = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(Box::new(dec_cell_value_bin(reader)?)) } else { None };
+            let expr = read_str_lp(reader).await?;
+            let cached = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(Box::new(Box::pin(dec_cell_value_bin(reader)).await?)) } else { None };
             Ok(XlsxCellValue::Formula { expr, cached })
         }
         5 => Ok(XlsxCellValue::Empty),
@@ -1403,9 +1403,9 @@ pub(crate) async fn enc_cell_bin(c: &XlsxCell, out: &mut Vec<u8>) {
     enc_cell_value_bin(&c.value, out);
 }
 pub(crate) async fn dec_cell_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxCell, String> {
-    let row = reader.read_varint_u64().map_err(|e| e.to_string())? as u32;
-    let col = reader.read_varint_u64().map_err(|e| e.to_string())? as u32;
-    let value = dec_cell_value_bin(reader)?;
+    let row = reader.read_varint_u64().await.map_err(|e| e.to_string())? as u32;
+    let col = reader.read_varint_u64().await.map_err(|e| e.to_string())? as u32;
+    let value = dec_cell_value_bin(reader).await?;
     Ok(XlsxCell { row, col, value })
 }
 
@@ -1417,11 +1417,11 @@ pub(crate) async fn enc_sheet_bin(s: &XlsxSheet, out: &mut Vec<u8>) {
     }
 }
 pub(crate) async fn dec_sheet_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxSheet, String> {
-    let name = read_str_lp(reader)?;
-    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let name = read_str_lp(reader).await?;
+    let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut cells = Vec::with_capacity(count as usize);
     for _ in 0..count {
-        cells.push(dec_cell_bin(reader)?);
+        cells.push(dec_cell_bin(reader).await?);
     }
     Ok(XlsxSheet { name, cells })
 }
@@ -1454,19 +1454,19 @@ async fn dec_named_triple_bin<K, D, T>(
     dec_d: impl Fn(&mut store::ByteReader<'_>) -> Result<D, String>,
     dec_t: impl Fn(&mut store::ByteReader<'_>) -> Result<T, String>,
 ) -> Result<NamedTripleDiff<K, D, T>, String> {
-    let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let removed_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(removed_count as usize);
     for _ in 0..removed_count {
         removed.push(dec_k(reader)?);
     }
-    let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let modified_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut modified = Vec::with_capacity(modified_count as usize);
     for _ in 0..modified_count {
         let key = dec_k(reader)?;
         let diff = dec_d(reader)?;
         modified.push(NamedModified { key, diff });
     }
-    let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let added_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut added = Vec::with_capacity(added_count as usize);
     for _ in 0..added_count {
         added.push(dec_t(reader)?);
@@ -1481,8 +1481,8 @@ async fn enc_cell_key_bin(k: &(u32, u32), out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, k.1 as u64);
 }
 async fn dec_cell_key_bin(reader: &mut store::ByteReader<'_>) -> Result<(u32, u32), String> {
-    let row = reader.read_varint_u64().map_err(|e| e.to_string())? as u32;
-    let col = reader.read_varint_u64().map_err(|e| e.to_string())? as u32;
+    let row = reader.read_varint_u64().await.map_err(|e| e.to_string())? as u32;
+    let col = reader.read_varint_u64().await.map_err(|e| e.to_string())? as u32;
     Ok((row, col))
 }
 
@@ -1493,15 +1493,15 @@ async fn enc_cell_diff_bin(d: &XlsxCellDiff, out: &mut Vec<u8>) {
     }
 }
 async fn dec_cell_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxCellDiff, String> {
-    let value = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_cell_value_bin(reader)?) } else { None };
+    let value = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_cell_value_bin(reader).await?) } else { None };
     Ok(XlsxCellDiff { value })
 }
 
 async fn enc_cells_diff_bin(d: &XlsxCellsDiff, out: &mut Vec<u8>) {
-    enc_named_triple_bin(d, enc_cell_key_bin, enc_cell_diff_bin, enc_cell_bin, out)
+    enc_named_triple_bin(d, enc_cell_key_bin, enc_cell_diff_bin, enc_cell_bin, out).await
 }
 async fn dec_cells_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxCellsDiff, String> {
-    dec_named_triple_bin(reader, dec_cell_key_bin, dec_cell_diff_bin, dec_cell_bin)
+    dec_named_triple_bin(reader, dec_cell_key_bin, dec_cell_diff_bin, dec_cell_bin).await
 }
 
 async fn enc_sheet_diff_bin(d: &XlsxSheetDiff, out: &mut Vec<u8>) {
@@ -1511,15 +1511,15 @@ async fn enc_sheet_diff_bin(d: &XlsxSheetDiff, out: &mut Vec<u8>) {
     }
 }
 async fn dec_sheet_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxSheetDiff, String> {
-    let cells = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_cells_diff_bin(reader)?) } else { None };
+    let cells = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_cells_diff_bin(reader).await?) } else { None };
     Ok(XlsxSheetDiff { cells })
 }
 
 async fn enc_sheets_diff_bin(d: &XlsxSheetsDiff, out: &mut Vec<u8>) {
-    enc_named_triple_bin(d, |k, out| write_str_lp(out, k), enc_sheet_diff_bin, enc_sheet_bin, out)
+    enc_named_triple_bin(d, |k, out| write_str_lp(out, k), enc_sheet_diff_bin, enc_sheet_bin, out).await
 }
 async fn dec_sheets_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxSheetsDiff, String> {
-    dec_named_triple_bin(reader, |r| read_str_lp(r), dec_sheet_diff_bin, dec_sheet_bin)
+    dec_named_triple_bin(reader, |r| read_str_lp(r), dec_sheet_diff_bin, dec_sheet_bin).await
 }
 
 async fn enc_shared_string_item_bin(item: &(usize, String), out: &mut Vec<u8>) {
@@ -1527,16 +1527,16 @@ async fn enc_shared_string_item_bin(item: &(usize, String), out: &mut Vec<u8>) {
     write_str_lp(out, &item.1);
 }
 async fn dec_shared_string_item_bin(reader: &mut store::ByteReader<'_>) -> Result<(usize, String), String> {
-    let idx = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-    let value = read_str_lp(reader)?;
+    let idx = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+    let value = read_str_lp(reader).await?;
     Ok((idx, value))
 }
 
 async fn enc_shared_strings_diff_bin(d: &XlsxSharedStringsDiff, out: &mut Vec<u8>) {
-    enc_named_triple_bin(d, |k, out| store::pack_rt::write_varint_u64(out, *k as u64), |v: &String, out| write_str_lp(out, v), enc_shared_string_item_bin, out)
+    enc_named_triple_bin(d, |k, out| store::pack_rt::write_varint_u64(out, *k as u64), |v: &String, out| write_str_lp(out, v), enc_shared_string_item_bin, out).await
 }
 async fn dec_shared_strings_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxSharedStringsDiff, String> {
-    dec_named_triple_bin(reader, |r| Ok(r.read_varint_u64().map_err(|e| e.to_string())? as usize), |r| read_str_lp(r), dec_shared_string_item_bin)
+    dec_named_triple_bin(reader, |r| Ok(semio_framework_plugin::resolve_ready(r.read_varint_u64()).map_err(|e| e.to_string())? as usize), |r| read_str_lp(r), dec_shared_string_item_bin).await
 }
 
 pub(crate) async fn enc_workbook_diff_bin(d: &XlsxWorkbookDiff, out: &mut Vec<u8>) {
@@ -1550,16 +1550,16 @@ pub(crate) async fn enc_workbook_diff_bin(d: &XlsxWorkbookDiff, out: &mut Vec<u8
     }
 }
 pub(crate) async fn dec_workbook_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxWorkbookDiff, String> {
-    let sheets = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_sheets_diff_bin(reader)?) } else { None };
-    let shared_strings = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_shared_strings_diff_bin(reader)?) } else { None };
+    let sheets = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_sheets_diff_bin(reader).await?) } else { None };
+    let shared_strings = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_shared_strings_diff_bin(reader).await?) } else { None };
     Ok(XlsxWorkbookDiff { sheets, shared_strings })
 }
 
 async fn enc_ct_entries_diff_bin(d: &XlsxOpcCtEntriesDiff, out: &mut Vec<u8>) {
-    enc_named_triple_bin(d, |k, out| write_str_lp(out, k), |v: &String, out| write_str_lp(out, v), enc_ct_entry_bin, out)
+    enc_named_triple_bin(d, |k, out| write_str_lp(out, k), |v: &String, out| write_str_lp(out, v), enc_ct_entry_bin, out).await
 }
 async fn dec_ct_entries_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxOpcCtEntriesDiff, String> {
-    dec_named_triple_bin(reader, |r| read_str_lp(r), |r| read_str_lp(r), dec_ct_entry_bin)
+    dec_named_triple_bin(reader, |r| read_str_lp(r), |r| read_str_lp(r), dec_ct_entry_bin).await
 }
 
 async fn enc_content_types_diff_bin(d: &XlsxOpcContentTypesDiff, out: &mut Vec<u8>) {
@@ -1573,8 +1573,8 @@ async fn enc_content_types_diff_bin(d: &XlsxOpcContentTypesDiff, out: &mut Vec<u
     }
 }
 async fn dec_content_types_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxOpcContentTypesDiff, String> {
-    let defaults = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_ct_entries_diff_bin(reader)?) } else { None };
-    let overrides = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_ct_entries_diff_bin(reader)?) } else { None };
+    let defaults = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_ct_entries_diff_bin(reader).await?) } else { None };
+    let overrides = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_ct_entries_diff_bin(reader).await?) } else { None };
     Ok(XlsxOpcContentTypesDiff { defaults, overrides })
 }
 
@@ -1589,16 +1589,16 @@ async fn enc_opc_part_diff_bin(d: &XlsxOpcPartDiff, out: &mut Vec<u8>) {
     }
 }
 async fn dec_opc_part_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxOpcPartDiff, String> {
-    let content_type = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
-    let bytes = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_bytes_lp(reader)?) } else { None };
+    let content_type = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader).await?) } else { None };
+    let bytes = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(read_bytes_lp(reader).await?) } else { None };
     Ok(XlsxOpcPartDiff { content_type, bytes })
 }
 
 async fn enc_parts_diff_bin(d: &XlsxOpcPartsDiff, out: &mut Vec<u8>) {
-    enc_named_triple_bin(d, |k, out| write_str_lp(out, k), enc_opc_part_diff_bin, enc_opc_part_bin, out)
+    enc_named_triple_bin(d, |k, out| write_str_lp(out, k), enc_opc_part_diff_bin, enc_opc_part_bin, out).await
 }
 async fn dec_parts_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxOpcPartsDiff, String> {
-    dec_named_triple_bin(reader, |r| read_str_lp(r), dec_opc_part_diff_bin, dec_opc_part_bin)
+    dec_named_triple_bin(reader, |r| read_str_lp(r), dec_opc_part_diff_bin, dec_opc_part_bin).await
 }
 
 async fn enc_rel_diff_bin(d: &XlsxOpcRelDiff, out: &mut Vec<u8>) {
@@ -1616,24 +1616,24 @@ async fn enc_rel_diff_bin(d: &XlsxOpcRelDiff, out: &mut Vec<u8>) {
     }
 }
 async fn dec_rel_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxOpcRelDiff, String> {
-    let rel_type = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
-    let target = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
-    let target_mode = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_target_mode_bin(reader)?) } else { None };
+    let rel_type = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader).await?) } else { None };
+    let target = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader).await?) } else { None };
+    let target_mode = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_target_mode_bin(reader).await?) } else { None };
     Ok(XlsxOpcRelDiff { rel_type, target, target_mode })
 }
 
 async fn enc_rel_list_diff_bin(d: &XlsxOpcRelListDiff, out: &mut Vec<u8>) {
-    enc_named_triple_bin(d, |k, out| write_str_lp(out, k), enc_rel_diff_bin, enc_rel_bin, out)
+    enc_named_triple_bin(d, |k, out| write_str_lp(out, k), enc_rel_diff_bin, enc_rel_bin, out).await
 }
 async fn dec_rel_list_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxOpcRelListDiff, String> {
-    dec_named_triple_bin(reader, |r| read_str_lp(r), dec_rel_diff_bin, dec_rel_bin)
+    dec_named_triple_bin(reader, |r| read_str_lp(r), dec_rel_diff_bin, dec_rel_bin).await
 }
 
 async fn enc_relationships_diff_bin(d: &XlsxOpcRelationshipsDiff, out: &mut Vec<u8>) {
-    enc_named_triple_bin(d, |k, out| write_str_lp(out, k), enc_rel_list_diff_bin, enc_owner_rels_bin, out)
+    enc_named_triple_bin(d, |k, out| write_str_lp(out, k), enc_rel_list_diff_bin, enc_owner_rels_bin, out).await
 }
 async fn dec_relationships_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxOpcRelationshipsDiff, String> {
-    dec_named_triple_bin(reader, |r| read_str_lp(r), dec_rel_list_diff_bin, dec_owner_rels_bin)
+    dec_named_triple_bin(reader, |r| read_str_lp(r), dec_rel_list_diff_bin, dec_owner_rels_bin).await
 }
 
 pub(crate) async fn enc_opc_diff_bin(d: &XlsxOpcDiff, out: &mut Vec<u8>) {
@@ -1651,9 +1651,9 @@ pub(crate) async fn enc_opc_diff_bin(d: &XlsxOpcDiff, out: &mut Vec<u8>) {
     }
 }
 pub(crate) async fn dec_opc_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxOpcDiff, String> {
-    let content_types = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_content_types_diff_bin(reader)?) } else { None };
-    let parts = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_parts_diff_bin(reader)?) } else { None };
-    let relationships = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_relationships_diff_bin(reader)?) } else { None };
+    let content_types = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_content_types_diff_bin(reader).await?) } else { None };
+    let parts = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_parts_diff_bin(reader).await?) } else { None };
+    let relationships = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_relationships_diff_bin(reader).await?) } else { None };
     Ok(XlsxOpcDiff { content_types, parts, relationships })
 }
 //#endregion 🔖️DiffValueBinaryCodecs
@@ -1680,9 +1680,9 @@ async fn parse_xlsx_diff(line: &str) -> Result<XlsxDiff, String> {
     }
     for token in line.split(' ') {
         if let Some(rest) = token.strip_prefix("opc=") {
-            d.opc = Some(dec_opc_diff(rest)?);
+            d.opc = Some(dec_opc_diff(rest).await?);
         } else if let Some(rest) = token.strip_prefix("workbook=") {
-            d.workbook = Some(dec_workbook_diff(rest)?);
+            d.workbook = Some(dec_workbook_diff(rest).await?);
         } else {
             return Err(format!("xlsx diff: unknown token {token:?}"));
         }
@@ -1692,10 +1692,10 @@ async fn parse_xlsx_diff(line: &str) -> Result<XlsxDiff, String> {
 
 impl protocol::DiffCodec for XlsxDiff {
     async fn print_diff(&self) -> String {
-        print_xlsx_diff(self)
+        print_xlsx_diff(self).await
     }
     async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
-        parse_xlsx_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_xlsx_diff(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// 🧪️ FG-wave: REAL binary frame (`format u8 | flags u8 | [opc][workbook]`), matching
     /// `../💾️binary/📡️component.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape
@@ -1722,12 +1722,12 @@ impl protocol::DiffCodec for XlsxDiff {
         Ok(out)
     }
     async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let mut reader = store::ByteReader::new(bytes);
+        let mut reader = store::ByteReader::new(bytes).await;
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
-        let _format = reader.read_u8().map_err(|e| malformed("diff format", 0, e.to_string()))?;
-        let flags = reader.read_u8().map_err(|e| malformed("diff flags", 1, e.to_string()))?;
-        let opc = if flags & 0b01 != 0 { Some(dec_opc_diff_bin(&mut reader).map_err(|e| malformed("diff opc", reader.position(), e))?) } else { None };
-        let workbook = if flags & 0b10 != 0 { Some(dec_workbook_diff_bin(&mut reader).map_err(|e| malformed("diff workbook", reader.position(), e))?) } else { None };
+        let _format = reader.read_u8().await.map_err(|e| malformed("diff format", 0, e.to_string()))?;
+        let flags = reader.read_u8().await.map_err(|e| malformed("diff flags", 1, e.to_string()))?;
+        let opc = if flags & 0b01 != 0 { Some(dec_opc_diff_bin(&mut reader).await.map_err(|e| malformed("diff opc", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
+        let workbook = if flags & 0b10 != 0 { Some(dec_workbook_diff_bin(&mut reader).await.map_err(|e| malformed("diff workbook", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
         Ok(XlsxDiff { opc, workbook })
     }
 }

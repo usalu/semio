@@ -27,7 +27,7 @@ pub struct SemioTableInference {
 
 impl protocol::Inference<SemioTableSnapshot> for SemioTableInference {
     async fn infer(snapshot: &SemioTableSnapshot) -> Self {
-        Self { shape: compute_semio_table_shape(snapshot) }
+        Self { shape: compute_semio_table_shape(snapshot).await }
     }
 }
 

@@ -1,0 +1,70 @@
+    Finished `test` profile [unoptimized] target(s) in 0.16s
+     Running unittests 📦️glue.rs (target/debug/deps/semio_framework_ui_runtime-b575e311e5ad91e8)
+
+running 57 tests
+test dispatch::tests::a_zero_tolerance_makes_any_trailing_revision_stale ... ok
+test dispatch::tests::an_intent_at_or_ahead_of_the_current_revision_is_never_stale ... ok
+test dispatch::tests::an_intent_exactly_at_the_tolerance_is_not_yet_stale ... ok
+test dispatch::tests::an_intent_trailing_by_more_than_the_tolerance_is_stale ... ok
+test entity::tests::read_during_lease_is_rejected ... ok
+test entity::tests::defer_effects_queue_rather_than_run_inline ... ok
+test entity::tests::effects_queue_rather_than_run_inline ... ok
+test entity::tests::dropped_subscription_stops_delivering ... ok
+test entity::tests::release_is_queued_until_flush_releases ... ok
+test entity::tests::nested_lease_is_rejected_not_aliased ... ok
+test entity::tests::spawn_local_queues_future_for_the_embedder ... ok
+test entity::tests::stale_entity_id_never_resolves_to_new_occupant ... ok
+test entity::tests::value_restored_after_panicking_closure ... ok
+test entity::tests::weak_entity_upgrade_fails_after_last_strong_drops ... ok
+test gateway::tests::full_backing_sink_returns_full_synchronously_without_dropping_the_command ... ok
+test gateway::tests::full_local_capacity_returns_full_synchronously_without_dropping_the_command ... ok
+test gateway::tests::resolving_a_ticket_frees_capacity_for_a_new_submission ... ok
+test gateway::tests::ticket_round_trips_to_acknowledged_and_to_rejected ... ok
+test inbox::tests::drain_into_on_an_empty_inbox_is_a_no_op ... ok
+test inbox::tests::drain_into_respects_limit_and_leaves_the_remainder_queued ... ok
+test inbox::tests::push_beyond_capacity_returns_overflow_without_dropping_existing_entries ... ok
+test inbox::tests::same_key_pushes_coalesce_to_the_newest_value ... ok
+test presence::tests::a_burst_of_same_key_own_presence_writes_coalesces_to_the_newest_value ... ok
+test presence::tests::a_burst_of_same_key_peer_writes_coalesces_to_one_update ... ok
+test presence::tests::distinct_peers_on_one_key_are_all_reported_and_expire_independently ... ok
+test presence::tests::own_presence_never_expires ... ok
+test presence::tests::presence_entries_expire_exactly_at_their_ttl_and_a_flush_after_expiry_omits_them ... ok
+test present::tests::a_stateless_fn_item_satisfies_present_generically ... ok
+test present::tests::component_tree_three_levels_builds_and_compares ... ok
+test present::tests::duplicate_sibling_keys_nested_in_the_tree_are_detected ... ok
+test present::tests::duplicate_sibling_keys_via_with_children_panic ... ok
+test present::tests::position_derived_keys_are_stable_and_ergonomic ... ok
+test reconcile::tests::changed_component_with_unchanged_layout_emits_set_component_not_upsert ... ok
+test reconcile::tests::changing_one_leaf_text_emits_exactly_one_op_naming_exactly_that_node ... ok
+test reconcile::tests::first_reconcile_emits_set_root_and_one_upsert_per_node_then_is_idempotent ... ok
+test reconcile::tests::duplicate_sibling_keys_are_reported_even_when_component_tree_new_is_bypassed ... ok
+test reconcile::tests::ids_are_never_reused_after_removal ... ok
+test reconcile::tests::inserting_a_middle_sibling_preserves_the_others_ids ... ok
+test reconcile::tests::mark_rejected_then_reconcile_emits_a_full_resend ... ok
+test reconcile::tests::removing_a_subtree_emits_one_remove_and_leaves_no_orphan_in_retained ... ok
+test reconcile::tests::reordering_siblings_preserves_every_id_and_emits_only_set_children ... ok
+test tracking::tests::finish_rejects_mismatched_surface - should panic ... ok
+test tracking::tests::n_notifications_of_one_surface_coalesce_to_one_dirty_mark ... ok
+test tracking::tests::nested_present_scopes_attribute_reads_to_the_right_surface ... ok
+test tracking::tests::presenter_reading_a_not_b_wakes_only_on_a ... ok
+test tracking::tests::reads_outside_a_present_scope_are_not_recorded ... ok
+test tracking::tests::stale_edge_disappears_after_next_present_without_the_read ... ok
+test reconcile::tests::round_trip_property_every_emitted_patch_applies_cleanly_and_reproduces_the_snapshot ... ok
+test transaction::tests::a_bulk_projection_update_touching_one_surface_many_times_yields_exactly_one_patch ... ok
+test transaction::tests::a_full_command_mailbox_surfaces_backpressure_without_blocking_the_transaction ... ok
+test transaction::tests::an_entity_notified_but_not_read_by_any_surface_produces_no_patch ... ok
+test transaction::tests::next_wake_ms_is_none_when_idle_and_some_earliest_when_a_deadline_is_pending ... ok
+test transaction::tests::a_stale_revision_intent_is_dropped_and_produces_no_patch_and_no_command ... ok
+test transaction::tests::an_intent_mutates_entity_state_and_the_following_transact_emits_a_patch ... ok
+test transaction::tests::presence_flushes_on_its_own_channel_and_never_appears_in_a_patch ... ok
+test transaction::tests::two_surfaces_are_independent_dirtying_one_does_not_re_present_the_other ... ok
+test transaction::tests::the_effect_fixpoint_terminates_and_a_pathological_observer_hits_the_storm_budget ... ok
+
+test result: ok. 57 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests semio_framework_ui_runtime
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

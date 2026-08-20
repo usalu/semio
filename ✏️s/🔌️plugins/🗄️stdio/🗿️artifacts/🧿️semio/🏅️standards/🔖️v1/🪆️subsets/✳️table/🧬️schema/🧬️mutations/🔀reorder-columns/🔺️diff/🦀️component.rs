@@ -10,10 +10,10 @@ use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::Se
 //#region 🔖️Diff
 pub async fn diff(payload: &ReorderColumns, base: &SemioTableSnapshot) -> protocol::MutationOutcome<SemioTableDiff> {
     let Some(from) = base.columns.iter().position(|c| c.name == payload.name) else {
-        return protocol::MutationOutcome::error("mutation.target-missing", format!("Column \"{}\" does not exist.", payload.name), [payload.name.clone()]);
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Column \"{}\" does not exist.", payload.name), [payload.name.clone()]).await;
     };
     if from == payload.to_index {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Column \"{}\" is already at position #{}.", payload.name, payload.to_index));
+        return protocol::MutationOutcome::empty().await.warn("mutation.no-op", format!("Column \"{}\" is already at position #{}.", payload.name, payload.to_index)).await;
     }
     let mut columns = base.columns.clone();
     let mut rows = base.rows.clone();
@@ -28,6 +28,6 @@ pub async fn diff(payload: &ReorderColumns, base: &SemioTableSnapshot) -> protoc
             row.cells.insert(pos, cell);
         }
     }
-    protocol::MutationOutcome::new(SemioTableDiff { columns: Some(SemioTableColumnList { values: columns }), rows: Some(SemioTableRowList { values: rows }) })
+    protocol::MutationOutcome::new(SemioTableDiff { columns: Some(SemioTableColumnList { values: columns }), rows: Some(SemioTableRowList { values: rows }) }).await
 }
 //#endregion 🔖️Diff

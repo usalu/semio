@@ -77,8 +77,8 @@ pub enum SemioVideoMutation {
 /// d.apply(snapshot); d` -- the diff is the single semantics source, never a separate imperative
 /// apply path (apply-and-capture is banned).
 pub async fn apply_semio_video_mutation(snapshot: &mut SemioVideoSnapshot, mutation: &SemioVideoMutation) -> protocol::MutationOutcome<SemioVideoDiff> {
-    let outcome = Mutation::diff(mutation, snapshot);
-    outcome.apply_to(snapshot)
+    let outcome = Mutation::diff(mutation, snapshot).await;
+    outcome.apply_to(snapshot).await
 }
 //#endregion 🔖️Apply
 
@@ -99,24 +99,24 @@ impl Mutation<SemioVideoSnapshot> for SemioVideoMutation {
     async fn diff(&self, base: &SemioVideoSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             SemioVideoMutation::NoMutation => SemioVideoDiff::default(),
-            SemioVideoMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
-            SemioVideoMutation::InsertStream { index, stream } => diff_insert_stream(*index, stream.clone()),
-            SemioVideoMutation::RemoveStream { index } => diff_remove_stream(*index),
-            SemioVideoMutation::SetStreamMeta { index, kind, codec, width, height, rate } => match stream_at(base, *index) {
-                Some(old) => diff_set_stream_meta(old, *index, *kind, codec, *width, *height, *rate),
+            SemioVideoMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot).await,
+            SemioVideoMutation::InsertStream { index, stream } => diff_insert_stream(*index, stream.clone()).await,
+            SemioVideoMutation::RemoveStream { index } => diff_remove_stream(*index).await,
+            SemioVideoMutation::SetStreamMeta { index, kind, codec, width, height, rate } => match stream_at(base, *index).await {
+                Some(old) => diff_set_stream_meta(old, *index, *kind, codec, *width, *height, *rate).await,
                 None => SemioVideoDiff::default(),
             },
-            SemioVideoMutation::InsertSample { stream_index, index, sample } => diff_insert_sample(*stream_index, *index, sample.clone()),
-            SemioVideoMutation::RemoveSample { stream_index, index } => diff_remove_sample(*stream_index, *index),
-            SemioVideoMutation::SetSampleData { stream_index, index, data } => match sample_at(base, *stream_index, *index) {
-                Some(old) => diff_set_sample_data(old, *stream_index, *index, data.clone()),
+            SemioVideoMutation::InsertSample { stream_index, index, sample } => diff_insert_sample(*stream_index, *index, sample.clone()).await,
+            SemioVideoMutation::RemoveSample { stream_index, index } => diff_remove_sample(*stream_index, *index).await,
+            SemioVideoMutation::SetSampleData { stream_index, index, data } => match sample_at(base, *stream_index, *index).await {
+                Some(old) => diff_set_sample_data(old, *stream_index, *index, data.clone()).await,
                 None => SemioVideoDiff::default(),
             },
-            SemioVideoMutation::SetSampleFlags { stream_index, index, pts, key } => match sample_at(base, *stream_index, *index) {
-                Some(old) => diff_set_sample_flags(old, *stream_index, *index, *pts, *key),
+            SemioVideoMutation::SetSampleFlags { stream_index, index, pts, key } => match sample_at(base, *stream_index, *index).await {
+                Some(old) => diff_set_sample_flags(old, *stream_index, *index, *pts, *key).await,
                 None => SemioVideoDiff::default(),
             },
-        })
+        }).await
     }
 
     async fn inverse(&self, base: &SemioVideoSnapshot) -> Vec<Self> {
@@ -124,24 +124,24 @@ impl Mutation<SemioVideoSnapshot> for SemioVideoMutation {
             SemioVideoMutation::NoMutation => vec![SemioVideoMutation::NoMutation],
             SemioVideoMutation::SetSnapshot { .. } => vec![SemioVideoMutation::SetSnapshot { snapshot: base.clone() }],
             SemioVideoMutation::InsertStream { index, .. } => vec![SemioVideoMutation::RemoveStream { index: *index }],
-            SemioVideoMutation::RemoveStream { index } => match stream_at(base, *index) {
+            SemioVideoMutation::RemoveStream { index } => match stream_at(base, *index).await {
                 Some(stream) => vec![SemioVideoMutation::InsertStream { index: *index, stream: stream.clone() }],
                 None => vec![SemioVideoMutation::NoMutation],
             },
-            SemioVideoMutation::SetStreamMeta { index, .. } => match stream_at(base, *index) {
+            SemioVideoMutation::SetStreamMeta { index, .. } => match stream_at(base, *index).await {
                 Some(stream) => vec![SemioVideoMutation::SetStreamMeta { index: *index, kind: stream.kind, codec: stream.codec.clone(), width: stream.width, height: stream.height, rate: stream.rate }],
                 None => vec![SemioVideoMutation::NoMutation],
             },
             SemioVideoMutation::InsertSample { stream_index, index, .. } => vec![SemioVideoMutation::RemoveSample { stream_index: *stream_index, index: *index }],
-            SemioVideoMutation::RemoveSample { stream_index, index } => match sample_at(base, *stream_index, *index) {
+            SemioVideoMutation::RemoveSample { stream_index, index } => match sample_at(base, *stream_index, *index).await {
                 Some(sample) => vec![SemioVideoMutation::InsertSample { stream_index: *stream_index, index: *index, sample: sample.clone() }],
                 None => vec![SemioVideoMutation::NoMutation],
             },
-            SemioVideoMutation::SetSampleData { stream_index, index, .. } => match sample_at(base, *stream_index, *index) {
+            SemioVideoMutation::SetSampleData { stream_index, index, .. } => match sample_at(base, *stream_index, *index).await {
                 Some(sample) => vec![SemioVideoMutation::SetSampleData { stream_index: *stream_index, index: *index, data: sample.data.clone() }],
                 None => vec![SemioVideoMutation::NoMutation],
             },
-            SemioVideoMutation::SetSampleFlags { stream_index, index, .. } => match sample_at(base, *stream_index, *index) {
+            SemioVideoMutation::SetSampleFlags { stream_index, index, .. } => match sample_at(base, *stream_index, *index).await {
                 Some(sample) => vec![SemioVideoMutation::SetSampleFlags { stream_index: *stream_index, index: *index, pts: sample.pts, key: sample.key }],
                 None => vec![SemioVideoMutation::NoMutation],
             },
@@ -159,10 +159,10 @@ async fn enc_semio_video_snapshot(s: &SemioVideoSnapshot) -> String {
     format!("[{},{}]", enc_str(&s.schema), enc_list(&s.streams, enc_stream))
 }
 async fn dec_semio_video_snapshot(s: &str) -> Result<SemioVideoSnapshot, String> {
-    let inner = strip_brackets(s)?;
-    let parts = split_top_level(inner, ',');
+    let inner = strip_brackets(s).await?;
+    let parts = split_top_level(inner, ',').await;
     let [schema, streams] = parts.as_slice() else { return Err(format!("snapshot: expected 2 fields, got {}", parts.len())) };
-    Ok(SemioVideoSnapshot { schema: dec_str(schema)?, streams: dec_list(streams, dec_stream)? })
+    Ok(SemioVideoSnapshot { schema: dec_str(schema).await?, streams: dec_list(streams, dec_stream).await? })
 }
 
 async fn print_semio_video_mutation(m: &SemioVideoMutation) -> String {
@@ -188,31 +188,31 @@ async fn parse_semio_video_mutation(line: &str) -> Result<SemioVideoMutation, St
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("semio video mutation: missing arg '{k}' for '{keyword}'"));
     let usize_arg = |k: &str| -> Result<usize, String> { parse_usize(arg(k)?) };
     match keyword {
-        "set-snapshot" => Ok(SemioVideoMutation::SetSnapshot { snapshot: dec_semio_video_snapshot(arg("snapshot")?)? }),
-        "insert-stream" => Ok(SemioVideoMutation::InsertStream { index: usize_arg("index")?, stream: dec_stream(arg("stream")?)? }),
+        "set-snapshot" => Ok(SemioVideoMutation::SetSnapshot { snapshot: dec_semio_video_snapshot(arg("snapshot")?).await? }),
+        "insert-stream" => Ok(SemioVideoMutation::InsertStream { index: usize_arg("index")?, stream: dec_stream(arg("stream")?).await? }),
         "remove-stream" => Ok(SemioVideoMutation::RemoveStream { index: usize_arg("index")? }),
         "set-stream-meta" => Ok(SemioVideoMutation::SetStreamMeta {
             index: usize_arg("index")?,
-            kind: dec_kind(arg("kind")?)?,
-            codec: dec_str(arg("codec")?)?,
+            kind: dec_kind(arg("kind")?).await?,
+            codec: dec_str(arg("codec")?).await?,
             width: arg("width")?.parse().map_err(|e: std::num::ParseIntError| e.to_string())?,
             height: arg("height")?.parse().map_err(|e: std::num::ParseIntError| e.to_string())?,
-            rate: dec_rational(arg("rate")?)?,
+            rate: dec_rational(arg("rate")?).await?,
         }),
-        "insert-sample" => Ok(SemioVideoMutation::InsertSample { stream_index: usize_arg("stream-index")?, index: usize_arg("index")?, sample: dec_sample(arg("sample")?)? }),
+        "insert-sample" => Ok(SemioVideoMutation::InsertSample { stream_index: usize_arg("stream-index")?, index: usize_arg("index")?, sample: dec_sample(arg("sample")?).await? }),
         "remove-sample" => Ok(SemioVideoMutation::RemoveSample { stream_index: usize_arg("stream-index")?, index: usize_arg("index")? }),
-        "set-sample-data" => Ok(SemioVideoMutation::SetSampleData { stream_index: usize_arg("stream-index")?, index: usize_arg("index")?, data: hex_decode(arg("data")?)? }),
-        "set-sample-flags" => Ok(SemioVideoMutation::SetSampleFlags { stream_index: usize_arg("stream-index")?, index: usize_arg("index")?, pts: arg("pts")?.parse().map_err(|e: std::num::ParseIntError| e.to_string())?, key: dec_bool(arg("key")?)? }),
+        "set-sample-data" => Ok(SemioVideoMutation::SetSampleData { stream_index: usize_arg("stream-index")?, index: usize_arg("index")?, data: hex_decode(arg("data")?).await? }),
+        "set-sample-flags" => Ok(SemioVideoMutation::SetSampleFlags { stream_index: usize_arg("stream-index")?, index: usize_arg("index")?, pts: arg("pts")?.parse().map_err(|e: std::num::ParseIntError| e.to_string())?, key: dec_bool(arg("key")?).await? }),
         other => Err(format!("semio video mutation: unknown keyword {other:?}")),
     }
 }
 
 impl OpText for SemioVideoMutation {
     async fn print_op(&self) -> String {
-        print_semio_video_mutation(self)
+        print_semio_video_mutation(self).await
     }
     async fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_semio_video_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_semio_video_mutation(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
 
@@ -236,7 +236,7 @@ async fn variant_ordinal(m: &SemioVideoMutation) -> u8 {
 /// `no-mutation`) — the binary frame's `tag` byte already carries the keyword, so the text keyword
 /// itself is redundant in the binary payload.
 async fn print_semio_video_mutation_args(m: &SemioVideoMutation) -> String {
-    match print_semio_video_mutation(m).split_once(' ') {
+    match print_semio_video_mutation(m).await.split_once(' ') {
         Some((_, rest)) => rest.to_string(),
         None => String::new(),
     }
@@ -251,8 +251,8 @@ async fn print_semio_video_mutation_args(m: &SemioVideoMutation) -> String {
 impl OpBinary for SemioVideoMutation {
     async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
-        let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self)];
-        out.extend_from_slice(print_semio_video_mutation_args(self).as_bytes());
+        let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self).await];
+        out.extend_from_slice(print_semio_video_mutation_args(self).await.as_bytes());
         Ok(out)
     }
     async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
@@ -267,7 +267,7 @@ impl OpBinary for SemioVideoMutation {
         let keyword = OP_KEYWORDS.get(tag as usize).ok_or_else(|| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("tag {tag} out of range for {} declared variants", OP_KEYWORDS.len()) })?;
         let args = std::str::from_utf8(&bytes[2..]).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 2, detail: e.to_string() })?;
         let line = if args.is_empty() { keyword.to_string() } else { format!("{keyword} {args}") };
-        Self::parse_op(&line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 2, detail: e.to_string() })
+        Self::parse_op(&line).await.map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 2, detail: e.to_string() })
     }
 }
 //#endregion OpCodecs

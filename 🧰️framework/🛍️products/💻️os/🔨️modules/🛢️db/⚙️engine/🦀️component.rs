@@ -44,28 +44,30 @@ use std::sync::{Arc, Mutex};
 
 use crate::*;
 use crate::db_ids::{DbError, ArtifactId, ActorId};
+use db_storage::CatalogStorage as _;
+use db_storage::PayloadStorage as _;
 
 
 //#region 🔖️Reexports
 pub use crate::db_policy::{DbCapabilities, DbConfig, Profile};
 pub use crate::db_durability::DurabilityClass;
-pub use crate::db_storage::DbStorage;
 //#endregion 🔖️Reexports
 
 //#region 🔖️Ids
 /// @emoji 🌉️ `protocol::ArtifactId` → `ArtifactId`, the lossless single-`String` bridge
 /// `db_core`'s module doc promises — see `db_artifact`'s identical helper for the rationale (this
 /// crate is the other place in the family that depends on both `db_core` and `protocol`).
-fn to_core_document_id(id: &protocol::ArtifactId) -> ArtifactId {
+async fn to_core_document_id(id: &protocol::ArtifactId) -> ArtifactId {
     ArtifactId(id.0.clone())
 }
 
 /// @emoji 🌉️ `protocol::ActorId` → `ActorId`, same bridge as `to_core_document_id`.
+// 🚫️async: E4 fn-pointer slot (used as `Iterator::map(to_core_actor_id)`) — see R9
 fn to_core_actor_id(id: &protocol::ActorId) -> ActorId {
     ActorId(id.0.clone())
 }
 
-fn now_ms() -> u64 {
+async fn now_ms() -> u64 {
     std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |duration| duration.as_millis() as u64)
 }
 //#endregion 🔖️Ids
@@ -87,6 +89,7 @@ impl Frontier {
     /// @emoji 🏔️ True iff `self` has observed everything `other` has — mirrors
     /// `Frontier::dominates`, re-derived here since this type's `document` field has a
     /// different type than `Frontier`'s.
+    // 🚫️async: E1 pure accessor consumed by a sync Iterator::filter — see R9
     pub fn dominates(&self, other: &Frontier) -> Result<bool, DbError> {
         if self.document != other.document {
             return Err(DbError::InvalidArgument(format!("frontier document mismatch: {} vs {}", self.document.0, other.document.0)));
@@ -169,7 +172,7 @@ pub struct HistoryView {
 /// groups `WAL_COMMAND` records by the `WAL_FRONTIER` record that closes their transaction, exactly
 /// mirroring `db_artifact::ArtifactEngine::submit`'s own commit shape (one frontier record per
 /// committed batch, preceded by that batch's command records).
-fn replay_history<R: semio_framework_async::HostAsyncRuntime>(storage: &db_storage::DbBackend<R>, core_document: &ArtifactId, protocol_document: &protocol::ArtifactId) -> Result<HistoryView, DbError> {
+async fn replay_history<R: semio_framework_async::HostAsyncRuntime>(storage: &db_storage::DbBackend<R>, core_document: &ArtifactId, protocol_document: &protocol::ArtifactId) -> Result<HistoryView, DbError> {
     let records = db_actor::block_on(async { db_wal::replay_document(&storage.wal().await, core_document).await })?;
     let mut entries = Vec::new();
     let mut pending_operation_ids: Vec<protocol::MutationId> = Vec::new();
@@ -178,7 +181,7 @@ fn replay_history<R: semio_framework_async::HostAsyncRuntime>(storage: &db_stora
             db_wal::WalRecord::TxBegin { .. } => pending_operation_ids.clear(),
             db_wal::WalRecord::Command(bytes) => {
                 let mut pos = 0usize;
-                let envelope = protocol::decode_envelope(&bytes, &mut pos).map_err(|err| DbError::Corrupt(format!("history: wal command record is not a valid operation envelope: {err}")))?;
+                let envelope = protocol::decode_envelope(&bytes, &mut pos).await.map_err(|err| DbError::Corrupt(format!("history: wal command record is not a valid operation envelope: {err}")))?;
                 pending_operation_ids.push(envelope.mutation_id);
             }
             db_wal::WalRecord::Frontier(frontier) if !pending_operation_ids.is_empty() => {
@@ -245,15 +248,15 @@ pub struct SecurityAuthzHook {
 }
 
 impl SecurityAuthzHook {
-    pub fn new(gate: db_security::SecurityGate, principal_for: impl Fn(&protocol::ActorId) -> db_security::Principal + Send + Sync + 'static) -> SecurityAuthzHook {
+    pub async fn new(gate: db_security::SecurityGate, principal_for: impl Fn(&protocol::ActorId) -> db_security::Principal + Send + Sync + 'static) -> SecurityAuthzHook {
         SecurityAuthzHook { gate, principal_for: Box::new(principal_for) }
     }
 }
 
 impl db_artifact::AuthzHook for SecurityAuthzHook {
-    fn authorize(&self, actor: &protocol::ActorId, envelope: &protocol::MutationEnvelope) -> Result<(), DbError> {
+    async fn authorize(&self, actor: &protocol::ActorId, envelope: &protocol::MutationEnvelope) -> Result<(), DbError> {
         let principal = (self.principal_for)(actor);
-        self.gate.authorize(&principal, &db_security::AuthzScope::Document { document: envelope.document_id.clone() }, db_security::Action::Write)
+        self.gate.authorize(&principal, &db_security::AuthzScope::Document { document: envelope.document_id.clone() }, db_security::Action::Write).await
     }
 }
 //#endregion 🔖️Security
@@ -286,7 +289,7 @@ pub mod vcs_integration {
     impl store::ArtifactDsl for HashProjection {
         const EXTENSION: &'static str = "dbhash";
 
-        fn parse_dsl(text: &str) -> Result<HashProjection, store::TextError> {
+        async fn parse_dsl(text: &str) -> Result<HashProjection, store::TextError> {
             let trimmed = text.trim();
             if trimmed.len() != 64 || !trimmed.bytes().all(|byte| byte.is_ascii_hexdigit()) {
                 return Err(store::TextError::new("expected 64 lowercase hex characters", store::TextSpan::at(1, 1)));
@@ -298,7 +301,7 @@ pub mod vcs_integration {
             Ok(HashProjection { latest_hash })
         }
 
-        fn print_dsl(&self) -> String {
+        async fn print_dsl(&self) -> String {
             let mut out = String::with_capacity(64);
             for byte in self.latest_hash {
                 use std::fmt::Write;
@@ -309,10 +312,10 @@ pub mod vcs_integration {
     }
 
     impl store::ArtifactPack for HashProjection {
-        fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+        async fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
             Ok(self.latest_hash.to_vec())
         }
-        fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+        async fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
             let latest_hash: [u8; 32] = bytes.try_into().map_err(|_| store::PackError::Schema("HashProjection pack must be exactly 32 bytes".to_string()))?;
             Ok(HashProjection { latest_hash })
         }
@@ -324,14 +327,14 @@ pub mod vcs_integration {
     }
 
     impl protocol::MutationDiff<HashProjection> for HashDiff {
-        fn apply(&self, base: &HashProjection) -> protocol::MutationApplyResult<HashProjection> {
+        async fn apply(&self, base: &HashProjection) -> protocol::MutationApplyResult<HashProjection> {
             Ok(match self.hash {
                 Some(hash) => HashProjection { latest_hash: hash },
                 None => base.clone(),
             })
         }
 
-        fn absorb(&mut self, other: HashDiff) {
+        async fn absorb(&mut self, other: HashDiff) {
             if other.hash.is_some() {
                 self.hash = other.hash;
             }
@@ -348,25 +351,26 @@ pub mod vcs_integration {
     impl protocol::Mutation<HashProjection> for HashMutation {
         type Diff = HashDiff;
 
-        fn diff(&self, _base: &HashProjection) -> protocol::MutationOutcome<HashDiff> {
-            protocol::MutationOutcome::new(HashDiff { hash: Some(self.hash) })
+        async fn diff(&self, _base: &HashProjection) -> protocol::MutationOutcome<HashDiff> {
+            protocol::MutationOutcome::new(HashDiff { hash: Some(self.hash) }).await
         }
 
         /// @emoji ↩️ The true inverse: an operation that would restore `base`'s hash — not a
         /// no-op placeholder.
-        fn inverse(&self, base: &HashProjection) -> Vec<HashMutation> {
+        async fn inverse(&self, base: &HashProjection) -> Vec<HashMutation> {
             vec![HashMutation { hash: base.latest_hash, author: self.author.clone(), timestamp: self.timestamp }]
         }
 
-        fn author_id(&self) -> Option<protocol::ActorId> {
+        async fn author_id(&self) -> Option<protocol::ActorId> {
             self.author.clone()
         }
 
-        fn timestamp(&self) -> Option<protocol::HybridLogicalTimestamp> {
+        async fn timestamp(&self) -> Option<protocol::HybridLogicalTimestamp> {
             self.timestamp
         }
     }
 
+    // 🚫️async: E1 pure accessor consumed synchronously inside `format!` — see R9
     fn hex_encode(bytes: &[u8; 32]) -> String {
         use std::fmt::Write;
         let mut out = String::with_capacity(64);
@@ -376,7 +380,7 @@ pub mod vcs_integration {
         out
     }
 
-    fn hex_decode(text: &str) -> Result<[u8; 32], String> {
+    async fn hex_decode(text: &str) -> Result<[u8; 32], String> {
         if text.len() != 64 || !text.bytes().all(|byte| byte.is_ascii_hexdigit()) {
             return Err("expected 64 lowercase hex characters".to_string());
         }
@@ -389,7 +393,7 @@ pub mod vcs_integration {
 
     /// @emoji 🎯️ Single-line text form: `hash=<hex64>[ author=<id>][ ts=<actor>,<physical_ms>,<logical>]`.
     impl protocol::OpText for HashMutation {
-        fn print_op(&self) -> String {
+        async fn print_op(&self) -> String {
             let mut out = format!("hash={}", hex_encode(&self.hash));
             if let Some(author) = &self.author {
                 out.push_str(&format!(" author={}", author.0));
@@ -399,7 +403,7 @@ pub mod vcs_integration {
             }
             out
         }
-        fn parse_op(line: &str) -> Result<Self, store::TextError> {
+        async fn parse_op(line: &str) -> Result<Self, store::TextError> {
             let err = |detail: String| store::TextError::new(detail, store::TextSpan::at(1, 1));
             let mut hash = None;
             let mut author = None;
@@ -407,7 +411,7 @@ pub mod vcs_integration {
             for token in line.split_whitespace() {
                 let (key, value) = token.split_once('=').ok_or_else(|| err(format!("malformed token '{token}'")))?;
                 match key {
-                    "hash" => hash = Some(hex_decode(value).map_err(err)?),
+                    "hash" => hash = Some(hex_decode(value).await.map_err(err)?),
                     "author" => author = Some(protocol::ActorId(value.to_string())),
                     "ts" => {
                         let parts: Vec<&str> = value.split(',').collect();
@@ -429,22 +433,22 @@ pub mod vcs_integration {
     /// @emoji 🎯️ Binary form: `hash 32 bytes | presence u8 (bit0=author, bit1=timestamp) | [author
     /// len varint + utf8 bytes] | [timestamp: actor/physical_ms/logical varint each]`.
     impl protocol::OpBinary for HashMutation {
-        fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
             let mut out = self.hash.to_vec();
             let presence = (self.author.is_some() as u8) | ((self.timestamp.is_some() as u8) << 1);
             out.push(presence);
             if let Some(author) = &self.author {
-                pack::os_pack::write_varint_u64(&mut out, author.0.len() as u64);
+                pack::os_pack::write_varint_u64(&mut out, author.0.len() as u64).await;
                 out.extend_from_slice(author.0.as_bytes());
             }
             if let Some(ts) = &self.timestamp {
-                pack::os_pack::write_varint_u64(&mut out, ts.actor);
-                pack::os_pack::write_varint_u64(&mut out, ts.physical_ms);
-                pack::os_pack::write_varint_u64(&mut out, ts.logical);
+                pack::os_pack::write_varint_u64(&mut out, ts.actor).await;
+                pack::os_pack::write_varint_u64(&mut out, ts.physical_ms).await;
+                pack::os_pack::write_varint_u64(&mut out, ts.logical).await;
             }
             Ok(out)
         }
-        fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
             let malformed = |detail: String| protocol::ProtocolError::Malformed { what: "hash op", offset: 0, detail };
             if bytes.len() < 33 {
                 return Err(malformed("truncated hash op".to_string()));
@@ -453,7 +457,7 @@ pub mod vcs_integration {
             let presence = bytes[32];
             let mut pos = 33usize;
             let author = if presence & 0b01 != 0 {
-                let len = pack::os_pack::read_varint_u64(bytes, &mut pos).map_err(|error| malformed(error.to_string()))? as usize;
+                let len = pack::os_pack::read_varint_u64(bytes, &mut pos).await.map_err(|error| malformed(error.to_string()))? as usize;
                 let end = pos + len;
                 let text = std::str::from_utf8(bytes.get(pos..end).ok_or_else(|| malformed("truncated author".to_string()))?).map_err(|error| malformed(error.to_string()))?.to_string();
                 pos = end;
@@ -462,9 +466,9 @@ pub mod vcs_integration {
                 None
             };
             let timestamp = if presence & 0b10 != 0 {
-                let actor = pack::os_pack::read_varint_u64(bytes, &mut pos).map_err(|error| malformed(error.to_string()))?;
-                let physical_ms = pack::os_pack::read_varint_u64(bytes, &mut pos).map_err(|error| malformed(error.to_string()))?;
-                let logical = pack::os_pack::read_varint_u64(bytes, &mut pos).map_err(|error| malformed(error.to_string()))?;
+                let actor = pack::os_pack::read_varint_u64(bytes, &mut pos).await.map_err(|error| malformed(error.to_string()))?;
+                let physical_ms = pack::os_pack::read_varint_u64(bytes, &mut pos).await.map_err(|error| malformed(error.to_string()))?;
+                let logical = pack::os_pack::read_varint_u64(bytes, &mut pos).await.map_err(|error| malformed(error.to_string()))?;
                 Some(protocol::HybridLogicalTimestamp { actor, physical_ms, logical })
             } else {
                 None
@@ -481,6 +485,7 @@ pub mod vcs_integration {
     // as `db_artifact`'s `json_err`: `Result::map_err`'s `FnOnce(E) -> F2` bound always calls the
     // mapper with an owned `E`, so a by-reference signature would not type-check at those sites.
     #[allow(clippy::needless_pass_by_value)]
+    // 🚫️async: E4 fn-pointer slot
     fn map_vcs_error(err: vcs::VcsError) -> DbError {
         DbError::Internal(format!("vcs: {err}"))
     }
@@ -498,29 +503,35 @@ pub mod vcs_integration {
     }
 
     impl VcsVersionGraph {
-        pub fn new() -> VcsVersionGraph {
+        pub async fn new() -> VcsVersionGraph {
             VcsVersionGraph::default()
         }
 
-        fn with_store<R>(&self, document: &ArtifactId, f: impl FnOnce(&mut HashStore) -> Result<R, DbError>) -> Result<R, DbError> {
+        // 🔀️ Ensures `document` has a live `HashStore` entry, WITHOUT handing the caller a
+        // closure — `VersionGraph`'s methods need `&mut HashStore` held across real `.await`
+        // points (`store.dispatch(...).await`), and a sync `FnOnce(&mut HashStore) -> Result<R,
+        // DbError>` closure (the previous shape) cannot contain those awaits (R10 residue shape 1:
+        // `.await` inside a sync closure). Each caller now locks `self.stores` itself and keeps the
+        // guard alive across its own awaits instead of routing through a closure.
+        async fn ensure_store(&self, document: &ArtifactId) -> Result<(), DbError> {
             let mut stores = self.stores.lock().map_err(|_| DbError::Internal("vcs_integration: store registry mutex poisoned".to_string()))?;
             if !stores.contains_key(&document.0) {
                 let envelope = store::create_document_envelope::<HashProjection, HashMutation>("db_engine.version_graph", &document.0, HashProjection::default(), None);
-                let created = store::ArtifactStore::new(envelope).map_err(map_vcs_error)?;
+                let created = store::ArtifactStore::new(envelope.await).await.map_err(map_vcs_error)?;
                 stores.insert(document.0.clone(), created);
             }
-            let store = stores.get_mut(&document.0).ok_or_else(|| DbError::Internal(format!("vcs_integration: store insertion disappeared for {}", document.0)))?;
-            f(store)
+            Ok(())
         }
     }
 
     impl VersionGraph for VcsVersionGraph {
-        fn record_change(&self, document: &ArtifactId, change: ChangeRecord) -> Result<String, DbError> {
-            self.with_store(document, |store| {
-                let operation = HashMutation { hash: change.content_hash.0, author: Some(protocol::ActorId(change.author.0.clone())), timestamp: Some(protocol::HybridLogicalTimestamp::new(0, change.timestamp_ms)) };
-                store.dispatch(store::ArtifactCommand::Apply { mutations: vec![operation], description: Some(change.message.clone()) }).map_err(map_vcs_error)?;
-                Ok(store.envelope().vcs.edits.last().map(|edit| edit.id.clone()).unwrap_or_default())
-            })
+        async fn record_change(&self, document: &ArtifactId, change: ChangeRecord) -> Result<String, DbError> {
+            self.ensure_store(document).await?;
+            let mut stores = self.stores.lock().map_err(|_| DbError::Internal("vcs_integration: store registry mutex poisoned".to_string()))?;
+            let store = stores.get_mut(&document.0).ok_or_else(|| DbError::Internal(format!("vcs_integration: store insertion disappeared for {}", document.0)))?;
+            let operation = HashMutation { hash: change.content_hash.0, author: Some(protocol::ActorId(change.author.0.clone())), timestamp: Some(protocol::HybridLogicalTimestamp::new(0, change.timestamp_ms).await) };
+            store.dispatch(store::ArtifactCommand::Apply { mutations: vec![operation], description: Some(change.message.clone()) }).await.map_err(map_vcs_error)?;
+            Ok(store.envelope().await.vcs.edits.last().map(|edit| edit.id.clone()).unwrap_or_default())
         }
 
         /// @emoji 🎯️ Design choice: `request.parent_checkpoint`/`change_ids` are NOT threaded
@@ -531,26 +542,31 @@ pub mod vcs_integration {
         /// unused: `vcs`'s own `CommitCheckpoint` handler stamps its own `now_iso()` timestamp into
         /// the checkpoint (part of what its content-addressed id hashes over) — this crate cannot
         /// override that without reaching into `vcs`'s private state.
-        fn checkpoint(&self, document: &ArtifactId, request: CheckpointRequest) -> Result<String, DbError> {
-            self.with_store(document, |store| {
-                let authors: Vec<vcs::Author> = request.authors.iter().map(|author| vcs::Author { id: author.0.clone(), name: author.0.clone(), avatar: None }).collect();
-                store.dispatch(store::ArtifactCommand::CommitCheckpoint { message: Some(request.message.clone()), authors }).map_err(map_vcs_error)?;
-                store.current_checkpoint_id().map(str::to_string).ok_or_else(|| DbError::Internal("vcs: commit_checkpoint produced no checkpoint id".to_string()))
-            })
+        async fn checkpoint(&self, document: &ArtifactId, request: CheckpointRequest) -> Result<String, DbError> {
+            self.ensure_store(document).await?;
+            let mut stores = self.stores.lock().map_err(|_| DbError::Internal("vcs_integration: store registry mutex poisoned".to_string()))?;
+            let store = stores.get_mut(&document.0).ok_or_else(|| DbError::Internal(format!("vcs_integration: store insertion disappeared for {}", document.0)))?;
+            let authors: Vec<vcs::Author> = request.authors.iter().map(|author| vcs::Author { id: author.0.clone(), name: author.0.clone(), avatar: None }).collect();
+            store.dispatch(store::ArtifactCommand::CommitCheckpoint { message: Some(request.message.clone()), authors }).await.map_err(map_vcs_error)?;
+            store.current_checkpoint_id().await.map(str::to_string).ok_or_else(|| DbError::Internal("vcs: commit_checkpoint produced no checkpoint id".to_string()))
         }
 
-        fn merge_base(&self, document: &ArtifactId, a: &str, b: &str) -> Result<Option<String>, DbError> {
-            self.with_store(document, |store| Ok(store::merge_base(store.envelope(), a, b)))
+        async fn merge_base(&self, document: &ArtifactId, a: &str, b: &str) -> Result<Option<String>, DbError> {
+            self.ensure_store(document).await?;
+            let mut stores = self.stores.lock().map_err(|_| DbError::Internal("vcs_integration: store registry mutex poisoned".to_string()))?;
+            let store = stores.get_mut(&document.0).ok_or_else(|| DbError::Internal(format!("vcs_integration: store insertion disappeared for {}", document.0)))?;
+            Ok(store::merge_base(store.envelope().await, a, b).await)
         }
 
-        fn head(&self, document: &ArtifactId, alternative: &str) -> Result<Option<String>, DbError> {
-            self.with_store(document, |store| {
-                let envelope = store.envelope();
-                if let Some(found) = envelope.vcs.alternatives.iter().find(|candidate| candidate.id == alternative || candidate.name == alternative) {
-                    return Ok(found.checkpoint_ids.last().cloned());
-                }
-                Ok(store.current_checkpoint_id().map(str::to_string))
-            })
+        async fn head(&self, document: &ArtifactId, alternative: &str) -> Result<Option<String>, DbError> {
+            self.ensure_store(document).await?;
+            let mut stores = self.stores.lock().map_err(|_| DbError::Internal("vcs_integration: store registry mutex poisoned".to_string()))?;
+            let store = stores.get_mut(&document.0).ok_or_else(|| DbError::Internal(format!("vcs_integration: store insertion disappeared for {}", document.0)))?;
+            let envelope = store.envelope().await;
+            if let Some(found) = envelope.vcs.alternatives.iter().find(|candidate| candidate.id == alternative || candidate.name == alternative) {
+                return Ok(found.checkpoint_ids.last().cloned());
+            }
+            Ok(store.current_checkpoint_id().await.map(str::to_string))
         }
     }
     //#endregion 🔖️Store
@@ -591,7 +607,7 @@ dyn_enum_close! {
 /// `db_observe::WriterSink` themselves and passes it via `Database::open_with_emit`).
 // 🔀️ dedyn-emit-runtime, O1/R1: concrete return type (`Database`'s `E` default matches it exactly),
 // not `Arc<dyn Emit>` — every caller (`open`/`open_at`/`open_with_authz`) infers `E` from this value.
-fn default_emit() -> Arc<db_observe::StructuredSink<db_observe::MemorySink>> {
+async fn default_emit() -> Arc<db_observe::StructuredSink<db_observe::MemorySink>> {
     Arc::new(db_observe::StructuredSink::new(db_observe::MemorySink::new()))
 }
 //#endregion 🔖️Observe
@@ -618,12 +634,12 @@ struct CatalogRootEntry {
     created_at_ms: u64,
 }
 
-fn encode_catalog(entries: &[CatalogEntry]) -> Result<Vec<u8>, DbError> {
+async fn encode_catalog(entries: &[CatalogEntry]) -> Result<Vec<u8>, DbError> {
     let raw: Vec<CatalogRootEntry> = entries.iter().map(|entry| CatalogRootEntry { document: entry.document.0.clone(), created_at_ms: entry.created_at_ms }).collect();
     serde_json::to_vec(&raw).map_err(|err| DbError::Internal(format!("catalog encode: {err}")))
 }
 
-fn decode_catalog(bytes: &[u8]) -> Result<Vec<CatalogEntry>, DbError> {
+async fn decode_catalog(bytes: &[u8]) -> Result<Vec<CatalogEntry>, DbError> {
     if bytes.is_empty() {
         return Ok(Vec::new());
     }
@@ -646,7 +662,7 @@ pub struct ArtifactSpec {
 }
 
 impl ArtifactSpec {
-    pub fn new(document: protocol::ArtifactId) -> ArtifactSpec {
+    pub async fn new(document: protocol::ArtifactId) -> ArtifactSpec {
         ArtifactSpec { document }
     }
 }
@@ -713,8 +729,8 @@ impl Database<db_artifact::AllowAll> {
     /// @emoji 🚀️ The frozen entry point: opens (or initializes, if `storage` is fresh) a `Database`
     /// over an arbitrary `Arc<db_storage::DbBackend<db_storage::InlineRuntime>>` backend, wired with the default `AllowAll` authz and
     /// (behind the default-on `vcs` feature) a real `VcsVersionGraph`.
-    pub fn open(config: DbConfig, storage: Arc<db_storage::DbBackend<db_storage::InlineRuntime>>) -> Result<Database<db_artifact::AllowAll>, DbError> {
-        Database::open_with(config, storage, Arc::new(db_artifact::AllowAll), default_emit())
+    pub async fn open(config: DbConfig, storage: Arc<db_storage::DbBackend<db_storage::InlineRuntime>>) -> Result<Database<db_artifact::AllowAll>, DbError> {
+        Database::open_with(config, storage, Arc::new(db_artifact::AllowAll), default_emit().await).await
     }
 
     /// @emoji 🚀️ The frozen zero-touch entry point: `FsStorage` rooted at `root`, defaults for
@@ -723,10 +739,10 @@ impl Database<db_artifact::AllowAll> {
     /// `db_storage`'s own [`db_storage::InlineRuntime`] rather than threading a caller-supplied
     /// `HostAsyncRuntime` through this frozen signature. A caller that owns a real runtime builds
     /// its `FsStorage` with `FsStorage::open` and goes through `Database::open` instead.
-    pub fn open_at(root: &std::path::Path, profile: Profile) -> Result<Database<db_artifact::AllowAll>, DbError> {
+    pub async fn open_at(root: &std::path::Path, profile: Profile) -> Result<Database<db_artifact::AllowAll>, DbError> {
         let fs = db_actor::block_on(db_storage::FsStorage::open_inline("db_engine", root))?;
         let storage: Arc<db_storage::DbBackend<db_storage::InlineRuntime>> = Arc::new(db_storage::DbBackend::Fs(fs));
-        Database::open(DbConfig::for_profile(profile), storage)
+        Database::open(DbConfig::for_profile(profile), storage).await
     }
 
     /// @emoji 🚀️ Like `open`, but with a caller-supplied `Emit` sink (e.g. a `db_observe::WriterSink`
@@ -735,16 +751,16 @@ impl Database<db_artifact::AllowAll> {
     // `Database`'s default) so the returned `Database<AllowAll, E>` carries the caller's concrete
     // sink type — this fn has zero callers anywhere in the repo today (public, documented extension
     // seam per `open_with_emit`'s own doc; matches `open_with_authz`'s identical shape below).
-    pub fn open_with_emit<E: Emit + 'static>(config: DbConfig, storage: Arc<db_storage::DbBackend<db_storage::InlineRuntime>>, emit: Arc<E>) -> Result<Database<db_artifact::AllowAll, E>, DbError> {
-        Database::open_with(config, storage, Arc::new(db_artifact::AllowAll), emit)
+    pub async fn open_with_emit<E: Emit + 'static>(config: DbConfig, storage: Arc<db_storage::DbBackend<db_storage::InlineRuntime>>, emit: Arc<E>) -> Result<Database<db_artifact::AllowAll, E>, DbError> {
+        Database::open_with(config, storage, Arc::new(db_artifact::AllowAll), emit).await
     }
 }
 
 impl<A: db_artifact::AuthzHook + 'static> Database<A> {
     /// @emoji 🚀️ Like `open`, but with a caller-supplied `AuthzHook` (e.g. `SecurityAuthzHook`)
     /// instead of the default `AllowAll`.
-    pub fn open_with_authz(config: DbConfig, storage: Arc<db_storage::DbBackend<db_storage::InlineRuntime>>, authz: Arc<A>) -> Result<Database<A>, DbError> {
-        Database::open_with(config, storage, authz, default_emit())
+    pub async fn open_with_authz(config: DbConfig, storage: Arc<db_storage::DbBackend<db_storage::InlineRuntime>>, authz: Arc<A>) -> Result<Database<A>, DbError> {
+        Database::open_with(config, storage, authz, default_emit().await).await
     }
 }
 
@@ -756,7 +772,7 @@ impl<A: db_artifact::AuthzHook + 'static> Database<A> {
 // `default_emit()`'s concrete return type regardless of which `impl` block `open_with` itself lives
 // in, so the split is transparent to every call site.
 impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
-    fn open_with(config: DbConfig, storage: Arc<db_storage::DbBackend<db_storage::InlineRuntime>>, authz: Arc<A>, emit: Arc<E>) -> Result<Database<A, E>, DbError> {
+    async fn open_with(config: DbConfig, storage: Arc<db_storage::DbBackend<db_storage::InlineRuntime>>, authz: Arc<A>, emit: Arc<E>) -> Result<Database<A, E>, DbError> {
         let storage_capabilities = db_actor::block_on(storage.capabilities());
         let capabilities = DbCapabilities {
             // 🧩️ Extension seam: real, honest today — see module doc on why preview/live-query
@@ -773,9 +789,9 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
         health.set("db_engine.storage", if storage_capabilities.durable { db_observe::HealthState::Healthy } else { db_observe::HealthState::Degraded("storage backend is not durable".to_string()) });
 
         let (epoch, entries) = match db_actor::block_on(async { storage.catalog().await.read_root().await })? {
-            Some((bytes, epoch)) => (epoch, decode_catalog(&bytes)?),
+            Some((bytes, epoch)) => (epoch, decode_catalog(&bytes).await?),
             None => {
-                let empty = encode_catalog(&[])?;
+                let empty = encode_catalog(&[]).await?;
                 let epoch = db_actor::block_on(async { storage.catalog().await.cas_root(EpochFence::INITIAL, &empty).await })?;
                 (epoch, Vec::new())
             }
@@ -783,11 +799,11 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
         health.set("db_engine.catalog", db_observe::HealthState::Healthy);
 
         #[cfg(feature = "vcs")]
-        let version_graph: Arc<VersionGraphs> = Arc::new(VersionGraphs::Vcs(vcs_integration::VcsVersionGraph::new()));
+        let version_graph: Arc<VersionGraphs> = Arc::new(VersionGraphs::Vcs(vcs_integration::VcsVersionGraph::new().await));
         #[cfg(not(feature = "vcs"))]
         let version_graph: Arc<VersionGraphs> = Arc::new(VersionGraphs::Null(NullVersionGraph));
 
-        emit.emit(EmitEvent::new("db_engine.database_opened").field("documents", EmitField::U64(entries.len() as u64)));
+        emit.emit(EmitEvent::new("db_engine.database_opened").field("documents", EmitField::U64(entries.len() as u64))).await;
 
         Ok(Database { storage, config, capabilities, authz, version_graph, emit, health, catalog: Mutex::new(CatalogState { epoch, entries }), open_artifacts: Mutex::new(HashMap::new()) })
     }
@@ -800,7 +816,7 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
     /// `db_security::SecurityGate`-backed default policy already matches `AllowAll`'s permissive
     /// single-tenant spirit), and the spread keeps this call site correct across further additive
     /// growth without another coordinated edit.
-    fn document_engine_config(&self) -> db_artifact::ArtifactEngineConfig<A, VersionGraphs> {
+    async fn document_engine_config(&self) -> db_artifact::ArtifactEngineConfig<A, VersionGraphs> {
         // 🔀️ Can't `..db_artifact::ArtifactEngineConfig::default()` spread here: that default is
         // only defined for `ArtifactEngineConfig<AllowAll, NullVersionGraph>` (see its `impl
         // Default`), a different concrete type from `ArtifactEngineConfig<A, VersionGraphs>`
@@ -819,33 +835,33 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
         }
     }
 
-    fn spawn_authority_create(&self, document: protocol::ArtifactId) -> Result<Arc<db_artifact::ArtifactAuthority>, DbError> {
+    async fn spawn_authority_create(&self, document: protocol::ArtifactId) -> Result<Arc<db_artifact::ArtifactAuthority>, DbError> {
         let storage = self.storage.clone();
-        let config = self.document_engine_config();
-        let created_at_ms = now_ms();
+        let config = self.document_engine_config().await;
+        let created_at_ms = now_ms().await;
         let mailbox_capacities = self.config.mailbox_capacities;
-        let authority = db_artifact::ArtifactAuthority::spawn(move || db_artifact::ArtifactEngine::create(document, storage, config, created_at_ms), mailbox_capacities)?;
+        let authority = db_artifact::ArtifactAuthority::spawn(move || db_artifact::ArtifactEngine::create(document, storage, config, created_at_ms), mailbox_capacities).await?;
         Ok(Arc::new(authority))
     }
 
-    fn spawn_authority_open(&self, document: protocol::ArtifactId) -> Result<Arc<db_artifact::ArtifactAuthority>, DbError> {
+    async fn spawn_authority_open(&self, document: protocol::ArtifactId) -> Result<Arc<db_artifact::ArtifactAuthority>, DbError> {
         let storage = self.storage.clone();
-        let config = self.document_engine_config();
-        let opened_at_ms = now_ms();
+        let config = self.document_engine_config().await;
+        let opened_at_ms = now_ms().await;
         let mailbox_capacities = self.config.mailbox_capacities;
-        let authority = db_artifact::ArtifactAuthority::spawn(move || db_artifact::ArtifactEngine::open(document, &storage, config, opened_at_ms).map(|(engine, _report)| engine), mailbox_capacities)?;
+        let authority = db_artifact::ArtifactAuthority::spawn(move || db_artifact::ArtifactEngine::open(document, &storage, config, opened_at_ms).map(|(engine, _report)| engine), mailbox_capacities).await?;
         Ok(Arc::new(authority))
     }
 
-    fn register_handle(&self, document: protocol::ArtifactId, authority: Arc<db_artifact::ArtifactAuthority>) -> ArtifactHandle {
-        let core_document = to_core_document_id(&document);
+    async fn register_handle(&self, document: protocol::ArtifactId, authority: Arc<db_artifact::ArtifactAuthority>) -> ArtifactHandle {
+        let core_document = to_core_document_id(&document).await;
         self.open_artifacts.lock().expect("db_engine: open_artifacts mutex poisoned").insert(document.0.clone(), authority.clone());
         ArtifactHandle { authority, storage: self.storage.clone(), document, core_document }
     }
 
     /// @emoji 🌱️ The frozen `create_document`: mints a brand-new document, durably records it in the
     /// catalog root (CAS-fenced), spawns its `ArtifactAuthority`, and returns a live handle.
-    pub fn create_document(&self, spec: ArtifactSpec) -> Result<ArtifactHandle, DbError> {
+    pub async fn create_document(&self, spec: ArtifactSpec) -> Result<ArtifactHandle, DbError> {
         let document = spec.document;
         {
             let mut catalog = self.catalog.lock().expect("db_engine: catalog mutex poisoned");
@@ -853,42 +869,42 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
                 return Err(DbError::AlreadyExists(format!("document {} already exists", document.0)));
             }
             let mut entries = catalog.entries.clone();
-            entries.push(CatalogEntry { document: document.clone(), created_at_ms: now_ms() });
-            let bytes = encode_catalog(&entries)?;
+            entries.push(CatalogEntry { document: document.clone(), created_at_ms: now_ms().await });
+            let bytes = encode_catalog(&entries).await?;
             let new_epoch = db_actor::block_on(async { self.storage.catalog().await.cas_root(catalog.epoch, &bytes).await })?;
             catalog.epoch = new_epoch;
             catalog.entries = entries;
         }
-        let authority = self.spawn_authority_create(document.clone())?;
-        self.emit.emit(EmitEvent::new("db_engine.document_created").with_document(to_core_document_id(&document)));
-        Ok(self.register_handle(document, authority))
+        let authority = self.spawn_authority_create(document.clone()).await?;
+        self.emit.emit(EmitEvent::new("db_engine.document_created").with_document(to_core_document_id(&document).await)).await;
+        Ok(self.register_handle(document, authority).await)
     }
 
     /// @emoji 📄️ The frozen `document`: returns a live handle to an already-cataloged document,
     /// reusing an already-open `ArtifactAuthority` if one exists, else recovering it fresh from its
     /// WAL.
-    pub fn document(&self, id: &protocol::ArtifactId) -> Result<ArtifactHandle, DbError> {
+    pub async fn document(&self, id: &protocol::ArtifactId) -> Result<ArtifactHandle, DbError> {
         if let Some(authority) = self.open_artifacts.lock().expect("db_engine: open_artifacts mutex poisoned").get(&id.0) {
-            return Ok(ArtifactHandle { authority: authority.clone(), storage: self.storage.clone(), document: id.clone(), core_document: to_core_document_id(id) });
+            return Ok(ArtifactHandle { authority: authority.clone(), storage: self.storage.clone(), document: id.clone(), core_document: to_core_document_id(id).await });
         }
         let known = self.catalog.lock().expect("db_engine: catalog mutex poisoned").entries.iter().any(|entry| &entry.document == id);
         if !known {
             return Err(DbError::NotFound(format!("document {} not found", id.0)));
         }
-        let authority = self.spawn_authority_open(id.clone())?;
-        self.emit.emit(EmitEvent::new("db_engine.document_opened").with_document(to_core_document_id(id)));
-        Ok(self.register_handle(id.clone(), authority))
+        let authority = self.spawn_authority_open(id.clone()).await?;
+        self.emit.emit(EmitEvent::new("db_engine.document_opened").with_document(to_core_document_id(id).await)).await;
+        Ok(self.register_handle(id.clone(), authority).await)
     }
 
     /// @emoji 📇️ The frozen `catalog`: a point-in-time read of every document this `Database`
     /// knows about.
-    pub fn catalog(&self) -> CatalogView {
+    pub async fn catalog(&self) -> CatalogView {
         CatalogView { artifacts: self.catalog.lock().expect("db_engine: catalog mutex poisoned").entries.clone() }
     }
 
     /// @emoji 🩺️ The frozen `health`: this `Database`'s `HealthRegistry` snapshot plus its own open
     /// document count.
-    pub fn health(&self) -> DbHealth {
+    pub async fn health(&self) -> DbHealth {
         DbHealth { report: self.health.report(), open_artifacts: self.open_artifacts.lock().expect("db_engine: open_artifacts mutex poisoned").len() }
     }
 
@@ -901,19 +917,19 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
     /// whose `ArtifactHandle` is still cloned elsewhere (this `Arc`'s strong count > 1) is skipped —
     /// its actor thread keeps running under whichever handle still holds it, which is correct
     /// (shutdown must never yank a mailbox out from under a live caller), just not exhaustive.
-    pub fn shutdown(self, _deadline: std::time::Duration) -> Result<(), DbError> {
+    pub async fn shutdown(self, _deadline: std::time::Duration) -> Result<(), DbError> {
         let authorities: Vec<Arc<db_artifact::ArtifactAuthority>> = self.open_artifacts.lock().expect("db_engine: open_artifacts mutex poisoned").drain().map(|(_, authority)| authority).collect();
         for authority in authorities {
             if let Ok(authority) = Arc::try_unwrap(authority) {
-                authority.shutdown();
+                authority.shutdown().await;
             }
         }
-        self.emit.emit(EmitEvent::new("db_engine.database_shutdown"));
+        self.emit.emit(EmitEvent::new("db_engine.database_shutdown")).await;
         Ok(())
     }
 
     /// @emoji 🧰️ What this `Database` instance negotiated at `open` time.
-    pub fn capabilities(&self) -> DbCapabilities {
+    pub async fn capabilities(&self) -> DbCapabilities {
         self.capabilities
     }
 
@@ -923,7 +939,7 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
     /// session driving `db_sync::handle_frontier_advertise` directly). Additive: not part of the
     /// contract-frozen `Database` API surface listed in `contract.md`'s "Stable API" block, so it
     /// carries no compatibility promise beyond this crate's own semver.
-    pub fn storage(&self) -> Arc<db_storage::DbBackend<db_storage::InlineRuntime>> {
+    pub async fn storage(&self) -> Arc<db_storage::DbBackend<db_storage::InlineRuntime>> {
         self.storage.clone()
     }
 
@@ -933,28 +949,28 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
     /// genuine `db_compact` integration, just document-at-a-time rather than a background scheduler
     /// (deferred — this wave's instructions ask for a lighter, documented cluster/compact/sync
     /// surface, not a full online scheduler).
-    pub fn compact_document(&self, document: &protocol::ArtifactId, holder: &str, consolidate_snapshots: bool) -> Result<db_compact::CompactionReport, DbError> {
-        let core_document = to_core_document_id(document);
-        db_actor::block_on(db_compact::Compactor::new(self.storage.as_ref()).run_from_latest_snapshot(&core_document, holder, consolidate_snapshots, &db_compact::CompactionBudget::default(), now_ms()))
+    pub async fn compact_document(&self, document: &protocol::ArtifactId, holder: &str, consolidate_snapshots: bool) -> Result<db_compact::CompactionReport, DbError> {
+        let core_document = to_core_document_id(document).await;
+        db_actor::block_on(db_compact::Compactor::new(self.storage.as_ref()).await.run_from_latest_snapshot(&core_document, holder, consolidate_snapshots, &db_compact::CompactionBudget::default(), now_ms().await))
     }
 
     /// @emoji 👋️ A real `db_sync::handle_hello` call for `document` — the server-side half of the
     /// wire-v2 handshake (frontier exchange / bootstrap-plan decision). No transport of its own:
     /// wiring this to an actual `protocol_wire` socket is CW5/CW6's job (framework/sync, semio_hub
     /// rebuilds), out of this crate's scope this wave.
-    pub fn hello(&self, document: &protocol::ArtifactId, hello_frontier: Option<&protocol::RuntimeFrontierSummary>, session_id: String, origin: &protocol::ActorId, snapshot_chunk_bytes: usize) -> Result<db_sync::WelcomeResponse, DbError> {
+    pub async fn hello(&self, document: &protocol::ArtifactId, hello_frontier: Option<&protocol::RuntimeFrontierSummary>, session_id: String, origin: &protocol::ActorId, snapshot_chunk_bytes: usize) -> Result<db_sync::WelcomeResponse, DbError> {
         let core_document = to_core_document_id(document);
-        db_actor::block_on(db_sync::handle_hello(self.storage.as_ref(), core_document, hello_frontier, session_id, origin, snapshot_chunk_bytes))
+        db_actor::block_on(db_sync::handle_hello(self.storage.as_ref(), core_document.await, hello_frontier, session_id, origin, snapshot_chunk_bytes))
     }
 
     /// @emoji 🌿️ A real, `vcs`-backed checkpoint over every change `record_change` has recorded for
     /// `document` since its last checkpoint (see `db_artifact::ArtifactEngine::submit`'s "vcs"
     /// pipeline stage, which calls `record_change` on every commit when a `VersionGraph` is wired).
     /// Errs `Unimplemented` if the `vcs` feature is disabled (no `VersionGraph` configured).
-    pub fn checkpoint_document(&self, document: &protocol::ArtifactId, message: String, authors: &[protocol::ActorId]) -> Result<String, DbError> {
-        let core_document = to_core_document_id(document);
+    pub async fn checkpoint_document(&self, document: &protocol::ArtifactId, message: String, authors: &[protocol::ActorId]) -> Result<String, DbError> {
+        let core_document = to_core_document_id(document).await;
         let core_authors = authors.iter().map(to_core_actor_id).collect();
-        self.version_graph.checkpoint(&core_document, CheckpointRequest { parent_checkpoint: None, change_ids: Vec::new(), message, authors: core_authors, timestamp_ms: now_ms() })
+        self.version_graph.checkpoint(&core_document, CheckpointRequest { parent_checkpoint: None, change_ids: Vec::new(), message, authors: core_authors, timestamp_ms: now_ms().await }).await
     }
 }
 //#endregion 🔖️Database
@@ -980,15 +996,23 @@ impl ArtifactHandle {
     /// dedicated bridge thread and resolving a `db_actor` oneshot from it — the same
     /// `spawn_blocking`-over-a-channel pattern `tokio`/`pack_async` both use for the identical
     /// blocking-API-under-an-async-facade problem.
+    // 🔀️ Sync (was `async fn ... -> SubmitFuture`): `SubmitFuture` is itself a `Future`
+    // (`ReplyReceiver`), so an async wrapper here made every call site double-future
+    // (`.await` once for `submit` to resolve, again to resolve `SubmitFuture`) — the same
+    // hand-rolled-future convention as `Address::send`/`ask` (sync constructor, one future,
+    // one `.await`/`block_on` at the call site).
     pub fn submit(&self, batch: db_artifact::CommandBatch, options: db_artifact::SubmitOptions) -> SubmitFuture {
         let (reply_tx, reply_rx) = db_actor::oneshot();
         let authority = self.authority.clone();
         let document = self.document.clone();
-        let submitted_at_ms = now_ms();
+        let submitted_at_ms = db_actor::block_on(now_ms());
         std::thread::Builder::new()
             .name("db-engine-submit-bridge".to_string())
             .spawn(move || {
-                let result = authority.submit_blocking(batch, options, submitted_at_ms).map(|receipt| to_engine_receipt(receipt, document));
+                // 🚫️async: E5 executor bridge — this dedicated thread IS the executor (R4 clause 2/4:
+                // "dedicated-thread actor bridges where the thread IS the executor"), so `.await` is
+                // both illegal here (no runtime on a raw `std::thread`) and unnecessary.
+                let result = db_actor::block_on(authority.submit_blocking(batch, options, submitted_at_ms)).map(|receipt| to_engine_receipt(receipt, document));
                 reply_tx.send(result);
             })
             .expect("db_engine: failed to spawn submit bridge thread");
@@ -1004,7 +1028,7 @@ impl ArtifactHandle {
     // (`ArtifactHandle::query(&self, query: Query, consistency: Consistency)`, contract.md's
     // "Stable API" block) — not changeable even though this revision's body only borrows it.
     #[allow(clippy::needless_pass_by_value)]
-    pub fn query(&self, query: Query, consistency: Consistency) -> Result<QueryStream, DbError> {
+    pub async fn query(&self, query: Query, consistency: Consistency) -> Result<QueryStream, DbError> {
         match &consistency {
             Consistency::Historical(_) | Consistency::PreviewAugmented(_) => {
                 return Err(DbError::Unimplemented("historical/preview-augmented query consistency is not yet wired at the db_engine layer (db_query/db_projection integration deferred)"));
@@ -1021,11 +1045,11 @@ impl ArtifactHandle {
         };
         let mut results = Vec::with_capacity(paths.len());
         for path in paths {
-            let value = self.authority.query_blocking(&path)?;
+            let value = self.authority.query_blocking(&path).await?;
             results.push((path, value));
         }
 
-        let frontier = self.frontier()?;
+        let frontier = self.frontier().await?;
         match &consistency {
             Consistency::AtLeast(requested) if !frontier.dominates(requested)? => {
                 return Err(DbError::Unavailable("document has not yet reached the requested frontier".to_string()));
@@ -1041,37 +1065,37 @@ impl ArtifactHandle {
     /// @emoji 📡️ The frozen `subscribe` — see module doc's `//🎯️ Design choice`: always
     /// `DbError::Unimplemented`, a real (not faked) extension seam pending a `ArtifactMessage`
     /// variant `db_artifact` doesn't expose yet.
-    pub fn subscribe(&self, _spec: LiveQuerySpec) -> Result<LiveQuery, DbError> {
+    pub async fn subscribe(&self, _spec: LiveQuerySpec) -> Result<LiveQuery, DbError> {
         Err(DbError::Unimplemented("live-query subscription is not yet reachable: ArtifactAuthority's mailbox only exposes Submit/Query/Frontier messages"))
     }
 
     /// @emoji 🧭️ The frozen `frontier`.
-    pub fn frontier(&self) -> Result<Frontier, DbError> {
-        let core_frontier = self.authority.frontier_blocking()?;
+    pub async fn frontier(&self) -> Result<Frontier, DbError> {
+        let core_frontier = self.authority.frontier_blocking().await?;
         Ok(to_engine_frontier(&core_frontier, self.document.clone()))
     }
 
     /// @emoji 🌫️ The frozen `preview` — see `subscribe`'s doc; same deferral reason.
-    pub fn preview(&self, _base: Frontier) -> Result<PreviewHandle, DbError> {
+    pub async fn preview(&self, _base: Frontier) -> Result<PreviewHandle, DbError> {
         Err(DbError::Unimplemented("preview publish/query is not yet reachable: ArtifactAuthority's mailbox only exposes Submit/Query/Frontier messages"))
     }
 
     /// @emoji 📜️ The frozen `history` — real, see module doc: replays the WAL directly rather than
     /// going through the actor.
-    pub fn history(&self) -> Result<HistoryView, DbError> {
-        replay_history(self.storage.as_ref(), &self.core_document, &self.document)
+    pub async fn history(&self) -> Result<HistoryView, DbError> {
+        replay_history(self.storage.as_ref(), &self.core_document, &self.document).await
     }
 
     /// @emoji 📸️ The frozen `snapshot_now` — see module doc's `//🎯️ Design choice`: always resolves
     /// to `DbError::Unimplemented`, a real extension seam (no full-state enumeration exists yet to
     /// serialize, and `db_snapshot` is not a direct dependency of this crate).
-    pub fn snapshot_now(&self, _kind: SnapshotKind) -> SnapshotFuture {
+    pub async fn snapshot_now(&self, _kind: SnapshotKind) -> SnapshotFuture {
         let (reply_tx, reply_rx) = db_actor::oneshot();
         reply_tx.send(Err(DbError::Unimplemented("db_engine does not yet build real pack snapshots (no db_snapshot dependency this wave, and DocumentState exposes no full-state enumeration to serialize)")));
         reply_rx
     }
 
-    pub fn document_id(&self) -> &protocol::ArtifactId {
+    pub async fn document_id(&self) -> &protocol::ArtifactId {
         &self.document
     }
 }
@@ -1085,38 +1109,38 @@ mod tests {
     use protocol::{OpBinary, OpText};
     use store::ArtifactPack;
 
-    #[test]
-    fn hash_operation_text_and_binary_round_trip_with_every_field_present_and_absent() {
+    #[semio_framework_async_macros::async_test]
+    async fn hash_operation_text_and_binary_round_trip_with_every_field_present_and_absent() {
         let bare = HashMutation { hash: [7u8; 32], author: None, timestamp: None };
-        assert_eq!(HashMutation::parse_op(&bare.print_op()).unwrap().hash, bare.hash);
-        assert!(HashMutation::parse_op(&bare.print_op()).unwrap().author.is_none());
-        assert_eq!(HashMutation::decode_op(&bare.encode_op().unwrap()).unwrap(), bare);
+        assert_eq!(HashMutation::parse_op(&bare.print_op().await).await.unwrap().hash, bare.hash);
+        assert!(HashMutation::parse_op(&bare.print_op().await).await.unwrap().author.is_none());
+        assert_eq!(HashMutation::decode_op(&bare.encode_op().await.unwrap()).await.unwrap(), bare);
 
         let full = HashMutation { hash: [9u8; 32], author: Some(protocol::ActorId("actor-1".into())), timestamp: Some(protocol::HybridLogicalTimestamp { actor: 1, physical_ms: 2, logical: 3 }) };
-        let reparsed = HashMutation::parse_op(&full.print_op()).unwrap();
+        let reparsed = HashMutation::parse_op(&full.print_op().await).await.unwrap();
         assert_eq!(reparsed.hash, full.hash);
         assert_eq!(reparsed.author, full.author);
         assert_eq!(reparsed.timestamp, full.timestamp);
-        let redecoded = HashMutation::decode_op(&full.encode_op().unwrap()).unwrap();
+        let redecoded = HashMutation::decode_op(&full.encode_op().await.unwrap()).await.unwrap();
         assert_eq!(redecoded, full);
     }
 
-    #[test]
-    fn hash_projection_pack_round_trips() {
+    #[semio_framework_async_macros::async_test]
+    async fn hash_projection_pack_round_trips() {
         let projection = HashProjection { latest_hash: [3u8; 32] };
-        let bytes = projection.encode_pack();
-        assert_eq!(HashProjection::decode_pack(&bytes).unwrap(), projection);
+        let bytes = projection.encode_pack().await;
+        assert_eq!(HashProjection::decode_pack(&bytes).await.unwrap(), projection);
     }
 
     //#region 🧸️Fixtures
-    fn tempdir(name: &str) -> std::path::PathBuf {
+    async fn tempdir(name: &str) -> std::path::PathBuf {
         let mut dir = std::env::temp_dir();
-        dir.push(format!("db_engine-test-{name}-{}-{}", std::process::id(), now_ms()));
+        dir.push(format!("db_engine-test-{name}-{}-{}", std::process::id(), now_ms().await));
         std::fs::create_dir_all(&dir).unwrap();
         dir
     }
 
-    fn envelope(id: &str, deps: &[&str], actor: &str, document: &protocol::ArtifactId, entries: &[(&str, serde_json::Value)]) -> protocol::MutationEnvelope {
+    async fn envelope(id: &str, deps: &[&str], actor: &str, document: &protocol::ArtifactId, entries: &[(&str, serde_json::Value)]) -> protocol::MutationEnvelope {
         let mut payload = serde_json::Map::new();
         for (path, value) in entries {
             payload.insert((*path).to_string(), value.clone());
@@ -1126,66 +1150,67 @@ mod tests {
             document_id: document.clone(),
             actor: protocol::ActorId(actor.to_string()),
             dependencies: deps.iter().map(|dep| protocol::MutationId((*dep).to_string())).collect(),
-            diff: protocol::ArtifactDiff { schema: protocol::SchemaId(db_artifact::DB_PATHMAP_SCHEMA.to_string()), payload: db_artifact::encode_pathmap_json(&serde_json::Value::Object(payload)).unwrap() },
-            inverse: protocol::InverseMutation { schema: protocol::SchemaId(db_artifact::DB_PATHMAP_SCHEMA.to_string()), payload: db_artifact::encode_pathmap_json(&serde_json::Value::Object(serde_json::Map::new())).unwrap() },
-            timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
+            diff: protocol::ArtifactDiff { schema: protocol::SchemaId(db_artifact::DB_PATHMAP_SCHEMA.to_string()), payload: db_artifact::encode_pathmap_json(&serde_json::Value::Object(payload)).await.unwrap() },
+            inverse: protocol::InverseMutation { schema: protocol::SchemaId(db_artifact::DB_PATHMAP_SCHEMA.to_string()), payload: db_artifact::encode_pathmap_json(&serde_json::Value::Object(serde_json::Map::new())).await.unwrap() },
+            timestamp: protocol::HybridLogicalTimestamp::new(0, 0).await,
         }
     }
     //#endregion 🧸️Fixtures
 
     //#region 🔖️Database open/catalog
-    #[test]
-    fn open_at_creates_a_fresh_zero_touch_database_with_an_empty_catalog() {
-        let root = tempdir("open-at-fresh");
-        let database = Database::open_at(&root, Profile::Test).unwrap();
-        assert!(database.catalog().artifacts.is_empty());
-        assert_eq!(database.health().open_artifacts, 0);
-        assert!(matches!(database.health().report.overall, db_observe::HealthState::Healthy));
+    #[semio_framework_async_macros::async_test]
+    async fn open_at_creates_a_fresh_zero_touch_database_with_an_empty_catalog() {
+        let root = tempdir("open-at-fresh").await;
+        let database = Database::open_at(&root, Profile::Test).await.unwrap();
+        assert!(database.catalog().await.artifacts.is_empty());
+        assert_eq!(database.health().await.open_artifacts, 0);
+        assert!(matches!(database.health().await.report.overall, db_observe::HealthState::Healthy));
     }
 
-    #[test]
-    fn create_document_registers_it_in_the_catalog_and_document_finds_it() {
-        let root = tempdir("create-and-find");
-        let database = Database::open_at(&root, Profile::Test).unwrap();
+    #[semio_framework_async_macros::async_test]
+    async fn create_document_registers_it_in_the_catalog_and_document_finds_it() {
+        let root = tempdir("create-and-find").await;
+        let database = Database::open_at(&root, Profile::Test).await.unwrap();
         let document = protocol::ArtifactId("doc-1".to_string());
-        database.create_document(ArtifactSpec::new(document.clone())).unwrap();
+        database.create_document(ArtifactSpec::new(document.clone()).await).await.unwrap();
 
-        let catalog = database.catalog();
+        let catalog = database.catalog().await;
         assert_eq!(catalog.artifacts.len(), 1);
         assert_eq!(catalog.artifacts[0].document, document);
 
-        let handle = database.document(&document).unwrap();
-        assert_eq!(handle.document_id(), &document);
+        let handle = database.document(&document).await.unwrap();
+        assert_eq!(handle.document_id().await, &document);
     }
 
-    #[test]
-    fn create_document_twice_errs_already_exists() {
-        let root = tempdir("create-twice");
-        let database = Database::open_at(&root, Profile::Test).unwrap();
+    #[semio_framework_async_macros::async_test]
+    async fn create_document_twice_errs_already_exists() {
+        let root = tempdir("create-twice").await;
+        let database = Database::open_at(&root, Profile::Test).await.unwrap();
         let document = protocol::ArtifactId("doc-1".to_string());
-        database.create_document(ArtifactSpec::new(document.clone())).unwrap();
-        let result = database.create_document(ArtifactSpec::new(document));
-        assert!(matches!(result, Err(DbError::AlreadyExists(_))));
+        database.create_document(ArtifactSpec::new(document.clone()).await).await.unwrap();
+        let result = database.create_document(ArtifactSpec::new(document).await);
+        assert!(matches!(result.await, Err(DbError::AlreadyExists(_))));
     }
 
-    #[test]
-    fn document_of_an_unknown_id_errs_not_found() {
-        let root = tempdir("unknown-doc");
-        let database = Database::open_at(&root, Profile::Test).unwrap();
-        let result = database.document(&protocol::ArtifactId("never-created".to_string()));
-        assert!(matches!(result, Err(DbError::NotFound(_))));
+    #[semio_framework_async_macros::async_test]
+    async fn document_of_an_unknown_id_errs_not_found() {
+        let root = tempdir("unknown-doc").await;
+        let database = Database::open_at(&root, Profile::Test).await.unwrap();
+        let never_created = protocol::ArtifactId("never-created".to_string());
+        let result = database.document(&never_created);
+        assert!(matches!(result.await, Err(DbError::NotFound(_))));
     }
     //#endregion 🔖️Database open/catalog
 
     //#region 🔖️Round trip
-    #[test]
-    fn full_submit_durable_query_round_trip_over_a_real_document_authority() {
-        let root = tempdir("round-trip");
-        let database = Database::open_at(&root, Profile::Test).unwrap();
+    #[semio_framework_async_macros::async_test]
+    async fn full_submit_durable_query_round_trip_over_a_real_document_authority() {
+        let root = tempdir("round-trip").await;
+        let database = Database::open_at(&root, Profile::Test).await.unwrap();
         let document = protocol::ArtifactId("doc-1".to_string());
-        let handle = database.create_document(ArtifactSpec::new(document.clone())).unwrap();
+        let handle = database.create_document(ArtifactSpec::new(document.clone()).await).await.unwrap();
 
-        let batch = db_artifact::CommandBatch::new(vec![envelope("op-1", &[], "alice", &document, &[("name", serde_json::json!("hello"))])]).unwrap();
+        let batch = db_artifact::CommandBatch::new(vec![envelope("op-1", &[], "alice", &document, &[("name", serde_json::json!("hello"))]).await]).await.unwrap();
         let receipt = db_actor::block_on(handle.submit(batch, db_artifact::SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() })).unwrap().unwrap();
         assert_eq!(receipt.command_id, protocol::MutationId("op-1".to_string()));
         assert_eq!(receipt.frontier.document, document);
@@ -1193,98 +1218,98 @@ mod tests {
         assert!(receipt.conflicts.is_empty());
         assert!(receipt.state_hash.is_some());
 
-        let queried = handle.query(Query::Get { path: "name".to_string() }, Consistency::Canonical).unwrap();
-        let value: serde_json::Value = db_artifact::decode_pathmap_json(queried.results[0].1.as_ref().unwrap()).unwrap();
+        let queried = handle.query(Query::Get { path: "name".to_string() }, Consistency::Canonical).await.unwrap();
+        let value: serde_json::Value = db_artifact::decode_pathmap_json(queried.results[0].1.as_ref().unwrap()).await.unwrap();
         assert_eq!(value, serde_json::json!("hello"));
 
-        let frontier = handle.frontier().unwrap();
+        let frontier = handle.frontier().await.unwrap();
         assert_eq!(frontier.head_seq, 1);
 
-        let at_least = handle.query(Query::Get { path: "name".to_string() }, Consistency::AtLeast(frontier)).unwrap();
+        let at_least = handle.query(Query::Get { path: "name".to_string() }, Consistency::AtLeast(frontier)).await.unwrap();
         assert_eq!(at_least.results.len(), 1);
 
-        let history = handle.history().unwrap();
+        let history = handle.history().await.unwrap();
         assert_eq!(history.entries.len(), 1);
         assert_eq!(history.entries[0].operation_ids, vec![protocol::MutationId("op-1".to_string())]);
     }
 
-    #[test]
-    fn a_document_survives_a_full_database_shutdown_and_reopen_at_the_same_root() {
-        let root = tempdir("reopen");
+    #[semio_framework_async_macros::async_test]
+    async fn a_document_survives_a_full_database_shutdown_and_reopen_at_the_same_root() {
+        let root = tempdir("reopen").await;
         let document = protocol::ArtifactId("doc-1".to_string());
         {
-            let database = Database::open_at(&root, Profile::Test).unwrap();
-            let handle = database.create_document(ArtifactSpec::new(document.clone())).unwrap();
-            let batch = db_artifact::CommandBatch::new(vec![envelope("op-1", &[], "alice", &document, &[("count", serde_json::json!(1))])]).unwrap();
+            let database = Database::open_at(&root, Profile::Test).await.unwrap();
+            let handle = database.create_document(ArtifactSpec::new(document.clone()).await).await.unwrap();
+            let batch = db_artifact::CommandBatch::new(vec![envelope("op-1", &[], "alice", &document, &[("count", serde_json::json!(1))]).await]).await.unwrap();
             db_actor::block_on(handle.submit(batch, db_artifact::SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() })).unwrap().unwrap();
-            database.shutdown(std::time::Duration::from_secs(1)).unwrap();
+            database.shutdown(std::time::Duration::from_secs(1)).await.unwrap();
         }
 
-        let reopened = Database::open_at(&root, Profile::Test).unwrap();
-        assert_eq!(reopened.catalog().artifacts.len(), 1, "the catalog root must have survived the reopen");
+        let reopened = Database::open_at(&root, Profile::Test).await.unwrap();
+        assert_eq!(reopened.catalog().await.artifacts.len(), 1, "the catalog root must have survived the reopen");
 
-        let handle = reopened.document(&document).unwrap();
-        let queried = handle.query(Query::Get { path: "count".to_string() }, Consistency::Canonical).unwrap();
-        let value: serde_json::Value = db_artifact::decode_pathmap_json(queried.results[0].1.as_ref().unwrap()).unwrap();
+        let handle = reopened.document(&document).await.unwrap();
+        let queried = handle.query(Query::Get { path: "count".to_string() }, Consistency::Canonical).await.unwrap();
+        let value: serde_json::Value = db_artifact::decode_pathmap_json(queried.results[0].1.as_ref().unwrap()).await.unwrap();
         assert_eq!(value, serde_json::json!(1), "the document's committed state must have survived the reopen via WAL replay");
-        assert_eq!(handle.frontier().unwrap().head_seq, 1);
+        assert_eq!(handle.frontier().await.unwrap().head_seq, 1);
     }
 
-    #[test]
-    fn exact_consistency_rejects_a_frontier_the_document_has_moved_past() {
-        let root = tempdir("exact-consistency");
-        let database = Database::open_at(&root, Profile::Test).unwrap();
+    #[semio_framework_async_macros::async_test]
+    async fn exact_consistency_rejects_a_frontier_the_document_has_moved_past() {
+        let root = tempdir("exact-consistency").await;
+        let database = Database::open_at(&root, Profile::Test).await.unwrap();
         let document = protocol::ArtifactId("doc-1".to_string());
-        let handle = database.create_document(ArtifactSpec::new(document.clone())).unwrap();
-        let stale = handle.frontier().unwrap();
+        let handle = database.create_document(ArtifactSpec::new(document.clone()).await).await.unwrap();
+        let stale = handle.frontier().await.unwrap();
 
-        let batch = db_artifact::CommandBatch::new(vec![envelope("op-1", &[], "alice", &document, &[("x", serde_json::json!(1))])]).unwrap();
+        let batch = db_artifact::CommandBatch::new(vec![envelope("op-1", &[], "alice", &document, &[("x", serde_json::json!(1))]).await]).await.unwrap();
         db_actor::block_on(handle.submit(batch, db_artifact::SubmitOptions::default())).unwrap().unwrap();
 
         let result = handle.query(Query::Get { path: "x".to_string() }, Consistency::Exact(stale));
-        assert!(matches!(result, Err(DbError::Unavailable(_))));
+        assert!(matches!(result.await, Err(DbError::Unavailable(_))));
     }
     //#endregion 🔖️Round trip
 
     //#region 🔖️Deferred extension seams
-    #[test]
-    fn subscribe_preview_and_snapshot_now_are_documented_unimplemented_not_panics() {
-        let root = tempdir("deferred");
-        let database = Database::open_at(&root, Profile::Test).unwrap();
+    #[semio_framework_async_macros::async_test]
+    async fn subscribe_preview_and_snapshot_now_are_documented_unimplemented_not_panics() {
+        let root = tempdir("deferred").await;
+        let database = Database::open_at(&root, Profile::Test).await.unwrap();
         let document = protocol::ArtifactId("doc-1".to_string());
-        let handle = database.create_document(ArtifactSpec::new(document)).unwrap();
+        let handle = database.create_document(ArtifactSpec::new(document).await).await.unwrap();
 
-        assert!(matches!(handle.subscribe(LiveQuerySpec { since: None }), Err(DbError::Unimplemented(_))));
-        assert!(matches!(handle.preview(handle.frontier().unwrap()), Err(DbError::Unimplemented(_))));
-        assert!(matches!(db_actor::block_on(handle.snapshot_now(SnapshotKind::Full)), Ok(Err(DbError::Unimplemented(_)))));
+        assert!(matches!(handle.subscribe(LiveQuerySpec { since: None }).await, Err(DbError::Unimplemented(_))));
+        assert!(matches!(handle.preview(handle.frontier().await.unwrap()).await, Err(DbError::Unimplemented(_))));
+        assert!(matches!(db_actor::block_on(handle.snapshot_now(SnapshotKind::Full).await), Ok(Err(DbError::Unimplemented(_)))));
     }
     //#endregion 🔖️Deferred extension seams
 
     //#region 🔖️VersionGraph
     #[cfg(feature = "vcs")]
-    #[test]
-    fn checkpoint_document_mints_distinct_real_vcs_content_addressed_checkpoint_ids() {
-        let root = tempdir("vcs-checkpoint");
-        let database = Database::open_at(&root, Profile::Test).unwrap();
+    #[semio_framework_async_macros::async_test]
+    async fn checkpoint_document_mints_distinct_real_vcs_content_addressed_checkpoint_ids() {
+        let root = tempdir("vcs-checkpoint").await;
+        let database = Database::open_at(&root, Profile::Test).await.unwrap();
         let document = protocol::ArtifactId("doc-1".to_string());
-        let handle = database.create_document(ArtifactSpec::new(document.clone())).unwrap();
+        let handle = database.create_document(ArtifactSpec::new(document.clone()).await).await.unwrap();
 
-        let batch1 = db_artifact::CommandBatch::new(vec![envelope("op-1", &[], "alice", &document, &[("x", serde_json::json!(1))])]).unwrap();
+        let batch1 = db_artifact::CommandBatch::new(vec![envelope("op-1", &[], "alice", &document, &[("x", serde_json::json!(1))]).await]).await.unwrap();
         db_actor::block_on(handle.submit(batch1, db_artifact::SubmitOptions::default())).unwrap().unwrap();
-        let checkpoint_1 = database.checkpoint_document(&document, "first".to_string(), &[protocol::ActorId("alice".to_string())]).unwrap();
+        let checkpoint_1 = database.checkpoint_document(&document, "first".to_string(), &[protocol::ActorId("alice".to_string())]).await.unwrap();
         assert!(checkpoint_1.starts_with("ck-"), "vcs checkpoint ids are content-addressed as ck-<hex16>, got {checkpoint_1:?}");
 
-        let batch2 = db_artifact::CommandBatch::new(vec![envelope("op-2", &["op-1"], "alice", &document, &[("x", serde_json::json!(2))])]).unwrap();
+        let batch2 = db_artifact::CommandBatch::new(vec![envelope("op-2", &["op-1"], "alice", &document, &[("x", serde_json::json!(2))]).await]).await.unwrap();
         db_actor::block_on(handle.submit(batch2, db_artifact::SubmitOptions::default())).unwrap().unwrap();
-        let checkpoint_2 = database.checkpoint_document(&document, "second".to_string(), &[protocol::ActorId("alice".to_string())]).unwrap();
+        let checkpoint_2 = database.checkpoint_document(&document, "second".to_string(), &[protocol::ActorId("alice".to_string())]).await.unwrap();
 
         assert_ne!(checkpoint_1, checkpoint_2, "distinct commits must mint distinct content-addressed checkpoint ids");
     }
 
     #[cfg(not(feature = "vcs"))]
-    #[test]
-    fn checkpoint_document_errs_unimplemented_without_the_vcs_feature() {
-        let root = tempdir("no-vcs-checkpoint");
+    #[semio_framework_async_macros::async_test]
+    async fn checkpoint_document_errs_unimplemented_without_the_vcs_feature() {
+        let root = tempdir("no-vcs-checkpoint").await;
         let database = Database::open_at(&root, Profile::Test).unwrap();
         let document = protocol::ArtifactId("doc-1".to_string());
         database.create_document(ArtifactSpec::new(document.clone())).unwrap();
@@ -1293,55 +1318,55 @@ mod tests {
     //#endregion 🔖️VersionGraph
 
     //#region 🔖️Compact + Sync
-    #[test]
-    fn compact_document_runs_a_real_compaction_pass_without_error() {
-        let root = tempdir("compact");
-        let database = Database::open_at(&root, Profile::Test).unwrap();
+    #[semio_framework_async_macros::async_test]
+    async fn compact_document_runs_a_real_compaction_pass_without_error() {
+        let root = tempdir("compact").await;
+        let database = Database::open_at(&root, Profile::Test).await.unwrap();
         let document = protocol::ArtifactId("doc-1".to_string());
-        let handle = database.create_document(ArtifactSpec::new(document.clone())).unwrap();
-        let batch = db_artifact::CommandBatch::new(vec![envelope("op-1", &[], "alice", &document, &[("x", serde_json::json!(1))])]).unwrap();
+        let handle = database.create_document(ArtifactSpec::new(document.clone()).await).await.unwrap();
+        let batch = db_artifact::CommandBatch::new(vec![envelope("op-1", &[], "alice", &document, &[("x", serde_json::json!(1))]).await]).await.unwrap();
         db_actor::block_on(handle.submit(batch, db_artifact::SubmitOptions::default())).unwrap().unwrap();
 
-        let report = database.compact_document(&document, "holder-1", false).unwrap();
+        let report = database.compact_document(&document, "holder-1", false).await.unwrap();
         assert_eq!(report.wal_segments_deleted, 0, "nothing is below the (nonexistent) snapshot floor yet, but the pass itself must succeed");
     }
 
-    #[test]
-    fn hello_returns_a_welcome_with_a_fresh_bootstrap_for_a_brand_new_replica() {
-        let root = tempdir("hello");
-        let database = Database::open_at(&root, Profile::Test).unwrap();
+    #[semio_framework_async_macros::async_test]
+    async fn hello_returns_a_welcome_with_a_fresh_bootstrap_for_a_brand_new_replica() {
+        let root = tempdir("hello").await;
+        let database = Database::open_at(&root, Profile::Test).await.unwrap();
         let document = protocol::ArtifactId("doc-1".to_string());
-        let handle = database.create_document(ArtifactSpec::new(document.clone())).unwrap();
-        let batch = db_artifact::CommandBatch::new(vec![envelope("op-1", &[], "alice", &document, &[("x", serde_json::json!(1))])]).unwrap();
+        let handle = database.create_document(ArtifactSpec::new(document.clone()).await).await.unwrap();
+        let batch = db_artifact::CommandBatch::new(vec![envelope("op-1", &[], "alice", &document, &[("x", serde_json::json!(1))]).await]).await.unwrap();
         db_actor::block_on(handle.submit(batch, db_artifact::SubmitOptions::default())).unwrap().unwrap();
 
-        let response = database.hello(&document, None, "session-1".to_string(), &protocol::ActorId("semio_hub".to_string()), 4096).unwrap();
+        let response = database.hello(&document, None, "session-1".to_string(), &protocol::ActorId("semio_hub".to_string()), 4096).await.unwrap();
         assert!(matches!(response.welcome, protocol::ServerFrame::Welcome { .. }));
     }
 
     // 🔬️ `storage()` is a real escape hatch to the same backend `Database::open_at` wired — a
     // caller below the document-actor boundary (os-semio_hub's blob routes) can round-trip a payload
     // through it directly, independent of any document actor.
-    #[test]
-    fn storage_accessor_reaches_the_same_backend_payload_store() {
-        let root = tempdir("storage-accessor");
-        let database = Database::open_at(&root, Profile::Test).unwrap();
-        let hash = db_actor::block_on(async { database.storage().payload().await.put(b"hello storage accessor").await }).unwrap();
-        assert_eq!(db_actor::block_on(async { database.storage().payload().await.get(&hash).await }).unwrap(), b"hello storage accessor");
+    #[semio_framework_async_macros::async_test]
+    async fn storage_accessor_reaches_the_same_backend_payload_store() {
+        let root = tempdir("storage-accessor").await;
+        let database = Database::open_at(&root, Profile::Test).await.unwrap();
+        let hash = db_actor::block_on(async { database.storage().await.payload().await.put(b"hello storage accessor").await }).unwrap();
+        assert_eq!(db_actor::block_on(async { database.storage().await.payload().await.get(&hash).await }).unwrap(), b"hello storage accessor");
     }
     //#endregion 🔖️Compact + Sync
 
     //#region 🔖️Security
-    #[test]
-    fn security_authz_hook_rejects_a_principal_denied_by_its_policy() {
+    #[semio_framework_async_macros::async_test]
+    async fn security_authz_hook_rejects_a_principal_denied_by_its_policy() {
         let policy = db_security::RoleBasedPolicy::new();
         let gate = db_security::SecurityGate::new(policy, db_security::ReplayGuard::new(60_000, 16), db_security::BudgetRegistry::new(100, 10), Arc::new(NullEmit));
-        let hook = SecurityAuthzHook::new(gate, |actor| db_security::Principal::new(actor.clone(), db_security::TenantId::from("tenant-1"), vec!["viewer".to_string()]));
+        let hook = SecurityAuthzHook::new(gate, |actor| db_security::Principal::new(actor.clone(), db_security::TenantId::from("tenant-1"), vec!["viewer".to_string()])).await;
 
         let document = protocol::ArtifactId("doc-1".to_string());
-        let envelope = envelope("op-1", &[], "alice", &document, &[("x", serde_json::json!(1))]);
+        let envelope = envelope("op-1", &[], "alice", &document, &[("x", serde_json::json!(1))]).await;
         let result = db_artifact::AuthzHook::authorize(&hook, &envelope.actor, &envelope);
-        assert!(matches!(result, Err(DbError::Unauthorized(_))), "a default-deny policy with no grants must reject every action");
+        assert!(matches!(result.await, Err(DbError::Unauthorized(_))), "a default-deny policy with no grants must reject every action");
     }
     //#endregion 🔖️Security
 }

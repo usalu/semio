@@ -67,8 +67,8 @@ impl Default for DxfValue {
 /// known entities, etc.) are parsed directly by their own field-specific logic instead.
 async fn classify_group_code_value(code: i32, raw: &str) -> DxfValue {
     match code {
-        10..=59 | 110..=149 | 210..=239 | 460..=469 => DxfValue::Double { value: parse_f64(raw) },
-        60..=99 | 160..=179 | 270..=289 | 370..=389 | 400..=409 | 440..=459 => DxfValue::Int { value: parse_i64(raw) },
+        10..=59 | 110..=149 | 210..=239 | 460..=469 => DxfValue::Double { value: parse_f64(raw).await },
+        60..=99 | 160..=179 | 270..=289 | 370..=389 | 400..=409 | 440..=459 => DxfValue::Int { value: parse_i64(raw).await },
         _ => DxfValue::Str { value: raw.to_string() },
     }
 }
@@ -77,8 +77,8 @@ async fn format_dxf_value(v: &DxfValue) -> String {
     match v {
         DxfValue::Str { value } => value.clone(),
         DxfValue::Int { value } => value.to_string(),
-        DxfValue::Double { value } => format_f64(*value),
-        DxfValue::Point { value } => format_f64(value[0]),
+        DxfValue::Double { value } => format_f64(*value).await,
+        DxfValue::Point { value } => format_f64(value[0]).await,
     }
 }
 
@@ -350,12 +350,12 @@ async fn parse_header_var(name: String, tags: &[DxfTag]) -> DxfHeaderVar {
     // 🧭️ Point-component detection: an adjacent 3-code (or 2-code, z=0) run at +10/+20 offsets
     // from the primary code (the DXF convention for $INSBASE/$EXTMIN/$EXTMAX/… point vars).
     if tags.len() >= 3 && tags[1].code == tags[0].code + 10 && tags[2].code == tags[0].code + 20 {
-        let value = DxfValue::Point { value: [parse_f64(&tags[0].value), parse_f64(&tags[1].value), parse_f64(&tags[2].value)] };
+        let value = DxfValue::Point { value: [parse_f64(&tags[0].value).await, parse_f64(&tags[1].value).await, parse_f64(&tags[2].value).await] };
         let extra = tags[3..].iter().map(|t| (t.code, classify_group_code_value(t.code, &t.value))).collect();
         return DxfHeaderVar { name, group_code: tags[0].code, value, extra_group_codes: extra };
     }
     if tags.len() >= 2 && tags[1].code == tags[0].code + 10 {
-        let value = DxfValue::Point { value: [parse_f64(&tags[0].value), parse_f64(&tags[1].value), 0.0] };
+        let value = DxfValue::Point { value: [parse_f64(&tags[0].value).await, parse_f64(&tags[1].value).await, 0.0] };
         let extra = tags[2..].iter().map(|t| (t.code, classify_group_code_value(t.code, &t.value))).collect();
         return DxfHeaderVar { name, group_code: tags[0].code, value, extra_group_codes: extra };
     }
@@ -390,8 +390,8 @@ async fn parse_header_section(tags: &[DxfTag]) -> Vec<DxfHeaderVar> {
 /// into the code/code+10/code+20 triplet convention; everything else is a single pair.
 async fn header_var_value_pairs(code: i32, value: &DxfValue) -> Vec<(i32, String)> {
     match value {
-        DxfValue::Point { value } => vec![(code, format_f64(value[0])), (code + 10, format_f64(value[1])), (code + 20, format_f64(value[2]))],
-        other => vec![(code, format_dxf_value(other))],
+        DxfValue::Point { value } => vec![(code, format_f64(value[0]).await), (code + 10, format_f64(value[1]).await), (code + 20, format_f64(value[2]).await)],
+        other => vec![(code, format_dxf_value(other).await)],
     }
 }
 
@@ -420,7 +420,7 @@ async fn build_layer(body: &[DxfTag]) -> DxfLayer {
             62 => layer.color = parse_i64(&t.value) as i32,
             6 => layer.linetype = t.value.clone(),
             70 => layer.flags = parse_i64(&t.value) as i32,
-            _ => layer.unknown_group_codes.push((t.code, classify_group_code_value(t.code, &t.value))),
+            _ => layer.unknown_group_codes.push((t.code, classify_group_code_value(t.code, &t.value).await)),
         }
     }
     layer
@@ -432,7 +432,7 @@ async fn build_style(body: &[DxfTag]) -> DxfStyle {
             2 => style.name = t.value.clone(),
             70 => style.flags = parse_i64(&t.value) as i32,
             3 => style.font_name = t.value.clone(),
-            _ => style.unknown_group_codes.push((t.code, classify_group_code_value(t.code, &t.value))),
+            _ => style.unknown_group_codes.push((t.code, classify_group_code_value(t.code, &t.value).await)),
         }
     }
     style
@@ -444,7 +444,7 @@ async fn build_linetype(body: &[DxfTag]) -> DxfLinetype {
             2 => lt.name = t.value.clone(),
             70 => lt.flags = parse_i64(&t.value) as i32,
             3 => lt.description = t.value.clone(),
-            _ => lt.unknown_group_codes.push((t.code, classify_group_code_value(t.code, &t.value))),
+            _ => lt.unknown_group_codes.push((t.code, classify_group_code_value(t.code, &t.value).await)),
         }
     }
     lt
@@ -596,11 +596,11 @@ async fn build_vertex(body: &[DxfTag]) -> DxfVertex {
     let mut v = DxfVertex::default();
     for t in body {
         match t.code {
-            10 => v.x = parse_f64(&t.value),
-            20 => v.y = parse_f64(&t.value),
-            30 => v.z = parse_f64(&t.value),
-            42 => v.bulge = parse_f64(&t.value),
-            _ => v.unknown_group_codes.push((t.code, classify_group_code_value(t.code, &t.value))),
+            10 => v.x = parse_f64(&t.value).await,
+            20 => v.y = parse_f64(&t.value).await,
+            30 => v.z = parse_f64(&t.value).await,
+            42 => v.bulge = parse_f64(&t.value).await,
+            _ => v.unknown_group_codes.push((t.code, classify_group_code_value(t.code, &t.value).await)),
         }
     }
     v
@@ -613,12 +613,12 @@ async fn build_entity(kind: &str, body: &[DxfTag]) -> DxfEntity {
             for t in body {
                 match t.code {
                     8 => layer = t.value.clone(),
-                    10 => start[0] = parse_f64(&t.value),
-                    20 => start[1] = parse_f64(&t.value),
-                    30 => start[2] = parse_f64(&t.value),
-                    11 => end[0] = parse_f64(&t.value),
-                    21 => end[1] = parse_f64(&t.value),
-                    31 => end[2] = parse_f64(&t.value),
+                    10 => start[0] = parse_f64(&t.value).await,
+                    20 => start[1] = parse_f64(&t.value).await,
+                    30 => start[2] = parse_f64(&t.value).await,
+                    11 => end[0] = parse_f64(&t.value).await,
+                    21 => end[1] = parse_f64(&t.value).await,
+                    31 => end[2] = parse_f64(&t.value).await,
                     _ => unknown.push((t.code, classify_group_code_value(t.code, &t.value))),
                 }
             }
@@ -629,10 +629,10 @@ async fn build_entity(kind: &str, body: &[DxfTag]) -> DxfEntity {
             for t in body {
                 match t.code {
                     8 => layer = t.value.clone(),
-                    10 => center[0] = parse_f64(&t.value),
-                    20 => center[1] = parse_f64(&t.value),
-                    30 => center[2] = parse_f64(&t.value),
-                    40 => radius = parse_f64(&t.value),
+                    10 => center[0] = parse_f64(&t.value).await,
+                    20 => center[1] = parse_f64(&t.value).await,
+                    30 => center[2] = parse_f64(&t.value).await,
+                    40 => radius = parse_f64(&t.value).await,
                     _ => unknown.push((t.code, classify_group_code_value(t.code, &t.value))),
                 }
             }
@@ -643,12 +643,12 @@ async fn build_entity(kind: &str, body: &[DxfTag]) -> DxfEntity {
             for t in body {
                 match t.code {
                     8 => layer = t.value.clone(),
-                    10 => center[0] = parse_f64(&t.value),
-                    20 => center[1] = parse_f64(&t.value),
-                    30 => center[2] = parse_f64(&t.value),
-                    40 => radius = parse_f64(&t.value),
-                    50 => sa = parse_f64(&t.value),
-                    51 => ea = parse_f64(&t.value),
+                    10 => center[0] = parse_f64(&t.value).await,
+                    20 => center[1] = parse_f64(&t.value).await,
+                    30 => center[2] = parse_f64(&t.value).await,
+                    40 => radius = parse_f64(&t.value).await,
+                    50 => sa = parse_f64(&t.value).await,
+                    51 => ea = parse_f64(&t.value).await,
                     _ => unknown.push((t.code, classify_group_code_value(t.code, &t.value))),
                 }
             }
@@ -659,10 +659,10 @@ async fn build_entity(kind: &str, body: &[DxfTag]) -> DxfEntity {
             for t in body {
                 match t.code {
                     8 => layer = t.value.clone(),
-                    10 => position[0] = parse_f64(&t.value),
-                    20 => position[1] = parse_f64(&t.value),
-                    30 => position[2] = parse_f64(&t.value),
-                    40 => height = parse_f64(&t.value),
+                    10 => position[0] = parse_f64(&t.value).await,
+                    20 => position[1] = parse_f64(&t.value).await,
+                    30 => position[2] = parse_f64(&t.value).await,
+                    40 => height = parse_f64(&t.value).await,
                     1 => value = t.value.clone(),
                     _ => unknown.push((t.code, classify_group_code_value(t.code, &t.value))),
                 }
@@ -674,18 +674,18 @@ async fn build_entity(kind: &str, body: &[DxfTag]) -> DxfEntity {
             for t in body {
                 match t.code {
                     8 => layer = t.value.clone(),
-                    10 => points[0][0] = parse_f64(&t.value),
-                    20 => points[0][1] = parse_f64(&t.value),
-                    30 => points[0][2] = parse_f64(&t.value),
-                    11 => points[1][0] = parse_f64(&t.value),
-                    21 => points[1][1] = parse_f64(&t.value),
-                    31 => points[1][2] = parse_f64(&t.value),
-                    12 => points[2][0] = parse_f64(&t.value),
-                    22 => points[2][1] = parse_f64(&t.value),
-                    32 => points[2][2] = parse_f64(&t.value),
-                    13 => points[3][0] = parse_f64(&t.value),
-                    23 => points[3][1] = parse_f64(&t.value),
-                    33 => points[3][2] = parse_f64(&t.value),
+                    10 => points[0][0] = parse_f64(&t.value).await,
+                    20 => points[0][1] = parse_f64(&t.value).await,
+                    30 => points[0][2] = parse_f64(&t.value).await,
+                    11 => points[1][0] = parse_f64(&t.value).await,
+                    21 => points[1][1] = parse_f64(&t.value).await,
+                    31 => points[1][2] = parse_f64(&t.value).await,
+                    12 => points[2][0] = parse_f64(&t.value).await,
+                    22 => points[2][1] = parse_f64(&t.value).await,
+                    32 => points[2][2] = parse_f64(&t.value).await,
+                    13 => points[3][0] = parse_f64(&t.value).await,
+                    23 => points[3][1] = parse_f64(&t.value).await,
+                    33 => points[3][2] = parse_f64(&t.value).await,
                     _ => unknown.push((t.code, classify_group_code_value(t.code, &t.value))),
                 }
             }
@@ -697,13 +697,13 @@ async fn build_entity(kind: &str, body: &[DxfTag]) -> DxfEntity {
                 match t.code {
                     8 => layer = t.value.clone(),
                     2 => block_name = t.value.clone(),
-                    10 => position[0] = parse_f64(&t.value),
-                    20 => position[1] = parse_f64(&t.value),
-                    30 => position[2] = parse_f64(&t.value),
-                    41 => scale[0] = parse_f64(&t.value),
-                    42 => scale[1] = parse_f64(&t.value),
-                    43 => scale[2] = parse_f64(&t.value),
-                    50 => rotation = parse_f64(&t.value),
+                    10 => position[0] = parse_f64(&t.value).await,
+                    20 => position[1] = parse_f64(&t.value).await,
+                    30 => position[2] = parse_f64(&t.value).await,
+                    41 => scale[0] = parse_f64(&t.value).await,
+                    42 => scale[1] = parse_f64(&t.value).await,
+                    43 => scale[2] = parse_f64(&t.value).await,
+                    50 => rotation = parse_f64(&t.value).await,
                     _ => unknown.push((t.code, classify_group_code_value(t.code, &t.value))),
                 }
             }
@@ -770,7 +770,7 @@ async fn parse_entities_until(tags: &[DxfTag], mut i: usize, stop_kind: &str) ->
         let kind = tags[i].value.clone();
         i += 1;
         if kind == "POLYLINE" {
-            let (entity, next_i) = parse_polyline(tags, i);
+            let (entity, next_i) = parse_polyline(tags, i).await;
             entities.push(entity);
             i = next_i;
         } else {
@@ -779,7 +779,7 @@ async fn parse_entities_until(tags: &[DxfTag], mut i: usize, stop_kind: &str) ->
             while body_end < tags.len() && tags[body_end].code != 0 {
                 body_end += 1;
             }
-            entities.push(build_entity(&kind, &tags[body_start..body_end]));
+            entities.push(build_entity(&kind, &tags[body_start..body_end]).await);
             i = body_end;
         }
     }
@@ -909,14 +909,14 @@ async fn parse_blocks_section(tags: &[DxfTag]) -> Vec<DxfBlock> {
             for t in &tags[header_start..header_end] {
                 match t.code {
                     2 => name = t.value.clone(),
-                    10 => bx = parse_f64(&t.value),
-                    20 => by = parse_f64(&t.value),
-                    30 => bz = parse_f64(&t.value),
+                    10 => bx = parse_f64(&t.value).await,
+                    20 => by = parse_f64(&t.value).await,
+                    30 => bz = parse_f64(&t.value).await,
                     _ => unknown.push((t.code, classify_group_code_value(t.code, &t.value))),
                 }
             }
             i = header_end;
-            let (entities, next_i) = parse_entities_until(tags, i, "ENDBLK");
+            let (entities, next_i) = parse_entities_until(tags, i, "ENDBLK").await;
             i = next_i;
             if i < tags.len() && tags[i].code == 0 && tags[i].value == "ENDBLK" {
                 i += 1;
@@ -953,7 +953,7 @@ async fn print_blocks_section(blocks: &[DxfBlock], out: &mut String) {
 /// 📥️ Parses a complete R12 ASCII document: `HEADER`, `TABLES`, `BLOCKS`, `ENTITIES` sections
 /// (the full R12 section set — R12 predates `CLASSES`/`OBJECTS`/thumbnails), terminated by `0/EOF`.
 pub async fn parse_dxf_document(text: &str) -> Result<DxfSnapshot, String> {
-    let tags = tokenize_dxf(text)?;
+    let tags = tokenize_dxf(text).await?;
     let mut snap = DxfSnapshot { schema: STDIO_DXF_DOCUMENT_SCHEMA.into(), ..DxfSnapshot::default() };
     let mut i = 0usize;
     while i < tags.len() {
@@ -973,15 +973,15 @@ pub async fn parse_dxf_document(text: &str) -> Result<DxfSnapshot, String> {
             }
             let body = &tags[body_start..body_end];
             match section_name.as_str() {
-                "HEADER" => snap.header_vars = parse_header_section(body),
+                "HEADER" => snap.header_vars = parse_header_section(body).await,
                 "TABLES" => {
-                    let (t, o) = parse_tables_section(body);
+                    let (t, o) = parse_tables_section(body).await;
                     snap.tables = t;
                     snap.other_tables = o;
                 }
-                "BLOCKS" => snap.blocks = parse_blocks_section(body),
+                "BLOCKS" => snap.blocks = parse_blocks_section(body).await,
                 "ENTITIES" => {
-                    let (e, _) = parse_entities_until(body, 0, "ENDSEC");
+                    let (e, _) = parse_entities_until(body, 0, "ENDSEC").await;
                     snap.entities = e;
                 }
                 _ => {} // R12 has no other section kinds
@@ -1027,11 +1027,11 @@ impl store::ArtifactDsl for DxfSnapshot {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        parse_dxf_document(body).map_err(|e| store::TextError::new(format!("dxf parse: {e}"), dsl::TextSpan::at(1, 1)))
+        parse_dxf_document(body).await.map_err(|e| store::TextError::new(format!("dxf parse: {e}"), dsl::TextSpan::at(1, 1)))
     }
     async fn print_dsl(&self) -> String {
         let body = print_dxf_document(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -1039,8 +1039,8 @@ impl store::ArtifactDsl for DxfSnapshot {
 impl store::ArtifactPack for DxfSnapshot {
     async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
-        let raw = print_dxf_document(self).into_bytes();
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let raw = print_dxf_document(self).await.into_bytes();
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
     async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
@@ -1050,7 +1050,7 @@ impl store::ArtifactPack for DxfSnapshot {
         }
         let _ = options;
         let text = String::from_utf8(inner).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        parse_dxf_document(&text).map_err(store::PackError::Schema)
+        parse_dxf_document(&text).await.map_err(store::PackError::Schema)
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs

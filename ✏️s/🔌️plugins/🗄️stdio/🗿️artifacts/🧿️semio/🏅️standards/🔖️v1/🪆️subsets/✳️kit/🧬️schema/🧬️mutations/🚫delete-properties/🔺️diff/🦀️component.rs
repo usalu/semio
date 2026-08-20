@@ -12,8 +12,8 @@ pub async fn diff(_payload: &DeleteProperties, base: &SemioKitSnapshot) -> proto
             "mutation.target-missing",
             "The kit has no properties to delete.".to_string(),
             ["properties".to_string()],
-        );
+        ).await;
     }
-    protocol::MutationOutcome::new(SemioKitDiff { properties: Some(None), ..Default::default() })
+    protocol::MutationOutcome::new(SemioKitDiff { properties: Some(None), ..Default::default() }).await
 }
 //#endregion 🔖️Diff

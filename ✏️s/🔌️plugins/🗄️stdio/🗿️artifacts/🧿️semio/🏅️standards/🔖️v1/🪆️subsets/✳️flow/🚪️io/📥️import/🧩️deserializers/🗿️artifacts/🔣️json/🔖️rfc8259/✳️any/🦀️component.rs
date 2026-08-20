@@ -41,32 +41,32 @@ async fn as_f64(v: &JsonValue) -> Result<f64, store::PackError> {
 
 //#region 🔖️FieldMapping
 async fn map_point(v: &JsonValue) -> Result<SemioPoint2, store::PackError> {
-    let m = as_object(v)?;
-    Ok(SemioPoint2 { x: as_f64(get(m, "x")?)?, y: as_f64(get(m, "y")?)? })
+    let m = as_object(v).await?;
+    Ok(SemioPoint2 { x: as_f64(get(m, "x").await?).await?, y: as_f64(get(m, "y").await?).await? })
 }
 
 async fn map_param(v: &JsonValue) -> Result<FlowParam, store::PackError> {
-    let m = as_object(v)?;
-    Ok(FlowParam { key: as_string(get(m, "key")?)?, value: as_string(get(m, "value")?)? })
+    let m = as_object(v).await?;
+    Ok(FlowParam { key: as_string(get(m, "key").await?).await?, value: as_string(get(m, "value").await?).await? })
 }
 
 async fn map_port_ref(v: &JsonValue) -> Result<PortRef, store::PackError> {
-    let m = as_object(v)?;
-    Ok(PortRef { node: as_string(get(m, "node")?)?, port: as_string(get(m, "port")?)? })
+    let m = as_object(v).await?;
+    Ok(PortRef { node: as_string(get(m, "node").await?).await?, port: as_string(get(m, "port").await?).await? })
 }
 
 async fn map_node(v: &JsonValue) -> Result<FlowNode, store::PackError> {
-    let m = as_object(v)?;
+    let m = as_object(v).await?;
     let params = match m.iter().find(|e| e.key == "params") {
-        Some(e) => as_array(&e.value)?.iter().map(map_param).collect::<Result<Vec<_>, _>>()?,
+        Some(e) => as_array(&e.value).await?.iter().map(map_param).collect::<Result<Vec<_>, _>>()?,
         None => Vec::new(),
     };
-    Ok(FlowNode { id: as_string(get(m, "id")?)?, kind: as_string(get(m, "kind")?)?, label: as_string(get(m, "label")?)?, params, position: map_point(get(m, "position")?)? })
+    Ok(FlowNode { id: as_string(get(m, "id").await?).await?, kind: as_string(get(m, "kind").await?).await?, label: as_string(get(m, "label").await?).await?, params, position: map_point(get(m, "position").await?).await? })
 }
 
 async fn map_edge(v: &JsonValue) -> Result<FlowEdge, store::PackError> {
-    let m = as_object(v)?;
-    Ok(FlowEdge { id: as_string(get(m, "id")?)?, from: map_port_ref(get(m, "from")?)?, to: map_port_ref(get(m, "to")?)?, kind: as_string(get(m, "kind")?)? })
+    let m = as_object(v).await?;
+    Ok(FlowEdge { id: as_string(get(m, "id").await?).await?, from: map_port_ref(get(m, "from").await?).await?, to: map_port_ref(get(m, "to").await?).await?, kind: as_string(get(m, "kind").await?).await? })
 }
 //#endregion 🔖️FieldMapping
 
@@ -80,9 +80,9 @@ impl ArtifactDeserializer for SemioFlowFromJson {
     const INTO: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("flow") };
 
     async fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
-        let root = as_object(&from.value)?;
-        let nodes = as_array(get(root, "nodes")?)?.iter().map(map_node).collect::<Result<Vec<_>, _>>()?;
-        let edges = as_array(get(root, "edges")?)?.iter().map(map_edge).collect::<Result<Vec<_>, _>>()?;
+        let root = as_object(&from.value).await?;
+        let nodes = as_array(get(root, "nodes").await?).await?.iter().map(map_node).collect::<Result<Vec<_>, _>>()?;
+        let edges = as_array(get(root, "edges").await?).await?.iter().map(map_edge).collect::<Result<Vec<_>, _>>()?;
         Ok(SemioFlowSnapshot { schema: STDIO_SEMIOFLOW_DOCUMENT_SCHEMA.into(), nodes, edges })
     }
 }

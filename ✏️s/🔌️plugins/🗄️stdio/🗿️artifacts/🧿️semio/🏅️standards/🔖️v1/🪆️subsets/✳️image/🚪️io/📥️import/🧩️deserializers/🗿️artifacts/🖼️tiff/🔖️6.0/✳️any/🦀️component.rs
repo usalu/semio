@@ -34,7 +34,7 @@ const CORE_TAGS: [u16; 9] = [TAG_IMAGE_WIDTH, TAG_IMAGE_LENGTH, TAG_BITS_PER_SAM
 async fn value_to_metadata_string(v: &TiffValues) -> String {
     match v {
         TiffValues::Ascii(s) => s.clone(),
-        other => other.first_u32().map(|n| n.to_string()).unwrap_or_else(|| format!("{other:?}")),
+        other => other.first_u32().await.map(|n| n.to_string()).unwrap_or_else(|| format!("{other:?}")),
     }
 }
 
@@ -48,19 +48,19 @@ impl ArtifactDeserializer for SemioImageFromTiff {
     const INTO: Dialect = INTO_DIALECT;
 
     async fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
-        let width = from.width().ok_or_else(|| store::PackError::Schema("tiff→semio/image: missing ImageWidth tag in ifds[0]".into()))?;
-        let height = from.height().ok_or_else(|| store::PackError::Schema("tiff→semio/image: missing ImageLength tag in ifds[0]".into()))?;
+        let width = from.width().await.ok_or_else(|| store::PackError::Schema("tiff→semio/image: missing ImageWidth tag in ifds[0]".into()))?;
+        let height = from.height().await.ok_or_else(|| store::PackError::Schema("tiff→semio/image: missing ImageLength tag in ifds[0]".into()))?;
         if from.pixels.len() != (width as usize) * (height as usize) * 4 {
             return Err(store::PackError::Schema("tiff→semio/image: pixels length does not match width*height*4".into()));
         }
-        let samples_per_pixel = from.tag(TAG_SAMPLES_PER_PIXEL).and_then(|t| t.values.first_u32());
-        let photometric = from.tag(TAG_PHOTOMETRIC).and_then(|t| t.values.first_u32());
+        let samples_per_pixel = from.tag(TAG_SAMPLES_PER_PIXEL).await.and_then(|t| t.values.first_u32());
+        let photometric = from.tag(TAG_PHOTOMETRIC).await.and_then(|t| t.values.first_u32());
         let colorspace = match (photometric, samples_per_pixel) {
             (Some(0), _) | (Some(1), _) => SemioColorspace::Grayscale,
             (_, Some(4)) => SemioColorspace::Rgba,
             _ => SemioColorspace::Rgb,
         };
-        let bit_depth = from.tag(TAG_BITS_PER_SAMPLE).and_then(|t| t.values.first_u32()).unwrap_or(0).min(u8::MAX as u32) as u8;
+        let bit_depth = from.tag(TAG_BITS_PER_SAMPLE).await.and_then(|t| t.values.first_u32()).unwrap_or(0).min(u8::MAX as u32) as u8;
         let metadata = from.ifds.first().map(|ifd| ifd.entries.iter().filter(|t| !CORE_TAGS.contains(&t.tag)).map(|t| SemioImageMetadataEntry { key: t.tag.to_string(), value: value_to_metadata_string(&t.values) }).collect()).unwrap_or_default();
         Ok(SemioImageSnapshot { schema: STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA.into(), width, height, colorspace, bit_depth, frames: vec![SemioImageFrame { delay_ms: 0, rgba8: from.pixels.clone() }], icc: None, metadata })
     }

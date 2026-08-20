@@ -133,14 +133,14 @@ pub(crate) async fn enc_semio_value_snapshot(s: &SemioValueSnapshot) -> String {
 pub(crate) async fn dec_semio_value_snapshot(s: &str) -> Result<SemioValueSnapshot, String> {
     use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{split_top_level, strip_brackets};
     use crate::artifacts::semio::standards::v1::subsets::value::schema::diff::{dec_semio_value, dec_semio_value_node, dec_str};
-    let inner = strip_brackets(s)?;
-    let parts = split_top_level(inner, ',');
+    let inner = strip_brackets(s).await?;
+    let parts = split_top_level(inner, ',').await;
     let [schema_s, root_s, nodes_s] = parts.as_slice() else {
         return Err(format!("semio value snapshot: expected 3 top-level fields, got {}", parts.len()));
     };
-    let nodes_inner = strip_brackets(nodes_s)?;
+    let nodes_inner = strip_brackets(nodes_s).await?;
     let nodes = split_top_level(nodes_inner, ',').into_iter().filter(|s| !s.is_empty()).map(dec_semio_value_node).collect::<Result<Vec<_>, String>>()?;
-    Ok(SemioValueSnapshot { schema: dec_str(schema_s)?, root: dec_semio_value(root_s)?, nodes })
+    Ok(SemioValueSnapshot { schema: dec_str(schema_s).await?, root: dec_semio_value(root_s).await?, nodes })
 }
 //#endregion 🔖️SnapshotTextCodec
 
@@ -163,12 +163,12 @@ impl store::ArtifactDsl for SemioValueSnapshot {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        dec_semio_value_snapshot(body.trim()).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        dec_semio_value_snapshot(body.trim()).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 
     async fn print_dsl(&self) -> String {
         let body = enc_semio_value_snapshot(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -176,8 +176,8 @@ impl store::ArtifactDsl for SemioValueSnapshot {
 impl store::ArtifactPack for SemioValueSnapshot {
     async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
-        let raw = enc_semio_value_snapshot(self).into_bytes();
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let raw = enc_semio_value_snapshot(self).await.into_bytes();
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
 
@@ -188,7 +188,7 @@ impl store::ArtifactPack for SemioValueSnapshot {
         }
         let _ = options;
         let text = std::str::from_utf8(&inner).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        dec_semio_value_snapshot(text).map_err(store::PackError::Schema)
+        dec_semio_value_snapshot(text).await.map_err(store::PackError::Schema)
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs

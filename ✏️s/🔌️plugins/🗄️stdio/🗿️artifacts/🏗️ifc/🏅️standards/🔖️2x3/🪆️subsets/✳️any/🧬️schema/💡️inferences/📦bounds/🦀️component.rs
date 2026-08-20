@@ -41,7 +41,7 @@ pub async fn compute_ifc2x3_bounds(snapshot: &Ifc2x3Snapshot) -> Ifc2x3Bounds {
     let mut point_count = 0u32;
 
     for instance in &snapshot.document.instances {
-        let Some(args) = instance.entity("IFCCARTESIANPOINT") else { continue };
+        let Some(args) = instance.entity("IFCCARTESIANPOINT").await else { continue };
         let Some(coords) = args.first().and_then(Part21Value::as_list) else { continue };
         let p = [coords.first().and_then(Part21Value::as_real).unwrap_or(0.0), coords.get(1).and_then(Part21Value::as_real).unwrap_or(0.0), coords.get(2).and_then(Part21Value::as_real).unwrap_or(0.0)];
         point_count += 1;

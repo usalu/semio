@@ -40,20 +40,20 @@ pub mod derived_construction {
         }
 
         async fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self::from_snapshot(<TiffSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+            Ok(Self::from_snapshot(<TiffSnapshot as store::ArtifactDsl>::parse_dsl(text).await?).await)
         }
 
         async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<TiffSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+            Ok(Self::from_snapshot(<TiffSnapshot as store::ArtifactPack>::decode_pack(bytes).await?).await)
         }
 
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::tiff::standards::v6_0::subsets::any::schema::mutations::apply_tiff_mutation(&mut self.snapshot, &mutation);
-            (self, diff)
+            (self, diff.await)
         }
 
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            self.snapshot = <TiffDiff as protocol::MutationDiff<TiffSnapshot>>::apply(&diff, &self.snapshot)?;
+            self.snapshot = <TiffDiff as protocol::MutationDiff<TiffSnapshot>>::apply(&diff, &self.snapshot).await?;
             Ok(self)
         }
 
@@ -140,17 +140,17 @@ pub mod derived_analysis {
             _ => out.push(soft(CODE_DEGENERATE_RASTER, "IFD 0 has no ImageWidth/ImageLength tag".into())),
         }
 
-        if let Some(&c) = ifd0_u32_list(snapshot, TAG_COMPRESSION).first() {
+        if let Some(&c) = ifd0_u32_list(snapshot, TAG_COMPRESSION).await.first() {
             if c != 1 && c != 2 && c != 32773 {
                 out.push(soft(CODE_UNSUPPORTED_COMPRESSION, format!("Compression {c} is not one of Baseline TIFF's {{1 none, 2 CCITT G3 1D, 32773 PackBits}}")));
             }
         }
-        if let Some(&p) = ifd0_u32_list(snapshot, TAG_PHOTOMETRIC).first() {
+        if let Some(&p) = ifd0_u32_list(snapshot, TAG_PHOTOMETRIC).await.first() {
             if p > 3 {
                 out.push(soft(CODE_UNSUPPORTED_PHOTOMETRIC, format!("PhotometricInterpretation {p} is not one of Baseline TIFF's {{0,1,2,3}}")));
             }
         }
-        let bits = ifd0_u32_list(snapshot, TAG_BITS_PER_SAMPLE);
+        let bits = ifd0_u32_list(snapshot, TAG_BITS_PER_SAMPLE).await;
         if bits.iter().any(|&b| b != 1 && b != 4 && b != 8) {
             out.push(soft(CODE_UNSUPPORTED_BITS_PER_SAMPLE, format!("BitsPerSample {bits:?} has a value outside Baseline TIFF's {{1,4,8}}")));
         }
@@ -175,11 +175,11 @@ pub mod derived_analysis {
         const DIALECT: Dialect = DIALECT;
 
         async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
-            TiffAnyAnalyzer::sniff(source)
+            TiffAnyAnalyzer::sniff(source).await
         }
 
         async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
-            let inner = TiffAnyAnalyzer::analyze(sources);
+            let inner = TiffAnyAnalyzer::analyze(sources).await;
             let mut diagnostics = inner.diagnostics.clone();
             if let Some(snapshot) = &inner.parts.snapshot {
                 diagnostics.extend(check_tiff_baseline_conformance(snapshot));

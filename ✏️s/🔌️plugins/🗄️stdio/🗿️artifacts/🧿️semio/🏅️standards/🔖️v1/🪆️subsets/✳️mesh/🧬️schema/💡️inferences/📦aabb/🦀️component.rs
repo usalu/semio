@@ -81,14 +81,14 @@ impl store::InferredField<SemioMeshSnapshot> for MeshAabb {
     /// AABB) — an unrelated field touch on the SAME primitive must still hit the cache, proven by
     /// the incrementality-law test below.
     async fn dep_input(snapshot: &SemioMeshSnapshot, key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
-        match find_primitive_by_key(snapshot, key) {
+        match find_primitive_by_key(snapshot, key).await {
             Some((_, primitive)) => serde_json::to_vec(&primitive.positions).unwrap_or_default(),
             None => Vec::new(),
         }
     }
 
     async fn compute(snapshot: &SemioMeshSnapshot, key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {
-        let Some((_, primitive)) = find_primitive_by_key(snapshot, key) else {
+        let Some((_, primitive)) = find_primitive_by_key(snapshot, key).await else {
             return SemioAabb::default();
         };
         let Some(first) = primitive.positions.first().copied() else {

@@ -1,0 +1,17 @@
+{
+  "case": "cycle",
+  "kind": "rejection",
+  "description": "Node 1's children is set to [0], its own ancestor — node 0 (or 1) is reachable from itself, rejected as Cycle.",
+  "outcome": "reject",
+  "limits": null,
+  "baseRevision": 0,
+  "patchRejection": {
+    "type": "invariantViolated",
+    "violations": [
+      {
+        "type": "cycle",
+        "node": 0
+      }
+    ]
+  }
+}

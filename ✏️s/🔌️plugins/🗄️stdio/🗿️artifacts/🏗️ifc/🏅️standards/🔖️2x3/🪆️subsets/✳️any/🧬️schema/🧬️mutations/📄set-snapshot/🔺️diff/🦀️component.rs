@@ -6,7 +6,7 @@ use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::Ifc2
 /// 🔺️ Diff helper for set-snapshot.
 pub async fn diff(base: &Ifc2x3Snapshot, snapshot: &Ifc2x3Snapshot) -> protocol::MutationOutcome<Ifc2x3Diff> {
     if base == snapshot {
-        return protocol::MutationOutcome::new(Ifc2x3Diff::default()).warn("mutation.no-op", "set-snapshot: new snapshot is identical to the current one");
+        return protocol::MutationOutcome::new(Ifc2x3Diff::default()).await.warn("mutation.no-op", "set-snapshot: new snapshot is identical to the current one").await;
     }
     protocol::MutationOutcome::new(diff_set_snapshot(base, snapshot))
 }

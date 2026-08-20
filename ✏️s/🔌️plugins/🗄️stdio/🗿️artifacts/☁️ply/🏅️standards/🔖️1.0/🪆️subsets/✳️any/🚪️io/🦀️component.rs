@@ -35,7 +35,7 @@ pub mod derived_composition {
             if native.is_empty() {
                 return Err(ComposeError { message: "PlyComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() });
             }
-            let analysis = PlyAnalyzer::analyze(&native);
+            let analysis = PlyAnalyzer::analyze(&native).await;
             let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError { message: "PlyComposerComposition: analysis produced no snapshot".into(), diagnostics: analysis.diagnostics.clone() })?;
             Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics })
         }
@@ -196,12 +196,12 @@ async fn parse_header_text(text: &str) -> Result<PlyHeader, String> {
             let mut parts = rest.split_whitespace();
             let first_tok = parts.next().ok_or("ply: empty property declaration")?;
             if first_tok == "list" {
-                let count_kind = parse_scalar_type(parts.next().ok_or("ply: list property missing count type")?)?;
-                let value_kind = parse_scalar_type(parts.next().ok_or("ply: list property missing value type")?)?;
+                let count_kind = parse_scalar_type(parts.next().ok_or("ply: list property missing count type")?).await?;
+                let value_kind = parse_scalar_type(parts.next().ok_or("ply: list property missing value type")?).await?;
                 let name = parts.next().ok_or("ply: list property missing name")?.to_string();
                 el.properties.push(PlyProperty::List { name, count_kind, value_kind });
             } else {
-                let kind = parse_scalar_type(first_tok)?;
+                let kind = parse_scalar_type(first_tok).await?;
                 let name = parts.next().ok_or("ply: property missing name")?.to_string();
                 el.properties.push(PlyProperty::Scalar { name, kind });
             }
@@ -295,15 +295,15 @@ async fn decode_body_ascii(body: &str, header_elements: &[PlyElement]) -> Result
                 match prop {
                     PlyProperty::Scalar { kind, .. } => {
                         let tok = tokens.next().ok_or("ply: unexpected eof in ascii body")?;
-                        values.push(parse_scalar_ascii(*kind, tok)?);
+                        values.push(parse_scalar_ascii(*kind, tok).await?);
                     }
                     PlyProperty::List { count_kind, value_kind, .. } => {
                         let n_tok = tokens.next().ok_or("ply: unexpected eof reading list count")?;
-                        let n = value_as_usize(&parse_scalar_ascii(*count_kind, n_tok)?);
-                        let mut items = Vec::with_capacity(n);
-                        for _ in 0..n {
+                        let n = value_as_usize(&parse_scalar_ascii(*count_kind, n_tok).await?);
+                        let mut items = Vec::with_capacity(n.await);
+                        for _ in 0..n.await {
                             let vt = tokens.next().ok_or("ply: unexpected eof reading list value")?;
-                            items.push(parse_scalar_ascii(*value_kind, vt)?);
+                            items.push(parse_scalar_ascii(*value_kind, vt).await?);
                         }
                         values.push(PlyValue::List(items));
                     }
@@ -327,12 +327,12 @@ async fn decode_body_binary(body: &[u8], header_elements: &[PlyElement], big: bo
             let mut values = Vec::with_capacity(el.properties.len());
             for prop in &el.properties {
                 match prop {
-                    PlyProperty::Scalar { kind, .. } => values.push(read_scalar_bin(*kind, body, &mut pos, big)?),
+                    PlyProperty::Scalar { kind, .. } => values.push(read_scalar_bin(*kind, body, &mut pos, big).await?),
                     PlyProperty::List { count_kind, value_kind, .. } => {
-                        let n = value_as_usize(&read_scalar_bin(*count_kind, body, &mut pos, big)?);
-                        let mut items = Vec::with_capacity(n);
-                        for _ in 0..n {
-                            items.push(read_scalar_bin(*value_kind, body, &mut pos, big)?);
+                        let n = value_as_usize(&read_scalar_bin(*count_kind, body, &mut pos, big).await?);
+                        let mut items = Vec::with_capacity(n.await);
+                        for _ in 0..n.await {
+                            items.push(read_scalar_bin(*value_kind, body, &mut pos, big).await?);
                         }
                         values.push(PlyValue::List(items));
                     }
@@ -379,7 +379,7 @@ async fn header_text(format: PlyFormat, comments: &[String], elements: &[PlyElem
 /// re-emitted into the header on encode (as real `comment <text>\n` lines, matching
 /// `parse_header_text`'s decode side).
 pub async fn encode_ply_with_format(snap: &PlySnapshot, format: PlyFormat) -> Result<Vec<u8>, String> {
-    let mut out = header_text(format, &snap.comments, &snap.elements).into_bytes();
+    let mut out = header_text(format, &snap.comments, &snap.elements).await.into_bytes();
     match format {
         PlyFormat::Ascii => {
             for el in &snap.elements {
@@ -388,7 +388,7 @@ pub async fn encode_ply_with_format(snap: &PlySnapshot, format: PlyFormat) -> Re
                     for (i, prop) in el.properties.iter().enumerate() {
                         let v = row.values.get(i).ok_or("ply: row missing value for declared property")?;
                         match prop {
-                            PlyProperty::Scalar { .. } => parts.push(format_scalar_ascii(v)),
+                            PlyProperty::Scalar { .. } => parts.push(format_scalar_ascii(v).await),
                             PlyProperty::List { .. } => match v {
                                 PlyValue::List(items) => {
                                     parts.push(items.len().to_string());
@@ -410,7 +410,7 @@ pub async fn encode_ply_with_format(snap: &PlySnapshot, format: PlyFormat) -> Re
                     for (i, prop) in el.properties.iter().enumerate() {
                         let v = row.values.get(i).ok_or("ply: row missing value for declared property")?;
                         match prop {
-                            PlyProperty::Scalar { .. } => push_scalar_bin(&mut out, v, big),
+                            PlyProperty::Scalar { .. } => push_scalar_bin(&mut out, v, big).await,
                             PlyProperty::List { count_kind, .. } => match v {
                                 PlyValue::List(items) => {
                                     push_scalar_bin(&mut out, &count_as_value(*count_kind, items.len()), big);
@@ -431,20 +431,20 @@ pub async fn encode_ply_with_format(snap: &PlySnapshot, format: PlyFormat) -> Re
 
 /// 🏗️ Canonical encode — ascii wire format, matches the DSL/pack default.
 pub async fn encode_ply(snap: &PlySnapshot) -> Result<Vec<u8>, String> {
-    encode_ply_with_format(snap, PlyFormat::Ascii)
+    encode_ply_with_format(snap, PlyFormat::Ascii).await
 }
 
 /// 🔍 Decodes any of the three wire formats, dispatching on the header's own `format` line.
 pub async fn decode_ply(data: &[u8]) -> Result<PlySnapshot, String> {
-    let (header_str, body) = split_header(data)?;
-    let header = parse_header_text(&header_str)?;
+    let (header_str, body) = split_header(data).await?;
+    let header = parse_header_text(&header_str).await?;
     let elements = match header.format {
         PlyFormat::Ascii => {
             let body_text = std::str::from_utf8(body).map_err(|e| format!("ply: ascii body not utf8: {e}"))?;
-            decode_body_ascii(body_text, &header.elements)?
+            decode_body_ascii(body_text, &header.elements).await?
         }
-        PlyFormat::BinaryLittleEndian => decode_body_binary(body, &header.elements, false)?,
-        PlyFormat::BinaryBigEndian => decode_body_binary(body, &header.elements, true)?,
+        PlyFormat::BinaryLittleEndian => decode_body_binary(body, &header.elements, false).await?,
+        PlyFormat::BinaryBigEndian => decode_body_binary(body, &header.elements, true).await?,
     };
     Ok(PlySnapshot { schema: STDIO_PLY_DOCUMENT_SCHEMA.into(), format: header.format, comments: header.comments, elements })
 }
@@ -458,7 +458,8 @@ pub mod io_registry {
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 
-    pub async fn entries() -> &'static [ComposerEntry] {
+    // 🚫️async: E1 pure table accessor consumed by OnceLock::get_or_init's sync closure — see R9
+    pub fn entries() -> &'static [ComposerEntry] {
         ENTRIES.get_or_init(|| vec![composer_entry_of::<PlyRawAnyComposer>()]).as_slice()
     }
 }

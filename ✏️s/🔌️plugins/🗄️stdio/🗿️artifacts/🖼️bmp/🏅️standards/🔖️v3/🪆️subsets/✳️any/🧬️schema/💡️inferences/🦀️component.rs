@@ -23,7 +23,7 @@ pub struct BmpInference {
 
 impl protocol::Inference<BmpSnapshot> for BmpInference {
     async fn infer(snapshot: &BmpSnapshot) -> Self {
-        Self { dimensions: compute_bmp_dimensions(snapshot) }
+        Self { dimensions: compute_bmp_dimensions(snapshot).await }
     }
 }
 

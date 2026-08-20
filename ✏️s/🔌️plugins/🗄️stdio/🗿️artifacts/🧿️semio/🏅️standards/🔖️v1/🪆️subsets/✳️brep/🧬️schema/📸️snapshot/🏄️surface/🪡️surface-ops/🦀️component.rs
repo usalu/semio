@@ -19,19 +19,19 @@ use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vec
 pub async fn closest_point(surface: &Surface, domain: ((f64, f64), (f64, f64)), target: Pnt3, samples: usize) -> (f64, f64, f64) {
     match surface {
         Surface::Plane { frame } => {
-            let local = frame.to_local(target);
-            let p = surface.eval(local.x, local.y);
-            (local.x, local.y, p.distance(target))
+            let local = frame.to_local(target).await;
+            let p = surface.eval(local.x, local.y).await;
+            (local.x, local.y, p.distance(target).await)
         }
         Surface::Sphere { frame, .. } => {
-            let local = frame.to_local(target).to_vec();
-            let n = local.normalized().unwrap_or(Vec3::Z);
+            let local = frame.to_local(target).await.to_vec();
+            let n = local.await.normalized().await.unwrap_or(Vec3::Z);
             let v = n.z.clamp(-1.0, 1.0).asin();
             let u = n.y.atan2(n.x).rem_euclid(std::f64::consts::TAU);
-            let p = surface.eval(u, v);
-            (u, v, p.distance(target))
+            let p = surface.eval(u, v).await;
+            (u, v, p.distance(target).await)
         }
-        _ => closest_point_numeric(surface, domain, target, samples),
+        _ => closest_point_numeric(surface, domain, target, samples).await,
     }
 }
 
@@ -63,7 +63,7 @@ async fn closest_point_numeric(surface: &Surface, domain: ((f64, f64), (f64, f64
         for j in 0..=samples {
             let u = u_dom.0 + (u_hi - u_dom.0) * (i as f64 / samples as f64);
             let v = v_lo + (v_hi - v_lo) * (j as f64 / samples as f64);
-            let d = surface.eval(u, v).distance_sq(target);
+            let d = surface.eval(u, v).await.distance_sq(target).await;
             if d < best.2 {
                 best = (u, v, d);
             }
@@ -72,7 +72,7 @@ async fn closest_point_numeric(surface: &Surface, domain: ((f64, f64), (f64, f64
     best.2 = best.2.sqrt();
     let (mut u, mut v, _) = best;
     for _ in 0..30 {
-        let d = surface.derivatives(u, v);
+        let d = surface.derivatives(u, v).await;
         let delta = d.point - target;
         let fu = delta.dot(d.du);
         let fv = delta.dot(d.dv);
@@ -85,19 +85,19 @@ async fn closest_point_numeric(surface: &Surface, domain: ((f64, f64), (f64, f64
         }
         let step_u = (fu * fvv - fv * fuv) / det;
         let step_v = (fv * fuu - fu * fuv) / det;
-        let next_u = wrap_or_clamp(u - step_u, u_dom.0, u_hi, u_periodic);
-        let next_v = wrap_or_clamp(v - step_v, v_lo, v_hi, v_periodic);
+        let next_u = wrap_or_clamp(u - step_u, u_dom.0, u_hi, u_periodic.await);
+        let next_v = wrap_or_clamp(v - step_v, v_lo, v_hi, v_periodic.await);
         if (next_u - u).abs() < 1e-13 && (next_v - v).abs() < 1e-13 {
-            u = next_u;
-            v = next_v;
+            u = next_u.await;
+            v = next_v.await;
             break;
         }
-        u = next_u;
-        v = next_v;
+        u = next_u.await;
+        v = next_v.await;
     }
-    let refined_dist = surface.eval(u, v).distance(target);
+    let refined_dist = surface.eval(u, v).await.distance(target);
     if refined_dist < best.2 {
-        (u, v, refined_dist)
+        (u, v, refined_dist.await)
     } else {
         best
     }

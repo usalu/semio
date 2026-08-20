@@ -17,7 +17,7 @@ pub const HEX_PREVIEW_CAP_BYTES: usize = 4096;
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::binary::create_binary_viewer`.
 pub async fn definition() -> WindowKindDefinition {
-    WindowKindDefinition { label: LocalizedLabel::native("Bytes", "Bytes"), ..TextWindowKit::window_kind() }
+    WindowKindDefinition { label: LocalizedLabel::native("Bytes", "Bytes"), ..TextWindowKit::window_kind().await }
 }
 //#endregion 🔖️Definition
 
@@ -29,7 +29,7 @@ pub async fn render(document: &BinarySnapshot) -> UiNode {
     let shown = total.min(HEX_PREVIEW_CAP_BYTES);
     let hex: String = document.bytes[..shown].iter().map(|byte| format!("{byte:02x}")).collect();
     let text = if total > shown { format!("{hex}\n# total bytes: {total} (showing first {shown})") } else { format!("{hex}\n# total bytes: {total}") };
-    TextWindowKit::render(&TextView { text, language: Some("hex".into()), read_only: true })
+    TextWindowKit::render(&TextView { text, language: Some("hex".into()), read_only: true }).await
 }
 //#endregion 🔖️Render
 

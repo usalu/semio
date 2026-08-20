@@ -1,0 +1,93 @@
+{
+  "case": "tree-nested-sections",
+  "kind": "composite",
+  "description": "A Tree with one TreeSection holding a row-action item and a nested parent/child item pair.",
+  "outcome": "accept",
+  "limits": null,
+  "tree": {
+    "root": 0,
+    "nodeCount": 5,
+    "shape": [
+      {
+        "id": 0,
+        "key": "#0",
+        "type": "tree",
+        "children": [
+          1
+        ]
+      },
+      {
+        "id": 1,
+        "key": "section-1",
+        "type": "treeSection",
+        "children": [
+          3,
+          4
+        ]
+      },
+      {
+        "id": 3,
+        "key": "leaf-item",
+        "type": "treeItem",
+        "children": []
+      },
+      {
+        "id": 4,
+        "key": "parent-item",
+        "type": "treeItem",
+        "children": [
+          5
+        ]
+      },
+      {
+        "id": 5,
+        "key": "#0",
+        "type": "treeItem",
+        "children": []
+      }
+    ]
+  },
+  "accessibility": [
+    {
+      "id": 0,
+      "label": null,
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    },
+    {
+      "id": 1,
+      "label": null,
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    },
+    {
+      "id": 3,
+      "label": "Leaf row",
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    },
+    {
+      "id": 4,
+      "label": "Parent row",
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    },
+    {
+      "id": 5,
+      "label": "Nested child",
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    }
+  ],
+  "actionIds": []
+}

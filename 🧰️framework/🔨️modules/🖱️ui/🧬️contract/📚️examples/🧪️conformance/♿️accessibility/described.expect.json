@@ -1,0 +1,30 @@
+{
+  "case": "described",
+  "kind": "accessibility",
+  "description": "A Slider carrying an accessible description in addition to its (absent) label.",
+  "outcome": "accept",
+  "limits": null,
+  "tree": {
+    "root": 0,
+    "nodeCount": 1,
+    "shape": [
+      {
+        "id": 0,
+        "key": "#0",
+        "type": "slider",
+        "children": []
+      }
+    ]
+  },
+  "accessibility": [
+    {
+      "id": 0,
+      "label": null,
+      "description": "Playback volume, zero to one hundred percent.",
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    }
+  ],
+  "actionIds": []
+}

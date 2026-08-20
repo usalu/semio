@@ -23,14 +23,14 @@ pub(crate) async fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<Gltf
         .iter()
         .map(|face| {
             let normal = normalize(cross(sub(context.points[face[1]], context.points[face[0]]), sub(context.points[face[2]], context.points[face[0]])));
-            dot(normal, context.principal_frame.axes[0].array()).clamp(-1.0, 1.0).acos()
+            semio_framework_plugin::resolve_ready(dot(normal, context.principal_frame.axes[0].array())).clamp(-1.0, 1.0).acos()
         })
         .collect::<Vec<_>>();
-    exact(super::super::geometry_core::statistics(&face_angles, &context.policy.histogram_edges), GltfUnit::Radian, context.faces.len(), Some(context.topology))
+    exact(super::super::geometry_core::statistics(&face_angles, &context.policy.histogram_edges), GltfUnit::Radian, context.faces.len(), Some(context.topology)).await
 }
 
 pub async fn unavailable_measure(ids: &[String]) -> GltfMeasure<GltfStatistics> {
-    unavailable(GltfUnit::Radian, GltfAvailability::Unavailable, ids.to_vec(), 0, None)
+    unavailable(GltfUnit::Radian, GltfAvailability::Unavailable, ids.to_vec(), 0, None).await
 }
 
 pub async fn encode_result(indicators: &GltfEntityIndicators) -> Result<serde_json::Value, serde_json::Error> {

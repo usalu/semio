@@ -80,13 +80,13 @@ pub enum BmpMutation {
 /// ▶️ Applies `mutation` to `snapshot`: `let d = mutation.diff(&*snapshot); *snapshot =
 /// d.apply(snapshot); d` — the diff is the single semantics source.
 pub async fn apply_bmp_mutation(snapshot: &mut BmpSnapshot, mutation: &BmpMutation) -> protocol::MutationOutcome<BmpDiff> {
-    let outcome = <BmpMutation as Mutation<BmpSnapshot>>::diff(mutation, snapshot);
-    match MutationDiff::apply(outcome.diff(), snapshot) {
+    let outcome = <BmpMutation as Mutation<BmpSnapshot>>::diff(mutation, snapshot).await;
+    match MutationDiff::apply(outcome.diff().await, snapshot).await {
         Ok(next) => {
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).await.absorb_messages(outcome.messages().await.to_vec()).await,
     }
 }
 //#endregion 🔖️Apply
@@ -98,7 +98,7 @@ impl Mutation<BmpSnapshot> for BmpMutation {
     async fn diff(&self, base: &BmpSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             BmpMutation::NoMutation => BmpDiff::default(),
-            BmpMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
+            BmpMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot).await,
             BmpMutation::SetHeaderFields { header_size, width, height, row_order, planes, bits_per_pixel, compression, image_size, x_pixels_per_meter, y_pixels_per_meter, colors_used, colors_important } => BmpDiff {
                 header_size: *header_size,
                 width: *width,
@@ -118,7 +118,7 @@ impl Mutation<BmpSnapshot> for BmpMutation {
             BmpMutation::RemovePaletteEntry { index } => BmpDiff { palette: Some(BmpPaletteDiff { removed: vec![*index], modified: Vec::new(), added: Vec::new() }), ..Default::default() },
             BmpMutation::SetPaletteEntry { index, entry } => BmpDiff { palette: Some(BmpPaletteDiff { removed: Vec::new(), modified: vec![BmpPaletteModified { index: *index, entry: entry.clone() }], added: Vec::new() }), ..Default::default() },
             BmpMutation::SetPixelData { pixels } => BmpDiff { pixels: Some(pixels.clone()), ..Default::default() },
-        })
+        }).await
     }
 
     async fn inverse(&self, base: &BmpSnapshot) -> Vec<Self> {
@@ -170,27 +170,27 @@ impl protocol::OpText for BmpMutation {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
-                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
+                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline }).await?;
+                return <Self as dsl::DslVariants>::from_named_record(keyword, &record).await;
             }
         }
         Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
     }
     async fn print_op(&self) -> String {
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
+        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self).await;
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
+        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline).await
     }
 }
 
 /// ⚡️ Handcrafted `OpBinary` (P6) — pure forward to `dsl::variants_binary`.
 impl protocol::OpBinary for BmpMutation {
     async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        dsl::variants_binary::encode_op(self)
+        dsl::variants_binary::encode_op(self).await
     }
     async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        dsl::variants_binary::decode_op(bytes)
+        dsl::variants_binary::decode_op(bytes).await
     }
 }
 //#endregion OpCodecs

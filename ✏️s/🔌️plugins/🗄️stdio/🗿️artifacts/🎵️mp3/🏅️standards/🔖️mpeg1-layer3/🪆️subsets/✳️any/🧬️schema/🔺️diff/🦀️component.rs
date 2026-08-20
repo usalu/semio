@@ -65,7 +65,7 @@ impl DiffAlgebra<Mp3Snapshot> for Mp3Diff {
 
 /// 🧩 Builds a set-snapshot diff: the sparse field-by-field delta, never a full-replace slot.
 pub async fn diff_set_snapshot(base: &Mp3Snapshot, snapshot: &Mp3Snapshot) -> Mp3Diff {
-    Mp3Diff::between(base, snapshot)
+    Mp3Diff::between(base, snapshot).await
 }
 /// 🧩 Builds a set-id3v2 diff (`None` clears the tag).
 pub async fn diff_set_id3v2(id3v2: Option<Id3v2Tag>) -> Mp3Diff {
@@ -133,8 +133,8 @@ async fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String
     }
 }
 async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
-    let inner = strip_brackets(s)?;
-    match split_top_level(inner, ',').as_slice() {
+    let inner = strip_brackets(s).await?;
+    match split_top_level(inner, ',').await.as_slice() {
         ["0"] => Ok(None),
         [tag, value] if *tag == "1" => Ok(Some(dec(value)?)),
         other => Err(format!("option decode: bad shape {other:?}")),
@@ -169,18 +169,18 @@ async fn enc_id3_frame(f: &Id3Frame) -> String {
     format!("[{},{},{}]", f.id, f.flags, hex_encode(&f.data))
 }
 async fn dec_id3_frame(s: &str) -> Result<Id3Frame, String> {
-    let inner = strip_brackets(s)?;
-    let parts = split_top_level(inner, ',');
+    let inner = strip_brackets(s).await?;
+    let parts = split_top_level(inner, ',').await;
     if parts.len() != 3 {
         return Err(format!("id3 frame: expected 3 fields, got {}", parts.len()));
     }
-    Ok(Id3Frame { id: parts[0].to_string(), flags: parse_u16(parts[1])?, data: hex_decode(parts[2])? })
+    Ok(Id3Frame { id: parts[0].to_string(), flags: parse_u16(parts[1]).await?, data: hex_decode(parts[2]).await? })
 }
 async fn enc_id3_frames(frames: &[Id3Frame]) -> String {
     format!("[{}]", frames.iter().map(enc_id3_frame).collect::<Vec<_>>().join(";"))
 }
 async fn dec_id3_frames(s: &str) -> Result<Vec<Id3Frame>, String> {
-    let inner = strip_brackets(s)?;
+    let inner = strip_brackets(s).await?;
     split_top_level(inner, ';').into_iter().filter(|p| !p.is_empty()).map(dec_id3_frame).collect()
 }
 
@@ -188,19 +188,19 @@ async fn enc_id3v2(tag: &Id3v2Tag) -> String {
     format!("[{},{},{},{}]", tag.major_version, tag.minor_version, tag.flags, enc_id3_frames(&tag.frames))
 }
 async fn dec_id3v2(s: &str) -> Result<Id3v2Tag, String> {
-    let inner = strip_brackets(s)?;
-    let parts = split_top_level(inner, ',');
+    let inner = strip_brackets(s).await?;
+    let parts = split_top_level(inner, ',').await;
     if parts.len() != 4 {
         return Err(format!("id3v2: expected 4 fields, got {}", parts.len()));
     }
-    Ok(Id3v2Tag { major_version: parse_u8(parts[0])?, minor_version: parse_u8(parts[1])?, flags: parse_u8(parts[2])?, frames: dec_id3_frames(parts[3])? })
+    Ok(Id3v2Tag { major_version: parse_u8(parts[0]).await?, minor_version: parse_u8(parts[1]).await?, flags: parse_u8(parts[2]).await?, frames: dec_id3_frames(parts[3]).await? })
 }
 
 async fn enc_id3v1(tag: &Id3v1Tag) -> String {
     format!("[{}]", hex_encode(&tag.raw))
 }
 async fn dec_id3v1(s: &str) -> Result<Id3v1Tag, String> {
-    Ok(Id3v1Tag { raw: hex_decode(strip_brackets(s)?)? })
+    Ok(Id3v1Tag { raw: hex_decode(strip_brackets(s).await?).await? })
 }
 
 async fn enc_mp3_header(h: &Mp3FrameHeader) -> String {
@@ -223,46 +223,46 @@ async fn enc_mp3_header(h: &Mp3FrameHeader) -> String {
 /// 🧭️ `s` is the header's OWN bracketed group (e.g. `[3,1,1,9,0,0,0,3,0,0,1,0]`) — callers strip
 /// it from its enclosing token first (see `dec_mp3_frame`).
 async fn dec_mp3_header(s: &str) -> Result<Mp3FrameHeader, String> {
-    let inner = strip_brackets(s)?;
-    let parts = split_top_level(inner, ',');
+    let inner = strip_brackets(s).await?;
+    let parts = split_top_level(inner, ',').await;
     if parts.len() != 12 {
         return Err(format!("mp3 frame header: expected 12 fields, got {}", parts.len()));
     }
     Ok(Mp3FrameHeader {
-        mpeg_version_id: parse_u8(parts[0])?,
-        layer: parse_u8(parts[1])?,
-        protection_bit: parse_bool(parts[2])?,
-        bitrate_index: parse_u8(parts[3])?,
-        sample_rate_index: parse_u8(parts[4])?,
-        padding: parse_bool(parts[5])?,
-        private_bit: parse_bool(parts[6])?,
-        channel_mode: parse_u8(parts[7])?,
-        mode_extension: parse_u8(parts[8])?,
-        copyright: parse_bool(parts[9])?,
-        original: parse_bool(parts[10])?,
-        emphasis: parse_u8(parts[11])?,
+        mpeg_version_id: parse_u8(parts[0]).await?,
+        layer: parse_u8(parts[1]).await?,
+        protection_bit: parse_bool(parts[2]).await?,
+        bitrate_index: parse_u8(parts[3]).await?,
+        sample_rate_index: parse_u8(parts[4]).await?,
+        padding: parse_bool(parts[5]).await?,
+        private_bit: parse_bool(parts[6]).await?,
+        channel_mode: parse_u8(parts[7]).await?,
+        mode_extension: parse_u8(parts[8]).await?,
+        copyright: parse_bool(parts[9]).await?,
+        original: parse_bool(parts[10]).await?,
+        emphasis: parse_u8(parts[11]).await?,
     })
 }
 async fn enc_mp3_frame(f: &Mp3Frame) -> String {
     format!("[{},{}]", enc_mp3_header(&f.header), hex_encode(&f.payload))
 }
 async fn dec_mp3_frame(s: &str) -> Result<Mp3Frame, String> {
-    let inner = strip_brackets(s)?;
+    let inner = strip_brackets(s).await?;
     // 🧭️ The header is itself a bracketed 12-field group, so at depth-0 it is ONE token (same
     // nesting trick `decode_option` relies on) — split at depth 0 gives exactly
     // `["[12 header fields]", "<payload-hex>"]`, 2 top-level tokens, never 13.
-    let parts = split_top_level(inner, ',');
+    let parts = split_top_level(inner, ',').await;
     if parts.len() != 2 {
         return Err(format!("mp3 frame: expected header+payload=2 top-level fields, got {}", parts.len()));
     }
-    let header = dec_mp3_header(parts[0])?;
-    Ok(Mp3Frame { header, payload: hex_decode(parts[1])? })
+    let header = dec_mp3_header(parts[0]).await?;
+    Ok(Mp3Frame { header, payload: hex_decode(parts[1]).await? })
 }
 async fn enc_mp3_frames(frames: &[Mp3Frame]) -> String {
     format!("[{}]", frames.iter().map(enc_mp3_frame).collect::<Vec<_>>().join(";"))
 }
 async fn dec_mp3_frames(s: &str) -> Result<Vec<Mp3Frame>, String> {
-    let inner = strip_brackets(s)?;
+    let inner = strip_brackets(s).await?;
     split_top_level(inner, ';').into_iter().filter(|p| !p.is_empty()).map(dec_mp3_frame).collect()
 }
 //#endregion 🔖️ValueCodecs
@@ -288,11 +288,11 @@ async fn parse_mp3_diff(line: &str) -> Result<Mp3Diff, String> {
     }
     for token in line.split(' ') {
         if let Some(rest) = token.strip_prefix("id3v2=") {
-            d.id3v2 = Some(decode_option(rest, dec_id3v2)?);
+            d.id3v2 = Some(decode_option(rest, dec_id3v2).await?);
         } else if let Some(rest) = token.strip_prefix("frames=") {
-            d.frames = Some(dec_mp3_frames(rest)?);
+            d.frames = Some(dec_mp3_frames(rest).await?);
         } else if let Some(rest) = token.strip_prefix("id3v1=") {
-            d.id3v1 = Some(decode_option(rest, dec_id3v1)?);
+            d.id3v1 = Some(decode_option(rest, dec_id3v1).await?);
         } else {
             return Err(format!("mp3 diff: unknown token {token:?}"));
         }
@@ -302,19 +302,19 @@ async fn parse_mp3_diff(line: &str) -> Result<Mp3Diff, String> {
 
 impl protocol::DiffCodec for Mp3Diff {
     async fn print_diff(&self) -> String {
-        print_mp3_diff(self)
+        print_mp3_diff(self).await
     }
     async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
-        parse_mp3_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_mp3_diff(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// ⚡️ Binary = the text bytes verbatim (same simplification `DeflateDiff`/`GifDiff`'s
     /// hand-rolled `DiffCodec` impls use).
     async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(self.print_diff().into_bytes())
+        Ok(self.print_diff().await.into_bytes())
     }
     async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "diff utf8", offset: 0, detail: e.to_string() })?;
-        Self::parse_diff(line).map_err(|e| protocol::ProtocolError::Malformed { what: "diff text", offset: 0, detail: e.to_string() })
+        Self::parse_diff(line).await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff text", offset: 0, detail: e.to_string() })
     }
 }
 //#endregion 🔖️TopLevel

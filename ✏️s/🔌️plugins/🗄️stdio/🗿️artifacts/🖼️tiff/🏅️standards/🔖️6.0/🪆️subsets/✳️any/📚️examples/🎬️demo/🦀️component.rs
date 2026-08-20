@@ -11,7 +11,7 @@ pub const PRIMARY_TEXT: &str = include_str!("🖼️assets/🗣️example.dsl.se
 /// 🖼️ Genuine `encode_tiff(demo_tiff_snapshot())` bytes (populated by engine fixture honesty).
 pub const NATIVE_BYTES: &[u8] = include_bytes!("🖼️assets/🖼️example.tiff");
 pub async fn source() -> ExampleSource {
-    ExampleSource::new(ID, label(), PRIMARY_TEXT, ICON)
+    ExampleSource::new(ID, label(), PRIMARY_TEXT, ICON).await
 }
 
 #[cfg(test)]

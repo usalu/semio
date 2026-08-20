@@ -8,13 +8,13 @@ use crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::Sem
 //#region 🔖️Diff
 pub async fn diff(payload: &EditRun, base: &SemioTextSnapshot) -> protocol::MutationOutcome<SemioTextDiff> {
     let Some(existing) = base.runs.get(payload.index) else {
-        return protocol::MutationOutcome::error("mutation.target-missing", format!("Run #{} does not exist.", payload.index), [payload.index.to_string()]);
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Run #{} does not exist.", payload.index), [payload.index.to_string()]).await;
     };
     if existing.content == payload.new_content {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Run #{} content is already \"{}\".", payload.index, payload.new_content));
+        return protocol::MutationOutcome::empty().await.warn("mutation.no-op", format!("Run #{} content is already \"{}\".", payload.index, payload.new_content)).await;
     }
     let mut runs = base.runs.clone();
     runs[payload.index].content = payload.new_content.clone();
-    protocol::MutationOutcome::new(SemioTextDiff { runs: Some(SemioTextRunList { values: runs }) })
+    protocol::MutationOutcome::new(SemioTextDiff { runs: Some(SemioTextRunList { values: runs }) }).await
 }
 //#endregion 🔖️Diff

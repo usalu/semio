@@ -10,16 +10,16 @@ use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::
 
 //#region 🔖️Diff
 pub async fn diff(payload: &Scale, base: &SemioDrawingSnapshot) -> protocol::MutationOutcome<SemioDrawingDiff> {
-    let Some(node) = node_at(base, &payload.at) else {
-        return protocol::MutationOutcome::error("mutation.target-missing", format!("Node at layer #{} does not exist.", payload.at.layer), [payload.at.layer.to_string()]);
+    let Some(node) = node_at(base, &payload.at).await else {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Node at layer #{} does not exist.", payload.at.layer), [payload.at.layer.to_string()]).await;
     };
     let s = payload.new_scale;
     if !s.x.is_finite() || !s.y.is_finite() || !s.z.is_finite() {
-        return protocol::MutationOutcome::fatal("mutation.invariant", format!("Node at layer #{} new scale has a non-finite component.", payload.at.layer), [payload.at.layer.to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.invariant", format!("Node at layer #{} new scale has a non-finite component.", payload.at.layer), [payload.at.layer.to_string()]).await;
     }
     if let DrawNode::Group { transform, .. } = node {
         if transform.scale == s {
-            return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Node in layer #{} already has that scale.", payload.at.layer));
+            return protocol::MutationOutcome::empty().await.warn("mutation.no-op", format!("Node in layer #{} already has that scale.", payload.at.layer)).await;
         }
     }
     protocol::MutationOutcome::new(diff_scale_node(base, &payload.at, s))

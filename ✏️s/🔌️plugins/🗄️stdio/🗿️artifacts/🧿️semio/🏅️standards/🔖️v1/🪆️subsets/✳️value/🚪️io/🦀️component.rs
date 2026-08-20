@@ -37,7 +37,7 @@ pub mod derived_composition {
             if native.is_empty() {
                 return Err(ComposeError { message: "SemioValueComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() });
             }
-            let analysis = SemioValueAnalyzer::analyze(&native);
+            let analysis = SemioValueAnalyzer::analyze(&native).await;
             let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError { message: "SemioValueComposerComposition: analysis produced no snapshot".into(), diagnostics: analysis.diagnostics.clone() })?;
             Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics })
         }
@@ -51,8 +51,8 @@ pub mod derived_composition {
     async fn collect_refs(value: &SemioValue, out: &mut Vec<ValueId>) {
         match value {
             SemioValue::Ref { id } => out.push(id.clone()),
-            SemioValue::List { items } => items.iter().for_each(|v| collect_refs(v, out)),
-            SemioValue::Map { entries } => entries.iter().for_each(|e| collect_refs(&e.value, out)),
+            SemioValue::List { items } => items.iter().for_each(|v| semio_framework_plugin::resolve_ready(collect_refs(v, out))),
+            SemioValue::Map { entries } => entries.iter().for_each(|e| semio_framework_plugin::resolve_ready(collect_refs(&e.value, out))),
             _ => {}
         }
     }
@@ -68,8 +68,8 @@ pub mod derived_composition {
         const DIALECT: Dialect = DIALECT;
         async fn validate(payload: &IoPayload) -> Vec<dsl::Diagnostic> {
             let decoded = match payload {
-                IoPayload::Binary(bytes) => <SemioValueSnapshot as store::ArtifactPack>::decode_pack(bytes).ok(),
-                IoPayload::Text(text) => <SemioValueSnapshot as store::ArtifactDsl>::parse_dsl(text).ok(),
+                IoPayload::Binary(bytes) => <SemioValueSnapshot as store::ArtifactPack>::decode_pack(bytes).await.ok(),
+                IoPayload::Text(text) => <SemioValueSnapshot as store::ArtifactDsl>::parse_dsl(text).await.ok(),
             };
             let snapshot = match decoded {
                 Some(snapshot) => snapshot,
@@ -114,12 +114,12 @@ pub mod derived_composition {
     /// 📌️ Registers this subset's schema descriptor, document codec, and SubsetValidator. Called from
     /// this artifact's standard-level `engine::register()`.
     pub async fn register() {
-        ::schema::register_artifact_schema_descriptor(crate::artifacts::semio::standards::v1::subsets::value::schema::semio_value_artifact_schema_descriptor());
+        ::schema::register_artifact_schema_descriptor(crate::artifacts::semio::standards::v1::subsets::value::schema::semio_value_artifact_schema_descriptor().await);
         let _ = store::register_document_codec(store::ArtifactCodec::of::<SemioValueSnapshot, crate::artifacts::semio::standards::v1::subsets::value::schema::mutations::SemioValueMutation>(
             crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::STDIO_SEMIOVALUE_DOCUMENT_SCHEMA,
-        ));
-        let _ = register_subset_validator(validator_entry());
-        let _ = register_composer_entries(io_bridge_entries());
+        ).await);
+        let _ = register_subset_validator(validator_entry().await);
+        let _ = register_composer_entries(io_bridge_entries().await);
         register_artifact_inferences();
     }
 
@@ -127,7 +127,7 @@ pub mod derived_composition {
     /// catalog — sibling to `register_artifact_schema_descriptor` above (separate registry,
     /// ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
     pub async fn register_artifact_inferences() {
-        ::schema::register_artifact_inference_descriptor(crate::artifacts::semio::standards::v1::subsets::value::schema::inferences::semio_value_artifact_inference_descriptor());
+        ::schema::register_artifact_inference_descriptor(crate::artifacts::semio::standards::v1::subsets::value::schema::inferences::semio_value_artifact_inference_descriptor().await);
     }
     //#endregion 🔖️Register
 

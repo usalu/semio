@@ -28,7 +28,7 @@ pub struct StepInference {
 
 impl protocol::Inference<StepSnapshot> for StepInference {
     async fn infer(snapshot: &StepSnapshot) -> Self {
-        Self { bounds: compute_step_bounds(snapshot) }
+        Self { bounds: compute_step_bounds(snapshot).await }
     }
 }
 

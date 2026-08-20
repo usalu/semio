@@ -7,7 +7,7 @@ use crate::artifacts::zip::ZipSnapshot;
 /// full-replace slot exists on `ZipDiff` to short-circuit into).
 pub async fn diff(base: &ZipSnapshot, snapshot: &ZipSnapshot) -> protocol::MutationOutcome<ZipDiff> {
     if base == snapshot {
-        return protocol::MutationOutcome::new(ZipDiff::default()).warn("mutation.no-op", "set-snapshot: new snapshot is identical to the current one");
+        return protocol::MutationOutcome::new(ZipDiff::default()).await.warn("mutation.no-op", "set-snapshot: new snapshot is identical to the current one").await;
     }
     protocol::MutationOutcome::new(diff_set_snapshot(base, snapshot))
 }

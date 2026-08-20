@@ -36,7 +36,7 @@ impl GltfChangeMaterialAlphaModeInverse {
     }
 }
 pub async fn reconstruct(payload: &GltfChangeMaterialAlphaModePayload, base: &GltfSnapshot) -> Result<GltfChangeMaterialAlphaModeInverse, GltfChangeMaterialAlphaModeRejection> {
-    validate(payload, base)?;
+    validate(payload, base).await?;
     let touched_paths = vec![format!("document/materials/{}/alphaMode", payload.material)];
     Ok(GltfChangeMaterialAlphaModeInverse { material: payload.material, expected_alpha_mode: payload.alpha_mode, alpha_mode: base.document.materials[payload.material].alpha_mode, touched_paths })
 }

@@ -28,7 +28,7 @@ impl ArtifactDeserializer for SemioValueFromCsv {
     const INTO: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("value") };
 
     async fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
-        Ok(SemioValueSnapshot { schema: STDIO_SEMIOVALUE_DOCUMENT_SCHEMA.into(), root: semio_value_from_csv(from), nodes: Vec::new() })
+        Ok(SemioValueSnapshot { schema: STDIO_SEMIOVALUE_DOCUMENT_SCHEMA.into(), root: semio_value_from_csv(from).await, nodes: Vec::new() })
     }
 }
 

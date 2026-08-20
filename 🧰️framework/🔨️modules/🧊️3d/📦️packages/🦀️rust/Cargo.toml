@@ -32,3 +32,6 @@ thiserror.workspace = true
 semio-framework-number = { workspace = true }
 semio-framework-geometry = { workspace = true }
 semio-framework-os-kernel = { workspace = true, optional = true }
+
+[dev-dependencies]
+semio-framework-async-macros = { path = "../../../⏳️async/✨️macros/📦️packages/🦀️rust" }

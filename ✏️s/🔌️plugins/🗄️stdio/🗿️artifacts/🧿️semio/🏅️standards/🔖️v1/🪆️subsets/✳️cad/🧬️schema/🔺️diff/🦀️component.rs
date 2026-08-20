@@ -205,7 +205,7 @@ pub async fn wrap_entity_diff(handle: &str, diff: CadEntityRecordDiff) -> SemioC
 
 /// 🧭️ Lowers a per-block-entity leaf diff (inside block `block_name`) into a full `SemioCadDiff`.
 pub async fn wrap_block_entity_diff(block_name: &str, handle: &str, diff: CadEntityRecordDiff) -> SemioCadDiff {
-    wrap_block_diff(block_name, CadBlockDiff { base_point: None, entities: Some(CadEntitiesDiff { removed: Vec::new(), modified: vec![NamedModified { key: handle.to_string(), diff }], added: Vec::new() }) })
+    wrap_block_diff(block_name, CadBlockDiff { base_point: None, entities: Some(CadEntitiesDiff { removed: Vec::new(), modified: vec![NamedModified { key: handle.to_string(), diff }], added: Vec::new() }) }).await
 }
 //#endregion 🔖️WrapHelpers
 
@@ -214,15 +214,15 @@ impl MutationDiff<SemioCadSnapshot> for SemioCadDiff {
     async fn apply(&self, base: &SemioCadSnapshot) -> protocol::MutationApplyResult<SemioCadSnapshot> {
         let mut next = base.clone();
         if let Some(ld) = &self.layers {
-            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&next.layers, ld, |layer| layer.name.clone(), |layer| layer.name.clone(), ["layers"])?;
+            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&next.layers, ld, |layer| layer.name.clone(), |layer| layer.name.clone(), ["layers"]).await?;
             apply_named(&mut next.layers, ld, |l| l.name.clone(), apply_layer);
         }
         if let Some(bd) = &self.blocks {
-            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&next.blocks, bd, |block| block.name.clone(), |block| block.name.clone(), ["blocks"])?;
+            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&next.blocks, bd, |block| block.name.clone(), |block| block.name.clone(), ["blocks"]).await?;
             apply_named(&mut next.blocks, bd, |b| b.name.clone(), apply_block);
         }
         if let Some(ed) = &self.entities {
-            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&next.entities, ed, |entity| entity.handle.clone(), |entity| entity.handle.clone(), ["entities"])?;
+            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&next.entities, ed, |entity| entity.handle.clone(), |entity| entity.handle.clone(), ["entities"]).await?;
             apply_named(&mut next.entities, ed, |e| e.handle.clone(), apply_entity_record);
         }
         Ok(next)
@@ -232,17 +232,17 @@ impl MutationDiff<SemioCadSnapshot> for SemioCadDiff {
         self.layers = match (self.layers.take(), other.layers) {
             (None, b) => b,
             (a, None) => a,
-            (Some(a), Some(b)) => Some(absorb_named(a, b, |l| l.name.clone(), absorb_layer_diff, apply_layer)),
+            (Some(a), Some(b)) => Some(absorb_named(a, b, |l| l.name.clone(), absorb_layer_diff, apply_layer).await),
         };
         self.blocks = match (self.blocks.take(), other.blocks) {
             (None, b) => b,
             (a, None) => a,
-            (Some(a), Some(b)) => Some(absorb_named(a, b, |bl| bl.name.clone(), absorb_block_diff, apply_block)),
+            (Some(a), Some(b)) => Some(absorb_named(a, b, |bl| bl.name.clone(), absorb_block_diff, apply_block).await),
         };
         self.entities = match (self.entities.take(), other.entities) {
             (None, b) => b,
             (a, None) => a,
-            (Some(a), Some(b)) => Some(absorb_named(a, b, |e| e.handle.clone(), absorb_entity_record_diff, apply_entity_record)),
+            (Some(a), Some(b)) => Some(absorb_named(a, b, |e| e.handle.clone(), absorb_entity_record_diff, apply_entity_record).await),
         };
     }
 }
@@ -297,7 +297,7 @@ async fn absorb_block_diff(mut a: CadBlockDiff, b: CadBlockDiff) -> CadBlockDiff
     a.entities = match (a.entities.take(), b.entities) {
         (None, x) => x,
         (x, None) => x,
-        (Some(x), Some(y)) => Some(absorb_named(x, y, |e| e.handle.clone(), absorb_entity_record_diff, apply_entity_record)),
+        (Some(x), Some(y)) => Some(absorb_named(x, y, |e| e.handle.clone(), absorb_entity_record_diff, apply_entity_record).await),
     };
     a
 }
@@ -325,9 +325,9 @@ impl DiffAlgebra<SemioCadSnapshot> for SemioCadDiff {
 
     async fn between(base: &SemioCadSnapshot, other: &SemioCadSnapshot) -> Self {
         SemioCadDiff {
-            layers: between_named(&base.layers, &other.layers, |l| l.name.clone(), between_layer),
-            blocks: between_named(&base.blocks, &other.blocks, |b| b.name.clone(), between_block),
-            entities: between_named(&base.entities, &other.entities, |e| e.handle.clone(), between_entity_record),
+            layers: between_named(&base.layers, &other.layers, |l| l.name.clone(), between_layer).await,
+            blocks: between_named(&base.blocks, &other.blocks, |b| b.name.clone(), between_block).await,
+            entities: between_named(&base.entities, &other.entities, |e| e.handle.clone(), between_entity_record).await,
         }
     }
 
@@ -361,7 +361,7 @@ async fn between_layer(base: &CadLayer, other: &CadLayer) -> Option<CadLayerDiff
 
 async fn between_block(base: &CadBlock, other: &CadBlock) -> Option<CadBlockDiff> {
     let base_point = if base.base_point != other.base_point { Some(other.base_point) } else { None };
-    let entities = between_named(&base.entities, &other.entities, |e| e.handle.clone(), between_entity_record);
+    let entities = between_named(&base.entities, &other.entities, |e| e.handle.clone(), between_entity_record).await;
     if base_point.is_none() && entities.is_none() {
         None
     } else {
@@ -384,7 +384,7 @@ async fn between_entity_record(base: &CadEntityRecord, other: &CadEntityRecord) 
 /// 🧩️ Builds the sparse field-by-field diff for a `SetSnapshot` mutation. No
 /// `snapshot: Option<SemioCadSnapshot>` full-replace slot -- this IS `SemioCadDiff::between`.
 pub async fn diff_set_snapshot(base: &SemioCadSnapshot, next: &SemioCadSnapshot) -> SemioCadDiff {
-    SemioCadDiff::between(base, next)
+    SemioCadDiff::between(base, next).await
 }
 //#endregion 🔖️SetSnapshot
 
@@ -407,10 +407,10 @@ pub(crate) async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
 pub(crate) async fn enc_str(s: &str) -> String {
-    hex_encode(s.as_bytes())
+    hex_encode(s.as_bytes()).await
 }
 pub(crate) async fn dec_str(s: &str) -> Result<String, String> {
-    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
+    String::from_utf8(hex_decode(s).await?).map_err(|e| e.to_string())
 }
 async fn parse_f64(s: &str) -> Result<f64, String> {
     s.parse().map_err(|e: std::num::ParseFloatError| e.to_string())
@@ -426,8 +426,8 @@ pub(crate) async fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String
     }
 }
 pub(crate) async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
-    let inner = strip_brackets(s)?;
-    match split_top_level(inner, ',').as_slice() {
+    let inner = strip_brackets(s).await?;
+    match split_top_level(inner, ',').await.as_slice() {
         ["0"] => Ok(None),
         [tag, value] if *tag == "1" => Ok(Some(dec(value)?)),
         other => Err(format!("option decode: bad shape {other:?}")),
@@ -437,7 +437,7 @@ pub(crate) async fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> Stri
     format!("[{}]", items.iter().map(|it| enc(it)).collect::<Vec<_>>().join(","))
 }
 pub(crate) async fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
-    split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| dec(entry)).collect()
+    split_top_level(strip_brackets(s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| dec(entry)).collect()
 }
 //#endregion 🔖️Primitives
 
@@ -446,9 +446,9 @@ pub(crate) async fn enc_point2(p: &SemioPoint2) -> String {
     format!("[{},{}]", p.x, p.y)
 }
 pub(crate) async fn dec_point2(s: &str) -> Result<SemioPoint2, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [x, y] = parts.as_slice() else { return Err(format!("point2: expected 2 fields, got {}", parts.len())) };
-    Ok(SemioPoint2 { x: parse_f64(x)?, y: parse_f64(y)? })
+    Ok(SemioPoint2 { x: parse_f64(x).await?, y: parse_f64(y).await? })
 }
 
 /// 📐️ `L`ine/`A`rc/`C`ircle/`E`llipse/`P`olyline/`T`ext/`I`nsert/`S`olid/`D`imension — the `dxf`
@@ -471,44 +471,44 @@ pub(crate) async fn enc_entity(e: &CadEntity) -> String {
 }
 pub(crate) async fn dec_entity(s: &str) -> Result<CadEntity, String> {
     let (tag, rest) = s.split_at(1);
-    let inner = strip_brackets(rest)?;
-    let parts = split_top_level(inner, ',');
+    let inner = strip_brackets(rest).await?;
+    let parts = split_top_level(inner, ',').await;
     match tag {
         "L" => {
             let [a, b] = parts.as_slice() else { return Err(format!("line: expected 2 fields, got {}", parts.len())) };
-            Ok(CadEntity::Line { a: dec_point2(a)?, b: dec_point2(b)? })
+            Ok(CadEntity::Line { a: dec_point2(a).await?, b: dec_point2(b).await? })
         }
         "A" => {
             let [center, radius, start_angle, end_angle] = parts.as_slice() else { return Err(format!("arc: expected 4 fields, got {}", parts.len())) };
-            Ok(CadEntity::Arc { center: dec_point2(center)?, radius: parse_f64(radius)?, start_angle: parse_f64(start_angle)?, end_angle: parse_f64(end_angle)? })
+            Ok(CadEntity::Arc { center: dec_point2(center).await?, radius: parse_f64(radius).await?, start_angle: parse_f64(start_angle).await?, end_angle: parse_f64(end_angle).await? })
         }
         "C" => {
             let [center, radius] = parts.as_slice() else { return Err(format!("circle: expected 2 fields, got {}", parts.len())) };
-            Ok(CadEntity::Circle { center: dec_point2(center)?, radius: parse_f64(radius)? })
+            Ok(CadEntity::Circle { center: dec_point2(center).await?, radius: parse_f64(radius).await? })
         }
         "E" => {
             let [center, major_axis_end, ratio, start_param, end_param] = parts.as_slice() else { return Err(format!("ellipse: expected 5 fields, got {}", parts.len())) };
-            Ok(CadEntity::Ellipse { center: dec_point2(center)?, major_axis_end: dec_point2(major_axis_end)?, ratio: parse_f64(ratio)?, start_param: parse_f64(start_param)?, end_param: parse_f64(end_param)? })
+            Ok(CadEntity::Ellipse { center: dec_point2(center).await?, major_axis_end: dec_point2(major_axis_end).await?, ratio: parse_f64(ratio).await?, start_param: parse_f64(start_param).await?, end_param: parse_f64(end_param).await? })
         }
         "P" => {
             let [vertices, closed] = parts.as_slice() else { return Err(format!("polyline: expected 2 fields, got {}", parts.len())) };
-            Ok(CadEntity::Polyline { vertices: dec_list(vertices, dec_point2)?, closed: *closed == "1" })
+            Ok(CadEntity::Polyline { vertices: dec_list(vertices, dec_point2).await?, closed: *closed == "1" })
         }
         "T" => {
             let [position, height, rotation, content] = parts.as_slice() else { return Err(format!("text: expected 4 fields, got {}", parts.len())) };
-            Ok(CadEntity::Text { position: dec_point2(position)?, height: parse_f64(height)?, rotation: parse_f64(rotation)?, content: dec_str(content)? })
+            Ok(CadEntity::Text { position: dec_point2(position).await?, height: parse_f64(height).await?, rotation: parse_f64(rotation).await?, content: dec_str(content).await? })
         }
         "I" => {
             let [block_name, insertion_point, scale, rotation] = parts.as_slice() else { return Err(format!("insert: expected 4 fields, got {}", parts.len())) };
-            Ok(CadEntity::Insert { block_name: dec_str(block_name)?, insertion_point: dec_point2(insertion_point)?, scale: dec_point2(scale)?, rotation: parse_f64(rotation)? })
+            Ok(CadEntity::Insert { block_name: dec_str(block_name).await?, insertion_point: dec_point2(insertion_point).await?, scale: dec_point2(scale).await?, rotation: parse_f64(rotation).await? })
         }
         "S" => {
             let [p1, p2, p3, p4] = parts.as_slice() else { return Err(format!("solid: expected 4 fields, got {}", parts.len())) };
-            Ok(CadEntity::Solid { p1: dec_point2(p1)?, p2: dec_point2(p2)?, p3: dec_point2(p3)?, p4: dec_point2(p4)? })
+            Ok(CadEntity::Solid { p1: dec_point2(p1).await?, p2: dec_point2(p2).await?, p3: dec_point2(p3).await?, p4: dec_point2(p4).await? })
         }
         "D" => {
             let [def_point, text_position, measurement, text] = parts.as_slice() else { return Err(format!("dimension: expected 4 fields, got {}", parts.len())) };
-            Ok(CadEntity::Dimension { def_point: dec_point2(def_point)?, text_position: dec_point2(text_position)?, measurement: parse_f64(measurement)?, text: dec_str(text)? })
+            Ok(CadEntity::Dimension { def_point: dec_point2(def_point).await?, text_position: dec_point2(text_position).await?, measurement: parse_f64(measurement).await?, text: dec_str(text).await? })
         }
         other => Err(format!("entity: unknown tag {other:?}")),
     }
@@ -518,27 +518,27 @@ pub(crate) async fn enc_layer(l: &CadLayer) -> String {
     format!("[{},{},{},{}]", enc_str(&l.name), l.color_index, enc_str(&l.line_type), if l.visible { "1" } else { "0" })
 }
 pub(crate) async fn dec_layer(s: &str) -> Result<CadLayer, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [name, color_index, line_type, visible] = parts.as_slice() else { return Err(format!("layer: expected 4 fields, got {}", parts.len())) };
-    Ok(CadLayer { name: dec_str(name)?, color_index: parse_i32(color_index)?, line_type: dec_str(line_type)?, visible: *visible == "1" })
+    Ok(CadLayer { name: dec_str(name).await?, color_index: parse_i32(color_index).await?, line_type: dec_str(line_type).await?, visible: *visible == "1" })
 }
 
 pub(crate) async fn enc_entity_record(r: &CadEntityRecord) -> String {
     format!("[{},{},{}]", enc_str(&r.handle), enc_str(&r.layer), enc_entity(&r.entity))
 }
 pub(crate) async fn dec_entity_record(s: &str) -> Result<CadEntityRecord, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [handle, layer, entity] = parts.as_slice() else { return Err(format!("entity record: expected 3 fields, got {}", parts.len())) };
-    Ok(CadEntityRecord { handle: dec_str(handle)?, layer: dec_str(layer)?, entity: dec_entity(entity)? })
+    Ok(CadEntityRecord { handle: dec_str(handle).await?, layer: dec_str(layer).await?, entity: dec_entity(entity).await? })
 }
 
 pub(crate) async fn enc_block(b: &CadBlock) -> String {
     format!("[{},{},{}]", enc_str(&b.name), enc_point2(&b.base_point), enc_list(&b.entities, enc_entity_record))
 }
 pub(crate) async fn dec_block(s: &str) -> Result<CadBlock, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [name, base_point, entities] = parts.as_slice() else { return Err(format!("block: expected 3 fields, got {}", parts.len())) };
-    Ok(CadBlock { name: dec_str(name)?, base_point: dec_point2(base_point)?, entities: dec_list(entities, dec_entity_record)? })
+    Ok(CadBlock { name: dec_str(name).await?, base_point: dec_point2(base_point).await?, entities: dec_list(entities, dec_entity_record).await? })
 }
 //#endregion 🔖️ValueCodecs
 
@@ -547,27 +547,27 @@ pub(crate) async fn enc_layer_diff(d: &CadLayerDiff) -> String {
     format!("[{},{},{}]", encode_option(&d.color_index, |v: &i32| v.to_string()), encode_option(&d.line_type, |v: &String| enc_str(v)), encode_option(&d.visible, |v: &bool| if *v { "1".to_string() } else { "0".to_string() }),)
 }
 pub(crate) async fn dec_layer_diff(s: &str) -> Result<CadLayerDiff, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [color_index, line_type, visible] = parts.as_slice() else { return Err(format!("layer diff: expected 3 fields, got {}", parts.len())) };
-    Ok(CadLayerDiff { color_index: decode_option(color_index, parse_i32)?, line_type: decode_option(line_type, dec_str)?, visible: decode_option(visible, |v| Ok(v == "1"))? })
+    Ok(CadLayerDiff { color_index: decode_option(color_index, parse_i32).await?, line_type: decode_option(line_type, dec_str).await?, visible: decode_option(visible, |v| Ok(v == "1")).await? })
 }
 
 pub(crate) async fn enc_entity_record_diff(d: &CadEntityRecordDiff) -> String {
     format!("[{},{}]", encode_option(&d.layer, |v: &String| enc_str(v)), encode_option(&d.entity, enc_entity))
 }
 pub(crate) async fn dec_entity_record_diff(s: &str) -> Result<CadEntityRecordDiff, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [layer, entity] = parts.as_slice() else { return Err(format!("entity record diff: expected 2 fields, got {}", parts.len())) };
-    Ok(CadEntityRecordDiff { layer: decode_option(layer, dec_str)?, entity: decode_option(entity, dec_entity)? })
+    Ok(CadEntityRecordDiff { layer: decode_option(layer, dec_str).await?, entity: decode_option(entity, dec_entity).await? })
 }
 
 pub(crate) async fn enc_block_diff(d: &CadBlockDiff) -> String {
     format!("[{},{}]", encode_option(&d.base_point, |p: &SemioPoint2| enc_point2(p)), encode_option(&d.entities, |v: &CadEntitiesDiff| enc_named_triple(v, |k: &String| enc_str(k), enc_entity_record_diff, enc_entity_record)),)
 }
 pub(crate) async fn dec_block_diff(s: &str) -> Result<CadBlockDiff, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [base_point, entities] = parts.as_slice() else { return Err(format!("block diff: expected 2 fields, got {}", parts.len())) };
-    Ok(CadBlockDiff { base_point: decode_option(base_point, dec_point2)?, entities: decode_option(entities, |v| dec_named_triple(v, dec_str, dec_entity_record_diff, dec_entity_record))? })
+    Ok(CadBlockDiff { base_point: decode_option(base_point, dec_point2).await?, entities: decode_option(entities, |v| dec_named_triple(v, dec_str, dec_entity_record_diff, dec_entity_record)).await? })
 }
 //#endregion 🔖️DiffValueCodecs
 
@@ -592,11 +592,11 @@ async fn parse_cad_diff(line: &str) -> Result<SemioCadDiff, String> {
     }
     for token in line.split(' ') {
         if let Some(rest) = token.strip_prefix("layers=") {
-            d.layers = Some(dec_named_triple(rest, dec_str, dec_layer_diff, dec_layer)?);
+            d.layers = Some(dec_named_triple(rest, dec_str, dec_layer_diff, dec_layer).await?);
         } else if let Some(rest) = token.strip_prefix("blocks=") {
-            d.blocks = Some(dec_named_triple(rest, dec_str, dec_block_diff, dec_block)?);
+            d.blocks = Some(dec_named_triple(rest, dec_str, dec_block_diff, dec_block).await?);
         } else if let Some(rest) = token.strip_prefix("entities=") {
-            d.entities = Some(dec_named_triple(rest, dec_str, dec_entity_record_diff, dec_entity_record)?);
+            d.entities = Some(dec_named_triple(rest, dec_str, dec_entity_record_diff, dec_entity_record).await?);
         } else {
             return Err(format!("cad diff: unknown token {token:?}"));
         }
@@ -612,22 +612,22 @@ async fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
     out.extend_from_slice(bytes);
 }
 async fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
+    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec())
 }
 async fn write_str_lp(out: &mut Vec<u8>, s: &str) {
     write_bytes_lp(out, s.as_bytes());
 }
 async fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
-    String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
+    String::from_utf8(read_bytes_lp(reader).await?).map_err(|e| e.to_string())
 }
 
 impl protocol::DiffCodec for SemioCadDiff {
     async fn print_diff(&self) -> String {
-        print_cad_diff(self)
+        print_cad_diff(self).await
     }
     async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
-        parse_cad_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_cad_diff(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// ⚡️ Real binary diff frame, replacing the old `print_diff().into_bytes()` text-as-binary
     /// shortcut. `format u8` + `presence u8` (bit0=`layers`, bit1=`blocks`, bit2=`entities`) are
@@ -671,19 +671,19 @@ impl protocol::DiffCodec for SemioCadDiff {
         }
         let presence = bytes[1];
         let mut reader = store::ByteReader::new(&bytes[2..]);
-        let mut next_blob = |what: &'static str| -> Result<String, protocol::ProtocolError> { read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what, offset: 2, detail: e }) };
+        let mut next_blob = |what: &'static str| -> Result<String, protocol::ProtocolError> { semio_framework_plugin::resolve_ready(read_str_lp(&mut reader)).map_err(|e| protocol::ProtocolError::Malformed { what, offset: 2, detail: e }) };
         let layers = if presence & 0b0000_0001 != 0 {
-            Some(dec_named_triple(&next_blob("diff layers blob")?, dec_str, dec_layer_diff, dec_layer).map_err(|e| protocol::ProtocolError::Malformed { what: "diff layers text", offset: 2, detail: e })?)
+            Some(dec_named_triple(&next_blob("diff layers blob")?, dec_str, dec_layer_diff, dec_layer).await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff layers text", offset: 2, detail: e })?)
         } else {
             None
         };
         let blocks = if presence & 0b0000_0010 != 0 {
-            Some(dec_named_triple(&next_blob("diff blocks blob")?, dec_str, dec_block_diff, dec_block).map_err(|e| protocol::ProtocolError::Malformed { what: "diff blocks text", offset: 2, detail: e })?)
+            Some(dec_named_triple(&next_blob("diff blocks blob")?, dec_str, dec_block_diff, dec_block).await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff blocks text", offset: 2, detail: e })?)
         } else {
             None
         };
         let entities = if presence & 0b0000_0100 != 0 {
-            Some(dec_named_triple(&next_blob("diff entities blob")?, dec_str, dec_entity_record_diff, dec_entity_record).map_err(|e| protocol::ProtocolError::Malformed { what: "diff entities text", offset: 2, detail: e })?)
+            Some(dec_named_triple(&next_blob("diff entities blob")?, dec_str, dec_entity_record_diff, dec_entity_record).await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff entities text", offset: 2, detail: e })?)
         } else {
             None
         };

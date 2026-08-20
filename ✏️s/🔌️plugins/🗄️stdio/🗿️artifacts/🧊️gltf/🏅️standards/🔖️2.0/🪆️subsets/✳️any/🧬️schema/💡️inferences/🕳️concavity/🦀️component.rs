@@ -40,7 +40,7 @@ pub(crate) async fn raw(context: &GltfGeometryContext<'_>) -> GltfConcavityRaw {
             .iter()
             .filter(|face| {
                 let centroid = mul(add(add(context.points[face[0]], context.points[face[1]]), context.points[face[2]]), 1.0 / 3.0);
-                !planes.iter().any(|(normal, offset)| (dot(*normal, centroid) - *offset).abs() <= tolerance * 4.0)
+                !planes.iter().any(|(normal, offset)| semio_framework_plugin::resolve_ready((dot(*normal, centroid) - *offset)).abs() <= tolerance * 4.0)
             })
             .map(|face| triangle_area(context.points[face[0]], context.points[face[1]], context.points[face[2]]))
             .sum::<f64>()
@@ -54,19 +54,19 @@ impl GltfInferenceStage<GltfGeometryContext<'_>> for GltfConcavityInference {
     async fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
         let raw = raw(context);
         Self::Output {
-            convex_hull_gap: convex_hull_gap::from_raw(context, &raw),
-            reentrant_area: reentrant_area::from_raw(context, &raw),
-            reentrant_volume: reentrant_volume::from_raw(context, &raw),
-            concavity_index: concavity_index::from_raw(context, &raw),
+            convex_hull_gap: convex_hull_gap::from_raw(context, &raw).await,
+            reentrant_area: reentrant_area::from_raw(context, &raw).await,
+            reentrant_volume: reentrant_volume::from_raw(context, &raw).await,
+            concavity_index: concavity_index::from_raw(context, &raw).await,
         }
     }
 
     async fn unavailable(diagnostic_ids: &[String]) -> Self::Output {
         Self::Output {
-            convex_hull_gap: convex_hull_gap::unavailable_measure(diagnostic_ids),
-            reentrant_area: reentrant_area::unavailable_measure(diagnostic_ids),
-            reentrant_volume: reentrant_volume::unavailable_measure(diagnostic_ids),
-            concavity_index: concavity_index::unavailable_measure(diagnostic_ids),
+            convex_hull_gap: convex_hull_gap::unavailable_measure(diagnostic_ids).await,
+            reentrant_area: reentrant_area::unavailable_measure(diagnostic_ids).await,
+            reentrant_volume: reentrant_volume::unavailable_measure(diagnostic_ids).await,
+            concavity_index: concavity_index::unavailable_measure(diagnostic_ids).await,
         }
     }
 }

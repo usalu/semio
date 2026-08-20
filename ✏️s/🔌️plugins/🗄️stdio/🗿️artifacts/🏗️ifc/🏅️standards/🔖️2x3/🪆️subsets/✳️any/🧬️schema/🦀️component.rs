@@ -109,17 +109,17 @@ pub mod derived_construction {
             Self { snapshot, diagnostics: Vec::new() }
         }
         async fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self::from_snapshot(<Ifc2x3Snapshot as store::ArtifactDsl>::parse_dsl(text)?))
+            Ok(Self::from_snapshot(<Ifc2x3Snapshot as store::ArtifactDsl>::parse_dsl(text).await?).await)
         }
         async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<Ifc2x3Snapshot as store::ArtifactPack>::decode_pack(bytes)?))
+            Ok(Self::from_snapshot(<Ifc2x3Snapshot as store::ArtifactPack>::decode_pack(bytes).await?).await)
         }
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = apply_ifc2x3_mutation(&mut self.snapshot, &mutation);
-            (self, diff)
+            (self, diff.await)
         }
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            self.snapshot = <Ifc2x3Diff as protocol::MutationDiff<Ifc2x3Snapshot>>::apply(&diff, &self.snapshot)?;
+            self.snapshot = <Ifc2x3Diff as protocol::MutationDiff<Ifc2x3Snapshot>>::apply(&diff, &self.snapshot).await?;
             Ok(self)
         }
         async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
@@ -180,10 +180,10 @@ pub mod derived_analysis {
                         Ok((_, rest)) => rest,
                         Err(_) => text,
                     };
-                    sniff_text(body)
+                    sniff_text(body).await
                 }
                 AnalyzeSource::Binary(bytes) => match std::str::from_utf8(bytes) {
-                    Ok(text) => sniff_text(text),
+                    Ok(text) => sniff_text(text).await,
                     Err(_) => IoConfidence::Low,
                 },
             }
@@ -196,9 +196,9 @@ pub mod derived_analysis {
             for source in sources {
                 match source {
                     AnalyzeSource::Text(text) => match if text.trim_start().starts_with("ISO-10303-21") {
-                        crate::artifacts::ifc::standards::v2x3::engine::decode_ifc2x3(text.as_bytes()).map_err(|error| store::TextError::new(error, dsl::TextSpan::at(1, 1)))
+                        crate::artifacts::ifc::standards::v2x3::engine::decode_ifc2x3(text.as_bytes()).await.map_err(|error| store::TextError::new(error, dsl::TextSpan::at(1, 1)))
                     } else {
-                        <Ifc2x3Snapshot as store::ArtifactDsl>::parse_dsl(text)
+                        <Ifc2x3Snapshot as store::ArtifactDsl>::parse_dsl(text).await
                     } {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
@@ -206,7 +206,7 @@ pub mod derived_analysis {
                             diagnostics.push(dsl::Diagnostic::error("stdio.analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
-                    AnalyzeSource::Binary(bytes) => match <Ifc2x3Snapshot as store::ArtifactPack>::decode_pack(bytes).or_else(|_| crate::artifacts::ifc::standards::v2x3::engine::decode_ifc2x3(bytes).map_err(store::PackError::Schema)) {
+                    AnalyzeSource::Binary(bytes) => match <Ifc2x3Snapshot as store::ArtifactPack>::decode_pack(bytes).await.or_else(|_| semio_framework_plugin::resolve_ready(crate::artifacts::ifc::standards::v2x3::engine::decode_ifc2x3(bytes)).map_err(store::PackError::Schema)) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
@@ -320,12 +320,12 @@ pub async fn demo_ifc2x3_snapshot() -> Ifc2x3Snapshot {
 /// calling it a second time here would be a redundant registration, same reasoning gif's
 /// `89a::engine::register` doc comment gives).
 pub async fn register() {
-    ::schema::register_artifact_schema_descriptor(ifc2x3_artifact_schema_descriptor());
+    ::schema::register_artifact_schema_descriptor(ifc2x3_artifact_schema_descriptor().await);
     register_artifact_inferences();
     register_pilot_languages();
     let _ = store::register_document_codec(store::ArtifactCodec::of::<Ifc2x3Snapshot, crate::artifacts::ifc::standards::v2x3::subsets::any::schema::mutations::Ifc2x3Mutation>(
         crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::STDIO_IFC2X3_DOCUMENT_SCHEMA,
-    ));
+    ).await);
     // 🛡️ D5's generic validate-on-build hook: registers each real subset's `SubsetValidator` so
     // `io_dispatch`/`wire_artifact_compose` re-check them for free. Each subset's `ComposerEntry`
     // is registered separately via this standard's own `composer::entries()` aggregation.
@@ -338,7 +338,7 @@ pub async fn register() {
 /// sibling to the schema descriptor registration above (separate registry, ticket
 /// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
 pub async fn register_artifact_inferences() {
-    ::schema::register_artifact_inference_descriptor(crate::artifacts::ifc::standards::v2x3::subsets::any::schema::inferences::ifc2x3_artifact_inference_descriptor());
+    ::schema::register_artifact_inference_descriptor(crate::artifacts::ifc::standards::v2x3::subsets::any::schema::inferences::ifc2x3_artifact_inference_descriptor().await);
 }
 
 /// 📌️ Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION: 5-role

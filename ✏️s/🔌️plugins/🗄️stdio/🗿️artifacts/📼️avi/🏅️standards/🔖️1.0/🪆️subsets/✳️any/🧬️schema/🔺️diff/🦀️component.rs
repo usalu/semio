@@ -64,22 +64,22 @@ async fn validate_indexed<T, D>(base: &[T], diff: &IndexedDiff<T, D>, validate_i
     let mut removed = std::collections::HashSet::new();
     for &index in &diff.removed {
         if index >= base.len() {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "indexed removal target does not exist"));
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "indexed removal target does not exist").await);
         }
         if !removed.insert(index) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "indexed removal target is repeated"));
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "indexed removal target is repeated").await);
         }
     }
     let mut modified = std::collections::HashSet::new();
     for entry in &diff.modified {
         if entry.index >= base.len() {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "indexed modification target does not exist"));
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "indexed modification target does not exist").await);
         }
         if removed.contains(&entry.index) {
-            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "indexed modification targets a removed item"));
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "indexed modification targets a removed item").await);
         }
         if !modified.insert(entry.index) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "indexed modification target is repeated"));
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "indexed modification target is repeated").await);
         }
         validate_item(&base[entry.index], &entry.diff).map_err(|error| error.under(vec!["modified".to_string(), entry.index.to_string()]))?;
     }
@@ -87,10 +87,10 @@ async fn validate_indexed<T, D>(base: &[T], diff: &IndexedDiff<T, D>, validate_i
     let mut added = std::collections::HashSet::new();
     for entry in &diff.added {
         if entry.index > final_len {
-            return Err(MutationApplyError::new("mutation.apply.invalid-index", "indexed addition is outside the final collection"));
+            return Err(MutationApplyError::new("mutation.apply.invalid-index", "indexed addition is outside the final collection").await);
         }
         if !added.insert(entry.index) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "indexed addition occupies a repeated final position"));
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "indexed addition occupies a repeated final position").await);
         }
     }
     Ok(())
@@ -151,8 +151,8 @@ pub async fn absorb_indexed<T: Clone, D: Clone>(d1: &mut IndexedDiff<T, D>, d2: 
             merged_added.retain(|a| a.index != r2);
         } else {
             let post_remove_rank = rank_excluding(r2, &added1_index_sorted);
-            let base_index = unrank_excluding(post_remove_rank, &removed1_sorted);
-            merged_removed_base.push(base_index);
+            let base_index = unrank_excluding(post_remove_rank.await, &removed1_sorted);
+            merged_removed_base.push(base_index.await);
         }
     }
     merged_removed_base.sort_unstable();
@@ -172,14 +172,14 @@ pub async fn absorb_indexed<T: Clone, D: Clone>(d1: &mut IndexedDiff<T, D>, d2: 
             }
         } else {
             let post_remove_rank = rank_excluding(m2.index, &added1_index_sorted);
-            let base_index = unrank_excluding(post_remove_rank, &removed1_sorted);
+            let base_index = unrank_excluding(post_remove_rank.await, &removed1_sorted);
             if merged_removed_base.binary_search(&base_index).is_ok() {
                 continue;
             }
             match modified_map.get_mut(&base_index) {
                 Some(existing) => absorb_item(existing, m2.diff),
                 None => {
-                    modified_map.insert(base_index, m2.diff);
+                    modified_map.insert(base_index.await, m2.diff);
                 }
             }
         }
@@ -220,7 +220,7 @@ async fn apply_chunk_diff(base: &AviChunk, d: &AviChunkDiff) -> AviChunk {
     AviChunk { fourcc: base.fourcc.clone(), data: d.data.clone().unwrap_or_else(|| base.data.clone()), keyframe: d.keyframe.unwrap_or(base.keyframe) }
 }
 async fn apply_chunk_diff_mut(item: &mut AviChunk, d: &AviChunkDiff) {
-    *item = apply_chunk_diff(item, d);
+    *item = apply_chunk_diff(item, d).await;
 }
 async fn between_chunk(a: &AviChunk, b: &AviChunk) -> AviChunkDiff {
     AviChunkDiff { data: (a.data != b.data).then(|| b.data.clone()), keyframe: (a.keyframe != b.keyframe).then_some(b.keyframe) }
@@ -260,12 +260,12 @@ async fn apply_stream_diff(base: &AviStream, d: &AviStreamDiff) -> AviStream {
     }
 }
 async fn apply_stream_diff_mut(item: &mut AviStream, d: &AviStreamDiff) {
-    *item = apply_stream_diff(item, d);
+    *item = apply_stream_diff(item, d).await;
 }
 
 async fn between_stream(a: &AviStream, b: &AviStream) -> AviStreamDiff {
-    let chunks_diff = between_indexed(&a.chunks, &b.chunks, between_chunk, chunk_diff_is_empty);
-    AviStreamDiff { strh: (a.strh != b.strh).then(|| b.strh.clone()), strf: (a.strf != b.strf).then(|| b.strf.clone()), chunks: (!chunks_diff.is_empty()).then_some(chunks_diff) }
+    let chunks_diff = between_indexed(&a.chunks, &b.chunks, between_chunk, chunk_diff_is_empty).await;
+    AviStreamDiff { strh: (a.strh != b.strh).then(|| b.strh.clone()), strf: (a.strf != b.strf).then(|| b.strf.clone()), chunks: (!chunks_diff.is_empty().await).then_some(chunks_diff) }
 }
 async fn stream_diff_is_empty(d: &AviStreamDiff) -> bool {
     d.strh.is_none() && d.strf.is_none() && d.chunks.is_none()
@@ -278,7 +278,7 @@ async fn absorb_stream_diff(a: &mut AviStreamDiff, b: AviStreamDiff) {
         a.strf = b.strf;
     }
     match (&mut a.chunks, b.chunks) {
-        (Some(existing), Some(other)) => absorb_indexed(existing, other, absorb_chunk_diff, apply_chunk_diff_mut),
+        (Some(existing), Some(other)) => absorb_indexed(existing, other, absorb_chunk_diff, apply_chunk_diff_mut).await,
         (a_slot @ None, Some(other)) => *a_slot = Some(other),
         _ => {}
     }
@@ -320,10 +320,10 @@ async fn riff_diff_is_empty(_d: &RiffChunk) -> bool {
 impl MutationDiff<AviSnapshot> for AviDiff {
     async fn apply(&self, base: &AviSnapshot) -> MutationApplyResult<AviSnapshot> {
         if let Some(diff) = &self.streams {
-            validate_indexed(&base.streams, diff, validate_stream_diff)?;
+            validate_indexed(&base.streams, diff, validate_stream_diff).await?;
         }
         if let Some(diff) = &self.unknown_chunks {
-            validate_indexed(&base.unknown_chunks, diff, |_, _| Ok(()))?;
+            validate_indexed(&base.unknown_chunks, diff, |_, _| Ok(())).await?;
         }
         Ok(AviSnapshot {
             schema: base.schema.clone(),
@@ -342,12 +342,12 @@ impl MutationDiff<AviSnapshot> for AviDiff {
             self.idx1_present = other.idx1_present;
         }
         match (&mut self.streams, other.streams) {
-            (Some(existing), Some(other_streams)) => absorb_indexed(existing, other_streams, absorb_stream_diff, apply_stream_diff_mut),
+            (Some(existing), Some(other_streams)) => absorb_indexed(existing, other_streams, absorb_stream_diff, apply_stream_diff_mut).await,
             (slot @ None, Some(other_streams)) => *slot = Some(other_streams),
             _ => {}
         }
         match (&mut self.unknown_chunks, other.unknown_chunks) {
-            (Some(existing), Some(other_chunks)) => absorb_indexed(existing, other_chunks, |a: &mut RiffChunk, b: RiffChunk| *a = b, apply_riff_diff_mut),
+            (Some(existing), Some(other_chunks)) => absorb_indexed(existing, other_chunks, |a: &mut RiffChunk, b: RiffChunk| *a = b, apply_riff_diff_mut).await,
             (slot @ None, Some(other_chunks)) => *slot = Some(other_chunks),
             _ => {}
         }
@@ -356,20 +356,20 @@ impl MutationDiff<AviSnapshot> for AviDiff {
 
 async fn validate_stream_diff(base: &AviStream, diff: &AviStreamDiff) -> MutationApplyResult<()> {
     if let Some(chunks) = &diff.chunks {
-        validate_indexed(&base.chunks, chunks, |_, _| Ok(()))?;
+        validate_indexed(&base.chunks, chunks, |_, _| Ok(())).await?;
     }
     Ok(())
 }
 
 impl DiffAlgebra<AviSnapshot> for AviDiff {
     async fn between(base: &AviSnapshot, other: &AviSnapshot) -> Self {
-        let streams_diff = between_indexed(&base.streams, &other.streams, between_stream, stream_diff_is_empty);
-        let chunks_diff = between_indexed(&base.unknown_chunks, &other.unknown_chunks, between_riff, riff_diff_is_empty);
+        let streams_diff = between_indexed(&base.streams, &other.streams, between_stream, stream_diff_is_empty).await;
+        let chunks_diff = between_indexed(&base.unknown_chunks, &other.unknown_chunks, between_riff, riff_diff_is_empty).await;
         Self {
             main_header: (base.main_header != other.main_header).then(|| other.main_header.clone()),
-            streams: (!streams_diff.is_empty()).then_some(streams_diff),
+            streams: (!streams_diff.is_empty().await).then_some(streams_diff),
             idx1_present: (base.idx1_present != other.idx1_present).then_some(other.idx1_present),
-            unknown_chunks: (!chunks_diff.is_empty()).then_some(chunks_diff),
+            unknown_chunks: (!chunks_diff.is_empty().await).then_some(chunks_diff),
         }
     }
     async fn inverse(&self, base: &AviSnapshot) -> Self {
@@ -379,15 +379,15 @@ impl DiffAlgebra<AviSnapshot> for AviDiff {
             after.main_header = v.clone();
         }
         if let Some(v) = &self.streams {
-            after.streams = apply_indexed(&base.streams, v, apply_stream_diff);
+            after.streams = apply_indexed(&base.streams, v, apply_stream_diff).await;
         }
         if let Some(v) = self.idx1_present {
             after.idx1_present = v;
         }
         if let Some(v) = &self.unknown_chunks {
-            after.unknown_chunks = apply_indexed(&base.unknown_chunks, v, apply_riff_diff);
+            after.unknown_chunks = apply_indexed(&base.unknown_chunks, v, apply_riff_diff).await;
         }
-        Self::between(&after, base)
+        Self::between(&after, base).await
     }
     async fn is_empty(&self) -> bool {
         self.main_header.is_none() && self.streams.is_none() && self.idx1_present.is_none() && self.unknown_chunks.is_none()
@@ -396,7 +396,7 @@ impl DiffAlgebra<AviSnapshot> for AviDiff {
 
 /// 🧩 Set-snapshot diff helper — used by the `📸️set-snapshot/🔺️diff` leaf.
 pub async fn diff_set_snapshot(base: &AviSnapshot, snapshot: &AviSnapshot) -> AviDiff {
-    <AviDiff as DiffAlgebra<AviSnapshot>>::between(base, snapshot)
+    <AviDiff as DiffAlgebra<AviSnapshot>>::between(base, snapshot).await
 }
 //#endregion 🔖️Diff
 

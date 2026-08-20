@@ -1,0 +1,41 @@
+{
+  "surface": "conformance.rejection",
+  "baseRevision": 0,
+  "revision": 1,
+  "ops": [
+    {
+      "type": "upsert",
+      "id": 2,
+      "key": "b",
+      "component": {
+        "type": "text",
+        "value": "B"
+      },
+      "layout": {
+        "kind": "leaf",
+        "width": "hug",
+        "height": "hug"
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {}
+    },
+    {
+      "type": "upsert",
+      "id": 3,
+      "key": "c",
+      "component": {
+        "type": "text",
+        "value": "C"
+      },
+      "layout": {
+        "kind": "leaf",
+        "width": "hug",
+        "height": "hug"
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {}
+    }
+  ]
+}

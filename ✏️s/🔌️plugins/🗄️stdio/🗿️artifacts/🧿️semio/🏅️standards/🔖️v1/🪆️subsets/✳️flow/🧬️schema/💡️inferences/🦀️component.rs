@@ -29,7 +29,7 @@ pub struct SemioFlowInference {
 
 impl protocol::Inference<SemioFlowSnapshot> for SemioFlowInference {
     async fn infer(snapshot: &SemioFlowSnapshot) -> Self {
-        Self { topology: compute_semio_flow_topology(snapshot) }
+        Self { topology: compute_semio_flow_topology(snapshot).await }
     }
 }
 

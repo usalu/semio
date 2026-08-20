@@ -25,20 +25,20 @@ pub fn clear_default_app(dialect: ArtifactDialect, role: AppRole) -> OpeningConf
 impl MutationKind<OpeningPreferences, OpeningConfigMutation> for ClearDefaultApp {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "clear", entity: "default-app", kind: "clear-default-app", record: "Cleared" };
 
-    fn diff(&self, base: &OpeningPreferences) -> MutationOutcome<OpeningPreferences> {
-        super::diff::diff(self, base)
+    async fn diff(&self, base: &OpeningPreferences) -> MutationOutcome<OpeningPreferences> {
+        super::diff::diff(self, base).await
     }
 
-    fn inverse(&self, base: &OpeningPreferences) -> Vec<OpeningConfigMutation> {
+    async fn inverse(&self, base: &OpeningPreferences) -> Vec<OpeningConfigMutation> {
         super::inverse::inverse(self, base)
     }
 
-    fn label(&self) -> String {
-        format!("Clear default {} for \"{}\"", self.role.as_str(), self.dialect.to_coordinate())
+    async fn label(&self) -> String {
+        format!("Clear default {} for \"{}\"", self.role.as_str().await, self.dialect.to_coordinate().await)
     }
 
-    fn target(&self) -> Vec<String> {
-        vec![self.dialect.to_coordinate(), self.role.as_str().to_string()]
+    async fn target(&self) -> Vec<String> {
+        vec![self.dialect.to_coordinate().await, self.role.as_str().await.to_string()]
     }
 }
 //#endregion 🔖️Mutation
@@ -48,11 +48,11 @@ impl MutationKind<OpeningPreferences, OpeningConfigMutation> for ClearDefaultApp
 mod tests {
     use super::*;
 
-    #[test]
-    fn clear_default_app_label_names_role_and_dialect() {
+    #[semio_framework_async_macros::async_test]
+    async fn clear_default_app_label_names_role_and_dialect() {
         let dialect = ArtifactDialect { artifact_kind: "s.cad.cad".to_string(), standard: "1".to_string(), subset: "*".to_string() };
         let payload = ClearDefaultApp { dialect: dialect.clone(), role: AppRole::Viewer };
-        assert_eq!(MutationKind::<OpeningPreferences, OpeningConfigMutation>::label(&payload), "Clear default viewer for \"s.cad.cad@1/*\"");
+        assert_eq!(MutationKind::<OpeningPreferences, OpeningConfigMutation>::label(&payload).await, "Clear default viewer for \"s.cad.cad@1/*\"");
     }
 }
 //#endregion 🧪️Tests

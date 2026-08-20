@@ -1,0 +1,28 @@
+{
+  "surface": "conformance.component.slider",
+  "revision": 0,
+  "root": 0,
+  "nodes": [
+    {
+      "id": 0,
+      "key": "#0",
+      "component": {
+        "type": "slider",
+        "value": 0.4,
+        "min": 0.0,
+        "max": 1.0,
+        "step": 0.1,
+        "unit": "%"
+      },
+      "layout": {
+        "kind": "leaf",
+        "width": "hug",
+        "height": "hug"
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {}
+    }
+  ],
+  "layoutEpoch": 0
+}

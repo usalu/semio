@@ -58,20 +58,20 @@ impl protocol::OpText for GltfMutation {
     async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let fields: Vec<_> = line.split_ascii_whitespace().collect();
         if fields.len() != 5 || fields[0] != "gltf-mutation" {
-            return Err(text_error("expected canonical GLTF mutation envelope"));
+            return Err(text_error("expected canonical GLTF mutation envelope").await);
         }
-        let command_id = decode_hex(parse_field(fields[1], "commandId=")?).map_err(text_error)?;
+        let command_id = decode_hex(parse_field(fields[1], "commandId=").await?).await.map_err(text_error)?;
         let command_id = String::from_utf8(command_id).map_err(|error| text_error(error.to_string()))?;
-        let version = parse_field(fields[2], "version=")?.parse().map_err(|error| text_error(format!("invalid mutation version: {error}")))?;
-        let phase = match parse_field(fields[3], "phase=")? {
+        let version = parse_field(fields[2], "version=").await?.parse().map_err(|error| text_error(format!("invalid mutation version: {error}")))?;
+        let phase = match parse_field(fields[3], "phase=").await? {
             "mutation" => GltfMutationPhase::Mutation,
             "inverse" => GltfMutationPhase::Inverse,
-            _ => return Err(text_error("unknown GLTF mutation phase")),
+            _ => return Err(text_error("unknown GLTF mutation phase").await),
         };
-        let payload_hex = parse_field(fields[4], "payload=")?;
-        let payload = if payload_hex == "-" { Vec::new() } else { decode_hex(payload_hex).map_err(text_error)? };
+        let payload_hex = parse_field(fields[4], "payload=").await?;
+        let payload = if payload_hex == "-" { Vec::new() } else { decode_hex(payload_hex).await.map_err(text_error)? };
         let envelope = GltfMutationEnvelope { command_id, version, phase, payload };
-        validate_gltf_mutation_envelope(&envelope).map_err(|error| text_error(error.to_string()))?;
-        GltfMutation::from_transport(envelope).map_err(|error| text_error(error.to_string()))
+        validate_gltf_mutation_envelope(&envelope).await.map_err(|error| text_error(error.to_string()))?;
+        GltfMutation::from_transport(envelope).await.map_err(|error| text_error(error.to_string()))
     }
 }

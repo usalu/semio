@@ -56,12 +56,12 @@ use dsl::DslValue;
 /// `db_core`'s module doc promises (see `ArtifactId`'s own doc for the rationale: this
 /// crate is the first one in the family that depends on both `db_core` and `protocol` and so is
 /// where the bridge is actually exercised).
-fn to_core_document_id(id: &protocol::ArtifactId) -> ArtifactId {
+async fn to_core_document_id(id: &protocol::ArtifactId) -> ArtifactId {
     ArtifactId(id.0.clone())
 }
 
 /// @emoji 🌉️ `protocol::ActorId` → `ActorId`, same bridge as `to_core_document_id`.
-fn to_core_actor_id(id: &protocol::ActorId) -> ActorId {
+async fn to_core_actor_id(id: &protocol::ActorId) -> ActorId {
     ActorId(id.0.clone())
 }
 
@@ -69,10 +69,12 @@ fn to_core_actor_id(id: &protocol::ActorId) -> ActorId {
 // `Result::map_err`'s `FnOnce(E) -> F2` bound always calls the mapper with an owned `E`, so a
 // by-reference signature would not type-check at any of those call sites despite the function
 // body itself only borrowing `err` to format it.
+// 🚫️async: E4 fn-pointer slot
 fn wire_err(err: store::PackError) -> DbError {
     DbError::InvalidArgument(format!("db_artifact wire error: {err}"))
 }
 
+// 🚫️async: E4 fn-pointer slot
 fn dsl_err(err: String) -> DbError {
     DbError::InvalidArgument(format!("db_artifact dsl error: {err}"))
 }
@@ -90,7 +92,7 @@ pub struct CommandBatch {
 impl CommandBatch {
     /// @emoji 🏗️ Builds a batch, rejecting an empty one or one whose envelopes disagree on
     /// `document_id`.
-    pub fn new(envelopes: Vec<protocol::MutationEnvelope>) -> Result<CommandBatch, DbError> {
+    pub async fn new(envelopes: Vec<protocol::MutationEnvelope>) -> Result<CommandBatch, DbError> {
         let first = envelopes.first().ok_or_else(|| DbError::InvalidArgument("command batch must contain at least one operation".to_string()))?;
         let document_id = first.document_id.clone();
         if envelopes.iter().any(|envelope| envelope.document_id != document_id) {
@@ -130,13 +132,13 @@ impl Default for SubmitOptions {
 pub const DB_PATHMAP_SCHEMA: &str = "db.pathmap.v1";
 
 /// @emoji 🎯️ `DslValue` object pathmap -> `store::pack_rt::encode_wire_value` bytes.
-fn encode_pathmap(value: &DslValue) -> Vec<u8> {
-    store::pack_rt::encode_wire_value(value)
+async fn encode_pathmap(value: &DslValue) -> Vec<u8> {
+    store::pack_rt::encode_wire_value(value).await
 }
 
 /// @emoji 🎯️ Inverse of `encode_pathmap`.
-fn decode_pathmap(bytes: &[u8]) -> Result<DslValue, DbError> {
-    store::pack_rt::decode_wire_value(bytes).map_err(wire_err)
+async fn decode_pathmap(bytes: &[u8]) -> Result<DslValue, DbError> {
+    store::pack_rt::decode_wire_value(bytes).await.map_err(wire_err)
 }
 
 /// @emoji 🧰️ Public convenience for every crate above this one that hand-builds a `DB_PATHMAP_SCHEMA`
@@ -147,8 +149,8 @@ fn decode_pathmap(bytes: &[u8]) -> Result<DslValue, DbError> {
 /// instead hand-rolls `serde_json::to_vec` produces bytes `decode_pathmap` cannot read (it expects
 /// `store::pack_rt`'s binary encoding, not raw JSON text), which is exactly the "wire error:
 /// truncated" bug this function exists to make structurally impossible to repeat.
-pub fn encode_pathmap_json(value: &serde_json::Value) -> Result<Vec<u8>, DbError> {
-    Ok(encode_pathmap(&dsl::to_dsl_value(value).map_err(dsl_err)?))
+pub async fn encode_pathmap_json(value: &serde_json::Value) -> Result<Vec<u8>, DbError> {
+    Ok(encode_pathmap(&dsl::to_dsl_value(value).map_err(dsl_err)?).await)
 }
 
 /// @emoji 🧰️ Inverse of `encode_pathmap_json` — also the general "read back one stored/queried
@@ -157,45 +159,47 @@ pub fn encode_pathmap_json(value: &serde_json::Value) -> Result<Vec<u8>, DbError
 /// wire bytes (single value OR whole pathmap object, both are just a `DslValue` tree to this
 /// codec), never raw JSON text — a caller reaching for `serde_json::from_slice` on them directly
 /// hits exactly the "expected value" parse error this function exists to make impossible.
-pub fn decode_pathmap_json(bytes: &[u8]) -> Result<serde_json::Value, DbError> {
-    dsl::from_dsl_value(decode_pathmap(bytes)?).map_err(dsl_err)
+pub async fn decode_pathmap_json(bytes: &[u8]) -> Result<serde_json::Value, DbError> {
+    dsl::from_dsl_value(decode_pathmap(bytes).await?).map_err(dsl_err)
 }
 
 /// @emoji 🧮️ Flattens a diff/inverse pathmap object into `(path, Some(value) | None)` pairs per this
 /// module's generic path-value convention (see module doc). Errors if `value` is not an object —
 /// this crate's own schema-erased documents have no other shape it can interpret.
-fn entries_from_value(value: &DslValue) -> Result<Vec<(String, Option<DslValue>)>, DbError> {
+async fn entries_from_value(value: &DslValue) -> Result<Vec<(String, Option<DslValue>)>, DbError> {
     let object = value.as_object().ok_or_else(|| DbError::InvalidArgument("diff/inverse payload must be a pathmap object".to_string()))?;
     Ok(object.iter().map(|(path, entry)| (path.clone(), if entry.is_null() { None } else { Some(entry.clone()) })).collect())
 }
 
 /// @emoji ➡️ Entries for an envelope's forward diff — empty (not an error) for any schema other
 /// than `DB_PATHMAP_SCHEMA`, see its doc.
-fn diff_entries(diff: &protocol::ArtifactDiff) -> Result<Vec<(String, Option<DslValue>)>, DbError> {
+async fn diff_entries(diff: &protocol::ArtifactDiff) -> Result<Vec<(String, Option<DslValue>)>, DbError> {
     if diff.schema.0 != DB_PATHMAP_SCHEMA {
         return Ok(Vec::new());
     }
-    entries_from_value(&decode_pathmap(&diff.payload)?)
+    entries_from_value(&decode_pathmap(&diff.payload).await?).await
 }
 
 /// @emoji ↩️ Entries for an envelope's inverse diff (the `undo` pipeline's source) — same
 /// foreign-schema handling as `diff_entries`.
-fn inverse_entries(inverse: &protocol::InverseMutation) -> Result<Vec<(String, Option<DslValue>)>, DbError> {
+async fn inverse_entries(inverse: &protocol::InverseMutation) -> Result<Vec<(String, Option<DslValue>)>, DbError> {
     if inverse.schema.0 != DB_PATHMAP_SCHEMA {
         return Ok(Vec::new());
     }
-    entries_from_value(&decode_pathmap(&inverse.payload)?)
+    entries_from_value(&decode_pathmap(&inverse.payload).await?).await
 }
 
 /// @emoji 🧮️ The inverse of `entries_from_value` — rebuilds a JSON object from path-value pairs,
 /// `None` becoming an explicit `null` tombstone. Used by `undo` to construct a compensating
 /// envelope's diff/inverse payloads.
+// 🚫️async: E1 pure accessor, always used as `&entries_to_value(...)` inline into another call — see R9
 fn entries_to_value(entries: &[(String, Option<DslValue>)]) -> DslValue {
     DslValue::Object(entries.iter().map(|(path, value)| (path.clone(), value.clone().unwrap_or(DslValue::Null))).collect())
 }
 
 /// @emoji 👣️ The `TouchedSet` a set of entries would write — shared by `DocumentState::
 /// apply_entries` and preview publishing.
+// 🚫️async: E1 pure accessor, `db_state::TouchedSet`'s own methods are sync — see R9
 fn entries_touched(entries: &[(String, Option<DslValue>)]) -> db_state::TouchedSet {
     let mut touched = db_state::TouchedSet::new();
     for (path, _) in entries {
@@ -213,7 +217,7 @@ fn entries_touched(entries: &[(String, Option<DslValue>)]) -> db_state::TouchedS
 /// `timestamp`) — see the module doc's design-choice note on why this crate is allowed to. A
 /// caller wanting per-sub-path granularity builds the JSON object directly via
 /// `CommandBatch::new`/`entries_to_value` instead of this whole-projection convenience.
-pub fn envelope_from_operation<P, Op>(
+pub async fn envelope_from_operation<P, Op>(
     document: protocol::ArtifactId,
     path: &str,
     op: &Op,
@@ -226,19 +230,19 @@ where
     P: serde::Serialize,
     Op: protocol::Mutation<P>,
 {
-    let diff = op.diff(base);
-    let post = diff.diff().apply(base).map_err(|error| DbError::InvalidArgument(error.to_string()))?;
+    let diff = op.diff(base).await;
+    let post = diff.diff().await.apply(base).await.map_err(|error| DbError::InvalidArgument(error.to_string()))?;
     let forward = DslValue::Object(vec![(path.to_string(), dsl::to_dsl_value(&post).map_err(dsl_err)?)]);
     let backward = DslValue::Object(vec![(path.to_string(), dsl::to_dsl_value(base).map_err(dsl_err)?)]);
     let schema = protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string());
     Ok(protocol::MutationEnvelope {
-        mutation_id: op.mutation_id().unwrap_or(default_mutation_id),
+        mutation_id: op.mutation_id().await.unwrap_or(default_mutation_id),
         document_id: document,
-        actor: op.author_id().unwrap_or(default_actor),
-        dependencies: op.dependencies(),
-        diff: protocol::ArtifactDiff { schema: schema.clone(), payload: encode_pathmap(&forward) },
-        inverse: protocol::InverseMutation { schema, payload: encode_pathmap(&backward) },
-        timestamp: op.timestamp().unwrap_or(default_timestamp),
+        actor: op.author_id().await.unwrap_or(default_actor),
+        dependencies: op.dependencies().await,
+        diff: protocol::ArtifactDiff { schema: schema.clone(), payload: encode_pathmap(&forward).await },
+        inverse: protocol::InverseMutation { schema, payload: encode_pathmap(&backward).await },
+        timestamp: op.timestamp().await.unwrap_or(default_timestamp),
     })
 }
 //#endregion 🔖️Bridge
@@ -265,6 +269,7 @@ pub struct ConflictRecord {
 /// ConflictDetector` use. No per-operation conflict-declaration tag anymore (C10 deleted the CRDT-era
 /// vocabulary): a `CommandTouch` carries only what `db_conflict::ConflictDetector` actually needs to detect —
 /// identity, kind, timestamp, and the regions it touched.
+// 🚫️async: E1 pure accessor consumed by a sync Iterator::map closure — see R9
 fn command_touch(envelope: &protocol::MutationEnvelope, touched: &db_state::TouchedSet) -> db_conflict::CommandTouch {
     let touch = db_conflict::CommandTouch::new(envelope.mutation_id.clone(), envelope.actor.clone(), db_conflict::CommandKind::from(envelope.diff.schema.0.as_str()), envelope.timestamp);
     touched.regions.iter().fold(touch, |touch, region| touch.touch(region.clone()))
@@ -278,14 +283,14 @@ fn command_touch(envelope: &protocol::MutationEnvelope, touched: &db_state::Touc
 /// see `🔖️Conflict`'s doc) so it reads as an adjusted-but-applied write (`mutation.clamped`); a
 /// violated `Constraint` reads as a broken structural invariant (`mutation.invariant`) — the two
 /// `Warning`/`Fatal` codes from the frozen 7 that fit each shape.
-fn grade_conflict_record(record: &db_conflict::ConflictRecord) -> protocol::MutationMessage {
+async fn grade_conflict_record(record: &db_conflict::ConflictRecord) -> protocol::MutationMessage {
     match &record.kind {
         db_conflict::ConflictKind::TouchedRegion(regions) => {
             let target: Vec<String> = regions.iter().map(|region| region.path.clone()).collect();
-            protocol::MutationMessage::warn("mutation.clamped", format!("command {} touches region(s) also touched by concurrent command {}", record.command_id.0, record.conflicting_with.0)).at(target)
+            protocol::MutationMessage::warn("mutation.clamped", format!("command {} touches region(s) also touched by concurrent command {}", record.command_id.0, record.conflicting_with.0)).await.at(target).await
         }
         db_conflict::ConflictKind::Constraint(description) => {
-            protocol::MutationMessage::fatal("mutation.invariant", format!("command {} violates constraint '{description}' held by concurrent command {}", record.command_id.0, record.conflicting_with.0)).at([description.clone()])
+            protocol::MutationMessage::fatal("mutation.invariant", format!("command {} violates constraint '{description}' held by concurrent command {}", record.command_id.0, record.conflicting_with.0)).await.at([description.clone()]).await
         }
     }
 }
@@ -345,22 +350,23 @@ struct DocumentState {
 }
 
 impl DocumentState {
+    // 🚫️async: E1 pure constructor, `db_state::PMap::new` is sync — see R9
     fn new() -> DocumentState {
         DocumentState { values: db_state::PMap::new(), last_writer: db_state::PMap::new() }
     }
 
-    fn get(&self, path: &str) -> Option<Vec<u8>> {
+    async fn get(&self, path: &str) -> Option<Vec<u8>> {
         self.values.get(&path.to_string()).cloned()
     }
 
-    fn content_hash(&self) -> ContentHash {
+    async fn content_hash(&self) -> ContentHash {
         self.values.content_hash()
     }
 
     /// @emoji ✍️ Applies one envelope's flattened path-value entries, returning the new state, the
     /// `TouchedSet` it wrote, and any conflicts (a path whose last writer is neither `mutation_id`
     /// itself nor a declared `dependencies` member).
-    fn apply_entries(&self, mutation_id: &protocol::MutationId, dependencies: &[protocol::MutationId], entries: &[(String, Option<DslValue>)]) -> Result<(DocumentState, db_state::TouchedSet, Vec<ConflictRecord>), DbError> {
+    async fn apply_entries(&self, mutation_id: &protocol::MutationId, dependencies: &[protocol::MutationId], entries: &[(String, Option<DslValue>)]) -> Result<(DocumentState, db_state::TouchedSet, Vec<ConflictRecord>), DbError> {
         let mut values = self.values.clone();
         let mut last_writer = self.last_writer.clone();
         let mut touched = db_state::TouchedSet::new();
@@ -374,7 +380,7 @@ impl DocumentState {
             match value {
                 Some(dsl_value) => {
                     let bytes = store::pack_rt::encode_wire_value(dsl_value);
-                    values = values.insert(path.clone(), bytes);
+                    values = values.insert(path.clone(), bytes.await);
                 }
                 None => values = values.remove(path),
             }
@@ -392,7 +398,7 @@ impl DocumentState {
 /// real deployment supplies whatever backend it wants at `ArtifactEngineConfig` construction time.
 /// `db_engine`'s `SecurityAuthzHook` is the real `db_security::SecurityGate`-backed implementation.
 pub trait AuthzHook: Send + Sync {
-    fn authorize(&self, actor: &protocol::ActorId, envelope: &protocol::MutationEnvelope) -> Result<(), DbError>;
+    async fn authorize(&self, actor: &protocol::ActorId, envelope: &protocol::MutationEnvelope) -> Result<(), DbError>;
 }
 
 /// @emoji 🟢️ The default `AuthzHook`: authorizes everything. Correct for a single-tenant/test
@@ -402,7 +408,7 @@ pub trait AuthzHook: Send + Sync {
 pub struct AllowAll;
 
 impl AuthzHook for AllowAll {
-    fn authorize(&self, _actor: &protocol::ActorId, _envelope: &protocol::MutationEnvelope) -> Result<(), DbError> {
+    async fn authorize(&self, _actor: &protocol::ActorId, _envelope: &protocol::MutationEnvelope) -> Result<(), DbError> {
         Ok(())
     }
 }
@@ -516,9 +522,9 @@ impl<R: semio_framework_async::HostAsyncRuntime, A: AuthzHook + 'static, V: Vers
     // own dedicated actor thread (R4 clause 2/4: the thread IS the executor for this bridge), so
     // they stay plain sync fns and drive their async storage calls via `db_actor::block_on`.
     pub fn create(document: protocol::ArtifactId, storage: Arc<db_storage::DbBackend<R>>, config: ArtifactEngineConfig<A, V>, now_ms: u64) -> Result<ArtifactEngine<R, A, V>, DbError> {
-        let core_id = to_core_document_id(&document);
+        let core_id = db_actor::block_on(to_core_document_id(&document));
         let wal = db_actor::block_on(async { db_wal::ArtifactWal::create(&storage.wal().await, core_id.clone(), db_wal::GroupCommitPolicy::default(), now_ms).await })?;
-        Ok(ArtifactEngine::assemble(document, core_id, storage, wal, None, config))
+        Ok(db_actor::block_on(ArtifactEngine::assemble(document, core_id, storage, wal, None, config)))
     }
 
     /// @emoji 🚑️ Materializes a document as initial ⊕ latest `db_snapshot` generation ⊕ WAL suffix
@@ -529,22 +535,22 @@ impl<R: semio_framework_async::HostAsyncRuntime, A: AuthzHook + 'static, V: Vers
     /// yet).
     // 🚫️async: E5 executor bridge — see `create`'s doc; same actor-thread bridge.
     pub fn open(document: protocol::ArtifactId, storage: &Arc<db_storage::DbBackend<R>>, config: ArtifactEngineConfig<A, V>, now_ms: u64) -> Result<(ArtifactEngine<R, A, V>, MaterializeReport), DbError> {
-        let core_id = to_core_document_id(&document);
+        let core_id = db_actor::block_on(to_core_document_id(&document));
         let mut report = MaterializeReport::default();
 
         let mut state = DocumentState::new();
         let mut applied_head_seq = 0u64;
         let mut vcs_head = None;
         let snapshot_facet = db_actor::block_on(storage.snapshot());
-        let snapshot_manager = db_snapshot::SnapshotManager::new(&snapshot_facet);
+        let snapshot_manager = db_actor::block_on(db_snapshot::SnapshotManager::new(&snapshot_facet));
         if let Some((generation, descriptor)) = db_actor::block_on(snapshot_manager.load_latest(&core_id))? {
             report.from_snapshot = true;
             report.snapshot_generation = Some(generation);
             let combined = db_actor::block_on(snapshot_manager.materialize_chain(&core_id, generation))?;
-            let handle = db_snapshot::open_latest(&combined)?;
+            let handle = db_actor::block_on(db_snapshot::open_latest(&combined))?;
             for hash in &descriptor.roots {
-                let page_bytes = db_snapshot::read_page(&combined, &handle, *hash)?;
-                for (path, value) in decode_state_page(&page_bytes)? {
+                let page_bytes = db_actor::block_on(db_snapshot::read_page(&combined, &handle, *hash))?;
+                for (path, value) in db_actor::block_on(decode_state_page(&page_bytes))? {
                     state.values = match value {
                         Some(bytes) => state.values.insert(path, bytes),
                         None => state.values.remove(&path),
@@ -559,7 +565,7 @@ impl<R: semio_framework_async::HostAsyncRuntime, A: AuthzHook + 'static, V: Vers
 
         let (wal, wal_recovery) = db_actor::block_on(async { db_wal::ArtifactWal::open(&storage.wal().await, core_id.clone(), db_wal::GroupCommitPolicy::default(), now_ms).await })?;
         report.torn_tail_bytes = wal_recovery.torn_tail_bytes;
-        let mut engine = ArtifactEngine::assemble(document, core_id.clone(), storage.clone(), wal, vcs_head, config);
+        let mut engine = db_actor::block_on(ArtifactEngine::assemble(document, core_id.clone(), storage.clone(), wal, vcs_head, config));
         engine.state = state;
         engine.frontier.head_seq = applied_head_seq;
 
@@ -571,7 +577,7 @@ impl<R: semio_framework_async::HostAsyncRuntime, A: AuthzHook + 'static, V: Vers
                 db_wal::WalRecord::TxBegin { .. } => batch_ids.clear(),
                 db_wal::WalRecord::Command(bytes) => {
                     let mut pos = 0usize;
-                    let envelope = protocol::decode_envelope(&bytes, &mut pos).map_err(|err| DbError::Corrupt(format!("wal command record is not a valid operation envelope: {err}")))?;
+                    let envelope = db_actor::block_on(protocol::decode_envelope(&bytes, &mut pos)).map_err(|err| DbError::Corrupt(format!("wal command record is not a valid operation envelope: {err}")))?;
                     seen += 1;
                     batch_ids.insert(envelope.mutation_id.0.clone());
                     if seen <= applied_head_seq {
@@ -580,7 +586,7 @@ impl<R: semio_framework_async::HostAsyncRuntime, A: AuthzHook + 'static, V: Vers
                         engine.applied.insert(envelope.mutation_id.0.clone(), envelope);
                         continue;
                     }
-                    let (touched, _conflicts, _) = engine.apply_one(&envelope, &batch_ids)?;
+                    let (touched, _conflicts, _) = db_actor::block_on(engine.apply_one(&envelope, &batch_ids))?;
                     let touch = command_touch(&envelope, &touched);
                     if engine.recent_touches.len() >= MAX_RECENT_TOUCHES {
                         engine.recent_touches.pop_front();
@@ -599,7 +605,7 @@ impl<R: semio_framework_async::HostAsyncRuntime, A: AuthzHook + 'static, V: Vers
         Ok((engine, report))
     }
 
-    fn assemble(protocol_document: protocol::ArtifactId, core_id: ArtifactId, storage: Arc<db_storage::DbBackend<R>>, wal: db_wal::ArtifactWal, vcs_head: Option<String>, config: ArtifactEngineConfig<A, V>) -> ArtifactEngine<R, A, V> {
+    async fn assemble(protocol_document: protocol::ArtifactId, core_id: ArtifactId, storage: Arc<db_storage::DbBackend<R>>, wal: db_wal::ArtifactWal, vcs_head: Option<String>, config: ArtifactEngineConfig<A, V>) -> ArtifactEngine<R, A, V> {
         let preview_budgets = db_preview::PreviewBudgets { default_ttl_ms: config.preview_ttl_ms, max_ttl_ms: config.preview_ttl_ms, ..db_preview::PreviewBudgets::default() };
         ArtifactEngine {
             document: core_id.clone(),
@@ -628,7 +634,7 @@ impl<R: semio_framework_async::HostAsyncRuntime, A: AuthzHook + 'static, V: Vers
     /// members as dependencies). Returns `(touched, conflicts, applied_now)`; `applied_now` is
     /// `false` (with empty touched/conflicts) if `envelope.mutation_id` was already applied in an
     /// earlier commit — the per-envelope half of this crate's dedupe law.
-    fn apply_one(&mut self, envelope: &protocol::MutationEnvelope, batch_ids: &HashSet<String>) -> Result<(db_state::TouchedSet, Vec<ConflictRecord>, bool), DbError> {
+    async fn apply_one(&mut self, envelope: &protocol::MutationEnvelope, batch_ids: &HashSet<String>) -> Result<(db_state::TouchedSet, Vec<ConflictRecord>, bool), DbError> {
         if self.applied.contains_key(&envelope.mutation_id.0) {
             return Ok((db_state::TouchedSet::new(), Vec::new(), false));
         }
@@ -637,9 +643,9 @@ impl<R: semio_framework_async::HostAsyncRuntime, A: AuthzHook + 'static, V: Vers
                 return Err(DbError::InvalidArgument(format!("operation {} depends on unseen operation {}", envelope.mutation_id.0, dependency.0)));
             }
         }
-        let entries = diff_entries(&envelope.diff)?;
+        let entries = diff_entries(&envelope.diff).await?;
         check_len(entries.len() as u64, self.config.limits.max_batch_commands as u64, "db_artifact::diff_entries")?;
-        let (new_state, touched, conflicts) = self.state.apply_entries(&envelope.mutation_id, &envelope.dependencies, &entries)?;
+        let (new_state, touched, conflicts) = self.state.apply_entries(&envelope.mutation_id, &envelope.dependencies, &entries).await?;
         self.state = new_state;
         self.applied.insert(envelope.mutation_id.0.clone(), envelope.clone());
         let actor_seq = self.actor_seq.entry(envelope.actor.0.clone()).or_insert(0);
@@ -656,7 +662,7 @@ impl<R: semio_framework_async::HostAsyncRuntime, A: AuthzHook + 'static, V: Vers
     // owned payload on the actor-mailbox side one level up. Keeping ownership here leaves room for
     // a future zero-copy WAL append that moves `batch.envelopes` directly into the write path.
     #[allow(clippy::needless_pass_by_value)]
-    pub fn submit(&mut self, batch: CommandBatch, options: SubmitOptions, now_ms: u64) -> Result<CommandReceipt, DbError> {
+    pub async fn submit(&mut self, batch: CommandBatch, options: SubmitOptions, now_ms: u64) -> Result<CommandReceipt, DbError> {
         // admit
         check_len(batch.envelopes.len() as u64, self.config.limits.max_batch_commands as u64, "db_artifact::batch_commands")?;
         for envelope in &batch.envelopes {
@@ -682,13 +688,13 @@ impl<R: semio_framework_async::HostAsyncRuntime, A: AuthzHook + 'static, V: Vers
         for envelope in &batch.envelopes {
             // authz: the `AuthzHook` seam (defaults to `AllowAll`; `db_engine`'s `SecurityAuthzHook`
             // wraps a real `db_security::SecurityGate` here).
-            self.config.authz.authorize(&envelope.actor, envelope)?;
+            self.config.authz.authorize(&envelope.actor, envelope).await?;
 
             // authz (defense in depth): the newer, real `db_security::SecurityGate` gate, keyed by a
             // permissive principal synthesized from the envelope's own actor (see
             // `ArtifactEngineConfig::security`'s doc) — additive, does not replace `authz` above.
             let principal = db_security::Principal::new(envelope.actor.clone(), db_security::TenantId::from("default"), vec!["member".to_string()]);
-            self.config.security.admit_command(&principal, &db_security::TenantId::from("default"), &envelope.document_id, &envelope.diff.schema.0, &envelope.actor, &envelope.mutation_id, now_ms)?;
+            self.config.security.admit_command(&principal, &db_security::TenantId::from("default"), &envelope.document_id, &envelope.diff.schema.0, &envelope.actor, &envelope.mutation_id, now_ms).await?;
 
             // 🎯️ W5: `WalRecord::Command`'s bytes are `protocol::encode_envelope`'s binary record now
             // (M-C's "storage AND communication both binary") — `db_sync::replay_sync_state` reads
@@ -696,11 +702,11 @@ impl<R: semio_framework_async::HostAsyncRuntime, A: AuthzHook + 'static, V: Vers
             // semio_hub bootstrap/catch-up, so this crate's own write-and-read-back convention below must
             // agree with it byte-for-byte.
             let mut envelope_bytes = Vec::new();
-            protocol::encode_envelope(envelope, &mut envelope_bytes);
+            protocol::encode_envelope(envelope, &mut envelope_bytes).await;
             check_len(envelope_bytes.len() as u64, self.config.limits.max_command_bytes, "db_artifact::envelope_bytes")?;
 
             // base-resolve/deps + execute
-            let (touched, conflicts, applied_now) = self.apply_one(envelope, &batch_ids)?;
+            let (touched, conflicts, applied_now) = self.apply_one(envelope, &batch_ids).await?;
             batch_ids.insert(envelope.mutation_id.0.clone());
             if !applied_now {
                 continue;
@@ -723,7 +729,7 @@ impl<R: semio_framework_async::HostAsyncRuntime, A: AuthzHook + 'static, V: Vers
         if newly_applied.is_empty() {
             // Every envelope in this (re-)submitted batch was already durable individually — a
             // full no-op commit, per-envelope half of the dedupe law (see `apply_one`'s doc).
-            let receipt = CommandReceipt { command_id, frontier: self.frontier.clone(), durability: options.durability, conflicts: Vec::new(), state_hash: Some(self.state.content_hash()), messages: Vec::new() };
+            let receipt = CommandReceipt { command_id, frontier: self.frontier.clone(), durability: options.durability, conflicts: Vec::new(), state_hash: Some(self.state.content_hash().await), messages: Vec::new() };
             self.applied_receipts.insert(receipt.command_id.0.clone(), receipt.clone());
             return Ok(receipt);
         }
@@ -735,14 +741,19 @@ impl<R: semio_framework_async::HostAsyncRuntime, A: AuthzHook + 'static, V: Vers
         let new_ids: HashSet<&str> = newly_applied.iter().map(|(envelope, _, _)| envelope.mutation_id.0.as_str()).collect();
         let batch_touches: Vec<db_conflict::CommandTouch> = newly_applied.iter().map(|(envelope, touched, _)| command_touch(envelope, touched)).collect();
         let probe: Vec<db_conflict::CommandTouch> = self.recent_touches.iter().cloned().chain(batch_touches.iter().cloned()).collect();
-        let messages: Vec<protocol::MutationMessage> = db_conflict::ConflictDetector::new()
+        // 🔀️ `grade_conflict_record` genuinely awaits (`protocol::MutationMessage::warn`/`fatal`),
+        // so this can't stay an `Iterator::map` chain (R10 residue shape 1: `.await` inside a sync
+        // closure) — hoisted into an explicit async loop instead.
+        let mut messages: Vec<protocol::MutationMessage> = Vec::new();
+        for record in db_conflict::ConflictDetector::new()
             .detect(&probe)
             .iter()
             .filter(|record| new_ids.contains(record.command_id.0.as_str()) || new_ids.contains(record.conflicting_with.0.as_str()))
-            .map(grade_conflict_record)
-            .collect();
-        if let Some(worst) = protocol::worst_level(&messages) {
-            if options.policy.rejects(worst) {
+        {
+            messages.push(grade_conflict_record(record).await);
+        }
+        if let Some(worst) = protocol::worst_level(&messages).await {
+            if options.policy.rejects(worst).await {
                 return Err(DbError::Rejected { policy: options.policy, worst, messages });
             }
         }
@@ -763,7 +774,7 @@ impl<R: semio_framework_async::HostAsyncRuntime, A: AuthzHook + 'static, V: Vers
 
         // publish: compute + WAL-append the new frontier in the same transaction as its commands
         let new_frontier =
-            Frontier { document: self.document.clone(), head_seq: self.frontier.head_seq + newly_applied.len() as u64, commit_seq: self.frontier.commit_seq + 1, chain_hash: self.state.content_hash().0, epoch: self.frontier.epoch };
+            Frontier { document: self.document.clone(), head_seq: self.frontier.head_seq + newly_applied.len() as u64, commit_seq: self.frontier.commit_seq + 1, chain_hash: self.state.content_hash().await.0, epoch: self.frontier.epoch };
         records.push(db_wal::WalRecord::Frontier(new_frontier.clone()));
 
         // WAL append + durability (ArtifactWal::submit wraps `records` in its own TxBegin/TxCommit)
@@ -774,17 +785,17 @@ impl<R: semio_framework_async::HostAsyncRuntime, A: AuthzHook + 'static, V: Vers
 
         // publish: durable indices
         let index_facet = db_actor::block_on(self.storage.index());
-        let command_index = db_index::CommandIndex::new(&index_facet, self.document.clone());
-        let inverse_index = db_index::InverseIndex::new(&index_facet, self.document.clone());
-        let actor_seq_index = db_index::ActorSeqIndex::new(&index_facet, self.document.clone());
-        db_actor::block_on(db_index::FrontierIndex::new(&index_facet, self.document.clone()).record(&new_frontier))?;
+        let command_index = db_index::CommandIndex::new(&index_facet, self.document.clone()).await;
+        let inverse_index = db_index::InverseIndex::new(&index_facet, self.document.clone()).await;
+        let actor_seq_index = db_index::ActorSeqIndex::new(&index_facet, self.document.clone()).await;
+        db_actor::block_on(db_index::FrontierIndex::new(&index_facet, self.document.clone()).await.record(&new_frontier))?;
         let base_seq = self.frontier.head_seq - newly_applied.len() as u64;
         for (offset, (envelope, _, _)) in newly_applied.iter().enumerate() {
             let seq = base_seq + offset as u64 + 1;
-            let location = db_index::RecordLocation { segment: self.wal.active_segment_index(), offset: seq, len: 1 };
+            let location = db_index::RecordLocation { segment: self.wal.active_segment_index().await, offset: seq, len: 1 };
             db_actor::block_on(command_index.record(seq, location))?;
             db_actor::block_on(inverse_index.record(seq, location))?;
-            let core_actor = to_core_actor_id(&envelope.actor);
+            let core_actor = to_core_actor_id(&envelope.actor).await;
             let actor_seq = *self.actor_seq.get(&envelope.actor.0).unwrap_or(&0);
             db_actor::block_on(actor_seq_index.record(&core_actor, actor_seq, seq))?;
         }
@@ -792,7 +803,7 @@ impl<R: semio_framework_async::HostAsyncRuntime, A: AuthzHook + 'static, V: Vers
         // project: run every registered projection over each newly-applied envelope
         let projection_classes = (self.config.projections)();
         if !projection_classes.is_empty() {
-            let engine = db_projection::ProjectionEngine::new(&index_facet, self.document.clone(), projection_classes)?;
+            let engine = db_projection::ProjectionEngine::new(&index_facet, self.document.clone(), projection_classes).await?;
             for (offset, (envelope, touched, _)) in newly_applied.iter().enumerate() {
                 db_actor::block_on(engine.apply_envelope(base_seq + offset as u64 + 1, envelope, touched))?;
             }
@@ -808,18 +819,22 @@ impl<R: semio_framework_async::HostAsyncRuntime, A: AuthzHook + 'static, V: Vers
         for (envelope, _, _) in &newly_applied {
             match self.config.version_graph.record_change(
                 &self.document,
-                ChangeRecord { parent: None, content_hash: self.state.content_hash(), author: to_core_actor_id(&envelope.actor), message: format!("operation {}", envelope.mutation_id.0), timestamp_ms: now_ms },
-            ) {
+                ChangeRecord { parent: None, content_hash: self.state.content_hash().await, author: to_core_actor_id(&envelope.actor).await, message: format!("operation {}", envelope.mutation_id.0), timestamp_ms: now_ms },
+            ).await {
                 Ok(_) | Err(DbError::Unimplemented(_)) => {}
                 Err(other) => return Err(other),
             }
         }
 
         // live-query notify
-        let _ = self.refresh_live_queries();
+        // 🩹️ R13: was `let _ = self.refresh_live_queries();` — silently dropped the future, so
+        // this notify step never actually ran. `.await`ed now; the `Vec<(u64, QueryDiff)>` result
+        // is genuinely unneeded here (callers observe diffs via their own subscription poll), so
+        // `let _ =` on the awaited, resolved value is the correct fire-and-forget shape.
+        let _ = self.refresh_live_queries().await;
 
         // receipt
-        let receipt = CommandReceipt { command_id, frontier: new_frontier, durability: options.durability, conflicts: conflicts_all, state_hash: Some(self.state.content_hash()), messages };
+        let receipt = CommandReceipt { command_id, frontier: new_frontier, durability: options.durability, conflicts: conflicts_all, state_hash: Some(self.state.content_hash().await), messages };
         self.applied_receipts.insert(receipt.command_id.0.clone(), receipt.clone());
         Ok(receipt)
     }
@@ -829,47 +844,47 @@ impl<R: semio_framework_async::HostAsyncRuntime, A: AuthzHook + 'static, V: Vers
     /// envelope's OWN inverse can re-undo the undo), and submits it as a fresh, ordinary command
     /// depending on `target` — undo is just another commit, not a WAL rewrite. This is the crate's
     /// "inverse undo, using protocol's inverse-operation machinery".
-    pub fn undo(&mut self, target: &protocol::MutationId, undo_mutation_id: protocol::MutationId, actor: protocol::ActorId, now_ms: u64) -> Result<CommandReceipt, DbError> {
+    pub async fn undo(&mut self, target: &protocol::MutationId, undo_mutation_id: protocol::MutationId, actor: protocol::ActorId, now_ms: u64) -> Result<CommandReceipt, DbError> {
         let original = self.applied.get(&target.0).cloned().ok_or_else(|| DbError::NotFound(format!("operation {} not found for undo", target.0)))?;
-        let undo_diff_entries = inverse_entries(&original.inverse)?;
-        let redo_inverse_entries = diff_entries(&original.diff)?;
+        let undo_diff_entries = inverse_entries(&original.inverse).await?;
+        let redo_inverse_entries = diff_entries(&original.diff).await?;
         let compensating = protocol::MutationEnvelope {
             mutation_id: undo_mutation_id,
             document_id: self.protocol_document.clone(),
             actor,
             dependencies: vec![target.clone()],
-            diff: protocol::ArtifactDiff { schema: original.inverse.schema.clone(), payload: encode_pathmap(&entries_to_value(&undo_diff_entries)) },
-            inverse: protocol::InverseMutation { schema: original.diff.schema, payload: encode_pathmap(&entries_to_value(&redo_inverse_entries)) },
-            timestamp: protocol::HybridLogicalTimestamp::new(0, now_ms),
+            diff: protocol::ArtifactDiff { schema: original.inverse.schema.clone(), payload: encode_pathmap(&entries_to_value(&undo_diff_entries)).await },
+            inverse: protocol::InverseMutation { schema: original.diff.schema, payload: encode_pathmap(&entries_to_value(&redo_inverse_entries)).await },
+            timestamp: protocol::HybridLogicalTimestamp::new(0, now_ms).await,
         };
-        self.submit(CommandBatch::new(vec![compensating])?, SubmitOptions::default(), now_ms)
+        self.submit(CommandBatch::new(vec![compensating]).await?, SubmitOptions::default(), now_ms).await
     }
 
-    pub fn get(&self, path: &str) -> Option<Vec<u8>> {
-        self.state.get(path)
+    pub async fn get(&self, path: &str) -> Option<Vec<u8>> {
+        self.state.get(path).await
     }
 
-    pub fn frontier(&self) -> Frontier {
+    pub async fn frontier(&self) -> Frontier {
         self.frontier.clone()
     }
 
-    pub fn commit_log(&self) -> &[CommitNotification] {
+    pub async fn commit_log(&self) -> &[CommitNotification] {
         &self.commit_log
     }
 
     /// @emoji 📤️ Hands out (and clears) every effect queued since the last drain.
-    pub fn drain_outbox(&mut self) -> Vec<OutboxEntry> {
+    pub async fn drain_outbox(&mut self) -> Vec<OutboxEntry> {
         std::mem::take(&mut self.outbox)
     }
 
     //#region 🔖️Snapshot
     /// @emoji 📸️ Publishes a new `db_snapshot` generation of the whole current `DocumentState` —
     /// new this revision; the counterpart `open` reads back to accelerate materialization.
-    pub fn snapshot_now(&self, now_ms: u64) -> Result<u64, DbError> {
+    pub async fn snapshot_now(&self, now_ms: u64) -> Result<u64, DbError> {
         let entries: Vec<(String, Option<Vec<u8>>)> = self.state.values.iter().map(|(path, bytes)| (path.clone(), Some(bytes.clone()))).collect();
-        let page = db_state::Page::new(encode_state_page(&entries));
+        let page = db_state::Page::new(encode_state_page(&entries).await);
         let snapshot_facet = db_actor::block_on(self.storage.snapshot());
-        let snapshot_manager = db_snapshot::SnapshotManager::new(&snapshot_facet);
+        let snapshot_manager = db_snapshot::SnapshotManager::new(&snapshot_facet).await;
         let origin = if db_actor::block_on(snapshot_manager.load_latest(&self.document))?.is_some() { db_snapshot::SnapshotOrigin::Incremental } else { db_snapshot::SnapshotOrigin::FullBaseline };
         let body = db_snapshot::SnapshotBody {
             head_seq: self.frontier.head_seq,
@@ -896,9 +911,9 @@ impl<R: semio_framework_async::HostAsyncRuntime, A: AuthzHook + 'static, V: Vers
     // small, cheap-to-move value types — taking them by reference here would only push the
     // ownership question onto every caller for no benefit.
     #[allow(clippy::needless_pass_by_value)]
-    pub fn query(&self, query: db_query::Query, consistency: db_query::Consistency) -> Result<db_query::QueryResult, DbError> {
+    pub async fn query(&self, query: db_query::Query, consistency: db_query::Consistency) -> Result<db_query::QueryResult, DbError> {
         let index_facet = db_actor::block_on(self.storage.index());
-        let resolver = db_query::IndexConsistencyResolver { commits: db_index::CommitIndex::new(&index_facet, self.document.clone()), frontiers: db_index::FrontierIndex::new(&index_facet, self.document.clone()) };
+        let resolver = db_query::IndexConsistencyResolver { commits: db_index::CommitIndex::new(&index_facet, self.document.clone()).await, frontiers: db_index::FrontierIndex::new(&index_facet, self.document.clone()).await };
         // A fresh document has no recorded frontier yet; canonical reads still succeed via the
         // in-memory frontier, so only consult the resolver for modes that truly need the index.
         if !matches!(consistency, db_query::Consistency::Canonical) {
@@ -909,20 +924,20 @@ impl<R: semio_framework_async::HostAsyncRuntime, A: AuthzHook + 'static, V: Vers
     }
 
     /// @emoji 📡️ Registers a live query, returning its subscription id — new this revision.
-    pub fn subscribe(&mut self, spec: db_query::LiveQuerySpec) -> u64 {
+    pub async fn subscribe(&mut self, spec: db_query::LiveQuerySpec) -> u64 {
         let id = self.next_live_query_id;
         self.next_live_query_id += 1;
-        self.live_queries.insert(id, db_query::LiveQuery::new(spec));
+        self.live_queries.insert(id, db_query::LiveQuery::new(spec).await);
         id
     }
 
-    pub fn unsubscribe(&mut self, id: u64) {
+    pub async fn unsubscribe(&mut self, id: u64) {
         self.live_queries.remove(&id);
     }
 
     /// @emoji 📡️ Live-query notify: re-evaluates every registered live query and returns what
     /// changed. Called automatically at the end of `submit`; also callable directly.
-    pub fn refresh_live_queries(&mut self) -> Vec<(u64, db_query::QueryDiff)> {
+    pub async fn refresh_live_queries(&mut self) -> Vec<(u64, db_query::QueryDiff)> {
         let source = StateQuerySource(&self.state.values);
         let limits = db_query::QueryLimits::default();
         let mut diffs = Vec::new();
@@ -945,10 +960,10 @@ impl<R: semio_framework_async::HostAsyncRuntime, A: AuthzHook + 'static, V: Vers
     /// this crate's original path-granular last-writer detection (see `🔖️Conflict`'s doc on why
     /// `db_conflict`'s per-command-pair shape can't replace it without breaking `db_engine`'s frozen
     /// `CommandReceipt.conflicts` element type).
-    pub fn preview_conflicts(&self, batch: &CommandBatch) -> Result<Vec<db_conflict::ConflictRecord>, DbError> {
+    pub async fn preview_conflicts(&self, batch: &CommandBatch) -> Result<Vec<db_conflict::ConflictRecord>, DbError> {
         let mut probe: Vec<db_conflict::CommandTouch> = self.recent_touches.iter().cloned().collect();
         for envelope in &batch.envelopes {
-            let entries = diff_entries(&envelope.diff)?;
+            let entries = diff_entries(&envelope.diff).await?;
             let touched = entries_touched(&entries);
             probe.push(command_touch(envelope, &touched));
         }
@@ -960,7 +975,7 @@ impl<R: semio_framework_async::HostAsyncRuntime, A: AuthzHook + 'static, V: Vers
     /// @emoji 🌫️ Publishes a new preview overlaying the CURRENT committed state — never durable
     /// (never touches the WAL), per the contract's preview law. Backed by a real
     /// `db_preview::PreviewStore` this revision (previously a local, minimal stand-in).
-    pub fn publish_preview(&mut self, entries: &[(String, Option<serde_json::Value>)], now_ms: u64) -> Result<db_preview::PreviewId, DbError> {
+    pub async fn publish_preview(&mut self, entries: &[(String, Option<serde_json::Value>)], now_ms: u64) -> Result<db_preview::PreviewId, DbError> {
         let dsl_entries: Vec<(String, Option<DslValue>)> = entries.iter().map(|(path, value)| Ok((path.clone(), value.as_ref().map(|json| dsl::to_dsl_value(json).map_err(dsl_err)).transpose()?))).collect::<Result<Vec<_>, DbError>>()?;
         let touched = entries_touched(&dsl_entries);
         let envelope = protocol::MutationEnvelope {
@@ -968,9 +983,9 @@ impl<R: semio_framework_async::HostAsyncRuntime, A: AuthzHook + 'static, V: Vers
             document_id: self.protocol_document.clone(),
             actor: protocol::ActorId("preview".to_string()),
             dependencies: Vec::new(),
-            diff: protocol::ArtifactDiff { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&entries_to_value(&dsl_entries)) },
-            inverse: protocol::InverseMutation { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&DslValue::Object(vec![])) },
-            timestamp: protocol::HybridLogicalTimestamp::new(0, now_ms),
+            diff: protocol::ArtifactDiff { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&entries_to_value(&dsl_entries)).await },
+            inverse: protocol::InverseMutation { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&DslValue::Object(vec![])).await },
+            timestamp: protocol::HybridLogicalTimestamp::new(0, now_ms).await,
         };
         self.previews.publish(db_preview::PublishPreviewRequest {
             document: self.document.clone(),
@@ -986,32 +1001,32 @@ impl<R: semio_framework_async::HostAsyncRuntime, A: AuthzHook + 'static, V: Vers
 
     /// @emoji 🌫️ The value a preview would show at `path`: the preview's own diff if it touches
     /// `path`, else falling through to the committed state.
-    pub fn preview_get(&self, id: &db_preview::PreviewId, path: &str) -> Result<Option<Vec<u8>>, DbError> {
+    pub async fn preview_get(&self, id: &db_preview::PreviewId, path: &str) -> Result<Option<Vec<u8>>, DbError> {
         let preview = self.previews.get(id).ok_or_else(|| DbError::NotFound(format!("preview {id} not found")))?;
-        for (entry_path, value) in diff_entries(&preview.envelope.diff)? {
+        for (entry_path, value) in diff_entries(&preview.envelope.diff).await? {
             if entry_path == path {
                 return match value {
-                    Some(dsl_value) => Ok(Some(store::pack_rt::encode_wire_value(&dsl_value))),
+                    Some(dsl_value) => Ok(Some(store::pack_rt::encode_wire_value(&dsl_value).await)),
                     None => Ok(None),
                 };
             }
         }
-        Ok(self.state.get(path))
+        Ok(self.state.get(path).await)
     }
 
-    pub fn preview_status(&self, id: &db_preview::PreviewId) -> Result<db_preview::PreviewState, DbError> {
+    pub async fn preview_status(&self, id: &db_preview::PreviewId) -> Result<db_preview::PreviewState, DbError> {
         Ok(self.previews.get(id).ok_or_else(|| DbError::NotFound(format!("preview {id} not found")))?.state)
     }
 
-    pub fn withdraw_preview(&mut self, id: &db_preview::PreviewId) -> Result<(), DbError> {
+    pub async fn withdraw_preview(&mut self, id: &db_preview::PreviewId) -> Result<(), DbError> {
         self.previews.withdraw(id)
     }
 
-    pub fn reject_preview(&mut self, id: &db_preview::PreviewId) -> Result<(), DbError> {
+    pub async fn reject_preview(&mut self, id: &db_preview::PreviewId) -> Result<(), DbError> {
         self.previews.reject(id)
     }
 
-    pub fn expire_previews(&mut self, now_ms: u64) -> Vec<db_preview::PreviewId> {
+    pub async fn expire_previews(&mut self, now_ms: u64) -> Vec<db_preview::PreviewId> {
         self.previews.sweep_expired(now_ms)
     }
     //#endregion 🔖️Preview
@@ -1023,6 +1038,7 @@ impl<R: semio_framework_async::HostAsyncRuntime, A: AuthzHook + 'static, V: Vers
 /// per stored path, `{"path": <path>, "value": <text-or-bytes>}`.
 struct StateQuerySource<'a>(&'a db_state::PMap<String, Vec<u8>>);
 
+// 🚫️async: E1 pure accessor consumed by a sync Iterator::map (QuerySource::scan's row builder) — see R9
 fn path_row_value(path: &str, bytes: &[u8]) -> db_query::Value {
     let mut map = std::collections::BTreeMap::new();
     map.insert("path".to_string(), db_query::Value::Text(path.to_string()));
@@ -1038,7 +1054,7 @@ fn path_row_value(path: &str, bytes: &[u8]) -> db_query::Value {
 }
 
 impl<'a> db_query::QuerySource for StateQuerySource<'a> {
-    fn scan(&self) -> Box<dyn Iterator<Item = (db_query::RowId, db_query::Value)> + '_> {
+    async fn scan(&self) -> Box<dyn Iterator<Item = (db_query::RowId, db_query::Value)> + '_> {
         Box::new(self.0.iter().enumerate().map(|(index, (path, bytes))| (db_query::RowId(index as u64), path_row_value(path, bytes))))
     }
 }
@@ -1047,22 +1063,22 @@ impl<'a> db_query::QuerySource for StateQuerySource<'a> {
 //#region 🔖️Snapshot
 /// @emoji 📸️ This crate's own snapshot page convention (opaque to `db_snapshot`/`db_storage`): the
 /// whole `DocumentState` as of the snapshot's frontier, one entry per stored path.
-fn encode_state_page(entries: &[(String, Option<Vec<u8>>)]) -> Vec<u8> {
-    let mut writer = pack::ByteWriter::new();
-    writer.write_varint_u64(entries.len() as u64);
+async fn encode_state_page(entries: &[(String, Option<Vec<u8>>)]) -> Vec<u8> {
+    let mut writer = pack::ByteWriter::new().await;
+    writer.write_varint_u64(entries.len() as u64).await;
     for (path, value) in entries {
-        writer.write_varint_u64(path.len() as u64);
-        writer.write_bytes(path.as_bytes());
+        writer.write_varint_u64(path.len() as u64).await;
+        writer.write_bytes(path.as_bytes()).await;
         match value {
             Some(bytes) => {
-                writer.write_u8(1);
-                writer.write_varint_u64(bytes.len() as u64);
-                writer.write_bytes(bytes);
+                writer.write_u8(1).await;
+                writer.write_varint_u64(bytes.len() as u64).await;
+                writer.write_bytes(bytes).await;
             }
-            None => writer.write_u8(0),
+            None => writer.write_u8(0).await,
         }
     }
-    writer.into_bytes()
+    writer.into_bytes().await
 }
 
 const MAX_STATE_PAGE_ENTRIES: u64 = 10_000_000;
@@ -1072,20 +1088,20 @@ const MAX_STATE_PAGE_VALUE_BYTES: u64 = 256 * 1024 * 1024;
 /// @emoji 🗺️ One decoded state page: `(path, value_bytes)` pairs, `None` marking a tombstoned path.
 type StatePageEntries = Vec<(String, Option<Vec<u8>>)>;
 
-fn decode_state_page(bytes: &[u8]) -> Result<StatePageEntries, DbError> {
-    let mut reader = pack::ByteReader::new(bytes);
-    let count = reader.read_varint_u64()?;
+async fn decode_state_page(bytes: &[u8]) -> Result<StatePageEntries, DbError> {
+    let mut reader = pack::ByteReader::new(bytes).await;
+    let count = reader.read_varint_u64().await?;
     check_len(count, MAX_STATE_PAGE_ENTRIES, "db_artifact::snapshot_page_entries")?;
     let mut entries = Vec::with_capacity(count as usize);
     for _ in 0..count {
-        let path_len = reader.read_varint_u64()?;
+        let path_len = reader.read_varint_u64().await?;
         check_len(path_len, MAX_STATE_PAGE_PATH_BYTES, "db_artifact::snapshot_page_path")?;
-        let path_bytes = reader.read_bytes(path_len as usize)?.to_vec();
+        let path_bytes = reader.read_bytes(path_len as usize).await?.to_vec();
         let path = String::from_utf8(path_bytes).map_err(|_| DbError::Corrupt("snapshot page path is not valid utf-8".to_string()))?;
-        let value = if reader.read_u8()? == 1 {
-            let len = reader.read_varint_u64()?;
+        let value = if reader.read_u8().await? == 1 {
+            let len = reader.read_varint_u64().await?;
             check_len(len, MAX_STATE_PAGE_VALUE_BYTES, "db_artifact::snapshot_page_value")?;
-            Some(reader.read_bytes(len as usize)?.to_vec())
+            Some(reader.read_bytes(len as usize).await?.to_vec())
         } else {
             None
         };
@@ -1162,7 +1178,7 @@ impl ArtifactAuthority {
     /// @emoji 🚀️ Spawns the actor thread, builds the engine there via `build`, and blocks until
     /// that construction succeeds or fails — a caller never holds a `ArtifactAuthority` whose
     /// engine failed to open.
-    pub fn spawn<R: semio_framework_async::HostAsyncRuntime + 'static, A: AuthzHook + 'static, V: VersionGraph + 'static>(build: impl FnOnce() -> Result<ArtifactEngine<R, A, V>, DbError> + Send + 'static, capacities: MailboxCapacities) -> Result<ArtifactAuthority, DbError> {
+    pub async fn spawn<R: semio_framework_async::HostAsyncRuntime + 'static, A: AuthzHook + 'static, V: VersionGraph + 'static>(build: impl FnOnce() -> Result<ArtifactEngine<R, A, V>, DbError> + Send + 'static, capacities: MailboxCapacities) -> Result<ArtifactAuthority, DbError> {
         let (address, receiver) = db_actor::mailbox::<ArtifactMessage>(capacities);
         let (ready_tx, ready_rx) = db_actor::oneshot::<Result<(), DbError>>();
         let handle = std::thread::Builder::new()
@@ -1178,12 +1194,15 @@ impl ArtifactAuthority {
                 ready_tx.send(Ok(()));
                 while let Some(envelope) = receiver.recv_blocking() {
                     match envelope.payload {
-                        ArtifactMessage::Submit { batch, options, now_ms, reply } => reply.send(engine.submit(batch, options, now_ms)),
-                        ArtifactMessage::Query { path, reply } => reply.send(engine.get(&path)),
-                        ArtifactMessage::Frontier { reply } => reply.send(engine.frontier()),
-                        ArtifactMessage::RunQuery { query, consistency, reply } => reply.send(engine.query(query, consistency)),
-                        ArtifactMessage::SnapshotNow { now_ms, reply } => reply.send(engine.snapshot_now(now_ms)),
-                        ArtifactMessage::DrainOutbox { reply } => reply.send(engine.drain_outbox()),
+                        // 🚫️async: E5 executor bridge — this dedicated actor thread IS the
+                        // executor (R4 clause 2/4), so `ArtifactEngine`'s real `async fn` methods
+                        // are driven via `db_actor::block_on` rather than `.await`.
+                        ArtifactMessage::Submit { batch, options, now_ms, reply } => reply.send(db_actor::block_on(engine.submit(batch, options, now_ms))),
+                        ArtifactMessage::Query { path, reply } => reply.send(db_actor::block_on(engine.get(&path))),
+                        ArtifactMessage::Frontier { reply } => reply.send(db_actor::block_on(engine.frontier())),
+                        ArtifactMessage::RunQuery { query, consistency, reply } => reply.send(db_actor::block_on(engine.query(query, consistency))),
+                        ArtifactMessage::SnapshotNow { now_ms, reply } => reply.send(db_actor::block_on(engine.snapshot_now(now_ms))),
+                        ArtifactMessage::DrainOutbox { reply } => reply.send(db_actor::block_on(engine.drain_outbox())),
                     }
                 }
             })
@@ -1196,33 +1215,33 @@ impl ArtifactAuthority {
         }
     }
 
-    pub fn submit_blocking(&self, batch: CommandBatch, options: SubmitOptions, now_ms: u64) -> Result<CommandReceipt, DbError> {
+    pub async fn submit_blocking(&self, batch: CommandBatch, options: SubmitOptions, now_ms: u64) -> Result<CommandReceipt, DbError> {
         self.address.ask_blocking(Priority::Command, |reply| ArtifactMessage::Submit { batch, options, now_ms, reply })?
     }
 
-    pub fn query_blocking(&self, path: &str) -> Result<Option<Vec<u8>>, DbError> {
+    pub async fn query_blocking(&self, path: &str) -> Result<Option<Vec<u8>>, DbError> {
         let path = path.to_string();
         self.address.ask_blocking(Priority::Query, |reply| ArtifactMessage::Query { path, reply })
     }
 
-    pub fn frontier_blocking(&self) -> Result<Frontier, DbError> {
+    pub async fn frontier_blocking(&self) -> Result<Frontier, DbError> {
         self.address.ask_blocking(Priority::Query, |reply| ArtifactMessage::Frontier { reply })
     }
 
-    pub fn run_query_blocking(&self, query: db_query::Query, consistency: db_query::Consistency) -> Result<db_query::QueryResult, DbError> {
+    pub async fn run_query_blocking(&self, query: db_query::Query, consistency: db_query::Consistency) -> Result<db_query::QueryResult, DbError> {
         self.address.ask_blocking(Priority::Query, |reply| ArtifactMessage::RunQuery { query, consistency, reply })?
     }
 
-    pub fn snapshot_now_blocking(&self, now_ms: u64) -> Result<u64, DbError> {
+    pub async fn snapshot_now_blocking(&self, now_ms: u64) -> Result<u64, DbError> {
         self.address.ask_blocking(Priority::Command, |reply| ArtifactMessage::SnapshotNow { now_ms, reply })?
     }
 
-    pub fn drain_outbox_blocking(&self) -> Result<Vec<OutboxEntry>, DbError> {
+    pub async fn drain_outbox_blocking(&self) -> Result<Vec<OutboxEntry>, DbError> {
         self.address.ask_blocking(Priority::Query, |reply| ArtifactMessage::DrainOutbox { reply })
     }
 
     /// @emoji 🚪️ Closes the mailbox and joins the actor thread — graceful shutdown.
-    pub fn shutdown(mut self) {
+    pub async fn shutdown(mut self) {
         self.address.close();
         if let Some(handle) = self.handle.take() {
             let _ = handle.join();
@@ -1237,38 +1256,38 @@ mod tests {
     use super::*;
     use std::sync::Arc as StdArc;
 
-    fn storage() -> StdArc<db_storage::DbBackend<db_storage::InlineRuntime>> {
-        StdArc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new()))
+    async fn storage() -> StdArc<db_storage::DbBackend<db_storage::InlineRuntime>> {
+        StdArc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new().await))
     }
 
-    fn document_id() -> protocol::ArtifactId {
+    async fn document_id() -> protocol::ArtifactId {
         protocol::ArtifactId("doc-1".to_string())
     }
 
-    fn stored_json(bytes: &[u8]) -> serde_json::Value {
-        decode_pathmap_json(bytes).expect("stored json value")
+    async fn stored_json(bytes: &[u8]) -> serde_json::Value {
+        decode_pathmap_json(bytes).await.expect("stored json value")
     }
 
-    fn envelope(id: &str, deps: &[&str], actor: &str, entries: &[(&str, serde_json::Value)]) -> protocol::MutationEnvelope {
+    async fn envelope(id: &str, deps: &[&str], actor: &str, entries: &[(&str, serde_json::Value)]) -> protocol::MutationEnvelope {
         let object: Vec<(String, DslValue)> = entries.iter().map(|(path, value)| (path.to_string(), dsl::to_dsl_value(value).expect("test envelope dsl"))).collect();
         protocol::MutationEnvelope {
             mutation_id: protocol::MutationId(id.to_string()),
-            document_id: document_id(),
+            document_id: document_id().await,
             actor: protocol::ActorId(actor.to_string()),
             dependencies: deps.iter().map(|dep| protocol::MutationId((*dep).to_string())).collect(),
-            diff: protocol::ArtifactDiff { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&DslValue::Object(object)) },
-            inverse: protocol::InverseMutation { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&DslValue::Object(vec![])) },
-            timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
+            diff: protocol::ArtifactDiff { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&DslValue::Object(object)).await },
+            inverse: protocol::InverseMutation { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&DslValue::Object(vec![])).await },
+            timestamp: protocol::HybridLogicalTimestamp::new(0, 0).await,
         }
     }
 
     //#region 🔖️Command
-    #[test]
-    fn command_batch_rejects_empty_and_mixed_documents() {
-        assert!(CommandBatch::new(Vec::new()).is_err());
-        let mut mismatched = envelope("op-2", &[], "alice", &[("x", serde_json::json!(1))]);
+    #[semio_framework_async_macros::async_test]
+    async fn command_batch_rejects_empty_and_mixed_documents() {
+        assert!(CommandBatch::new(Vec::new()).await.is_err());
+        let mut mismatched = envelope("op-2", &[], "alice", &[("x", serde_json::json!(1))]).await;
         mismatched.document_id = protocol::ArtifactId("other-doc".to_string());
-        let batch = CommandBatch::new(vec![envelope("op-1", &[], "alice", &[("x", serde_json::json!(1))]), mismatched]);
+        let batch = CommandBatch::new(vec![envelope("op-1", &[], "alice", &[("x", serde_json::json!(1))]).await, mismatched]).await;
         assert!(batch.is_err());
     }
     //#endregion 🔖️Command
@@ -1284,10 +1303,10 @@ mod tests {
         struct AddDiff(i64);
 
         impl protocol::MutationDiff<Counter> for AddDiff {
-            fn apply(&self, base: &Counter) -> protocol::MutationApplyResult<Counter> {
+            async fn apply(&self, base: &Counter) -> protocol::MutationApplyResult<Counter> {
                 Ok(Counter(base.0 + self.0))
             }
-            fn absorb(&mut self, other: Self) {
+            async fn absorb(&mut self, other: Self) {
                 self.0 += other.0;
             }
         }
@@ -1297,20 +1316,20 @@ mod tests {
 
         impl protocol::Mutation<Counter> for Add {
             type Diff = AddDiff;
-            fn diff(&self, _base: &Counter) -> protocol::MutationOutcome<AddDiff> {
-                protocol::MutationOutcome::new(AddDiff(self.0))
+            async fn diff(&self, _base: &Counter) -> protocol::MutationOutcome<AddDiff> {
+                protocol::MutationOutcome::new(AddDiff(self.0)).await
             }
-            fn inverse(&self, _base: &Counter) -> Vec<Self> {
+            async fn inverse(&self, _base: &Counter) -> Vec<Self> {
                 vec![Add(-self.0)]
             }
         }
 
-        #[test]
-        fn envelope_from_operation_uses_operation_and_diff_traits() {
+        #[semio_framework_async_macros::async_test]
+        async fn envelope_from_operation_uses_operation_and_diff_traits() {
             let base = Counter(10);
             let op = Add(5);
-            let envelope = envelope_from_operation(document_id(), "counter", &op, &base, protocol::ActorId("alice".to_string()), protocol::MutationId("op-add-1".to_string()), protocol::HybridLogicalTimestamp::new(1, 0)).unwrap();
-            let entries = diff_entries(&envelope.diff).unwrap();
+            let envelope = envelope_from_operation(document_id().await, "counter", &op, &base, protocol::ActorId("alice".to_string()), protocol::MutationId("op-add-1".to_string()), protocol::HybridLogicalTimestamp::new(1, 0).await).await.unwrap();
+            let entries = diff_entries(&envelope.diff).await.unwrap();
             assert_eq!(entries.len(), 1);
             let (path, value) = &entries[0];
             assert_eq!(path, "counter");
@@ -1321,13 +1340,13 @@ mod tests {
     //#endregion 🔖️Bridge
 
     //#region 🔖️Engine submit + materialize + WAL replay
-    #[test]
-    fn submit_persists_to_wal_and_updates_materialized_state_and_frontier() {
-        let storage = storage();
-        let mut engine = ArtifactEngine::create(document_id(), storage, ArtifactEngineConfig::default(), 0).unwrap();
+    #[semio_framework_async_macros::async_test]
+    async fn submit_persists_to_wal_and_updates_materialized_state_and_frontier() {
+        let storage = storage().await;
+        let mut engine = ArtifactEngine::create(document_id().await, storage, ArtifactEngineConfig::default(), 0).unwrap();
 
-        let batch = CommandBatch::new(vec![envelope("op-1", &[], "alice", &[("name", serde_json::json!("hello"))])]).unwrap();
-        let receipt = engine.submit(batch, SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() }, 1).unwrap();
+        let batch = CommandBatch::new(vec![envelope("op-1", &[], "alice", &[("name", serde_json::json!("hello"))]).await]).await.unwrap();
+        let receipt = engine.submit(batch, SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() }, 1).await.unwrap();
 
         assert_eq!(receipt.command_id, protocol::MutationId("op-1".to_string()));
         assert_eq!(receipt.frontier.head_seq, 1);
@@ -1335,287 +1354,288 @@ mod tests {
         assert!(receipt.conflicts.is_empty());
         assert!(receipt.state_hash.is_some());
 
-        let stored = engine.get("name").unwrap();
-        let value: serde_json::Value = stored_json(&stored);
+        let stored = engine.get("name").await.unwrap();
+        let value: serde_json::Value = stored_json(&stored).await;
         assert_eq!(value, serde_json::json!("hello"));
-        assert_eq!(engine.frontier().head_seq, 1);
+        assert_eq!(engine.frontier().await.head_seq, 1);
     }
 
-    #[test]
-    fn open_replays_the_wal_and_reconstructs_state_and_frontier_identically() {
-        let storage = storage();
+    #[semio_framework_async_macros::async_test]
+    async fn open_replays_the_wal_and_reconstructs_state_and_frontier_identically() {
+        let storage = storage().await;
         {
-            let mut engine = ArtifactEngine::create(document_id(), storage.clone(), ArtifactEngineConfig::default(), 0).unwrap();
-            let batch1 = CommandBatch::new(vec![envelope("op-1", &[], "alice", &[("name", serde_json::json!("hello"))])]).unwrap();
-            engine.submit(batch1, SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() }, 1).unwrap();
-            let batch2 = CommandBatch::new(vec![envelope("op-2", &["op-1"], "alice", &[("count", serde_json::json!(2))])]).unwrap();
-            engine.submit(batch2, SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() }, 2).unwrap();
+            let mut engine = ArtifactEngine::create(document_id().await, storage.clone(), ArtifactEngineConfig::default(), 0).unwrap();
+            let batch1 = CommandBatch::new(vec![envelope("op-1", &[], "alice", &[("name", serde_json::json!("hello"))]).await]).await.unwrap();
+            engine.submit(batch1, SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() }, 1).await.unwrap();
+            let batch2 = CommandBatch::new(vec![envelope("op-2", &["op-1"], "alice", &[("count", serde_json::json!(2))]).await]).await.unwrap();
+            engine.submit(batch2, SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() }, 2).await.unwrap();
         }
 
-        let (reopened, report) = ArtifactEngine::open(document_id(), &storage, ArtifactEngineConfig::default(), 3).unwrap();
+        let (reopened, report) = ArtifactEngine::open(document_id().await, &storage, ArtifactEngineConfig::default(), 3).unwrap();
         assert_eq!(report.torn_tail_bytes, 0);
-        assert_eq!(reopened.frontier().head_seq, 2);
-        assert_eq!(reopened.frontier().commit_seq, 2);
+        assert_eq!(reopened.frontier().await.head_seq, 2);
+        assert_eq!(reopened.frontier().await.commit_seq, 2);
 
-        let name: serde_json::Value = stored_json(&reopened.get("name").unwrap());
+        let name: serde_json::Value = stored_json(&reopened.get("name").await.unwrap()).await;
         assert_eq!(name, serde_json::json!("hello"));
-        let count: serde_json::Value = stored_json(&reopened.get("count").unwrap());
+        let count: serde_json::Value = stored_json(&reopened.get("count").await.unwrap()).await;
         assert_eq!(count, serde_json::json!(2));
     }
 
-    #[test]
-    fn materialize_from_snapshot_plus_wal_suffix_matches_full_replay() {
-        let storage = storage();
+    #[semio_framework_async_macros::async_test]
+    async fn materialize_from_snapshot_plus_wal_suffix_matches_full_replay() {
+        let storage = storage().await;
         {
-            let mut engine = ArtifactEngine::create(document_id(), storage.clone(), ArtifactEngineConfig::default(), 0).unwrap();
+            let mut engine = ArtifactEngine::create(document_id().await, storage.clone(), ArtifactEngineConfig::default(), 0).unwrap();
             for i in 0..3 {
                 let key = format!("path-{i}");
                 let value = format!("value-{i}");
-                let batch = CommandBatch::new(vec![envelope(&format!("op-{i}"), &[], "alice", &[(&key, serde_json::json!(value))])]).unwrap();
-                engine.submit(batch, SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() }, i).unwrap();
+                let batch = CommandBatch::new(vec![envelope(&format!("op-{i}"), &[], "alice", &[(&key, serde_json::json!(value))]).await]).await.unwrap();
+                engine.submit(batch, SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() }, i).await.unwrap();
             }
-            engine.snapshot_now(10).unwrap();
+            engine.snapshot_now(10).await.unwrap();
             for i in 3..6 {
                 let key = format!("path-{i}");
                 let value = format!("value-{i}");
-                let batch = CommandBatch::new(vec![envelope(&format!("op-{i}"), &[], "alice", &[(&key, serde_json::json!(value))])]).unwrap();
-                engine.submit(batch, SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() }, i).unwrap();
+                let batch = CommandBatch::new(vec![envelope(&format!("op-{i}"), &[], "alice", &[(&key, serde_json::json!(value))]).await]).await.unwrap();
+                engine.submit(batch, SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() }, i).await.unwrap();
             }
         }
 
-        let (reopened, report) = ArtifactEngine::open(document_id(), &storage, ArtifactEngineConfig::default(), 20).unwrap();
+        let (reopened, report) = ArtifactEngine::open(document_id().await, &storage, ArtifactEngineConfig::default(), 20).unwrap();
         assert!(report.from_snapshot);
         assert_eq!(report.commands_replayed, 3);
-        assert_eq!(reopened.frontier().head_seq, 6);
+        assert_eq!(reopened.frontier().await.head_seq, 6);
         for i in 0..6 {
-            let value: serde_json::Value = stored_json(&reopened.get(&format!("path-{i}")).unwrap());
+            let value: serde_json::Value = stored_json(&reopened.get(&format!("path-{i}")).await.unwrap()).await;
             assert_eq!(value, serde_json::json!(format!("value-{i}")));
         }
     }
 
-    #[test]
-    fn deletion_via_json_null_tombstones_a_path() {
-        let storage = storage();
-        let mut engine = ArtifactEngine::create(document_id(), storage, ArtifactEngineConfig::default(), 0).unwrap();
-        engine.submit(CommandBatch::new(vec![envelope("op-1", &[], "alice", &[("x", serde_json::json!(1))])]).unwrap(), SubmitOptions::default(), 0).unwrap();
-        assert!(engine.get("x").is_some());
-        engine.submit(CommandBatch::new(vec![envelope("op-2", &["op-1"], "alice", &[("x", serde_json::Value::Null)])]).unwrap(), SubmitOptions::default(), 1).unwrap();
-        assert!(engine.get("x").is_none());
+    #[semio_framework_async_macros::async_test]
+    async fn deletion_via_json_null_tombstones_a_path() {
+        let storage = storage().await;
+        let mut engine = ArtifactEngine::create(document_id().await, storage, ArtifactEngineConfig::default(), 0).unwrap();
+        engine.submit(CommandBatch::new(vec![envelope("op-1", &[], "alice", &[("x", serde_json::json!(1))]).await]).await.unwrap(), SubmitOptions::default(), 0).await.unwrap();
+        assert!(engine.get("x").await.is_some());
+        engine.submit(CommandBatch::new(vec![envelope("op-2", &["op-1"], "alice", &[("x", serde_json::Value::Null)]).await]).await.unwrap(), SubmitOptions::default(), 1).await.unwrap();
+        assert!(engine.get("x").await.is_none());
     }
     //#endregion 🔖️Engine submit + materialize + WAL replay
 
     //#region 🔖️Deps + Dedupe
-    #[test]
-    fn submit_rejects_an_envelope_whose_dependency_was_never_applied() {
-        let storage = storage();
-        let mut engine = ArtifactEngine::create(document_id(), storage, ArtifactEngineConfig::default(), 0).unwrap();
-        let batch = CommandBatch::new(vec![envelope("op-2", &["op-1-never-applied"], "alice", &[("x", serde_json::json!(1))])]).unwrap();
+    #[semio_framework_async_macros::async_test]
+    async fn submit_rejects_an_envelope_whose_dependency_was_never_applied() {
+        let storage = storage().await;
+        let mut engine = ArtifactEngine::create(document_id().await, storage, ArtifactEngineConfig::default(), 0).unwrap();
+        let batch = CommandBatch::new(vec![envelope("op-2", &["op-1-never-applied"], "alice", &[("x", serde_json::json!(1))]).await]).await.unwrap();
         let result = engine.submit(batch, SubmitOptions::default(), 0);
-        assert!(matches!(result, Err(DbError::InvalidArgument(_))));
-        assert!(engine.get("x").is_none(), "a rejected batch must not have partially applied");
+        assert!(matches!(result.await, Err(DbError::InvalidArgument(_))));
+        assert!(engine.get("x").await.is_none(), "a rejected batch must not have partially applied");
     }
 
-    #[test]
-    fn resubmitting_the_same_batch_returns_the_cached_receipt_without_advancing_the_frontier() {
-        let storage = storage();
-        let mut engine = ArtifactEngine::create(document_id(), storage, ArtifactEngineConfig::default(), 0).unwrap();
-        let batch = || CommandBatch::new(vec![envelope("op-1", &[], "alice", &[("x", serde_json::json!(1))])]).unwrap();
+    #[semio_framework_async_macros::async_test]
+    async fn resubmitting_the_same_batch_returns_the_cached_receipt_without_advancing_the_frontier() {
+        let storage = storage().await;
+        let mut engine = ArtifactEngine::create(document_id().await, storage, ArtifactEngineConfig::default(), 0).unwrap();
+        let batch = || db_actor::block_on(CommandBatch::new(vec![db_actor::block_on(envelope("op-1", &[], "alice", &[("x", serde_json::json!(1))]))])).unwrap();
 
-        let first = engine.submit(batch(), SubmitOptions::default(), 0).unwrap();
-        let frontier_after_first = engine.frontier();
-        let second = engine.submit(batch(), SubmitOptions::default(), 1).unwrap();
+        let first = engine.submit(batch(), SubmitOptions::default(), 0).await.unwrap();
+        let frontier_after_first = engine.frontier().await;
+        let second = engine.submit(batch(), SubmitOptions::default(), 1).await.unwrap();
 
         assert_eq!(first, second);
-        assert_eq!(engine.frontier(), frontier_after_first, "a deduped resubmit must not move the frontier");
+        assert_eq!(engine.frontier().await, frontier_after_first, "a deduped resubmit must not move the frontier");
     }
     //#endregion 🔖️Deps + Dedupe
 
     //#region 🔖️Conflict
-    #[test]
-    fn concurrent_write_to_the_same_path_without_a_dependency_is_recorded_as_a_conflict() {
-        let storage = storage();
-        let mut engine = ArtifactEngine::create(document_id(), storage, ArtifactEngineConfig::default(), 0).unwrap();
-        engine.submit(CommandBatch::new(vec![envelope("op-1", &[], "alice", &[("x", serde_json::json!(1))])]).unwrap(), SubmitOptions::default(), 0).unwrap();
+    #[semio_framework_async_macros::async_test]
+    async fn concurrent_write_to_the_same_path_without_a_dependency_is_recorded_as_a_conflict() {
+        let storage = storage().await;
+        let mut engine = ArtifactEngine::create(document_id().await, storage, ArtifactEngineConfig::default(), 0).unwrap();
+        engine.submit(CommandBatch::new(vec![envelope("op-1", &[], "alice", &[("x", serde_json::json!(1))]).await]).await.unwrap(), SubmitOptions::default(), 0).await.unwrap();
 
         // op-2 writes the same path but does NOT declare op-1 as a dependency: a real concurrent
         // write from `op-2`'s author's point of view.
-        let receipt = engine.submit(CommandBatch::new(vec![envelope("op-2", &[], "bob", &[("x", serde_json::json!(2))])]).unwrap(), SubmitOptions::default(), 1).unwrap();
+        let receipt = engine.submit(CommandBatch::new(vec![envelope("op-2", &[], "bob", &[("x", serde_json::json!(2))]).await]).await.unwrap(), SubmitOptions::default(), 1).await.unwrap();
         assert_eq!(receipt.conflicts.len(), 1);
         assert_eq!(receipt.conflicts[0].conflicting_with, protocol::MutationId("op-1".to_string()));
         assert_eq!(receipt.conflicts[0].path, "x");
         // Last-writer-wins: the conflicting write still applies.
-        let x: serde_json::Value = stored_json(&engine.get("x").unwrap());
+        let x: serde_json::Value = stored_json(&engine.get("x").await.unwrap()).await;
         assert_eq!(x, serde_json::json!(2));
     }
 
-    #[test]
-    fn declaring_the_prior_writer_as_a_dependency_avoids_the_conflict() {
-        let storage = storage();
-        let mut engine = ArtifactEngine::create(document_id(), storage, ArtifactEngineConfig::default(), 0).unwrap();
-        engine.submit(CommandBatch::new(vec![envelope("op-1", &[], "alice", &[("x", serde_json::json!(1))])]).unwrap(), SubmitOptions::default(), 0).unwrap();
-        let receipt = engine.submit(CommandBatch::new(vec![envelope("op-2", &["op-1"], "bob", &[("x", serde_json::json!(2))])]).unwrap(), SubmitOptions::default(), 1).unwrap();
+    #[semio_framework_async_macros::async_test]
+    async fn declaring_the_prior_writer_as_a_dependency_avoids_the_conflict() {
+        let storage = storage().await;
+        let mut engine = ArtifactEngine::create(document_id().await, storage, ArtifactEngineConfig::default(), 0).unwrap();
+        engine.submit(CommandBatch::new(vec![envelope("op-1", &[], "alice", &[("x", serde_json::json!(1))]).await]).await.unwrap(), SubmitOptions::default(), 0).await.unwrap();
+        let receipt = engine.submit(CommandBatch::new(vec![envelope("op-2", &["op-1"], "bob", &[("x", serde_json::json!(2))]).await]).await.unwrap(), SubmitOptions::default(), 1).await.unwrap();
         assert!(receipt.conflicts.is_empty());
     }
 
-    #[test]
-    fn preview_conflicts_uses_real_db_conflict_detector_against_recent_history() {
-        let storage = storage();
-        let mut engine = ArtifactEngine::create(document_id(), storage, ArtifactEngineConfig::default(), 0).unwrap();
-        engine.submit(CommandBatch::new(vec![envelope("op-1", &[], "alice", &[("x", serde_json::json!(1))])]).unwrap(), SubmitOptions::default(), 0).unwrap();
+    #[semio_framework_async_macros::async_test]
+    async fn preview_conflicts_uses_real_db_conflict_detector_against_recent_history() {
+        let storage = storage().await;
+        let mut engine = ArtifactEngine::create(document_id().await, storage, ArtifactEngineConfig::default(), 0).unwrap();
+        engine.submit(CommandBatch::new(vec![envelope("op-1", &[], "alice", &[("x", serde_json::json!(1))]).await]).await.unwrap(), SubmitOptions::default(), 0).await.unwrap();
 
-        let probe = CommandBatch::new(vec![envelope("op-2", &[], "bob", &[("x", serde_json::json!(2))])]).unwrap();
-        let conflicts = engine.preview_conflicts(&probe).unwrap();
+        let probe = CommandBatch::new(vec![envelope("op-2", &[], "bob", &[("x", serde_json::json!(2))]).await]).await.unwrap();
+        let conflicts = engine.preview_conflicts(&probe).await.unwrap();
         assert!(!conflicts.is_empty(), "db_conflict must detect the same-path intersection against recent history");
     }
     //#endregion 🔖️Conflict
 
     //#region 🔖️Undo
-    #[test]
-    fn undo_applies_the_recorded_inverse_and_produces_a_fresh_commit() {
-        let storage = storage();
-        let mut engine = ArtifactEngine::create(document_id(), storage, ArtifactEngineConfig::default(), 0).unwrap();
+    #[semio_framework_async_macros::async_test]
+    async fn undo_applies_the_recorded_inverse_and_produces_a_fresh_commit() {
+        let storage = storage().await;
+        let mut engine = ArtifactEngine::create(document_id().await, storage, ArtifactEngineConfig::default(), 0).unwrap();
         let original = protocol::MutationEnvelope {
             mutation_id: protocol::MutationId("op-1".to_string()),
-            document_id: document_id(),
+            document_id: document_id().await,
             actor: protocol::ActorId("alice".to_string()),
             dependencies: Vec::new(),
-            diff: protocol::ArtifactDiff { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&dsl::to_dsl_value(&serde_json::json!({ "x": 1 })).expect("dsl")) },
-            inverse: protocol::InverseMutation { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&dsl::to_dsl_value(&serde_json::json!({ "x": null })).expect("dsl")) },
-            timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
+            diff: protocol::ArtifactDiff { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&dsl::to_dsl_value(&serde_json::json!({ "x": 1 })).expect("dsl")).await },
+            inverse: protocol::InverseMutation { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&dsl::to_dsl_value(&serde_json::json!({ "x": null })).expect("dsl")).await },
+            timestamp: protocol::HybridLogicalTimestamp::new(0, 0).await,
         };
-        engine.submit(CommandBatch::new(vec![original]).unwrap(), SubmitOptions::default(), 0).unwrap();
-        assert!(engine.get("x").is_some());
+        engine.submit(CommandBatch::new(vec![original]).await.unwrap(), SubmitOptions::default(), 0).await.unwrap();
+        assert!(engine.get("x").await.is_some());
 
-        let receipt = engine.undo(&protocol::MutationId("op-1".to_string()), protocol::MutationId("op-1-undo".to_string()), protocol::ActorId("alice".to_string()), 1).unwrap();
+        let receipt = engine.undo(&protocol::MutationId("op-1".to_string()), protocol::MutationId("op-1-undo".to_string()), protocol::ActorId("alice".to_string()), 1).await.unwrap();
         assert_eq!(receipt.frontier.head_seq, 2);
-        assert!(engine.get("x").is_none(), "undo must have applied the recorded inverse (delete x)");
+        assert!(engine.get("x").await.is_none(), "undo must have applied the recorded inverse (delete x)");
     }
 
-    #[test]
-    fn undo_of_an_unknown_operation_errs_not_found() {
-        let storage = storage();
-        let mut engine = ArtifactEngine::create(document_id(), storage, ArtifactEngineConfig::default(), 0).unwrap();
-        let result = engine.undo(&protocol::MutationId("never-applied".to_string()), protocol::MutationId("undo-1".to_string()), protocol::ActorId("alice".to_string()), 0);
-        assert!(matches!(result, Err(DbError::NotFound(_))));
+    #[semio_framework_async_macros::async_test]
+    async fn undo_of_an_unknown_operation_errs_not_found() {
+        let storage = storage().await;
+        let mut engine = ArtifactEngine::create(document_id().await, storage, ArtifactEngineConfig::default(), 0).unwrap();
+        let never_applied = protocol::MutationId("never-applied".to_string());
+        let result = engine.undo(&never_applied, protocol::MutationId("undo-1".to_string()), protocol::ActorId("alice".to_string()), 0);
+        assert!(matches!(result.await, Err(DbError::NotFound(_))));
     }
     //#endregion 🔖️Undo
 
     //#region 🔖️Preview
-    #[test]
-    fn preview_is_never_durable_and_a_conflicting_commit_supersedes_it() {
-        let storage = storage();
-        let mut engine = ArtifactEngine::create(document_id(), storage, ArtifactEngineConfig::default(), 0).unwrap();
+    #[semio_framework_async_macros::async_test]
+    async fn preview_is_never_durable_and_a_conflicting_commit_supersedes_it() {
+        let storage = storage().await;
+        let mut engine = ArtifactEngine::create(document_id().await, storage, ArtifactEngineConfig::default(), 0).unwrap();
 
-        let preview_id = engine.publish_preview(&[("y".to_string(), Some(serde_json::json!("preview-value")))], 0).unwrap();
-        assert_eq!(engine.preview_status(&preview_id).unwrap(), db_preview::PreviewState::Active);
-        let preview_value: serde_json::Value = stored_json(&engine.preview_get(&preview_id, "y").unwrap().unwrap());
+        let preview_id = engine.publish_preview(&[("y".to_string(), Some(serde_json::json!("preview-value")))], 0).await.unwrap();
+        assert_eq!(engine.preview_status(&preview_id).await.unwrap(), db_preview::PreviewState::Active);
+        let preview_value: serde_json::Value = stored_json(&engine.preview_get(&preview_id, "y").await.unwrap().unwrap()).await;
         assert_eq!(preview_value, serde_json::json!("preview-value"));
-        assert!(engine.get("y").is_none(), "a preview must never be visible in committed state");
+        assert!(engine.get("y").await.is_none(), "a preview must never be visible in committed state");
 
-        engine.submit(CommandBatch::new(vec![envelope("op-1", &[], "bob", &[("y", serde_json::json!("committed-value"))])]).unwrap(), SubmitOptions::default(), 1).unwrap();
-        assert_eq!(engine.preview_status(&preview_id).unwrap(), db_preview::PreviewState::Superseded, "an intersecting real commit must supersede the preview");
+        engine.submit(CommandBatch::new(vec![envelope("op-1", &[], "bob", &[("y", serde_json::json!("committed-value"))]).await]).await.unwrap(), SubmitOptions::default(), 1).await.unwrap();
+        assert_eq!(engine.preview_status(&preview_id).await.unwrap(), db_preview::PreviewState::Superseded, "an intersecting real commit must supersede the preview");
 
-        let committed: serde_json::Value = stored_json(&engine.get("y").unwrap());
+        let committed: serde_json::Value = stored_json(&engine.get("y").await.unwrap()).await;
         assert_eq!(committed, serde_json::json!("committed-value"));
     }
 
-    #[test]
-    fn preview_withdraw_and_expire_transitions() {
-        let storage = storage();
-        let mut engine = ArtifactEngine::create(document_id(), storage, ArtifactEngineConfig::default(), 0).unwrap();
+    #[semio_framework_async_macros::async_test]
+    async fn preview_withdraw_and_expire_transitions() {
+        let storage = storage().await;
+        let mut engine = ArtifactEngine::create(document_id().await, storage, ArtifactEngineConfig::default(), 0).unwrap();
 
-        let withdrawn_id = engine.publish_preview(&[("a".to_string(), Some(serde_json::json!(1)))], 0).unwrap();
-        engine.withdraw_preview(&withdrawn_id).unwrap();
-        assert_eq!(engine.preview_status(&withdrawn_id).unwrap(), db_preview::PreviewState::Withdrawn);
+        let withdrawn_id = engine.publish_preview(&[("a".to_string(), Some(serde_json::json!(1)))], 0).await.unwrap();
+        engine.withdraw_preview(&withdrawn_id).await.unwrap();
+        assert_eq!(engine.preview_status(&withdrawn_id).await.unwrap(), db_preview::PreviewState::Withdrawn);
 
         let dummy_id = db_preview::PreviewId("does-not-exist".to_string());
-        assert!(matches!(engine.preview_status(&dummy_id), Err(DbError::NotFound(_))));
+        assert!(matches!(engine.preview_status(&dummy_id).await, Err(DbError::NotFound(_))));
     }
     //#endregion 🔖️Preview
 
     //#region 🔖️Security
-    #[test]
-    fn security_gate_rejects_a_principal_denied_by_its_policy() {
+    #[semio_framework_async_macros::async_test]
+    async fn security_gate_rejects_a_principal_denied_by_its_policy() {
         // An empty `RoleBasedPolicy` (no grants at all) denies every action, per its own doc — a
         // default-deny policy, matching `db_engine`'s own equivalent test of the same gate.
         let security = db_security::SecurityGate::new(db_security::RoleBasedPolicy::new(), db_security::ReplayGuard::new(60_000, 1_024), db_security::BudgetRegistry::new(100_000, 100_000), Arc::new(NullEmit));
-        let storage = storage();
+        let storage = storage().await;
         let config = ArtifactEngineConfig { security, ..ArtifactEngineConfig::default() };
-        let mut engine = ArtifactEngine::create(document_id(), storage, config, 0).unwrap();
-        let result = engine.submit(CommandBatch::new(vec![envelope("op-1", &[], "bob", &[("x", serde_json::json!(1))])]).unwrap(), SubmitOptions::default(), 0);
-        assert!(matches!(result, Err(DbError::Unauthorized(_))));
-        assert!(engine.get("x").is_none());
+        let mut engine = ArtifactEngine::create(document_id().await, storage, config, 0).unwrap();
+        let result = engine.submit(CommandBatch::new(vec![envelope("op-1", &[], "bob", &[("x", serde_json::json!(1))]).await]).await.unwrap(), SubmitOptions::default(), 0);
+        assert!(matches!(result.await, Err(DbError::Unauthorized(_))));
+        assert!(engine.get("x").await.is_none());
     }
     //#endregion 🔖️Security
 
     //#region 🔖️Query
-    #[test]
-    fn query_finds_a_committed_row_by_path() {
-        let storage = storage();
-        let mut engine = ArtifactEngine::create(document_id(), storage, ArtifactEngineConfig::default(), 0).unwrap();
-        engine.submit(CommandBatch::new(vec![envelope("op-1", &[], "alice", &[("greeting", serde_json::json!("hello"))])]).unwrap(), SubmitOptions::default(), 0).unwrap();
+    #[semio_framework_async_macros::async_test]
+    async fn query_finds_a_committed_row_by_path() {
+        let storage = storage().await;
+        let mut engine = ArtifactEngine::create(document_id().await, storage, ArtifactEngineConfig::default(), 0).unwrap();
+        engine.submit(CommandBatch::new(vec![envelope("op-1", &[], "alice", &[("greeting", serde_json::json!("hello"))]).await]).await.unwrap(), SubmitOptions::default(), 0).await.unwrap();
 
-        let query = db_query::Query::new().filter(db_query::Predicate::Eq(db_query::Path::empty().push_field("path"), db_query::Value::Text("greeting".to_string())));
-        let result = engine.query(query, db_query::Consistency::Canonical).unwrap();
+        let query = db_query::Query::new().await.filter(db_query::Predicate::Eq(db_query::Path::empty().push_field("path"), db_query::Value::Text("greeting".to_string())));
+        let result = engine.query(query.await, db_query::Consistency::Canonical).await.unwrap();
         assert_eq!(result.rows.len(), 1);
     }
 
-    #[test]
-    fn live_query_refresh_reports_no_further_diff_right_after_submit_already_refreshed_it() {
-        let storage = storage();
-        let mut engine = ArtifactEngine::create(document_id(), storage, ArtifactEngineConfig::default(), 0).unwrap();
-        let id = engine.subscribe(db_query::LiveQuerySpec { query: db_query::Query::new(), consistency: db_query::Consistency::Canonical });
-        engine.submit(CommandBatch::new(vec![envelope("op-1", &[], "alice", &[("x", serde_json::json!(1))])]).unwrap(), SubmitOptions::default(), 0).unwrap();
-        let diffs = engine.refresh_live_queries();
+    #[semio_framework_async_macros::async_test]
+    async fn live_query_refresh_reports_no_further_diff_right_after_submit_already_refreshed_it() {
+        let storage = storage().await;
+        let mut engine = ArtifactEngine::create(document_id().await, storage, ArtifactEngineConfig::default(), 0).unwrap();
+        let id = engine.subscribe(db_query::LiveQuerySpec { query: db_query::Query::new().await, consistency: db_query::Consistency::Canonical }).await;
+        engine.submit(CommandBatch::new(vec![envelope("op-1", &[], "alice", &[("x", serde_json::json!(1))]).await]).await.unwrap(), SubmitOptions::default(), 0).await.unwrap();
+        let diffs = engine.refresh_live_queries().await;
         assert!(diffs.is_empty());
-        engine.unsubscribe(id);
+        engine.unsubscribe(id).await;
     }
     //#endregion 🔖️Query
 
     //#region 🔖️Outbox + CommitLog
-    #[test]
-    fn outbox_and_commit_log_accumulate_and_outbox_drains() {
-        let storage = storage();
-        let mut engine = ArtifactEngine::create(document_id(), storage, ArtifactEngineConfig::default(), 0).unwrap();
-        engine.submit(CommandBatch::new(vec![envelope("op-1", &[], "alice", &[("x", serde_json::json!(1))])]).unwrap(), SubmitOptions::default(), 0).unwrap();
+    #[semio_framework_async_macros::async_test]
+    async fn outbox_and_commit_log_accumulate_and_outbox_drains() {
+        let storage = storage().await;
+        let mut engine = ArtifactEngine::create(document_id().await, storage, ArtifactEngineConfig::default(), 0).unwrap();
+        engine.submit(CommandBatch::new(vec![envelope("op-1", &[], "alice", &[("x", serde_json::json!(1))]).await]).await.unwrap(), SubmitOptions::default(), 0).await.unwrap();
 
-        assert_eq!(engine.commit_log().len(), 1);
-        assert_eq!(engine.commit_log()[0].operation_ids, vec![protocol::MutationId("op-1".to_string())]);
+        assert_eq!(engine.commit_log().await.len(), 1);
+        assert_eq!(engine.commit_log().await[0].operation_ids, vec![protocol::MutationId("op-1".to_string())]);
 
-        let drained = engine.drain_outbox();
+        let drained = engine.drain_outbox().await;
         assert_eq!(drained.len(), 1);
         assert_eq!(drained[0].mutation_id, protocol::MutationId("op-1".to_string()));
-        assert!(engine.drain_outbox().is_empty(), "drain must clear the outbox");
+        assert!(engine.drain_outbox().await.is_empty(), "drain must clear the outbox");
     }
     //#endregion 🔖️Outbox + CommitLog
 
     //#region 🔖️Actor
-    #[test]
-    fn document_authority_submits_and_queries_over_the_mailbox_from_a_dedicated_thread() {
-        let storage = storage();
-        let document = document_id();
-        let authority = ArtifactAuthority::spawn(move || ArtifactEngine::create(document, storage, ArtifactEngineConfig::default(), 0), MailboxCapacities::uniform(16)).unwrap();
+    #[semio_framework_async_macros::async_test]
+    async fn document_authority_submits_and_queries_over_the_mailbox_from_a_dedicated_thread() {
+        let storage = storage().await;
+        let document = document_id().await;
+        let authority = ArtifactAuthority::spawn(move || ArtifactEngine::create(document, storage, ArtifactEngineConfig::default(), 0), MailboxCapacities::uniform(16)).await.unwrap();
 
-        let batch = CommandBatch::new(vec![envelope("op-1", &[], "alice", &[("name", serde_json::json!("hi"))])]).unwrap();
-        let receipt = authority.submit_blocking(batch, SubmitOptions::default(), 0).unwrap();
+        let batch = CommandBatch::new(vec![envelope("op-1", &[], "alice", &[("name", serde_json::json!("hi"))]).await]).await.unwrap();
+        let receipt = authority.submit_blocking(batch, SubmitOptions::default(), 0).await.unwrap();
         assert_eq!(receipt.frontier.head_seq, 1);
 
-        let queried: serde_json::Value = stored_json(&authority.query_blocking("name").unwrap().unwrap());
+        let queried: serde_json::Value = stored_json(&authority.query_blocking("name").await.unwrap().unwrap()).await;
         assert_eq!(queried, serde_json::json!("hi"));
 
-        let frontier = authority.frontier_blocking().unwrap();
+        let frontier = authority.frontier_blocking().await.unwrap();
         assert_eq!(frontier.head_seq, 1);
 
-        let generation = authority.snapshot_now_blocking(1).unwrap();
+        let generation = authority.snapshot_now_blocking(1).await.unwrap();
         assert_eq!(generation, 0);
 
-        authority.shutdown();
+        authority.shutdown().await;
     }
 
-    #[test]
-    fn document_authority_spawn_propagates_a_build_failure_synchronously() {
-        let result = ArtifactAuthority::spawn(|| Err(DbError::InvalidArgument("boom".to_string())), MailboxCapacities::uniform(4));
-        assert!(matches!(result, Err(DbError::InvalidArgument(_))));
+    #[semio_framework_async_macros::async_test]
+    async fn document_authority_spawn_propagates_a_build_failure_synchronously() {
+        let result = ArtifactAuthority::spawn(|| -> Result<ArtifactEngine<db_storage::InlineRuntime, AllowAll, NullVersionGraph>, DbError> { Err(DbError::InvalidArgument("boom".to_string())) }, MailboxCapacities::uniform(4));
+        assert!(matches!(result.await, Err(DbError::InvalidArgument(_))));
     }
     //#endregion 🔖️Actor
 }

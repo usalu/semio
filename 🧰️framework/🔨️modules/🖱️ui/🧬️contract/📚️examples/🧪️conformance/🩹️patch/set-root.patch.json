@@ -1,0 +1,20 @@
+{
+  "surface": "conformance.patch",
+  "baseRevision": 0,
+  "revision": 1,
+  "ops": [
+    {
+      "type": "setChildren",
+      "id": 0,
+      "children": []
+    },
+    {
+      "type": "setRoot",
+      "id": 1
+    },
+    {
+      "type": "remove",
+      "id": 0
+    }
+  ]
+}

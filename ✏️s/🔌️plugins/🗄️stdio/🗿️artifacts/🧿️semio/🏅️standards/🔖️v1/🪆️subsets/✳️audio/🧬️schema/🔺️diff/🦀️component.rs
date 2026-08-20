@@ -43,7 +43,7 @@ async fn unrank_excluding(rank: usize, excluded_sorted: &[usize]) -> usize {
     }
 }
 async fn transport_forward(index: usize, removed_sorted: &[usize], added_index_sorted: &[usize]) -> usize {
-    unrank_excluding(rank_excluding(index, removed_sorted), added_index_sorted)
+    unrank_excluding(rank_excluding(index, removed_sorted).await, added_index_sorted).await
 }
 //#endregion 🔖️IndexTransport
 
@@ -127,8 +127,8 @@ async fn indexed_absorb<T: Clone, D: Clone>(mine: &mut IndexedTripleDiff<D, T>, 
             merged_added.retain(|(i, _)| *i != r2);
         } else {
             let post_remove_rank = rank_excluding(r2, &added1_index_sorted);
-            let base_index = unrank_excluding(post_remove_rank, &removed1_sorted);
-            merged_removed_base.push(base_index);
+            let base_index = unrank_excluding(post_remove_rank.await, &removed1_sorted);
+            merged_removed_base.push(base_index.await);
         }
     }
     merged_removed_base.sort_unstable();
@@ -150,11 +150,11 @@ async fn indexed_absorb<T: Clone, D: Clone>(mine: &mut IndexedTripleDiff<D, T>, 
             }
         } else {
             let post_remove_rank = rank_excluding(mp, &added1_index_sorted);
-            let base_index = unrank_excluding(post_remove_rank, &removed1_sorted);
+            let base_index = unrank_excluding(post_remove_rank.await, &removed1_sorted);
             if merged_removed_base.binary_search(&base_index).is_ok() {
                 continue;
             }
-            modified_map.entry(base_index).and_modify(|d| absorb_diff(d, dd2.clone())).or_insert(dd2);
+            modified_map.entry(base_index.await).and_modify(|d| absorb_diff(d, dd2.clone())).or_insert(dd2);
         }
     }
     let merged_modified: Vec<(usize, D)> = modified_map.into_iter().collect();
@@ -195,7 +195,7 @@ async fn indexed_inverse<T: Clone, D>(triple: &IndexedTripleDiff<D, T>, base_ite
     for m in &triple.modified {
         if let Some(orig) = base_items.get(m.index) {
             let after_index = transport_forward(m.index, &removed_sorted, &added_index_sorted);
-            inv_modified.push(IndexModified { index: after_index, diff: diff_inverse(&m.diff, orig) });
+            inv_modified.push(IndexModified { index: after_index.await, diff: diff_inverse(&m.diff, orig) });
         }
     }
     let mut inv_added: Vec<IndexAdded<T>> = Vec::new();
@@ -249,18 +249,18 @@ pub type SemioAudioChannelsDiff = IndexedTripleDiff<SemioAudioChannelDiff, Semio
 
 async fn channels_between(base: &[SemioAudioChannel], other: &[SemioAudioChannel]) -> SemioAudioChannelsDiff {
     indexed_between(base, other, |a, b| {
-        let d = SemioAudioChannelDiff::between(a, b);
-        (!d.is_empty()).then_some(d)
-    })
+        let d = semio_framework_plugin::resolve_ready(SemioAudioChannelDiff::between(a, b));
+        (!semio_framework_plugin::resolve_ready(d.is_empty())).then_some(d)
+    }).await
 }
 async fn channels_apply(d: &SemioAudioChannelsDiff, base: &[SemioAudioChannel]) -> Vec<SemioAudioChannel> {
-    indexed_apply(d, base, |diff, item| diff.apply(item))
+    indexed_apply(d, base, |diff, item| diff.apply(item)).await
 }
 async fn channels_absorb(mine: &mut SemioAudioChannelsDiff, other: SemioAudioChannelsDiff) {
-    indexed_absorb(mine, other, |d, o| d.absorb(o), |diff, item| diff.apply(item))
+    indexed_absorb(mine, other, |d, o| d.absorb(o), |diff, item| diff.apply(item)).await
 }
 async fn channels_inverse(d: &SemioAudioChannelsDiff, base_items: &[SemioAudioChannel]) -> SemioAudioChannelsDiff {
-    indexed_inverse(d, base_items, |diff, item| diff.inverse(item))
+    indexed_inverse(d, base_items, |diff, item| diff.inverse(item)).await
 }
 //#endregion 🔖️ChannelDiff
 
@@ -270,16 +270,16 @@ async fn channels_inverse(d: &SemioAudioChannelsDiff, base_items: &[SemioAudioCh
 pub type SemioAudioTagsDiff = IndexedTripleDiff<SemioAudioTag, SemioAudioTag>;
 
 async fn tags_between(base: &[SemioAudioTag], other: &[SemioAudioTag]) -> SemioAudioTagsDiff {
-    indexed_between(base, other, |a, b| (a != b).then_some(b.clone()))
+    indexed_between(base, other, |a, b| (a != b).then_some(b.clone())).await
 }
 async fn tags_apply(d: &SemioAudioTagsDiff, base: &[SemioAudioTag]) -> Vec<SemioAudioTag> {
-    indexed_apply(d, base, |diff, _item| diff.clone())
+    indexed_apply(d, base, |diff, _item| diff.clone()).await
 }
 async fn tags_absorb(mine: &mut SemioAudioTagsDiff, other: SemioAudioTagsDiff) {
-    indexed_absorb(mine, other, |d, o| *d = o, |diff, _item| diff.clone())
+    indexed_absorb(mine, other, |d, o| *d = o, |diff, _item| diff.clone()).await
 }
 async fn tags_inverse(d: &SemioAudioTagsDiff, base_items: &[SemioAudioTag]) -> SemioAudioTagsDiff {
-    indexed_inverse(d, base_items, |_diff, item| item.clone())
+    indexed_inverse(d, base_items, |_diff, item| item.clone()).await
 }
 //#endregion 🔖️TagsDiff
 
@@ -301,7 +301,7 @@ pub struct SemioAudioDiff {
 
 impl SemioAudioDiff {
     pub async fn is_empty_diff(&self) -> bool {
-        self.sample_rate.is_none() && self.format.is_none() && self.channels.as_ref().map(indexed_is_empty).unwrap_or(true) && self.tags.as_ref().map(indexed_is_empty).unwrap_or(true)
+        self.sample_rate.is_none() && self.format.is_none() && self.channels.as_ref().map(indexed_is_empty).unwrap_or(true).await && self.tags.as_ref().map(indexed_is_empty).unwrap_or(true).await
     }
 }
 
@@ -315,12 +315,12 @@ impl MutationDiff<SemioAudioSnapshot> for SemioAudioDiff {
             next.format = v;
         }
         if let Some(d) = &self.channels {
-            triples::validate_indexed_triple(d, next.channels.len(), ["channels"])?;
-            next.channels = channels_apply(d, &next.channels);
+            triples::validate_indexed_triple(d, next.channels.len(), ["channels"]).await?;
+            next.channels = channels_apply(d, &next.channels).await;
         }
         if let Some(d) = &self.tags {
-            triples::validate_indexed_triple(d, next.tags.len(), ["tags"])?;
-            next.tags = tags_apply(d, &next.tags);
+            triples::validate_indexed_triple(d, next.tags.len(), ["tags"]).await?;
+            next.tags = tags_apply(d, &next.tags).await;
         }
         Ok(next)
     }
@@ -333,12 +333,12 @@ impl MutationDiff<SemioAudioSnapshot> for SemioAudioDiff {
             self.format = other.format;
         }
         match (&mut self.channels, other.channels) {
-            (Some(mine), Some(theirs)) => channels_absorb(mine, theirs),
+            (Some(mine), Some(theirs)) => channels_absorb(mine, theirs).await,
             (slot @ None, Some(theirs)) => *slot = Some(theirs),
             _ => {}
         }
         match (&mut self.tags, other.tags) {
-            (Some(mine), Some(theirs)) => tags_absorb(mine, theirs),
+            (Some(mine), Some(theirs)) => tags_absorb(mine, theirs).await,
             (slot @ None, Some(theirs)) => *slot = Some(theirs),
             _ => {}
         }
@@ -367,13 +367,13 @@ impl DiffAlgebra<SemioAudioSnapshot> for SemioAudioDiff {
     }
 
     async fn is_empty(&self) -> bool {
-        self.is_empty_diff()
+        self.is_empty_diff().await
     }
 }
 
 /// 🧩️ Builds a set-snapshot diff — sparse field-by-field, never a full-replace slot.
 pub async fn diff_set_snapshot(base: &SemioAudioSnapshot, snapshot: &SemioAudioSnapshot) -> SemioAudioDiff {
-    <SemioAudioDiff as DiffAlgebra<SemioAudioSnapshot>>::between(base, snapshot)
+    <SemioAudioDiff as DiffAlgebra<SemioAudioSnapshot>>::between(base, snapshot).await
 }
 //#endregion 🔖️Diff
 
@@ -401,7 +401,7 @@ pub(crate) async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
 pub(crate) async fn hex_decode_string(s: &str) -> Result<String, String> {
-    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
+    String::from_utf8(hex_decode(s).await?).map_err(|e| e.to_string())
 }
 pub(crate) async fn parse_u32(s: &str) -> Result<u32, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
@@ -411,10 +411,10 @@ pub(crate) async fn parse_usize(s: &str) -> Result<usize, String> {
 }
 
 pub(crate) async fn split_top_level(s: &str, sep: char) -> Vec<&str> {
-    triples::split_top_level(s, sep)
+    triples::split_top_level(s, sep).await
 }
 pub(crate) async fn strip_brackets(s: &str) -> Result<&str, String> {
-    triples::strip_brackets(s)
+    triples::strip_brackets(s).await
 }
 
 async fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
@@ -424,8 +424,8 @@ async fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String
     }
 }
 async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
-    let inner = strip_brackets(s)?;
-    match split_top_level(inner, ',').as_slice() {
+    let inner = strip_brackets(s).await?;
+    match split_top_level(inner, ',').await.as_slice() {
         ["0"] => Ok(None),
         [tag, value] if *tag == "1" => Ok(Some(dec(value)?)),
         other => Err(format!("option decode: bad shape {other:?}")),
@@ -462,7 +462,7 @@ pub(crate) async fn enc_f32_list(v: &[f32]) -> String {
     format!("[{}]", v.iter().map(|f| format!("{:08x}", f.to_bits())).collect::<Vec<_>>().join(","))
 }
 pub(crate) async fn dec_f32_list(s: &str) -> Result<Vec<f32>, String> {
-    let inner = strip_brackets(s)?;
+    let inner = strip_brackets(s).await?;
     if inner.is_empty() {
         return Ok(Vec::new());
     }
@@ -470,26 +470,26 @@ pub(crate) async fn dec_f32_list(s: &str) -> Result<Vec<f32>, String> {
 }
 
 pub(crate) async fn enc_channel(c: &SemioAudioChannel) -> String {
-    enc_f32_list(&c.samples)
+    enc_f32_list(&c.samples).await
 }
 pub(crate) async fn dec_channel(s: &str) -> Result<SemioAudioChannel, String> {
-    Ok(SemioAudioChannel { samples: dec_f32_list(s)? })
+    Ok(SemioAudioChannel { samples: dec_f32_list(s).await? })
 }
 
 async fn enc_channel_diff(d: &SemioAudioChannelDiff) -> String {
-    encode_option(&d.samples, |v| enc_f32_list(v))
+    encode_option(&d.samples, |v| enc_f32_list(v)).await
 }
 async fn dec_channel_diff(s: &str) -> Result<SemioAudioChannelDiff, String> {
-    Ok(SemioAudioChannelDiff { samples: decode_option(s, dec_f32_list)? })
+    Ok(SemioAudioChannelDiff { samples: decode_option(s, dec_f32_list).await? })
 }
 
 pub(crate) async fn enc_tag(t: &SemioAudioTag) -> String {
     format!("[{},{}]", hex_encode(t.key.as_bytes()), hex_encode(t.value.as_bytes()))
 }
 pub(crate) async fn dec_tag(s: &str) -> Result<SemioAudioTag, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [key, value] = parts.as_slice() else { return Err(format!("tag: expected 2 fields, got {}", parts.len())) };
-    Ok(SemioAudioTag { key: hex_decode_string(key)?, value: hex_decode_string(value)? })
+    Ok(SemioAudioTag { key: hex_decode_string(key).await?, value: hex_decode_string(value).await? })
 }
 
 /// 🧩️ Full bracket encoding of a snapshot — used both by [`protocol::DiffCodec`]'s `SetSnapshot`
@@ -499,13 +499,13 @@ pub(crate) async fn enc_snapshot(s: &SemioAudioSnapshot) -> String {
     format!("[{},{},{},[{}],[{}]]", hex_encode(s.schema.as_bytes()), s.sample_rate, enc_format(s.format), s.channels.iter().map(enc_channel).collect::<Vec<_>>().join(","), s.tags.iter().map(enc_tag).collect::<Vec<_>>().join(","),)
 }
 pub(crate) async fn dec_snapshot(s: &str) -> Result<SemioAudioSnapshot, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [schema_hex, sample_rate, format, channels_s, tags_s] = parts.as_slice() else {
         return Err(format!("snapshot: expected 5 fields, got {}", parts.len()));
     };
-    let channels = split_top_level(strip_brackets(channels_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_channel).collect::<Result<Vec<_>, String>>()?;
-    let tags = split_top_level(strip_brackets(tags_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_tag).collect::<Result<Vec<_>, String>>()?;
-    Ok(SemioAudioSnapshot { schema: hex_decode_string(schema_hex)?, sample_rate: parse_u32(sample_rate)?, format: dec_format(format)?, channels, tags })
+    let channels = split_top_level(strip_brackets(channels_s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_channel).collect::<Result<Vec<_>, String>>()?;
+    let tags = split_top_level(strip_brackets(tags_s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_tag).collect::<Result<Vec<_>, String>>()?;
+    Ok(SemioAudioSnapshot { schema: hex_decode_string(schema_hex).await?, sample_rate: parse_u32(sample_rate).await?, format: dec_format(format).await?, channels, tags })
 }
 //#endregion 🔖️ValueCodecs
 
@@ -533,15 +533,15 @@ async fn parse_audio_diff(line: &str) -> Result<SemioAudioDiff, String> {
     }
     for token in line.split(' ') {
         if let Some(rest) = token.strip_prefix("rate=") {
-            d.sample_rate = Some(parse_u32(rest)?);
+            d.sample_rate = Some(parse_u32(rest).await?);
         } else if let Some(rest) = token.strip_prefix("format=") {
-            d.format = Some(dec_format(rest)?);
+            d.format = Some(dec_format(rest).await?);
         } else if let Some(rest) = token.strip_prefix("channels{") {
             let body = rest.strip_suffix('}').ok_or_else(|| "channels: missing closing brace".to_string())?;
-            d.channels = Some(triples::dec_indexed_triple(body, dec_channel_diff, dec_channel)?);
+            d.channels = Some(triples::dec_indexed_triple(body, dec_channel_diff, dec_channel).await?);
         } else if let Some(rest) = token.strip_prefix("tags{") {
             let body = rest.strip_suffix('}').ok_or_else(|| "tags: missing closing brace".to_string())?;
-            d.tags = Some(triples::dec_indexed_triple(body, dec_tag, dec_tag)?);
+            d.tags = Some(triples::dec_indexed_triple(body, dec_tag, dec_tag).await?);
         } else {
             return Err(format!("audio diff: unknown token {token:?}"));
         }
@@ -557,17 +557,17 @@ async fn write_str_lp(out: &mut Vec<u8>, s: &str) {
     out.extend_from_slice(s.as_bytes());
 }
 async fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
-    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-    let bytes = reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec();
+    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+    let bytes = reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec();
     String::from_utf8(bytes).map_err(|e| e.to_string())
 }
 
 impl DiffCodec for SemioAudioDiff {
     async fn print_diff(&self) -> String {
-        print_audio_diff(self)
+        print_audio_diff(self).await
     }
     async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
-        parse_audio_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_audio_diff(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// ⚡️ Real binary diff frame, replacing the old `print_diff().into_bytes()` text-as-binary
     /// shortcut. `format u8` + `presence u8` (bit0=`sample_rate` bit1=`format` bit2=`channels`
@@ -598,7 +598,7 @@ impl DiffCodec for SemioAudioDiff {
             write_str_lp(&mut out, &v.to_string());
         }
         if let Some(v) = self.format {
-            write_str_lp(&mut out, enc_format(v));
+            write_str_lp(&mut out, enc_format(v).await);
         }
         if let Some(v) = &self.channels {
             write_str_lp(&mut out, &triples::enc_indexed_triple(v, enc_channel_diff, enc_channel));
@@ -619,26 +619,26 @@ impl DiffCodec for SemioAudioDiff {
         let presence = bytes[1];
         let mut reader = store::ByteReader::new(&bytes[2..]);
         let sample_rate = if presence & 0b0001 != 0 {
-            let text = read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff sample_rate blob", offset: 2, detail: e })?;
-            Some(parse_u32(&text).map_err(|e| protocol::ProtocolError::Malformed { what: "diff sample_rate text", offset: 2, detail: e })?)
+            let text = read_str_lp(&mut reader).await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff sample_rate blob", offset: 2, detail: e })?;
+            Some(parse_u32(&text).await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff sample_rate text", offset: 2, detail: e })?)
         } else {
             None
         };
         let format = if presence & 0b0010 != 0 {
-            let text = read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff format blob", offset: 2, detail: e })?;
-            Some(dec_format(&text).map_err(|e| protocol::ProtocolError::Malformed { what: "diff format text", offset: 2, detail: e })?)
+            let text = read_str_lp(&mut reader).await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff format blob", offset: 2, detail: e })?;
+            Some(dec_format(&text).await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff format text", offset: 2, detail: e })?)
         } else {
             None
         };
         let channels = if presence & 0b0100 != 0 {
-            let text = read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff channels blob", offset: 2, detail: e })?;
-            Some(triples::dec_indexed_triple(&text, dec_channel_diff, dec_channel).map_err(|e| protocol::ProtocolError::Malformed { what: "diff channels text", offset: 2, detail: e })?)
+            let text = read_str_lp(&mut reader).await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff channels blob", offset: 2, detail: e })?;
+            Some(triples::dec_indexed_triple(&text, dec_channel_diff, dec_channel).await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff channels text", offset: 2, detail: e })?)
         } else {
             None
         };
         let tags = if presence & 0b1000 != 0 {
-            let text = read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff tags blob", offset: 2, detail: e })?;
-            Some(triples::dec_indexed_triple(&text, dec_tag, dec_tag).map_err(|e| protocol::ProtocolError::Malformed { what: "diff tags text", offset: 2, detail: e })?)
+            let text = read_str_lp(&mut reader).await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff tags blob", offset: 2, detail: e })?;
+            Some(triples::dec_indexed_triple(&text, dec_tag, dec_tag).await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff tags text", offset: 2, detail: e })?)
         } else {
             None
         };

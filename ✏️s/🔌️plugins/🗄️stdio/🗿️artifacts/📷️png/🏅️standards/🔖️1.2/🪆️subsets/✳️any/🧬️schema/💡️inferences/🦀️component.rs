@@ -23,7 +23,7 @@ pub struct PngInference {
 
 impl protocol::Inference<PngSnapshot> for PngInference {
     async fn infer(snapshot: &PngSnapshot) -> Self {
-        Self { dimensions: compute_png_dimensions(snapshot) }
+        Self { dimensions: compute_png_dimensions(snapshot).await }
     }
 }
 

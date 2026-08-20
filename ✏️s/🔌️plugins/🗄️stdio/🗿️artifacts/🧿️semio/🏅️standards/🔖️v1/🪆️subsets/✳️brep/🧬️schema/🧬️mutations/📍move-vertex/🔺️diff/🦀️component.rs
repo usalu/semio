@@ -12,15 +12,15 @@ use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::Sem
 //#region 🔖️Diff
 pub async fn diff(payload: &MoveVertex, base: &SemioBrepSnapshot) -> protocol::MutationOutcome<SemioBrepDiff> {
     let Some(vertex) = base.vertices.iter().find(|v| v.id == payload.vertex_id) else {
-        return protocol::MutationOutcome::error("mutation.target-missing", format!("Vertex \"{}\" does not exist.", payload.vertex_id), [payload.vertex_id.clone()]);
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Vertex \"{}\" does not exist.", payload.vertex_id), [payload.vertex_id.clone()]).await;
     };
     let p = payload.new_point;
     if !p.x.is_finite() || !p.y.is_finite() || !p.z.is_finite() {
-        return protocol::MutationOutcome::fatal("mutation.invariant", format!("Vertex \"{}\" new point has a non-finite component.", payload.vertex_id), [payload.vertex_id.clone()]);
+        return protocol::MutationOutcome::fatal("mutation.invariant", format!("Vertex \"{}\" new point has a non-finite component.", payload.vertex_id), [payload.vertex_id.clone()]).await;
     }
     if vertex.point == p {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Vertex \"{}\" is already at this point.", payload.vertex_id));
+        return protocol::MutationOutcome::empty().await.warn("mutation.no-op", format!("Vertex \"{}\" is already at this point.", payload.vertex_id)).await;
     }
-    protocol::MutationOutcome::new(SemioBrepDiff { vertices: Some(NamedTripleDiff { removed: vec![], modified: vec![NamedModified { key: payload.vertex_id.clone(), diff: BrepVertexDiff { point: Some(p) } }], added: vec![] }), ..Default::default() })
+    protocol::MutationOutcome::new(SemioBrepDiff { vertices: Some(NamedTripleDiff { removed: vec![], modified: vec![NamedModified { key: payload.vertex_id.clone(), diff: BrepVertexDiff { point: Some(p) } }], added: vec![] }), ..Default::default() }).await
 }
 //#endregion 🔖️Diff

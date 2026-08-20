@@ -110,13 +110,13 @@ pub(crate) async fn demo_mutation_cases() -> Vec<GifMutation> {
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`. Out-of-range image indices are no-ops rather than panics.
 pub async fn apply_gif_mutation(snapshot: &mut GifSnapshot, mutation: &GifMutation) -> protocol::MutationOutcome<GifDiff> {
-    let outcome = <GifMutation as Mutation<GifSnapshot>>::diff(mutation, snapshot);
-    match MutationDiff::apply(outcome.diff(), snapshot) {
+    let outcome = <GifMutation as Mutation<GifSnapshot>>::diff(mutation, snapshot).await;
+    match MutationDiff::apply(outcome.diff().await, snapshot).await {
         Ok(next) => {
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).await.absorb_messages(outcome.messages().await.to_vec()).await,
     }
 }
 //#endregion 🔖️Apply
@@ -128,7 +128,7 @@ impl Mutation<GifSnapshot> for GifMutation {
     async fn diff(&self, base: &GifSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             GifMutation::NoMutation => GifDiff::default(),
-            GifMutation::SetSnapshot { snapshot } => diff::diff_set_snapshot(base, snapshot),
+            GifMutation::SetSnapshot { snapshot } => diff::diff_set_snapshot(base, snapshot).await,
             GifMutation::SetScreenSize { width, height } => GifDiff { width: (*width != base.width).then_some(*width), height: (*height != base.height).then_some(*height), ..Default::default() },
             GifMutation::SetGlobalColorTable { gct } => GifDiff { gct: (*gct != base.gct).then_some(gct.clone()), ..Default::default() },
             GifMutation::SetBackgroundColorIndex { index } => GifDiff { background_color_index: (*index != base.background_color_index).then_some(*index), ..Default::default() },
@@ -142,7 +142,7 @@ impl Mutation<GifSnapshot> for GifMutation {
                     let at = (*to).min(images.len());
                     images.insert(at, item);
                 }
-                GifDiff { images: Some(GifImagesDiff::between(&base.images, &images)), ..Default::default() }
+                GifDiff { images: Some(GifImagesDiff::between(&base.images, &images).await), ..Default::default() }
             }
             GifMutation::SetImageGeometry { index, left, top, width, height } => {
                 let d = GifImageDiff { left: Some(*left), top: Some(*top), width: Some(*width), height: Some(*height), ..Default::default() };
@@ -156,7 +156,7 @@ impl Mutation<GifSnapshot> for GifMutation {
                 let d = GifImageDiff { interlace: Some(*interlace), ..Default::default() };
                 GifDiff { images: Some(GifImagesDiff { modified: vec![GifImageModified { index: *index, diff: d }], ..Default::default() }), ..Default::default() }
             }
-        })
+        }).await
     }
 
     /// ↩️ Real, round-trippable inverses. `apply(inverse(m, base), apply(m, base)) == base` for
@@ -212,27 +212,27 @@ impl OpText for GifMutation {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
-                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
+                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline }).await?;
+                return <Self as dsl::DslVariants>::from_named_record(keyword, &record).await;
             }
         }
         Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
     }
     async fn print_op(&self) -> String {
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
+        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self).await;
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
+        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline).await
     }
 }
 
 /// ⚡️ Handcrafted `OpBinary` (P6) — pure forward to `dsl::variants_binary`.
 impl OpBinary for GifMutation {
     async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        dsl::variants_binary::encode_op(self)
+        dsl::variants_binary::encode_op(self).await
     }
     async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        dsl::variants_binary::decode_op(bytes)
+        dsl::variants_binary::decode_op(bytes).await
     }
 }
 //#endregion OpCodecs

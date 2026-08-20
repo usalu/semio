@@ -9,10 +9,10 @@ use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::
 
 //#region 🔖️Diff
 pub async fn diff(payload: &ReorderNodes, base: &SemioDrawingSnapshot) -> protocol::MutationOutcome<SemioDrawingDiff> {
-    match node_at(base, &payload.parent) {
+    match node_at(base, &payload.parent).await {
         Some(DrawNode::Group { children, .. }) if payload.from < children.len() => {
             if payload.from == payload.to {
-                return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Node #{} in layer #{} is already at position #{}.", payload.from, payload.parent.layer, payload.to));
+                return protocol::MutationOutcome::empty().await.warn("mutation.no-op", format!("Node #{} in layer #{} is already at position #{}.", payload.from, payload.parent.layer, payload.to)).await;
             }
             let item = children[payload.from].clone();
             protocol::MutationOutcome::new(diff_at_path(&payload.parent, DrawNodeDiff::Group(DrawGroupDiff { transform: None, children: Some(IndexedTripleDiff { removed: vec![payload.from], modified: Vec::new(), added: vec![IndexAdded { index: payload.to, item }] }) })))

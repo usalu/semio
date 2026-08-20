@@ -1237,8 +1237,10 @@ pub async fn start_introduction_action_definition() -> ActionDefinition {
 #[serde(transparent)]
 pub struct ActionRef(String);
 
+// 🚫️async: E1 — `new` is a pure single-field wrapper, zero suspension points, same rationale
+// already applied to `as_str` below; reverted per R9 (sync closure / catch_unwind consumers).
 impl ActionRef {
-    pub async fn new(id: impl Into<String>) -> Self {
+    pub fn new(id: impl Into<String>) -> Self {
         Self(id.into())
     }
 
@@ -1700,8 +1702,11 @@ pub struct IntroductionStepDefinition {
     pub demonstrations: Vec<IntroductionDemonstration>,
 }
 
+// 🚫️async: E1 — pure builder methods (self-mutation only, zero suspension points), reverted
+// per R9: multiple test consumers are language-barred from async (plain `#[test] fn`, sync
+// `catch_unwind` closures, `Vec<IntroductionStepDefinition>` literals).
 impl IntroductionStepDefinition {
-    pub async fn new(id: impl Into<String>, title: impl Into<LocalizedLabel>, body: impl Into<LocalizedLabel>) -> Self {
+    pub fn new(id: impl Into<String>, title: impl Into<LocalizedLabel>, body: impl Into<LocalizedLabel>) -> Self {
         Self {
             id: id.into(),
             title: title.into(),
@@ -1717,45 +1722,45 @@ impl IntroductionStepDefinition {
     }
 
     /// @emoji 🎯️ Sets the single element id raised above the glass and anchoring the info box.
-    pub async fn introduce(mut self, element_id: impl Into<String>) -> Self {
+    pub fn introduce(mut self, element_id: impl Into<String>) -> Self {
         self.introduce = Some(element_id.into());
         self
     }
 
     /// @emoji 🕳️ Additional element ids raised above the glass alongside `introduce` (no pulse).
-    pub async fn show(mut self, element_ids: Vec<String>) -> Self {
+    pub fn show(mut self, element_ids: Vec<String>) -> Self {
         self.show = element_ids;
         self
     }
 
     /// @emoji 📍️ Overrides where the info box is placed relative to `introduce`.
-    pub async fn placement(mut self, placement: IntroductionPlacement) -> Self {
+    pub fn placement(mut self, placement: IntroductionPlacement) -> Self {
         self.placement = placement;
         self
     }
 
     /// @emoji ✅️ Makes the step complete when the user performs all `interactions` (any order) instead of
     /// pressing Next.
-    pub async fn interact(mut self, interactions: Vec<IntroductionInteraction>) -> Self {
+    pub fn interact(mut self, interactions: Vec<IntroductionInteraction>) -> Self {
         self.interactions = interactions;
         self
     }
 
     /// @emoji 🔢️ Like `interact`, but `interactions` must complete in declaration order.
-    pub async fn interact_ordered(mut self, interactions: Vec<IntroductionInteraction>) -> Self {
+    pub fn interact_ordered(mut self, interactions: Vec<IntroductionInteraction>) -> Self {
         self.interactions = interactions;
         self.ordered = true;
         self
     }
 
     /// @emoji 🏛️ Attaches institution/partner logos to the step's info box.
-    pub async fn logos(mut self, logos: Vec<IntroductionLogo>) -> Self {
+    pub fn logos(mut self, logos: Vec<IntroductionLogo>) -> Self {
         self.logos = logos;
         self
     }
 
     /// @emoji 🎬️ Attaches ghost-cursor demonstrations played in order, then looping back to the first.
-    pub async fn demonstrate(mut self, demonstrations: Vec<IntroductionDemonstration>) -> Self {
+    pub fn demonstrate(mut self, demonstrations: Vec<IntroductionDemonstration>) -> Self {
         self.demonstrations = demonstrations;
         self
     }
@@ -1838,7 +1843,7 @@ impl IntroductionInteraction {
 
     /// @emoji 📇️ An interaction completing when the user activates action `id`.
     pub async fn action(id: impl Into<String>, label: impl Into<String>) -> Self {
-        Self::new(IntroductionInteractionKind::Action(ActionRef::new(id.into()).await), label).await
+        Self::new(IntroductionInteractionKind::Action(ActionRef::new(id.into())), label).await
     }
 
     /// @emoji 🧰️ An interaction completing when the user activates utility `id`.
@@ -2903,8 +2908,10 @@ pub struct DialogDefinition {
     pub cancel_label: Option<LocalizedLabel>,
 }
 
+// 🚫️async: E1 — pure builder methods (self-mutation only, zero suspension points), reverted
+// per R9: `catch_unwind` sync-closure test consumers are language-barred from async.
 impl DialogDefinition {
-    pub async fn new(id: impl Into<String>, title: impl Into<LocalizedLabel>, submit_action: ActionRef) -> Self {
+    pub fn new(id: impl Into<String>, title: impl Into<LocalizedLabel>, submit_action: ActionRef) -> Self {
         Self {
             id: id.into(),
             title: title.into(),
@@ -2919,31 +2926,31 @@ impl DialogDefinition {
     }
 
     /// @emoji 📝️ Attaches explanatory body text shown below the title.
-    pub async fn body(mut self, body: impl Into<LocalizedLabel>) -> Self {
+    pub fn body(mut self, body: impl Into<LocalizedLabel>) -> Self {
         self.body = Some(body.into());
         self
     }
 
     /// @emoji 🧾️ Attaches the staged-form field declarations.
-    pub async fn args(mut self, args: Vec<ActionArgDef>) -> Self {
+    pub fn args(mut self, args: Vec<ActionArgDef>) -> Self {
         self.args = args;
         self
     }
 
     /// @emoji ✅️ Overrides the submit button label (default "OK").
-    pub async fn submit_label(mut self, label: impl Into<LocalizedLabel>) -> Self {
+    pub fn submit_label(mut self, label: impl Into<LocalizedLabel>) -> Self {
         self.submit_label = label.into();
         self
     }
 
     /// @emoji ❌️ Overrides the cancel button label (default "Cancel", applied by the renderer).
-    pub async fn cancel_label(mut self, label: impl Into<LocalizedLabel>) -> Self {
+    pub fn cancel_label(mut self, label: impl Into<LocalizedLabel>) -> Self {
         self.cancel_label = Some(label.into());
         self
     }
 
     /// @emoji 🚪️ Declares an action dispatched on any dismissal (Escape, veil click, Cancel button).
-    pub async fn on_cancel(mut self, action: ActionRef) -> Self {
+    pub fn on_cancel(mut self, action: ActionRef) -> Self {
         self.cancel_action = Some(action);
         self
     }
@@ -5378,8 +5385,8 @@ mod app_label_tests {
     /// and `.destructive()`/`.use_when()`/`.example()` compose on top of it.
     #[semio_framework_async_macros::async_test]
     async fn action_definition_semantics_default_from_kind_and_builders_compose() {
-        let mutation = ActionDefinition::new_catalog("deleteThing", LocalizedLabel::data("Delete Thing"), ActionKind::Mutation);
-        assert_eq!(mutation.await.semantics, ActionSemantics::for_kind(ActionKind::Mutation).await);
+        let mutation = ActionDefinition::new_catalog("deleteThing", LocalizedLabel::data("Delete Thing"), ActionKind::Mutation).await;
+        assert_eq!(mutation.semantics, ActionSemantics::for_kind(ActionKind::Mutation).await);
 
         let action = ActionDefinition::new_catalog("deleteSelection", LocalizedLabel::data("Delete"), ActionKind::Mutation)
             .await.destructive()
@@ -5569,7 +5576,7 @@ mod app_label_tests {
                 ActionDefinition::new_catalog("add", LocalizedLabel::data("Add"), ActionKind::Mutation).await,
                 ActionDefinition::new_catalog("remove", LocalizedLabel::data("Remove"), ActionKind::Mutation).await,
             ],
-            vec![ActionRef::new("add").await],
+            vec![ActionRef::new("add")],
         ).await;
         let window = app.window_kinds.first();
         let resolved: Vec<&str> = resolve_window_actions(&app, window).await.iter().map(|a| a.id.as_str()).collect();
@@ -5679,7 +5686,7 @@ mod app_label_tests {
     async fn app_definition_and_window_kind_definition_serde_round_trip_interactions() {
         let mut app = app_with(
             vec![ActionDefinition::new_catalog("noop", LocalizedLabel::data("No operation"), ActionKind::View).await],
-            vec![ActionRef::new("noop").await],
+            vec![ActionRef::new("noop")],
         ).await;
         app.interactions = vec![sample_interaction_definition("graph").await];
         app.window_kinds.first_mut().interactions = vec![InteractionRef::new("graph").await];
@@ -5972,9 +5979,8 @@ mod app_label_tests {
         assert_eq!(round, step);
 
         let with_targets = IntroductionStepDefinition::new("viewport", LocalizedLabel::data("The Viewport"), LocalizedLabel::data("…"))
-            .await.introduce(window_element_id("puzzle3d-main").await)
-            .await.show(vec![window_element_id("puzzle3d-secondary").await])
-            .await;
+            .introduce(window_element_id("puzzle3d-main").await)
+            .show(vec![window_element_id("puzzle3d-secondary").await]);
         let json = serde_json::to_string(&with_targets).unwrap();
         assert!(json.contains("\"introduce\":\"framework.window.puzzle3dMain\""), "{json}");
         let round: IntroductionStepDefinition = serde_json::from_str(&json).unwrap();
@@ -5999,7 +6005,7 @@ mod app_label_tests {
     #[semio_framework_async_macros::async_test]
     async fn introduction_interaction_kind_round_trips_tagged() {
         for (kind, tag) in [
-            (IntroductionInteractionKind::Action(ActionRef::new("add").await), "action"),
+            (IntroductionInteractionKind::Action(ActionRef::new("add")), "action"),
             (IntroductionInteractionKind::Utility(UtilityRef::new("brush").await), "utility"),
             (IntroductionInteractionKind::Tool(ToolRef::new("fill").await), "tool"),
             (IntroductionInteractionKind::Panel("framework.panel.catalogue".into()), "panel"),
@@ -6037,11 +6043,11 @@ mod app_label_tests {
         assert!(step.interactions.is_empty());
         assert!(!step.ordered);
 
-        let with_interactions = IntroductionStepDefinition::new("viewport", LocalizedLabel::data("Viewport"), LocalizedLabel::data("…")).await.interact_ordered(vec![
+        let with_interactions = IntroductionStepDefinition::new("viewport", LocalizedLabel::data("Viewport"), LocalizedLabel::data("…")).interact_ordered(vec![
             IntroductionInteraction::zoom("puzzle3d-main", "Zoom").await,
             IntroductionInteraction::pan("puzzle3d-main", "Pan").await,
             IntroductionInteraction::orbit("puzzle3d-main", "Orbit").await,
-        ]).await;
+        ]);
         assert!(with_interactions.ordered);
         assert_eq!(with_interactions.interactions.len(), 3);
         let json = serde_json::to_string(&with_interactions).unwrap();
@@ -6184,11 +6190,11 @@ mod app_label_tests {
         assert!(json.contains("\"demonstrations\":[]"), "{json}");
 
         // 🎬️ A step can sequence several demonstrations (e.g. zoom, then pan, then orbit).
-        let with_demos = IntroductionStepDefinition::new("viewport", LocalizedLabel::data("Viewport"), LocalizedLabel::data("…")).await.demonstrate(vec![
+        let with_demos = IntroductionStepDefinition::new("viewport", LocalizedLabel::data("Viewport"), LocalizedLabel::data("…")).demonstrate(vec![
             IntroductionDemonstration::scroll(IntroductionPoint::Screen { x: 400.0, y: 300.0 }, -100.0).await,
             IntroductionDemonstration::drag(IntroductionPoint::Screen { x: 300.0, y: 300.0 }, IntroductionPoint::Screen { x: 400.0, y: 320.0 }).await,
             IntroductionDemonstration::orbit(IntroductionPoint::Screen { x: 300.0, y: 300.0 }, IntroductionPoint::Screen { x: 500.0, y: 300.0 }).await,
-        ]).await;
+        ]);
         assert_eq!(with_demos.demonstrations.len(), 3);
         let json = serde_json::to_string(&with_demos).unwrap();
         let round: IntroductionStepDefinition = serde_json::from_str(&json).unwrap();
@@ -6502,8 +6508,8 @@ mod app_label_tests {
         let TutorialArtifactEventKind::Edit { backwards, .. } = &backward.document[0].kind else { panic!("expected Edit") };
         assert_eq!(backwards[0].get("id").and_then(DslValue::as_str), Some("b"), "backward order unwinds newest-first");
 
-        let empty = tutorial_slice(&def, 250.0, 250.0);
-        assert!(empty.await.document.is_empty());
+        let empty = tutorial_slice(&def, 250.0, 250.0).await;
+        assert!(empty.document.is_empty());
     }
 
     #[semio_framework_async_macros::async_test]
@@ -6545,7 +6551,7 @@ mod app_label_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn dialog_definition_round_trips_camel_case_with_defaults() {
-        let dialog = DialogDefinition::new("confirm-delete", LocalizedLabel::data("Delete?"), ActionRef::new("deleteSelection").await).await;
+        let dialog = DialogDefinition::new("confirm-delete", LocalizedLabel::data("Delete?"), ActionRef::new("deleteSelection"));
         let json = serde_json::to_string(&dialog).unwrap();
         assert!(json.contains("\"args\":[]"), "{json}");
         assert!(json.contains("\"submitAction\":\"deleteSelection\""), "{json}");
@@ -6557,18 +6563,17 @@ mod app_label_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn dialog_definition_builder_chain() {
-        let dialog = DialogDefinition::new("addObject", LocalizedLabel::data("Add Object"), ActionRef::new("addObjectKind").await)
-            .await.body(LocalizedLabel::data("Choose a kind"))
-            .await.args(vec![ActionArgDef::text("objectKind", LocalizedLabel::data("Kind")).await])
-            .await.submit_label(LocalizedLabel::data("Add"))
-            .await.cancel_label(LocalizedLabel::data("Nevermind"))
-            .await.on_cancel(ActionRef::new("closeDialog").await)
-            .await;
+        let dialog = DialogDefinition::new("addObject", LocalizedLabel::data("Add Object"), ActionRef::new("addObjectKind"))
+            .body(LocalizedLabel::data("Choose a kind"))
+            .args(vec![ActionArgDef::text("objectKind", LocalizedLabel::data("Kind")).await])
+            .submit_label(LocalizedLabel::data("Add"))
+            .cancel_label(LocalizedLabel::data("Nevermind"))
+            .on_cancel(ActionRef::new("closeDialog"));
         assert_eq!(dialog.body.as_ref().map(|b| b.resolve(Terminology::Native, Locale::En)), Some("Choose a kind"));
         assert_eq!(dialog.args.len(), 1);
         assert_eq!(dialog.submit_label.resolve(Terminology::Native, Locale::En), "Add");
         assert_eq!(dialog.cancel_label.as_ref().map(|c| c.resolve(Terminology::Native, Locale::En)), Some("Nevermind"));
-        assert_eq!(dialog.cancel_action, Some(ActionRef::new("closeDialog").await));
+        assert_eq!(dialog.cancel_action, Some(ActionRef::new("closeDialog")));
     }
 
     #[semio_framework_async_macros::async_test]

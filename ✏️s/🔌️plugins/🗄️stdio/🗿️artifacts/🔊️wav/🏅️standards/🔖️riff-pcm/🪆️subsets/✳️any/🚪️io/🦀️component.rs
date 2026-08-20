@@ -33,7 +33,7 @@ pub mod derived_composition {
             if native.is_empty() {
                 return Err(ComposeError { message: "WavComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() });
             }
-            let analysis = WavAnalyzer::analyze(&native);
+            let analysis = WavAnalyzer::analyze(&native).await;
             let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError { message: "WavComposerComposition: analysis produced no snapshot".into(), diagnostics: analysis.diagnostics.clone() })?;
             Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics })
         }
@@ -44,18 +44,18 @@ pub mod derived_composition {
     /// 📌️ Registers this subset's schema descriptor, document codec. Called from
     /// this artifact's standard-level `engine::register()`.
     pub async fn register() {
-        ::schema::register_artifact_schema_descriptor(crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::wav_artifact_schema_descriptor());
+        ::schema::register_artifact_schema_descriptor(crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::wav_artifact_schema_descriptor().await);
         register_artifact_inferences();
         let _ = store::register_document_codec(store::ArtifactCodec::of::<WavSnapshot, crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::mutations::WavMutation>(
             crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::snapshot::STDIO_WAV_DOCUMENT_SCHEMA,
-        ));
+        ).await);
     }
 
     /// 💡️ Registers `s.stdio.wav.inference`'s facet leaves into the OS-wide inference
     /// catalog — sibling to `register_artifact_schema_descriptor` above (separate registry,
     /// ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING P2/S3+S4).
     pub async fn register_artifact_inferences() {
-        ::schema::register_artifact_inference_descriptor(crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::inferences::wav_artifact_inference_descriptor());
+        ::schema::register_artifact_inference_descriptor(crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::inferences::wav_artifact_inference_descriptor().await);
     }
     //#endregion 🔖️Register
 }
@@ -179,7 +179,7 @@ pub async fn decode_wav(bytes: &[u8]) -> Result<WavSnapshot, String> {
         }
         let body = &bytes[body_start..body_end];
         match fourcc {
-            b"fmt " => fmt = Some(decode_fmt_chunk(body)?),
+            b"fmt " => fmt = Some(decode_fmt_chunk(body).await?),
             b"data" => pending_data_body = Some(body.to_vec()),
             other => other_chunks.push(RiffChunk { fourcc: String::from_utf8_lossy(other).into_owned(), data: body.to_vec() }),
         }
@@ -187,7 +187,7 @@ pub async fn decode_wav(bytes: &[u8]) -> Result<WavSnapshot, String> {
     }
     let fmt = fmt.ok_or_else(|| "wav: no fmt chunk found".to_string())?;
     if let Some(body) = pending_data_body {
-        data = Some(decode_data_chunk(&fmt, &body));
+        data = Some(decode_data_chunk(&fmt, &body).await);
     }
     let data = data.ok_or_else(|| "wav: no data chunk found".to_string())?;
     Ok(WavSnapshot { schema: STDIO_WAV_DOCUMENT_SCHEMA.into(), fmt, data, other_chunks })
@@ -199,14 +199,14 @@ pub async fn decode_wav(bytes: &[u8]) -> Result<WavSnapshot, String> {
 pub async fn encode_wav(snapshot: &WavSnapshot) -> Vec<u8> {
     let mut body = Vec::new();
     body.extend_from_slice(b"WAVE");
-    let fmt_body = encode_fmt_chunk(&snapshot.fmt);
+    let fmt_body = encode_fmt_chunk(&snapshot.fmt).await;
     body.extend_from_slice(b"fmt ");
     body.extend_from_slice(&(fmt_body.len() as u32).to_le_bytes());
     body.extend_from_slice(&fmt_body);
     if fmt_body.len() % 2 == 1 {
         body.push(0);
     }
-    let data_body = encode_data_chunk(&snapshot.data);
+    let data_body = encode_data_chunk(&snapshot.data).await;
     body.extend_from_slice(b"data");
     body.extend_from_slice(&(data_body.len() as u32).to_le_bytes());
     body.extend_from_slice(&data_body);
@@ -358,7 +358,8 @@ pub mod io_registry {
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 
-    pub async fn entries() -> &'static [ComposerEntry] {
+    // 🚫️async: E1 pure table accessor consumed by OnceLock::get_or_init's sync closure — see R9
+    pub fn entries() -> &'static [ComposerEntry] {
         ENTRIES.get_or_init(|| vec![composer_entry_of::<WavRawAnyComposer>()]).as_slice()
     }
 }

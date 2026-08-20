@@ -8,7 +8,7 @@ use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::
 
 //#region 🔖️Inverse
 pub async fn inverse(payload: &ReplacePath, base: &SemioDrawingSnapshot) -> Vec<SemioDrawingMutation> {
-    match node_at(base, &payload.at) {
+    match node_at(base, &payload.at).await {
         Some(DrawNode::Path { segments, .. }) => vec![SemioDrawingMutation::ReplacePath(ReplacePath { at: payload.at.clone(), new_segments: segments.clone() })],
         _ => Vec::new(),
     }

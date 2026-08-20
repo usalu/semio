@@ -9,8 +9,8 @@ use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::S
 //#region 🔖️Diff
 pub async fn diff(payload: &CreateMesh, base: &SemioObjectSnapshot) -> protocol::MutationOutcome<SemioObjectDiff> {
     if base.mesh.is_some() {
-        return protocol::MutationOutcome::fatal("mutation.duplicate-id", "The object already has a mesh child.".to_string(), ["mesh".to_string()]);
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", "The object already has a mesh child.".to_string(), ["mesh".to_string()]).await;
     }
-    protocol::MutationOutcome::new(SemioObjectDiff { mesh: Some(Some(store::ArtifactChild::new(payload.child_id.clone(), payload.target.clone()))), ..Default::default() })
+    protocol::MutationOutcome::new(SemioObjectDiff { mesh: Some(Some(store::ArtifactChild::new(payload.child_id.clone(), payload.target.clone()).await)), ..Default::default() }).await
 }
 //#endregion 🔖️Diff

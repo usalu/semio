@@ -17,7 +17,7 @@ pub const BODY_KEY: &str = TreeWindowKit::KIND_ID;
 //#region 🔖️Definition
 /// 🧱️ Stitched into the editor manifest by `crate::editor::xml_valid::create_xml_valid_editor`.
 pub async fn definition() -> WindowKindDefinition {
-    WindowKindDefinition { label: LocalizedLabel::native("Tree", "Baum"), icon_id: "list-tree".into(), ..TreeWindowKit::editable_window_kind() }
+    WindowKindDefinition { label: LocalizedLabel::native("Tree", "Baum"), icon_id: "list-tree".into(), ..TreeWindowKit::editable_window_kind().await }
 }
 //#endregion 🔖️Definition
 
@@ -26,10 +26,10 @@ pub async fn definition() -> WindowKindDefinition {
 /// the real element tree, child-index paths as node ids.
 pub async fn render(document: &XmlSnapshot) -> UiNode {
     let root = match &document.doc.root {
-        Some(node) => node_view(Vec::new(), node),
+        Some(node) => node_view(Vec::new(), node).await,
         None => TreeNodeView { id: String::new(), label: "(empty document)".to_string(), children: Vec::new() },
     };
-    TreeWindowKit::render(&TreeView { roots: vec![root] })
+    TreeWindowKit::render(&TreeView { roots: vec![root] }).await
 }
 
 async fn node_view(path: Vec<usize>, node: &XmlNode) -> TreeNodeView {

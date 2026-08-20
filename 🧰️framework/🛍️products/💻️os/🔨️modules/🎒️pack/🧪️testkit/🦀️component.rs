@@ -477,11 +477,11 @@ pub async fn assert_streamed_equals_buffered(spec: &RecordSpec, record: &RecordV
 /// the original. Kept generic over closures so this crate needs no dependency on `vcs`/
 /// `dsl_derive`; their own `test_support` wraps this with concrete `P: ArtifactDsl + ArtifactPack`
 /// bounds in wave 1.
-pub async fn assert_dsl_pack_bidirectional<P>(parse_dsl: impl AsyncFn(&str) -> P, print_dsl: impl Fn(&P) -> String, encode_pack: impl AsyncFn(&P) -> Vec<u8>, decode_pack: impl AsyncFn(&[u8]) -> P, sample: &P)
+pub async fn assert_dsl_pack_bidirectional<P>(parse_dsl: impl AsyncFn(&str) -> P, print_dsl: impl AsyncFn(&P) -> String, encode_pack: impl AsyncFn(&P) -> Vec<u8>, decode_pack: impl AsyncFn(&[u8]) -> P, sample: &P)
 where
     P: PartialEq + std::fmt::Debug,
 {
-    let printed = print_dsl(sample);
+    let printed = print_dsl(sample).await;
     let reparsed = parse_dsl(&printed).await;
     let encoded = encode_pack(sample).await;
     let decoded = decode_pack(&encoded).await;
@@ -635,12 +635,12 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn law_dsl_pack_bidirectional_holds_for_a_hand_built_sample() {
-        let spec = camera_spec();
+        let spec = camera_spec().await;
         let parse_dsl = async |text: &str| crate::os_dsl::schema::parse(text, &spec, &ParseOptions::default()).await.unwrap_or_else(|e| panic!("parse failed: {e}"));
-        let print_dsl = |value: &RecordValue| crate::os_dsl::schema::print(value, &spec, JoinMode::Document);
+        let print_dsl = async |value: &RecordValue| crate::os_dsl::schema::print(value, &spec, JoinMode::Document).await;
         let encode_pack = async |value: &RecordValue| crate::os_pack::encode_document(&spec, value, &crate::os_pack::EncodeOptions::default()).await.expect("encode_pack");
         let decode_pack = async |bytes: &[u8]| crate::os_pack::decode_document(bytes, &spec, &crate::os_pack::DecodeOptions::default()).await.expect("decode_pack").0;
-        assert_dsl_pack_bidirectional(parse_dsl, print_dsl, encode_pack, decode_pack, &camera_sample()).await;
+        assert_dsl_pack_bidirectional(parse_dsl, print_dsl, encode_pack, decode_pack, &camera_sample().await).await;
     }
     //#endregion 🔖️Laws
 
@@ -655,7 +655,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn fuzz_truncation_never_panics_on_a_real_encoded_document() {
         let spec = mixed_spec().await;
-        let record = RecordValueGen::new(9).await.generate(&spec, 4);
+        let record = RecordValueGen::new(9).await.generate(&spec, 4).await;
         let bytes = crate::os_pack::encode_document(&spec, &record, &crate::os_pack::EncodeOptions::default()).await.expect("encode_document");
         let report = fuzz_truncation(&bytes, CorruptionLevel::Quick, decode_closure(spec));
         assert!(report.cases_panicked.is_empty(), "fuzz_truncation observed panics: {:?}", report.cases_panicked);
@@ -665,7 +665,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn fuzz_bit_flips_never_panics_on_a_real_encoded_document() {
         let spec = mixed_spec().await;
-        let record = RecordValueGen::new(11).await.generate(&spec, 4);
+        let record = RecordValueGen::new(11).await.generate(&spec, 4).await;
         let bytes = crate::os_pack::encode_document(&spec, &record, &crate::os_pack::EncodeOptions::default()).await.expect("encode_document");
         let report = fuzz_bit_flips(&bytes, CorruptionLevel::Quick, decode_closure(spec));
         assert!(report.cases_panicked.is_empty(), "fuzz_bit_flips observed panics: {:?}", report.cases_panicked);
@@ -707,7 +707,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn golden_hash_hex_matches_a_real_encoded_document_across_two_encodes() {
         let spec = mixed_spec().await;
-        let record = RecordValueGen::new(5).await.generate(&spec, 4);
+        let record = RecordValueGen::new(5).await.generate(&spec, 4).await;
         let a = crate::os_pack::encode_document(&spec, &record, &crate::os_pack::EncodeOptions::default()).await.unwrap();
         let b = crate::os_pack::encode_document(&spec, &record, &crate::os_pack::EncodeOptions::default()).await.unwrap();
         assert_eq!(golden_hash_hex(&a).await, golden_hash_hex(&b).await, "golden hash of a canonical encoding must be stable across repeated encodes");
@@ -721,7 +721,7 @@ mod tests {
         #[semio_framework_async_macros::async_test]
         async fn fuzz_truncation_and_bit_flips_never_panic_at_long_density() {
             let spec = mixed_spec().await;
-            let record = RecordValueGen::new(21).await.generate(&spec, 5);
+            let record = RecordValueGen::new(21).await.generate(&spec, 5).await;
             let bytes = crate::os_pack::encode_document(&spec, &record, &crate::os_pack::EncodeOptions::default()).await.expect("encode_document");
             let truncation_report = fuzz_truncation(&bytes, CorruptionLevel::Long, decode_closure(spec.clone()));
             let bit_flip_report = fuzz_bit_flips(&bytes, CorruptionLevel::Long, decode_closure(spec));
@@ -740,7 +740,7 @@ mod tests {
         #[semio_framework_async_macros::async_test]
         async fn fuzz_truncation_never_panics_at_every_single_byte_offset() {
             let spec = mixed_spec().await;
-            let record = RecordValueGen::new(33).await.generate(&spec, 5);
+            let record = RecordValueGen::new(33).await.generate(&spec, 5).await;
             let bytes = crate::os_pack::encode_document(&spec, &record, &crate::os_pack::EncodeOptions::default()).await.expect("encode_document");
             let report = fuzz_truncation(&bytes, CorruptionLevel::Exhaustive, decode_closure(spec));
             assert!(report.cases_panicked.is_empty(), "exhaustive truncation fuzz observed panics: {:?}", report.cases_panicked);
@@ -750,7 +750,7 @@ mod tests {
         #[semio_framework_async_macros::async_test]
         async fn fuzz_bit_flips_never_panics_at_every_single_bit() {
             let spec = mixed_spec().await;
-            let record = RecordValueGen::new(34).await.generate(&spec, 3);
+            let record = RecordValueGen::new(34).await.generate(&spec, 3).await;
             let bytes = crate::os_pack::encode_document(&spec, &record, &crate::os_pack::EncodeOptions::default()).await.expect("encode_document");
             let report = fuzz_bit_flips(&bytes, CorruptionLevel::Exhaustive, decode_closure(spec));
             assert!(report.cases_panicked.is_empty(), "exhaustive bit-flip fuzz observed panics: {:?}", report.cases_panicked);

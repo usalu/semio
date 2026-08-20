@@ -9,15 +9,15 @@ use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::Se
 //#region 🔖️Diff
 pub async fn diff(payload: &AddNodeProperty, base: &SemioGraphSnapshot) -> protocol::MutationOutcome<SemioGraphDiff> {
     let Some(node) = base.nodes.iter().find(|n| n.id == payload.node_id) else {
-        return protocol::MutationOutcome::error("mutation.target-missing", format!("Node \"{}\" does not exist.", payload.node_id.value), [payload.node_id.value.clone()]);
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Node \"{}\" does not exist.", payload.node_id.value), [payload.node_id.value.clone()]).await;
     };
     if node.properties.iter().any(|p| p.key == payload.property.key) {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Node \"{}\" already has a property \"{}\".", payload.node_id.value, payload.property.key));
+        return protocol::MutationOutcome::empty().await.warn("mutation.no-op", format!("Node \"{}\" already has a property \"{}\".", payload.node_id.value, payload.property.key)).await;
     }
     let mut nodes = base.nodes.clone();
     let node = nodes.iter_mut().find(|n| n.id == payload.node_id).expect("checked above");
     let at = payload.index.min(node.properties.len());
     node.properties.insert(at, payload.property.clone());
-    protocol::MutationOutcome::new(SemioGraphDiff { nodes: Some(SemioGraphNodeList { values: nodes }), edges: None })
+    protocol::MutationOutcome::new(SemioGraphDiff { nodes: Some(SemioGraphNodeList { values: nodes }), edges: None }).await
 }
 //#endregion 🔖️Diff

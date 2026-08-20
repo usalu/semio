@@ -185,7 +185,7 @@ pub async fn basis_function_derivatives(knots: &KnotVector, span: usize, u: f64,
 pub async fn de_boor(knots: &KnotVector, control_values: &[f64], u: f64) -> f64 {
     let span = knots.find_span(u);
     let p = knots.degree;
-    let n = basis_functions(knots, span, u);
+    let n = basis_functions(knots, span.await, u);
     (0..=p).map(|j| n[j] * control_values[span - p + j]).sum()
 }
 
@@ -198,7 +198,7 @@ pub async fn de_boor(knots: &KnotVector, control_values: &[f64], u: f64) -> f64 
 /// used to raise local control or to harmonize two curves onto a shared knot vector.
 pub async fn insert_knot(knots: &KnotVector, control_values: &[f64], u: f64) -> (KnotVector, Vec<f64>) {
     let p = knots.degree;
-    let span = knots.find_span(u);
+    let span = knots.find_span(u).await;
     let mut new_knots = knots.knots.clone();
     new_knots.insert(span + 1, u);
     let n = control_values.len();

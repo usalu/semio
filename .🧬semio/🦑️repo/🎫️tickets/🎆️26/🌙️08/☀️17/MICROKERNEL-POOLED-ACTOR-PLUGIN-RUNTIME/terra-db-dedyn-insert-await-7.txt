@@ -1,0 +1,353 @@
+{
+  "crate": "semio-framework-os-kernel-db",
+  "history": [],
+  "residual_errors": 473,
+  "ambiguous": [],
+  "other": [
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../👁️observe/🦀️component.rs:301",
+      "code": "(no code)",
+      "msg": "expected one of `,`, `:`, or `}`, found `.`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../👁️observe/🦀️component.rs:529",
+      "code": "(no code)",
+      "msg": "expected one of `,`, `:`, or `}`, found `.`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../👁️observe/🦀️component.rs:539",
+      "code": "(no code)",
+      "msg": "expected one of `,`, `:`, or `}`, found `.`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📝️wal/🦀️component.rs:519",
+      "code": "(no code)",
+      "msg": "expected one of `,`, `:`, or `}`, found `.`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📝️wal/🦀️component.rs:670",
+      "code": "(no code)",
+      "msg": "expected one of `,`, `:`, or `}`, found `.`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔄️sync/🦀️component.rs:104",
+      "code": "(no code)",
+      "msg": "expected one of `,`, `:`, or `}`, found `.`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📄️artifact/🦀️component.rs:989",
+      "code": "(no code)",
+      "msg": "expected one of `,`, `:`, or `}`, found `.`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:856",
+      "code": "(no code)",
+      "msg": "expected one of `,`, `:`, or `}`, found `.`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:52",
+      "code": "E0432",
+      "msg": "unresolved import `crate::db_storage::DbStorage`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🗄️storage/🦀️component.rs:1463",
+      "code": "E0433",
+      "msg": "cannot find module or crate `db_actor` in this scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🗄️storage/🦀️component.rs:1475",
+      "code": "E0433",
+      "msg": "cannot find module or crate `db_actor` in this scope"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🌐️cluster/🦀️component.rs:318",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔍️query/🦀️component.rs:205",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔍️query/🦀️component.rs:354",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔍️query/🦀️component.rs:362",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔍️query/🦀️component.rs:368",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔍️query/🦀️component.rs:369",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔍️query/🦀️component.rs:378",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔍️query/🦀️component.rs:403",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔍️query/🦀️component.rs:434",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔍️query/🦀️component.rs:435",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔍️query/🦀️component.rs:436",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔍️query/🦀️component.rs:615",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔍️query/🦀️component.rs:619",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔍️query/🦀️component.rs:676",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔍️query/🦀️component.rs:678",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔍️query/🦀️component.rs:679",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔍️query/🦀️component.rs:680",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔍️query/🦀️component.rs:682",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔍️query/🦀️component.rs:683",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔍️query/🦀️component.rs:687",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔍️query/🦀️component.rs:688",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔍️query/🦀️component.rs:691",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔍️query/🦀️component.rs:702",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔍️query/🦀️component.rs:706",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔍️query/🦀️component.rs:707",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔍️query/🦀️component.rs:586",
+      "code": "E0107",
+      "msg": "struct takes 1 generic argument but 0 generic arguments were supplied"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⌨️cli/🦀️component.rs:448",
+      "code": "E0107",
+      "msg": "missing generics for struct `fs_storage::FsStorage`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔍️query/🦀️component.rs:858",
+      "code": "E0038",
+      "msg": "the trait `QuerySource` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../👁️preview/🦀️component.rs:475",
+      "code": "E0038",
+      "msg": "the trait `ConflictOracle` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../👁️preview/🦀️component.rs:486",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🎭️actor/🦀️component.rs:171",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🎭️actor/🦀️component.rs:820",
+      "code": "E0038",
+      "msg": "the trait `ThreadSpawner` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🎭️actor/🦀️component.rs:847",
+      "code": "E0038",
+      "msg": "the trait `ThreadSpawner` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🎭️actor/🦀️component.rs:911",
+      "code": "E0382",
+      "msg": "use of moved value: `decision`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔒️security/🦀️component.rs:254",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔒️security/🦀️component.rs:254",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔒️security/🦀️component.rs:491",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🧪️testkit/🦀️component.rs:602",
+      "code": "E0107",
+      "msg": "missing generics for struct `ArtifactEngine`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🧪️testkit/🦀️component.rs:548",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📝️wal/🦀️component.rs:556",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = Vec<u8>>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📝️wal/🦀️component.rs:574",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = Vec<u8>>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📝️wal/🦀️component.rs:577",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = Vec<u8>>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📝️wal/🦀️component.rs:673",
+      "code": "E0271",
+      "msg": "expected `tx_id` to return `Option<_>`, but it returns `impl Future<Output = Option<u64>>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚔️conflict/🦀️component.rs:354",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "/Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/src/rust/library/alloc/src/macros.rs:113",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🌐️cluster/🦀️component.rs:250",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📄️artifact/🦀️component.rs:811",
+      "code": "E0038",
+      "msg": "the trait `ConflictOracle` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📄️artifact/🦀️component.rs:916",
+      "code": "E0038",
+      "msg": "the trait `QuerySource` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📄️artifact/🦀️component.rs:938",
+      "code": "E0038",
+      "msg": "the trait `QuerySource` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📄️artifact/🦀️component.rs:1050",
+      "code": "E0271",
+      "msg": "expected `{closure@🦀️component.rs:1050:48}` to return `(RowId, Value)`, but it returns `(RowId, impl Future<Output = Value>)`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔍️query/🦀️component.rs:1048",
+      "code": "E0038",
+      "msg": "the trait `QuerySource` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔒️security/🦀️component.rs:325",
+      "code": "E0038",
+      "msg": "the trait `Signer` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔒️security/🦀️component.rs:334",
+      "code": "E0038",
+      "msg": "the trait `SignatureVerifier` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🎭️actor/🦀️component.rs:809",
+      "code": "E0038",
+      "msg": "the trait `ThreadSpawner` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔍️query/🦀️component.rs:1047",
+      "code": "E0038",
+      "msg": "the trait `QuerySource` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../👁️preview/🦀️component.rs:483",
+      "code": "E0038",
+      "msg": "the trait `ConflictOracle` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🎭️actor/🦀️component.rs:819",
+      "code": "E0038",
+      "msg": "the trait `ThreadSpawner` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📄️artifact/🦀️component.rs:273",
+      "code": "E0282",
+      "msg": "type annotations needed"
+    }
+  ]
+}

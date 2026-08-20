@@ -1,0 +1,80 @@
+warning: unused import: `dispatch::*`
+  --> 🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/📦️glue.rs:43:9
+   |
+43 | pub use dispatch::*;
+   |         ^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `reconcile::*`
+  --> 🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/📦️glue.rs:49:9
+   |
+49 | pub use reconcile::*;
+   |         ^^^^^^^^^^^^
+
+warning: unused import: `transaction::*`
+  --> 🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/📦️glue.rs:51:9
+   |
+51 | pub use transaction::*;
+   |         ^^^^^^^^^^^^^^
+
+warning: method `restore_after_lease` is never used
+   --> 🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/🦀️entity.rs:321:8
+    |
+272 | impl EntityStore {
+    | ---------------- method in this implementation
+...
+321 |     fn restore_after_lease<T: 'static>(&mut self, id: EntityId, value: Box<T>) {
+    |        ^^^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-ui-runtime` (lib) generated 4 warnings (run `cargo fix --lib -p semio-framework-ui-runtime` to apply 3 suggestions)
+warning: `semio-framework-ui-runtime` (lib test) generated 3 warnings (3 duplicates)
+    Finished `test` profile [unoptimized] target(s) in 0.17s
+     Running unittests 📦️glue.rs (target/debug/deps/semio_framework_ui_runtime-b575e311e5ad91e8)
+
+running 34 tests
+test entity::tests::defer_effects_queue_rather_than_run_inline ... ok
+test entity::tests::read_during_lease_is_rejected ... ok
+test entity::tests::spawn_local_queues_future_for_the_embedder ... ok
+test entity::tests::stale_entity_id_never_resolves_to_new_occupant ... ok
+test entity::tests::dropped_subscription_stops_delivering ... ok
+test entity::tests::weak_entity_upgrade_fails_after_last_strong_drops ... ok
+test entity::tests::release_is_queued_until_flush_releases ... ok
+test entity::tests::effects_queue_rather_than_run_inline ... ok
+test gateway::tests::full_backing_sink_returns_full_synchronously_without_dropping_the_command ... ok
+test gateway::tests::full_local_capacity_returns_full_synchronously_without_dropping_the_command ... ok
+test gateway::tests::resolving_a_ticket_frees_capacity_for_a_new_submission ... ok
+test gateway::tests::ticket_round_trips_to_acknowledged_and_to_rejected ... ok
+test inbox::tests::drain_into_on_an_empty_inbox_is_a_no_op ... ok
+test inbox::tests::drain_into_respects_limit_and_leaves_the_remainder_queued ... ok
+test inbox::tests::push_beyond_capacity_returns_overflow_without_dropping_existing_entries ... ok
+test inbox::tests::same_key_pushes_coalesce_to_the_newest_value ... ok
+test presence::tests::a_burst_of_same_key_own_presence_writes_coalesces_to_the_newest_value ... ok
+test presence::tests::distinct_peers_on_one_key_are_all_reported_and_expire_independently ... ok
+test presence::tests::own_presence_never_expires ... ok
+test presence::tests::presence_entries_expire_exactly_at_their_ttl_and_a_flush_after_expiry_omits_them ... ok
+test presence::tests::a_burst_of_same_key_peer_writes_coalesces_to_one_update ... ok
+test entity::tests::value_restored_after_panicking_closure ... ok
+test present::tests::a_stateless_fn_item_satisfies_present_generically ... ok
+test entity::tests::nested_lease_is_rejected_not_aliased ... ok
+test present::tests::component_tree_three_levels_builds_and_compares ... ok
+test present::tests::duplicate_sibling_keys_nested_in_the_tree_are_detected ... ok
+test present::tests::position_derived_keys_are_stable_and_ergonomic ... ok
+test present::tests::duplicate_sibling_keys_via_with_children_panic ... ok
+test tracking::tests::n_notifications_of_one_surface_coalesce_to_one_dirty_mark ... ok
+test tracking::tests::finish_rejects_mismatched_surface - should panic ... ok
+test tracking::tests::nested_present_scopes_attribute_reads_to_the_right_surface ... ok
+test tracking::tests::presenter_reading_a_not_b_wakes_only_on_a ... ok
+test tracking::tests::reads_outside_a_present_scope_are_not_recorded ... ok
+test tracking::tests::stale_edge_disappears_after_next_present_without_the_read ... ok
+
+test result: ok. 34 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests semio_framework_ui_runtime
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

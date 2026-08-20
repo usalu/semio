@@ -61,8 +61,8 @@ impl ArtifactEditor for HtmlEditor {
         _engines: &EngineHandles,
     ) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
         match command {
-            HtmlEditCommand::ReplaceText { text } => match <HtmlSnapshot as store::ArtifactDsl>::parse_dsl(text) {
-                Ok(snapshot) => Ok(Emit::mutations(vec![HtmlMutation::SetSnapshot { snapshot }])),
+            HtmlEditCommand::ReplaceText { text } => match <HtmlSnapshot as store::ArtifactDsl>::parse_dsl(text).await {
+                Ok(snapshot) => Ok(Emit::mutations(vec![HtmlMutation::SetSnapshot { snapshot }]).await),
                 Err(_) => Ok(Emit::default()),
             },
         }
@@ -70,8 +70,8 @@ impl ArtifactEditor for HtmlEditor {
 
     async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
-            main::BODY_KEY => main::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
+            main::BODY_KEY => main::render(doc.snapshot).await,
+            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))).await,
         }
     }
 }
@@ -80,12 +80,12 @@ impl ArtifactEditor for HtmlEditor {
 //#region 🔖️Manifest
 pub async fn create_html_editor() -> semio_framework_plugin::AppDefinition {
     Editor::builder(HTML_DIALECT)
-        .document(["semio", "html"])
-        .icon_id("file-text")
-        .mode_def(edit::definition())
-        .default_mode_id(edit::MODE_ID)
-        .window_kind_def(main::definition())
-        .default_layout(edit::layout())
+        .await.document(["semio", "html"])
+        .await.icon_id("file-text")
+        .await.mode_def(edit::definition().await)
+        .await.default_mode_id(edit::MODE_ID)
+        .await.window_kind_def(main::definition().await)
+        .await.default_layout(edit::layout())
         .build_definition()
 }
 //#endregion 🔖️Manifest

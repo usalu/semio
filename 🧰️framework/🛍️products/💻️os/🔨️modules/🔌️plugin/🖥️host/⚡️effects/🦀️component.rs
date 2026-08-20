@@ -47,11 +47,11 @@ use semio_framework_os_services::{ComputeError, ComputePool, CompletionSink, Eve
 pub struct TraceIdAllocator(AtomicU64);
 
 impl TraceIdAllocator {
-    pub fn new() -> Self {
+    pub async fn new() -> Self {
         Self(AtomicU64::new(1))
     }
 
-    pub fn next(&self) -> TraceId {
+    pub async fn next(&self) -> TraceId {
         TraceId(self.0.fetch_add(1, Ordering::SeqCst))
     }
 }
@@ -75,6 +75,7 @@ struct ActorRecord {
 pub struct ActorScopeRegistry(Arc<Mutex<HashMap<u64, ActorRecord>>>);
 
 impl ActorScopeRegistry {
+    // 🚫️async: E1 pure constructor consumed by `impl Default` (external trait, sync-only) — R9.
     pub fn new() -> Self {
         Self(Arc::new(Mutex::new(HashMap::new())))
     }
@@ -86,21 +87,21 @@ impl ActorScopeRegistry {
     // 🔀️ dedyn-emit-runtime, O1/R3: generic over `R: HostAsyncRuntime` (Send-ness derived
     // structurally at each caller's own concrete `R`, never a bound on this fn) rather than `&dyn
     // HostAsyncRuntime` — mirrors `db_storage`'s `R: HostAsyncRuntime` holders.
-    pub fn activate<R: HostAsyncRuntime>(&self, runtime: &R, actor: u64, generation: u16, package_scope: &ScopeHandle) -> ScopeHandle {
-        let scope = runtime.open_scope(ScopeOwner::Actor(actor), Some(package_scope));
+    pub async fn activate<R: HostAsyncRuntime>(&self, runtime: &R, actor: u64, generation: u16, package_scope: &ScopeHandle) -> ScopeHandle {
+        let scope = runtime.open_scope(ScopeOwner::Actor(actor), Some(package_scope)).await;
         self.0.lock().expect("ActorScopeRegistry mutex poisoned").insert(actor, ActorRecord { scope: scope.clone(), generation });
         scope
     }
 
-    pub fn scope_for(&self, actor: u64) -> Option<ScopeHandle> {
+    pub async fn scope_for(&self, actor: u64) -> Option<ScopeHandle> {
         self.0.lock().expect("ActorScopeRegistry mutex poisoned").get(&actor).map(|record| record.scope.clone())
     }
 
-    pub fn generation_of(&self, actor: u64) -> Option<u16> {
+    pub async fn generation_of(&self, actor: u64) -> Option<u16> {
         self.0.lock().expect("ActorScopeRegistry mutex poisoned").get(&actor).map(|record| record.generation)
     }
 
-    pub fn deactivate(&self, actor: u64) {
+    pub async fn deactivate(&self, actor: u64) {
         self.0.lock().expect("ActorScopeRegistry mutex poisoned").remove(&actor);
     }
 }
@@ -116,9 +117,9 @@ impl Default for ActorScopeRegistry {
 /// `generation` — always correct regardless of what `actor_stable`'s own low 14 bits were, per
 /// `OperationContext.generation`'s own doc ("a different concept from ActorId's packed 14-bit
 /// restart-generation bits").
-fn addressed_actor_id(actor_stable: u64, generation: u16) -> RuntimeActorId {
+async fn addressed_actor_id(actor_stable: u64, generation: u16) -> RuntimeActorId {
     let stable = RuntimeActorId(actor_stable);
-    RuntimeActorId::new(stable.plugin_ordinal(), stable.kind_tag(), stable.ordinal(), generation)
+    RuntimeActorId::new(stable.plugin_ordinal(), stable.kind_tag(), stable.ordinal(), generation).await
 }
 //#endregion 🪪️ActorScopeRegistry
 
@@ -132,11 +133,12 @@ fn addressed_actor_id(actor_stable: u64, generation: u16) -> RuntimeActorId {
 pub struct CapabilityRevocationRegistry(Arc<Mutex<HashMap<CapabilityTokenId, Vec<CancelToken>>>>);
 
 impl CapabilityRevocationRegistry {
+    // 🚫️async: E1 pure constructor consumed by `impl Default` (external trait, sync-only) — R9.
     pub fn new() -> Self {
         Self(Arc::new(Mutex::new(HashMap::new())))
     }
 
-    fn track(&self, capability: CapabilityTokenId, token: CancelToken) {
+    async fn track(&self, capability: CapabilityTokenId, token: CancelToken) {
         self.0.lock().expect("CapabilityRevocationRegistry mutex poisoned").entry(capability).or_default().push(token);
     }
 
@@ -145,10 +147,10 @@ impl CapabilityRevocationRegistry {
     /// the `capability-revoked` completion (see `emit_completed_err` call sites below). Clears the
     /// registered list for `capability` so a later revoke of the same (already-revoked) id is a
     /// harmless no-op.
-    pub fn revoke(&self, capability: CapabilityTokenId) {
+    pub async fn revoke(&self, capability: CapabilityTokenId) {
         if let Some(tokens) = self.0.lock().expect("CapabilityRevocationRegistry mutex poisoned").remove(&capability) {
             for token in tokens {
-                token.cancel();
+                token.cancel().await;
             }
         }
     }
@@ -168,15 +170,15 @@ impl Default for CapabilityRevocationRegistry {
 /// per-effect deadline can never starve a higher-priority lane's fair share of `ComputePool`.
 const LANE_DEADLINE_CEILING_MS: [u64; 4] = [2_000, 5_000, 30_000, 120_000];
 
-fn lane_ceiling_ms(lane: u8) -> u64 {
+async fn lane_ceiling_ms(lane: u8) -> u64 {
     LANE_DEADLINE_CEILING_MS.get(lane as usize).copied().unwrap_or(*LANE_DEADLINE_CEILING_MS.last().expect("non-empty"))
 }
 
 /// ⏱️ Clamps `effect_deadline_ms` (if the effect stated one) to the lane's own ceiling from
 /// `now_ms` — always returns `Some`, since every dispatched operation gets a host-enforced deadline
 /// even when the effect itself did not ask for one.
-fn clamp_deadline_ms(now_ms: u64, effect_deadline_ms: Option<u64>, lane: u8) -> u64 {
-    let ceiling = now_ms.saturating_add(lane_ceiling_ms(lane));
+async fn clamp_deadline_ms(now_ms: u64, effect_deadline_ms: Option<u64>, lane: u8) -> u64 {
+    let ceiling = now_ms.saturating_add(lane_ceiling_ms(lane).await);
     match effect_deadline_ms {
         Some(requested) => requested.min(ceiling),
         None => ceiling,
@@ -193,7 +195,7 @@ fn clamp_deadline_ms(now_ms: u64, effect_deadline_ms: Option<u64>, lane: u8) -> 
 /// and the packet report's `## honest gaps`) — [`RecordingEnvelopeInjector`] below exists for
 /// tests only.
 pub trait EnvelopeInjector: Send + Sync {
-    fn inject(&self, envelope: Envelope);
+    async fn inject(&self, envelope: Envelope);
 }
 
 /// 🧪️ Test double recording every injected `Envelope` in order.
@@ -201,17 +203,17 @@ pub trait EnvelopeInjector: Send + Sync {
 pub struct RecordingEnvelopeInjector(Arc<Mutex<Vec<Envelope>>>);
 
 impl RecordingEnvelopeInjector {
-    pub fn new() -> Self {
+    pub async fn new() -> Self {
         Self::default()
     }
 
-    pub fn recorded(&self) -> Vec<Envelope> {
+    pub async fn recorded(&self) -> Vec<Envelope> {
         self.0.lock().expect("RecordingEnvelopeInjector mutex poisoned").clone()
     }
 }
 
 impl EnvelopeInjector for RecordingEnvelopeInjector {
-    fn inject(&self, envelope: Envelope) {
+    async fn inject(&self, envelope: Envelope) {
         self.0.lock().expect("RecordingEnvelopeInjector mutex poisoned").push(envelope);
     }
 }
@@ -224,20 +226,20 @@ impl EnvelopeInjector for RecordingEnvelopeInjector {
 /// misbehaving/runaway service, not a steady-state throttle.
 pub const COMPLETION_MAILBOX_CAP: u32 = 512;
 
-fn completion_topic(actor: u64) -> Topic {
+async fn completion_topic(actor: u64) -> Topic {
     Topic(format!("__effect_completions__:{actor}"))
 }
 
 /// 🧵️ `EventRouter`'s `Mailbox` payload is a bare `Vec<u8>` with no room for `lane` — this
 /// prefixes the single `lane` byte so [`EnvelopeCompletionSink::flush`] can recover it on drain.
-fn encode_mailbox_entry(lane: u8, event_bytes: &[u8]) -> Vec<u8> {
+async fn encode_mailbox_entry(lane: u8, event_bytes: &[u8]) -> Vec<u8> {
     let mut wire = Vec::with_capacity(1 + event_bytes.len());
     wire.push(lane);
     wire.extend_from_slice(event_bytes);
     wire
 }
 
-fn decode_mailbox_entry(wire: &[u8]) -> (u8, &[u8]) {
+async fn decode_mailbox_entry(wire: &[u8]) -> (u8, &[u8]) {
     match wire.split_first() {
         Some((lane, rest)) => (*lane, rest),
         None => (0, &[]),
@@ -269,14 +271,14 @@ pub struct EnvelopeCompletionSink<I: EnvelopeInjector> {
 }
 
 impl<I: EnvelopeInjector> EnvelopeCompletionSink<I> {
-    pub fn new(actors: ActorScopeRegistry, events: Arc<EventRouter>, injector: Arc<I>) -> Self {
+    pub async fn new(actors: ActorScopeRegistry, events: Arc<EventRouter>, injector: Arc<I>) -> Self {
         Self { actors, events, injector, subscribed: Mutex::new(std::collections::HashSet::new()) }
     }
 
-    fn ensure_subscribed(&self, actor: u64) {
+    async fn ensure_subscribed(&self, actor: u64) {
         let mut subscribed = self.subscribed.lock().expect("EnvelopeCompletionSink subscribed mutex poisoned");
         if subscribed.insert(actor) {
-            self.events.subscribe(completion_topic(actor), semio_framework_actor::ActorId(actor), ChannelPolicy::LosslessBounded { cap: COMPLETION_MAILBOX_CAP });
+            self.events.subscribe(completion_topic(actor).await, semio_framework_actor::ActorId(actor), ChannelPolicy::LosslessBounded { cap: COMPLETION_MAILBOX_CAP }).await;
         }
     }
 
@@ -286,41 +288,51 @@ impl<I: EnvelopeInjector> EnvelopeCompletionSink<I> {
     /// buffered entry's generation against the CURRENT registry value (not just at `complete`-time)
     /// so an entry that went stale WHILE buffered (the actor restarted before it was ever flushed)
     /// is still dropped rather than misdelivered to the new incarnation.
-    pub fn flush(&self, actor: u64) {
-        let Some(scope) = self.actors.scope_for(actor) else { return };
-        if !scope.cancel.is_live() {
+    pub async fn flush(&self, actor: u64) {
+        let Some(scope) = self.actors.scope_for(actor).await else { return };
+        if !scope.cancel.is_live().await {
             return;
         }
-        let topic = completion_topic(actor);
-        let current_generation = self.actors.generation_of(actor);
-        for wire in self.events.drain(&topic, semio_framework_actor::ActorId(actor)) {
-            let (lane, event_bytes) = decode_mailbox_entry(&wire);
-            if current_generation.is_none() {
+        let topic = completion_topic(actor).await;
+        // 🚫️async: R10 residue shape 2 — a future is consumed by a single `.await`; the codemod's
+        // insert-await pass had this awaited twice inside the loop below (E0382). Awaited once here.
+        let current_generation = self.actors.generation_of(actor).await;
+        for wire in self.events.drain(&topic, semio_framework_actor::ActorId(actor)).await {
+            let (lane, event_bytes) = decode_mailbox_entry(&wire).await;
+            let Some(generation) = current_generation else {
                 continue;
-            }
-            let envelope = build_envelope(actor, current_generation.expect("checked Some above"), lane, event_bytes.to_vec());
-            self.injector.inject(envelope);
+            };
+            let envelope = build_envelope(actor, generation, lane, event_bytes.to_vec()).await;
+            self.injector.inject(envelope).await;
         }
     }
 }
 
 impl<I: EnvelopeInjector> CompletionSink for EnvelopeCompletionSink<I> {
+    // 🚫️async: E1 — `semio_framework_os_services::CompletionSink::complete` is declared sync
+    // (`🛎️services/🦀️component.rs:1539`), outside this packet's `🔌️plugin/🖥️host` path_scope to
+    // change. Everything this body needs (`generation_of`, `ensure_subscribed`, `send_message`,
+    // `flush`) is genuinely `async` (the last transitively through the generic `I: EnvelopeInjector`,
+    // which per this file's own R11(a) note has exactly one implementor today, a recording test
+    // double with no real I/O) — a textbook E5 sync/async bridge, block_on'd as one unit.
     fn complete(&self, actor: u64, generation: u16, event_bytes: Vec<u8>, lane: u8) {
-        // 🛑️ Generation gate — snapshotted at dispatch time (`OperationContext.generation`),
-        // checked here at delivery time: a stale generation (the actor restarted since this
-        // operation was dispatched) is dropped, never delivered or even buffered.
-        if self.actors.generation_of(actor) != Some(generation) {
-            return;
-        }
-        self.ensure_subscribed(actor);
-        let topic = completion_topic(actor);
-        let _outcome: PublishOutcome = self.events.send_message(&topic, semio_framework_actor::ActorId(actor), encode_mailbox_entry(lane, &event_bytes));
-        self.flush(actor);
+        semio_framework_async::block_on(async {
+            // 🛑️ Generation gate — snapshotted at dispatch time (`OperationContext.generation`),
+            // checked here at delivery time: a stale generation (the actor restarted since this
+            // operation was dispatched) is dropped, never delivered or even buffered.
+            if self.actors.generation_of(actor).await != Some(generation) {
+                return;
+            }
+            self.ensure_subscribed(actor).await;
+            let topic = completion_topic(actor).await;
+            let _outcome: PublishOutcome = self.events.send_message(&topic, semio_framework_actor::ActorId(actor), encode_mailbox_entry(lane, &event_bytes).await).await;
+            self.flush(actor).await;
+        });
     }
 }
 
-fn build_envelope(actor_stable: u64, generation: u16, lane_byte: u8, event_bytes: Vec<u8>) -> Envelope {
-    let to = addressed_actor_id(actor_stable, generation);
+async fn build_envelope(actor_stable: u64, generation: u16, lane_byte: u8, event_bytes: Vec<u8>) -> Envelope {
+    let to = addressed_actor_id(actor_stable, generation).await;
     let lane = ActorLane::ALL.get(lane_byte as usize).copied().unwrap_or(ActorLane::Maintenance);
     Envelope { to, from: Origin::Kernel, lane, seq: 0, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::Event { bytes: event_bytes } }
 }
@@ -331,20 +343,20 @@ fn build_envelope(actor_stable: u64, generation: u16, lane_byte: u8, event_bytes
 /// kind." Mirrors `🖥️host/🦀️component.rs`'s own (private, test-only-called-today)
 /// `host_fault_bytes` helper exactly — duplicated locally rather than reached via `super::`, so
 /// this module stays fully self-contained (no coupling to that file's own dead-code lint state).
-fn fault_bytes(code: impl Into<String>, message: impl Into<String>) -> Vec<u8> {
+async fn fault_bytes(code: impl Into<String>, message: impl Into<String>) -> Vec<u8> {
     dsl::encode_fault_bytes(&dsl::Fault::new(dsl::FaultOrigin::Os, dsl::FaultCode::new(code), message))
 }
 
-fn encode_event(event: &Event) -> Vec<u8> {
+async fn encode_event(event: &Event) -> Vec<u8> {
     serde_json::to_vec(event).unwrap_or_default()
 }
 
-fn emit_completed_ok<I: EnvelopeInjector>(sink: &Arc<EnvelopeCompletionSink<I>>, ctx: &OperationContext, req: RequestId, bytes: Vec<u8>) {
-    sink.complete(ctx.actor, ctx.generation, encode_event(&Event::Completed { req, result: RequestOutcome::Ok(bytes) }), ctx.lane);
+async fn emit_completed_ok<I: EnvelopeInjector>(sink: &Arc<EnvelopeCompletionSink<I>>, ctx: &OperationContext, req: RequestId, bytes: Vec<u8>) {
+    sink.complete(ctx.actor, ctx.generation, encode_event(&Event::Completed { req, result: RequestOutcome::Ok(bytes) }).await, ctx.lane);
 }
 
-fn emit_completed_err<I: EnvelopeInjector>(sink: &Arc<EnvelopeCompletionSink<I>>, ctx: &OperationContext, req: RequestId, code: &str, message: impl Into<String>) {
-    sink.complete(ctx.actor, ctx.generation, encode_event(&Event::Completed { req, result: RequestOutcome::Err(fault_bytes(code, message.into())) }), ctx.lane);
+async fn emit_completed_err<I: EnvelopeInjector>(sink: &Arc<EnvelopeCompletionSink<I>>, ctx: &OperationContext, req: RequestId, code: &str, message: impl Into<String>) {
+    sink.complete(ctx.actor, ctx.generation, encode_event(&Event::Completed { req, result: RequestOutcome::Err(fault_bytes(code, message.into()).await) }).await, ctx.lane);
 }
 //#endregion 🧯️Fault encoding
 
@@ -414,6 +426,11 @@ impl RouterEffectHandler for UnwiredRouterEffectHandler {
 /// 💾️ Blocking storage transport `StorageScheduler::submit` drives — same seam discipline as
 /// `HttpTransport` in `semio-framework-os-services` (this packet adds no concrete implementation;
 /// see `UnwiredStorageBackend`).
+// 🚫️async: R1/E0038 — `Arc<dyn StorageBackend>` (below, `AsyncEffectExecutor::storage_backend`)
+// makes this an open dyn-dispatched extension point; `async fn` in a trait used via `dyn` is not
+// object-safe on stable Rust. Full de-dyn (O1/R11) is a separate, repo-wide program outside this
+// packet's `🔌️plugin/🖥️host` scope — reverted to the sync form this trait had before the blind
+// universal-async codemod touched it (doc already called it "Blocking storage transport").
 pub trait StorageBackend: Send + Sync {
     fn read(&self, key: &str) -> Result<Vec<u8>, std::io::Error>;
     fn write(&self, key: &str, bytes: &[u8]) -> Result<(), std::io::Error>;
@@ -438,6 +455,7 @@ impl StorageBackend for UnwiredStorageBackend {
 /// 🔑️ Whether `actor` currently holds a grant covering `scope` (e.g. `"messaging.backbone:<uri>"`)
 /// — a seam, not a real grant table: no such table exists yet for backbone scopes specifically
 /// (see `#region 📡️EffectBackbone`'s own doc and the packet report's honest gaps).
+// 🚫️async: R1/E0038 — same `dyn CapabilityChecker` reasoning as `StorageBackend` above.
 pub trait CapabilityChecker: Send + Sync {
     fn is_granted(&self, actor: u64, scope: &str) -> bool;
 }
@@ -470,6 +488,8 @@ impl CapabilityChecker for AllowAllCapabilities {
 /// the TS side can detect a collapsed (skipped) delta the same way `UiPatch.base_revision` lets a
 /// guest detect a stale diff. This module never itself crosses that boundary — it only defines the
 /// shape precisely enough for the TS packet to conform to.
+// 🚫️async: R1/E0038 — same `dyn BackboneTransport` reasoning as `StorageBackend` above
+// (`BackboneRegistry::endpoints: Mutex<HashMap<String, Arc<dyn BackboneTransport>>>`).
 pub trait BackboneTransport: Send + Sync {
     fn send(&self, uri: &str, payload: &[u8]) -> Result<(), std::io::Error>;
 }
@@ -499,17 +519,17 @@ pub struct BackboneRegistry {
 }
 
 impl BackboneRegistry {
-    pub fn new(events: Arc<EventRouter>, capabilities: Arc<dyn CapabilityChecker>) -> Self {
+    pub async fn new(events: Arc<EventRouter>, capabilities: Arc<dyn CapabilityChecker>) -> Self {
         Self { endpoints: Mutex::new(HashMap::new()), events, capabilities }
     }
 
-    pub fn register(&self, uri: String, transport: Arc<dyn BackboneTransport>) {
+    pub async fn register(&self, uri: String, transport: Arc<dyn BackboneTransport>) {
         self.endpoints.lock().expect("BackboneRegistry endpoints mutex poisoned").insert(uri, transport);
     }
 
     /// 📤️ `messaging.backbone:<uri>` capability-gated send — the `Effect::SendMessage` handler for
     /// a `MessageEndpoint::Backbone` target.
-    pub fn send(&self, actor: u64, uri: &str, payload: &[u8]) -> Result<(), BackboneError> {
+    pub async fn send(&self, actor: u64, uri: &str, payload: &[u8]) -> Result<(), BackboneError> {
         if !self.capabilities.is_granted(actor, &format!("messaging.backbone:{uri}")) {
             return Err(BackboneError::CapabilityDenied { uri: uri.to_string() });
         }
@@ -520,9 +540,9 @@ impl BackboneRegistry {
     /// 📥️ Fans a store-sync delta for `uri` out to every actor subscribed to `backbone.delta.<uri>`
     /// — `ChannelPolicy::Coalesced { key: uri }` collapses a burst of deltas for the SAME uri to
     /// the latest rather than queueing every one.
-    pub fn fanout_delta(&self, uri: &str, delta: Vec<u8>) -> Vec<(semio_framework_actor::ActorId, PublishOutcome)> {
+    pub async fn fanout_delta(&self, uri: &str, delta: Vec<u8>) -> Vec<(semio_framework_actor::ActorId, PublishOutcome)> {
         let topic = Topic(format!("backbone.delta.{uri}"));
-        self.events.publish(&topic, Some(uri), &delta)
+        self.events.publish(&topic, Some(uri), &delta).await
     }
 }
 //#endregion 📡️EffectBackbone
@@ -536,6 +556,8 @@ pub enum DrainOwner {
     Package,
 }
 
+// 🚫️async: R1/E0038 — same `dyn EffectMetricsRecorder` reasoning as `StorageBackend` above
+// (`AsyncEffectExecutor::metrics: Arc<dyn EffectMetricsRecorder>`).
 pub trait EffectMetricsRecorder: Send + Sync {
     fn record_drain(&self, owner: DrainOwner, report: ScopeDrainReport);
 }
@@ -549,10 +571,10 @@ impl EffectMetricsRecorder for NullMetricsRecorder {
 #[derive(Clone, Default)]
 pub struct RecordingMetrics(Arc<Mutex<Vec<(DrainOwner, ScopeDrainReport)>>>);
 impl RecordingMetrics {
-    pub fn new() -> Self {
+    pub async fn new() -> Self {
         Self::default()
     }
-    pub fn recorded(&self) -> Vec<(DrainOwner, ScopeDrainReport)> {
+    pub async fn recorded(&self) -> Vec<(DrainOwner, ScopeDrainReport)> {
         self.0.lock().expect("RecordingMetrics mutex poisoned").clone()
     }
 }
@@ -626,50 +648,53 @@ pub struct AsyncEffectExecutor<I: EnvelopeInjector, R: HostAsyncRuntime> {
 // 🔀️ `R: HostAsyncRuntime + 'static` (not just `HostAsyncRuntime`, matching `StorageScheduler<R>`'s
 // own impl bound in `🛎️services`): every dispatch method below builds a `HostFuture<()> = Pin<Box<dyn
 // Future<..> + Send + 'static>>` capturing `Arc<R>` inside an `async move` block, which needs `R:
-// 'static` to be nameable at all.
-impl<I: EnvelopeInjector, R: HostAsyncRuntime + 'static> AsyncEffectExecutor<I, R> {
+// 'static` to be nameable at all. `I: 'static` alongside it for the same reason — several of those
+// same boxed blocks also capture `sink: Arc<EnvelopeCompletionSink<I>>` (R15 unmasked this: it was
+// always required, but the `HostAsyncRuntime::sleep_until`/`run_blocking` Send gap these dispatch
+// methods hit first was reported before rustc's own outlives check on `I` had a chance to run).
+impl<I: EnvelopeInjector + 'static, R: HostAsyncRuntime + 'static> AsyncEffectExecutor<I, R> {
     #[allow(clippy::too_many_arguments)]
-    pub fn new(services: AsyncServices<R>, actors: ActorScopeRegistry, capabilities: CapabilityRevocationRegistry, sink: Arc<EnvelopeCompletionSink<I>>, backbone: Arc<BackboneRegistry>, router_handler: Arc<dyn RouterEffectHandler>, metrics: Arc<dyn EffectMetricsRecorder>) -> Self {
-        Self { services, actors, capabilities, sink, backbone, router_handler, metrics, trace_ids: TraceIdAllocator::new() }
+    pub async fn new(services: AsyncServices<R>, actors: ActorScopeRegistry, capabilities: CapabilityRevocationRegistry, sink: Arc<EnvelopeCompletionSink<I>>, backbone: Arc<BackboneRegistry>, router_handler: Arc<dyn RouterEffectHandler>, metrics: Arc<dyn EffectMetricsRecorder>) -> Self {
+        Self { services, actors, capabilities, sink, backbone, router_handler, metrics, trace_ids: TraceIdAllocator::new().await }
     }
 
-    pub fn actors(&self) -> &ActorScopeRegistry {
+    pub async fn actors(&self) -> &ActorScopeRegistry {
         &self.actors
     }
 
-    pub fn completion_sink(&self) -> &Arc<EnvelopeCompletionSink<I>> {
+    pub async fn completion_sink(&self) -> &Arc<EnvelopeCompletionSink<I>> {
         &self.sink
     }
 
     /// 🛑️ `Suspend` — `CancelToken::park`: in-flight operations run to completion, but their
     /// completions accumulate in the actor's own mailbox (never dropped) until
     /// [`AsyncEffectExecutor::resume`].
-    pub fn suspend(&self, actor: u64) {
-        if let Some(scope) = self.actors.scope_for(actor) {
-            scope.cancel.park();
+    pub async fn suspend(&self, actor: u64) {
+        if let Some(scope) = self.actors.scope_for(actor).await {
+            scope.cancel.park().await;
         }
     }
 
     /// ▶️ Resume from `Suspend` — `CancelToken::unpark` then flush every completion the actor
     /// accumulated while parked, in order.
-    pub fn resume(&self, actor: u64) {
-        if let Some(scope) = self.actors.scope_for(actor) {
-            scope.cancel.unpark();
+    pub async fn resume(&self, actor: u64) {
+        if let Some(scope) = self.actors.scope_for(actor).await {
+            scope.cancel.unpark().await;
         }
-        self.sink.flush(actor);
+        self.sink.flush(actor).await;
     }
 
     /// 🔑️ Capability revoked — cancels only the child tokens registered under `capability`; the
     /// actor's own scope token is never touched, so the actor stays alive.
-    pub fn revoke_capability(&self, capability: CapabilityTokenId) {
-        self.capabilities.revoke(capability);
+    pub async fn revoke_capability(&self, capability: CapabilityTokenId) {
+        self.capabilities.revoke(capability).await;
     }
 
     /// 💥️ Trap — `cancel_scope(Actor, grace 0)`. Stale completions are dropped by generation
     /// gating once the caller re-`activate`s this actor at a bumped generation; this method only
     /// performs the mechanical cancellation and records the drain report.
     pub async fn trap(&self, actor: u64) -> Option<ScopeDrainReport> {
-        let scope = self.actors.scope_for(actor)?;
+        let scope = self.actors.scope_for(actor).await?;
         let report = self.services.runtime.cancel_scope(&scope.owner, 0).await;
         self.metrics.record_drain(DrainOwner::Actor(actor), report);
         Some(report)
@@ -683,21 +708,22 @@ impl<I: EnvelopeInjector, R: HostAsyncRuntime + 'static> AsyncEffectExecutor<I, 
         report
     }
 
-    fn derive_ctx(&self, dispatch: &EffectDispatchContext, scope: &ScopeHandle, effect_deadline_ms: Option<u64>) -> OperationContext {
-        let now_ms = self.services.runtime.now_ms();
-        let generation = self.actors.generation_of(dispatch.actor).unwrap_or(0);
-        let cancel = scope.cancel.child();
+    async fn derive_ctx(&self, dispatch: &EffectDispatchContext, scope: &ScopeHandle, effect_deadline_ms: Option<u64>) -> OperationContext {
+        // 🚫️async: R10 residue shape 2 — `now_ms`/`cancel` each awaited ONCE here, at binding.
+        let now_ms = self.services.runtime.now_ms().await;
+        let generation = self.actors.generation_of(dispatch.actor).await.unwrap_or(0);
+        let cancel = scope.cancel.child().await;
         if let Some(capability) = dispatch.capability {
-            self.capabilities.track(capability, cancel.clone());
+            self.capabilities.track(capability, cancel.clone()).await;
         }
-        OperationContext { actor: dispatch.actor, generation, trace: self.trace_ids.next(), lane: dispatch.lane, deadline_ms: Some(clamp_deadline_ms(now_ms, effect_deadline_ms, dispatch.lane)), cancel, capability: dispatch.capability }
+        OperationContext { actor: dispatch.actor, generation, trace: self.trace_ids.next().await, lane: dispatch.lane, deadline_ms: Some(clamp_deadline_ms(now_ms, effect_deadline_ms, dispatch.lane).await), cancel, capability: dispatch.capability }
     }
 
     /// ⚡️ Classifies and dispatches every effect in `effects` on behalf of `dispatch`. Cheap and
     /// synchronous itself — one `HostAsyncRuntime::spawn_scoped` call (or a direct, non-blocking
     /// `EventRouter` call) per effect, never an `.await` on the real work.
-    pub fn execute(&self, dispatch: &EffectDispatchContext, effects: &[Effect]) -> EffectDispatchReport {
-        let Some(scope) = self.actors.scope_for(dispatch.actor) else {
+    pub async fn execute(&self, dispatch: &EffectDispatchContext, effects: &[Effect]) -> EffectDispatchReport {
+        let Some(scope) = self.actors.scope_for(dispatch.actor).await else {
             // 🚧️ Dispatching effects for an actor that was never (or no longer) activated is a
             // caller bug, not a runtime fault — nothing to spawn into, so every effect is honestly
             // reported as skipped rather than silently accepted.
@@ -708,88 +734,88 @@ impl<I: EnvelopeInjector, R: HostAsyncRuntime + 'static> AsyncEffectExecutor<I, 
             match effect {
                 Effect::HttpRequest { req, method, url, headers, body, .. } => {
                     let ctx = self.derive_ctx(dispatch, &scope, None);
-                    self.dispatch_http(ctx, scope.clone(), dispatch.package.clone(), addressed_actor_id(dispatch.actor, self.actors.generation_of(dispatch.actor).unwrap_or(0)), *req, method.clone(), url.clone(), headers.clone(), body.clone());
+                    self.dispatch_http(ctx.await, scope.clone(), dispatch.package.clone(), addressed_actor_id(dispatch.actor, self.actors.generation_of(dispatch.actor).await.unwrap_or(0)).await, *req, method.clone(), url.clone(), headers.clone(), body.clone()).await;
                     report.dispatched += 1;
                 }
                 Effect::StorageRead { req, key } => {
                     let ctx = self.derive_ctx(dispatch, &scope, None);
-                    self.dispatch_storage(ctx, scope.clone(), dispatch.package.clone(), *req, StorageOp::Read { key: key.clone() });
+                    self.dispatch_storage(ctx.await, scope.clone(), dispatch.package.clone(), *req, StorageOp::Read { key: key.clone() }).await;
                     report.dispatched += 1;
                 }
                 Effect::StorageWrite { req, key, bytes } => {
                     let ctx = self.derive_ctx(dispatch, &scope, None);
-                    self.dispatch_storage(ctx, scope.clone(), dispatch.package.clone(), *req, StorageOp::Write { key: key.clone(), bytes: bytes.clone() });
+                    self.dispatch_storage(ctx.await, scope.clone(), dispatch.package.clone(), *req, StorageOp::Write { key: key.clone(), bytes: bytes.clone() }).await;
                     report.dispatched += 1;
                 }
                 Effect::StorageDelete { req, key } => {
                     let ctx = self.derive_ctx(dispatch, &scope, None);
-                    self.dispatch_storage(ctx, scope.clone(), dispatch.package.clone(), *req, StorageOp::Delete { key: key.clone() });
+                    self.dispatch_storage(ctx.await, scope.clone(), dispatch.package.clone(), *req, StorageOp::Delete { key: key.clone() }).await;
                     report.dispatched += 1;
                 }
                 Effect::SetTimer { id, after_ms, repeat } => {
                     let ctx = self.derive_ctx(dispatch, &scope, None);
-                    self.dispatch_set_timer(ctx, scope.clone(), dispatch.package.clone(), *id, *after_ms, *repeat);
+                    self.dispatch_set_timer(ctx.await, scope.clone(), dispatch.package.clone(), *id, *after_ms, *repeat).await;
                     report.dispatched += 1;
                 }
                 Effect::PublishEvent { topic, payload } => {
-                    self.dispatch_publish_event(dispatch, topic, payload);
+                    self.dispatch_publish_event(dispatch, topic, payload).await;
                     report.dispatched += 1;
                 }
                 Effect::SendMessage { target, payload } => {
-                    self.dispatch_send_message(dispatch, target, payload);
+                    self.dispatch_send_message(dispatch, target, payload).await;
                     report.dispatched += 1;
                 }
                 Effect::Subscribe { topic } => {
-                    self.services.events.subscribe(Topic(topic.clone()), addressed_actor_id(dispatch.actor, self.actors.generation_of(dispatch.actor).unwrap_or(0)), ChannelPolicy::LatestWins);
+                    self.services.events.subscribe(Topic(topic.clone()), addressed_actor_id(dispatch.actor, self.actors.generation_of(dispatch.actor).await.unwrap_or(0)).await, ChannelPolicy::LatestWins).await;
                     report.dispatched += 1;
                 }
                 Effect::Unsubscribe { topic } => {
-                    self.services.events.unsubscribe(&Topic(topic.clone()), addressed_actor_id(dispatch.actor, self.actors.generation_of(dispatch.actor).unwrap_or(0)));
+                    self.services.events.unsubscribe(&Topic(topic.clone()), addressed_actor_id(dispatch.actor, self.actors.generation_of(dispatch.actor).await.unwrap_or(0)).await).await;
                     report.dispatched += 1;
                 }
                 Effect::BlobWrite { req, media_type, bytes } => {
                     let ctx = self.derive_ctx(dispatch, &scope, None);
-                    self.dispatch_router_effect(ctx, scope.clone(), *req, RouterEffect::BlobWrite { media_type: media_type.clone(), bytes: bytes.clone() });
+                    self.dispatch_router_effect(ctx.await, scope.clone(), *req, RouterEffect::BlobWrite { media_type: media_type.clone(), bytes: bytes.clone() }).await;
                     report.dispatched += 1;
                 }
                 Effect::BlobLoad { req, hash } => {
                     let ctx = self.derive_ctx(dispatch, &scope, None);
-                    self.dispatch_router_effect(ctx, scope.clone(), *req, RouterEffect::BlobLoad { hash: hash.clone() });
+                    self.dispatch_router_effect(ctx.await, scope.clone(), *req, RouterEffect::BlobLoad { hash: hash.clone() }).await;
                     report.dispatched += 1;
                 }
                 Effect::DocumentRead { req, doc, lane } => {
                     let ctx = self.derive_ctx(dispatch, &scope, None);
-                    self.dispatch_router_effect(ctx, scope.clone(), *req, RouterEffect::DocumentRead { doc: doc.0, lane: lane.clone() });
+                    self.dispatch_router_effect(ctx.await, scope.clone(), *req, RouterEffect::DocumentRead { doc: doc.0, lane: lane.clone() }).await;
                     report.dispatched += 1;
                 }
                 Effect::DocumentWrite { req, doc, lane, ops } => {
                     let ctx = self.derive_ctx(dispatch, &scope, None);
-                    self.dispatch_router_effect(ctx, scope.clone(), *req, RouterEffect::DocumentWrite { doc: doc.0, lane: lane.clone(), ops: ops.clone() });
+                    self.dispatch_router_effect(ctx.await, scope.clone(), *req, RouterEffect::DocumentWrite { doc: doc.0, lane: lane.clone(), ops: ops.clone() }).await;
                     report.dispatched += 1;
                 }
                 Effect::IoCompose { req, key, sources } => {
                     let ctx = self.derive_ctx(dispatch, &scope, None);
-                    self.dispatch_router_effect(ctx, scope.clone(), *req, RouterEffect::IoCompose { key: key.clone(), sources: sources.clone() });
+                    self.dispatch_router_effect(ctx.await, scope.clone(), *req, RouterEffect::IoCompose { key: key.clone(), sources: sources.clone() }).await;
                     report.dispatched += 1;
                 }
                 Effect::CacheDerive { req, engine_id, input } => {
                     let ctx = self.derive_ctx(dispatch, &scope, None);
-                    self.dispatch_router_effect(ctx, scope.clone(), *req, RouterEffect::CacheDerive { engine_id: engine_id.clone(), input: input.clone() });
+                    self.dispatch_router_effect(ctx.await, scope.clone(), *req, RouterEffect::CacheDerive { engine_id: engine_id.clone(), input: input.clone() }).await;
                     report.dispatched += 1;
                 }
                 Effect::CacheRead { req, engine_id, key } => {
                     let ctx = self.derive_ctx(dispatch, &scope, None);
-                    self.dispatch_router_effect(ctx, scope.clone(), *req, RouterEffect::CacheRead { engine_id: engine_id.clone(), key: key.clone() });
+                    self.dispatch_router_effect(ctx.await, scope.clone(), *req, RouterEffect::CacheRead { engine_id: engine_id.clone(), key: key.clone() }).await;
                     report.dispatched += 1;
                 }
                 Effect::InvokeExtension { req, extension_id, capability, request_json } => {
                     let ctx = self.derive_ctx(dispatch, &scope, None);
-                    self.dispatch_router_effect(ctx, scope.clone(), *req, RouterEffect::InvokeExtension { extension_id: extension_id.clone(), capability: capability.clone(), request_json: request_json.clone() });
+                    self.dispatch_router_effect(ctx.await, scope.clone(), *req, RouterEffect::InvokeExtension { extension_id: extension_id.clone(), capability: capability.clone(), request_json: request_json.clone() }).await;
                     report.dispatched += 1;
                 }
                 Effect::DispatchAction { req, action, args, delay_ms } => {
                     let ctx = self.derive_ctx(dispatch, &scope, None);
-                    self.dispatch_router_effect(ctx, scope.clone(), *req, RouterEffect::DispatchAction { action: action.clone(), args: args.clone(), delay_ms: *delay_ms });
+                    self.dispatch_router_effect(ctx.await, scope.clone(), *req, RouterEffect::DispatchAction { action: action.clone(), args: args.clone(), delay_ms: *delay_ms }).await;
                     report.dispatched += 1;
                 }
                 Effect::SpawnJob { .. } | Effect::CancelJob { .. } => {
@@ -805,7 +831,7 @@ impl<I: EnvelopeInjector, R: HostAsyncRuntime + 'static> AsyncEffectExecutor<I, 
         report
     }
 
-    fn dispatch_http(&self, ctx: OperationContext, scope: ScopeHandle, package: PackageId, actor_id: RuntimeActorId, req: RequestId, method: String, url: String, headers: Vec<(String, String)>, body: Option<Vec<u8>>) {
+    async fn dispatch_http(&self, ctx: OperationContext, scope: ScopeHandle, package: PackageId, actor_id: RuntimeActorId, req: RequestId, method: String, url: String, headers: Vec<(String, String)>, body: Option<Vec<u8>>) {
         let runtime = self.services.runtime.clone();
         let http = self.services.http.clone();
         let sink = self.sink.clone();
@@ -816,43 +842,43 @@ impl<I: EnvelopeInjector, R: HostAsyncRuntime + 'static> AsyncEffectExecutor<I, 
         // at the bottom of this function to borrow.
         let scope_for_task = scope.clone();
         let fut: HostFuture<()> = Box::pin(async move {
-            if ctx_for_task.cancel.is_cancelled() {
-                emit_completed_err(&sink, &ctx_for_task, req, "capability-revoked", "http request cancelled before dispatch");
+            if ctx_for_task.cancel.is_cancelled().await {
+                emit_completed_err(&sink, &ctx_for_task, req, "capability-revoked", "http request cancelled before dispatch").await;
                 return;
             }
             let request = ServiceHttpRequest { method, url, headers, body: body.unwrap_or_default() };
             match http.request(runtime.as_ref(), &scope_for_task, ctx_for_task.clone(), package, actor_id, request).await {
-                Ok(response) => emit_completed_ok(&sink, &ctx_for_task, req, encode_http_response(&response)),
-                Err(HttpPoolError::Compute(ComputeError::DeadlineExceeded)) => emit_completed_err(&sink, &ctx_for_task, req, "deadline-exceeded", "http request exceeded its deadline"),
-                Err(error) => emit_completed_err(&sink, &ctx_for_task, req, "http-error", error.to_string()),
+                Ok(response) => emit_completed_ok(&sink, &ctx_for_task, req, encode_http_response(&response).await).await,
+                Err(HttpPoolError::Compute(ComputeError::DeadlineExceeded)) => emit_completed_err(&sink, &ctx_for_task, req, "deadline-exceeded", "http request exceeded its deadline").await,
+                Err(error) => emit_completed_err(&sink, &ctx_for_task, req, "http-error", error.to_string()).await,
             }
         });
-        self.services.runtime.spawn_scoped(&scope, ctx, fut);
+        self.services.runtime.spawn_scoped(&scope, ctx, fut).await;
     }
 
-    fn dispatch_storage(&self, ctx: OperationContext, scope: ScopeHandle, package: PackageId, req: RequestId, op: StorageOp) {
+    async fn dispatch_storage(&self, ctx: OperationContext, scope: ScopeHandle, package: PackageId, req: RequestId, op: StorageOp) {
         let storage = self.services.storage.clone();
         let backend = self.services.storage_backend.clone();
         let sink = self.sink.clone();
         let ctx_for_task = ctx.clone();
         let fut: HostFuture<()> = Box::pin(async move {
-            if ctx_for_task.cancel.is_cancelled() {
-                emit_completed_err(&sink, &ctx_for_task, req, "capability-revoked", "storage op cancelled before dispatch");
+            if ctx_for_task.cancel.is_cancelled().await {
+                emit_completed_err(&sink, &ctx_for_task, req, "capability-revoked", "storage op cancelled before dispatch").await;
                 return;
             }
             let bytes_hint = op.byte_hint();
             let submitted = storage.submit(&ctx_for_task, package, bytes_hint, move || op.run(backend.as_ref()));
             match submitted {
                 Ok(ticket) => match ticket.await_result().await {
-                    Ok(bytes) => emit_completed_ok(&sink, &ctx_for_task, req, bytes),
-                    Err(StorageError::DeadlineExceeded) => emit_completed_err(&sink, &ctx_for_task, req, "deadline-exceeded", "storage op exceeded its deadline"),
-                    Err(storage_error) => emit_completed_err(&sink, &ctx_for_task, req, "storage-error", storage_error.to_string()),
+                    Ok(bytes) => emit_completed_ok(&sink, &ctx_for_task, req, bytes).await,
+                    Err(StorageError::DeadlineExceeded) => emit_completed_err(&sink, &ctx_for_task, req, "deadline-exceeded", "storage op exceeded its deadline").await,
+                    Err(storage_error) => emit_completed_err(&sink, &ctx_for_task, req, "storage-error", storage_error.to_string()).await,
                 },
-                Err(storage_error @ StorageError::BytesQuotaExceeded { .. }) => emit_completed_err(&sink, &ctx_for_task, req, "quota-exceeded", storage_error.to_string()),
-                Err(storage_error) => emit_completed_err(&sink, &ctx_for_task, req, "storage-error", storage_error.to_string()),
+                Err(storage_error @ StorageError::BytesQuotaExceeded { .. }) => emit_completed_err(&sink, &ctx_for_task, req, "quota-exceeded", storage_error.to_string()).await,
+                Err(storage_error) => emit_completed_err(&sink, &ctx_for_task, req, "storage-error", storage_error.to_string()).await,
             }
         });
-        self.services.runtime.spawn_scoped(&scope, ctx, fut);
+        self.services.runtime.spawn_scoped(&scope, ctx, fut).await;
     }
 
     /// ⏲️ `SetTimer` uses `TimerWheel::arm`/`disarm` for per-plugin QUOTA admission only — it does
@@ -864,32 +890,46 @@ impl<I: EnvelopeInjector, R: HostAsyncRuntime + 'static> AsyncEffectExecutor<I, 
     /// honest gaps: this is a real, confirmed os-services API gap, not a shortcut taken here). This
     /// executor instead reserves the quota slot via `arm`, then sleeps and fires the completion
     /// itself via `runtime.sleep_until`, so the guest-chosen `id` is preserved exactly.
-    fn dispatch_set_timer(&self, ctx: OperationContext, scope: ScopeHandle, package: PackageId, guest_timer_id: u64, after_ms: u64, repeat: bool) {
+    async fn dispatch_set_timer(&self, ctx: OperationContext, scope: ScopeHandle, package: PackageId, guest_timer_id: u64, after_ms: u64, repeat: bool) {
         let runtime = self.services.runtime.clone();
         let wheel = self.services.timers.clone();
         let sink = self.sink.clone();
-        let now_ms = self.services.runtime.now_ms();
+        let now_ms = self.services.runtime.now_ms().await;
         let at_ms = now_ms.saturating_add(after_ms);
         let repeat_ms = if repeat { Some(after_ms.max(1)) } else { None };
-        match wheel.arm(package, ctx.actor, ctx.generation, ctx.lane, at_ms, repeat_ms) {
+        match wheel.arm(package, ctx.actor, ctx.generation, ctx.lane, at_ms, repeat_ms).await {
             Ok(timer_id) => {
                 let ctx_for_task = ctx.clone();
                 let fut: HostFuture<()> = Box::pin(async move {
                     let mut next_ms = at_ms;
                     loop {
                         runtime.sleep_until(next_ms).await;
-                        if ctx_for_task.cancel.is_cancelled() {
+                        if ctx_for_task.cancel.is_cancelled().await {
                             break;
                         }
-                        sink.complete(ctx_for_task.actor, ctx_for_task.generation, encode_event(&Event::Timer { id: guest_timer_id }), ctx_for_task.lane);
+                        sink.complete(ctx_for_task.actor, ctx_for_task.generation, encode_event(&Event::Timer { id: guest_timer_id }).await, ctx_for_task.lane);
                         match repeat_ms {
                             Some(step) => next_ms = next_ms.saturating_add(step),
                             None => break,
                         }
                     }
-                    wheel.disarm(timer_id);
+                    // 🚫️async: E5 executor bridge, NOT a plain `.await`. `TimerWheel::disarm`
+                    // holds a `std::sync::MutexGuard<WheelCore>` across ITS OWN internal `.await`
+                    // on `WheelCore::disarm` (`🛎️services/🦀️component.rs:506-508`) — the exact
+                    // Send-violating shape that impl block's OWN sibling methods `pop_expired`/
+                    // `next_expiry_ms` are already R9-tagged against (see their doc comments there),
+                    // but `arm`/`disarm`/`armed_count` were missed. A plain `.await` here forces the
+                    // non-`Send` guard into this block's own generated state (it is cast to
+                    // `HostFuture<()> = Pin<Box<dyn Future + Send>>` two lines below) — confirmed by
+                    // compiling it: E0277 `MutexGuard<WheelCore> cannot be sent between threads`.
+                    // `🛎️services` is outside this packet's `🔌️plugin/🖥️host` path_scope to fix at
+                    // the root (reported to the coordinator instead, see the packet report). Sound
+                    // here because `WheelCore::disarm`'s own body has zero suspension points (pure
+                    // `HashMap`/counter bookkeeping, no internal `.await`), so the whole call always
+                    // resolves on its first poll — `resolve_ready` never hits its `unreachable!()`.
+                    resolve_ready(wheel.disarm(timer_id));
                 });
-                self.services.runtime.spawn_scoped(&scope, ctx, fut);
+                self.services.runtime.spawn_scoped(&scope, ctx, fut).await;
             }
             Err(TimerError::QuotaExceeded { .. }) => {
                 // 🕳️ `Effect::SetTimer` carries no `req: RequestId` to answer — there is no
@@ -900,19 +940,26 @@ impl<I: EnvelopeInjector, R: HostAsyncRuntime + 'static> AsyncEffectExecutor<I, 
         }
     }
 
-    fn dispatch_publish_event(&self, dispatch: &EffectDispatchContext, topic: &str, payload: &[u8]) {
+    async fn dispatch_publish_event(&self, dispatch: &EffectDispatchContext, topic: &str, payload: &[u8]) {
         let topic = Topic(topic.to_string());
-        for (recipient, outcome) in self.services.events.publish(&topic, None, payload) {
+        for (recipient, outcome) in self.services.events.publish(&topic, None, payload).await {
             if matches!(outcome, PublishOutcome::Delivered | PublishOutcome::Collapsed) {
-                self.deliver_message(recipient, MessageEndpoint::Topic { name: topic.0.clone() }, dispatch.lane);
+                self.deliver_message(recipient, MessageEndpoint::Topic { name: topic.0.clone() }, dispatch.lane).await;
             }
         }
     }
 
-    fn dispatch_send_message(&self, dispatch: &EffectDispatchContext, target: &MessageEndpoint, payload: &[u8]) {
+    async fn dispatch_send_message(&self, dispatch: &EffectDispatchContext, target: &MessageEndpoint, payload: &[u8]) {
         match target {
             MessageEndpoint::Backbone { uri } => {
-                let _ = self.backbone.send(dispatch.actor, uri, payload);
+                // 🚫️async: R13/R14 corollary — `let _ = <async call>;` suppressed the lint while
+                // silently dropping this call's future: `Effect::SendMessage` to a `Backbone`
+                // target never actually reached `BackboneRegistry::send` (capability check, lookup,
+                // transport dispatch — none of it ran), so the guest↔store sync bridge this whole
+                // module's doc comment describes stayed as broken as the deleted process-global
+                // channel it replaced. The `Result` still discards (no `RequestId` to answer with a
+                // completion for this effect), only the future is now actually driven.
+                let _ = self.backbone.send(dispatch.actor, uri, payload).await;
             }
             MessageEndpoint::PluginInstance { id } => {
                 let topic = Topic(format!("__message__:{}", id.0));
@@ -928,15 +975,15 @@ impl<I: EnvelopeInjector, R: HostAsyncRuntime + 'static> AsyncEffectExecutor<I, 
         }
     }
 
-    fn deliver_message(&self, recipient: semio_framework_actor::ActorId, source: MessageEndpoint, lane: u8) {
-        let Some(generation) = self.actors.generation_of(recipient.0) else { return };
+    async fn deliver_message(&self, recipient: semio_framework_actor::ActorId, source: MessageEndpoint, lane: u8) {
+        let Some(generation) = self.actors.generation_of(recipient.0).await else { return };
         let topic = Topic(format!("__message_inbox__:{}", recipient.0));
-        for payload in self.services.events.drain(&topic, recipient) {
-            self.sink.complete(recipient.0, generation, encode_event(&Event::Message { source: source.clone(), payload }), lane);
+        for payload in self.services.events.drain(&topic, recipient).await {
+            self.sink.complete(recipient.0, generation, encode_event(&Event::Message { source: source.clone(), payload }).await, lane);
         }
     }
 
-    fn dispatch_router_effect(&self, ctx: OperationContext, scope: ScopeHandle, req: RequestId, effect: RouterEffect) {
+    async fn dispatch_router_effect(&self, ctx: OperationContext, scope: ScopeHandle, req: RequestId, effect: RouterEffect) {
         let runtime = self.services.runtime.clone();
         let compute = self.services.compute.clone();
         let sink = self.sink.clone();
@@ -946,20 +993,35 @@ impl<I: EnvelopeInjector, R: HostAsyncRuntime + 'static> AsyncEffectExecutor<I, 
         // bare `scope` below survives the `async move` block for `spawn_scoped(&scope, ..)`.
         let scope_for_task = scope.clone();
         let fut: HostFuture<()> = Box::pin(async move {
-            if ctx_for_task.cancel.is_cancelled() {
-                emit_completed_err(&sink, &ctx_for_task, req, "capability-revoked", "router effect cancelled before dispatch");
+            if ctx_for_task.cancel.is_cancelled().await {
+                emit_completed_err(&sink, &ctx_for_task, req, "capability-revoked", "router effect cancelled before dispatch").await;
                 return;
             }
             let ctx_for_compute = ctx_for_task.clone();
             let result = compute.run_blocking(runtime.as_ref(), &scope_for_task, ctx_for_compute, move || handler.handle(effect)).await;
             match result {
-                Ok(Ok(bytes)) => emit_completed_ok(&sink, &ctx_for_task, req, bytes),
-                Ok(Err(router_error)) => emit_completed_err(&sink, &ctx_for_task, req, "router-error", router_error.to_string()),
-                Err(ComputeError::DeadlineExceeded) => emit_completed_err(&sink, &ctx_for_task, req, "deadline-exceeded", "router effect exceeded its deadline"),
-                Err(ComputeError::WorkerLost) => emit_completed_err(&sink, &ctx_for_task, req, "worker-lost", "router effect worker lost"),
+                Ok(Ok(bytes)) => emit_completed_ok(&sink, &ctx_for_task, req, bytes).await,
+                Ok(Err(router_error)) => emit_completed_err(&sink, &ctx_for_task, req, "router-error", router_error.to_string()).await,
+                Err(ComputeError::DeadlineExceeded) => emit_completed_err(&sink, &ctx_for_task, req, "deadline-exceeded", "router effect exceeded its deadline").await,
+                Err(ComputeError::WorkerLost) => emit_completed_err(&sink, &ctx_for_task, req, "worker-lost", "router effect worker lost").await,
             }
         });
-        self.services.runtime.spawn_scoped(&scope, ctx, fut);
+        self.services.runtime.spawn_scoped(&scope, ctx, fut).await;
+    }
+}
+
+/// 🌉️ Local copy of the same tiny bridge `🛎️services`/`🚪️io`/`🕸️graph/🗣️dsl` each already carry
+/// (no shared home for it in `⏳️async` today) — polls `fut` exactly once, asserting it resolves
+/// without suspending. Used ONLY where the callee's own future is proven suspension-free (see each
+/// call site's own `// 🚫️async: E5` tag); this is what lets a `Send`-boxed `HostFuture<()>` call a
+/// non-`Send` future without forcing its internals into the boxed block's own generated state.
+fn resolve_ready<F: std::future::Future>(fut: F) -> F::Output {
+    let waker = std::task::Waker::noop();
+    let mut cx = std::task::Context::from_waker(waker);
+    let mut fut = std::pin::pin!(fut);
+    match fut.as_mut().poll(&mut cx) {
+        std::task::Poll::Ready(value) => value,
+        std::task::Poll::Pending => unreachable!("resolve_ready: the awaited future is documented to resolve on its first poll — a Pending here means that contract was violated"),
     }
 }
 
@@ -970,7 +1032,7 @@ struct HttpResponseWire {
     body: Vec<u8>,
 }
 
-fn encode_http_response(response: &ServiceHttpResponse) -> Vec<u8> {
+async fn encode_http_response(response: &ServiceHttpResponse) -> Vec<u8> {
     serde_json::to_vec(&HttpResponseWire { status: response.status, headers: response.headers.clone(), body: response.body.clone() }).unwrap_or_default()
 }
 
@@ -982,6 +1044,10 @@ enum StorageOp {
 }
 
 impl StorageOp {
+    // 🚫️async: E1 — `StorageScheduler::submit`'s `work` parameter is a plain sync
+    // `FnOnce() -> Result<Vec<u8>, io::Error> + Send + 'static` closure (`🛎️services`, R4 clause 3:
+    // deliberately bounded-blocking, not async) — `run` is called from inside that sync closure, and
+    // `byte_hint` is pure with no suspension point, so both stay sync. See R9.
     fn byte_hint(&self) -> u64 {
         match self {
             StorageOp::Read { key } => key.len() as u64,
@@ -1007,14 +1073,14 @@ mod tests {
     use semio_framework_async::testkit::ManualRuntime;
     use std::sync::atomic::AtomicUsize;
 
-    fn services<R: HostAsyncRuntime + 'static>(runtime: Arc<R>) -> AsyncServices<R> {
+    async fn services<R: HostAsyncRuntime + 'static>(runtime: Arc<R>) -> AsyncServices<R> {
         AsyncServices {
             runtime: runtime.clone(),
-            http: Arc::new(HttpPool::new(Arc::new(semio_framework_os_services::UnwiredHttpTransport), Arc::new(ComputePool::new(4)), 1_000_000, 8)),
-            storage: Arc::new(StorageScheduler::new(runtime.clone(), runtime.open_scope(ScopeOwner::Service("test-storage"), None), 4, 1_000_000)),
-            timers: Arc::new(TimerWheel::new(16)),
+            http: Arc::new(HttpPool::new(Arc::new(semio_framework_os_services::UnwiredHttpTransport), Arc::new(ComputePool::new(4).await), 1_000_000, 8).await),
+            storage: Arc::new(StorageScheduler::new(runtime.clone(), runtime.open_scope(ScopeOwner::Service("test-storage"), None).await, 4, 1_000_000).await),
+            timers: Arc::new(TimerWheel::new(16).await),
             events: Arc::new(EventRouter::new()),
-            compute: Arc::new(ComputePool::new(4)),
+            compute: Arc::new(ComputePool::new(4).await),
             storage_backend: Arc::new(RecordingStorageBackend::default()),
         }
     }
@@ -1044,21 +1110,21 @@ mod tests {
         }
     }
 
-    fn executor<R: HostAsyncRuntime + 'static>(runtime: Arc<R>) -> (AsyncEffectExecutor<RecordingEnvelopeInjector, R>, RecordingEnvelopeInjector, ActorScopeRegistry) {
+    async fn executor<R: HostAsyncRuntime + 'static>(runtime: Arc<R>) -> (AsyncEffectExecutor<RecordingEnvelopeInjector, R>, RecordingEnvelopeInjector, ActorScopeRegistry) {
         let actors = ActorScopeRegistry::new();
         let events = Arc::new(EventRouter::new());
-        let injector = RecordingEnvelopeInjector::new();
-        let sink = Arc::new(EnvelopeCompletionSink::new(actors.clone(), events.clone(), Arc::new(injector.clone())));
-        let backbone = Arc::new(BackboneRegistry::new(events.clone(), Arc::new(AllowAllCapabilities)));
-        let mut svc = services(runtime);
+        let injector = RecordingEnvelopeInjector::new().await;
+        let sink = Arc::new(EnvelopeCompletionSink::new(actors.clone(), events.clone(), Arc::new(injector.clone())).await);
+        let backbone = Arc::new(BackboneRegistry::new(events.clone(), Arc::new(AllowAllCapabilities)).await);
+        let mut svc = services(runtime).await;
         svc.events = events;
-        let executor = AsyncEffectExecutor::new(svc, actors.clone(), CapabilityRevocationRegistry::new(), sink, backbone, Arc::new(UnwiredRouterEffectHandler), Arc::new(NullMetricsRecorder));
+        let executor = AsyncEffectExecutor::new(svc, actors.clone(), CapabilityRevocationRegistry::new(), sink, backbone, Arc::new(UnwiredRouterEffectHandler), Arc::new(NullMetricsRecorder)).await;
         (executor, injector, actors)
     }
 
-    fn activate<R: HostAsyncRuntime>(executor: &AsyncEffectExecutor<RecordingEnvelopeInjector, R>, actors: &ActorScopeRegistry, runtime: &R, actor: u64, generation: u16) -> ScopeHandle {
-        let package_scope = runtime.open_scope(ScopeOwner::Package("pkg".to_string()), None);
-        let scope = actors.activate(runtime, actor, generation, &package_scope);
+    async fn activate<R: HostAsyncRuntime>(executor: &AsyncEffectExecutor<RecordingEnvelopeInjector, R>, actors: &ActorScopeRegistry, runtime: &R, actor: u64, generation: u16) -> ScopeHandle {
+        let package_scope = runtime.open_scope(ScopeOwner::Package("pkg".to_string()), None).await;
+        let scope = actors.activate(runtime, actor, generation, &package_scope).await;
         let _ = executor;
         scope
     }
@@ -1067,12 +1133,12 @@ mod tests {
     /// 🔑️ Bench budget 8: a revoked capability cancels ONLY the operations holding it — the actor
     /// survives, and the revoked operation's own completion carries a `capability-revoked` error
     /// while a SIBLING operation (different capability) completes normally.
-    #[test]
-    fn revoked_capability_cancels_only_its_own_operations_and_actor_survives() {
-        let runtime = ManualRuntime::new(0);
+    #[semio_framework_async_macros::async_test]
+    async fn revoked_capability_cancels_only_its_own_operations_and_actor_survives() {
+        let runtime = ManualRuntime::new(0).await;
         let runtime_dyn: Arc<ManualRuntime> = Arc::new(runtime.clone());
-        let (mut executor, injector, actors) = executor(runtime_dyn.clone());
-        let scope = activate(&executor, &actors, runtime_dyn.as_ref(), 1, 0);
+        let (mut executor, injector, actors) = executor(runtime_dyn.clone()).await;
+        let scope = activate(&executor, &actors, runtime_dyn.as_ref(), 1, 0).await;
         // 🐛️ `executor()`'s default `UnwiredRouterEffectHandler` always returns `Err` — this test
         // needs the NON-revoked operation to actually succeed so the two completions are
         // distinguishable by more than "which one happened to fail", so it swaps in a handler that
@@ -1091,13 +1157,13 @@ mod tests {
         let dispatch_revoked = EffectDispatchContext { actor: 1, package: PackageId("pkg".to_string()), lane: 0, capability: Some(revoked_cap) };
         let dispatch_kept = EffectDispatchContext { actor: 1, package: PackageId("pkg".to_string()), lane: 0, capability: Some(kept_cap) };
 
-        executor.execute(&dispatch_revoked, &[Effect::BlobLoad { req: RequestId(1), hash: "h1".to_string() }]);
-        executor.execute(&dispatch_kept, &[Effect::BlobLoad { req: RequestId(2), hash: "h2".to_string() }]);
+        executor.execute(&dispatch_revoked, &[Effect::BlobLoad { req: RequestId(1), hash: "h1".to_string() }]).await;
+        executor.execute(&dispatch_kept, &[Effect::BlobLoad { req: RequestId(2), hash: "h2".to_string() }]).await;
 
-        executor.revoke_capability(revoked_cap);
-        runtime.drive();
+        executor.revoke_capability(revoked_cap).await;
+        runtime.drive().await;
 
-        let recorded = injector.recorded();
+        let recorded = injector.recorded().await;
         assert_eq!(recorded.len(), 2, "both operations must complete — one with an error, one normally");
         let find_result = |req: u64| -> RequestOutcome {
             let envelope = recorded.iter().find(|e| matches!(&e.payload, Payload::Event { bytes } if matches!(serde_json::from_slice::<Event>(bytes), Ok(Event::Completed { req: r, .. }) if r.0 == req))).expect("completion for req must exist");
@@ -1111,36 +1177,36 @@ mod tests {
         };
         assert!(matches!(find_result(1), RequestOutcome::Err(_)), "the revoked operation must complete with an error");
         assert!(matches!(find_result(2), RequestOutcome::Ok(_)), "the sibling operation (different capability) must complete normally");
-        assert!(scope.cancel.is_live(), "the actor's own scope token must be untouched by a capability revocation");
+        assert!(scope.cancel.is_live().await, "the actor's own scope token must be untouched by a capability revocation");
     }
     //#endregion 🔑️CapabilityRevocationTests
 
     //#region 💾️QuotaTests
     /// 💾️ A quota denial (storage byte budget exceeded) must produce a typed completion, never a
     /// panic.
-    #[test]
-    fn storage_quota_denial_produces_a_typed_completion_not_a_panic() {
-        let runtime = ManualRuntime::new(0);
+    #[semio_framework_async_macros::async_test]
+    async fn storage_quota_denial_produces_a_typed_completion_not_a_panic() {
+        let runtime = ManualRuntime::new(0).await;
         let runtime_dyn: Arc<ManualRuntime> = Arc::new(runtime.clone());
-        let mut svc = services(runtime_dyn.clone());
-        svc.storage = Arc::new(StorageScheduler::new(runtime_dyn.clone(), runtime_dyn.open_scope(ScopeOwner::Service("tiny-storage"), None), 4, 4));
+        let mut svc = services(runtime_dyn.clone()).await;
+        svc.storage = Arc::new(StorageScheduler::new(runtime_dyn.clone(), runtime_dyn.open_scope(ScopeOwner::Service("tiny-storage"), None).await, 4, 4).await);
         let actors = ActorScopeRegistry::new();
         let events = Arc::new(EventRouter::new());
         svc.events = events.clone();
-        let injector = RecordingEnvelopeInjector::new();
-        let sink = Arc::new(EnvelopeCompletionSink::new(actors.clone(), events.clone(), Arc::new(injector.clone())));
-        let backbone = Arc::new(BackboneRegistry::new(events, Arc::new(AllowAllCapabilities)));
-        let executor = AsyncEffectExecutor::new(svc, actors.clone(), CapabilityRevocationRegistry::new(), sink, backbone, Arc::new(UnwiredRouterEffectHandler), Arc::new(NullMetricsRecorder));
+        let injector = RecordingEnvelopeInjector::new().await;
+        let sink = Arc::new(EnvelopeCompletionSink::new(actors.clone(), events.clone(), Arc::new(injector.clone())).await);
+        let backbone = Arc::new(BackboneRegistry::new(events, Arc::new(AllowAllCapabilities)).await);
+        let executor = AsyncEffectExecutor::new(svc, actors.clone(), CapabilityRevocationRegistry::new(), sink, backbone, Arc::new(UnwiredRouterEffectHandler), Arc::new(NullMetricsRecorder)).await;
 
-        let package_scope = runtime_dyn.open_scope(ScopeOwner::Package("pkg".to_string()), None);
-        actors.activate(runtime_dyn.as_ref(), 1, 0, &package_scope);
+        let package_scope = runtime_dyn.open_scope(ScopeOwner::Package("pkg".to_string()), None).await;
+        actors.activate(runtime_dyn.as_ref(), 1, 0, &package_scope).await;
 
         let dispatch = EffectDispatchContext { actor: 1, package: PackageId("pkg".to_string()), lane: 0, capability: None };
         let big_bytes = vec![0u8; 1_000];
-        executor.execute(&dispatch, &[Effect::StorageWrite { req: RequestId(9), key: "k".to_string(), bytes: big_bytes }]);
-        runtime.drive();
+        executor.execute(&dispatch, &[Effect::StorageWrite { req: RequestId(9), key: "k".to_string(), bytes: big_bytes }]).await;
+        runtime.drive().await;
 
-        let recorded = injector.recorded();
+        let recorded = injector.recorded().await;
         assert_eq!(recorded.len(), 1);
         match &recorded[0].payload {
             Payload::Event { bytes } => match serde_json::from_slice::<Event>(bytes).unwrap() {
@@ -1153,21 +1219,21 @@ mod tests {
     //#endregion 💾️QuotaTests
 
     //#region 🪪️GenerationGatingTests
-    #[test]
-    fn stale_generation_completion_is_dropped_current_generation_is_delivered() {
-        let runtime = ManualRuntime::new(0);
+    #[semio_framework_async_macros::async_test]
+    async fn stale_generation_completion_is_dropped_current_generation_is_delivered() {
+        let runtime = ManualRuntime::new(0).await;
         let actors = ActorScopeRegistry::new();
         let events = Arc::new(EventRouter::new());
-        let injector = RecordingEnvelopeInjector::new();
-        let sink = EnvelopeCompletionSink::new(actors.clone(), events, Arc::new(injector.clone()));
-        let package_scope = runtime.open_scope(ScopeOwner::Service("pkg"), None);
-        actors.activate(&runtime, 42, 5, &package_scope);
+        let injector = RecordingEnvelopeInjector::new().await;
+        let sink = EnvelopeCompletionSink::new(actors.clone(), events, Arc::new(injector.clone())).await;
+        let package_scope = runtime.open_scope(ScopeOwner::Service("pkg"), None).await;
+        actors.activate(&runtime, 42, 5, &package_scope).await;
 
-        sink.complete(42, 3, encode_event(&Event::Timer { id: 1 }), 0);
-        assert!(injector.recorded().is_empty(), "a completion addressed to a stale generation must be dropped");
+        sink.complete(42, 3, encode_event(&Event::Timer { id: 1 }).await, 0);
+        assert!(injector.recorded().await.is_empty(), "a completion addressed to a stale generation must be dropped");
 
-        sink.complete(42, 5, encode_event(&Event::Timer { id: 2 }), 0);
-        let recorded = injector.recorded();
+        sink.complete(42, 5, encode_event(&Event::Timer { id: 2 }).await, 0);
+        let recorded = injector.recorded().await;
         assert_eq!(recorded.len(), 1, "a completion addressed to the CURRENT generation must be delivered");
         match &recorded[0].payload {
             Payload::Event { bytes } => assert_eq!(serde_json::from_slice::<Event>(bytes).unwrap(), Event::Timer { id: 2 }),
@@ -1177,26 +1243,26 @@ mod tests {
     //#endregion 🪪️GenerationGatingTests
 
     //#region ⏸️ParkBufferTests
-    #[test]
-    fn park_buffers_completions_and_resume_delivers_them_in_order() {
-        let runtime = ManualRuntime::new(0);
+    #[semio_framework_async_macros::async_test]
+    async fn park_buffers_completions_and_resume_delivers_them_in_order() {
+        let runtime = ManualRuntime::new(0).await;
         let actors = ActorScopeRegistry::new();
         let events = Arc::new(EventRouter::new());
-        let injector = RecordingEnvelopeInjector::new();
-        let sink = EnvelopeCompletionSink::new(actors.clone(), events, Arc::new(injector.clone()));
-        let package_scope = runtime.open_scope(ScopeOwner::Service("pkg"), None);
-        let scope = actors.activate(&runtime, 7, 0, &package_scope);
+        let injector = RecordingEnvelopeInjector::new().await;
+        let sink = EnvelopeCompletionSink::new(actors.clone(), events, Arc::new(injector.clone())).await;
+        let package_scope = runtime.open_scope(ScopeOwner::Service("pkg"), None).await;
+        let scope = actors.activate(&runtime, 7, 0, &package_scope).await;
 
-        scope.cancel.park();
-        sink.complete(7, 0, encode_event(&Event::Timer { id: 1 }), 0);
-        sink.complete(7, 0, encode_event(&Event::Timer { id: 2 }), 0);
-        sink.complete(7, 0, encode_event(&Event::Timer { id: 3 }), 0);
-        assert!(injector.recorded().is_empty(), "a parked actor's completions must be buffered, never delivered while parked");
+        scope.cancel.park().await;
+        sink.complete(7, 0, encode_event(&Event::Timer { id: 1 }).await, 0);
+        sink.complete(7, 0, encode_event(&Event::Timer { id: 2 }).await, 0);
+        sink.complete(7, 0, encode_event(&Event::Timer { id: 3 }).await, 0);
+        assert!(injector.recorded().await.is_empty(), "a parked actor's completions must be buffered, never delivered while parked");
 
-        scope.cancel.unpark();
-        sink.flush(7);
+        scope.cancel.unpark().await;
+        sink.flush(7).await;
 
-        let recorded = injector.recorded();
+        let recorded = injector.recorded().await;
         assert_eq!(recorded.len(), 3, "resume must deliver every buffered completion");
         let ids: Vec<u64> = recorded
             .iter()
@@ -1215,76 +1281,76 @@ mod tests {
     //#region 🚰️BackpressureTests
     /// 🚰️ A completion burst is subject to the SAME mailbox bound every other channel honours —
     /// proves the BOUND (delivered count never exceeds the cap), not the internal mechanism.
-    #[test]
-    fn completion_burst_while_parked_is_bounded_not_unbounded() {
-        let runtime = ManualRuntime::new(0);
+    #[semio_framework_async_macros::async_test]
+    async fn completion_burst_while_parked_is_bounded_not_unbounded() {
+        let runtime = ManualRuntime::new(0).await;
         let actors = ActorScopeRegistry::new();
         let events = Arc::new(EventRouter::new());
-        let injector = RecordingEnvelopeInjector::new();
-        let sink = EnvelopeCompletionSink::new(actors.clone(), events, Arc::new(injector.clone()));
-        let package_scope = runtime.open_scope(ScopeOwner::Service("pkg"), None);
-        let scope = actors.activate(&runtime, 3, 0, &package_scope);
-        scope.cancel.park();
+        let injector = RecordingEnvelopeInjector::new().await;
+        let sink = EnvelopeCompletionSink::new(actors.clone(), events, Arc::new(injector.clone())).await;
+        let package_scope = runtime.open_scope(ScopeOwner::Service("pkg"), None).await;
+        let scope = actors.activate(&runtime, 3, 0, &package_scope).await;
+        scope.cancel.park().await;
 
         let burst = COMPLETION_MAILBOX_CAP as u64 + 200;
         for id in 0..burst {
-            sink.complete(3, 0, encode_event(&Event::Timer { id }), 0);
+            sink.complete(3, 0, encode_event(&Event::Timer { id }).await, 0);
         }
-        scope.cancel.unpark();
-        sink.flush(3);
+        scope.cancel.unpark().await;
+        sink.flush(3).await;
 
-        let delivered = injector.recorded().len() as u32;
+        let delivered = injector.recorded().await.len() as u32;
         assert!(delivered <= COMPLETION_MAILBOX_CAP, "a completion burst of {burst} must never deliver more than the mailbox cap {COMPLETION_MAILBOX_CAP}, got {delivered}");
         assert!(delivered > 0, "a bounded mailbox must still deliver what it DID accept, not reject everything");
     }
     //#endregion 🚰️BackpressureTests
 
     //#region 🚀️ClassificationTests
-    #[test]
-    fn spawn_job_and_cancel_job_are_reported_shard_owned_never_dispatched() {
-        let runtime = ManualRuntime::new(0);
+    #[semio_framework_async_macros::async_test]
+    async fn spawn_job_and_cancel_job_are_reported_shard_owned_never_dispatched() {
+        let runtime = ManualRuntime::new(0).await;
         let runtime_dyn: Arc<ManualRuntime> = Arc::new(runtime.clone());
-        let (executor, injector, actors) = executor(runtime_dyn.clone());
-        activate(&executor, &actors, runtime_dyn.as_ref(), 1, 0);
+        let (executor, injector, actors) = executor(runtime_dyn.clone()).await;
+        activate(&executor, &actors, runtime_dyn.as_ref(), 1, 0).await;
         let dispatch = EffectDispatchContext { actor: 1, package: PackageId("pkg".to_string()), lane: 0, capability: None };
-        let report = executor.execute(&dispatch, &[Effect::SpawnJob { job: 1, kind: "k".to_string(), input: vec![], placement: semio_framework::kernel::JobPlacement::Inline }, Effect::CancelJob { job: 1 }]);
-        runtime.drive();
+        let report = executor.execute(&dispatch, &[Effect::SpawnJob { job: 1, kind: "k".to_string(), input: vec![], placement: semio_framework::kernel::JobPlacement::Inline }, Effect::CancelJob { job: 1 }]).await;
+        runtime.drive().await;
         assert_eq!(report.shard_owned, 2);
         assert_eq!(report.dispatched, 0);
-        assert!(injector.recorded().is_empty());
+        assert!(injector.recorded().await.is_empty());
     }
 
-    #[test]
-    fn shell_effects_are_reported_shell_owned_never_dispatched() {
-        let runtime = ManualRuntime::new(0);
+    #[semio_framework_async_macros::async_test]
+    async fn shell_effects_are_reported_shell_owned_never_dispatched() {
+        let runtime = ManualRuntime::new(0).await;
         let runtime_dyn: Arc<ManualRuntime> = Arc::new(runtime.clone());
-        let (executor, _injector, actors) = executor(runtime_dyn.clone());
-        activate(&executor, &actors, runtime_dyn.as_ref(), 1, 0);
+        let (executor, _injector, actors) = executor(runtime_dyn.clone()).await;
+        activate(&executor, &actors, runtime_dyn.as_ref(), 1, 0).await;
         let dispatch = EffectDispatchContext { actor: 1, package: PackageId("pkg".to_string()), lane: 0, capability: None };
-        let report = executor.execute(&dispatch, &[Effect::Notify { message: "hi".to_string() }]);
+        let report = executor.execute(&dispatch, &[Effect::Notify { message: "hi".to_string() }]).await;
         assert_eq!(report.shell_owned, 1);
         assert_eq!(report.dispatched, 0);
     }
 
-    #[test]
-    fn router_effect_runs_through_compute_pool_and_completes_ok() {
-        let runtime = ManualRuntime::new(0);
+    #[semio_framework_async_macros::async_test]
+    async fn router_effect_runs_through_compute_pool_and_completes_ok() {
+        let runtime = ManualRuntime::new(0).await;
         let runtime_dyn: Arc<ManualRuntime> = Arc::new(runtime.clone());
-        let (mut executor, injector, actors) = executor(runtime_dyn.clone());
-        activate(&executor, &actors, runtime_dyn.as_ref(), 1, 0);
+        let (mut executor, injector, actors) = executor(runtime_dyn.clone()).await;
+        activate(&executor, &actors, runtime_dyn.as_ref(), 1, 0).await;
         let recording_handler = Arc::new(RecordingRouterHandler(AtomicUsize::new(0)));
         executor.router_handler = recording_handler.clone();
         let dispatch = EffectDispatchContext { actor: 1, package: PackageId("pkg".to_string()), lane: 0, capability: None };
-        executor.execute(&dispatch, &[Effect::CacheRead { req: RequestId(5), engine_id: "e".to_string(), key: "k".to_string() }]);
-        runtime.drive();
+        executor.execute(&dispatch, &[Effect::CacheRead { req: RequestId(5), engine_id: "e".to_string(), key: "k".to_string() }]).await;
+        runtime.drive().await;
         assert_eq!(recording_handler.0.load(Ordering::SeqCst), 1);
-        assert_eq!(injector.recorded().len(), 1);
+        assert_eq!(injector.recorded().await.len(), 1);
     }
     //#endregion 🚀️ClassificationTests
 
     //#region 📡️BackboneTests
-    #[test]
-    fn backbone_send_is_rejected_without_the_capability() {
+    #[semio_framework_async_macros::async_test]
+    async fn backbone_send_is_rejected_without_the_capability() {
         struct DenyAll;
         impl CapabilityChecker for DenyAll {
             fn is_granted(&self, _actor: u64, _scope: &str) -> bool {
@@ -1292,13 +1358,13 @@ mod tests {
             }
         }
         let events = Arc::new(EventRouter::new());
-        let registry = BackboneRegistry::new(events, Arc::new(DenyAll));
-        let result = registry.send(1, "studio-42", b"payload");
+        let registry = BackboneRegistry::new(events, Arc::new(DenyAll)).await;
+        let result = registry.send(1, "studio-42", b"payload").await;
         assert_eq!(result, Err(BackboneError::CapabilityDenied { uri: "studio-42".to_string() }));
     }
 
-    #[test]
-    fn backbone_send_reaches_the_registered_transport_once_granted() {
+    #[semio_framework_async_macros::async_test]
+    async fn backbone_send_reaches_the_registered_transport_once_granted() {
         #[derive(Default)]
         struct RecordingTransport(Mutex<Vec<Vec<u8>>>);
         impl BackboneTransport for RecordingTransport {
@@ -1308,23 +1374,23 @@ mod tests {
             }
         }
         let events = Arc::new(EventRouter::new());
-        let registry = BackboneRegistry::new(events, Arc::new(AllowAllCapabilities));
+        let registry = BackboneRegistry::new(events, Arc::new(AllowAllCapabilities)).await;
         let transport = Arc::new(RecordingTransport::default());
-        registry.register("studio-42".to_string(), transport.clone());
-        registry.send(1, "studio-42", b"payload").expect("granted send must succeed");
+        registry.register("studio-42".to_string(), transport.clone()).await;
+        registry.send(1, "studio-42", b"payload").await.expect("granted send must succeed");
         assert_eq!(*transport.0.lock().unwrap(), vec![b"payload".to_vec()]);
     }
 
-    #[test]
-    fn backbone_delta_fanout_coalesces_a_burst_for_the_same_uri() {
+    #[semio_framework_async_macros::async_test]
+    async fn backbone_delta_fanout_coalesces_a_burst_for_the_same_uri() {
         let events = Arc::new(EventRouter::new());
-        let registry = BackboneRegistry::new(events.clone(), Arc::new(AllowAllCapabilities));
+        let registry = BackboneRegistry::new(events.clone(), Arc::new(AllowAllCapabilities)).await;
         let topic = Topic("backbone.delta.studio-42".to_string());
         let actor = semio_framework_actor::ActorId(1);
-        events.subscribe(topic.clone(), actor, ChannelPolicy::Coalesced { key: "studio-42".to_string() });
-        registry.fanout_delta("studio-42", b"delta-1".to_vec());
-        registry.fanout_delta("studio-42", b"delta-2".to_vec());
-        let drained = events.drain(&topic, actor);
+        events.subscribe(topic.clone(), actor, ChannelPolicy::Coalesced { key: "studio-42".to_string() }).await;
+        registry.fanout_delta("studio-42", b"delta-1".to_vec()).await;
+        registry.fanout_delta("studio-42", b"delta-2".to_vec()).await;
+        let drained = events.drain(&topic, actor).await;
         assert_eq!(drained, vec![b"delta-2".to_vec()], "a burst of deltas for the SAME uri must collapse to the latest");
     }
     //#endregion 📡️BackboneTests

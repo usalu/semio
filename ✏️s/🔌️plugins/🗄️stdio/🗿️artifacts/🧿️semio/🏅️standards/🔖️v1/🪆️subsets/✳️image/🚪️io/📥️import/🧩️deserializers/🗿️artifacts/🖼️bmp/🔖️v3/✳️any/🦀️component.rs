@@ -55,7 +55,7 @@ impl ArtifactDeserializer for SemioImageFromBmp {
             schema: STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA.into(),
             width: from.width,
             height: from.height,
-            colorspace: colorspace_from_bpp(from.bits_per_pixel),
+            colorspace: colorspace_from_bpp(from.bits_per_pixel).await,
             bit_depth: from.bits_per_pixel.min(u8::MAX as u16) as u8,
             frames: vec![SemioImageFrame { delay_ms: 0, rgba8: from.pixels.clone() }],
             icc: None,

@@ -1,0 +1,26 @@
+{
+  "surface": "conformance.a11y.live-region",
+  "revision": 0,
+  "root": 0,
+  "nodes": [
+    {
+      "id": 0,
+      "key": "#0",
+      "component": {
+        "type": "text",
+        "value": "3 errors found"
+      },
+      "layout": {
+        "kind": "leaf",
+        "width": "hug",
+        "height": "hug"
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {
+        "live": "assertive"
+      }
+    }
+  ],
+  "layoutEpoch": 0
+}

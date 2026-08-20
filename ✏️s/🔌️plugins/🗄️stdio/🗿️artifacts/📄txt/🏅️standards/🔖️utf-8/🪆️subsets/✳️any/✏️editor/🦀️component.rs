@@ -45,7 +45,7 @@ impl protocol::OpText for TxtEditorCommand {
     }
     async fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let hex = line.strip_prefix("replace-text text=").ok_or_else(|| store::TextError::new(format!("txt editor command: unknown line {line:?}"), dsl::TextSpan::at(1, 1)))?;
-        let bytes = hex_decode(hex).map_err(|error| store::TextError::new(format!("txt editor command: bad hex {error}"), dsl::TextSpan::at(1, 1)))?;
+        let bytes = hex_decode(hex).await.map_err(|error| store::TextError::new(format!("txt editor command: bad hex {error}"), dsl::TextSpan::at(1, 1)))?;
         let text = String::from_utf8(bytes).map_err(|error| store::TextError::new(format!("txt editor command: bad utf8 {error}"), dsl::TextSpan::at(1, 1)))?;
         Ok(TxtEditorCommand::ReplaceText { text })
     }
@@ -53,11 +53,11 @@ impl protocol::OpText for TxtEditorCommand {
 
 impl protocol::OpBinary for TxtEditorCommand {
     async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(<Self as protocol::OpText>::print_op(self).into_bytes())
+        Ok(<Self as protocol::OpText>::print_op(self).await.into_bytes())
     }
     async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let line = String::from_utf8(bytes.to_vec()).map_err(|error| protocol::ProtocolError::Malformed { what: "txt editor command utf8", offset: 0, detail: error.to_string() })?;
-        <Self as protocol::OpText>::parse_op(&line).map_err(|error| protocol::ProtocolError::Malformed { what: "txt editor command", offset: 0, detail: error.to_string() })
+        <Self as protocol::OpText>::parse_op(&line).await.map_err(|error| protocol::ProtocolError::Malformed { what: "txt editor command", offset: 0, detail: error.to_string() })
     }
 }
 //#endregion 🔖️Command
@@ -110,15 +110,15 @@ impl ArtifactEditor for TxtEditor {
         _engines: &store::EngineHandles,
     ) -> Result<Emit<Self::Mutation>, Fault> {
         let TxtEditorCommand::ReplaceText { text } = command;
-        let (lines, trailing_newline) = split_text(text);
+        let (lines, trailing_newline) = split_text(text).await;
         let snapshot = TxtSnapshot { schema: doc.snapshot.schema.clone(), lines, trailing_newline, line_ending: doc.snapshot.line_ending };
         Ok(Emit { artifact_mutations: vec![TxtMutation::SetSnapshot { snapshot }], description: Some("Replace text".into()), ..Default::default() })
     }
 
     async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
-            main::BODY_KEY => main::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
+            main::BODY_KEY => main::render(doc.snapshot).await,
+            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))).await,
         }
     }
 }
@@ -127,12 +127,12 @@ impl ArtifactEditor for TxtEditor {
 //#region 🔖️Manifest
 pub async fn create_txt_editor() -> semio_framework_plugin::AppDefinition {
     Editor::builder(TXT_EDITOR_DIALECT)
-        .document(["semio", "stdio", "txt"])
-        .icon_id("type")
-        .mode_def(edit::definition())
-        .default_mode_id(edit::TXT_EDIT_MODE_ID)
-        .window_kind_def(main::definition())
-        .default_layout(edit::layout())
+        .await.document(["semio", "stdio", "txt"])
+        .await.icon_id("type")
+        .await.mode_def(edit::definition().await)
+        .await.default_mode_id(edit::TXT_EDIT_MODE_ID)
+        .await.window_kind_def(main::definition().await)
+        .await.default_layout(edit::layout())
         .build_definition()
 }
 //#endregion 🔖️Manifest

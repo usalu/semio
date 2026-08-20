@@ -47,11 +47,11 @@ async fn resolve_index(current_len: usize, raw: i64) -> Result<u32, String> {
 async fn parse_face_vertex(token: &str, vertex_count: usize, texcoord_count: usize, normal_count: usize) -> Result<ObjFaceVertex, String> {
     let mut parts = token.split('/');
     let v_raw: i64 = parts.next().ok_or("empty face token")?.parse().map_err(|e| format!("face vertex index: {e}"))?;
-    let vertex = resolve_index(vertex_count, v_raw)?;
+    let vertex = resolve_index(vertex_count, v_raw).await?;
     let vt_raw = parts.next().unwrap_or("");
-    let texcoord = if vt_raw.is_empty() { None } else { Some(resolve_index(texcoord_count, vt_raw.parse().map_err(|e| format!("face texcoord index: {e}"))?)?) };
+    let texcoord = if vt_raw.is_empty() { None } else { Some(resolve_index(texcoord_count, vt_raw.parse().map_err(|e| format!("face texcoord index: {e}"))?).await?) };
     let vn_raw = parts.next().unwrap_or("");
-    let normal = if vn_raw.is_empty() { None } else { Some(resolve_index(normal_count, vn_raw.parse().map_err(|e| format!("face normal index: {e}"))?)?) };
+    let normal = if vn_raw.is_empty() { None } else { Some(resolve_index(normal_count, vn_raw.parse().map_err(|e| format!("face normal index: {e}"))?).await?) };
     Ok(ObjFaceVertex { vertex, texcoord, normal })
 }
 //#endregion 🔖️IndexResolution
@@ -113,7 +113,7 @@ pub async fn decode_obj(text: &str) -> Result<ObjSnapshot, String> {
             Some("f") => {
                 let mut face_vertices = Vec::new();
                 for token in parts {
-                    face_vertices.push(parse_face_vertex(token, vertices.len(), texcoords.len(), normals.len())?);
+                    face_vertices.push(parse_face_vertex(token, vertices.len(), texcoords.len(), normals.len()).await?);
                 }
                 if face_vertices.len() < 3 {
                     return Err(format!("face has fewer than 3 vertices: {line}"));
@@ -319,7 +319,7 @@ pub mod derived_composition {
             if native.is_empty() {
                 return Err(ComposeError { message: "ObjComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() });
             }
-            let analysis = ObjAnalyzer::analyze(&native);
+            let analysis = ObjAnalyzer::analyze(&native).await;
             let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError { message: "ObjComposerComposition: analysis produced no snapshot".into(), diagnostics: analysis.diagnostics.clone() })?;
             Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics })
         }
@@ -610,7 +610,8 @@ pub mod io_registry {
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 
-    pub async fn entries() -> &'static [ComposerEntry] {
+    // 🚫️async: E1 pure table accessor consumed by OnceLock::get_or_init's sync closure — see R9
+    pub fn entries() -> &'static [ComposerEntry] {
         ENTRIES.get_or_init(|| vec![composer_entry_of::<ObjRawAnyComposer>()]).as_slice()
     }
 }

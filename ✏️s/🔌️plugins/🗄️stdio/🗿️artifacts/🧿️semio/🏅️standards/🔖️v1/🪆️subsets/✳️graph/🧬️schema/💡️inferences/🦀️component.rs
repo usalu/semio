@@ -27,7 +27,7 @@ pub struct SemioGraphInference {
 
 impl protocol::Inference<SemioGraphSnapshot> for SemioGraphInference {
     async fn infer(snapshot: &SemioGraphSnapshot) -> Self {
-        Self { topology: compute_semio_graph_topology(snapshot) }
+        Self { topology: compute_semio_graph_topology(snapshot).await }
     }
 }
 

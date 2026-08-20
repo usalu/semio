@@ -142,7 +142,7 @@ impl Column {
     pub async fn len(&self) -> usize {
         match self {
             Self::Continuous(values) => values.len(),
-            Self::Categorical(column) => column.len(),
+            Self::Categorical(column) => column.len().await,
         }
     }
 
@@ -192,9 +192,9 @@ impl Table {
             return Err(TabularError::DuplicateName(name.to_string()));
         }
         if self.columns.is_empty() {
-            self.rows = column.len();
+            self.rows = column.len().await;
         } else if column.len() != self.rows {
-            return Err(TabularError::LengthMismatch { expected: self.rows, found: column.len() });
+            return Err(TabularError::LengthMismatch { expected: self.rows, found: column.len().await });
         }
         self.names.push(name.to_string());
         self.columns.push(column);
@@ -202,11 +202,11 @@ impl Table {
     }
 
     pub async fn push_continuous(&mut self, name: &str, values: Vec<f64>) -> Result<usize, TabularError> {
-        self.push_column(name, Column::Continuous(values))
+        self.push_column(name, Column::Continuous(values)).await
     }
 
     pub async fn push_categorical(&mut self, name: &str, labels: &[&str]) -> Result<usize, TabularError> {
-        self.push_column(name, Column::Categorical(CategoricalColumn::from_labels(labels)))
+        self.push_column(name, Column::Categorical(CategoricalColumn::from_labels(labels).await)).await
     }
 
     pub async fn column_index(&self, name: &str) -> Result<usize, TabularError> {
@@ -223,14 +223,14 @@ impl Table {
     }
 
     pub async fn continuous(&self, index: usize) -> Result<&[f64], TabularError> {
-        match self.column(index)? {
+        match self.column(index).await? {
             Column::Continuous(values) => Ok(values),
             Column::Categorical(_) => Err(TabularError::NotContinuous(self.names[index].clone())),
         }
     }
 
     pub async fn categorical(&self, index: usize) -> Result<&CategoricalColumn, TabularError> {
-        match self.column(index)? {
+        match self.column(index).await? {
             Column::Categorical(column) => Ok(column),
             Column::Continuous(_) => Err(TabularError::NotCategorical(self.names[index].clone())),
         }
@@ -238,10 +238,10 @@ impl Table {
 
     /// 🔀️ Projects the table to the given columns (order preserved, repeats allowed).
     pub async fn select_columns(&self, indices: &[usize]) -> Result<Table, TabularError> {
-        let mut out = Table::new();
+        let mut out = Table::new().await;
         for &index in indices {
-            let column = self.column(index)?.clone();
-            out.push_column(&self.names[index], column)?;
+            let column = self.column(index).await?.clone();
+            out.push_column(&self.names[index], column).await?;
         }
         Ok(out)
     }
@@ -253,13 +253,13 @@ impl Table {
                 return Err(TabularError::IndexOutOfBounds(row));
             }
         }
-        let mut out = Table::new();
+        let mut out = Table::new().await;
         for (name, column) in self.names.iter().zip(self.columns.iter()) {
             let gathered = match column {
                 Column::Continuous(values) => Column::Continuous(indices.iter().map(|&row| values[row]).collect()),
                 Column::Categorical(cat) => Column::Categorical(CategoricalColumn { levels: cat.levels.clone(), codes: indices.iter().map(|&row| cat.codes[row]).collect() }),
             };
-            out.push_column(name, gathered)?;
+            out.push_column(name, gathered).await?;
         }
         Ok(out)
     }
@@ -276,25 +276,25 @@ impl Table {
 
     /// ✅️ `select_rows(complete_rows(columns))` — the complete-case sub-table.
     pub async fn drop_missing(&self, columns: &[usize]) -> Result<Table, TabularError> {
-        let rows = self.complete_rows(columns)?;
-        self.select_rows(&rows)
+        let rows = self.complete_rows(columns).await?;
+        self.select_rows(&rows).await
     }
 
     /// 🏗️ Builds a table from parallel-named `f64` column vectors.
     pub async fn from_f64_columns(names: Vec<String>, columns: Vec<Vec<f64>>) -> Result<Table, TabularError> {
-        let mut out = Table::new();
+        let mut out = Table::new().await;
         for (name, values) in names.into_iter().zip(columns) {
-            out.push_continuous(&name, values)?;
+            out.push_continuous(&name, values).await?;
         }
         Ok(out)
     }
 
     /// 🏗️ Builds a table from parallel-named `(codes, level_names)` categorical column pairs.
     pub async fn from_categorical_columns(names: Vec<String>, columns: Vec<(Vec<u32>, Vec<String>)>) -> Result<Table, TabularError> {
-        let mut out = Table::new();
+        let mut out = Table::new().await;
         for (name, (codes, levels)) in names.into_iter().zip(columns) {
-            let column = CategoricalColumn::from_parts(levels, codes)?;
-            out.push_column(&name, Column::Categorical(column))?;
+            let column = CategoricalColumn::from_parts(levels, codes).await?;
+            out.push_column(&name, Column::Categorical(column)).await?;
         }
         Ok(out)
     }
@@ -383,7 +383,7 @@ impl Table {
         let mut rows = rows.into_iter();
         let first = rows.next();
         let Some(first) = first else {
-            return Ok(Table::new());
+            return Ok(Table::new().await);
         };
         let n_cols = first.len();
         let (names, data_rows): (Vec<String>, Vec<Vec<String>>) = if options.has_header { (first, rows.collect()) } else { ((0..n_cols).map(|i| format!("c{i}")).collect(), std::iter::once(first).chain(rows).collect()) };
@@ -392,7 +392,7 @@ impl Table {
                 return Err(TabularError::Csv { line: line + 1, message: format!("expected {n_cols} fields, found {}", row.len()) });
             }
         }
-        let mut table = Table::new();
+        let mut table = Table::new().await;
         for (col_index, name) in names.iter().enumerate() {
             let field_of = |row: &Vec<String>| row[col_index].trim().to_string();
             let all_numeric = data_rows.iter().all(|row| {
@@ -411,11 +411,11 @@ impl Table {
                         }
                     })
                     .collect();
-                table.push_continuous(name, values)?;
+                table.push_continuous(name, values).await?;
             } else {
                 let labels: Vec<String> = data_rows.iter().map(field_of).collect();
                 let refs: Vec<&str> = labels.iter().map(String::as_str).collect();
-                table.push_categorical(name, &refs)?;
+                table.push_categorical(name, &refs).await?;
             }
         }
         Ok(table)
@@ -442,7 +442,7 @@ impl Table {
                             values[row].to_string()
                         }
                     }
-                    Column::Categorical(cat) => cat.level(cat.codes[row]).map(|label| quote_csv_field(label, options.delimiter)).unwrap_or_default(),
+                    Column::Categorical(cat) => semio_framework_plugin::resolve_ready(cat.level(cat.codes[row])).map(|label| quote_csv_field(label, options.delimiter)).unwrap_or_default(),
                 })
                 .collect();
             out.push_str(&fields.join(&options.delimiter.to_string()));

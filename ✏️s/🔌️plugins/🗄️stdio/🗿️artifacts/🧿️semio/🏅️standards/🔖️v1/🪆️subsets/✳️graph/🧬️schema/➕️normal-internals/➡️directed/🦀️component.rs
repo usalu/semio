@@ -13,24 +13,24 @@ impl DirectedGraph {
     // #subregion Construction
     /// 🆕️ Empty directed graph.
     pub async fn new() -> Self {
-        Self(Storage::new())
+        Self(Storage::new().await)
     }
     // #endsubregion
 
     // #subregion NodeOperations
     /// ➕️ Adds a fresh node with no attributes, returning its auto-assigned id.
     pub async fn add_node(&mut self) -> NodeId {
-        self.0.add_node()
+        self.0.add_node().await
     }
 
     /// ➕️ Adds a fresh node with `attrs`, returning its auto-assigned id.
     pub async fn add_node_with(&mut self, attrs: PropertyBag) -> NodeId {
-        self.0.add_node_with(attrs)
+        self.0.add_node_with(attrs).await
     }
 
     /// 🆔️ Inserts a node at `id` (or merges `attrs` into it if already present) — NetworkX `add_node(id, **attrs)`.
     pub async fn add_node_with_id(&mut self, id: NodeId, attrs: PropertyBag) -> NodeId {
-        self.0.add_node_with_id(id, attrs)
+        self.0.add_node_with_id(id, attrs).await
     }
 
     /// ➕️ Adds every id in `nodes` (no attrs) — NetworkX `add_nodes_from`.
@@ -42,7 +42,7 @@ impl DirectedGraph {
 
     /// 🗑️ Removes a node and every incident edge; returns whether it was present.
     pub async fn remove_node(&mut self, id: NodeId) -> bool {
-        self.0.remove_node(id)
+        self.0.remove_node(id).await
     }
 
     /// 🗑️ Removes every id in `nodes` — NetworkX `remove_nodes_from`.
@@ -53,16 +53,16 @@ impl DirectedGraph {
     }
 
     pub async fn has_node(&self, id: NodeId) -> bool {
-        self.0.contains_node(id)
+        self.0.contains_node(id).await
     }
 
     pub async fn number_of_nodes(&self) -> usize {
-        self.0.node_count()
+        self.0.node_count().await
     }
 
     /// 🔢️ Alias of `number_of_nodes` — NetworkX `order()`.
     pub async fn order(&self) -> usize {
-        self.0.node_count()
+        self.0.node_count().await
     }
 
     pub async fn nodes(&self) -> impl Iterator<Item = NodeId> + '_ {
@@ -78,14 +78,14 @@ impl DirectedGraph {
 
     /// ➕️ Adds a directed `source -> target` edge (auto-creating missing endpoints), returning its id; upserts (merges no attrs) if the pair already exists.
     pub async fn add_edge(&mut self, source: NodeId, target: NodeId) -> EdgeId {
-        self.add_edge_with(source, target, PropertyBag::new())
+        self.add_edge_with(source, target, PropertyBag::new()).await
     }
 
     /// ➕️ Adds a directed `source -> target` edge with `attrs` (auto-creating missing endpoints); upserts (merges `attrs`) if the pair already exists.
     pub async fn add_edge_with(&mut self, source: NodeId, target: NodeId, attrs: PropertyBag) -> EdgeId {
         self.ensure_node(source);
         self.ensure_node(target);
-        self.0.add_edge_with(source, target, attrs)
+        self.0.add_edge_with(source, target, attrs).await
     }
 
     /// ➕️ Adds every `(source, target)` pair — NetworkX `add_edges_from`.
@@ -108,7 +108,7 @@ impl DirectedGraph {
     /// 🗑️ Removes the `source -> target` edge only — the reverse edge (if any) is untouched. Returns whether it was present.
     pub async fn remove_edge(&mut self, source: NodeId, target: NodeId) -> bool {
         let Some(id) = self.0.edges_between(source, target).next().map(|e| e.id) else { return false };
-        self.0.remove_edge(id)
+        self.0.remove_edge(id).await
     }
 
     /// ❓️ Whether `source -> target` exists (direction matters).
@@ -117,7 +117,7 @@ impl DirectedGraph {
     }
 
     pub async fn number_of_edges(&self) -> usize {
-        self.0.edge_count()
+        self.0.edge_count().await
     }
 
     /// 📏️ Total edge count, or total edge weight when `weighted` — NetworkX `size(weight=...)`.
@@ -132,7 +132,7 @@ impl DirectedGraph {
     /// 🏷️ Attribute bag of the `source -> target` edge, if present.
     pub async fn get_edge_data(&self, source: NodeId, target: NodeId) -> Option<&PropertyBag> {
         let id = self.0.edges_between(source, target).next()?.id;
-        self.0.edge_attrs(id)
+        self.0.edge_attrs(id).await
     }
 
     /// ➡️ Adds edges `nodes[0] -> nodes[1] -> ... -> nodes[n-1]`; every listed node is added even if isolated (e.g. a single-node path).
@@ -148,9 +148,9 @@ impl DirectedGraph {
         if nodes.is_empty() {
             return Vec::new();
         }
-        let mut ids = self.add_path(nodes);
+        let mut ids = self.add_path(nodes).await;
         let last = *nodes.last().expect("checked non-empty above");
-        ids.push(self.add_edge(last, nodes[0]));
+        ids.push(self.add_edge(last, nodes[0]).await);
         ids
     }
 
@@ -189,16 +189,16 @@ impl DirectedGraph {
     }
 
     pub async fn in_degree(&self, node: NodeId) -> usize {
-        self.0.in_degree(node)
+        self.0.in_degree(node).await
     }
 
     pub async fn out_degree(&self, node: NodeId) -> usize {
-        self.0.out_degree(node)
+        self.0.out_degree(node).await
     }
 
     /// 🔢️ `in_degree + out_degree` — NetworkX directed `degree`.
     pub async fn degree(&self, node: NodeId) -> usize {
-        self.0.degree(node)
+        self.0.degree(node).await
     }
 
     /// 📐️ `m / (n * (n - 1))`, `0.0` for `n < 2` — NetworkX directed `density`.
@@ -225,16 +225,16 @@ impl DirectedGraph {
     /// 🔎️ Owned copy restricted to `nodes`; an edge is included only when both endpoints survive.
     pub async fn subgraph(&self, nodes: impl IntoIterator<Item = NodeId>) -> Self {
         let keep: BTreeSet<NodeId> = nodes.into_iter().filter(|&n| self.0.contains_node(n)).collect();
-        let mut out = Storage::<Normal, Directed>::new();
+        let mut out = Storage::<Normal, Directed>::new().await;
         for &id in &keep {
-            out.add_node_with_id(id, self.0.node_attrs(id).cloned().unwrap_or_default());
+            out.add_node_with_id(id, self.0.node_attrs(id).await.cloned().unwrap_or_default()).await;
         }
         for e in self.0.edges() {
             if keep.contains(&e.u) && keep.contains(&e.v) {
-                out.add_edge_with(e.u, e.v, self.0.edge_attrs(e.id).cloned().unwrap_or_default());
+                out.add_edge_with(e.u, e.v, self.0.edge_attrs(e.id).await.cloned().unwrap_or_default()).await;
             }
         }
-        *out.graph_attrs_mut() = self.0.graph_attrs().clone();
+        *out.graph_attrs_mut().await = self.0.graph_attrs().clone();
         Self(out)
     }
 
@@ -248,37 +248,37 @@ impl DirectedGraph {
                 nodes.insert(e.v);
             }
         }
-        let mut out = Storage::<Normal, Directed>::new();
+        let mut out = Storage::<Normal, Directed>::new().await;
         for &id in &nodes {
-            out.add_node_with_id(id, self.0.node_attrs(id).cloned().unwrap_or_default());
+            out.add_node_with_id(id, self.0.node_attrs(id).await.cloned().unwrap_or_default()).await;
         }
         for e in self.0.edges() {
             if keep.contains(&e.id) {
-                out.add_edge_with(e.u, e.v, self.0.edge_attrs(e.id).cloned().unwrap_or_default());
+                out.add_edge_with(e.u, e.v, self.0.edge_attrs(e.id).await.cloned().unwrap_or_default()).await;
             }
         }
-        *out.graph_attrs_mut() = self.0.graph_attrs().clone();
+        *out.graph_attrs_mut().await = self.0.graph_attrs().clone();
         Self(out)
     }
 
     /// ↩️ Owned copy with every edge's source/target swapped (rebuilt, not a borrowed `ReversedView`, since callers need an owned `Self`).
     pub async fn reverse(&self) -> Self {
-        let mut out = Storage::<Normal, Directed>::new();
+        let mut out = Storage::<Normal, Directed>::new().await;
         for id in self.0.nodes() {
-            out.add_node_with_id(id, self.0.node_attrs(id).cloned().unwrap_or_default());
+            out.add_node_with_id(id, self.0.node_attrs(id).await.cloned().unwrap_or_default()).await;
         }
         for e in self.0.edges() {
-            out.add_edge_with(e.v, e.u, self.0.edge_attrs(e.id).cloned().unwrap_or_default());
+            out.add_edge_with(e.v, e.u, self.0.edge_attrs(e.id).await.cloned().unwrap_or_default()).await;
         }
-        *out.graph_attrs_mut() = self.0.graph_attrs().clone();
+        *out.graph_attrs_mut().await = self.0.graph_attrs().clone();
         Self(out)
     }
 
     /// 🔀️ NetworkX `to_undirected(reciprocal=...)`: `false` collapses every directed edge into one undirected edge (attrs from both directions merged, later-processed direction wins on key conflicts); `true` keeps an undirected edge only where BOTH `u -> v` and `v -> u` exist in `self`. Returns the raw core `Storage` (not the undirected sibling facade) to avoid a circular crate dependency between the two direction facades.
     pub async fn to_undirected(&self, reciprocal: bool) -> Storage<Normal, Undirected> {
-        let mut out = Storage::<Normal, Undirected>::new();
+        let mut out = Storage::<Normal, Undirected>::new().await;
         for id in self.0.nodes() {
-            out.add_node_with_id(id, self.0.node_attrs(id).cloned().unwrap_or_default());
+            out.add_node_with_id(id, self.0.node_attrs(id).await.cloned().unwrap_or_default()).await;
         }
         let mut done: BTreeSet<(NodeId, NodeId)> = BTreeSet::new();
         for e in self.0.edges() {
@@ -290,15 +290,15 @@ impl DirectedGraph {
             if reciprocal && !backward {
                 continue;
             }
-            let mut attrs = self.0.edge_attrs(e.id).cloned().unwrap_or_default();
-            if backward {
-                if let Some(rev) = self.get_edge_data(e.v, e.u) {
+            let mut attrs = self.0.edge_attrs(e.id).await.cloned().unwrap_or_default();
+            if backward.await {
+                if let Some(rev) = self.get_edge_data(e.v, e.u).await {
                     attrs.extend(rev.clone());
                 }
             }
-            out.add_edge_with(e.u, e.v, attrs);
+            out.add_edge_with(e.u, e.v, attrs).await;
         }
-        *out.graph_attrs_mut() = self.0.graph_attrs().clone();
+        *out.graph_attrs_mut().await = self.0.graph_attrs().clone();
         out
     }
 
@@ -317,7 +317,7 @@ impl DirectedGraph {
     /// 🏷️ Sets `attrs[name]` on every listed node that exists; missing ids are skipped — NetworkX `set_node_attributes`.
     pub async fn set_node_attributes(&mut self, name: &str, values: impl IntoIterator<Item = (NodeId, PropertyValue)>) {
         for (id, value) in values {
-            if let Some(attrs) = self.0.node_attrs_mut(id) {
+            if let Some(attrs) = self.0.node_attrs_mut(id).await {
                 attrs.insert(name.to_string(), value);
             }
         }
@@ -325,7 +325,7 @@ impl DirectedGraph {
 
     /// 🏷️ Reads `attrs[name]` off every node that has it — NetworkX `get_node_attributes`.
     pub async fn get_node_attributes(&self, name: &str) -> BTreeMap<NodeId, PropertyValue> {
-        self.0.nodes().filter_map(|id| self.0.node_attrs(id).and_then(|a| a.get(name)).cloned().map(|v| (id, v))).collect()
+        self.0.nodes().filter_map(|id| semio_framework_plugin::resolve_ready(self.0.node_attrs(id)).and_then(|a| a.get(name)).cloned().map(|v| (id, v))).collect()
     }
 
     /// 🏷️ Sets `attrs[name]` on every listed `(source, target)` edge that exists; missing pairs are skipped — NetworkX `set_edge_attributes`, keyed by direction.
@@ -333,7 +333,7 @@ impl DirectedGraph {
         for ((u, v), value) in values {
             let edge_id = self.0.edges_between(u, v).next().map(|e| e.id);
             if let Some(id) = edge_id {
-                if let Some(attrs) = self.0.edge_attrs_mut(id) {
+                if let Some(attrs) = self.0.edge_attrs_mut(id).await {
                     attrs.insert(name.to_string(), value);
                 }
             }
@@ -342,16 +342,16 @@ impl DirectedGraph {
 
     /// 🏷️ Reads `attrs[name]` off every `(source, target)` edge that has it — NetworkX `get_edge_attributes`, keyed by direction.
     pub async fn get_edge_attributes(&self, name: &str) -> BTreeMap<(NodeId, NodeId), PropertyValue> {
-        self.0.edges().filter_map(|e| self.0.edge_attrs(e.id).and_then(|a| a.get(name)).cloned().map(|v| ((e.u, e.v), v))).collect()
+        self.0.edges().filter_map(|e| semio_framework_plugin::resolve_ready(self.0.edge_attrs(e.id)).and_then(|a| a.get(name)).cloned().map(|v| ((e.u, e.v), v))).collect()
     }
 
     /// 🏷️ Graph-level `"name"` attribute, or `""` if unset.
     pub async fn name(&self) -> String {
-        self.0.graph_attrs().get("name").and_then(PropertyValue::as_str).unwrap_or("").to_string()
+        self.0.graph_attrs().await.get("name").and_then(PropertyValue::as_str).unwrap_or("").to_string()
     }
 
     pub async fn set_name(&mut self, name: impl Into<String>) {
-        self.0.graph_attrs_mut().insert("name".to_string(), PropertyValue::String(name.into()));
+        self.0.graph_attrs_mut().await.insert("name".to_string(), PropertyValue::String(name.into()));
     }
     // #endsubregion
 
@@ -432,16 +432,16 @@ impl DirectedGraph {
 // #region 🔖️ViewImpls
 impl GraphView for DirectedGraph {
     async fn node_count(&self) -> usize {
-        self.0.node_count()
+        self.0.node_count().await
     }
     async fn nodes(&self) -> impl Iterator<Item = NodeId> {
         self.0.nodes()
     }
     async fn contains_node(&self, node: NodeId) -> bool {
-        self.0.contains_node(node)
+        self.0.contains_node(node).await
     }
     async fn edge_count(&self) -> usize {
-        self.0.edge_count()
+        self.0.edge_count().await
     }
     async fn edges(&self) -> impl Iterator<Item = EdgeRef> {
         self.0.edges()
@@ -456,19 +456,19 @@ impl GraphView for DirectedGraph {
         self.0.in_neighbors(node)
     }
     async fn degree(&self, node: NodeId) -> usize {
-        self.0.degree(node)
+        self.0.degree(node).await
     }
     async fn out_degree(&self, node: NodeId) -> usize {
-        self.0.out_degree(node)
+        self.0.out_degree(node).await
     }
     async fn in_degree(&self, node: NodeId) -> usize {
-        self.0.in_degree(node)
+        self.0.in_degree(node).await
     }
     async fn is_directed(&self) -> bool {
-        self.0.is_directed()
+        self.0.is_directed().await
     }
     async fn is_multigraph(&self) -> bool {
-        self.0.is_multigraph()
+        self.0.is_multigraph().await
     }
     async fn edges_between(&self, u: NodeId, v: NodeId) -> impl Iterator<Item = EdgeRef> {
         self.0.edges_between(u, v)
@@ -477,19 +477,19 @@ impl GraphView for DirectedGraph {
 
 impl AttrView for DirectedGraph {
     async fn node_attrs(&self, node: NodeId) -> Option<&PropertyBag> {
-        self.0.node_attrs(node)
+        self.0.node_attrs(node).await
     }
     async fn edge_attrs(&self, edge: EdgeId) -> Option<&PropertyBag> {
-        self.0.edge_attrs(edge)
+        self.0.edge_attrs(edge).await
     }
     async fn graph_attrs(&self) -> &PropertyBag {
-        self.0.graph_attrs()
+        self.0.graph_attrs().await
     }
 }
 
 impl EdgeWeights for DirectedGraph {
     async fn weight(&self, edge: EdgeRef) -> f64 {
-        self.0.weight(edge)
+        self.0.weight(edge).await
     }
 }
 // #endregion 🔖️ViewImpls

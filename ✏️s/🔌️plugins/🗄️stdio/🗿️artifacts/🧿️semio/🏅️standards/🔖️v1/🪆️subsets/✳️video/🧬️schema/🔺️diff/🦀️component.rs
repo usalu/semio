@@ -131,7 +131,7 @@ where
     for m in &diff.modified {
         if let Some(original) = base_items.get(m.index) {
             let next_index = transform_index(m.index, &diff.removed, &diff.added);
-            modified.push(IndexModified { index: next_index, diff: inverse_item(original, &m.diff) });
+            modified.push(IndexModified { index: next_index.await, diff: inverse_item(original, &m.diff) });
         }
     }
     let mut added = Vec::new();
@@ -199,7 +199,7 @@ where
         base_len += 1;
     }
 
-    let mid = simulate_mid_origins(base_len, &d1.removed, &d1.added);
+    let mid = simulate_mid_origins(base_len, &d1.removed, &d1.added).await;
 
     let mut removed = d1.removed.clone();
     let mut modified = d1.modified;
@@ -249,7 +249,7 @@ where
             continue;
         }
         let final_index = transform_index(add.index, &d2.removed, &d2.added);
-        added.push(IndexAdded { index: final_index, item: add.item });
+        added.push(IndexAdded { index: final_index.await, item: add.item });
     }
     for a2 in &d2.added {
         added.push(a2.clone());
@@ -284,7 +284,7 @@ async fn diff_stream(old: &SemioVideoStream, new: &SemioVideoStream) -> Option<S
 }
 
 async fn diff_video(base: &SemioVideoSnapshot, other: &SemioVideoSnapshot) -> SemioVideoDiff {
-    SemioVideoDiff { streams: between_indexed(&base.streams, &other.streams, diff_stream) }
+    SemioVideoDiff { streams: between_indexed(&base.streams, &other.streams, diff_stream).await }
 }
 
 async fn apply_sample(sample: &mut SemioVideoSample, diff: &SemioVideoSampleDiff) {
@@ -379,7 +379,7 @@ async fn absorb_stream_diff(mut a: SemioVideoStreamDiff, b: SemioVideoStreamDiff
     a.samples = match (a.samples.take(), b.samples) {
         (None, x) => x,
         (x, None) => x,
-        (Some(sa), Some(sb)) => Some(absorb_indexed(sa, sb, absorb_sample_diff, sample_with_diff_applied)),
+        (Some(sa), Some(sb)) => Some(absorb_indexed(sa, sb, absorb_sample_diff, sample_with_diff_applied).await),
     };
     a
 }
@@ -390,7 +390,7 @@ impl MutationDiff<SemioVideoSnapshot> for SemioVideoDiff {
     async fn apply(&self, base: &SemioVideoSnapshot) -> protocol::MutationApplyResult<SemioVideoSnapshot> {
         let mut next = base.clone();
         if let Some(d) = &self.streams {
-            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_indexed_triple(d, next.streams.len(), ["streams"])?;
+            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_indexed_triple(d, next.streams.len(), ["streams"]).await?;
             apply_indexed(&mut next.streams, d, apply_stream);
         }
         Ok(next)
@@ -400,7 +400,7 @@ impl MutationDiff<SemioVideoSnapshot> for SemioVideoDiff {
         self.streams = match (self.streams.take(), other.streams) {
             (None, x) => x,
             (x, None) => x,
-            (Some(a), Some(b)) => Some(absorb_indexed(a, b, absorb_stream_diff, stream_with_diff_applied)),
+            (Some(a), Some(b)) => Some(absorb_indexed(a, b, absorb_stream_diff, stream_with_diff_applied).await),
         };
     }
 }
@@ -413,7 +413,7 @@ impl DiffAlgebra<SemioVideoSnapshot> for SemioVideoDiff {
     }
 
     async fn between(base: &SemioVideoSnapshot, other: &SemioVideoSnapshot) -> Self {
-        diff_video(base, other)
+        diff_video(base, other).await
     }
 
     async fn is_empty(&self) -> bool {
@@ -426,7 +426,7 @@ impl DiffAlgebra<SemioVideoSnapshot> for SemioVideoDiff {
 /// 🧩 Builds the sparse field-by-field diff for a `SetSnapshot` mutation. No `snapshot:
 /// Option<SemioVideoSnapshot>` full-replace slot -- this IS `SemioVideoDiff::between`.
 pub async fn diff_set_snapshot(base: &SemioVideoSnapshot, next: &SemioVideoSnapshot) -> SemioVideoDiff {
-    SemioVideoDiff::between(base, next)
+    SemioVideoDiff::between(base, next).await
 }
 
 /// 🧩 Builds the diff for inserting `stream` at `index` (FINAL state).
@@ -453,19 +453,19 @@ pub async fn diff_set_stream_meta(old: &SemioVideoStream, index: usize, kind: Se
     if sd.kind.is_none() && sd.codec.is_none() && sd.width.is_none() && sd.height.is_none() && sd.rate.is_none() {
         return SemioVideoDiff::default();
     }
-    wrap_stream_diff(index, sd)
+    wrap_stream_diff(index, sd).await
 }
 
 /// 🧩 Builds the diff for inserting `sample` at `index` within stream `stream_index` (FINAL state).
 pub async fn diff_insert_sample(stream_index: usize, index: usize, sample: SemioVideoSample) -> SemioVideoDiff {
     let samples = SemioVideoSamplesDiff { added: vec![IndexAdded { index, item: sample }], ..Default::default() };
-    wrap_stream_diff(stream_index, SemioVideoStreamDiff { samples: Some(samples), ..Default::default() })
+    wrap_stream_diff(stream_index, SemioVideoStreamDiff { samples: Some(samples), ..Default::default() }).await
 }
 
 /// 🧩 Builds the diff for removing the sample at `index` (BASE-state index) within `stream_index`.
 pub async fn diff_remove_sample(stream_index: usize, index: usize) -> SemioVideoDiff {
     let samples = SemioVideoSamplesDiff { removed: vec![index], ..Default::default() };
-    wrap_stream_diff(stream_index, SemioVideoStreamDiff { samples: Some(samples), ..Default::default() })
+    wrap_stream_diff(stream_index, SemioVideoStreamDiff { samples: Some(samples), ..Default::default() }).await
 }
 
 /// 🧩 Builds the diff for replacing one sample's opaque `data` payload.
@@ -475,7 +475,7 @@ pub async fn diff_set_sample_data(old: &SemioVideoSample, stream_index: usize, i
     }
     let sample_diff = SemioVideoSampleDiff { pts: None, key: None, data: Some(data) };
     let samples = SemioVideoSamplesDiff { modified: vec![IndexModified { index, diff: sample_diff }], ..Default::default() };
-    wrap_stream_diff(stream_index, SemioVideoStreamDiff { samples: Some(samples), ..Default::default() })
+    wrap_stream_diff(stream_index, SemioVideoStreamDiff { samples: Some(samples), ..Default::default() }).await
 }
 
 /// 🧩 Builds the diff for setting a sample's `pts`/`key` flags.
@@ -485,7 +485,7 @@ pub async fn diff_set_sample_flags(old: &SemioVideoSample, stream_index: usize, 
         return SemioVideoDiff::default();
     }
     let samples = SemioVideoSamplesDiff { modified: vec![IndexModified { index, diff: sample_diff }], ..Default::default() };
-    wrap_stream_diff(stream_index, SemioVideoStreamDiff { samples: Some(samples), ..Default::default() })
+    wrap_stream_diff(stream_index, SemioVideoStreamDiff { samples: Some(samples), ..Default::default() }).await
 }
 
 /// 🧭️ Wraps a single stream-level diff into a full `SemioVideoDiff`, addressing it as `modified`
@@ -513,10 +513,10 @@ pub(crate) async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
 pub(crate) async fn enc_str(s: &str) -> String {
-    hex_encode(s.as_bytes())
+    hex_encode(s.as_bytes()).await
 }
 pub(crate) async fn dec_str(s: &str) -> Result<String, String> {
-    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
+    String::from_utf8(hex_decode(s).await?).map_err(|e| e.to_string())
 }
 pub(crate) async fn enc_bool(b: &bool) -> String {
     if *b {
@@ -542,8 +542,8 @@ pub(crate) async fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String
     }
 }
 pub(crate) async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
-    let inner = strip_brackets(s)?;
-    match split_top_level(inner, ',').as_slice() {
+    let inner = strip_brackets(s).await?;
+    match split_top_level(inner, ',').await.as_slice() {
         ["0"] => Ok(None),
         [tag, value] if *tag == "1" => Ok(Some(dec(value)?)),
         other => Err(format!("option decode: bad shape {other:?}")),
@@ -553,7 +553,7 @@ pub(crate) async fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> Stri
     format!("[{}]", items.iter().map(|i| enc(i)).collect::<Vec<_>>().join(","))
 }
 pub(crate) async fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
-    split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec).collect()
+    split_top_level(strip_brackets(s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec).collect()
 }
 //#endregion 🔖️Primitives
 
@@ -579,8 +579,8 @@ pub(crate) async fn enc_rational(r: &SemioRational) -> String {
     format!("[{},{}]", r.num, r.den)
 }
 pub(crate) async fn dec_rational(s: &str) -> Result<SemioRational, String> {
-    let inner = strip_brackets(s)?;
-    let parts = split_top_level(inner, ',');
+    let inner = strip_brackets(s).await?;
+    let parts = split_top_level(inner, ',').await;
     let [num, den] = parts.as_slice() else { return Err(format!("rational: expected 2 fields, got {}", parts.len())) };
     Ok(SemioRational { num: num.parse().map_err(|e: std::num::ParseIntError| e.to_string())?, den: den.parse().map_err(|e: std::num::ParseIntError| e.to_string())? })
 }
@@ -589,26 +589,26 @@ pub(crate) async fn enc_sample(s: &SemioVideoSample) -> String {
     format!("[{},{},{}]", s.pts, enc_bool(&s.key), hex_encode(&s.data))
 }
 pub(crate) async fn dec_sample(s: &str) -> Result<SemioVideoSample, String> {
-    let inner = strip_brackets(s)?;
-    let parts = split_top_level(inner, ',');
+    let inner = strip_brackets(s).await?;
+    let parts = split_top_level(inner, ',').await;
     let [pts, key, data] = parts.as_slice() else { return Err(format!("sample: expected 3 fields, got {}", parts.len())) };
-    Ok(SemioVideoSample { pts: pts.parse().map_err(|e: std::num::ParseIntError| e.to_string())?, key: dec_bool(key)?, data: hex_decode(data)? })
+    Ok(SemioVideoSample { pts: pts.parse().map_err(|e: std::num::ParseIntError| e.to_string())?, key: dec_bool(key).await?, data: hex_decode(data).await? })
 }
 
 pub(crate) async fn enc_stream(s: &SemioVideoStream) -> String {
     format!("[{},{},{},{},{},{}]", enc_kind(&s.kind), enc_str(&s.codec), s.width, s.height, enc_rational(&s.rate), enc_list(&s.samples, enc_sample))
 }
 pub(crate) async fn dec_stream(s: &str) -> Result<SemioVideoStream, String> {
-    let inner = strip_brackets(s)?;
-    let parts = split_top_level(inner, ',');
+    let inner = strip_brackets(s).await?;
+    let parts = split_top_level(inner, ',').await;
     let [kind, codec, width, height, rate, samples] = parts.as_slice() else { return Err(format!("stream: expected 6 fields, got {}", parts.len())) };
     Ok(SemioVideoStream {
-        kind: dec_kind(kind)?,
-        codec: dec_str(codec)?,
+        kind: dec_kind(kind).await?,
+        codec: dec_str(codec).await?,
         width: width.parse().map_err(|e: std::num::ParseIntError| e.to_string())?,
         height: height.parse().map_err(|e: std::num::ParseIntError| e.to_string())?,
-        rate: dec_rational(rate)?,
-        samples: dec_list(samples, dec_sample)?,
+        rate: dec_rational(rate).await?,
+        samples: dec_list(samples, dec_sample).await?,
     })
 }
 //#endregion 🔖️ValueCodecs
@@ -618,17 +618,17 @@ async fn enc_sample_diff(d: &SemioVideoSampleDiff) -> String {
     format!("[{},{},{}]", encode_option(&d.pts, |v| v.to_string()), encode_option(&d.key, |v| enc_bool(v)), encode_option(&d.data, |v| hex_encode(v)))
 }
 async fn dec_sample_diff(s: &str) -> Result<SemioVideoSampleDiff, String> {
-    let inner = strip_brackets(s)?;
-    let parts = split_top_level(inner, ',');
+    let inner = strip_brackets(s).await?;
+    let parts = split_top_level(inner, ',').await;
     let [pts, key, data] = parts.as_slice() else { return Err(format!("sample diff: expected 3 fields, got {}", parts.len())) };
-    Ok(SemioVideoSampleDiff { pts: decode_option(pts, |v| v.parse().map_err(|e: std::num::ParseIntError| e.to_string()))?, key: decode_option(key, dec_bool)?, data: decode_option(data, hex_decode)? })
+    Ok(SemioVideoSampleDiff { pts: decode_option(pts, |v| v.parse().map_err(|e: std::num::ParseIntError| e.to_string())).await?, key: decode_option(key, dec_bool).await?, data: decode_option(data, hex_decode).await? })
 }
 
 pub(crate) async fn enc_samples_diff(d: &SemioVideoSamplesDiff) -> String {
-    enc_indexed_triple(d, enc_sample_diff, enc_sample)
+    enc_indexed_triple(d, enc_sample_diff, enc_sample).await
 }
 pub(crate) async fn dec_samples_diff(s: &str) -> Result<SemioVideoSamplesDiff, String> {
-    dec_indexed_triple(s, dec_sample_diff, dec_sample)
+    dec_indexed_triple(s, dec_sample_diff, dec_sample).await
 }
 
 async fn enc_stream_diff(d: &SemioVideoStreamDiff) -> String {
@@ -643,24 +643,24 @@ async fn enc_stream_diff(d: &SemioVideoStreamDiff) -> String {
     )
 }
 async fn dec_stream_diff(s: &str) -> Result<SemioVideoStreamDiff, String> {
-    let inner = strip_brackets(s)?;
-    let parts = split_top_level(inner, ',');
+    let inner = strip_brackets(s).await?;
+    let parts = split_top_level(inner, ',').await;
     let [kind, codec, width, height, rate, samples] = parts.as_slice() else { return Err(format!("stream diff: expected 6 fields, got {}", parts.len())) };
     Ok(SemioVideoStreamDiff {
-        kind: decode_option(kind, dec_kind)?,
-        codec: decode_option(codec, dec_str)?,
-        width: decode_option(width, |v| v.parse().map_err(|e: std::num::ParseIntError| e.to_string()))?,
-        height: decode_option(height, |v| v.parse().map_err(|e: std::num::ParseIntError| e.to_string()))?,
-        rate: decode_option(rate, dec_rational)?,
-        samples: decode_option(samples, dec_samples_diff)?,
+        kind: decode_option(kind, dec_kind).await?,
+        codec: decode_option(codec, dec_str).await?,
+        width: decode_option(width, |v| v.parse().map_err(|e: std::num::ParseIntError| e.to_string())).await?,
+        height: decode_option(height, |v| v.parse().map_err(|e: std::num::ParseIntError| e.to_string())).await?,
+        rate: decode_option(rate, dec_rational).await?,
+        samples: decode_option(samples, dec_samples_diff).await?,
     })
 }
 
 pub(crate) async fn enc_streams_diff(d: &SemioVideoStreamsDiff) -> String {
-    enc_indexed_triple(d, enc_stream_diff, enc_stream)
+    enc_indexed_triple(d, enc_stream_diff, enc_stream).await
 }
 pub(crate) async fn dec_streams_diff(s: &str) -> Result<SemioVideoStreamsDiff, String> {
-    dec_indexed_triple(s, dec_stream_diff, dec_stream)
+    dec_indexed_triple(s, dec_stream_diff, dec_stream).await
 }
 //#endregion 🔖️DiffValueCodecs
 
@@ -676,7 +676,7 @@ async fn parse_semio_video_diff(line: &str) -> Result<SemioVideoDiff, String> {
         return Ok(SemioVideoDiff::default());
     }
     let rest = line.strip_prefix("streams=").ok_or_else(|| format!("semio video diff: unknown token {line:?}"))?;
-    Ok(SemioVideoDiff { streams: Some(dec_streams_diff(rest)?) })
+    Ok(SemioVideoDiff { streams: Some(dec_streams_diff(rest).await?) })
 }
 
 /// 🧪️ Real LEB128-varint-length-prefixed binary primitives (`store::pack_rt::write_varint_u64` /
@@ -687,16 +687,16 @@ async fn write_str_lp(out: &mut Vec<u8>, s: &str) {
     out.extend_from_slice(s.as_bytes());
 }
 async fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
-    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-    String::from_utf8(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec()).map_err(|e| e.to_string())
+    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+    String::from_utf8(reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec()).map_err(|e| e.to_string())
 }
 
 impl protocol::DiffCodec for SemioVideoDiff {
     async fn print_diff(&self) -> String {
-        print_semio_video_diff(self)
+        print_semio_video_diff(self).await
     }
     async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
-        parse_semio_video_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_semio_video_diff(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// ⚡️ Real binary diff frame, replacing the old `print_diff().into_bytes()` text-as-binary
     /// shortcut (same treatment flow's/mesh's own upgraded diff facets use). `format u8` +
@@ -726,8 +726,8 @@ impl protocol::DiffCodec for SemioVideoDiff {
         let presence = bytes[1];
         let mut reader = store::ByteReader::new(&bytes[2..]);
         let streams = if presence & 0b01 != 0 {
-            let text = read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff streams blob", offset: 2, detail: e })?;
-            Some(dec_streams_diff(&text).map_err(|e| protocol::ProtocolError::Malformed { what: "diff streams text", offset: 2, detail: e })?)
+            let text = read_str_lp(&mut reader).await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff streams blob", offset: 2, detail: e })?;
+            Some(dec_streams_diff(&text).await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff streams text", offset: 2, detail: e })?)
         } else {
             None
         };

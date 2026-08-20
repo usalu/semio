@@ -1,0 +1,31 @@
+  SKIP 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🦀️component.rs:1255 [E0599] — could not resolve insertion point near byte 63337
+  EDIT 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs:12342 [E0369] insert `.await` at byte 760685
+  EDIT 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs:11535 [E0369] insert `.await` at byte 701537
+  EDIT 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs:11469 [E0369] insert `.await` at byte 696471
+  EDIT 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs:11469 [E0369] insert `.await` at byte 696489
+  EDIT 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs:11460 [E0599] insert `.await` at byte 695811
+  EDIT 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs:11446 [E0599] insert `.await` at byte 695121
+  EDIT 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs:10072 [E0369] insert `.await` at byte 594176
+  EDIT 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs:10045 [E0369] insert `.await` at byte 591933
+  EDIT 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs:10042 [E0369] insert `.await` at byte 591663
+  EDIT 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs:10037 [E0369] insert `.await` at byte 591314
+  EDIT 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs:10036 [E0369] insert `.await` at byte 591218
+  EDIT 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs:10030 [E0369] insert `.await` at byte 590648
+  EDIT 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs:9971 [E0369] insert `.await` at byte 586365
+  EDIT 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs:9881 [E0369] insert `.await` at byte 578803
+  EDIT 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs:9581 [E0369] insert `.await` at byte 558305
+  EDIT 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs:9333 [E0369] insert `.await` at byte 539091
+  EDIT 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs:9314 [E0369] insert `.await` at byte 537387
+  EDIT 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs:9295 [E0369] insert `.await` at byte 535968
+  EDIT 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:1205 [E0369] insert `.await` at byte 68322
+  EDIT 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🦀️component.rs:1560 [E0369] insert `.await` at byte 78521
+  EDIT 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🦀️component.rs:1526 [E0369] insert `.await` at byte 76689
+  EDIT 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🦀️component.rs:1484 [E0369] insert `.await` at byte 74492
+  EDIT 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🦀️component.rs:1462 [E0369] insert `.await` at byte 73423
+  EDIT 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🦀️component.rs:1453 [E0369] insert `.await` at byte 73023
+  EDIT 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🦀️component.rs:1272 [E0369] insert `.await` at byte 64205
+  EDIT 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/📇️registry/🦀️component.rs:124 [E0369] insert `.await` at byte 7464
+
+applied: 26  skipped: 1  files: 4
+  E0369: 24
+  E0599: 2

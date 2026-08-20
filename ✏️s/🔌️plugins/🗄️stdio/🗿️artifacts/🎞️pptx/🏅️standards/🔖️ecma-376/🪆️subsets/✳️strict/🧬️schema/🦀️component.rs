@@ -29,28 +29,28 @@ pub mod derived_construction {
         type Diff = PptxDiff;
 
         async fn empty() -> Self {
-            Self { inner: PptxAnyBuilder::empty() }
+            Self { inner: PptxAnyBuilder::empty().await }
         }
 
         async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
-            Self { inner: PptxAnyBuilder::from_snapshot(snapshot) }
+            Self { inner: PptxAnyBuilder::from_snapshot(snapshot).await }
         }
 
         async fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self { inner: PptxAnyBuilder::from_text(text)? })
+            Ok(Self { inner: PptxAnyBuilder::from_text(text).await? })
         }
 
         async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self { inner: PptxAnyBuilder::from_binary(bytes)? })
+            Ok(Self { inner: PptxAnyBuilder::from_binary(bytes).await? })
         }
 
         async fn mutate(self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let (inner, diff) = self.inner.mutate(mutation);
+            let (inner, diff) = self.inner.mutate(mutation).await;
             (Self { inner }, diff)
         }
 
         async fn absorb(self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            Ok(Self { inner: self.inner.absorb(diff)? })
+            Ok(Self { inner: self.inner.absorb(diff).await? })
         }
 
         /// 🛡️ The real construction gate: however `self`'s inner snapshot got here, a hard
@@ -58,7 +58,7 @@ pub mod derived_construction {
         /// `conformance="strict"`, `mc:AlternateContent`) pass through as advisory `Diagnostic`s;
         /// the `Err` path is NOT taken for those, only hard ones block.
         async fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
-            let snapshot = self.inner.build()?;
+            let snapshot = self.inner.build().await?;
             let hard: Vec<Diagnostic> = check_strict_conformance(&snapshot).into_iter().filter(|d| matches!(d.severity, Severity::Error | Severity::Fatal)).collect();
             if hard.is_empty() {
                 Ok(snapshot)
@@ -146,11 +146,11 @@ pub mod derived_analysis {
     /// 🧭️ Locates the root officeDocument part regardless of whether the package declares the
     /// Transitional or Strict officeDocument relationship type.
     async fn main_part_path(opc: &OpcPackage) -> Option<String> {
-        crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::resolve_office_document_relationship(opc)
+        crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::resolve_office_document_relationship(opc).await
     }
 
     async fn part_text<'a>(opc: &'a OpcPackage, path: &str) -> Option<&'a str> {
-        opc.part_bytes(path).and_then(|b| std::str::from_utf8(b).ok())
+        opc.part_bytes(path).await.and_then(|b| std::str::from_utf8(b).ok())
     }
 
     async fn hard(code: &'static str, message: String) -> Diagnostic {
@@ -169,8 +169,8 @@ pub mod derived_analysis {
         let opc = &snapshot.opc;
         let mut out = Vec::new();
 
-        match main_part_path(opc) {
-            Some(path) => match part_text(opc, &path) {
+        match main_part_path(opc).await {
+            Some(path) => match part_text(opc, &path).await {
                 Some(text) => {
                     if !text.contains(STRICT_MAIN_NS) {
                         out.push(hard(CODE_MAIN_NS, format!("root officeDocument part {path} does not declare the Strict PresentationML main namespace ({STRICT_MAIN_NS})")));
@@ -224,15 +224,15 @@ pub mod derived_analysis {
         const DIALECT: Dialect = DIALECT;
 
         async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
-            PptxAnyAnalyzer::sniff(source)
+            PptxAnyAnalyzer::sniff(source).await
         }
 
         async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
-            let inner = PptxAnyAnalyzer::analyze(sources);
+            let inner = PptxAnyAnalyzer::analyze(sources).await;
             let mut diagnostics = inner.diagnostics.clone();
             let mut confidence = inner.confidence;
             if let Some(snapshot) = &inner.parts.snapshot {
-                let checks = check_strict_conformance(snapshot);
+                let checks = check_strict_conformance(snapshot).await;
                 if checks.iter().any(|d| matches!(d.severity, Severity::Error | Severity::Fatal)) {
                     confidence = IoConfidence::Low;
                 }

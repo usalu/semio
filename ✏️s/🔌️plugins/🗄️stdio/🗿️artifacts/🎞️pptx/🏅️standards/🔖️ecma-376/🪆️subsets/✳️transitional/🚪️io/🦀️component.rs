@@ -52,11 +52,11 @@ pub mod derived_composition {
 
         async fn validate(payload: &IoPayload) -> Vec<Diagnostic> {
             let decoded = match payload {
-                IoPayload::Binary(bytes) => <PptxSnapshot as store::ArtifactPack>::decode_pack(bytes).ok(),
-                IoPayload::Text(text) => <PptxSnapshot as store::ArtifactDsl>::parse_dsl(text).ok(),
+                IoPayload::Binary(bytes) => <PptxSnapshot as store::ArtifactPack>::decode_pack(bytes).await.ok(),
+                IoPayload::Text(text) => <PptxSnapshot as store::ArtifactDsl>::parse_dsl(text).await.ok(),
             };
             match decoded {
-                Some(snapshot) => check_transitional_conformance(&snapshot),
+                Some(snapshot) => check_transitional_conformance(&snapshot).await,
                 None => vec![Diagnostic {
                     code: FaultCode::new("stdio.pptx.transitional.validate-decode-failed"),
                     severity: Severity::Warning,
@@ -81,7 +81,7 @@ pub mod derived_composition {
     /// (`crate::artifacts::pptx::standards::v_ecma_376::engine::io_registry::entries()`), matching how `✳️any`'s
     /// own entry is registered.
     pub async fn register() {
-        let _ = register_subset_validator(validator_entry());
+        let _ = register_subset_validator(validator_entry().await);
     }
     //#endregion 🔖️SubsetValidator
 

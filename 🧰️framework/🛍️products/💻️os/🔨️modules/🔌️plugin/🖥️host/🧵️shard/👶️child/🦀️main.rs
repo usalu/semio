@@ -41,7 +41,9 @@ fn main() {
         std::process::exit(2);
     });
 
-    let runtime = Arc::new(GuestRuntimes::Wasmtime(WasmtimeRuntime::new(SharedEngineConfig::default()).unwrap_or_else(|error| {
+    // 👶️ host-dedyn: `fn main` (E3) is this process's thread root — every async startup step below
+    // crosses the sync↔async boundary via its own `block_on`, same bridge the pump loop uses.
+    let runtime = Arc::new(GuestRuntimes::Wasmtime(semio_framework_async::block_on(WasmtimeRuntime::new(SharedEngineConfig::default())).unwrap_or_else(|error| {
         eprintln!("[semio-shard] engine init failed: {error}");
         std::process::exit(1);
     })));
@@ -51,18 +53,18 @@ fn main() {
     });
     let hash = *blake3::hash(&bytes).as_bytes();
     let package = PackageRef { package: PackageId(package_id.clone()), hash: PackageHash(hash) };
-    let compiled = runtime.compile(&package, &bytes).unwrap_or_else(|error| {
+    let compiled = semio_framework_async::block_on(runtime.compile(&package, &bytes)).unwrap_or_else(|error| {
         eprintln!("[semio-shard] compile failed: {error}");
         std::process::exit(1);
     });
-    let instance = runtime.instantiate(&compiled, ActorId(actor_id), &[], &INSTANTIATE_BUDGET).unwrap_or_else(|error| {
+    let instance = semio_framework_async::block_on(runtime.instantiate(&compiled, ActorId(actor_id), &[], &INSTANTIATE_BUDGET)).unwrap_or_else(|error| {
         eprintln!("[semio-shard] instantiate failed: {error}");
         std::process::exit(1);
     });
 
-    let transport = StdioTransport::new(200);
-    let mut shard = ShardLoop::new(runtime, ShardTransports::Stdio(transport));
-    shard.register(ActorId(actor_id), instance);
+    let transport = semio_framework_async::block_on(StdioTransport::new(200));
+    let mut shard = semio_framework_async::block_on(ShardLoop::new(runtime, ShardTransports::Stdio(transport)));
+    semio_framework_async::block_on(shard.register(ActorId(actor_id), instance));
     eprintln!("[semio-shard] pid={} package={package_id} actor={actor_id} ready", std::process::id());
 
     // 🌀️ `ShardLoop::pump` only drains what is ALREADY buffered and never blocks (its own doc

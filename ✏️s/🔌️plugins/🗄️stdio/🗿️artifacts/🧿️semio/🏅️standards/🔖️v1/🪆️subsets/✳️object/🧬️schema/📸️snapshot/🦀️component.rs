@@ -70,17 +70,17 @@ async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
 pub(crate) async fn enc_str(s: &str) -> String {
-    hex_encode(s.as_bytes())
+    hex_encode(s.as_bytes()).await
 }
 pub(crate) async fn dec_str(s: &str) -> Result<String, String> {
-    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
+    String::from_utf8(hex_decode(s).await?).map_err(|e| e.to_string())
 }
 
 pub(crate) async fn enc_ref(r: &store::os_io::ArtifactRef) -> String {
-    enc_str(&r.to_uri())
+    enc_str(&r.to_uri()).await
 }
 pub(crate) async fn dec_ref(s: &str) -> Result<store::os_io::ArtifactRef, String> {
-    store::os_io::ArtifactRef::parse_uri(&dec_str(s)?)
+    store::os_io::ArtifactRef::parse_uri(&dec_str(s).await?).await
 }
 
 /// 🪪️ `[<hex child_id>,<hex target-uri>]` — the two-string handle, real and complete.
@@ -88,13 +88,13 @@ pub(crate) async fn enc_child<S>(c: &store::ArtifactChild<S>) -> String {
     format!("[{},{}]", enc_str(&c.child_id), enc_ref(&c.target))
 }
 pub(crate) async fn dec_child<S>(s: &str) -> Result<store::ArtifactChild<S>, String> {
-    let parts = crate::artifacts::semio::standards::v1::subsets::any::schema::triples::split_top_level(crate::artifacts::semio::standards::v1::subsets::any::schema::triples::strip_brackets(s)?, ',');
+    let parts = crate::artifacts::semio::standards::v1::subsets::any::schema::triples::split_top_level(crate::artifacts::semio::standards::v1::subsets::any::schema::triples::strip_brackets(s).await?, ',').await;
     let [child_id, target] = parts.as_slice() else { return Err(format!("child handle: expected 2 fields, got {}", parts.len())) };
-    Ok(store::ArtifactChild::new(dec_str(child_id)?, dec_ref(target)?))
+    Ok(store::ArtifactChild::new(dec_str(child_id).await?, dec_ref(target).await?).await)
 }
 pub(crate) async fn enc_child_opt<S>(c: &Option<store::ArtifactChild<S>>) -> String {
     match c {
-        Some(c) => enc_child(c),
+        Some(c) => enc_child(c).await,
         None => "[]".to_string(),
     }
 }
@@ -102,14 +102,14 @@ pub(crate) async fn dec_child_opt<S>(s: &str) -> Result<Option<store::ArtifactCh
     if s == "[]" {
         return Ok(None);
     }
-    Ok(Some(dec_child(s)?))
+    Ok(Some(dec_child(s).await?))
 }
 
 pub(crate) async fn enc_transform(t: &SemioTransform) -> String {
     format!("[{},{},{},{},{},{},{},{},{},{}]", t.translation.x, t.translation.y, t.translation.z, t.rotation.x, t.rotation.y, t.rotation.z, t.rotation.w, t.scale.x, t.scale.y, t.scale.z,)
 }
 pub(crate) async fn dec_transform(s: &str) -> Result<SemioTransform, String> {
-    let parts = crate::artifacts::semio::standards::v1::subsets::any::schema::triples::split_top_level(crate::artifacts::semio::standards::v1::subsets::any::schema::triples::strip_brackets(s)?, ',');
+    let parts = crate::artifacts::semio::standards::v1::subsets::any::schema::triples::split_top_level(crate::artifacts::semio::standards::v1::subsets::any::schema::triples::strip_brackets(s).await?, ',').await;
     let [tx, ty, tz, rx, ry, rz, rw, sx, sy, sz] = parts.as_slice() else {
         return Err(format!("transform: expected 10 fields, got {}", parts.len()));
     };
@@ -135,15 +135,15 @@ async fn parse_object_snapshot_body(body: &str) -> Result<SemioObjectSnapshot, S
             continue;
         }
         if let Some(rest) = line.strip_prefix("schema=") {
-            schema = Some(dec_str(rest)?);
+            schema = Some(dec_str(rest).await?);
         } else if let Some(rest) = line.strip_prefix("transform=") {
-            transform = Some(dec_transform(rest)?);
+            transform = Some(dec_transform(rest).await?);
         } else if let Some(rest) = line.strip_prefix("brep=") {
-            brep = dec_child_opt(rest)?;
+            brep = dec_child_opt(rest).await?;
         } else if let Some(rest) = line.strip_prefix("mesh=") {
-            mesh = dec_child_opt(rest)?;
+            mesh = dec_child_opt(rest).await?;
         } else if let Some(rest) = line.strip_prefix("properties=") {
-            properties = dec_child_opt(rest)?;
+            properties = dec_child_opt(rest).await?;
         } else {
             return Err(format!("semio object snapshot: unknown line {line:?}"));
         }
@@ -158,30 +158,30 @@ async fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
     out.extend_from_slice(bytes);
 }
 async fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
+    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec())
 }
 pub(crate) async fn write_str_lp(out: &mut Vec<u8>, s: &str) {
     write_bytes_lp(out, s.as_bytes());
 }
 pub(crate) async fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
-    String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
+    String::from_utf8(read_bytes_lp(reader).await?).map_err(|e| e.to_string())
 }
 
 pub(crate) async fn write_ref(out: &mut Vec<u8>, r: &store::os_io::ArtifactRef) {
     write_str_lp(out, &r.to_uri());
 }
 pub(crate) async fn read_ref(reader: &mut store::ByteReader<'_>) -> Result<store::os_io::ArtifactRef, String> {
-    store::os_io::ArtifactRef::parse_uri(&read_str_lp(reader)?)
+    store::os_io::ArtifactRef::parse_uri(&read_str_lp(reader).await?).await
 }
 pub(crate) async fn write_child<S>(out: &mut Vec<u8>, c: &store::ArtifactChild<S>) {
     write_str_lp(out, &c.child_id);
     write_ref(out, &c.target);
 }
 pub(crate) async fn read_child<S>(reader: &mut store::ByteReader<'_>) -> Result<store::ArtifactChild<S>, String> {
-    let child_id = read_str_lp(reader)?;
-    let target = read_ref(reader)?;
-    Ok(store::ArtifactChild::new(child_id, target))
+    let child_id = read_str_lp(reader).await?;
+    let target = read_ref(reader).await?;
+    Ok(store::ArtifactChild::new(child_id, target).await)
 }
 pub(crate) async fn write_child_opt<S>(out: &mut Vec<u8>, c: &Option<store::ArtifactChild<S>>) {
     match c {
@@ -193,11 +193,11 @@ pub(crate) async fn write_child_opt<S>(out: &mut Vec<u8>, c: &Option<store::Arti
     }
 }
 pub(crate) async fn read_child_opt<S>(reader: &mut store::ByteReader<'_>) -> Result<Option<store::ArtifactChild<S>>, String> {
-    let presence = reader.read_u8().map_err(|e| e.to_string())?;
+    let presence = reader.read_u8().await.map_err(|e| e.to_string())?;
     if presence == 0 {
         Ok(None)
     } else {
-        Ok(Some(read_child(reader)?))
+        Ok(Some(read_child(reader).await?))
     }
 }
 pub(crate) async fn write_transform(out: &mut Vec<u8>, t: &SemioTransform) {
@@ -207,7 +207,7 @@ pub(crate) async fn write_transform(out: &mut Vec<u8>, t: &SemioTransform) {
 }
 pub(crate) async fn read_transform(reader: &mut store::ByteReader<'_>) -> Result<SemioTransform, String> {
     use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint3, SemioQuaternion};
-    let mut next = || -> Result<f64, String> { Ok(f64::from_le_bytes(reader.read_bytes(8).map_err(|e| e.to_string())?.try_into().map_err(|_| "transform: short read".to_string())?)) };
+    let mut next = || -> Result<f64, String> { Ok(f64::from_le_bytes(semio_framework_plugin::resolve_ready(reader.read_bytes(8)).map_err(|e| e.to_string())?.try_into().map_err(|_| "transform: short read".to_string())?)) };
     Ok(SemioTransform { translation: SemioPoint3 { x: next()?, y: next()?, z: next()? }, rotation: SemioQuaternion { x: next()?, y: next()?, z: next()?, w: next()? }, scale: SemioPoint3 { x: next()?, y: next()?, z: next()? } })
 }
 
@@ -223,16 +223,16 @@ async fn encode_object_snapshot_binary(s: &SemioObjectSnapshot) -> Vec<u8> {
 }
 async fn decode_object_snapshot_binary(bytes: &[u8]) -> Result<SemioObjectSnapshot, String> {
     const PACK_BINARY_FORMAT: u8 = 1;
-    let mut reader = store::ByteReader::new(bytes);
-    let format = reader.read_u8().map_err(|e| e.to_string())?;
+    let mut reader = store::ByteReader::new(bytes).await;
+    let format = reader.read_u8().await.map_err(|e| e.to_string())?;
     if format != PACK_BINARY_FORMAT {
         return Err(format!("unsupported pack format {format}"));
     }
-    let schema = read_str_lp(&mut reader)?;
-    let transform = read_transform(&mut reader)?;
-    let brep = read_child_opt(&mut reader)?;
-    let mesh = read_child_opt(&mut reader)?;
-    let properties = read_child_opt(&mut reader)?;
+    let schema = read_str_lp(&mut reader).await?;
+    let transform = read_transform(&mut reader).await?;
+    let brep = read_child_opt(&mut reader).await?;
+    let mesh = read_child_opt(&mut reader).await?;
+    let properties = read_child_opt(&mut reader).await?;
     Ok(SemioObjectSnapshot { schema, transform, brep, mesh, properties })
 }
 //#endregion 🔖️BinaryPrimitives
@@ -249,11 +249,11 @@ impl store::ArtifactDsl for SemioObjectSnapshot {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        parse_object_snapshot_body(body).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_object_snapshot_body(body).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     async fn print_dsl(&self) -> String {
         let body = print_object_snapshot_body(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -262,7 +262,7 @@ impl store::ArtifactPack for SemioObjectSnapshot {
     async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = encode_object_snapshot_binary(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
     async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
@@ -271,7 +271,7 @@ impl store::ArtifactPack for SemioObjectSnapshot {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
-        decode_object_snapshot_binary(&inner).map_err(store::PackError::Schema)
+        decode_object_snapshot_binary(&inner).await.map_err(store::PackError::Schema)
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs

@@ -1,0 +1,63 @@
+{
+  "case": "set-children",
+  "kind": "patch",
+  "description": "UiPatchOp::SetChildren adds node 2 as root's second child (node 2 itself must already exist, so this patch also Upserts it).",
+  "outcome": "accept",
+  "limits": null,
+  "baseRevision": 0,
+  "resultRevision": 1,
+  "tree": {
+    "root": 0,
+    "nodeCount": 3,
+    "shape": [
+      {
+        "id": 0,
+        "key": "root",
+        "type": "container",
+        "children": [
+          1,
+          2
+        ]
+      },
+      {
+        "id": 1,
+        "key": "a",
+        "type": "text",
+        "children": []
+      },
+      {
+        "id": 2,
+        "key": "b",
+        "type": "text",
+        "children": []
+      }
+    ]
+  },
+  "accessibility": [
+    {
+      "id": 0,
+      "label": null,
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    },
+    {
+      "id": 1,
+      "label": null,
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    },
+    {
+      "id": 2,
+      "label": null,
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    }
+  ],
+  "actionIds": []
+}

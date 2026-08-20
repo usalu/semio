@@ -26,7 +26,7 @@ pub struct DxfInference {
 
 impl protocol::Inference<DxfSnapshot> for DxfInference {
     async fn infer(snapshot: &DxfSnapshot) -> Self {
-        Self { bounds: compute_dxf_bounds(snapshot) }
+        Self { bounds: compute_dxf_bounds(snapshot).await }
     }
 }
 

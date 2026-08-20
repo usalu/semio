@@ -33,7 +33,7 @@ impl ArtifactSerializer for SemioValueToJson {
     async fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         let nodes: HashMap<&ValueId, &SemioValue> = from.nodes.iter().map(|n| (&n.id, &n.value)).collect();
         let mut visiting: HashSet<ValueId> = HashSet::new();
-        let value = json_value_from_semio(&from.root, &nodes, &mut visiting)?;
+        let value = json_value_from_semio(&from.root, &nodes, &mut visiting).await?;
         Ok(JsonSnapshot { schema: STDIO_JSON_DOCUMENT_SCHEMA.into(), value })
     }
 }
@@ -66,7 +66,7 @@ async fn json_value_from_semio(v: &SemioValue, nodes: &HashMap<&ValueId, &SemioV
         SemioValue::Bool { value } => Ok(JsonValue::Bool { value: *value }),
         SemioValue::Int { lexeme } | SemioValue::Float { lexeme } => Ok(JsonValue::Number { lexeme: lexeme.clone() }),
         SemioValue::Str { value } => Ok(JsonValue::String { value: value.clone() }),
-        SemioValue::Bytes { value } => Ok(JsonValue::String { value: base64_encode(value) }),
+        SemioValue::Bytes { value } => Ok(JsonValue::String { value: base64_encode(value).await }),
         SemioValue::List { items } => {
             let items = items.iter().map(|item| json_value_from_semio(item, nodes, visiting)).collect::<Result<Vec<_>, _>>()?;
             Ok(JsonValue::Array { items })
@@ -82,7 +82,7 @@ async fn json_value_from_semio(v: &SemioValue, nodes: &HashMap<&ValueId, &SemioV
             let target = nodes.get(id).ok_or_else(|| store::PackError::Schema(format!("value->json: dangling Ref{{id: {:?}}} — not found in `nodes`", id.value)))?;
             let result = json_value_from_semio(target, nodes, visiting);
             visiting.remove(id);
-            result
+            result.await
         }
     }
 }

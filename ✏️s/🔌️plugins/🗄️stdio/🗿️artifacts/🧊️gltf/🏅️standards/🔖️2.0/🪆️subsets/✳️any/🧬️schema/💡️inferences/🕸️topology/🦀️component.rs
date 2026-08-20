@@ -31,16 +31,16 @@ impl GltfInferenceStage<GltfGeometryContext<'_>> for GltfTopologyInference {
     type Output = GltfTopologyIndicators;
 
     async fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
-        Self::Output { holes: holes::infer(context), handles: handles::infer(context), boundary_loops: boundary_loops::infer(context), euler_characteristic: euler_characteristic::infer(context), genus: genus::infer(context) }
+        Self::Output { holes: holes::infer(context).await, handles: handles::infer(context).await, boundary_loops: boundary_loops::infer(context).await, euler_characteristic: euler_characteristic::infer(context).await, genus: genus::infer(context).await }
     }
 
     async fn unavailable(diagnostic_ids: &[String]) -> Self::Output {
         Self::Output {
-            holes: holes::unavailable_measure(diagnostic_ids),
-            handles: handles::unavailable_measure(diagnostic_ids),
-            boundary_loops: boundary_loops::unavailable_measure(diagnostic_ids),
-            euler_characteristic: euler_characteristic::unavailable_measure(diagnostic_ids),
-            genus: genus::unavailable_measure(diagnostic_ids),
+            holes: holes::unavailable_measure(diagnostic_ids).await,
+            handles: handles::unavailable_measure(diagnostic_ids).await,
+            boundary_loops: boundary_loops::unavailable_measure(diagnostic_ids).await,
+            euler_characteristic: euler_characteristic::unavailable_measure(diagnostic_ids).await,
+            genus: genus::unavailable_measure(diagnostic_ids).await,
         }
     }
 }

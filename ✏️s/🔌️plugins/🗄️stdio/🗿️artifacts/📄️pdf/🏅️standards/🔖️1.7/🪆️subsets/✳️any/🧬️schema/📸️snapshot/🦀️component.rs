@@ -88,7 +88,7 @@ impl PdfDecimal {
             None => (text.as_str(), 0),
         };
         let normalized = if mantissa.contains('.') { mantissa.to_string() } else { format!("{mantissa}.") };
-        let mut decimal = Self::parse(&normalized).expect("finite f64 has valid decimal mantissa");
+        let mut decimal = Self::parse(&normalized).await.expect("finite f64 has valid decimal mantissa");
         let scale = decimal.scale as i64 - exponent as i64;
         if scale < 0 {
             decimal.coefficient.extend(std::iter::repeat_n('0', -scale as usize));
@@ -162,7 +162,7 @@ impl PdfObject {
         }
     }
     pub async fn dict_get<'a>(&'a self, key: &str) -> Option<&'a PdfObject> {
-        self.as_dict()?.iter().find(|e| e.key == key).map(|e| &e.value)
+        self.as_dict().await?.iter().find(|e| e.key == key).map(|e| &e.value)
     }
     pub async fn as_name(&self) -> Option<&str> {
         match self {
@@ -185,14 +185,14 @@ impl PdfObject {
     pub async fn as_f64(&self) -> Option<f64> {
         match self {
             PdfObject::Int(i) => Some(*i as f64),
-            PdfObject::Real(r) => r.to_f64(),
+            PdfObject::Real(r) => r.to_f64().await,
             _ => None,
         }
     }
     pub async fn as_i64(&self) -> Option<i64> {
         match self {
             PdfObject::Int(i) => Some(*i),
-            PdfObject::Real(r) => r.to_f64().map(|value| value as i64),
+            PdfObject::Real(r) => r.to_f64().await.map(|value| value as i64),
             _ => None,
         }
     }
@@ -308,12 +308,12 @@ impl store::ArtifactDsl for PdfSnapshot {
         for i in (0..hex.len()).step_by(2) {
             bytes.push(u8::from_str_radix(&hex[i..i + 2], 16).map_err(|e| store::TextError::new(format!("invalid hex: {e}"), dsl::TextSpan::at(1, 1)))?);
         }
-        crate::artifacts::pdf::standards::v1_7::subsets::any::io::decode_pdf(&bytes).map_err(|e| store::TextError::new(format!("{e:?}"), dsl::TextSpan::at(1, 1)))
+        crate::artifacts::pdf::standards::v1_7::subsets::any::io::decode_pdf(&bytes).await.map_err(|e| store::TextError::new(format!("{e:?}"), dsl::TextSpan::at(1, 1)))
     }
     async fn print_dsl(&self) -> String {
-        let bytes = crate::artifacts::pdf::standards::v1_7::subsets::any::io::encode_pdf(self).expect("PDF snapshot must encode before DSL transport");
+        let bytes = crate::artifacts::pdf::standards::v1_7::subsets::any::io::encode_pdf(self).await.expect("PDF snapshot must encode before DSL transport");
         let body: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -321,8 +321,8 @@ impl store::ArtifactDsl for PdfSnapshot {
 impl store::ArtifactPack for PdfSnapshot {
     async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
-        let raw = crate::artifacts::pdf::standards::v1_7::subsets::any::io::encode_pdf(self).map_err(|e| store::PackError::Schema(format!("{e:?}")))?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let raw = crate::artifacts::pdf::standards::v1_7::subsets::any::io::encode_pdf(self).await.map_err(|e| store::PackError::Schema(format!("{e:?}")))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
     async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
@@ -331,7 +331,7 @@ impl store::ArtifactPack for PdfSnapshot {
             return Err(store::PackError::Schema("pack envelope mismatch".into()));
         }
         let _ = options;
-        crate::artifacts::pdf::standards::v1_7::subsets::any::io::decode_pdf(&inner).map_err(|e| store::PackError::Schema(format!("{e:?}")))
+        crate::artifacts::pdf::standards::v1_7::subsets::any::io::decode_pdf(&inner).await.map_err(|e| store::PackError::Schema(format!("{e:?}")))
     }
 }
 //#endregion 🔖️Snapshot
@@ -368,7 +368,7 @@ pub async fn demo_pdf17_snapshot() -> PdfSnapshot {
         objects: Vec::new(),
         trailer: Vec::new(),
     };
-    let bytes = crate::artifacts::pdf::standards::v1_7::subsets::any::io::encode_pdf(&seed).expect("encode_pdf(seed) must succeed");
-    crate::artifacts::pdf::standards::v1_7::subsets::any::io::decode_pdf(&bytes).expect("decode_pdf(encode_pdf(seed)) must succeed")
+    let bytes = crate::artifacts::pdf::standards::v1_7::subsets::any::io::encode_pdf(&seed).await.expect("encode_pdf(seed) must succeed");
+    crate::artifacts::pdf::standards::v1_7::subsets::any::io::decode_pdf(&bytes).await.expect("decode_pdf(encode_pdf(seed)) must succeed")
 }
 //#endregion 🔖️SnapshotFixtures

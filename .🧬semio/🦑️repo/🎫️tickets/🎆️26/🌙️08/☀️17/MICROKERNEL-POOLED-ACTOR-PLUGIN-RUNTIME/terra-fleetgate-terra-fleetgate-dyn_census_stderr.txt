@@ -1,0 +1,2 @@
+Found 10575 .rs files under ['🧰️framework', '✏️s', '🌎️hub']
+Found 241 distinct first-party trait names declared.

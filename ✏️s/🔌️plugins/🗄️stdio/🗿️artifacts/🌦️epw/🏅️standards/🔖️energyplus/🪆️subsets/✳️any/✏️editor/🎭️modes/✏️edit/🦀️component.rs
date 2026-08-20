@@ -13,7 +13,7 @@ pub async fn definition() -> ModeDefinition {
 
 /// 🪟️ One window, one layout slot.
 pub async fn layout() -> WindowLayout {
-    create_stack_layout(&[main::WINDOW_KIND_ID.into()], Some(&["Weather Records".into()]))
+    create_stack_layout(&[main::WINDOW_KIND_ID.into()], Some(&["Weather Records".into()])).await
 }
 //#endregion 🔖️Definition
 

@@ -28,11 +28,11 @@ async fn face_normal(v0: SemioPoint3, v1: SemioPoint3, v2: SemioPoint3) -> [f64;
     let e1 = [v1.x - v0.x, v1.y - v0.y, v1.z - v0.z];
     let e2 = [v2.x - v0.x, v2.y - v0.y, v2.z - v0.z];
     let n = [e1[1] * e2[2] - e1[2] * e2[1], e1[2] * e2[0] - e1[0] * e2[2], e1[0] * e2[1] - e1[1] * e2[0]];
-    normalize(n)
+    normalize(n).await
 }
 
 async fn average_normal(n0: SemioPoint3, n1: SemioPoint3, n2: SemioPoint3) -> [f64; 3] {
-    normalize([(n0.x + n1.x + n2.x) / 3.0, (n0.y + n1.y + n2.y) / 3.0, (n0.z + n1.z + n2.z) / 3.0])
+    normalize([(n0.x + n1.x + n2.x) / 3.0, (n0.y + n1.y + n2.y) / 3.0, (n0.z + n1.z + n2.z) / 3.0]).await
 }
 
 async fn normalize(v: [f64; 3]) -> [f64; 3] {
@@ -84,9 +84,9 @@ impl ArtifactSerializer for SemioMeshToStl {
                             *prim.normals.get(i1 as usize).ok_or_else(|| store::PackError::Schema(format!("SemioMeshToStl: primitive {:?} normal index {i1} out of bounds", prim.id)))?,
                             *prim.normals.get(i2 as usize).ok_or_else(|| store::PackError::Schema(format!("SemioMeshToStl: primitive {:?} normal index {i2} out of bounds", prim.id)))?,
                         );
-                        average_normal(n0, n1, n2)
+                        average_normal(n0, n1, n2).await
                     } else {
-                        face_normal(v0, v1, v2)
+                        face_normal(v0, v1, v2).await
                     };
                     triangles.push(StlTriangle { normal, vertices: [[v0.x, v0.y, v0.z], [v1.x, v1.y, v1.z], [v2.x, v2.y, v2.z]] });
                 }

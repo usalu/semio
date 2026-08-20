@@ -65,18 +65,18 @@ pub async fn artifact_kind() -> ArtifactKindSpec {
 /// REFERENCES what it already exposes.
 /// 🧩️ Binds this executable root to its sole schema-owned definition.
 pub async fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
-    crate::registry::runtime_assembly("jpg", definition, declaration)
+    crate::registry::runtime_assembly("jpg", definition, declaration).await
 }
 
 pub async fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
-    let formats = crate::registry::format_descriptors_for("jpg")?;
+    let formats = crate::registry::format_descriptors_for("jpg").await?;
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
-        .schema(crate::artifacts::jpg::standards::v_jfif_1_01::subsets::any::schema::jpg_artifact_schema_descriptor())
-        .formats(formats)
-        .inferences([crate::artifacts::jpg::standards::v_jfif_1_01::subsets::any::schema::inferences::jpg_artifact_inference_descriptor()])
-        .composers(crate::artifacts::jpg::standards::v_jfif_1_01::engine::io_registry::entries())
-        .subset_validators(declared_subset_validators())
-        .languages(pilot_languages())
+        .await.schema(crate::artifacts::jpg::standards::v_jfif_1_01::subsets::any::schema::jpg_artifact_schema_descriptor().await)
+        .await.formats(formats)
+        .await.inferences([crate::artifacts::jpg::standards::v_jfif_1_01::subsets::any::schema::inferences::jpg_artifact_inference_descriptor()])
+        .await.composers(crate::artifacts::jpg::standards::v_jfif_1_01::engine::io_registry::entries())
+        .await.subset_validators(declared_subset_validators().await)
+        .await.languages(pilot_languages())
         .document_codec_bare::<JpgSnapshot, JpgMutation>(STDIO_JPG_DOCUMENT_SCHEMA)
         .try_build()
 }
@@ -162,7 +162,8 @@ pub mod io_registry {
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 
-    pub async fn entries() -> &'static [&'static ComposerEntry] {
+    // 🚫️async: E1 pure table accessor consumed by OnceLock::get_or_init's sync closure — see R9
+    pub fn entries() -> &'static [&'static ComposerEntry] {
         ENTRIES.get_or_init(|| v_jfif_1_01::entries().iter().collect()).as_slice()
     }
 

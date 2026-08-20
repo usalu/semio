@@ -12,10 +12,10 @@ pub async fn descriptor() -> GltfInferenceLeafDescriptor {
     GltfOverallSizeInference::DESCRIPTOR
 }
 pub(crate) async fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<f64> {
-    exact(context.diagonal, GltfUnit::Metre, context.sample_count, Some(context.topology))
+    exact(context.diagonal, GltfUnit::Metre, context.sample_count, Some(context.topology)).await
 }
 pub async fn unavailable_measure(ids: &[String]) -> GltfMeasure<f64> {
-    unavailable(GltfUnit::Metre, GltfAvailability::Unavailable, ids.to_vec(), 0, None)
+    unavailable(GltfUnit::Metre, GltfAvailability::Unavailable, ids.to_vec(), 0, None).await
 }
 pub async fn encode_result(indicators: &GltfEntityIndicators) -> Result<serde_json::Value, serde_json::Error> {
     serde_json::to_value(&indicators.size.overall_size)

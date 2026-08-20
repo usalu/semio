@@ -19,12 +19,12 @@ pub(crate) async fn cross(a: V3, b: V3) -> V3 {
     [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]
 }
 pub(crate) async fn norm(a: V3) -> f64 {
-    dot(a, a).sqrt()
+    dot(a, a).await.sqrt()
 }
 pub(crate) async fn normalize(a: V3) -> V3 {
     let norm = norm(a);
     if norm > 0.0 {
-        mul(a, 1.0 / norm)
+        mul(a, 1.0 / norm).await
     } else {
         [1.0, 0.0, 0.0]
     }

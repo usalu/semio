@@ -11,15 +11,15 @@ use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::
 //#region 🔖️Diff
 pub async fn diff(payload: &ChangeStrokeWidth, base: &SemioDrawingSnapshot) -> protocol::MutationOutcome<SemioDrawingDiff> {
     let Some(old) = base.styles.iter().find(|s| s.name == payload.style_name) else {
-        return protocol::MutationOutcome::error("mutation.target-missing", format!("Style \"{}\" does not exist.", payload.style_name), [payload.style_name.clone()]);
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Style \"{}\" does not exist.", payload.style_name), [payload.style_name.clone()]).await;
     };
     if let Some(w) = payload.new_width {
         if !w.is_finite() {
-            return protocol::MutationOutcome::fatal("mutation.invariant", format!("Style \"{}\" new stroke width is not finite.", payload.style_name), [payload.style_name.clone()]);
+            return protocol::MutationOutcome::fatal("mutation.invariant", format!("Style \"{}\" new stroke width is not finite.", payload.style_name), [payload.style_name.clone()]).await;
         }
     }
     if old.stroke_width == payload.new_width {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Style \"{}\" already has that stroke width.", payload.style_name));
+        return protocol::MutationOutcome::empty().await.warn("mutation.no-op", format!("Style \"{}\" already has that stroke width.", payload.style_name)).await;
     }
     protocol::MutationOutcome::new(SemioDrawingDiff {
         canvas: None,
@@ -29,6 +29,6 @@ pub async fn diff(payload: &ChangeStrokeWidth, base: &SemioDrawingSnapshot) -> p
             added: Vec::new(),
         }),
         layers: None,
-    })
+    }).await
 }
 //#endregion 🔖️Diff

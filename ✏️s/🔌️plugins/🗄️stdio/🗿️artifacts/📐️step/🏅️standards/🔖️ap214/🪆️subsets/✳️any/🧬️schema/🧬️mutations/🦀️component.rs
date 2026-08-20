@@ -64,13 +64,13 @@ pub enum StepMutation {
 /// ▶️ Applies `mutation` to `snapshot` — diff is the single semantics source: computed first,
 /// then applied, never re-derived by hand.
 pub async fn apply_step_mutation(snapshot: &mut StepSnapshot, mutation: &StepMutation) -> protocol::MutationOutcome<StepDiff> {
-    let outcome = <StepMutation as Mutation<StepSnapshot>>::diff(mutation, snapshot);
-    match MutationDiff::apply(outcome.diff(), snapshot) {
+    let outcome = <StepMutation as Mutation<StepSnapshot>>::diff(mutation, snapshot).await;
+    match MutationDiff::apply(outcome.diff().await, snapshot).await {
         Ok(next) => {
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).await.absorb_messages(outcome.messages().await.to_vec()).await,
     }
 }
 //#endregion 🔖️Apply
@@ -83,7 +83,7 @@ impl Mutation<StepSnapshot> for StepMutation {
         protocol::MutationOutcome::new(match self {
             StepMutation::NoMutation => StepDiff::default(),
 
-            StepMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
+            StepMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot).await,
 
             StepMutation::SetFileDescription { file_description } => StepDiff { file_description: (base.header.file_description != *file_description).then(|| file_description.clone()), ..Default::default() },
             StepMutation::SetFileName { file_name } => StepDiff { file_name: (base.header.file_name != *file_name).then(|| file_name.clone()), ..Default::default() },
@@ -141,7 +141,7 @@ impl Mutation<StepSnapshot> for StepMutation {
                 },
                 _ => StepDiff::default(),
             },
-        })
+        }).await
     }
 
     async fn inverse(&self, base: &StepSnapshot) -> Vec<Self> {
@@ -220,15 +220,15 @@ async fn parse_step_mutation(line: &str) -> Result<StepMutation, String> {
     let usize_arg = |k: &str| -> Result<usize, String> { parse_usize(arg(k)?) };
     let u64_arg = |k: &str| -> Result<u64, String> { parse_u64(arg(k)?) };
     match keyword {
-        "set-snapshot" => Ok(StepMutation::SetSnapshot { snapshot: dec_step_snapshot(arg("snapshot")?)? }),
-        "set-file-description" => Ok(StepMutation::SetFileDescription { file_description: dec_file_description(arg("file-description")?)? }),
-        "set-file-name" => Ok(StepMutation::SetFileName { file_name: dec_file_name(arg("file-name")?)? }),
-        "set-file-schema" => Ok(StepMutation::SetFileSchema { file_schema: dec_file_schema(arg("file-schema")?)? }),
-        "insert-entity" => Ok(StepMutation::InsertEntity { index: usize_arg("index")?, entity: dec_entity(arg("entity")?)? }),
+        "set-snapshot" => Ok(StepMutation::SetSnapshot { snapshot: dec_step_snapshot(arg("snapshot")?).await? }),
+        "set-file-description" => Ok(StepMutation::SetFileDescription { file_description: dec_file_description(arg("file-description")?).await? }),
+        "set-file-name" => Ok(StepMutation::SetFileName { file_name: dec_file_name(arg("file-name")?).await? }),
+        "set-file-schema" => Ok(StepMutation::SetFileSchema { file_schema: dec_file_schema(arg("file-schema")?).await? }),
+        "insert-entity" => Ok(StepMutation::InsertEntity { index: usize_arg("index")?, entity: dec_entity(arg("entity")?).await? }),
         "remove-entity" => Ok(StepMutation::RemoveEntity { id: u64_arg("id")? }),
-        "set-entity-name" => Ok(StepMutation::SetEntityName { id: u64_arg("id")?, name: dec_str(arg("name")?)? }),
-        "set-entity-arg" => Ok(StepMutation::SetEntityArg { id: u64_arg("id")?, arg_index: usize_arg("arg-index")?, value: dec_value(arg("value")?)? }),
-        "insert-entity-arg" => Ok(StepMutation::InsertEntityArg { id: u64_arg("id")?, arg_index: usize_arg("arg-index")?, value: dec_value(arg("value")?)? }),
+        "set-entity-name" => Ok(StepMutation::SetEntityName { id: u64_arg("id")?, name: dec_str(arg("name")?).await? }),
+        "set-entity-arg" => Ok(StepMutation::SetEntityArg { id: u64_arg("id")?, arg_index: usize_arg("arg-index")?, value: dec_value(arg("value")?).await? }),
+        "insert-entity-arg" => Ok(StepMutation::InsertEntityArg { id: u64_arg("id")?, arg_index: usize_arg("arg-index")?, value: dec_value(arg("value")?).await? }),
         "remove-entity-arg" => Ok(StepMutation::RemoveEntityArg { id: u64_arg("id")?, arg_index: usize_arg("arg-index")? }),
         other => Err(format!("step mutation: unknown keyword {other:?}")),
     }
@@ -236,10 +236,10 @@ async fn parse_step_mutation(line: &str) -> Result<StepMutation, String> {
 
 impl OpText for StepMutation {
     async fn print_op(&self) -> String {
-        print_step_mutation(self)
+        print_step_mutation(self).await
     }
     async fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_step_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_step_mutation(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
 
@@ -268,15 +268,15 @@ impl OpBinary for StepMutation {
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
         match self {
             StepMutation::NoMutation => {}
-            StepMutation::SetSnapshot { snapshot } => enc_step_snapshot_bin(snapshot, &mut out),
-            StepMutation::SetFileDescription { file_description } => enc_file_description_bin(file_description, &mut out),
-            StepMutation::SetFileName { file_name } => enc_file_name_bin(file_name, &mut out),
-            StepMutation::SetFileSchema { file_schema } => enc_file_schema_bin(file_schema, &mut out),
+            StepMutation::SetSnapshot { snapshot } => enc_step_snapshot_bin(snapshot, &mut out).await,
+            StepMutation::SetFileDescription { file_description } => enc_file_description_bin(file_description, &mut out).await,
+            StepMutation::SetFileName { file_name } => enc_file_name_bin(file_name, &mut out).await,
+            StepMutation::SetFileSchema { file_schema } => enc_file_schema_bin(file_schema, &mut out).await,
             StepMutation::InsertEntity { index, entity } => {
                 store::pack_rt::write_varint_u64(&mut out, *index as u64);
                 enc_entity_bin(entity, &mut out);
             }
-            StepMutation::RemoveEntity { id } => store::pack_rt::write_varint_u64(&mut out, *id),
+            StepMutation::RemoveEntity { id } => store::pack_rt::write_varint_u64(&mut out, *id).await,
             StepMutation::SetEntityName { id, name } => {
                 store::pack_rt::write_varint_u64(&mut out, *id);
                 write_str_bin(&mut out, name);
@@ -300,57 +300,57 @@ impl OpBinary for StepMutation {
     }
 
     async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let mut reader = store::ByteReader::new(bytes);
+        let mut reader = store::ByteReader::new(bytes).await;
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
-        let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
-        let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
+        let _format = reader.read_u8().await.map_err(|e| malformed("op format", 0, e.to_string()))?;
+        let tag = reader.read_u8().await.map_err(|e| malformed("op tag", 1, e.to_string()))?;
         match tag {
             0 => Ok(StepMutation::NoMutation),
             1 => {
-                let snapshot = dec_step_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", reader.position(), e))?;
+                let snapshot = dec_step_snapshot_bin(&mut reader).await.map_err(|e| malformed("op snapshot", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(StepMutation::SetSnapshot { snapshot })
             }
             2 => {
-                let file_description = dec_file_description_bin(&mut reader).map_err(|e| malformed("op file_description", reader.position(), e))?;
+                let file_description = dec_file_description_bin(&mut reader).await.map_err(|e| malformed("op file_description", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(StepMutation::SetFileDescription { file_description })
             }
             3 => {
-                let file_name = dec_file_name_bin(&mut reader).map_err(|e| malformed("op file_name", reader.position(), e))?;
+                let file_name = dec_file_name_bin(&mut reader).await.map_err(|e| malformed("op file_name", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(StepMutation::SetFileName { file_name })
             }
             4 => {
-                let file_schema = dec_file_schema_bin(&mut reader).map_err(|e| malformed("op file_schema", reader.position(), e))?;
+                let file_schema = dec_file_schema_bin(&mut reader).await.map_err(|e| malformed("op file_schema", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(StepMutation::SetFileSchema { file_schema })
             }
             5 => {
-                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
-                let entity = dec_entity_bin(&mut reader).map_err(|e| malformed("op entity", reader.position(), e))?;
+                let index = reader.read_varint_u64().await.map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
+                let entity = dec_entity_bin(&mut reader).await.map_err(|e| malformed("op entity", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(StepMutation::InsertEntity { index, entity })
             }
             6 => {
-                let id = reader.read_varint_u64().map_err(|e| malformed("op id", reader.position(), e.to_string()))?;
+                let id = reader.read_varint_u64().await.map_err(|e| malformed("op id", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
                 Ok(StepMutation::RemoveEntity { id })
             }
             7 => {
-                let id = reader.read_varint_u64().map_err(|e| malformed("op id", reader.position(), e.to_string()))?;
-                let name = read_str_bin(&mut reader).map_err(|e| malformed("op name", reader.position(), e))?;
+                let id = reader.read_varint_u64().await.map_err(|e| malformed("op id", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
+                let name = read_str_bin(&mut reader).await.map_err(|e| malformed("op name", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(StepMutation::SetEntityName { id, name })
             }
             8 => {
-                let id = reader.read_varint_u64().map_err(|e| malformed("op id", reader.position(), e.to_string()))?;
-                let arg_index = reader.read_varint_u64().map_err(|e| malformed("op arg_index", reader.position(), e.to_string()))? as usize;
-                let value = dec_value_bin(&mut reader).map_err(|e| malformed("op value", reader.position(), e))?;
+                let id = reader.read_varint_u64().await.map_err(|e| malformed("op id", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
+                let arg_index = reader.read_varint_u64().await.map_err(|e| malformed("op arg_index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
+                let value = dec_value_bin(&mut reader).await.map_err(|e| malformed("op value", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(StepMutation::SetEntityArg { id, arg_index, value })
             }
             9 => {
-                let id = reader.read_varint_u64().map_err(|e| malformed("op id", reader.position(), e.to_string()))?;
-                let arg_index = reader.read_varint_u64().map_err(|e| malformed("op arg_index", reader.position(), e.to_string()))? as usize;
-                let value = dec_value_bin(&mut reader).map_err(|e| malformed("op value", reader.position(), e))?;
+                let id = reader.read_varint_u64().await.map_err(|e| malformed("op id", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
+                let arg_index = reader.read_varint_u64().await.map_err(|e| malformed("op arg_index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
+                let value = dec_value_bin(&mut reader).await.map_err(|e| malformed("op value", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(StepMutation::InsertEntityArg { id, arg_index, value })
             }
             10 => {
-                let id = reader.read_varint_u64().map_err(|e| malformed("op id", reader.position(), e.to_string()))?;
-                let arg_index = reader.read_varint_u64().map_err(|e| malformed("op arg_index", reader.position(), e.to_string()))? as usize;
+                let id = reader.read_varint_u64().await.map_err(|e| malformed("op id", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
+                let arg_index = reader.read_varint_u64().await.map_err(|e| malformed("op arg_index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
                 Ok(StepMutation::RemoveEntityArg { id, arg_index })
             }
             other => Err(malformed("op tag", 1, format!("unknown tag {other}"))),

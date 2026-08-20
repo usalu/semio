@@ -53,11 +53,11 @@ pub mod derived_composition {
 
         async fn validate(payload: &IoPayload) -> Vec<Diagnostic> {
             let decoded = match payload {
-                IoPayload::Binary(bytes) => <JpgSnapshot as store::ArtifactPack>::decode_pack(bytes).ok(),
-                IoPayload::Text(text) => <JpgSnapshot as store::ArtifactDsl>::parse_dsl(text).ok(),
+                IoPayload::Binary(bytes) => <JpgSnapshot as store::ArtifactPack>::decode_pack(bytes).await.ok(),
+                IoPayload::Text(text) => <JpgSnapshot as store::ArtifactDsl>::parse_dsl(text).await.ok(),
             };
             match decoded {
-                Some(snapshot) => check_baseline_conformance(&snapshot),
+                Some(snapshot) => check_baseline_conformance(&snapshot).await,
                 None => vec![Diagnostic {
                     code: FaultCode::new("stdio.jpg.baseline.validate-decode-failed"),
                     severity: Severity::Warning,
@@ -82,7 +82,7 @@ pub mod derived_composition {
     /// (`crate::artifacts::jpg::standards::v_jfif_1_01::engine::io_registry::entries()`), matching how `✳️any`'s
     /// own entry is registered.
     pub async fn register() {
-        let _ = register_subset_validator(validator_entry());
+        let _ = register_subset_validator(validator_entry().await);
     }
     //#endregion 🔖️SubsetValidator
 

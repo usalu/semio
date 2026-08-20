@@ -1,0 +1,111 @@
+   Compiling semio-framework-number v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust)
+    Finished `test` profile [unoptimized] target(s) in 0.82s
+     Running unittests 📦️glue.rs (/private/tmp/claude-501/-Users-ueli-Documents-semio/e6a44461-bab7-421f-8a53-65123a5e9482/scratchpad/target-number/debug/deps/semio_framework_number-b5cab5ffa96e4986)
+
+running 97 tests
+test component::algebra::tests::bareiss_det_over_integer_matches_hand_case ... ok
+test component::algebra::tests::berkowitz_over_modint_matches_brute_force_2x2 ... ok
+test component::algebra::tests::inverse_of_singular_matrix_is_none ... ok
+test component::algebra::tests::det_of_singular_matrix_is_zero ... ok
+test component::algebra::tests::det_matches_cofactor_hand_case ... ok
+test component::algebra::tests::nullspace_vectors_are_in_kernel ... ok
+test component::algebra::tests::bareiss_det_matches_field_det ... ok
+test component::algebra::tests::inverse_round_trips_to_identity ... ok
+test component::algebra::tests::rank_bareiss_hand_cases_full_and_deficient_rank ... ok
+test component::algebra::tests::smith_normal_form_divisibility_chain ... ok
+test component::algebra::tests::solve_of_singular_system_is_none ... ok
+test component::algebra::tests::rref_and_rank_hand_case ... ok
+test component::algebra::tests::vecg_basic_ops_match_hand_computation ... ok
+test component::integer::tests::add_sub_sign_handling ... ok
+test component::algebra::tests::solve_matches_hand_solved_system ... ok
+test component::integer::tests::checked_isqrt_rejects_negative ... ok
+test component::integer::tests::div_rem_floor_matches_math_floor_division ... ok
+test component::integer::tests::div_rem_euclid_remainder_always_nonnegative ... ok
+test component::algebra::tests::cayley_hamilton_holds_for_3x3 ... ok
+test component::integer::tests::extended_gcd_satisfies_bezout_identity ... ok
+test component::integer::tests::div_rem_truncated_matches_rust_semantics ... ok
+test component::integer::tests::mul_sign_handling ... ok
+test component::integer::tests::nth_root_odd_accepts_negative ... ok
+test component::integer::tests::ordering_across_signs ... ok
+test component::integer::tests::ring_trait_impl_matches_inherent_methods ... ok
+test component::integer::tests::string_roundtrip_positive_and_negative ... ok
+test component::interval::tests::arithmetic_hand_cases ... ok
+test component::interval::tests::division_by_zero_straddling_interval_is_none ... ok
+test component::interval::tests::hull_and_intersect ... ok
+test component::interval::tests::powi_matches_repeated_multiplication ... ok
+test component::interval::tests::from_rational_contains_the_exact_value ... ok
+test component::interval::tests::sign_detection ... ok
+test component::interval::tests::sqrt_of_negative_is_none ... ok
+test component::modular::tests::crt_pair_matches_congruences ... ok
+test component::modular::tests::jacobi_hand_cases ... ok
+test component::modular::tests::mod_add_sub_mul_hand_cases ... ok
+test component::modular::tests::mod_inv_matches_bezout ... ok
+test component::modular::tests::mod_pow_hand_cases ... ok
+test component::modular::tests::modint_field_operations ... ok
+test component::modular::tests::modint_unbound_zero_unifies_with_bound_side ... ok
+test component::modular::tests::quick::sqrt_mod_matches_brute_force_for_all_residues_small_primes ... ok
+test component::modular::tests::sqrt_mod_hand_cases ... ok
+test component::natural::tests::bit_length_and_bit_access ... ok
+test component::natural::tests::add_matches_hand_case ... ok
+test component::natural::tests::decimal_string_roundtrip ... ok
+test component::natural::tests::div_rem_by_larger_value_is_zero_quotient ... ok
+test component::natural::tests::checked_sub_matches_hand_case_and_rejects_negative ... ok
+test component::algebra::tests::quick::rank_bareiss_matches_field_rank_on_random_integer_matrices ... ok
+test component::natural::tests::hex_roundtrip ... ok
+test component::algebra::tests::quick::bareiss_matches_field_det_on_random_integer_matrices ... ok
+test component::natural::tests::gcd_matches_euclid_hand_cases ... ok
+test component::natural::tests::div_rem_self_check_invariant ... ok
+test component::natural::tests::isqrt_matches_known_squares ... ok
+test component::natural::tests::nth_root_matches_known_cubes ... ok
+test component::natural::tests::quick::div_rem_add_back_branch_is_exercised_and_correct ... ok
+test component::natural::tests::mul_matches_hand_case ... ok
+test component::natural::tests::ord_compares_by_magnitude ... ok
+test component::natural::tests::shl_shr_roundtrip ... ok
+test component::natural::tests::zero_roundtrips ... ok
+test component::primes::tests::carmichael_numbers_are_rejected ... ok
+test component::natural::tests::quick::sieve_like_isqrt_matches_f64_for_moderate_values ... ok
+test component::primes::tests::divisors_hand_case ... ok
+test component::primes::tests::euler_phi_hand_cases ... ok
+test component::natural::tests::quick::karatsuba_matches_schoolbook_across_threshold ... ok
+test component::primes::tests::factor_u64_reconstructs_via_multiplication ... ok
+test component::natural::tests::quick::div_rem_invariant_holds_on_random_shapes ... ok
+test component::primes::tests::is_prime_u64_hand_cases ... ok
+test component::primes::tests::moebius_hand_cases ... ok
+test component::primes::tests::next_prime_hand_cases ... ok
+test component::primes::tests::is_prime_natural_matches_u64_path_for_small_values ... ok
+test component::primes::tests::quick::factor_random_64bit_semiprimes ... ok
+test component::rational::tests::best_approximation_respects_denominator_bound ... ok
+test component::rational::tests::continued_fraction_reconstructs_convergents ... ok
+test component::primes::tests::sieve_matches_is_prime_u64 ... ok
+test component::rational::tests::field_ops_hand_cases ... ok
+test component::rational::tests::field_trait_impl_matches_inherent_methods ... ok
+test component::rational::tests::floor_ceil_trunc_hand_cases ... ok
+test component::rational::tests::from_f64_roundtrips_exactly ... ok
+test component::primes::tests::long::factor_natural_random_semiprime ... ok
+test component::rational::tests::inv_of_zero_is_none ... ok
+test component::rational::tests::ordering_via_cross_multiplication ... ok
+test component::rational::tests::normalization_reduces_to_lowest_terms ... ok
+test component::rational::tests::to_f64_matches_expected_for_simple_fractions ... ok
+test component::rational::tests::zero_denominator_is_rejected ... ok
+test component::traits::tests::f64_field_inv_and_div ... ok
+test component::traits::tests::field_gcd_helper_matches_unit_convention ... ok
+test component::traits::tests::i64_div_rem_matches_language_semantics ... ok
+test component::traits::tests::i64_from_i64_via_default_matches_identity_for_positive_and_negative ... ok
+test component::traits::tests::i64_gcd_matches_euclid_hand_cases ... ok
+test component::traits::tests::i64_lcm_matches_hand_cases ... ok
+test component::traits::tests::i64_pow_matches_repeated_multiplication ... ok
+test component::traits::tests::i64_ring_axioms_hold_on_small_samples ... ok
+test component::natural::tests::exhaustive::stress_16384_bit_operations ... ok
+test component::primes::tests::is_prime_natural_handles_large_known_prime ... ok
+test component::algebra::tests::quick::random_rational_matrix_inverse_round_trips ... ok
+test component::natural::tests::long::stress_4096_bit_mul_div_gcd ... ok
+test component::primes::tests::quick::sieve_count_matches_known_pi_of_1e6 ... ok
+
+test result: ok. 97 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+   Doc-tests semio_framework_number
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

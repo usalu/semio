@@ -3,5 +3,5 @@ use crate::artifacts::stl::{StlDiff, StlSnapshot};
 
 /// ▶️ Applies a set-snapshot mutation.
 pub async fn apply(projection: &mut StlSnapshot, mutation: &StlMutation) -> protocol::MutationOutcome<StlDiff> {
-    apply_stl_mutation(projection, mutation)
+    apply_stl_mutation(projection, mutation).await
 }

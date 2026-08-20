@@ -40,13 +40,13 @@ pub enum ZipMutation {
 
 //#region 🔖️Algebra
 pub async fn apply_zip_mutation(snapshot: &mut ZipSnapshot, mutation: &ZipMutation) -> protocol::MutationOutcome<ZipDiff> {
-    let outcome = mutation.diff(snapshot);
-    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
+    let outcome = mutation.diff(snapshot).await;
+    match protocol::MutationDiff::apply(outcome.diff().await, snapshot).await {
         Ok(next) => {
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).await.absorb_messages(outcome.messages().await.to_vec()).await,
     }
 }
 
@@ -56,12 +56,12 @@ impl Mutation<ZipSnapshot> for ZipMutation {
     async fn diff(&self, base: &ZipSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             Self::NoMutation => ZipDiff::default(),
-            Self::SetSnapshot { snapshot } => diff::diff_set_snapshot(base, snapshot),
-            Self::SetArchiveComment { comment } => diff::diff_set_archive_comment(comment),
-            Self::AddEntry { entry } => diff::diff_add_entry(entry.clone()),
-            Self::RemoveEntry { name } => diff::diff_remove_entry(name),
-            Self::RenameEntry { name, new_name } => diff::diff_rename_entry(name, new_name),
-            Self::SetEntryData { name, data } => diff::diff_set_entry_data(name, data.clone()),
+            Self::SetSnapshot { snapshot } => diff::diff_set_snapshot(base, snapshot).await,
+            Self::SetArchiveComment { comment } => diff::diff_set_archive_comment(comment).await,
+            Self::AddEntry { entry } => diff::diff_add_entry(entry.clone()).await,
+            Self::RemoveEntry { name } => diff::diff_remove_entry(name).await,
+            Self::RenameEntry { name, new_name } => diff::diff_rename_entry(name, new_name).await,
+            Self::SetEntryData { name, data } => diff::diff_set_entry_data(name, data.clone()).await,
         })
     }
 
@@ -85,28 +85,28 @@ impl protocol::OpText for ZipMutation {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec) in &variants {
             if line == keyword || line.starts_with(&format!("{keyword} ")) {
-                let record = dsl::parse(line, &spec(), &dsl::ParseOptions { limits: dsl::Limits { max_bytes: 64 * 1024 * 1024, ..dsl::Limits::default() }, mode: dsl::SourceMode::Inline })?;
-                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
+                let record = dsl::parse(line, &spec(), &dsl::ParseOptions { limits: dsl::Limits { max_bytes: 64 * 1024 * 1024, ..dsl::Limits::default() }, mode: dsl::SourceMode::Inline }).await?;
+                return <Self as dsl::DslVariants>::from_named_record(keyword, &record).await;
             }
         }
         Err(dsl::__rt::field_error(format!("unknown ZIP operation '{line}'")))
     }
 
     async fn print_op(&self) -> String {
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
+        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self).await;
         let variants = <Self as dsl::DslVariants>::variants();
         let spec = variants.iter().find(|(name, _)| name == &keyword).map(|(_, spec)| *spec).expect("ZIP operation spec");
-        dsl::print(&record, &spec(), dsl::JoinMode::Inline)
+        dsl::print(&record, &spec(), dsl::JoinMode::Inline).await
     }
 }
 
 impl protocol::OpBinary for ZipMutation {
     async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        dsl::variants_binary::encode_op(self)
+        dsl::variants_binary::encode_op(self).await
     }
 
     async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        dsl::variants_binary::decode_op(bytes)
+        dsl::variants_binary::decode_op(bytes).await
     }
 }
 //#endregion 🔖️Codecs

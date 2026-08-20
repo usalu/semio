@@ -33,7 +33,7 @@ pub mod derived_composition {
             if native.is_empty() {
                 return Err(ComposeError { message: "AviComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() });
             }
-            let analysis = AviAnalyzer::analyze(&native);
+            let analysis = AviAnalyzer::analyze(&native).await;
             let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError { message: "AviComposerComposition: analysis produced no snapshot".into(), diagnostics: analysis.diagnostics.clone() })?;
             Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics })
         }
@@ -44,18 +44,18 @@ pub mod derived_composition {
     /// 📌️ Registers this subset's schema descriptor, document codec. Called from
     /// this artifact's standard-level `engine::register()`.
     pub async fn register() {
-        ::schema::register_artifact_schema_descriptor(crate::artifacts::avi::standards::v1_0::subsets::any::schema::avi_artifact_schema_descriptor());
+        ::schema::register_artifact_schema_descriptor(crate::artifacts::avi::standards::v1_0::subsets::any::schema::avi_artifact_schema_descriptor().await);
         register_artifact_inferences();
         let _ = store::register_document_codec(store::ArtifactCodec::of::<AviSnapshot, crate::artifacts::avi::standards::v1_0::subsets::any::schema::mutations::AviMutation>(
             crate::artifacts::avi::standards::v1_0::subsets::any::schema::snapshot::STDIO_AVI_DOCUMENT_SCHEMA,
-        ));
+        ).await);
     }
 
     /// 💡️ Registers `s.stdio.avi.inference`'s facet leaves into the OS-wide inference
     /// catalog — sibling to `register_artifact_schema_descriptor` above (separate registry,
     /// ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING P2/S3+S4).
     pub async fn register_artifact_inferences() {
-        ::schema::register_artifact_inference_descriptor(crate::artifacts::avi::standards::v1_0::subsets::any::schema::inferences::avi_artifact_inference_descriptor());
+        ::schema::register_artifact_inference_descriptor(crate::artifacts::avi::standards::v1_0::subsets::any::schema::inferences::avi_artifact_inference_descriptor().await);
     }
     //#endregion 🔖️Register
 }
@@ -111,7 +111,7 @@ async fn write_chunk(fourcc: &[u8; 4], payload: &[u8]) -> Vec<u8> {
 async fn write_list(list_type: &[u8; 4], children: &[u8]) -> Vec<u8> {
     let mut payload = list_type.to_vec();
     payload.extend_from_slice(children);
-    write_chunk(b"LIST", &payload)
+    write_chunk(b"LIST", &payload).await
 }
 
 async fn fourcc4(s: &str) -> [u8; 4] {
@@ -171,8 +171,8 @@ async fn parse_strh(payload: &[u8]) -> Result<AviStreamHeader, String> {
     let i32le = |o: usize| i32::from_le_bytes(payload[o..o + 4].try_into().unwrap());
     let u16le = |o: usize| u16::from_le_bytes(payload[o..o + 2].try_into().unwrap());
     Ok(AviStreamHeader {
-        fcc_type: fourcc_str(&payload[0..4].try_into().unwrap()),
-        fcc_handler: fourcc_str(&payload[4..8].try_into().unwrap()),
+        fcc_type: fourcc_str(&payload[0..4].try_into().unwrap()).await,
+        fcc_handler: fourcc_str(&payload[4..8].try_into().unwrap()).await,
         flags: u32le(8),
         priority: u16le(12),
         language: u16le(14),
@@ -223,7 +223,7 @@ async fn parse_strf(fcc_type: &str, payload: &[u8]) -> AviStreamFormat {
             height: i32le(8),
             planes: u16le(12),
             bit_count: u16le(14),
-            compression: fourcc_str(&payload[16..20].try_into().unwrap()),
+            compression: fourcc_str(&payload[16..20].try_into().unwrap()).await,
             size_image: u32le(20),
             x_pels_per_meter: i32le(24),
             y_pels_per_meter: i32le(28),
@@ -307,7 +307,7 @@ pub async fn decode_avi(bytes: &[u8]) -> Result<AviSnapshot, String> {
                     for hitem in iter_riff(list_body) {
                         let h = hitem?;
                         if &h.fourcc == b"avih" {
-                            main_header = Some(parse_avih(h.payload)?);
+                            main_header = Some(parse_avih(h.payload).await?);
                         } else if &h.fourcc == b"LIST" && &h.payload[0..4] == b"strl" {
                             let strl_body = &h.payload[4..];
                             let mut strh = None;
@@ -315,7 +315,7 @@ pub async fn decode_avi(bytes: &[u8]) -> Result<AviSnapshot, String> {
                             for sitem in iter_riff(strl_body) {
                                 let s = sitem?;
                                 if &s.fourcc == b"strh" {
-                                    strh = Some(parse_strh(s.payload)?);
+                                    strh = Some(parse_strh(s.payload).await?);
                                 }
                                 if &s.fourcc == b"strf" {
                                     strf_bytes = Some(s.payload);
@@ -323,14 +323,14 @@ pub async fn decode_avi(bytes: &[u8]) -> Result<AviSnapshot, String> {
                             }
                             let strh = strh.ok_or("avi: strl missing strh")?;
                             let strf = parse_strf(&strh.fcc_type, strf_bytes.ok_or("avi: strl missing strf")?);
-                            stream_headers.push((strh, strf));
+                            stream_headers.push((strh, strf.await));
                         }
                     }
                 }
                 b"movi" => {
                     for mitem in iter_riff(list_body) {
                         let m = mitem?;
-                        movi_chunks.push((fourcc_str(&m.fourcc), m.payload.to_vec()));
+                        movi_chunks.push((fourcc_str(&m.fourcc).await, m.payload.to_vec()));
                     }
                 }
                 other => unknown_chunks.push(RiffChunk { fourcc: format!("LIST:{}", String::from_utf8_lossy(other)), data: list_body.to_vec() }),
@@ -343,7 +343,7 @@ pub async fn decode_avi(bytes: &[u8]) -> Result<AviSnapshot, String> {
                 r = &r[16..];
             }
         } else {
-            unknown_chunks.push(RiffChunk { fourcc: fourcc_str(&entry.fourcc), data: entry.payload.to_vec() });
+            unknown_chunks.push(RiffChunk { fourcc: fourcc_str(&entry.fourcc).await, data: entry.payload.to_vec() });
         }
     }
 
@@ -588,7 +588,8 @@ pub mod io_registry {
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 
-    pub async fn entries() -> &'static [ComposerEntry] {
+    // 🚫️async: E1 pure table accessor consumed by OnceLock::get_or_init's sync closure — see R9
+    pub fn entries() -> &'static [ComposerEntry] {
         ENTRIES.get_or_init(|| vec![composer_entry_of::<AviRawAnyComposer>()]).as_slice()
     }
 }

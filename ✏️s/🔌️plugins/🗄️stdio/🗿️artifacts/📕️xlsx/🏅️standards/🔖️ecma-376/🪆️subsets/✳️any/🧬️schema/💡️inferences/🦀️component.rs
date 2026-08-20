@@ -24,7 +24,7 @@ pub struct XlsxInference {
 
 impl protocol::Inference<XlsxSnapshot> for XlsxInference {
     async fn infer(snapshot: &XlsxSnapshot) -> Self {
-        Self { outline: XlsxOutline::compute(snapshot) }
+        Self { outline: XlsxOutline::compute(snapshot).await }
     }
 }
 

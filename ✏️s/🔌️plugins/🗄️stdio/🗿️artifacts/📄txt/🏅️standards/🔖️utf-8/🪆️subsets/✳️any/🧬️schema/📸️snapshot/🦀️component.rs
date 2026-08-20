@@ -67,9 +67,9 @@ impl TxtSnapshot {
     /// newline appended iff `trailing_newline`). Inverse of [`Self::from_body`].
     pub async fn to_body(&self) -> String {
         let sep = self.line_ending.as_str();
-        let mut out = self.lines.join(sep);
+        let mut out = self.lines.join(sep.await);
         if self.trailing_newline {
-            out.push_str(sep);
+            out.push_str(sep.await);
         }
         out
     }
@@ -82,7 +82,7 @@ impl TxtSnapshot {
             return Self { schema: STDIO_TXT_DOCUMENT_SCHEMA.into(), lines: Vec::new(), trailing_newline: false, line_ending: LineEnding::Lf };
         }
         let line_ending = if body.contains("\r\n") { LineEnding::CrLf } else { LineEnding::Lf };
-        let sep = line_ending.as_str();
+        let sep = line_ending.as_str().await;
         let trailing_newline = body.ends_with(sep);
         let content = if trailing_newline { &body[..body.len() - sep.len()] } else { body };
         let lines: Vec<String> = content.split(sep).map(String::from).collect();
@@ -106,10 +106,10 @@ impl store::ArtifactDsl for TxtSnapshot {
     }
 
     async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-        Ok(Self::from_body(text))
+        Ok(Self::from_body(text).await)
     }
     async fn print_dsl(&self) -> String {
-        self.to_body()
+        self.to_body().await
     }
 }
 
@@ -117,8 +117,8 @@ impl store::ArtifactPack for TxtSnapshot {
     async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
 
-        let raw = self.to_body();
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let raw = self.to_body().await;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, raw.as_bytes()))
     }
     async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
@@ -128,7 +128,7 @@ impl store::ArtifactPack for TxtSnapshot {
         }
         let _ = options;
         let body = String::from_utf8(inner).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        Ok(Self::from_body(&body))
+        Ok(Self::from_body(&body).await)
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs

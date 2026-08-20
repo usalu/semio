@@ -356,11 +356,11 @@ impl store::ArtifactDsl for EpwSnapshot {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        crate::artifacts::epw::standards::energyplus::subsets::any::io::decode_epw(body).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        crate::artifacts::epw::standards::energyplus::subsets::any::io::decode_epw(body).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     async fn print_dsl(&self) -> String {
         let body = crate::artifacts::epw::standards::energyplus::subsets::any::io::encode_epw(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -368,8 +368,8 @@ impl store::ArtifactDsl for EpwSnapshot {
 impl store::ArtifactPack for EpwSnapshot {
     async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
-        let raw = crate::artifacts::epw::standards::energyplus::subsets::any::io::encode_epw(self).into_bytes();
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let raw = crate::artifacts::epw::standards::energyplus::subsets::any::io::encode_epw(self).await.into_bytes();
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
     async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
@@ -379,7 +379,7 @@ impl store::ArtifactPack for EpwSnapshot {
         }
         let _ = options;
         let text = String::from_utf8(inner).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        crate::artifacts::epw::standards::energyplus::subsets::any::io::decode_epw(&text).map_err(store::PackError::Schema)
+        crate::artifacts::epw::standards::energyplus::subsets::any::io::decode_epw(&text).await.map_err(store::PackError::Schema)
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs

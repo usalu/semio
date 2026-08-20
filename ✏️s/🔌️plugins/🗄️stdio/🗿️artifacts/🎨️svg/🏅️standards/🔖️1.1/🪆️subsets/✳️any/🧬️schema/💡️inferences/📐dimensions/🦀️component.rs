@@ -38,7 +38,7 @@ pub async fn compute_svg_dimensions(snapshot: &SvgSnapshot) -> SvgDimensions {
     let Some(root @ XmlNode::Element { .. }) = &snapshot.doc.root else {
         return SvgDimensions::default();
     };
-    let Ok(SvgElement::Svg { view_box, width, height, .. }) = svg_element_from_xml_node(root) else {
+    let Ok(SvgElement::Svg { view_box, width, height, .. }) = svg_element_from_xml_node(root).await else {
         return SvgDimensions::default();
     };
     let (view_box_width, view_box_height) = view_box.map(|vb| (vb.width, vb.height)).unwrap_or((0.0, 0.0));

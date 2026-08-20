@@ -1,0 +1,2 @@
+    Checking semio-framework-graph v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust)
+error: could not compile `semio-framework-graph` (lib) due to 273 previous errors; 2 warnings emitted

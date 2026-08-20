@@ -7,7 +7,7 @@ use crate::artifacts::pptx::PptxSnapshot;
 /// `PptxDiff::between`'s real shape (no `snapshot: Option<PptxSnapshot>` full-replace slot).
 pub async fn diff(base: &PptxSnapshot, snapshot: &PptxSnapshot) -> protocol::MutationOutcome<PptxDiff> {
     if base == snapshot {
-        return protocol::MutationOutcome::new(PptxDiff::default()).warn("mutation.no-op", "set-snapshot: new snapshot is identical to the current one");
+        return protocol::MutationOutcome::new(PptxDiff::default()).await.warn("mutation.no-op", "set-snapshot: new snapshot is identical to the current one").await;
     }
     protocol::MutationOutcome::new(diff_set_snapshot(base, snapshot))
 }

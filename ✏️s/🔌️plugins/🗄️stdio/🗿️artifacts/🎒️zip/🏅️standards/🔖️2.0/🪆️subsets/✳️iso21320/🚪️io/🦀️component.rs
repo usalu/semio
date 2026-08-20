@@ -31,7 +31,7 @@ pub mod derived_composition {
                 if let Ok((_, inner)) = store::semio_format::unwrap_binary(bytes) {
                     Some(inner.to_vec())
                 } else if matches!(
-                    crate::artifacts::zip::standards::v2_0::subsets::any::io::sniff_zip_bytes(bytes),
+                    crate::artifacts::zip::standards::v2_0::subsets::any::io::sniff_zip_bytes(bytes).await,
                     crate::artifacts::zip::standards::v2_0::subsets::any::io::SniffConfidence::High | crate::artifacts::zip::standards::v2_0::subsets::any::io::SniffConfidence::Medium
                 ) {
                     Some(bytes.to_vec())
@@ -40,8 +40,8 @@ pub mod derived_composition {
                 }
             }
             IoPayload::Text(text) => <ZipSnapshot as store::ArtifactDsl>::parse_dsl(text)
-                .ok()
-                .and_then(|snapshot| crate::artifacts::zip::standards::v2_0::subsets::any::io::encode_zip(&snapshot).ok()),
+                .await.ok()
+                .and_then(|snapshot| semio_framework_plugin::resolve_ready(crate::artifacts::zip::standards::v2_0::subsets::any::io::encode_zip(&snapshot)).ok()),
         }
     }
     //#endregion 🔖️Normalize
@@ -88,8 +88,8 @@ pub mod derived_composition {
         const DIALECT: Dialect = DIALECT_ISO21320;
 
         async fn validate(payload: &IoPayload) -> Vec<Diagnostic> {
-            match zip_wire_bytes_from_payload(payload) {
-                Some(bytes) => check_iso21320_wire_conformance(&bytes),
+            match zip_wire_bytes_from_payload(payload).await {
+                Some(bytes) => check_iso21320_wire_conformance(&bytes).await,
                 None => vec![Diagnostic {
                     code: FaultCode::new("stdio.zip.iso21320.validate-decode-failed"),
                     severity: Severity::Warning,
@@ -117,7 +117,7 @@ pub mod derived_composition {
     /// (`crate::artifacts::zip::standards::v2_0::subsets::any::io::io_registry::entries()`), matching
     /// how `✳️any`'s own entry is registered.
     pub async fn register() {
-        let _ = register_subset_validator(validator_entry());
+        let _ = register_subset_validator(validator_entry().await);
     }
     //#endregion 🔖️SubsetValidator
 

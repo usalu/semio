@@ -26,7 +26,7 @@ impl Default for SvgSnapshot {
 
 //#region 🔖️SvgCodec
 pub async fn parse_svg_xml(text: &str) -> Result<XmlDocument, String> {
-    let doc = xml_document_from_text(text)?;
+    let doc = xml_document_from_text(text).await?;
     if let Some(XmlNode::Element { name, .. }) = &doc.root {
         if name != "svg" && !name.ends_with(":svg") {
             return Err("root element must be svg".into());
@@ -38,7 +38,7 @@ pub async fn parse_svg_xml(text: &str) -> Result<XmlDocument, String> {
 }
 
 pub async fn write_svg_xml(doc: &XmlDocument) -> String {
-    xml_document_to_text(doc)
+    xml_document_to_text(doc).await
 }
 
 impl SvgSnapshot {
@@ -50,12 +50,12 @@ impl SvgSnapshot {
     /// 📥️ Parses SVG UTF-8 into its lossless logical XML model.
     pub async fn import_utf8(bytes: &[u8]) -> Result<Self, String> {
         let text = std::str::from_utf8(bytes).map_err(|error| format!("svg source is not UTF-8: {error}"))?;
-        Ok(Self { schema: STDIO_SVG_DOCUMENT_SCHEMA.into(), doc: parse_svg_xml(text)? })
+        Ok(Self { schema: STDIO_SVG_DOCUMENT_SCHEMA.into(), doc: parse_svg_xml(text).await? })
     }
 
     /// 📤️ Deterministically materializes SVG from the logical XML model.
     pub async fn export_utf8(&self) -> Result<Vec<u8>, String> {
-        Ok(write_svg_xml(&self.doc).into_bytes())
+        Ok(write_svg_xml(&self.doc).await.into_bytes())
     }
 }
 //#endregion 🔖️SvgCodec
@@ -81,29 +81,29 @@ impl<'a> NumCursor<'a> {
         self.pos >= self.s.len()
     }
     async fn skip_wsp_comma(&mut self) {
-        while matches!(self.peek(), Some(b' ') | Some(b'\t') | Some(b'\n') | Some(b'\r') | Some(b',')) {
+        while matches!(self.peek().await, Some(b' ') | Some(b'\t') | Some(b'\n') | Some(b'\r') | Some(b',')) {
             self.pos += 1;
         }
     }
     async fn skip_wsp(&mut self) {
-        while matches!(self.peek(), Some(b' ') | Some(b'\t') | Some(b'\n') | Some(b'\r')) {
+        while matches!(self.peek().await, Some(b' ') | Some(b'\t') | Some(b'\n') | Some(b'\r')) {
             self.pos += 1;
         }
     }
     async fn parse_number(&mut self) -> Result<f64, String> {
         self.skip_wsp_comma();
         let start = self.pos;
-        if matches!(self.peek(), Some(b'+') | Some(b'-')) {
+        if matches!(self.peek().await, Some(b'+') | Some(b'-')) {
             self.pos += 1;
         }
         let mut has_digits = false;
-        while matches!(self.peek(), Some(b'0'..=b'9')) {
+        while matches!(self.peek().await, Some(b'0'..=b'9')) {
             self.pos += 1;
             has_digits = true;
         }
         if self.peek() == Some(b'.') {
             self.pos += 1;
-            while matches!(self.peek(), Some(b'0'..=b'9')) {
+            while matches!(self.peek().await, Some(b'0'..=b'9')) {
                 self.pos += 1;
                 has_digits = true;
             }
@@ -112,14 +112,14 @@ impl<'a> NumCursor<'a> {
             self.pos = start;
             return Err(format!("expected number at byte {start}"));
         }
-        if matches!(self.peek(), Some(b'e') | Some(b'E')) {
+        if matches!(self.peek().await, Some(b'e') | Some(b'E')) {
             let save = self.pos;
             self.pos += 1;
-            if matches!(self.peek(), Some(b'+') | Some(b'-')) {
+            if matches!(self.peek().await, Some(b'+') | Some(b'-')) {
                 self.pos += 1;
             }
-            if matches!(self.peek(), Some(b'0'..=b'9')) {
-                while matches!(self.peek(), Some(b'0'..=b'9')) {
+            if matches!(self.peek().await, Some(b'0'..=b'9')) {
+                while matches!(self.peek().await, Some(b'0'..=b'9')) {
                     self.pos += 1;
                 }
             } else {
@@ -134,7 +134,7 @@ impl<'a> NumCursor<'a> {
     /// (large-arc=1, sweep=0, x=8), never a naive 2-digit/3-digit number grab. Classic bug source.
     async fn parse_flag(&mut self) -> Result<bool, String> {
         self.skip_wsp_comma();
-        match self.peek() {
+        match self.peek().await {
             Some(b'0') => {
                 self.pos += 1;
                 Ok(false)
@@ -149,14 +149,14 @@ impl<'a> NumCursor<'a> {
 }
 
 async fn parse_number_list(s: &str) -> Result<Vec<f64>, String> {
-    let mut c = NumCursor::new(s);
+    let mut c = NumCursor::new(s).await;
     let mut out = Vec::new();
     loop {
-        c.skip_wsp_comma();
-        if c.is_eof() {
+        c.skip_wsp_comma().await;
+        if c.is_eof().await {
             break;
         }
-        out.push(c.parse_number()?);
+        out.push(c.parse_number().await?);
     }
     Ok(out)
 }
@@ -178,7 +178,7 @@ pub struct ViewBox {
 }
 
 pub async fn parse_view_box(s: &str) -> Result<ViewBox, String> {
-    let nums = parse_number_list(s)?;
+    let nums = parse_number_list(s).await?;
     if nums.len() != 4 {
         return Err(format!("viewBox requires exactly 4 numbers, got {}", nums.len()));
     }
@@ -191,7 +191,7 @@ pub async fn view_box_to_string(v: &ViewBox) -> String {
 
 /// 🔗️ `points="x1,y1 x2,y2 ..."` (polyline/polygon).
 pub async fn parse_points(s: &str) -> Result<Vec<(f64, f64)>, String> {
-    let nums = parse_number_list(s)?;
+    let nums = parse_number_list(s).await?;
     if nums.len() % 2 != 0 {
         return Err("points list must have an even number of coordinates".into());
     }
@@ -285,7 +285,7 @@ impl TransformOp {
                     Some((cx, cy)) => {
                         let t1 = Matrix2D { a: 1.0, b: 0.0, c: 0.0, d: 1.0, e: cx, f: cy };
                         let t2 = Matrix2D { a: 1.0, b: 0.0, c: 0.0, d: 1.0, e: -cx, f: -cy };
-                        t1.multiply(&rot).multiply(&t2)
+                        t1.multiply(&rot).await.multiply(&t2).await
                     }
                 }
             }
@@ -297,39 +297,39 @@ impl TransformOp {
 
 /// ✖️ Composes an entire transform list into one resolved matrix (fold in list order).
 pub async fn transform_ops_to_matrix(ops: &[TransformOp]) -> Matrix2D {
-    ops.iter().fold(Matrix2D::identity(), |acc, op| acc.multiply(&op.to_matrix()))
+    ops.iter().fold(Matrix2D::identity().await, |acc, op| acc.multiply(&op.to_matrix()))
 }
 
 pub async fn parse_transform_list(s: &str) -> Result<Vec<TransformOp>, String> {
-    let mut c = NumCursor::new(s);
+    let mut c = NumCursor::new(s).await;
     let mut ops = Vec::new();
     loop {
-        c.skip_wsp_comma();
-        if c.is_eof() {
+        c.skip_wsp_comma().await;
+        if c.is_eof().await {
             break;
         }
         let start = c.pos;
-        while matches!(c.peek(), Some(b'a'..=b'z') | Some(b'A'..=b'Z')) {
+        while matches!(c.peek().await, Some(b'a'..=b'z') | Some(b'A'..=b'Z')) {
             c.pos += 1;
         }
         let name = std::str::from_utf8(&c.s[start..c.pos]).unwrap();
         if name.is_empty() {
             return Err(format!("expected transform function name at byte {}", c.pos));
         }
-        c.skip_wsp();
-        if c.peek() != Some(b'(') {
+        c.skip_wsp().await;
+        if c.peek().await != Some(b'(') {
             return Err(format!("expected '(' after transform function '{name}'"));
         }
         c.pos += 1;
         let mut nums = Vec::new();
         loop {
-            c.skip_wsp_comma();
-            if c.peek() == Some(b')') {
+            c.skip_wsp_comma().await;
+            if c.peek().await == Some(b')') {
                 break;
             }
-            nums.push(c.parse_number()?);
+            nums.push(c.parse_number().await?);
         }
-        if c.peek() != Some(b')') {
+        if c.peek().await != Some(b')') {
             return Err(format!("unclosed '(' for transform function '{name}'"));
         }
         c.pos += 1;
@@ -392,7 +392,7 @@ pub enum PathCommand {
 /// (incl. the arc-flag squeeze edge case) in a standalone scratch crate before porting here, per
 /// the technique in the ticket's STATUS.md.
 pub async fn parse_path_data(d: &str) -> Result<Vec<PathCommand>, String> {
-    let mut c = NumCursor::new(d);
+    let mut c = NumCursor::new(d).await;
     let mut cmds = Vec::new();
     // 🔁 `last_letter`/`last_relative` drive implicit command repetition: a number run with no
     // leading letter reuses the previous command -- except a bare `M`/`m` run whose FIRST pair is
@@ -400,11 +400,11 @@ pub async fn parse_path_data(d: &str) -> Result<Vec<PathCommand>, String> {
     let mut last_letter: Option<u8> = None;
     let mut last_relative = false;
     loop {
-        c.skip_wsp_comma();
-        if c.is_eof() {
+        c.skip_wsp_comma().await;
+        if c.is_eof().await {
             break;
         }
-        let peeked = c.peek().unwrap();
+        let peeked = c.peek().await.unwrap();
         let (letter, relative, explicit) = if peeked.is_ascii_alphabetic() {
             c.pos += 1;
             (peeked.to_ascii_uppercase(), peeked.is_ascii_lowercase(), true)
@@ -419,75 +419,75 @@ pub async fn parse_path_data(d: &str) -> Result<Vec<PathCommand>, String> {
         }
         match letter {
             b'M' => {
-                let x = c.parse_number()?;
-                let y = c.parse_number()?;
+                let x = c.parse_number().await?;
+                let y = c.parse_number().await?;
                 cmds.push(PathCommand::MoveTo { x, y, relative });
                 last_letter = Some(b'L');
                 last_relative = relative;
             }
             b'L' => {
-                let x = c.parse_number()?;
-                let y = c.parse_number()?;
+                let x = c.parse_number().await?;
+                let y = c.parse_number().await?;
                 cmds.push(PathCommand::LineTo { x, y, relative });
                 last_letter = Some(b'L');
                 last_relative = relative;
             }
             b'H' => {
-                let x = c.parse_number()?;
+                let x = c.parse_number().await?;
                 cmds.push(PathCommand::HorizontalLineTo { x, relative });
                 last_letter = Some(b'H');
                 last_relative = relative;
             }
             b'V' => {
-                let y = c.parse_number()?;
+                let y = c.parse_number().await?;
                 cmds.push(PathCommand::VerticalLineTo { y, relative });
                 last_letter = Some(b'V');
                 last_relative = relative;
             }
             b'C' => {
-                let x1 = c.parse_number()?;
-                let y1 = c.parse_number()?;
-                let x2 = c.parse_number()?;
-                let y2 = c.parse_number()?;
-                let x = c.parse_number()?;
-                let y = c.parse_number()?;
+                let x1 = c.parse_number().await?;
+                let y1 = c.parse_number().await?;
+                let x2 = c.parse_number().await?;
+                let y2 = c.parse_number().await?;
+                let x = c.parse_number().await?;
+                let y = c.parse_number().await?;
                 cmds.push(PathCommand::CurveTo { x1, y1, x2, y2, x, y, relative });
                 last_letter = Some(b'C');
                 last_relative = relative;
             }
             b'S' => {
-                let x2 = c.parse_number()?;
-                let y2 = c.parse_number()?;
-                let x = c.parse_number()?;
-                let y = c.parse_number()?;
+                let x2 = c.parse_number().await?;
+                let y2 = c.parse_number().await?;
+                let x = c.parse_number().await?;
+                let y = c.parse_number().await?;
                 cmds.push(PathCommand::SmoothCurveTo { x2, y2, x, y, relative });
                 last_letter = Some(b'S');
                 last_relative = relative;
             }
             b'Q' => {
-                let x1 = c.parse_number()?;
-                let y1 = c.parse_number()?;
-                let x = c.parse_number()?;
-                let y = c.parse_number()?;
+                let x1 = c.parse_number().await?;
+                let y1 = c.parse_number().await?;
+                let x = c.parse_number().await?;
+                let y = c.parse_number().await?;
                 cmds.push(PathCommand::QuadraticCurveTo { x1, y1, x, y, relative });
                 last_letter = Some(b'Q');
                 last_relative = relative;
             }
             b'T' => {
-                let x = c.parse_number()?;
-                let y = c.parse_number()?;
+                let x = c.parse_number().await?;
+                let y = c.parse_number().await?;
                 cmds.push(PathCommand::SmoothQuadraticCurveTo { x, y, relative });
                 last_letter = Some(b'T');
                 last_relative = relative;
             }
             b'A' => {
-                let rx = c.parse_number()?;
-                let ry = c.parse_number()?;
-                let x_axis_rotation = c.parse_number()?;
-                let large_arc = c.parse_flag()?;
-                let sweep = c.parse_flag()?;
-                let x = c.parse_number()?;
-                let y = c.parse_number()?;
+                let rx = c.parse_number().await?;
+                let ry = c.parse_number().await?;
+                let x_axis_rotation = c.parse_number().await?;
+                let large_arc = c.parse_flag().await?;
+                let sweep = c.parse_flag().await?;
+                let x = c.parse_number().await?;
+                let y = c.parse_number().await?;
                 cmds.push(PathCommand::Arc { rx, ry, x_axis_rotation, large_arc, sweep, x, y, relative });
                 last_letter = Some(b'A');
                 last_relative = relative;
@@ -675,13 +675,13 @@ impl CommonAttrs {
 /// declarations are retained in `presentation.extra_style`, never dropped.
 async fn parse_common_attrs(attrs: &[XmlAttr], element_specific: &[&str]) -> CommonAttrs {
     let mut common = CommonAttrs::default();
-    let style_decls = attr_val(attrs, "style").map(parse_style_decls).unwrap_or_default();
+    let style_decls = attr_val(attrs, "style").await.map(parse_style_decls).unwrap_or_default();
     for a in attrs {
         match a.name.as_str() {
             "id" => common.id = Some(a.value.clone()),
             "class" => common.class = Some(a.value.clone()),
             "style" => {}
-            "transform" => match parse_transform_list(&a.value) {
+            "transform" => match parse_transform_list(&a.value).await {
                 Ok(ops) => common.transform = Some(ops),
                 // 🚧️ malformed transform: kept verbatim rather than fabricated as an empty list.
                 Err(_) => common.extra_attrs.push(a.clone()),
@@ -710,7 +710,7 @@ async fn push_common_attrs(attrs: &mut Vec<XmlAttr>, common: &CommonAttrs) {
         attrs.push(XmlAttr { name: "class".into(), value: class.clone() });
     }
     if let Some(t) = &common.transform {
-        attrs.push(XmlAttr { name: "transform".into(), value: transform_list_to_string(t) });
+        attrs.push(XmlAttr { name: "transform".into(), value: transform_list_to_string(t).await });
     }
     push_presentation_attrs(attrs, &common.presentation);
     attrs.extend(common.extra_attrs.iter().cloned());
@@ -723,21 +723,21 @@ async fn attr_val<'a>(attrs: &'a [XmlAttr], name: &str) -> Option<&'a str> {
 }
 
 async fn attr_f64(attrs: &[XmlAttr], name: &str, default: f64) -> Result<f64, String> {
-    match attr_val(attrs, name) {
+    match attr_val(attrs, name).await {
         None => Ok(default),
         Some(v) => v.trim().parse::<f64>().map_err(|_| format!("attribute '{name}' is not a number: '{v}'")),
     }
 }
 
 async fn attr_f64_opt(attrs: &[XmlAttr], name: &str) -> Result<Option<f64>, String> {
-    match attr_val(attrs, name) {
+    match attr_val(attrs, name).await {
         None => Ok(None),
         Some(v) => v.trim().parse::<f64>().map(Some).map_err(|_| format!("attribute '{name}' is not a number: '{v}'")),
     }
 }
 
 async fn attr_string_opt(attrs: &[XmlAttr], name: &str) -> Option<String> {
-    attr_val(attrs, name).map(|s| s.to_string())
+    attr_val(attrs, name).await.map(|s| s.to_string())
 }
 
 /// ✂️ Strips an XML namespace prefix (`xlink:href` -> `href`) for TYPED-ELEMENT DISPATCH ONLY;
@@ -918,108 +918,108 @@ pub async fn svg_element_from_xml_node(node: &XmlNode) -> Result<SvgElement, Str
         XmlNode::CData { text } => Ok(SvgElement::CData(text.clone())),
         XmlNode::Comment { text } => Ok(SvgElement::Comment(text.clone())),
         XmlNode::ProcessingInstruction { target, data } => Ok(SvgElement::ProcessingInstruction { target: target.clone(), data: data.clone() }),
-        XmlNode::Element { name, attrs, children } => match local_name(name) {
+        XmlNode::Element { name, attrs, children } => match local_name(name).await {
             "svg" => {
                 let common = parse_common_attrs(attrs, &["viewBox", "width", "height", "xmlns"]);
-                let view_box = match attr_val(attrs, "viewBox") {
-                    Some(v) => Some(parse_view_box(v)?),
+                let view_box = match attr_val(attrs, "viewBox").await {
+                    Some(v) => Some(parse_view_box(v).await?),
                     None => None,
                 };
-                Ok(SvgElement::Svg { common, view_box, width: attr_string_opt(attrs, "width"), height: attr_string_opt(attrs, "height"), xmlns: attr_string_opt(attrs, "xmlns"), children: convert_children(children)? })
+                Ok(SvgElement::Svg { common, view_box, width: attr_string_opt(attrs, "width").await, height: attr_string_opt(attrs, "height").await, xmlns: attr_string_opt(attrs, "xmlns").await, children: convert_children(children).await? })
             }
             "rect" => {
                 let common = parse_common_attrs(attrs, &["x", "y", "width", "height", "rx", "ry"]);
                 Ok(SvgElement::Rect {
                     common,
-                    x: attr_f64(attrs, "x", 0.0)?,
-                    y: attr_f64(attrs, "y", 0.0)?,
-                    width: attr_f64(attrs, "width", 0.0)?,
-                    height: attr_f64(attrs, "height", 0.0)?,
-                    rx: attr_f64_opt(attrs, "rx")?,
-                    ry: attr_f64_opt(attrs, "ry")?,
+                    x: attr_f64(attrs, "x", 0.0).await?,
+                    y: attr_f64(attrs, "y", 0.0).await?,
+                    width: attr_f64(attrs, "width", 0.0).await?,
+                    height: attr_f64(attrs, "height", 0.0).await?,
+                    rx: attr_f64_opt(attrs, "rx").await?,
+                    ry: attr_f64_opt(attrs, "ry").await?,
                 })
             }
             "circle" => {
                 let common = parse_common_attrs(attrs, &["cx", "cy", "r"]);
-                Ok(SvgElement::Circle { common, cx: attr_f64(attrs, "cx", 0.0)?, cy: attr_f64(attrs, "cy", 0.0)?, r: attr_f64(attrs, "r", 0.0)? })
+                Ok(SvgElement::Circle { common, cx: attr_f64(attrs, "cx", 0.0).await?, cy: attr_f64(attrs, "cy", 0.0).await?, r: attr_f64(attrs, "r", 0.0).await? })
             }
             "ellipse" => {
                 let common = parse_common_attrs(attrs, &["cx", "cy", "rx", "ry"]);
-                Ok(SvgElement::Ellipse { common, cx: attr_f64(attrs, "cx", 0.0)?, cy: attr_f64(attrs, "cy", 0.0)?, rx: attr_f64(attrs, "rx", 0.0)?, ry: attr_f64(attrs, "ry", 0.0)? })
+                Ok(SvgElement::Ellipse { common, cx: attr_f64(attrs, "cx", 0.0).await?, cy: attr_f64(attrs, "cy", 0.0).await?, rx: attr_f64(attrs, "rx", 0.0).await?, ry: attr_f64(attrs, "ry", 0.0).await? })
             }
             "line" => {
                 let common = parse_common_attrs(attrs, &["x1", "y1", "x2", "y2"]);
-                Ok(SvgElement::Line { common, x1: attr_f64(attrs, "x1", 0.0)?, y1: attr_f64(attrs, "y1", 0.0)?, x2: attr_f64(attrs, "x2", 0.0)?, y2: attr_f64(attrs, "y2", 0.0)? })
+                Ok(SvgElement::Line { common, x1: attr_f64(attrs, "x1", 0.0).await?, y1: attr_f64(attrs, "y1", 0.0).await?, x2: attr_f64(attrs, "x2", 0.0).await?, y2: attr_f64(attrs, "y2", 0.0).await? })
             }
             "polyline" => {
                 let common = parse_common_attrs(attrs, &["points"]);
-                let points = match attr_val(attrs, "points") {
-                    Some(v) => parse_points(v)?,
+                let points = match attr_val(attrs, "points").await {
+                    Some(v) => parse_points(v).await?,
                     None => Vec::new(),
                 };
                 Ok(SvgElement::Polyline { common, points })
             }
             "polygon" => {
                 let common = parse_common_attrs(attrs, &["points"]);
-                let points = match attr_val(attrs, "points") {
-                    Some(v) => parse_points(v)?,
+                let points = match attr_val(attrs, "points").await {
+                    Some(v) => parse_points(v).await?,
                     None => Vec::new(),
                 };
                 Ok(SvgElement::Polygon { common, points })
             }
             "path" => {
                 let common = parse_common_attrs(attrs, &["d"]);
-                let d = match attr_val(attrs, "d") {
-                    Some(v) => parse_path_data(v)?,
+                let d = match attr_val(attrs, "d").await {
+                    Some(v) => parse_path_data(v).await?,
                     None => Vec::new(),
                 };
                 Ok(SvgElement::Path { common, d })
             }
-            "g" => Ok(SvgElement::Group { common: parse_common_attrs(attrs, &[]), children: convert_children(children)? }),
+            "g" => Ok(SvgElement::Group { common: parse_common_attrs(attrs, &[]).await, children: convert_children(children).await? }),
             "text" => {
                 let common = parse_common_attrs(attrs, &["x", "y"]);
-                Ok(SvgElement::Text { common, x: attr_f64_opt(attrs, "x")?, y: attr_f64_opt(attrs, "y")?, children: convert_children(children)? })
+                Ok(SvgElement::Text { common, x: attr_f64_opt(attrs, "x").await?, y: attr_f64_opt(attrs, "y").await?, children: convert_children(children).await? })
             }
             "tspan" => {
                 let common = parse_common_attrs(attrs, &["x", "y"]);
-                Ok(SvgElement::Tspan { common, x: attr_f64_opt(attrs, "x")?, y: attr_f64_opt(attrs, "y")?, children: convert_children(children)? })
+                Ok(SvgElement::Tspan { common, x: attr_f64_opt(attrs, "x").await?, y: attr_f64_opt(attrs, "y").await?, children: convert_children(children).await? })
             }
-            "defs" => Ok(SvgElement::Defs { common: parse_common_attrs(attrs, &[]), children: convert_children(children)? }),
+            "defs" => Ok(SvgElement::Defs { common: parse_common_attrs(attrs, &[]).await, children: convert_children(children).await? }),
             "linearGradient" => {
                 let common = parse_common_attrs(attrs, &["id", "x1", "y1", "x2", "y2"]);
                 Ok(SvgElement::LinearGradient {
                     common,
-                    id: attr_string_opt(attrs, "id"),
-                    x1: attr_string_opt(attrs, "x1"),
-                    y1: attr_string_opt(attrs, "y1"),
-                    x2: attr_string_opt(attrs, "x2"),
-                    y2: attr_string_opt(attrs, "y2"),
-                    children: convert_children(children)?,
+                    id: attr_string_opt(attrs, "id").await,
+                    x1: attr_string_opt(attrs, "x1").await,
+                    y1: attr_string_opt(attrs, "y1").await,
+                    x2: attr_string_opt(attrs, "x2").await,
+                    y2: attr_string_opt(attrs, "y2").await,
+                    children: convert_children(children).await?,
                 })
             }
             "radialGradient" => {
                 let common = parse_common_attrs(attrs, &["id", "cx", "cy", "r", "fx", "fy"]);
                 Ok(SvgElement::RadialGradient {
                     common,
-                    id: attr_string_opt(attrs, "id"),
-                    cx: attr_string_opt(attrs, "cx"),
-                    cy: attr_string_opt(attrs, "cy"),
-                    r: attr_string_opt(attrs, "r"),
-                    fx: attr_string_opt(attrs, "fx"),
-                    fy: attr_string_opt(attrs, "fy"),
-                    children: convert_children(children)?,
+                    id: attr_string_opt(attrs, "id").await,
+                    cx: attr_string_opt(attrs, "cx").await,
+                    cy: attr_string_opt(attrs, "cy").await,
+                    r: attr_string_opt(attrs, "r").await,
+                    fx: attr_string_opt(attrs, "fx").await,
+                    fy: attr_string_opt(attrs, "fy").await,
+                    children: convert_children(children).await?,
                 })
             }
             "stop" => {
                 let common = parse_common_attrs(attrs, &["offset", "stop-color", "stop-opacity"]);
-                Ok(SvgElement::Stop { common, offset: attr_string_opt(attrs, "offset").unwrap_or_default(), stop_color: attr_string_opt(attrs, "stop-color"), stop_opacity: attr_string_opt(attrs, "stop-opacity") })
+                Ok(SvgElement::Stop { common, offset: attr_string_opt(attrs, "offset").await.unwrap_or_default(), stop_color: attr_string_opt(attrs, "stop-color").await, stop_opacity: attr_string_opt(attrs, "stop-opacity").await })
             }
             "use" => {
                 let common = parse_common_attrs(attrs, &["href", "xlink:href", "x", "y", "width", "height"]);
-                let href = attr_string_opt(attrs, "href").or_else(|| attr_string_opt(attrs, "xlink:href")).unwrap_or_default();
-                Ok(SvgElement::Use { common, href, x: attr_f64_opt(attrs, "x")?, y: attr_f64_opt(attrs, "y")?, width: attr_f64_opt(attrs, "width")?, height: attr_f64_opt(attrs, "height")? })
+                let href = attr_string_opt(attrs, "href").await.or_else(|| attr_string_opt(attrs, "xlink:href")).unwrap_or_default();
+                Ok(SvgElement::Use { common, href, x: attr_f64_opt(attrs, "x").await?, y: attr_f64_opt(attrs, "y").await?, width: attr_f64_opt(attrs, "width").await?, height: attr_f64_opt(attrs, "height").await? })
             }
-            _ => Ok(SvgElement::Unknown { name: name.clone(), attrs: attrs.clone(), children: convert_children(children)? }),
+            _ => Ok(SvgElement::Unknown { name: name.clone(), attrs: attrs.clone(), children: convert_children(children).await? }),
         },
     }
 }
@@ -1035,7 +1035,7 @@ pub async fn svg_element_to_xml_node(el: &SvgElement) -> XmlNode {
         SvgElement::Svg { common, view_box, width, height, xmlns, children } => {
             let mut attrs = Vec::new();
             if let Some(vb) = view_box {
-                attrs.push(XmlAttr { name: "viewBox".into(), value: view_box_to_string(vb) });
+                attrs.push(XmlAttr { name: "viewBox".into(), value: view_box_to_string(vb).await });
             }
             if let Some(w) = width {
                 attrs.push(XmlAttr { name: "width".into(), value: w.clone() });
@@ -1051,43 +1051,43 @@ pub async fn svg_element_to_xml_node(el: &SvgElement) -> XmlNode {
         }
         SvgElement::Rect { common, x, y, width, height, rx, ry } => {
             let mut attrs =
-                vec![XmlAttr { name: "x".into(), value: fmt_num(*x) }, XmlAttr { name: "y".into(), value: fmt_num(*y) }, XmlAttr { name: "width".into(), value: fmt_num(*width) }, XmlAttr { name: "height".into(), value: fmt_num(*height) }];
+                vec![XmlAttr { name: "x".into(), value: fmt_num(*x).await }, XmlAttr { name: "y".into(), value: fmt_num(*y).await }, XmlAttr { name: "width".into(), value: fmt_num(*width).await }, XmlAttr { name: "height".into(), value: fmt_num(*height).await }];
             if let Some(rx) = rx {
-                attrs.push(XmlAttr { name: "rx".into(), value: fmt_num(*rx) });
+                attrs.push(XmlAttr { name: "rx".into(), value: fmt_num(*rx).await });
             }
             if let Some(ry) = ry {
-                attrs.push(XmlAttr { name: "ry".into(), value: fmt_num(*ry) });
+                attrs.push(XmlAttr { name: "ry".into(), value: fmt_num(*ry).await });
             }
             push_common_attrs(&mut attrs, common);
             XmlNode::Element { name: "rect".into(), attrs, children: vec![] }
         }
         SvgElement::Circle { common, cx, cy, r } => {
-            let mut attrs = vec![XmlAttr { name: "cx".into(), value: fmt_num(*cx) }, XmlAttr { name: "cy".into(), value: fmt_num(*cy) }, XmlAttr { name: "r".into(), value: fmt_num(*r) }];
+            let mut attrs = vec![XmlAttr { name: "cx".into(), value: fmt_num(*cx).await }, XmlAttr { name: "cy".into(), value: fmt_num(*cy).await }, XmlAttr { name: "r".into(), value: fmt_num(*r).await }];
             push_common_attrs(&mut attrs, common);
             XmlNode::Element { name: "circle".into(), attrs, children: vec![] }
         }
         SvgElement::Ellipse { common, cx, cy, rx, ry } => {
-            let mut attrs = vec![XmlAttr { name: "cx".into(), value: fmt_num(*cx) }, XmlAttr { name: "cy".into(), value: fmt_num(*cy) }, XmlAttr { name: "rx".into(), value: fmt_num(*rx) }, XmlAttr { name: "ry".into(), value: fmt_num(*ry) }];
+            let mut attrs = vec![XmlAttr { name: "cx".into(), value: fmt_num(*cx).await }, XmlAttr { name: "cy".into(), value: fmt_num(*cy).await }, XmlAttr { name: "rx".into(), value: fmt_num(*rx).await }, XmlAttr { name: "ry".into(), value: fmt_num(*ry).await }];
             push_common_attrs(&mut attrs, common);
             XmlNode::Element { name: "ellipse".into(), attrs, children: vec![] }
         }
         SvgElement::Line { common, x1, y1, x2, y2 } => {
-            let mut attrs = vec![XmlAttr { name: "x1".into(), value: fmt_num(*x1) }, XmlAttr { name: "y1".into(), value: fmt_num(*y1) }, XmlAttr { name: "x2".into(), value: fmt_num(*x2) }, XmlAttr { name: "y2".into(), value: fmt_num(*y2) }];
+            let mut attrs = vec![XmlAttr { name: "x1".into(), value: fmt_num(*x1).await }, XmlAttr { name: "y1".into(), value: fmt_num(*y1).await }, XmlAttr { name: "x2".into(), value: fmt_num(*x2).await }, XmlAttr { name: "y2".into(), value: fmt_num(*y2).await }];
             push_common_attrs(&mut attrs, common);
             XmlNode::Element { name: "line".into(), attrs, children: vec![] }
         }
         SvgElement::Polyline { common, points } => {
-            let mut attrs = vec![XmlAttr { name: "points".into(), value: points_to_string(points) }];
+            let mut attrs = vec![XmlAttr { name: "points".into(), value: points_to_string(points).await }];
             push_common_attrs(&mut attrs, common);
             XmlNode::Element { name: "polyline".into(), attrs, children: vec![] }
         }
         SvgElement::Polygon { common, points } => {
-            let mut attrs = vec![XmlAttr { name: "points".into(), value: points_to_string(points) }];
+            let mut attrs = vec![XmlAttr { name: "points".into(), value: points_to_string(points).await }];
             push_common_attrs(&mut attrs, common);
             XmlNode::Element { name: "polygon".into(), attrs, children: vec![] }
         }
         SvgElement::Path { common, d } => {
-            let mut attrs = vec![XmlAttr { name: "d".into(), value: path_data_to_string(d) }];
+            let mut attrs = vec![XmlAttr { name: "d".into(), value: path_data_to_string(d).await }];
             push_common_attrs(&mut attrs, common);
             XmlNode::Element { name: "path".into(), attrs, children: vec![] }
         }
@@ -1099,10 +1099,10 @@ pub async fn svg_element_to_xml_node(el: &SvgElement) -> XmlNode {
         SvgElement::Text { common, x, y, children } => {
             let mut attrs = Vec::new();
             if let Some(x) = x {
-                attrs.push(XmlAttr { name: "x".into(), value: fmt_num(*x) });
+                attrs.push(XmlAttr { name: "x".into(), value: fmt_num(*x).await });
             }
             if let Some(y) = y {
-                attrs.push(XmlAttr { name: "y".into(), value: fmt_num(*y) });
+                attrs.push(XmlAttr { name: "y".into(), value: fmt_num(*y).await });
             }
             push_common_attrs(&mut attrs, common);
             XmlNode::Element { name: "text".into(), attrs, children: children.iter().map(svg_element_to_xml_node).collect() }
@@ -1110,10 +1110,10 @@ pub async fn svg_element_to_xml_node(el: &SvgElement) -> XmlNode {
         SvgElement::Tspan { common, x, y, children } => {
             let mut attrs = Vec::new();
             if let Some(x) = x {
-                attrs.push(XmlAttr { name: "x".into(), value: fmt_num(*x) });
+                attrs.push(XmlAttr { name: "x".into(), value: fmt_num(*x).await });
             }
             if let Some(y) = y {
-                attrs.push(XmlAttr { name: "y".into(), value: fmt_num(*y) });
+                attrs.push(XmlAttr { name: "y".into(), value: fmt_num(*y).await });
             }
             push_common_attrs(&mut attrs, common);
             XmlNode::Element { name: "tspan".into(), attrs, children: children.iter().map(svg_element_to_xml_node).collect() }
@@ -1180,16 +1180,16 @@ pub async fn svg_element_to_xml_node(el: &SvgElement) -> XmlNode {
         SvgElement::Use { common, href, x, y, width, height } => {
             let mut attrs = vec![XmlAttr { name: "href".into(), value: href.clone() }];
             if let Some(x) = x {
-                attrs.push(XmlAttr { name: "x".into(), value: fmt_num(*x) });
+                attrs.push(XmlAttr { name: "x".into(), value: fmt_num(*x).await });
             }
             if let Some(y) = y {
-                attrs.push(XmlAttr { name: "y".into(), value: fmt_num(*y) });
+                attrs.push(XmlAttr { name: "y".into(), value: fmt_num(*y).await });
             }
             if let Some(w) = width {
-                attrs.push(XmlAttr { name: "width".into(), value: fmt_num(*w) });
+                attrs.push(XmlAttr { name: "width".into(), value: fmt_num(*w).await });
             }
             if let Some(h) = height {
-                attrs.push(XmlAttr { name: "height".into(), value: fmt_num(*h) });
+                attrs.push(XmlAttr { name: "height".into(), value: fmt_num(*h).await });
             }
             push_common_attrs(&mut attrs, common);
             XmlNode::Element { name: "use".into(), attrs, children: vec![] }
@@ -1200,13 +1200,13 @@ pub async fn svg_element_to_xml_node(el: &SvgElement) -> XmlNode {
 
 pub async fn svg_document_to_typed(doc: &XmlDocument) -> Result<SvgElement, String> {
     match &doc.root {
-        Some(node) => svg_element_from_xml_node(node),
+        Some(node) => svg_element_from_xml_node(node).await,
         None => Err("svg document has no root element".into()),
     }
 }
 
 pub async fn typed_to_svg_document(root: &SvgElement, doctype: Option<crate::artifacts::xml::schema::snapshot::XmlDoctype>) -> XmlDocument {
-    XmlDocument { root: Some(svg_element_to_xml_node(root)), doctype, declaration: None, prolog: Vec::new() }
+    XmlDocument { root: Some(svg_element_to_xml_node(root).await), doctype, declaration: None, prolog: Vec::new() }
 }
 //#endregion 🔖️TypedElementModel
 
@@ -1275,11 +1275,11 @@ impl store::ArtifactDsl for SvgSnapshot {
 
     async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let (_, body) = store::semio_format::split_text_preamble(text).map_err(|error| store::TextError::new(format!("svg state envelope: {error}"), dsl::TextSpan::at(1, 1)))?;
-        crate::artifacts::svg::schema::mutations::dec_svg_snapshot(body.trim()).map_err(|e| store::TextError::new(format!("svg state parse: {e}"), dsl::TextSpan::at(1, 1)))
+        crate::artifacts::svg::schema::mutations::dec_svg_snapshot(body.trim()).await.map_err(|e| store::TextError::new(format!("svg state parse: {e}"), dsl::TextSpan::at(1, 1)))
     }
     async fn print_dsl(&self) -> String {
         let body = crate::artifacts::svg::schema::mutations::enc_svg_snapshot(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -1296,7 +1296,7 @@ impl store::ArtifactPack for SvgSnapshot {
         let _ = options;
         let mut raw = vec![1];
         crate::artifacts::svg::schema::mutations::enc_svg_snapshot_bin(self, &mut raw);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
     async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
@@ -1305,12 +1305,12 @@ impl store::ArtifactPack for SvgSnapshot {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
-        let mut reader = store::ByteReader::new(&inner);
-        let version = reader.read_u8().map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let mut reader = store::ByteReader::new(&inner).await;
+        let version = reader.read_u8().await.map_err(|e| store::PackError::Schema(e.to_string()))?;
         if version != 1 {
             return Err(store::PackError::Schema(format!("unsupported svg snapshot state version {version}")));
         }
-        crate::artifacts::svg::schema::mutations::dec_svg_snapshot_bin(&mut reader).map_err(store::PackError::Schema)
+        crate::artifacts::svg::schema::mutations::dec_svg_snapshot_bin(&mut reader).await.map_err(store::PackError::Schema)
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs

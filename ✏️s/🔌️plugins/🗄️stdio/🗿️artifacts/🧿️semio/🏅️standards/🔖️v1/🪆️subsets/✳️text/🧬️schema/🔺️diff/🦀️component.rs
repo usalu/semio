@@ -68,7 +68,7 @@ impl protocol::command::DiffAlgebra<SemioTextSnapshot> for SemioTextDiff {
         SemioTextDiff { runs: self.runs.as_ref().map(|_| SemioTextRunList { values: base.runs.clone() }) }
     }
     async fn is_empty(&self) -> bool {
-        self.is_empty_diff()
+        self.is_empty_diff().await
     }
 }
 //#endregion 🔖️Diff
@@ -88,44 +88,44 @@ async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
 async fn enc_str(s: &str) -> String {
-    hex_encode(s.as_bytes())
+    hex_encode(s.as_bytes()).await
 }
 async fn dec_str(s: &str) -> Result<String, String> {
-    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
+    String::from_utf8(hex_decode(s).await?).map_err(|e| e.to_string())
 }
 
 use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{split_top_level, strip_brackets};
 use crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::SemioTextMark;
 
 async fn enc_mark_kind(k: crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::SemioTextMarkKind) -> char {
-    crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::enc_mark_kind(k)
+    crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::enc_mark_kind(k).await
 }
 async fn dec_mark_kind(s: &str) -> Result<crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::SemioTextMarkKind, String> {
-    crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::dec_mark_kind(s)
+    crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::dec_mark_kind(s).await
 }
 async fn enc_mark(m: &SemioTextMark) -> String {
     format!("[{},{}]", enc_mark_kind(m.kind), enc_str(&m.href))
 }
 async fn dec_mark(s: &str) -> Result<SemioTextMark, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [kind, href] = parts.as_slice() else { return Err(format!("mark: expected 2 fields, got {}", parts.len())) };
-    Ok(SemioTextMark { kind: dec_mark_kind(kind)?, href: dec_str(href)? })
+    Ok(SemioTextMark { kind: dec_mark_kind(kind).await?, href: dec_str(href).await? })
 }
 async fn enc_run(r: &SemioTextRun) -> String {
     let marks = r.marks.iter().map(enc_mark).collect::<Vec<_>>().join(",");
     format!("[{},{},[{}]]", enc_str(&r.language), enc_str(&r.content), marks)
 }
 async fn dec_run(s: &str) -> Result<SemioTextRun, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [language, content, marks] = parts.as_slice() else { return Err(format!("run: expected 3 fields, got {}", parts.len())) };
-    let marks = split_top_level(strip_brackets(marks)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_mark).collect::<Result<Vec<_>, String>>()?;
-    Ok(SemioTextRun { language: dec_str(language)?, content: dec_str(content)?, marks })
+    let marks = split_top_level(strip_brackets(marks).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_mark).collect::<Result<Vec<_>, String>>()?;
+    Ok(SemioTextRun { language: dec_str(language).await?, content: dec_str(content).await?, marks })
 }
 async fn enc_runs(list: &SemioTextRunList) -> String {
     format!("[{}]", list.values.iter().map(enc_run).collect::<Vec<_>>().join(","))
 }
 async fn dec_runs(s: &str) -> Result<SemioTextRunList, String> {
-    let values = split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_run).collect::<Result<Vec<_>, String>>()?;
+    let values = split_top_level(strip_brackets(s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_run).collect::<Result<Vec<_>, String>>()?;
     Ok(SemioTextRunList { values })
 }
 
@@ -140,15 +140,15 @@ async fn parse_text_diff(line: &str) -> Result<SemioTextDiff, String> {
         return Ok(SemioTextDiff::default());
     }
     let rest = line.strip_prefix("runs=").ok_or_else(|| format!("text diff: unknown token {line:?}"))?;
-    Ok(SemioTextDiff { runs: Some(dec_runs(rest)?) })
+    Ok(SemioTextDiff { runs: Some(dec_runs(rest).await?) })
 }
 
 impl protocol::DiffCodec for SemioTextDiff {
     async fn print_diff(&self) -> String {
-        print_text_diff(self)
+        print_text_diff(self).await
     }
     async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
-        parse_text_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_text_diff(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 
     /// ⚡️ Real binary diff frame: `format u8` + `presence u8` (bit0=`runs`) are two REAL fixed
@@ -179,12 +179,12 @@ impl protocol::DiffCodec for SemioTextDiff {
             return Err(protocol::ProtocolError::Malformed { what: "diff format", offset: 0, detail: format!("unsupported diff format {}", bytes[0]) });
         }
         let presence = bytes[1];
-        let mut reader = store::ByteReader::new(&bytes[2..]);
+        let mut reader = store::ByteReader::new(&bytes[2..]).await;
         let runs = if presence & 0b0000_0001 != 0 {
-            let count = reader.read_varint_u64().map_err(|e| protocol::ProtocolError::Malformed { what: "diff runs count", offset: 2, detail: e.to_string() })?;
+            let count = reader.read_varint_u64().await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff runs count", offset: 2, detail: e.to_string() })?;
             let mut values = Vec::with_capacity(count as usize);
             for _ in 0..count {
-                values.push(read_run(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff run", offset: 2, detail: e })?);
+                values.push(read_run(&mut reader).await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff run", offset: 2, detail: e })?);
             }
             Some(SemioTextRunList { values })
         } else {

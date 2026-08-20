@@ -11,10 +11,10 @@ use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::Sem
 //#region 🔖️Diff
 pub async fn diff(payload: &ReplaceSurface, base: &SemioBrepSnapshot) -> protocol::MutationOutcome<SemioBrepDiff> {
     let Some(face) = base.faces.iter().find(|f| f.id == payload.face_id) else {
-        return protocol::MutationOutcome::error("mutation.target-missing", format!("Face \"{}\" does not exist.", payload.face_id), [payload.face_id.clone()]);
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Face \"{}\" does not exist.", payload.face_id), [payload.face_id.clone()]).await;
     };
     if face.surface == payload.new_surface {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Face \"{}\" already has this surface.", payload.face_id));
+        return protocol::MutationOutcome::empty().await.warn("mutation.no-op", format!("Face \"{}\" already has this surface.", payload.face_id)).await;
     }
     protocol::MutationOutcome::new(SemioBrepDiff {
         faces: Some(NamedTripleDiff {
@@ -23,6 +23,6 @@ pub async fn diff(payload: &ReplaceSurface, base: &SemioBrepSnapshot) -> protoco
             added: vec![],
         }),
         ..Default::default()
-    })
+    }).await
 }
 //#endregion 🔖️Diff

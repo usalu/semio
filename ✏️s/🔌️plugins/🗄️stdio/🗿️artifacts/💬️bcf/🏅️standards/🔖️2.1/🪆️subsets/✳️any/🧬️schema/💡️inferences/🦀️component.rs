@@ -25,7 +25,7 @@ pub struct BcfInference {
 
 impl protocol::Inference<BcfSnapshot> for BcfInference {
     async fn infer(snapshot: &BcfSnapshot) -> Self {
-        Self { topic_stats: compute_bcf_topic_stats(snapshot) }
+        Self { topic_stats: compute_bcf_topic_stats(snapshot).await }
     }
 }
 

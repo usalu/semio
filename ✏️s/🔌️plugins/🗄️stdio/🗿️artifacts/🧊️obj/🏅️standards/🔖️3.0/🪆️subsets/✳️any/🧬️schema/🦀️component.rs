@@ -164,17 +164,17 @@ pub mod derived_construction {
             Self { snapshot, diagnostics: Vec::new() }
         }
         async fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self::from_snapshot(<ObjSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+            Ok(Self::from_snapshot(<ObjSnapshot as store::ArtifactDsl>::parse_dsl(text).await?).await)
         }
         async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<ObjSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+            Ok(Self::from_snapshot(<ObjSnapshot as store::ArtifactPack>::decode_pack(bytes).await?).await)
         }
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::obj::schema::mutations::apply_obj_mutation(&mut self.snapshot, &mutation);
-            (self, diff)
+            (self, diff.await)
         }
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            self.snapshot = <ObjDiff as protocol::MutationDiff<ObjSnapshot>>::apply(&diff, &self.snapshot)?;
+            self.snapshot = <ObjDiff as protocol::MutationDiff<ObjSnapshot>>::apply(&diff, &self.snapshot).await?;
             Ok(self)
         }
         async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
@@ -248,15 +248,15 @@ pub mod derived_analysis {
                         Ok((_, rest)) => rest,
                         Err(_) => text,
                     };
-                    looks_like_obj(body)
+                    looks_like_obj(body).await
                 }
                 AnalyzeSource::Binary(bytes) => match store::semio_format::unwrap_binary(bytes) {
                     Ok((_, inner)) => match String::from_utf8(inner) {
-                        Ok(text) => looks_like_obj(&text),
+                        Ok(text) => looks_like_obj(&text).await,
                         Err(_) => IoConfidence::Low,
                     },
                     Err(_) => match std::str::from_utf8(bytes) {
-                        Ok(text) => looks_like_obj(text),
+                        Ok(text) => looks_like_obj(text).await,
                         Err(_) => IoConfidence::Low,
                     },
                 },
@@ -269,14 +269,14 @@ pub mod derived_analysis {
             let mut confidence = IoConfidence::High;
             for source in sources {
                 match source {
-                    AnalyzeSource::Text(text) => match <ObjSnapshot as store::ArtifactDsl>::parse_dsl(text) {
+                    AnalyzeSource::Text(text) => match <ObjSnapshot as store::ArtifactDsl>::parse_dsl(text).await {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
                             diagnostics.push(dsl::Diagnostic::error("stdio.analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
-                    AnalyzeSource::Binary(bytes) => match <ObjSnapshot as store::ArtifactPack>::decode_pack(bytes) {
+                    AnalyzeSource::Binary(bytes) => match <ObjSnapshot as store::ArtifactPack>::decode_pack(bytes).await {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
@@ -359,9 +359,9 @@ weird_directive foo bar\n";
 /// `fixture_honesty_law` requirement exactly. Same pattern `stdio.txt`'s own
 /// `demo_txt_snapshot()`/`stdio.csv`'s own `demo_csv_snapshot()` establish.
 pub async fn demo_obj_snapshot() -> ObjSnapshot {
-    let gen1 = crate::artifacts::obj::engine::decode_obj(DEMO_OBJ_TEXT).unwrap_or_else(|_| empty_obj_snapshot());
+    let gen1 = crate::artifacts::obj::engine::decode_obj(DEMO_OBJ_TEXT).await.unwrap_or_else(|_| empty_obj_snapshot());
     let gen2_text = crate::artifacts::obj::engine::encode_obj(&gen1);
-    crate::artifacts::obj::engine::decode_obj(&gen2_text).unwrap_or(gen1)
+    crate::artifacts::obj::engine::decode_obj(&gen2_text).await.unwrap_or(gen1)
 }
 //#endregion 🔖️DocumentHelpers
 

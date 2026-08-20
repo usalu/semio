@@ -1,0 +1,21 @@
+{
+  "surface": "conformance.patch",
+  "baseRevision": 0,
+  "revision": 1,
+  "ops": [
+    {
+      "type": "setBindings",
+      "id": 1,
+      "bindings": [
+        {
+          "trigger": "activate",
+          "action": {
+            "scope": "scope",
+            "name": "name",
+            "version": 1
+          }
+        }
+      ]
+    }
+  ]
+}

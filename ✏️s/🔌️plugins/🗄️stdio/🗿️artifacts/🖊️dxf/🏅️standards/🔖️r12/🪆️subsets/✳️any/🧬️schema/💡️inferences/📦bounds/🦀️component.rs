@@ -67,13 +67,13 @@ async fn expand_entity(min: &mut [f64; 3], max: &mut [f64; 3], seen: &mut bool, 
                 expand(min, max, seen, [v.x, v.y, v.z]);
             }
         }
-        DxfEntity::Text { position, .. } => expand(min, max, seen, *position),
+        DxfEntity::Text { position, .. } => expand(min, max, seen, *position).await,
         DxfEntity::Solid { points, .. } => {
             for p in points {
                 expand(min, max, seen, *p);
             }
         }
-        DxfEntity::Insert { position, .. } => expand(min, max, seen, *position),
+        DxfEntity::Insert { position, .. } => expand(min, max, seen, *position).await,
         DxfEntity::Other { .. } => {}
     }
 }

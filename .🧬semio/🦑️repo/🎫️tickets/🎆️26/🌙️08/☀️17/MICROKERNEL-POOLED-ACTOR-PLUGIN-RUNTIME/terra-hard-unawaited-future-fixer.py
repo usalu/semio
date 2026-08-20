@@ -1,4 +1,16 @@
 #!/usr/bin/env python3
+# 🚨🚨🚨 BROKEN — DO NOT RUN --apply AGAIN. Kept only as a documented cautionary artifact. 🚨🚨🚨
+# It uses `span["byte_end"]` (a UTF-8 BYTE offset from `cargo --message-format=json`) directly as a
+# Python STRING (Unicode codepoint) index. In a codebase this heavy with multi-byte emoji, byte
+# offset != codepoint offset, so every insertion after the first multi-byte character drifts —
+# landing `.await` inside doc comments, mid-identifier, mid-string-literal, or as an orphan token.
+# Corrupted 372 sites across 16 files in one `--apply` run on 2026-08-20 (`alltargets-hard` packet;
+# see 📓️terra-alltargets-hard-report.md, section "A severe bug in a tool I wrote"). Recovered via
+# terra-hard-undo-corrupted-await.py + terra-hard-safe-await-fixer.py (the correct, byte-safe,
+# per-line replacement — USE THAT ONE) + terra-hard-final-corruption-sweep.py +
+# terra-hard-diagnostic-remove-bad-await.py. If you need this tool's FUNCTIONALITY (finding unawaited
+# "must be used" Future warnings and inserting `.await`), use terra-hard-safe-await-fixer.py instead.
+#
 # 🩹 terra-hard-unawaited-future-fixer.py
 #
 # R10-compliant diagnostic-driven recovery tool (span-keyed, NOT name-keyed).

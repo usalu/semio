@@ -25,7 +25,7 @@ pub struct SemioAnimationInference {
 
 impl protocol::Inference<SemioAnimationSnapshot> for SemioAnimationInference {
     async fn infer(snapshot: &SemioAnimationSnapshot) -> Self {
-        Self { duration: compute_semio_animation_duration(snapshot) }
+        Self { duration: compute_semio_animation_duration(snapshot).await }
     }
 }
 

@@ -1,0 +1,15 @@
+{
+  "surface": "conformance.patch",
+  "baseRevision": 0,
+  "revision": 1,
+  "ops": [
+    {
+      "type": "setAccessibility",
+      "id": 1,
+      "accessibility": {
+        "live": "polite",
+        "shortcut": "Ctrl+S"
+      }
+    }
+  ]
+}

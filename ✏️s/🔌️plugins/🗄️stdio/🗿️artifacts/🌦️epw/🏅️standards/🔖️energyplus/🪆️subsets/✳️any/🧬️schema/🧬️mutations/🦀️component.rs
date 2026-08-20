@@ -78,13 +78,13 @@ pub enum EpwMutation {
 /// ▶️ Applies `mutation` to `snapshot`: `let d = mutation.diff(&*snapshot); *snapshot =
 /// d.apply(snapshot); d` — the diff is the single semantics source.
 pub async fn apply_epw_mutation(snapshot: &mut EpwSnapshot, mutation: &EpwMutation) -> protocol::MutationOutcome<EpwDiff> {
-    let outcome = <EpwMutation as Mutation<EpwSnapshot>>::diff(mutation, snapshot);
-    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
+    let outcome = <EpwMutation as Mutation<EpwSnapshot>>::diff(mutation, snapshot).await;
+    match protocol::MutationDiff::apply(outcome.diff().await, snapshot).await {
         Ok(next) => {
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).await.absorb_messages(outcome.messages().await.to_vec()).await,
     }
 }
 //#endregion 🔖️Apply
@@ -96,7 +96,7 @@ impl Mutation<EpwSnapshot> for EpwMutation {
     async fn diff(&self, base: &EpwSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             EpwMutation::NoMutation => EpwDiff::default(),
-            EpwMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
+            EpwMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot).await,
             EpwMutation::SetLocation { location } => EpwDiff { location: Some(location.clone()), ..EpwDiff::default() },
             EpwMutation::SetDesignConditions { value } => EpwDiff { design_conditions: Some(value.clone()), ..EpwDiff::default() },
             EpwMutation::SetTypicalExtremePeriods { value } => EpwDiff { typical_extreme_periods: Some(value.clone()), ..EpwDiff::default() },
@@ -112,7 +112,7 @@ impl Mutation<EpwSnapshot> for EpwMutation {
                 fdiff.set_at(*field_index, Some(value.clone()));
                 EpwDiff { records: Some(EpwRecordsDiff { removed: Vec::new(), modified: vec![EpwRecordModified { index: *record_index, diff: fdiff }], added: Vec::new() }), ..EpwDiff::default() }
             }
-        })
+        }).await
     }
 
     async fn inverse(&self, base: &EpwSnapshot) -> Vec<Self> {
@@ -161,21 +161,21 @@ async fn enc_epw_snapshot(s: &EpwSnapshot) -> String {
     )
 }
 async fn dec_epw_snapshot(s: &str) -> Result<EpwSnapshot, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [schema, location, design_conditions, typical_extreme_periods, ground_temperatures, holidays_dst, comments_1, comments_2, data_periods, records] = parts.as_slice() else {
         return Err(format!("epw snapshot: expected 10 fields, got {}", parts.len()));
     };
-    let records = split_top_level(strip_brackets(records)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_record).collect::<Result<Vec<_>, String>>()?;
+    let records = split_top_level(strip_brackets(records).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_record).collect::<Result<Vec<_>, String>>()?;
     Ok(EpwSnapshot {
-        schema: dec_str(schema)?,
-        location: dec_location(location)?,
-        design_conditions: dec_str(design_conditions)?,
-        typical_extreme_periods: dec_str(typical_extreme_periods)?,
-        ground_temperatures: dec_str(ground_temperatures)?,
-        holidays_dst: dec_str(holidays_dst)?,
-        comments_1: dec_str(comments_1)?,
-        comments_2: dec_str(comments_2)?,
-        data_periods: dec_data_periods(data_periods)?,
+        schema: dec_str(schema).await?,
+        location: dec_location(location).await?,
+        design_conditions: dec_str(design_conditions).await?,
+        typical_extreme_periods: dec_str(typical_extreme_periods).await?,
+        ground_temperatures: dec_str(ground_temperatures).await?,
+        holidays_dst: dec_str(holidays_dst).await?,
+        comments_1: dec_str(comments_1).await?,
+        comments_2: dec_str(comments_2).await?,
+        data_periods: dec_data_periods(data_periods).await?,
         records,
     })
 }
@@ -206,39 +206,39 @@ async fn parse_epw_mutation(line: &str) -> Result<EpwMutation, String> {
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("epw mutation: missing arg '{k}' for '{keyword}'"));
     let usize_arg = |k: &str| -> Result<usize, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
     match keyword {
-        "set-snapshot" => Ok(EpwMutation::SetSnapshot { snapshot: dec_epw_snapshot(arg("snapshot")?)? }),
-        "set-location" => Ok(EpwMutation::SetLocation { location: dec_location(arg("location")?)? }),
-        "set-design-conditions" => Ok(EpwMutation::SetDesignConditions { value: dec_str(arg("value")?)? }),
-        "set-typical-extreme-periods" => Ok(EpwMutation::SetTypicalExtremePeriods { value: dec_str(arg("value")?)? }),
-        "set-ground-temperatures" => Ok(EpwMutation::SetGroundTemperatures { value: dec_str(arg("value")?)? }),
-        "set-holidays-dst" => Ok(EpwMutation::SetHolidaysDst { value: dec_str(arg("value")?)? }),
-        "set-comments-1" => Ok(EpwMutation::SetComments1 { value: dec_str(arg("value")?)? }),
-        "set-comments-2" => Ok(EpwMutation::SetComments2 { value: dec_str(arg("value")?)? }),
-        "set-data-periods" => Ok(EpwMutation::SetDataPeriods { data_periods: dec_data_periods(arg("data-periods")?)? }),
-        "insert-record" => Ok(EpwMutation::InsertRecord { index: usize_arg("index")?, record: dec_record(arg("record")?)? }),
+        "set-snapshot" => Ok(EpwMutation::SetSnapshot { snapshot: dec_epw_snapshot(arg("snapshot")?).await? }),
+        "set-location" => Ok(EpwMutation::SetLocation { location: dec_location(arg("location")?).await? }),
+        "set-design-conditions" => Ok(EpwMutation::SetDesignConditions { value: dec_str(arg("value")?).await? }),
+        "set-typical-extreme-periods" => Ok(EpwMutation::SetTypicalExtremePeriods { value: dec_str(arg("value")?).await? }),
+        "set-ground-temperatures" => Ok(EpwMutation::SetGroundTemperatures { value: dec_str(arg("value")?).await? }),
+        "set-holidays-dst" => Ok(EpwMutation::SetHolidaysDst { value: dec_str(arg("value")?).await? }),
+        "set-comments-1" => Ok(EpwMutation::SetComments1 { value: dec_str(arg("value")?).await? }),
+        "set-comments-2" => Ok(EpwMutation::SetComments2 { value: dec_str(arg("value")?).await? }),
+        "set-data-periods" => Ok(EpwMutation::SetDataPeriods { data_periods: dec_data_periods(arg("data-periods")?).await? }),
+        "insert-record" => Ok(EpwMutation::InsertRecord { index: usize_arg("index")?, record: dec_record(arg("record")?).await? }),
         "remove-record" => Ok(EpwMutation::RemoveRecord { index: usize_arg("index")? }),
-        "set-record-field" => Ok(EpwMutation::SetRecordField { record_index: usize_arg("record-index")?, field_index: usize_arg("field-index")?, value: dec_str(arg("value")?)? }),
+        "set-record-field" => Ok(EpwMutation::SetRecordField { record_index: usize_arg("record-index")?, field_index: usize_arg("field-index")?, value: dec_str(arg("value")?).await? }),
         other => Err(format!("epw mutation: unknown keyword {other:?}")),
     }
 }
 
 impl OpText for EpwMutation {
     async fn print_op(&self) -> String {
-        print_epw_mutation(self)
+        print_epw_mutation(self).await
     }
     async fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_epw_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_epw_mutation(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
 
 /// ⚡️ Binary = the text bytes verbatim, same simplification as `EpwDiff`'s hand-rolled codec.
 impl OpBinary for EpwMutation {
     async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(self.print_op().into_bytes())
+        Ok(self.print_op().await.into_bytes())
     }
     async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 0, detail: e.to_string() })?;
-        Self::parse_op(line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 0, detail: e.to_string() })
+        Self::parse_op(line).await.map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 0, detail: e.to_string() })
     }
 }
 //#endregion OpCodecs

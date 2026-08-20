@@ -42,7 +42,7 @@ impl ArtifactDeserializer for SemioModelFromIfc {
     const INTO: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("model") };
 
     async fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
-        Ok(model_from_ifc(from))
+        Ok(model_from_ifc(from).await)
     }
 }
 
@@ -102,7 +102,7 @@ async fn quat_from_rotation_columns(m: &Mat4) -> SemioQuaternion {
 }
 
 async fn transform_from_mat4(m: &Mat4) -> SemioTransform {
-    SemioTransform { translation: SemioPoint3 { x: m.0[0][3], y: m.0[1][3], z: m.0[2][3] }, rotation: quat_from_rotation_columns(m), scale: SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 } }
+    SemioTransform { translation: SemioPoint3 { x: m.0[0][3], y: m.0[1][3], z: m.0[2][3] }, rotation: quat_from_rotation_columns(m).await, scale: SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 } }
 }
 //#endregion 🔖️Geometry
 
@@ -114,7 +114,7 @@ async fn transform_from_mat4(m: &Mat4) -> SemioTransform {
 async fn pset_value_from_part21(v: &Part21Value) -> Option<PsetValue> {
     match v {
         Part21Value::Str(s) => Some(PsetValue::Text { value: s.clone() }),
-        Part21Value::Real(r) => Some(PsetValue::Number { value: r.to_f64()? }),
+        Part21Value::Real(r) => Some(PsetValue::Number { value: r.to_f64().await? }),
         Part21Value::Int(i) => Some(PsetValue::Number { value: *i as f64 }),
         Part21Value::Enum(s) => match s.as_str() {
             "T" | "TRUE" | ".T." => Some(PsetValue::Boolean { value: true }),
@@ -127,13 +127,13 @@ async fn pset_value_from_part21(v: &Part21Value) -> Option<PsetValue> {
 }
 
 async fn convert_pset(ps: &IfcPropertySet) -> PropertySet {
-    PropertySet { name: ps.name.clone(), properties: ps.properties.iter().filter_map(|p| pset_value_from_part21(&p.value).map(|value| Property { key: p.name.clone(), value })).collect() }
+    PropertySet { name: ps.name.clone(), properties: ps.properties.iter().filter_map(|p| semio_framework_plugin::resolve_ready(pset_value_from_part21(&p.value)).map(|value| Property { key: p.name.clone(), value })).collect() }
 }
 //#endregion 🔖️PropertyValue
 
 //#region 🔖️Walk
 async fn guid_of(doc: &Part21Document, id: u64) -> String {
-    doc.instance(id).and_then(|i| i.primary()).and_then(|(_, args)| args.first()).and_then(Part21Value::as_str).map(str::to_string).unwrap_or_else(|| format!("ifc-{id}"))
+    doc.instance(id).await.and_then(|i| i.primary()).and_then(|(_, args)| args.first()).and_then(Part21Value::as_str).map(str::to_string).unwrap_or_else(|| format!("ifc-{id}"))
 }
 
 /// 🌳️ Recursively converts one `analyze_spatial` tree node into `spatial`/`elements`/`relations`
@@ -143,7 +143,7 @@ async fn guid_of(doc: &Part21Document, id: u64) -> String {
 async fn walk(doc: &Part21Document, node: &IfcSpatialNode, parent_spatial_id: Option<String>, analysis: &SpatialAnalysis, out_spatial: &mut Vec<SpatialNode>, out_elements: &mut Vec<SemioModelElement>, out_relations: &mut Vec<ModelRelation>) {
     let placement = node.object_placement.and_then(|pid| analysis.placements.get(&pid)).map(transform_from_mat4).unwrap_or_else(SemioTransform::identity);
 
-    if let Some(kind) = spatial_kind_of(&node.ifc_type) {
+    if let Some(kind) = spatial_kind_of(&node.ifc_type).await {
         let id = guid_of(doc, node.id);
         out_spatial.push(SpatialNode { id: id.clone(), kind, name: node.name.clone().unwrap_or_default(), parent_id: parent_spatial_id.clone(), placement });
         if let Some(parent) = &parent_spatial_id {
@@ -176,7 +176,7 @@ async fn walk(doc: &Part21Document, node: &IfcSpatialNode, parent_spatial_id: Op
 //#region 🔖️Entry
 pub async fn model_from_ifc(from: &IfcSnapshot) -> SemioModelSnapshot {
     let doc = crate::artifacts::ifc::schema::snapshot::to_part21_document(from);
-    let analysis = analyze_spatial(&doc);
+    let analysis = analyze_spatial(&doc).await;
     let mut spatial = Vec::new();
     let mut elements = Vec::new();
     let mut relations = Vec::new();

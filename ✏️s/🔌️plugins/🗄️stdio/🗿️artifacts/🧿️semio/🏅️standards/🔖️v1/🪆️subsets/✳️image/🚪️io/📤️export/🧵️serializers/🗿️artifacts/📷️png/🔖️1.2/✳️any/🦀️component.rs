@@ -60,7 +60,7 @@ impl ArtifactSerializer for SemioImageToPng {
             width: from.width,
             height: from.height,
             bit_depth: 8,
-            color_type: colorspace_to_png(from.colorspace),
+            color_type: colorspace_to_png(from.colorspace).await,
             interlace: false,
             pixels: frame.rgba8.clone(),
             text_chunks,

@@ -34,7 +34,7 @@ struct VertexOutput {
 }
 
 @vertex
-async fn vs_main(vertex: VertexInput, instance: InstanceInput) -> VertexOutput {
+fn vs_main(vertex: VertexInput, instance: InstanceInput) -> VertexOutput {
 var out: VertexOutput;
 let pos = instance.rect.xy + vertex.corner * instance.rect.zw;
 let ndc = (pos / globals.screen_size) * 2.0 - vec2<f32>(1.0, 1.0);
@@ -49,13 +49,13 @@ out.uv = mix(uv_min, uv_max, vertex.corner);
 return out;
 }
 
-async fn sdf_rounded_rect(p: vec2<f32>, half_size: vec2<f32>, radius: f32) -> f32 {
+fn sdf_rounded_rect(p: vec2<f32>, half_size: vec2<f32>, radius: f32) -> f32 {
 let q = abs(p) - half_size + vec2<f32>(radius);
 return length(max(q, vec2<f32>(0.0))) + min(max(q.x, q.y), 0.0) - radius;
 }
 
 @fragment
-async fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
+fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
 let kind = i32(in.params.z + 0.5);
 let glyph = textureSample(glyph_atlas, glyph_sampler, in.uv);
 let icon = textureSample(icon_atlas, icon_sampler, in.uv);
@@ -170,7 +170,7 @@ struct VertexOutput {
 }
 
 @vertex
-async fn vs_main(vertex: VertexInput) -> VertexOutput {
+fn vs_main(vertex: VertexInput) -> VertexOutput {
 var out: VertexOutput;
 let ndc = (vertex.position / globals.screen_size) * 2.0 - vec2<f32>(1.0, 1.0);
 out.clip_position = vec4<f32>(ndc.x, -ndc.y, 0.0, 1.0);
@@ -179,7 +179,7 @@ return out;
 }
 
 @fragment
-async fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
+fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
 return in.color;
 }
 "#;
@@ -214,7 +214,7 @@ struct VertexOutput {
 }
 
 @vertex
-async fn vs_main(vertex: VertexInput, instance: InstanceInput) -> VertexOutput {
+fn vs_main(vertex: VertexInput, instance: InstanceInput) -> VertexOutput {
 var out: VertexOutput;
 let model = mat4x4<f32>(instance.model0, instance.model1, instance.model2, instance.model3);
 let world_pos = model * vec4<f32>(vertex.position, 1.0);
@@ -231,7 +231,7 @@ return out;
 }
 
 @fragment
-async fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
+fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
 let n = normalize(in.normal);
 let diffuse = max(dot(n, normalize(globals.light_dir.xyz)), 0.28);
 var color = in.color.rgb * diffuse;
@@ -264,7 +264,7 @@ struct VertexOutput {
 }
 
 @vertex
-async fn vs_main(vertex: VertexInput) -> VertexOutput {
+fn vs_main(vertex: VertexInput) -> VertexOutput {
 var out: VertexOutput;
 out.clip_position = globals.view_proj * vec4<f32>(vertex.position, 1.0);
 out.color = vertex.color;
@@ -272,7 +272,7 @@ return out;
 }
 
 @fragment
-async fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
+fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
 return in.color;
 }
 "#;
@@ -307,7 +307,7 @@ struct VertexOutput {
 }
 
 @vertex
-async fn vs_main(vertex: VertexInput, instance: InstanceInput) -> VertexOutput {
+fn vs_main(vertex: VertexInput, instance: InstanceInput) -> VertexOutput {
 var out: VertexOutput;
 let model = mat4x4<f32>(instance.model0, instance.model1, instance.model2, instance.model3);
 let world_pos = model * vec4<f32>(vertex.position, 1.0);
@@ -318,7 +318,7 @@ return out;
 }
 
 @fragment
-async fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
+fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
 let sampled = textureSample(tex, tex_sampler, in.uv);
 return vec4<f32>(sampled.rgb * in.tint.rgb, sampled.a * in.tint.a);
 }
@@ -340,7 +340,7 @@ struct VertexOutput {
 }
 
 @vertex
-async fn vs_main(@builtin(vertex_index) vid: u32) -> VertexOutput {
+fn vs_main(@builtin(vertex_index) vid: u32) -> VertexOutput {
 var positions = array<vec2<f32>, 6>(
     vec2<f32>(-1.0, -1.0), vec2<f32>(1.0, -1.0), vec2<f32>(-1.0, 1.0),
     vec2<f32>(-1.0, 1.0), vec2<f32>(1.0, -1.0), vec2<f32>(1.0, 1.0)
@@ -357,7 +357,7 @@ return out;
 }
 
 @fragment
-async fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
+fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
 let mip = u32(blur_globals.src_mip);
 let dim = vec2<f32>(textureDimensions(src_tex, mip));
 let texel = vec2<f32>(1.0) / dim;
@@ -382,7 +382,7 @@ struct VertexOutput {
 }
 
 @vertex
-async fn vs_main(@builtin(vertex_index) vid: u32) -> VertexOutput {
+fn vs_main(@builtin(vertex_index) vid: u32) -> VertexOutput {
 var positions = array<vec2<f32>, 6>(
     vec2<f32>(-1.0, -1.0), vec2<f32>(1.0, -1.0), vec2<f32>(-1.0, 1.0),
     vec2<f32>(-1.0, 1.0), vec2<f32>(1.0, -1.0), vec2<f32>(1.0, 1.0)
@@ -399,7 +399,7 @@ return out;
 }
 
 @fragment
-async fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
+fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
 return textureSampleLevel(scene_tex, scene_samp, in.uv, 0.0);
 }
 "#;
@@ -434,7 +434,7 @@ struct VertexOutput {
 }
 
 @vertex
-async fn vs_main(vertex: VertexInput, instance: GlassInstanceInput) -> VertexOutput {
+fn vs_main(vertex: VertexInput, instance: GlassInstanceInput) -> VertexOutput {
 var out: VertexOutput;
 let pos = instance.rect.xy + vertex.corner * instance.rect.zw;
 let ndc = (pos / globals.screen_size) * 2.0 - vec2<f32>(1.0, 1.0);
@@ -447,13 +447,13 @@ out.scene_uv = pos / globals.screen_size;
 return out;
 }
 
-async fn sdf_rounded_rect(p: vec2<f32>, half_size: vec2<f32>, radius: f32) -> f32 {
+fn sdf_rounded_rect(p: vec2<f32>, half_size: vec2<f32>, radius: f32) -> f32 {
 let q = abs(p) - half_size + vec2<f32>(radius);
 return length(max(q, vec2<f32>(0.0))) + min(max(q.x, q.y), 0.0) - radius;
 }
 
 @fragment
-async fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
+fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
 let half = in.size * 0.5;
 let p = in.local - half;
 let radius = in.params.x;

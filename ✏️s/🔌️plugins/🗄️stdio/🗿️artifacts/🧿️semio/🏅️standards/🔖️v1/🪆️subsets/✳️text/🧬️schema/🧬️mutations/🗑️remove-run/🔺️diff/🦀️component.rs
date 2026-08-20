@@ -7,10 +7,10 @@ use crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::Sem
 //#region 🔖️Diff
 pub async fn diff(payload: &RemoveRun, base: &SemioTextSnapshot) -> protocol::MutationOutcome<SemioTextDiff> {
     if payload.index >= base.runs.len() {
-        return protocol::MutationOutcome::error("mutation.target-missing", format!("Run #{} does not exist.", payload.index), [payload.index.to_string()]);
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Run #{} does not exist.", payload.index), [payload.index.to_string()]).await;
     }
     let mut runs = base.runs.clone();
     runs.remove(payload.index);
-    protocol::MutationOutcome::new(SemioTextDiff { runs: Some(SemioTextRunList { values: runs }) })
+    protocol::MutationOutcome::new(SemioTextDiff { runs: Some(SemioTextRunList { values: runs }) }).await
 }
 //#endregion 🔖️Diff

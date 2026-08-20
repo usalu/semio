@@ -24,29 +24,29 @@ pub mod derived_construction {
     impl DocxTransitionalBuilderConstruction {
         /// ➕️ Appends a paragraph.
         pub async fn add_paragraph(mut self, paragraph: DocxParagraph) -> Self {
-            self.inner = self.inner.add_paragraph(paragraph);
+            self.inner = self.inner.add_paragraph(paragraph).await;
             self
         }
 
         /// ➕️ Appends a single-run plain-text paragraph.
         pub async fn add_text_paragraph(self, text: impl Into<String>) -> Self {
-            self.add_paragraph(DocxParagraph::text(text.into()))
+            self.add_paragraph(DocxParagraph::text(text.into()).await).await
         }
 
         /// ➕️ Appends a paragraph made of the given runs (basic bold/italic/underline formatting).
         pub async fn add_runs(self, runs: Vec<DocxRun>) -> Self {
-            self.add_paragraph(DocxParagraph { runs, style: None, extra_paragraph_properties: Vec::new() })
+            self.add_paragraph(DocxParagraph { runs, style: None, extra_paragraph_properties: Vec::new() }).await
         }
 
         /// ➕️ Appends a table.
         pub async fn add_table(mut self, table: DocxTable) -> Self {
-            self.inner = self.inner.add_table(table);
+            self.inner = self.inner.add_table(table).await;
             self
         }
 
         /// ➕️ Appends (or replaces, by `id`) a named style.
         pub async fn add_style(mut self, style: DocxStyle) -> Self {
-            self.inner = self.inner.add_style(style);
+            self.inner = self.inner.add_style(style).await;
             self
         }
     }
@@ -57,29 +57,29 @@ pub mod derived_construction {
         type Diff = DocxDiff;
 
         async fn empty() -> Self {
-            Self { inner: DocxAnyBuilder::empty() }
+            Self { inner: DocxAnyBuilder::empty().await }
         }
 
         async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
-            Self { inner: DocxAnyBuilder::from_snapshot(snapshot) }
+            Self { inner: DocxAnyBuilder::from_snapshot(snapshot).await }
         }
 
         async fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self { inner: DocxAnyBuilder::from_text(text)? })
+            Ok(Self { inner: DocxAnyBuilder::from_text(text).await? })
         }
 
         async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self { inner: DocxAnyBuilder::from_binary(bytes)? })
+            Ok(Self { inner: DocxAnyBuilder::from_binary(bytes).await? })
         }
 
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let (inner, diff) = self.inner.mutate(mutation);
+            let (inner, diff) = self.inner.mutate(mutation).await;
             self.inner = inner;
             (self, diff)
         }
 
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            self.inner = self.inner.absorb(diff)?;
+            self.inner = self.inner.absorb(diff).await?;
             Ok(self)
         }
 
@@ -90,7 +90,7 @@ pub mod derived_construction {
         /// materialized `word/document.xml`/relationship to find at all, and the shared `DocxAnyBuilder`
         /// this wraps doesn't materialize either until actual encode.
         async fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
-            let mut snapshot = self.inner.build()?;
+            let mut snapshot = self.inner.build().await?;
             crate::artifacts::docx::standards::v_ecma_376::subsets::any::io::export::serializers::sync_main_part(&mut snapshot);
             let hard: Vec<Diagnostic> = check_transitional_conformance(&snapshot).into_iter().filter(|d| matches!(d.severity, Severity::Error | Severity::Fatal)).collect();
             if hard.is_empty() {
@@ -157,9 +157,9 @@ pub mod derived_analysis {
     /// relationship-type SUFFIX (`/officeDocument`) so this resolves for either conformance class; see
     /// `✳️strict::analyzer::main_document_part`'s doc comment for the full rationale.
     async fn main_document_part<'a>(opc: &'a OpcPackage) -> Option<(&'a OpcPart, String)> {
-        let rel = opc.relationships_for("").iter().find(|r| r.rel_type.ends_with("/officeDocument"))?;
+        let rel = opc.relationships_for("").await.iter().find(|r| r.rel_type.ends_with("/officeDocument"))?;
         let path = resolve_relationship_target("", &rel.target);
-        opc.part(&path).map(|p| (p, path))
+        opc.part(&path).await.map(|p| (p, path))
     }
 
     async fn part_contains(bytes: &[u8], needle: &str) -> bool {
@@ -182,12 +182,12 @@ pub mod derived_analysis {
         let opc = &snapshot.opc;
         let mut out = Vec::new();
 
-        match main_document_part(opc) {
+        match main_document_part(opc).await {
             Some((part, path)) => {
                 if !part_contains(&part.bytes, TRANSITIONAL_MAIN_NS) {
                     out.push(hard(CODE_MAIN_NS_MISSING, format!("main document part {path} does not declare the transitional WordprocessingML namespace {TRANSITIONAL_MAIN_NS}")));
                 }
-                if part_contains(&part.bytes, "conformance=\"strict\"") {
+                if part_contains(&part.bytes, "conformance=\"strict\"").await {
                     out.push(soft(CODE_CONFORMANCE_ATTR, format!("main document part {path} root element declares conformance=\"strict\" -- transitional documents must leave it absent or =\"transitional\"")));
                 }
             }
@@ -195,7 +195,7 @@ pub mod derived_analysis {
         }
 
         for part in &opc.parts {
-            if part_contains(&part.bytes, STRICT_NS_FAMILY_PREFIX) {
+            if part_contains(&part.bytes, STRICT_NS_FAMILY_PREFIX).await {
                 out.push(hard(CODE_STRICT_NS_PRESENT, format!("part {} contains a strict-family namespace ({STRICT_NS_FAMILY_PREFIX}) -- transitional conformance forbids mixed namespaces", part.path)));
             }
         }
@@ -225,15 +225,15 @@ pub mod derived_analysis {
         const DIALECT: Dialect = DIALECT;
 
         async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
-            DocxAnyAnalyzer::sniff(source)
+            DocxAnyAnalyzer::sniff(source).await
         }
 
         async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
-            let inner = DocxAnyAnalyzer::analyze(sources);
+            let inner = DocxAnyAnalyzer::analyze(sources).await;
             let mut diagnostics = inner.diagnostics.clone();
             let mut confidence = inner.confidence;
             if let Some(snapshot) = &inner.parts.snapshot {
-                let checks = check_transitional_conformance(snapshot);
+                let checks = check_transitional_conformance(snapshot).await;
                 if checks.iter().any(|d| matches!(d.severity, Severity::Error | Severity::Fatal)) {
                     confidence = IoConfidence::Low;
                 }

@@ -130,7 +130,7 @@ impl ArtifactSerializer for SemioMeshToGltf {
                     None => None,
                 };
 
-                gprims.push(GltfPrimitive { attributes, indices, material, mode: Some(topology_to_gltf_mode(prim.topology)), targets: Vec::new(), extensions: None, extras: None });
+                gprims.push(GltfPrimitive { attributes, indices, material, mode: Some(topology_to_gltf_mode(prim.topology).await), targets: Vec::new(), extensions: None, extras: None });
             }
             gltf_meshes.push(GltfMesh { primitives: gprims, weights: Vec::new(), name: Some(mesh.id.clone()), extensions: None, extras: None });
         }
@@ -166,7 +166,7 @@ impl ArtifactSerializer for SemioMeshToGltf {
         for tex in &from.textures {
             let mime = if tex.mime.is_empty() { "application/octet-stream".to_string() } else { tex.mime.clone() };
             let img_idx = gltf_images.len();
-            gltf_images.push(GltfImage { uri: Some(encode_data_uri(&mime, &tex.bytes)), mime_type: Some(tex.mime.clone()), buffer_view: None, name: Some(tex.id.clone()), extensions: None, extras: None });
+            gltf_images.push(GltfImage { uri: Some(encode_data_uri(&mime, &tex.bytes).await), mime_type: Some(tex.mime.clone()), buffer_view: None, name: Some(tex.id.clone()), extensions: None, extras: None });
             gltf_textures.push(GltfTexture { sampler: None, source: Some(img_idx), name: Some(tex.id.clone()), extensions: None, extras: None });
         }
 

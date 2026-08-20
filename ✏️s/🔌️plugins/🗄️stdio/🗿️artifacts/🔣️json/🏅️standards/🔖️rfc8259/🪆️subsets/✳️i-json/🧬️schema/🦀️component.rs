@@ -28,34 +28,34 @@ pub mod derived_construction {
         type Diff = JsonDiff;
 
         async fn empty() -> Self {
-            Self(JsonAnyBuilder::empty())
+            Self(JsonAnyBuilder::empty().await)
         }
 
         async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
-            Self(JsonAnyBuilder::from_snapshot(snapshot))
+            Self(JsonAnyBuilder::from_snapshot(snapshot).await)
         }
 
         async fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self(JsonAnyBuilder::from_text(text)?))
+            Ok(Self(JsonAnyBuilder::from_text(text).await?))
         }
 
         async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self(JsonAnyBuilder::from_binary(bytes)?))
+            Ok(Self(JsonAnyBuilder::from_binary(bytes).await?))
         }
 
         async fn mutate(self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let (inner, diff) = self.0.mutate(mutation);
+            let (inner, diff) = self.0.mutate(mutation).await;
             (Self(inner), diff)
         }
 
         async fn absorb(self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            Ok(Self(self.0.absorb(diff)?))
+            Ok(Self(self.0.absorb(diff).await?))
         }
 
         /// 🛡️ The real construction gate: however `self.0`'s inner snapshot got here, a hard RFC 7493
         /// violation fails `build()` -- soft/advisory diagnostics pass through as `Ok`.
         async fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
-            let snapshot = self.0.build()?;
+            let snapshot = self.0.build().await?;
             let hard: Vec<Diagnostic> = check_i_json_conformance(&snapshot).into_iter().filter(|d| matches!(d.severity, Severity::Error | Severity::Fatal)).collect();
             if hard.is_empty() {
                 Ok(snapshot)
@@ -131,7 +131,7 @@ pub mod derived_analysis {
                 let mut seen: std::collections::HashSet<&str> = std::collections::HashSet::new();
                 for member in members {
                     if !seen.insert(member.key.as_str()) {
-                        out.push(hard(CODE_DUPLICATE_MEMBER, format!("object member name '{}' appears more than once -- RFC 7493 §2.3 forbids duplicate member names within one object", member.key)));
+                        out.push(hard(CODE_DUPLICATE_MEMBER, format!("object member name '{}' appears more than once -- RFC 7493 §2.3 forbids duplicate member names within one object", member.key)).await);
                     }
                     scan_duplicate_members(&member.value, out);
                 }
@@ -156,14 +156,14 @@ pub mod derived_analysis {
     /// are checked exactly.
     async fn scan_unsafe_integers(value: &JsonValue, out: &mut Vec<Diagnostic>) {
         match value {
-            JsonValue::Number { lexeme } if is_integer_lexeme(lexeme) => match lexeme.parse::<i128>() {
+            JsonValue::Number { lexeme } if is_integer_lexeme(lexeme).await => match lexeme.parse::<i128>() {
                 Ok(n) if n.unsigned_abs() > MAX_SAFE_INTEGER_MAGNITUDE as u128 => {
-                    out.push(hard(CODE_UNSAFE_INTEGER, format!("integer {lexeme} exceeds ±(2^53-1) = ±{MAX_SAFE_INTEGER_MAGNITUDE} and is not exactly representable as an IEEE-754 double -- RFC 7493 §2.2 forbids this for I-JSON")));
+                    out.push(hard(CODE_UNSAFE_INTEGER, format!("integer {lexeme} exceeds ±(2^53-1) = ±{MAX_SAFE_INTEGER_MAGNITUDE} and is not exactly representable as an IEEE-754 double -- RFC 7493 §2.2 forbids this for I-JSON")).await);
                 }
                 Ok(_) => {}
                 Err(_) => {
                     // Too large even for i128 -- definitely exceeds the much smaller 2^53-1 bound.
-                    out.push(hard(CODE_UNSAFE_INTEGER, format!("integer {lexeme} is far larger than ±(2^53-1) and is not exactly representable as an IEEE-754 double -- RFC 7493 §2.2 forbids this for I-JSON")));
+                    out.push(hard(CODE_UNSAFE_INTEGER, format!("integer {lexeme} is far larger than ±(2^53-1) and is not exactly representable as an IEEE-754 double -- RFC 7493 §2.2 forbids this for I-JSON")).await);
                 }
             },
             JsonValue::Number { .. } => {}
@@ -194,7 +194,7 @@ pub mod derived_analysis {
         match value {
             JsonValue::String { value: s } => {
                 if s.chars().any(is_unicode_noncharacter) {
-                    out.push(soft(CODE_STRING_NONCHARACTER, format!("string {s:?} contains a Unicode noncharacter (U+FFFE/U+FFFF, U+FDD0-U+FDEF, or a per-plane equivalent) -- RFC 7493 §2.3 advises against these in I-JSON text")));
+                    out.push(soft(CODE_STRING_NONCHARACTER, format!("string {s:?} contains a Unicode noncharacter (U+FFFE/U+FFFF, U+FDD0-U+FDEF, or a per-plane equivalent) -- RFC 7493 §2.3 advises against these in I-JSON text")).await);
                 }
             }
             JsonValue::Object { members } => {
@@ -237,15 +237,15 @@ pub mod derived_analysis {
         const DIALECT: Dialect = DIALECT;
 
         async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
-            JsonAnyAnalyzer::sniff(source)
+            JsonAnyAnalyzer::sniff(source).await
         }
 
         async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
-            let inner = JsonAnyAnalyzer::analyze(sources);
+            let inner = JsonAnyAnalyzer::analyze(sources).await;
             let mut diagnostics = inner.diagnostics.clone();
             let mut confidence = inner.confidence;
             if let Some(snapshot) = &inner.parts.snapshot {
-                let checks = check_i_json_conformance(snapshot);
+                let checks = check_i_json_conformance(snapshot).await;
                 if checks.iter().any(|d| matches!(d.severity, Severity::Error | Severity::Fatal)) {
                     confidence = IoConfidence::Low;
                 }

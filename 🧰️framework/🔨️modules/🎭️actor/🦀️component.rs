@@ -50,7 +50,7 @@ pub mod pack {
         out.push(v as u8);
     }
     pub async fn read_bool(bytes: &[u8], pos: &mut usize, what: &'static str) -> Result<bool, PackError> {
-        Ok(read_u8(bytes, pos, what)? != 0)
+        Ok(read_u8(bytes, pos, what).await? != 0)
     }
 
     pub async fn write_u16(out: &mut Vec<u8>, v: u16) {
@@ -125,11 +125,11 @@ pub mod pack {
     }
 
     pub async fn write_bytes(out: &mut Vec<u8>, v: &[u8]) {
-        write_varint_u64(out, v.len() as u64);
+        write_varint_u64(out, v.len() as u64).await;
         out.extend_from_slice(v);
     }
     pub async fn read_bytes(bytes: &[u8], pos: &mut usize, what: &'static str) -> Result<Vec<u8>, PackError> {
-        let len = read_varint_u64(bytes, pos, what)? as usize;
+        let len = read_varint_u64(bytes, pos, what).await? as usize;
         let end = *pos + len;
         let slice = bytes.get(*pos..end).ok_or(PackError::Truncated(*pos, what))?;
         *pos = end;
@@ -137,11 +137,11 @@ pub mod pack {
     }
 
     pub async fn write_str(out: &mut Vec<u8>, v: &str) {
-        write_bytes(out, v.as_bytes());
+        write_bytes(out, v.as_bytes()).await;
     }
     pub async fn read_str(bytes: &[u8], pos: &mut usize, what: &'static str) -> Result<String, PackError> {
         let start = *pos;
-        let raw = read_bytes(bytes, pos, what)?;
+        let raw = read_bytes(bytes, pos, what).await?;
         String::from_utf8(raw).map_err(|_| PackError::InvalidUtf8(what, start))
     }
 
@@ -155,31 +155,55 @@ pub mod pack {
         Ok(slice.try_into().expect("32 bytes"))
     }
 
-    pub async fn write_opt<T>(out: &mut Vec<u8>, v: &Option<T>, f: impl FnOnce(&mut Vec<u8>, &T)) {
-        write_bool(out, v.is_some());
+    /// 🪡 Concrete (non-generic) `Option<Vec<u8>>` combinators — a closure-based generic
+    /// `write_opt`/`read_opt` hits rustc's "implementation of `AsyncFnOnce` is not general enough"
+    /// (the returned per-call future can't be proven to outlive a HRTB-quantified borrow of `out`/
+    /// `bytes`, a known async-closures rough edge). Concrete types sidestep it entirely; every
+    /// `Option<Vec<u8>>` field in this file's wire format goes through these two.
+    pub async fn write_opt_bytes(out: &mut Vec<u8>, v: &Option<Vec<u8>>) {
+        write_bool(out, v.is_some()).await;
         if let Some(x) = v {
-            f(out, x);
+            write_bytes(out, x).await;
         }
     }
-    pub async fn read_opt<T>(bytes: &[u8], pos: &mut usize, what: &'static str, f: impl FnOnce(&[u8], &mut usize) -> Result<T, PackError>) -> Result<Option<T>, PackError> {
-        if read_bool(bytes, pos, what)? {
-            Ok(Some(f(bytes, pos)?))
+    pub async fn read_opt_bytes(bytes: &[u8], pos: &mut usize, what: &'static str) -> Result<Option<Vec<u8>>, PackError> {
+        if read_bool(bytes, pos, what).await? {
+            Ok(Some(read_bytes(bytes, pos, what).await?))
         } else {
             Ok(None)
         }
     }
 
-    pub async fn write_vec<T>(out: &mut Vec<u8>, v: &[T], mut f: impl FnMut(&mut Vec<u8>, &T)) {
-        write_varint_u64(out, v.len() as u64);
-        for item in v {
-            f(out, item);
+    /// 🪡 Same rationale as `write_opt_bytes`/`read_opt_bytes`, for `Option<u64>` (deadlines/wake times).
+    pub async fn write_opt_u64(out: &mut Vec<u8>, v: &Option<u64>) {
+        write_bool(out, v.is_some()).await;
+        if let Some(x) = v {
+            write_u64(out, *x).await;
         }
     }
-    pub async fn read_vec<T>(bytes: &[u8], pos: &mut usize, what: &'static str, mut f: impl FnMut(&[u8], &mut usize) -> Result<T, PackError>) -> Result<Vec<T>, PackError> {
-        let len = read_varint_u64(bytes, pos, what)? as usize;
+    pub async fn read_opt_u64(bytes: &[u8], pos: &mut usize, what: &'static str) -> Result<Option<u64>, PackError> {
+        if read_bool(bytes, pos, what).await? {
+            Ok(Some(read_u64(bytes, pos, what).await?))
+        } else {
+            Ok(None)
+        }
+    }
+
+    /// 🪡 `f` is a bare async fn item (`Type::pack_encode`), never a closure — fn items are
+    /// automatically higher-ranked over their argument lifetimes, so they don't hit the
+    /// `write_opt_bytes` doc's HRTB rough edge. `(item, out)` order (not `(out, item)`) is what
+    /// lets `T::pack_encode`'s own `(&self, out)` signature line up without an adapter closure.
+    pub async fn write_vec<T>(out: &mut Vec<u8>, v: &[T], mut f: impl AsyncFnMut(&T, &mut Vec<u8>)) {
+        write_varint_u64(out, v.len() as u64).await;
+        for item in v {
+            f(item, out).await;
+        }
+    }
+    pub async fn read_vec<T>(bytes: &[u8], pos: &mut usize, what: &'static str, mut f: impl AsyncFnMut(&[u8], &mut usize) -> Result<T, PackError>) -> Result<Vec<T>, PackError> {
+        let len = read_varint_u64(bytes, pos, what).await? as usize;
         let mut out = Vec::with_capacity(len.min(1 << 20));
         for _ in 0..len {
-            out.push(f(bytes, pos)?);
+            out.push(f(bytes, pos).await?);
         }
         Ok(out)
     }
@@ -194,10 +218,10 @@ pub struct PackageId(pub String);
 
 impl PackageId {
     pub async fn pack_encode(&self, out: &mut Vec<u8>) {
-        pack::write_str(out, &self.0);
+        pack::write_str(out, &self.0).await;
     }
     pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
-        Ok(Self(pack::read_str(bytes, pos, "PackageId")?))
+        Ok(Self(pack::read_str(bytes, pos, "PackageId").await?))
     }
 }
 
@@ -218,10 +242,10 @@ impl std::fmt::Debug for PackageHash {
 
 impl PackageHash {
     pub async fn pack_encode(&self, out: &mut Vec<u8>) {
-        pack::write_hash32(out, &self.0);
+        pack::write_hash32(out, &self.0).await;
     }
     pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
-        Ok(Self(pack::read_hash32(bytes, pos, "PackageHash")?))
+        Ok(Self(pack::read_hash32(bytes, pos, "PackageHash").await?))
     }
 }
 //#endregion 📦️PackageId
@@ -253,33 +277,37 @@ impl ActorId {
         Self(bits)
     }
 
-    pub async fn plugin_ordinal(self) -> u16 {
+    // 🚫️async: E1 pure accessor consumed by `Debug::fmt` (external trait impl below) — see R9
+    pub fn plugin_ordinal(self) -> u16 {
         (self.0 >> ACTOR_ID_PLUGIN_SHIFT) as u16
     }
 
-    pub async fn kind_tag(self) -> u8 {
+    // 🚫️async: E1 pure accessor consumed by `Debug::fmt` (external trait impl below) — see R9
+    pub fn kind_tag(self) -> u8 {
         ((self.0 >> ACTOR_ID_KIND_SHIFT) & ACTOR_ID_KIND_MASK) as u8
     }
 
-    pub async fn ordinal(self) -> u32 {
+    // 🚫️async: E1 pure accessor consumed by `Debug::fmt` (external trait impl below) — see R9
+    pub fn ordinal(self) -> u32 {
         ((self.0 >> ACTOR_ID_ORDINAL_SHIFT) & ACTOR_ID_ORDINAL_MASK) as u32
     }
 
-    pub async fn generation(self) -> u16 {
+    // 🚫️async: E1 pure accessor consumed by `Debug::fmt` (external trait impl below) — see R9
+    pub fn generation(self) -> u16 {
         (self.0 & ACTOR_ID_GENERATION_MASK) as u16
     }
 
     /// 🔁️ Restart-after-trap: same plugin/kind/ordinal, generation bumped (wraps at 14 bits — a
     /// restart storm beyond 16384 generations is itself a `Disabled`-worthy condition upstream).
     pub async fn next_generation(self) -> Self {
-        Self::new(self.plugin_ordinal(), self.kind_tag(), self.ordinal(), self.generation().wrapping_add(1) & (ACTOR_ID_GENERATION_MASK as u16))
+        Self::new(self.plugin_ordinal(), self.kind_tag(), self.ordinal(), self.generation().wrapping_add(1) & (ACTOR_ID_GENERATION_MASK as u16)).await
     }
 
     pub async fn pack_encode(&self, out: &mut Vec<u8>) {
-        pack::write_u64(out, self.0);
+        pack::write_u64(out, self.0).await;
     }
     pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
-        Ok(Self(pack::read_u64(bytes, pos, "ActorId")?))
+        Ok(Self(pack::read_u64(bytes, pos, "ActorId").await?))
     }
 }
 
@@ -314,30 +342,30 @@ impl ActorKind {
     pub async fn pack_encode(&self, out: &mut Vec<u8>) {
         match self {
             ActorKind::PluginApp { plugin, app_id, instance_id } => {
-                pack::write_u8(out, 0);
-                plugin.pack_encode(out);
-                pack::write_str(out, app_id);
-                pack::write_u32(out, *instance_id);
+                pack::write_u8(out, 0).await;
+                plugin.pack_encode(out).await;
+                pack::write_str(out, app_id).await;
+                pack::write_u32(out, *instance_id).await;
             }
             ActorKind::Extension { plugin, extension_id } => {
-                pack::write_u8(out, 1);
-                plugin.pack_encode(out);
-                pack::write_str(out, extension_id);
+                pack::write_u8(out, 1).await;
+                plugin.pack_encode(out).await;
+                pack::write_str(out, extension_id).await;
             }
             ActorKind::Job { owner, job_id } => {
-                pack::write_u8(out, 2);
-                owner.pack_encode(out);
-                pack::write_u64(out, *job_id);
+                pack::write_u8(out, 2).await;
+                owner.pack_encode(out).await;
+                pack::write_u64(out, *job_id).await;
             }
         }
     }
 
     pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
-        let tag = pack::read_u8(bytes, pos, "ActorKind")?;
+        let tag = pack::read_u8(bytes, pos, "ActorKind").await?;
         match tag {
-            0 => Ok(ActorKind::PluginApp { plugin: PackageId::pack_decode(bytes, pos)?, app_id: pack::read_str(bytes, pos, "ActorKind::app_id")?, instance_id: pack::read_u32(bytes, pos, "ActorKind::instance_id")? }),
-            1 => Ok(ActorKind::Extension { plugin: PackageId::pack_decode(bytes, pos)?, extension_id: pack::read_str(bytes, pos, "ActorKind::extension_id")? }),
-            2 => Ok(ActorKind::Job { owner: ActorId::pack_decode(bytes, pos)?, job_id: pack::read_u64(bytes, pos, "ActorKind::job_id")? }),
+            0 => Ok(ActorKind::PluginApp { plugin: PackageId::pack_decode(bytes, pos).await?, app_id: pack::read_str(bytes, pos, "ActorKind::app_id").await?, instance_id: pack::read_u32(bytes, pos, "ActorKind::instance_id").await? }),
+            1 => Ok(ActorKind::Extension { plugin: PackageId::pack_decode(bytes, pos).await?, extension_id: pack::read_str(bytes, pos, "ActorKind::extension_id").await? }),
+            2 => Ok(ActorKind::Job { owner: ActorId::pack_decode(bytes, pos).await?, job_id: pack::read_u64(bytes, pos, "ActorKind::job_id").await? }),
             other => Err(pack::PackError::InvalidTag { what: "ActorKind", tag: other, offset: *pos }),
         }
     }
@@ -370,7 +398,9 @@ impl Lane {
     }
 
     /// ⚖️ Level-2 DRR quantum weight — biases actor selection within a plugin toward interactive work.
-    pub async fn weight(self) -> u32 {
+    // 🚫️async: E1-adjacent pure computation — its one consumer, `Scheduler::actor_weight`, is
+    // itself sync for the same reason (see that fn's own tag) — see R9 residue shape 1.
+    pub fn weight(self) -> u32 {
         match self {
             Lane::Interactive => 8,
             Lane::UserVisible => 4,
@@ -380,7 +410,7 @@ impl Lane {
     }
 
     async fn tag(self) -> u8 {
-        self.priority_rank() as u8
+        self.priority_rank().await as u8
     }
 
     async fn from_tag(tag: u8) -> Result<Self, pack::PackError> {
@@ -394,11 +424,11 @@ impl Lane {
     }
 
     pub async fn pack_encode(&self, out: &mut Vec<u8>) {
-        pack::write_u8(out, self.tag());
+        pack::write_u8(out, self.tag().await).await;
     }
     pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
-        let tag = pack::read_u8(bytes, pos, "Lane")?;
-        Self::from_tag(tag)
+        let tag = pack::read_u8(bytes, pos, "Lane").await?;
+        Self::from_tag(tag).await
     }
 }
 //#endregion 🛣️Lane
@@ -435,23 +465,23 @@ impl Budget {
     }
 
     pub async fn pack_encode(&self, out: &mut Vec<u8>) {
-        pack::write_u64(out, self.fuel);
-        pack::write_u32(out, self.wall_ms);
-        pack::write_u64(out, self.memory_bytes);
-        pack::write_u32(out, self.ui_nodes);
-        pack::write_u16(out, self.mailbox_len);
-        pack::write_u32(out, self.max_effects);
-        pack::write_u32(out, self.max_patch_bytes);
+        pack::write_u64(out, self.fuel).await;
+        pack::write_u32(out, self.wall_ms).await;
+        pack::write_u64(out, self.memory_bytes).await;
+        pack::write_u32(out, self.ui_nodes).await;
+        pack::write_u16(out, self.mailbox_len).await;
+        pack::write_u32(out, self.max_effects).await;
+        pack::write_u32(out, self.max_patch_bytes).await;
     }
     pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
         Ok(Self {
-            fuel: pack::read_u64(bytes, pos, "Budget::fuel")?,
-            wall_ms: pack::read_u32(bytes, pos, "Budget::wall_ms")?,
-            memory_bytes: pack::read_u64(bytes, pos, "Budget::memory_bytes")?,
-            ui_nodes: pack::read_u32(bytes, pos, "Budget::ui_nodes")?,
-            mailbox_len: pack::read_u16(bytes, pos, "Budget::mailbox_len")?,
-            max_effects: pack::read_u32(bytes, pos, "Budget::max_effects")?,
-            max_patch_bytes: pack::read_u32(bytes, pos, "Budget::max_patch_bytes")?,
+            fuel: pack::read_u64(bytes, pos, "Budget::fuel").await?,
+            wall_ms: pack::read_u32(bytes, pos, "Budget::wall_ms").await?,
+            memory_bytes: pack::read_u64(bytes, pos, "Budget::memory_bytes").await?,
+            ui_nodes: pack::read_u32(bytes, pos, "Budget::ui_nodes").await?,
+            mailbox_len: pack::read_u16(bytes, pos, "Budget::mailbox_len").await?,
+            max_effects: pack::read_u32(bytes, pos, "Budget::max_effects").await?,
+            max_patch_bytes: pack::read_u32(bytes, pos, "Budget::max_patch_bytes").await?,
         })
     }
 }
@@ -485,10 +515,10 @@ pub struct WindowId(pub u32);
 
 impl WindowId {
     pub async fn pack_encode(&self, out: &mut Vec<u8>) {
-        pack::write_u32(out, self.0);
+        pack::write_u32(out, self.0).await;
     }
     pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
-        Ok(Self(pack::read_u32(bytes, pos, "WindowId")?))
+        Ok(Self(pack::read_u32(bytes, pos, "WindowId").await?))
     }
 }
 
@@ -513,27 +543,27 @@ impl Origin {
     pub async fn pack_encode(&self, out: &mut Vec<u8>) {
         match self {
             Origin::Ui { window } => {
-                pack::write_u8(out, 0);
-                window.pack_encode(out);
+                pack::write_u8(out, 0).await;
+                window.pack_encode(out).await;
             }
             Origin::Actor { id } => {
-                pack::write_u8(out, 1);
-                id.pack_encode(out);
+                pack::write_u8(out, 1).await;
+                id.pack_encode(out).await;
             }
-            Origin::Kernel => pack::write_u8(out, 2),
+            Origin::Kernel => pack::write_u8(out, 2).await,
             Origin::Bus { topic } => {
-                pack::write_u8(out, 3);
-                pack::write_str(out, topic);
+                pack::write_u8(out, 3).await;
+                pack::write_str(out, topic).await;
             }
         }
     }
     pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
-        let tag = pack::read_u8(bytes, pos, "Origin")?;
+        let tag = pack::read_u8(bytes, pos, "Origin").await?;
         match tag {
-            0 => Ok(Origin::Ui { window: WindowId::pack_decode(bytes, pos)? }),
-            1 => Ok(Origin::Actor { id: ActorId::pack_decode(bytes, pos)? }),
+            0 => Ok(Origin::Ui { window: WindowId::pack_decode(bytes, pos).await? }),
+            1 => Ok(Origin::Actor { id: ActorId::pack_decode(bytes, pos).await? }),
             2 => Ok(Origin::Kernel),
-            3 => Ok(Origin::Bus { topic: pack::read_str(bytes, pos, "Origin::topic")? }),
+            3 => Ok(Origin::Bus { topic: pack::read_str(bytes, pos, "Origin::topic").await? }),
             other => Err(pack::PackError::InvalidTag { what: "Origin", tag: other, offset: *pos }),
         }
     }
@@ -565,35 +595,38 @@ impl Payload {
     pub async fn pack_encode(&self, out: &mut Vec<u8>) {
         match self {
             Payload::Event { bytes } => {
-                pack::write_u8(out, 0);
-                pack::write_bytes(out, bytes);
+                pack::write_u8(out, 0).await;
+                pack::write_bytes(out, bytes).await;
             }
             Payload::Suspend { checkpoint } => {
-                pack::write_u8(out, 1);
-                pack::write_bool(out, *checkpoint);
+                pack::write_u8(out, 1).await;
+                pack::write_bool(out, *checkpoint).await;
             }
             Payload::Resume { checkpoint } => {
-                pack::write_u8(out, 2);
-                pack::write_opt(out, checkpoint, |o, v| pack::write_bytes(o, v));
+                pack::write_u8(out, 2).await;
+                pack::write_bool(out, checkpoint.is_some()).await;
+                if let Some(v) = checkpoint {
+                    pack::write_bytes(out, v).await;
+                }
             }
             Payload::Cancel { seq } => {
-                pack::write_u8(out, 3);
-                pack::write_u64(out, *seq);
+                pack::write_u8(out, 3).await;
+                pack::write_u64(out, *seq).await;
             }
             Payload::JobStep { job } => {
-                pack::write_u8(out, 4);
-                pack::write_u64(out, *job);
+                pack::write_u8(out, 4).await;
+                pack::write_u64(out, *job).await;
             }
         }
     }
     pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
-        let tag = pack::read_u8(bytes, pos, "Payload")?;
+        let tag = pack::read_u8(bytes, pos, "Payload").await?;
         match tag {
-            0 => Ok(Payload::Event { bytes: pack::read_bytes(bytes, pos, "Payload::Event")? }),
-            1 => Ok(Payload::Suspend { checkpoint: pack::read_bool(bytes, pos, "Payload::Suspend")? }),
-            2 => Ok(Payload::Resume { checkpoint: pack::read_opt(bytes, pos, "Payload::Resume", |b, p| pack::read_bytes(b, p, "Payload::Resume::checkpoint"))? }),
-            3 => Ok(Payload::Cancel { seq: pack::read_u64(bytes, pos, "Payload::Cancel")? }),
-            4 => Ok(Payload::JobStep { job: pack::read_u64(bytes, pos, "Payload::JobStep")? }),
+            0 => Ok(Payload::Event { bytes: pack::read_bytes(bytes, pos, "Payload::Event").await? }),
+            1 => Ok(Payload::Suspend { checkpoint: pack::read_bool(bytes, pos, "Payload::Suspend").await? }),
+            2 => Ok(Payload::Resume { checkpoint: pack::read_opt_bytes(bytes, pos, "Payload::Resume").await? }),
+            3 => Ok(Payload::Cancel { seq: pack::read_u64(bytes, pos, "Payload::Cancel").await? }),
+            4 => Ok(Payload::JobStep { job: pack::read_u64(bytes, pos, "Payload::JobStep").await? }),
             other => Err(pack::PackError::InvalidTag { what: "Payload", tag: other, offset: *pos }),
         }
     }
@@ -608,10 +641,10 @@ pub struct CoalesceKey(pub String);
 
 impl CoalesceKey {
     pub async fn pack_encode(&self, out: &mut Vec<u8>) {
-        pack::write_str(out, &self.0);
+        pack::write_str(out, &self.0).await;
     }
     pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
-        Ok(Self(pack::read_str(bytes, pos, "CoalesceKey")?))
+        Ok(Self(pack::read_str(bytes, pos, "CoalesceKey").await?))
     }
 }
 //#endregion 🔑️CoalesceKey
@@ -634,26 +667,32 @@ pub struct Envelope {
 
 impl Envelope {
     pub async fn pack_encode(&self, out: &mut Vec<u8>) {
-        self.to.pack_encode(out);
-        self.from.pack_encode(out);
-        self.lane.pack_encode(out);
-        pack::write_u64(out, self.seq);
-        pack::write_opt(out, &self.deadline_ms, |o, v| pack::write_u64(o, *v));
-        pack::write_opt(out, &self.coalesce, |o, v| v.pack_encode(o));
-        pack::write_opt(out, &self.cancel_of, |o, v| pack::write_u64(o, *v));
-        self.payload.pack_encode(out);
+        self.to.pack_encode(out).await;
+        self.from.pack_encode(out).await;
+        self.lane.pack_encode(out).await;
+        pack::write_u64(out, self.seq).await;
+        pack::write_opt_u64(out, &self.deadline_ms).await;
+        pack::write_bool(out, self.coalesce.is_some()).await;
+        if let Some(key) = &self.coalesce {
+            key.pack_encode(out).await;
+        }
+        pack::write_opt_u64(out, &self.cancel_of).await;
+        self.payload.pack_encode(out).await;
     }
     pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
-        Ok(Self {
-            to: ActorId::pack_decode(bytes, pos)?,
-            from: Origin::pack_decode(bytes, pos)?,
-            lane: Lane::pack_decode(bytes, pos)?,
-            seq: pack::read_u64(bytes, pos, "Envelope::seq")?,
-            deadline_ms: pack::read_opt(bytes, pos, "Envelope::deadline_ms", |b, p| pack::read_u64(b, p, "deadline_ms"))?,
-            coalesce: pack::read_opt(bytes, pos, "Envelope::coalesce", CoalesceKey::pack_decode)?,
-            cancel_of: pack::read_opt(bytes, pos, "Envelope::cancel_of", |b, p| pack::read_u64(b, p, "cancel_of"))?,
-            payload: Payload::pack_decode(bytes, pos)?,
-        })
+        let to = ActorId::pack_decode(bytes, pos).await?;
+        let from = Origin::pack_decode(bytes, pos).await?;
+        let lane = Lane::pack_decode(bytes, pos).await?;
+        let seq = pack::read_u64(bytes, pos, "Envelope::seq").await?;
+        let deadline_ms = pack::read_opt_u64(bytes, pos, "Envelope::deadline_ms").await?;
+        let coalesce = if pack::read_bool(bytes, pos, "Envelope::coalesce").await? {
+            Some(CoalesceKey::pack_decode(bytes, pos).await?)
+        } else {
+            None
+        };
+        let cancel_of = pack::read_opt_u64(bytes, pos, "Envelope::cancel_of").await?;
+        let payload = Payload::pack_decode(bytes, pos).await?;
+        Ok(Self { to, from, lane, seq, deadline_ms, coalesce, cancel_of, payload })
     }
 }
 //#endregion ✉️Envelope
@@ -675,22 +714,22 @@ pub enum TurnStatus {
 impl TurnStatus {
     pub async fn pack_encode(&self, out: &mut Vec<u8>) {
         match self {
-            TurnStatus::Idle => pack::write_u8(out, 0),
-            TurnStatus::MoreWork => pack::write_u8(out, 1),
-            TurnStatus::CheckpointReady => pack::write_u8(out, 2),
+            TurnStatus::Idle => pack::write_u8(out, 0).await,
+            TurnStatus::MoreWork => pack::write_u8(out, 1).await,
+            TurnStatus::CheckpointReady => pack::write_u8(out, 2).await,
             TurnStatus::Faulted { detail } => {
-                pack::write_u8(out, 3);
-                pack::write_bytes(out, detail);
+                pack::write_u8(out, 3).await;
+                pack::write_bytes(out, detail).await;
             }
         }
     }
     pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
-        let tag = pack::read_u8(bytes, pos, "TurnStatus")?;
+        let tag = pack::read_u8(bytes, pos, "TurnStatus").await?;
         match tag {
             0 => Ok(TurnStatus::Idle),
             1 => Ok(TurnStatus::MoreWork),
             2 => Ok(TurnStatus::CheckpointReady),
-            3 => Ok(TurnStatus::Faulted { detail: pack::read_bytes(bytes, pos, "TurnStatus::Faulted")? }),
+            3 => Ok(TurnStatus::Faulted { detail: pack::read_bytes(bytes, pos, "TurnStatus::Faulted").await? }),
             other => Err(pack::PackError::InvalidTag { what: "TurnStatus", tag: other, offset: *pos }),
         }
     }
@@ -707,12 +746,12 @@ pub struct Usage {
 
 impl Usage {
     pub async fn pack_encode(&self, out: &mut Vec<u8>) {
-        pack::write_u64(out, self.fuel);
-        pack::write_u64(out, self.wall_us);
-        pack::write_u64(out, self.memory_bytes);
+        pack::write_u64(out, self.fuel).await;
+        pack::write_u64(out, self.wall_us).await;
+        pack::write_u64(out, self.memory_bytes).await;
     }
     pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
-        Ok(Self { fuel: pack::read_u64(bytes, pos, "Usage::fuel")?, wall_us: pack::read_u64(bytes, pos, "Usage::wall_us")?, memory_bytes: pack::read_u64(bytes, pos, "Usage::memory_bytes")? })
+        Ok(Self { fuel: pack::read_u64(bytes, pos, "Usage::fuel").await?, wall_us: pack::read_u64(bytes, pos, "Usage::wall_us").await?, memory_bytes: pack::read_u64(bytes, pos, "Usage::memory_bytes").await? })
     }
 }
 
@@ -730,19 +769,19 @@ pub struct TurnResult {
 
 impl TurnResult {
     pub async fn pack_encode(&self, out: &mut Vec<u8>) {
-        pack::write_bytes(out, &self.ui_patches);
-        pack::write_bytes(out, &self.effects);
-        pack::write_opt(out, &self.next_wake, |o, v| pack::write_u64(o, *v));
-        self.status.pack_encode(out);
-        self.usage.pack_encode(out);
+        pack::write_bytes(out, &self.ui_patches).await;
+        pack::write_bytes(out, &self.effects).await;
+        pack::write_opt_u64(out, &self.next_wake).await;
+        self.status.pack_encode(out).await;
+        self.usage.pack_encode(out).await;
     }
     pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
         Ok(Self {
-            ui_patches: pack::read_bytes(bytes, pos, "TurnResult::ui_patches")?,
-            effects: pack::read_bytes(bytes, pos, "TurnResult::effects")?,
-            next_wake: pack::read_opt(bytes, pos, "TurnResult::next_wake", |b, p| pack::read_u64(b, p, "next_wake"))?,
-            status: TurnStatus::pack_decode(bytes, pos)?,
-            usage: Usage::pack_decode(bytes, pos)?,
+            ui_patches: pack::read_bytes(bytes, pos, "TurnResult::ui_patches").await?,
+            effects: pack::read_bytes(bytes, pos, "TurnResult::effects").await?,
+            next_wake: pack::read_opt_u64(bytes, pos, "TurnResult::next_wake").await?,
+            status: TurnStatus::pack_decode(bytes, pos).await?,
+            usage: Usage::pack_decode(bytes, pos).await?,
         })
     }
 }
@@ -769,21 +808,21 @@ pub enum Backpressure {
 impl Backpressure {
     pub async fn pack_encode(&self, out: &mut Vec<u8>) {
         match self {
-            Backpressure::Accept => pack::write_u8(out, 0),
-            Backpressure::Coalesced => pack::write_u8(out, 1),
+            Backpressure::Accept => pack::write_u8(out, 0).await,
+            Backpressure::Coalesced => pack::write_u8(out, 1).await,
             Backpressure::Dropped { lane } => {
-                pack::write_u8(out, 2);
-                lane.pack_encode(out);
+                pack::write_u8(out, 2).await;
+                lane.pack_encode(out).await;
             }
-            Backpressure::Rejected => pack::write_u8(out, 3),
+            Backpressure::Rejected => pack::write_u8(out, 3).await,
         }
     }
     pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
-        let tag = pack::read_u8(bytes, pos, "Backpressure")?;
+        let tag = pack::read_u8(bytes, pos, "Backpressure").await?;
         match tag {
             0 => Ok(Backpressure::Accept),
             1 => Ok(Backpressure::Coalesced),
-            2 => Ok(Backpressure::Dropped { lane: Lane::pack_decode(bytes, pos)? }),
+            2 => Ok(Backpressure::Dropped { lane: Lane::pack_decode(bytes, pos).await? }),
             3 => Ok(Backpressure::Rejected),
             other => Err(pack::PackError::InvalidTag { what: "Backpressure", tag: other, offset: *pos }),
         }
@@ -811,15 +850,20 @@ impl Mailbox {
         Self { capacity, lanes: Default::default(), len: 0 }
     }
 
-    pub async fn len(&self) -> u16 {
+    // 🚫️async: E1-adjacent pure accessor — every consumer sits inside a sync `Iterator`/`Option`
+    // combinator closure or a test assertion — see R9 residue shape 1.
+    pub fn len(&self) -> u16 {
         self.len
     }
 
-    pub async fn is_empty(&self) -> bool {
+    // 🚫️async: E1-adjacent pure accessor — same rationale as `len` above — see R9 residue shape 1.
+    pub fn is_empty(&self) -> bool {
         self.len == 0
     }
 
-    pub async fn pressure(&self) -> f32 {
+    // 🚫️async: E1-adjacent pure accessor — its one consumer, `Kernel::mailbox_pressure` (below),
+    // sits inside a sync `Option::map` closure — see R9 residue shape 1.
+    pub fn pressure(&self) -> f32 {
         if self.capacity == 0 {
             return 1.0;
         }
@@ -830,14 +874,14 @@ impl Mailbox {
     /// not let a hot key jump the line), then bounded-ring enqueue with lowest-priority eviction.
     pub async fn enqueue(&mut self, envelope: Envelope) -> Backpressure {
         if let Some(key) = envelope.coalesce.clone() {
-            let lane_idx = envelope.lane.priority_rank();
+            let lane_idx = envelope.lane.priority_rank().await;
             if let Some(existing) = self.lanes[lane_idx].iter_mut().find(|e| e.coalesce.as_ref() == Some(&key)) {
                 *existing = envelope;
                 return Backpressure::Coalesced;
             }
         }
         if self.len >= self.capacity {
-            let incoming_rank = envelope.lane.priority_rank();
+            let incoming_rank = envelope.lane.priority_rank().await;
             let victim_rank = (incoming_rank + 1..4).rev().find(|&rank| !self.lanes[rank].is_empty());
             match victim_rank {
                 Some(rank) => {
@@ -851,7 +895,7 @@ impl Mailbox {
                 None => Backpressure::Rejected,
             }
         } else {
-            self.lanes[envelope.lane.priority_rank()].push_back(envelope);
+            self.lanes[envelope.lane.priority_rank().await].push_back(envelope);
             self.len += 1;
             Backpressure::Accept
         }
@@ -869,26 +913,29 @@ impl Mailbox {
     }
 
     /// 👀️ Earliest `deadline_ms` among all queued envelopes, for scheduler preemption checks.
-    pub async fn earliest_deadline(&self) -> Option<u64> {
+    // 🚫️async: E1-adjacent pure accessor — both consumers sit inside sync `Iterator::filter_map`
+    // closures (`Scheduler::tick`'s deadline-preemption and wake-at scans), which cannot await —
+    // see R9 residue shape 1.
+    pub fn earliest_deadline(&self) -> Option<u64> {
         self.lanes.iter().flatten().filter_map(|e| e.deadline_ms).min()
     }
 
     pub async fn pack_encode(&self, out: &mut Vec<u8>) {
-        pack::write_u16(out, self.capacity);
-        pack::write_u16(out, self.len);
+        pack::write_u16(out, self.capacity).await;
+        pack::write_u16(out, self.len).await;
         for lane in &self.lanes {
-            pack::write_varint_u64(out, lane.len() as u64);
+            pack::write_varint_u64(out, lane.len() as u64).await;
             for envelope in lane.iter() {
-                envelope.pack_encode(out);
+                envelope.pack_encode(out).await;
             }
         }
     }
     pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
-        let capacity = pack::read_u16(bytes, pos, "Mailbox::capacity")?;
-        let len = pack::read_u16(bytes, pos, "Mailbox::len")?;
+        let capacity = pack::read_u16(bytes, pos, "Mailbox::capacity").await?;
+        let len = pack::read_u16(bytes, pos, "Mailbox::len").await?;
         let mut lanes: [VecDeque<Envelope>; 4] = Default::default();
         for lane in lanes.iter_mut() {
-            *lane = pack::read_vec(bytes, pos, "Mailbox::lane", Envelope::pack_decode)?.into();
+            *lane = pack::read_vec(bytes, pos, "Mailbox::lane", Envelope::pack_decode).await?.into();
         }
         Ok(Self { capacity, lanes, len })
     }
@@ -906,11 +953,11 @@ pub struct CapabilityGrant {
 
 impl CapabilityGrant {
     pub async fn pack_encode(&self, out: &mut Vec<u8>) {
-        pack::write_str(out, &self.capability);
-        pack::write_opt(out, &self.scope, |o, v| pack::write_bytes(o, v));
+        pack::write_str(out, &self.capability).await;
+        pack::write_opt_bytes(out, &self.scope).await;
     }
     pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
-        Ok(Self { capability: pack::read_str(bytes, pos, "CapabilityGrant::capability")?, scope: pack::read_opt(bytes, pos, "CapabilityGrant::scope", |b, p| pack::read_bytes(b, p, "scope"))? })
+        Ok(Self { capability: pack::read_str(bytes, pos, "CapabilityGrant::capability").await?, scope: pack::read_opt_bytes(bytes, pos, "CapabilityGrant::scope").await? })
     }
 }
 //#endregion 🔐️CapabilityGrant
@@ -943,34 +990,34 @@ impl FailureSignal {
     pub async fn pack_encode(&self, out: &mut Vec<u8>) {
         match self {
             FailureSignal::DeadlineOverrun { ratio } => {
-                pack::write_u8(out, 0);
-                pack::write_f32(out, *ratio);
+                pack::write_u8(out, 0).await;
+                pack::write_f32(out, *ratio).await;
             }
-            FailureSignal::FuelExhausted => pack::write_u8(out, 1),
-            FailureSignal::MemoryLimit => pack::write_u8(out, 2),
-            FailureSignal::MailboxOverflow => pack::write_u8(out, 3),
-            FailureSignal::UiQuota => pack::write_u8(out, 4),
+            FailureSignal::FuelExhausted => pack::write_u8(out, 1).await,
+            FailureSignal::MemoryLimit => pack::write_u8(out, 2).await,
+            FailureSignal::MailboxOverflow => pack::write_u8(out, 3).await,
+            FailureSignal::UiQuota => pack::write_u8(out, 4).await,
             FailureSignal::Trap { detail } => {
-                pack::write_u8(out, 5);
-                pack::write_str(out, detail);
+                pack::write_u8(out, 5).await;
+                pack::write_str(out, detail).await;
             }
             FailureSignal::HeartbeatMissed { count } => {
-                pack::write_u8(out, 6);
-                pack::write_u32(out, *count);
+                pack::write_u8(out, 6).await;
+                pack::write_u32(out, *count).await;
             }
-            FailureSignal::ManualReset => pack::write_u8(out, 7),
+            FailureSignal::ManualReset => pack::write_u8(out, 7).await,
         }
     }
     pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
-        let tag = pack::read_u8(bytes, pos, "FailureSignal")?;
+        let tag = pack::read_u8(bytes, pos, "FailureSignal").await?;
         match tag {
-            0 => Ok(FailureSignal::DeadlineOverrun { ratio: pack::read_f32(bytes, pos, "FailureSignal::ratio")? }),
+            0 => Ok(FailureSignal::DeadlineOverrun { ratio: pack::read_f32(bytes, pos, "FailureSignal::ratio").await? }),
             1 => Ok(FailureSignal::FuelExhausted),
             2 => Ok(FailureSignal::MemoryLimit),
             3 => Ok(FailureSignal::MailboxOverflow),
             4 => Ok(FailureSignal::UiQuota),
-            5 => Ok(FailureSignal::Trap { detail: pack::read_str(bytes, pos, "FailureSignal::Trap")? }),
-            6 => Ok(FailureSignal::HeartbeatMissed { count: pack::read_u32(bytes, pos, "FailureSignal::count")? }),
+            5 => Ok(FailureSignal::Trap { detail: pack::read_str(bytes, pos, "FailureSignal::Trap").await? }),
+            6 => Ok(FailureSignal::HeartbeatMissed { count: pack::read_u32(bytes, pos, "FailureSignal::count").await? }),
             7 => Ok(FailureSignal::ManualReset),
             other => Err(pack::PackError::InvalidTag { what: "FailureSignal", tag: other, offset: *pos }),
         }
@@ -995,38 +1042,38 @@ pub enum FailureStage {
 impl FailureStage {
     pub async fn pack_encode(&self, out: &mut Vec<u8>) {
         match self {
-            FailureStage::Healthy => pack::write_u8(out, 0),
-            FailureStage::Warned => pack::write_u8(out, 1),
+            FailureStage::Healthy => pack::write_u8(out, 0).await,
+            FailureStage::Warned => pack::write_u8(out, 1).await,
             FailureStage::Throttled { factor } => {
-                pack::write_u8(out, 2);
-                pack::write_f32(out, *factor);
+                pack::write_u8(out, 2).await;
+                pack::write_f32(out, *factor).await;
             }
             FailureStage::Suspended { until } => {
-                pack::write_u8(out, 3);
-                pack::write_u64(out, *until);
+                pack::write_u8(out, 3).await;
+                pack::write_u64(out, *until).await;
             }
-            FailureStage::Cancelled => pack::write_u8(out, 4),
+            FailureStage::Cancelled => pack::write_u8(out, 4).await,
             FailureStage::Trapped { restarts } => {
-                pack::write_u8(out, 5);
-                pack::write_u32(out, *restarts);
+                pack::write_u8(out, 5).await;
+                pack::write_u32(out, *restarts).await;
             }
             FailureStage::Quarantined { until } => {
-                pack::write_u8(out, 6);
-                pack::write_u64(out, *until);
+                pack::write_u8(out, 6).await;
+                pack::write_u64(out, *until).await;
             }
-            FailureStage::Disabled => pack::write_u8(out, 7),
+            FailureStage::Disabled => pack::write_u8(out, 7).await,
         }
     }
     pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
-        let tag = pack::read_u8(bytes, pos, "FailureStage")?;
+        let tag = pack::read_u8(bytes, pos, "FailureStage").await?;
         match tag {
             0 => Ok(FailureStage::Healthy),
             1 => Ok(FailureStage::Warned),
-            2 => Ok(FailureStage::Throttled { factor: pack::read_f32(bytes, pos, "FailureStage::factor")? }),
-            3 => Ok(FailureStage::Suspended { until: pack::read_u64(bytes, pos, "FailureStage::until")? }),
+            2 => Ok(FailureStage::Throttled { factor: pack::read_f32(bytes, pos, "FailureStage::factor").await? }),
+            3 => Ok(FailureStage::Suspended { until: pack::read_u64(bytes, pos, "FailureStage::until").await? }),
             4 => Ok(FailureStage::Cancelled),
-            5 => Ok(FailureStage::Trapped { restarts: pack::read_u32(bytes, pos, "FailureStage::restarts")? }),
-            6 => Ok(FailureStage::Quarantined { until: pack::read_u64(bytes, pos, "FailureStage::until")? }),
+            5 => Ok(FailureStage::Trapped { restarts: pack::read_u32(bytes, pos, "FailureStage::restarts").await? }),
+            6 => Ok(FailureStage::Quarantined { until: pack::read_u64(bytes, pos, "FailureStage::until").await? }),
             7 => Ok(FailureStage::Disabled),
             other => Err(pack::PackError::InvalidTag { what: "FailureStage", tag: other, offset: *pos }),
         }
@@ -1082,7 +1129,9 @@ pub enum FailureEscalation {
 }
 
 impl FailureState {
-    pub async fn new() -> Self {
+    // 🚫️async: E1 pure constructor consumed by `Default::default` (external trait impl above) —
+    // see R9
+    pub fn new() -> Self {
         Self { stage: FailureStage::Healthy, clean_turns: 0, warn_count: 0, restart_count: 0, last_signal_ms: 0 }
     }
 
@@ -1094,11 +1143,11 @@ impl FailureState {
             *self = Self::new();
             return FailureEscalation::None;
         }
-        if signal.is_fatal() {
+        if signal.is_fatal().await {
             self.restart_count += 1;
             self.stage = FailureStage::Trapped { restarts: self.restart_count };
             if self.restart_count >= FAILURE_QUARANTINE_RESTART_THRESHOLD {
-                self.stage = FailureStage::Quarantined { until: now_ms + quarantine_duration_ms(self.restart_count) };
+                self.stage = FailureStage::Quarantined { until: now_ms + quarantine_duration_ms(self.restart_count).await };
                 return FailureEscalation::QuarantinePackage;
             }
             return FailureEscalation::Restart;
@@ -1108,18 +1157,18 @@ impl FailureState {
                 self.restart_count += 1;
                 self.stage = FailureStage::Trapped { restarts: self.restart_count };
                 if self.restart_count >= FAILURE_QUARANTINE_RESTART_THRESHOLD {
-                    self.stage = FailureStage::Quarantined { until: now_ms + quarantine_duration_ms(self.restart_count) };
+                    self.stage = FailureStage::Quarantined { until: now_ms + quarantine_duration_ms(self.restart_count).await };
                     return FailureEscalation::QuarantinePackage;
                 }
                 return FailureEscalation::Restart;
             }
         }
         self.warn_count += 1;
-        let [throttle_at, suspend_at] = lane_escalation_thresholds(lane);
+        let [throttle_at, suspend_at] = lane_escalation_thresholds(lane).await;
         self.stage = if self.warn_count >= suspend_at {
-            FailureStage::Suspended { until: now_ms + suspend_backoff_ms(self.warn_count) }
+            FailureStage::Suspended { until: now_ms + suspend_backoff_ms(self.warn_count).await }
         } else if self.warn_count >= throttle_at {
-            FailureStage::Throttled { factor: throttle_factor(self.warn_count, throttle_at) }
+            FailureStage::Throttled { factor: throttle_factor(self.warn_count, throttle_at).await }
         } else {
             FailureStage::Warned
         };
@@ -1173,19 +1222,19 @@ impl FailureState {
     }
 
     pub async fn pack_encode(&self, out: &mut Vec<u8>) {
-        self.stage.pack_encode(out);
-        pack::write_u32(out, self.clean_turns);
-        pack::write_u32(out, self.warn_count);
-        pack::write_u32(out, self.restart_count);
-        pack::write_u64(out, self.last_signal_ms);
+        self.stage.pack_encode(out).await;
+        pack::write_u32(out, self.clean_turns).await;
+        pack::write_u32(out, self.warn_count).await;
+        pack::write_u32(out, self.restart_count).await;
+        pack::write_u64(out, self.last_signal_ms).await;
     }
     pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
         Ok(Self {
-            stage: FailureStage::pack_decode(bytes, pos)?,
-            clean_turns: pack::read_u32(bytes, pos, "FailureState::clean_turns")?,
-            warn_count: pack::read_u32(bytes, pos, "FailureState::warn_count")?,
-            restart_count: pack::read_u32(bytes, pos, "FailureState::restart_count")?,
-            last_signal_ms: pack::read_u64(bytes, pos, "FailureState::last_signal_ms")?,
+            stage: FailureStage::pack_decode(bytes, pos).await?,
+            clean_turns: pack::read_u32(bytes, pos, "FailureState::clean_turns").await?,
+            warn_count: pack::read_u32(bytes, pos, "FailureState::warn_count").await?,
+            restart_count: pack::read_u32(bytes, pos, "FailureState::restart_count").await?,
+            last_signal_ms: pack::read_u64(bytes, pos, "FailureState::last_signal_ms").await?,
         })
     }
 }
@@ -1223,26 +1272,26 @@ pub enum ActorStatus {
 impl ActorStatus {
     pub async fn pack_encode(&self, out: &mut Vec<u8>) {
         match self {
-            ActorStatus::Cold => pack::write_u8(out, 0),
-            ActorStatus::Activating => pack::write_u8(out, 1),
-            ActorStatus::Active => pack::write_u8(out, 2),
+            ActorStatus::Cold => pack::write_u8(out, 0).await,
+            ActorStatus::Activating => pack::write_u8(out, 1).await,
+            ActorStatus::Active => pack::write_u8(out, 2).await,
             ActorStatus::Suspended { checkpoint } => {
-                pack::write_u8(out, 3);
-                pack::write_opt(out, checkpoint, |o, v| pack::write_bytes(o, v));
+                pack::write_u8(out, 3).await;
+                pack::write_opt_bytes(out, checkpoint).await;
             }
-            ActorStatus::Draining => pack::write_u8(out, 4),
-            ActorStatus::Trapped => pack::write_u8(out, 5),
-            ActorStatus::Quarantined => pack::write_u8(out, 6),
-            ActorStatus::Disabled => pack::write_u8(out, 7),
+            ActorStatus::Draining => pack::write_u8(out, 4).await,
+            ActorStatus::Trapped => pack::write_u8(out, 5).await,
+            ActorStatus::Quarantined => pack::write_u8(out, 6).await,
+            ActorStatus::Disabled => pack::write_u8(out, 7).await,
         }
     }
     pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
-        let tag = pack::read_u8(bytes, pos, "ActorStatus")?;
+        let tag = pack::read_u8(bytes, pos, "ActorStatus").await?;
         match tag {
             0 => Ok(ActorStatus::Cold),
             1 => Ok(ActorStatus::Activating),
             2 => Ok(ActorStatus::Active),
-            3 => Ok(ActorStatus::Suspended { checkpoint: pack::read_opt(bytes, pos, "ActorStatus::Suspended", |b, p| pack::read_bytes(b, p, "checkpoint"))? }),
+            3 => Ok(ActorStatus::Suspended { checkpoint: pack::read_opt_bytes(bytes, pos, "ActorStatus::Suspended").await? }),
             4 => Ok(ActorStatus::Draining),
             5 => Ok(ActorStatus::Trapped),
             6 => Ok(ActorStatus::Quarantined),
@@ -1271,29 +1320,29 @@ pub struct ActorRecord {
 
 impl ActorRecord {
     pub async fn pack_encode(&self, out: &mut Vec<u8>) {
-        self.id.pack_encode(out);
-        self.kind.pack_encode(out);
-        self.package.pack_encode(out);
-        self.shard.pack_encode(out);
-        pack::write_vec(out, &self.capabilities, |o, c| c.pack_encode(o));
-        self.budget.pack_encode(out);
-        self.mailbox.pack_encode(out);
-        self.status.pack_encode(out);
-        self.failure.pack_encode(out);
-        self.metrics.pack_encode(out);
+        self.id.pack_encode(out).await;
+        self.kind.pack_encode(out).await;
+        self.package.pack_encode(out).await;
+        self.shard.pack_encode(out).await;
+        pack::write_vec(out, &self.capabilities, CapabilityGrant::pack_encode).await;
+        self.budget.pack_encode(out).await;
+        self.mailbox.pack_encode(out).await;
+        self.status.pack_encode(out).await;
+        self.failure.pack_encode(out).await;
+        self.metrics.pack_encode(out).await;
     }
     pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
         Ok(Self {
-            id: ActorId::pack_decode(bytes, pos)?,
-            kind: ActorKind::pack_decode(bytes, pos)?,
-            package: PackageId::pack_decode(bytes, pos)?,
-            shard: ShardId::pack_decode(bytes, pos)?,
-            capabilities: pack::read_vec(bytes, pos, "ActorRecord::capabilities", CapabilityGrant::pack_decode)?,
-            budget: Budget::pack_decode(bytes, pos)?,
-            mailbox: Mailbox::pack_decode(bytes, pos)?,
-            status: ActorStatus::pack_decode(bytes, pos)?,
-            failure: FailureState::pack_decode(bytes, pos)?,
-            metrics: ActorMetrics::pack_decode(bytes, pos)?,
+            id: ActorId::pack_decode(bytes, pos).await?,
+            kind: ActorKind::pack_decode(bytes, pos).await?,
+            package: PackageId::pack_decode(bytes, pos).await?,
+            shard: ShardId::pack_decode(bytes, pos).await?,
+            capabilities: pack::read_vec(bytes, pos, "ActorRecord::capabilities", CapabilityGrant::pack_decode).await?,
+            budget: Budget::pack_decode(bytes, pos).await?,
+            mailbox: Mailbox::pack_decode(bytes, pos).await?,
+            status: ActorStatus::pack_decode(bytes, pos).await?,
+            failure: FailureState::pack_decode(bytes, pos).await?,
+            metrics: ActorMetrics::pack_decode(bytes, pos).await?,
         })
     }
 }
@@ -1318,10 +1367,10 @@ impl ShardKind {
         }
     }
     pub async fn pack_encode(&self, out: &mut Vec<u8>) {
-        pack::write_u8(out, self.tag());
+        pack::write_u8(out, self.tag().await).await;
     }
     pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
-        match pack::read_u8(bytes, pos, "ShardKind")? {
+        match pack::read_u8(bytes, pos, "ShardKind").await? {
             0 => Ok(ShardKind::Thread),
             1 => Ok(ShardKind::WebWorker),
             2 => Ok(ShardKind::Process),
@@ -1336,10 +1385,10 @@ pub struct ShardId(pub u16);
 
 impl ShardId {
     pub async fn pack_encode(&self, out: &mut Vec<u8>) {
-        pack::write_u16(out, self.0);
+        pack::write_u16(out, self.0).await;
     }
     pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
-        Ok(Self(pack::read_u16(bytes, pos, "ShardId")?))
+        Ok(Self(pack::read_u16(bytes, pos, "ShardId").await?))
     }
 }
 
@@ -1397,7 +1446,7 @@ impl ShardTable {
         if let Some(existing) = self.assignment.get(&actor) {
             return *existing;
         }
-        let shard = self.least_loaded(&BTreeSet::new());
+        let shard = self.least_loaded(&BTreeSet::new()).await;
         self.assignment.insert(actor, shard);
         shard
     }
@@ -1439,7 +1488,7 @@ impl ShardTable {
         if let Some(existing) = self.assignment.get(&actor) {
             return *existing;
         }
-        let shard = self.least_loaded(avoid);
+        let shard = self.least_loaded(avoid).await;
         self.assignment.insert(actor, shard);
         shard
     }
@@ -1476,24 +1525,34 @@ impl ShardTable {
     }
 
     pub async fn pack_encode(&self, out: &mut Vec<u8>) {
-        self.kind.pack_encode(out);
-        pack::write_u16(out, self.shard_count);
-        pack::write_u16(out, self.exclusive_reserve);
-        pack::write_vec(out, &self.assignment.iter().collect::<Vec<_>>(), |o, (actor, shard)| {
-            actor.pack_encode(o);
-            shard.pack_encode(o);
-        });
-        pack::write_vec(out, &self.exclusive_leases.iter().collect::<Vec<_>>(), |o, (shard, actor)| {
-            shard.pack_encode(o);
-            actor.pack_encode(o);
-        });
+        self.kind.pack_encode(out).await;
+        pack::write_u16(out, self.shard_count).await;
+        pack::write_u16(out, self.exclusive_reserve).await;
+        pack::write_varint_u64(out, self.assignment.len() as u64).await;
+        for (actor, shard) in &self.assignment {
+            actor.pack_encode(out).await;
+            shard.pack_encode(out).await;
+        }
+        pack::write_varint_u64(out, self.exclusive_leases.len() as u64).await;
+        for (shard, actor) in &self.exclusive_leases {
+            shard.pack_encode(out).await;
+            actor.pack_encode(out).await;
+        }
     }
     pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
-        let kind = ShardKind::pack_decode(bytes, pos)?;
-        let shard_count = pack::read_u16(bytes, pos, "ShardTable::shard_count")?;
-        let exclusive_reserve = pack::read_u16(bytes, pos, "ShardTable::exclusive_reserve")?;
-        let assignment_pairs = pack::read_vec(bytes, pos, "ShardTable::assignment", |b, p| Ok((ActorId::pack_decode(b, p)?, ShardId::pack_decode(b, p)?)))?;
-        let lease_pairs = pack::read_vec(bytes, pos, "ShardTable::exclusive_leases", |b, p| Ok((ShardId::pack_decode(b, p)?, ActorId::pack_decode(b, p)?)))?;
+        let kind = ShardKind::pack_decode(bytes, pos).await?;
+        let shard_count = pack::read_u16(bytes, pos, "ShardTable::shard_count").await?;
+        let exclusive_reserve = pack::read_u16(bytes, pos, "ShardTable::exclusive_reserve").await?;
+        let assignment_len = pack::read_varint_u64(bytes, pos, "ShardTable::assignment").await? as usize;
+        let mut assignment_pairs = Vec::with_capacity(assignment_len.min(1 << 20));
+        for _ in 0..assignment_len {
+            assignment_pairs.push((ActorId::pack_decode(bytes, pos).await?, ShardId::pack_decode(bytes, pos).await?));
+        }
+        let lease_len = pack::read_varint_u64(bytes, pos, "ShardTable::exclusive_leases").await? as usize;
+        let mut lease_pairs = Vec::with_capacity(lease_len.min(1 << 20));
+        for _ in 0..lease_len {
+            lease_pairs.push((ShardId::pack_decode(bytes, pos).await?, ActorId::pack_decode(bytes, pos).await?));
+        }
         Ok(Self { kind, shard_count, exclusive_reserve, assignment: assignment_pairs.into_iter().collect(), exclusive_leases: lease_pairs.into_iter().collect() })
     }
 }
@@ -1525,11 +1584,11 @@ pub struct Decision {
 
 impl Decision {
     pub async fn pack_encode(&self, out: &mut Vec<u8>) {
-        pack::write_vec(out, &self.run, |o, g| g.pack_encode(o));
-        pack::write_opt(out, &self.wake_at, |o, v| pack::write_u64(o, *v));
+        pack::write_vec(out, &self.run, TurnGrant::pack_encode).await;
+        pack::write_opt_u64(out, &self.wake_at).await;
     }
     pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
-        Ok(Self { run: pack::read_vec(bytes, pos, "Decision::run", TurnGrant::pack_decode)?, wake_at: pack::read_opt(bytes, pos, "Decision::wake_at", |b, p| pack::read_u64(b, p, "wake_at"))? })
+        Ok(Self { run: pack::read_vec(bytes, pos, "Decision::run", TurnGrant::pack_decode).await?, wake_at: pack::read_opt_u64(bytes, pos, "Decision::wake_at").await? })
     }
 }
 
@@ -1546,13 +1605,13 @@ pub struct TurnGrant {
 
 impl TurnGrant {
     pub async fn pack_encode(&self, out: &mut Vec<u8>) {
-        self.actor.pack_encode(out);
-        self.shard.pack_encode(out);
-        self.budget.pack_encode(out);
-        pack::write_vec(out, &self.envelopes, |o, e| e.pack_encode(o));
+        self.actor.pack_encode(out).await;
+        self.shard.pack_encode(out).await;
+        self.budget.pack_encode(out).await;
+        pack::write_vec(out, &self.envelopes, Envelope::pack_encode).await;
     }
     pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
-        Ok(Self { actor: ActorId::pack_decode(bytes, pos)?, shard: ShardId::pack_decode(bytes, pos)?, budget: Budget::pack_decode(bytes, pos)?, envelopes: pack::read_vec(bytes, pos, "TurnGrant::envelopes", Envelope::pack_decode)? })
+        Ok(Self { actor: ActorId::pack_decode(bytes, pos).await?, shard: ShardId::pack_decode(bytes, pos).await?, budget: Budget::pack_decode(bytes, pos).await?, envelopes: pack::read_vec(bytes, pos, "TurnGrant::envelopes", Envelope::pack_decode).await? })
     }
 }
 
@@ -1580,7 +1639,7 @@ impl Scheduler {
         if !self.plugin_order.contains(&package) {
             self.plugin_order.push(package.clone());
         }
-        self.actors.insert(actor, ScheduledActor { package, lane, budget, shard, mailbox: Mailbox::new(budget.mailbox_len), active: true, throttle: 1.0, deficit: 0 });
+        self.actors.insert(actor, ScheduledActor { package, lane, budget, shard, mailbox: Mailbox::new(budget.mailbox_len).await, active: true, throttle: 1.0, deficit: 0 });
     }
 
     pub async fn unregister_actor(&mut self, actor: ActorId) {
@@ -1612,18 +1671,23 @@ impl Scheduler {
     /// 📈️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (T1): the one piece of an actor's scheduling entry
     /// [`Kernel::actor_metrics_samples`] needs that [`ActorMeta`] doesn't itself carry — `lane` is
     /// fixed at [`Scheduler::register_actor`] and never changes, so this is a plain lookup.
-    pub async fn lane_of(&self, actor: ActorId) -> Option<Lane> {
+    // 🚫️async: E1-adjacent pure accessor — its one consumer sits inside a sync `Iterator::map`
+    // closure (`Kernel::actor_metrics_samples`) — see R9 residue shape 1.
+    pub fn lane_of(&self, actor: ActorId) -> Option<Lane> {
         self.actors.get(&actor).map(|e| e.lane)
     }
 
     pub async fn submit(&mut self, envelope: Envelope) -> Backpressure {
         match self.actors.get_mut(&envelope.to) {
-            Some(entry) => entry.mailbox.enqueue(envelope),
+            Some(entry) => entry.mailbox.enqueue(envelope).await,
             None => Backpressure::Rejected,
         }
     }
 
-    async fn actor_weight(entry: &ScheduledActor) -> i64 {
+    // 🚫️async: E1-adjacent pure computation — every consumer sits inside a sync `Iterator::map`/
+    // `Option::map_or`/subtract-assign call (DRR quantum/deficit accounting), which cannot await —
+    // see R9 residue shape 1.
+    fn actor_weight(entry: &ScheduledActor) -> i64 {
         ((entry.lane.weight() as f32) * entry.throttle.max(0.05)).round().max(1.0) as i64
     }
 
@@ -1650,7 +1714,7 @@ impl Scheduler {
             if granted_this_tick.contains(&actor_id) {
                 continue;
             }
-            if let Some(grant) = self.drain_turn(actor_id) {
+            if let Some(grant) = self.drain_turn(actor_id).await {
                 run.push(grant);
                 granted_this_tick.insert(actor_id);
                 budget_left -= 1;
@@ -1678,9 +1742,9 @@ impl Scheduler {
                 while deficit > 0 && budget_left > 0 {
                     let mut candidates: Vec<ActorId> = self.actors.iter().filter(|(id, e)| e.package == package && e.active && !granted_this_tick.contains(*id) && !e.mailbox.is_empty()).map(|(id, _)| *id).collect();
                     candidates.sort();
-                    let Some(actor_id) = self.pick_level2(&candidates) else { break };
+                    let Some(actor_id) = self.pick_level2(&candidates).await else { break };
                     let weight = self.actors.get(&actor_id).map_or(1, Self::actor_weight);
-                    if let Some(grant) = self.drain_turn(actor_id) {
+                    if let Some(grant) = self.drain_turn(actor_id).await {
                         run.push(grant);
                         granted_this_tick.insert(actor_id);
                         budget_left -= 1;
@@ -1719,7 +1783,7 @@ impl Scheduler {
         let entry = self.actors.get_mut(&actor_id)?;
         let mut envelopes = Vec::new();
         for _ in 0..TURN_ENVELOPE_BATCH {
-            match entry.mailbox.pop_next() {
+            match entry.mailbox.pop_next().await {
                 Some(e) => envelopes.push(e),
                 None => break,
             }
@@ -1728,7 +1792,7 @@ impl Scheduler {
             return None;
         }
         entry.deficit -= Self::actor_weight(entry);
-        Some(TurnGrant { actor: actor_id, shard: entry.shard, budget: entry.budget.scaled(entry.throttle), envelopes })
+        Some(TurnGrant { actor: actor_id, shard: entry.shard, budget: entry.budget.scaled(entry.throttle).await, envelopes })
     }
 }
 //#endregion ⏱️Scheduler
@@ -1748,13 +1812,13 @@ pub struct SceneSnapshot {
 
 impl SceneSnapshot {
     pub async fn pack_encode(&self, out: &mut Vec<u8>) {
-        pack::write_u64(out, self.revision);
-        pack::write_u64(out, self.committed_ms);
-        pack::write_bytes(out, &self.patches);
-        pack::write_u32(out, self.node_count);
+        pack::write_u64(out, self.revision).await;
+        pack::write_u64(out, self.committed_ms).await;
+        pack::write_bytes(out, &self.patches).await;
+        pack::write_u32(out, self.node_count).await;
     }
     pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
-        Ok(Self { revision: pack::read_u64(bytes, pos, "SceneSnapshot::revision")?, committed_ms: pack::read_u64(bytes, pos, "SceneSnapshot::committed_ms")?, patches: pack::read_bytes(bytes, pos, "SceneSnapshot::patches")?, node_count: pack::read_u32(bytes, pos, "SceneSnapshot::node_count")? })
+        Ok(Self { revision: pack::read_u64(bytes, pos, "SceneSnapshot::revision").await?, committed_ms: pack::read_u64(bytes, pos, "SceneSnapshot::committed_ms").await?, patches: pack::read_bytes(bytes, pos, "SceneSnapshot::patches").await?, node_count: pack::read_u32(bytes, pos, "SceneSnapshot::node_count").await? })
     }
 }
 
@@ -1776,7 +1840,9 @@ impl Default for SceneStore {
 }
 
 impl SceneStore {
-    pub async fn new() -> Self {
+    // 🚫️async: E1 pure constructor consumed by `Default::default` (external trait impl above) —
+    // see R9
+    pub fn new() -> Self {
         Self { current: Arc::new(SceneSnapshot::default()), pending: Vec::new(), pending_node_delta: 0 }
     }
 
@@ -1890,7 +1956,8 @@ impl ActorMetrics {
         self.memory_bytes = usage.memory_bytes;
     }
 
-    pub async fn wall_us_p95(&self) -> u32 {
+    // 🚫️async: E1 pure computation consumed by `Debug::fmt` (external trait impl above) — see R9
+    pub fn wall_us_p95(&self) -> u32 {
         if self.wall_us_ring_len == 0 {
             return 0;
         }
@@ -1918,34 +1985,34 @@ impl ActorMetrics {
     }
 
     pub async fn pack_encode(&self, out: &mut Vec<u8>) {
-        pack::write_u64(out, self.turns);
-        pack::write_u64(out, self.fuel_total);
-        pack::write_u64(out, self.wall_us_total);
+        pack::write_u64(out, self.turns).await;
+        pack::write_u64(out, self.fuel_total).await;
+        pack::write_u64(out, self.wall_us_total).await;
         for sample in &self.wall_us_ring {
-            pack::write_u32(out, *sample);
+            pack::write_u32(out, *sample).await;
         }
-        pack::write_u8(out, self.wall_us_ring_len);
-        pack::write_u8(out, self.wall_us_ring_pos);
-        pack::write_u64(out, self.memory_bytes);
-        pack::write_u16(out, self.mailbox_len);
-        pack::write_u32(out, self.mailbox_lag_ms);
-        pack::write_u64(out, self.coalesced);
-        pack::write_u64(out, self.dropped);
-        pack::write_u32(out, self.traps);
-        pack::write_u32(out, self.restarts);
-        self.stage.pack_encode(out);
-        self.shard.pack_encode(out);
+        pack::write_u8(out, self.wall_us_ring_len).await;
+        pack::write_u8(out, self.wall_us_ring_pos).await;
+        pack::write_u64(out, self.memory_bytes).await;
+        pack::write_u16(out, self.mailbox_len).await;
+        pack::write_u32(out, self.mailbox_lag_ms).await;
+        pack::write_u64(out, self.coalesced).await;
+        pack::write_u64(out, self.dropped).await;
+        pack::write_u32(out, self.traps).await;
+        pack::write_u32(out, self.restarts).await;
+        self.stage.pack_encode(out).await;
+        self.shard.pack_encode(out).await;
     }
     pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
-        let turns = pack::read_u64(bytes, pos, "ActorMetrics::turns")?;
-        let fuel_total = pack::read_u64(bytes, pos, "ActorMetrics::fuel_total")?;
-        let wall_us_total = pack::read_u64(bytes, pos, "ActorMetrics::wall_us_total")?;
+        let turns = pack::read_u64(bytes, pos, "ActorMetrics::turns").await?;
+        let fuel_total = pack::read_u64(bytes, pos, "ActorMetrics::fuel_total").await?;
+        let wall_us_total = pack::read_u64(bytes, pos, "ActorMetrics::wall_us_total").await?;
         let mut wall_us_ring = Vec::with_capacity(WALL_US_RING_CAPACITY);
         for _ in 0..WALL_US_RING_CAPACITY {
-            wall_us_ring.push(pack::read_u32(bytes, pos, "ActorMetrics::wall_us_ring")?);
+            wall_us_ring.push(pack::read_u32(bytes, pos, "ActorMetrics::wall_us_ring").await?);
         }
-        let wall_us_ring_len = pack::read_u8(bytes, pos, "ActorMetrics::wall_us_ring_len")?;
-        let wall_us_ring_pos = pack::read_u8(bytes, pos, "ActorMetrics::wall_us_ring_pos")?;
+        let wall_us_ring_len = pack::read_u8(bytes, pos, "ActorMetrics::wall_us_ring_len").await?;
+        let wall_us_ring_pos = pack::read_u8(bytes, pos, "ActorMetrics::wall_us_ring_pos").await?;
         Ok(Self {
             turns,
             fuel_total,
@@ -1953,15 +2020,15 @@ impl ActorMetrics {
             wall_us_ring,
             wall_us_ring_len,
             wall_us_ring_pos,
-            memory_bytes: pack::read_u64(bytes, pos, "ActorMetrics::memory_bytes")?,
-            mailbox_len: pack::read_u16(bytes, pos, "ActorMetrics::mailbox_len")?,
-            mailbox_lag_ms: pack::read_u32(bytes, pos, "ActorMetrics::mailbox_lag_ms")?,
-            coalesced: pack::read_u64(bytes, pos, "ActorMetrics::coalesced")?,
-            dropped: pack::read_u64(bytes, pos, "ActorMetrics::dropped")?,
-            traps: pack::read_u32(bytes, pos, "ActorMetrics::traps")?,
-            restarts: pack::read_u32(bytes, pos, "ActorMetrics::restarts")?,
-            stage: FailureStage::pack_decode(bytes, pos)?,
-            shard: ShardId::pack_decode(bytes, pos)?,
+            memory_bytes: pack::read_u64(bytes, pos, "ActorMetrics::memory_bytes").await?,
+            mailbox_len: pack::read_u16(bytes, pos, "ActorMetrics::mailbox_len").await?,
+            mailbox_lag_ms: pack::read_u32(bytes, pos, "ActorMetrics::mailbox_lag_ms").await?,
+            coalesced: pack::read_u64(bytes, pos, "ActorMetrics::coalesced").await?,
+            dropped: pack::read_u64(bytes, pos, "ActorMetrics::dropped").await?,
+            traps: pack::read_u32(bytes, pos, "ActorMetrics::traps").await?,
+            restarts: pack::read_u32(bytes, pos, "ActorMetrics::restarts").await?,
+            stage: FailureStage::pack_decode(bytes, pos).await?,
+            shard: ShardId::pack_decode(bytes, pos).await?,
         })
     }
 }
@@ -1976,12 +2043,12 @@ pub struct ShardMetrics {
 
 impl ShardMetrics {
     pub async fn pack_encode(&self, out: &mut Vec<u8>) {
-        pack::write_u32(out, self.actors);
-        pack::write_f32(out, self.busy_ratio);
-        pack::write_u32(out, self.heartbeat_age_ms);
+        pack::write_u32(out, self.actors).await;
+        pack::write_f32(out, self.busy_ratio).await;
+        pack::write_u32(out, self.heartbeat_age_ms).await;
     }
     pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
-        Ok(Self { actors: pack::read_u32(bytes, pos, "ShardMetrics::actors")?, busy_ratio: pack::read_f32(bytes, pos, "ShardMetrics::busy_ratio")?, heartbeat_age_ms: pack::read_u32(bytes, pos, "ShardMetrics::heartbeat_age_ms")? })
+        Ok(Self { actors: pack::read_u32(bytes, pos, "ShardMetrics::actors").await?, busy_ratio: pack::read_f32(bytes, pos, "ShardMetrics::busy_ratio").await?, heartbeat_age_ms: pack::read_u32(bytes, pos, "ShardMetrics::heartbeat_age_ms").await? })
     }
 }
 
@@ -1996,12 +2063,12 @@ pub struct KernelMetrics {
 
 impl KernelMetrics {
     pub async fn pack_encode(&self, out: &mut Vec<u8>) {
-        pack::write_u32(out, self.actors);
-        pack::write_u32(out, self.shards);
-        pack::write_u32(out, self.packages);
+        pack::write_u32(out, self.actors).await;
+        pack::write_u32(out, self.shards).await;
+        pack::write_u32(out, self.packages).await;
     }
     pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
-        Ok(Self { actors: pack::read_u32(bytes, pos, "KernelMetrics::actors")?, shards: pack::read_u32(bytes, pos, "KernelMetrics::shards")?, packages: pack::read_u32(bytes, pos, "KernelMetrics::packages")? })
+        Ok(Self { actors: pack::read_u32(bytes, pos, "KernelMetrics::actors").await?, shards: pack::read_u32(bytes, pos, "KernelMetrics::shards").await?, packages: pack::read_u32(bytes, pos, "KernelMetrics::packages").await? })
     }
 }
 
@@ -2021,14 +2088,14 @@ pub struct ActorMetricsSample {
 
 impl ActorMetricsSample {
     pub async fn pack_encode(&self, out: &mut Vec<u8>) {
-        self.id.pack_encode(out);
-        self.package.pack_encode(out);
-        self.lane.pack_encode(out);
-        self.status.pack_encode(out);
-        self.metrics.pack_encode(out);
+        self.id.pack_encode(out).await;
+        self.package.pack_encode(out).await;
+        self.lane.pack_encode(out).await;
+        self.status.pack_encode(out).await;
+        self.metrics.pack_encode(out).await;
     }
     pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
-        Ok(Self { id: ActorId::pack_decode(bytes, pos)?, package: PackageId::pack_decode(bytes, pos)?, lane: Lane::pack_decode(bytes, pos)?, status: ActorStatus::pack_decode(bytes, pos)?, metrics: ActorMetrics::pack_decode(bytes, pos)? })
+        Ok(Self { id: ActorId::pack_decode(bytes, pos).await?, package: PackageId::pack_decode(bytes, pos).await?, lane: Lane::pack_decode(bytes, pos).await?, status: ActorStatus::pack_decode(bytes, pos).await?, metrics: ActorMetrics::pack_decode(bytes, pos).await? })
     }
 }
 
@@ -2045,11 +2112,11 @@ pub struct ShardMetricsSample {
 
 impl ShardMetricsSample {
     pub async fn pack_encode(&self, out: &mut Vec<u8>) {
-        self.shard.pack_encode(out);
-        self.metrics.pack_encode(out);
+        self.shard.pack_encode(out).await;
+        self.metrics.pack_encode(out).await;
     }
     pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
-        Ok(Self { shard: ShardId::pack_decode(bytes, pos)?, metrics: ShardMetrics::pack_decode(bytes, pos)? })
+        Ok(Self { shard: ShardId::pack_decode(bytes, pos).await?, metrics: ShardMetrics::pack_decode(bytes, pos).await? })
     }
 }
 
@@ -2068,17 +2135,17 @@ pub struct RuntimeMetricsSnapshot {
 
 impl RuntimeMetricsSnapshot {
     pub async fn pack_encode(&self, out: &mut Vec<u8>) {
-        self.kernel.pack_encode(out);
-        pack::write_vec(out, &self.actors, |o, a| a.pack_encode(o));
-        pack::write_vec(out, &self.shards, |o, s| s.pack_encode(o));
-        pack::write_u64(out, self.sampled_at_ms);
+        self.kernel.pack_encode(out).await;
+        pack::write_vec(out, &self.actors, ActorMetricsSample::pack_encode).await;
+        pack::write_vec(out, &self.shards, ShardMetricsSample::pack_encode).await;
+        pack::write_u64(out, self.sampled_at_ms).await;
     }
     pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
         Ok(Self {
-            kernel: KernelMetrics::pack_decode(bytes, pos)?,
-            actors: pack::read_vec(bytes, pos, "RuntimeMetricsSnapshot::actors", ActorMetricsSample::pack_decode)?,
-            shards: pack::read_vec(bytes, pos, "RuntimeMetricsSnapshot::shards", ShardMetricsSample::pack_decode)?,
-            sampled_at_ms: pack::read_u64(bytes, pos, "RuntimeMetricsSnapshot::sampled_at_ms")?,
+            kernel: KernelMetrics::pack_decode(bytes, pos).await?,
+            actors: pack::read_vec(bytes, pos, "RuntimeMetricsSnapshot::actors", ActorMetricsSample::pack_decode).await?,
+            shards: pack::read_vec(bytes, pos, "RuntimeMetricsSnapshot::shards", ShardMetricsSample::pack_decode).await?,
+            sampled_at_ms: pack::read_u64(bytes, pos, "RuntimeMetricsSnapshot::sampled_at_ms").await?,
         })
     }
 }
@@ -2243,7 +2310,7 @@ pub struct Kernel {
 
 impl Kernel {
     pub async fn new(shard_kind: ShardKind, shard_count: u16, exclusive_reserve: u16, grants_per_tick: u32) -> Self {
-        Self { scheduler: Scheduler::new(grants_per_tick), shards: ShardTable::new(shard_kind, shard_count, exclusive_reserve), scenes: HashMap::new(), actors: HashMap::new(), next_ordinal: HashMap::new() }
+        Self { scheduler: Scheduler::new(grants_per_tick).await, shards: ShardTable::new(shard_kind, shard_count, exclusive_reserve).await, scenes: HashMap::new(), actors: HashMap::new(), next_ordinal: HashMap::new() }
     }
 
     /// ▶️ Instantiates a fresh actor for `kind` under `package`/`lane`, pins it to a shard, and
@@ -2257,16 +2324,16 @@ impl Kernel {
     /// interactive latency).
     pub async fn activate(&mut self, package: PackageId, plugin_ordinal: u16, kind: ActorKind, lane: Lane, window: Option<WindowId>, _event: ActivationEvent) -> ActorId {
         let ordinal = self.next_ordinal.entry(package.clone()).or_insert(0);
-        let id = ActorId::new(plugin_ordinal, kind.tag(), *ordinal, 0);
+        let id = ActorId::new(plugin_ordinal, kind.tag().await, *ordinal, 0).await;
         *ordinal += 1;
-        let budget = lane_defaults::budget_for(lane);
+        let budget = lane_defaults::budget_for(lane).await;
         let shard = if lane == Lane::Interactive {
-            let avoid = self.saturated_shards();
-            self.shards.pin_avoiding(id, &avoid)
+            let avoid = self.saturated_shards().await;
+            self.shards.pin_avoiding(id, &avoid).await
         } else {
-            self.shards.pin(id)
+            self.shards.pin(id).await
         };
-        self.scheduler.register_actor(id, package.clone(), lane, budget, shard);
+        self.scheduler.register_actor(id, package.clone(), lane, budget, shard).await;
         self.actors.insert(id, ActorMeta { kind, package, capabilities: Vec::new(), budget, status: ActorStatus::Activating, failure: FailureState::new(), metrics: ActorMetrics::default(), window });
         id
     }
@@ -2277,18 +2344,26 @@ impl Kernel {
     /// never a fixture/profile name. `activate`'s own doc explains why only `Lane::Interactive`
     /// consults this.
     async fn saturated_shards(&self) -> BTreeSet<ShardId> {
-        self.actors.iter().filter(|(_, meta)| meta.metrics.is_saturating(&meta.budget)).filter_map(|(id, _)| self.shards.shard_of(*id)).collect()
+        let mut out = BTreeSet::new();
+        for (id, meta) in &self.actors {
+            if meta.metrics.is_saturating(&meta.budget).await {
+                if let Some(shard) = self.shards.shard_of(*id).await {
+                    out.insert(shard);
+                }
+            }
+        }
+        out
     }
 
     pub async fn submit(&mut self, envelope: &Envelope) -> Backpressure {
-        let backpressure = self.scheduler.submit(envelope.clone());
+        let backpressure = self.scheduler.submit(envelope.clone()).await;
         if let Some(meta) = self.actors.get_mut(&envelope.to) {
             match backpressure {
                 Backpressure::Coalesced => meta.metrics.coalesced += 1,
                 Backpressure::Dropped { .. } => meta.metrics.dropped += 1,
                 _ => {}
             }
-            if let Some(pressure) = self.scheduler.mailbox_pressure(envelope.to) {
+            if let Some(pressure) = self.scheduler.mailbox_pressure(envelope.to).await {
                 meta.metrics.mailbox_len = (pressure * meta.budget.mailbox_len as f32) as u16;
             }
         }
@@ -2296,7 +2371,7 @@ impl Kernel {
     }
 
     pub async fn tick(&mut self, now_ms: u64) -> Decision {
-        self.scheduler.tick(now_ms)
+        self.scheduler.tick(now_ms).await
     }
 
     /// ✅️ Records a turn's result against its actor: usage metrics, failure-ladder update (clean
@@ -2304,14 +2379,14 @@ impl Kernel {
     /// act on for `Trapped`/`Quarantined` outcomes.
     pub async fn complete(&mut self, actor: ActorId, result: &TurnResult, now_ms: u64) -> Result<FailureEscalation, KernelError> {
         let meta = self.actors.get_mut(&actor).ok_or(KernelError::UnknownActor)?;
-        meta.metrics.record_turn(&result.usage);
+        meta.metrics.record_turn(&result.usage).await;
         let escalation = match &result.status {
             TurnStatus::Faulted { detail } => {
                 let detail_string = String::from_utf8_lossy(detail).into_owned();
-                meta.failure.on_signal(&FailureSignal::Trap { detail: detail_string }, Lane::Interactive, now_ms)
+                meta.failure.on_signal(&FailureSignal::Trap { detail: detail_string }, Lane::Interactive, now_ms).await
             }
             _ => {
-                meta.failure.on_clean_turn(now_ms);
+                meta.failure.on_clean_turn(now_ms).await;
                 FailureEscalation::None
             }
         };
@@ -2329,9 +2404,9 @@ impl Kernel {
         meta.metrics.stage = meta.failure.stage;
         let throttle = meta.failure.throttle_factor();
         let package = meta.package.clone();
-        self.scheduler.set_throttle(actor, throttle);
+        self.scheduler.set_throttle(actor, throttle.await).await;
         if let FailureEscalation::QuarantinePackage = escalation {
-            self.quarantine_package(&package, now_ms);
+            self.quarantine_package(&package, now_ms).await;
         }
         Ok(escalation)
     }
@@ -2342,18 +2417,18 @@ impl Kernel {
         let affected: Vec<ActorId> = self.actors.iter().filter(|(_, m)| &m.package == package).map(|(id, _)| *id).collect();
         for actor in affected {
             if let Some(meta) = self.actors.get_mut(&actor) {
-                meta.failure.stage = FailureStage::Quarantined { until: now_ms + quarantine_duration_ms(meta.failure.restart_count.max(1)) };
+                meta.failure.stage = FailureStage::Quarantined { until: now_ms + quarantine_duration_ms(meta.failure.restart_count.max(1)).await };
                 meta.status = ActorStatus::Quarantined;
                 meta.metrics.stage = meta.failure.stage;
             }
-            self.scheduler.set_active(actor, false);
+            self.scheduler.set_active(actor, false).await;
         }
     }
 
     pub async fn suspend(&mut self, actor: ActorId, checkpoint: Option<Vec<u8>>) -> Result<(), KernelError> {
         let meta = self.actors.get_mut(&actor).ok_or(KernelError::UnknownActor)?;
         meta.status = ActorStatus::Suspended { checkpoint };
-        self.scheduler.set_active(actor, false);
+        self.scheduler.set_active(actor, false).await;
         Ok(())
     }
 
@@ -2362,7 +2437,7 @@ impl Kernel {
         match meta.status {
             ActorStatus::Suspended { .. } => {
                 meta.status = ActorStatus::Active;
-                self.scheduler.set_active(actor, true);
+                self.scheduler.set_active(actor, true).await;
                 Ok(())
             }
             _ => Err(KernelError::InvalidTransition),
@@ -2373,15 +2448,15 @@ impl Kernel {
         if !self.actors.contains_key(&actor) {
             return Err(KernelError::UnknownActor);
         }
-        let shard = self.shards.request_exclusive(actor).ok_or(KernelError::NoExclusiveShard)?;
-        self.scheduler.set_shard(actor, shard);
+        let shard = self.shards.request_exclusive(actor).await.ok_or(KernelError::NoExclusiveShard)?;
+        self.scheduler.set_shard(actor, shard).await;
         Ok(shard)
     }
 
     pub async fn release_exclusive(&mut self, actor: ActorId) {
-        self.shards.release_exclusive(actor);
-        if let Some(shard) = self.shards.shard_of(actor) {
-            self.scheduler.set_shard(actor, shard);
+        self.shards.release_exclusive(actor).await;
+        if let Some(shard) = self.shards.shard_of(actor).await {
+            self.scheduler.set_shard(actor, shard).await;
         }
     }
 
@@ -2391,29 +2466,36 @@ impl Kernel {
         let Some(meta) = self.actors.get(&actor) else { return Ok(()) };
         let Some(window) = meta.window else { return Ok(()) };
         let budget = meta.budget;
-        self.scenes.entry(window).or_default().apply_patch(actor, patch_bytes, node_delta, &budget)
+        self.scenes.entry(window).or_default().apply_patch(actor, patch_bytes, node_delta, &budget).await
     }
 
     /// 🖼️ Commits every window's pending patches at a frame boundary.
     pub async fn commit_frame(&mut self, now_ms: u64) -> HashMap<WindowId, Arc<SceneSnapshot>> {
-        self.scenes.iter_mut().map(|(window, store)| (*window, store.commit_frame(now_ms))).collect()
+        let mut out = HashMap::with_capacity(self.scenes.len());
+        for (window, store) in self.scenes.iter_mut() {
+            out.insert(*window, store.commit_frame(now_ms).await);
+        }
+        out
     }
 
     pub async fn scene_of(&self, window: WindowId) -> Option<Arc<SceneSnapshot>> {
-        self.scenes.get(&window).map(|s| s.current())
+        match self.scenes.get(&window) {
+            Some(s) => Some(s.current().await),
+            None => None,
+        }
     }
 
     pub async fn metrics(&self) -> KernelMetrics {
         let packages: BTreeSet<&PackageId> = self.actors.values().map(|m| &m.package).collect();
-        KernelMetrics { actors: self.actors.len() as u32, shards: self.shards.shard_count() as u32, packages: packages.len() as u32 }
+        KernelMetrics { actors: self.actors.len() as u32, shards: self.shards.shard_count().await as u32, packages: packages.len() as u32 }
     }
 
     /// 🗂️ Assembles a full [`ActorRecord`] snapshot from the scheduler's live entry and this
     /// actor's own bookkeeping — a convenience for hosts/tests, not itself part of the required façade.
     pub async fn actor_record(&self, actor: ActorId) -> Option<ActorRecord> {
         let meta = self.actors.get(&actor)?;
-        let shard = self.shards.shard_of(actor).unwrap_or(ShardId(0));
-        let mailbox = Mailbox::new(meta.budget.mailbox_len);
+        let shard = self.shards.shard_of(actor).await.unwrap_or(ShardId(0));
+        let mailbox = Mailbox::new(meta.budget.mailbox_len).await;
         Some(ActorRecord { id: actor, kind: meta.kind.clone(), package: meta.package.clone(), shard, capabilities: meta.capabilities.clone(), budget: meta.budget, mailbox, status: meta.status.clone(), failure: meta.failure.clone(), metrics: meta.metrics.clone() })
     }
 
@@ -2438,7 +2520,7 @@ impl Kernel {
     pub async fn shard_metrics_samples(&self) -> Vec<ShardMetricsSample> {
         let mut per_shard: HashMap<ShardId, (u32, u32)> = HashMap::new();
         for (id, meta) in &self.actors {
-            let shard = self.shards.shard_of(*id).unwrap_or(ShardId(0));
+            let shard = self.shards.shard_of(*id).await.unwrap_or(ShardId(0));
             let entry = per_shard.entry(shard).or_insert((0, 0));
             entry.1 += 1;
             if meta.status == ActorStatus::Active {
@@ -2455,7 +2537,7 @@ impl Kernel {
     /// shard's sample — for a host to pack-encode and publish. `sampled_at_ms` is the caller's clock
     /// reading, never read internally (this crate's purity rule: transports and time are injected).
     pub async fn runtime_metrics_snapshot(&self, sampled_at_ms: u64) -> RuntimeMetricsSnapshot {
-        RuntimeMetricsSnapshot { kernel: self.metrics(), actors: self.actor_metrics_samples(), shards: self.shard_metrics_samples(), sampled_at_ms }
+        RuntimeMetricsSnapshot { kernel: self.metrics().await, actors: self.actor_metrics_samples().await, shards: self.shard_metrics_samples().await, sampled_at_ms }
     }
 }
 //#endregion 🏛️Kernel
@@ -2479,13 +2561,13 @@ mod tests {
         //#region 🔖️PackRoundTrips
         macro_rules! round_trip {
             ($name:ident, $ty:ty, $value:expr) => {
-                #[test]
-                fn $name() {
+                #[semio_framework_async_macros::async_test]
+                async fn $name() {
                     let value: $ty = $value;
                     let mut bytes = Vec::new();
-                    value.pack_encode(&mut bytes);
+                    value.pack_encode(&mut bytes).await;
                     let mut pos = 0usize;
-                    let decoded = <$ty>::pack_decode(&bytes, &mut pos).unwrap();
+                    let decoded = <$ty>::pack_decode(&bytes, &mut pos).await.unwrap();
                     assert_eq!(pos, bytes.len());
                     assert_eq!(decoded, value);
                 }
@@ -2494,18 +2576,18 @@ mod tests {
 
         round_trip!(pack_round_trip_package_id, PackageId, PackageId("s.cad/extrude".into()));
         round_trip!(pack_round_trip_package_hash, PackageHash, PackageHash([7u8; 32]));
-        round_trip!(pack_round_trip_actor_id, ActorId, ActorId::new(42, 1, 99, 3));
+        round_trip!(pack_round_trip_actor_id, ActorId, ActorId::new(42, 1, 99, 3).await);
         round_trip!(pack_round_trip_actor_kind, ActorKind, ActorKind::PluginApp { plugin: PackageId("s.cad".into()), app_id: "s.cad.editor".into(), instance_id: 7 });
         round_trip!(pack_round_trip_lane, Lane, Lane::UserVisible);
-        round_trip!(pack_round_trip_budget, Budget, lane_defaults::budget_for(Lane::Interactive));
+        round_trip!(pack_round_trip_budget, Budget, lane_defaults::budget_for(Lane::Interactive).await);
         round_trip!(pack_round_trip_window_id, WindowId, WindowId(5));
         round_trip!(pack_round_trip_origin, Origin, Origin::Bus { topic: "os.runtime.metrics".into() });
         round_trip!(pack_round_trip_payload, Payload, Payload::Resume { checkpoint: Some(vec![9, 9, 9]) });
         round_trip!(pack_round_trip_coalesce_key, CoalesceKey, CoalesceKey("pointer-move".into()));
-        round_trip!(pack_round_trip_envelope, Envelope, env(ActorId::new(1, 0, 1, 0), Lane::Interactive, 7));
+        round_trip!(pack_round_trip_envelope, Envelope, env(ActorId::new(1, 0, 1, 0).await, Lane::Interactive, 7).await);
         round_trip!(pack_round_trip_turn_status, TurnStatus, TurnStatus::Faulted { detail: vec![1, 2] });
         round_trip!(pack_round_trip_usage, Usage, Usage { fuel: 1, wall_us: 2, memory_bytes: 3 });
-        round_trip!(pack_round_trip_turn_result, TurnResult, ok_turn());
+        round_trip!(pack_round_trip_turn_result, TurnResult, ok_turn().await);
         round_trip!(pack_round_trip_backpressure, Backpressure, Backpressure::Dropped { lane: Lane::Background });
         round_trip!(pack_round_trip_capability_grant, CapabilityGrant, CapabilityGrant { capability: "fs.read".into(), scope: Some(vec![1]) });
         round_trip!(pack_round_trip_failure_signal, FailureSignal, FailureSignal::HeartbeatMissed { count: 2 });
@@ -2514,47 +2596,47 @@ mod tests {
         round_trip!(pack_round_trip_actor_status, ActorStatus, ActorStatus::Suspended { checkpoint: Some(vec![1, 2, 3]) });
         round_trip!(pack_round_trip_shard_id, ShardId, ShardId(3));
         round_trip!(pack_round_trip_shard_kind, ShardKind, ShardKind::WebWorker);
-        round_trip!(pack_round_trip_decision, Decision, Decision { run: vec![TurnGrant { actor: ActorId::new(1, 0, 0, 0), shard: ShardId(0), budget: lane_defaults::budget_for(Lane::Background), envelopes: vec![] }], wake_at: Some(10) });
-        round_trip!(pack_round_trip_turn_grant, TurnGrant, TurnGrant { actor: ActorId::new(2, 1, 3, 0), shard: ShardId(1), budget: lane_defaults::budget_for(Lane::Maintenance), envelopes: vec![env(ActorId::new(2, 1, 3, 0), Lane::Maintenance, 1)] });
+        round_trip!(pack_round_trip_decision, Decision, Decision { run: vec![TurnGrant { actor: ActorId::new(1, 0, 0, 0).await, shard: ShardId(0), budget: lane_defaults::budget_for(Lane::Background).await, envelopes: vec![] }], wake_at: Some(10) });
+        round_trip!(pack_round_trip_turn_grant, TurnGrant, TurnGrant { actor: ActorId::new(2, 1, 3, 0).await, shard: ShardId(1), budget: lane_defaults::budget_for(Lane::Maintenance).await, envelopes: vec![env(ActorId::new(2, 1, 3, 0).await, Lane::Maintenance, 1).await] });
         round_trip!(pack_round_trip_scene_snapshot, SceneSnapshot, SceneSnapshot { revision: 3, committed_ms: 12, patches: vec![9, 9], node_count: 40 });
         round_trip!(pack_round_trip_shard_metrics, ShardMetrics, ShardMetrics { actors: 3, busy_ratio: 0.5, heartbeat_age_ms: 12 });
         round_trip!(pack_round_trip_kernel_metrics, KernelMetrics, KernelMetrics { actors: 3, shards: 4, packages: 2 });
-        round_trip!(pack_round_trip_actor_metrics_sample, ActorMetricsSample, ActorMetricsSample { id: ActorId::new(1, 0, 2, 0), package: PackageId("s.cad".into()), lane: Lane::UserVisible, status: ActorStatus::Active, metrics: ActorMetrics::default() });
+        round_trip!(pack_round_trip_actor_metrics_sample, ActorMetricsSample, ActorMetricsSample { id: ActorId::new(1, 0, 2, 0).await, package: PackageId("s.cad".into()), lane: Lane::UserVisible, status: ActorStatus::Active, metrics: ActorMetrics::default() });
         round_trip!(pack_round_trip_shard_metrics_sample, ShardMetricsSample, ShardMetricsSample { shard: ShardId(2), metrics: ShardMetrics { actors: 5, busy_ratio: 0.4, heartbeat_age_ms: 8 } });
         round_trip!(
             pack_round_trip_runtime_metrics_snapshot,
             RuntimeMetricsSnapshot,
             RuntimeMetricsSnapshot {
                 kernel: KernelMetrics { actors: 1, shards: 1, packages: 1 },
-                actors: vec![ActorMetricsSample { id: ActorId::new(0, 0, 0, 0), package: PackageId("s.a".into()), lane: Lane::Interactive, status: ActorStatus::Active, metrics: ActorMetrics::default() }],
+                actors: vec![ActorMetricsSample { id: ActorId::new(0, 0, 0, 0).await, package: PackageId("s.a".into()), lane: Lane::Interactive, status: ActorStatus::Active, metrics: ActorMetrics::default() }],
                 shards: vec![ShardMetricsSample { shard: ShardId(0), metrics: ShardMetrics { actors: 1, busy_ratio: 1.0, heartbeat_age_ms: 0 } }],
                 sampled_at_ms: 1234,
             }
         );
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn pack_round_trip_mailbox() {
-            let mut mailbox = Mailbox::new(4);
-            mailbox.enqueue(env(ActorId::new(1, 0, 0, 0), Lane::Interactive, 1));
-            mailbox.enqueue(env(ActorId::new(1, 0, 0, 0), Lane::Background, 2));
+            let mut mailbox = Mailbox::new(4).await;
+            mailbox.enqueue(env(ActorId::new(1, 0, 0, 0).await, Lane::Interactive, 1).await).await;
+            mailbox.enqueue(env(ActorId::new(1, 0, 0, 0).await, Lane::Background, 2).await).await;
             let mut bytes = Vec::new();
-            mailbox.pack_encode(&mut bytes);
+            mailbox.pack_encode(&mut bytes).await;
             let mut pos = 0usize;
-            let decoded = Mailbox::pack_decode(&bytes, &mut pos).unwrap();
+            let decoded = Mailbox::pack_decode(&bytes, &mut pos).await.unwrap();
             assert_eq!(pos, bytes.len());
             assert_eq!(decoded.len(), mailbox.len());
             assert_eq!(decoded.capacity, mailbox.capacity);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn pack_round_trip_actor_record() {
-            let mut kernel = Kernel::new(ShardKind::Thread, 4, 1, 4);
-            let id = kernel.activate(PackageId("s.cad".into()), 1, ActorKind::PluginApp { plugin: PackageId("s.cad".into()), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, None, ActivationEvent::Manual);
-            let record = kernel.actor_record(id).unwrap();
+            let mut kernel = Kernel::new(ShardKind::Thread, 4, 1, 4).await;
+            let id = kernel.activate(PackageId("s.cad".into()), 1, ActorKind::PluginApp { plugin: PackageId("s.cad".into()), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, None, ActivationEvent::Manual).await;
+            let record = kernel.actor_record(id).await.unwrap();
             let mut bytes = Vec::new();
-            record.pack_encode(&mut bytes);
+            record.pack_encode(&mut bytes).await;
             let mut pos = 0usize;
-            let decoded = ActorRecord::pack_decode(&bytes, &mut pos).unwrap();
+            let decoded = ActorRecord::pack_decode(&bytes, &mut pos).await.unwrap();
             assert_eq!(pos, bytes.len());
             assert_eq!(decoded, record);
         }
@@ -2564,12 +2646,12 @@ mod tests {
         /// `generation == 0`, and generation occupied the low bits, so the old modulo returned 0 for
         /// all of them — a bench-measured `perShardCounts {"0": 100}`. Asserts distribution, not
         /// mere validity: a "pin returns a shard in range" test passes when every answer is 0.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn pin_spreads_actors_of_one_plugin_across_the_pool() {
-            let mut table = ShardTable::new(ShardKind::Thread, 8, 0);
+            let mut table = ShardTable::new(ShardKind::Thread, 8, 0).await;
             let mut counts: std::collections::BTreeMap<u16, usize> = std::collections::BTreeMap::new();
             for ordinal in 0..100u32 {
-                *counts.entry(table.pin(ActorId::new(7, 0, ordinal, 0)).0).or_default() += 1;
+                *counts.entry(table.pin(ActorId::new(7, 0, ordinal, 0).await).await.0).or_default() += 1;
             }
             assert_eq!(counts.values().sum::<usize>(), 100);
             assert_eq!(counts.len(), 8, "all 8 shards must receive actors, got {counts:?}");
@@ -2578,25 +2660,28 @@ mod tests {
 
         /// 🔁️ Pinning the same actor twice is idempotent — a re-pin must not consume a second slot
         /// and skew the balance.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn pin_is_idempotent_for_the_same_actor() {
-            let mut table = ShardTable::new(ShardKind::Thread, 8, 0);
-            let actor = ActorId::new(3, 0, 11, 0);
-            assert_eq!(table.pin(actor), table.pin(actor));
+            let mut table = ShardTable::new(ShardKind::Thread, 8, 0).await;
+            let actor = ActorId::new(3, 0, 11, 0).await;
+            assert_eq!(table.pin(actor).await, table.pin(actor).await);
         }
 
         /// 🕳️ `unpin` leaves a gap; the next `pin` must refill it rather than stride past, which is
         /// exactly what a round-robin counter would do and why placement is least-loaded.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn pin_refills_the_gap_left_by_unpin() {
-            let mut table = ShardTable::new(ShardKind::Thread, 4, 0);
-            let actors: Vec<ActorId> = (0..8u32).map(|ordinal| ActorId::new(1, 0, ordinal, 0)).collect();
-            for actor in &actors {
-                table.pin(*actor);
+            let mut table = ShardTable::new(ShardKind::Thread, 4, 0).await;
+            let mut actors: Vec<ActorId> = Vec::new();
+            for ordinal in 0..8u32 {
+                actors.push(ActorId::new(1, 0, ordinal, 0).await);
             }
-            let freed = table.shard_of(actors[2]).unwrap();
-            table.unpin(actors[2]);
-            assert_eq!(table.pin(ActorId::new(1, 0, 99, 0)), freed);
+            for actor in &actors {
+                table.pin(*actor).await;
+            }
+            let freed = table.shard_of(actors[2]).await.unwrap();
+            table.unpin(actors[2]).await;
+            assert_eq!(table.pin(ActorId::new(1, 0, 99, 0).await).await, freed);
         }
 
         /// 🔥️ PROPERTY (terra-interactive-isolation): the mechanism this packet's mission asked for —
@@ -2604,9 +2689,9 @@ mod tests {
         /// actor as a co-resident. Pure/deterministic: injected `Usage`s stand in for real wall-clock
         /// turns (`ActorMetrics::is_saturating`'s whole point is never needing a clock/bench of its
         /// own), no thread/bench needed.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn interactive_actor_avoids_a_shard_saturated_by_cpu_bound_actors() {
-            let mut kernel = Kernel::new(ShardKind::Thread, 3, 0, 64);
+            let mut kernel = Kernel::new(ShardKind::Thread, 3, 0, 64).await;
             let background_package = PackageId("cpu-hog".into());
             // 🔢️ 6 Background actors round-robin 2-per-shard across 3 shards under plain least-loaded
             // `pin` (proven deterministic by `pin_spreads_actors_of_one_plugin_across_the_pool`'s own
@@ -2614,8 +2699,8 @@ mod tests {
             // the exact order, so this test stays correct even if that internal tie-break ever changes.
             let mut by_shard: std::collections::BTreeMap<u16, Vec<ActorId>> = std::collections::BTreeMap::new();
             for ordinal in 0..6u32 {
-                let id = kernel.activate(background_package.clone(), 1, ActorKind::PluginApp { plugin: background_package.clone(), app_id: "hog".into(), instance_id: ordinal }, Lane::Background, None, ActivationEvent::Manual);
-                let shard = kernel.actor_record(id).unwrap().shard;
+                let id = kernel.activate(background_package.clone(), 1, ActorKind::PluginApp { plugin: background_package.clone(), app_id: "hog".into(), instance_id: ordinal }, Lane::Background, None, ActivationEvent::Manual).await;
+                let shard = kernel.actor_record(id).await.unwrap().shard;
                 by_shard.entry(shard.0).or_default().push(id);
             }
             assert_eq!(by_shard.len(), 3, "expected all 3 shards to receive background actors: {by_shard:?}");
@@ -2629,40 +2714,40 @@ mod tests {
             let hot_turn = TurnResult { ui_patches: vec![], effects: vec![], next_wake: None, status: TurnStatus::Idle, usage: Usage { fuel: 100, wall_us: 40_000, memory_bytes: 1024 } };
             for shard in hot_shards {
                 for actor in &by_shard[shard] {
-                    kernel.complete(*actor, &hot_turn, 0).unwrap();
-                    kernel.complete(*actor, &hot_turn, 0).unwrap();
+                    kernel.complete(*actor, &hot_turn, 0).await.unwrap();
+                    kernel.complete(*actor, &hot_turn, 0).await.unwrap();
                 }
             }
 
-            let interactive_id = kernel.activate(PackageId("editor".into()), 2, ActorKind::PluginApp { plugin: PackageId("editor".into()), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, None, ActivationEvent::Manual);
-            let interactive_shard = kernel.actor_record(interactive_id).unwrap().shard;
+            let interactive_id = kernel.activate(PackageId("editor".into()), 2, ActorKind::PluginApp { plugin: PackageId("editor".into()), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, None, ActivationEvent::Manual).await;
+            let interactive_shard = kernel.actor_record(interactive_id).await.unwrap().shard;
             assert_eq!(interactive_shard.0, *safe_shard, "interactive actor must land on the one shard with no CPU-saturating co-resident, got {interactive_shard:?} (hot shards: {hot_shards:?})");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn pack_round_trip_shard_table() {
-            let mut table = ShardTable::new(ShardKind::Thread, 4, 1);
-            let actor = ActorId::new(1, 0, 0, 0);
-            table.pin(actor);
-            table.request_exclusive(ActorId::new(2, 0, 0, 0));
+            let mut table = ShardTable::new(ShardKind::Thread, 4, 1).await;
+            let actor = ActorId::new(1, 0, 0, 0).await;
+            table.pin(actor).await;
+            table.request_exclusive(ActorId::new(2, 0, 0, 0).await).await;
             let mut bytes = Vec::new();
-            table.pack_encode(&mut bytes);
+            table.pack_encode(&mut bytes).await;
             let mut pos = 0usize;
-            let decoded = ShardTable::pack_decode(&bytes, &mut pos).unwrap();
+            let decoded = ShardTable::pack_decode(&bytes, &mut pos).await.unwrap();
             assert_eq!(pos, bytes.len());
-            assert_eq!(decoded.shard_of(actor), table.shard_of(actor));
+            assert_eq!(decoded.shard_of(actor).await, table.shard_of(actor).await);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn pack_round_trip_actor_metrics() {
             let mut metrics = ActorMetrics::default();
             for i in 0..70u64 {
-                metrics.record_turn(&Usage { fuel: i, wall_us: i * 3, memory_bytes: 10 });
+                metrics.record_turn(&Usage { fuel: i, wall_us: i * 3, memory_bytes: 10 }).await;
             }
             let mut bytes = Vec::new();
-            metrics.pack_encode(&mut bytes);
+            metrics.pack_encode(&mut bytes).await;
             let mut pos = 0usize;
-            let decoded = ActorMetrics::pack_decode(&bytes, &mut pos).unwrap();
+            let decoded = ActorMetrics::pack_decode(&bytes, &mut pos).await.unwrap();
             assert_eq!(pos, bytes.len());
             assert_eq!(decoded, metrics);
             assert_eq!(decoded.wall_us_p95(), metrics.wall_us_p95());
@@ -2680,8 +2765,8 @@ mod tests {
         /// in-process values, never on bytes that had crossed a serde boundary).
         macro_rules! serde_round_trip {
             ($name:ident, $ty:ty, $value:expr) => {
-                #[test]
-                fn $name() {
+                #[semio_framework_async_macros::async_test]
+                async fn $name() {
                     let value: $ty = $value;
                     let bytes = serde_json::to_vec(&value).expect("serde_json::to_vec must not error — this is the exact defect this test exists to catch");
                     let decoded: $ty = serde_json::from_slice(&bytes).expect("serde_json::from_slice must round-trip what to_vec produced");
@@ -2692,26 +2777,26 @@ mod tests {
 
         serde_round_trip!(serde_round_trip_payload_event, Payload, Payload::Event { bytes: vec![1, 2, 3] });
         serde_round_trip!(serde_round_trip_payload_cancel, Payload, Payload::Cancel { seq: 42 });
-        serde_round_trip!(serde_round_trip_origin_actor, Origin, Origin::Actor { id: ActorId::new(1, 0, 2, 0) });
+        serde_round_trip!(serde_round_trip_origin_actor, Origin, Origin::Actor { id: ActorId::new(1, 0, 2, 0).await });
         serde_round_trip!(serde_round_trip_turn_status_faulted, TurnStatus, TurnStatus::Faulted { detail: b"boom".to_vec() });
         serde_round_trip!(serde_round_trip_failure_signal_trap, FailureSignal, FailureSignal::Trap { detail: "trapped".to_string() });
         serde_round_trip!(serde_round_trip_backpressure_dropped, Backpressure, Backpressure::Dropped { lane: Lane::Background });
         //#endregion 🔖️SerdeRoundTrips
 
         //#region 🔖️ActorIdBitPacking
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn actor_id_bit_packing_round_trips_all_fields() {
-            let id = ActorId::new(0xBEEF, 2, 0xC0FFEE, 0x1234 & 0x3FFF);
+            let id = ActorId::new(0xBEEF, 2, 0xC0FFEE, 0x1234 & 0x3FFF).await;
             assert_eq!(id.plugin_ordinal(), 0xBEEF);
             assert_eq!(id.kind_tag(), 2);
             assert_eq!(id.ordinal(), 0xC0FFEE);
             assert_eq!(id.generation(), 0x1234 & 0x3FFF);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn actor_id_next_generation_bumps_only_generation() {
-            let id = ActorId::new(3, 1, 9, 5);
-            let restarted = id.next_generation();
+            let id = ActorId::new(3, 1, 9, 5).await;
+            let restarted = id.next_generation().await;
             assert_eq!(restarted.plugin_ordinal(), id.plugin_ordinal());
             assert_eq!(restarted.kind_tag(), id.kind_tag());
             assert_eq!(restarted.ordinal(), id.ordinal());
@@ -2720,89 +2805,89 @@ mod tests {
         //#endregion 🔖️ActorIdBitPacking
 
         //#region 🔖️MailboxTests
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn mailbox_coalesces_latest_wins_older_dropped() {
-            let mut mailbox = Mailbox::new(10);
-            let actor = ActorId::new(1, 0, 0, 0);
+            let mut mailbox = Mailbox::new(10).await;
+            let actor = ActorId::new(1, 0, 0, 0).await;
             for i in 0..200u64 {
-                let mut e = env(actor, Lane::Interactive, i);
+                let mut e = env(actor, Lane::Interactive, i).await;
                 e.coalesce = Some(CoalesceKey("pointer-move".into()));
                 e.payload = Payload::Event { bytes: vec![i as u8] };
-                let bp = mailbox.enqueue(e);
+                let bp = mailbox.enqueue(e).await;
                 assert!(matches!(bp, Backpressure::Accept | Backpressure::Coalesced));
             }
             assert_eq!(mailbox.len(), 1, "200 coalesced moves must never queue more than the latest");
-            let popped = mailbox.pop_next().unwrap();
+            let popped = mailbox.pop_next().await.unwrap();
             assert_eq!(popped.payload, Payload::Event { bytes: vec![199] });
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn mailbox_backpressure_rejected_when_full_and_nothing_lower_priority() {
-            let mut mailbox = Mailbox::new(2);
-            let actor = ActorId::new(1, 0, 0, 0);
-            assert_eq!(mailbox.enqueue(env(actor, Lane::Maintenance, 1)), Backpressure::Accept);
-            assert_eq!(mailbox.enqueue(env(actor, Lane::Maintenance, 2)), Backpressure::Accept);
-            let bp = mailbox.enqueue(env(actor, Lane::Maintenance, 3));
+            let mut mailbox = Mailbox::new(2).await;
+            let actor = ActorId::new(1, 0, 0, 0).await;
+            assert_eq!(mailbox.enqueue(env(actor, Lane::Maintenance, 1).await).await, Backpressure::Accept);
+            assert_eq!(mailbox.enqueue(env(actor, Lane::Maintenance, 2).await).await, Backpressure::Accept);
+            let bp = mailbox.enqueue(env(actor, Lane::Maintenance, 3).await).await;
             assert_eq!(bp, Backpressure::Rejected, "no lower-priority lane to evict — must reject, never silently drop");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn mailbox_backpressure_drops_lower_priority_lane_to_admit_interactive() {
-            let mut mailbox = Mailbox::new(2);
-            let actor = ActorId::new(1, 0, 0, 0);
-            assert_eq!(mailbox.enqueue(env(actor, Lane::Maintenance, 1)), Backpressure::Accept);
-            assert_eq!(mailbox.enqueue(env(actor, Lane::Background, 2)), Backpressure::Accept);
-            let bp = mailbox.enqueue(env(actor, Lane::Interactive, 3));
+            let mut mailbox = Mailbox::new(2).await;
+            let actor = ActorId::new(1, 0, 0, 0).await;
+            assert_eq!(mailbox.enqueue(env(actor, Lane::Maintenance, 1).await).await, Backpressure::Accept);
+            assert_eq!(mailbox.enqueue(env(actor, Lane::Background, 2).await).await, Backpressure::Accept);
+            let bp = mailbox.enqueue(env(actor, Lane::Interactive, 3).await).await;
             assert_eq!(bp, Backpressure::Dropped { lane: Lane::Maintenance });
             assert_eq!(mailbox.len(), 2);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn mailbox_pop_next_honors_lane_priority_over_fifo() {
-            let mut mailbox = Mailbox::new(10);
-            let actor = ActorId::new(1, 0, 0, 0);
-            mailbox.enqueue(env(actor, Lane::Maintenance, 1));
-            mailbox.enqueue(env(actor, Lane::Background, 2));
-            mailbox.enqueue(env(actor, Lane::Interactive, 3));
-            assert_eq!(mailbox.pop_next().unwrap().lane, Lane::Interactive);
-            assert_eq!(mailbox.pop_next().unwrap().lane, Lane::Background);
-            assert_eq!(mailbox.pop_next().unwrap().lane, Lane::Maintenance);
+            let mut mailbox = Mailbox::new(10).await;
+            let actor = ActorId::new(1, 0, 0, 0).await;
+            mailbox.enqueue(env(actor, Lane::Maintenance, 1).await).await;
+            mailbox.enqueue(env(actor, Lane::Background, 2).await).await;
+            mailbox.enqueue(env(actor, Lane::Interactive, 3).await).await;
+            assert_eq!(mailbox.pop_next().await.unwrap().lane, Lane::Interactive);
+            assert_eq!(mailbox.pop_next().await.unwrap().lane, Lane::Background);
+            assert_eq!(mailbox.pop_next().await.unwrap().lane, Lane::Maintenance);
         }
         //#endregion 🔖️MailboxTests
 
         //#region 🔖️SchedulerFairness
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn drr_fairness_plugin_with_50_actors_does_not_starve_plugin_with_1() {
             // 🧪️ Both plugins are given abundant backlog up front (nobody runs dry mid-test), so the
             // measured split reflects level-1 DRR's PLUGIN-level fairness, not which plugin happened
             // to have offered work left when the other ran out. Without level 1, `s.busy` (50 actors)
             // would swamp `s.quiet` (1 actor) roughly 50:1 — see design §Scheduler.
-            let mut scheduler = Scheduler::new(4);
+            let mut scheduler = Scheduler::new(4).await;
             let busy_package = PackageId("s.busy".into());
             let quiet_package = PackageId("s.quiet".into());
-            let budget = lane_defaults::budget_for(Lane::Background);
+            let budget = lane_defaults::budget_for(Lane::Background).await;
             let mut busy_actors = Vec::new();
             for i in 0..50u32 {
-                let id = ActorId::new(1, 0, i, 0);
-                scheduler.register_actor(id, busy_package.clone(), Lane::Background, budget, ShardId(0));
+                let id = ActorId::new(1, 0, i, 0).await;
+                scheduler.register_actor(id, busy_package.clone(), Lane::Background, budget, ShardId(0)).await;
                 busy_actors.push(id);
             }
-            let quiet_actor = ActorId::new(2, 0, 0, 0);
-            scheduler.register_actor(quiet_actor, quiet_package, Lane::Background, budget, ShardId(1));
+            let quiet_actor = ActorId::new(2, 0, 0, 0).await;
+            scheduler.register_actor(quiet_actor, quiet_package, Lane::Background, budget, ShardId(1)).await;
 
             for &id in &busy_actors {
                 for seq in 0..30u64 {
-                    scheduler.submit(Envelope { to: id, from: Origin::Kernel, lane: Lane::Background, seq, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::Event { bytes: vec![] } });
+                    scheduler.submit(Envelope { to: id, from: Origin::Kernel, lane: Lane::Background, seq, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::Event { bytes: vec![] } }).await;
                 }
             }
             for seq in 0..500u64 {
-                scheduler.submit(Envelope { to: quiet_actor, from: Origin::Kernel, lane: Lane::Background, seq, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::Event { bytes: vec![] } });
+                scheduler.submit(Envelope { to: quiet_actor, from: Origin::Kernel, lane: Lane::Background, seq, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::Event { bytes: vec![] } }).await;
             }
 
             let mut busy_grants = 0u32;
             let mut quiet_grants = 0u32;
             for now in 0..100u64 {
-                let decision = scheduler.tick(now);
+                let decision = scheduler.tick(now).await;
                 for grant in &decision.run {
                     if grant.actor == quiet_actor {
                         quiet_grants += 1;
@@ -2817,135 +2902,135 @@ mod tests {
             assert!(ratio < 10.0, "level-1 DRR must keep PLUGIN-level share roughly comparable regardless of actor count (busy={busy_grants} quiet={quiet_grants} ratio={ratio}, naive per-actor scheduling would give ~50x)");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn deadline_preemption_runs_before_background_drr_deficit() {
-            let mut scheduler = Scheduler::new(1);
+            let mut scheduler = Scheduler::new(1).await;
             let package = PackageId("s.mixed".into());
-            let budget = lane_defaults::budget_for(Lane::Background);
-            let bg_actor = ActorId::new(1, 0, 0, 0);
-            let interactive_actor = ActorId::new(1, 0, 1, 0);
-            scheduler.register_actor(bg_actor, package.clone(), Lane::Background, budget, ShardId(0));
-            scheduler.register_actor(interactive_actor, package, Lane::Interactive, lane_defaults::budget_for(Lane::Interactive), ShardId(0));
-            scheduler.submit(Envelope { to: bg_actor, from: Origin::Kernel, lane: Lane::Background, seq: 1, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::Event { bytes: vec![] } });
-            scheduler.submit(Envelope { to: interactive_actor, from: Origin::Kernel, lane: Lane::Interactive, seq: 2, deadline_ms: Some(5), coalesce: None, cancel_of: None, payload: Payload::Event { bytes: vec![] } });
-            let decision = scheduler.tick(10);
+            let budget = lane_defaults::budget_for(Lane::Background).await;
+            let bg_actor = ActorId::new(1, 0, 0, 0).await;
+            let interactive_actor = ActorId::new(1, 0, 1, 0).await;
+            scheduler.register_actor(bg_actor, package.clone(), Lane::Background, budget, ShardId(0)).await;
+            scheduler.register_actor(interactive_actor, package, Lane::Interactive, lane_defaults::budget_for(Lane::Interactive).await, ShardId(0)).await;
+            scheduler.submit(Envelope { to: bg_actor, from: Origin::Kernel, lane: Lane::Background, seq: 1, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::Event { bytes: vec![] } }).await;
+            scheduler.submit(Envelope { to: interactive_actor, from: Origin::Kernel, lane: Lane::Interactive, seq: 2, deadline_ms: Some(5), coalesce: None, cancel_of: None, payload: Payload::Event { bytes: vec![] } }).await;
+            let decision = scheduler.tick(10).await;
             assert_eq!(decision.run.len(), 1);
             assert_eq!(decision.run[0].actor, interactive_actor, "an overdue interactive deadline must preempt DRR ordering");
         }
         //#endregion 🔖️SchedulerFairness
 
         //#region 🔖️FailureLadder
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn failure_ladder_escalates_and_decays_back_to_healthy() {
             let mut state = FailureState::new();
             assert_eq!(state.stage, FailureStage::Healthy);
 
-            let esc = state.on_signal(&FailureSignal::DeadlineOverrun { ratio: 1.2 }, Lane::Interactive, 0);
+            let esc = state.on_signal(&FailureSignal::DeadlineOverrun { ratio: 1.2 }, Lane::Interactive, 0).await;
             assert_eq!(esc, FailureEscalation::None);
             assert_eq!(state.stage, FailureStage::Warned);
 
-            let esc = state.on_signal(&FailureSignal::DeadlineOverrun { ratio: 1.4 }, Lane::Interactive, 10);
+            let esc = state.on_signal(&FailureSignal::DeadlineOverrun { ratio: 1.4 }, Lane::Interactive, 10).await;
             assert_eq!(esc, FailureEscalation::None);
             assert!(matches!(state.stage, FailureStage::Throttled { .. }), "second interactive warn must throttle (threshold=2)");
 
-            let esc = state.on_signal(&FailureSignal::MailboxOverflow, Lane::Interactive, 20);
+            let esc = state.on_signal(&FailureSignal::MailboxOverflow, Lane::Interactive, 20).await;
             assert_eq!(esc, FailureEscalation::None);
             assert!(matches!(state.stage, FailureStage::Suspended { .. }), "third interactive warn must suspend (threshold=2 -> suspend_at)");
 
             for i in 0..200u64 {
-                state.on_clean_turn(1_000_000 + i);
+                state.on_clean_turn(1_000_000 + i).await;
             }
             assert_eq!(state.stage, FailureStage::Healthy, "sustained clean turns must decay all the way back to Healthy, got {:?}", state.stage);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn failure_ladder_trap_then_quarantine_is_package_wide() {
-            let mut kernel = Kernel::new(ShardKind::Thread, 4, 1, 4);
+            let mut kernel = Kernel::new(ShardKind::Thread, 4, 1, 4).await;
             let package = PackageId("s.flaky".into());
-            let a = kernel.activate(package.clone(), 1, ActorKind::PluginApp { plugin: package.clone(), app_id: "a".into(), instance_id: 0 }, Lane::Background, None, ActivationEvent::Manual);
-            let b = kernel.activate(package.clone(), 1, ActorKind::PluginApp { plugin: package, app_id: "b".into(), instance_id: 1 }, Lane::Background, None, ActivationEvent::Manual);
+            let a = kernel.activate(package.clone(), 1, ActorKind::PluginApp { plugin: package.clone(), app_id: "a".into(), instance_id: 0 }, Lane::Background, None, ActivationEvent::Manual).await;
+            let b = kernel.activate(package.clone(), 1, ActorKind::PluginApp { plugin: package, app_id: "b".into(), instance_id: 1 }, Lane::Background, None, ActivationEvent::Manual).await;
 
             for i in 0..FAILURE_QUARANTINE_RESTART_THRESHOLD {
                 let faulted = TurnResult { ui_patches: vec![], effects: vec![], next_wake: None, status: TurnStatus::Faulted { detail: b"boom".to_vec() }, usage: Usage::default() };
-                kernel.complete(a, &faulted, (i as u64) * 100).unwrap();
+                kernel.complete(a, &faulted, (i as u64) * 100).await.unwrap();
             }
-            assert_eq!(kernel.actor_status(a), Some(&ActorStatus::Quarantined));
-            assert_eq!(kernel.actor_status(b), Some(&ActorStatus::Quarantined), "quarantine must be package-wide, not just the trapping actor");
+            assert_eq!(kernel.actor_status(a).await, Some(&ActorStatus::Quarantined));
+            assert_eq!(kernel.actor_status(b).await, Some(&ActorStatus::Quarantined), "quarantine must be package-wide, not just the trapping actor");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn failure_ladder_manual_reset_returns_to_healthy_immediately() {
             let mut state = FailureState::new();
-            state.on_signal(&FailureSignal::FuelExhausted, Lane::Background, 0);
+            state.on_signal(&FailureSignal::FuelExhausted, Lane::Background, 0).await;
             assert_ne!(state.stage, FailureStage::Healthy);
-            state.on_signal(&FailureSignal::ManualReset, Lane::Background, 1);
+            state.on_signal(&FailureSignal::ManualReset, Lane::Background, 1).await;
             assert_eq!(state.stage, FailureStage::Healthy);
             assert_eq!(state.warn_count, 0);
         }
         //#endregion 🔖️FailureLadder
 
         //#region 🔖️Scene
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn scene_revision_is_monotonic_and_reuses_snapshot_on_empty_commit() {
             let mut store = SceneStore::new();
-            let budget = lane_defaults::budget_for(Lane::Interactive);
-            let actor = ActorId::new(1, 0, 0, 0);
-            let first = store.commit_frame(0);
+            let budget = lane_defaults::budget_for(Lane::Interactive).await;
+            let actor = ActorId::new(1, 0, 0, 0).await;
+            let first = store.commit_frame(0).await;
             assert_eq!(first.revision, 0, "no pending patches yet -> initial empty snapshot, revision 0");
 
-            store.apply_patch(actor, vec![1, 2, 3], 10, &budget).unwrap();
-            let second = store.commit_frame(16);
+            store.apply_patch(actor, vec![1, 2, 3], 10, &budget).await.unwrap();
+            let second = store.commit_frame(16).await;
             assert_eq!(second.revision, 1);
             assert!(second.committed_ms >= first.committed_ms);
 
-            let third = store.commit_frame(32);
+            let third = store.commit_frame(32).await;
             assert_eq!(third.revision, second.revision, "nothing pending -> previous snapshot reused, same revision");
             assert!(Arc::ptr_eq(&second, &third));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn scene_ui_node_quota_truncates_and_signals() {
             let mut store = SceneStore::new();
-            let mut budget = lane_defaults::budget_for(Lane::Interactive);
+            let mut budget = lane_defaults::budget_for(Lane::Interactive).await;
             budget.ui_nodes = 100;
-            let actor = ActorId::new(1, 0, 0, 0);
-            let err = store.apply_patch(actor, vec![1], 150, &budget).unwrap_err();
+            let actor = ActorId::new(1, 0, 0, 0).await;
+            let err = store.apply_patch(actor, vec![1], 150, &budget).await.unwrap_err();
             assert_eq!(err, FailureSignal::UiQuota);
-            let snapshot = store.commit_frame(0);
+            let snapshot = store.commit_frame(0).await;
             assert_eq!(snapshot.node_count, 100, "node count must be truncated to the budget ceiling, never exceed it");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn scene_max_patch_bytes_rejects_oversized_patch() {
             let mut store = SceneStore::new();
-            let mut budget = lane_defaults::budget_for(Lane::Interactive);
+            let mut budget = lane_defaults::budget_for(Lane::Interactive).await;
             budget.max_patch_bytes = 4;
-            let actor = ActorId::new(1, 0, 0, 0);
-            let err = store.apply_patch(actor, vec![0; 100], 1, &budget).unwrap_err();
+            let actor = ActorId::new(1, 0, 0, 0).await;
+            let err = store.apply_patch(actor, vec![0; 100], 1, &budget).await.unwrap_err();
             assert_eq!(err, FailureSignal::UiQuota);
         }
         //#endregion 🔖️Scene
 
         //#region 🔖️ThreadTransport
-        #[test]
+        #[semio_framework_async_macros::async_test]
         #[cfg(not(target_arch = "wasm32"))]
         async fn thread_transport_duplex_send_recv_and_heartbeat() {
-            let (kernel_side, shard_side) = ThreadTransport::new_pair();
-            kernel_side.send(b"to-shard");
-            assert_eq!(shard_side.recv(), Some(b"to-shard".to_vec()));
-            shard_side.send(b"to-kernel");
-            assert_eq!(kernel_side.recv(), Some(b"to-kernel".to_vec()));
-            shard_side.beat(42);
-            assert_eq!(kernel_side.heartbeat(), 42);
+            let (kernel_side, shard_side) = ThreadTransport::new_pair().await;
+            kernel_side.send(b"to-shard").await;
+            assert_eq!(shard_side.recv().await, Some(b"to-shard".to_vec()));
+            shard_side.send(b"to-kernel").await;
+            assert_eq!(kernel_side.recv().await, Some(b"to-kernel".to_vec()));
+            shard_side.beat(42).await;
+            assert_eq!(kernel_side.heartbeat().await, 42);
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         #[cfg(not(target_arch = "wasm32"))]
         async fn thread_transport_kill_stops_recv() {
-            let (kernel_side, shard_side) = ThreadTransport::new_pair();
-            kernel_side.send(b"queued-before-kill");
-            kernel_side.kill();
-            assert_eq!(shard_side.recv(), None, "a killed transport must never yield a stale message");
+            let (kernel_side, shard_side) = ThreadTransport::new_pair().await;
+            kernel_side.send(b"queued-before-kill").await;
+            kernel_side.kill().await;
+            assert_eq!(shard_side.recv().await, None, "a killed transport must never yield a stale message");
         }
 
         /// 🎯️ terra-shard-grants requirement: `recv_deadline` must return `None` on a genuine
@@ -2957,78 +3042,78 @@ mod tests {
         /// header doc comment across the whole file) — deliberately NOT re-proven here via
         /// `std::thread::current()`, which would itself add a real (non-doc-comment) `std::thread`
         /// use to this file and defeat the very grep this test is meant to keep passing.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         #[cfg(not(target_arch = "wasm32"))]
         async fn recv_deadline_returns_none_on_timeout() {
-            let (_kernel_side, shard_side) = ThreadTransport::new_pair();
-            let result = shard_side.recv_deadline(std::time::Duration::from_millis(20));
+            let (_kernel_side, shard_side) = ThreadTransport::new_pair().await;
+            let result = shard_side.recv_deadline(std::time::Duration::from_millis(20)).await;
             assert_eq!(result, None, "nothing was ever sent — a timeout must yield None, not block forever");
         }
 
         /// 🎯️ The complementary case: a message sent before the deadline must still be delivered —
         /// `recv_deadline` is a bounded wait, not merely a disguised `recv()` that always returns
         /// `None` until timeout.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         #[cfg(not(target_arch = "wasm32"))]
         async fn recv_deadline_returns_the_message_when_one_arrives_before_the_timeout() {
-            let (kernel_side, shard_side) = ThreadTransport::new_pair();
-            kernel_side.send(b"before-deadline");
-            assert_eq!(shard_side.recv_deadline(std::time::Duration::from_millis(200)), Some(b"before-deadline".to_vec()));
+            let (kernel_side, shard_side) = ThreadTransport::new_pair().await;
+            kernel_side.send(b"before-deadline").await;
+            assert_eq!(shard_side.recv_deadline(std::time::Duration::from_millis(200)).await, Some(b"before-deadline".to_vec()));
         }
 
         /// 🛑️ Mirrors `thread_transport_kill_stops_recv` for the blocking variant — a killed
         /// transport must return `None` immediately, never wait out the full deadline.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         #[cfg(not(target_arch = "wasm32"))]
         async fn recv_deadline_returns_none_immediately_on_a_killed_transport() {
-            let (kernel_side, shard_side) = ThreadTransport::new_pair();
-            kernel_side.send(b"queued-before-kill");
-            kernel_side.kill();
-            assert_eq!(shard_side.recv_deadline(std::time::Duration::from_millis(20)), None, "a killed transport must never yield a stale message");
+            let (kernel_side, shard_side) = ThreadTransport::new_pair().await;
+            kernel_side.send(b"queued-before-kill").await;
+            kernel_side.kill().await;
+            assert_eq!(shard_side.recv_deadline(std::time::Duration::from_millis(20)).await, None, "a killed transport must never yield a stale message");
         }
         //#endregion 🔖️ThreadTransport
 
         //#region 🔖️KernelFacade
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn kernel_activate_submit_tick_complete_round_trip() {
-            let mut kernel = Kernel::new(ShardKind::Thread, 4, 1, 4);
+            let mut kernel = Kernel::new(ShardKind::Thread, 4, 1, 4).await;
             let window = WindowId(1);
-            let actor = kernel.activate(PackageId("s.cad".into()), 1, ActorKind::PluginApp { plugin: PackageId("s.cad".into()), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, Some(window), ActivationEvent::WindowOpen { window });
-            let bp = kernel.submit(&env(actor, Lane::Interactive, 1));
+            let actor = kernel.activate(PackageId("s.cad".into()), 1, ActorKind::PluginApp { plugin: PackageId("s.cad".into()), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, Some(window), ActivationEvent::WindowOpen { window }).await;
+            let bp = kernel.submit(&env(actor, Lane::Interactive, 1).await).await;
             assert_eq!(bp, Backpressure::Accept);
-            let decision = kernel.tick(0);
+            let decision = kernel.tick(0).await;
             assert_eq!(decision.run.len(), 1);
             assert_eq!(decision.run[0].actor, actor);
-            let escalation = kernel.complete(actor, &ok_turn(), 1).unwrap();
+            let escalation = kernel.complete(actor, &ok_turn().await, 1).await.unwrap();
             assert_eq!(escalation, FailureEscalation::None);
-            assert_eq!(kernel.actor_status(actor), Some(&ActorStatus::Active));
+            assert_eq!(kernel.actor_status(actor).await, Some(&ActorStatus::Active));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn kernel_suspend_resume_round_trip() {
-            let mut kernel = Kernel::new(ShardKind::Thread, 4, 1, 4);
-            let actor = kernel.activate(PackageId("s.cad".into()), 1, ActorKind::Extension { plugin: PackageId("s.cad".into()), extension_id: "e1".into() }, Lane::Background, None, ActivationEvent::Manual);
-            kernel.suspend(actor, Some(vec![1, 2, 3])).unwrap();
-            assert_eq!(kernel.actor_status(actor), Some(&ActorStatus::Suspended { checkpoint: Some(vec![1, 2, 3]) }));
-            kernel.resume(actor).unwrap();
-            assert_eq!(kernel.actor_status(actor), Some(&ActorStatus::Active));
+            let mut kernel = Kernel::new(ShardKind::Thread, 4, 1, 4).await;
+            let actor = kernel.activate(PackageId("s.cad".into()), 1, ActorKind::Extension { plugin: PackageId("s.cad".into()), extension_id: "e1".into() }, Lane::Background, None, ActivationEvent::Manual).await;
+            kernel.suspend(actor, Some(vec![1, 2, 3])).await.unwrap();
+            assert_eq!(kernel.actor_status(actor).await, Some(&ActorStatus::Suspended { checkpoint: Some(vec![1, 2, 3]) }));
+            kernel.resume(actor).await.unwrap();
+            assert_eq!(kernel.actor_status(actor).await, Some(&ActorStatus::Active));
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn kernel_request_exclusive_then_release() {
-            let mut kernel = Kernel::new(ShardKind::Thread, 4, 1, 4);
-            let actor = kernel.activate(PackageId("s.cad".into()), 1, ActorKind::Job { owner: ActorId::new(0, 0, 0, 0), job_id: 1 }, Lane::Background, None, ActivationEvent::Manual);
-            let shard = kernel.request_exclusive(actor).unwrap();
+            let mut kernel = Kernel::new(ShardKind::Thread, 4, 1, 4).await;
+            let actor = kernel.activate(PackageId("s.cad".into()), 1, ActorKind::Job { owner: ActorId::new(0, 0, 0, 0).await, job_id: 1 }, Lane::Background, None, ActivationEvent::Manual).await;
+            let shard = kernel.request_exclusive(actor).await.unwrap();
             assert!(shard.0 >= 3, "exclusive shards must come from the reserved tail of the pool");
-            kernel.release_exclusive(actor);
+            kernel.release_exclusive(actor).await;
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn kernel_metrics_counts_actors_shards_packages() {
-            let mut kernel = Kernel::new(ShardKind::Thread, 4, 0, 4);
-            kernel.activate(PackageId("s.a".into()), 1, ActorKind::Extension { plugin: PackageId("s.a".into()), extension_id: "e".into() }, Lane::Background, None, ActivationEvent::Manual);
-            kernel.activate(PackageId("s.b".into()), 2, ActorKind::Extension { plugin: PackageId("s.b".into()), extension_id: "e".into() }, Lane::Background, None, ActivationEvent::Manual);
-            let metrics = kernel.metrics();
+            let mut kernel = Kernel::new(ShardKind::Thread, 4, 0, 4).await;
+            kernel.activate(PackageId("s.a".into()), 1, ActorKind::Extension { plugin: PackageId("s.a".into()), extension_id: "e".into() }, Lane::Background, None, ActivationEvent::Manual).await;
+            kernel.activate(PackageId("s.b".into()), 2, ActorKind::Extension { plugin: PackageId("s.b".into()), extension_id: "e".into() }, Lane::Background, None, ActivationEvent::Manual).await;
+            let metrics = kernel.metrics().await;
             assert_eq!(metrics.actors, 2);
             assert_eq!(metrics.packages, 2);
             assert_eq!(metrics.shards, 4);
@@ -3039,18 +3124,18 @@ mod tests {
         /// 📈️ T1 runtime evidence: drives two real actors (different packages/lanes) through
         /// `activate`/`submit`/`tick`/`complete`, then asserts `runtime_metrics_snapshot`'s rows —
         /// package, lane, status, turns, shard — match what the kernel actually did, not a fake.
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn runtime_metrics_snapshot_reflects_real_kernel_activity() {
-            let mut kernel = Kernel::new(ShardKind::Thread, 2, 0, 8);
-            let cad = kernel.activate(PackageId("s.cad".into()), 1, ActorKind::PluginApp { plugin: PackageId("s.cad".into()), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, None, ActivationEvent::Manual);
-            let stdio = kernel.activate(PackageId("s.stdio".into()), 2, ActorKind::Extension { plugin: PackageId("s.stdio".into()), extension_id: "e".into() }, Lane::Background, None, ActivationEvent::Manual);
+            let mut kernel = Kernel::new(ShardKind::Thread, 2, 0, 8).await;
+            let cad = kernel.activate(PackageId("s.cad".into()), 1, ActorKind::PluginApp { plugin: PackageId("s.cad".into()), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, None, ActivationEvent::Manual).await;
+            let stdio = kernel.activate(PackageId("s.stdio".into()), 2, ActorKind::Extension { plugin: PackageId("s.stdio".into()), extension_id: "e".into() }, Lane::Background, None, ActivationEvent::Manual).await;
 
-            kernel.submit(&env(cad, Lane::Interactive, 1));
-            let decision = kernel.tick(0);
+            kernel.submit(&env(cad, Lane::Interactive, 1).await).await;
+            let decision = kernel.tick(0).await;
             assert_eq!(decision.run.len(), 1, "only `cad` has a pending envelope this tick");
-            kernel.complete(cad, &ok_turn(), 5).unwrap();
+            kernel.complete(cad, &ok_turn().await, 5).await.unwrap();
 
-            let snapshot = kernel.runtime_metrics_snapshot(5);
+            let snapshot = kernel.runtime_metrics_snapshot(5).await;
             assert_eq!(snapshot.sampled_at_ms, 5);
             assert_eq!(snapshot.kernel.actors, 2);
             assert_eq!(snapshot.kernel.packages, 2);
@@ -3072,30 +3157,30 @@ mod tests {
             assert_eq!(total_shard_actors, 2, "every actor is counted on exactly one shard");
         }
 
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn runtime_metrics_due_gates_at_the_2hz_interval_and_always_fires_once() {
-            assert!(runtime_metrics_due(None, 0), "never published yet must always be due");
-            assert!(!runtime_metrics_due(Some(1_000), 1_200), "200ms since last publish is inside the 500ms window");
-            assert!(runtime_metrics_due(Some(1_000), 1_500), "exactly the 500ms interval must fire");
-            assert!(runtime_metrics_due(Some(1_000), 2_000), "well past the interval must fire");
+            assert!(runtime_metrics_due(None, 0).await, "never published yet must always be due");
+            assert!(!runtime_metrics_due(Some(1_000), 1_200).await, "200ms since last publish is inside the 500ms window");
+            assert!(runtime_metrics_due(Some(1_000), 1_500).await, "exactly the 500ms interval must fire");
+            assert!(runtime_metrics_due(Some(1_000), 2_000).await, "well past the interval must fire");
         }
         //#endregion 🔖️RuntimeMetricsSnapshot
 
         //#region 🔖️ShardTable
-        #[test]
+        #[semio_framework_async_macros::async_test]
         async fn shard_sizing_policy_clamps_native_and_web() {
-            assert_eq!(clamp_native_shard_count(1), 2);
-            assert_eq!(clamp_native_shard_count(9), 8);
-            assert_eq!(clamp_native_shard_count(5), 4);
-            assert_eq!(clamp_web_shard_count(1), 1);
-            assert_eq!(clamp_web_shard_count(9), 4);
+            assert_eq!(clamp_native_shard_count(1).await, 2);
+            assert_eq!(clamp_native_shard_count(9).await, 8);
+            assert_eq!(clamp_native_shard_count(5).await, 4);
+            assert_eq!(clamp_web_shard_count(1).await, 1);
+            assert_eq!(clamp_web_shard_count(9).await, 4);
         }
         //#endregion 🔖️ShardTable
     }
 
     //#region 🔖️Typegen
     #[cfg(feature = "typegen")]
-    #[test]
+    #[semio_framework_async_macros::async_test]
     async fn exports_typescript_bindings() {
         use ts_rs::TS;
         use crate::*;

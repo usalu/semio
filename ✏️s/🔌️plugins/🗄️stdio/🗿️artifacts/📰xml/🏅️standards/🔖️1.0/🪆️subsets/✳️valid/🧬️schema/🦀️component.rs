@@ -26,34 +26,34 @@ pub mod derived_construction {
         type Diff = XmlDiff;
 
         async fn empty() -> Self {
-            Self(XmlAnyBuilder::empty())
+            Self(XmlAnyBuilder::empty().await)
         }
 
         async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
-            Self(XmlAnyBuilder::from_snapshot(snapshot))
+            Self(XmlAnyBuilder::from_snapshot(snapshot).await)
         }
 
         async fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self(XmlAnyBuilder::from_text(text)?))
+            Ok(Self(XmlAnyBuilder::from_text(text).await?))
         }
 
         async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self(XmlAnyBuilder::from_binary(bytes)?))
+            Ok(Self(XmlAnyBuilder::from_binary(bytes).await?))
         }
 
         async fn mutate(self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let (inner, diff) = self.0.mutate(mutation);
+            let (inner, diff) = self.0.mutate(mutation).await;
             (Self(inner), diff)
         }
 
         async fn absorb(self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            Ok(Self(self.0.absorb(diff)?))
+            Ok(Self(self.0.absorb(diff).await?))
         }
 
         /// 🛡️ The real construction gate: however `self.0`'s inner snapshot got here, a hard XML 1.0
         /// §5.1 validity violation fails `build()` -- soft/advisory diagnostics pass through as `Ok`.
         async fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
-            let snapshot = self.0.build()?;
+            let snapshot = self.0.build().await?;
             let hard: Vec<Diagnostic> = check_valid_conformance(&snapshot).into_iter().filter(|d| matches!(d.severity, Severity::Error | Severity::Fatal)).collect();
             if hard.is_empty() {
                 Ok(snapshot)
@@ -139,7 +139,7 @@ pub mod derived_analysis {
                 out.push(hard(CODE_DOCTYPE_MISSING, "no <!DOCTYPE ...> declaration present -- XML 1.0 §5.1 validity requires one (a document without one can be well-formed at best)".into()));
             }
             Some(doctype) => {
-                if let Some(actual_root) = root_element_name(snapshot) {
+                if let Some(actual_root) = root_element_name(snapshot).await {
                     if doctype.name != actual_root {
                         out.push(hard(CODE_ROOT_NAME_MISMATCH, format!("doctype declares root name '{}' but the actual root element is '<{actual_root}>' -- §2.8 requires the DOCTYPE Name to match the document element", doctype.name)));
                     }
@@ -169,15 +169,15 @@ pub mod derived_analysis {
         const DIALECT: Dialect = DIALECT;
 
         async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
-            XmlAnyAnalyzer::sniff(source)
+            XmlAnyAnalyzer::sniff(source).await
         }
 
         async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
-            let inner = XmlAnyAnalyzer::analyze(sources);
+            let inner = XmlAnyAnalyzer::analyze(sources).await;
             let mut diagnostics = inner.diagnostics.clone();
             let mut confidence = inner.confidence;
             if let Some(snapshot) = &inner.parts.snapshot {
-                let checks = check_valid_conformance(snapshot);
+                let checks = check_valid_conformance(snapshot).await;
                 if checks.iter().any(|d| matches!(d.severity, Severity::Error | Severity::Fatal)) {
                     confidence = IoConfidence::Low;
                 }

@@ -244,11 +244,11 @@ impl TiffSnapshot {
     }
     /// 📐️ `ImageWidth` (256) from IFD 0, widened to `u32`.
     pub async fn width(&self) -> Option<u32> {
-        self.tag(TAG_IMAGE_WIDTH).and_then(|t| t.values.first_u32())
+        self.tag(TAG_IMAGE_WIDTH).await.and_then(|t| t.values.first_u32())
     }
     /// 📐️ `ImageLength` (257) from IFD 0, widened to `u32`.
     pub async fn height(&self) -> Option<u32> {
-        self.tag(TAG_IMAGE_LENGTH).and_then(|t| t.values.first_u32())
+        self.tag(TAG_IMAGE_LENGTH).await.and_then(|t| t.values.first_u32())
     }
 }
 //#endregion Snapshot
@@ -276,13 +276,13 @@ impl store::ArtifactDsl for TiffSnapshot {
             bytes.push(byte);
             i += 2;
         }
-        crate::artifacts::tiff::engine::decode_tiff(&bytes).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        crate::artifacts::tiff::engine::decode_tiff(&bytes).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 
     async fn print_dsl(&self) -> String {
-        let bytes = crate::artifacts::tiff::engine::encode_tiff(self).unwrap_or_default();
+        let bytes = crate::artifacts::tiff::engine::encode_tiff(self).await.unwrap_or_default();
         let body: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -290,8 +290,8 @@ impl store::ArtifactDsl for TiffSnapshot {
 impl store::ArtifactPack for TiffSnapshot {
     async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
-        let raw = crate::artifacts::tiff::engine::encode_tiff(self).map_err(|e| store::PackError::Schema(e))?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let raw = crate::artifacts::tiff::engine::encode_tiff(self).await.map_err(|e| store::PackError::Schema(e))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
 
@@ -301,7 +301,7 @@ impl store::ArtifactPack for TiffSnapshot {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
-        crate::artifacts::tiff::engine::decode_tiff(&inner).map_err(|e| store::PackError::Schema(e))
+        crate::artifacts::tiff::engine::decode_tiff(&inner).await.map_err(|e| store::PackError::Schema(e))
     }
 }
 //#endregion HandcraftedArtifactCodecs

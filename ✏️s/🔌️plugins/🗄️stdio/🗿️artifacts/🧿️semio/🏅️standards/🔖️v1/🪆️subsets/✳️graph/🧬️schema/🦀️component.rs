@@ -95,12 +95,12 @@ pub mod derived_construction {
         /// 🏗️ Appends one node, in insertion order (id-keyed set — order carries no display
         /// meaning, but insertion order is preserved for determinism).
         pub async fn add_node(mut self, id: impl Into<String>, kind: impl Into<String>, label: impl Into<String>, position: SemioPoint2, ports: Vec<SemioGraphPort>, properties: Vec<SemioValueEntry>) -> Self {
-            self.snapshot.nodes.push(SemioGraphNode { id: GraphNodeId::new(id), kind: kind.into(), label: label.into(), position, ports, properties });
+            self.snapshot.nodes.push(SemioGraphNode { id: GraphNodeId::new(id).await, kind: kind.into(), label: label.into(), position, ports, properties });
             self
         }
         /// 🏗️ Appends one edge, in insertion order.
         pub async fn add_edge(mut self, id: impl Into<String>, source: impl Into<String>, target: impl Into<String>, kind: impl Into<String>, label: impl Into<String>) -> Self {
-            self.snapshot.edges.push(SemioGraphEdge { id: GraphEdgeId::new(id), source: GraphNodeId::new(source), target: GraphNodeId::new(target), kind: kind.into(), label: label.into() });
+            self.snapshot.edges.push(SemioGraphEdge { id: GraphEdgeId::new(id).await, source: GraphNodeId::new(source).await, target: GraphNodeId::new(target).await, kind: kind.into(), label: label.into() });
             self
         }
     }
@@ -117,18 +117,18 @@ pub mod derived_construction {
             Self { snapshot }
         }
         async fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self::from_snapshot(<SemioGraphSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+            Ok(Self::from_snapshot(<SemioGraphSnapshot as store::ArtifactDsl>::parse_dsl(text).await?).await)
         }
         async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<SemioGraphSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+            Ok(Self::from_snapshot(<SemioGraphSnapshot as store::ArtifactPack>::decode_pack(bytes).await?).await)
         }
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let diff = <Self::Mutation as protocol::Mutation<SemioGraphSnapshot>>::diff(&mutation, &self.snapshot);
-            let diff = diff.apply_to(&mut self.snapshot);
+            let diff = <Self::Mutation as protocol::Mutation<SemioGraphSnapshot>>::diff(&mutation, &self.snapshot).await;
+            let diff = diff.apply_to(&mut self.snapshot).await;
             (self, diff)
         }
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            self.snapshot = <SemioGraphDiff as protocol::MutationDiff<SemioGraphSnapshot>>::apply(&diff, &self.snapshot)?;
+            self.snapshot = <SemioGraphDiff as protocol::MutationDiff<SemioGraphSnapshot>>::apply(&diff, &self.snapshot).await?;
             Ok(self)
         }
         async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
@@ -200,14 +200,14 @@ pub mod derived_analysis {
             let mut confidence = IoConfidence::High;
             for source in sources {
                 match source {
-                    AnalyzeSource::Text(text) => match <SemioGraphSnapshot as store::ArtifactDsl>::parse_dsl(text) {
+                    AnalyzeSource::Text(text) => match <SemioGraphSnapshot as store::ArtifactDsl>::parse_dsl(text).await {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
                             diagnostics.push(dsl::Diagnostic::error("stdio.analyze.graph", dsl::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
-                    AnalyzeSource::Binary(bytes) => match <SemioGraphSnapshot as store::ArtifactPack>::decode_pack(bytes) {
+                    AnalyzeSource::Binary(bytes) => match <SemioGraphSnapshot as store::ArtifactPack>::decode_pack(bytes).await {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;

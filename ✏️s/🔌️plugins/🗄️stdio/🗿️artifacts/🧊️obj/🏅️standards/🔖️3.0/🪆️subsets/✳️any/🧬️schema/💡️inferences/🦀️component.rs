@@ -25,7 +25,7 @@ pub struct ObjInference {
 
 impl protocol::Inference<ObjSnapshot> for ObjInference {
     async fn infer(snapshot: &ObjSnapshot) -> Self {
-        Self { bounds: compute_obj_bounds(snapshot) }
+        Self { bounds: compute_obj_bounds(snapshot).await }
     }
 }
 

@@ -26,7 +26,7 @@ pub struct SemioDocumentInference {
 
 impl protocol::Inference<SemioDocumentSnapshot> for SemioDocumentInference {
     async fn infer(snapshot: &SemioDocumentSnapshot) -> Self {
-        Self { outline: compute_semio_document_outline(snapshot) }
+        Self { outline: compute_semio_document_outline(snapshot).await }
     }
 }
 

@@ -73,14 +73,14 @@ mod tests {
     async fn parses_and_prints_a_slash_path() {
         let segments = parse_slash_path_text("beams/solid-timber/glulam").await.expect("parse_slash_path_text");
         assert_eq!(segments, vec!["beams".to_string(), "solid-timber".to_string(), "glulam".to_string()]);
-        assert_eq!(print_slash_path(&segments), "beams/solid-timber/glulam");
+        assert_eq!(print_slash_path(&segments).await, "beams/solid-timber/glulam");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn single_segment_path_round_trips() {
         let segments = parse_slash_path_text("beams").await.expect("parse_slash_path_text");
         assert_eq!(segments, vec!["beams".to_string()]);
-        assert_eq!(print_slash_path(&segments), "beams");
+        assert_eq!(print_slash_path(&segments).await, "beams");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -97,7 +97,7 @@ mod tests {
     async fn parses_and_prints_a_count_literal() {
         let n = parse_count_text("x24").await.expect("parse_count_text");
         assert_eq!(n, 24);
-        assert_eq!(print_count(n), "x24");
+        assert_eq!(print_count(n).await, "x24");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -115,7 +115,7 @@ mod tests {
     async fn compat_pair_reuses_the_edge_grammar_directly() {
         let value = crate::os_dsl::notation::parse_edge_text("b-l--b-s").await.expect("parse_edge_text");
         assert_eq!(value.from, EdgeNode { id: "b-l".to_string(), kind: None, port: None });
-        let printed = print_edge(&value);
+        let printed = print_edge(&value).await;
         let link = value.link.expect("link");
         assert_eq!(link.directed, false);
         assert_eq!(link.to, EdgeNode { id: "b-s".to_string(), kind: None, port: None });

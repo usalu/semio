@@ -1,0 +1,602 @@
+    Checking semio-framework-number v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust)
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:39:22: error[E0308]: mismatched types: expected `&Self`, found `&impl Future<Output = Self>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:39:13: error[E0308]: mismatched types: expected type parameter `Self`, found associated type
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:42:22: error[E0308]: mismatched types: expected type parameter `Self`, found associated type
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:45:22: error[E0308]: mismatched types: expected type parameter `Self`, found associated type
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:51:24: error[E0308]: mismatched types: expected type parameter `Self`, found associated type
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:59:37: error[E0599]: no method named `add` found for associated type `impl Future<Output = Self>` in the current scope: method not found in `impl Future<Output = Self>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:61:29: error[E0599]: no method named `add` found for associated type `impl Future<Output = Self>` in the current scope: method not found in `impl Future<Output = Self>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:65:24: error[E0599]: no method named `neg` found for associated type `impl Future<Output = Self>` in the current scope: method not found in `impl Future<Output = Self>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:67:17: error[E0308]: mismatched types: expected type parameter `Self`, found associated type
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:77:37: error[E0599]: no method named `mul` found for associated type `impl Future<Output = Self>` in the current scope: method not found in `impl Future<Output = Self>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:79:24: error[E0308]: mismatched types: expected type parameter `Self`, found associated type
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:82:13: error[E0308]: mismatched types: expected type parameter `Self`, found associated type
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:109:16: error[E0308]: mismatched types: expected `bool`, found associated type
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:109:34: error[E0308]: mismatched types: expected `bool`, found associated type
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:110:24: error[E0308]: mismatched types: expected type parameter `Self`, found associated type
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:113:27: error[E0599]: no method named `exact_div` found for associated type `impl Future<Output = Self>` in the current scope: method not found in `impl Future<Output = Self>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:130:19: error[E0599]: no method named `expect` found for associated type `impl Future<Output = Option<T>>` in the current scope: method not found in `impl Future<Output = Option<T>>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:130:69: error[E0308]: mismatched types: expected type parameter `T`, found associated type
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:136:12: error[E0308]: mismatched types: expected `bool`, found associated type
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:136:27: error[E0308]: mismatched types: expected `bool`, found associated type
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:137:13: error[E0308]: mismatched types: expected type parameter `T`, found associated type
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:139:13: error[E0308]: mismatched types: expected type parameter `T`, found associated type
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:154:23: error[E0599]: `impl Future<Output = Option<Self>>` is not an iterator: `impl Future<Output = Option<Self>>` is not an iterator
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:259:13: error[E0308]: mismatched types: expected `f64`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:264:13: error[E0308]: mismatched types: expected `(f64, f64)`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:396:13: error[E0308]: mismatched types: expected `Natural`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:402:13: error[E0308]: mismatched types: expected `Natural`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:448:16: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:463:13: error[E0308]: mismatched types: expected `Natural`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:469:24: error[E0308]: mismatched types: expected `Natural`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:479:13: error[E0308]: mismatched types: expected `Natural`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:483:16: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:498:13: error[E0308]: mismatched types: expected `Natural`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:503:13: error[E0308]: mismatched types: expected `Natural`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:508:13: error[E0308]: mismatched types: expected `Natural`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:528:13: error[E0308]: mismatched types: expected `Natural`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:550:18: error[E0308]: mismatched types: expected `Natural`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:587:24: error[E0308]: mismatched types: expected `Vec<u64>`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:596:56: error[E0599]: no method named `add` found for opaque type `impl Future<Output = Natural>` in the current scope: method not found in `impl Future<Output = Natural>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:597:56: error[E0599]: no method named `add` found for opaque type `impl Future<Output = Natural>` in the current scope: method not found in `impl Future<Output = Natural>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:600:48: error[E0277]: `Vec<u64>` is not a future: `Vec<u64>` is not a future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:601:51: error[E0599]: no method named `clone` found for opaque type `impl Future<Output = Vec<u64>>` in the current scope: method not found in `impl Future<Output = Vec<u64>>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:602:51: error[E0599]: no method named `clone` found for opaque type `impl Future<Output = Vec<u64>>` in the current scope: method not found in `impl Future<Output = Vec<u64>>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:603:36: error[E0599]: no method named `checked_sub` found for opaque type `impl Future<Output = Natural>` in the current scope: method not found in `impl Future<Output = Natural>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:605:56: error[E0599]: no method named `len` found for opaque type `impl Future<Output = Vec<u64>>` in the current scope: method not found in `impl Future<Output = Vec<u64>>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:606:37: error[E0599]: no method named `iter` found for opaque type `impl Future<Output = Vec<u64>>` in the current scope: method not found in `impl Future<Output = Vec<u64>>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:610:43: error[E0277]: `[u64]` is not a future: `[u64]` is not a future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:610:43: error[E0277]: the size for values of type `[u64]` cannot be known at compilation time: doesn't have a size known at compile-time
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:638:29: error[E0308]: mismatched types: expected `Vec<u64>`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:638:13: error[E0308]: mismatched types: expected `Natural`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:649:28: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:650:24: error[E0308]: mismatched types: expected `Natural`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:662:13: error[E0308]: mismatched types: expected `Natural`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:677:14: error[E0308]: mismatched types: expected `Natural`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:685:21: error[E0600]: cannot apply unary operator `!` to type `impl Future<Output = bool>`: cannot apply unary operator `!`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:687:25: error[E0308]: mismatched types: expected `Natural`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:690:21: error[E0308]: mismatched types: expected future, found `(_, _)`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:691:28: error[E0308]: mismatched types: expected `Natural`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:697:23: error[E0609]: no field `limbs` on type `impl Future<Output = Natural>`: field not available in `impl Future`, but it is available in its `Output`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:698:23: error[E0609]: no field `limbs` on type `impl Future<Output = Natural>`: field not available in `impl Future`, but it is available in its `Output`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:699:15: error[E0609]: no field `limbs` on type `impl Future<Output = Natural>`: field not available in `impl Future`, but it is available in its `Output`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:699:30: error[E0609]: no field `limbs` on type `impl Future<Output = Natural>`: field not available in `impl Future`, but it is available in its `Output`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:702:27: error[E0609]: no field `limbs` on type `impl Future<Output = Natural>`: field not available in `impl Future`, but it is available in its `Output`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:703:30: error[E0609]: no field `limbs` on type `impl Future<Output = Natural>`: field not available in `impl Future`, but it is available in its `Output`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:706:34: error[E0609]: no field `limbs` on type `impl Future<Output = Natural>`: field not available in `impl Future`, but it is available in its `Output`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:706:67: error[E0609]: no field `limbs` on type `impl Future<Output = Natural>`: field not available in `impl Future`, but it is available in its `Output`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:713:94: error[E0609]: no field `limbs` on type `impl Future<Output = Natural>`: field not available in `impl Future`, but it is available in its `Output`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:722:41: error[E0609]: no field `limbs` on type `impl Future<Output = Natural>`: field not available in `impl Future`, but it is available in its `Output`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:724:33: error[E0609]: no field `limbs` on type `impl Future<Output = Natural>`: field not available in `impl Future`, but it is available in its `Output`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:726:27: error[E0609]: no field `limbs` on type `impl Future<Output = Natural>`: field not available in `impl Future`, but it is available in its `Output`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:729:27: error[E0609]: no field `limbs` on type `impl Future<Output = Natural>`: field not available in `impl Future`, but it is available in its `Output`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:733:33: error[E0609]: no field `limbs` on type `impl Future<Output = Natural>`: field not available in `impl Future`, but it is available in its `Output`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:736:23: error[E0609]: no field `limbs` on type `impl Future<Output = Natural>`: field not available in `impl Future`, but it is available in its `Output`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:740:42: error[E0609]: no field `limbs` on type `impl Future<Output = Natural>`: field not available in `impl Future`, but it is available in its `Output`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:740:73: error[E0609]: no field `limbs` on type `impl Future<Output = Natural>`: field not available in `impl Future`, but it is available in its `Output`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:742:27: error[E0609]: no field `limbs` on type `impl Future<Output = Natural>`: field not available in `impl Future`, but it is available in its `Output`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:745:23: error[E0609]: no field `limbs` on type `impl Future<Output = Natural>`: field not available in `impl Future`, but it is available in its `Output`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:745:40: error[E0609]: no field `limbs` on type `impl Future<Output = Natural>`: field not available in `impl Future`, but it is available in its `Output`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:747:23: error[E0609]: no field `limbs` on type `impl Future<Output = Natural>`: field not available in `impl Future`, but it is available in its `Output`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:752:15: error[E0609]: no field `limbs` on type `impl Future<Output = Natural>`: field not available in `impl Future`, but it is available in its `Output`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:753:47: error[E0609]: no field `limbs` on type `impl Future<Output = Natural>`: field not available in `impl Future`, but it is available in its `Output`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:753:54: error[E0599]: no method named `shr` found for opaque type `impl Future<Output = Natural>` in the current scope: method not found in `impl Future<Output = Natural>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:754:14: error[E0308]: mismatched types: expected `Natural`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:765:37: error[E0599]: no method named `mul` found for opaque type `impl Future<Output = Natural>` in the current scope: method not found in `impl Future<Output = Natural>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:767:24: error[E0308]: mismatched types: expected `Natural`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:770:13: error[E0308]: mismatched types: expected `Natural`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:776:13: error[E0308]: mismatched types: expected `Natural`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:782:16: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:786:37: error[E0599]: no method named `shl` found for opaque type `impl Future<Output = Natural>` in the current scope: method not found in `impl Future<Output = Natural>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:786:46: error[E0369]: cannot divide `impl Future<Output = u64>` by `u64`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:815:16: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:818:16: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:823:44: error[E0599]: no method named `unwrap` found for opaque type `impl Future<Output = Option<u64>>` in the current scope: method not found in `impl Future<Output = Option<u64>>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:823:76: error[E0599]: no method named `unwrap` found for opaque type `impl Future<Output = Option<u64>>` in the current scope: method not found in `impl Future<Output = Option<u64>>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:824:42: error[E0599]: no method named `unwrap` found for opaque type `impl Future<Output = Option<u64>>` in the current scope: method not found in `impl Future<Output = Option<u64>>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:824:17: error[E0308]: mismatched types: expected `Natural`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:826:46: error[E0599]: no method named `unwrap` found for opaque type `impl Future<Output = Option<u64>>` in the current scope: method not found in `impl Future<Output = Option<u64>>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:826:21: error[E0308]: mismatched types: expected `Natural`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:830:39: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = Option<Natural>>` in the current scope: method not found in `impl Future<Output = Option<Natural>>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:831:20: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:835:13: error[E0308]: mismatched types: expected `Natural`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:841:16: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:846:19: error[E0600]: cannot apply unary operator `!` to type `impl Future<Output = bool>`: cannot apply unary operator `!`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:847:21: error[E0308]: mismatched types: expected future, found `(_, _)`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:859:16: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:877:33: error[E0599]: no method named `mul` found for opaque type `impl Future<Output = Natural>` in the current scope: method not found in `impl Future<Output = Natural>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:879:18: error[E0308]: mismatched types: expected `Natural`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:914:17: error[E0308]: mismatched types: expected `Natural`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1198:16: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1206:49: error[E0308]: mismatched types: expected `Natural`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1210:53: error[E0308]: mismatched types: expected `Natural`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1215:24: error[E0308]: mismatched types: expected `Integer`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1218:36: error[E0308]: mismatched types: expected `Natural`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1218:13: error[E0308]: mismatched types: expected `Integer`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1223:24: error[E0308]: mismatched types: expected `Integer`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1226:36: error[E0308]: mismatched types: expected `Natural`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1226:13: error[E0308]: mismatched types: expected `Integer`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1230:13: error[E0308]: mismatched types: expected `Integer`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1234:23: error[E0277]: the `?` operator can only be applied to values that implement `Try`: the `?` operator cannot be applied to type `impl Future<Output = Option<u64>>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1281:13: error[E0308]: mismatched types: expected `Integer`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1286:31: error[E0308]: mismatched types: expected `Integer`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1297:57: error[E0308]: mismatched types: expected `Natural`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1297:37: error[E0308]: `match` arms have incompatible types: expected `Integer`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1300:96: error[E0599]: no method named `unwrap` found for opaque type `impl Future<Output = Option<Natural>>` in the current scope: method not found in `impl Future<Output = Option<Natural>>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1300:25: error[E0308]: mismatched types: expected `Integer`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1302:95: error[E0599]: no method named `unwrap` found for opaque type `impl Future<Output = Option<Natural>>` in the current scope: method not found in `impl Future<Output = Option<Natural>>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1302:25: error[E0308]: mismatched types: expected `Integer`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1309:22: error[E0308]: mismatched types: expected `&Integer`, found `&impl Future<Output = Integer>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1309:13: error[E0308]: mismatched types: expected `Integer`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1313:16: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1313:34: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1314:24: error[E0308]: mismatched types: expected `Integer`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1317:36: error[E0308]: mismatched types: expected `Natural`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1317:13: error[E0308]: mismatched types: expected `Integer`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1324:21: error[E0600]: cannot apply unary operator `!` to type `impl Future<Output = bool>`: cannot apply unary operator `!`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1325:17: error[E0308]: mismatched types: expected future, found `(_, _)`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1327:14: error[E0308]: mismatched types: expected `Integer`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1327:44: error[E0308]: mismatched types: expected `Integer`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1332:17: error[E0308]: mismatched types: expected future, found `(_, _)`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1342:17: error[E0308]: mismatched types: expected future, found `(_, _)`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1344:20: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1357:31: error[E0599]: no method named `is_zero` found for opaque type `impl Future<Output = Natural>` in the current scope: method not found in `impl Future<Output = Natural>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1359:23: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1364:36: error[E0308]: mismatched types: expected `Natural`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1364:13: error[E0308]: mismatched types: expected `Integer`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1369:16: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1372:51: error[E0308]: mismatched types: expected `Natural`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1372:18: error[E0308]: mismatched types: expected `Integer`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1377:16: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1381:46: error[E0308]: mismatched types: expected `Natural`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1381:18: error[E0308]: mismatched types: expected `Integer`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1385:13: error[E0308]: mismatched types: expected `Natural`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1393:19: error[E0600]: cannot apply unary operator `!` to type `impl Future<Output = bool>`: cannot apply unary operator `!`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1394:21: error[E0308]: mismatched types: expected future, found `(_, _)`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1396:51: error[E0308]: mismatched types: expected `Integer`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1397:35: error[E0599]: no method named `sub` found for opaque type `impl Future<Output = Integer>` in the current scope: method not found in `impl Future<Output = Integer>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1399:35: error[E0599]: no method named `sub` found for opaque type `impl Future<Output = Integer>` in the current scope: method not found in `impl Future<Output = Integer>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1402:16: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1403:18: error[E0308]: mismatched types: expected `Integer`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1403:37: error[E0599]: no method named `neg` found for opaque type `impl Future<Output = Integer>` in the current scope: method not found in `impl Future<Output = Integer>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1403:50: error[E0599]: no method named `neg` found for opaque type `impl Future<Output = Integer>` in the current scope: method not found in `impl Future<Output = Integer>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1405:25: error[E0308]: mismatched types: expected `Integer`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1405:32: error[E0308]: mismatched types: expected `Integer`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1410:16: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1410:34: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1411:24: error[E0308]: mismatched types: expected `Natural`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1414:64: error[E0599]: no method named `div_rem` found for opaque type `impl Future<Output = Natural>` in the current scope: method not found in `impl Future<Output = Natural>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1419:16: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1420:32: error[E0277]: `impl Future<Output = String>` doesn't implement `std::fmt::Display`: `impl Future<Output = String>` cannot be formatted with the default formatter
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1422:17: error[E0308]: mismatched types: expected `String`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1476:17: error[E0308]: mismatched types: expected `Integer`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1497:13: error[E0308]: mismatched types: expected `Integer`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1500:13: error[E0308]: mismatched types: expected `Integer`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1503:13: error[E0308]: mismatched types: expected `Integer`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1506:13: error[E0308]: mismatched types: expected `Integer`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1509:13: error[E0308]: mismatched types: expected `Integer`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1512:13: error[E0308]: mismatched types: expected `Integer`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1515:13: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1518:13: error[E0308]: mismatched types: expected `Integer`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1521:13: error[E0308]: mismatched types: expected `Integer`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1530:16: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1533:17: error[E0308]: mismatched types: expected future, found `(_, _)`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1543:32: error[E0308]: mismatched types: expected `Natural`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1543:13: error[E0308]: mismatched types: expected `Integer`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1546:32: error[E0308]: mismatched types: expected `Natural`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1546:13: error[E0308]: mismatched types: expected `Integer`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1551:13: error[E0308]: mismatched types: expected `(Integer, Integer)`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1681:16: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1684:41: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1684:99: error[E0308]: `if` and `else` have incompatible types: expected `(impl Future<Output = Integer>, ...)`, found `(Integer, impl Future<Output = Natural>)`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1685:18: error[E0308]: mismatched types: expected `Rational`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1689:16: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1690:38: error[E0308]: mismatched types: expected `Integer`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1690:62: error[E0308]: mismatched types: expected `Natural`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1692:39: error[E0599]: no method named `gcd` found for opaque type `impl Future<Output = &Natural>` in the current scope: method not found in `impl Future<Output = &Natural>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1696:52: error[E0599]: no method named `div_rem` found for opaque type `impl Future<Output = &Natural>` in the current scope: method not found in `impl Future<Output = &Natural>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1697:17: error[E0308]: mismatched types: expected future, found `(_, _)`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1698:28: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1698:83: error[E0599]: no method named `neg` found for opaque type `impl Future<Output = Integer>` in the current scope: method not found in `impl Future<Output = Integer>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1703:41: error[E0308]: mismatched types: expected `Natural`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1707:13: error[E0308]: arguments to this function are incorrect
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1707:13: error[E0308]: mismatched types: expected `Option<Rational>`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1711:27: error[E0308]: mismatched types: expected `Integer`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1711:51: error[E0308]: mismatched types: expected `Natural`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1715:27: error[E0308]: mismatched types: expected `Integer`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1715:50: error[E0308]: mismatched types: expected `Natural`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1727:13: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1731:27: error[E0308]: mismatched types: expected `Natural`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1735:27: error[E0308]: mismatched types: expected `Integer`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1740:40: error[E0308]: mismatched types: expected `&Integer`, found `&impl Future<Output = Integer>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1740:83: error[E0599]: no method named `add` found for opaque type `impl Future<Output = Integer>` in the current scope: method not found in `impl Future<Output = Integer>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1740:102: error[E0308]: mismatched types: expected `&Integer`, found `&impl Future<Output = Integer>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1742:36: error[E0308]: mismatched types: expected `Natural`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1742:13: error[E0308]: mismatched types: expected `Rational`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1746:27: error[E0308]: mismatched types: expected `Integer`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1750:22: error[E0308]: mismatched types: expected `&Rational`, found `&impl Future<Output = Rational>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1750:13: error[E0308]: mismatched types: expected `Rational`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1754:13: error[E0308]: arguments to this function are incorrect
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1754:13: error[E0308]: mismatched types: expected `Rational`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1758:16: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1761:16: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1762:78: error[E0599]: no method named `neg` found for opaque type `impl Future<Output = Integer>` in the current scope: method not found in `impl Future<Output = Integer>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1762:92: error[E0308]: mismatched types: expected `Natural`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1764:36: error[E0308]: mismatched types: expected `Integer`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1764:86: error[E0308]: mismatched types: expected `Natural`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1769:23: error[E0599]: `impl Future<Output = Option<Rational>>` is not an iterator: `impl Future<Output = Option<Rational>>` is not an iterator
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1774:22: error[E0308]: arguments to this function are incorrect
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1774:22: error[E0308]: mismatched types: expected `Rational`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1776:28: error[E0599]: `impl Future<Output = Option<Rational>>` is not an iterator: `impl Future<Output = Option<Rational>>` is not an iterator
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1783:51: error[E0308]: mismatched types: expected `&Integer`, found `&impl Future<Output = Integer>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1783:17: error[E0308]: mismatched types: expected future, found `(_, _)`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1788:26: error[E0599]: no method named `add` found for opaque type `impl Future<Output = Integer>` in the current scope: method not found in `impl Future<Output = Integer>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1788:34: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1788:79: error[E0308]: `if` and `else` have incompatible types: expected future, found a different future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1792:45: error[E0308]: mismatched types: expected `&Integer`, found `&impl Future<Output = Integer>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1792:17: error[E0308]: mismatched types: expected future, found `(_, _)`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1799:59: error[E0599]: no method named `clone` found for opaque type `impl Future<Output = Integer>` in the current scope: method not found in `impl Future<Output = Integer>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1799:33: error[E0308]: mismatched types: expected `&Rational`, found `&impl Future<Output = Rational>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1800:45: error[E0599]: no method named `unwrap` found for opaque type `impl Future<Output = Option<Rational>>` in the current scope: method not found in `impl Future<Output = Option<Rational>>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1801:24: error[E0599]: `impl Future<Output = Rational>` is not an iterator: `impl Future<Output = Rational>` is not an iterator
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1802:45: error[E0308]: mismatched types: expected `Integer`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1803:54: error[E0599]: no method named `add` found for opaque type `impl Future<Output = Integer>` in the current scope: method not found in `impl Future<Output = Integer>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1805:30: error[E0599]: no method named `magnitude` found for opaque type `impl Future<Output = Integer>` in the current scope: method not found in `impl Future<Output = Integer>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1806:31: error[E0599]: no method named `add` found for opaque type `impl Future<Output = Integer>` in the current scope: method not found in `impl Future<Output = Integer>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1808:25: error[E0308]: mismatched types: expected `Integer`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1822:16: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1825:27: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1827:36: error[E0599]: no method named `bit_length` found for opaque type `impl Future<Output = &Natural>` in the current scope: method not found in `impl Future<Output = &Natural>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1830:75: error[E0599]: no method named `shl` found for opaque type `impl Future<Output = &Natural>` in the current scope: method not found in `impl Future<Output = &Natural>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1830:134: error[E0599]: no method named `clone` found for opaque type `impl Future<Output = &Natural>` in the current scope: method not found in `impl Future<Output = &Natural>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1828:26: error[E0605]: non-primitive cast: `impl Future<Output = u64>` as `i64`: an `as` expression can only be used to convert between primitive types or to coerce to a specific trait object
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1843:29: error[E0308]: mismatched types: expected `Rational`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1855:68: error[E0308]: mismatched types: expected `Natural`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1855:79: error[E0599]: no method named `neg` found for opaque type `impl Future<Output = Integer>` in the current scope: method not found in `impl Future<Output = Integer>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1855:116: error[E0308]: mismatched types: expected `Natural`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1857:96: error[E0599]: no method named `shl` found for opaque type `impl Future<Output = Natural>` in the current scope: method not found in `impl Future<Output = Natural>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1857:22: error[E0308]: mismatched types: expected `Rational`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1859:78: error[E0599]: no method named `shl` found for opaque type `impl Future<Output = Natural>` in the current scope: method not found in `impl Future<Output = Natural>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1859:41: error[E0308]: mismatched types: expected `Integer`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1859:17: error[E0308]: mismatched types: expected `Option<Rational>`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1869:26: error[E0599]: no method named `is_zero` found for opaque type `impl Future<Output = Integer>` in the current scope: method not found in `impl Future<Output = Integer>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1870:50: error[E0308]: mismatched types: expected `&Integer`, found `&impl Future<Output = Integer>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1870:21: error[E0308]: mismatched types: expected future, found `(_, _)`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1872:25: error[E0308]: mismatched types: expected `Integer`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1880:55: error[E0599]: no method named `len` found for opaque type `impl Future<Output = Vec<Integer>>` in the current scope: method not found in `impl Future<Output = Vec<Integer>>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1883:22: error[E0277]: `&impl Future<Output = Vec<Integer>>` is not an iterator: `&impl Future<Output = Vec<Integer>>` is not an iterator
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1886:61: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = Option<Rational>>` in the current scope: method not found in `impl Future<Output = Option<Rational>>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1887:27: error[E0308]: mismatched types: expected future, found a different future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1889:27: error[E0308]: mismatched types: expected future, found a different future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1899:47: error[E0308]: mismatched types: expected `Integer`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1900:22: error[E0277]: `&impl Future<Output = Vec<Rational>>` is not an iterator: `&impl Future<Output = Vec<Rational>>` is not an iterator
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1907:13: error[E0308]: mismatched types: expected `Rational`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1953:13: error[E0308]: mismatched types: expected `Rational`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1956:13: error[E0308]: mismatched types: expected `Rational`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1959:13: error[E0308]: mismatched types: expected `Rational`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1962:13: error[E0308]: mismatched types: expected `Rational`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1965:13: error[E0308]: mismatched types: expected `Rational`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1968:13: error[E0308]: mismatched types: expected `Rational`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1971:13: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1974:36: error[E0308]: mismatched types: expected `Integer`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1974:13: error[E0308]: mismatched types: expected `Rational`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1983:13: error[E0308]: mismatched types: expected `Option<Rational>`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1988:13: error[E0308]: mismatched types: expected `Rational`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1993:13: error[E0308]: mismatched types: expected `(Rational, Rational)`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1998:13: error[E0308]: mismatched types: expected `Option<Rational>`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2131:26: error[E0308]: mismatched types: expected `u64`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2133:17: error[E0308]: mismatched types: expected `u64`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2189:40: error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = u64>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2201:12: error[E0600]: cannot apply unary operator `!` to type `impl Future<Output = bool>`: cannot apply unary operator `!`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2205:25: error[E0308]: mismatched types: expected `u64`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2216:15: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2224:18: error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = u64>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2225:29: error[E0308]: mismatched types: expected `u64`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2229:24: error[E0369]: binary operation `!=` cannot be applied to type `impl Future<Output = u64>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2230:24: error[E0308]: arguments to this function are incorrect
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2230:24: error[E0308]: mismatched types: expected future, found a different future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2236:29: error[E0308]: mismatched types: expected `u64`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2238:17: error[E0308]: arguments to this function are incorrect
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2238:17: error[E0308]: mismatched types: expected future, found a different future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2239:17: error[E0308]: arguments to this function are incorrect
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2239:17: error[E0308]: mismatched types: expected future, found a different future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2240:17: error[E0308]: arguments to this function are incorrect
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2240:17: error[E0308]: mismatched types: expected future, found a different future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2246:19: error[E0277]: the `?` operator can only be applied to values that implement `Try`: the `?` operator cannot be applied to type `impl Future<Output = Option<u64>>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2249:43: error[E0605]: non-primitive cast: `impl Future<Output = u64>` as `u128`: an `as` expression can only be used to convert between primitive types or to coerce to a specific trait object
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2257:22: error[E0277]: the `?` operator can only be applied to values that implement `Try`: the `?` operator cannot be applied to type `impl Future<Output = Option<(u64, u64)>>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2264:45: error[E0369]: binary operation `!=` cannot be applied to type `impl Future<Output = u64>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2268:49: error[E0308]: mismatched types: expected `u64`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2270:24: error[E0277]: `&impl Future<Output = Vec<(u64, u32)>>` is not an iterator: `&impl Future<Output = Vec<(u64, u32)>>` is not an iterator
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2956:23: error[E0277]: `impl Future<Output = Vec<(u64, u32)>>` is not an iterator: `impl Future<Output = Vec<(u64, u32)>>` is not an iterator
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2271:25: error[E0599]: no method named `is_multiple_of` found for opaque type `impl Future<Output = u64>` in the current scope: method not found in `impl Future<Output = u64>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2271:57: error[E0308]: mismatched types: expected `u64`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2271:71: error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = u64>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2275:14: error[E0308]: mismatched types: expected `u64`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2285:53: error[E0308]: mismatched types: expected `u64`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2287:45: error[E0369]: binary operation `!=` cannot be applied to type `impl Future<Output = u64>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2290:28: error[E0277]: `&impl Future<Output = Vec<(u64, u32)>>` is not an iterator: `&impl Future<Output = Vec<(u64, u32)>>` is not an iterator
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2291:35: error[E0369]: cannot divide `impl Future<Output = u64>` by `_`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2291:43: error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = u64>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2341:18: error[E0308]: mismatched types: expected `u64`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2343:30: error[E0308]: mismatched types: expected `u64`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2359:17: error[E0308]: mismatched types: expected future, found `(_, _, _)`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2364:31: error[E0308]: mismatched types: expected `u64`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2378:17: error[E0308]: mismatched types: expected future, found `(_, _, _)`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2383:31: error[E0308]: mismatched types: expected `u64`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2399:28: error[E0277]: the `?` operator can only be applied to values that implement `Try`: the `?` operator cannot be applied to type `impl Future<Output = Option<ModInt>>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2399:18: error[E0308]: mismatched types: expected `ModInt`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2404:13: error[E0308]: mismatched types: expected `ModInt`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2409:13: error[E0308]: mismatched types: expected `(ModInt, ModInt)`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2420:47: error[E0599]: `impl Future<Output = Option<u64>>` is not an iterator: `impl Future<Output = Option<u64>>` is not an iterator
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2561:18: error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = u64>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2561:28: error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = u64>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2565:21: error[E0308]: arguments to this function are incorrect
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2565:21: error[E0308]: mismatched types: expected future, found a different future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2566:22: error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = u64>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2593:39: error[E0308]: mismatched types: expected `&Natural`, found `&impl Future<Output = Natural>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2593:45: error[E0599]: no method named `unwrap` found for opaque type `impl Future<Output = Option<Natural>>` in the current scope: method not found in `impl Future<Output = Option<Natural>>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2601:14: error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = Natural>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2605:17: error[E0308]: arguments to this function are incorrect
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2605:17: error[E0308]: mismatched types: expected future, found a different future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2614:31: error[E0599]: no method named `div_rem` found for opaque type `impl Future<Output = Natural>` in the current scope: method not found in `impl Future<Output = Natural>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2621:17: error[E0308]: mismatched types: expected future, found `(_, _)`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2625:21: error[E0308]: mismatched types: expected integer, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2626:16: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2627:41: error[E0308]: mismatched types: expected `&Natural`, found `&impl Future<Output = Natural>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2627:26: error[E0308]: mismatched types: expected future, found a different future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2631:9: error[E0308]: mismatched types: expected `Natural`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2640:16: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2641:20: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2643:12: error[E0600]: cannot apply unary operator `!` to type `impl Future<Output = bool>`: cannot apply unary operator `!`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2646:37: error[E0308]: mismatched types: expected `&Natural`, found `&impl Future<Output = Natural>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2646:12: error[E0600]: cannot apply unary operator `!` to type `impl Future<Output = bool>`: cannot apply unary operator `!`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2649:30: error[E0599]: no method named `first` found for opaque type `impl Future<Output = &[u64]>` in the current scope: method not found in `impl Future<Output = &[u64]>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2649:72: error[E0599]: `impl Future<Output = &[u64]>` is not an iterator: `impl Future<Output = &[u64]>` is not an iterator
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2651:39: error[E0308]: mismatched types: expected `&Natural`, found `&impl Future<Output = Natural>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2651:62: error[E0599]: no method named `unwrap_or_else` found for opaque type `impl Future<Output = Option<Natural>>` in the current scope: method not found in `impl Future<Output = Option<Natural>>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2657:53: error[E0599]: no method named `div_rem` found for opaque type `impl Future<Output = Natural>` in the current scope: method not found in `impl Future<Output = Natural>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2660:16: error[E0600]: cannot apply unary operator `!` to type `impl Future<Output = bool>`: cannot apply unary operator `!`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2653:24: error[E0605]: non-primitive cast: `impl Future<Output = u64>` as `u128`: an `as` expression can only be used to convert between primitive types or to coerce to a specific trait object
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2653:53: error[E0605]: non-primitive cast: `impl Future<Output = u64>` as `u128`: an `as` expression can only be used to convert between primitive types or to coerce to a specific trait object
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2668:35: error[E0308]: mismatched types: expected `&Natural`, found `&impl Future<Output = Natural>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2669:23: error[E0599]: no method named `bit` found for opaque type `impl Future<Output = Natural>` in the current scope: method not found in `impl Future<Output = Natural>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2669:43: error[E0369]: binary operation `>` cannot be applied to type `impl Future<Output = Natural>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2670:35: error[E0599]: no method named `add` found for opaque type `impl Future<Output = Natural>` in the current scope: method not found in `impl Future<Output = Natural>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2672:22: error[E0369]: binary operation `<=` cannot be applied to type `impl Future<Output = Natural>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2673:20: error[E0308]: mismatched types: expected `Natural`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2675:25: error[E0308]: mismatched types: expected `&Natural`, found `&impl Future<Output = Natural>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2675:15: error[E0600]: cannot apply unary operator `!` to type `impl Future<Output = bool>`: cannot apply unary operator `!`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2676:35: error[E0599]: no method named `add` found for opaque type `impl Future<Output = Natural>` in the current scope: method not found in `impl Future<Output = Natural>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2678:9: error[E0308]: mismatched types: expected `Natural`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2717:24: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2723:47: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2727:27: error[E0599]: `impl Future<Output = impl Iterator<Item = usize> + '_>` is not an iterator: `impl Future<Output = impl Iterator<Item = usize> + '_>` is not an iterator
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2741:37: error[E0369]: cannot calculate the remainder of `impl Future<Output = u64>` divided by `u64`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2757:21: error[E0308]: mismatched types: expected `u64`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2766:25: error[E0308]: mismatched types: expected `u64`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2796:16: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2804:21: error[E0308]: mismatched types: expected `u64`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2805:23: error[E0277]: cannot divide `u64` by `impl Future<Output = u64>`: no implementation for `u64 / impl Future<Output = u64>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2826:16: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2827:38: error[E0599]: `impl Future<Output = Vec<(u64, u32)>>` is not an iterator: `impl Future<Output = Vec<(u64, u32)>>` is not an iterator
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2832:24: error[E0599]: no method named `primes` found for opaque type `impl Future<Output = Sieve>` in the current scope: method not found in `impl Future<Output = Sieve>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2834:35: error[E0599]: no method named `is_some` found for opaque type `impl Future<Output = Option<u64>>` in the current scope: method not found in `impl Future<Output = Option<u64>>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2839:48: error[E0308]: mismatched types: expected `&Natural`, found `&impl Future<Output = Natural>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2839:21: error[E0308]: mismatched types: expected future, found `(_, _)`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2848:31: error[E0308]: mismatched types: expected `Natural`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2852:18: error[E0277]: can't compare `Natural` with `impl Future<Output = Natural>`: no implementation for `Natural == impl Future<Output = Natural>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2855:20: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2856:31: error[E0277]: `impl Future<Output = Vec<(u64, u32)>>` is not an iterator: `impl Future<Output = Vec<(u64, u32)>>` is not an iterator
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2858:62: error[E0308]: mismatched types: expected `Natural`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2860:43: error[E0308]: mismatched types: expected `Natural`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2865:16: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2873:36: error[E0308]: mismatched types: expected `&Natural`, found `&impl Future<Output = Natural>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2873:17: error[E0308]: mismatched types: expected future, found `(_, _)`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2874:21: error[E0308]: mismatched types: expected `&Natural`, found `&impl Future<Output = Natural>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2893:12: error[E0600]: cannot apply unary operator `!` to type `impl Future<Output = bool>`: cannot apply unary operator `!`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2894:20: error[E0308]: mismatched types: expected `Natural`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2896:30: error[E0599]: no method named `first` found for opaque type `impl Future<Output = &[u64]>` in the current scope: method not found in `impl Future<Output = &[u64]>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2900:54: error[E0369]: cannot calculate the remainder of `impl Future<Output = u64>` divided by `{integer}`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2902:39: error[E0599]: no method named `add` found for opaque type `impl Future<Output = Natural>` in the current scope: method not found in `impl Future<Output = Natural>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2906:39: error[E0599]: no method named `clone` found for opaque type `impl Future<Output = Natural>` in the current scope: method not found in `impl Future<Output = Natural>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2906:50: error[E0599]: no method named `clone` found for opaque type `impl Future<Output = Natural>` in the current scope: method not found in `impl Future<Output = Natural>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2908:21: error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = Natural>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2909:24: error[E0599]: no method named `clone` found for opaque type `impl Future<Output = Natural>` in the current scope: method not found in `impl Future<Output = Natural>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2910:24: error[E0599]: no method named `clone` found for opaque type `impl Future<Output = Natural>` in the current scope: method not found in `impl Future<Output = Natural>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2913:27: error[E0308]: mismatched types: expected `&Natural`, found `&impl Future<Output = Natural>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2913:25: error[E0308]: mismatched types: expected future, found `Natural`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2914:30: error[E0308]: mismatched types: expected `&Natural`, found `&impl Future<Output = Natural>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2914:25: error[E0308]: mismatched types: expected future, found `Natural`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2915:37: error[E0369]: binary operation `>` cannot be applied to type `impl Future<Output = Natural>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2915:45: error[E0599]: no method named `checked_sub` found for opaque type `impl Future<Output = Natural>` in the current scope: method not found in `impl Future<Output = Natural>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2915:81: error[E0599]: no method named `checked_sub` found for opaque type `impl Future<Output = Natural>` in the current scope: method not found in `impl Future<Output = Natural>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2917:29: error[E0308]: mismatched types: expected future, found a different future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2920:36: error[E0599]: no method named `mul` found for opaque type `impl Future<Output = Natural>` in the current scope: method not found in `impl Future<Output = Natural>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2922:26: error[E0599]: no method named `is_zero` found for opaque type `impl Future<Output = Natural>` in the current scope: method not found in `impl Future<Output = Natural>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2926:26: error[E0599]: no method named `is_zero` found for opaque type `impl Future<Output = Natural>` in the current scope: method not found in `impl Future<Output = Natural>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2926:38: error[E0308]: mismatched types: expected future, found `Natural`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2926:59: error[E0599]: no method named `gcd` found for opaque type `impl Future<Output = Natural>` in the current scope: method not found in `impl Future<Output = Natural>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2928:18: error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = Natural>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2932:25: error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = Natural>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2936:29: error[E0308]: mismatched types: expected future, found `Natural`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2942:18: error[E0369]: binary operation `!=` cannot be applied to type `impl Future<Output = Natural>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2942:30: error[E0599]: no method named `is_zero` found for opaque type `impl Future<Output = Natural>` in the current scope: method not found in `impl Future<Output = Natural>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2942:45: error[E0369]: binary operation `!=` cannot be applied to type `impl Future<Output = Natural>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2970:20: error[E0599]: no method named `iter` found for opaque type `impl Future<Output = Vec<(u64, u32)>>` in the current scope: method not found in `impl Future<Output = Vec<(u64, u32)>>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2973:20: error[E0599]: no method named `len` found for opaque type `impl Future<Output = Vec<(u64, u32)>>` in the current scope: method not found in `impl Future<Output = Vec<(u64, u32)>>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:2986:23: error[E0277]: `impl Future<Output = Vec<(u64, u32)>>` is not an iterator: `impl Future<Output = Vec<(u64, u32)>>` is not an iterator
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3005:23: error[E0599]: `impl Future<Output = Vec<(u64, u32)>>` is not an iterator: `impl Future<Output = Vec<(u64, u32)>>` is not an iterator
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3012:23: error[E0599]: `impl Future<Output = Vec<(u64, u32)>>` is not an iterator: `impl Future<Output = Vec<(u64, u32)>>` is not an iterator
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3185:24: error[E0599]: no method named `is_finite` found for opaque type `impl Future<Output = f64>` in the current scope: method not found in `impl Future<Output = f64>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3186:24: error[E0308]: mismatched types: expected `Interval`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3193:42: error[E0308]: mismatched types: expected `f64`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3193:20: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3196:25: error[E0599]: no method named `next_down` found for opaque type `impl Future<Output = f64>` in the current scope: method not found in `impl Future<Output = f64>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3199:45: error[E0308]: mismatched types: expected `f64`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3199:20: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3202:25: error[E0599]: no method named `next_up` found for opaque type `impl Future<Output = f64>` in the current scope: method not found in `impl Future<Output = f64>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3204:20: error[E0308]: mismatched types: expected `f64`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3204:24: error[E0308]: mismatched types: expected `f64`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3209:17: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3210:17: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3216:17: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3217:17: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3226:13: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3273:17: error[E0308]: mismatched types: expected `Interval`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3284:22: error[E0308]: mismatched types: expected `&Interval`, found `&impl Future<Output = Interval>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3284:13: error[E0308]: mismatched types: expected `Interval`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3295:16: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3305:25: error[E0599]: `impl Future<Output = Option<Interval>>` is not an iterator: `impl Future<Output = Option<Interval>>` is not an iterator
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3318:24: error[E0308]: mismatched types: expected `Interval`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3321:38: error[E0599]: no method named `recip` found for opaque type `impl Future<Output = Interval>` in the current scope: method not found in `impl Future<Output = Interval>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3328:37: error[E0599]: no method named `mul` found for opaque type `impl Future<Output = Interval>` in the current scope: method not found in `impl Future<Output = Interval>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3330:24: error[E0308]: mismatched types: expected `Interval`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3333:13: error[E0308]: mismatched types: expected `Interval`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3342:24: error[E0308]: mismatched types: expected `f64`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3342:58: error[E0308]: mismatched types: expected `f64`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3350:73: error[E0308]: `if` and `else` have incompatible types: expected `f64`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3351:41: error[E0308]: mismatched types: expected `f64`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3356:29: error[E0369]: binary operation `>` cannot be applied to type `impl Future<Output = f64>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3359:74: error[E0599]: no method named `sin` found for opaque type `impl Future<Output = f64>` in the current scope: method not found in `impl Future<Output = f64>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3362:24: error[E0308]: mismatched types: expected `f64`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3362:47: error[E0308]: mismatched types: expected `f64`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3366:29: error[E0369]: binary operation `>` cannot be applied to type `impl Future<Output = f64>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3369:74: error[E0599]: no method named `cos` found for opaque type `impl Future<Output = f64>` in the current scope: method not found in `impl Future<Output = f64>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3372:24: error[E0308]: mismatched types: expected `f64`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3372:47: error[E0308]: mismatched types: expected `f64`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3376:24: error[E0308]: mismatched types: expected `f64`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3376:59: error[E0308]: mismatched types: expected `f64`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3495:52: error[E0277]: a value of type `Vec<T>` cannot be built from an iterator over elements of type `impl Future<Output = T>`: value of type `Vec<T>` cannot be built from `std::iter::Iterator<Item=impl Future<Output = T>>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3519:89: error[E0277]: a value of type `Vec<T>` cannot be built from an iterator over elements of type `impl Future<Output = T>`: value of type `Vec<T>` cannot be built from `std::iter::Iterator<Item=impl Future<Output = T>>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3523:89: error[E0277]: a value of type `Vec<T>` cannot be built from an iterator over elements of type `impl Future<Output = T>`: value of type `Vec<T>` cannot be built from `std::iter::Iterator<Item=impl Future<Output = T>>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3527:61: error[E0277]: a value of type `Vec<T>` cannot be built from an iterator over elements of type `impl Future<Output = T>`: value of type `Vec<T>` cannot be built from `std::iter::Iterator<Item=impl Future<Output = T>>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3531:70: error[E0282]: type annotations needed
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3531:58: error[E0308]: mismatched types: expected type parameter `T`, found associated type
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3548:74: error[E0277]: a value of type `Vec<T>` cannot be built from an iterator over elements of type `impl Future<Output = T>`: value of type `Vec<T>` cannot be built from `std::iter::Iterator<Item=impl Future<Output = T>>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3554:19: error[E0599]: no method named `set` found for opaque type `impl Future<Output = MatG<T>>` in the current scope: method not found in `impl Future<Output = MatG<T>>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3556:13: error[E0308]: mismatched types: expected `MatG<T>`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3578:25: error[E0599]: no method named `set` found for opaque type `impl Future<Output = MatG<T>>` in the current scope: method not found in `impl Future<Output = MatG<T>>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3578:58: error[E0599]: no method named `clone` found for opaque type `impl Future<Output = &T>` in the current scope: method not found in `impl Future<Output = &T>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3581:13: error[E0308]: mismatched types: expected `MatG<T>`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3591:35: error[E0599]: no method named `add` found for associated type `impl Future<Output = T>` in the current scope: method not found in `impl Future<Output = T>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3591:57: error[E0599]: no method named `mul` found for opaque type `impl Future<Output = &T>` in the current scope: method not found in `impl Future<Output = &T>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3593:25: error[E0599]: no method named `set` found for opaque type `impl Future<Output = MatG<T>>` in the current scope: method not found in `impl Future<Output = MatG<T>>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3596:13: error[E0308]: mismatched types: expected `MatG<T>`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3600:35: error[E0308]: mismatched types: expected `usize`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3600:13: error[E0277]: `impl Future<Output = usize>` doesn't implement `Debug`: the trait `Debug` is not implemented for `impl Future<Output = usize>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3605:31: error[E0599]: no method named `add` found for associated type `impl Future<Output = T>` in the current scope: method not found in `impl Future<Output = T>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3605:55: error[E0599]: no method named `mul` found for opaque type `impl Future<Output = &T>` in the current scope: method not found in `impl Future<Output = &T>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3607:21: error[E0599]: no method named `set` found for opaque type `impl Future<Output = VecG<_>>` in the current scope: method not found in `impl Future<Output = VecG<_>>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3609:13: error[E0308]: mismatched types: expected `VecG<T>`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3613:123: error[E0277]: a value of type `Vec<T>` cannot be built from an iterator over elements of type `impl Future<Output = T>`: value of type `Vec<T>` cannot be built from `std::iter::Iterator<Item=impl Future<Output = T>>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3617:123: error[E0277]: a value of type `Vec<T>` cannot be built from an iterator over elements of type `impl Future<Output = T>`: value of type `Vec<T>` cannot be built from `std::iter::Iterator<Item=impl Future<Output = T>>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3621:95: error[E0277]: a value of type `Vec<T>` cannot be built from an iterator over elements of type `impl Future<Output = T>`: value of type `Vec<T>` cannot be built from `std::iter::Iterator<Item=impl Future<Output = T>>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3639:80: error[E0599]: no method named `is_zero` found for opaque type `impl Future<Output = &T>` in the current scope: method not found in `impl Future<Output = &T>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3644:51: error[E0599]: no method named `clone` found for opaque type `impl Future<Output = &T>` in the current scope: method not found in `impl Future<Output = &T>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3645:55: error[E0599]: no method named `clone` found for opaque type `impl Future<Output = &T>` in the current scope: method not found in `impl Future<Output = &T>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3650:55: error[E0599]: no method named `clone` found for opaque type `impl Future<Output = &T>` in the current scope: method not found in `impl Future<Output = &T>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3653:54: error[E0599]: no method named `mul` found for opaque type `impl Future<Output = &T>` in the current scope: method not found in `impl Future<Output = &T>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3660:48: error[E0599]: no method named `clone` found for opaque type `impl Future<Output = &T>` in the current scope: method not found in `impl Future<Output = &T>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3665:47: error[E0599]: no method named `sub` found for opaque type `impl Future<Output = &T>` in the current scope: method not found in `impl Future<Output = &T>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3677:25: error[E0609]: no field `2` on type `impl Future<Output = (MatG<T>, Vec<usize>, usize)>`: unknown field
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3689:69: error[E0599]: no method named `is_zero` found for opaque type `impl Future<Output = &T>` in the current scope: method not found in `impl Future<Output = &T>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3690:28: error[E0308]: mismatched types: expected type parameter `T`, found associated type
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3694:51: error[E0599]: no method named `clone` found for opaque type `impl Future<Output = &T>` in the current scope: method not found in `impl Future<Output = &T>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3695:49: error[E0599]: no method named `clone` found for opaque type `impl Future<Output = &T>` in the current scope: method not found in `impl Future<Output = &T>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3699:33: error[E0599]: no method named `neg` found for associated type `impl Future<Output = T>` in the current scope: method not found in `impl Future<Output = T>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3701:49: error[E0599]: no method named `clone` found for opaque type `impl Future<Output = &T>` in the current scope: method not found in `impl Future<Output = &T>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3702:27: error[E0599]: no method named `mul` found for associated type `impl Future<Output = T>` in the current scope: method not found in `impl Future<Output = T>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3705:48: error[E0599]: no method named `mul` found for opaque type `impl Future<Output = &T>` in the current scope: method not found in `impl Future<Output = &T>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3710:47: error[E0599]: no method named `sub` found for opaque type `impl Future<Output = &T>` in the current scope: method not found in `impl Future<Output = &T>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3715:17: error[E0599]: no method named `mul` found for associated type `impl Future<Output = T>` in the current scope: method not found in `impl Future<Output = T>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3725:28: error[E0369]: binary operation `<` cannot be applied to type `impl Future<Output = usize>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3731:31: error[E0599]: no method named `set` found for opaque type `impl Future<Output = MatG<T>>` in the current scope: method not found in `impl Future<Output = MatG<T>>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3731:64: error[E0599]: no method named `clone` found for opaque type `impl Future<Output = &T>` in the current scope: method not found in `impl Future<Output = &T>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3733:27: error[E0599]: no method named `set` found for opaque type `impl Future<Output = MatG<T>>` in the current scope: method not found in `impl Future<Output = MatG<T>>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3735:42: error[E0599]: no method named `rref` found for opaque type `impl Future<Output = MatG<T>>` in the current scope: method not found in `impl Future<Output = MatG<T>>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3739:25: error[E0599]: no method named `set` found for opaque type `impl Future<Output = MatG<T>>` in the current scope: method not found in `impl Future<Output = MatG<T>>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3742:18: error[E0308]: mismatched types: expected `MatG<T>`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3750:28: error[E0369]: binary operation `<` cannot be applied to type `impl Future<Output = usize>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3756:31: error[E0599]: no method named `set` found for opaque type `impl Future<Output = MatG<T>>` in the current scope: method not found in `impl Future<Output = MatG<T>>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3756:64: error[E0599]: no method named `clone` found for opaque type `impl Future<Output = &T>` in the current scope: method not found in `impl Future<Output = &T>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3758:27: error[E0599]: no method named `set` found for opaque type `impl Future<Output = MatG<T>>` in the current scope: method not found in `impl Future<Output = MatG<T>>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3758:50: error[E0599]: no method named `clone` found for opaque type `impl Future<Output = &T>` in the current scope: method not found in `impl Future<Output = &T>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3760:42: error[E0599]: no method named `rref` found for opaque type `impl Future<Output = MatG<T>>` in the current scope: method not found in `impl Future<Output = MatG<T>>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3761:18: error[E0308]: mismatched types: expected `VecG<T>`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3766:17: error[E0308]: mismatched types: expected future, found `(_, _, _)`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3773:23: error[E0599]: no method named `set` found for opaque type `impl Future<Output = VecG<_>>` in the current scope: method not found in `impl Future<Output = VecG<_>>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3776:27: error[E0599]: no method named `set` found for opaque type `impl Future<Output = VecG<_>>` in the current scope: method not found in `impl Future<Output = VecG<_>>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3780:18: error[E0277]: a value of type `Vec<VecG<T>>` cannot be built from an iterator over elements of type `impl Future<Output = VecG<_>>`: value of type `Vec<VecG<T>>` cannot be built from `std::iter::Iterator<Item=impl Future<Output = VecG<_>>>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3792:24: error[E0308]: mismatched types: expected type parameter `T`, found associated type
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3798:32: error[E0599]: no method named `is_zero` found for opaque type `impl Future<Output = &T>` in the current scope: method not found in `impl Future<Output = &T>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3799:78: error[E0599]: no method named `is_zero` found for opaque type `impl Future<Output = &T>` in the current scope: method not found in `impl Future<Output = &T>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3803:54: error[E0599]: no method named `clone` found for opaque type `impl Future<Output = &T>` in the current scope: method not found in `impl Future<Output = &T>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3804:47: error[E0599]: no method named `clone` found for opaque type `impl Future<Output = &T>` in the current scope: method not found in `impl Future<Output = &T>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3808:33: error[E0599]: no method named `neg` found for associated type `impl Future<Output = T>` in the current scope: method not found in `impl Future<Output = T>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3812:49: error[E0599]: no method named `mul` found for opaque type `impl Future<Output = &T>` in the current scope: method not found in `impl Future<Output = &T>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3812:83: error[E0599]: no method named `mul` found for opaque type `impl Future<Output = &T>` in the current scope: method not found in `impl Future<Output = &T>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3817:42: error[E0599]: no method named `clone` found for opaque type `impl Future<Output = &T>` in the current scope: method not found in `impl Future<Output = &T>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3819:33: error[E0599]: no method named `mul` found for opaque type `impl Future<Output = &T>` in the current scope: method not found in `impl Future<Output = &T>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3834:80: error[E0599]: no method named `is_zero` found for opaque type `impl Future<Output = &T>` in the current scope: method not found in `impl Future<Output = &T>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3839:51: error[E0599]: no method named `clone` found for opaque type `impl Future<Output = &T>` in the current scope: method not found in `impl Future<Output = &T>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3840:55: error[E0599]: no method named `clone` found for opaque type `impl Future<Output = &T>` in the current scope: method not found in `impl Future<Output = &T>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3847:49: error[E0599]: no method named `mul` found for opaque type `impl Future<Output = &T>` in the current scope: method not found in `impl Future<Output = &T>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3847:95: error[E0599]: no method named `mul` found for opaque type `impl Future<Output = &T>` in the current scope: method not found in `impl Future<Output = &T>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3851:35: error[E0308]: mismatched types: expected type parameter `T`, found associated type
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3853:52: error[E0599]: no method named `clone` found for opaque type `impl Future<Output = &T>` in the current scope: method not found in `impl Future<Output = &T>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3873:29: error[E0308]: mismatched types: expected type parameter `T`, found associated type
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3878:45: error[E0599]: no method named `sub` found for opaque type `impl Future<Output = &T>` in the current scope: method not found in `impl Future<Output = &T>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3883:43: error[E0308]: mismatched types: expected `&MatG<T>`, found `&impl Future<Output = MatG<T>>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3885:39: error[E0599]: no method named `get` found for opaque type `impl Future<Output = MatG<T>>` in the current scope: method not found in `impl Future<Output = MatG<T>>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3886:25: error[E0599]: no method named `set` found for opaque type `impl Future<Output = MatG<T>>` in the current scope: method not found in `impl Future<Output = MatG<T>>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3888:38: error[E0308]: mismatched types: expected `&MatG<T>`, found `&impl Future<Output = MatG<T>>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3891:35: error[E0599]: no method named `add` found for associated type `impl Future<Output = T>` in the current scope: method not found in `impl Future<Output = T>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3891:42: error[E0599]: no method named `get` found for opaque type `impl Future<Output = MatG<T>>` in the current scope: method not found in `impl Future<Output = MatG<T>>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3895:27: error[E0599]: no method named `mul` found for associated type `impl Future<Output = T>` in the current scope: method not found in `impl Future<Output = T>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3897:21: error[E0308]: mismatched types: expected future, found a different future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3917:125: error[E0599]: no method named `is_zero` found for opaque type `impl Future<Output = &T>` in the current scope: method not found in `impl Future<Output = &T>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3921:19: error[E0599]: no method named `swap_rows` found for opaque type `impl Future<Output = MatG<T>>` in the current scope: method not found in `impl Future<Output = MatG<T>>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3923:19: error[E0599]: no method named `swap_cols` found for opaque type `impl Future<Output = MatG<T>>` in the current scope: method not found in `impl Future<Output = MatG<T>>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3927:40: error[E0599]: no method named `is_zero` found for opaque type `impl Future<Output = &T>` in the current scope: method not found in `impl Future<Output = &T>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3930:52: error[E0599]: no method named `div_rem` found for opaque type `impl Future<Output = &T>` in the current scope: method not found in `impl Future<Output = &T>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3932:27: error[E0599]: no method named `row_op_subtract_multiple` found for opaque type `impl Future<Output = MatG<T>>` in the current scope: method not found in `impl Future<Output = MatG<T>>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3935:31: error[E0599]: no method named `swap_rows` found for opaque type `impl Future<Output = MatG<T>>` in the current scope: method not found in `impl Future<Output = MatG<T>>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3940:40: error[E0599]: no method named `is_zero` found for opaque type `impl Future<Output = &T>` in the current scope: method not found in `impl Future<Output = &T>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3943:52: error[E0599]: no method named `div_rem` found for opaque type `impl Future<Output = &T>` in the current scope: method not found in `impl Future<Output = &T>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3945:27: error[E0599]: no method named `col_op_subtract_multiple` found for opaque type `impl Future<Output = MatG<T>>` in the current scope: method not found in `impl Future<Output = MatG<T>>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3948:31: error[E0599]: no method named `swap_cols` found for opaque type `impl Future<Output = MatG<T>>` in the current scope: method not found in `impl Future<Output = MatG<T>>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3961:40: error[E0599]: no method named `exact_div` found for opaque type `impl Future<Output = &T>` in the current scope: method not found in `impl Future<Output = &T>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3963:31: error[E0599]: no method named `row_op_add` found for opaque type `impl Future<Output = MatG<T>>` in the current scope: method not found in `impl Future<Output = MatG<T>>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3974:17: error[E0308]: mismatched types: expected `MatG<T>`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3974:20: error[E0308]: mismatched types: expected `MatG<T>`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3979:43: error[E0599]: no method named `clone` found for opaque type `impl Future<Output = &T>` in the current scope: method not found in `impl Future<Output = &T>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3980:43: error[E0599]: no method named `clone` found for opaque type `impl Future<Output = &T>` in the current scope: method not found in `impl Future<Output = &T>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3988:43: error[E0599]: no method named `clone` found for opaque type `impl Future<Output = &T>` in the current scope: method not found in `impl Future<Output = &T>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3989:43: error[E0599]: no method named `clone` found for opaque type `impl Future<Output = &T>` in the current scope: method not found in `impl Future<Output = &T>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3998:47: error[E0599]: no method named `sub` found for opaque type `impl Future<Output = &T>` in the current scope: method not found in `impl Future<Output = &T>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:3998:63: error[E0308]: mismatched types: expected `&T`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:4006:47: error[E0599]: no method named `sub` found for opaque type `impl Future<Output = &T>` in the current scope: method not found in `impl Future<Output = &T>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:4006:63: error[E0308]: mismatched types: expected `&T`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:4014:47: error[E0599]: no method named `add` found for opaque type `impl Future<Output = &T>` in the current scope: method not found in `impl Future<Output = &T>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1475:41: error[E0053]: method `from` has an incompatible type for trait: expected `Integer`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:913:41: error[E0053]: method `from` has an incompatible type for trait: expected `Natural`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1916:16: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1431:29: error[E0277]: `impl Future<Output = String>` doesn't implement `std::fmt::Display`: `impl Future<Output = String>` cannot be formatted with the default formatter
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1947:36: error[E0308]: mismatched types: expected `Integer`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:887:29: error[E0277]: `impl Future<Output = String>` doesn't implement `std::fmt::Display`: `impl Future<Output = String>` cannot be formatted with the default formatter
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1485:87: error[E0308]: mismatched types: expected `Natural`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1491:13: error[E0308]: mismatched types: expected `Integer`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1947:13: error[E0308]: mismatched types: expected `Rational`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:923:13: error[E0308]: mismatched types: expected `Natural`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1485:13: error[E0308]: mismatched types: expected `Integer`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1927:38: error[E0308]: mismatched types: expected `&Integer`, found `&impl Future<Output = Integer>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1928:39: error[E0308]: mismatched types: expected `&Integer`, found `&impl Future<Output = Integer>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1929:17: error[E0599]: `impl Future<Output = Integer>` is not an iterator: `impl Future<Output = Integer>` is not an iterator
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:894:41: error[E0599]: no method named `ok_or` found for opaque type `impl Future<Output = Option<Natural>>` in the current scope: method not found in `impl Future<Output = Option<Natural>>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1439:61: error[E0599]: no method named `ok_or` found for opaque type `impl Future<Output = Option<Natural>>` in the current scope: method not found in `impl Future<Output = Option<Natural>>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1941:13: error[E0308]: mismatched types: expected `Rational`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1440:20: error[E0308]: mismatched types: expected `Integer`, found future
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1442:58: error[E0599]: no method named `ok_or` found for opaque type `impl Future<Output = Option<Natural>>` in the current scope: method not found in `impl Future<Output = Option<Natural>>`
+🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust/../../🦀️component.rs:1443:20: error[E0308]: mismatched types: expected `Integer`, found future
+error: could not compile `semio-framework-number` (lib) due to 620 previous errors

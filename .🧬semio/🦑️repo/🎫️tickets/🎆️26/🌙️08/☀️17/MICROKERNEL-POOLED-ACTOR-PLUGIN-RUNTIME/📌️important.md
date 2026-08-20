@@ -4,6 +4,198 @@
 
 ---
 
+## 🎯 cross-packet finding (host-dropped-futures, 2026-08-20) — `semio-framework-plugin-host --lib` is GREEN; new `🛎️services` Send bug found (not fixed)
+
+`host-dropped-futures` is DONE. Forced-rebuild dropped-future census on `semio-framework-plugin-host
+--lib` → **0** (was 37, exact match with the packet brief's per-file breakdown: 28 `⚡️effects`, 3
+`🧵️shard/🦀️component.rs`, 3 `⏳️imports.rs`, 2 `🦀️component.rs`, 1 `🧵️shard/🏃️executor.rs`). All 37
+were genuine dropped work (host-side effect dispatch never ran for ANY effect kind — the inbound mirror
+of `sdk-dropped-futures`' `HostAdapter::emit` finding; a `Payload::Cancel` false-success where the actor
+was never actually unregistered; the entire cross-plugin IO route-resolution DFS never ran since both
+`walk_io_routes` call sites, including its own self-recursion, were dropped). Plus 2 more real bugs found
+via the R13 `let _ =` corollary (repeats the db-dedyn pattern exactly): `WasmtimeRuntime::compile`'s
+on-disk cache write, and `dispatch_send_message`'s `BackboneRegistry::send` for `MessageEndpoint::
+Backbone` targets. Full per-site table: `📓️terra-host-dropped-futures-report.md`. Regression guards all
+green: `semio-framework-plugin --lib`/`--all-features` EXIT 0, `semio-framework-async --lib` EXIT 0,
+`semio-framework-os-kernel-db --lib` EXIT 0, `semio-framework-os-kernel --lib` EXIT 0 and `cargo test
+--lib` **779 passed / 0 failed** (unchanged baseline).
+
+**New finding, NOT fixed by this packet (out of scope — `🛎️services`, not `🔌️plugin/🖥️host`)**:
+`TimerWheel::arm`/`disarm`/`armed_count` (`🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/
+🦀️component.rs:494-511`) each do `self.core.lock().expect(...).<method>(...).await` — holding a
+`std::sync::MutexGuard<WheelCore>` across their OWN internal `.await`, making their returned futures
+non-`Send`. Confirmed by compiling: `E0277: MutexGuard<WheelCore> cannot be sent between threads safely`
+when `⚡️effects/🦀️component.rs`'s `dispatch_set_timer` tried to `.await` `wheel.disarm(...)` from inside
+its `Box::pin(...) -> HostFuture<()>` (`Send`-required) task. **The exact same `impl WheelCore` block
+already carries an R9 tag on its OWN sibling methods `pop_expired`/`next_expiry_ms` for this identical
+reason** ("held behind a `std::sync::Mutex` across an async caller ... breaking the `HostFuture<()>: Send`
+bound R3 requires. See R9.") — whichever prior packet applied that fix missed `arm`/`disarm`/
+`armed_count`. Worked around locally with a `resolve_ready` bridge (sound: `WheelCore::disarm`'s own body
+has zero suspension points), but the root fix — R9-reverting `arm`/`disarm`/`armed_count` to sync, same
+as their siblings — belongs to `🛎️services`'s owner or a dedicated packet.
+
+---
+
+## 🎯 packet `stdio-await` — response to coordinator's urgent audit request (2026-08-20)
+
+Answering the three asks directly, plus what was found beyond them.
+
+**1. E0382 "use of moved value"**: YES, present. Peaked at 282 in-scope after
+`insert-await.py`'s span-keyed fixpoint plus my own `hoist-place-await.py` pass (which only
+touches E0728-diagnosed sites, so it left the plain-async-fn-body repeats untouched). Ran the
+sibling's `fix-repeated-await.py --scope '✏️s/🔌️plugins/🗄️stdio' --apply` exactly as instructed
+— **10,567 edits across 316 files** in one pass, fixpoint confirmed (`--dry-run` after → 0).
+E0382 fell 282 → 25 (the residual 25 are separate genuine pre-existing move bugs unrelated to
+await, e.g. `sep`/`n`/`v` reused after a real consuming call — not this defect class; left as
+residue, itemized in my own report).
+
+**2. Field-init shorthand corruption (`field,` -> `field.await,`)**: YES, found independently
+before this message arrived, via 3 fatal-parse-error clusters that were silently truncating
+analysis of their files. All repaired, diagnostic-driven off rustc's own parse-error spans
+(`fix-shorthand-corruption.py`, 215 sites total across two passes as more got unmasked).
+
+**3. Two MORE corruption classes found in my OWN tooling, not previously named** — both now fixed
+and repaired (I do not believe either is the sibling's bug; different tool, different mechanism):
+   - **CALLEE_CHARS bytes-vs-int bug** in my `wrap-sync-closure-await.py` (a bridge-wrapping tool
+     for `.await` trapped in sync closures): `set(b"ABC...")` is a set of INTs in Python 3, but I
+     compared it against a `bytes` slice — always False, so the callee-name backward-scan was a
+     silent no-op. Produced `CALLEE semio_framework_plugin::resolve_ready(())`-shaped garbage on
+     223 of 224 sites at peak. Tool fixed, damage repaired (`repair-wrap-corruption.py`), reverified
+     zero remaining twice more across later batches.
+   - **Method-call receiver left outside the wrap**, same tool, different code path: for
+     `receiver.method(args)` the scan correctly stops at `method`'s name but didn't check whether
+     it landed after a `.` — left `receiver.` stranded outside, e.g.
+     `cat.semio_framework_plugin::resolve_ready(level(cat.codes[row]))`. 96 sites / 38 files,
+     repaired (`fix-method-wrap-corruption.py`), tool extended to walk back across `IDENT.`
+     receiver-chain segments (does not yet handle a receiver ending in its own `(...)` call —
+     hit exactly once, hand-fixed, zero remaining by grep).
+   All four repair tools left in the ticket folder, each documents the defect it undoes in its own
+   docstring per R10.
+
+**Honest current state, verified this turn, target dir warm**:
+`cargo check -p semio-s-plugin-stdio --lib` → **20,000 errors** (was 44,102 at this packet's
+start — 54.6% reduction), **0 raw/parse-level errors**, **25 E0382** (residue, not this defect
+class). Full taxonomy and remaining-work breakdown in `📓️terra-stdio-await-report.md`
+(in progress — packet is continuing after this report).
+
+---
+
+## 🎯 cross-packet finding (terra-sdk-features, 2026-08-20) — `semio-framework-plugin --all-features` is GREEN; new residue class found (not fixed)
+
+`sdk-features` is DONE. `cargo check -p semio-framework-plugin --lib --all-features` → **EXIT 0**
+(was EXIT 101 / 27 errors). **100% of the 27 errors were gated exclusively by the
+`component-guest-async` feature** — `component-guest` and `component-extension-guest` were always
+clean, alone or combined. All 27 were the same missing-`.await` shape (`direct_unavailable_fault`/
+`pack`/`crate::reactor::host()` — async fns called without `.await` inside already-`async` callers,
+26 in `🔌️plugin/🌐host/🦀️component.rs`'s `impl Host` `HostBackend::Direct` arms, 1 in
+`🔌️plugin/⚛️reactor/💼️jobs/🦀️component.rs`'s `spawn_job`), fixed span-keyed with `insert-await.py`
+per R10 — no design content, no E-tags needed. Both files sit outside this packet's literally-named
+`path_scope` (only `🔌️plugin/🦀️component.rs` + `🏗️builder/**` were named) but are `#[path]`-included
+`pub mod`s of that exact root file, same mechanism as the granted `🏗️builder/**`; git log/status
+confirmed no other session live there before editing. Full detail incl. the scope reasoning:
+`📓️terra-sdk-features-report.md`.
+
+**New finding, NOT fixed by this packet (out of scope, needs its own)**: both `--all-features` and
+plain default-features `--lib` (unregressed, still EXIT 0) show **97 identical "unused implementer
+of `std::future::Future` that must be used" warnings**, confirmed pre-existing (identical count
+before/after this packet's edits, unrelated line numbers) across `🔌️plugin/🦀️component.rs` (~65),
+`🌐host/🦀️component.rs` (~24), `⚛️reactor/💼️jobs/🦀️component.rs` (~7),
+`🏗️builder/🦀️component.rs` (1). This is the ticket's documented **silent no-op class**: bare
+statement calls to now-`async` fns whose futures are silently dropped and do nothing at runtime
+(`spawn_job(job, kind, input, None);`, `ensure_plugin_initialized();`,
+`crate::reactor::jobs::register_job_kind(kind, run);`, `self.presence_store.adopt_peer(...)`, etc.).
+Unlike ordinary missing-await errors these carry **no `suggested_replacement`** from rustc (just
+`note: futures do nothing unless you .await or poll them`), so `insert-await.py` cannot apply them
+mechanically — each needs a per-site decision (await it, or genuinely fire-and-forget via
+`let _ = …` / a spawn). Needs its own dedicated packet.
+
+---
+
+## 🎯 cross-packet finding (terra-dispatch-group-split, 2026-08-20) — `semio-framework-plugin --lib` is GREEN; first fleet compile measured
+
+`dispatch-group-split` is DONE. `store::CompositionCoordinator::{dispatch_group, dispatch_peer_group,
+dispatch_relation_group, compensate, undo_group, redo_group}` all now take separate `Mp`/`Mc` type
+parameters (parent/children) instead of one shared `M`, exactly per this file's own prior ruling.
+`cargo check -p semio-framework-plugin --lib` → **EXIT 0** (115 warnings, 0 errors) — the 5-error
+blocker `sdk-final` left behind is fully cleared. `semio-framework-os-kernel` stayed green throughout
+(`--lib` EXIT 0/57 warnings, `--all-targets` EXIT 0, `cargo test --lib` **779 passed / 0 failed**,
+unchanged) and `semio-framework --lib` stayed EXIT 0/27 warnings. Full detail, including a
+pre-existing double-`.await` bug (E0382) this fix unmasked and corrected in
+`dispatch_group_history_action`, in `📓️terra-dispatch-group-split-report.md`.
+
+**First fleet compile of the program, now measured**: `cargo check -p semio-s-plugin-stdio --lib` →
+44102 errors; `cargo check -p semio-s-plugin-note --lib` → 44152 errors. Both now reach and compile
+against `semio-framework-plugin` for the first time (previously they aborted earlier on
+`semio-framework-number`/`semio-framework-3d`). These counts are the real, previously-unmeasured
+fleet-readiness fan-out — not a regression, the expected next data point per this ticket's own rule 3.
+
+**New blocker surfaced, NOT fixed by this packet (out of scope, needs its own)**: `cargo test -p
+semio-framework-plugin --lib` cannot compile — **1373 errors, all `#[cfg(test)]`**, confirmed to be
+the SAME residue the `sdk-final` finding below already named (word-for-word matching errors:
+`unresolved import crate::app::__semio_dispatch_PluginApp`, `__semio_dispatch_PluginApp is
+ambiguous`, `cannot find type HybridLogicalTimestamp in module $crate::os_store`, at
+`🏗️builder/🦀️component.rs:945` and `🦀️component.rs:15089/15091/18361`), not new damage. This
+means the packet brief's step-4 acceptance ("cargo test -p semio-framework-plugin --lib, baseline
+263 passed / 5 known failures BY NAME") **cannot be re-measured until that separate `#[cfg(test)]`
+residue packet lands** — still needs its own dedicated packet, per rule 25.
+
+---
+
+## 🚨 cross-packet finding (terra-number-green, 2026-08-20) — number-green DONE; new fleet blocker is `semio-framework-3d`
+
+`semio-framework-number` (620 errors, stale/unowned per the packet brief) is now **fully green**:
+`--lib` EXIT 0, `--all-targets` EXIT 0, `cargo test` **97 passed / 0 failed / 0 ignored**. Root cause
+was the universal-async codemod having applied `async` to all 384 fns in
+`🧰️framework/🔨️modules/🔢️number/🦀️component.rs` with **zero `.await` insertion ever run** (0 `.await`
+anywhere in the file, before or after) and **zero I/O anywhere in the file** (grepped for
+`std::fs`/`tokio`/`reqwest`/`ureq`/`File::`/`TcpStream`/`spawn`/`sleep`/`SystemTime` — zero hits) — a
+pure-computation crate whose entire public surface is consumed through E1 impls
+(`Display`/`FromStr`/`Ord`/`PartialOrd`/`From` for `Natural`/`Integer`/`Rational`/`ModInt`) that
+propagate R9 backwards through the whole file. Fix was a full R9 reversion: stripped `async` from all
+384 fn signatures (no `.await` to remove — there were none). See
+`📓️terra-number-green-report.md` and the repair tool `terra-number-deasync.py` (both in this ticket
+folder) for the diagnostic-driven verification.
+
+**Also re-confirmed GREEN at time of writing** (the RED entry directly below this one, from
+`terra-actor-green` 2026-08-20 earlier the same day, is now STALE — the peer's parse-error edit in
+`🗣️dsl/🧬️schema/🦀️component.rs` has since landed or self-resolved): `cargo check -p
+semio-framework-os-kernel --lib` EXIT 0 (57 warnings, all `async_fn_in_trait`, R7-sanctioned);
+`cargo check -p semio-framework --lib` EXIT 0 (27 warnings, same class).
+
+**New fleet blocker, replacing `semio-framework-number` in that role**: `cargo check -p
+semio-s-plugin-note --lib` and `cargo check -p semio-s-plugin-stdio --lib` **still never reach
+`semio-framework-plugin`** — both now abort on a *different* unowned crate,
+`semio-framework-3d` (`🧰️framework/🔨️modules/🧊️3d/🥽️mesh/🦀️component.rs`), **296 errors**, same
+async-codemod-residue shape (`impl Future<Output = mesh::Vec3>` has no `.x`/`.y`/`.z`/`.dot`/`.scale`/
+etc., `Result<(), MeshKernelError>` expected found future). Nobody has claimed this crate yet as of
+this writing — needs its own packet before the fleet-readiness question (rule 3 of this packet's
+brief) can be measured. Not touched by this packet (out of `🔢️number`'s path scope).
+
+---
+
+## 🚨 cross-packet finding (terra-actor-green, 2026-08-20) — os-kernel / semio-framework are RED, live peer edit — STALE, see entry above
+
+`semio-framework-actor` is now green (`--lib`, `--all-targets`, `cargo test` all EXIT 0, 70/0/0 —
+see `📓️terra-actor-green-report.md`). Its downstream unblock target,
+`cargo check -p semio-framework-plugin-host --lib`, is still **EXIT 101**, but not because of
+`actor`: the whole `semio-framework-os-kernel` crate is red, and `semio-framework --lib` (per this
+ticket's own rule 26) is red for the same reason — **6 parse errors, all in one file**:
+`🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs`, lines 2496/2620/2685/
+2909/2942/(+1) — a statement separator between two consecutive `assert_*`/`let` calls has been
+deleted in each case, fusing them into one unparseable expression (e.g.
+`assert_round_trip("...", &spec     assert_document_inline_agree("...")`).
+
+**This is a live, uncommitted, in-progress edit, not stale damage**: `git diff HEAD --stat` on that
+exact path shows 208 lines changed right now (100 insertions / 108 deletions) on top of last
+*committed* change `cb9bcce7a4`. Not in `actor-green`'s `path_scope`
+(`🧰️framework/🔨️modules/🎭️actor/**`), so not touched. Whoever owns
+`💻️os/🔨️modules/🗣️dsl/🧬️schema` needs to land or fix this before `plugin-host`'s acceptance gate
+(and this ticket's rule-26 os-kernel/framework baselines) can be re-verified. Full logs:
+`terra-actorgreen-pluginhost-BLOCKED-oskernel.txt`, `terra-actorgreen-oskernel-RED-peer-break.txt`,
+`terra-actorgreen-framework-RED-peer-break.txt` in this ticket folder.
+
+---
+
 # 🌅️ U-PROGRAM RULINGS (2026-08-19) — these SUPERSEDE anything below that contradicts them
 
 Plan of record: `📋️master-u.md`. Designs: `📓️design-dedyn.md` + §"Design B" of `📋️master-u.md`.
@@ -392,3 +584,261 @@ The single remaining `💻️os` failure (`matches the Rust plan_workflow … de
 24. **Cargo target dirs must live in the session scratchpad, NOT in the ticket folder.** As of 2026-08-19 a build with `CARGO_TARGET_DIR=<ticket>/🎯️target-*` fails with `couldn't read …/out/private.rs: Operation not permitted (os error 1)` — rustc gets EPERM on build-script output under the repo's `.🧬semio/` tree even though the file is readable from the shell (`com.apple.provenance` xattr present). Reproduced in both a fresh and a warm ticket target dir; the identical build in `/private/tmp/claude-501/…/scratchpad/target-<slug>` finishes clean. Use the scratchpad. Bonus: the ticket folder had accumulated ~20 target dirs (one at 5.1 GB) which no longer belong there at all.
 25. **An atomic packet may be redirected BEFORE it starts, or allowed to FINISH — never interrupted.** A scope change does not make a half-applied atomic refactor safe. Cost of learning this on 2026-08-19: `semio-framework-os-kernel-db` left RED with 84 errors (9 db files + hub bin half-converted to async `DbFuture` traits) when the `db-trait-flip` packet was stopped mid-flight.
 26. **Neither `--lib` nor `--all-targets` is a sufficient gate alone — run BOTH.** Hit from opposite directions the same day: `--lib` hid a `cfg(test)` trait impl (7 errors); `--all-targets` hid a missing *production* `tokio` `macros` feature by unifying it out of dev-dependencies. Confirmed again immediately: a green `--lib` wgpu check while `--all-targets` still had a real error.
+27. **`sdk-final` findings (2026-08-20, full detail in `📓️terra-sdk-final-report.md`)** — three separate cross-packet items:
+    - `semio-framework-plugin --lib` went **26 → 7**. Every one of the 19 fixable errors is fixed
+      (the `.await`-in-sync-closure pair was R9, not a hoist — `InteractionView::peers_selecting`/
+      `peers_hovering` were pure I/O-free filters wrongly made `async`; the 11 "future cannot be
+      sent" errors were fixed with `resolve_ready` inside the three `erased_compose` E4 thunks, NOT
+      `+ Send`). **The remaining 7 are `dispatch_group`/`MemberFactory` — confirmed IMPOSSIBLE to
+      close from `semio-framework-plugin`** (Rust orphan rule: both `MemberFactory` and
+      `ArtifactStore` are foreign to that crate). `🏪️store/🦀️component.rs` needs either a
+      two-type-param `dispatch_group<Mp, Mc>` split or a production (non-`#[cfg(test)]`)
+      `MemberFactory` impl for `ArtifactStore` — either one should take `--lib` straight to EXIT 0,
+      nothing else is outstanding there. **`lease-request` open against `🏪️store`.**
+    - `semio-framework-plugin --all-targets` surfaces a **separate 1,381-error residue**, almost
+      entirely `#[cfg(test)]`, an order of magnitude past anything `sdk-final`'s brief scoped for
+      (breakdown: 579 E0599, 344 E0308, 235 E0277, 92 E0609, 60 E0728, plus smaller codes including
+      two `__semio_dispatch_PluginApp` ambiguous-import errors that look macro-related, not
+      await-insertion residue). **Needs its own dedicated packet** — not absorbed into `sdk-final`,
+      per rule 25 (atomic packets finish clean or get redirected before start, not partially eaten).
+    - `semio-s-plugin-note`/`semio-s-plugin-stdio` (the fleet payoff checks) **never reach
+      `semio-framework-plugin`** — both abort earlier on an unrelated crate,
+      `🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust` (`semio-framework-number`, 620 errors),
+      evidently mid-refactor by a concurrent session. Re-run both once `semio-framework-number` is
+      green; the new-SDK fleet-readiness question is still genuinely unmeasured.
+    - `os-kernel`/`framework` both confirmed EXIT 0 at time of writing, after two more transient
+      concurrent-edit corruptions self-resolved mid-session in `🗣️dsl/🧬️schema/🦀️component.rs`,
+      `📡️spr/🧪️testkit/🦀️component.rs`, `📇️directory/🔌️client/🦀️component.rs` (all outside
+      `sdk-final`'s path — polled, not touched, per rule 3).
+
+
+## R12 — a warning census REQUIRES a forced rebuild (sol, 2026-08-20)
+
+cargo does not re-emit warnings for an up-to-date crate. Any `cargo check | grep warning` over a
+warm target dir reports **zero** and looks like good news. Before counting warnings, always:
+
+    cargo clean -p <crate> && cargo check -p <crate> --lib --message-format=short
+
+Corollary, learned the same minute: the lint text is `unused implementer of \`std::future::Future\``,
+NOT `` `Future` ``. A grep for the short form silently matches nothing.
+
+sol hit BOTH failure modes in sequence while checking a subagent's claim of 97 dropped futures, and
+initially measured 0. The agent was right; the instrument was wrong twice. A zero from an unverified
+instrument is not evidence of absence — verify the instrument can see a known-positive before
+trusting a negative. (Directly reinforces the standing lesson: *a fix — or a measurement — is a new
+claim about the world and needs its own evidence.*)
+
+## R13 — a bare dropped future must never survive a packet (sol, 2026-08-20)
+
+`unused implementer of std::future::Future` means the operation NEVER RUNS, while compiling clean.
+Confirmed instances on this ticket: graph's adjacency mutators, MappedHeap's sift/swap (heap
+invariant never maintained), FlowNetwork's Dinic helpers (max-flow never ran), 3d's `mark_uv_seam`.
+
+Whenever this lint appears, the site must end up in one of three EXPLICIT states — never left bare:
+1. awaited;
+2. deliberately detached (spawned, or `let _ = ...` with a stated reason);
+3. tagged `// 🚫️async: E<n>` because the call site is language-barred from being async.
+
+These sites carry no rustc `suggested_replacement`, so `insert-await.py` cannot fix them and a
+pattern-keyed rewrite is banned under R10. They are hand-judged, site by site.
+
+
+## R14 — native green is NOT evidence the plugins work (sol, 2026-08-20)
+
+`🔌️plugin/🦀️component.rs:10` gates the entire WIT guest export surface on
+`target_arch = "wasm32", target_env = "p2"`. **No native build compiles it — not `cargo check`, not
+`--all-features`, not `cargo test`.** That module contains `poll`/`start_job`/`step_job`/`cancel_job`/
+`checkpoint`/`restore`/`describe`: the code every plugin actually ships and runs.
+
+Measured 2026-08-20, with the SDK green natively on every gate the program had:
+`cargo check -p semio-framework-plugin --lib --target wasm32-wasip2 --features component-guest`
+→ **90 errors**, none of which any native gate could ever have reported.
+
+Therefore: **no packet touching guest-side or cfg-gated code may be accepted on native checks alone.**
+Acceptance must name the target it compiled. The same applies to feature-gated code — sol found 5
+un-awaited `is_cancelled()` CANCELLATION CHECKS in `📇️directory/🔌️client` sitting behind
+`#[cfg(target_arch="wasm32")]` and `#[cfg(all(feature="ureq", feature="sync", …))]`, plus a latent
+E0446 visibility leak in BOTH the browser and native transports, all invisible to the default build.
+
+Corollary to R13: `let _ = <future>` SUPPRESSES the dropped-future lint entirely. A clean lint census
+does not prove there are no dropped futures — `sdk-dropped-futures` found one that way
+(`let _ = member.checkout(...)`), spotted only because an identical sibling line had `.await`.
+
+
+## R15 — R3 amended: `HostAsyncRuntime` declares Send futures at the trait (sol, 2026-08-20)
+
+**The collision.** `host-repair` reduced plugin-host 123 → 6 and stopped at a real architectural
+wall. The 6 are `E0277: impl Future cannot be sent between threads safely` at
+`🔌️plugin/🖥️host/⚡️effects/🦀️component.rs:841,861,…`, where an async block is boxed into
+`HostFuture<()>` — the erased spawn channel R1 explicitly sanctions — and awaits
+`<R as HostAsyncRuntime>::run_blocking` / `::sleep_until`. AFIT futures of a GENERIC `R` are not
+Send-provable.
+
+Plan Design A pulls two ways here:
+* **R3**: host Send comes STRUCTURALLY from concrete types, *"never by `+ Send` RPITIT bounds"*.
+* **R11 / Design A item 2**: `HostAsyncRuntime` stays generic (`Arc<R>`) because enum-closing is
+  **layering-impossible** — impls live in crates ABOVE the trait (`TokioHostRuntime` in 🛎️services,
+  `InlineRuntime` in 🛢️db).
+
+You cannot obtain Send through a generic structurally. The executor's proposal (enum-close the trait)
+would violate R11 and the orphan rule; R3's mechanism cannot apply. One of them has to give.
+
+**Evidence gathered before ruling** (all three impls, repo-wide — there are only three):
+1. `pub trait HostAsyncRuntime: Send + Sync` — the trait ALREADY requires Send implementors.
+2. `spawn_scoped(&self, …, fut: HostFuture<()>)` — the trait ALREADY demands Send-boxed futures.
+3. `ManualRuntime` (testkit), `InlineRuntime` (db), `TokioHostRuntime` (services) use `Arc`/`Mutex`/
+   atomics exclusively: **`Rc`=0, `RefCell`=0, `Cell`=0 in all three files.** Their futures are
+   structurally Send already.
+4. **`BoxedHostAsyncRuntime` already exists** (`🛎️services:344`) purely to work around this —
+   `sleep_until_boxed` does `Box::pin(async move { self.sleep_until(…).await })` into `HostFuture<()>`.
+   That it COMPILES proves the underlying future is Send. It is a double-future wrapper, exactly the
+   shape the plan set out to delete.
+
+**Ruling.** R3's *intent* (host futures are Send) is upheld; R3's *mechanism* ban is amended for this
+one trait. `HostAsyncRuntime`'s method declarations become RPITIT with an explicit Send bound:
+
+    fn sleep_until(&self, deadline_ms: u64) -> impl Future<Output = ()> + Send;
+
+Rationale, in order of weight:
+* The Send invariant is **already true and already depended upon** — declaring it removes a lie of
+  omission rather than adding a constraint.
+* It **preserves R11**: the trait stays open, generic, no enum, no orphan violation.
+* It **deletes `BoxedHostAsyncRuntime`** and its double-future wrappers — a net removal of the very
+  pattern R1 bans, not a new workaround.
+* Universal-async is preserved where it is observable: **only the trait DECLARATIONS change** (they
+  have no bodies). Every `impl` keeps its literal `async fn`, since an RPITIT `-> impl Future + Send`
+  is implementable by `async fn`.
+
+Scope of the amendment is exactly `HostAsyncRuntime`. R3 stands unchanged everywhere else: the
+guest side stays `?Send`, and no other family may reach for `+ Send` instead of concrete types.
+
+
+## R16 — two systematic defects in `insert-await.py`, and the standing audit they require (sol, 2026-08-20)
+
+Diagnosed by packet `db-dedyn` while repairing `🛢️db`. Both are defects in the SHARED instrument, so
+they affect every packet that has ever run it — including work already accepted.
+
+**Mode 1 — repeated passes scatter `.await` onto USE sites instead of the declaration.**
+When a local binding is left un-awaited, successive independent tool passes insert `.await` at each
+*use* of that local rather than at its declaration, producing `E0382: use of moved value`. Measured at
+**570 corrupted edits at peak** in one crate. This is inherently a MULTI-PASS failure, so the longer
+the fixpoint runs, the worse it gets — exactly backwards from how the tool is meant to behave.
+Recovery tool: `fix-repeated-await.py` (ticket folder). Do not hand-repair at scale.
+
+**Mode 2 — Rust field-init shorthand corruption.** `field,` inside a struct literal becomes
+`field.await,` — a hard PARSE error, not a type error. Hit 9× by `db-dedyn`, 4× by `host-repair`, and
+repaired by hand in clusters by sol earlier in this ticket. Sibling shape: `await.` written inside
+string literals.
+
+**Standing requirement.** Any packet running `insert-await.py` must, after every `--apply`:
+1. check for `E0382 use of moved value` (mode 1) and recover with `fix-repeated-await.py`;
+2. grep touched files for `\.await,` in struct literals and `\.await\.` inside string literals (mode 2).
+
+This is the fourth distinct class of defect found in this tool during this ticket (earlier: substring
+`--scope` reaching 314 files, missing asyncify-before-await ordering, E0728 counting out-of-scope
+diagnostics, trusting the message over the replacement, ambiguity misdiagnosis, missing `--features`,
+and a dot-position assumption that silently discarded every mid-chain candidate). The tool is still
+correct to use — span-keyed beats name-keyed (R10) — but it is NOT trustworthy unattended, and its
+output must be audited, never assumed. Restating the standing lesson it keeps re-teaching: **a fix is
+a new claim about the world and needs its own evidence.**
+
+
+## R12 AMENDED + R17 — census mechanics, corrected twice by evidence (sol, 2026-08-20)
+
+**R12 amendment — grep the ROBUST pattern.** R12 originally prescribed grepping
+`unused implementer of \`std::future::Future\``. That is WRONG as a general rule: rustc renders the
+type both ways depending on context. `db-dedyn` hit the short form `` `Future` `` and reported the
+correction; sol's own crates render the long form. **Grep `unused implementer of` alone.** A narrow
+pattern silently returns zero, which is the exact failure R12 was written to prevent — the rule's own
+prescribed mechanism reproduced the bug it existed to stop.
+
+## R17 — a red crate CANNOT report dropped futures; re-census on the turn it goes green
+
+rustc emits `unused implementer of Future` only for code it successfully compiles. **Every
+dropped-future census taken while a crate is red is meaningless**, and a zero from one is not
+evidence of anything.
+
+Measured proof, same day: `semio-framework-plugin-host` censused clean while red, reached EXIT 0 via
+R15, and **immediately reported 37 dropped futures** — 28 of them in `⚡️effects/🦀️component.rs`, the
+host's effect dispatch path. Nothing changed in those 37 sites; only the crate's ability to report
+them changed. `db-dedyn` independently reached the same conclusion from the other direction, refusing
+to bank its own census-of-0 while `--lib` was red, and then finding 46 real dropped futures (plus 2
+more via the `let _ =` corollary, one a genuine production bug — `ArtifactEngine::submit`'s live-query
+notify never ran) once the crate compiled.
+
+**Standing requirement: the turn a crate first reaches EXIT 0, a forced-rebuild dropped-future census
+is mandatory before it may be called done.** Green is when the audit STARTS, not when it ends.
+
+
+## R18 — R16 mode-2 is SELF-REVEALING; do not sweep for it (sol, 2026-08-20)
+
+Struct field-init shorthand corruption (`field.await,` where `field,` was meant) is a **parse error**,
+never a type error. Therefore: **if a crate compiles, it contains zero mode-2 sites.**
+
+sol swept all first-party Rust with a loose pattern and got **311 "candidates" across 83 files — in
+crates that compile green**, i.e. essentially all false positives (`f(x.await, y)`, `Some(fut.await)`,
+`vec![a.await, b.await]` on any line containing `{`). Chasing that list would have been pure waste.
+
+Practical rule for the three known damage classes, ordered by how well they hide:
+| class | how it presents | how to find it |
+|---|---|---|
+| R16 mode-2 shorthand | **parse error** — loudest | it finds you; only look in crates that fail to parse |
+| R16 mode-1 repeated-await | `E0382 use of moved value` — type error | compiler finds it; recover with `fix-repeated-await.py` |
+| dropped future | **silent, compiles clean** | forced-rebuild census (R12/R17) + `let _ =` grep (R13) |
+
+Spend audit effort in inverse proportion to how loudly a class announces itself.
+
+
+## R18 AMENDED — mode-2 self-reveals only for code the compiler REACHES (sol, 2026-08-20)
+
+R18 said: a crate that compiles has zero mode-2 sites. That half stands. But it implied a red crate
+reveals all its mode-2 sites at once, and **that is false**.
+
+`stdio-await` found **171 additional mode-2 sites** (386 total for the packet) that surfaced only as
+earlier errors cleared and compilation reached files it could not previously parse. In a crate with
+cascading failures, the parser never gets to code behind an earlier abort.
+
+**Amended rule:** mode-2 is self-revealing only for code the compiler actually reaches. In a red
+crate, **re-run the check as the error count falls** — treat "no parse errors" as provisional until
+the crate reaches EXIT 0. The "never sweep green crates" half of R18 is unchanged (sol's sweep of
+compiling crates produced 311 candidates, essentially all false positives).
+
+## R19 — the coordinator must not put an editing packet in a live packet's dependency (sol, 2026-08-20)
+
+sol dispatched `test-attr-restore` to edit `semio-framework-plugin` while `stdio-await` was live and
+depended on that crate compiling. `stdio-await` was blocked for a very long poll (~20,000s of agent
+runtime), diagnosed it as an unknown "live peer", and correctly refused to touch the file — safe
+behaviour that nonetheless produced a large stall.
+
+**Before dispatching a packet, check whether its path_scope is in the DEPENDENCY GRAPH of any live
+packet, not merely whether the paths overlap.** Disjoint `path_scope`s are not sufficient for
+isolation: a packet that edits a dependency blocks every packet downstream of it, and the downstream
+agent cannot tell an authorised sibling from a stray session.
+
+Corollary for executors: on a blocking break in a SHARED file, **escalate to the coordinator
+immediately rather than polling.** Only the coordinator knows the full live-packet set, and a long
+poll on damage nobody is returning to fix is unbounded waste.
+
+
+## R20 — `insert-await.py` re-introduces mode-2 corruption; never authorise it unattended (sol, 2026-08-20)
+
+sol repaired 3 mode-2 sites in `🔌️plugin/🦀️component.rs` (:15772,:15795). Half an hour later **the
+same 3 sites were corrupt again**, at :15750/:15773 — identical content, shifted 22 lines by edits
+above them. Not residue: **re-introduced**.
+
+Cause: sol's own brief for `test-attr-restore` authorised `insert-await.py` for test-body residue.
+That tool carries the R16 mode-2 defect. The brief required a post-`--apply` audit but did not flag
+this specific file as freshly repaired, so the tool re-corrupted work the coordinator had just fixed.
+
+**Rules that follow:**
+1. A repaired file must be named explicitly in any later brief that authorises a codemod over it.
+2. After every `--apply`, the crate must still PARSE before more edits are layered on. Never stack
+   conversions on top of a crate that cannot parse.
+3. Defect classes found in `insert-await.py` on this ticket now number **seven**: substring `--scope`
+   (reached 314 files), missing asyncify-before-await ordering, E0728 counting out-of-scope
+   diagnostics, trusting message over replacement, ambiguity misdiagnosis, missing `--features`, a
+   dot-position assumption that discarded every mid-chain candidate — plus R16's two live modes
+   (repeated-pass use-site scattering, shorthand corruption).
+
+It remains preferable to a hand-rolled regex (R10, span-keyed beats name-keyed). It is **not**
+trustworthy unattended, and its output is never evidence of its own correctness.

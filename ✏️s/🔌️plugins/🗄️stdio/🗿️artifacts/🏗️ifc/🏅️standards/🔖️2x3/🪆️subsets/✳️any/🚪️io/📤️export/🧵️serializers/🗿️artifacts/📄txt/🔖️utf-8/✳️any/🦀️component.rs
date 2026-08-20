@@ -6,11 +6,11 @@ use crate::artifacts::txt::TxtSnapshot;
 pub async fn register() {}
 
 pub async fn serialize(from: &Ifc2x3Snapshot) -> Result<TxtSnapshot, store::PackError> {
-    let bytes = crate::artifacts::ifc::standards::v2x3::engine::encode_ifc2x3(from).map_err(store::PackError::Schema)?;
+    let bytes = crate::artifacts::ifc::standards::v2x3::engine::encode_ifc2x3(from).await.map_err(store::PackError::Schema)?;
     let text = String::from_utf8(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
-    Ok(TxtSnapshot::from_body(&text))
+    Ok(TxtSnapshot::from_body(&text).await)
 }
 
 pub async fn serialize_text(from: &Ifc2x3Snapshot) -> Result<String, store::PackError> {
-    Ok(store::ArtifactDsl::print_dsl(&serialize(from)?))
+    Ok(store::ArtifactDsl::print_dsl(&serialize(from).await?).await)
 }

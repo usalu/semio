@@ -28,7 +28,7 @@
 /// point: `db::Database::open_at(root, db::Profile::Dev)` is the zero-touch way to stand up a
 /// document database over `FsStorage`.
 pub use crate::db_engine::{
-    CatalogEntry, CatalogView, CommandReceipt, Consistency, Database, DbHealth, DbStorage, ArtifactHandle, ArtifactSpec, HistoryEntry, HistoryView, LiveQuery, LiveQuerySpec, PreviewHandle, Query, QueryStream, SecurityAuthzHook, SnapshotFuture, SnapshotKind, SnapshotReceipt, SubmitFuture,
+    CatalogEntry, CatalogView, CommandReceipt, Consistency, Database, DbHealth, ArtifactHandle, ArtifactSpec, HistoryEntry, HistoryView, LiveQuery, LiveQuerySpec, PreviewHandle, Query, QueryStream, SecurityAuthzHook, SnapshotFuture, SnapshotKind, SnapshotReceipt, SubmitFuture,
 };
 
 /// 🗄️🌿️ The real `vcs`-backed `VersionGraph` — the ONLY place in the whole `db` family
@@ -203,14 +203,14 @@ mod tests {
     use super::*;
 
     //#region 🧸️Fixtures
-    fn tempdir(name: &str) -> std::path::PathBuf {
+    async fn tempdir(name: &str) -> std::path::PathBuf {
         let mut dir = std::env::temp_dir();
         dir.push(format!("db-facade-test-{name}-{}-{}", std::process::id(), std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos()));
         std::fs::create_dir_all(&dir).unwrap();
         dir
     }
 
-    fn envelope(id: &str, deps: &[&str], actor: &str, document: &protocol::ArtifactId, entries: &[(&str, serde_json::Value)]) -> protocol::MutationEnvelope {
+    async fn envelope(id: &str, deps: &[&str], actor: &str, document: &protocol::ArtifactId, entries: &[(&str, serde_json::Value)]) -> protocol::MutationEnvelope {
         let mut payload = serde_json::Map::new();
         for (path, value) in entries {
             payload.insert((*path).to_string(), value.clone());
@@ -220,9 +220,9 @@ mod tests {
             document_id: document.clone(),
             actor: protocol::ActorId(actor.to_string()),
             dependencies: deps.iter().map(|dep| protocol::MutationId((*dep).to_string())).collect(),
-            diff: protocol::ArtifactDiff { schema: protocol::SchemaId(document::DB_PATHMAP_SCHEMA.to_string()), payload: document::encode_pathmap_json(&serde_json::Value::Object(payload)).unwrap() },
-            inverse: protocol::InverseMutation { schema: protocol::SchemaId(document::DB_PATHMAP_SCHEMA.to_string()), payload: document::encode_pathmap_json(&serde_json::Value::Object(serde_json::Map::new())).unwrap() },
-            timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
+            diff: protocol::ArtifactDiff { schema: protocol::SchemaId(document::DB_PATHMAP_SCHEMA.to_string()), payload: document::encode_pathmap_json(&serde_json::Value::Object(payload)).await.unwrap() },
+            inverse: protocol::InverseMutation { schema: protocol::SchemaId(document::DB_PATHMAP_SCHEMA.to_string()), payload: document::encode_pathmap_json(&serde_json::Value::Object(serde_json::Map::new())).await.unwrap() },
+            timestamp: protocol::HybridLogicalTimestamp::new(0, 0).await,
         }
     }
     //#endregion 🧸️Fixtures
@@ -234,39 +234,40 @@ mod tests {
     /// `db::document::CommandBatch`/`SubmitOptions`) — never by reaching past the facade into
     /// `db_engine`/`db_artifact` directly. A rename or a dropped re-export in `//#region
     /// 🔖️Database`/`//#region 🔖️Family` would fail this test to compile.
-    #[test]
-    fn full_round_trip_reachable_purely_through_facade_reexports() {
-        let root = tempdir("round-trip");
-        let database = Database::open_at(&root, Profile::Dev).unwrap();
+    #[semio_framework_async_macros::async_test]
+    async fn full_round_trip_reachable_purely_through_facade_reexports() {
+        let root = tempdir("round-trip").await;
+        let database = Database::open_at(&root, Profile::Dev).await.unwrap();
         let document = protocol::ArtifactId("doc-1".to_string());
-        let handle = database.create_document(ArtifactSpec::new(document.clone())).unwrap();
+        let handle = database.create_document(ArtifactSpec::new(document.clone()).await).await.unwrap();
 
-        let batch = document::CommandBatch::new(vec![envelope("op-1", &[], "alice", &document, &[("name", serde_json::json!("hello"))])]).unwrap();
+        let batch = document::CommandBatch::new(vec![envelope("op-1", &[], "alice", &document, &[("name", serde_json::json!("hello"))]).await]).await.unwrap();
         let receipt = actor::block_on(handle.submit(batch, document::SubmitOptions { durability: DurabilityClass::Fsync, ..Default::default() })).unwrap().unwrap();
         assert_eq!(receipt.command_id, protocol::MutationId("op-1".to_string()));
         assert_eq!(receipt.frontier.head_seq, 1);
         assert!(receipt.conflicts.is_empty());
 
-        let queried = handle.query(Query::Get { path: "name".to_string() }, Consistency::Canonical).unwrap();
-        let value: serde_json::Value = document::decode_pathmap_json(queried.results[0].1.as_ref().unwrap()).unwrap();
+        let queried = handle.query(Query::Get { path: "name".to_string() }, Consistency::Canonical).await.unwrap();
+        let value: serde_json::Value = document::decode_pathmap_json(queried.results[0].1.as_ref().unwrap()).await.unwrap();
         assert_eq!(value, serde_json::json!("hello"));
 
-        let frontier = handle.frontier().unwrap();
+        let frontier = handle.frontier().await.unwrap();
         assert!(frontier.dominates(&receipt.frontier).unwrap());
 
-        let history = handle.history().unwrap();
+        let history = handle.history().await.unwrap();
         assert_eq!(history.entries.len(), 1);
 
-        assert_eq!(database.catalog().artifacts.len(), 1);
-        database.shutdown(std::time::Duration::from_secs(1)).unwrap();
+        assert_eq!(database.catalog().await.artifacts.len(), 1);
+        database.shutdown(std::time::Duration::from_secs(1)).await.unwrap();
     }
 
-    #[test]
-    fn database_error_type_is_reachable_at_the_facade_root() {
-        let root = tempdir("db-error");
-        let database = Database::open_at(&root, Profile::Test).unwrap();
-        let result = database.document(&protocol::ArtifactId("never-created".to_string()));
-        assert!(matches!(result, Err(DbError::NotFound(_))));
+    #[semio_framework_async_macros::async_test]
+    async fn database_error_type_is_reachable_at_the_facade_root() {
+        let root = tempdir("db-error").await;
+        let database = Database::open_at(&root, Profile::Test).await.unwrap();
+        let never_created = protocol::ArtifactId("never-created".to_string());
+        let result = database.document(&never_created);
+        assert!(matches!(result.await, Err(DbError::NotFound(_))));
     }
     //#endregion 🔖️Facade round trip
 
@@ -276,8 +277,8 @@ mod tests {
     /// crate's module doc promises (`db::core::…`, `db::state::…`, …) — a wiring/rename regression
     /// in `//#region 🔖️Family` breaks this test to compile, independent of any single crate's own
     /// internal test suite.
-    #[test]
-    fn every_family_submodule_reexports_its_headline_public_surface() {
+    #[semio_framework_async_macros::async_test]
+    async fn every_family_submodule_reexports_its_headline_public_surface() {
         let limits = ids::DbLimits::default();
         assert!(limits.max_command_bytes > 0);
         ids::check_len(1, 2, "smoke").unwrap();
@@ -289,10 +290,10 @@ mod tests {
         assert_eq!(map.len(), 1);
 
         let memory_storage = storage::MemoryStorage::new();
-        let _: storage::DbBackend<storage::InlineRuntime> = storage::DbBackend::Memory(memory_storage);
+        let _: storage::DbBackend<storage::InlineRuntime> = storage::DbBackend::Memory(memory_storage.await);
 
         assert_eq!(wal::WAL_SEGMENT_HEADER, 0x40);
-        assert!(wal::is_wal_record_kind(wal::WAL_COMMAND));
+        assert!(wal::is_wal_record_kind(wal::WAL_COMMAND).await);
 
         assert_eq!(snapshot::SnapshotOrigin::FullBaseline, snapshot::SnapshotOrigin::FullBaseline);
 
@@ -317,11 +318,11 @@ mod tests {
         assert_eq!(node.to_string(), "node-1");
 
         let sink = observe::MemorySink::new();
-        assert!(sink.lines().is_empty());
+        assert!(sink.lines().await.is_empty());
 
         let from = durability::Frontier::genesis(ids::ArtifactId("doc-1".to_string()));
         let to = durability::Frontier { head_seq: 3, commit_seq: 3, ..durability::Frontier::genesis(ids::ArtifactId("doc-1".to_string())) };
-        let delta = sync::frontier_delta(&from, &to).unwrap();
+        let delta = sync::frontier_delta(&from, &to).await.unwrap();
         assert_eq!(delta.commands, 3);
     }
     //#endregion 🔖️Family submodule smoke

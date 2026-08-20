@@ -101,13 +101,13 @@ impl protocol::OpBinary for XlsxStrictEditorCommand {
         Ok(out)
     }
     async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let mut reader = store::ByteReader::new(bytes);
+        let mut reader = store::ByteReader::new(bytes).await;
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
-        let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
-        let row = reader.read_varint_u64().map_err(|e| malformed("op row", reader.position(), e.to_string()))? as u32;
-        let len = reader.read_varint_u64().map_err(|e| malformed("op value len", reader.position(), e.to_string()))? as usize;
-        let value_bytes = reader.read_bytes(len).map_err(|e| malformed("op value", reader.position(), e.to_string()))?;
-        let value = String::from_utf8(value_bytes.to_vec()).map_err(|e| malformed("op value", reader.position(), e.to_string()))?;
+        let _format = reader.read_u8().await.map_err(|e| malformed("op format", 0, e.to_string()))?;
+        let row = reader.read_varint_u64().await.map_err(|e| malformed("op row", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as u32;
+        let len = reader.read_varint_u64().await.map_err(|e| malformed("op value len", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
+        let value_bytes = reader.read_bytes(len).await.map_err(|e| malformed("op value", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
+        let value = String::from_utf8(value_bytes.to_vec()).map_err(|e| malformed("op value", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
         Ok(XlsxStrictEditorCommand::SetCell { row, value })
     }
 }
@@ -154,13 +154,13 @@ impl ArtifactEditor for XlsxStrictEditor {
         let Some((sheet_name, cell_row, cell_col, _)) = xlsx_flat_cells(doc.snapshot).into_iter().nth(*row as usize) else { return Ok(Emit::default()) };
         let parsed = parse_xlsx_cell_value(value);
         let description = format!("Set {sheet_name}!{cell_row},{cell_col}");
-        Ok(Emit { artifact_mutations: vec![XlsxMutation::SetCell { sheet_name, row: cell_row, col: cell_col, value: parsed }], description: Some(description), ..Default::default() })
+        Ok(Emit { artifact_mutations: vec![XlsxMutation::SetCell { sheet_name, row: cell_row, col: cell_col, value: parsed.await }], description: Some(description), ..Default::default() })
     }
 
     async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
-            main::BODY_KEY => main::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
+            main::BODY_KEY => main::render(doc.snapshot).await,
+            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))).await,
         }
     }
 }
@@ -169,12 +169,12 @@ impl ArtifactEditor for XlsxStrictEditor {
 //#region 🔖️Manifest
 pub async fn create_xlsx_strict_editor() -> semio_framework_plugin::AppDefinition {
     Editor::builder(XLSX_STRICT_DIALECT)
-        .document(["stdio", "xlsx", "strict"])
-        .icon_id("table")
-        .mode_def(edit::definition())
-        .default_mode_id(edit::XLSX_STRICT_EDIT_MODE_ID)
-        .window_kind_def(main::definition())
-        .default_layout(edit::layout())
+        .await.document(["stdio", "xlsx", "strict"])
+        .await.icon_id("table")
+        .await.mode_def(edit::definition().await)
+        .await.default_mode_id(edit::XLSX_STRICT_EDIT_MODE_ID)
+        .await.window_kind_def(main::definition().await)
+        .await.default_layout(edit::layout())
         .build_definition()
 }
 //#endregion 🔖️Manifest

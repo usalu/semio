@@ -68,11 +68,11 @@ async fn walk(value: &SemioValue, census: &mut SemioValueCensus, depth: u32) -> 
         }
         SemioValue::List { items } => {
             census.list_count += 1;
-            items.iter().fold(depth, |acc, item| acc.max(walk(item, census, depth + 1)))
+            items.iter().fold(depth, |acc, item| acc.max(semio_framework_plugin::resolve_ready(walk(item, census, depth + 1))))
         }
         SemioValue::Map { entries } => {
             census.map_count += 1;
-            entries.iter().fold(depth, |acc, entry| acc.max(walk(&entry.value, census, depth + 1)))
+            entries.iter().fold(depth, |acc, entry| acc.max(semio_framework_plugin::resolve_ready(walk(&entry.value, census, depth + 1))))
         }
         SemioValue::Ref { .. } => {
             census.ref_count += 1;
@@ -91,7 +91,7 @@ pub async fn compute_semio_value_census(snapshot: &SemioValueSnapshot) -> SemioV
         max_depth = max_depth.max(walk(&node.value, &mut census, 1));
     }
     census.node_count = snapshot.nodes.len() as u32;
-    census.max_depth = max_depth;
+    census.max_depth = max_depth.await;
     census
 }
 //#endregion 🔖️Census

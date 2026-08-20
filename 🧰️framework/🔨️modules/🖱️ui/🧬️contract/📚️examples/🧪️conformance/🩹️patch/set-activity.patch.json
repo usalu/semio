@@ -1,0 +1,13 @@
+{
+  "surface": "conformance.patch",
+  "baseRevision": 0,
+  "revision": 1,
+  "ops": [
+    {
+      "type": "setActivity",
+      "id": 1,
+      "activity": "loading",
+      "disabled": true
+    }
+  ]
+}

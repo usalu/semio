@@ -18,14 +18,14 @@ pub async fn descriptor() -> GltfInferenceLeafDescriptor {
 
 pub(crate) async fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<f64> {
     let distribution = super::distribution(context);
-    distribution
+    distribution.await
         .minimum
-        .map(|value| estimate(value, GltfUnit::Metre, super::samples(context).len(), Some(context.topology)))
-        .unwrap_or_else(|| unavailable(GltfUnit::Metre, context.unavailable_volume, Vec::new(), context.sample_count, Some(context.topology)))
+        .map(|value| estimate(value, GltfUnit::Metre, semio_framework_plugin::resolve_ready(super::samples(context)).len(), Some(context.topology)))
+        .unwrap_or_else(|| unavailable(GltfUnit::Metre, context.unavailable_volume, Vec::new(), context.sample_count, Some(context.topology))).await
 }
 
 pub async fn unavailable_measure(ids: &[String]) -> GltfMeasure<f64> {
-    unavailable(GltfUnit::Metre, GltfAvailability::Unavailable, ids.to_vec(), 0, None)
+    unavailable(GltfUnit::Metre, GltfAvailability::Unavailable, ids.to_vec(), 0, None).await
 }
 
 pub async fn encode_result(indicators: &GltfEntityIndicators) -> Result<serde_json::Value, serde_json::Error> {

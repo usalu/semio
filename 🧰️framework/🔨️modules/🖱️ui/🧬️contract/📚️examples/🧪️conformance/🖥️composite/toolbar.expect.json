@@ -1,0 +1,78 @@
+{
+  "case": "toolbar",
+  "kind": "composite",
+  "description": "A Container(role=toolbar) with a Button, a Separator and a Toggle in a horizontal Stack.",
+  "outcome": "accept",
+  "limits": null,
+  "tree": {
+    "root": 0,
+    "nodeCount": 4,
+    "shape": [
+      {
+        "id": 0,
+        "key": "#0",
+        "type": "container",
+        "children": [
+          1,
+          2,
+          3
+        ]
+      },
+      {
+        "id": 1,
+        "key": "#0",
+        "type": "button",
+        "children": []
+      },
+      {
+        "id": 2,
+        "key": "#1",
+        "type": "separator",
+        "children": []
+      },
+      {
+        "id": 3,
+        "key": "#2",
+        "type": "toggle",
+        "children": []
+      }
+    ]
+  },
+  "accessibility": [
+    {
+      "id": 0,
+      "label": null,
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    },
+    {
+      "id": 1,
+      "label": "New",
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    },
+    {
+      "id": 2,
+      "label": null,
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    },
+    {
+      "id": 3,
+      "label": null,
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    }
+  ],
+  "actionIds": [
+    "app.new@1"
+  ]
+}

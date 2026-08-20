@@ -162,45 +162,45 @@ async fn parse_semio_mesh_mutation(line: &str) -> Result<SemioMeshMutation, Stri
         rest.split(' ').filter(|s| !s.is_empty()).map(|tok| tok.split_once('=').ok_or_else(|| format!("semio mesh mutation: bad arg token {tok:?}"))).collect::<Result<Vec<_>, String>>()?.into_iter().collect();
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("semio mesh mutation: missing arg '{k}' for '{keyword}'"));
     match keyword {
-        "create-mesh" => Ok(SemioMeshMutation::CreateMesh(create_mesh::mutation::CreateMesh { mesh: dec_mesh(arg("mesh")?)? })),
-        "delete-mesh" => Ok(SemioMeshMutation::DeleteMesh(delete_mesh::mutation::DeleteMesh { id: dec_str(arg("id")?)? })),
-        "create-primitive" => Ok(SemioMeshMutation::CreatePrimitive(create_primitive::mutation::CreatePrimitive { mesh_id: dec_str(arg("mesh-id")?)?, primitive: dec_primitive(arg("primitive")?)? })),
-        "delete-primitive" => Ok(SemioMeshMutation::DeletePrimitive(delete_primitive::mutation::DeletePrimitive { mesh_id: dec_str(arg("mesh-id")?)?, primitive_id: dec_str(arg("primitive-id")?)? })),
+        "create-mesh" => Ok(SemioMeshMutation::CreateMesh(create_mesh::mutation::CreateMesh { mesh: dec_mesh(arg("mesh")?).await? })),
+        "delete-mesh" => Ok(SemioMeshMutation::DeleteMesh(delete_mesh::mutation::DeleteMesh { id: dec_str(arg("id")?).await? })),
+        "create-primitive" => Ok(SemioMeshMutation::CreatePrimitive(create_primitive::mutation::CreatePrimitive { mesh_id: dec_str(arg("mesh-id")?).await?, primitive: dec_primitive(arg("primitive")?).await? })),
+        "delete-primitive" => Ok(SemioMeshMutation::DeletePrimitive(delete_primitive::mutation::DeletePrimitive { mesh_id: dec_str(arg("mesh-id")?).await?, primitive_id: dec_str(arg("primitive-id")?).await? })),
         "set-primitive-topology" => {
-            Ok(SemioMeshMutation::SetPrimitiveTopology(set_primitive_topology::mutation::SetPrimitiveTopology { mesh_id: dec_str(arg("mesh-id")?)?, primitive_id: dec_str(arg("primitive-id")?)?, topology: dec_topology(arg("topology")?)? }))
+            Ok(SemioMeshMutation::SetPrimitiveTopology(set_primitive_topology::mutation::SetPrimitiveTopology { mesh_id: dec_str(arg("mesh-id")?).await?, primitive_id: dec_str(arg("primitive-id")?).await?, topology: dec_topology(arg("topology")?).await? }))
         }
         "replace-primitive-geometry" => Ok(SemioMeshMutation::ReplacePrimitiveGeometry(replace_primitive_geometry::mutation::ReplacePrimitiveGeometry {
-            mesh_id: dec_str(arg("mesh-id")?)?,
-            primitive_id: dec_str(arg("primitive-id")?)?,
-            positions: dec_list(arg("positions")?, dec_point3)?,
-            normals: dec_list(arg("normals")?, dec_point3)?,
-            uvs: dec_list(arg("uvs")?, dec_uv)?,
-            colors: dec_list(arg("colors")?, dec_rgba)?,
-            indices: dec_list(arg("indices")?, |t| t.parse::<u32>().map_err(|e: std::num::ParseIntError| e.to_string()))?,
+            mesh_id: dec_str(arg("mesh-id")?).await?,
+            primitive_id: dec_str(arg("primitive-id")?).await?,
+            positions: dec_list(arg("positions")?, dec_point3).await?,
+            normals: dec_list(arg("normals")?, dec_point3).await?,
+            uvs: dec_list(arg("uvs")?, dec_uv).await?,
+            colors: dec_list(arg("colors")?, dec_rgba).await?,
+            indices: dec_list(arg("indices")?, |t| t.parse::<u32>().map_err(|e: std::num::ParseIntError| e.to_string())).await?,
         })),
         "set-primitive-material" => Ok(SemioMeshMutation::SetPrimitiveMaterial(set_primitive_material::mutation::SetPrimitiveMaterial {
-            mesh_id: dec_str(arg("mesh-id")?)?,
-            primitive_id: dec_str(arg("primitive-id")?)?,
-            material_id: decode_option(arg("material-id")?, dec_str)?,
+            mesh_id: dec_str(arg("mesh-id")?).await?,
+            primitive_id: dec_str(arg("primitive-id")?).await?,
+            material_id: decode_option(arg("material-id")?, dec_str).await?,
         })),
-        "create-material" => Ok(SemioMeshMutation::CreateMaterial(create_material::mutation::CreateMaterial { material: dec_material(arg("material")?)? })),
-        "delete-material" => Ok(SemioMeshMutation::DeleteMaterial(delete_material::mutation::DeleteMaterial { id: dec_str(arg("id")?)? })),
-        "change-material-base-color" => Ok(SemioMeshMutation::ChangeMaterialBaseColor(change_material_base_color::mutation::ChangeMaterialBaseColor { id: dec_str(arg("id")?)?, new_base_color: dec_rgba(arg("new-base-color")?)? })),
+        "create-material" => Ok(SemioMeshMutation::CreateMaterial(create_material::mutation::CreateMaterial { material: dec_material(arg("material")?).await? })),
+        "delete-material" => Ok(SemioMeshMutation::DeleteMaterial(delete_material::mutation::DeleteMaterial { id: dec_str(arg("id")?).await? })),
+        "change-material-base-color" => Ok(SemioMeshMutation::ChangeMaterialBaseColor(change_material_base_color::mutation::ChangeMaterialBaseColor { id: dec_str(arg("id")?).await?, new_base_color: dec_rgba(arg("new-base-color")?).await? })),
         "change-material-metallic" => {
-            Ok(SemioMeshMutation::ChangeMaterialMetallic(change_material_metallic::mutation::ChangeMaterialMetallic { id: dec_str(arg("id")?)?, new_metallic: arg("new-metallic")?.parse().map_err(|e: std::num::ParseFloatError| e.to_string())? }))
+            Ok(SemioMeshMutation::ChangeMaterialMetallic(change_material_metallic::mutation::ChangeMaterialMetallic { id: dec_str(arg("id")?).await?, new_metallic: arg("new-metallic")?.parse().map_err(|e: std::num::ParseFloatError| e.to_string())? }))
         }
         "change-material-roughness" => {
-            Ok(SemioMeshMutation::ChangeMaterialRoughness(change_material_roughness::mutation::ChangeMaterialRoughness { id: dec_str(arg("id")?)?, new_roughness: arg("new-roughness")?.parse().map_err(|e: std::num::ParseFloatError| e.to_string())? }))
+            Ok(SemioMeshMutation::ChangeMaterialRoughness(change_material_roughness::mutation::ChangeMaterialRoughness { id: dec_str(arg("id")?).await?, new_roughness: arg("new-roughness")?.parse().map_err(|e: std::num::ParseFloatError| e.to_string())? }))
         }
-        "create-texture" => Ok(SemioMeshMutation::CreateTexture(create_texture::mutation::CreateTexture { texture: dec_texture(arg("texture")?)? })),
-        "delete-texture" => Ok(SemioMeshMutation::DeleteTexture(delete_texture::mutation::DeleteTexture { id: dec_str(arg("id")?)? })),
-        "change-texture-mime" => Ok(SemioMeshMutation::ChangeTextureMime(change_texture_mime::mutation::ChangeTextureMime { id: dec_str(arg("id")?)?, new_mime: dec_str(arg("new-mime")?)? })),
-        "replace-texture-bytes" => Ok(SemioMeshMutation::ReplaceTextureBytes(replace_texture_bytes::mutation::ReplaceTextureBytes { id: dec_str(arg("id")?)?, new_bytes: hex_decode(arg("new-bytes")?)? })),
+        "create-texture" => Ok(SemioMeshMutation::CreateTexture(create_texture::mutation::CreateTexture { texture: dec_texture(arg("texture")?).await? })),
+        "delete-texture" => Ok(SemioMeshMutation::DeleteTexture(delete_texture::mutation::DeleteTexture { id: dec_str(arg("id")?).await? })),
+        "change-texture-mime" => Ok(SemioMeshMutation::ChangeTextureMime(change_texture_mime::mutation::ChangeTextureMime { id: dec_str(arg("id")?).await?, new_mime: dec_str(arg("new-mime")?).await? })),
+        "replace-texture-bytes" => Ok(SemioMeshMutation::ReplaceTextureBytes(replace_texture_bytes::mutation::ReplaceTextureBytes { id: dec_str(arg("id")?).await?, new_bytes: hex_decode(arg("new-bytes")?).await? })),
         "move-vertex" => Ok(SemioMeshMutation::MoveVertex(move_vertex::mutation::MoveVertex {
-            mesh_id: dec_str(arg("mesh-id")?)?,
-            primitive_id: dec_str(arg("primitive-id")?)?,
+            mesh_id: dec_str(arg("mesh-id")?).await?,
+            primitive_id: dec_str(arg("primitive-id")?).await?,
             vertex_index: arg("vertex-index")?.parse().map_err(|e: std::num::ParseIntError| e.to_string())?,
-            new_point: dec_point3(arg("new-point")?)?,
+            new_point: dec_point3(arg("new-point")?).await?,
         })),
         other => Err(format!("semio mesh mutation: unknown keyword {other:?}")),
     }
@@ -208,10 +208,10 @@ async fn parse_semio_mesh_mutation(line: &str) -> Result<SemioMeshMutation, Stri
 
 impl OpText for SemioMeshMutation {
     async fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_semio_mesh_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_semio_mesh_mutation(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     async fn print_op(&self) -> String {
-        print_semio_mesh_mutation(self)
+        print_semio_mesh_mutation(self).await
     }
 }
 //#endregion 🔖️OpText
@@ -263,7 +263,7 @@ async fn variant_ordinal(m: &SemioMeshMutation) -> u8 {
 /// `tag` byte already carries the keyword, so the text keyword itself is redundant in the binary
 /// payload.
 async fn print_semio_mesh_mutation_args(m: &SemioMeshMutation) -> String {
-    match print_semio_mesh_mutation(m).split_once(' ') {
+    match print_semio_mesh_mutation(m).await.split_once(' ') {
         Some((_, rest)) => rest.to_string(),
         None => String::new(),
     }
@@ -277,8 +277,8 @@ async fn print_semio_mesh_mutation_args(m: &SemioMeshMutation) -> String {
 impl OpBinary for SemioMeshMutation {
     async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
-        let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self)];
-        out.extend_from_slice(print_semio_mesh_mutation_args(self).as_bytes());
+        let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self).await];
+        out.extend_from_slice(print_semio_mesh_mutation_args(self).await.as_bytes());
         Ok(out)
     }
     async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
@@ -293,7 +293,7 @@ impl OpBinary for SemioMeshMutation {
         let keyword = OP_KEYWORDS.get(tag as usize).ok_or_else(|| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("tag {tag} out of range for {} declared variants", OP_KEYWORDS.len()) })?;
         let args = std::str::from_utf8(&bytes[2..]).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 2, detail: e.to_string() })?;
         let line = if args.is_empty() { keyword.to_string() } else { format!("{keyword} {args}") };
-        Self::parse_op(&line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 2, detail: e.to_string() })
+        Self::parse_op(&line).await.map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 2, detail: e.to_string() })
     }
 }
 //#endregion 🔖️OpBinary

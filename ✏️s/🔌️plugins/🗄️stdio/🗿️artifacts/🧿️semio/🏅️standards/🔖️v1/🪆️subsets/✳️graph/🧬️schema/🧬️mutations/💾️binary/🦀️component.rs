@@ -38,7 +38,7 @@ async fn variant_ordinal(m: &SemioGraphMutation) -> u8 {
 /// keyword, so the text keyword itself (and its `:` separator) is redundant in the binary payload.
 async fn print_op_args(m: &SemioGraphMutation) -> String {
     use protocol::OpText;
-    match m.print_op().split_once(':') {
+    match m.print_op().await.split_once(':') {
         Some((_, rest)) => rest.to_string(),
         None => String::new(),
     }
@@ -47,8 +47,8 @@ async fn print_op_args(m: &SemioGraphMutation) -> String {
 impl protocol::OpBinary for SemioGraphMutation {
     async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
-        let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self)];
-        out.extend_from_slice(print_op_args(self).as_bytes());
+        let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self).await];
+        out.extend_from_slice(print_op_args(self).await.as_bytes());
         Ok(out)
     }
     async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
@@ -64,7 +64,7 @@ impl protocol::OpBinary for SemioGraphMutation {
         let keyword = OP_KEYWORDS.get(tag as usize).ok_or_else(|| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("tag {tag} out of range for {} declared variants", OP_KEYWORDS.len()) })?;
         let args = std::str::from_utf8(&bytes[2..]).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 2, detail: e.to_string() })?;
         let line = if args.is_empty() { keyword.to_string() } else { format!("{keyword}:{args}") };
-        Self::parse_op(&line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 2, detail: e.to_string() })
+        Self::parse_op(&line).await.map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 2, detail: e.to_string() })
     }
 }
 //#endregion 🔖️OpBinary

@@ -99,7 +99,7 @@ impl ArtifactSerializer for SemioAnimationToGltf {
                     AnimInterpolation::CubicSpline => GltfInterpolation::Linear, // 📦️ downgraded, documented above
                 };
                 let sampler_index = samplers.len();
-                samplers.push(GltfAnimationSampler { input: input_acc, interpolation, output: output_acc, extensions: None, extras: None });
+                samplers.push(GltfAnimationSampler { input: input_acc.await, interpolation, output: output_acc.await, extensions: None, extras: None });
                 channels.push(GltfAnimationChannel { sampler: sampler_index, target: GltfAnimationChannelTarget { node: Some(node_index), path, extensions: None, extras: None }, extensions: None, extras: None });
             }
             animations.push(GltfAnimation { channels, samplers, name: timeline.name.clone(), extensions: None, extras: None });

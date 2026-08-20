@@ -1,0 +1,27 @@
+{
+  "surface": "conformance.component.state-activity-finished",
+  "revision": 0,
+  "root": 0,
+  "nodes": [
+    {
+      "id": 0,
+      "key": "#0",
+      "component": {
+        "type": "slider",
+        "value": 1.0,
+        "min": 0.0,
+        "max": 1.0,
+        "step": 0.1
+      },
+      "layout": {
+        "kind": "leaf",
+        "width": "hug",
+        "height": "hug"
+      },
+      "style": {},
+      "activity": "finished",
+      "accessibility": {}
+    }
+  ],
+  "layoutEpoch": 0
+}

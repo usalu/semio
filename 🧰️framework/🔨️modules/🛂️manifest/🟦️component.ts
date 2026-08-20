@@ -107,6 +107,176 @@ import type {
 } from "./🤖️generated/🟦️manifest.ts";
 // #endregion 🧬️GeneratedMirror
 
+// #region 🧬️GeneratedUiContract
+/** 🧬️ The semantic UI contract (`🖱️ui/🧬️contract/📦️packages/🦀️rust/📦️glue.rs`) — flat,
+ * id-keyed replacement for the hand-written `UiNode` recursive-union mirror this file used to
+ * carry, generated via ts-rs (`bun nx run @semio-tech/ui-contract-rs:generate`). Three names
+ * collide with an unrelated existing export (artifact-editor `SurfaceKind`, OS-shell
+ * `WindowLayout`/`WindowStackCorner`) and are re-exported `Ui`-prefixed instead of shadowing
+ * them; everything else keeps its Rust name verbatim. */
+import type {
+  Liveness as GeneratedLiveness,
+  AccessibilitySpec as GeneratedAccessibilitySpec,
+  ActionId as GeneratedActionId,
+  Trigger as GeneratedTrigger,
+  ActionBinding as GeneratedActionBinding,
+  MenuRef as GeneratedMenuRef,
+  UiIntent as GeneratedUiIntent,
+  UiValue as GeneratedUiValue,
+  BuiltNode as GeneratedBuiltNode,
+  Label as GeneratedLabel,
+  ContainerRole as GeneratedContainerRole,
+  InputKind as GeneratedInputKind,
+  RowActionPlacement as GeneratedRowActionPlacement,
+  DropOverlaySpec as GeneratedDropOverlaySpec,
+  SelectItem as GeneratedSelectItem,
+  KeyValueEntry as GeneratedKeyValueEntry,
+  RowAction as GeneratedRowAction,
+  ContainerProps as GeneratedContainerProps,
+  TextProps as GeneratedTextProps,
+  ButtonProps as GeneratedButtonProps,
+  SeparatorProps as GeneratedSeparatorProps,
+  InputProps as GeneratedInputProps,
+  SelectProps as GeneratedSelectProps,
+  ToggleProps as GeneratedToggleProps,
+  KeyValueListProps as GeneratedKeyValueListProps,
+  SliderProps as GeneratedSliderProps,
+  NumberStepperProps as GeneratedNumberStepperProps,
+  RingProps as GeneratedRingProps,
+  IconSelectProps as GeneratedIconSelectProps,
+  TreeProps as GeneratedTreeProps,
+  TreeSectionProps as GeneratedTreeSectionProps,
+  TreeItemProps as GeneratedTreeItemProps,
+  ImageProps as GeneratedImageProps,
+  ExtensionProps as GeneratedExtensionProps,
+  Component as GeneratedComponent,
+  SurfaceId as GeneratedSurfaceId,
+  UiNodeId as GeneratedUiNodeId,
+  UiRevision as GeneratedUiRevision,
+  TransitionHint as GeneratedTransitionHint,
+  UiNodeRecord as GeneratedUiNodeRecord,
+  UiSnapshot as GeneratedUiSnapshot,
+  UiPatchOp as GeneratedUiPatchOp,
+  UiPatch as GeneratedUiPatch,
+  SpaceToken as GeneratedSpaceToken,
+  Sizing as GeneratedSizing,
+  Axis as GeneratedAxis,
+  Align as GeneratedAlign,
+  Justify as GeneratedJustify,
+  GridTrack as GeneratedGridTrack,
+  ScrollAxes as GeneratedScrollAxes,
+  Anchor as GeneratedAnchor,
+  EdgeSpace as GeneratedEdgeSpace,
+  StackLayout as GeneratedStackLayout,
+  GridLayout as GeneratedGridLayout,
+  OverlayLayout as GeneratedOverlayLayout,
+  ScrollLayout as GeneratedScrollLayout,
+  AbsoluteLayout as GeneratedAbsoluteLayout,
+  LeafLayout as GeneratedLeafLayout,
+  LayoutSpec as GeneratedLayoutSpec,
+  WindowStackCorner as GeneratedWindowStackCorner,
+  WindowLayoutNode as GeneratedWindowLayoutNode,
+  WindowLayout as GeneratedWindowLayout,
+  UiDocumentLimits as GeneratedUiDocumentLimits,
+  UiContractViolation as GeneratedUiContractViolation,
+  PatchRejection as GeneratedPatchRejection,
+  QuotaKind as GeneratedQuotaKind,
+  Activity as GeneratedActivity,
+  PeerMark as GeneratedPeerMark,
+  OwnPresence as GeneratedOwnPresence,
+  PresenceUpdate as GeneratedPresenceUpdate,
+  Variant as GeneratedVariant,
+  SizeToken as GeneratedSizeToken,
+  Density as GeneratedDensity,
+  Tone as GeneratedTone,
+  Emphasis as GeneratedEmphasis,
+  StyleSpec as GeneratedStyleSpec,
+  SurfaceKind as GeneratedSurfaceKind,
+  SurfaceDoc as GeneratedSurfaceDoc,
+  SurfaceProps as GeneratedSurfaceProps,
+} from "./🤖️generated/🟦️ui-contract.ts";
+
+export type Liveness = GeneratedLiveness;
+export type AccessibilitySpec = GeneratedAccessibilitySpec;
+export type ActionId = GeneratedActionId;
+export type Trigger = GeneratedTrigger;
+export type ActionBinding = GeneratedActionBinding;
+export type MenuRef = GeneratedMenuRef;
+export type UiIntent = GeneratedUiIntent;
+export type UiValue = GeneratedUiValue;
+export type BuiltNode = GeneratedBuiltNode;
+export type Label = GeneratedLabel;
+export type ContainerRole = GeneratedContainerRole;
+export type InputKind = GeneratedInputKind;
+export type RowActionPlacement = GeneratedRowActionPlacement;
+export type DropOverlaySpec = GeneratedDropOverlaySpec;
+export type SelectItem = GeneratedSelectItem;
+export type KeyValueEntry = GeneratedKeyValueEntry;
+export type RowAction = GeneratedRowAction;
+export type ContainerProps = GeneratedContainerProps;
+export type TextProps = GeneratedTextProps;
+export type ButtonProps = GeneratedButtonProps;
+export type SeparatorProps = GeneratedSeparatorProps;
+export type InputProps = GeneratedInputProps;
+export type SelectProps = GeneratedSelectProps;
+export type ToggleProps = GeneratedToggleProps;
+export type KeyValueListProps = GeneratedKeyValueListProps;
+export type SliderProps = GeneratedSliderProps;
+export type NumberStepperProps = GeneratedNumberStepperProps;
+export type RingProps = GeneratedRingProps;
+export type IconSelectProps = GeneratedIconSelectProps;
+export type TreeProps = GeneratedTreeProps;
+export type TreeSectionProps = GeneratedTreeSectionProps;
+export type TreeItemProps = GeneratedTreeItemProps;
+export type ImageProps = GeneratedImageProps;
+export type ExtensionProps = GeneratedExtensionProps;
+export type Component = GeneratedComponent;
+export type SurfaceId = GeneratedSurfaceId;
+export type UiNodeId = GeneratedUiNodeId;
+export type UiRevision = GeneratedUiRevision;
+export type TransitionHint = GeneratedTransitionHint;
+export type UiNodeRecord = GeneratedUiNodeRecord;
+export type UiSnapshot = GeneratedUiSnapshot;
+export type UiPatchOp = GeneratedUiPatchOp;
+export type UiPatch = GeneratedUiPatch;
+export type SpaceToken = GeneratedSpaceToken;
+export type Sizing = GeneratedSizing;
+export type Axis = GeneratedAxis;
+export type Align = GeneratedAlign;
+export type Justify = GeneratedJustify;
+export type GridTrack = GeneratedGridTrack;
+export type ScrollAxes = GeneratedScrollAxes;
+export type Anchor = GeneratedAnchor;
+export type EdgeSpace = GeneratedEdgeSpace;
+export type StackLayout = GeneratedStackLayout;
+export type GridLayout = GeneratedGridLayout;
+export type OverlayLayout = GeneratedOverlayLayout;
+export type ScrollLayout = GeneratedScrollLayout;
+export type AbsoluteLayout = GeneratedAbsoluteLayout;
+export type LeafLayout = GeneratedLeafLayout;
+export type LayoutSpec = GeneratedLayoutSpec;
+export type UiWindowStackCorner = GeneratedWindowStackCorner;
+export type WindowLayoutNode = GeneratedWindowLayoutNode;
+export type UiWindowLayout = GeneratedWindowLayout;
+export type UiDocumentLimits = GeneratedUiDocumentLimits;
+export type UiContractViolation = GeneratedUiContractViolation;
+export type PatchRejection = GeneratedPatchRejection;
+export type QuotaKind = GeneratedQuotaKind;
+export type Activity = GeneratedActivity;
+export type PeerMark = GeneratedPeerMark;
+export type OwnPresence = GeneratedOwnPresence;
+export type PresenceUpdate = GeneratedPresenceUpdate;
+export type Variant = GeneratedVariant;
+export type SizeToken = GeneratedSizeToken;
+export type Density = GeneratedDensity;
+export type Tone = GeneratedTone;
+export type Emphasis = GeneratedEmphasis;
+export type StyleSpec = GeneratedStyleSpec;
+export type UiSurfaceKind = GeneratedSurfaceKind;
+export type SurfaceDoc = GeneratedSurfaceDoc;
+export type SurfaceProps = GeneratedSurfaceProps;
+// #endregion 🧬️GeneratedUiContract
+
 export const CANVAS_HOVER_SOURCE_CANVAS = "canvas";
 export const CANVAS_HOVER_SOURCE_PICK_MENU = "pick-menu";
 export const CANVAS_HOVER_SOURCE_CATALOG = "catalog";
@@ -269,300 +439,6 @@ export type UtilityNode =
       readonly category?: UtilityCategory;
       readonly onChange: ActionDescriptor;
     };
-
-export type UiSectionNode = {
-  readonly type: "section";
-  readonly id: string;
-  readonly label?: string;
-  readonly defaultOpen?: boolean;
-  readonly loading?: boolean;
-  readonly waiting?: boolean;
-  readonly menu?: UiMenuRef;
-  readonly children: readonly UiNode[];
-};
-
-/** @emoji 🌳️ One hover-revealed row action on a {@link UiTreeItemNode}; renderer-side addition on top of the base wasm tree-item shape. */
-export type UiTreeActionPlacement = "row" | "menu";
-
-export type UiTreeItemAction = {
-  readonly iconId: IconName;
-  readonly label?: string;
-  readonly action: ActionDescriptor;
-  readonly placement?: UiTreeActionPlacement;
-};
-
-/** 👥️ One peer's mark on the {@link UiTreeItemNode} carrying this — hand-written twin of the Rust
- * `UiPeerMark` (`🖱️ui/…/🎯️targets/🧊️wgpu/🦀️component.rs` `🔖️Presence` region, contract-freeze §C7.6
- * of ticket `.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/SHARED-PRESENCE-SESSION-COLORS-AND-UNIVERSAL-ARTIFACT-
- * CREATION`). `label` is the raw actor id (no display name travels this far down the stack). */
-export type UiPeerMark = {
-  readonly actor: string;
-  readonly color?: number;
-  readonly hovered?: boolean;
-  readonly selected?: boolean;
-  readonly label: string;
-};
-
-export type UiTreeItemNode = {
-  readonly id: string;
-  readonly label: string;
-  readonly description?: string;
-  readonly icon?: string;
-  readonly iconId?: IconName;
-  readonly selected?: boolean;
-  readonly loading?: boolean;
-  readonly waiting?: boolean;
-  readonly defaultOpen?: boolean;
-  readonly action?: ActionDescriptor;
-  readonly actions?: readonly UiTreeItemAction[];
-  readonly draggable?: boolean;
-  readonly dragData?: Readonly<Record<string, string>>;
-  readonly items?: readonly UiTreeItemNode[];
-  readonly control?: UiControlNode;
-  readonly isHidden?: boolean;
-  /** 🖱️ Row-level context-menu address — most rows share one `menu.id` across a tree with the row
-   * id carried in `args` (e.g. `{ id: row.id }`), rather than minting a unique menu id per row. */
-  readonly menu?: UiMenuRef;
-  /** 🎨️ This session's own hub-assigned palette index, mirrored from `UiPresence.color` — stamped by
-   * the framework's `ui_tree_stamp_presence` pass onto every `interactionDomain`-bound item. */
-  readonly color?: number;
-  /** 👥️ Every OTHER peer currently marking this item (hover and/or selection), sorted by actor. */
-  readonly peers?: readonly UiPeerMark[];
-};
-
-export type UiTreeSectionNode = {
-  readonly id: string;
-  readonly label?: string;
-  readonly defaultOpen?: boolean;
-  readonly loading?: boolean;
-  readonly waiting?: boolean;
-  readonly items: readonly UiTreeItemNode[];
-};
-
-export type UiTreeNode = {
-  readonly type: "tree";
-  readonly sections: readonly UiTreeSectionNode[];
-  readonly loading?: boolean;
-  readonly waiting?: boolean;
-  readonly dropAction?: ActionDescriptor;
-  readonly menu?: UiMenuRef;  readonly presence?: UiPresence;
-  /** 🕹️ Binds this rendered tree to an app-declared `InteractionDefinition` domain so the framework
-   * (not the app) owns its selection/hover — replaces the deleted `selectedIds`/`highlightedIds`/
-   * `selectionChange` wire surface. */
-  readonly interactionDomain?: string;
-};
-
-export type UiControlNode = UiInputNode | UiSelectNode | UiToggleNode | UiButtonNode | UiKeyValueNode | UiSliderNode | UiNumberStepperNode | UiRingNode | UiIconSelectNode;
-
-export type UiInputNode = {
-  readonly type: "input";
-  readonly id: string;
-  readonly inputKind: string;
-  readonly value: string;
-  readonly placeholder?: string;
-  readonly commit?: string;
-  readonly min?: number;
-  readonly max?: number;
-  readonly step?: number;
-  readonly accept?: string;
-  readonly onChange: ActionDescriptor;
-  readonly menu?: UiMenuRef;
-};
-
-export type UiSelectItem = {
-  readonly value: string;
-  readonly label: string;
-};
-
-export type UiSelectNode = {
-  readonly type: "select";
-  readonly id: string;
-  readonly value: string;
-  readonly items: readonly UiSelectItem[];
-  readonly placeholder?: string;
-  readonly onChange: ActionDescriptor;
-  readonly menu?: UiMenuRef;
-};
-
-export type UiToggleNode = {
-  readonly type: "toggle";
-  readonly id: string;
-  readonly iconId: IconName;
-  readonly pressed: boolean;
-  readonly text?: string;
-  readonly onChange: ActionDescriptor;
-  readonly menu?: UiMenuRef;
-};
-
-/** @emoji 🌿️ A nestable labeled container of {@link UiNode} children — the declarative-tree mechanism
- * for subtrees like `Origin > X/Y/Z`: {@link uiDeclarativeChildToTreeItem} expands a `Group` into a
- * {@link UiTreeItemNode} whose `items` are its recursively-converted children, so depth composes to
- * any level (`Plane > Origin > X/Y/Z`). Unlike {@link UiSectionNode} (top-level tree sections only,
- * see `assertNoNestedTreeSections`), a `Group` may itself appear as another `Group`'s or
- * {@link UiFieldNode}'s child. */
-export type UiGroupNode = {
-  readonly type: "group";
-  readonly id: string;
-  readonly label: string;
-  readonly defaultOpen?: boolean;
-  readonly menu?: UiMenuRef;
-  readonly children: readonly UiNode[];
-};
-
-export type UiKeyValueEntry = {
-  readonly label: string;
-  readonly value: string;
-};
-
-export type UiKeyValueNode = {
-  readonly type: "keyValue";
-  readonly entries: readonly UiKeyValueEntry[];
-  readonly menu?: UiMenuRef;
-};
-
-export type UiSliderNode = {
-  readonly type: "slider";
-  readonly id: string;
-  readonly value: number;
-  readonly min: number;
-  readonly max: number;
-  readonly step: number;
-  readonly unit?: string;
-  readonly onChange: ActionDescriptor;
-  readonly menu?: UiMenuRef;
-};
-
-export type UiNumberStepperNode = {
-  readonly type: "numberStepper";
-  readonly id: string;
-  readonly value: number;
-  readonly step: number;
-  readonly uniform: boolean;
-  readonly onAbsolute: ActionDescriptor;
-  readonly onDelta: ActionDescriptor;
-  readonly menu?: UiMenuRef;
-};
-
-export type UiRingNode = {
-  readonly type: "ring";
-  readonly id: string;
-  readonly orbId: string;
-  readonly t: number;
-  readonly disabled?: boolean;
-  readonly onChange: ActionDescriptor;
-  readonly menu?: UiMenuRef;
-};
-
-export type UiIconSelectNode = {
-  readonly type: "iconSelect";
-  readonly id: string;
-  readonly value: string;
-  readonly uniform: boolean;
-  readonly classifierKind: string;
-  readonly onChange: ActionDescriptor;
-  readonly menu?: UiMenuRef;
-};
-
-export type UiFieldNode = {
-  readonly type: "field";
-  readonly id: string;
-  readonly label: string;
-  readonly description?: string;
-  readonly required?: boolean;
-  readonly error?: string;
-  readonly child: UiNode;
-  readonly menu?: UiMenuRef;
-};
-
-/** 🎨️ Renderer-side visual variant/size/density hints on a {@link UiButtonNode} — no wasm/plugin equivalent, purely a display hint. */
-export type StyleSpec = {
-  readonly variant?: string;
-  readonly size?: string;
-  readonly density?: string;
-};
-
-export type UiButtonNode = {
-  readonly type: "button";
-  readonly id?: string;
-  readonly iconId: IconName;
-  readonly label: string;
-  readonly action: ActionDescriptor;
-  readonly style?: StyleSpec;
-  readonly disabled?: boolean;
-  readonly loading?: boolean;
-  readonly waiting?: boolean;
-  readonly menu?: UiMenuRef;
-};
-
-export type UiTextNode = {
-  readonly type: "text";
-  readonly value: string;
-  readonly emphasize?: boolean;
-  readonly dataAttributes?: Readonly<Record<string, string>>;
-  readonly menu?: UiMenuRef;
-};
-
-export type UiStackNode = {
-  readonly type: "stack";
-  readonly direction: string;
-  readonly gap?: string;
-  readonly padding?: string;
-  readonly id?: string;
-  readonly selected?: boolean;
-  readonly loading?: boolean;
-  readonly waiting?: boolean;
-  readonly activate?: ActionDescriptor;
-  readonly dropAction?: ActionDescriptor;
-  readonly dropOverlay?: UiDropOverlaySpec;
-  readonly menu?: UiMenuRef;
-  readonly children: readonly UiNode[];  readonly presence?: UiPresence;
-};
-
-/** 📥️ Hover-state copy for a {@link UiStackNode}'s `dropOverlay` — shown while a drag is over the stack, ahead of `dropAction` firing on release. */
-export type UiDropOverlaySpec = {
-  readonly title: string;
-  readonly hint: string;
-  readonly accept?: string;
-};
-
-export type UiSeparatorNode = { readonly type: "separator"; readonly menu?: UiMenuRef };
-
-export type UiImageNode = {
-  readonly type: "image";
-  readonly id: string;
-  readonly src: string;
-  readonly alt?: string;
-  readonly menu?: UiMenuRef;
-};
-
-export type UiNode =
-  | UiStackNode
-  | UiTextNode
-  | UiButtonNode
-  | UiSeparatorNode
-  | UiSectionNode
-  | UiInputNode
-  | UiSelectNode
-  | UiToggleNode
-  | UiKeyValueNode
-  | UiSliderNode
-  | UiNumberStepperNode
-  | UiRingNode
-  | UiIconSelectNode
-  | UiFieldNode
-  | UiGroupNode
-  | UiTreeNode
-  | UiImageNode
-  | UiComponentSceneNode
-  | UiExternalSlotNode;
-
-export type UiInspectorFieldGroup = {
-  readonly id: string;
-  readonly label: string;
-  readonly defaultOpen?: boolean;
-  readonly fields: readonly UiNode[];
-};
-
 
 //#region 🔌️PluginAndAppContract
 //#region PluginRuntime
@@ -934,8 +810,6 @@ export type PluginViewState = {
   /** 🪟️ The live set of open window instances (base + spawned/split), so `windowMeasures`/`windowEngagements` can return one entry per instance. */
   readonly windowInstances?: readonly { readonly id: string; readonly windowKindId: string }[];
 };
-
-export type PluginUiNode = Record<string, unknown> & { readonly type: string };
 
 /** 🗣️ Locale/terminology-aware label patch for an app's window-kind/panel-tab/mode labels, resolved fresh per {@link PluginViewState} — merge over the static {@link PluginManifest} app labels by id. */
 export type PluginAppLabelsOverlay = {

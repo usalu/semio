@@ -473,7 +473,7 @@ async fn prescan_dict_and_edits(trusted: &[u8], up_to_offset: u64) -> Result<(Di
 /// (default limits — no `limits` parameter on this frozen signature) so a torn live tail is silently
 /// excluded rather than surfaced as an error, matching how every other reader in this crate family
 /// treats the boundary `crate::os_spr::format::recover` establishes.
-pub async fn materialize_with<P, E>(plan: MaterializePlan<'_>, protocol_bytes: &[u8], decode_base: impl FnOnce(&[u8]) -> Result<P, E>, mut apply_edit: impl FnMut(&mut P, &crate::os_spr::history::HistoryEdit) -> Result<(), E>) -> Result<(P, MaterializeReport), E>
+pub async fn materialize_with<P, E>(plan: MaterializePlan<'_>, protocol_bytes: &[u8], decode_base: impl FnOnce(&[u8]) -> Result<P, E>, mut apply_edit: impl AsyncFnMut(&mut P, &crate::os_spr::history::HistoryEdit) -> Result<(), E>) -> Result<(P, MaterializeReport), E>
 where
     E: From<ProtocolError>,
 {
@@ -507,7 +507,7 @@ where
                 let edit_ids_ref = &edit_ids;
                 let dict_ref = &dict;
                 let edit = crate::os_spr::history::decode_edit(frame.payload().await, dict_ref, |ord| edit_ids_ref.get(ord as usize).map(String::as_str).ok_or(ProtocolError::DictMiss(ord as u32))).await.map_err(E::from)?;
-                apply_edit(&mut snapshot, &edit)?;
+                apply_edit(&mut snapshot, &edit).await?;
                 edit_ids.push(edit.id);
                 edit_ordinal += 1;
                 edits_replayed += 1;
@@ -534,38 +534,41 @@ mod tests {
 
     //#region 🔖️Snapshot
     async fn sample_record(anchor: Option<&str>, ordinal: u64, kind: SnapshotBodyKind, body: Option<Vec<u8>>) -> SnapshotRecord {
-        let body_hash = body.as_deref().map_or([0u8; 32], |b| Blake3Hasher.hash(b));
+        let body_hash = match body.as_deref() {
+            Some(b) => Blake3Hasher.hash(b).await,
+            None => [0u8; 32],
+        };
         SnapshotRecord { anchor_checkpoint_id: anchor.map(str::to_string), edit_ordinal: ordinal, body_kind: kind, body_hash, body }
     }
 
     #[semio_framework_async_macros::async_test]
     async fn snapshot_round_trips_embedded_with_checkpoint_anchor() {
-        let record = sample_record(Some("cp-1"), 7, SnapshotBodyKind::EmbeddedPack, Some(vec![1, 2, 3, 4]));
+        let record = sample_record(Some("cp-1"), 7, SnapshotBodyKind::EmbeddedPack, Some(vec![1, 2, 3, 4])).await;
         let bytes = encode_snapshot(&record);
-        let decoded = decode_snapshot(&bytes).await.unwrap();
-        assert_eq!(decoded, record.await);
+        let decoded = decode_snapshot(&bytes.await).await.unwrap();
+        assert_eq!(decoded, record);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn snapshot_round_trips_embedded_dsl_with_ordinal_only_anchor() {
-        let record = sample_record(None, 0, SnapshotBodyKind::EmbeddedDsl, Some(b"(doc)".to_vec()));
+        let record = sample_record(None, 0, SnapshotBodyKind::EmbeddedDsl, Some(b"(doc)".to_vec())).await;
         let bytes = encode_snapshot(&record);
-        let decoded = decode_snapshot(&bytes).await.unwrap();
-        assert_eq!(decoded, record.await);
+        let decoded = decode_snapshot(&bytes.await).await.unwrap();
+        assert_eq!(decoded, record);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn snapshot_round_trips_sidecar_without_body() {
-        let record = sample_record(Some("cp-9"), 42, SnapshotBodyKind::SidecarPack, None);
+        let record = sample_record(Some("cp-9"), 42, SnapshotBodyKind::SidecarPack, None).await;
         let bytes = encode_snapshot(&record);
-        let decoded = decode_snapshot(&bytes).await.unwrap();
+        let decoded = decode_snapshot(&bytes.await).await.unwrap();
         assert_eq!(decoded.body, None);
-        assert_eq!(decoded, record.await);
+        assert_eq!(decoded, record);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn snapshot_rejects_unknown_format() {
-        let mut bytes = encode_snapshot(&sample_record(None, 0, SnapshotBodyKind::EmbeddedPack, Some(vec![9])));
+        let mut bytes = encode_snapshot(&sample_record(None, 0, SnapshotBodyKind::EmbeddedPack, Some(vec![9])).await).await;
         bytes[0] = 7;
         assert!(matches!(decode_snapshot(&bytes).await, Err(ProtocolError::Malformed { .. })));
     }
@@ -587,19 +590,19 @@ mod tests {
     }
 
     async fn flush_dict_delta<S: crate::os_pack::PackSink>(writer: &mut SprWriter<S>, dict: &DictBuilder, base: &mut u32) {
-        let len = dict.len();
+        let len = dict.len().await;
         if len > *base {
-            let entries = dict.entries_since(*base);
+            let entries = dict.entries_since(*base).await;
             let mut payload = ByteWriter::new().await;
             payload.write_u8(1).await;
             payload.write_varint_u64(*base as u64).await;
-            payload.write_varint_u64(entries.await.len() as u64).await;
+            payload.write_varint_u64(entries.len() as u64).await;
             for entry in entries {
                 payload.write_varint_u64(entry.len() as u64).await;
                 payload.write_bytes(entry.as_bytes()).await;
             }
             writer.write_record(crate::os_spr::REC_STR_DICT, true, &payload.into_bytes().await, CodecId(0)).await.unwrap();
-            *base = len.await;
+            *base = len;
         }
     }
 
@@ -609,26 +612,26 @@ mod tests {
     async fn build_stream_with_snapshot(snapshot_body: &[u8]) -> Vec<u8> {
         let write_options = WriteOptions { required_flags: REQUIRED_HASH_CHAIN, optional_flags: 0 };
         let mut writer = SprWriter::begin(Vec::<u8>::new(), &write_options).await.unwrap();
-        let mut dict = DictBuilder::new();
+        let mut dict = DictBuilder::new().await;
         let mut dict_base = 0u32;
 
-        let doc_payload = crate::os_spr::history::encode_doc("doc-1", "schema-1", &mut dict);
-        flush_dict_delta(&mut writer, &dict, &mut dict_base);
+        let doc_payload = crate::os_spr::history::encode_doc("doc-1", "schema-1", &mut dict).await;
+        flush_dict_delta(&mut writer, &dict, &mut dict_base).await;
         writer.write_record(crate::os_spr::REC_DOC, true, &doc_payload, CodecId(0)).await.unwrap();
 
-        for (i, edit) in [sample_edit("edit-0", "op-0"), sample_edit("edit-1", "op-1")].iter().enumerate() {
+        for (i, edit) in [sample_edit("edit-0", "op-0").await, sample_edit("edit-1", "op-1").await].iter().enumerate() {
             let _ = i;
             let payload = crate::os_spr::history::encode_edit(edit, &mut dict, |_| None).await.unwrap();
-            flush_dict_delta(&mut writer, &dict, &mut dict_base);
+            flush_dict_delta(&mut writer, &dict, &mut dict_base).await;
             writer.write_record(REC_EDIT, true, &payload, CodecId(0)).await.unwrap();
         }
 
-        let snapshot = sample_record(None, 1, SnapshotBodyKind::EmbeddedPack, Some(snapshot_body.to_vec()));
-        writer.write_record(crate::os_spr::REC_PROJECTION, false, &encode_snapshot(&snapshot), CodecId(0)).await.unwrap();
+        let snapshot = sample_record(None, 1, SnapshotBodyKind::EmbeddedPack, Some(snapshot_body.to_vec())).await;
+        writer.write_record(crate::os_spr::REC_PROJECTION, false, &encode_snapshot(&snapshot).await, CodecId(0)).await.unwrap();
 
-        for edit in [sample_edit("edit-2", "op-2"), sample_edit("edit-3", "op-3")] {
+        for edit in [sample_edit("edit-2", "op-2").await, sample_edit("edit-3", "op-3").await] {
             let payload = crate::os_spr::history::encode_edit(&edit, &mut dict, |_| None).await.unwrap();
-            flush_dict_delta(&mut writer, &dict, &mut dict_base);
+            flush_dict_delta(&mut writer, &dict, &mut dict_base).await;
             writer.write_record(REC_EDIT, true, &payload, CodecId(0)).await.unwrap();
         }
 
@@ -649,7 +652,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn resolve_plan_picks_snapshot_and_replays_only_the_tail() {
         let body = vec![0xAA, 0xBB, 0xCC];
-        let bytes = build_stream_with_snapshot(&body);
+        let bytes = build_stream_with_snapshot(&body).await;
 
         let plan = resolve_plan(&bytes, &[], MaterializeTarget::LatestOnActive, &ProtocolLimits::default()).await.unwrap();
         assert_eq!(plan.base.applied_edits, 2);
@@ -672,7 +675,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn resolve_plan_falls_back_to_initial_pack_when_target_precedes_every_snapshot() {
-        let bytes = build_stream_with_snapshot(&[0xAA, 0xBB, 0xCC]);
+        let bytes = build_stream_with_snapshot(&[0xAA, 0xBB, 0xCC]).await;
         let initial_pack = b"INIT";
 
         let plan = resolve_plan(&bytes, initial_pack, MaterializeTarget::AtEditOrdinal(0), &ProtocolLimits::default()).await.unwrap();
@@ -693,7 +696,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn resolve_plan_at_edit_ordinal_beyond_snapshot_replays_full_tail() {
         let body = vec![0xAA, 0xBB, 0xCC];
-        let bytes = build_stream_with_snapshot(&body);
+        let bytes = build_stream_with_snapshot(&body).await;
 
         let plan = resolve_plan(&bytes, &[], MaterializeTarget::AtEditOrdinal(3), &ProtocolLimits::default()).await.unwrap();
         let (result, report) = materialize_with::<Collected, ProtocolError>(plan, &bytes, |b| Ok((b.to_vec(), Vec::new())), collect_ids).await.unwrap();
@@ -725,23 +728,23 @@ mod tests {
     async fn resolve_plan_skips_a_corrupt_snapshot_and_falls_back_to_initial_pack() {
         let write_options = WriteOptions { required_flags: REQUIRED_HASH_CHAIN, optional_flags: 0 };
         let mut writer = SprWriter::begin(Vec::<u8>::new(), &write_options).await.unwrap();
-        let mut dict = DictBuilder::new();
+        let mut dict = DictBuilder::new().await;
         let mut dict_base = 0u32;
 
-        let doc_payload = crate::os_spr::history::encode_doc("doc-3", "schema-3", &mut dict);
-        flush_dict_delta(&mut writer, &dict, &mut dict_base);
+        let doc_payload = crate::os_spr::history::encode_doc("doc-3", "schema-3", &mut dict).await;
+        flush_dict_delta(&mut writer, &dict, &mut dict_base).await;
         writer.write_record(crate::os_spr::REC_DOC, true, &doc_payload, CodecId(0)).await.unwrap();
 
         // A snapshot whose stored body_hash does not match its body — must be treated as corrupt.
-        let mut bad_record = sample_record(None, 0, SnapshotBodyKind::EmbeddedPack, Some(vec![1, 2, 3]));
-        bad_record.await.body_hash = [0xFFu8; 32];
-        writer.write_record(crate::os_spr::REC_PROJECTION, false, &encode_snapshot(&bad_record), CodecId(0)).await.unwrap();
+        let mut bad_record = sample_record(None, 0, SnapshotBodyKind::EmbeddedPack, Some(vec![1, 2, 3])).await;
+        bad_record.body_hash = [0xFFu8; 32];
+        writer.write_record(crate::os_spr::REC_PROJECTION, false, &encode_snapshot(&bad_record).await, CodecId(0)).await.unwrap();
 
-        let payload = crate::os_spr::history::encode_edit(&sample_edit("edit-0", "op-0"), &mut dict, |_| None).await.unwrap();
-        flush_dict_delta(&mut writer, &dict, &mut dict_base);
+        let payload = crate::os_spr::history::encode_edit(&sample_edit("edit-0", "op-0").await, &mut dict, |_| None).await.unwrap();
+        flush_dict_delta(&mut writer, &dict, &mut dict_base).await;
         writer.write_record(REC_EDIT, true, &payload, CodecId(0)).await.unwrap();
         writer.commit().await.unwrap();
-        let bytes = writer.into_sink();
+        let bytes = writer.into_sink().await;
 
         let plan = resolve_plan(&bytes, b"INIT", MaterializeTarget::LatestOnActive, &ProtocolLimits::default()).await.unwrap();
         assert_eq!(plan.base.applied_edits, 0);
@@ -766,12 +769,12 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn checkpoint_policy_triggers_on_any_threshold() {
         let policy = CheckpointPolicy::default();
-        assert!(policy.should_checkpoint(512, 0, false));
-        assert!(policy.should_checkpoint(0, 4 * 1024 * 1024, false));
-        assert!(policy.should_checkpoint(0, 0, true));
-        assert!(!policy.should_checkpoint(1, 1, false));
-        assert!(policy.should_embed(1024));
-        assert!(!policy.should_embed(2 * 1024 * 1024));
+        assert!(policy.should_checkpoint(512, 0, false).await);
+        assert!(policy.should_checkpoint(0, 4 * 1024 * 1024, false).await);
+        assert!(policy.should_checkpoint(0, 0, true).await);
+        assert!(!policy.should_checkpoint(1, 1, false).await);
+        assert!(policy.should_embed(1024).await);
+        assert!(!policy.should_embed(2 * 1024 * 1024).await);
     }
     //#endregion 🔖️Policy
 }

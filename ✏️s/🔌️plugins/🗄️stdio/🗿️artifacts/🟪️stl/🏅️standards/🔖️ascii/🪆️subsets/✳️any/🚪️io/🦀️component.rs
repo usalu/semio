@@ -146,12 +146,12 @@ pub async fn decode_stl_auto(bytes: &[u8]) -> Result<StlSnapshot, String> {
             let count = u32::from_le_bytes(bytes[80..84].try_into().unwrap()) as usize;
             let expected_binary_len = 84 + count * 50;
             if expected_binary_len == bytes.len() {
-                return decode_stl_binary(bytes);
+                return decode_stl_binary(bytes).await;
             }
         }
-        decode_stl_ascii(std::str::from_utf8(bytes).map_err(|e| e.to_string())?)
+        decode_stl_ascii(std::str::from_utf8(bytes).map_err(|e| e.to_string())?).await
     } else {
-        decode_stl_binary(bytes)
+        decode_stl_binary(bytes).await
     }
 }
 //#endregion 🔖️AutoDetect
@@ -193,7 +193,7 @@ pub mod derived_composition {
             if native.is_empty() {
                 return Err(ComposeError { message: "StlComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() });
             }
-            let analysis = StlAnalyzer::analyze(&native);
+            let analysis = StlAnalyzer::analyze(&native).await;
             let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError { message: "StlComposerComposition: analysis produced no snapshot".into(), diagnostics: analysis.diagnostics.clone() })?;
             Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics })
         }
@@ -422,7 +422,8 @@ pub mod io_registry {
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 
-    pub async fn entries() -> &'static [ComposerEntry] {
+    // 🚫️async: E1 pure table accessor consumed by OnceLock::get_or_init's sync closure — see R9
+    pub fn entries() -> &'static [ComposerEntry] {
         ENTRIES.get_or_init(|| vec![composer_entry_of::<StlRawAnyComposer>()]).as_slice()
     }
 }

@@ -24,7 +24,7 @@ pub struct XmlInference {
 
 impl protocol::Inference<XmlSnapshot> for XmlInference {
     async fn infer(snapshot: &XmlSnapshot) -> Self {
-        Self { outline: XmlOutline::compute(snapshot) }
+        Self { outline: XmlOutline::compute(snapshot).await }
     }
 }
 

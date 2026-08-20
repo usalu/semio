@@ -37,7 +37,7 @@ async fn unrank_excluding(rank: usize, excluded_sorted: &[usize]) -> usize {
     }
 }
 async fn transport_forward(index: usize, removed_sorted: &[usize], added_index_sorted: &[usize]) -> usize {
-    unrank_excluding(rank_excluding(index, removed_sorted), added_index_sorted)
+    unrank_excluding(rank_excluding(index, removed_sorted).await, added_index_sorted).await
 }
 //#endregion 🔖️IndexTransport
 
@@ -76,8 +76,8 @@ async fn absorb_indexed_collection<T: Clone, D: Clone>(
             merged_added.retain(|(i, _)| *i != r2);
         } else {
             let post_remove_rank = rank_excluding(r2, &added1_index_sorted);
-            let base_index = unrank_excluding(post_remove_rank, &removed1_sorted);
-            merged_removed_base.push(base_index);
+            let base_index = unrank_excluding(post_remove_rank.await, &removed1_sorted);
+            merged_removed_base.push(base_index.await);
         }
     }
     merged_removed_base.sort_unstable();
@@ -99,11 +99,11 @@ async fn absorb_indexed_collection<T: Clone, D: Clone>(
             }
         } else {
             let post_remove_rank = rank_excluding(mp, &added1_index_sorted);
-            let base_index = unrank_excluding(post_remove_rank, &removed1_sorted);
+            let base_index = unrank_excluding(post_remove_rank.await, &removed1_sorted);
             if merged_removed_base.binary_search(&base_index).is_ok() {
                 continue;
             }
-            modified_map.entry(base_index).and_modify(|d| absorb_diff(d, dd2.clone())).or_insert(dd2);
+            modified_map.entry(base_index.await).and_modify(|d| absorb_diff(d, dd2.clone())).or_insert(dd2);
         }
     }
     let merged_modified: Vec<(usize, D)> = modified_map.into_iter().collect();
@@ -141,7 +141,7 @@ async fn inverse_indexed_collection<T: Clone, D: Clone>(removed: &[usize], modif
     for (base_index, d) in modified {
         if let Some(orig) = base_items.get(*base_index) {
             let after_index = transport_forward(*base_index, &removed_sorted, &added_index_sorted);
-            inv_modified.push((after_index, diff_inverse(d, orig)));
+            inv_modified.push((after_index.await, diff_inverse(d, orig)));
         }
     }
     let mut inv_added: Vec<(usize, T)> = Vec::new();
@@ -368,8 +368,8 @@ impl GifFramesDiff {
         let min = base.len().min(other.len());
         let mut modified = Vec::new();
         for i in 0..min {
-            let d = GifFrameDiff::between(&base[i], &other[i]);
-            if !d.is_empty() {
+            let d = GifFrameDiff::between(&base[i], &other[i]).await;
+            if !d.is_empty().await {
                 modified.push(GifFrameModified { index: i, diff: d });
             }
         }
@@ -383,7 +383,7 @@ impl GifFramesDiff {
         for m in &self.modified {
             if let Some(slot) = next.get_mut(m.index) {
                 if let Some(item) = slot {
-                    *item = m.diff.apply(item);
+                    *item = m.diff.apply(item).await;
                 }
             }
         }
@@ -415,7 +415,7 @@ impl GifFramesDiff {
             other.added.into_iter().map(|a| (a.index, a.frame)).collect(),
             |d, o| d.absorb(o),
             |d, item| d.apply(item),
-        );
+        ).await;
         self.removed = removed;
         self.modified = modified.into_iter().map(|(index, diff)| GifFrameModified { index, diff }).collect();
         self.added = added.into_iter().map(|(index, frame)| GifFrameAdded { index, frame }).collect();
@@ -423,7 +423,7 @@ impl GifFramesDiff {
 
     async fn inverse(&self, base_frames: &[GifFrame]) -> Self {
         let (removed, modified, added) =
-            inverse_indexed_collection(&self.removed, &self.modified.iter().map(|m| (m.index, m.diff.clone())).collect::<Vec<_>>(), &self.added.iter().map(|a| (a.index, a.frame.clone())).collect::<Vec<_>>(), base_frames, |d, item| d.inverse(item));
+            inverse_indexed_collection(&self.removed, &self.modified.iter().map(|m| (m.index, m.diff.clone())).collect::<Vec<_>>(), &self.added.iter().map(|a| (a.index, a.frame.clone())).collect::<Vec<_>>(), base_frames, |d, item| d.inverse(item)).await;
         Self { removed, modified: modified.into_iter().map(|(index, diff)| GifFrameModified { index, diff }).collect(), added: added.into_iter().map(|(index, frame)| GifFrameAdded { index, frame }).collect() }
     }
 }
@@ -501,14 +501,14 @@ impl GifCommentsDiff {
             other.added.into_iter().map(|a| (a.index, a.text)).collect(),
             |d, o| *d = o,
             |d, _item| d.clone(),
-        );
+        ).await;
         self.removed = removed;
         self.modified = modified.into_iter().map(|(index, text)| GifCommentModified { index, text }).collect();
         self.added = added.into_iter().map(|(index, text)| GifCommentAdded { index, text }).collect();
     }
     async fn inverse(&self, base_comments: &[String]) -> Self {
         let (removed, modified, added) =
-            inverse_indexed_collection(&self.removed, &self.modified.iter().map(|m| (m.index, m.text.clone())).collect::<Vec<_>>(), &self.added.iter().map(|a| (a.index, a.text.clone())).collect::<Vec<_>>(), base_comments, |_d, item| item.clone());
+            inverse_indexed_collection(&self.removed, &self.modified.iter().map(|m| (m.index, m.text.clone())).collect::<Vec<_>>(), &self.added.iter().map(|a| (a.index, a.text.clone())).collect::<Vec<_>>(), base_comments, |_d, item| item.clone()).await;
         Self { removed, modified: modified.into_iter().map(|(index, text)| GifCommentModified { index, text }).collect(), added: added.into_iter().map(|(index, text)| GifCommentAdded { index, text }).collect() }
     }
 }
@@ -581,7 +581,7 @@ impl GifAppExtensionsDiff {
             other.added.into_iter().map(|a| (a.index, a.extension)).collect(),
             |d, o| *d = o,
             |d, _item| d.clone(),
-        );
+        ).await;
         self.removed = removed;
         self.modified = modified.into_iter().map(|(index, extension)| GifAppExtensionModified { index, extension }).collect();
         self.added = added.into_iter().map(|(index, extension)| GifAppExtensionAdded { index, extension }).collect();
@@ -590,7 +590,7 @@ impl GifAppExtensionsDiff {
         let (removed, modified, added) =
             inverse_indexed_collection(&self.removed, &self.modified.iter().map(|m| (m.index, m.extension.clone())).collect::<Vec<_>>(), &self.added.iter().map(|a| (a.index, a.extension.clone())).collect::<Vec<_>>(), base_exts, |_d, item| {
                 item.clone()
-            });
+            }).await;
         Self { removed, modified: modified.into_iter().map(|(index, extension)| GifAppExtensionModified { index, extension }).collect(), added: added.into_iter().map(|(index, extension)| GifAppExtensionAdded { index, extension }).collect() }
     }
 }
@@ -639,22 +639,22 @@ impl GifDiff {
             && self.background_color_index.is_none()
             && self.pixel_aspect_ratio.is_none()
             && self.loop_count.is_none()
-            && self.frames.as_ref().map(GifFramesDiff::is_empty).unwrap_or(true)
-            && self.comments.as_ref().map(GifCommentsDiff::is_empty).unwrap_or(true)
-            && self.app_extensions.as_ref().map(GifAppExtensionsDiff::is_empty).unwrap_or(true)
+            && self.frames.as_ref().map(GifFramesDiff::is_empty).unwrap_or(true).await
+            && self.comments.as_ref().map(GifCommentsDiff::is_empty).unwrap_or(true).await
+            && self.app_extensions.as_ref().map(GifAppExtensionsDiff::is_empty).unwrap_or(true).await
     }
 }
 
 impl MutationDiff<GifSnapshot> for GifDiff {
     async fn apply(&self, base: &GifSnapshot) -> MutationApplyResult<GifSnapshot> {
         if let Some(frames) = &self.frames {
-            validate_gif_triple(base.frames.len(), frames.removed.as_slice(), frames.modified.iter().map(|entry| entry.index), frames.added.iter().map(|entry| entry.index), ["frames"])?;
+            validate_gif_triple(base.frames.len(), frames.removed.as_slice(), frames.modified.iter().map(|entry| entry.index), frames.added.iter().map(|entry| entry.index), ["frames"]).await?;
         }
         if let Some(comments) = &self.comments {
-            validate_gif_triple(base.comments.len(), comments.removed.as_slice(), comments.modified.iter().map(|entry| entry.index), comments.added.iter().map(|entry| entry.index), ["comments"])?;
+            validate_gif_triple(base.comments.len(), comments.removed.as_slice(), comments.modified.iter().map(|entry| entry.index), comments.added.iter().map(|entry| entry.index), ["comments"]).await?;
         }
         if let Some(extensions) = &self.app_extensions {
-            validate_gif_triple(base.app_extensions.len(), extensions.removed.as_slice(), extensions.modified.iter().map(|entry| entry.index), extensions.added.iter().map(|entry| entry.index), ["appExtensions"])?;
+            validate_gif_triple(base.app_extensions.len(), extensions.removed.as_slice(), extensions.modified.iter().map(|entry| entry.index), extensions.added.iter().map(|entry| entry.index), ["appExtensions"]).await?;
         }
         let mut next = base.clone();
         if let Some(v) = self.width {
@@ -676,13 +676,13 @@ impl MutationDiff<GifSnapshot> for GifDiff {
             next.loop_count = v;
         }
         if let Some(d) = &self.frames {
-            next.frames = d.apply(&next.frames);
+            next.frames = d.apply(&next.frames).await;
         }
         if let Some(d) = &self.comments {
-            next.comments = d.apply(&next.comments);
+            next.comments = d.apply(&next.comments).await;
         }
         if let Some(d) = &self.app_extensions {
-            next.app_extensions = d.apply(&next.app_extensions);
+            next.app_extensions = d.apply(&next.app_extensions).await;
         }
         Ok(next)
     }
@@ -707,17 +707,17 @@ impl MutationDiff<GifSnapshot> for GifDiff {
             self.loop_count = other.loop_count;
         }
         match (&mut self.frames, other.frames) {
-            (Some(mine), Some(theirs)) => mine.absorb(theirs),
+            (Some(mine), Some(theirs)) => mine.absorb(theirs).await,
             (slot @ None, Some(theirs)) => *slot = Some(theirs),
             _ => {}
         }
         match (&mut self.comments, other.comments) {
-            (Some(mine), Some(theirs)) => mine.absorb(theirs),
+            (Some(mine), Some(theirs)) => mine.absorb(theirs).await,
             (slot @ None, Some(theirs)) => *slot = Some(theirs),
             _ => {}
         }
         match (&mut self.app_extensions, other.app_extensions) {
-            (Some(mine), Some(theirs)) => mine.absorb(theirs),
+            (Some(mine), Some(theirs)) => mine.absorb(theirs).await,
             (slot @ None, Some(theirs)) => *slot = Some(theirs),
             _ => {}
         }
@@ -735,13 +735,13 @@ where
     let mut removed_set = std::collections::HashSet::new();
     for &index in removed {
         if index >= base_len || !removed_set.insert(index) {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "GIF collection removal is missing or duplicated").at(path.iter().map(String::as_str)));
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "GIF collection removal is missing or duplicated").await.at(path.iter().map(String::as_str)).await);
         }
     }
     let mut modified_set = std::collections::HashSet::new();
     for index in modified {
         if index >= base_len || !modified_set.insert(index) || removed_set.contains(&index) {
-            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "GIF collection modification is missing, duplicated, or removed").at(path.iter().map(String::as_str)));
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "GIF collection modification is missing, duplicated, or removed").await.at(path.iter().map(String::as_str)).await);
         }
     }
     let added: Vec<usize> = added.into_iter().collect();
@@ -749,7 +749,7 @@ where
     let mut added_set = std::collections::HashSet::new();
     for index in added {
         if index > final_len || !added_set.insert(index) {
-            return Err(MutationApplyError::new("mutation.apply.invalid-index", "GIF collection addition index is invalid or duplicated").at(path.iter().map(String::as_str)));
+            return Err(MutationApplyError::new("mutation.apply.invalid-index", "GIF collection addition index is invalid or duplicated").await.at(path.iter().map(String::as_str)).await);
         }
     }
     Ok(())
@@ -771,9 +771,9 @@ impl DiffAlgebra<GifSnapshot> for GifDiff {
     }
 
     async fn between(base: &GifSnapshot, other: &GifSnapshot) -> Self {
-        let frames_diff = GifFramesDiff::between(&base.frames, &other.frames);
-        let comments_diff = GifCommentsDiff::between(&base.comments, &other.comments);
-        let app_extensions_diff = GifAppExtensionsDiff::between(&base.app_extensions, &other.app_extensions);
+        let frames_diff = GifFramesDiff::between(&base.frames, &other.frames).await;
+        let comments_diff = GifCommentsDiff::between(&base.comments, &other.comments).await;
+        let app_extensions_diff = GifAppExtensionsDiff::between(&base.app_extensions, &other.app_extensions).await;
         Self {
             width: (base.width != other.width).then_some(other.width),
             height: (base.height != other.height).then_some(other.height),
@@ -781,20 +781,20 @@ impl DiffAlgebra<GifSnapshot> for GifDiff {
             background_color_index: (base.background_color_index != other.background_color_index).then_some(other.background_color_index),
             pixel_aspect_ratio: (base.pixel_aspect_ratio != other.pixel_aspect_ratio).then_some(other.pixel_aspect_ratio),
             loop_count: (base.loop_count != other.loop_count).then_some(other.loop_count),
-            frames: (!frames_diff.is_empty()).then_some(frames_diff),
-            comments: (!comments_diff.is_empty()).then_some(comments_diff),
-            app_extensions: (!app_extensions_diff.is_empty()).then_some(app_extensions_diff),
+            frames: (!frames_diff.is_empty().await).then_some(frames_diff),
+            comments: (!comments_diff.is_empty().await).then_some(comments_diff),
+            app_extensions: (!app_extensions_diff.is_empty().await).then_some(app_extensions_diff),
         }
     }
 
     async fn is_empty(&self) -> bool {
-        self.is_empty_diff()
+        self.is_empty_diff().await
     }
 }
 
 /// 🧩 Builds a set-snapshot diff — sparse field-by-field, never a full-replace slot.
 pub async fn diff_set_snapshot(base: &GifSnapshot, snapshot: &GifSnapshot) -> GifDiff {
-    <GifDiff as DiffAlgebra<GifSnapshot>>::between(base, snapshot)
+    <GifDiff as DiffAlgebra<GifSnapshot>>::between(base, snapshot).await
 }
 
 /// 🧪️ P2-FG2: representative `GifDiff` (89a) cases for `diff_grammar_conformance_law`/
@@ -915,8 +915,8 @@ async fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String
     }
 }
 async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
-    let inner = strip_brackets(s)?;
-    match split_top_level(inner, ',').as_slice() {
+    let inner = strip_brackets(s).await?;
+    match split_top_level(inner, ',').await.as_slice() {
         ["0"] => Ok(None),
         [tag, value] if *tag == "1" => Ok(Some(dec(value)?)),
         other => Err(format!("option decode: bad shape {other:?}")),
@@ -929,38 +929,38 @@ async fn enc_rgb(c: &GifRgb) -> String {
     format!("[{},{},{}]", c.r, c.g, c.b)
 }
 async fn dec_rgb(s: &str) -> Result<GifRgb, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [r, g, b] = parts.as_slice() else { return Err(format!("rgb: expected 3 fields, got {}", parts.len())) };
-    Ok(GifRgb { r: parse_u8(r)?, g: parse_u8(g)?, b: parse_u8(b)? })
+    Ok(GifRgb { r: parse_u8(r).await?, g: parse_u8(g).await?, b: parse_u8(b).await? })
 }
 async fn enc_color_table(t: &GifColorTable) -> String {
     let colors = t.colors.iter().map(enc_rgb).collect::<Vec<_>>().join(",");
     format!("[{},[{}]]", if t.sorted { 1 } else { 0 }, colors)
 }
 async fn dec_color_table(s: &str) -> Result<GifColorTable, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [sorted, colors] = parts.as_slice() else { return Err(format!("color table: expected 2 fields, got {}", parts.len())) };
-    let colors = split_top_level(strip_brackets(colors)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_rgb).collect::<Result<Vec<_>, String>>()?;
+    let colors = split_top_level(strip_brackets(colors).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_rgb).collect::<Result<Vec<_>, String>>()?;
     Ok(GifColorTable { sorted: *sorted == "1", colors })
 }
 async fn enc_plain_text(p: &GifPlainText) -> String {
     format!("[{},{},{},{},{},{},{},{},{}]", p.left, p.top, p.width, p.height, p.cell_width, p.cell_height, p.fg_color_index, p.bg_color_index, hex_encode(p.text.as_bytes()))
 }
 async fn dec_plain_text(s: &str) -> Result<GifPlainText, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [left, top, width, height, cw, ch, fg, bg, text] = parts.as_slice() else {
         return Err(format!("plain text: expected 9 fields, got {}", parts.len()));
     };
     Ok(GifPlainText {
-        left: parse_u32(left)?,
-        top: parse_u32(top)?,
-        width: parse_u32(width)?,
-        height: parse_u32(height)?,
-        cell_width: parse_u8(cw)?,
-        cell_height: parse_u8(ch)?,
-        fg_color_index: parse_u8(fg)?,
-        bg_color_index: parse_u8(bg)?,
-        text: String::from_utf8(hex_decode(text)?).map_err(|e| e.to_string())?,
+        left: parse_u32(left).await?,
+        top: parse_u32(top).await?,
+        width: parse_u32(width).await?,
+        height: parse_u32(height).await?,
+        cell_width: parse_u8(cw).await?,
+        cell_height: parse_u8(ch).await?,
+        fg_color_index: parse_u8(fg).await?,
+        bg_color_index: parse_u8(bg).await?,
+        text: String::from_utf8(hex_decode(text).await?).map_err(|e| e.to_string())?,
     })
 }
 async fn enc_disposal(d: GifDisposal) -> char {
@@ -998,34 +998,34 @@ async fn enc_frame(f: &GifFrame) -> String {
     )
 }
 async fn dec_frame(s: &str) -> Result<GifFrame, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [left, top, width, height, interlace, lct, indices, delay_cs, disposal, transparent_index, user_input, plain_text] = parts.as_slice() else {
         return Err(format!("frame: expected 12 fields, got {}", parts.len()));
     };
     Ok(GifFrame {
-        left: parse_u32(left)?,
-        top: parse_u32(top)?,
-        width: parse_u32(width)?,
-        height: parse_u32(height)?,
+        left: parse_u32(left).await?,
+        top: parse_u32(top).await?,
+        width: parse_u32(width).await?,
+        height: parse_u32(height).await?,
         interlace: *interlace == "1",
-        lct: decode_option(lct, dec_color_table)?,
-        indices: hex_decode(indices)?,
-        delay_cs: parse_u16(delay_cs)?,
-        disposal: dec_disposal(disposal)?,
-        transparent_index: decode_option(transparent_index, parse_u8)?,
+        lct: decode_option(lct, dec_color_table).await?,
+        indices: hex_decode(indices).await?,
+        delay_cs: parse_u16(delay_cs).await?,
+        disposal: dec_disposal(disposal).await?,
+        transparent_index: decode_option(transparent_index, parse_u8).await?,
         user_input: *user_input == "1",
-        plain_text: decode_option(plain_text, dec_plain_text)?,
+        plain_text: decode_option(plain_text, dec_plain_text).await?,
     })
 }
 async fn enc_app_extension(e: &GifAppExtension) -> String {
     format!("[{},{},{}]", hex_encode(&e.identifier), hex_encode(&e.auth_code), hex_encode(&e.data))
 }
 async fn dec_app_extension(s: &str) -> Result<GifAppExtension, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [id_hex, auth_hex, data_hex] = parts.as_slice() else { return Err(format!("app extension: expected 3 fields, got {}", parts.len())) };
-    let identifier: [u8; 8] = hex_decode(id_hex)?.try_into().map_err(|_| "app extension: identifier must be 8 bytes".to_string())?;
-    let auth_code: [u8; 3] = hex_decode(auth_hex)?.try_into().map_err(|_| "app extension: auth_code must be 3 bytes".to_string())?;
-    Ok(GifAppExtension { identifier, auth_code, data: hex_decode(data_hex)? })
+    let identifier: [u8; 8] = hex_decode(id_hex).await?.try_into().map_err(|_| "app extension: identifier must be 8 bytes".to_string())?;
+    let auth_code: [u8; 3] = hex_decode(auth_hex).await?.try_into().map_err(|_| "app extension: auth_code must be 3 bytes".to_string())?;
+    Ok(GifAppExtension { identifier, auth_code, data: hex_decode(data_hex).await? })
 }
 //#endregion 🔖️ValueCodecs
 
@@ -1071,7 +1071,7 @@ async fn enc_frame_diff(d: &GifFrameDiff) -> String {
     format!("[{}]", parts.join(","))
 }
 async fn dec_frame_diff(s: &str) -> Result<GifFrameDiff, String> {
-    let inner = strip_brackets(s)?;
+    let inner = strip_brackets(s).await?;
     let mut d = GifFrameDiff::default();
     for entry in split_top_level(inner, ',') {
         if entry.is_empty() {
@@ -1079,18 +1079,18 @@ async fn dec_frame_diff(s: &str) -> Result<GifFrameDiff, String> {
         }
         let (tag, val) = entry.split_once(':').ok_or_else(|| format!("frame diff: bad entry {entry:?}"))?;
         match tag {
-            "L" => d.left = Some(parse_u32(val)?),
-            "T" => d.top = Some(parse_u32(val)?),
-            "W" => d.width = Some(parse_u32(val)?),
-            "H" => d.height = Some(parse_u32(val)?),
+            "L" => d.left = Some(parse_u32(val).await?),
+            "T" => d.top = Some(parse_u32(val).await?),
+            "W" => d.width = Some(parse_u32(val).await?),
+            "H" => d.height = Some(parse_u32(val).await?),
             "I" => d.interlace = Some(val == "1"),
-            "C" => d.lct = Some(decode_option(val, dec_color_table)?),
-            "X" => d.indices = Some(hex_decode(val)?),
-            "D" => d.delay_cs = Some(parse_u16(val)?),
-            "S" => d.disposal = Some(dec_disposal(val)?),
-            "P" => d.transparent_index = Some(decode_option(val, parse_u8)?),
+            "C" => d.lct = Some(decode_option(val, dec_color_table).await?),
+            "X" => d.indices = Some(hex_decode(val).await?),
+            "D" => d.delay_cs = Some(parse_u16(val).await?),
+            "S" => d.disposal = Some(dec_disposal(val).await?),
+            "P" => d.transparent_index = Some(decode_option(val, parse_u8).await?),
             "U" => d.user_input = Some(val == "1"),
-            "Q" => d.plain_text = Some(decode_option(val, dec_plain_text)?),
+            "Q" => d.plain_text = Some(decode_option(val, dec_plain_text).await?),
             other => return Err(format!("frame diff: unknown tag {other:?}")),
         }
     }
@@ -1107,9 +1107,9 @@ async fn enc_collection_triple(name: &str, removed: &[usize], modified: &[(usize
     format!("{name}{{[{removed}];[{modified}];[{added}]}}")
 }
 async fn dec_collection_triple(body: &str) -> Result<(Vec<usize>, Vec<(usize, String)>, Vec<(usize, String)>), String> {
-    let three = split_top_level(body, ';');
+    let three = split_top_level(body, ';').await;
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("collection: expected 3 sections, got {}", three.len())) };
-    let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
+    let removed = split_top_level(strip_brackets(removed_s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
     let parse_entries = |s: &str| -> Result<Vec<(usize, String)>, String> {
         split_top_level(strip_brackets(s)?, ',')
             .into_iter()
@@ -1124,10 +1124,10 @@ async fn dec_collection_triple(body: &str) -> Result<(Vec<usize>, Vec<(usize, St
 }
 
 async fn enc_frames_diff(d: &GifFramesDiff) -> String {
-    enc_collection_triple("frames", &d.removed, &d.modified.iter().map(|m| (m.index, enc_frame_diff(&m.diff))).collect::<Vec<_>>(), &d.added.iter().map(|a| (a.index, enc_frame(&a.frame))).collect::<Vec<_>>())
+    enc_collection_triple("frames", &d.removed, &d.modified.iter().map(|m| (m.index, enc_frame_diff(&m.diff))).collect::<Vec<_>>(), &d.added.iter().map(|a| (a.index, enc_frame(&a.frame))).collect::<Vec<_>>()).await
 }
 async fn dec_frames_diff(body: &str) -> Result<GifFramesDiff, String> {
-    let (removed, modified, added) = dec_collection_triple(body)?;
+    let (removed, modified, added) = dec_collection_triple(body).await?;
     Ok(GifFramesDiff {
         removed,
         modified: modified.into_iter().map(|(index, enc)| Ok(GifFrameModified { index, diff: dec_frame_diff(&enc)? })).collect::<Result<Vec<_>, String>>()?,
@@ -1135,10 +1135,10 @@ async fn dec_frames_diff(body: &str) -> Result<GifFramesDiff, String> {
     })
 }
 async fn enc_comments_diff(d: &GifCommentsDiff) -> String {
-    enc_collection_triple("comments", &d.removed, &d.modified.iter().map(|m| (m.index, hex_encode(m.text.as_bytes()))).collect::<Vec<_>>(), &d.added.iter().map(|a| (a.index, hex_encode(a.text.as_bytes()))).collect::<Vec<_>>())
+    enc_collection_triple("comments", &d.removed, &d.modified.iter().map(|m| (m.index, hex_encode(m.text.as_bytes()))).collect::<Vec<_>>(), &d.added.iter().map(|a| (a.index, hex_encode(a.text.as_bytes()))).collect::<Vec<_>>()).await
 }
 async fn dec_comments_diff(body: &str) -> Result<GifCommentsDiff, String> {
-    let (removed, modified, added) = dec_collection_triple(body)?;
+    let (removed, modified, added) = dec_collection_triple(body).await?;
     let text_of = |hex: &str| -> Result<String, String> { String::from_utf8(hex_decode(hex)?).map_err(|e| e.to_string()) };
     Ok(GifCommentsDiff {
         removed,
@@ -1147,10 +1147,10 @@ async fn dec_comments_diff(body: &str) -> Result<GifCommentsDiff, String> {
     })
 }
 async fn enc_app_extensions_diff(d: &GifAppExtensionsDiff) -> String {
-    enc_collection_triple("appext", &d.removed, &d.modified.iter().map(|m| (m.index, enc_app_extension(&m.extension))).collect::<Vec<_>>(), &d.added.iter().map(|a| (a.index, enc_app_extension(&a.extension))).collect::<Vec<_>>())
+    enc_collection_triple("appext", &d.removed, &d.modified.iter().map(|m| (m.index, enc_app_extension(&m.extension))).collect::<Vec<_>>(), &d.added.iter().map(|a| (a.index, enc_app_extension(&a.extension))).collect::<Vec<_>>()).await
 }
 async fn dec_app_extensions_diff(body: &str) -> Result<GifAppExtensionsDiff, String> {
-    let (removed, modified, added) = dec_collection_triple(body)?;
+    let (removed, modified, added) = dec_collection_triple(body).await?;
     Ok(GifAppExtensionsDiff {
         removed,
         modified: modified.into_iter().map(|(index, enc)| Ok(GifAppExtensionModified { index, extension: dec_app_extension(&enc)? })).collect::<Result<Vec<_>, String>>()?,
@@ -1172,15 +1172,15 @@ async fn write_bin_rgb(w: &mut dsl::ByteWriter, c: &GifRgb) {
     w.write_u8(c.b);
 }
 async fn read_bin_rgb(r: &mut dsl::ByteReader<'_>) -> Result<GifRgb, dsl::PackError> {
-    Ok(GifRgb { r: r.read_u8()?, g: r.read_u8()?, b: r.read_u8()? })
+    Ok(GifRgb { r: r.read_u8().await?, g: r.read_u8().await?, b: r.read_u8().await? })
 }
 async fn write_bin_color_table(w: &mut dsl::ByteWriter, t: &GifColorTable) {
     w.write_u8(if t.sorted { 1 } else { 0 });
     write_bin_vec(w, &t.colors, write_bin_rgb);
 }
 async fn read_bin_color_table(r: &mut dsl::ByteReader<'_>) -> Result<GifColorTable, dsl::PackError> {
-    let sorted = r.read_u8()? != 0;
-    let colors = read_bin_vec(r, read_bin_rgb)?;
+    let sorted = r.read_u8().await? != 0;
+    let colors = read_bin_vec(r, read_bin_rgb).await?;
     Ok(GifColorTable { sorted, colors })
 }
 async fn write_bin_blob(w: &mut dsl::ByteWriter, bytes: &[u8]) {
@@ -1188,21 +1188,21 @@ async fn write_bin_blob(w: &mut dsl::ByteWriter, bytes: &[u8]) {
     w.write_bytes(bytes);
 }
 async fn read_bin_blob(r: &mut dsl::ByteReader<'_>) -> Result<Vec<u8>, dsl::PackError> {
-    let len = r.read_varint_u64()? as usize;
-    Ok(r.read_bytes(len)?.to_vec())
+    let len = r.read_varint_u64().await? as usize;
+    Ok(r.read_bytes(len).await?.to_vec())
 }
 async fn write_bin_str(w: &mut dsl::ByteWriter, s: &str) {
     write_bin_blob(w, s.as_bytes());
 }
 async fn read_bin_str(r: &mut dsl::ByteReader<'_>) -> Result<String, dsl::PackError> {
-    let bytes = read_bin_blob(r)?;
+    let bytes = read_bin_blob(r).await?;
     String::from_utf8(bytes).map_err(|e| dsl::PackError::Malformed { what: "gif89a binary utf8 string", offset: 0, detail: e.to_string() })
 }
 async fn write_bin_disposal(w: &mut dsl::ByteWriter, d: GifDisposal) {
-    w.write_u8(d.to_bits());
+    w.write_u8(d.to_bits().await);
 }
 async fn read_bin_disposal(r: &mut dsl::ByteReader<'_>) -> Result<GifDisposal, dsl::PackError> {
-    Ok(GifDisposal::from_bits(r.read_u8()?))
+    Ok(GifDisposal::from_bits(r.read_u8().await?).await)
 }
 async fn write_bin_plain_text(w: &mut dsl::ByteWriter, p: &GifPlainText) {
     w.write_u32_le(p.left);
@@ -1217,15 +1217,15 @@ async fn write_bin_plain_text(w: &mut dsl::ByteWriter, p: &GifPlainText) {
 }
 async fn read_bin_plain_text(r: &mut dsl::ByteReader<'_>) -> Result<GifPlainText, dsl::PackError> {
     Ok(GifPlainText {
-        left: r.read_u32_le()?,
-        top: r.read_u32_le()?,
-        width: r.read_u32_le()?,
-        height: r.read_u32_le()?,
-        cell_width: r.read_u8()?,
-        cell_height: r.read_u8()?,
-        fg_color_index: r.read_u8()?,
-        bg_color_index: r.read_u8()?,
-        text: read_bin_str(r)?,
+        left: r.read_u32_le().await?,
+        top: r.read_u32_le().await?,
+        width: r.read_u32_le().await?,
+        height: r.read_u32_le().await?,
+        cell_width: r.read_u8().await?,
+        cell_height: r.read_u8().await?,
+        fg_color_index: r.read_u8().await?,
+        bg_color_index: r.read_u8().await?,
+        text: read_bin_str(r).await?,
     })
 }
 async fn write_bin_frame(w: &mut dsl::ByteWriter, f: &GifFrame) {
@@ -1244,18 +1244,18 @@ async fn write_bin_frame(w: &mut dsl::ByteWriter, f: &GifFrame) {
 }
 async fn read_bin_frame(r: &mut dsl::ByteReader<'_>) -> Result<GifFrame, dsl::PackError> {
     Ok(GifFrame {
-        left: r.read_u32_le()?,
-        top: r.read_u32_le()?,
-        width: r.read_u32_le()?,
-        height: r.read_u32_le()?,
-        interlace: r.read_u8()? != 0,
-        lct: read_bin_option(r, read_bin_color_table)?,
-        indices: read_bin_blob(r)?,
-        delay_cs: r.read_u16_le()?,
-        disposal: read_bin_disposal(r)?,
-        transparent_index: read_bin_option(r, |r| r.read_u8())?,
-        user_input: r.read_u8()? != 0,
-        plain_text: read_bin_option(r, read_bin_plain_text)?,
+        left: r.read_u32_le().await?,
+        top: r.read_u32_le().await?,
+        width: r.read_u32_le().await?,
+        height: r.read_u32_le().await?,
+        interlace: r.read_u8().await? != 0,
+        lct: read_bin_option(r, read_bin_color_table).await?,
+        indices: read_bin_blob(r).await?,
+        delay_cs: r.read_u16_le().await?,
+        disposal: read_bin_disposal(r).await?,
+        transparent_index: read_bin_option(r, |r| r.read_u8()).await?,
+        user_input: r.read_u8().await? != 0,
+        plain_text: read_bin_option(r, read_bin_plain_text).await?,
     })
 }
 async fn write_bin_app_extension(w: &mut dsl::ByteWriter, e: &GifAppExtension) {
@@ -1264,14 +1264,14 @@ async fn write_bin_app_extension(w: &mut dsl::ByteWriter, e: &GifAppExtension) {
     write_bin_blob(w, &e.data);
 }
 async fn read_bin_app_extension(r: &mut dsl::ByteReader<'_>) -> Result<GifAppExtension, dsl::PackError> {
-    let identifier: [u8; 8] = r.read_bytes(8)?.try_into().map_err(|_| dsl::PackError::Malformed { what: "gif89a app extension identifier", offset: 0, detail: "expected 8 bytes".into() })?;
-    let auth_code: [u8; 3] = r.read_bytes(3)?.try_into().map_err(|_| dsl::PackError::Malformed { what: "gif89a app extension auth_code", offset: 0, detail: "expected 3 bytes".into() })?;
-    Ok(GifAppExtension { identifier, auth_code, data: read_bin_blob(r)? })
+    let identifier: [u8; 8] = r.read_bytes(8).await?.try_into().map_err(|_| dsl::PackError::Malformed { what: "gif89a app extension identifier", offset: 0, detail: "expected 8 bytes".into() })?;
+    let auth_code: [u8; 3] = r.read_bytes(3).await?.try_into().map_err(|_| dsl::PackError::Malformed { what: "gif89a app extension auth_code", offset: 0, detail: "expected 3 bytes".into() })?;
+    Ok(GifAppExtension { identifier, auth_code, data: read_bin_blob(r).await? })
 }
 /// 🧩 2-way presence flag (`0`=None, `1`=Some) — shared by every plain `Option<T>` field.
 async fn write_bin_option<T>(w: &mut dsl::ByteWriter, v: &Option<T>, write_value: impl FnOnce(&mut dsl::ByteWriter, &T)) {
     match v {
-        None => w.write_u8(0),
+        None => w.write_u8(0).await,
         Some(val) => {
             w.write_u8(1);
             write_value(w, val);
@@ -1279,7 +1279,7 @@ async fn write_bin_option<T>(w: &mut dsl::ByteWriter, v: &Option<T>, write_value
     }
 }
 async fn read_bin_option<T>(r: &mut dsl::ByteReader<'_>, read_value: impl FnOnce(&mut dsl::ByteReader<'_>) -> Result<T, dsl::PackError>) -> Result<Option<T>, dsl::PackError> {
-    match r.read_u8()? {
+    match r.read_u8().await? {
         0 => Ok(None),
         1 => Ok(Some(read_value(r)?)),
         other => Err(dsl::PackError::Malformed { what: "gif89a binary option tag", offset: 0, detail: format!("unknown tag {other}") }),
@@ -1292,7 +1292,7 @@ async fn write_bin_vec<T>(w: &mut dsl::ByteWriter, items: &[T], write_item: impl
     }
 }
 async fn read_bin_vec<T>(r: &mut dsl::ByteReader<'_>, mut read_item: impl FnMut(&mut dsl::ByteReader<'_>) -> Result<T, dsl::PackError>) -> Result<Vec<T>, dsl::PackError> {
-    let n = r.read_varint_u64()? as usize;
+    let n = r.read_varint_u64().await? as usize;
     let mut out = Vec::with_capacity(n);
     for _ in 0..n {
         out.push(read_item(r)?);
@@ -1305,8 +1305,8 @@ async fn read_bin_vec<T>(r: &mut dsl::ByteReader<'_>, mut read_item: impl FnMut(
 /// codec here has no such limitation but keeps the same 3-way-flag SHAPE for parity).
 async fn write_bin_tri_flag<T>(w: &mut dsl::ByteWriter, v: &Option<Option<T>>, write_value: impl FnOnce(&mut dsl::ByteWriter, &T)) {
     match v {
-        None => w.write_u8(0),
-        Some(None) => w.write_u8(1),
+        None => w.write_u8(0).await,
+        Some(None) => w.write_u8(1).await,
         Some(Some(val)) => {
             w.write_u8(2);
             write_value(w, val);
@@ -1314,7 +1314,7 @@ async fn write_bin_tri_flag<T>(w: &mut dsl::ByteWriter, v: &Option<Option<T>>, w
     }
 }
 async fn read_bin_tri_flag<T>(r: &mut dsl::ByteReader<'_>, read_value: impl FnOnce(&mut dsl::ByteReader<'_>) -> Result<T, dsl::PackError>) -> Result<Option<Option<T>>, dsl::PackError> {
-    match r.read_u8()? {
+    match r.read_u8().await? {
         0 => Ok(None),
         1 => Ok(Some(None)),
         2 => Ok(Some(Some(read_value(r)?))),
@@ -1349,22 +1349,22 @@ async fn write_bin_frame_diff(w: &mut dsl::ByteWriter, d: &GifFrameDiff) {
 }
 async fn read_bin_frame_diff(r: &mut dsl::ByteReader<'_>) -> Result<GifFrameDiff, dsl::PackError> {
     Ok(GifFrameDiff {
-        left: read_bin_option(r, |r| r.read_u32_le())?,
-        top: read_bin_option(r, |r| r.read_u32_le())?,
-        width: read_bin_option(r, |r| r.read_u32_le())?,
-        height: read_bin_option(r, |r| r.read_u32_le())?,
-        interlace: read_bin_option(r, |r| Ok(r.read_u8()? != 0))?,
-        lct: read_bin_tri_flag(r, read_bin_color_table)?,
-        indices: read_bin_option(r, read_bin_blob)?,
-        delay_cs: read_bin_option(r, |r| r.read_u16_le())?,
-        disposal: read_bin_option(r, read_bin_disposal)?,
-        transparent_index: read_bin_tri_flag(r, |r| r.read_u8())?,
-        user_input: read_bin_option(r, |r| Ok(r.read_u8()? != 0))?,
-        plain_text: read_bin_tri_flag(r, read_bin_plain_text)?,
+        left: read_bin_option(r, |r| r.read_u32_le()).await?,
+        top: read_bin_option(r, |r| r.read_u32_le()).await?,
+        width: read_bin_option(r, |r| r.read_u32_le()).await?,
+        height: read_bin_option(r, |r| r.read_u32_le()).await?,
+        interlace: read_bin_option(r, |r| Ok(r.read_u8()? != 0)).await?,
+        lct: read_bin_tri_flag(r, read_bin_color_table).await?,
+        indices: read_bin_option(r, read_bin_blob).await?,
+        delay_cs: read_bin_option(r, |r| r.read_u16_le()).await?,
+        disposal: read_bin_option(r, read_bin_disposal).await?,
+        transparent_index: read_bin_tri_flag(r, |r| r.read_u8()).await?,
+        user_input: read_bin_option(r, |r| Ok(r.read_u8()? != 0)).await?,
+        plain_text: read_bin_tri_flag(r, read_bin_plain_text).await?,
     })
 }
 async fn enc_frames_diff_bin(d: &GifFramesDiff) -> Vec<u8> {
-    let mut w = dsl::ByteWriter::new();
+    let mut w = dsl::ByteWriter::new().await;
     write_bin_vec(&mut w, &d.removed, |w, v: &usize| w.write_varint_u64(*v as u64));
     write_bin_vec(&mut w, &d.modified, |w, m: &GifFrameModified| {
         w.write_varint_u64(m.index as u64);
@@ -1374,25 +1374,25 @@ async fn enc_frames_diff_bin(d: &GifFramesDiff) -> Vec<u8> {
         w.write_varint_u64(a.index as u64);
         write_bin_frame(w, &a.frame);
     });
-    w.into_bytes()
+    w.into_bytes().await
 }
 async fn dec_frames_diff_bin(bytes: &[u8]) -> Result<GifFramesDiff, dsl::PackError> {
     let mut r = dsl::ByteReader::new(bytes);
-    let removed = read_bin_vec(&mut r, |r| Ok(r.read_varint_u64()? as usize))?;
+    let removed = read_bin_vec(&mut r, |r| Ok(r.read_varint_u64()? as usize)).await?;
     let modified = read_bin_vec(&mut r, |r| {
         let index = r.read_varint_u64()? as usize;
         let diff = read_bin_frame_diff(r)?;
         Ok(GifFrameModified { index, diff })
-    })?;
+    }).await?;
     let added = read_bin_vec(&mut r, |r| {
         let index = r.read_varint_u64()? as usize;
         let frame = read_bin_frame(r)?;
         Ok(GifFrameAdded { index, frame })
-    })?;
+    }).await?;
     Ok(GifFramesDiff { removed, modified, added })
 }
 async fn enc_comments_diff_bin(d: &GifCommentsDiff) -> Vec<u8> {
-    let mut w = dsl::ByteWriter::new();
+    let mut w = dsl::ByteWriter::new().await;
     write_bin_vec(&mut w, &d.removed, |w, v: &usize| w.write_varint_u64(*v as u64));
     write_bin_vec(&mut w, &d.modified, |w, m: &GifCommentModified| {
         w.write_varint_u64(m.index as u64);
@@ -1402,25 +1402,25 @@ async fn enc_comments_diff_bin(d: &GifCommentsDiff) -> Vec<u8> {
         w.write_varint_u64(a.index as u64);
         write_bin_str(w, &a.text);
     });
-    w.into_bytes()
+    w.into_bytes().await
 }
 async fn dec_comments_diff_bin(bytes: &[u8]) -> Result<GifCommentsDiff, dsl::PackError> {
     let mut r = dsl::ByteReader::new(bytes);
-    let removed = read_bin_vec(&mut r, |r| Ok(r.read_varint_u64()? as usize))?;
+    let removed = read_bin_vec(&mut r, |r| Ok(r.read_varint_u64()? as usize)).await?;
     let modified = read_bin_vec(&mut r, |r| {
         let index = r.read_varint_u64()? as usize;
         let text = read_bin_str(r)?;
         Ok(GifCommentModified { index, text })
-    })?;
+    }).await?;
     let added = read_bin_vec(&mut r, |r| {
         let index = r.read_varint_u64()? as usize;
         let text = read_bin_str(r)?;
         Ok(GifCommentAdded { index, text })
-    })?;
+    }).await?;
     Ok(GifCommentsDiff { removed, modified, added })
 }
 async fn enc_app_extensions_diff_bin(d: &GifAppExtensionsDiff) -> Vec<u8> {
-    let mut w = dsl::ByteWriter::new();
+    let mut w = dsl::ByteWriter::new().await;
     write_bin_vec(&mut w, &d.removed, |w, v: &usize| w.write_varint_u64(*v as u64));
     write_bin_vec(&mut w, &d.modified, |w, m: &GifAppExtensionModified| {
         w.write_varint_u64(m.index as u64);
@@ -1430,21 +1430,21 @@ async fn enc_app_extensions_diff_bin(d: &GifAppExtensionsDiff) -> Vec<u8> {
         w.write_varint_u64(a.index as u64);
         write_bin_app_extension(w, &a.extension);
     });
-    w.into_bytes()
+    w.into_bytes().await
 }
 async fn dec_app_extensions_diff_bin(bytes: &[u8]) -> Result<GifAppExtensionsDiff, dsl::PackError> {
     let mut r = dsl::ByteReader::new(bytes);
-    let removed = read_bin_vec(&mut r, |r| Ok(r.read_varint_u64()? as usize))?;
+    let removed = read_bin_vec(&mut r, |r| Ok(r.read_varint_u64()? as usize)).await?;
     let modified = read_bin_vec(&mut r, |r| {
         let index = r.read_varint_u64()? as usize;
         let extension = read_bin_app_extension(r)?;
         Ok(GifAppExtensionModified { index, extension })
-    })?;
+    }).await?;
     let added = read_bin_vec(&mut r, |r| {
         let index = r.read_varint_u64()? as usize;
         let extension = read_bin_app_extension(r)?;
         Ok(GifAppExtensionAdded { index, extension })
-    })?;
+    }).await?;
     Ok(GifAppExtensionsDiff { removed, modified, added })
 }
 //#endregion 🔖️RealBinaryDiffFrame
@@ -1471,13 +1471,13 @@ async fn print_gif_diff(d: &GifDiff) -> String {
         tokens.push(format!("loop={}", encode_option(&v, |x| x.to_string())));
     }
     if let Some(v) = &d.frames {
-        tokens.push(enc_frames_diff(v));
+        tokens.push(enc_frames_diff(v).await);
     }
     if let Some(v) = &d.comments {
-        tokens.push(enc_comments_diff(v));
+        tokens.push(enc_comments_diff(v).await);
     }
     if let Some(v) = &d.app_extensions {
-        tokens.push(enc_app_extensions_diff(v));
+        tokens.push(enc_app_extensions_diff(v).await);
     }
     tokens.join(" ")
 }
@@ -1488,23 +1488,23 @@ async fn parse_gif_diff(line: &str) -> Result<GifDiff, String> {
     }
     for token in line.split(' ') {
         if let Some(rest) = token.strip_prefix("width=") {
-            d.width = Some(parse_u32(rest)?);
+            d.width = Some(parse_u32(rest).await?);
         } else if let Some(rest) = token.strip_prefix("height=") {
-            d.height = Some(parse_u32(rest)?);
+            d.height = Some(parse_u32(rest).await?);
         } else if let Some(rest) = token.strip_prefix("gct=") {
-            d.gct = Some(decode_option(rest, dec_color_table)?);
+            d.gct = Some(decode_option(rest, dec_color_table).await?);
         } else if let Some(rest) = token.strip_prefix("bg=") {
-            d.background_color_index = Some(parse_u8(rest)?);
+            d.background_color_index = Some(parse_u8(rest).await?);
         } else if let Some(rest) = token.strip_prefix("par=") {
-            d.pixel_aspect_ratio = Some(parse_u8(rest)?);
+            d.pixel_aspect_ratio = Some(parse_u8(rest).await?);
         } else if let Some(rest) = token.strip_prefix("loop=") {
-            d.loop_count = Some(decode_option(rest, parse_u16)?);
+            d.loop_count = Some(decode_option(rest, parse_u16).await?);
         } else if let Some(rest) = token.strip_prefix("frames{") {
-            d.frames = Some(dec_frames_diff(rest.strip_suffix('}').ok_or_else(|| "frames: missing closing brace".to_string())?)?);
+            d.frames = Some(dec_frames_diff(rest.strip_suffix('}').ok_or_else(|| "frames: missing closing brace".to_string())?).await?);
         } else if let Some(rest) = token.strip_prefix("comments{") {
-            d.comments = Some(dec_comments_diff(rest.strip_suffix('}').ok_or_else(|| "comments: missing closing brace".to_string())?)?);
+            d.comments = Some(dec_comments_diff(rest.strip_suffix('}').ok_or_else(|| "comments: missing closing brace".to_string())?).await?);
         } else if let Some(rest) = token.strip_prefix("appext{") {
-            d.app_extensions = Some(dec_app_extensions_diff(rest.strip_suffix('}').ok_or_else(|| "appext: missing closing brace".to_string())?)?);
+            d.app_extensions = Some(dec_app_extensions_diff(rest.strip_suffix('}').ok_or_else(|| "appext: missing closing brace".to_string())?).await?);
         } else {
             return Err(format!("gif diff: unknown token {token:?}"));
         }
@@ -1514,10 +1514,10 @@ async fn parse_gif_diff(line: &str) -> Result<GifDiff, String> {
 
 impl DiffCodec for GifDiff {
     async fn print_diff(&self) -> String {
-        print_gif_diff(self)
+        print_gif_diff(self).await
     }
     async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
-        parse_gif_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_gif_diff(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// ⚡️ P2-FG2: real binary diff-frame — upgraded from the F6-era `print_diff().into_bytes()`
     /// text-as-binary shortcut (100% of stdio's `DiffCodec` impls were still on that shortcut
@@ -1526,13 +1526,13 @@ impl DiffCodec for GifDiff {
     /// flag-per-field layout exactly, field for field, in struct order (2-way flag for plain
     /// `Option<T>` fields, 3-way flag for the tri-state `gct`/`loop_count` fields).
     async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        let mut w = dsl::ByteWriter::new();
+        let mut w = dsl::ByteWriter::new().await;
         write_bin_option(&mut w, &self.width, |w, v| w.write_u32_le(*v));
         write_bin_option(&mut w, &self.height, |w, v| w.write_u32_le(*v));
         write_bin_tri_flag(&mut w, &self.gct, |w, v| {
             let mut inner = dsl::ByteWriter::new();
             write_bin_color_table(&mut inner, v);
-            write_bin_blob(w, &inner.into_bytes());
+            write_bin_blob(w, &semio_framework_plugin::resolve_ready(inner.await.into_bytes()));
         });
         write_bin_option(&mut w, &self.background_color_index, |w, v| w.write_u8(*v));
         write_bin_option(&mut w, &self.pixel_aspect_ratio, |w, v| w.write_u8(*v));
@@ -1540,24 +1540,24 @@ impl DiffCodec for GifDiff {
         write_bin_option(&mut w, &self.frames, |w, v| write_bin_blob(w, &enc_frames_diff_bin(v)));
         write_bin_option(&mut w, &self.comments, |w, v| write_bin_blob(w, &enc_comments_diff_bin(v)));
         write_bin_option(&mut w, &self.app_extensions, |w, v| write_bin_blob(w, &enc_app_extensions_diff_bin(v)));
-        Ok(w.into_bytes())
+        Ok(w.into_bytes().await)
     }
     async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let mut r = dsl::ByteReader::new(bytes);
-        let width = read_bin_option(&mut r, |r| r.read_u32_le()).map_err(diff_pack_err)?;
-        let height = read_bin_option(&mut r, |r| r.read_u32_le()).map_err(diff_pack_err)?;
+        let width = read_bin_option(&mut r, |r| r.read_u32_le()).await.map_err(diff_pack_err)?;
+        let height = read_bin_option(&mut r, |r| r.read_u32_le()).await.map_err(diff_pack_err)?;
         let gct = read_bin_tri_flag(&mut r, |r| {
             let blob = read_bin_blob(r)?;
             let mut inner = dsl::ByteReader::new(&blob);
             read_bin_color_table(&mut inner)
         })
-        .map_err(diff_pack_err)?;
-        let background_color_index = read_bin_option(&mut r, |r| r.read_u8()).map_err(diff_pack_err)?;
-        let pixel_aspect_ratio = read_bin_option(&mut r, |r| r.read_u8()).map_err(diff_pack_err)?;
-        let loop_count = read_bin_tri_flag(&mut r, |r| r.read_u16_le()).map_err(diff_pack_err)?;
-        let frames = read_bin_option(&mut r, |r| dec_frames_diff_bin(&read_bin_blob(r)?)).map_err(diff_pack_err)?;
-        let comments = read_bin_option(&mut r, |r| dec_comments_diff_bin(&read_bin_blob(r)?)).map_err(diff_pack_err)?;
-        let app_extensions = read_bin_option(&mut r, |r| dec_app_extensions_diff_bin(&read_bin_blob(r)?)).map_err(diff_pack_err)?;
+        .await.map_err(diff_pack_err)?;
+        let background_color_index = read_bin_option(&mut r, |r| r.read_u8()).await.map_err(diff_pack_err)?;
+        let pixel_aspect_ratio = read_bin_option(&mut r, |r| r.read_u8()).await.map_err(diff_pack_err)?;
+        let loop_count = read_bin_tri_flag(&mut r, |r| r.read_u16_le()).await.map_err(diff_pack_err)?;
+        let frames = read_bin_option(&mut r, |r| dec_frames_diff_bin(&read_bin_blob(r)?)).await.map_err(diff_pack_err)?;
+        let comments = read_bin_option(&mut r, |r| dec_comments_diff_bin(&read_bin_blob(r)?)).await.map_err(diff_pack_err)?;
+        let app_extensions = read_bin_option(&mut r, |r| dec_app_extensions_diff_bin(&read_bin_blob(r)?)).await.map_err(diff_pack_err)?;
         Ok(GifDiff { width, height, gct, background_color_index, pixel_aspect_ratio, loop_count, frames, comments, app_extensions })
     }
 }

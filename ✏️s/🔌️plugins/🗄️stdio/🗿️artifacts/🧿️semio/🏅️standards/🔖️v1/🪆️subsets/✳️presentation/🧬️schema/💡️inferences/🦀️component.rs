@@ -26,7 +26,7 @@ pub struct SemioPresentationInference {
 
 impl protocol::Inference<SemioPresentationSnapshot> for SemioPresentationInference {
     async fn infer(snapshot: &SemioPresentationSnapshot) -> Self {
-        Self { outline: compute_semio_presentation_outline(snapshot) }
+        Self { outline: compute_semio_presentation_outline(snapshot).await }
     }
 }
 

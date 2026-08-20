@@ -24,6 +24,14 @@ members = [
     "✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/📦️packages/🦀️rust",
     "✏️s/🔌️plugins/📸️remodel/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust",
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust",
+    "🧰️framework/🔨️modules/🖱️ui/🖼️render/📦️packages/🦀️rust",
+    "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust",
+    "🧰️framework/🔨️modules/🖱️ui/🖼️render/🎯️targets/🧊️webgpu/📦️packages/🦀️rust",
+    "🧰️framework/🔨️modules/🖱️ui/🖼️render/🎯️targets/🍎️metal/📦️packages/🦀️rust",
+    "🧰️framework/🔨️modules/🖱️ui/🖼️render/🎯️targets/🪟️d3d12/📦️packages/🦀️rust",
+    "🧰️framework/🔨️modules/🖱️ui/🖼️render/🎯️targets/🌋️vulkan/📦️packages/🦀️rust",
+    "🧰️framework/🔨️modules/🖱️ui/🖥️host/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/◻2d/📦️packages/🦀️rust",
@@ -192,8 +200,16 @@ semio-framework-os-mcp = { path = "🧰️framework/🛍️products/💻️os/�
 
 # ---- math (13) ----
 
-# ---- ui (2) ----
+# ---- ui (10) ----
 semio-framework-ui-styling = { path = "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust" }  # 15 refs
+semio-framework-ui-contract = { path = "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust" }
+semio-framework-ui-render = { path = "🧰️framework/🔨️modules/🖱️ui/🖼️render/📦️packages/🦀️rust" }
+semio-framework-ui-runtime = { path = "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust" }
+semio-framework-ui-backend-webgpu = { path = "🧰️framework/🔨️modules/🖱️ui/🖼️render/🎯️targets/🧊️webgpu/📦️packages/🦀️rust" }
+semio-framework-ui-backend-metal = { path = "🧰️framework/🔨️modules/🖱️ui/🖼️render/🎯️targets/🍎️metal/📦️packages/🦀️rust" }
+semio-framework-ui-backend-d3d12 = { path = "🧰️framework/🔨️modules/🖱️ui/🖼️render/🎯️targets/🪟️d3d12/📦️packages/🦀️rust" }
+semio-framework-ui-backend-vulkan = { path = "🧰️framework/🔨️modules/🖱️ui/🖼️render/🎯️targets/🌋️vulkan/📦️packages/🦀️rust" }
+semio-framework-ui-host = { path = "🧰️framework/🔨️modules/🖱️ui/🖥️host/📦️packages/🦀️rust" }
 semio-framework-ui = { path = "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust" }
 semio-framework-surface = { path = "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust" }
 

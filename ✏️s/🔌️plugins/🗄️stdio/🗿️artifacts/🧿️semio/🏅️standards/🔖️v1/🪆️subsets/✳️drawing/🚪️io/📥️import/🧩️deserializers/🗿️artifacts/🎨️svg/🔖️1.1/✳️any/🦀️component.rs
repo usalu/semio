@@ -211,7 +211,7 @@ async fn decode_data_uri(href: &str) -> Option<(String, Vec<u8>)> {
     if !meta.contains("base64") {
         return None;
     }
-    let bytes = base64_decode(data)?;
+    let bytes = base64_decode(data).await?;
     Some((mime, bytes))
 }
 
@@ -253,7 +253,7 @@ async fn common_presentation<'a>(common: &'a crate::artifacts::svg::schema::snap
 async fn draw_node_from_svg(el: &SvgElement, styles: &mut Vec<DrawStyle>) -> Option<DrawNode> {
     match el {
         SvgElement::Rect { common, x, y, width, height, .. } => {
-            let (fill, stroke, sw, op) = common_presentation(common);
+            let (fill, stroke, sw, op) = common_presentation(common).await;
             let style = intern_style(styles, fill, stroke, sw, op);
             Some(DrawNode::Path {
                 segments: vec![
@@ -267,22 +267,22 @@ async fn draw_node_from_svg(el: &SvgElement, styles: &mut Vec<DrawStyle>) -> Opt
             })
         }
         SvgElement::Circle { common, cx, cy, r } => {
-            let (fill, stroke, sw, op) = common_presentation(common);
+            let (fill, stroke, sw, op) = common_presentation(common).await;
             let style = intern_style(styles, fill, stroke, sw, op);
-            Some(DrawNode::Path { segments: ellipse_path(*cx, *cy, *r, *r), style })
+            Some(DrawNode::Path { segments: ellipse_path(*cx, *cy, *r, *r).await, style })
         }
         SvgElement::Ellipse { common, cx, cy, rx, ry } => {
-            let (fill, stroke, sw, op) = common_presentation(common);
+            let (fill, stroke, sw, op) = common_presentation(common).await;
             let style = intern_style(styles, fill, stroke, sw, op);
-            Some(DrawNode::Path { segments: ellipse_path(*cx, *cy, *rx, *ry), style })
+            Some(DrawNode::Path { segments: ellipse_path(*cx, *cy, *rx, *ry).await, style })
         }
         SvgElement::Line { common, x1, y1, x2, y2 } => {
-            let (fill, stroke, sw, op) = common_presentation(common);
+            let (fill, stroke, sw, op) = common_presentation(common).await;
             let style = intern_style(styles, fill, stroke, sw, op);
             Some(DrawNode::Path { segments: vec![PathSegment::MoveTo { to: SemioPoint2 { x: *x1, y: *y1 } }, PathSegment::LineTo { to: SemioPoint2 { x: *x2, y: *y2 } }], style })
         }
         SvgElement::Polyline { common, points } | SvgElement::Polygon { common, points } => {
-            let (fill, stroke, sw, op) = common_presentation(common);
+            let (fill, stroke, sw, op) = common_presentation(common).await;
             let style = intern_style(styles, fill, stroke, sw, op);
             let mut segments: Vec<PathSegment> = points.iter().enumerate().map(|(i, (x, y))| if i == 0 { PathSegment::MoveTo { to: SemioPoint2 { x: *x, y: *y } } } else { PathSegment::LineTo { to: SemioPoint2 { x: *x, y: *y } } }).collect();
             if matches!(el, SvgElement::Polygon { .. }) {
@@ -291,25 +291,25 @@ async fn draw_node_from_svg(el: &SvgElement, styles: &mut Vec<DrawStyle>) -> Opt
             Some(DrawNode::Path { segments, style })
         }
         SvgElement::Path { common, d } => {
-            let (fill, stroke, sw, op) = common_presentation(common);
+            let (fill, stroke, sw, op) = common_presentation(common).await;
             let style = intern_style(styles, fill, stroke, sw, op);
-            Some(DrawNode::Path { segments: resolve_path_commands(d), style })
+            Some(DrawNode::Path { segments: resolve_path_commands(d).await, style })
         }
         SvgElement::Group { common, children } => {
             let transform = common.transform.as_ref().map(|ops| matrix_to_semio_transform(&transform_ops_to_matrix(ops))).unwrap_or_else(SemioTransform::identity);
-            Some(DrawNode::Group { transform, children: children.iter().filter_map(|c| draw_node_from_svg(c, styles)).collect() })
+            Some(DrawNode::Group { transform, children: children.iter().filter_map(|c| semio_framework_plugin::resolve_ready(draw_node_from_svg(c, styles))).collect() })
         }
         SvgElement::Text { common, x, y, children } => {
-            let (fill, stroke, sw, op) = common_presentation(common);
+            let (fill, stroke, sw, op) = common_presentation(common).await;
             let style = intern_style(styles, fill, stroke, sw, op);
             let value = flatten_text(children);
             Some(DrawNode::Text { value, at: SemioPoint2 { x: x.unwrap_or(0.0), y: y.unwrap_or(0.0) }, style })
         }
         SvgElement::Unknown { name, attrs, .. } if name == "image" => {
             let href = attrs.iter().find(|a| a.name == "href" || a.name == "xlink:href")?;
-            let (mime, bytes) = decode_data_uri(&href.value)?;
-            let at = SemioPoint2 { x: attr_f64(attrs, "x"), y: attr_f64(attrs, "y") };
-            Some(DrawNode::Image { at, width: attr_f64(attrs, "width"), height: attr_f64(attrs, "height"), mime, bytes })
+            let (mime, bytes) = decode_data_uri(&href.value).await?;
+            let at = SemioPoint2 { x: attr_f64(attrs, "x").await, y: attr_f64(attrs, "y").await };
+            Some(DrawNode::Image { at, width: attr_f64(attrs, "width").await, height: attr_f64(attrs, "height").await, mime, bytes })
         }
         _ => None, // defs/gradients/stop/use/other Unknown — no DrawNode equivalent, documented drop.
     }
@@ -324,7 +324,7 @@ async fn flatten_text(children: &[SvgElement]) -> String {
         .iter()
         .map(|c| match c {
             SvgElement::TextNode(t) => t.clone(),
-            SvgElement::Tspan { children, .. } => flatten_text(children),
+            SvgElement::Tspan { children, .. } => semio_framework_plugin::resolve_ready(flatten_text(children)),
             _ => String::new(),
         })
         .collect::<Vec<_>>()
@@ -343,7 +343,7 @@ impl ArtifactDeserializer for SemioDrawingFromSvg {
 
     async fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         let root_node = from.doc.root.as_ref().ok_or_else(|| store::PackError::Schema("svg→semio/drawing: document has no root element".into()))?;
-        let root = svg_element_from_xml_node(root_node).map_err(store::PackError::Schema)?;
+        let root = svg_element_from_xml_node(root_node).await.map_err(store::PackError::Schema)?;
         let (canvas, children) = match &root {
             SvgElement::Svg { view_box, width, height, children, .. } => {
                 let (w, h) = match view_box {
@@ -356,7 +356,7 @@ impl ArtifactDeserializer for SemioDrawingFromSvg {
         };
         let mut styles = Vec::new();
         let nodes: Vec<DrawNode> = children.iter().filter_map(|c| draw_node_from_svg(c, &mut styles)).collect();
-        let layers = vec![DrawLayer { id: "0".into(), name: "root".into(), visible: true, root: DrawNode::Group { transform: SemioTransform::identity(), children: nodes } }];
+        let layers = vec![DrawLayer { id: "0".into(), name: "root".into(), visible: true, root: DrawNode::Group { transform: SemioTransform::identity().await, children: nodes } }];
         Ok(SemioDrawingSnapshot { schema: STDIO_SEMIODRAWING_DOCUMENT_SCHEMA.into(), canvas, styles, layers })
     }
 }

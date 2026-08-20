@@ -233,7 +233,7 @@ async fn inverse_indexed<T: Clone, D>(base: &[T], diff: &IndexedTripleDiff<D, T>
     for m in &diff.modified {
         if let Some(original) = base.get(m.index) {
             let next_index = transform_index(m.index, &diff.removed, &added_idx);
-            modified.push(IndexModified { index: next_index, diff: inverse_item(original, &m.diff) });
+            modified.push(IndexModified { index: next_index.await, diff: inverse_item(original, &m.diff) });
         }
     }
     let mut added = Vec::new();
@@ -265,7 +265,7 @@ async fn simulate_mid_origins(base_len: usize, removed: &[usize], added_idx: &[u
 /// 🧮️ Sequential-coalesce absorb (base-free index-transport over `d1`'s own removed/added),
 /// mirroring svg's `absorb_children_diff` generically over `T`/`D`.
 async fn absorb_indexed<T: Clone, D: Clone>(d1: IndexedTripleDiff<D, T>, d2: IndexedTripleDiff<D, T>, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&T, &D) -> T) -> IndexedTripleDiff<D, T> {
-    let d1_added_idx = added_indices(&d1.added);
+    let d1_added_idx = added_indices(&d1.added).await;
     let d1_ref_max = d1.removed.iter().copied().chain(d1.modified.iter().map(|m| m.index)).max();
     let mut base_len = d1_ref_max.map(|m| m + 1).unwrap_or(0);
     let mid_len_needed_by_d1 = d1_added_idx.iter().map(|&i| i + 1).max().unwrap_or(0);
@@ -278,7 +278,7 @@ async fn absorb_indexed<T: Clone, D: Clone>(d1: IndexedTripleDiff<D, T>, d2: Ind
         base_len += 1;
     }
 
-    let mid = simulate_mid_origins(base_len, &d1.removed, &d1_added_idx);
+    let mid = simulate_mid_origins(base_len, &d1.removed, &d1_added_idx).await;
 
     let mut removed = d1.removed.clone();
     let mut modified = d1.modified.clone();
@@ -329,7 +329,7 @@ async fn absorb_indexed<T: Clone, D: Clone>(d1: IndexedTripleDiff<D, T>, d2: Ind
             continue;
         }
         let final_index = transform_index(add.index, &d2.removed, &d2_added_idx);
-        added.push(IndexAdded { index: final_index, item: add.item });
+        added.push(IndexAdded { index: final_index.await, item: add.item });
     }
     for a2 in &d2.added {
         added.push(a2.clone());
@@ -458,7 +458,7 @@ async fn apply_node_diff(node: &DrawNode, diff: &DrawNodeDiff) -> DrawNode {
             DrawNode::Group { transform, children } => DrawNode::Group {
                 transform: gd.transform.unwrap_or(*transform),
                 children: match &gd.children {
-                    Some(cd) => apply_indexed(children, cd, apply_node_diff),
+                    Some(cd) => apply_indexed(children, cd, apply_node_diff).await,
                     None => children.clone(),
                 },
             },
@@ -500,7 +500,7 @@ async fn between_node(base: &DrawNode, other: &DrawNode) -> Option<DrawNodeDiff>
         (DrawNode::Group { transform: bt, children: bc }, DrawNode::Group { transform: ot, children: oc }) => {
             let transform = if bt != ot { Some(*ot) } else { None };
             let children = between_indexed(bc, oc, between_node);
-            if transform.is_none() && children.is_none() {
+            if transform.is_none() && children.await.is_none() {
                 None
             } else {
                 Some(DrawNodeDiff::Group(DrawGroupDiff { transform, children }))
@@ -534,7 +534,7 @@ async fn inverse_node_diff(current: &DrawNode, diff: &DrawNodeDiff) -> DrawNodeD
             other => DrawNodeDiff::Replace { node: other.clone() },
         },
         DrawNodeDiff::Group(gd) => match current {
-            DrawNode::Group { transform, children } => DrawNodeDiff::Group(DrawGroupDiff { transform: gd.transform.as_ref().map(|_| *transform), children: gd.children.as_ref().map(|cd| inverse_indexed(children, cd, inverse_node_diff)) }),
+            DrawNode::Group { transform, children } => DrawNodeDiff::Group(DrawGroupDiff { transform: gd.transform.as_ref().map(|_| *transform), children: gd.children.as_ref().map(|cd| inverse_indexed(children, cd, |c, d| semio_framework_plugin::resolve_ready(inverse_node_diff(c, d)))) }),
             other => DrawNodeDiff::Replace { node: other.clone() },
         },
         DrawNodeDiff::Image(id) => match current {
@@ -553,7 +553,7 @@ async fn inverse_node_diff(current: &DrawNode, diff: &DrawNodeDiff) -> DrawNodeD
 async fn absorb_node_diff(a: DrawNodeDiff, b: DrawNodeDiff) -> DrawNodeDiff {
     match (a, b) {
         (_, DrawNodeDiff::Replace { node }) => DrawNodeDiff::Replace { node },
-        (DrawNodeDiff::Replace { node }, b) => DrawNodeDiff::Replace { node: apply_node_diff(&node, &b) },
+        (DrawNodeDiff::Replace { node }, b) => DrawNodeDiff::Replace { node: apply_node_diff(&node, &b).await },
         (DrawNodeDiff::Path(pa), DrawNodeDiff::Path(pb)) => DrawNodeDiff::Path(DrawPathDiff { segments: pb.segments.or(pa.segments), style: pb.style.or(pa.style) }),
         (DrawNodeDiff::Text(ta), DrawNodeDiff::Text(tb)) => DrawNodeDiff::Text(DrawTextDiff { value: tb.value.or(ta.value), at: tb.at.or(ta.at), style: tb.style.or(ta.style) }),
         (DrawNodeDiff::Group(ga), DrawNodeDiff::Group(gb)) => DrawNodeDiff::Group(DrawGroupDiff {
@@ -561,7 +561,7 @@ async fn absorb_node_diff(a: DrawNodeDiff, b: DrawNodeDiff) -> DrawNodeDiff {
             children: match (ga.children, gb.children) {
                 (None, x) => x,
                 (x, None) => x,
-                (Some(ac), Some(bc)) => Some(absorb_indexed(ac, bc, absorb_node_diff, apply_node_diff)),
+                (Some(ac), Some(bc)) => Some(absorb_indexed(ac, bc, absorb_node_diff, apply_node_diff).await),
             },
         }),
         (DrawNodeDiff::Image(ia), DrawNodeDiff::Image(ib)) => DrawNodeDiff::Image(DrawImageDiff { at: ib.at.or(ia.at), width: ib.width.or(ia.width), height: ib.height.or(ia.height), mime: ib.mime.or(ia.mime), bytes: ib.bytes.or(ia.bytes) }),
@@ -626,7 +626,7 @@ async fn apply_layer_diff(layer: &DrawLayer, diff: &DrawLayerDiff) -> DrawLayer 
         name: diff.name.clone().unwrap_or_else(|| layer.name.clone()),
         visible: diff.visible.unwrap_or(layer.visible),
         root: match &diff.root {
-            Some(rd) => apply_node_diff(&layer.root, rd),
+            Some(rd) => apply_node_diff(&layer.root, rd).await,
             None => layer.root.clone(),
         },
     }
@@ -635,7 +635,7 @@ async fn between_layer_diff(base: &DrawLayer, other: &DrawLayer) -> Option<DrawL
     let id = if base.id != other.id { Some(other.id.clone()) } else { None };
     let name = if base.name != other.name { Some(other.name.clone()) } else { None };
     let visible = if base.visible != other.visible { Some(other.visible) } else { None };
-    let root = between_node(&base.root, &other.root);
+    let root = between_node(&base.root, &other.root).await;
     if id.is_none() && name.is_none() && visible.is_none() && root.is_none() {
         None
     } else {
@@ -643,7 +643,7 @@ async fn between_layer_diff(base: &DrawLayer, other: &DrawLayer) -> Option<DrawL
     }
 }
 async fn inverse_layer_diff(base: &DrawLayer, diff: &DrawLayerDiff) -> DrawLayerDiff {
-    DrawLayerDiff { id: diff.id.as_ref().map(|_| base.id.clone()), name: diff.name.as_ref().map(|_| base.name.clone()), visible: diff.visible.as_ref().map(|_| base.visible), root: diff.root.as_ref().map(|rd| inverse_node_diff(&base.root, rd)) }
+    DrawLayerDiff { id: diff.id.as_ref().map(|_| base.id.clone()), name: diff.name.as_ref().map(|_| base.name.clone()), visible: diff.visible.as_ref().map(|_| base.visible), root: diff.root.as_ref().map(|rd| semio_framework_plugin::resolve_ready(inverse_node_diff(&base.root, rd))) }
 }
 async fn absorb_layer_diff(a: DrawLayerDiff, b: DrawLayerDiff) -> DrawLayerDiff {
     DrawLayerDiff {
@@ -653,7 +653,7 @@ async fn absorb_layer_diff(a: DrawLayerDiff, b: DrawLayerDiff) -> DrawLayerDiff 
         root: match (a.root, b.root) {
             (None, x) => x,
             (x, None) => x,
-            (Some(ar), Some(br)) => Some(absorb_node_diff(ar, br)),
+            (Some(ar), Some(br)) => Some(absorb_node_diff(ar, br).await),
         },
     }
 }
@@ -664,15 +664,15 @@ impl MutationDiff<SemioDrawingSnapshot> for SemioDrawingDiff {
     async fn apply(&self, base: &SemioDrawingSnapshot) -> protocol::MutationApplyResult<SemioDrawingSnapshot> {
         let mut next = base.clone();
         if let Some(cd) = &self.canvas {
-            next.canvas = apply_canvas_diff(&next.canvas, cd);
+            next.canvas = apply_canvas_diff(&next.canvas, cd).await;
         }
         if let Some(sd) = &self.styles {
-            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&next.styles, sd, |item| item.name.clone(), |item| item.name.clone(), ["styles"])?;
-            next.styles = apply_named(&next.styles, sd, |s| &s.name, apply_style_diff);
+            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&next.styles, sd, |item| item.name.clone(), |item| item.name.clone(), ["styles"]).await?;
+            next.styles = apply_named(&next.styles, sd, |s| &s.name, apply_style_diff).await;
         }
         if let Some(ld) = &self.layers {
-            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_indexed_triple(ld, next.layers.len(), ["layers"])?;
-            next.layers = apply_indexed(&next.layers, ld, apply_layer_diff);
+            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_indexed_triple(ld, next.layers.len(), ["layers"]).await?;
+            next.layers = apply_indexed(&next.layers, ld, apply_layer_diff).await;
         }
         Ok(next)
     }
@@ -681,17 +681,17 @@ impl MutationDiff<SemioDrawingSnapshot> for SemioDrawingDiff {
         self.canvas = match (self.canvas.take(), other.canvas) {
             (None, x) => x,
             (x, None) => x,
-            (Some(a), Some(b)) => Some(absorb_canvas_diff(a, b)),
+            (Some(a), Some(b)) => Some(absorb_canvas_diff(a, b).await),
         };
         self.styles = match (self.styles.take(), other.styles) {
             (None, x) => x,
             (x, None) => x,
-            (Some(a), Some(b)) => Some(absorb_named(a, b, absorb_style_diff, apply_style_diff, |s: &DrawStyle| s.name.clone())),
+            (Some(a), Some(b)) => Some(absorb_named(a, b, absorb_style_diff, apply_style_diff, |s: &DrawStyle| s.name.clone()).await),
         };
         self.layers = match (self.layers.take(), other.layers) {
             (None, x) => x,
             (x, None) => x,
-            (Some(a), Some(b)) => Some(absorb_indexed(a, b, absorb_layer_diff, apply_layer_diff)),
+            (Some(a), Some(b)) => Some(absorb_indexed(a, b, absorb_layer_diff, apply_layer_diff).await),
         };
     }
 }
@@ -709,9 +709,9 @@ impl DiffAlgebra<SemioDrawingSnapshot> for SemioDrawingDiff {
 
     async fn between(base: &SemioDrawingSnapshot, other: &SemioDrawingSnapshot) -> Self {
         SemioDrawingDiff {
-            canvas: between_canvas_diff(&base.canvas, &other.canvas),
-            styles: between_named(&base.styles, &other.styles, |s: &DrawStyle| s.name.clone(), between_style_diff),
-            layers: between_indexed(&base.layers, &other.layers, between_layer_diff),
+            canvas: between_canvas_diff(&base.canvas, &other.canvas).await,
+            styles: between_named(&base.styles, &other.styles, |s: &DrawStyle| s.name.clone(), between_style_diff).await,
+            layers: between_indexed(&base.layers, &other.layers, between_layer_diff).await,
         }
     }
 
@@ -763,7 +763,7 @@ pub async fn node_at<'a>(snapshot: &'a SemioDrawingSnapshot, np: &NodePath) -> O
 /// `at` for `Text`/`Image`) -- `Path` has no origin field of its own (its geometry lives entirely
 /// in `segments`), so it is honestly excluded rather than approximated.
 pub async fn node_origin(snapshot: &SemioDrawingSnapshot, np: &NodePath) -> Option<SemioPoint2> {
-    match node_at(snapshot, np)? {
+    match node_at(snapshot, np).await? {
         DrawNode::Group { transform, .. } => Some(SemioPoint2 { x: transform.translation.x, y: transform.translation.y }),
         DrawNode::Text { at, .. } => Some(*at),
         DrawNode::Image { at, .. } => Some(*at),
@@ -774,15 +774,15 @@ pub async fn node_origin(snapshot: &SemioDrawingSnapshot, np: &NodePath) -> Opti
 /// 📍️ Builds the sparse diff that repositions the node at `np` to `new_origin` -- empty (no-op)
 /// diff when the node is absent or is a `Path` (no origin field).
 pub async fn diff_move_node(snapshot: &SemioDrawingSnapshot, np: &NodePath, new_origin: SemioPoint2) -> SemioDrawingDiff {
-    match node_at(snapshot, np) {
+    match node_at(snapshot, np).await {
         Some(DrawNode::Group { transform, .. }) => {
             let mut next = *transform;
             next.translation.x = new_origin.x;
             next.translation.y = new_origin.y;
-            diff_at_path(np, DrawNodeDiff::Group(DrawGroupDiff { transform: Some(next), children: None }))
+            diff_at_path(np, DrawNodeDiff::Group(DrawGroupDiff { transform: Some(next), children: None })).await
         }
-        Some(DrawNode::Text { .. }) => diff_at_path(np, DrawNodeDiff::Text(DrawTextDiff { value: None, at: Some(new_origin), style: None })),
-        Some(DrawNode::Image { .. }) => diff_at_path(np, DrawNodeDiff::Image(DrawImageDiff { at: Some(new_origin), width: None, height: None, mime: None, bytes: None })),
+        Some(DrawNode::Text { .. }) => diff_at_path(np, DrawNodeDiff::Text(DrawTextDiff { value: None, at: Some(new_origin), style: None })).await,
+        Some(DrawNode::Image { .. }) => diff_at_path(np, DrawNodeDiff::Image(DrawImageDiff { at: Some(new_origin), width: None, height: None, mime: None, bytes: None })).await,
         _ => SemioDrawingDiff::default(),
     }
 }
@@ -790,10 +790,10 @@ pub async fn diff_move_node(snapshot: &SemioDrawingSnapshot, np: &NodePath, new_
 /// 🔄️ Builds the sparse diff that sets a `Group` node's `transform.rotation` -- empty (no-op) for
 /// every other node kind (`Path`/`Text`/`Image` carry no rotation field).
 pub async fn diff_rotate_node(snapshot: &SemioDrawingSnapshot, np: &NodePath, new_rotation: crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioQuaternion) -> SemioDrawingDiff {
-    match node_at(snapshot, np) {
+    match node_at(snapshot, np).await {
         Some(DrawNode::Group { transform, .. }) => {
             let next = SemioTransform { translation: transform.translation, rotation: new_rotation, scale: transform.scale };
-            diff_at_path(np, DrawNodeDiff::Group(DrawGroupDiff { transform: Some(next), children: None }))
+            diff_at_path(np, DrawNodeDiff::Group(DrawGroupDiff { transform: Some(next), children: None })).await
         }
         _ => SemioDrawingDiff::default(),
     }
@@ -802,10 +802,10 @@ pub async fn diff_rotate_node(snapshot: &SemioDrawingSnapshot, np: &NodePath, ne
 /// 📏️ Builds the sparse diff that sets a `Group` node's `transform.scale` -- empty (no-op) for
 /// every other node kind.
 pub async fn diff_scale_node(snapshot: &SemioDrawingSnapshot, np: &NodePath, new_scale: crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3) -> SemioDrawingDiff {
-    match node_at(snapshot, np) {
+    match node_at(snapshot, np).await {
         Some(DrawNode::Group { transform, .. }) => {
             let next = SemioTransform { translation: transform.translation, rotation: transform.rotation, scale: new_scale };
-            diff_at_path(np, DrawNodeDiff::Group(DrawGroupDiff { transform: Some(next), children: None }))
+            diff_at_path(np, DrawNodeDiff::Group(DrawGroupDiff { transform: Some(next), children: None })).await
         }
         _ => SemioDrawingDiff::default(),
     }
@@ -833,10 +833,10 @@ async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
 async fn enc_str(s: &str) -> String {
-    hex_encode(s.as_bytes())
+    hex_encode(s.as_bytes()).await
 }
 async fn dec_str(s: &str) -> Result<String, String> {
-    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
+    String::from_utf8(hex_decode(s).await?).map_err(|e| e.to_string())
 }
 async fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
     match opt {
@@ -845,8 +845,8 @@ async fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String
     }
 }
 async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
-    let inner = strip_brackets(s)?;
-    match split_top_level(inner, ',').as_slice() {
+    let inner = strip_brackets(s).await?;
+    match split_top_level(inner, ',').await.as_slice() {
         ["0"] => Ok(None),
         [tag, value] if *tag == "1" => Ok(Some(dec(value)?)),
         other => Err(format!("option decode: bad shape {other:?}")),
@@ -863,7 +863,7 @@ async fn enc_node_diff(d: &DrawNodeDiff) -> String {
             "G[{},{}]",
             encode_option(&g.transform, enc_transform),
             match &g.children {
-                Some(c) => format!("[1,{}]", enc_indexed_triple(c, enc_node_diff, enc_node)),
+                Some(c) => format!("[1,{}.await]", enc_indexed_triple(c, enc_node_diff, enc_node)),
                 None => "[0]".to_string(),
             }
         ),
@@ -875,41 +875,41 @@ async fn enc_node_diff(d: &DrawNodeDiff) -> String {
 }
 async fn dec_node_diff(s: &str) -> Result<DrawNodeDiff, String> {
     let (tag, rest) = s.split_at(1);
-    let inner = strip_brackets(rest)?;
+    let inner = strip_brackets(rest).await?;
     match tag {
         "P" => {
-            let parts = split_top_level(inner, ',');
+            let parts = split_top_level(inner, ',').await;
             let [segments, style] = parts.as_slice() else { return Err(format!("path diff: expected 2 fields, got {}", parts.len())) };
-            Ok(DrawNodeDiff::Path(DrawPathDiff { segments: decode_option(segments, |v| dec_list(v, dec_path_segment))?, style: decode_option(style, |v| decode_option(v, dec_str))? }))
+            Ok(DrawNodeDiff::Path(DrawPathDiff { segments: decode_option(segments, |v| dec_list(v, dec_path_segment)).await?, style: decode_option(style, |v| decode_option(v, dec_str)).await? }))
         }
         "T" => {
-            let parts = split_top_level(inner, ',');
+            let parts = split_top_level(inner, ',').await;
             let [value, at, style] = parts.as_slice() else { return Err(format!("text diff: expected 3 fields, got {}", parts.len())) };
-            Ok(DrawNodeDiff::Text(DrawTextDiff { value: decode_option(value, dec_str)?, at: decode_option(at, dec_point2)?, style: decode_option(style, |v| decode_option(v, dec_str))? }))
+            Ok(DrawNodeDiff::Text(DrawTextDiff { value: decode_option(value, dec_str).await?, at: decode_option(at, dec_point2).await?, style: decode_option(style, |v| decode_option(v, dec_str)).await? }))
         }
         "G" => {
-            let parts = split_top_level(inner, ',');
+            let parts = split_top_level(inner, ',').await;
             let [transform_s, children_s] = parts.as_slice() else { return Err(format!("group diff: expected 2 fields, got {}", parts.len())) };
-            let transform = decode_option(transform_s, dec_transform)?;
-            let children = match split_top_level(strip_brackets(children_s)?, ',').as_slice() {
+            let transform = decode_option(transform_s, dec_transform).await?;
+            let children = match split_top_level(strip_brackets(children_s).await?, ',').await.as_slice() {
                 ["0"] => None,
-                [tag, rest @ ..] if *tag == "1" => Some(dec_indexed_triple(&rest.join(","), dec_node_diff, dec_node)?),
+                [tag, rest @ ..] if *tag == "1" => Some(dec_indexed_triple(&rest.join(","), dec_node_diff, dec_node).await?),
                 other => return Err(format!("group children: bad shape {other:?}")),
             };
             Ok(DrawNodeDiff::Group(DrawGroupDiff { transform, children }))
         }
         "I" => {
-            let parts = split_top_level(inner, ',');
+            let parts = split_top_level(inner, ',').await;
             let [at, width, height, mime, bytes] = parts.as_slice() else { return Err(format!("image diff: expected 5 fields, got {}", parts.len())) };
             Ok(DrawNodeDiff::Image(DrawImageDiff {
-                at: decode_option(at, dec_point2)?,
-                width: decode_option(width, |v| v.parse::<f64>().map_err(|e: std::num::ParseFloatError| e.to_string()))?,
-                height: decode_option(height, |v| v.parse::<f64>().map_err(|e: std::num::ParseFloatError| e.to_string()))?,
-                mime: decode_option(mime, dec_str)?,
-                bytes: decode_option(bytes, hex_decode)?,
+                at: decode_option(at, dec_point2).await?,
+                width: decode_option(width, |v| v.parse::<f64>().map_err(|e: std::num::ParseFloatError| e.to_string())).await?,
+                height: decode_option(height, |v| v.parse::<f64>().map_err(|e: std::num::ParseFloatError| e.to_string())).await?,
+                mime: decode_option(mime, dec_str).await?,
+                bytes: decode_option(bytes, hex_decode).await?,
             }))
         }
-        "R" => Ok(DrawNodeDiff::Replace { node: dec_node(inner)? }),
+        "R" => Ok(DrawNodeDiff::Replace { node: dec_node(inner).await? }),
         other => Err(format!("node diff: unknown tag {other:?}")),
     }
 }
@@ -920,12 +920,12 @@ async fn enc_canvas(c: &DrawCanvasDiff) -> String {
     format!("[{},{},{}]", encode_option(&c.width, |v| v.to_string()), encode_option(&c.height, |v| v.to_string()), encode_option(&c.background, |v| encode_option(v, enc_rgba)))
 }
 async fn dec_canvas(s: &str) -> Result<DrawCanvasDiff, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [width, height, background] = parts.as_slice() else { return Err(format!("canvas diff: expected 3 fields, got {}", parts.len())) };
     Ok(DrawCanvasDiff {
-        width: decode_option(width, |v| v.parse::<f64>().map_err(|e: std::num::ParseFloatError| e.to_string()))?,
-        height: decode_option(height, |v| v.parse::<f64>().map_err(|e: std::num::ParseFloatError| e.to_string()))?,
-        background: decode_option(background, |v| decode_option(v, dec_rgba))?,
+        width: decode_option(width, |v| v.parse::<f64>().map_err(|e: std::num::ParseFloatError| e.to_string())).await?,
+        height: decode_option(height, |v| v.parse::<f64>().map_err(|e: std::num::ParseFloatError| e.to_string())).await?,
+        background: decode_option(background, |v| decode_option(v, dec_rgba)).await?,
     })
 }
 
@@ -939,13 +939,13 @@ async fn enc_style_diff(d: &DrawStyleDiff) -> String {
     )
 }
 async fn dec_style_diff(s: &str) -> Result<DrawStyleDiff, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [fill, stroke, stroke_width, opacity] = parts.as_slice() else { return Err(format!("style diff: expected 4 fields, got {}", parts.len())) };
     Ok(DrawStyleDiff {
-        fill: decode_option(fill, |v| decode_option(v, dec_rgba))?,
-        stroke: decode_option(stroke, |v| decode_option(v, dec_rgba))?,
-        stroke_width: decode_option(stroke_width, |v| decode_option(v, |x| x.parse::<f64>().map_err(|e: std::num::ParseFloatError| e.to_string())))?,
-        opacity: decode_option(opacity, |v| decode_option(v, |x| x.parse::<f32>().map_err(|e: std::num::ParseFloatError| e.to_string())))?,
+        fill: decode_option(fill, |v| decode_option(v, dec_rgba)).await?,
+        stroke: decode_option(stroke, |v| decode_option(v, dec_rgba)).await?,
+        stroke_width: decode_option(stroke_width, |v| decode_option(v, |x| x.parse::<f64>().map_err(|e: std::num::ParseFloatError| e.to_string()))).await?,
+        opacity: decode_option(opacity, |v| decode_option(v, |x| x.parse::<f32>().map_err(|e: std::num::ParseFloatError| e.to_string()))).await?,
     })
 }
 
@@ -953,9 +953,9 @@ async fn enc_layer_diff(d: &DrawLayerDiff) -> String {
     format!("[{},{},{},{}]", encode_option(&d.id, |v| enc_str(v)), encode_option(&d.name, |v| enc_str(v)), encode_option(&d.visible, |v| if *v { "1".to_string() } else { "0".to_string() }), encode_option(&d.root, enc_node_diff))
 }
 async fn dec_layer_diff(s: &str) -> Result<DrawLayerDiff, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [id, name, visible, root] = parts.as_slice() else { return Err(format!("layer diff: expected 4 fields, got {}", parts.len())) };
-    Ok(DrawLayerDiff { id: decode_option(id, dec_str)?, name: decode_option(name, dec_str)?, visible: decode_option(visible, |v| Ok(v == "1"))?, root: decode_option(root, dec_node_diff)? })
+    Ok(DrawLayerDiff { id: decode_option(id, dec_str).await?, name: decode_option(name, dec_str).await?, visible: decode_option(visible, |v| Ok(v == "1")).await?, root: decode_option(root, dec_node_diff).await? })
 }
 
 async fn print_drawing_diff(d: &SemioDrawingDiff) -> String {
@@ -978,11 +978,11 @@ async fn parse_drawing_diff(line: &str) -> Result<SemioDrawingDiff, String> {
     }
     for token in line.split(' ') {
         if let Some(rest) = token.strip_prefix("canvas=") {
-            d.canvas = Some(dec_canvas(rest)?);
+            d.canvas = Some(dec_canvas(rest).await?);
         } else if let Some(rest) = token.strip_prefix("styles=") {
-            d.styles = Some(dec_named_triple(rest, dec_str, dec_style_diff, dec_style)?);
+            d.styles = Some(dec_named_triple(rest, dec_str, dec_style_diff, dec_style).await?);
         } else if let Some(rest) = token.strip_prefix("layers=") {
-            d.layers = Some(dec_indexed_triple(rest, dec_layer_diff, dec_layer)?);
+            d.layers = Some(dec_indexed_triple(rest, dec_layer_diff, dec_layer).await?);
         } else {
             return Err(format!("drawing diff: unknown token {token:?}"));
         }
@@ -1002,16 +1002,16 @@ async fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
     out.extend_from_slice(bytes);
 }
 async fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
+    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec())
 }
 
 impl protocol::DiffCodec for SemioDrawingDiff {
     async fn print_diff(&self) -> String {
-        print_drawing_diff(self)
+        print_drawing_diff(self).await
     }
     async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
-        parse_drawing_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_drawing_diff(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const DIFF_BINARY_FORMAT: u8 = 1;
@@ -1027,43 +1027,43 @@ impl protocol::DiffCodec for SemioDrawingDiff {
         }
         let mut out = vec![DIFF_BINARY_FORMAT, presence];
         if let Some(c) = &self.canvas {
-            write_bytes_lp(&mut out, enc_canvas(c).as_bytes());
+            write_bytes_lp(&mut out, enc_canvas(c).await.as_bytes());
         }
         if let Some(s) = &self.styles {
-            write_bytes_lp(&mut out, enc_named_triple(s, |k: &String| enc_str(k), enc_style_diff, enc_style).as_bytes());
+            write_bytes_lp(&mut out, enc_named_triple(s, |k: &String| enc_str(k), enc_style_diff, enc_style).await.as_bytes());
         }
         if let Some(l) = &self.layers {
-            write_bytes_lp(&mut out, enc_indexed_triple(l, enc_layer_diff, enc_layer).as_bytes());
+            write_bytes_lp(&mut out, enc_indexed_triple(l, enc_layer_diff, enc_layer).await.as_bytes());
         }
         Ok(out)
     }
     async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const DIFF_BINARY_FORMAT: u8 = 1;
-        let mut reader = store::ByteReader::new(bytes);
-        let format = reader.read_u8().map_err(|e| protocol::ProtocolError::Malformed { what: "diff format", offset: 0, detail: e.to_string() })?;
+        let mut reader = store::ByteReader::new(bytes).await;
+        let format = reader.read_u8().await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff format", offset: 0, detail: e.to_string() })?;
         if format != DIFF_BINARY_FORMAT {
             return Err(protocol::ProtocolError::Malformed { what: "diff format", offset: 0, detail: format!("unsupported diff format {format}") });
         }
-        let presence = reader.read_u8().map_err(|e| protocol::ProtocolError::Malformed { what: "diff presence", offset: 1, detail: e.to_string() })?;
+        let presence = reader.read_u8().await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff presence", offset: 1, detail: e.to_string() })?;
         let map_err = |what: &'static str| move |e: String| protocol::ProtocolError::Malformed { what, offset: 2, detail: e };
         let canvas = if presence & 1 != 0 {
-            let blob = read_bytes_lp(&mut reader).map_err(map_err("diff canvas blob"))?;
+            let blob = read_bytes_lp(&mut reader).await.map_err(map_err("diff canvas blob"))?;
             let text = std::str::from_utf8(&blob).map_err(|e| protocol::ProtocolError::Malformed { what: "diff canvas utf8", offset: 2, detail: e.to_string() })?;
-            Some(dec_canvas(text).map_err(map_err("diff canvas"))?)
+            Some(dec_canvas(text).await.map_err(map_err("diff canvas"))?)
         } else {
             None
         };
         let styles = if presence & 2 != 0 {
-            let blob = read_bytes_lp(&mut reader).map_err(map_err("diff styles blob"))?;
+            let blob = read_bytes_lp(&mut reader).await.map_err(map_err("diff styles blob"))?;
             let text = std::str::from_utf8(&blob).map_err(|e| protocol::ProtocolError::Malformed { what: "diff styles utf8", offset: 2, detail: e.to_string() })?;
-            Some(dec_named_triple(text, dec_str, dec_style_diff, dec_style).map_err(map_err("diff styles"))?)
+            Some(dec_named_triple(text, dec_str, dec_style_diff, dec_style).await.map_err(map_err("diff styles"))?)
         } else {
             None
         };
         let layers = if presence & 4 != 0 {
-            let blob = read_bytes_lp(&mut reader).map_err(map_err("diff layers blob"))?;
+            let blob = read_bytes_lp(&mut reader).await.map_err(map_err("diff layers blob"))?;
             let text = std::str::from_utf8(&blob).map_err(|e| protocol::ProtocolError::Malformed { what: "diff layers utf8", offset: 2, detail: e.to_string() })?;
-            Some(dec_indexed_triple(text, dec_layer_diff, dec_layer).map_err(map_err("diff layers"))?)
+            Some(dec_indexed_triple(text, dec_layer_diff, dec_layer).await.map_err(map_err("diff layers"))?)
         } else {
             None
         };

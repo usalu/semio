@@ -1,0 +1,243 @@
+{
+  "crate": "semio-framework-os-kernel-db",
+  "history": [],
+  "residual_errors": 1620,
+  "ambiguous": [],
+  "other": [
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:52",
+      "code": "E0432",
+      "msg": "unresolved import `crate::db_storage::DbStorage`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📄️artifact/🦀️component.rs:574",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:521",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:537",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:538",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:552",
+      "code": "E0728",
+      "msg": "`await` is only allowed inside `async` functions and blocks"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔍️query/🦀️component.rs:583",
+      "code": "E0107",
+      "msg": "struct takes 1 generic argument but 0 generic arguments were supplied"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⌨️cli/🦀️component.rs:448",
+      "code": "E0107",
+      "msg": "missing generics for struct `fs_storage::FsStorage`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔍️query/🦀️component.rs:852",
+      "code": "E0038",
+      "msg": "the trait `QuerySource` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔍️query/🦀️component.rs:89",
+      "code": "E0053",
+      "msg": "method `from` has an incompatible type for trait"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../⚔️conflict/🦀️component.rs:354",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../👁️preview/🦀️component.rs:475",
+      "code": "E0038",
+      "msg": "the trait `ConflictOracle` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../👁️preview/🦀️component.rs:486",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🎭️actor/🦀️component.rs:171",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🎭️actor/🦀️component.rs:820",
+      "code": "E0038",
+      "msg": "the trait `ThreadSpawner` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🎭️actor/🦀️component.rs:847",
+      "code": "E0038",
+      "msg": "the trait `ThreadSpawner` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔒️security/🦀️component.rs:250",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔒️security/🦀️component.rs:250",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🧪️testkit/🦀️component.rs:599",
+      "code": "E0107",
+      "msg": "missing generics for struct `ArtifactEngine`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🧪️testkit/🦀️component.rs:545",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📄️artifact/🦀️component.rs:803",
+      "code": "E0038",
+      "msg": "the trait `ConflictOracle` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📝️wal/🦀️component.rs:555",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = Vec<u8>>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📝️wal/🦀️component.rs:573",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = Vec<u8>>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📝️wal/🦀️component.rs:576",
+      "code": "E0608",
+      "msg": "cannot index into a value of type `impl Future<Output = Vec<u8>>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📸️snapshot/🦀️component.rs:340",
+      "code": "E0502",
+      "msg": "cannot borrow `*bytes` as mutable because it is also borrowed as immutable"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔘️state/🦀️component.rs:245",
+      "code": "E0792",
+      "msg": "expected generic type parameter, found `{type error}`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔘️state/🦀️component.rs:245",
+      "code": "(no code)",
+      "msg": "type parameter `V` is part of concrete type but not used in parameter list for the `impl Trait` type alias"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔘️state/🦀️component.rs:294",
+      "code": "E0792",
+      "msg": "expected generic type parameter, found `{type error}`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔘️state/🦀️component.rs:387",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔘️state/🦀️component.rs:892",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔘️state/🦀️component.rs:989",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔘️state/🦀️component.rs:989",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📽️projection/🦀️component.rs:334",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🌐️cluster/🦀️component.rs:250",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📄️artifact/🦀️component.rs:270",
+      "code": "E0282",
+      "msg": "type annotations needed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📄️artifact/🦀️component.rs:908",
+      "code": "E0038",
+      "msg": "the trait `QuerySource` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../📄️artifact/🦀️component.rs:930",
+      "code": "E0038",
+      "msg": "the trait `QuerySource` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔍️query/🦀️component.rs:382",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔍️query/🦀️component.rs:821",
+      "code": "E0271",
+      "msg": "expected `extract_full_text_term` to return `Option<_>`, but it returns `impl Future<Output = Option<String>>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔍️query/🦀️component.rs:1042",
+      "code": "E0038",
+      "msg": "the trait `QuerySource` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔒️security/🦀️component.rs:320",
+      "code": "E0038",
+      "msg": "the trait `Signer` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔒️security/🦀️component.rs:329",
+      "code": "E0038",
+      "msg": "the trait `SignatureVerifier` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🎭️actor/🦀️component.rs:809",
+      "code": "E0038",
+      "msg": "the trait `ThreadSpawner` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔍️query/🦀️component.rs:1041",
+      "code": "E0038",
+      "msg": "the trait `QuerySource` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../👁️preview/🦀️component.rs:483",
+      "code": "E0038",
+      "msg": "the trait `ConflictOracle` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🎭️actor/🦀️component.rs:819",
+      "code": "E0038",
+      "msg": "the trait `ThreadSpawner` is not dyn compatible"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🗄️storage/🦀️component.rs:487",
+      "code": "E0733",
+      "msg": "recursion in an async fn requires boxing"
+    }
+  ]
+}

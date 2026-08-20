@@ -51,9 +51,9 @@ async fn push_inline(inline: &MdInline, style: RunStyle, runs: &mut Vec<DocRun>,
             }
         }
         MdInline::Image { alt, url, .. } => images.push(DocBlock::Image { image_id: url.clone(), alt: alt.clone(), width: None, height: None }),
-        MdInline::SoftBreak => runs.push(DocRun::plain(" ")),
-        MdInline::HardBreak => runs.push(DocRun::plain("\n")),
-        MdInline::HtmlInline { raw } => runs.push(DocRun::plain(raw.clone())),
+        MdInline::SoftBreak => runs.push(DocRun::plain(" ").await),
+        MdInline::HardBreak => runs.push(DocRun::plain("\n").await),
+        MdInline::HtmlInline { raw } => runs.push(DocRun::plain(raw.clone()).await),
     }
 }
 
@@ -72,13 +72,13 @@ async fn map_inlines(inlines: &[MdInline]) -> (Vec<DocRun>, Vec<DocBlock>) {
 async fn map_block(block: &MdBlock) -> Vec<DocBlock> {
     match block {
         MdBlock::Heading { level, inlines } => {
-            let (runs, images) = map_inlines(inlines);
+            let (runs, images) = map_inlines(inlines).await;
             let mut out = vec![DocBlock::Heading { level: *level, style_id: None, runs }];
             out.extend(images);
             out
         }
         MdBlock::Paragraph { inlines } => {
-            let (runs, images) = map_inlines(inlines);
+            let (runs, images) = map_inlines(inlines).await;
             let mut out = vec![DocBlock::Paragraph { style_id: None, runs }];
             out.extend(images);
             out

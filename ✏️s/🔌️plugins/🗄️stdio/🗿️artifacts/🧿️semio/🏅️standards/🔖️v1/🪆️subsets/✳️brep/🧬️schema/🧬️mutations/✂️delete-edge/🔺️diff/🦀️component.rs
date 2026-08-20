@@ -12,8 +12,8 @@ use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::Sem
 //#region 🔖️Diff
 pub async fn diff(payload: &DeleteEdge, base: &SemioBrepSnapshot) -> protocol::MutationOutcome<SemioBrepDiff> {
     if !base.edges.iter().any(|x| x.id == payload.id) {
-        return protocol::MutationOutcome::error("mutation.target-missing", format!("Edge \"{}\" does not exist.", payload.id), [payload.id.clone()]);
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Edge \"{}\" does not exist.", payload.id), [payload.id.clone()]).await;
     }
-    protocol::MutationOutcome::new(SemioBrepDiff { edges: Some(NamedTripleDiff { removed: vec![payload.id.clone()], modified: vec![], added: vec![] }), ..Default::default() })
+    protocol::MutationOutcome::new(SemioBrepDiff { edges: Some(NamedTripleDiff { removed: vec![payload.id.clone()], modified: vec![], added: vec![] }), ..Default::default() }).await
 }
 //#endregion 🔖️Diff

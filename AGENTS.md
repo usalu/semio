@@ -41,7 +41,7 @@ You MUST follow the following rules unless explicitly asked to do otherwise:
 - You MUST develop multi-device.
   - You MUST prioritize desktop, then mobile, then tablet.
 - You MUST take decisions for maximum control.
-- You MUST implement everything async.
+- You SHOULD implement everything async when it makes sense.
 - You MUST take decisions for maximum performance.
 - All devs are using `launch.json` and never use the cli.
   - You MUST register all executable commands there by following the existing order, grouping and naming.

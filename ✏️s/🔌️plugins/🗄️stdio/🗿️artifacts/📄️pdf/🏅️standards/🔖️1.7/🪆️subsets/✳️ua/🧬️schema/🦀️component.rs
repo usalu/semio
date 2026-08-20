@@ -47,7 +47,7 @@ pub mod derived_construction {
     impl PdfUaBuilderConstruction {
         /// ➕ The recommended entry point: REQUIRES a language tag (e.g. `"en-US"`) up front.
         pub async fn new(lang: impl Into<String>) -> Self {
-            Self { snapshot: seeded_snapshot(lang.into()) }
+            Self { snapshot: seeded_snapshot(lang.into()).await }
         }
 
         pub async fn add_page(mut self, page: PdfPage) -> Self {
@@ -68,7 +68,7 @@ pub mod derived_construction {
         type Diff = PdfDiff;
 
         async fn empty() -> Self {
-            Self::new("en")
+            Self::new("en").await
         }
 
         async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
@@ -76,20 +76,20 @@ pub mod derived_construction {
         }
 
         async fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self::from_snapshot(<PdfSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+            Ok(Self::from_snapshot(<PdfSnapshot as store::ArtifactDsl>::parse_dsl(text).await?).await)
         }
 
         async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<PdfSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+            Ok(Self::from_snapshot(<PdfSnapshot as store::ArtifactPack>::decode_pack(bytes).await?).await)
         }
 
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = apply_pdf_mutation(&mut self.snapshot, &mutation);
-            (self, diff)
+            (self, diff.await)
         }
 
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            self.snapshot = <PdfDiff as protocol::MutationDiff<PdfSnapshot>>::apply(&diff, &self.snapshot)?;
+            self.snapshot = <PdfDiff as protocol::MutationDiff<PdfSnapshot>>::apply(&diff, &self.snapshot).await?;
             Ok(self)
         }
 
@@ -162,48 +162,48 @@ pub mod derived_analysis {
 
     async fn resolve_item<'a>(objects: &'a [PdfIndirectObject], item: &'a PdfObject) -> Option<&'a PdfObject> {
         match item {
-            PdfObject::Ref(r) => resolve_ref(objects, *r),
+            PdfObject::Ref(r) => resolve_ref(objects, *r).await,
             other => Some(other),
         }
     }
 
     async fn find_catalog(objects: &[PdfIndirectObject]) -> Option<&PdfObject> {
-        objects.iter().find(|o| o.value.as_dict().map(|d| dict_name(d, "Type") == Some("Catalog")).unwrap_or(false)).map(|o| &o.value)
+        objects.iter().find(|o| semio_framework_plugin::resolve_ready(o.value.as_dict()).map(|d| dict_name(d, "Type") == Some("Catalog")).unwrap_or(false)).map(|o| &o.value)
     }
 
     async fn resolved_dict_entry<'a>(objects: &'a [PdfIndirectObject], catalog: &'a PdfObject, key: &str) -> Option<&'a PdfObject> {
-        catalog.dict_get(key).and_then(|v| resolve_item(objects, v))
+        catalog.dict_get(key).await.and_then(|v| resolve_item(objects, v))
     }
 
     /// ✅ Real check: `/Root/MarkInfo` resolves to a dict carrying `/Marked true`.
     async fn has_marked_true(objects: &[PdfIndirectObject], catalog: &PdfObject) -> bool {
-        resolved_dict_entry(objects, catalog, "MarkInfo").and_then(|v| v.dict_get("Marked")).map(|v| matches!(v, PdfObject::Bool(true))).unwrap_or(false)
+        resolved_dict_entry(objects, catalog, "MarkInfo").await.and_then(|v| v.dict_get("Marked")).map(|v| matches!(v, PdfObject::Bool(true))).unwrap_or(false)
     }
 
     /// 🌳️ Real check: `/Root` carries a `/StructTreeRoot` key at all (any value -- presence is what
     /// PDF/UA requires; deep structure-tree content validation is out of this schema's reach).
     async fn has_struct_tree_root(catalog: &PdfObject) -> bool {
-        catalog.dict_get("StructTreeRoot").is_some()
+        catalog.dict_get("StructTreeRoot").await.is_some()
     }
 
     /// 🗣️ Real check: `/Root/Lang` is a non-empty text string.
     async fn has_nonempty_lang(catalog: &PdfObject) -> bool {
-        catalog.dict_get("Lang").map(|v| matches!(v, PdfObject::Str(s) if !s.is_empty())).unwrap_or(false)
+        catalog.dict_get("Lang").await.map(|v| matches!(v, PdfObject::Str(s) if !s.is_empty())).unwrap_or(false)
     }
 
     /// 🏷️ Real check: `/Root/ViewerPreferences` resolves to a dict carrying `/DisplayDocTitle true`.
     async fn has_display_doc_title(objects: &[PdfIndirectObject], catalog: &PdfObject) -> bool {
-        resolved_dict_entry(objects, catalog, "ViewerPreferences").and_then(|v| v.dict_get("DisplayDocTitle")).map(|v| matches!(v, PdfObject::Bool(true))).unwrap_or(false)
+        resolved_dict_entry(objects, catalog, "ViewerPreferences").await.and_then(|v| v.dict_get("DisplayDocTitle")).map(|v| matches!(v, PdfObject::Bool(true))).unwrap_or(false)
     }
 
     async fn descriptor_has_embedded_file(objects: &[PdfIndirectObject], desc_ref: ObjRef) -> bool {
-        resolve_ref(objects, desc_ref).and_then(|o| o.as_dict()).map(|d| d.iter().any(|e| e.key == "FontFile" || e.key == "FontFile2" || e.key == "FontFile3")).unwrap_or(false)
+        resolve_ref(objects, desc_ref).await.and_then(|o| o.as_dict()).map(|d| d.iter().any(|e| e.key == "FontFile" || e.key == "FontFile2" || e.key == "FontFile3")).unwrap_or(false)
     }
 
     async fn non_embedded_fonts(objects: &[PdfIndirectObject]) -> Vec<ObjRef> {
         let mut out = Vec::new();
         for o in objects {
-            let Some(d) = o.value.as_dict() else { continue };
+            let Some(d) = o.value.as_dict().await else { continue };
             if dict_name(d, "Type") != Some("Font") {
                 continue;
             }
@@ -214,7 +214,7 @@ pub mod derived_analysis {
                 .and_then(|e| e.value.as_array())
                 .map(|arr| {
                     arr.iter().any(|item| {
-                        resolve_item(objects, item).and_then(|desc| desc.as_dict()).and_then(|dd| dd.iter().find(|e| e.key == "FontDescriptor").and_then(|e| e.value.as_ref())).map(|r| descriptor_has_embedded_file(objects, r)).unwrap_or(false)
+                        semio_framework_plugin::resolve_ready(resolve_item(objects, item)).and_then(|desc| desc.as_dict()).and_then(|dd| dd.iter().find(|e| e.key == "FontDescriptor").and_then(|e| e.value.as_ref())).map(|r| descriptor_has_embedded_file(objects, r)).unwrap_or(false)
                     })
                 })
                 .unwrap_or(false);
@@ -240,7 +240,7 @@ pub mod derived_analysis {
         let objects = &snapshot.objects;
         let mut out = Vec::new();
         let catalog = find_catalog(objects);
-        match catalog {
+        match catalog.await {
             Some(catalog) => {
                 if !has_marked_true(objects, catalog) {
                     out.push(hard(CODE_MARKINFO, "/Root/MarkInfo is absent or lacks /Marked true -- ISO 14289-1 requires the document be marked as tagged".into()));
@@ -280,15 +280,15 @@ pub mod derived_analysis {
         const DIALECT: Dialect = DIALECT;
 
         async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
-            PdfAnyAnalyzer::sniff(source)
+            PdfAnyAnalyzer::sniff(source).await
         }
 
         async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
-            let inner = PdfAnyAnalyzer::analyze(sources);
+            let inner = PdfAnyAnalyzer::analyze(sources).await;
             let mut diagnostics = inner.diagnostics.clone();
             let mut confidence = inner.confidence;
             if let Some(snapshot) = &inner.parts.snapshot {
-                let checks = check_ua_conformance(snapshot);
+                let checks = check_ua_conformance(snapshot).await;
                 if checks.iter().any(|d| matches!(d.severity, Severity::Error | Severity::Fatal)) {
                     confidence = IoConfidence::Low;
                 }

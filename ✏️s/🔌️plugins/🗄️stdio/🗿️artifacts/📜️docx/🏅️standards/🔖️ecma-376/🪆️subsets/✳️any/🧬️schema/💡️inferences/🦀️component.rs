@@ -24,7 +24,7 @@ pub struct DocxInference {
 
 impl protocol::Inference<DocxSnapshot> for DocxInference {
     async fn infer(snapshot: &DocxSnapshot) -> Self {
-        Self { outline: DocxOutline::compute(snapshot) }
+        Self { outline: DocxOutline::compute(snapshot).await }
     }
 }
 

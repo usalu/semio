@@ -100,23 +100,23 @@ async fn parse_csv_records(text: &str) -> Vec<CsvRecord> {
                 in_quotes = true;
                 cur_quoted = true;
             }
-            ',' => fields.push(take_field(&mut cur, &mut cur_quoted)),
+            ',' => fields.push(take_field(&mut cur, &mut cur_quoted).await),
             '\r' => {
                 if chars.peek() == Some(&'\n') {
                     chars.next();
                 }
-                fields.push(take_field(&mut cur, &mut cur_quoted));
+                fields.push(take_field(&mut cur, &mut cur_quoted).await);
                 records.push(CsvRecord { fields: std::mem::take(&mut fields) });
             }
             '\n' => {
-                fields.push(take_field(&mut cur, &mut cur_quoted));
+                fields.push(take_field(&mut cur, &mut cur_quoted).await);
                 records.push(CsvRecord { fields: std::mem::take(&mut fields) });
             }
             _ => cur.push(ch),
         }
     }
     if !cur.is_empty() || cur_quoted || !fields.is_empty() {
-        fields.push(take_field(&mut cur, &mut cur_quoted));
+        fields.push(take_field(&mut cur, &mut cur_quoted).await);
         records.push(CsvRecord { fields });
     }
     records
@@ -155,12 +155,12 @@ pub async fn decode_csv_with(text: &str, has_header: bool) -> CsvSnapshot {
 
 /// 📥 Decodes assuming a header row is present (the pre-existing default behavior).
 pub async fn decode_csv(text: &str) -> Result<CsvSnapshot, String> {
-    Ok(decode_csv_with(text, true))
+    Ok(decode_csv_with(text, true).await)
 }
 
 /// 📤 Encodes with LF line endings.
 pub async fn encode_csv(snap: &CsvSnapshot) -> String {
-    encode_csv_with(snap, "\n")
+    encode_csv_with(snap, "\n").await
 }
 
 /// 📤 Encodes with a caller-chosen line ending (`"\n"` or `"\r\n"`).
@@ -168,7 +168,7 @@ pub async fn encode_csv_with(snap: &CsvSnapshot, line_ending: &str) -> String {
     if snap.records.is_empty() {
         return String::new();
     }
-    write_csv_records(&snap.records, line_ending)
+    write_csv_records(&snap.records, line_ending).await
 }
 //#endregion 🔖️SnapshotCodec
 //#endregion 🔖️Codec
@@ -183,7 +183,7 @@ pub async fn empty_csv_snapshot() -> CsvSnapshot {
 /// of truth `🗣️example.dsl.semio` is genuinely `print_dsl` of (P2-P1 `fixture_honesty_law`),
 /// same pattern as `note::semio_example_snapshot`.
 pub async fn demo_csv_snapshot() -> CsvSnapshot {
-    <CsvSnapshot as store::ArtifactDsl>::parse_dsl(crate::artifacts::csv::examples::demo::PRIMARY_TEXT).unwrap_or_else(|_| empty_csv_snapshot())
+    <CsvSnapshot as store::ArtifactDsl>::parse_dsl(crate::artifacts::csv::examples::demo::PRIMARY_TEXT).await.unwrap_or_else(|_| empty_csv_snapshot())
 }
 //#endregion 🔖️DocumentHelpers
 
@@ -199,11 +199,11 @@ impl store::ArtifactDsl for CsvSnapshot {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        Ok(decode_csv_with(body, true))
+        Ok(decode_csv_with(body, true).await)
     }
     async fn print_dsl(&self) -> String {
         let body = encode_csv(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -211,8 +211,8 @@ impl store::ArtifactDsl for CsvSnapshot {
 impl store::ArtifactPack for CsvSnapshot {
     async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
-        let raw = encode_csv(self).into_bytes();
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let raw = encode_csv(self).await.into_bytes();
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
     async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
@@ -222,7 +222,7 @@ impl store::ArtifactPack for CsvSnapshot {
         }
         let _ = options;
         let text = String::from_utf8(inner).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        Ok(decode_csv_with(&text, true))
+        Ok(decode_csv_with(&text, true).await)
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs

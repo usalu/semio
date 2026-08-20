@@ -128,11 +128,11 @@ pub struct JsonDiff {
 impl MutationDiff<JsonSnapshot> for JsonDiff {
     async fn apply(&self, base: &JsonSnapshot) -> MutationApplyResult<JsonSnapshot> {
         if let Some(diff) = &self.value {
-            validate_value_diff(diff, &base.value)?;
+            validate_value_diff(diff, &base.value).await?;
         }
         let mut next = base.clone();
         if let Some(diff) = &self.value {
-            next.value = apply_value_diff(diff, &base.value);
+            next.value = apply_value_diff(diff, &base.value).await;
         }
         Ok(next)
     }
@@ -148,10 +148,10 @@ impl MutationDiff<JsonSnapshot> for JsonDiff {
             (None, Some(d2)) => Some(d2),
             (Some(d1), Some(d2)) => {
                 let combined = absorb_value_diff(d1, d2);
-                if is_value_diff_effectively_empty(&combined) {
+                if is_value_diff_effectively_empty(&combined).await {
                     None
                 } else {
-                    Some(combined)
+                    Some(combined.await)
                 }
             }
         };
@@ -164,11 +164,11 @@ impl DiffAlgebra<JsonSnapshot> for JsonDiff {
     /// `base` when applied to `mid`.
     async fn inverse(&self, base: &JsonSnapshot) -> Self {
         let mid = apply_json_diff_unchecked(self, base);
-        Self::between(&mid, base)
+        Self::between(&mid, base).await
     }
 
     async fn between(base: &JsonSnapshot, other: &JsonSnapshot) -> Self {
-        JsonDiff { value: value_diff_between(&base.value, &other.value) }
+        JsonDiff { value: value_diff_between(&base.value, &other.value).await }
     }
 
     async fn is_empty(&self) -> bool {
@@ -179,7 +179,7 @@ impl DiffAlgebra<JsonSnapshot> for JsonDiff {
 async fn apply_json_diff_unchecked(diff: &JsonDiff, base: &JsonSnapshot) -> JsonSnapshot {
     let mut next = base.clone();
     if let Some(value) = &diff.value {
-        next.value = apply_value_diff(value, &base.value);
+        next.value = apply_value_diff(value, &base.value).await;
     }
     next
 }
@@ -187,7 +187,7 @@ async fn apply_json_diff_unchecked(diff: &JsonDiff, base: &JsonSnapshot) -> Json
 /// 🧩 Builds the sparse `between(base, next)` diff for a `SetSnapshot` mutation — NOT a full
 /// `snapshot: Option<JsonSnapshot>` replace slot.
 pub async fn diff_set_snapshot(base: &JsonSnapshot, next: &JsonSnapshot) -> JsonDiff {
-    JsonDiff::between(base, next)
+    JsonDiff::between(base, next).await
 }
 //#endregion 🔖️Diff
 
@@ -204,14 +204,14 @@ pub async fn apply_value_diff(diff: &JsonValueDiff, base: &JsonValue) -> JsonVal
                 JsonValue::Array { items } => items.as_slice(),
                 _ => &[],
             };
-            JsonValue::Array { items: apply_array_diff(diff, items) }
+            JsonValue::Array { items: Box::pin(apply_array_diff(diff, items)).await }
         }
         JsonValueDiff::Object { diff } => {
             let members: &[JsonMember] = match base {
                 JsonValue::Object { members } => members.as_slice(),
                 _ => &[],
             };
-            JsonValue::Object { members: apply_object_diff(diff, members) }
+            JsonValue::Object { members: Box::pin(apply_object_diff(diff, members)).await }
         }
     }
 }
@@ -223,14 +223,14 @@ async fn validate_value_diff(diff: &JsonValueDiff, base: &JsonValue) -> Mutation
         JsonValueDiff::Number { .. } if matches!(base, JsonValue::Number { .. }) => Ok(()),
         JsonValueDiff::String { .. } if matches!(base, JsonValue::String { .. }) => Ok(()),
         JsonValueDiff::Array { diff } => match base {
-            JsonValue::Array { items } => validate_array_diff(diff, items),
-            _ => Err(MutationApplyError::new("mutation.apply.kind-mismatch", "array diff targets a non-array value")),
+            JsonValue::Array { items } => validate_array_diff(diff, items).await,
+            _ => Err(MutationApplyError::new("mutation.apply.kind-mismatch", "array diff targets a non-array value").await),
         },
         JsonValueDiff::Object { diff } => match base {
-            JsonValue::Object { members } => validate_object_diff(diff, members),
-            _ => Err(MutationApplyError::new("mutation.apply.kind-mismatch", "object diff targets a non-object value")),
+            JsonValue::Object { members } => validate_object_diff(diff, members).await,
+            _ => Err(MutationApplyError::new("mutation.apply.kind-mismatch", "object diff targets a non-object value").await),
         },
-        _ => Err(MutationApplyError::new("mutation.apply.kind-mismatch", "scalar diff targets a different JSON value kind")),
+        _ => Err(MutationApplyError::new("mutation.apply.kind-mismatch", "scalar diff targets a different JSON value kind").await),
     }
 }
 
@@ -238,33 +238,33 @@ async fn validate_array_diff(diff: &JsonArrayDiff, base: &[JsonValue]) -> Mutati
     let mut removed = HashSet::new();
     for &index in &diff.removed {
         if index >= base.len() {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "array removal target does not exist"));
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "array removal target does not exist").await);
         }
         if !removed.insert(index) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "array removal target is repeated"));
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "array removal target is repeated").await);
         }
     }
     let mut modified = HashSet::new();
     for entry in &diff.modified {
         if entry.index >= base.len() {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "array modification target does not exist"));
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "array modification target does not exist").await);
         }
         if removed.contains(&entry.index) {
-            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "array modification targets a removed item"));
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "array modification targets a removed item").await);
         }
         if !modified.insert(entry.index) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "array modification target is repeated"));
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "array modification target is repeated").await);
         }
-        validate_value_diff(&entry.diff, &base[entry.index]).map_err(|error| error.under(vec!["modified".to_string(), entry.index.to_string()]))?;
+        validate_value_diff(&entry.diff, &base[entry.index]).await.map_err(|error| error.under(vec!["modified".to_string(), entry.index.to_string()]))?;
     }
     let final_len = base.len() - removed.len() + diff.added.len();
     let mut added = HashSet::new();
     for entry in &diff.added {
         if entry.index > final_len {
-            return Err(MutationApplyError::new("mutation.apply.invalid-index", "array addition is outside the final collection"));
+            return Err(MutationApplyError::new("mutation.apply.invalid-index", "array addition is outside the final collection").await);
         }
         if !added.insert(entry.index) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "array addition occupies a repeated final position"));
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "array addition occupies a repeated final position").await);
         }
     }
     Ok(())
@@ -274,36 +274,36 @@ async fn validate_object_diff(diff: &JsonObjectDiff, base: &[JsonMember]) -> Mut
     let keys: Vec<&str> = base.iter().map(|member| member.key.as_str()).collect();
     for (position, key) in diff.removed.iter().enumerate() {
         if !keys.contains(&key.as_str()) {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "object removal target does not exist"));
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "object removal target does not exist").await);
         }
         if diff.removed[..position].contains(key) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "object removal target is repeated"));
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "object removal target is repeated").await);
         }
     }
     for (position, modified) in diff.modified.iter().enumerate() {
         if !keys.contains(&modified.key.as_str()) {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "object modification target does not exist"));
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "object modification target does not exist").await);
         }
         if diff.removed.contains(&modified.key) {
-            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "object modification targets a removed member"));
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "object modification targets a removed member").await);
         }
         if diff.modified[..position].iter().any(|candidate| candidate.key == modified.key) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "object modification target is repeated"));
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "object modification target is repeated").await);
         }
         let Some(member) = base.iter().find(|member| member.key == modified.key) else {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "object modification target does not exist"));
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "object modification target does not exist").await);
         };
-        validate_value_diff(&modified.diff, &member.value).map_err(|error| error.under(vec!["modified".to_string(), modified.key.clone()]))?;
+        validate_value_diff(&modified.diff, &member.value).await.map_err(|error| error.under(vec!["modified".to_string(), modified.key.clone()]))?;
     }
     let final_len = base.len() - diff.removed.len() + diff.added.len();
     let mut added_keys = HashSet::new();
     let mut added_indices = HashSet::new();
     for entry in &diff.added {
         if entry.index > final_len {
-            return Err(MutationApplyError::new("mutation.apply.invalid-index", "object addition is outside the final collection"));
+            return Err(MutationApplyError::new("mutation.apply.invalid-index", "object addition is outside the final collection").await);
         }
         if !added_indices.insert(entry.index) || keys.contains(&entry.key.as_str()) || !added_keys.insert(entry.key.clone()) || diff.removed.contains(&entry.key) || diff.modified.iter().any(|modified| modified.key == entry.key) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "object addition target already exists or conflicts"));
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "object addition target already exists or conflicts").await);
         }
     }
     Ok(())
@@ -317,7 +317,7 @@ pub async fn apply_array_diff(diff: &JsonArrayDiff, base: &[JsonValue]) -> Vec<J
     for m in &diff.modified {
         if let Some(old) = base.get(m.index) {
             if let Some(slot) = items.get_mut(m.index) {
-                *slot = apply_value_diff(&m.diff, old);
+                *slot = Box::pin(apply_value_diff(&m.diff, old)).await;
             }
         }
     }
@@ -344,7 +344,7 @@ pub async fn apply_object_diff(diff: &JsonObjectDiff, base: &[JsonMember]) -> Ve
     for m in &diff.modified {
         if let Some(pos) = members.iter().position(|mem| mem.key == m.key) {
             let old = members[pos].value.clone();
-            members[pos].value = apply_value_diff(&m.diff, &old);
+            members[pos].value = Box::pin(apply_value_diff(&m.diff, &old)).await;
         }
     }
     for key in &diff.removed {
@@ -375,7 +375,7 @@ pub async fn value_diff_between(a: &JsonValue, b: &JsonValue) -> Option<JsonValu
         (JsonValue::String { value: _ }, JsonValue::String { value: next }) => Some(JsonValueDiff::String { value: next.clone() }),
         (JsonValue::Array { items: av }, JsonValue::Array { items: bv }) => {
             let diff = array_diff_between(av, bv);
-            if is_array_diff_empty(&diff) {
+            if is_array_diff_empty(&diff).await {
                 None
             } else {
                 Some(JsonValueDiff::Array { diff })
@@ -383,7 +383,7 @@ pub async fn value_diff_between(a: &JsonValue, b: &JsonValue) -> Option<JsonValu
         }
         (JsonValue::Object { members: am }, JsonValue::Object { members: bm }) => {
             let diff = object_diff_between(am, bm);
-            if is_object_diff_empty(&diff) {
+            if is_object_diff_empty(&diff).await {
                 None
             } else {
                 Some(JsonValueDiff::Object { diff })
@@ -399,7 +399,7 @@ async fn array_diff_between(a: &[JsonValue], b: &[JsonValue]) -> JsonArrayDiff {
     let min = a.len().min(b.len());
     let mut modified = Vec::new();
     for i in 0..min {
-        if let Some(diff) = value_diff_between(&a[i], &b[i]) {
+        if let Some(diff) = value_diff_between(&a[i], &b[i]).await {
             modified.push(JsonArrayModified { index: i, diff });
         }
     }
@@ -417,7 +417,7 @@ async fn object_diff_between(a: &[JsonMember], b: &[JsonMember]) -> JsonObjectDi
     for am in a {
         match b.iter().find(|bm| bm.key == am.key) {
             Some(bm) => {
-                if let Some(diff) = value_diff_between(&am.value, &bm.value) {
+                if let Some(diff) = value_diff_between(&am.value, &bm.value).await {
                     modified.push(JsonObjectModified { key: am.key.clone(), diff });
                 }
             }
@@ -449,8 +449,8 @@ async fn is_object_diff_empty(d: &JsonObjectDiff) -> bool {
 /// collapse away rather than survive as a no-op wrapper.
 async fn is_value_diff_effectively_empty(d: &JsonValueDiff) -> bool {
     match d {
-        JsonValueDiff::Array { diff } => is_array_diff_empty(diff),
-        JsonValueDiff::Object { diff } => is_object_diff_empty(diff),
+        JsonValueDiff::Array { diff } => is_array_diff_empty(diff).await,
+        JsonValueDiff::Object { diff } => is_object_diff_empty(diff).await,
         _ => false,
     }
 }
@@ -468,14 +468,14 @@ async fn absorb_value_diff(d1: JsonValueDiff, d2: JsonValueDiff) -> JsonValueDif
     }
     if let JsonValueDiff::Replace { value } = d1 {
         let merged = apply_value_diff(&d2, &value);
-        return JsonValueDiff::Replace { value: merged };
+        return JsonValueDiff::Replace { value: merged.await };
     }
     match (d1, d2) {
         (JsonValueDiff::Bool { .. }, JsonValueDiff::Bool { value }) => JsonValueDiff::Bool { value },
         (JsonValueDiff::Number { .. }, JsonValueDiff::Number { lexeme }) => JsonValueDiff::Number { lexeme },
         (JsonValueDiff::String { .. }, JsonValueDiff::String { value }) => JsonValueDiff::String { value },
-        (JsonValueDiff::Array { diff: a1 }, JsonValueDiff::Array { diff: a2 }) => JsonValueDiff::Array { diff: absorb_array_diff(a1, a2) },
-        (JsonValueDiff::Object { diff: o1 }, JsonValueDiff::Object { diff: o2 }) => JsonValueDiff::Object { diff: absorb_object_diff(o1, o2) },
+        (JsonValueDiff::Array { diff: a1 }, JsonValueDiff::Array { diff: a2 }) => JsonValueDiff::Array { diff: Box::pin(absorb_array_diff(a1, a2)).await },
+        (JsonValueDiff::Object { diff: o1 }, JsonValueDiff::Object { diff: o2 }) => JsonValueDiff::Object { diff: absorb_object_diff(o1, o2).await },
         // Defensive: a kind mismatch that isn't a Replace shouldn't arise from two diffs that were
         // actually produced by real sequential application against the same intervening state —
         // fall back to d2 (last-write-wins) rather than panicking.
@@ -563,17 +563,17 @@ async fn absorb_array_diff(d1: JsonArrayDiff, d2: JsonArrayDiff) -> JsonArrayDif
             match slot {
                 AfterSlot::Base { diff, .. } => {
                     let combined = match diff.take() {
-                        Some(existing) => absorb_value_diff(existing, m.diff.clone()),
+                        Some(existing) => Box::pin(absorb_value_diff(existing, m.diff.clone())).await,
                         None => m.diff.clone(),
                     };
-                    *diff = if is_value_diff_effectively_empty(&combined) { None } else { Some(combined) };
+                    *diff = if is_value_diff_effectively_empty(&combined).await { None } else { Some(combined) };
                 }
                 AfterSlot::D1Added { patch, .. } => {
                     let combined = match patch.take() {
-                        Some(existing) => absorb_value_diff(existing, m.diff.clone()),
+                        Some(existing) => absorb_value_diff(existing, m.diff.clone()).await,
                         None => m.diff.clone(),
                     };
-                    *patch = if is_value_diff_effectively_empty(&combined) { None } else { Some(combined) };
+                    *patch = if is_value_diff_effectively_empty(&combined).await { None } else { Some(combined) };
                 }
                 AfterSlot::D2Added(_) => {}
             }
@@ -596,7 +596,7 @@ async fn absorb_array_diff(d1: JsonArrayDiff, d2: JsonArrayDiff) -> JsonArrayDif
             AfterSlot::D1Added { tag, patch } => {
                 let mut item = d1.added[tag].item.clone();
                 if let Some(patch) = patch {
-                    item = apply_value_diff(&patch, &item);
+                    item = apply_value_diff(&patch, &item).await;
                 }
                 added.push(JsonArrayAdded { index: pos, item });
             }
@@ -635,13 +635,13 @@ async fn absorb_object_diff(d1: JsonObjectDiff, d2: JsonObjectDiff) -> JsonObjec
     }
     for m in d2.modified {
         if let Some(a) = added.iter_mut().find(|a| a.key == m.key) {
-            a.item = apply_value_diff(&m.diff, &a.item);
+            a.item = apply_value_diff(&m.diff, &a.item).await;
         } else if let Some(pos) = modified.iter().position(|e| e.key == m.key) {
             let combined = absorb_value_diff(modified[pos].diff.clone(), m.diff.clone());
-            if is_value_diff_effectively_empty(&combined) {
+            if is_value_diff_effectively_empty(&combined).await {
                 modified.remove(pos);
             } else {
-                modified[pos].diff = combined;
+                modified[pos].diff = combined.await;
             }
         } else {
             modified.push(JsonObjectModified { key: m.key, diff: m.diff });
@@ -672,10 +672,10 @@ pub(crate) async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
 pub(crate) async fn enc_str(s: &str) -> String {
-    hex_encode(s.as_bytes())
+    hex_encode(s.as_bytes()).await
 }
 pub(crate) async fn dec_str(s: &str) -> Result<String, String> {
-    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
+    String::from_utf8(hex_decode(s).await?).map_err(|e| e.to_string())
 }
 pub(crate) async fn parse_usize(s: &str) -> Result<usize, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
@@ -715,14 +715,14 @@ pub(crate) async fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
     out.extend_from_slice(bytes);
 }
 pub(crate) async fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
+    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec())
 }
 pub(crate) async fn write_str_lp(out: &mut Vec<u8>, s: &str) {
     write_bytes_lp(out, s.as_bytes());
 }
 pub(crate) async fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
-    String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
+    String::from_utf8(read_bytes_lp(reader).await?).map_err(|e| e.to_string())
 }
 //#endregion 🔖️BinaryPrimitives
 //#endregion 🔖️Primitives
@@ -746,11 +746,11 @@ pub(crate) async fn dec_json_value(s: &str) -> Result<JsonValue, String> {
         return Ok(JsonValue::Null);
     }
     let (tag, rest) = s.split_at(1);
-    let inner = strip_brackets(rest)?;
+    let inner = strip_brackets(rest).await?;
     match tag {
         "B" => Ok(JsonValue::Bool { value: inner == "1" }),
-        "N" => Ok(JsonValue::Number { lexeme: dec_str(inner)? }),
-        "S" => Ok(JsonValue::String { value: dec_str(inner)? }),
+        "N" => Ok(JsonValue::Number { lexeme: dec_str(inner).await? }),
+        "S" => Ok(JsonValue::String { value: dec_str(inner).await? }),
         "A" => Ok(JsonValue::Array { items: split_top_level(inner, ',').into_iter().filter(|s| !s.is_empty()).map(dec_json_value).collect::<Result<Vec<_>, String>>()? }),
         "O" => {
             let members = split_top_level(inner, ',')
@@ -808,26 +808,26 @@ pub(crate) async fn enc_json_value_bin(value: &JsonValue, out: &mut Vec<u8>) {
     }
 }
 pub(crate) async fn dec_json_value_bin(reader: &mut store::ByteReader<'_>) -> Result<JsonValue, String> {
-    let tag = reader.read_u8().map_err(|e| e.to_string())?;
+    let tag = reader.read_u8().await.map_err(|e| e.to_string())?;
     match tag {
         0 => Ok(JsonValue::Null),
-        1 => Ok(JsonValue::Bool { value: reader.read_u8().map_err(|e| e.to_string())? != 0 }),
-        2 => Ok(JsonValue::Number { lexeme: read_str_lp(reader)? }),
-        3 => Ok(JsonValue::String { value: read_str_lp(reader)? }),
+        1 => Ok(JsonValue::Bool { value: reader.read_u8().await.map_err(|e| e.to_string())? != 0 }),
+        2 => Ok(JsonValue::Number { lexeme: read_str_lp(reader).await? }),
+        3 => Ok(JsonValue::String { value: read_str_lp(reader).await? }),
         4 => {
-            let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+            let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
             let mut items = Vec::with_capacity(count as usize);
             for _ in 0..count {
-                items.push(dec_json_value_bin(reader)?);
+                items.push(Box::pin(dec_json_value_bin(reader)).await?);
             }
             Ok(JsonValue::Array { items })
         }
         5 => {
-            let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+            let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
             let mut members = Vec::with_capacity(count as usize);
             for _ in 0..count {
-                let key = read_str_lp(reader)?;
-                let value = dec_json_value_bin(reader)?;
+                let key = read_str_lp(reader).await?;
+                let value = Box::pin(dec_json_value_bin(reader)).await?;
                 members.push(JsonMember { key, value });
             }
             Ok(JsonValue::Object { members })
@@ -854,14 +854,14 @@ pub(crate) async fn enc_value_diff(d: &JsonValueDiff) -> String {
 }
 pub(crate) async fn dec_value_diff(s: &str) -> Result<JsonValueDiff, String> {
     let (tag, rest) = s.split_at(1);
-    let inner = strip_brackets(rest)?;
+    let inner = strip_brackets(rest).await?;
     match tag {
-        "R" => Ok(JsonValueDiff::Replace { value: dec_json_value(inner)? }),
+        "R" => Ok(JsonValueDiff::Replace { value: dec_json_value(inner).await? }),
         "B" => Ok(JsonValueDiff::Bool { value: inner == "1" }),
-        "N" => Ok(JsonValueDiff::Number { lexeme: dec_str(inner)? }),
-        "S" => Ok(JsonValueDiff::String { value: dec_str(inner)? }),
-        "A" => Ok(JsonValueDiff::Array { diff: dec_array_diff(inner)? }),
-        "O" => Ok(JsonValueDiff::Object { diff: dec_object_diff(inner)? }),
+        "N" => Ok(JsonValueDiff::Number { lexeme: dec_str(inner).await? }),
+        "S" => Ok(JsonValueDiff::String { value: dec_str(inner).await? }),
+        "A" => Ok(JsonValueDiff::Array { diff: dec_array_diff(inner).await? }),
+        "O" => Ok(JsonValueDiff::Object { diff: dec_object_diff(inner).await? }),
         other => Err(format!("json value diff: unknown tag {other:?}")),
     }
 }
@@ -873,10 +873,10 @@ async fn enc_array_diff(d: &JsonArrayDiff) -> String {
     format!("[{removed}];[{modified}];[{added}]")
 }
 async fn dec_array_diff(body: &str) -> Result<JsonArrayDiff, String> {
-    let three = split_top_level(body, ';');
+    let three = split_top_level(body, ';').await;
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("array diff: expected 3 sections, got {}", three.len())) };
-    let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
-    let modified = split_top_level(strip_brackets(modified_s)?, ',')
+    let removed = split_top_level(strip_brackets(removed_s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
+    let modified = split_top_level(strip_brackets(modified_s).await?, ',')
         .into_iter()
         .filter(|s| !s.is_empty())
         .map(|entry| {
@@ -884,7 +884,7 @@ async fn dec_array_diff(body: &str) -> Result<JsonArrayDiff, String> {
             Ok(JsonArrayModified { index: parse_usize(idx)?, diff: dec_value_diff(rest)? })
         })
         .collect::<Result<Vec<_>, String>>()?;
-    let added = split_top_level(strip_brackets(added_s)?, ',')
+    let added = split_top_level(strip_brackets(added_s).await?, ',')
         .into_iter()
         .filter(|s| !s.is_empty())
         .map(|entry| {
@@ -902,10 +902,10 @@ async fn enc_object_diff(d: &JsonObjectDiff) -> String {
     format!("[{removed}];[{modified}];[{added}]")
 }
 async fn dec_object_diff(body: &str) -> Result<JsonObjectDiff, String> {
-    let three = split_top_level(body, ';');
+    let three = split_top_level(body, ';').await;
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("object diff: expected 3 sections, got {}", three.len())) };
-    let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_str).collect::<Result<Vec<_>, String>>()?;
-    let modified = split_top_level(strip_brackets(modified_s)?, ',')
+    let removed = split_top_level(strip_brackets(removed_s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_str).collect::<Result<Vec<_>, String>>()?;
+    let modified = split_top_level(strip_brackets(modified_s).await?, ',')
         .into_iter()
         .filter(|s| !s.is_empty())
         .map(|entry| {
@@ -913,7 +913,7 @@ async fn dec_object_diff(body: &str) -> Result<JsonObjectDiff, String> {
             Ok(JsonObjectModified { key: dec_str(key)?, diff: dec_value_diff(rest)? })
         })
         .collect::<Result<Vec<_>, String>>()?;
-    let added = split_top_level(strip_brackets(added_s)?, ',')
+    let added = split_top_level(strip_brackets(added_s).await?, ',')
         .into_iter()
         .filter(|s| !s.is_empty())
         .map(|entry| {
@@ -960,14 +960,14 @@ pub(crate) async fn enc_value_diff_bin(diff: &JsonValueDiff, out: &mut Vec<u8>) 
     }
 }
 pub(crate) async fn dec_value_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<JsonValueDiff, String> {
-    let tag = reader.read_u8().map_err(|e| e.to_string())?;
+    let tag = reader.read_u8().await.map_err(|e| e.to_string())?;
     match tag {
-        6 => Ok(JsonValueDiff::Replace { value: dec_json_value_bin(reader)? }),
-        1 => Ok(JsonValueDiff::Bool { value: reader.read_u8().map_err(|e| e.to_string())? != 0 }),
-        2 => Ok(JsonValueDiff::Number { lexeme: read_str_lp(reader)? }),
-        3 => Ok(JsonValueDiff::String { value: read_str_lp(reader)? }),
-        4 => Ok(JsonValueDiff::Array { diff: dec_array_diff_bin(reader)? }),
-        5 => Ok(JsonValueDiff::Object { diff: dec_object_diff_bin(reader)? }),
+        6 => Ok(JsonValueDiff::Replace { value: dec_json_value_bin(reader).await? }),
+        1 => Ok(JsonValueDiff::Bool { value: reader.read_u8().await.map_err(|e| e.to_string())? != 0 }),
+        2 => Ok(JsonValueDiff::Number { lexeme: read_str_lp(reader).await? }),
+        3 => Ok(JsonValueDiff::String { value: read_str_lp(reader).await? }),
+        4 => Ok(JsonValueDiff::Array { diff: Box::pin(dec_array_diff_bin(reader)).await? }),
+        5 => Ok(JsonValueDiff::Object { diff: Box::pin(dec_object_diff_bin(reader)).await? }),
         other => Err(format!("json value diff binary: unknown tag {other}")),
     }
 }
@@ -989,23 +989,23 @@ async fn enc_array_diff_bin(diff: &JsonArrayDiff, out: &mut Vec<u8>) {
     }
 }
 async fn dec_array_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<JsonArrayDiff, String> {
-    let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let removed_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(removed_count as usize);
     for _ in 0..removed_count {
-        removed.push(reader.read_varint_u64().map_err(|e| e.to_string())? as usize);
+        removed.push(reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize);
     }
-    let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let modified_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut modified = Vec::with_capacity(modified_count as usize);
     for _ in 0..modified_count {
-        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-        let diff = dec_value_diff_bin(reader)?;
+        let index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+        let diff = Box::pin(dec_value_diff_bin(reader)).await?;
         modified.push(JsonArrayModified { index, diff });
     }
-    let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let added_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut added = Vec::with_capacity(added_count as usize);
     for _ in 0..added_count {
-        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-        let item = dec_json_value_bin(reader)?;
+        let index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+        let item = dec_json_value_bin(reader).await?;
         added.push(JsonArrayAdded { index, item });
     }
     Ok(JsonArrayDiff { removed, modified, added })
@@ -1029,24 +1029,24 @@ async fn enc_object_diff_bin(diff: &JsonObjectDiff, out: &mut Vec<u8>) {
     }
 }
 async fn dec_object_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<JsonObjectDiff, String> {
-    let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let removed_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(removed_count as usize);
     for _ in 0..removed_count {
-        removed.push(read_str_lp(reader)?);
+        removed.push(read_str_lp(reader).await?);
     }
-    let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let modified_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut modified = Vec::with_capacity(modified_count as usize);
     for _ in 0..modified_count {
-        let key = read_str_lp(reader)?;
-        let diff = dec_value_diff_bin(reader)?;
+        let key = read_str_lp(reader).await?;
+        let diff = Box::pin(dec_value_diff_bin(reader)).await?;
         modified.push(JsonObjectModified { key, diff });
     }
-    let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let added_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut added = Vec::with_capacity(added_count as usize);
     for _ in 0..added_count {
-        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-        let key = read_str_lp(reader)?;
-        let item = dec_json_value_bin(reader)?;
+        let index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+        let key = read_str_lp(reader).await?;
+        let item = dec_json_value_bin(reader).await?;
         added.push(JsonObjectAdded { index, key, item });
     }
     Ok(JsonObjectDiff { removed, modified, added })
@@ -1071,7 +1071,7 @@ async fn parse_json_diff(line: &str) -> Result<JsonDiff, String> {
     }
     for token in line.split(' ') {
         if let Some(rest) = token.strip_prefix("value=") {
-            d.value = Some(dec_value_diff(rest)?);
+            d.value = Some(dec_value_diff(rest).await?);
         } else {
             return Err(format!("json diff: unknown token {token:?}"));
         }
@@ -1081,10 +1081,10 @@ async fn parse_json_diff(line: &str) -> Result<JsonDiff, String> {
 
 impl protocol::DiffCodec for JsonDiff {
     async fn print_diff(&self) -> String {
-        print_json_diff(self)
+        print_json_diff(self).await
     }
     async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
-        parse_json_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_json_diff(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// 🧪️ P2-P1: REAL binary frame (`format u8 | has_value u8 | value-diff payload`), matching
     /// `../💾️binary/📡️component.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape —
@@ -1099,10 +1099,10 @@ impl protocol::DiffCodec for JsonDiff {
         Ok(out)
     }
     async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let mut reader = store::ByteReader::new(bytes);
-        let _format = reader.read_u8().map_err(|e| protocol::ProtocolError::Malformed { what: "diff format", offset: 0, detail: e.to_string() })?;
-        let has_value = reader.read_u8().map_err(|e| protocol::ProtocolError::Malformed { what: "diff has_value", offset: 1, detail: e.to_string() })?;
-        let value = if has_value != 0 { Some(dec_value_diff_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff value", offset: reader.position() as u64, detail: e })?) } else { None };
+        let mut reader = store::ByteReader::new(bytes).await;
+        let _format = reader.read_u8().await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff format", offset: 0, detail: e.to_string() })?;
+        let has_value = reader.read_u8().await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff has_value", offset: 1, detail: e.to_string() })?;
+        let value = if has_value != 0 { Some(dec_value_diff_bin(&mut reader).await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff value", offset: semio_framework_plugin::resolve_ready(reader.position()) as u64, detail: e })?) } else { None };
         Ok(JsonDiff { value })
     }
 }

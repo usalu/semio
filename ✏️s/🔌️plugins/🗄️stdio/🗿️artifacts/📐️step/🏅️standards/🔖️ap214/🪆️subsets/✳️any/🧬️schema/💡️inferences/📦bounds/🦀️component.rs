@@ -70,7 +70,7 @@ pub async fn compute_step_bounds(snapshot: &StepSnapshot) -> StepBounds {
         if !entity.name.eq_ignore_ascii_case("CARTESIAN_POINT") {
             continue;
         }
-        let Some(coords) = coordinate_aggregate(&entity.args) else { continue };
+        let Some(coords) = coordinate_aggregate(&entity.args).await else { continue };
         let p = [coords.first().copied().unwrap_or(0.0), coords.get(1).copied().unwrap_or(0.0), coords.get(2).copied().unwrap_or(0.0)];
         point_count += 1;
         if !seen {

@@ -34,7 +34,7 @@ impl ArtifactSerializer for SemioValueToXml {
     async fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         let nodes: HashMap<&ValueId, &SemioValue> = from.nodes.iter().map(|n| (&n.id, &n.value)).collect();
         let mut visiting: HashSet<ValueId> = HashSet::new();
-        let doc = xml_document_from_semio(&from.root, &nodes, &mut visiting)?;
+        let doc = xml_document_from_semio(&from.root, &nodes, &mut visiting).await?;
         Ok(XmlSnapshot { schema: STDIO_XML_DOCUMENT_SCHEMA.into(), doc })
     }
 }
@@ -51,12 +51,12 @@ async fn resolve(v: &SemioValue, nodes: &HashMap<&ValueId, &SemioValue>, visitin
     match v {
         SemioValue::Ref { id } => {
             if !visiting.insert(id.clone()) {
-                return Err(err(format!("value->xml: reference cycle detected at id {:?} (xml has no graph)", id.value)));
+                return Err(err(format!("value->xml: reference cycle detected at id {:?} (xml has no graph)", id.value)).await);
             }
             let target = *nodes.get(id).ok_or_else(|| err(format!("value->xml: dangling Ref{{id: {:?}}} — not found in `nodes`", id.value)))?;
             let result = resolve(target, nodes, visiting);
             visiting.remove(id);
-            result
+            result.await
         }
         other => Ok(other.clone()),
     }
@@ -65,7 +65,7 @@ async fn resolve(v: &SemioValue, nodes: &HashMap<&ValueId, &SemioValue>, visitin
 async fn expect_entries(v: &SemioValue) -> Result<Vec<SemioValueEntry>, store::PackError> {
     match v {
         SemioValue::Map { entries } => Ok(entries.clone()),
-        other => Err(err(format!("value->xml: expected a Map, got {other:?}"))),
+        other => Err(err(format!("value->xml: expected a Map, got {other:?}")).await),
     }
 }
 
@@ -76,65 +76,65 @@ async fn find(entries: &[SemioValueEntry], key: &str) -> Option<SemioValue> {
 async fn expect_str(v: &SemioValue) -> Result<String, store::PackError> {
     match v {
         SemioValue::Str { value } => Ok(value.clone()),
-        other => Err(err(format!("value->xml: expected a Str, got {other:?}"))),
+        other => Err(err(format!("value->xml: expected a Str, got {other:?}")).await),
     }
 }
 
 async fn expect_kind(entries: &[SemioValueEntry], nodes: &HashMap<&ValueId, &SemioValue>, visiting: &mut HashSet<ValueId>) -> Result<String, store::PackError> {
-    let raw = find(entries, "kind").ok_or_else(|| err("value->xml: missing required \"kind\" entry"))?;
-    expect_str(&resolve(&raw, nodes, visiting)?)
+    let raw = find(entries, "kind").await.ok_or_else(|| err("value->xml: missing required \"kind\" entry"))?;
+    expect_str(&resolve(&raw, nodes, visiting).await?).await
 }
 //#endregion 🔖️Resolve
 
 //#region 🔖️Convert
 async fn xml_node_from_semio(v: &SemioValue, nodes: &HashMap<&ValueId, &SemioValue>, visiting: &mut HashSet<ValueId>) -> Result<XmlNode, store::PackError> {
-    let resolved = resolve(v, nodes, visiting)?;
-    let entries = expect_entries(&resolved)?;
-    let kind = expect_kind(&entries, nodes, visiting)?;
+    let resolved = resolve(v, nodes, visiting).await?;
+    let entries = expect_entries(&resolved).await?;
+    let kind = expect_kind(&entries, nodes, visiting).await?;
     match kind.as_str() {
         "element" => {
-            let tag_raw = find(&entries, "tag").ok_or_else(|| err("value->xml: element missing \"tag\""))?;
-            let name = expect_str(&resolve(&tag_raw, nodes, visiting)?)?;
-            let attrs_raw = find(&entries, "attrs").ok_or_else(|| err("value->xml: element missing \"attrs\""))?;
-            let attrs_entries = expect_entries(&resolve(&attrs_raw, nodes, visiting)?)?;
+            let tag_raw = find(&entries, "tag").await.ok_or_else(|| err("value->xml: element missing \"tag\""))?;
+            let name = expect_str(&resolve(&tag_raw, nodes, visiting).await?).await?;
+            let attrs_raw = find(&entries, "attrs").await.ok_or_else(|| err("value->xml: element missing \"attrs\""))?;
+            let attrs_entries = expect_entries(&resolve(&attrs_raw, nodes, visiting).await?).await?;
             let attrs = attrs_entries.iter().map(|e| Ok(XmlAttr { name: e.key.clone(), value: expect_str(&resolve(&e.value, nodes, visiting)?)? })).collect::<Result<Vec<_>, store::PackError>>()?;
-            let children_raw = find(&entries, "children").ok_or_else(|| err("value->xml: element missing \"children\""))?;
-            let children_resolved = resolve(&children_raw, nodes, visiting)?;
+            let children_raw = find(&entries, "children").await.ok_or_else(|| err("value->xml: element missing \"children\""))?;
+            let children_resolved = resolve(&children_raw, nodes, visiting).await?;
             let items = match children_resolved {
                 SemioValue::List { items } => items,
-                other => return Err(err(format!("value->xml: \"children\" must be a List, got {other:?}"))),
+                other => return Err(err(format!("value->xml: \"children\" must be a List, got {other:?}")).await),
             };
             let children = items.iter().map(|c| xml_node_from_semio(c, nodes, visiting)).collect::<Result<Vec<_>, store::PackError>>()?;
             Ok(XmlNode::Element { name, attrs, children })
         }
-        "text" => Ok(XmlNode::Text { text: expect_str(&resolve(&find(&entries, "text").ok_or_else(|| err("value->xml: text node missing \"text\""))?, nodes, visiting)?)? }),
-        "cdata" => Ok(XmlNode::CData { text: expect_str(&resolve(&find(&entries, "text").ok_or_else(|| err("value->xml: cdata node missing \"text\""))?, nodes, visiting)?)? }),
-        "comment" => Ok(XmlNode::Comment { text: expect_str(&resolve(&find(&entries, "text").ok_or_else(|| err("value->xml: comment node missing \"text\""))?, nodes, visiting)?)? }),
+        "text" => Ok(XmlNode::Text { text: expect_str(&resolve(&find(&entries, "text").await.ok_or_else(|| err("value->xml: text node missing \"text\""))?, nodes, visiting).await?).await? }),
+        "cdata" => Ok(XmlNode::CData { text: expect_str(&resolve(&find(&entries, "text").await.ok_or_else(|| err("value->xml: cdata node missing \"text\""))?, nodes, visiting).await?).await? }),
+        "comment" => Ok(XmlNode::Comment { text: expect_str(&resolve(&find(&entries, "text").await.ok_or_else(|| err("value->xml: comment node missing \"text\""))?, nodes, visiting).await?).await? }),
         "pi" => {
-            let target = expect_str(&resolve(&find(&entries, "target").ok_or_else(|| err("value->xml: pi node missing \"target\""))?, nodes, visiting)?)?;
-            let data = expect_str(&resolve(&find(&entries, "data").ok_or_else(|| err("value->xml: pi node missing \"data\""))?, nodes, visiting)?)?;
+            let target = expect_str(&resolve(&find(&entries, "target").await.ok_or_else(|| err("value->xml: pi node missing \"target\""))?, nodes, visiting).await?).await?;
+            let data = expect_str(&resolve(&find(&entries, "data").await.ok_or_else(|| err("value->xml: pi node missing \"data\""))?, nodes, visiting).await?).await?;
             Ok(XmlNode::ProcessingInstruction { target, data })
         }
-        other => Err(err(format!("value->xml: unknown node kind {other:?}"))),
+        other => Err(err(format!("value->xml: unknown node kind {other:?}")).await),
     }
 }
 
 async fn xml_declaration_from_semio(v: &SemioValue, nodes: &HashMap<&ValueId, &SemioValue>, visiting: &mut HashSet<ValueId>) -> Result<XmlDeclaration, store::PackError> {
-    let entries = expect_entries(v)?;
-    let version = expect_str(&resolve(&find(&entries, "version").ok_or_else(|| err("value->xml: declaration missing \"version\""))?, nodes, visiting)?)?;
-    let encoding = match find(&entries, "encoding") {
-        Some(raw) => match resolve(&raw, nodes, visiting)? {
+    let entries = expect_entries(v).await?;
+    let version = expect_str(&resolve(&find(&entries, "version").await.ok_or_else(|| err("value->xml: declaration missing \"version\""))?, nodes, visiting).await?).await?;
+    let encoding = match find(&entries, "encoding").await {
+        Some(raw) => match resolve(&raw, nodes, visiting).await? {
             SemioValue::Null => None,
             SemioValue::Str { value } => Some(value),
-            other => return Err(err(format!("value->xml: declaration \"encoding\" must be Str or Null, got {other:?}"))),
+            other => return Err(err(format!("value->xml: declaration \"encoding\" must be Str or Null, got {other:?}")).await),
         },
         None => None,
     };
-    let standalone = match find(&entries, "standalone") {
-        Some(raw) => match resolve(&raw, nodes, visiting)? {
+    let standalone = match find(&entries, "standalone").await {
+        Some(raw) => match resolve(&raw, nodes, visiting).await? {
             SemioValue::Null => None,
             SemioValue::Bool { value } => Some(value),
-            other => return Err(err(format!("value->xml: declaration \"standalone\" must be Bool or Null, got {other:?}"))),
+            other => return Err(err(format!("value->xml: declaration \"standalone\" must be Bool or Null, got {other:?}")).await),
         },
         None => None,
     };
@@ -142,31 +142,31 @@ async fn xml_declaration_from_semio(v: &SemioValue, nodes: &HashMap<&ValueId, &S
 }
 
 async fn xml_doctype_from_semio(v: &SemioValue, nodes: &HashMap<&ValueId, &SemioValue>, visiting: &mut HashSet<ValueId>) -> Result<XmlDoctype, store::PackError> {
-    let entries = expect_entries(v)?;
-    let name = expect_str(&resolve(&find(&entries, "name").ok_or_else(|| err("value->xml: doctype missing name"))?, nodes, visiting)?)?;
-    let external_id = match find(&entries, "externalId") {
+    let entries = expect_entries(v).await?;
+    let name = expect_str(&resolve(&find(&entries, "name").await.ok_or_else(|| err("value->xml: doctype missing name"))?, nodes, visiting).await?).await?;
+    let external_id = match find(&entries, "externalId").await {
         None => None,
-        Some(value) => match resolve(&value, nodes, visiting)? {
+        Some(value) => match resolve(&value, nodes, visiting).await? {
             SemioValue::Null => None,
             SemioValue::Map { entries } => {
-                let kind = expect_str(&find(&entries, "kind").ok_or_else(|| err("value->xml: externalId missing kind"))?)?;
-                let system_id = expect_str(&find(&entries, "systemId").ok_or_else(|| err("value->xml: externalId missing systemId"))?)?;
+                let kind = expect_str(&find(&entries, "kind").await.ok_or_else(|| err("value->xml: externalId missing kind"))?).await?;
+                let system_id = expect_str(&find(&entries, "systemId").await.ok_or_else(|| err("value->xml: externalId missing systemId"))?).await?;
                 Some(match kind.as_str() {
                     "system" => XmlExternalId::System { system_id },
-                    "public" => XmlExternalId::Public { public_id: expect_str(&find(&entries, "publicId").ok_or_else(|| err("value->xml: public externalId missing publicId"))?)?, system_id },
-                    _ => return Err(err(format!("value->xml: unknown externalId kind {kind}"))),
+                    "public" => XmlExternalId::Public { public_id: expect_str(&find(&entries, "publicId").await.ok_or_else(|| err("value->xml: public externalId missing publicId"))?).await?, system_id },
+                    _ => return Err(err(format!("value->xml: unknown externalId kind {kind}")).await),
                 })
             }
-            other => return Err(err(format!("value->xml: externalId must be Map or Null, got {other:?}"))),
+            other => return Err(err(format!("value->xml: externalId must be Map or Null, got {other:?}")).await),
         },
     };
-    let declarations = match find(&entries, "declarations") {
+    let declarations = match find(&entries, "declarations").await {
         None => Vec::new(),
         Some(SemioValue::List { items }) => items
             .into_iter()
             .map(|item| {
                 let fields = expect_entries(&item)?;
-                let kind = expect_str(&find(&fields, "kind").ok_or_else(|| err("value->xml: DTD declaration missing kind"))?)?;
+                let kind = expect_str(&semio_framework_plugin::resolve_ready(find(&fields, "kind")).ok_or_else(|| err("value->xml: DTD declaration missing kind"))?)?;
                 if kind != "entity" {
                     return Err(err(format!("value->xml: unsupported DTD declaration kind {kind}")));
                 }
@@ -176,50 +176,50 @@ async fn xml_doctype_from_semio(v: &SemioValue, nodes: &HashMap<&ValueId, &Semio
                 };
                 Ok(XmlDtdDeclaration::Entity {
                     parameter,
-                    name: expect_str(&find(&fields, "name").ok_or_else(|| err("value->xml: entity missing name"))?)?,
-                    value: expect_str(&find(&fields, "value").ok_or_else(|| err("value->xml: entity missing value"))?)?,
+                    name: expect_str(&semio_framework_plugin::resolve_ready(find(&fields, "name")).ok_or_else(|| err("value->xml: entity missing name"))?)?,
+                    value: expect_str(&semio_framework_plugin::resolve_ready(find(&fields, "value")).ok_or_else(|| err("value->xml: entity missing value"))?)?,
                 })
             })
             .collect::<Result<Vec<_>, store::PackError>>()?,
-        Some(other) => return Err(err(format!("value->xml: declarations must be List, got {other:?}"))),
+        Some(other) => return Err(err(format!("value->xml: declarations must be List, got {other:?}")).await),
     };
     Ok(XmlDoctype { name, external_id, declarations })
 }
 
 pub async fn xml_document_from_semio(v: &SemioValue, nodes: &HashMap<&ValueId, &SemioValue>, visiting: &mut HashSet<ValueId>) -> Result<XmlDocument, store::PackError> {
-    let resolved = resolve(v, nodes, visiting)?;
-    let entries = expect_entries(&resolved)?;
-    let kind = expect_kind(&entries, nodes, visiting)?;
+    let resolved = resolve(v, nodes, visiting).await?;
+    let entries = expect_entries(&resolved).await?;
+    let kind = expect_kind(&entries, nodes, visiting).await?;
     if kind != "document" {
-        return Err(err(format!("value->xml: expected kind \"document\" at the snapshot root, got {kind:?}")));
+        return Err(err(format!("value->xml: expected kind \"document\" at the snapshot root, got {kind:?}")).await);
     }
-    let declaration = match find(&entries, "declaration") {
-        Some(raw) => match resolve(&raw, nodes, visiting)? {
+    let declaration = match find(&entries, "declaration").await {
+        Some(raw) => match resolve(&raw, nodes, visiting).await? {
             SemioValue::Null => None,
-            other @ SemioValue::Map { .. } => Some(xml_declaration_from_semio(&other, nodes, visiting)?),
-            other => return Err(err(format!("value->xml: \"declaration\" must be Map or Null, got {other:?}"))),
+            other @ SemioValue::Map { .. } => Some(xml_declaration_from_semio(&other, nodes, visiting).await?),
+            other => return Err(err(format!("value->xml: \"declaration\" must be Map or Null, got {other:?}")).await),
         },
         None => None,
     };
-    let doctype = match find(&entries, "doctype") {
-        Some(raw) => match resolve(&raw, nodes, visiting)? {
+    let doctype = match find(&entries, "doctype").await {
+        Some(raw) => match resolve(&raw, nodes, visiting).await? {
             SemioValue::Null => None,
-            other @ SemioValue::Map { .. } => Some(xml_doctype_from_semio(&other, nodes, visiting)?),
-            other => return Err(err(format!("value->xml: \"doctype\" must be Map or Null, got {other:?}"))),
+            other @ SemioValue::Map { .. } => Some(xml_doctype_from_semio(&other, nodes, visiting).await?),
+            other => return Err(err(format!("value->xml: \"doctype\" must be Map or Null, got {other:?}")).await),
         },
         None => None,
     };
-    let root = match find(&entries, "root") {
-        Some(raw) => match resolve(&raw, nodes, visiting)? {
+    let root = match find(&entries, "root").await {
+        Some(raw) => match resolve(&raw, nodes, visiting).await? {
             SemioValue::Null => None,
-            other => Some(xml_node_from_semio(&other, nodes, visiting)?),
+            other => Some(xml_node_from_semio(&other, nodes, visiting).await?),
         },
         None => None,
     };
-    let prolog = match find(&entries, "prolog") {
-        Some(raw) => match resolve(&raw, nodes, visiting)? {
+    let prolog = match find(&entries, "prolog").await {
+        Some(raw) => match resolve(&raw, nodes, visiting).await? {
             SemioValue::List { items } => items.iter().map(|node| xml_node_from_semio(node, nodes, visiting)).collect::<Result<Vec<_>, store::PackError>>()?,
-            other => return Err(err(format!("value->xml: \"prolog\" must be a List, got {other:?}"))),
+            other => return Err(err(format!("value->xml: \"prolog\" must be a List, got {other:?}")).await),
         },
         None => Vec::new(),
     };

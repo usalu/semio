@@ -201,15 +201,15 @@ impl MutationDiff<SemioModelSnapshot> for SemioModelDiff {
     async fn apply(&self, base: &SemioModelSnapshot) -> protocol::MutationApplyResult<SemioModelSnapshot> {
         let mut next = base.clone();
         if let Some(d) = &self.spatial {
-            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&next.spatial, d, |item| item.id.clone(), |item| item.id.clone(), ["spatial"])?;
+            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&next.spatial, d, |item| item.id.clone(), |item| item.id.clone(), ["spatial"]).await?;
             apply_named(&mut next.spatial, d, |n: &SpatialNode| n.id.clone(), apply_spatial);
         }
         if let Some(d) = &self.elements {
-            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&next.elements, d, |item| item.id.clone(), |item| item.id.clone(), ["elements"])?;
+            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&next.elements, d, |item| item.id.clone(), |item| item.id.clone(), ["elements"]).await?;
             apply_named(&mut next.elements, d, |e: &SemioModelElement| e.id.clone(), apply_element);
         }
         if let Some(d) = &self.relations {
-            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&next.relations, d, |item| item.id.clone(), |item| item.id.clone(), ["relations"])?;
+            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&next.relations, d, |item| item.id.clone(), |item| item.id.clone(), ["relations"]).await?;
             apply_named(&mut next.relations, d, |r: &ModelRelation| r.id.clone(), apply_relation);
         }
         Ok(next)
@@ -219,17 +219,17 @@ impl MutationDiff<SemioModelSnapshot> for SemioModelDiff {
         self.spatial = match (self.spatial.take(), other.spatial) {
             (None, b) => b,
             (a, None) => a,
-            (Some(a), Some(b)) => Some(absorb_named(a, b, |n: &SpatialNode| n.id.clone(), absorb_spatial_diff, apply_spatial)),
+            (Some(a), Some(b)) => Some(absorb_named(a, b, |n: &SpatialNode| n.id.clone(), absorb_spatial_diff, apply_spatial).await),
         };
         self.elements = match (self.elements.take(), other.elements) {
             (None, b) => b,
             (a, None) => a,
-            (Some(a), Some(b)) => Some(absorb_named(a, b, |e: &SemioModelElement| e.id.clone(), absorb_element_diff, apply_element)),
+            (Some(a), Some(b)) => Some(absorb_named(a, b, |e: &SemioModelElement| e.id.clone(), absorb_element_diff, apply_element).await),
         };
         self.relations = match (self.relations.take(), other.relations) {
             (None, b) => b,
             (a, None) => a,
-            (Some(a), Some(b)) => Some(absorb_named(a, b, |r: &ModelRelation| r.id.clone(), absorb_relation_diff, apply_relation)),
+            (Some(a), Some(b)) => Some(absorb_named(a, b, |r: &ModelRelation| r.id.clone(), absorb_relation_diff, apply_relation).await),
         };
     }
 }
@@ -292,9 +292,9 @@ impl DiffAlgebra<SemioModelSnapshot> for SemioModelDiff {
 
     async fn between(base: &SemioModelSnapshot, other: &SemioModelSnapshot) -> Self {
         SemioModelDiff {
-            spatial: between_named(&base.spatial, &other.spatial, |n: &SpatialNode| n.id.clone(), between_spatial),
-            elements: between_named(&base.elements, &other.elements, |e: &SemioModelElement| e.id.clone(), between_element),
-            relations: between_named(&base.relations, &other.relations, |r: &ModelRelation| r.id.clone(), between_relation),
+            spatial: between_named(&base.spatial, &other.spatial, |n: &SpatialNode| n.id.clone(), between_spatial).await,
+            elements: between_named(&base.elements, &other.elements, |e: &SemioModelElement| e.id.clone(), between_element).await,
+            relations: between_named(&base.relations, &other.relations, |r: &ModelRelation| r.id.clone(), between_relation).await,
         }
     }
 
@@ -410,7 +410,7 @@ async fn absorb_relation_diff(mut a: ModelRelationDiff, b: ModelRelationDiff) ->
 /// 🧩 Builds the sparse field-by-field diff for a `SetSnapshot` mutation. No
 /// `snapshot: Option<SemioModelSnapshot>` full-replace slot -- this IS `SemioModelDiff::between`.
 pub async fn diff_set_snapshot(base: &SemioModelSnapshot, next: &SemioModelSnapshot) -> SemioModelDiff {
-    SemioModelDiff::between(base, next)
+    SemioModelDiff::between(base, next).await
 }
 //#endregion 🔖️SetSnapshot
 
@@ -431,10 +431,10 @@ pub(crate) async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
 pub(crate) async fn enc_str(s: &str) -> String {
-    hex_encode(s.as_bytes())
+    hex_encode(s.as_bytes()).await
 }
 pub(crate) async fn dec_str(s: &str) -> Result<String, String> {
-    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
+    String::from_utf8(hex_decode(s).await?).map_err(|e| e.to_string())
 }
 pub(crate) async fn parse_f64(s: &str) -> Result<f64, String> {
     s.parse().map_err(|e: std::num::ParseFloatError| e.to_string())
@@ -446,8 +446,8 @@ pub(crate) async fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String
     }
 }
 pub(crate) async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
-    let inner = strip_brackets(s)?;
-    match split_top_level(inner, ',').as_slice() {
+    let inner = strip_brackets(s).await?;
+    match split_top_level(inner, ',').await.as_slice() {
         ["0"] => Ok(None),
         [tag, value] if *tag == "1" => Ok(Some(dec(value)?)),
         other => Err(format!("option decode: bad shape {other:?}")),
@@ -457,7 +457,7 @@ pub(crate) async fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> Stri
     format!("[{}]", items.iter().map(|it| enc(it)).collect::<Vec<_>>().join(","))
 }
 pub(crate) async fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
-    split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| dec(entry)).collect()
+    split_top_level(strip_brackets(s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| dec(entry)).collect()
 }
 
 /// 🧪️ P2 pilot (model): real LEB128-varint-length-prefixed binary primitives (`store::pack_rt::
@@ -468,14 +468,14 @@ pub(crate) async fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
     out.extend_from_slice(bytes);
 }
 pub(crate) async fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
+    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec())
 }
 pub(crate) async fn write_str_lp(out: &mut Vec<u8>, s: &str) {
     write_bytes_lp(out, s.as_bytes());
 }
 pub(crate) async fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
-    String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
+    String::from_utf8(read_bytes_lp(reader).await?).map_err(|e| e.to_string())
 }
 //#endregion 🔖️Primitives
 
@@ -484,25 +484,25 @@ pub(crate) async fn enc_point3(p: &SemioPoint3) -> String {
     format!("[{},{},{}]", p.x, p.y, p.z)
 }
 pub(crate) async fn dec_point3(s: &str) -> Result<SemioPoint3, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [x, y, z] = parts.as_slice() else { return Err(format!("point3: expected 3 fields, got {}", parts.len())) };
-    Ok(SemioPoint3 { x: parse_f64(x)?, y: parse_f64(y)?, z: parse_f64(z)? })
+    Ok(SemioPoint3 { x: parse_f64(x).await?, y: parse_f64(y).await?, z: parse_f64(z).await? })
 }
 pub(crate) async fn enc_quat(q: &SemioQuaternion) -> String {
     format!("[{},{},{},{}]", q.x, q.y, q.z, q.w)
 }
 pub(crate) async fn dec_quat(s: &str) -> Result<SemioQuaternion, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [x, y, z, w] = parts.as_slice() else { return Err(format!("quaternion: expected 4 fields, got {}", parts.len())) };
-    Ok(SemioQuaternion { x: parse_f64(x)?, y: parse_f64(y)?, z: parse_f64(z)?, w: parse_f64(w)? })
+    Ok(SemioQuaternion { x: parse_f64(x).await?, y: parse_f64(y).await?, z: parse_f64(z).await?, w: parse_f64(w).await? })
 }
 pub(crate) async fn enc_transform(t: &SemioTransform) -> String {
     format!("[{},{},{}]", enc_point3(&t.translation), enc_quat(&t.rotation), enc_point3(&t.scale))
 }
 pub(crate) async fn dec_transform(s: &str) -> Result<SemioTransform, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [translation, rotation, scale] = parts.as_slice() else { return Err(format!("transform: expected 3 fields, got {}", parts.len())) };
-    Ok(SemioTransform { translation: dec_point3(translation)?, rotation: dec_quat(rotation)?, scale: dec_point3(scale)? })
+    Ok(SemioTransform { translation: dec_point3(translation).await?, rotation: dec_quat(rotation).await?, scale: dec_point3(scale).await? })
 }
 
 pub(crate) async fn enc_spatial_kind(k: &SpatialKind) -> &'static str {
@@ -548,7 +548,7 @@ pub(crate) async fn dec_element_class(s: &str) -> Result<ElementClass, String> {
         "RO" => Ok(ElementClass::Roof),
         "ST" => Ok(ElementClass::Stair),
         "FU" => Ok(ElementClass::Furniture),
-        other if other.starts_with("OT[") => Ok(ElementClass::Other { name: dec_str(strip_brackets(&other[2..])?)? }),
+        other if other.starts_with("OT[") => Ok(ElementClass::Other { name: dec_str(strip_brackets(&other[2..]).await?).await? }),
         other => Err(format!("element class: unknown tag {other:?}")),
     }
 }
@@ -565,10 +565,10 @@ pub(crate) async fn dec_geometry_ref(s: &str) -> Result<GeometryRef, String> {
         return Ok(GeometryRef::None);
     }
     let (tag, rest) = s.split_at(1);
-    let inner = strip_brackets(rest)?;
+    let inner = strip_brackets(rest).await?;
     match tag {
-        "B" => Ok(GeometryRef::Brep { brep_id: dec_str(inner)? }),
-        "M" => Ok(GeometryRef::Mesh { mesh_id: dec_str(inner)? }),
+        "B" => Ok(GeometryRef::Brep { brep_id: dec_str(inner).await? }),
+        "M" => Ok(GeometryRef::Mesh { mesh_id: dec_str(inner).await? }),
         other => Err(format!("geometry ref: unknown tag {other:?}")),
     }
 }
@@ -582,10 +582,10 @@ pub(crate) async fn enc_pset_value(v: &PsetValue) -> String {
 }
 pub(crate) async fn dec_pset_value(s: &str) -> Result<PsetValue, String> {
     let (tag, rest) = s.split_at(1);
-    let inner = strip_brackets(rest)?;
+    let inner = strip_brackets(rest).await?;
     match tag {
-        "T" => Ok(PsetValue::Text { value: dec_str(inner)? }),
-        "N" => Ok(PsetValue::Number { value: parse_f64(inner)? }),
+        "T" => Ok(PsetValue::Text { value: dec_str(inner).await? }),
+        "N" => Ok(PsetValue::Number { value: parse_f64(inner).await? }),
         "B" => Ok(PsetValue::Boolean { value: inner == "1" }),
         other => Err(format!("pset value: unknown tag {other:?}")),
     }
@@ -595,36 +595,36 @@ pub(crate) async fn enc_property(p: &Property) -> String {
     format!("[{},{}]", enc_str(&p.key), enc_pset_value(&p.value))
 }
 pub(crate) async fn dec_property(s: &str) -> Result<Property, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [key, value] = parts.as_slice() else { return Err(format!("property: expected 2 fields, got {}", parts.len())) };
-    Ok(Property { key: dec_str(key)?, value: dec_pset_value(value)? })
+    Ok(Property { key: dec_str(key).await?, value: dec_pset_value(value).await? })
 }
 
 pub(crate) async fn enc_property_set(ps: &PropertySet) -> String {
     format!("[{},{}]", enc_str(&ps.name), enc_list(&ps.properties, enc_property))
 }
 pub(crate) async fn dec_property_set(s: &str) -> Result<PropertySet, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [name, properties] = parts.as_slice() else { return Err(format!("property set: expected 2 fields, got {}", parts.len())) };
-    Ok(PropertySet { name: dec_str(name)?, properties: dec_list(properties, dec_property)? })
+    Ok(PropertySet { name: dec_str(name).await?, properties: dec_list(properties, dec_property).await? })
 }
 
 pub(crate) async fn enc_spatial_node(n: &SpatialNode) -> String {
     format!("[{},{},{},{},{}]", enc_str(&n.id), enc_spatial_kind(&n.kind), enc_str(&n.name), encode_option(&n.parent_id, |v: &String| enc_str(v)), enc_transform(&n.placement))
 }
 pub(crate) async fn dec_spatial_node(s: &str) -> Result<SpatialNode, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [id, kind, name, parent_id, placement] = parts.as_slice() else { return Err(format!("spatial node: expected 5 fields, got {}", parts.len())) };
-    Ok(SpatialNode { id: dec_str(id)?, kind: dec_spatial_kind(kind)?, name: dec_str(name)?, parent_id: decode_option(parent_id, dec_str)?, placement: dec_transform(placement)? })
+    Ok(SpatialNode { id: dec_str(id).await?, kind: dec_spatial_kind(kind).await?, name: dec_str(name).await?, parent_id: decode_option(parent_id, dec_str).await?, placement: dec_transform(placement).await? })
 }
 
 pub(crate) async fn enc_element(e: &SemioModelElement) -> String {
     format!("[{},{},{},{},{},{}]", enc_str(&e.id), enc_element_class(&e.class), enc_transform(&e.placement), enc_geometry_ref(&e.geometry), encode_option(&e.spatial_id, |v: &String| enc_str(v)), enc_list(&e.psets, enc_property_set),)
 }
 pub(crate) async fn dec_element(s: &str) -> Result<SemioModelElement, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [id, class, placement, geometry, spatial_id, psets] = parts.as_slice() else { return Err(format!("element: expected 6 fields, got {}", parts.len())) };
-    Ok(SemioModelElement { id: dec_str(id)?, class: dec_element_class(class)?, placement: dec_transform(placement)?, geometry: dec_geometry_ref(geometry)?, spatial_id: decode_option(spatial_id, dec_str)?, psets: dec_list(psets, dec_property_set)? })
+    Ok(SemioModelElement { id: dec_str(id).await?, class: dec_element_class(class).await?, placement: dec_transform(placement).await?, geometry: dec_geometry_ref(geometry).await?, spatial_id: decode_option(spatial_id, dec_str).await?, psets: dec_list(psets, dec_property_set).await? })
 }
 
 pub(crate) async fn enc_relation_kind(k: &RelationKind) -> String {
@@ -644,7 +644,7 @@ pub(crate) async fn dec_relation_kind(s: &str) -> Result<RelationKind, String> {
         "CN" => Ok(RelationKind::ConnectsTo),
         "FV" => Ok(RelationKind::FillsVoid),
         "VE" => Ok(RelationKind::VoidsElement),
-        other if other.starts_with("OT[") => Ok(RelationKind::Other { label: dec_str(strip_brackets(&other[2..])?)? }),
+        other if other.starts_with("OT[") => Ok(RelationKind::Other { label: dec_str(strip_brackets(&other[2..]).await?).await? }),
         other => Err(format!("relation kind: unknown tag {other:?}")),
     }
 }
@@ -653,9 +653,9 @@ pub(crate) async fn enc_relation(r: &ModelRelation) -> String {
     format!("[{},{},{},{}]", enc_str(&r.id), enc_relation_kind(&r.kind), enc_str(&r.from), enc_str(&r.to))
 }
 pub(crate) async fn dec_relation(s: &str) -> Result<ModelRelation, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [id, kind, from, to] = parts.as_slice() else { return Err(format!("relation: expected 4 fields, got {}", parts.len())) };
-    Ok(ModelRelation { id: dec_str(id)?, kind: dec_relation_kind(kind)?, from: dec_str(from)?, to: dec_str(to)? })
+    Ok(ModelRelation { id: dec_str(id).await?, kind: dec_relation_kind(kind).await?, from: dec_str(from).await?, to: dec_str(to).await? })
 }
 //#endregion 🔖️ValueCodecs
 
@@ -670,9 +670,9 @@ async fn enc_spatial_node_diff(d: &SpatialNodeDiff) -> String {
     )
 }
 async fn dec_spatial_node_diff(s: &str) -> Result<SpatialNodeDiff, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [kind, name, parent_id, placement] = parts.as_slice() else { return Err(format!("spatial node diff: expected 4 fields, got {}", parts.len())) };
-    Ok(SpatialNodeDiff { kind: decode_option(kind, dec_spatial_kind)?, name: decode_option(name, dec_str)?, parent_id: decode_option(parent_id, |s| decode_option(s, dec_str))?, placement: decode_option(placement, dec_transform)? })
+    Ok(SpatialNodeDiff { kind: decode_option(kind, dec_spatial_kind).await?, name: decode_option(name, dec_str).await?, parent_id: decode_option(parent_id, |s| decode_option(s, dec_str)).await?, placement: decode_option(placement, dec_transform).await? })
 }
 
 async fn enc_element_diff(d: &SemioModelElementDiff) -> String {
@@ -686,14 +686,14 @@ async fn enc_element_diff(d: &SemioModelElementDiff) -> String {
     )
 }
 async fn dec_element_diff(s: &str) -> Result<SemioModelElementDiff, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [class, placement, geometry, spatial_id, psets] = parts.as_slice() else { return Err(format!("element diff: expected 5 fields, got {}", parts.len())) };
     Ok(SemioModelElementDiff {
-        class: decode_option(class, dec_element_class)?,
-        placement: decode_option(placement, dec_transform)?,
-        geometry: decode_option(geometry, dec_geometry_ref)?,
-        spatial_id: decode_option(spatial_id, |s| decode_option(s, dec_str))?,
-        psets: decode_option(psets, |s| dec_list(s, dec_property_set))?,
+        class: decode_option(class, dec_element_class).await?,
+        placement: decode_option(placement, dec_transform).await?,
+        geometry: decode_option(geometry, dec_geometry_ref).await?,
+        spatial_id: decode_option(spatial_id, |s| decode_option(s, dec_str)).await?,
+        psets: decode_option(psets, |s| dec_list(s, dec_property_set)).await?,
     })
 }
 
@@ -701,30 +701,30 @@ async fn enc_relation_diff(d: &ModelRelationDiff) -> String {
     format!("[{},{},{}]", encode_option(&d.kind, enc_relation_kind), encode_option(&d.from, |v: &String| enc_str(v)), encode_option(&d.to, |v: &String| enc_str(v)))
 }
 async fn dec_relation_diff(s: &str) -> Result<ModelRelationDiff, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [kind, from, to] = parts.as_slice() else { return Err(format!("relation diff: expected 3 fields, got {}", parts.len())) };
-    Ok(ModelRelationDiff { kind: decode_option(kind, dec_relation_kind)?, from: decode_option(from, dec_str)?, to: decode_option(to, dec_str)? })
+    Ok(ModelRelationDiff { kind: decode_option(kind, dec_relation_kind).await?, from: decode_option(from, dec_str).await?, to: decode_option(to, dec_str).await? })
 }
 //#endregion 🔖️DiffValueCodecs
 
 //#region 🔖️TopLevel
 pub(crate) async fn enc_spatial_diff(d: &SpatialDiff) -> String {
-    enc_named_triple(d, |k: &String| enc_str(k), enc_spatial_node_diff, enc_spatial_node)
+    enc_named_triple(d, |k: &String| enc_str(k), enc_spatial_node_diff, enc_spatial_node).await
 }
 pub(crate) async fn dec_spatial_diff(s: &str) -> Result<SpatialDiff, String> {
-    dec_named_triple(s, dec_str, dec_spatial_node_diff, dec_spatial_node)
+    dec_named_triple(s, dec_str, dec_spatial_node_diff, dec_spatial_node).await
 }
 pub(crate) async fn enc_elements_diff(d: &ElementsDiff) -> String {
-    enc_named_triple(d, |k: &String| enc_str(k), enc_element_diff, enc_element)
+    enc_named_triple(d, |k: &String| enc_str(k), enc_element_diff, enc_element).await
 }
 pub(crate) async fn dec_elements_diff(s: &str) -> Result<ElementsDiff, String> {
-    dec_named_triple(s, dec_str, dec_element_diff, dec_element)
+    dec_named_triple(s, dec_str, dec_element_diff, dec_element).await
 }
 pub(crate) async fn enc_relations_diff(d: &RelationsDiff) -> String {
-    enc_named_triple(d, |k: &String| enc_str(k), enc_relation_diff, enc_relation)
+    enc_named_triple(d, |k: &String| enc_str(k), enc_relation_diff, enc_relation).await
 }
 pub(crate) async fn dec_relations_diff(s: &str) -> Result<RelationsDiff, String> {
-    dec_named_triple(s, dec_str, dec_relation_diff, dec_relation)
+    dec_named_triple(s, dec_str, dec_relation_diff, dec_relation).await
 }
 
 async fn print_semio_model_diff(d: &SemioModelDiff) -> String {
@@ -747,11 +747,11 @@ async fn parse_semio_model_diff(line: &str) -> Result<SemioModelDiff, String> {
     }
     for token in line.split(' ') {
         if let Some(rest) = token.strip_prefix("spatial=") {
-            d.spatial = Some(dec_spatial_diff(rest)?);
+            d.spatial = Some(dec_spatial_diff(rest).await?);
         } else if let Some(rest) = token.strip_prefix("elements=") {
-            d.elements = Some(dec_elements_diff(rest)?);
+            d.elements = Some(dec_elements_diff(rest).await?);
         } else if let Some(rest) = token.strip_prefix("relations=") {
-            d.relations = Some(dec_relations_diff(rest)?);
+            d.relations = Some(dec_relations_diff(rest).await?);
         } else {
             return Err(format!("semio model diff: unknown token {token:?}"));
         }
@@ -761,10 +761,10 @@ async fn parse_semio_model_diff(line: &str) -> Result<SemioModelDiff, String> {
 
 impl DiffCodec for SemioModelDiff {
     async fn print_diff(&self) -> String {
-        print_semio_model_diff(self)
+        print_semio_model_diff(self).await
     }
     async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
-        parse_semio_model_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_semio_model_diff(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// ⚡️ P2 pilot (model): real binary diff frame, replacing the old `print_diff().into_bytes()`
     /// text-as-binary shortcut. `format u8` + `presence u8` (bit0=`spatial`, bit1=`elements`,
@@ -810,20 +810,20 @@ impl DiffCodec for SemioModelDiff {
         let presence = bytes[1];
         let mut reader = store::ByteReader::new(&bytes[2..]);
         let spatial = if presence & 0b001 != 0 {
-            let text = read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff spatial blob", offset: 2, detail: e })?;
-            Some(dec_spatial_diff(&text).map_err(|e| protocol::ProtocolError::Malformed { what: "diff spatial text", offset: 2, detail: e })?)
+            let text = read_str_lp(&mut reader).await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff spatial blob", offset: 2, detail: e })?;
+            Some(dec_spatial_diff(&text).await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff spatial text", offset: 2, detail: e })?)
         } else {
             None
         };
         let elements = if presence & 0b010 != 0 {
-            let text = read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff elements blob", offset: 2, detail: e })?;
-            Some(dec_elements_diff(&text).map_err(|e| protocol::ProtocolError::Malformed { what: "diff elements text", offset: 2, detail: e })?)
+            let text = read_str_lp(&mut reader).await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff elements blob", offset: 2, detail: e })?;
+            Some(dec_elements_diff(&text).await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff elements text", offset: 2, detail: e })?)
         } else {
             None
         };
         let relations = if presence & 0b100 != 0 {
-            let text = read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff relations blob", offset: 2, detail: e })?;
-            Some(dec_relations_diff(&text).map_err(|e| protocol::ProtocolError::Malformed { what: "diff relations text", offset: 2, detail: e })?)
+            let text = read_str_lp(&mut reader).await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff relations blob", offset: 2, detail: e })?;
+            Some(dec_relations_diff(&text).await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff relations text", offset: 2, detail: e })?)
         } else {
             None
         };

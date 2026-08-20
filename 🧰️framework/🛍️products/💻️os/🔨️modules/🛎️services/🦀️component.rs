@@ -33,6 +33,8 @@
 
 use std::cmp::Reverse;
 use std::collections::{BTreeMap, BinaryHeap, HashMap, VecDeque};
+use std::future::Future;
+use std::pin::Pin;
 use std::sync::atomic::{AtomicBool, AtomicU32, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
@@ -68,7 +70,7 @@ const PARK_POLL_INTERVAL_MS: u64 = 20;
 /// point-in-time `state()` read, no unpark notification.
 async fn await_live_or_cancelled(cancel: &CancelToken) -> bool {
     loop {
-        match cancel.state() {
+        match cancel.state().await {
             CancelState::Live => return true,
             CancelState::Cancelled => return false,
             CancelState::Park => tokio::time::sleep(Duration::from_millis(PARK_POLL_INTERVAL_MS)).await,
@@ -94,6 +96,10 @@ struct ScopeTableInner {
 }
 
 impl ScopeTable {
+    // 🚫️async: E1-adjacent pure constructor whose ONLY consumer, `TokioHostRuntime::new`, is forced
+    // synchronous by `📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs` (registrar-only, not
+    // this packet's to edit) — see R9. No suspension point exists (`Arc::new`/`AtomicU64::new`/
+    // `Mutex::new` are in-memory only).
     fn new(handle: tokio::runtime::Handle) -> ScopeTable {
         ScopeTable(Arc::new(ScopeTableInner { handle, next_id: AtomicU64::new(1), records: Mutex::new(HashMap::new()), owner_index: Mutex::new(HashMap::new()), children: Mutex::new(HashMap::new()) }))
     }
@@ -103,11 +109,11 @@ impl ScopeTable {
     /// owner-index entry; the earlier scope's tasks stay tracked by id but become unreachable via
     /// `cancel_scope(owner)` afterward. No caller in this packet re-opens an owner, so this is a
     /// documented limitation rather than an exercised bug.
-    fn open_scope(&self, owner: ScopeOwner, parent: Option<&ScopeHandle>) -> ScopeHandle {
+    async fn open_scope(&self, owner: ScopeOwner, parent: Option<&ScopeHandle>) -> ScopeHandle {
         let id = ScopeId(self.0.next_id.fetch_add(1, Ordering::SeqCst));
         let cancel = match parent {
-            Some(parent_handle) => parent_handle.cancel.child(),
-            None => CancelToken::root(),
+            Some(parent_handle) => parent_handle.cancel.child().await,
+            None => CancelToken::root().await,
         };
         let parent_id = parent.map(|handle| handle.id);
         self.0.records.lock().expect("ScopeTable records mutex poisoned").insert(id, ScopeRecord { cancel: cancel.clone(), tasks: tokio::task::JoinSet::new() });
@@ -118,6 +124,10 @@ impl ScopeTable {
         ScopeHandle { id, owner, cancel }
     }
 
+    // 🚫️async: E1-adjacent — no suspension point of its own (builds `wrapped` but only SPAWNS it,
+    // via a `std::sync::MutexGuard`-protected `spawn_on` push; never drives it here). Consumed
+    // above by `TokioHostRuntime::spawn_scoped`, already `async fn` to match the trait, which calls
+    // this plainly — an `async fn` here would add a second, pointless suspension layer. See R9.
     fn spawn_scoped(&self, scope: &ScopeHandle, ctx: &OperationContext, fut: HostFuture<()>) {
         let cancel = ctx.cancel.clone();
         let wrapped = async move {
@@ -134,6 +144,7 @@ impl ScopeTable {
         }
     }
 
+    // 🚫️async: E1-adjacent — see `spawn_scoped`'s tag above (R9); same shape.
     fn run_blocking(&self, scope: &ScopeHandle, ctx: &OperationContext, work: Box<dyn FnOnce() + Send>) {
         let cancel = ctx.cancel.clone();
         let wrapped = async move {
@@ -150,7 +161,7 @@ impl ScopeTable {
         }
     }
 
-    fn collect_descendants(&self, root: ScopeId) -> Vec<ScopeId> {
+    async fn collect_descendants(&self, root: ScopeId) -> Vec<ScopeId> {
         let children = self.0.children.lock().expect("ScopeTable children mutex poisoned");
         let mut out = vec![root];
         let mut frontier = vec![root];
@@ -179,14 +190,13 @@ impl ScopeTable {
             Some(id) => id,
             None => return ScopeDrainReport::default(),
         };
-        let scope_ids = self.collect_descendants(root_id);
-        {
+        let scope_ids = self.collect_descendants(root_id).await;
+        let cancels: Vec<CancelToken> = {
             let records = self.0.records.lock().expect("ScopeTable records mutex poisoned");
-            for id in &scope_ids {
-                if let Some(record) = records.get(id) {
-                    record.cancel.cancel();
-                }
-            }
+            scope_ids.iter().filter_map(|id| records.get(id).map(|record| record.cancel.clone())).collect()
+        };
+        for cancel in &cancels {
+            cancel.cancel().await;
         }
         let grace = Duration::from_millis(grace_ms);
         let mut report = ScopeDrainReport::default();
@@ -251,9 +261,13 @@ impl TokioHostRuntime {
     /// clock is in scope (only `#[tokio::test(start_paused = true)]`-style paused clocks need an
     /// entered context, and this crate's tests never use one), so this and every later
     /// `now_ms`/`sleep_until` call are anchored to the same real clock regardless.
+    /// [`resolve_ready`]-driven: `ThreadBudget::checkout` is `async fn` with zero I/O (atomic
+    /// bookkeeping only, confirmed by reading its body), and `new`'s own signature is fixed
+    /// synchronous by `📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs` — a registrar-only
+    /// file this packet cannot edit — calling it un-awaited.
     pub fn new(plan: ThreadPlan, budget: &ThreadBudget) -> Result<TokioHostRuntime, RuntimeBuildError> {
-        budget.checkout(ThreadRole::IoWorker, plan.io_workers);
-        budget.checkout(ThreadRole::Compute, plan.compute);
+        resolve_ready(budget.checkout(ThreadRole::IoWorker, plan.io_workers));
+        resolve_ready(budget.checkout(ThreadRole::Compute, plan.compute));
         let runtime = tokio::runtime::Builder::new_multi_thread()
             .worker_threads(plan.io_workers.max(1) as usize)
             .max_blocking_threads(plan.compute.max(1) as usize)
@@ -267,22 +281,31 @@ impl TokioHostRuntime {
     }
 
     /// 🧵️ Drives `f` to completion on this runtime — the entry point a process bootstrap uses for
-    /// its own top-level async setup before handing scopes to services.
-    pub fn block_on<F: std::future::Future>(&self, f: F) -> F::Output {
+    /// its own top-level async setup before handing scopes to services. This crate's designated
+    /// executor entry point (R4 sanctions `semio-framework-os-services` by name); every `#[test]`
+    /// in this file that drives real suspending work (`sleep_until` racing real time, `cancel_scope`
+    /// draining a `JoinSet`) goes through THIS bridge, per R4 Clause 5.
+    ///
+    /// 🚫️async: E5 executor bridge — the thread-becomes-executor boundary; an `async fn` can only be
+    /// driven by something already polling it, so this cannot itself be `async` without begging the
+    /// question (same reasoning as `semio-framework-async`'s own `block_on`, this crate's sibling
+    /// bridge one layer down). See [`resolve_ready`] below for why this crate carries a SECOND E5
+    /// exception rather than the one R2 normally allows — that doc explains the forced boundary.
+    pub fn block_on<F: Future>(&self, f: F) -> F::Output {
         self.runtime.block_on(f)
     }
 }
 
 impl HostAsyncRuntime for TokioHostRuntime {
-    fn open_scope(&self, owner: ScopeOwner, parent: Option<&ScopeHandle>) -> ScopeHandle {
-        self.scopes.open_scope(owner, parent)
+    async fn open_scope(&self, owner: ScopeOwner, parent: Option<&ScopeHandle>) -> ScopeHandle {
+        self.scopes.open_scope(owner, parent).await
     }
 
-    fn spawn_scoped(&self, scope: &ScopeHandle, ctx: OperationContext, fut: HostFuture<()>) {
+    async fn spawn_scoped(&self, scope: &ScopeHandle, ctx: OperationContext, fut: HostFuture<()>) {
         self.scopes.spawn_scoped(scope, &ctx, fut);
     }
 
-    fn run_blocking(&self, scope: &ScopeHandle, ctx: OperationContext, work: Box<dyn FnOnce() + Send>) {
+    async fn run_blocking(&self, scope: &ScopeHandle, ctx: OperationContext, work: Box<dyn FnOnce() + Send>) {
         self.scopes.run_blocking(scope, &ctx, work);
     }
 
@@ -295,10 +318,11 @@ impl HostAsyncRuntime for TokioHostRuntime {
         self.scopes.clone().cancel_scope(owner.clone(), grace_ms).await
     }
 
-    fn now_ms(&self) -> u64 {
+    async fn now_ms(&self) -> u64 {
         (tokio::time::Instant::now() - self.epoch).as_millis() as u64
     }
 }
+
 //#endregion 🚂️TokioHostRuntime
 
 //#region ⏲️TimerWheel
@@ -355,7 +379,7 @@ pub struct WheelCore {
 }
 
 impl WheelCore {
-    pub fn new(quota_per_plugin: u32) -> WheelCore {
+    pub async fn new(quota_per_plugin: u32) -> WheelCore {
         WheelCore { next_id: 1, next_seq: 0, entries: HashMap::new(), order: BinaryHeap::new(), per_plugin_counts: HashMap::new(), quota_per_plugin }
     }
 
@@ -363,7 +387,7 @@ impl WheelCore {
     /// `repeat_ms`. The per-plugin quota is checked BEFORE any insertion, so a rejected call leaves
     /// the wheel completely untouched.
     #[allow(clippy::too_many_arguments)]
-    pub fn arm(&mut self, plugin: PackageId, actor: u64, generation: u16, lane: u8, at_ms: u64, repeat_ms: Option<u64>) -> Result<TimerId, TimerError> {
+    pub async fn arm(&mut self, plugin: PackageId, actor: u64, generation: u16, lane: u8, at_ms: u64, repeat_ms: Option<u64>) -> Result<TimerId, TimerError> {
         let count = self.per_plugin_counts.get(&plugin).copied().unwrap_or(0);
         if count >= self.quota_per_plugin {
             return Err(TimerError::QuotaExceeded { plugin, limit: self.quota_per_plugin });
@@ -381,7 +405,7 @@ impl WheelCore {
     /// 🔕️ Disarms `id`, returning whether it was actually armed. Lazy: the heap entry is left in
     /// place and skipped when eventually popped by [`WheelCore::pop_expired`], since a `BinaryHeap`
     /// cannot remove an arbitrary interior element faster than O(n).
-    pub fn disarm(&mut self, id: TimerId) -> bool {
+    pub async fn disarm(&mut self, id: TimerId) -> bool {
         match self.entries.get_mut(&id) {
             Some(entry) if !entry.cancelled => {
                 entry.cancelled = true;
@@ -398,6 +422,10 @@ impl WheelCore {
     /// and catching up (rather than drifting) if more than one repeat period has actually elapsed.
     /// Cancelled entries are dropped here rather than rearmed — this is where lazy
     /// [`WheelCore::disarm`] deletion actually reclaims heap/map space.
+    // 🚫️async: E1-adjacent pure computation (in-memory heap only, no suspension point) whose sole
+    // caller holds it behind a `std::sync::Mutex<WheelCore>` inside `TimerWheel::spawn_driver`'s
+    // async loop — `async fn` here would force that `MutexGuard` (not `Send`) to live across the
+    // outer future's await points, breaking the `HostFuture<()>: Send` bound R3 requires. See R9.
     pub fn pop_expired(&mut self, now_ms: u64) -> Vec<TimerFired> {
         let mut fired = Vec::new();
         while let Some(&Reverse((expiry, _seq, id))) = self.order.peek() {
@@ -438,11 +466,13 @@ impl WheelCore {
     /// to sleep. O(n) in the number of currently-heaped entries (an acceptable scan given per-host
     /// timer counts are bounded by `quota_per_plugin` times the plugin count; a later packet can
     /// swap in a cancellation-aware heap if that ever matters).
+    // 🚫️async: E1-adjacent — same reasoning as `pop_expired` above (R9): pure, in-memory only, and
+    // held behind a `std::sync::Mutex` across an async caller.
     pub fn next_expiry_ms(&self) -> Option<u64> {
         self.order.iter().filter(|Reverse((_, _, id))| self.entries.get(id).is_some_and(|entry| !entry.cancelled)).map(|Reverse((expiry, _, _))| *expiry).min()
     }
 
-    pub fn armed_count(&self, plugin: &PackageId) -> u32 {
+    pub async fn armed_count(&self, plugin: &PackageId) -> u32 {
         self.per_plugin_counts.get(plugin).copied().unwrap_or(0)
     }
 }
@@ -462,23 +492,23 @@ pub struct TimerWheel {
 }
 
 impl TimerWheel {
-    pub fn new(quota_per_plugin: u32) -> TimerWheel {
-        TimerWheel { core: Arc::new(Mutex::new(WheelCore::new(quota_per_plugin))), wake: Arc::new(tokio::sync::Notify::new()) }
+    pub async fn new(quota_per_plugin: u32) -> TimerWheel {
+        TimerWheel { core: Arc::new(Mutex::new(WheelCore::new(quota_per_plugin).await)), wake: Arc::new(tokio::sync::Notify::new()) }
     }
 
     #[allow(clippy::too_many_arguments)]
-    pub fn arm(&self, plugin: PackageId, actor: u64, generation: u16, lane: u8, at_ms: u64, repeat_ms: Option<u64>) -> Result<TimerId, TimerError> {
-        let id = self.core.lock().expect("TimerWheel core mutex poisoned").arm(plugin, actor, generation, lane, at_ms, repeat_ms)?;
+    pub async fn arm(&self, plugin: PackageId, actor: u64, generation: u16, lane: u8, at_ms: u64, repeat_ms: Option<u64>) -> Result<TimerId, TimerError> {
+        let id = self.core.lock().expect("TimerWheel core mutex poisoned").arm(plugin, actor, generation, lane, at_ms, repeat_ms).await?;
         self.wake.notify_one();
         Ok(id)
     }
 
-    pub fn disarm(&self, id: TimerId) -> bool {
-        self.core.lock().expect("TimerWheel core mutex poisoned").disarm(id)
+    pub async fn disarm(&self, id: TimerId) -> bool {
+        self.core.lock().expect("TimerWheel core mutex poisoned").disarm(id).await
     }
 
-    pub fn armed_count(&self, plugin: &PackageId) -> u32 {
-        self.core.lock().expect("TimerWheel core mutex poisoned").armed_count(plugin)
+    pub async fn armed_count(&self, plugin: &PackageId) -> u32 {
+        self.core.lock().expect("TimerWheel core mutex poisoned").armed_count(plugin).await
     }
 
     /// ▶️ Spawns the driver loop into `scope` on `runtime`: sleeps until the wheel's next expiry (or
@@ -487,30 +517,36 @@ impl TimerWheel {
     /// the loop is a detached, indefinitely-recurring task; `ctx` identifies the DRIVER task itself
     /// (its own cancellation/lane), independent of the per-firing `actor`/`generation`/`lane` each
     /// [`TimerFired`] already carries.
-    pub fn spawn_driver<R: HostAsyncRuntime + 'static>(&self, runtime: &Arc<R>, scope: &ScopeHandle, ctx: OperationContext, sink: Arc<dyn CompletionSink>) {
+    pub async fn spawn_driver<R: HostAsyncRuntime + 'static>(&self, runtime: &Arc<R>, scope: &ScopeHandle, ctx: OperationContext, sink: Arc<dyn CompletionSink>) {
         let core = self.core.clone();
         let wake = self.wake.clone();
         let runtime_for_loop = runtime.clone();
         let fut: HostFuture<()> = Box::pin(async move {
             loop {
-                let now_ms = runtime_for_loop.now_ms();
+                let now_ms = runtime_for_loop.now_ms().await;
                 let next = core.lock().expect("TimerWheel core mutex poisoned").next_expiry_ms();
-                let sleep_fut: HostFuture<()> = match next {
-                    Some(expiry) if expiry > now_ms => runtime_for_loop.sleep_until(expiry),
+                // 🌉️ R15: `sleep_until` is RPITIT with an explicit `Send` bound at the trait, so
+                // its future is provably `Send` even for a generic `R` — no `BoxedHostAsyncRuntime`
+                // detour needed any more. Still boxed locally (NOT `HostFuture<()>`, which demands
+                // `'static`) purely to unify the three match arms' otherwise-distinct anonymous
+                // future types ahead of `tokio::select!`.
+                let sleep_fut: Pin<Box<dyn Future<Output = ()> + Send + '_>> = match next {
+                    Some(expiry) if expiry > now_ms => Box::pin(runtime_for_loop.sleep_until(expiry)),
                     Some(_) => Box::pin(std::future::ready(())),
-                    None => runtime_for_loop.sleep_until(now_ms + TIMER_DRIVER_IDLE_POLL_MS),
+                    None => Box::pin(runtime_for_loop.sleep_until(now_ms + TIMER_DRIVER_IDLE_POLL_MS)),
                 };
                 tokio::select! {
                     _ = sleep_fut => {}
                     _ = wake.notified() => {}
                 }
-                let fired = core.lock().expect("TimerWheel core mutex poisoned").pop_expired(runtime_for_loop.now_ms());
+                let now_ms = runtime_for_loop.now_ms().await;
+                let fired = core.lock().expect("TimerWheel core mutex poisoned").pop_expired(now_ms);
                 for timer in fired {
                     sink.complete(timer.actor, timer.generation, timer.id.0.to_le_bytes().to_vec(), timer.lane);
                 }
             }
         });
-        runtime.spawn_scoped(scope, ctx, fut);
+        runtime.spawn_scoped(scope, ctx, fut).await;
     }
 }
 //#endregion ⏲️TimerWheel
@@ -550,7 +586,7 @@ pub struct ComputePool {
 }
 
 impl ComputePool {
-    pub fn new(capacity: u32) -> ComputePool {
+    pub async fn new(capacity: u32) -> ComputePool {
         ComputePool { admission: Arc::new(tokio::sync::Semaphore::new(capacity.max(1) as usize)) }
     }
 
@@ -580,7 +616,7 @@ impl ComputePool {
                 let result = work();
                 let _ = result_tx.send(result);
             }),
-        );
+        ).await;
         match ctx.deadline_ms {
             Some(deadline_ms) => {
                 tokio::select! {
@@ -658,6 +694,8 @@ impl std::error::Error for HttpPoolError {}
 // `VersionGraph`'s own `#[cfg(feature = "vcs")]` case, same file family), so a `#[cfg(test)]`-only
 // variant cannot be expressed in one enum declaration. Revisit alongside `AsyncHttpTransport` if
 // that trait ever gains an associated `Body` type.
+// 🚫️async: E6 dyn-compat — machine-readable form of the `dedyn-fw-os-misc` reasoning above, added
+// so `asyncify-universal.py` stops re-breaking this trait (it does not yet recognise that tag).
 pub trait HttpBody: Send {
     fn next_chunk(&mut self) -> HostFuture<Result<Option<Vec<u8>>, HttpPoolError>>;
 }
@@ -668,6 +706,11 @@ pub trait HttpBody: Send {
 /// synchronous-`HttpTransport`-on-`ComputePool` behaviour, unchanged); a sibling packet adds a real
 /// async client behind this same trait, adding no new dependency to THIS crate — see the crate
 /// report's `## honest gaps`.
+// 🚫️async: E6 dyn-compat — same class as `HttpTransport` above. `start` already returns a
+// `HostFuture` (R1-legal argument/return erasure per `dyn_enum_close!`'s sibling exceptions); an
+// `async fn` wrapping THAT would be the literal double-future shape R1 bans, on top of breaking
+// `Arc<dyn AsyncHttpTransport>`'s object safety (E0038). `asyncify-universal.py` doesn't yet
+// recognise this class — see the `HttpTransport` tag above for the coordinator note.
 pub trait AsyncHttpTransport: Send + Sync {
     fn start(&self, ctx: &OperationContext, request: HttpRequest) -> HostFuture<Result<(HttpResponseHead, Box<dyn HttpBody>), HttpPoolError>>;
 }
@@ -689,6 +732,13 @@ pub trait AsyncHttpTransport: Send + Sync {
 // concurrent tickets right now) to become generic too, for a trait that costs nothing left as `dyn`.
 // Revisit if `HttpTransport` ever needs to become `async fn` (R2/universal-async) — an async trait
 // method genuinely cannot stay `dyn`, unlike this sync one.
+//
+// 🚫️async: E6 dyn-compat (gate-services, new class — not in the R2 E1–E5 list; flagged to the
+// coordinator to fold in) — `async fn` in a trait breaks object safety (E0038: "for a trait to be
+// dyn compatible it needs to allow building a vtable"), and `Arc<dyn HttpTransport>` is load-bearing
+// per the block comment above (implementors span two crates with no valid `dyn_enum_close!` or
+// generics fix). `asyncify-universal.py` does not yet recognise this class of exemption — re-scan
+// after adding it, or repair by hand again, the way this packet did.
 pub trait HttpTransport: Send + Sync {
     fn call(&self, request: HttpRequest) -> Result<HttpResponse, std::io::Error>;
 }
@@ -697,6 +747,7 @@ pub trait HttpTransport: Send + Sync {
 /// loudly rather than silently succeeding with fake data.
 pub struct UnwiredHttpTransport;
 impl HttpTransport for UnwiredHttpTransport {
+    // 🚫️async: E6 dyn-compat — see the trait declaration's tag above.
     fn call(&self, _request: HttpRequest) -> Result<HttpResponse, std::io::Error> {
         Err(std::io::Error::other("HttpPool: no HttpTransport wired yet (see the packet report's honest gaps)"))
     }
@@ -709,6 +760,7 @@ struct BufferedHttpBody {
     remaining: Option<Vec<u8>>,
 }
 impl HttpBody for BufferedHttpBody {
+    // 🚫️async: E6 dyn-compat — see the `HttpBody` trait's `dedyn-fw-os-misc` tag above.
     fn next_chunk(&mut self) -> HostFuture<Result<Option<Vec<u8>>, HttpPoolError>> {
         let chunk = self.remaining.take();
         Box::pin(async move { Ok(chunk) })
@@ -721,20 +773,27 @@ impl HttpBody for BufferedHttpBody {
 /// CONSTRUCTION time (unlike `HttpPool::fetch`'s own `runtime`/`scope` parameters) because
 /// [`AsyncHttpTransport::start`] itself takes neither — a transport that needs to reach
 /// `ComputePool::run_blocking` must own that context itself.
-pub struct BlockingHttpTransport<R: HostAsyncRuntime> {
+// 🔀️ dedyn-fw-os-misc: `TokioHostRuntime`, not `<R: HostAsyncRuntime>` — this is the ONE production
+// spawn site for HTTP transport work, and R3 requires Send-ness be obtained STRUCTURALLY (a known
+// concrete future type at the spawn site), never by bounding a generic. `TokioHostRuntime` is this
+// crate's sole real runtime; `ManualRuntime` (the other `HostAsyncRuntime` impl, testkit-only) never
+// constructs a `BlockingHttpTransport` — nothing in this file's tests does. Generalising over `R`
+// bought no actual caller and cost exactly the unprovable-Send error this comment replaces.
+pub struct BlockingHttpTransport {
     transport: Arc<dyn HttpTransport>,
     compute: Arc<ComputePool>,
-    runtime: Arc<R>,
+    runtime: Arc<TokioHostRuntime>,
     scope: ScopeHandle,
 }
 
-impl<R: HostAsyncRuntime> BlockingHttpTransport<R> {
-    pub fn new(transport: Arc<dyn HttpTransport>, compute: Arc<ComputePool>, runtime: Arc<R>, scope: ScopeHandle) -> BlockingHttpTransport<R> {
+impl BlockingHttpTransport {
+    pub async fn new(transport: Arc<dyn HttpTransport>, compute: Arc<ComputePool>, runtime: Arc<TokioHostRuntime>, scope: ScopeHandle) -> BlockingHttpTransport {
         BlockingHttpTransport { transport, compute, runtime, scope }
     }
 }
 
-impl<R: HostAsyncRuntime + 'static> AsyncHttpTransport for BlockingHttpTransport<R> {
+impl AsyncHttpTransport for BlockingHttpTransport {
+    // 🚫️async: E6 dyn-compat — see the trait declaration's tag.
     fn start(&self, ctx: &OperationContext, request: HttpRequest) -> HostFuture<Result<(HttpResponseHead, Box<dyn HttpBody>), HttpPoolError>> {
         let transport = self.transport.clone();
         let compute = self.compute.clone();
@@ -762,10 +821,14 @@ struct TokenBucket {
 }
 
 impl TokenBucket {
+    // 🚫️async: E1-adjacent — pure in-memory arithmetic, no suspension point, whose consumers include
+    // `Entry::or_insert_with`'s closure (`std`-fixed `FnOnce() -> V`, cannot be async) at every
+    // `HttpPool` call site below. See R9.
     fn new(capacity_bytes: u64) -> TokenBucket {
         TokenBucket { remaining_bytes: capacity_bytes, capacity_bytes }
     }
 
+    // 🚫️async: E1-adjacent — same reasoning as `new` above (R9).
     fn try_consume(&mut self, bytes: u64) -> bool {
         if bytes > self.remaining_bytes {
             false
@@ -778,6 +841,7 @@ impl TokenBucket {
     /// ♻️ Refills back toward capacity. Driven for real, once a minute, by
     /// [`HttpPool::spawn_refill_driver`] — see that method's doc; this method itself stays the pure
     /// arithmetic step so tests can also exercise refill deterministically without a driver.
+    // 🚫️async: E1-adjacent — same reasoning as `new` above (R9).
     fn refill(&mut self, bytes: u64) {
         self.remaining_bytes = (self.remaining_bytes + bytes).min(self.capacity_bytes);
     }
@@ -790,6 +854,8 @@ const HTTP_BUCKET_REFILL_INTERVAL_MS: u64 = 60_000;
 /// 🔓️ Releases one outstanding-request slot for `actor`, shared between [`HttpPool::fetch`]'s
 /// own early-return paths (no [`HttpPoolBody`] was ever created to own the release) and
 /// [`HttpPoolBody::finish`] (the body's own EOF/drop path) — ONE decrement implementation either way.
+// 🚫️async: E1 pure in-memory decrement whose consumer chain reaches `Drop::drop` (external trait,
+// cannot be async) via `HttpPoolBody::finish` — see R9.
 fn release_outstanding_slot(outstanding: &Mutex<HashMap<ActorId, u32>>, actor: ActorId) {
     let mut outstanding = outstanding.lock().expect("HttpPool outstanding mutex poisoned");
     if let Some(count) = outstanding.get_mut(&actor) {
@@ -823,7 +889,7 @@ impl HttpPool {
     /// callers built against today's `HttpPool::new`/`request` keep compiling unchanged) while
     /// [`AsyncHttpTransport::start`] needs a transport that OWNS them — see the crate report's
     /// `## honest gaps` for this one acknowledged duplication.
-    pub fn new(transport: Arc<dyn HttpTransport>, compute: Arc<ComputePool>, bytes_per_minute_cap: u64, outstanding_cap: u32) -> HttpPool {
+    pub async fn new(transport: Arc<dyn HttpTransport>, compute: Arc<ComputePool>, bytes_per_minute_cap: u64, outstanding_cap: u32) -> HttpPool {
         HttpPool {
             transport: HttpPoolTransport::Blocking { transport, compute },
             buckets: Arc::new(Mutex::new(HashMap::new())),
@@ -835,19 +901,19 @@ impl HttpPool {
 
     /// 🌐️ For a real [`AsyncHttpTransport`] (a sibling packet's real async client) that needs no
     /// [`ComputePool`] of its own — the transport already does real async I/O.
-    pub fn new_with_async_transport(transport: Arc<dyn AsyncHttpTransport>, bytes_per_minute_cap: u64, outstanding_cap: u32) -> HttpPool {
+    pub async fn new_with_async_transport(transport: Arc<dyn AsyncHttpTransport>, bytes_per_minute_cap: u64, outstanding_cap: u32) -> HttpPool {
         HttpPool { transport: HttpPoolTransport::Async(transport), buckets: Arc::new(Mutex::new(HashMap::new())), bytes_per_minute_cap, outstanding: Arc::new(Mutex::new(HashMap::new())), outstanding_cap: outstanding_cap.max(1) }
     }
 
     /// ♻️ Test/operator hook for a manual top-up outside the once-a-minute driver — see
     /// [`TokenBucket::refill`]'s doc.
-    pub fn refill_package_budget(&self, package: &PackageId, bytes: u64) {
+    pub async fn refill_package_budget(&self, package: &PackageId, bytes: u64) {
         self.buckets.lock().expect("HttpPool buckets mutex poisoned").entry(package.clone()).or_insert_with(|| TokenBucket::new(self.bytes_per_minute_cap)).refill(bytes);
     }
 
     /// 🔍️ `package`'s remaining bytes this minute — untracked packages read as a full bucket
     /// (nothing has been charged against them yet).
-    pub fn remaining_package_budget(&self, package: &PackageId) -> u64 {
+    pub async fn remaining_package_budget(&self, package: &PackageId) -> u64 {
         self.buckets.lock().expect("HttpPool buckets mutex poisoned").get(package).map(|bucket| bucket.remaining_bytes).unwrap_or(self.bytes_per_minute_cap)
     }
 
@@ -855,13 +921,16 @@ impl HttpPool {
     /// then tops EVERY currently-tracked package's bucket back toward its cap, forever — the loop
     /// this crate's own doc comment used to admit did not exist now actually runs. `ctx` identifies
     /// the DRIVER task itself, same convention as [`TimerWheel::spawn_driver`].
-    pub fn spawn_refill_driver<R: HostAsyncRuntime + 'static>(&self, runtime: &Arc<R>, scope: &ScopeHandle, ctx: OperationContext) {
+    pub async fn spawn_refill_driver<R: HostAsyncRuntime + 'static>(&self, runtime: &Arc<R>, scope: &ScopeHandle, ctx: OperationContext) {
         let buckets = self.buckets.clone();
         let cap = self.bytes_per_minute_cap;
         let runtime_for_loop = runtime.clone();
         let fut: HostFuture<()> = Box::pin(async move {
             loop {
-                let now_ms = runtime_for_loop.now_ms();
+                // 🌉️ R15: `now_ms`/`sleep_until` are RPITIT with an explicit `Send` bound at the
+                // trait, so their futures are provably `Send` even for a generic `R` — awaited
+                // directly, no `BoxedHostAsyncRuntime` detour needed any more.
+                let now_ms = runtime_for_loop.now_ms().await;
                 runtime_for_loop.sleep_until(now_ms + HTTP_BUCKET_REFILL_INTERVAL_MS).await;
                 let mut buckets = buckets.lock().expect("HttpPool buckets mutex poisoned");
                 for bucket in buckets.values_mut() {
@@ -869,7 +938,7 @@ impl HttpPool {
                 }
             }
         });
-        runtime.spawn_scoped(scope, ctx, fut);
+        runtime.spawn_scoped(scope, ctx, fut).await;
     }
 
     /// 🌊️ Starts `request` and returns as soon as the head is known, plus a [`HttpPoolBody`] the
@@ -956,6 +1025,8 @@ pub struct HttpPoolBody {
 }
 
 impl HttpPoolBody {
+    // 🚫️async: E1 pure bookkeeping consumed by `Drop::drop` below (external trait, cannot be
+    // async) — see R9.
     fn finish(&mut self) {
         if !self.finished {
             self.finished = true;
@@ -1053,12 +1124,53 @@ struct StorageState<R: HostAsyncRuntime> {
     byte_quota_per_plugin: u64,
 }
 
+/// 🚫️async: E5 executor bridge — polls `fut` exactly ONCE with a no-op waker (same construction
+/// `semio-framework-async::testkit::ManualRuntime::drive` already uses) and panics if it is not
+/// `Poll::Ready` on that first poll. This is deliberately NOT a general-purpose bridge: it is correct
+/// ONLY for a future documented to never suspend — every `HostAsyncRuntime::run_blocking` impl in
+/// this program dispatches its work (onto a `JoinSet`/thread, or runs it inline) and returns without
+/// ever yielding, both for [`TokioHostRuntime`] (delegates to [`ScopeTable::run_blocking`], a bare
+/// `spawn_on` push) and for `ManualRuntime` (runs `work()` inline). `storage_try_dispatch` is the
+/// ONLY caller.
+///
+/// WHY THIS CRATE CARRIES A SECOND E5 EXCEPTION, past R2's normal "at most one per crate": R2's
+/// bound is a discipline against proliferating ad-hoc bridges, not a literal ceiling that survives
+/// every cross-crate constraint. `StorageScheduler<R>` stays generic over `R: HostAsyncRuntime`
+/// because `🔌️plugin/🖥️host`'s `AsyncServices<R>` (outside this packet's `path_scope`) is generic
+/// over the SAME `R` and holds `Arc<StorageScheduler<R>>` — so [`TokioHostRuntime::block_on`] (tied
+/// to a concrete `tokio::runtime::Runtime`) cannot serve here. And `StorageScheduler::submit`'s
+/// signature is fixed SYNCHRONOUS by a caller this packet cannot edit either:
+/// `🔌️plugin/🖥️host/⏳️imports.rs`'s `storage_read`/`storage_write` call it un-awaited, inside an
+/// already-`async fn`, then immediately `.await` the returned [`StorageTicket`] — `submit` becoming
+/// `async fn` would desync that call site with no way for this packet to fix it. Two independently
+/// forced boundaries (generic `R`, synchronous `submit`) leave no path to `block_on`'s mechanism;
+/// `resolve_ready` is the smallest correct bridge for the one case that actually needs it.
+// 🚫️async: E5 executor bridge — see the doc comment directly above (kept short here, within the
+// codemod's 6-line lookback, since the full rationale needed more room than that).
+fn resolve_ready<F: Future>(fut: F) -> F::Output {
+    let waker = std::task::Waker::noop();
+    let mut cx = std::task::Context::from_waker(waker);
+    let mut fut = std::pin::pin!(fut);
+    match fut.as_mut().poll(&mut cx) {
+        std::task::Poll::Ready(value) => value,
+        std::task::Poll::Pending => unreachable!(
+            "resolve_ready: HostAsyncRuntime::run_blocking is documented to dispatch without \
+             suspending — a Pending here means an impl violated that contract"
+        ),
+    }
+}
+
 /// ▶️ Reentrant dispatch step: while a slot is free, pops the head of the HIGHEST-priority
 /// non-empty lane (`BTreeMap` iterates ascending, and lower `ctx.lane` is higher priority — the same
 /// convention `OperationContext.lane` documents) and runs it through [`HostAsyncRuntime::run_blocking`].
 /// No separate background polling task exists: [`StorageScheduler::submit`] and every job's own
 /// completion both call this again, so a freed slot or a newly queued job always gets a chance to
 /// dispatch without a dedicated loop.
+// 🚫️async: E1-adjacent — forced sync by `StorageScheduler::submit` (see `resolve_ready`'s tag
+// above for the full cross-crate reasoning: `submit` is called un-awaited, inside an already-`async
+// fn`, from `🔌️plugin/🖥️host/⏳️imports.rs`, which this packet cannot edit). Recurses into itself
+// from within the `resolve_ready`-driven `run_blocking` closure below — still synchronous, since
+// that closure runs to completion before `resolve_ready` returns.
 fn storage_try_dispatch<R: HostAsyncRuntime + 'static>(state: &Arc<StorageState<R>>) {
     loop {
         if state.in_flight.load(Ordering::SeqCst) >= state.max_in_flight {
@@ -1090,7 +1202,7 @@ fn storage_try_dispatch<R: HostAsyncRuntime + 'static>(state: &Arc<StorageState<
         let plugin = job.plugin.clone();
         let bytes = job.bytes;
         let ctx = job.ctx.clone();
-        state.runtime.run_blocking(
+        resolve_ready(state.runtime.run_blocking(
             &state.scope,
             ctx,
             Box::new(move || {
@@ -1108,7 +1220,7 @@ fn storage_try_dispatch<R: HostAsyncRuntime + 'static>(state: &Arc<StorageState<
                 recurse_state.in_flight.fetch_sub(1, Ordering::SeqCst);
                 storage_try_dispatch(&recurse_state);
             }),
-        );
+        ));
     }
 }
 
@@ -1123,7 +1235,7 @@ fn storage_try_dispatch<R: HostAsyncRuntime + 'static>(state: &Arc<StorageState<
 pub struct StorageScheduler<R: HostAsyncRuntime>(Arc<StorageState<R>>);
 
 impl<R: HostAsyncRuntime + 'static> StorageScheduler<R> {
-    pub fn new(runtime: Arc<R>, scope: ScopeHandle, max_in_flight: u32, byte_quota_per_plugin: u64) -> StorageScheduler<R> {
+    pub async fn new(runtime: Arc<R>, scope: ScopeHandle, max_in_flight: u32, byte_quota_per_plugin: u64) -> StorageScheduler<R> {
         StorageScheduler(Arc::new(StorageState { runtime, scope, queues: Mutex::new(BTreeMap::new()), in_flight: AtomicU32::new(0), max_in_flight: max_in_flight.max(1), per_plugin_bytes: Mutex::new(HashMap::new()), byte_quota_per_plugin }))
     }
 
@@ -1132,6 +1244,11 @@ impl<R: HostAsyncRuntime + 'static> StorageScheduler<R> {
     /// [`StorageError::BytesQuotaExceeded`] immediately if the reservation itself does not fit —
     /// the wheel is left untouched on that path, same discipline as [`WheelCore::arm`]. The ticket
     /// captures `ctx.deadline_ms` (if set) to race against in [`StorageTicket::await_result`].
+    // 🚫️async: E1-adjacent — forced synchronous by `🔌️plugin/🖥️host/⏳️imports.rs`'s
+    // `storage_read`/`storage_write`, which call this un-awaited inside an already-`async fn` then
+    // `.await` the returned `StorageTicket` separately (that file is outside this packet's
+    // `path_scope`, so it cannot be updated to `.await` this call instead). See `resolve_ready`'s
+    // doc comment above for the full cross-crate reasoning (R9).
     pub fn submit(&self, ctx: &OperationContext, plugin: PackageId, bytes: u64, work: impl FnOnce() -> Result<Vec<u8>, std::io::Error> + Send + 'static) -> Result<StorageTicket<R>, StorageError> {
         {
             let mut usage = self.0.per_plugin_bytes.lock().expect("StorageScheduler per_plugin_bytes mutex poisoned");
@@ -1149,7 +1266,7 @@ impl<R: HostAsyncRuntime + 'static> StorageScheduler<R> {
         Ok(StorageTicket { receiver: result_rx, cancelled, runtime: self.0.runtime.clone(), deadline_ms: ctx.deadline_ms })
     }
 
-    pub fn in_flight(&self) -> u32 {
+    pub async fn in_flight(&self) -> u32 {
         self.0.in_flight.load(Ordering::SeqCst)
     }
 }
@@ -1208,6 +1325,10 @@ enum Mailbox {
 }
 
 impl Mailbox {
+    // 🚫️async: E1-adjacent — pure, in-memory state-machine construction, consumed (below) through
+    // sync `Iterator::map`/`map_or` closures and a `std::sync::Mutex` guard held across the whole
+    // call in `EventRouter::publish`/`drain`. See R9 and the same reasoning on `TokenBucket`/
+    // `WheelCore` above.
     fn new(policy: &ChannelPolicy) -> Mailbox {
         match policy {
             ChannelPolicy::LatestWins => Mailbox::LatestWins(None),
@@ -1220,6 +1341,7 @@ impl Mailbox {
     /// 📮️ `coalesce_key` is only meaningful for a [`ChannelPolicy::Coalesced`] mailbox — an
     /// incoming message under a key already pending REPLACES it (collapse); a new key queues
     /// alongside the others.
+    // 🚫️async: E1-adjacent — see `Mailbox::new`'s tag above (R9).
     fn publish(&mut self, coalesce_key: Option<&str>, payload: Vec<u8>) -> PublishOutcome {
         match self {
             Mailbox::LatestWins(slot) => {
@@ -1265,6 +1387,7 @@ impl Mailbox {
 
     /// 💳️ `ByteCredit` tracks a spendable budget only, no queued payload, in this packet — a real
     /// byte-metered channel's actual delivery mechanism is later-packet wiring, so it drains empty.
+    // 🚫️async: E1-adjacent — see `Mailbox::new`'s tag above (R9).
     fn drain(&mut self) -> Vec<Vec<u8>> {
         match self {
             Mailbox::LatestWins(slot) => slot.take().into_iter().collect(),
@@ -1309,11 +1432,13 @@ impl Default for EventRouter {
 }
 
 impl EventRouter {
+    // 🚫️async: E1 pure constructor consumed by `Default::default` (external trait, cannot be async)
+    // — see R9. No suspension point exists (`Mutex::new`/`HashMap::new` are in-memory only).
     pub fn new() -> EventRouter {
         EventRouter { subscribers: Mutex::new(HashMap::new()), mailboxes: Mutex::new(HashMap::new()) }
     }
 
-    pub fn subscribe(&self, topic: Topic, actor: ActorId, policy: ChannelPolicy) {
+    pub async fn subscribe(&self, topic: Topic, actor: ActorId, policy: ChannelPolicy) {
         let mailbox = Mailbox::new(&policy);
         self.mailboxes.lock().expect("EventRouter mailboxes mutex poisoned").insert((topic.clone(), actor), mailbox);
         self.subscribers.lock().expect("EventRouter subscribers mutex poisoned").entry(topic).or_default().push(Subscriber { actor, policy });
@@ -1322,11 +1447,11 @@ impl EventRouter {
     /// 🔍️ The `ChannelPolicy` `actor` declared for `topic` at [`EventRouter::subscribe`] time, if
     /// still subscribed — lets a caller (e.g. a diagnostics surface) inspect backpressure
     /// vocabulary without reaching into a `Mailbox`, which is private.
-    pub fn declared_policy(&self, topic: &Topic, actor: ActorId) -> Option<ChannelPolicy> {
+    pub async fn declared_policy(&self, topic: &Topic, actor: ActorId) -> Option<ChannelPolicy> {
         self.subscribers.lock().expect("EventRouter subscribers mutex poisoned").get(topic)?.iter().find(|subscriber| subscriber.actor == actor).map(|subscriber| subscriber.policy.clone())
     }
 
-    pub fn unsubscribe(&self, topic: &Topic, actor: ActorId) {
+    pub async fn unsubscribe(&self, topic: &Topic, actor: ActorId) {
         if let Some(subscribers) = self.subscribers.lock().expect("EventRouter subscribers mutex poisoned").get_mut(topic) {
             subscribers.retain(|subscriber| subscriber.actor != actor);
         }
@@ -1335,7 +1460,7 @@ impl EventRouter {
 
     /// 📮️ Delivers `payload` to every subscriber of `topic`, honouring each one's OWN policy
     /// independently — one bounded subscriber rejecting never affects another's delivery.
-    pub fn publish(&self, topic: &Topic, coalesce_key: Option<&str>, payload: &[u8]) -> Vec<(ActorId, PublishOutcome)> {
+    pub async fn publish(&self, topic: &Topic, coalesce_key: Option<&str>, payload: &[u8]) -> Vec<(ActorId, PublishOutcome)> {
         let subscribers = self.subscribers.lock().expect("EventRouter subscribers mutex poisoned").get(topic).cloned().unwrap_or_default();
         let mut mailboxes = self.mailboxes.lock().expect("EventRouter mailboxes mutex poisoned");
         subscribers
@@ -1349,14 +1474,14 @@ impl EventRouter {
 
     /// ✉️ Direct actor-to-actor send, bypassing topic subscription — `actor` must already have a
     /// mailbox for `topic` from a prior [`EventRouter::subscribe`] call.
-    pub fn send_message(&self, topic: &Topic, actor: ActorId, payload: Vec<u8>) -> PublishOutcome {
+    pub async fn send_message(&self, topic: &Topic, actor: ActorId, payload: Vec<u8>) -> PublishOutcome {
         match self.mailboxes.lock().expect("EventRouter mailboxes mutex poisoned").get_mut(&(topic.clone(), actor)) {
             Some(mailbox) => mailbox.publish(None, payload),
             None => PublishOutcome::NoSuchSubscriber,
         }
     }
 
-    pub fn drain(&self, topic: &Topic, actor: ActorId) -> Vec<Vec<u8>> {
+    pub async fn drain(&self, topic: &Topic, actor: ActorId) -> Vec<Vec<u8>> {
         self.mailboxes.lock().expect("EventRouter mailboxes mutex poisoned").get_mut(&(topic.clone(), actor)).map(|mailbox| mailbox.drain()).unwrap_or_default()
     }
 }
@@ -1367,6 +1492,11 @@ impl EventRouter {
 /// result back as raw bytes tagged with the actor/generation/lane it belongs to. No type in this
 /// crate holds or calls a `Kernel` directly — every completion flows out through this trait instead,
 /// the same seam discipline `HostAsyncRuntime` itself uses to hide tokio.
+// 🚫️async: E6 dyn-compat — `Arc<dyn CompletionSink>` is the load-bearing shape (`spawn_driver`'s
+// `sink` parameter, an OPEN extension point implemented outside this crate). `complete` does no
+// awaiting of its own (raw-bytes handoff, no I/O in this crate), so unlike `AsyncHttpTransport` it
+// needs no `HostFuture` erasure either — plain sync is both correct and dyn-compatible. See the
+// `HttpTransport` tag above for the coordinator note on this exemption class.
 pub trait CompletionSink: Send + Sync {
     fn complete(&self, actor: u64, generation: u16, event_bytes: Vec<u8>, lane: u8);
 }
@@ -1387,16 +1517,17 @@ pub struct MockCompletionSink {
 }
 
 impl MockCompletionSink {
-    pub fn new() -> MockCompletionSink {
+    pub async fn new() -> MockCompletionSink {
         MockCompletionSink::default()
     }
 
-    pub fn recorded(&self) -> Vec<CompletionRecord> {
+    pub async fn recorded(&self) -> Vec<CompletionRecord> {
         self.completions.lock().expect("MockCompletionSink mutex poisoned").clone()
     }
 }
 
 impl CompletionSink for MockCompletionSink {
+    // 🚫️async: E6 dyn-compat — see the trait declaration's tag.
     fn complete(&self, actor: u64, generation: u16, event_bytes: Vec<u8>, lane: u8) {
         self.completions.lock().expect("MockCompletionSink mutex poisoned").push(CompletionRecord { actor, generation, event_bytes, lane });
     }
@@ -1410,66 +1541,66 @@ mod tests {
     use semio_framework_async::{testkit::ManualRuntime, thread_plan, TraceId};
     use std::sync::atomic::AtomicBool;
 
-    fn test_ctx(actor: u64, cancel: CancelToken) -> OperationContext {
+    async fn test_ctx(actor: u64, cancel: CancelToken) -> OperationContext {
         OperationContext { actor, generation: 0, trace: TraceId(actor), lane: 0, deadline_ms: None, cancel, capability: None }
     }
 
     //#region 🚂️TokioHostRuntimeTests
-    #[test]
-    fn tokio_host_runtime_checks_out_io_and_compute_threads_from_the_budget() {
-        let plan = thread_plan(8);
-        let budget = ThreadBudget::from_plan(plan);
+    #[semio_framework_async_macros::async_test]
+    async fn tokio_host_runtime_checks_out_io_and_compute_threads_from_the_budget() {
+        let plan = thread_plan(8).await;
+        let budget = ThreadBudget::from_plan(plan).await;
         let _runtime = TokioHostRuntime::new(plan, &budget).expect("runtime should build");
-        assert_eq!(budget.remaining(ThreadRole::IoWorker), 0);
-        assert_eq!(budget.remaining(ThreadRole::Compute), 0);
-        assert_eq!(budget.remaining(ThreadRole::Shard), plan.shards, "TokioHostRuntime must not touch roles it does not own");
+        assert_eq!(budget.remaining(ThreadRole::IoWorker).await, 0);
+        assert_eq!(budget.remaining(ThreadRole::Compute).await, 0);
+        assert_eq!(budget.remaining(ThreadRole::Shard).await, plan.shards, "TokioHostRuntime must not touch roles it does not own");
     }
 
-    #[test]
-    fn tokio_host_runtime_now_ms_advances_monotonically() {
-        let plan = thread_plan(4);
-        let budget = ThreadBudget::from_plan(plan);
+    #[semio_framework_async_macros::async_test]
+    async fn tokio_host_runtime_now_ms_advances_monotonically() {
+        let plan = thread_plan(4).await;
+        let budget = ThreadBudget::from_plan(plan).await;
         let runtime = TokioHostRuntime::new(plan, &budget).expect("runtime should build");
-        let first = runtime.now_ms();
+        let first = runtime.now_ms().await;
         runtime.block_on(async { tokio::time::sleep(Duration::from_millis(5)).await });
-        assert!(runtime.now_ms() >= first, "now_ms must never go backward");
+        assert!(runtime.now_ms().await >= first, "now_ms must never go backward");
     }
     //#endregion 🚂️TokioHostRuntimeTests
 
     //#region 🌳️ScopeTableTests
-    #[test]
-    fn cancel_scope_cancels_child_scopes_transitively() {
-        let plan = thread_plan(4);
-        let budget = ThreadBudget::from_plan(plan);
+    #[semio_framework_async_macros::async_test]
+    async fn cancel_scope_cancels_child_scopes_transitively() {
+        let plan = thread_plan(4).await;
+        let budget = ThreadBudget::from_plan(plan).await;
         let runtime = TokioHostRuntime::new(plan, &budget).expect("runtime should build");
-        let package = runtime.open_scope(ScopeOwner::Package("pkg-a".to_string()), None);
-        let actor = runtime.open_scope(ScopeOwner::Actor(1), Some(&package));
+        let package = runtime.open_scope(ScopeOwner::Package("pkg-a".to_string()), None).await;
+        let actor = runtime.open_scope(ScopeOwner::Actor(1), Some(&package)).await;
         runtime.block_on(async {
             let _ = runtime.cancel_scope(&package.owner, 50).await;
         });
-        assert!(actor.cancel.is_cancelled(), "child scope must observe the package scope's cancellation");
+        assert!(actor.cancel.is_cancelled().await, "child scope must observe the package scope's cancellation");
     }
 
     /// 🚨️ The spawned task sleeps far past the grace period and never checks its cancel token, so
     /// `cancel_scope` must report it `leaked` rather than `finished`. The 20ms sleep before
     /// cancelling gives the task a chance to actually start (pass the initial live/cancelled gate)
     /// first.
-    #[test]
-    fn cancel_scope_reports_leaked_task_that_ignores_cancellation_not_finished() {
-        let plan = thread_plan(4);
-        let budget = ThreadBudget::from_plan(plan);
+    #[semio_framework_async_macros::async_test]
+    async fn cancel_scope_reports_leaked_task_that_ignores_cancellation_not_finished() {
+        let plan = thread_plan(4).await;
+        let budget = ThreadBudget::from_plan(plan).await;
         let runtime = TokioHostRuntime::new(plan, &budget).expect("runtime should build");
-        let scope = runtime.open_scope(ScopeOwner::Actor(2), None);
+        let scope = runtime.open_scope(ScopeOwner::Actor(2), None).await;
         let ctx = test_ctx(2, scope.cancel.clone());
         runtime.spawn_scoped(
             &scope,
-            ctx,
+            ctx.await,
             Box::pin(async move {
                 loop {
                     tokio::time::sleep(Duration::from_secs(3600)).await;
                 }
             }),
-        );
+        ).await;
         let report = runtime.block_on(async {
             tokio::time::sleep(Duration::from_millis(20)).await;
             runtime.cancel_scope(&scope.owner, 60).await
@@ -1478,16 +1609,16 @@ mod tests {
         assert_eq!(report.finished, 0);
     }
 
-    #[test]
-    fn cancel_scope_counts_a_cooperative_task_as_finished() {
-        let plan = thread_plan(4);
-        let budget = ThreadBudget::from_plan(plan);
+    #[semio_framework_async_macros::async_test]
+    async fn cancel_scope_counts_a_cooperative_task_as_finished() {
+        let plan = thread_plan(4).await;
+        let budget = ThreadBudget::from_plan(plan).await;
         let runtime = TokioHostRuntime::new(plan, &budget).expect("runtime should build");
-        let scope = runtime.open_scope(ScopeOwner::Actor(3), None);
+        let scope = runtime.open_scope(ScopeOwner::Actor(3), None).await;
         let ctx = test_ctx(3, scope.cancel.clone());
         let ran = Arc::new(AtomicBool::new(false));
         let ran_clone = ran.clone();
-        runtime.spawn_scoped(&scope, ctx, Box::pin(async move { ran_clone.store(true, Ordering::SeqCst) }));
+        runtime.spawn_scoped(&scope, ctx.await, Box::pin(async move { ran_clone.store(true, Ordering::SeqCst) })).await;
         let report = runtime.block_on(async {
             tokio::time::sleep(Duration::from_millis(20)).await;
             runtime.cancel_scope(&scope.owner, 60).await
@@ -1497,33 +1628,33 @@ mod tests {
         assert_eq!(report.leaked, 0);
     }
 
-    #[test]
-    fn park_holds_new_work_until_unparked() {
-        let plan = thread_plan(4);
-        let budget = ThreadBudget::from_plan(plan);
+    #[semio_framework_async_macros::async_test]
+    async fn park_holds_new_work_until_unparked() {
+        let plan = thread_plan(4).await;
+        let budget = ThreadBudget::from_plan(plan).await;
         let runtime = TokioHostRuntime::new(plan, &budget).expect("runtime should build");
-        let scope = runtime.open_scope(ScopeOwner::Service("park-test"), None);
-        scope.cancel.park();
+        let scope = runtime.open_scope(ScopeOwner::Service("park-test"), None).await;
+        scope.cancel.park().await;
         let ran = Arc::new(AtomicBool::new(false));
         let ran_clone = ran.clone();
         let ctx = test_ctx(0, scope.cancel.clone());
-        runtime.spawn_scoped(&scope, ctx, Box::pin(async move { ran_clone.store(true, Ordering::SeqCst) }));
+        runtime.spawn_scoped(&scope, ctx.await, Box::pin(async move { ran_clone.store(true, Ordering::SeqCst) })).await;
         runtime.block_on(async { tokio::time::sleep(Duration::from_millis(2 * PARK_POLL_INTERVAL_MS)).await });
         assert!(!ran.load(Ordering::SeqCst), "parked scope must hold new work rather than running it");
-        scope.cancel.unpark();
+        scope.cancel.unpark().await;
         runtime.block_on(async { tokio::time::sleep(Duration::from_millis(4 * PARK_POLL_INTERVAL_MS)).await });
         assert!(ran.load(Ordering::SeqCst), "unparked scope must eventually run the held work");
     }
     //#endregion 🌳️ScopeTableTests
 
     //#region 🧮️ComputePoolTests
-    #[test]
-    fn run_blocking_never_exceeds_the_compute_bound_under_a_burst() {
+    #[semio_framework_async_macros::async_test]
+    async fn run_blocking_never_exceeds_the_compute_bound_under_a_burst() {
         let plan = ThreadPlan { kernel: 1, shards: 2, io_workers: 1, compute: 3, epoch_ticker: 1 };
-        let budget = ThreadBudget::from_plan(plan);
+        let budget = ThreadBudget::from_plan(plan).await;
         let runtime = TokioHostRuntime::new(plan, &budget).expect("runtime should build");
-        let pool = ComputePool::new(plan.compute);
-        let scope = runtime.open_scope(ScopeOwner::Service("compute-burst"), None);
+        let pool = ComputePool::new(plan.compute).await;
+        let scope = runtime.open_scope(ScopeOwner::Service("compute-burst"), None).await;
         let current = Arc::new(AtomicU32::new(0));
         let observed_max = Arc::new(AtomicU32::new(0));
         runtime.block_on(async {
@@ -1534,7 +1665,7 @@ mod tests {
                 let scope = &scope;
                 let current = current.clone();
                 let observed_max = observed_max.clone();
-                let ctx = test_ctx(i as u64, scope.cancel.clone());
+                let ctx = test_ctx(i as u64, scope.cancel.clone()).await;
                 handles.push(async move {
                     pool.run_blocking(runtime, scope, ctx, move || {
                         let now = current.fetch_add(1, Ordering::SeqCst) + 1;
@@ -1552,17 +1683,17 @@ mod tests {
         assert!(observed_max.load(Ordering::SeqCst) >= 2, "burst should have produced measurable overlap; observed {}", observed_max.load(Ordering::SeqCst));
     }
 
-    #[test]
-    fn run_blocking_deadline_actually_fires_and_the_late_result_is_not_awaited() {
-        let plan = thread_plan(8);
-        let budget = ThreadBudget::from_plan(plan);
+    #[semio_framework_async_macros::async_test]
+    async fn run_blocking_deadline_actually_fires_and_the_late_result_is_not_awaited() {
+        let plan = thread_plan(8).await;
+        let budget = ThreadBudget::from_plan(plan).await;
         let runtime = TokioHostRuntime::new(plan, &budget).expect("runtime should build");
-        let pool = ComputePool::new(plan.compute);
-        let scope = runtime.open_scope(ScopeOwner::Service("compute-deadline"), None);
+        let pool = ComputePool::new(plan.compute).await;
+        let scope = runtime.open_scope(ScopeOwner::Service("compute-deadline"), None).await;
         let (unblock_tx, unblock_rx) = std::sync::mpsc::channel::<()>();
         let outcome = runtime.block_on(async {
-            let now = runtime.now_ms();
-            let mut ctx = test_ctx(0, scope.cancel.clone());
+            let now = runtime.now_ms().await;
+            let mut ctx = test_ctx(0, scope.cancel.clone()).await;
             ctx.deadline_ms = Some(now + 40);
             pool.run_blocking(&runtime, &scope, ctx, move || {
                 unblock_rx.recv().expect("test should unblock this thread");
@@ -1593,21 +1724,21 @@ mod tests {
     //#endregion 🧮️ComputePoolTests
 
     //#region ⏲️WheelCoreTests
-    #[test]
-    fn wheel_core_pop_expired_fires_in_expiry_order_not_arm_order() {
-        let mut wheel = WheelCore::new(10);
+    #[semio_framework_async_macros::async_test]
+    async fn wheel_core_pop_expired_fires_in_expiry_order_not_arm_order() {
+        let mut wheel = WheelCore::new(10).await;
         let plugin = PackageId("p".to_string());
-        let late = wheel.arm(plugin.clone(), 1, 0, 0, 200, None).unwrap();
-        let early = wheel.arm(plugin, 2, 0, 0, 100, None).unwrap();
+        let late = wheel.arm(plugin.clone(), 1, 0, 0, 200, None).await.unwrap();
+        let early = wheel.arm(plugin, 2, 0, 0, 100, None).await.unwrap();
         let fired: Vec<TimerId> = wheel.pop_expired(1_000).into_iter().map(|f| f.id).collect();
         assert_eq!(fired, vec![early, late], "expiry order must win over arm order");
     }
 
-    #[test]
-    fn wheel_core_pop_expired_respects_now_ms_boundary() {
-        let mut wheel = WheelCore::new(10);
+    #[semio_framework_async_macros::async_test]
+    async fn wheel_core_pop_expired_respects_now_ms_boundary() {
+        let mut wheel = WheelCore::new(10).await;
         let plugin = PackageId("p".to_string());
-        wheel.arm(plugin, 1, 0, 0, 500, None).unwrap();
+        wheel.arm(plugin, 1, 0, 0, 500, None).await.unwrap();
         assert!(wheel.pop_expired(400).is_empty(), "must not fire before its expiry");
         assert_eq!(wheel.pop_expired(500).len(), 1, "must fire once now_ms reaches the expiry");
     }
@@ -1615,11 +1746,11 @@ mod tests {
     /// ⏲️ Jumps far past several repeat periods: a naive `expiry += repeat` applied once would
     /// still land before `now_ms` and fire again immediately on the next call; the catch-up loop
     /// in `pop_expired` must land beyond `now_ms` instead.
-    #[test]
-    fn wheel_core_repeat_rearms_and_catches_up_without_drift_accumulation() {
-        let mut wheel = WheelCore::new(10);
+    #[semio_framework_async_macros::async_test]
+    async fn wheel_core_repeat_rearms_and_catches_up_without_drift_accumulation() {
+        let mut wheel = WheelCore::new(10).await;
         let plugin = PackageId("p".to_string());
-        let id = wheel.arm(plugin, 1, 0, 0, 100, Some(100)).unwrap();
+        let id = wheel.arm(plugin, 1, 0, 0, 100, Some(100)).await.unwrap();
         let first = wheel.pop_expired(100);
         assert_eq!(first.len(), 1);
         assert_eq!(first[0].id, id);
@@ -1628,54 +1759,54 @@ mod tests {
         assert!(wheel.next_expiry_ms().unwrap() > 450);
     }
 
-    #[test]
-    fn wheel_core_disarm_prevents_a_future_fire() {
-        let mut wheel = WheelCore::new(10);
+    #[semio_framework_async_macros::async_test]
+    async fn wheel_core_disarm_prevents_a_future_fire() {
+        let mut wheel = WheelCore::new(10).await;
         let plugin = PackageId("p".to_string());
-        let id = wheel.arm(plugin, 1, 0, 0, 100, None).unwrap();
-        assert!(wheel.disarm(id));
+        let id = wheel.arm(plugin, 1, 0, 0, 100, None).await.unwrap();
+        assert!(wheel.disarm(id).await);
         assert!(wheel.pop_expired(1_000).is_empty());
-        assert!(!wheel.disarm(id), "disarming twice must report false the second time");
+        assert!(!wheel.disarm(id).await, "disarming twice must report false the second time");
     }
 
-    #[test]
-    fn wheel_core_rejects_arm_past_the_per_plugin_quota_with_a_typed_error() {
-        let mut wheel = WheelCore::new(2);
+    #[semio_framework_async_macros::async_test]
+    async fn wheel_core_rejects_arm_past_the_per_plugin_quota_with_a_typed_error() {
+        let mut wheel = WheelCore::new(2).await;
         let plugin = PackageId("p".to_string());
-        wheel.arm(plugin.clone(), 1, 0, 0, 100, None).unwrap();
-        wheel.arm(plugin.clone(), 1, 0, 0, 200, None).unwrap();
-        let result = wheel.arm(plugin.clone(), 1, 0, 0, 300, None);
+        wheel.arm(plugin.clone(), 1, 0, 0, 100, None).await.unwrap();
+        wheel.arm(plugin.clone(), 1, 0, 0, 200, None).await.unwrap();
+        let result = wheel.arm(plugin.clone(), 1, 0, 0, 300, None).await;
         assert_eq!(result, Err(TimerError::QuotaExceeded { plugin: plugin.clone(), limit: 2 }));
-        assert_eq!(wheel.armed_count(&plugin), 2, "a rejected arm must leave the wheel untouched");
+        assert_eq!(wheel.armed_count(&plugin).await, 2, "a rejected arm must leave the wheel untouched");
     }
 
-    #[test]
-    fn wheel_core_disarm_frees_quota_for_a_new_arm() {
-        let mut wheel = WheelCore::new(1);
+    #[semio_framework_async_macros::async_test]
+    async fn wheel_core_disarm_frees_quota_for_a_new_arm() {
+        let mut wheel = WheelCore::new(1).await;
         let plugin = PackageId("p".to_string());
-        let id = wheel.arm(plugin.clone(), 1, 0, 0, 100, None).unwrap();
-        assert!(wheel.arm(plugin.clone(), 1, 0, 0, 200, None).is_err());
-        wheel.disarm(id);
-        assert!(wheel.arm(plugin, 1, 0, 0, 200, None).is_ok());
+        let id = wheel.arm(plugin.clone(), 1, 0, 0, 100, None).await.unwrap();
+        assert!(wheel.arm(plugin.clone(), 1, 0, 0, 200, None).await.is_err());
+        wheel.disarm(id).await;
+        assert!(wheel.arm(plugin, 1, 0, 0, 200, None).await.is_ok());
     }
     //#endregion ⏲️WheelCoreTests
 
     //#region ⏲️TimerWheelDriverTests
-    #[test]
-    fn timer_wheel_driver_posts_a_fired_timer_through_the_completion_sink() {
-        let manual = ManualRuntime::new(0);
+    #[semio_framework_async_macros::async_test]
+    async fn timer_wheel_driver_posts_a_fired_timer_through_the_completion_sink() {
+        let manual = ManualRuntime::new(0).await;
         let runtime = Arc::new(manual.clone());
-        let scope = runtime.open_scope(ScopeOwner::Service("timer-driver-test"), None);
-        let wheel = TimerWheel::new(10);
-        let sink = Arc::new(MockCompletionSink::new());
-        let ctx = test_ctx(0, scope.cancel.clone());
-        wheel.spawn_driver(&runtime, &scope, ctx, sink.clone());
-        wheel.arm(PackageId("plugin-a".to_string()), 42, 3, 1, 100, None).expect("arm should succeed");
-        manual.drive();
-        assert!(sink.recorded().is_empty(), "must not fire before the injected clock reaches the deadline");
-        manual.set_now_ms(100);
-        manual.drive();
-        let recorded = sink.recorded();
+        let scope = runtime.open_scope(ScopeOwner::Service("timer-driver-test"), None).await;
+        let wheel = TimerWheel::new(10).await;
+        let sink = Arc::new(MockCompletionSink::new().await);
+        let ctx = test_ctx(0, scope.cancel.clone()).await;
+        wheel.spawn_driver(&runtime, &scope, ctx, sink.clone()).await;
+        wheel.arm(PackageId("plugin-a".to_string()), 42, 3, 1, 100, None).await.expect("arm should succeed");
+        manual.drive().await;
+        assert!(sink.recorded().await.is_empty(), "must not fire before the injected clock reaches the deadline");
+        manual.set_now_ms(100).await;
+        manual.drive().await;
+        let recorded = sink.recorded().await;
         assert_eq!(recorded.len(), 1, "the driver must post exactly one completion for the fired timer");
         assert_eq!(recorded[0].actor, 42);
         assert_eq!(recorded[0].generation, 3);
@@ -1688,18 +1819,18 @@ mod tests {
     /// ever be genuinely QUEUED behind it — a real `TokioHostRuntime` is required here to make the
     /// priority ordering observable at all: one job occupies the single in-flight slot on its own
     /// blocking thread while the two real submissions below queue behind it.
-    #[test]
-    fn storage_scheduler_dispatches_highest_priority_lane_first_despite_submit_order() {
-        let plan = thread_plan(4);
-        let budget = ThreadBudget::from_plan(plan);
+    #[semio_framework_async_macros::async_test]
+    async fn storage_scheduler_dispatches_highest_priority_lane_first_despite_submit_order() {
+        let plan = thread_plan(4).await;
+        let budget = ThreadBudget::from_plan(plan).await;
         let runtime = Arc::new(TokioHostRuntime::new(plan, &budget).expect("runtime should build"));
-        let scope = runtime.open_scope(ScopeOwner::Service("storage-priority-test"), None);
-        let scheduler = StorageScheduler::new(runtime.clone(), scope.clone(), 1, 1_000_000);
+        let scope = runtime.open_scope(ScopeOwner::Service("storage-priority-test"), None).await;
+        let scheduler = StorageScheduler::new(runtime.clone(), scope.clone(), 1, 1_000_000).await;
         let order = Arc::new(Mutex::new(Vec::<&'static str>::new()));
 
         let (occupy_tx, occupy_rx) = std::sync::mpsc::channel::<()>();
         let occupy_rx = Mutex::new(occupy_rx);
-        let occupy_ctx = test_ctx(0, scope.cancel.clone());
+        let occupy_ctx = test_ctx(0, scope.cancel.clone()).await;
         let occupy_ticket = scheduler
             .submit(&occupy_ctx, PackageId("occupy".to_string()), 1, move || {
                 occupy_rx.lock().unwrap().recv().ok();
@@ -1707,7 +1838,7 @@ mod tests {
             })
             .unwrap();
 
-        let mut low_ctx = test_ctx(0, scope.cancel.clone());
+        let mut low_ctx = test_ctx(0, scope.cancel.clone()).await;
         low_ctx.lane = 200;
         let order_low = order.clone();
         let low_ticket = scheduler
@@ -1717,7 +1848,7 @@ mod tests {
             })
             .unwrap();
 
-        let mut high_ctx = test_ctx(0, scope.cancel);
+        let mut high_ctx = test_ctx(0, scope.cancel).await;
         high_ctx.lane = 1;
         let order_high = order.clone();
         let high_ticket = scheduler
@@ -1736,16 +1867,16 @@ mod tests {
         assert_eq!(*order.lock().unwrap(), vec!["high", "low"], "the higher-priority lane (lower ctx.lane) must dispatch before the lower-priority one despite submitting second");
     }
 
-    #[test]
-    fn storage_scheduler_never_exceeds_max_in_flight() {
-        let plan = thread_plan(4);
-        let budget = ThreadBudget::from_plan(plan);
+    #[semio_framework_async_macros::async_test]
+    async fn storage_scheduler_never_exceeds_max_in_flight() {
+        let plan = thread_plan(4).await;
+        let budget = ThreadBudget::from_plan(plan).await;
         let runtime = Arc::new(TokioHostRuntime::new(plan, &budget).expect("runtime should build"));
-        let scope = runtime.open_scope(ScopeOwner::Service("storage-cap-test"), None);
-        let scheduler = StorageScheduler::new(runtime.clone(), scope.clone(), 2, 1_000_000);
+        let scope = runtime.open_scope(ScopeOwner::Service("storage-cap-test"), None).await;
+        let scheduler = StorageScheduler::new(runtime.clone(), scope.clone(), 2, 1_000_000).await;
         let mut tickets = Vec::new();
         for i in 0..8u32 {
-            let ctx = test_ctx(0, scope.cancel.clone());
+            let ctx = test_ctx(0, scope.cancel.clone()).await;
             let ticket = scheduler
                 .submit(&ctx, PackageId(format!("p{i}")), 1, move || {
                     std::thread::sleep(Duration::from_millis(15));
@@ -1760,7 +1891,7 @@ mod tests {
             let cap_violated_ref = &cap_violated;
             let sampler = async {
                 loop {
-                    if scheduler_ref.in_flight() > 2 {
+                    if scheduler_ref.in_flight().await > 2 {
                         cap_violated_ref.store(true, Ordering::SeqCst);
                     }
                     tokio::task::yield_now().await;
@@ -1783,14 +1914,14 @@ mod tests {
     /// above): the first job must still be genuinely IN FLIGHT — holding its 60-byte reservation —
     /// when the second `submit` is checked, so it is blocked on a channel rather than left to
     /// `ManualRuntime`'s synchronous, immediately-releasing execution.
-    #[test]
-    fn storage_scheduler_rejects_over_budget_submit_with_a_typed_error_and_untouched_usage() {
-        let plan = thread_plan(4);
-        let budget = ThreadBudget::from_plan(plan);
+    #[semio_framework_async_macros::async_test]
+    async fn storage_scheduler_rejects_over_budget_submit_with_a_typed_error_and_untouched_usage() {
+        let plan = thread_plan(4).await;
+        let budget = ThreadBudget::from_plan(plan).await;
         let runtime = Arc::new(TokioHostRuntime::new(plan, &budget).expect("runtime should build"));
-        let scope = runtime.open_scope(ScopeOwner::Service("storage-budget-test"), None);
-        let scheduler = StorageScheduler::new(runtime.clone(), scope.clone(), 4, 100);
-        let ctx = test_ctx(0, scope.cancel);
+        let scope = runtime.open_scope(ScopeOwner::Service("storage-budget-test"), None).await;
+        let scheduler = StorageScheduler::new(runtime.clone(), scope.clone(), 4, 100).await;
+        let ctx = test_ctx(0, scope.cancel).await;
         let plugin = PackageId("p".to_string());
         let (hold_tx, hold_rx) = std::sync::mpsc::channel::<()>();
         let hold_rx = Mutex::new(hold_rx);
@@ -1817,17 +1948,17 @@ mod tests {
     /// submit that would otherwise not fit the tight per-plugin quota) — the 50ms sleep after the
     /// occupier's own result gives that skip a chance to happen, since it runs on the completion
     /// closure's own thread, which may still be unwinding when this task's waker fires.
-    #[test]
-    fn storage_scheduler_races_a_queued_job_against_its_deadline_and_frees_its_reservation_when_lost() {
-        let plan = thread_plan(4);
-        let budget = ThreadBudget::from_plan(plan);
+    #[semio_framework_async_macros::async_test]
+    async fn storage_scheduler_races_a_queued_job_against_its_deadline_and_frees_its_reservation_when_lost() {
+        let plan = thread_plan(4).await;
+        let budget = ThreadBudget::from_plan(plan).await;
         let runtime = Arc::new(TokioHostRuntime::new(plan, &budget).expect("runtime should build"));
-        let scope = runtime.open_scope(ScopeOwner::Service("storage-deadline-test"), None);
-        let scheduler = StorageScheduler::new(runtime.clone(), scope.clone(), 1, 50);
+        let scope = runtime.open_scope(ScopeOwner::Service("storage-deadline-test"), None).await;
+        let scheduler = StorageScheduler::new(runtime.clone(), scope.clone(), 1, 50).await;
 
         let (occupy_tx, occupy_rx) = std::sync::mpsc::channel::<()>();
         let occupy_rx = Mutex::new(occupy_rx);
-        let occupy_ctx = test_ctx(0, scope.cancel.clone());
+        let occupy_ctx = test_ctx(0, scope.cancel.clone()).await;
         let occupy_ticket = scheduler
             .submit(&occupy_ctx, PackageId("occupy".to_string()), 1, move || {
                 occupy_rx.lock().unwrap().recv().ok();
@@ -1839,8 +1970,8 @@ mod tests {
         let ran = Arc::new(AtomicBool::new(false));
         let ran_clone = ran.clone();
         let outcome = runtime.block_on(async {
-            let now = runtime.now_ms();
-            let mut deadline_ctx = test_ctx(0, scope.cancel.clone());
+            let now = runtime.now_ms().await;
+            let mut deadline_ctx = test_ctx(0, scope.cancel.clone()).await;
             deadline_ctx.deadline_ms = Some(now + 30);
             let deadline_ticket = scheduler.submit(&deadline_ctx, plugin.clone(), 42, move || {
                 ran_clone.store(true, Ordering::SeqCst);
@@ -1856,7 +1987,7 @@ mod tests {
             let _ = occupy_ticket.await_result().await;
             tokio::time::sleep(Duration::from_millis(50)).await;
         });
-        let verify_ticket = scheduler.submit(&test_ctx(0, scope.cancel), plugin.clone(), 45, || Ok(Vec::new()));
+        let verify_ticket = scheduler.submit(&test_ctx(0, scope.cancel).await, plugin.clone(), 45, || Ok(Vec::new()));
         let verify_ticket = verify_ticket.expect("the deadline-lost job's 42-byte reservation must have been released, leaving room for 45 more under the 50-byte quota");
         runtime.block_on(async {
             let _ = verify_ticket.await_result().await;
@@ -1865,66 +1996,66 @@ mod tests {
     //#endregion 💾️StorageSchedulerTests
 
     //#region 📮️EventRouterTests
-    #[test]
-    fn event_router_latest_wins_collapses_older_pending_value() {
+    #[semio_framework_async_macros::async_test]
+    async fn event_router_latest_wins_collapses_older_pending_value() {
         let router = EventRouter::new();
         let topic = Topic("scene.updates".to_string());
         let actor = ActorId(1);
-        router.subscribe(topic.clone(), actor, ChannelPolicy::LatestWins);
-        let first = router.publish(&topic, None, b"v1");
-        let second = router.publish(&topic, None, b"v2");
+        router.subscribe(topic.clone(), actor, ChannelPolicy::LatestWins).await;
+        let first = router.publish(&topic, None, b"v1").await;
+        let second = router.publish(&topic, None, b"v2").await;
         assert_eq!(first, vec![(actor, PublishOutcome::Delivered)]);
         assert_eq!(second, vec![(actor, PublishOutcome::Collapsed)]);
-        assert_eq!(router.drain(&topic, actor), vec![b"v2".to_vec()], "only the LATEST value must survive the collapse");
+        assert_eq!(router.drain(&topic, actor).await, vec![b"v2".to_vec()], "only the LATEST value must survive the collapse");
     }
 
-    #[test]
-    fn event_router_lossless_bounded_rejects_at_cap_without_unbounded_growth() {
+    #[semio_framework_async_macros::async_test]
+    async fn event_router_lossless_bounded_rejects_at_cap_without_unbounded_growth() {
         let router = EventRouter::new();
         let topic = Topic("jobs.updates".to_string());
         let actor = ActorId(2);
-        router.subscribe(topic.clone(), actor, ChannelPolicy::LosslessBounded { cap: 2 });
-        assert_eq!(router.publish(&topic, None, b"a"), vec![(actor, PublishOutcome::Delivered)]);
-        assert_eq!(router.publish(&topic, None, b"b"), vec![(actor, PublishOutcome::Delivered)]);
-        assert_eq!(router.publish(&topic, None, b"c"), vec![(actor, PublishOutcome::RejectedFull { cap: 2 })], "must reject rather than grow past cap");
-        assert_eq!(router.drain(&topic, actor), vec![b"a".to_vec(), b"b".to_vec()], "the rejected message must never have been queued");
+        router.subscribe(topic.clone(), actor, ChannelPolicy::LosslessBounded { cap: 2 }).await;
+        assert_eq!(router.publish(&topic, None, b"a").await, vec![(actor, PublishOutcome::Delivered)]);
+        assert_eq!(router.publish(&topic, None, b"b").await, vec![(actor, PublishOutcome::Delivered)]);
+        assert_eq!(router.publish(&topic, None, b"c").await, vec![(actor, PublishOutcome::RejectedFull { cap: 2 })], "must reject rather than grow past cap");
+        assert_eq!(router.drain(&topic, actor).await, vec![b"a".to_vec(), b"b".to_vec()], "the rejected message must never have been queued");
     }
 
-    #[test]
-    fn event_router_coalesced_collapses_same_key_but_queues_distinct_keys() {
+    #[semio_framework_async_macros::async_test]
+    async fn event_router_coalesced_collapses_same_key_but_queues_distinct_keys() {
         let router = EventRouter::new();
         let topic = Topic("cursor.updates".to_string());
         let actor = ActorId(3);
-        router.subscribe(topic.clone(), actor, ChannelPolicy::Coalesced { key: "cursor".to_string() });
-        router.publish(&topic, Some("peer-1"), b"pos-1");
-        let outcome = router.publish(&topic, Some("peer-1"), b"pos-2");
-        router.publish(&topic, Some("peer-2"), b"pos-a");
+        router.subscribe(topic.clone(), actor, ChannelPolicy::Coalesced { key: "cursor".to_string() }).await;
+        router.publish(&topic, Some("peer-1"), b"pos-1").await;
+        let outcome = router.publish(&topic, Some("peer-1"), b"pos-2").await;
+        router.publish(&topic, Some("peer-2"), b"pos-a").await;
         assert_eq!(outcome, vec![(actor, PublishOutcome::Collapsed)]);
-        let drained = router.drain(&topic, actor);
+        let drained = router.drain(&topic, actor).await;
         assert_eq!(drained.len(), 2, "distinct coalesce keys must not collapse into each other");
         assert!(drained.contains(&b"pos-2".to_vec()));
         assert!(drained.contains(&b"pos-a".to_vec()));
     }
 
-    #[test]
-    fn event_router_byte_credit_rejects_when_insufficient_and_admits_after_refund_style_new_bucket() {
+    #[semio_framework_async_macros::async_test]
+    async fn event_router_byte_credit_rejects_when_insufficient_and_admits_after_refund_style_new_bucket() {
         let router = EventRouter::new();
         let topic = Topic("stream.frames".to_string());
         let actor = ActorId(4);
-        router.subscribe(topic.clone(), actor, ChannelPolicy::ByteCredit { bytes: 4 });
-        assert_eq!(router.publish(&topic, None, &[0u8; 3]), vec![(actor, PublishOutcome::Delivered)]);
-        assert_eq!(router.publish(&topic, None, &[0u8; 3]), vec![(actor, PublishOutcome::RejectedInsufficientCredit)], "must reject once the remaining credit is insufficient");
+        router.subscribe(topic.clone(), actor, ChannelPolicy::ByteCredit { bytes: 4 }).await;
+        assert_eq!(router.publish(&topic, None, &[0u8; 3]).await, vec![(actor, PublishOutcome::Delivered)]);
+        assert_eq!(router.publish(&topic, None, &[0u8; 3]).await, vec![(actor, PublishOutcome::RejectedInsufficientCredit)], "must reject once the remaining credit is insufficient");
     }
 
-    #[test]
-    fn event_router_unsubscribe_removes_the_mailbox_and_future_publishes_see_no_subscriber() {
+    #[semio_framework_async_macros::async_test]
+    async fn event_router_unsubscribe_removes_the_mailbox_and_future_publishes_see_no_subscriber() {
         let router = EventRouter::new();
         let topic = Topic("scene.updates".to_string());
         let actor = ActorId(5);
-        router.subscribe(topic.clone(), actor, ChannelPolicy::LatestWins);
-        router.unsubscribe(&topic, actor);
-        assert_eq!(router.publish(&topic, None, b"x"), Vec::new(), "no subscribers left means no outcomes at all");
-        assert_eq!(router.send_message(&topic, actor, b"x".to_vec()), PublishOutcome::NoSuchSubscriber);
+        router.subscribe(topic.clone(), actor, ChannelPolicy::LatestWins).await;
+        router.unsubscribe(&topic, actor).await;
+        assert_eq!(router.publish(&topic, None, b"x").await, Vec::new(), "no subscribers left means no outcomes at all");
+        assert_eq!(router.send_message(&topic, actor, b"x".to_vec()).await, PublishOutcome::NoSuchSubscriber);
     }
     //#endregion 📮️EventRouterTests
 
@@ -1933,18 +2064,20 @@ mod tests {
         calls: Arc<Mutex<u32>>,
     }
     impl HttpTransport for RecordingTransport {
+        // 🚫️async: E6 dyn-compat — see the trait declaration's tag.
         fn call(&self, request: HttpRequest) -> Result<HttpResponse, std::io::Error> {
             *self.calls.lock().unwrap() += 1;
             Ok(HttpResponse { status: 200, headers: Vec::new(), body: request.body })
         }
     }
 
-    fn sample_request() -> HttpRequest {
+    async fn sample_request() -> HttpRequest {
         HttpRequest { method: "GET".to_string(), url: "https://example.invalid/x".to_string(), headers: Vec::new(), body: Vec::new() }
     }
 
     struct BlockingTransport(Mutex<std::sync::mpsc::Receiver<()>>);
     impl HttpTransport for BlockingTransport {
+        // 🚫️async: E6 dyn-compat — see the trait declaration's tag.
         fn call(&self, request: HttpRequest) -> Result<HttpResponse, std::io::Error> {
             self.0.lock().unwrap().recv().ok();
             Ok(HttpResponse { status: 200, headers: Vec::new(), body: request.body })
@@ -1954,26 +2087,27 @@ mod tests {
     /// 🌐️ Runs a first request in the background, blocked on `unblock_rx` so it stays genuinely
     /// outstanding, then waits 40ms (well past the background task's own startup) before issuing a
     /// second request that must be rejected while the first still holds the actor's one slot.
-    #[test]
-    fn http_pool_rejects_past_the_per_actor_outstanding_cap() {
-        let plan = thread_plan(4);
-        let budget = ThreadBudget::from_plan(plan);
+    #[semio_framework_async_macros::async_test]
+    async fn http_pool_rejects_past_the_per_actor_outstanding_cap() {
+        let plan = thread_plan(4).await;
+        let budget = ThreadBudget::from_plan(plan).await;
         let runtime = Arc::new(TokioHostRuntime::new(plan, &budget).expect("runtime should build"));
-        let scope = runtime.open_scope(ScopeOwner::Service("http-test"), None);
+        let scope = runtime.open_scope(ScopeOwner::Service("http-test"), None).await;
         let (unblock_tx, unblock_rx) = std::sync::mpsc::channel::<()>();
-        let compute = Arc::new(ComputePool::new(plan.compute));
-        let pool = Arc::new(HttpPool::new(Arc::new(BlockingTransport(Mutex::new(unblock_rx))), compute, 1_000_000, 1));
+        let compute = Arc::new(ComputePool::new(plan.compute).await);
+        let pool = Arc::new(HttpPool::new(Arc::new(BlockingTransport(Mutex::new(unblock_rx))), compute, 1_000_000, 1).await);
         let actor = ActorId(9);
 
         runtime.block_on(async {
             let pool_bg = pool.clone();
             let runtime_bg = runtime.clone();
             let scope_bg = scope.clone();
-            let ctx_bg = test_ctx(0, scope.cancel.clone());
-            let handle = tokio::spawn(async move { pool_bg.request(runtime_bg.as_ref(), &scope_bg, ctx_bg, PackageId("pkg".to_string()), actor, sample_request()).await });
+            let ctx_bg = test_ctx(0, scope.cancel.clone()).await;
+            let request_bg = sample_request().await;
+            let handle = tokio::spawn(async move { pool_bg.request(runtime_bg.as_ref(), &scope_bg, ctx_bg, PackageId("pkg".to_string()), actor, request_bg).await });
             tokio::time::sleep(Duration::from_millis(40)).await;
-            let ctx2 = test_ctx(0, scope.cancel.clone());
-            let second = pool.request(runtime.as_ref(), &scope, ctx2, PackageId("pkg".to_string()), actor, sample_request()).await;
+            let ctx2 = test_ctx(0, scope.cancel.clone()).await;
+            let second = pool.request(runtime.as_ref(), &scope, ctx2, PackageId("pkg".to_string()), actor, sample_request().await).await;
             assert_eq!(second, Err(HttpPoolError::OutstandingCapReached { actor, limit: 1 }));
             let _ = unblock_tx.send(());
             let first_result = handle.await.expect("background request task must not panic");
@@ -1981,20 +2115,20 @@ mod tests {
         });
     }
 
-    #[test]
-    fn http_pool_rejects_when_byte_budget_exhausted_and_transport_is_never_called() {
-        let plan = thread_plan(4);
-        let budget = ThreadBudget::from_plan(plan);
+    #[semio_framework_async_macros::async_test]
+    async fn http_pool_rejects_when_byte_budget_exhausted_and_transport_is_never_called() {
+        let plan = thread_plan(4).await;
+        let budget = ThreadBudget::from_plan(plan).await;
         let runtime = TokioHostRuntime::new(plan, &budget).expect("runtime should build");
-        let scope = runtime.open_scope(ScopeOwner::Service("http-budget-test"), None);
+        let scope = runtime.open_scope(ScopeOwner::Service("http-budget-test"), None).await;
         let calls = Arc::new(Mutex::new(0));
-        let compute = Arc::new(ComputePool::new(plan.compute));
-        let pool = HttpPool::new(Arc::new(RecordingTransport { calls: calls.clone() }), compute, 4, 4);
+        let compute = Arc::new(ComputePool::new(plan.compute).await);
+        let pool = HttpPool::new(Arc::new(RecordingTransport { calls: calls.clone() }), compute, 4, 4).await;
         let actor = ActorId(10);
         let package = PackageId("pkg".to_string());
-        let mut big_request = sample_request();
+        let mut big_request = sample_request().await;
         big_request.body = vec![0u8; 10];
-        let ctx = test_ctx(0, scope.cancel.clone());
+        let ctx = test_ctx(0, scope.cancel.clone()).await;
         let result = runtime.block_on(pool.request(&runtime, &scope, ctx, package.clone(), actor, big_request));
         assert_eq!(result, Err(HttpPoolError::ByteBudgetExhausted { package }));
         assert_eq!(*calls.lock().unwrap(), 0, "the transport must never be called once the budget rejects the request");
@@ -2004,27 +2138,27 @@ mod tests {
     /// from this `tests` submodule — no new production API needed for it), then proves
     /// `spawn_refill_driver`'s task actually RUNS on a tick: no refill before the interval elapses,
     /// a full top-up once the injected clock reaches it.
-    #[test]
-    fn http_pool_refill_driver_actually_refills_a_consumed_bucket_on_its_tick() {
-        let manual = ManualRuntime::new(0);
+    #[semio_framework_async_macros::async_test]
+    async fn http_pool_refill_driver_actually_refills_a_consumed_bucket_on_its_tick() {
+        let manual = ManualRuntime::new(0).await;
         let runtime = Arc::new(manual.clone());
-        let scope = runtime.open_scope(ScopeOwner::Service("http-refill-test"), None);
-        let compute = Arc::new(ComputePool::new(2));
-        let pool = HttpPool::new(Arc::new(UnwiredHttpTransport), compute, 100, 4);
+        let scope = runtime.open_scope(ScopeOwner::Service("http-refill-test"), None).await;
+        let compute = Arc::new(ComputePool::new(2).await);
+        let pool = HttpPool::new(Arc::new(UnwiredHttpTransport), compute, 100, 4).await;
         let package = PackageId("pkg-refill".to_string());
         {
             let mut buckets = pool.buckets.lock().unwrap();
             buckets.entry(package.clone()).or_insert_with(|| TokenBucket::new(100)).try_consume(70);
         }
-        assert_eq!(pool.remaining_package_budget(&package), 30);
+        assert_eq!(pool.remaining_package_budget(&package).await, 30);
 
-        let ctx = test_ctx(0, scope.cancel.clone());
-        pool.spawn_refill_driver(&runtime, &scope, ctx);
-        manual.drive();
-        assert_eq!(pool.remaining_package_budget(&package), 30, "must not refill before the tick interval elapses");
-        manual.set_now_ms(HTTP_BUCKET_REFILL_INTERVAL_MS);
-        manual.drive();
-        assert_eq!(pool.remaining_package_budget(&package), 100, "the refill driver must actually run its loop and top the bucket back up on its own tick");
+        let ctx = test_ctx(0, scope.cancel.clone()).await;
+        pool.spawn_refill_driver(&runtime, &scope, ctx).await;
+        manual.drive().await;
+        assert_eq!(pool.remaining_package_budget(&package).await, 30, "must not refill before the tick interval elapses");
+        manual.set_now_ms(HTTP_BUCKET_REFILL_INTERVAL_MS).await;
+        manual.drive().await;
+        assert_eq!(pool.remaining_package_budget(&package).await, 100, "the refill driver must actually run its loop and top the bucket back up on its own tick");
     }
 
     /// 🌐️ A test-only `AsyncHttpTransport`/`HttpBody` over a REAL local TCP socket — the harness the
@@ -2043,6 +2177,7 @@ mod tests {
         dropped: Arc<AtomicBool>,
     }
     impl HttpBody for LocalSocketBody {
+        // 🚫️async: E6 dyn-compat — see the `HttpBody` trait's tag.
         fn next_chunk(&mut self) -> HostFuture<Result<Option<Vec<u8>>, HttpPoolError>> {
             let stream = self.stream.clone();
             let compute = self.compute.clone();
@@ -2080,6 +2215,7 @@ mod tests {
         dropped: Arc<AtomicBool>,
     }
     impl AsyncHttpTransport for LocalSocketTransport {
+        // 🚫️async: E6 dyn-compat — see the trait declaration's tag.
         fn start(&self, ctx: &OperationContext, _request: HttpRequest) -> HostFuture<Result<(HttpResponseHead, Box<dyn HttpBody>), HttpPoolError>> {
             let addr = self.addr;
             let compute = self.compute.clone();
@@ -2106,7 +2242,7 @@ mod tests {
     /// order with a small delay between each — a genuine streamed response, not a single buffered
     /// write. Accepts indefinitely (background thread lives for the test's duration) so more than
     /// one test connection can be served.
-    fn spawn_chunk_server(chunks: Vec<Vec<u8>>) -> std::net::SocketAddr {
+    async fn spawn_chunk_server(chunks: Vec<Vec<u8>>) -> std::net::SocketAddr {
         let listener = std::net::TcpListener::bind("127.0.0.1:0").expect("bind local test listener");
         let addr = listener.local_addr().expect("read local test listener addr");
         std::thread::spawn(move || {
@@ -2130,29 +2266,29 @@ mod tests {
     /// 🌐️ The run-the-real-thing case: a genuine multi-chunk response over a real local TCP socket,
     /// asserting the package bucket is charged EXACTLY each chunk's real length as it arrives — not
     /// an upfront estimate, not the whole body's length in one shot.
-    #[test]
-    fn http_pool_fetch_charges_real_bytes_per_chunk_over_a_local_tcp_listener() {
-        let plan = thread_plan(4);
-        let budget = ThreadBudget::from_plan(plan);
+    #[semio_framework_async_macros::async_test]
+    async fn http_pool_fetch_charges_real_bytes_per_chunk_over_a_local_tcp_listener() {
+        let plan = thread_plan(4).await;
+        let budget = ThreadBudget::from_plan(plan).await;
         let runtime = Arc::new(TokioHostRuntime::new(plan, &budget).expect("runtime should build"));
-        let scope = runtime.open_scope(ScopeOwner::Service("http-stream-test"), None);
-        let compute = Arc::new(ComputePool::new(plan.compute));
+        let scope = runtime.open_scope(ScopeOwner::Service("http-stream-test"), None).await;
+        let compute = Arc::new(ComputePool::new(plan.compute).await);
         let chunks = vec![vec![1u8; 10], vec![2u8; 15], vec![3u8; 7]];
-        let addr = spawn_chunk_server(chunks.clone());
+        let addr = spawn_chunk_server(chunks.clone()).await;
         let dropped = Arc::new(AtomicBool::new(false));
         let transport = Arc::new(LocalSocketTransport { addr, compute, runtime: runtime.clone(), scope: scope.clone(), dropped });
-        let pool = HttpPool::new_with_async_transport(transport, 1_000_000, 4);
+        let pool = HttpPool::new_with_async_transport(transport, 1_000_000, 4).await;
         let package = PackageId("pkg-stream".to_string());
         let actor = ActorId(11);
 
         runtime.block_on(async {
-            let ctx = test_ctx(0, scope.cancel.clone());
-            let (head, mut body) = pool.fetch(runtime.as_ref(), &scope, ctx, package.clone(), actor, sample_request()).await.expect("fetch should succeed");
+            let ctx = test_ctx(0, scope.cancel.clone()).await;
+            let (head, mut body) = pool.fetch(runtime.as_ref(), &scope, ctx, package.clone(), actor, sample_request().await).await.expect("fetch should succeed");
             assert_eq!(head.status, 200);
-            let mut before = pool.remaining_package_budget(&package);
+            let mut before = pool.remaining_package_budget(&package).await;
             let mut total = Vec::new();
             while let Some(chunk) = body.next_chunk().await.expect("chunk read should succeed") {
-                let after = pool.remaining_package_budget(&package);
+                let after = pool.remaining_package_budget(&package).await;
                 assert_eq!(before - after, chunk.len() as u64, "each real chunk must charge exactly its own real byte length, not an estimate");
                 before = after;
                 total.extend(chunk);
@@ -2167,24 +2303,24 @@ mod tests {
     /// connection, observed via `dropped` — and (b) free the actor's outstanding slot immediately,
     /// proved by a SECOND `fetch` against the same actor succeeding under `outstanding_cap: 1`
     /// rather than being rejected.
-    #[test]
-    fn http_pool_dropping_a_body_mid_stream_frees_the_outstanding_slot_and_drops_the_connection() {
-        let plan = thread_plan(4);
-        let budget = ThreadBudget::from_plan(plan);
+    #[semio_framework_async_macros::async_test]
+    async fn http_pool_dropping_a_body_mid_stream_frees_the_outstanding_slot_and_drops_the_connection() {
+        let plan = thread_plan(4).await;
+        let budget = ThreadBudget::from_plan(plan).await;
         let runtime = Arc::new(TokioHostRuntime::new(plan, &budget).expect("runtime should build"));
-        let scope = runtime.open_scope(ScopeOwner::Service("http-cancel-test"), None);
-        let compute = Arc::new(ComputePool::new(plan.compute));
+        let scope = runtime.open_scope(ScopeOwner::Service("http-cancel-test"), None).await;
+        let compute = Arc::new(ComputePool::new(plan.compute).await);
         let chunks: Vec<Vec<u8>> = (0..20).map(|_| vec![9u8; 8]).collect();
-        let addr = spawn_chunk_server(chunks);
+        let addr = spawn_chunk_server(chunks).await;
         let dropped = Arc::new(AtomicBool::new(false));
         let transport = Arc::new(LocalSocketTransport { addr, compute, runtime: runtime.clone(), scope: scope.clone(), dropped: dropped.clone() });
-        let pool = HttpPool::new_with_async_transport(transport, 1_000_000, 1);
+        let pool = HttpPool::new_with_async_transport(transport, 1_000_000, 1).await;
         let package = PackageId("pkg-cancel".to_string());
         let actor = ActorId(12);
 
         runtime.block_on(async {
-            let ctx = test_ctx(0, scope.cancel.clone());
-            let (_head, mut body) = pool.fetch(runtime.as_ref(), &scope, ctx, package.clone(), actor, sample_request()).await.expect("fetch should succeed");
+            let ctx = test_ctx(0, scope.cancel.clone()).await;
+            let (_head, mut body) = pool.fetch(runtime.as_ref(), &scope, ctx, package.clone(), actor, sample_request().await).await.expect("fetch should succeed");
             let first_chunk = body.next_chunk().await.expect("first chunk should read").expect("server must have sent at least one chunk");
             assert_eq!(first_chunk.len(), 8);
             drop(body);
@@ -2192,20 +2328,20 @@ mod tests {
         assert!(dropped.load(Ordering::SeqCst), "dropping HttpPoolBody mid-stream must drop the underlying transport body, closing its connection");
 
         runtime.block_on(async {
-            let ctx2 = test_ctx(0, scope.cancel.clone());
-            let second = pool.fetch(runtime.as_ref(), &scope, ctx2, package.clone(), actor, sample_request()).await;
+            let ctx2 = test_ctx(0, scope.cancel.clone()).await;
+            let second = pool.fetch(runtime.as_ref(), &scope, ctx2, package.clone(), actor, sample_request().await).await;
             assert!(second.is_ok(), "the outstanding slot must have been freed by the drop, not held open until a full response finished");
         });
     }
     //#endregion 🌐️HttpPoolTests
 
     //#region 🧾️CompletionSinkTests
-    #[test]
-    fn mock_completion_sink_records_calls_in_order() {
-        let sink = MockCompletionSink::new();
+    #[semio_framework_async_macros::async_test]
+    async fn mock_completion_sink_records_calls_in_order() {
+        let sink = MockCompletionSink::new().await;
         sink.complete(1, 0, vec![1], 0);
         sink.complete(2, 1, vec![2], 1);
-        let recorded = sink.recorded();
+        let recorded = sink.recorded().await;
         assert_eq!(recorded.len(), 2);
         assert_eq!(recorded[0].actor, 1);
         assert_eq!(recorded[1].actor, 2);

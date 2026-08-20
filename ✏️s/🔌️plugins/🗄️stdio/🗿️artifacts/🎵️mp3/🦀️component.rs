@@ -55,18 +55,18 @@ pub async fn artifact_kind() -> ArtifactKindSpec {
 /// to.
 /// 🧩️ Binds this executable root to its sole schema-owned definition.
 pub async fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
-    crate::registry::runtime_assembly("mp3", definition, declaration)
+    crate::registry::runtime_assembly("mp3", definition, declaration).await
 }
 
 pub async fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
-    let formats = crate::registry::format_descriptors_for("mp3")?;
+    let formats = crate::registry::format_descriptors_for("mp3").await?;
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
-        .schema(crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::mp3_artifact_schema_descriptor())
-        .formats(formats)
-        .inferences([crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::inferences::mp3_artifact_inference_descriptor()])
-        .composers(crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::io::io_registry::entries())
-        .document_codec_bare::<Mp3Snapshot, Mp3Mutation>(STDIO_MP3_DOCUMENT_SCHEMA)
-        .try_build()
+        .await.schema(crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::mp3_artifact_schema_descriptor().await)
+        .await.formats(formats)
+        .await.inferences([crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::inferences::mp3_artifact_inference_descriptor()])
+        .await.composers(crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::io::io_registry::entries())
+        .await.document_codec_bare::<Mp3Snapshot, Mp3Mutation>(STDIO_MP3_DOCUMENT_SCHEMA)
+        .await.try_build()
 }
 //#endregion 🔖️Declaration
 //#region 🚪️DerivedIoRegistry
@@ -77,7 +77,8 @@ pub mod io_registry {
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 
-    pub async fn entries() -> &'static [&'static ComposerEntry] {
+    // 🚫️async: E1 pure table accessor consumed by OnceLock::get_or_init's sync closure — see R9
+    pub fn entries() -> &'static [&'static ComposerEntry] {
         ENTRIES.get_or_init(|| std_composer::entries().iter().collect()).as_slice()
     }
 

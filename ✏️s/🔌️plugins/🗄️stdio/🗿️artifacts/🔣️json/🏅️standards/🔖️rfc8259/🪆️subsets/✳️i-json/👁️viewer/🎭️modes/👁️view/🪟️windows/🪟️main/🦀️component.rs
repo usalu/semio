@@ -16,14 +16,14 @@ pub const BODY_KEY: &str = TreeWindowKit::KIND_ID;
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::json_i_json::create_json_i_json_viewer`.
 pub async fn definition() -> WindowKindDefinition {
-    WindowKindDefinition { label: LocalizedLabel::native("Tree", "Baum"), icon_id: "list-tree".into(), ..TreeWindowKit::window_kind() }
+    WindowKindDefinition { label: LocalizedLabel::native("Tree", "Baum"), icon_id: "list-tree".into(), ..TreeWindowKit::window_kind().await }
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
 /// 👁️ Pure `JsonSnapshot -> UiNode` read: same shape as the editor's own render, no mutation.
 pub async fn render(document: &JsonSnapshot) -> UiNode {
-    TreeWindowKit::render(&TreeView { roots: vec![node_view(Vec::new(), None, &document.value)] })
+    TreeWindowKit::render(&TreeView { roots: vec![node_view(Vec::new(), None, &document.value).await] }).await
 }
 
 async fn scalar_label(value: &JsonValue) -> Option<String> {
@@ -63,7 +63,7 @@ async fn node_view(path: Vec<String>, key_label: Option<&str>, value: &JsonValue
                 .collect();
             TreeNodeView { id, label: format!("{prefix}[{}]", items.len()), children }
         }
-        scalar => TreeNodeView { id, label: format!("{prefix}{}", scalar_label(scalar).unwrap_or_default()), children: Vec::new() },
+        scalar => TreeNodeView { id, label: format!("{prefix}{}", scalar_label(scalar).await.unwrap_or_default()), children: Vec::new() },
     }
 }
 //#endregion 🔖️Render

@@ -1,0 +1,1 @@
+ui-render dependency boundaries hold (3 forbidden crates absent).

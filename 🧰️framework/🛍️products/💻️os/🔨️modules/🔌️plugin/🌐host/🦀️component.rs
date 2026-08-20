@@ -7,11 +7,14 @@
 //!   `semio_framework::kernel::Effect`, hands it to a `⚛️reactor/📮️requests::RequestRegistry`, and
 //!   awaits the matching `Event::Completed`/`Event::HttpChunk`/`Event::JobCompleted` on a LATER
 //!   `reactor::poll` call — this arm is BYTE-FOR-BYTE what every method did before this packet.
-//! - `HostBackend::Direct` (`world actor-async`, only constructible with `component-guest-async`
-//!   on): calls the matching `host-async` import directly and `.await`s wasmtime's own
-//!   `component-model-async` correlation — no `RequestId`, no registry slot, no `poll` round-trip.
-//!   Only constructible today (`Host::new_direct`) — no actor task drives `runner::run` yet, so
-//!   this is a landing pad, not a live path. See this packet's report for the honest gaps.
+//! - `HostBackend::Direct` (only constructible with `component-guest-async` on): calls the matching
+//!   `host-async` import directly and `.await`s wasmtime's own `component-model-async` correlation
+//!   — no `RequestId`, no registry slot, no `poll` round-trip. Since B1 world-collapse the IMPORT
+//!   it needs is on `world actor` itself (there is no second world any more), but the arm is still
+//!   a landing pad rather than a live path: the mounted host (`🖥️host/🦀️component.rs`'s
+//!   `WasmtimeRuntime`) answers every `host-async` import with a typed `host-async.poll-backed`
+//!   fault, because a poll-shaped turn has no point at which such a future could resolve. The
+//!   runtime that serves them for real is built on `🖥️host/⏳️imports.rs`'s `AsyncActorHostState`.
 //!
 //! Both arms build/consume the SAME `*-params` records `effects.wit`/`host-async` share via
 //! `use effects.{...}` — the host side's `🖥️host/🧪️schema-parity/🦀️component.rs` (4/4) verifies this
@@ -36,8 +39,10 @@ pub use body::BodyReader;
 /// synchronous `host_*` wrapper already used. Called from `⚛️reactor/🦀️component.rs`'s
 /// `Event::Completed` routing step before it hands the result to `RequestRegistry::resolve` —
 /// that routing step lives in `wit_bridge`, so this is gated identically (native never reaches it).
+// 🚫️async: E1 pure decode consumed by `⚛️reactor/🦀️component.rs`'s sync `world actor` boundary —
+// `dsl::{decode_fault_bytes,encode_fault_bytes}` are both plain `fn`, zero suspension here — R9.
 #[cfg(all(any(feature = "component-guest", feature = "component-extension-guest"), target_arch = "wasm32", target_env = "p2"))]
-pub(crate) async fn outcome_to_result(outcome: RequestOutcome) -> Result<Vec<u8>, Fault> {
+pub(crate) fn outcome_to_result(outcome: RequestOutcome) -> Result<Vec<u8>, Fault> {
     match outcome {
         RequestOutcome::Ok(bytes) => Ok(bytes),
         RequestOutcome::Err(bytes) => Err(dsl::decode_fault_bytes(&bytes)),
@@ -46,19 +51,25 @@ pub(crate) async fn outcome_to_result(outcome: RequestOutcome) -> Result<Vec<u8>
 
 //#region 🔖️Direct
 
-/// ⚡️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (sdk-async): the `world actor-async` guest bindings
-/// — a SECOND, independent `wit_bindgen::generate!` call in this crate (the root
-/// `🦀️component.rs`'s `pub mod component` generates ONLY `world: "actor"`), gated on its own
-/// feature + the same wasm32-wasip2 target check that gate applies. Two `generate!` calls in one
-/// crate is normal wit-bindgen usage (each gets its own module tree; there is no symbol collision
-/// since neither world's `export!` is ever called from here — imports only). Never call
+/// ⚡️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (sdk-async → B1 world-collapse): the guest-side
+/// `host-async` import bindings. `world actor-async` is DELETED — `world actor` imports
+/// `host-async` itself now — so this targets `world: "actor"`, the one and only world.
+///
+/// 🧹️ This is a SECOND `wit_bindgen::generate!` for the same world (the root `🦀️component.rs`'s
+/// `pub mod component` runs the first, and owns the `export!`). Two calls in one crate is normal
+/// wit-bindgen usage — each gets its own module tree, and only the exporting one emits symbols —
+/// but since the collapse it is also REDUNDANT: `mod component`'s own generated tree now carries
+/// `semio::framework::host_async` too. Folding `HostBackend::Direct`'s arms onto that single
+/// generated module (and deleting this one) is a genuine simplification the collapse unlocks; it is
+/// deliberately NOT done here, because it rewrites this file's ~40 `Direct` arms rather than its
+/// bindgen mount, and belongs to whichever packet next owns this file. Never call
 /// `crate::host::direct::*` outside this file's own `HostBackend::Direct` arms.
 #[cfg(all(feature = "component-guest-async", target_arch = "wasm32", target_env = "p2"))]
 pub mod direct {
     #![allow(unsafe_op_in_unsafe_fn, dead_code)]
 
     wit_bindgen::generate!({
-        world: "actor-async",
+        world: "actor",
         path: "../../🧬️schema",
     });
 
@@ -85,7 +96,7 @@ async fn direct_unavailable_fault(op: &str) -> Fault {
 /// this file's own `direct` module.
 #[cfg(feature = "component-guest-async")]
 async fn pack<T: serde::Serialize>(value: &T) -> Vec<u8> {
-    store::pack_rt::encode_wire_value(&dsl::to_dsl_value(value).unwrap_or(DslValue::Null))
+    store::pack_rt::encode_wire_value(&dsl::to_dsl_value(value).unwrap_or(DslValue::Null)).await
 }
 
 /// 🔀️ `kernel::JobPlacement` → the Direct world's `job-placement` enum — only ever called from
@@ -182,7 +193,7 @@ impl Host {
     /// per case").
     async fn emit(&self, effect: Effect) {
         match &self.backend {
-            HostBackend::Poll(registry) => registry.emit(effect).await,
+            HostBackend::Poll(registry) => registry.emit(effect),
             #[cfg(feature = "component-guest-async")]
             HostBackend::Direct => {
                 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
@@ -201,7 +212,7 @@ impl Host {
     pub async fn blob_load(&self, hash: impl Into<String>) -> Result<Vec<u8>, Fault> {
         let hash = hash.into();
         match &self.backend {
-            HostBackend::Poll(registry) => registry.request(move |req| Effect::BlobLoad { req, hash }).await.await,
+            HostBackend::Poll(registry) => registry.request(move |req| Effect::BlobLoad { req, hash }).await,
             #[cfg(feature = "component-guest-async")]
             HostBackend::Direct => {
                 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
@@ -211,7 +222,7 @@ impl Host {
                 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
                 {
                     let _ = hash;
-                    Err(direct_unavailable_fault("blob-load"))
+                    Err(direct_unavailable_fault("blob-load").await)
                 }
             }
         }
@@ -219,7 +230,7 @@ impl Host {
 
     pub async fn blob_write(&self, media_type: MediaType, bytes: Vec<u8>) -> Result<Vec<u8>, Fault> {
         match &self.backend {
-            HostBackend::Poll(registry) => registry.request(move |req| Effect::BlobWrite { req, media_type, bytes }).await.await,
+            HostBackend::Poll(registry) => registry.request(move |req| Effect::BlobWrite { req, media_type, bytes }).await,
             #[cfg(feature = "component-guest-async")]
             HostBackend::Direct => {
                 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
@@ -229,7 +240,7 @@ impl Host {
                 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
                 {
                     let _ = (media_type, bytes);
-                    Err(direct_unavailable_fault("blob-write"))
+                    Err(direct_unavailable_fault("blob-write").await)
                 }
             }
         }
@@ -246,7 +257,7 @@ impl Host {
     pub async fn blob_read(&self, hash: impl Into<String>) -> Result<BodyReader, Fault> {
         let hash = hash.into();
         match &self.backend {
-            HostBackend::Poll(registry) => match registry.request(move |req| Effect::BlobLoad { req, hash }).await.await {
+            HostBackend::Poll(registry) => match registry.request(move |req| Effect::BlobLoad { req, hash }).await {
                 Ok(bytes) => Ok(BodyReader::poll_buffered(bytes).await),
                 Err(fault) => Err(fault),
             },
@@ -259,7 +270,7 @@ impl Host {
                 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
                 {
                     let _ = hash;
-                    Err(direct_unavailable_fault("blob-read"))
+                    Err(direct_unavailable_fault("blob-read").await)
                 }
             }
         }
@@ -272,7 +283,7 @@ impl Host {
         let method = method.into();
         let url = url.into();
         match &self.backend {
-            HostBackend::Poll(registry) => registry.request(move |req| Effect::HttpRequest { req, method, url, headers, body, stream }).await.await,
+            HostBackend::Poll(registry) => registry.request(move |req| Effect::HttpRequest { req, method, url, headers, body, stream }).await,
             #[cfg(feature = "component-guest-async")]
             HostBackend::Direct => {
                 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
@@ -284,7 +295,7 @@ impl Host {
                 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
                 {
                     let _ = (method, url, headers, body, stream);
-                    Err(direct_unavailable_fault("http-fetch"))
+                    Err(direct_unavailable_fault("http-fetch").await)
                 }
             }
         }
@@ -305,7 +316,7 @@ impl Host {
         let url = url.into();
         match &self.backend {
             HostBackend::Poll(registry) => {
-                let bytes = registry.request(move |req| Effect::HttpRequest { req, method, url, headers, body, stream: true }).await.await?;
+                let bytes = registry.request(move |req| Effect::HttpRequest { req, method, url, headers, body, stream: true }).await?;
                 let wire: HttpResponseWire = serde_json::from_slice(&bytes).map_err(|error| Fault::new(FaultOrigin::Plugin, FaultCode::new("plugin.host.http-decode-error"), format!("could not decode the http-request completion envelope: {error}")))?;
                 Ok(HttpFetchResponse { status: wire.status, headers: wire.headers, body: BodyReader::poll_buffered(wire.body).await })
             }
@@ -319,7 +330,7 @@ impl Host {
                 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
                 {
                     let _ = (method, url, headers, body);
-                    Err(direct_unavailable_fault("http-fetch"))
+                    Err(direct_unavailable_fault("http-fetch").await)
                 }
             }
         }
@@ -330,7 +341,7 @@ impl Host {
     pub async fn document_read(&self, doc: semio_framework::kernel::ArtifactHandle, lane: impl Into<String>) -> Result<Vec<u8>, Fault> {
         let lane = lane.into();
         match &self.backend {
-            HostBackend::Poll(registry) => registry.request(move |req| Effect::DocumentRead { req, doc, lane }).await.await,
+            HostBackend::Poll(registry) => registry.request(move |req| Effect::DocumentRead { req, doc, lane }).await,
             #[cfg(feature = "component-guest-async")]
             HostBackend::Direct => {
                 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
@@ -340,7 +351,7 @@ impl Host {
                 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
                 {
                     let _ = (doc, lane);
-                    Err(direct_unavailable_fault("document-read"))
+                    Err(direct_unavailable_fault("document-read").await)
                 }
             }
         }
@@ -349,7 +360,7 @@ impl Host {
     pub async fn document_write(&self, doc: semio_framework::kernel::ArtifactHandle, lane: impl Into<String>, ops: Vec<u8>) -> Result<Vec<u8>, Fault> {
         let lane = lane.into();
         match &self.backend {
-            HostBackend::Poll(registry) => registry.request(move |req| Effect::DocumentWrite { req, doc, lane, ops }).await.await,
+            HostBackend::Poll(registry) => registry.request(move |req| Effect::DocumentWrite { req, doc, lane, ops }).await,
             #[cfg(feature = "component-guest-async")]
             HostBackend::Direct => {
                 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
@@ -359,7 +370,7 @@ impl Host {
                 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
                 {
                     let _ = (doc, lane, ops);
-                    Err(direct_unavailable_fault("document-write"))
+                    Err(direct_unavailable_fault("document-write").await)
                 }
             }
         }
@@ -370,7 +381,7 @@ impl Host {
     pub async fn resolve_link(&self, link: impl Into<String>) -> Result<Vec<u8>, Fault> {
         let link = link.into();
         match &self.backend {
-            HostBackend::Poll(registry) => registry.request(move |req| Effect::LinkResolve { req, link }).await.await,
+            HostBackend::Poll(registry) => registry.request(move |req| Effect::LinkResolve { req, link }).await,
             #[cfg(feature = "component-guest-async")]
             HostBackend::Direct => {
                 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
@@ -380,7 +391,7 @@ impl Host {
                 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
                 {
                     let _ = link;
-                    Err(direct_unavailable_fault("link-resolve"))
+                    Err(direct_unavailable_fault("link-resolve").await)
                 }
             }
         }
@@ -425,7 +436,7 @@ impl Host {
         let source = source.into();
         let target = target.into();
         match &self.backend {
-            HostBackend::Poll(registry) => registry.request(move |req| Effect::IoCompose { req, key: format!("{source}->{target}"), sources: vec![String::from_utf8_lossy(&payload).into_owned()] }).await.await,
+            HostBackend::Poll(registry) => registry.request(move |req| Effect::IoCompose { req, key: format!("{source}->{target}"), sources: vec![String::from_utf8_lossy(&payload).into_owned()] }).await,
             #[cfg(feature = "component-guest-async")]
             HostBackend::Direct => {
                 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
@@ -435,7 +446,7 @@ impl Host {
                 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
                 {
                     let _ = (source, target, payload);
-                    Err(direct_unavailable_fault("io-run"))
+                    Err(direct_unavailable_fault("io-run").await)
                 }
             }
         }
@@ -445,7 +456,7 @@ impl Host {
     pub async fn io_compose(&self, key: impl Into<String>, sources: Vec<String>) -> Result<Vec<u8>, Fault> {
         let key = key.into();
         match &self.backend {
-            HostBackend::Poll(registry) => registry.request(move |req| Effect::IoCompose { req, key, sources }).await.await,
+            HostBackend::Poll(registry) => registry.request(move |req| Effect::IoCompose { req, key, sources }).await,
             #[cfg(feature = "component-guest-async")]
             HostBackend::Direct => {
                 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
@@ -455,7 +466,7 @@ impl Host {
                 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
                 {
                     let _ = (key, sources);
-                    Err(direct_unavailable_fault("io-compose"))
+                    Err(direct_unavailable_fault("io-compose").await)
                 }
             }
         }
@@ -466,7 +477,7 @@ impl Host {
     pub async fn registry_query(&self, kind: impl Into<String>, filter: Option<DslValue>) -> Result<Vec<u8>, Fault> {
         let kind = kind.into();
         match &self.backend {
-            HostBackend::Poll(registry) => registry.request(move |req| Effect::RegistryQuery { req, kind, filter }).await.await,
+            HostBackend::Poll(registry) => registry.request(move |req| Effect::RegistryQuery { req, kind, filter }).await,
             #[cfg(feature = "component-guest-async")]
             HostBackend::Direct => {
                 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
@@ -476,7 +487,7 @@ impl Host {
                 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
                 {
                     let _ = (kind, filter);
-                    Err(direct_unavailable_fault("registry-query"))
+                    Err(direct_unavailable_fault("registry-query").await)
                 }
             }
         }
@@ -487,7 +498,7 @@ impl Host {
     pub async fn cache_derive(&self, engine_id: impl Into<String>, input: Vec<u8>) -> Result<Vec<u8>, Fault> {
         let engine_id = engine_id.into();
         match &self.backend {
-            HostBackend::Poll(registry) => registry.request(move |req| Effect::CacheDerive { req, engine_id, input }).await.await,
+            HostBackend::Poll(registry) => registry.request(move |req| Effect::CacheDerive { req, engine_id, input }).await,
             #[cfg(feature = "component-guest-async")]
             HostBackend::Direct => {
                 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
@@ -497,7 +508,7 @@ impl Host {
                 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
                 {
                     let _ = (engine_id, input);
-                    Err(direct_unavailable_fault("cache-derive"))
+                    Err(direct_unavailable_fault("cache-derive").await)
                 }
             }
         }
@@ -507,7 +518,7 @@ impl Host {
         let engine_id = engine_id.into();
         let key = key.into();
         match &self.backend {
-            HostBackend::Poll(registry) => registry.request(move |req| Effect::CacheRead { req, engine_id, key }).await.await,
+            HostBackend::Poll(registry) => registry.request(move |req| Effect::CacheRead { req, engine_id, key }).await,
             #[cfg(feature = "component-guest-async")]
             HostBackend::Direct => {
                 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
@@ -517,7 +528,7 @@ impl Host {
                 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
                 {
                     let _ = (engine_id, key);
-                    Err(direct_unavailable_fault("cache-read"))
+                    Err(direct_unavailable_fault("cache-read").await)
                 }
             }
         }
@@ -530,7 +541,7 @@ impl Host {
         let capability = capability.into();
         let request_json = request_json.into();
         match &self.backend {
-            HostBackend::Poll(registry) => registry.request(move |req| Effect::InvokeExtension { req, extension_id, capability, request_json }).await.await,
+            HostBackend::Poll(registry) => registry.request(move |req| Effect::InvokeExtension { req, extension_id, capability, request_json }).await,
             #[cfg(feature = "component-guest-async")]
             HostBackend::Direct => {
                 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
@@ -540,26 +551,26 @@ impl Host {
                 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
                 {
                     let _ = (extension_id, capability, request_json);
-                    Err(direct_unavailable_fault("invoke-extension"))
+                    Err(direct_unavailable_fault("invoke-extension").await)
                 }
             }
         }
     }
 
     pub async fn send_message(&self, target: semio_framework::kernel::MessageEndpoint, payload: Vec<u8>) {
-        self.emit(Effect::SendMessage { target, payload });
+        self.emit(Effect::SendMessage { target, payload }).await;
     }
 
     pub async fn publish_event(&self, topic: impl Into<String>, payload: Vec<u8>) {
-        self.emit(Effect::PublishEvent { topic: topic.into(), payload });
+        self.emit(Effect::PublishEvent { topic: topic.into(), payload }).await;
     }
 
     pub async fn subscribe(&self, topic: impl Into<String>) {
-        self.emit(Effect::Subscribe { topic: topic.into() });
+        self.emit(Effect::Subscribe { topic: topic.into() }).await;
     }
 
     pub async fn unsubscribe(&self, topic: impl Into<String>) {
-        self.emit(Effect::Unsubscribe { topic: topic.into() });
+        self.emit(Effect::Unsubscribe { topic: topic.into() }).await;
     }
 
     /// ↩️ Answers an inbound `Event::Request{req, ..}` — must be called within the bounded number
@@ -569,13 +580,13 @@ impl Host {
             Ok(bytes) => RequestOutcome::Ok(bytes),
             Err(bytes) => RequestOutcome::Err(bytes),
         };
-        self.emit(Effect::Respond { req, result });
+        self.emit(Effect::Respond { req, result }).await;
     }
     //#endregion 🔖️Extensions
 
     //#region 🔖️Timers / Jobs
     pub async fn set_timer(&self, id: u64, after_ms: u64, repeat: bool) {
-        self.emit(Effect::SetTimer { id, after_ms, repeat });
+        self.emit(Effect::SetTimer { id, after_ms, repeat }).await;
     }
 
     /// 💼️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (J1, design-abi.md §4): moves a genuinely long-
@@ -591,7 +602,7 @@ impl Host {
     pub async fn spawn_job(&self, kind: impl Into<String>, input: Vec<u8>, placement: JobPlacement) -> Result<Vec<u8>, Fault> {
         let kind = kind.into();
         match &self.backend {
-            HostBackend::Poll(registry) => registry.request(move |req| Effect::SpawnJob { job: req.0, kind, input, placement }).await.await,
+            HostBackend::Poll(registry) => registry.request(move |req| Effect::SpawnJob { job: req.0, kind, input, placement }).await,
             #[cfg(feature = "component-guest-async")]
             HostBackend::Direct => {
                 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
@@ -602,7 +613,7 @@ impl Host {
                 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
                 {
                     let _ = (kind, input, placement);
-                    Err(direct_unavailable_fault("spawn-job"))
+                    Err(direct_unavailable_fault("spawn-job").await)
                 }
             }
         }
@@ -613,7 +624,7 @@ impl Host {
     /// (Direct world), exactly as `respond`/every other `req`-carrying effect already assumes about
     /// ids it did not itself allocate.
     pub async fn cancel_job(&self, job: u64) {
-        self.emit(Effect::CancelJob { job });
+        self.emit(Effect::CancelJob { job }).await;
     }
     //#endregion 🔖️Timers
 
@@ -621,7 +632,7 @@ impl Host {
     pub async fn open_window(&self, kind: impl Into<String>, params: DslValue) -> Result<Vec<u8>, Fault> {
         let kind = WindowKindId(kind.into());
         match &self.backend {
-            HostBackend::Poll(registry) => registry.request(move |req| Effect::OpenWindow { req, kind, params }).await.await,
+            HostBackend::Poll(registry) => registry.request(move |req| Effect::OpenWindow { req, kind, params }).await,
             #[cfg(feature = "component-guest-async")]
             HostBackend::Direct => {
                 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
@@ -631,65 +642,65 @@ impl Host {
                 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
                 {
                     let _ = (kind, params);
-                    Err(direct_unavailable_fault("open-window"))
+                    Err(direct_unavailable_fault("open-window").await)
                 }
             }
         }
     }
 
     pub async fn close_window(&self, window: WindowHandle) {
-        self.emit(Effect::CloseWindow { window });
+        self.emit(Effect::CloseWindow { window }).await;
     }
 
     pub async fn notify(&self, message: impl Into<String>) {
-        self.emit(Effect::Notify { message: message.into() });
+        self.emit(Effect::Notify { message: message.into() }).await;
     }
 
     pub async fn clipboard_write(&self, fragment: ClipboardFragment) {
-        self.emit(Effect::ClipboardWrite { fragment });
+        self.emit(Effect::ClipboardWrite { fragment }).await;
     }
 
     pub async fn navigate(&self, uri: impl Into<String>) {
-        self.emit(Effect::Navigate { uri: uri.into() });
+        self.emit(Effect::Navigate { uri: uri.into() }).await;
     }
 
     pub async fn open_external_url(&self, url: impl Into<String>) {
-        self.emit(Effect::OpenExternalUrl { url: url.into() });
+        self.emit(Effect::OpenExternalUrl { url: url.into() }).await;
     }
 
     pub async fn set_panel(&self, panel_json: impl Into<String>) {
-        self.emit(Effect::SetPanel { panel_json: panel_json.into() });
+        self.emit(Effect::SetPanel { panel_json: panel_json.into() }).await;
     }
 
     pub async fn set_active_utility(&self, window_id: impl Into<String>, utility_id: impl Into<String>) {
-        self.emit(Effect::SetActiveUtility { window_id: window_id.into(), utility_id: utility_id.into() });
+        self.emit(Effect::SetActiveUtility { window_id: window_id.into(), utility_id: utility_id.into() }).await;
     }
 
     pub async fn set_active_tool(&self, tool_id: impl Into<String>) {
-        self.emit(Effect::SetActiveTool { tool_id: tool_id.into() });
+        self.emit(Effect::SetActiveTool { tool_id: tool_id.into() }).await;
     }
 
     pub async fn patch_world3d_chrome(&self, selection_json: impl Into<String>, vortices_json: Option<String>, document_selected_ids: Vec<String>, document_highlighted_ids: Option<Vec<String>>) {
-        self.emit(Effect::PatchWorld3dChrome { selection_json: selection_json.into(), vortices_json, document_selected_ids, document_highlighted_ids });
+        self.emit(Effect::PatchWorld3dChrome { selection_json: selection_json.into(), vortices_json, document_selected_ids, document_highlighted_ids }).await;
     }
 
     pub async fn replay_shell_command(&self, action_id: impl Into<String>, args: Option<DslValue>) {
-        self.emit(Effect::ReplayShellCommand { action_id: action_id.into(), args });
+        self.emit(Effect::ReplayShellCommand { action_id: action_id.into(), args }).await;
     }
 
     pub async fn download_media_export(&self, filename: impl Into<String>, mime_type: impl Into<String>, data: impl Into<String>, encoding: Option<String>) {
-        self.emit(Effect::DownloadMediaExport { filename: filename.into(), mime_type: mime_type.into(), data: data.into(), encoding });
+        self.emit(Effect::DownloadMediaExport { filename: filename.into(), mime_type: mime_type.into(), data: data.into(), encoding }).await;
     }
 
     pub async fn icon_render_export(&self, items: Vec<IconRenderExportItem>) {
-        self.emit(Effect::IconRenderExport { items });
+        self.emit(Effect::IconRenderExport { items }).await;
     }
 
     pub async fn request_file_open(&self, accept: impl Into<String>, read_as: Option<String>, import_action: impl Into<String>, multiple: bool) -> Result<Vec<u8>, Fault> {
         let accept = accept.into();
         let import_action = import_action.into();
         match &self.backend {
-            HostBackend::Poll(registry) => registry.request(move |req| Effect::RequestFileOpen { req, accept, read_as, import_action, multiple }).await.await,
+            HostBackend::Poll(registry) => registry.request(move |req| Effect::RequestFileOpen { req, accept, read_as, import_action, multiple }).await,
             #[cfg(feature = "component-guest-async")]
             HostBackend::Direct => {
                 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
@@ -699,7 +710,7 @@ impl Host {
                 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
                 {
                     let _ = (accept, read_as, import_action, multiple);
-                    Err(direct_unavailable_fault("request-file-open"))
+                    Err(direct_unavailable_fault("request-file-open").await)
                 }
             }
         }
@@ -714,7 +725,7 @@ impl Host {
         let done_action = done_action.into();
         let fallback_action = fallback_action.into();
         match &self.backend {
-            HostBackend::Poll(registry) => registry.request(move |req| Effect::RequestMediaFrames { req, accept, frame_action, done_action, fallback_action, sample_stride, max_frames, max_long_edge_px, fps_hint, payload, args }).await.await,
+            HostBackend::Poll(registry) => registry.request(move |req| Effect::RequestMediaFrames { req, accept, frame_action, done_action, fallback_action, sample_stride, max_frames, max_long_edge_px, fps_hint, payload, args }).await,
             #[cfg(feature = "component-guest-async")]
             HostBackend::Direct => {
                 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
@@ -724,21 +735,21 @@ impl Host {
                 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
                 {
                     let _ = (accept, frame_action, done_action, fallback_action, sample_stride, max_frames, max_long_edge_px, fps_hint, payload, args);
-                    Err(direct_unavailable_fault("request-media-frames"))
+                    Err(direct_unavailable_fault("request-media-frames").await)
                 }
             }
         }
     }
 
     pub async fn load_document(&self, pack: Vec<u8>, spr: Vec<u8>) {
-        self.emit(Effect::LoadDocument { pack, spr });
+        self.emit(Effect::LoadDocument { pack, spr }).await;
     }
 
     pub async fn spawn_plugin_instance(&self, plugin_id: impl Into<String>, app_id: impl Into<String>, os_instance_id: Option<String>, label: Option<String>, document_json: Option<String>) -> Result<Vec<u8>, Fault> {
         let plugin_id = plugin_id.into();
         let app_id = app_id.into();
         match &self.backend {
-            HostBackend::Poll(registry) => registry.request(move |req| Effect::SpawnPluginInstance { req, plugin_id, app_id, os_instance_id, label, document_json }).await.await,
+            HostBackend::Poll(registry) => registry.request(move |req| Effect::SpawnPluginInstance { req, plugin_id, app_id, os_instance_id, label, document_json }).await,
             #[cfg(feature = "component-guest-async")]
             HostBackend::Direct => {
                 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
@@ -748,14 +759,14 @@ impl Host {
                 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
                 {
                     let _ = (plugin_id, app_id, os_instance_id, label, document_json);
-                    Err(direct_unavailable_fault("spawn-plugin-instance"))
+                    Err(direct_unavailable_fault("spawn-plugin-instance").await)
                 }
             }
         }
     }
 
     pub async fn open_plugin_instance(&self, plugin_id: impl Into<String>, app_id: impl Into<String>, os_instance_id: Option<String>) {
-        self.emit(Effect::OpenPluginInstance { plugin_id: plugin_id.into(), app_id: app_id.into(), os_instance_id });
+        self.emit(Effect::OpenPluginInstance { plugin_id: plugin_id.into(), app_id: app_id.into(), os_instance_id }).await;
     }
 
     /// 🕹️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (sdk-async): NEW — `effects.wit`'s `dispatch-
@@ -767,7 +778,7 @@ impl Host {
     pub async fn dispatch_action(&self, action: impl Into<String>, args: Option<DslValue>, delay_ms: u64) -> Result<Vec<u8>, Fault> {
         let action = action.into();
         match &self.backend {
-            HostBackend::Poll(registry) => registry.request(move |req| Effect::DispatchAction { req, action, args, delay_ms }).await.await,
+            HostBackend::Poll(registry) => registry.request(move |req| Effect::DispatchAction { req, action, args, delay_ms }).await,
             #[cfg(feature = "component-guest-async")]
             HostBackend::Direct => {
                 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
@@ -777,7 +788,7 @@ impl Host {
                 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
                 {
                     let _ = (action, args, delay_ms);
-                    Err(direct_unavailable_fault("dispatch-action"))
+                    Err(direct_unavailable_fault("dispatch-action").await)
                 }
             }
         }
@@ -786,7 +797,7 @@ impl Host {
     pub async fn open_dialog(&self, dialog_id: impl Into<String>, args: Option<DslValue>) -> Result<Vec<u8>, Fault> {
         let dialog_id = dialog_id.into();
         match &self.backend {
-            HostBackend::Poll(registry) => registry.request(move |req| Effect::OpenDialog { req, dialog_id, args }).await.await,
+            HostBackend::Poll(registry) => registry.request(move |req| Effect::OpenDialog { req, dialog_id, args }).await,
             #[cfg(feature = "component-guest-async")]
             HostBackend::Direct => {
                 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
@@ -796,14 +807,14 @@ impl Host {
                 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
                 {
                     let _ = (dialog_id, args);
-                    Err(direct_unavailable_fault("open-dialog"))
+                    Err(direct_unavailable_fault("open-dialog").await)
                 }
             }
         }
     }
 
     pub async fn request_sync(&self) {
-        self.emit(Effect::RequestSync);
+        self.emit(Effect::RequestSync).await;
     }
     //#endregion 🔖️Ui
 
@@ -811,7 +822,7 @@ impl Host {
     pub async fn storage_read(&self, key: impl Into<String>) -> Result<Vec<u8>, Fault> {
         let key = key.into();
         match &self.backend {
-            HostBackend::Poll(registry) => registry.request(move |req| Effect::StorageRead { req, key }).await.await,
+            HostBackend::Poll(registry) => registry.request(move |req| Effect::StorageRead { req, key }).await,
             #[cfg(feature = "component-guest-async")]
             HostBackend::Direct => {
                 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
@@ -825,7 +836,7 @@ impl Host {
                 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
                 {
                     let _ = key;
-                    Err(direct_unavailable_fault("storage-read"))
+                    Err(direct_unavailable_fault("storage-read").await)
                 }
             }
         }
@@ -834,7 +845,7 @@ impl Host {
     pub async fn storage_write(&self, key: impl Into<String>, bytes: Vec<u8>) -> Result<Vec<u8>, Fault> {
         let key = key.into();
         match &self.backend {
-            HostBackend::Poll(registry) => registry.request(move |req| Effect::StorageWrite { req, key, bytes }).await.await,
+            HostBackend::Poll(registry) => registry.request(move |req| Effect::StorageWrite { req, key, bytes }).await,
             #[cfg(feature = "component-guest-async")]
             HostBackend::Direct => {
                 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
@@ -844,7 +855,7 @@ impl Host {
                 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
                 {
                     let _ = (key, bytes);
-                    Err(direct_unavailable_fault("storage-write"))
+                    Err(direct_unavailable_fault("storage-write").await)
                 }
             }
         }
@@ -853,7 +864,7 @@ impl Host {
     pub async fn storage_delete(&self, key: impl Into<String>) -> Result<Vec<u8>, Fault> {
         let key = key.into();
         match &self.backend {
-            HostBackend::Poll(registry) => registry.request(move |req| Effect::StorageDelete { req, key }).await.await,
+            HostBackend::Poll(registry) => registry.request(move |req| Effect::StorageDelete { req, key }).await,
             #[cfg(feature = "component-guest-async")]
             HostBackend::Direct => {
                 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
@@ -863,7 +874,7 @@ impl Host {
                 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
                 {
                     let _ = key;
-                    Err(direct_unavailable_fault("storage-delete"))
+                    Err(direct_unavailable_fault("storage-delete").await)
                 }
             }
         }
@@ -871,7 +882,7 @@ impl Host {
 
     pub async fn request_capability(&self, capability: semio_framework::kernel::CapabilityRequest) -> Result<Vec<u8>, Fault> {
         match &self.backend {
-            HostBackend::Poll(registry) => registry.request(move |req| Effect::RequestCapability { req, capability }).await.await,
+            HostBackend::Poll(registry) => registry.request(move |req| Effect::RequestCapability { req, capability }).await,
             #[cfg(feature = "component-guest-async")]
             HostBackend::Direct => {
                 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
@@ -881,14 +892,14 @@ impl Host {
                 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
                 {
                     let _ = capability;
-                    Err(direct_unavailable_fault("request-capability"))
+                    Err(direct_unavailable_fault("request-capability").await)
                 }
             }
         }
     }
 
     pub async fn release_capability(&self, id: CapabilityId) {
-        self.emit(Effect::ReleaseCapability { id });
+        self.emit(Effect::ReleaseCapability { id }).await;
     }
     //#endregion 🔖️Storage
 }

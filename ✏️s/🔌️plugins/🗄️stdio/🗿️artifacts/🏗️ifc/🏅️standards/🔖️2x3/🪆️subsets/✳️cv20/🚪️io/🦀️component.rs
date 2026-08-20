@@ -50,11 +50,11 @@ pub mod derived_composition {
 
         async fn validate(payload: &IoPayload) -> Vec<Diagnostic> {
             let decoded = match payload {
-                IoPayload::Binary(bytes) => <Ifc2x3Snapshot as store::ArtifactPack>::decode_pack(bytes).ok(),
-                IoPayload::Text(text) => <Ifc2x3Snapshot as store::ArtifactDsl>::parse_dsl(text).ok(),
+                IoPayload::Binary(bytes) => <Ifc2x3Snapshot as store::ArtifactPack>::decode_pack(bytes).await.ok(),
+                IoPayload::Text(text) => <Ifc2x3Snapshot as store::ArtifactDsl>::parse_dsl(text).await.ok(),
             };
             match decoded {
-                Some(snapshot) => check_cv20_conformance(&snapshot),
+                Some(snapshot) => check_cv20_conformance(&snapshot).await,
                 None => vec![Diagnostic {
                     code: FaultCode::new("stdio.ifc.2x3.cv20.validate-decode-failed"),
                     severity: Severity::Warning,
@@ -77,7 +77,7 @@ pub mod derived_composition {
     /// `⚙️engine::register()`. The `ComposerEntry` itself is registered separately via the standard's
     /// own `composer::entries()` aggregation.
     pub async fn register() {
-        let _ = register_subset_validator(validator_entry());
+        let _ = register_subset_validator(validator_entry().await);
     }
     //#endregion 🔖️SubsetValidator
 

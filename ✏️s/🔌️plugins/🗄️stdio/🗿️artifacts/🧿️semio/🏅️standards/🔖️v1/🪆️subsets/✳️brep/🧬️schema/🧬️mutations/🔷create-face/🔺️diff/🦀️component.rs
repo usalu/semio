@@ -12,7 +12,7 @@ use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{Br
 //#region 🔖️Diff
 pub async fn diff(payload: &CreateFace, base: &SemioBrepSnapshot) -> protocol::MutationOutcome<SemioBrepDiff> {
     if base.faces.iter().any(|x| x.id == payload.id) {
-        return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A face with id \"{}\" already exists.", payload.id), [payload.id.clone()]);
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A face with id \"{}\" already exists.", payload.id), [payload.id.clone()]).await;
     }
     protocol::MutationOutcome::new(SemioBrepDiff {
         faces: Some(NamedTripleDiff {
@@ -21,6 +21,6 @@ pub async fn diff(payload: &CreateFace, base: &SemioBrepSnapshot) -> protocol::M
             added: vec![BrepFace { id: payload.id.clone(), outer_loop: payload.outer_loop.clone(), inner_loops: payload.inner_loops.clone(), surface: payload.surface.clone(), orientation: payload.orientation }],
         }),
         ..Default::default()
-    })
+    }).await
 }
 //#endregion 🔖️Diff

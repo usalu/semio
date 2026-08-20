@@ -296,7 +296,7 @@ impl FuzzySet {
     }
 
     pub async fn grade(&self, x: f64) -> f64 {
-        clamp01(self.mf.eval(x))
+        clamp01(self.mf.eval(x).await).await
     }
 }
 
@@ -314,9 +314,9 @@ impl IntervalType2Set {
     }
 
     pub async fn grade_interval(&self, x: f64) -> (f64, f64) {
-        let lo = clamp01(self.lower.eval(x));
-        let hi = clamp01(self.upper.eval(x).max(lo));
-        (lo, hi)
+        let lo = clamp01(self.lower.eval(x).await);
+        let hi = clamp01(self.upper.eval(x).await.max(lo.await));
+        (lo.await, hi.await)
     }
 
     pub async fn type_reduced_centroid(&self, universe: &[f64]) -> f64 {
@@ -326,7 +326,7 @@ impl IntervalType2Set {
         let mut num = 0.0;
         let mut den = 0.0;
         for &x in universe {
-            let (lo, hi) = self.grade_interval(x);
+            let (lo, hi) = self.grade_interval(x).await;
             let mu = 0.5 * (lo + hi);
             num += x * mu;
             den += mu;
@@ -353,12 +353,12 @@ impl IntuitionisticSet {
     }
 
     pub async fn grades(&self, x: f64) -> FuzzyResult<(f64, f64, f64)> {
-        let mu = clamp01(self.membership.eval(x));
-        let nu = clamp01(self.non_membership.eval(x));
+        let mu = clamp01(self.membership.eval(x).await);
+        let nu = clamp01(self.non_membership.eval(x).await);
         if mu + nu > 1.0 + 1e-9 {
             return Err(FuzzyError::InvalidIntuitionistic);
         }
-        Ok((mu, nu, 1.0 - mu - nu))
+        Ok((mu.await, nu.await, 1.0 - mu - nu))
     }
 }
 // #endregion 🔖️FuzzySet
@@ -375,17 +375,17 @@ pub enum TNorm {
 
 impl TNorm {
     pub async fn apply(self, a: f64, b: f64) -> f64 {
-        let a = clamp01(a);
+        let a = clamp01(a).await;
         let b = clamp01(b);
         match self {
-            Self::Min => a.min(b),
+            Self::Min => a.min(b.await),
             Self::Product => a * b,
             Self::Lukasiewicz => (a + b - 1.0).max(0.0),
             Self::Drastic => {
                 if b == 1.0 {
                     a
                 } else if a == 1.0 {
-                    b
+                    b.await
                 } else {
                     0.0
                 }
@@ -409,17 +409,17 @@ pub enum TConorm {
 
 impl TConorm {
     pub async fn apply(self, a: f64, b: f64) -> f64 {
-        let a = clamp01(a);
+        let a = clamp01(a).await;
         let b = clamp01(b);
         match self {
-            Self::Max => a.max(b),
+            Self::Max => a.max(b.await),
             Self::ProbSum => a + b - a * b,
             Self::Lukasiewicz => (a + b).min(1.0),
             Self::NilpotentMax => {
                 if a + b < 1.0 {
                     0.0
                 } else {
-                    a.max(b)
+                    a.max(b.await)
                 }
             }
         }
@@ -441,7 +441,7 @@ pub enum Hedge {
 
 impl Hedge {
     pub async fn apply(self, mu: f64) -> f64 {
-        let mu = clamp01(mu);
+        let mu = clamp01(mu).await;
         match self {
             Self::Very => mu * mu,
             Self::Somewhat => mu.sqrt(),
@@ -456,11 +456,11 @@ pub async fn complement(mu: f64) -> f64 {
 }
 
 pub async fn concentration(mu: f64) -> f64 {
-    clamp01(mu).powi(2)
+    clamp01(mu).await.powi(2)
 }
 
 pub async fn dilation(mu: f64) -> f64 {
-    clamp01(mu).sqrt()
+    clamp01(mu).await.sqrt()
 }
 // #endregion 🔖️TNormTConorm
 
@@ -493,7 +493,7 @@ impl FuzzyNumber {
         let mut den = 0.0;
         for i in 0..samples {
             let x = self.a + (self.c - self.a) * i as f64 / (samples - 1).max(1) as f64;
-            let mu = MembershipFunction::triangular(self.a, self.b, self.c).eval(x);
+            let mu = MembershipFunction::triangular(self.a, self.b, self.c).await.eval(x);
             num += x * mu;
             den += mu;
         }
@@ -524,12 +524,12 @@ impl FuzzyNumber {
 }
 
 pub async fn fuzzy_add(a: FuzzyNumber, b: FuzzyNumber) -> FuzzyNumber {
-    a.add(b)
+    a.add(b).await
 }
 
 pub async fn fuzzy_mul_interval(a: FuzzyNumber, b: FuzzyNumber, alpha: f64) -> (f64, f64) {
-    let (al, ar) = a.alpha_cut(alpha);
-    let (bl, br) = b.alpha_cut(alpha);
+    let (al, ar) = a.alpha_cut(alpha).await;
+    let (bl, br) = b.alpha_cut(alpha).await;
     let candidates = [al * bl, al * br, ar * bl, ar * br];
     (candidates.iter().copied().fold(f64::INFINITY, f64::min), candidates.iter().copied().fold(f64::NEG_INFINITY, f64::max))
 }
@@ -548,7 +548,7 @@ impl FuzzyRelation {
     }
 
     pub async fn set(&mut self, row: usize, col: usize, value: f64) {
-        self.values[row][col] = clamp01(value);
+        self.values[row][col] = clamp01(value).await;
     }
 
     pub async fn get(&self, row: usize, col: usize) -> f64 {
@@ -562,7 +562,7 @@ impl FuzzyRelation {
         let rows = self.values.len();
         let cols = other.values[0].len();
         let inner = other.values.len();
-        let mut out = Self::new(rows, cols);
+        let mut out = Self::new(rows, cols).await;
         for i in 0..rows {
             for j in 0..cols {
                 let mut best = 0.0_f64;
@@ -582,7 +582,7 @@ impl FuzzyRelation {
         let rows = self.values.len();
         let cols = other.values[0].len();
         let inner = other.values.len();
-        let mut out = Self::new(rows, cols);
+        let mut out = Self::new(rows, cols).await;
         for i in 0..rows {
             for j in 0..cols {
                 let mut best = 0.0_f64;
@@ -623,7 +623,7 @@ impl PossibilityMeasure {
 
     pub async fn from_scores(universe: Vec<f64>, scores: Vec<f64>) -> FuzzyResult<Self> {
         let max_score = scores.iter().copied().fold(0.0_f64, f64::max).max(1e-12);
-        Self::new(universe, scores.into_iter().map(|s| s / max_score).collect())
+        Self::new(universe, scores.into_iter().map(|s| s / max_score).collect()).await
     }
 }
 // #endregion 🔖️PossibilityTheory
@@ -642,7 +642,7 @@ impl Universe {
         if min >= max || n == 0 {
             return Err(FuzzyError::InvalidDomain("universe bounds".into()));
         }
-        Ok(Self { min, max, samples: linspace(min, max, n) })
+        Ok(Self { min, max, samples: linspace(min, max, n).await })
     }
 
     pub async fn sample(&self, index: usize) -> f64 {
@@ -811,7 +811,7 @@ impl Defuzzifier {
             Self::Height => {
                 let heights = rule_heights.ok_or_else(|| FuzzyError::DimensionMismatch("height defuzz needs rule heights".into()))?;
                 let values = rule_values.ok_or_else(|| FuzzyError::DimensionMismatch("height defuzz needs rule values".into()))?;
-                Self::WeightedAverage.apply(universe, membership, Some(heights), Some(values))
+                Self::WeightedAverage.apply(universe, membership, Some(heights), Some(values)).await
             }
         }
     }
@@ -866,13 +866,13 @@ impl MimoSystem {
         if values.len() != self.inputs.len() {
             return Err(FuzzyError::DimensionMismatch("input count".into()));
         }
-        if self.rules.is_empty() {
+        if self.rules.is_empty().await {
             return Err(FuzzyError::EmptyRuleBase);
         }
         let mut outputs = vec![0.0; self.outputs.len()];
         let mut traces = Vec::new();
         for (out_idx, output_var) in self.outputs.iter().enumerate() {
-            let (value, out_traces) = self.infer_output(out_idx, output_var, values)?;
+            let (value, out_traces) = self.infer_output(out_idx, output_var, values).await?;
             outputs[out_idx] = value;
             traces.extend(out_traces);
         }
@@ -881,7 +881,7 @@ impl MimoSystem {
     }
 
     async fn infer_output(&self, out_idx: usize, output_var: &LinguisticVariable, values: &[f64]) -> FuzzyResult<(f64, Vec<RuleTrace>)> {
-        let mut aggregated = vec![0.0; output_var.universe.len()];
+        let mut aggregated = vec![0.0; output_var.universe.len().await];
         let mut traces = Vec::new();
         let mut sugeno_num = 0.0;
         let mut sugeno_den = 0.0;
@@ -895,18 +895,18 @@ impl MimoSystem {
             match (&self.model, &rule.consequent) {
                 (InferenceModel::Mamdani | InferenceModel::Hybrid, Consequent::Mamdani { output, term }) if *output == out_idx => {
                     for (i, x) in output_var.universe.samples.iter().enumerate() {
-                        let mu = output_var.terms[*term].grade(*x).min(activation);
-                        aggregated[i] = self.tconorm.apply(aggregated[i], mu);
+                        let mu = output_var.terms[*term].grade(*x).await.min(activation.await);
+                        aggregated[i] = self.tconorm.apply(aggregated[i], mu).await;
                     }
-                    traces.push(RuleTrace { rule_id: rule.id, activation, contribution: activation, description: format!("Mamdani rule {} clipped consequent", rule.id) });
+                    traces.push(RuleTrace { rule_id: rule.id, activation, contribution: activation.await, description: format!("Mamdani rule {} clipped consequent", rule.id) });
                 }
                 (InferenceModel::Larsen | InferenceModel::Hybrid, Consequent::Mamdani { output, term }) if *output == out_idx => {
                     for (i, x) in output_var.universe.samples.iter().enumerate() {
-                        let base = output_var.terms[*term].grade(*x);
-                        let mu = if base <= 1e-12 { 0.0 } else { (activation * base / base.max(activation)).min(1.0) };
-                        aggregated[i] = self.tconorm.apply(aggregated[i], mu.min(base * activation));
+                        let base = output_var.terms[*term].grade(*x).await;
+                        let mu = if base <= 1e-12 { 0.0 } else { (activation * base / base.max(activation.await)).min(1.0) };
+                        aggregated[i] = self.tconorm.apply(aggregated[i], mu.min(base * activation)).await;
                     }
-                    traces.push(RuleTrace { rule_id: rule.id, activation, contribution: activation, description: format!("Larsen rule {} scaled consequent", rule.id) });
+                    traces.push(RuleTrace { rule_id: rule.id, activation, contribution: activation.await, description: format!("Larsen rule {} scaled consequent", rule.id) });
                 }
                 (InferenceModel::Sugeno | InferenceModel::Hybrid, Consequent::SugenoConstant { output, value }) if *output == out_idx => {
                     sugeno_num += activation * value;
@@ -930,18 +930,18 @@ impl MimoSystem {
                 }
                 (InferenceModel::Tsukamoto | InferenceModel::Hybrid, Consequent::Tsukamoto { output, term }) if *output == out_idx => {
                     let term_mf = &output_var.terms[*term].mf;
-                    let crisp = tsukamoto_inverse(term_mf, activation);
+                    let crisp = tsukamoto_inverse(term_mf, activation.await);
                     sugeno_num += activation * crisp;
                     sugeno_den += activation;
                     heights.push(activation);
-                    rule_values.push(crisp);
+                    rule_values.push(crisp.await);
                     traces.push(RuleTrace { rule_id: rule.id, activation, contribution: activation * crisp, description: format!("Tsukamoto inverse -> {:.3}", crisp) });
                 }
                 (_, Consequent::SoftConstraint { output, term, preference }) if *output == out_idx => {
                     let pref = preference.max(0.0);
                     for (i, x) in output_var.universe.samples.iter().enumerate() {
-                        let mu = output_var.terms[*term].grade(*x).min(activation * pref);
-                        aggregated[i] = self.tconorm.apply(aggregated[i], mu);
+                        let mu = output_var.terms[*term].grade(*x).await.min(activation * pref);
+                        aggregated[i] = self.tconorm.apply(aggregated[i], mu).await;
                     }
                     traces.push(RuleTrace { rule_id: rule.id, activation, contribution: activation * pref, description: format!("soft constraint preference {:.3}", pref) });
                 }
@@ -953,13 +953,13 @@ impl MimoSystem {
                 if sugeno_den.abs() < 1e-12 {
                     return Err(FuzzyError::NoFiredRules);
                 }
-                Defuzzifier::WeightedAverage.apply(&output_var.universe, &aggregated, Some(&heights), Some(&rule_values))?
+                Defuzzifier::WeightedAverage.apply(&output_var.universe, &aggregated, Some(&heights), Some(&rule_values)).await?
             }
             InferenceModel::Mamdani | InferenceModel::Larsen | InferenceModel::Hybrid => {
                 if aggregated.iter().sum::<f64>() < 1e-12 && sugeno_den > 1e-12 {
                     sugeno_num / sugeno_den
                 } else {
-                    self.defuzzifier.apply(&output_var.universe, &aggregated, None, None)?
+                    self.defuzzifier.apply(&output_var.universe, &aggregated, None, None).await?
                 }
             }
         };
@@ -970,7 +970,7 @@ impl MimoSystem {
 async fn tsukamoto_inverse(mf: &MembershipFunction, alpha: f64) -> f64 {
     let alpha = clamp01(alpha);
     if alpha <= 0.0 {
-        return mf.support_min();
+        return mf.support_min().await;
     }
     let min = mf.support_min();
     let max = mf.support_max();
@@ -1002,7 +1002,7 @@ impl HierarchicalSystem {
         let mut current = values.to_vec();
         let mut explanations = Vec::new();
         for layer in &self.layers {
-            let (out, explanation) = layer.infer(&current)?;
+            let (out, explanation) = layer.infer(&current).await?;
             explanations.push(explanation);
             current = out;
         }
@@ -1028,13 +1028,13 @@ impl AdaptiveMembership {
         let mut loss = 0.0;
         for _ in 0..epochs {
             loss = 0.0;
-            let mut grads = vec![0.0; self.mf.parameters().len()];
+            let mut grads = vec![0.0; self.mf.parameters().await.len()];
             for &(x, target) in samples {
                 let pred = self.mf.eval(x);
                 let err = pred - clamp01(target);
                 loss += err * err;
                 let eps = 1e-4;
-                let params = self.mf.parameters();
+                let params = self.mf.parameters().await;
                 for (i, g) in grads.iter_mut().enumerate().take(params.len()) {
                     let mut p = params.clone();
                     p[i] += eps;
@@ -1044,7 +1044,7 @@ impl AdaptiveMembership {
                     *g += err * (plus - pred) / eps;
                 }
             }
-            let mut params = self.mf.parameters();
+            let mut params = self.mf.parameters().await;
             for (p, g) in params.iter_mut().zip(grads.iter()) {
                 *p -= self.learning_rate * g / samples.len().max(1) as f64;
             }
@@ -1099,7 +1099,7 @@ impl Anfis {
     }
 
     async fn firing_strengths(&self, x: &[f64]) -> Vec<f64> {
-        (0..self.rule_count())
+        (0..self.rule_count().await)
             .map(|r| {
                 (0..self.input_count)
                     .map(|j| {
@@ -1113,7 +1113,7 @@ impl Anfis {
     }
 
     pub async fn forward(&self, x: &[f64]) -> f64 {
-        let w = self.firing_strengths(x);
+        let w = self.firing_strengths(x).await;
         let den: f64 = w.iter().sum();
         if den < 1e-12 {
             return 0.0;
@@ -1133,7 +1133,7 @@ impl Anfis {
         let mut loss = 0.0;
         for _ in 0..epochs {
             self.fit_consequents(data);
-            loss = self.fit_premises(data);
+            loss = self.fit_premises(data).await;
         }
         loss
     }
@@ -1142,30 +1142,30 @@ impl Anfis {
         let n = data.len();
         let r = self.rule_count();
         let p = self.input_count + 1;
-        let mut ata = MatD::zeros(r * p, r * p);
-        let mut atb = VecD::zeros(r * p);
+        let mut ata = MatD::zeros(r * p, r * p).await;
+        let mut atb = VecD::zeros(r * p).await;
         for (x, y) in data {
-            let w = self.firing_strengths(x);
+            let w = self.firing_strengths(x).await;
             let den: f64 = w.iter().sum();
             if den < 1e-12 {
                 continue;
             }
-            for i in 0..r {
+            for i in 0..r.await {
                 let wi = w[i] / den;
                 let mut row = vec![wi];
                 row.extend(x.iter().map(|&xj| wi * xj));
                 for a in 0..p {
                     for b in 0..p {
-                        ata.add_at(i * p + a, i * p + b, row[a] * row[b]);
+                        ata.add_at(i * p + a, i * p + b, row[a] * row[b]).await;
                     }
-                    atb.add_at(i * p + a, row[a] * *y);
+                    atb.add_at(i * p + a, row[a] * *y).await;
                 }
             }
         }
-        if let Some(sol) = ata.lu_solve(&atb) {
-            for i in 0..r {
+        if let Some(sol) = ata.lu_solve(&atb).await {
+            for i in 0..r.await {
                 for j in 0..p {
-                    self.consequent_coeffs[i][j] = sol.get(i * p + j);
+                    self.consequent_coeffs[i][j] = sol.get(i * p + j).await;
                 }
             }
         }
@@ -1179,7 +1179,7 @@ impl Anfis {
             let pred = self.forward(x);
             let err = pred - y;
             loss += err * err;
-            for r in 0..self.rule_count() {
+            for r in 0..self.rule_count().await {
                 for j in 0..self.input_count {
                     let sigma = self.premise_widths[r][j].max(1e-6);
                     let z = (x[j] - self.premise_centers[r][j]) / sigma;
@@ -1209,17 +1209,17 @@ pub async fn wang_mendel_rules(inputs: &[LinguisticVariable], output: &Linguisti
         let out_term = argmax(&out_grades);
         let consequent = match model {
             InferenceModel::Sugeno => Consequent::SugenoConstant { output: 0, value: *y },
-            InferenceModel::Tsukamoto => Consequent::Tsukamoto { output: 0, term: out_term },
-            _ => Consequent::Mamdani { output: 0, term: out_term },
+            InferenceModel::Tsukamoto => Consequent::Tsukamoto { output: 0, term: out_term.await },
+            _ => Consequent::Mamdani { output: 0, term: out_term.await },
         };
         rules.push(Rule { id: idx, antecedents, consequent, weight: 1.0, confidence: 1.0 });
     }
-    RuleBase::new(rules)
+    RuleBase::new(rules).await
 }
 
 /// 🧹️ Prune rules with activation support or weight below thresholds.
 pub async fn prune_rules(rules: RuleBase, min_weight: f64, min_confidence: f64) -> RuleBase {
-    RuleBase::new(rules.rules.into_iter().filter(|r| r.weight >= min_weight && r.confidence >= min_confidence).collect())
+    RuleBase::new(rules.rules.into_iter().filter(|r| r.weight >= min_weight && r.confidence >= min_confidence).collect()).await
 }
 
 /// 🎯️ Re-weight rules by empirical fit quality on a dataset.
@@ -1229,7 +1229,7 @@ pub async fn weight_rules_by_fit(system: &mut MimoSystem, data: &[(Vec<f64>, Vec
         let mut err = 0.0;
         let mut n = 0.0;
         for (x, y) in data {
-            if let Ok((pred, _)) = system.infer(x) {
+            if let Ok((pred, _)) = system.infer(x).await {
                 for (p, t) in pred.iter().zip(y.iter()) {
                     err += (p - t).abs();
                     n += 1.0;
@@ -1291,9 +1291,9 @@ pub struct GeneticOptimizer {
 
 impl GeneticOptimizer {
     pub async fn optimize<F: Fn(&[f64]) -> f64>(&self, fitness: F) -> (Vec<f64>, f64) {
-        let mut rng = Rng::from_seed(self.seed);
+        let mut rng = Rng::from_seed(self.seed).await;
         let dim = self.bounds.len();
-        let mut population: Vec<Vec<f64>> = (0..self.population_size).map(|_| (0..dim).map(|d| self.bounds[d].0 + rng.next_f64() * (self.bounds[d].1 - self.bounds[d].0)).collect()).collect();
+        let mut population: Vec<Vec<f64>> = (0..self.population_size).map(|_| (0..dim).map(|d| self.bounds[d].0 + semio_framework_plugin::resolve_ready(rng.next_f64()) * (self.bounds[d].1 - self.bounds[d].0)).collect()).collect();
         let mut best = population[0].clone();
         let mut best_fit = fitness(&best);
         for _ in 0..self.generations {
@@ -1308,9 +1308,9 @@ impl GeneticOptimizer {
             while population.len() < self.population_size {
                 let p1 = &population[rng.next_range(0, population.len() as u64) as usize];
                 let p2 = &population[rng.next_range(0, population.len() as u64) as usize];
-                let mut child: Vec<f64> = if rng.next_bool(self.crossover_rate) { (0..dim).map(|d| if rng.next_bool(0.5) { p1[d] } else { p2[d] }).collect() } else { p1.clone() };
+                let mut child: Vec<f64> = if rng.next_bool(self.crossover_rate).await { (0..dim).map(|d| if semio_framework_plugin::resolve_ready(rng.next_bool(0.5)) { p1[d] } else { p2[d] }).collect() } else { p1.clone() };
                 for d in 0..dim {
-                    if rng.next_bool(self.mutation_rate) {
+                    if rng.next_bool(self.mutation_rate).await {
                         child[d] = self.bounds[d].0 + rng.next_f64() * (self.bounds[d].1 - self.bounds[d].0);
                     }
                 }
@@ -1334,9 +1334,9 @@ pub struct PsoOptimizer {
 
 impl PsoOptimizer {
     pub async fn optimize<F: Fn(&[f64]) -> f64>(&self, fitness: F) -> (Vec<f64>, f64) {
-        let mut rng = Rng::from_seed(self.seed);
+        let mut rng = Rng::from_seed(self.seed).await;
         let dim = self.bounds.len();
-        let mut positions: Vec<Vec<f64>> = (0..self.swarm_size).map(|_| (0..dim).map(|d| self.bounds[d].0 + rng.next_f64() * (self.bounds[d].1 - self.bounds[d].0)).collect()).collect();
+        let mut positions: Vec<Vec<f64>> = (0..self.swarm_size).map(|_| (0..dim).map(|d| self.bounds[d].0 + semio_framework_plugin::resolve_ready(rng.next_f64()) * (self.bounds[d].1 - self.bounds[d].0)).collect()).collect();
         let mut velocities = vec![vec![0.0; dim]; self.swarm_size];
         let mut personal_best = positions.clone();
         let mut personal_fit: Vec<f64> = positions.iter().map(|p| fitness(p)).collect();
@@ -1346,8 +1346,8 @@ impl PsoOptimizer {
         for _ in 0..self.iterations {
             for i in 0..self.swarm_size {
                 for d in 0..dim {
-                    let r1 = rng.next_f64();
-                    let r2 = rng.next_f64();
+                    let r1 = rng.next_f64().await;
+                    let r2 = rng.next_f64().await;
                     velocities[i][d] = self.inertia * velocities[i][d] + self.cognitive * r1 * (personal_best[i][d] - positions[i][d]) + self.social * r2 * (gbest[d] - positions[i][d]);
                     positions[i][d] = (positions[i][d] + velocities[i][d]).clamp(self.bounds[d].0, self.bounds[d].1);
                 }
@@ -1383,7 +1383,7 @@ impl EvolvingFuzzySystem {
     }
 
     pub async fn observe(&mut self, x: &[f64], y: &[f64]) -> FuzzyResult<Explanation> {
-        let (pred, mut explanation) = self.system.infer(x)?;
+        let (pred, mut explanation) = self.system.infer(x).await?;
         for (rule, trace) in self.system.rules.rules.iter_mut().zip(explanation.traces.iter()) {
             rule.weight = (rule.weight + self.learning_rate * trace.activation).clamp(0.0, 1.0);
             for (p, t) in pred.iter().zip(y.iter()) {
@@ -1391,7 +1391,7 @@ impl EvolvingFuzzySystem {
                 rule.confidence = (rule.confidence + self.learning_rate * (1.0 - err)).clamp(0.0, 1.0);
             }
         }
-        self.system.rules = prune_rules(self.system.rules.clone(), self.prune_threshold, self.prune_threshold);
+        self.system.rules = prune_rules(self.system.rules.clone(), self.prune_threshold, self.prune_threshold).await;
         if self.system.rules.rules.len() < self.max_rules {
             if let Some(output) = y.first().copied() {
                 let rule = Rule {
@@ -1476,27 +1476,27 @@ pub async fn fuzzy_c_means(data: &[Vec<f64>], k: usize, m: f64, max_iter: usize,
 
 /// 🎯️ Gustafson–Kessel fuzzy clustering with adaptive covariance per cluster.
 pub async fn gustafson_kessel(data: &[Vec<f64>], k: usize, m: f64, max_iter: usize) -> FuzzyResult<FcmResult> {
-    let mut result = fuzzy_c_means(data, k, m, max_iter, 1e-5)?;
+    let mut result = fuzzy_c_means(data, k, m, max_iter, 1e-5).await?;
     let n = data.len();
     let dim = data[0].len();
     for _ in 0..max_iter {
         let mut covariances = vec![MatD::identity(dim); k];
         for j in 0..k {
-            let mut cov = MatD::zeros(dim, dim);
+            let mut cov = MatD::zeros(dim, dim).await;
             let mut den = 0.0;
             for i in 0..n {
                 let w = result.membership[i][j].powf(m);
                 den += w;
                 for a in 0..dim {
                     for b in 0..dim {
-                        cov.add_at(a, b, w * (data[i][a] - result.centers[j][a]) * (data[i][b] - result.centers[j][b]));
+                        cov.add_at(a, b, w * (data[i][a] - result.centers[j][a]) * (data[i][b] - result.centers[j][b])).await;
                     }
                 }
             }
             if den > 1e-12 {
                 for a in 0..dim {
                     for b in 0..dim {
-                        covariances[j].set(a, b, cov.get(a, b) / den + if a == b { 1e-6 } else { 0.0 });
+                        covariances[j].await.set(a, b, cov.get(a, b).await / den + if a == b { 1e-6 } else { 0.0 });
                     }
                 }
             }
@@ -1507,7 +1507,7 @@ pub async fn gustafson_kessel(data: &[Vec<f64>], k: usize, m: f64, max_iter: usi
                 let diff: Vec<f64> = (0..dim).map(|d| data[i][d] - result.centers[j][d]).collect();
                 for a in 0..dim {
                     for b in 0..dim {
-                        dist2 += diff[a] * covariances[j].get(a, b) * diff[b];
+                        dist2 += diff[a] * covariances[j].await.get(a, b) * diff[b];
                     }
                 }
                 result.membership[i][j] = 1.0
@@ -1517,7 +1517,7 @@ pub async fn gustafson_kessel(data: &[Vec<f64>], k: usize, m: f64, max_iter: usi
                             let diff: Vec<f64> = (0..dim).map(|d| data[i][d] - result.centers[c][d]).collect();
                             for a in 0..dim {
                                 for b in 0..dim {
-                                    d2 += diff[a] * covariances[c].get(a, b) * diff[b];
+                                    d2 += diff[a] * semio_framework_plugin::resolve_ready(covariances[c].await.get(a, b)) * diff[b];
                                 }
                             }
                             (dist2.max(1e-12) / d2.max(1e-12)).powf(1.0 / (m - 1.0))
@@ -1576,7 +1576,7 @@ impl FuzzyTopsis {
         let mut crisp = vec![vec![0.0; n]; m];
         for i in 0..m {
             for j in 0..n {
-                crisp[i][j] = self.decision_matrix[i][j].defuzzify_centroid(32);
+                crisp[i][j] = self.decision_matrix[i][j].defuzzify_centroid(32).await;
             }
         }
         let mut norm = vec![vec![0.0; n]; m];
@@ -1653,12 +1653,12 @@ pub struct TemporalEvaluator {
 impl TemporalEvaluator {
     pub async fn recently(&self, timestamp: f64) -> f64 {
         let dt = (self.now - timestamp).max(0.0);
-        clamp01(1.0 - dt / self.recent_window.max(1e-6))
+        clamp01(1.0 - dt / self.recent_window.max(1e-6)).await
     }
 
     pub async fn frequently(&self, timestamps: &[f64]) -> f64 {
         let count = timestamps.iter().filter(|t| (self.now - **t).abs() <= self.frequent_window).count() as f64;
-        clamp01(count / 5.0)
+        clamp01(count / 5.0).await
     }
 }
 
@@ -1672,11 +1672,11 @@ pub struct SpatialEvaluator {
 impl SpatialEvaluator {
     pub async fn near(&self, point: &[f64]) -> f64 {
         let dist2: f64 = self.anchor.iter().zip(point.iter()).map(|(a, p)| (a - p).powi(2)).sum();
-        clamp01(1.0 - dist2.sqrt() / self.near_radius.max(1e-6))
+        clamp01(1.0 - dist2.sqrt() / self.near_radius.max(1e-6)).await
     }
 
     pub async fn slowly(&self, velocity: f64, max_speed: f64) -> f64 {
-        clamp01(1.0 - velocity.abs() / max_speed.max(1e-6))
+        clamp01(1.0 - velocity.abs() / max_speed.max(1e-6)).await
     }
 }
 // #endregion 🔖️TemporalSpatial
@@ -1684,7 +1684,7 @@ impl SpatialEvaluator {
 // #region 🔖️HybridUncertainty
 /// 🔀️ Map probabilistic scores to fuzzy membership without external Bayesian engines.
 pub async fn probabilistic_to_membership(probability: f64, certainty: f64) -> f64 {
-    clamp01(probability * certainty + 0.5 * (1.0 - certainty))
+    clamp01(probability * certainty + 0.5 * (1.0 - certainty)).await
 }
 
 /// 🔀️ Bridge possibility and fuzzy membership on a shared universe.
@@ -1695,7 +1695,7 @@ pub async fn possibility_to_membership(possibility: &PossibilityMeasure) -> Vec<
 /// 🔀️ Combine fuzzy and possibility evidence via weighted fusion.
 pub async fn hybrid_fuse(membership: f64, possibility: f64, fuzzy_weight: f64) -> f64 {
     let w = clamp01(fuzzy_weight);
-    clamp01(w * membership + (1.0 - w) * possibility)
+    clamp01(w * membership + (1.0 - w) * possibility).await
 }
 // #endregion 🔖️HybridUncertainty
 
@@ -1714,21 +1714,21 @@ impl FanController {
         let t_min = temps.iter().copied().fold(f64::INFINITY, f64::min);
         let t_max = temps.iter().copied().fold(f64::NEG_INFINITY, f64::max);
         let s_max = fan_speeds.iter().copied().fold(0.0_f64, f64::max).max(1.0);
-        let temp_univ = Universe::new(t_min - 1.0, t_max + 1.0, 101)?;
-        let speed_univ = Universe::new(0.0, s_max * 1.1, 101)?;
+        let temp_univ = Universe::new(t_min - 1.0, t_max + 1.0, 101).await?;
+        let speed_univ = Universe::new(0.0, s_max * 1.1, 101).await?;
         let mut low_mf = MembershipFunction::triangular(t_min, t_min, (t_min + t_max) * 0.5);
         let mut high_mf = MembershipFunction::triangular((t_min + t_max) * 0.5, t_max, t_max);
         let low_samples: Vec<(f64, f64)> = temps.iter().map(|&t| (t, if t < (t_min + t_max) * 0.5 { 1.0 } else { 0.0 })).collect();
         let high_samples: Vec<(f64, f64)> = temps.iter().map(|&t| (t, if t >= (t_min + t_max) * 0.5 { 1.0 } else { 0.0 })).collect();
-        let mut low_adapt = AdaptiveMembership::new(low_mf, 0.01);
-        low_adapt.fit(&low_samples, 20);
+        let mut low_adapt = AdaptiveMembership::new(low_mf.await, 0.01).await;
+        low_adapt.fit(&low_samples, 20).await;
         low_mf = low_adapt.mf;
-        let mut high_adapt = AdaptiveMembership::new(high_mf, 0.01);
-        high_adapt.fit(&high_samples, 20);
+        let mut high_adapt = AdaptiveMembership::new(high_mf.await, 0.01).await;
+        high_adapt.fit(&high_samples, 20).await;
         high_mf = high_adapt.mf;
-        let temperature_var = LinguisticVariable::new("temperature", temp_univ, vec![FuzzySet::new("low", low_mf), FuzzySet::new("high", high_mf)]);
-        let speed_var = LinguisticVariable::new("fan_speed", speed_univ, vec![FuzzySet::new("slow", MembershipFunction::triangular(0.0, 0.0, s_max * 0.5)), FuzzySet::new("fast", MembershipFunction::triangular(s_max * 0.4, s_max, s_max))]);
-        let sensor_uncertainty = IntervalType2Set::new("temperature_sensor", MembershipFunction::gaussian((t_min + t_max) * 0.5, (t_max - t_min) * 0.05), MembershipFunction::gaussian((t_min + t_max) * 0.5, (t_max - t_min) * 0.12));
+        let temperature_var = LinguisticVariable::new("temperature", temp_univ, vec![FuzzySet::new("low", low_mf.await).await, FuzzySet::new("high", high_mf.await).await]);
+        let speed_var = LinguisticVariable::new("fan_speed", speed_univ, vec![FuzzySet::new("slow", MembershipFunction::triangular(0.0, 0.0, s_max * 0.5).await).await, FuzzySet::new("fast", MembershipFunction::triangular(s_max * 0.4, s_max, s_max).await).await]);
+        let sensor_uncertainty = IntervalType2Set::new("temperature_sensor", MembershipFunction::gaussian((t_min + t_max) * 0.5, (t_max - t_min) * 0.05).await, MembershipFunction::gaussian((t_min + t_max) * 0.5, (t_max - t_min) * 0.12).await);
         let rules = RuleBase::new(vec![
             Rule { id: 0, antecedents: vec![AntecedentClause { input: 0, term: 1, hedge: None }], consequent: Consequent::Mamdani { output: 0, term: 1 }, weight: 0.9, confidence: 0.85 },
             Rule { id: 1, antecedents: vec![AntecedentClause { input: 0, term: 0, hedge: None }], consequent: Consequent::Mamdani { output: 0, term: 0 }, weight: 0.8, confidence: 0.8 },
@@ -1739,10 +1739,10 @@ impl FanController {
     }
 
     pub async fn decide(&mut self, temperature: f64) -> FuzzyResult<(f64, Explanation)> {
-        let (lo, hi) = self.sensor_uncertainty.grade_interval(temperature);
+        let (lo, hi) = self.sensor_uncertainty.grade_interval(temperature).await;
         let adjusted = 0.5 * (temperature + self.sensor_uncertainty.type_reduced_centroid(&[lo, temperature, hi]));
-        self.evolving.observe(&[adjusted], &[0.0])?;
-        let (outputs, explanation) = self.evolving.system.infer(&[adjusted])?;
+        self.evolving.observe(&[adjusted], &[0.0]).await?;
+        let (outputs, explanation) = self.evolving.system.infer(&[adjusted]).await?;
         Ok((outputs[0], explanation))
     }
 }

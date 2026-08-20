@@ -4,5 +4,5 @@ use protocol::Mutation;
 
 /// ↩️ Inverse of set-snapshot.
 pub async fn inverse(base: &HtmlSnapshot, mutation: &HtmlMutation) -> Vec<HtmlMutation> {
-    <HtmlMutation as Mutation<HtmlSnapshot>>::inverse(mutation, base)
+    <HtmlMutation as Mutation<HtmlSnapshot>>::inverse(mutation, base).await
 }

@@ -1,0 +1,11 @@
+  EDIT 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs:12050 [E0599] insert `.await` at byte 740429
+  EDIT 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs:12049 [E0599] insert `.await` at byte 740320
+  EDIT 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs:12047 [E0599] insert `.await` at byte 740189
+  EDIT 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs:12041 [E0599] insert `.await` at byte 739887
+  EDIT 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs:12040 [E0599] insert `.await` at byte 739805
+  EDIT 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs:12039 [E0599] insert `.await` at byte 739739
+  EDIT 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs:12038 [E0599] insert `.await` at byte 739661
+  EDIT 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs:12036 [E0599] insert `.await` at byte 739531
+
+applied: 8  skipped: 0  files: 1
+  E0599: 8

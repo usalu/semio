@@ -1,0 +1,199 @@
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1188:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1215:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1234:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1249:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1258:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1268:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1292:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1302:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1315:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1325:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1338:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1351:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1413:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1424:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1527:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1569:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1644:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1654:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1308:16: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1344:16: warning: unexpected `cfg` condition value: `typegen`
+warning: `semio-framework-replication` (lib) generated 20 warnings
+    Checking semio-framework-os-kernel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust)
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13022:6: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13023:48: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13023:103: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13024:64: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13025:9: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13027:55: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13027:107: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13028:21: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13029:55: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:39:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:40:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:285:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:290:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/⌨️cli/🦀️component.rs:80:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/⌨️cli/🦀️component.rs:83:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:29:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:80:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:95:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:98:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:99:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:208:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:212:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:214:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:217:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:223:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:235:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:236:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:237:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:238:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:508:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:680:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:681:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:682:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🌿️vcs/🦀️component.rs:284:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🌿️vcs/🦀️component.rs:285:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:501:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:502:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:513:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:514:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:515:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:522:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:541:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:542:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:720:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:721:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:722:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:732:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:733:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:734:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:1215:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:2403:9: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:2418:9: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:2421:9: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:92:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:96:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:107:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:110:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+warning: `semio-framework-os-kernel` (lib) generated 57 warnings (run `cargo fix --lib -p semio-framework-os-kernel` to apply 9 suggestions)
+    Checking semio-framework-3d v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust)
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:1698:47: error[E0369]: binary operation `<` cannot be applied to type `impl Future<Output = f32>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:1864:11: error[E0369]: binary operation `<` cannot be applied to type `impl Future<Output = f32>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:1659:22: error[E0369]: binary operation `<` cannot be applied to type `impl Future<Output = f64>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:1920:30: error[E0369]: binary operation `<` cannot be applied to type `impl Future<Output = f32>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:1724:30: error[E0369]: binary operation `<` cannot be applied to type `impl Future<Output = f32>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:1982:28: error[E0277]: `&impl Future<Output = Vec<[usize; 3]>>` is not an iterator: `&impl Future<Output = Vec<[usize; 3]>>` is not an iterator
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:1659:34: error[E0369]: binary operation `<` cannot be applied to type `impl Future<Output = f64>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:1659:46: error[E0369]: binary operation `<` cannot be applied to type `impl Future<Output = f64>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:1660:22: error[E0369]: binary operation `>` cannot be applied to type `impl Future<Output = f64>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:1920:58: error[E0369]: binary operation `<` cannot be applied to type `impl Future<Output = f32>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:1989:28: error[E0277]: `&impl Future<Output = Vec<[usize; 3]>>` is not an iterator: `&impl Future<Output = Vec<[usize; 3]>>` is not an iterator
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:1660:34: error[E0369]: binary operation `>` cannot be applied to type `impl Future<Output = f64>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:1660:46: error[E0369]: binary operation `>` cannot be applied to type `impl Future<Output = f64>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:1923:71: error[E0369]: binary operation `>` cannot be applied to type `impl Future<Output = f32>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:1630:10: error[E0369]: binary operation `<` cannot be applied to type `impl Future<Output = f64>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:1633:10: error[E0277]: cannot divide `f64` by `impl Future<Output = f64>`: no implementation for `f64 / impl Future<Output = f64>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:1669:42: error[E0599]: `impl Future<Output = Vec<[usize; 3]>>` is not an iterator: `impl Future<Output = Vec<[usize; 3]>>` is not an iterator
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:1734:19: error[E0308]: mismatched types: expected `(f64, f64, f64)`, found future
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:1633:19: error[E0277]: cannot divide `f64` by `impl Future<Output = f64>`: no implementation for `f64 / impl Future<Output = f64>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:1734:40: error[E0308]: mismatched types: expected `(f64, f64, f64)`, found future
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:1633:28: error[E0277]: cannot divide `f64` by `impl Future<Output = f64>`: no implementation for `f64 / impl Future<Output = f64>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:1648:6: error[E0382]: use of moved value: `axis_u`: value used here after move
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:1867:35: error[E0277]: cannot divide `{float}` by `impl Future<Output = f32>`: no implementation for `{float} / impl Future<Output = f32>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:1870:11: error[E0369]: binary operation `<` cannot be applied to type `impl Future<Output = f32>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:1603:16: error[E0605]: non-primitive cast: `impl Future<Output = f32>` as `f64`: an `as` expression can only be used to convert between primitive types or to coerce to a specific trait object
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:1603:31: error[E0605]: non-primitive cast: `impl Future<Output = f32>` as `f64`: an `as` expression can only be used to convert between primitive types or to coerce to a specific trait object
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:1603:48: error[E0605]: non-primitive cast: `impl Future<Output = f32>` as `f64`: an `as` expression can only be used to convert between primitive types or to coerce to a specific trait object
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:1603:63: error[E0605]: non-primitive cast: `impl Future<Output = f32>` as `f64`: an `as` expression can only be used to convert between primitive types or to coerce to a specific trait object
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:1604:16: error[E0605]: non-primitive cast: `impl Future<Output = f32>` as `f64`: an `as` expression can only be used to convert between primitive types or to coerce to a specific trait object
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:1604:31: error[E0605]: non-primitive cast: `impl Future<Output = f32>` as `f64`: an `as` expression can only be used to convert between primitive types or to coerce to a specific trait object
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:1604:48: error[E0605]: non-primitive cast: `impl Future<Output = f32>` as `f64`: an `as` expression can only be used to convert between primitive types or to coerce to a specific trait object
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:1604:63: error[E0605]: non-primitive cast: `impl Future<Output = f32>` as `f64`: an `as` expression can only be used to convert between primitive types or to coerce to a specific trait object
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:1605:16: error[E0605]: non-primitive cast: `impl Future<Output = f32>` as `f64`: an `as` expression can only be used to convert between primitive types or to coerce to a specific trait object
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:1736:10: error[E0277]: a value of type `Vec<(f64, f64)>` cannot be built from an iterator over elements of type `(impl Future<Output = f64>, impl Future<Output = f64>)`: value of type `Vec<(f64, f64)>` cannot be built from `std::iter::Iterator<Item=(impl Future<Output = f64>, impl Future<Output = f64>)>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:1605:31: error[E0605]: non-primitive cast: `impl Future<Output = f32>` as `f64`: an `as` expression can only be used to convert between primitive types or to coerce to a specific trait object
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:1605:48: error[E0605]: non-primitive cast: `impl Future<Output = f32>` as `f64`: an `as` expression can only be used to convert between primitive types or to coerce to a specific trait object
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:1605:63: error[E0605]: non-primitive cast: `impl Future<Output = f32>` as `f64`: an `as` expression can only be used to convert between primitive types or to coerce to a specific trait object
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:1564:30: error[E0277]: `impl Future<Output = HashMap<u32, [f32; 2]>>` is not an iterator: `impl Future<Output = HashMap<u32, [f32; 2]>>` is not an iterator
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:1483:24: error[E0277]: `impl Future<Output = Vec<[usize; 3]>>` is not an iterator: `impl Future<Output = Vec<[usize; 3]>>` is not an iterator
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:1576:43: error[E0308]: mismatched types: expected `&[Vec<usize>]`, found `&impl Future<Output = Vec<Vec<usize>>>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:1770:44: error[E0369]: binary operation `>` cannot be applied to type `impl Future<Output = f64>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:1873:35: error[E0277]: cannot divide `{float}` by `impl Future<Output = f32>`: no implementation for `{float} / impl Future<Output = f32>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:1770:67: error[E0369]: binary operation `<` cannot be applied to type `impl Future<Output = f64>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:1874:35: error[E0369]: binary operation `<` cannot be applied to type `impl Future<Output = f32>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:1687:31: error[E0599]: `impl Future<Output = Vec<[usize; 3]>>` is not an iterator: `impl Future<Output = Vec<[usize; 3]>>` is not an iterator
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:1722:62: error[E0605]: non-primitive cast: `impl Future<Output = f32>` as `f64`: an `as` expression can only be used to convert between primitive types or to coerce to a specific trait object
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:1722:76: error[E0605]: non-primitive cast: `impl Future<Output = f32>` as `f64`: an `as` expression can only be used to convert between primitive types or to coerce to a specific trait object
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:1722:90: error[E0605]: non-primitive cast: `impl Future<Output = f32>` as `f64`: an `as` expression can only be used to convert between primitive types or to coerce to a specific trait object
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:1727:34: error[E0605]: non-primitive cast: `impl Future<Output = f32>` as `f64`: an `as` expression can only be used to convert between primitive types or to coerce to a specific trait object
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:1727:59: error[E0605]: non-primitive cast: `impl Future<Output = f32>` as `f64`: an `as` expression can only be used to convert between primitive types or to coerce to a specific trait object
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:1727:84: error[E0605]: non-primitive cast: `impl Future<Output = f32>` as `f64`: an `as` expression can only be used to convert between primitive types or to coerce to a specific trait object
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:1524:18: error[E0369]: binary operation `>` cannot be applied to type `impl Future<Output = f32>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:1329:18: error[E0369]: binary operation `<` cannot be applied to type `impl Future<Output = f32>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:1531:62: error[E0608]: cannot index into a value of type `impl Future<Output = Vec<f64>>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:1531:75: error[E0608]: cannot index into a value of type `impl Future<Output = Vec<f64>>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:1332:28: error[E0369]: cannot divide `impl Future<Output = f32>` by `f32`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:1314:56: error[E0369]: cannot divide `impl Future<Output = f32>` by `impl Future<Output = f32>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:1885:42: error[E0277]: cannot multiply `f32` by `impl Future<Output = f32>`: no implementation for `f32 * impl Future<Output = f32>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:1213:26: error[E0369]: binary operation `>` cannot be applied to type `impl Future<Output = usize>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:1213:62: error[E0369]: binary operation `>` cannot be applied to type `impl Future<Output = usize>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:1506:25: error[E0605]: non-primitive cast: `impl Future<Output = f32>` as `f64`: an `as` expression can only be used to convert between primitive types or to coerce to a specific trait object
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:1507:25: error[E0605]: non-primitive cast: `impl Future<Output = f32>` as `f64`: an `as` expression can only be used to convert between primitive types or to coerce to a specific trait object
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:1508:25: error[E0605]: non-primitive cast: `impl Future<Output = f32>` as `f64`: an `as` expression can only be used to convert between primitive types or to coerce to a specific trait object
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:1189:46: error[E0369]: binary operation `<=` cannot be applied to type `impl Future<Output = f32>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:1221:50: error[E0369]: binary operation `<` cannot be applied to type `impl Future<Output = f32>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:976:24: error[E0600]: cannot apply unary operator `!` to type `impl Future<Output = bool>`: cannot apply unary operator `!`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:948:24: error[E0277]: `impl Future<Output = Vec<[usize; 3]>>` is not an iterator: `impl Future<Output = Vec<[usize; 3]>>` is not an iterator
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:994:52: error[E0308]: mismatched types: expected `&[Vec<u32>]`, found `&impl Future<Output = Vec<Vec<u32>>>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:1247:13: error[E0368]: binary assignment operation `-=` cannot be applied to type `impl Future<Output = usize>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:1205:29: error[E0605]: non-primitive cast: `impl Future<Output = usize>` as `f32`: an `as` expression can only be used to convert between primitive types or to coerce to a specific trait object
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:885:52: error[E0308]: mismatched types: expected `&[Vec<u32>]`, found `&impl Future<Output = Vec<Vec<u32>>>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:832:55: error[E0369]: binary operation `<=` cannot be applied to type `impl Future<Output = f32>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:840:51: error[E0277]: `mesh::Vec3` is not a future: `mesh::Vec3` is not a future
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:630:40: error[E0369]: cannot divide `impl Future<Output = f32>` by `f32`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:616:58: error[E0369]: cannot multiply `impl Future<Output = f32>` by `impl Future<Output = f32>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:616:84: error[E0369]: cannot multiply `impl Future<Output = f32>` by `impl Future<Output = f32>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:616:110: error[E0369]: cannot multiply `impl Future<Output = f32>` by `impl Future<Output = f32>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:630:55: error[E0689]: can't call method `max` on ambiguous numeric type `{float}`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:601:25: error[E0277]: cannot multiply `f32` by `impl Future<Output = f32>`: no implementation for `f32 * impl Future<Output = f32>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:601:57: error[E0277]: cannot multiply `f32` by `impl Future<Output = f32>`: no implementation for `f32 * impl Future<Output = f32>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:601:69: error[E0277]: cannot multiply `f32` by `impl Future<Output = f32>`: no implementation for `f32 * impl Future<Output = f32>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:601:93: error[E0277]: cannot multiply `f32` by `impl Future<Output = f32>`: no implementation for `f32 * impl Future<Output = f32>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:601:105: error[E0277]: cannot multiply `f32` by `impl Future<Output = f32>`: no implementation for `f32 * impl Future<Output = f32>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:573:41: error[E0277]: cannot multiply `f32` by `impl Future<Output = f32>`: no implementation for `f32 * impl Future<Output = f32>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:740:28: error[E0382]: use of moved value: `mid`: value used here after move
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:740:42: error[E0382]: use of moved value: `offset`: value used here after move
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:573:69: error[E0277]: cannot multiply `f32` by `impl Future<Output = f32>`: no implementation for `f32 * impl Future<Output = f32>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:563:25: error[E0277]: cannot multiply `f32` by `impl Future<Output = f32>`: no implementation for `f32 * impl Future<Output = f32>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:573:97: error[E0277]: cannot multiply `f32` by `impl Future<Output = f32>`: no implementation for `f32 * impl Future<Output = f32>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:335:24: error[E0277]: `impl Future<Output = Vec<[u32; 3]>>` is not an iterator: `impl Future<Output = Vec<[u32; 3]>>` is not an iterator
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:602:25: error[E0277]: cannot multiply `f32` by `impl Future<Output = f32>`: no implementation for `f32 * impl Future<Output = f32>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:563:51: error[E0277]: cannot multiply `f32` by `impl Future<Output = f32>`: no implementation for `f32 * impl Future<Output = f32>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:563:63: error[E0277]: cannot multiply `f32` by `impl Future<Output = f32>`: no implementation for `f32 * impl Future<Output = f32>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:602:37: error[E0277]: cannot multiply `f32` by `impl Future<Output = f32>`: no implementation for `f32 * impl Future<Output = f32>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:563:81: error[E0277]: cannot multiply `f32` by `impl Future<Output = f32>`: no implementation for `f32 * impl Future<Output = f32>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:563:93: error[E0277]: cannot multiply `f32` by `impl Future<Output = f32>`: no implementation for `f32 * impl Future<Output = f32>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:564:25: error[E0277]: cannot multiply `f32` by `impl Future<Output = f32>`: no implementation for `f32 * impl Future<Output = f32>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:602:61: error[E0277]: cannot multiply `f32` by `impl Future<Output = f32>`: no implementation for `f32 * impl Future<Output = f32>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:564:37: error[E0277]: cannot multiply `f32` by `impl Future<Output = f32>`: no implementation for `f32 * impl Future<Output = f32>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:602:93: error[E0277]: cannot multiply `f32` by `impl Future<Output = f32>`: no implementation for `f32 * impl Future<Output = f32>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:564:55: error[E0277]: cannot multiply `f32` by `impl Future<Output = f32>`: no implementation for `f32 * impl Future<Output = f32>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:602:105: error[E0277]: cannot multiply `f32` by `impl Future<Output = f32>`: no implementation for `f32 * impl Future<Output = f32>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:564:81: error[E0277]: cannot multiply `f32` by `impl Future<Output = f32>`: no implementation for `f32 * impl Future<Output = f32>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:564:93: error[E0277]: cannot multiply `f32` by `impl Future<Output = f32>`: no implementation for `f32 * impl Future<Output = f32>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:603:25: error[E0277]: cannot multiply `f32` by `impl Future<Output = f32>`: no implementation for `f32 * impl Future<Output = f32>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:565:25: error[E0277]: cannot multiply `f32` by `impl Future<Output = f32>`: no implementation for `f32 * impl Future<Output = f32>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:603:37: error[E0277]: cannot multiply `f32` by `impl Future<Output = f32>`: no implementation for `f32 * impl Future<Output = f32>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:565:37: error[E0277]: cannot multiply `f32` by `impl Future<Output = f32>`: no implementation for `f32 * impl Future<Output = f32>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:603:61: error[E0277]: cannot multiply `f32` by `impl Future<Output = f32>`: no implementation for `f32 * impl Future<Output = f32>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:789:74: error[E0382]: use of moved value: `cut_dir`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:565:55: error[E0277]: cannot multiply `f32` by `impl Future<Output = f32>`: no implementation for `f32 * impl Future<Output = f32>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:603:73: error[E0277]: cannot multiply `f32` by `impl Future<Output = f32>`: no implementation for `f32 * impl Future<Output = f32>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:565:67: error[E0277]: cannot multiply `f32` by `impl Future<Output = f32>`: no implementation for `f32 * impl Future<Output = f32>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:565:85: error[E0277]: cannot multiply `f32` by `impl Future<Output = f32>`: no implementation for `f32 * impl Future<Output = f32>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:603:97: error[E0277]: cannot multiply `f32` by `impl Future<Output = f32>`: no implementation for `f32 * impl Future<Output = f32>`
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:704:66: error[E0382]: use of moved value: `to_center`: value used here after move
+🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/../../🥽️mesh/🦀️component.rs:713:70: error[E0382]: use of moved value: `to_center`: value used here after move
+error: could not compile `semio-framework-3d` (lib) due to 117 previous errors

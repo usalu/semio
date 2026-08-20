@@ -109,7 +109,7 @@ impl StlTrianglesDiff {
 async fn apply_triangles_diff(triangles: &[StlTriangle], diff: &StlTrianglesDiff) -> Vec<StlTriangle> {
     let mut result = triangles.to_vec();
     for m in &diff.modified {
-        result[m.index] = apply_triangle_diff(&result[m.index], &m.diff);
+        result[m.index] = apply_triangle_diff(&result[m.index], &m.diff).await;
     }
     let mut removed_sorted = diff.removed.clone();
     removed_sorted.sort_unstable_by(|a, b| b.cmp(a));
@@ -128,13 +128,13 @@ async fn validate_triangles_diff(base_len: usize, diff: &StlTrianglesDiff) -> Mu
     let mut removed = BTreeSet::new();
     for &index in &diff.removed {
         if index >= base_len || !removed.insert(index) {
-            return Err(MutationApplyError::new("invalid-remove-index", "triangle removal target must exist exactly once").at(["triangles", &index.to_string()]));
+            return Err(MutationApplyError::new("invalid-remove-index", "triangle removal target must exist exactly once").await.at(["triangles", &index.to_string()]).await);
         }
     }
     let mut modified = BTreeSet::new();
     for entry in &diff.modified {
         if entry.index >= base_len || removed.contains(&entry.index) || !modified.insert(entry.index) {
-            return Err(MutationApplyError::new("invalid-modify-index", "triangle modification target must exist exactly once and remain present").at(["triangles", &entry.index.to_string()]));
+            return Err(MutationApplyError::new("invalid-modify-index", "triangle modification target must exist exactly once and remain present").await.at(["triangles", &entry.index.to_string()]).await);
         }
     }
     let mut length = base_len - removed.len();
@@ -143,7 +143,7 @@ async fn validate_triangles_diff(base_len: usize, diff: &StlTrianglesDiff) -> Mu
     let mut previous = None;
     for index in additions {
         if index > length || previous == Some(index) {
-            return Err(MutationApplyError::new("invalid-add-index", "triangle addition target must be unique and within the evolving sequence").at(["triangles", &index.to_string()]));
+            return Err(MutationApplyError::new("invalid-add-index", "triangle addition target must be unique and within the evolving sequence").await.at(["triangles", &index.to_string()]).await);
         }
         previous = Some(index);
         length += 1;
@@ -167,7 +167,7 @@ async fn triangles_between(a: &[StlTriangle], b: &[StlTriangle]) -> StlTriangles
     for i in 0..min_len {
         let d = triangle_between(&a[i], &b[i]);
         if !triangle_diff_is_empty(&d) {
-            modified.push(StlTriangleModified { index: i, diff: d });
+            modified.push(StlTriangleModified { index: i, diff: d.await });
         }
     }
     let removed: Vec<usize> = (min_len..a.len()).collect();
@@ -222,7 +222,7 @@ async fn absorb_pair(d1: &StlTrianglesDiff, d2: &StlTrianglesDiff) -> StlTriangl
 
     let base_labels: Vec<Lbl> = (0..l1).map(Lbl::Base).collect();
     let d1_added: Vec<(usize, Lbl)> = d1.added.iter().enumerate().map(|(j, a)| (a.index, Lbl::Added1(j))).collect();
-    let mut mid_labels = simulate_labels(base_labels, &d1.removed, &d1_added);
+    let mut mid_labels = simulate_labels(base_labels, &d1.removed, &d1_added).await;
 
     // 🔍️ Record each label's MID position — exactly the φ(base_index)/mid_index_of(Added1(j))
     // transport the recipe calls for.
@@ -277,7 +277,7 @@ async fn absorb_pair(d1: &StlTrianglesDiff, d2: &StlTrianglesDiff) -> StlTriangl
                 let mut triangle = d1.added[j].triangle;
                 if let Some(mp) = mid_pos {
                     if let Some(d2d) = d2_modified_at.get(&mp) {
-                        triangle = apply_triangle_diff(&triangle, d2d);
+                        triangle = apply_triangle_diff(&triangle, d2d).await;
                     }
                 }
                 added.push(StlTriangleAdded { index: pos, triangle });
@@ -300,8 +300,8 @@ async fn absorb_triangles(d1: Option<StlTrianglesDiff>, d2: Option<StlTrianglesD
         (Some(d1), None) => return Some(d1),
         (None, Some(d2)) => return Some(d2),
         (Some(d1), Some(d2)) => absorb_pair(&d1, &d2),
-    };
-    if merged.is_empty() {
+    }.await;
+    if merged.is_empty().await {
         None
     } else {
         Some(merged)
@@ -327,9 +327,9 @@ pub struct StlDiff {
 impl MutationDiff<StlSnapshot> for StlDiff {
     async fn apply(&self, base: &StlSnapshot) -> MutationApplyResult<StlSnapshot> {
         if let Some(diff) = &self.triangles {
-            validate_triangles_diff(base.triangles.len(), diff)?;
+            validate_triangles_diff(base.triangles.len(), diff).await?;
         }
-        Ok(apply_stl_diff_unchecked(self, base))
+        Ok(apply_stl_diff_unchecked(self, base).await)
     }
 
     /// ➕️ Structural, total, base-free sequential-coalesce (`## Absorb` contract). Scalar
@@ -338,7 +338,7 @@ impl MutationDiff<StlSnapshot> for StlDiff {
         if other.solid_name.is_some() {
             self.solid_name = other.solid_name;
         }
-        self.triangles = absorb_triangles(self.triangles.take(), other.triangles);
+        self.triangles = absorb_triangles(self.triangles.take(), other.triangles).await;
     }
 }
 
@@ -349,15 +349,15 @@ impl DiffAlgebra<StlSnapshot> for StlDiff {
     /// as this ticket's zip/xml precedent).
     async fn inverse(&self, base: &StlSnapshot) -> Self {
         let mutated = apply_stl_diff_unchecked(self, base);
-        <Self as DiffAlgebra<StlSnapshot>>::between(&mutated, base)
+        <Self as DiffAlgebra<StlSnapshot>>::between(&mutated, base).await
     }
 
     /// 🧭️ State delta (compose `GetXDiff`): `triangles` uses index-pairwise matching (see
     /// `triangles_between`'s doc comment for the single-tail-kind-per-call caveat).
     async fn between(base: &StlSnapshot, other: &StlSnapshot) -> Self {
         let solid_name = (base.solid_name != other.solid_name).then(|| other.solid_name.clone());
-        let td = triangles_between(&base.triangles, &other.triangles);
-        let triangles = if td.is_empty() { None } else { Some(td) };
+        let td = triangles_between(&base.triangles, &other.triangles).await;
+        let triangles = if td.is_empty().await { None } else { Some(td) };
         StlDiff { solid_name, triangles }
     }
 
@@ -371,7 +371,7 @@ impl DiffAlgebra<StlSnapshot> for StlDiff {
 /// 🧩 `SetSnapshot`'s diff is the sparse field-by-field `between(base, next)` — no full-replace
 /// slot exists on `StlDiff` to short-circuit into.
 pub async fn diff_set_snapshot(base: &StlSnapshot, next: &StlSnapshot) -> StlDiff {
-    <StlDiff as DiffAlgebra<StlSnapshot>>::between(base, next)
+    <StlDiff as DiffAlgebra<StlSnapshot>>::between(base, next).await
 }
 pub async fn diff_set_solid_name(name: &str) -> StlDiff {
     StlDiff { solid_name: Some(name.to_string()), triangles: None }
@@ -386,10 +386,10 @@ async fn diff_triangle_field(index: usize, field: StlTriangleDiff) -> StlDiff {
     StlDiff { solid_name: None, triangles: Some(StlTrianglesDiff { removed: vec![], modified: vec![StlTriangleModified { index, diff: field }], added: vec![] }) }
 }
 pub async fn diff_set_triangle_normal(index: usize, normal: [f64; 3]) -> StlDiff {
-    diff_triangle_field(index, StlTriangleDiff { normal: Some(normal), vertices: None })
+    diff_triangle_field(index, StlTriangleDiff { normal: Some(normal), vertices: None }).await
 }
 pub async fn diff_set_triangle_vertices(index: usize, vertices: [[f64; 3]; 3]) -> StlDiff {
-    diff_triangle_field(index, StlTriangleDiff { normal: None, vertices: Some(vertices) })
+    diff_triangle_field(index, StlTriangleDiff { normal: None, vertices: Some(vertices) }).await
 }
 //#endregion 🔖️MutationDiffBuilders
 
@@ -419,10 +419,10 @@ pub(crate) async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
 pub(crate) async fn hex_encode_str(s: &str) -> String {
-    hex_encode(s.as_bytes())
+    hex_encode(s.as_bytes()).await
 }
 pub(crate) async fn hex_decode_str(s: &str) -> Result<String, String> {
-    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
+    String::from_utf8(hex_decode(s).await?).map_err(|e| e.to_string())
 }
 pub(crate) async fn parse_f64(s: &str) -> Result<f64, String> {
     s.parse().map_err(|e: std::num::ParseFloatError| e.to_string())
@@ -471,14 +471,14 @@ pub(crate) async fn write_str_bin(out: &mut Vec<u8>, s: &str) {
     out.extend_from_slice(s.as_bytes());
 }
 pub(crate) async fn read_str_bin(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
-    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-    String::from_utf8(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec()).map_err(|e| e.to_string())
+    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+    String::from_utf8(reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec()).map_err(|e| e.to_string())
 }
 pub(crate) async fn write_f64_bin(out: &mut Vec<u8>, v: f64) {
     out.extend_from_slice(&v.to_le_bytes());
 }
 pub(crate) async fn read_f64_bin(reader: &mut store::ByteReader<'_>) -> Result<f64, String> {
-    reader.read_f64_le().map_err(|e| e.to_string())
+    reader.read_f64_le().await.map_err(|e| e.to_string())
 }
 pub(crate) async fn write_option_bin<T>(out: &mut Vec<u8>, opt: &Option<T>, enc: impl FnOnce(&T, &mut Vec<u8>)) {
     match opt {
@@ -490,7 +490,7 @@ pub(crate) async fn write_option_bin<T>(out: &mut Vec<u8>, opt: &Option<T>, enc:
     }
 }
 pub(crate) async fn read_option_bin<T>(reader: &mut store::ByteReader<'_>, dec: impl FnOnce(&mut store::ByteReader<'_>) -> Result<T, String>) -> Result<Option<T>, String> {
-    match reader.read_u8().map_err(|e| e.to_string())? {
+    match reader.read_u8().await.map_err(|e| e.to_string())? {
         0 => Ok(None),
         1 => Ok(Some(dec(reader)?)),
         other => Err(format!("option binary: unknown tag {other}")),
@@ -504,26 +504,26 @@ pub(crate) async fn enc_vec3(v: &[f64; 3]) -> String {
     format!("[{},{},{}]", v[0], v[1], v[2])
 }
 pub(crate) async fn dec_vec3(s: &str) -> Result<[f64; 3], String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [x, y, z] = parts.as_slice() else { return Err(format!("vec3: expected 3 fields, got {}", parts.len())) };
-    Ok([parse_f64(x)?, parse_f64(y)?, parse_f64(z)?])
+    Ok([parse_f64(x).await?, parse_f64(y).await?, parse_f64(z).await?])
 }
 /// 📐️ The outer `[[f64; 3]; 3]` level — 3 `enc_vec3`-bracketed vertices inside one more `[...]`.
 pub(crate) async fn enc_vertices(vs: &[[f64; 3]; 3]) -> String {
     format!("[{}]", vs.iter().map(enc_vec3).collect::<Vec<_>>().join(","))
 }
 pub(crate) async fn dec_vertices(s: &str) -> Result<[[f64; 3]; 3], String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [v0, v1, v2] = parts.as_slice() else { return Err(format!("vertices: expected 3 fields, got {}", parts.len())) };
-    Ok([dec_vec3(v0)?, dec_vec3(v1)?, dec_vec3(v2)?])
+    Ok([dec_vec3(v0).await?, dec_vec3(v1).await?, dec_vec3(v2).await?])
 }
 pub(crate) async fn enc_triangle(t: &StlTriangle) -> String {
     format!("[{},{}]", enc_vec3(&t.normal), enc_vertices(&t.vertices))
 }
 pub(crate) async fn dec_triangle(s: &str) -> Result<StlTriangle, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [normal, vertices] = parts.as_slice() else { return Err(format!("triangle: expected 2 fields, got {}", parts.len())) };
-    Ok(StlTriangle { normal: dec_vec3(normal)?, vertices: dec_vertices(vertices)? })
+    Ok(StlTriangle { normal: dec_vec3(normal).await?, vertices: dec_vertices(vertices).await? })
 }
 //#endregion 🔖️ValueCodecs
 
@@ -537,7 +537,7 @@ pub(crate) async fn enc_vec3_bin(v: &[f64; 3], out: &mut Vec<u8>) {
     write_f64_bin(out, v[2]);
 }
 pub(crate) async fn dec_vec3_bin(reader: &mut store::ByteReader<'_>) -> Result<[f64; 3], String> {
-    Ok([read_f64_bin(reader)?, read_f64_bin(reader)?, read_f64_bin(reader)?])
+    Ok([read_f64_bin(reader).await?, read_f64_bin(reader).await?, read_f64_bin(reader).await?])
 }
 pub(crate) async fn enc_vertices_bin(vs: &[[f64; 3]; 3], out: &mut Vec<u8>) {
     for v in vs {
@@ -545,14 +545,14 @@ pub(crate) async fn enc_vertices_bin(vs: &[[f64; 3]; 3], out: &mut Vec<u8>) {
     }
 }
 pub(crate) async fn dec_vertices_bin(reader: &mut store::ByteReader<'_>) -> Result<[[f64; 3]; 3], String> {
-    Ok([dec_vec3_bin(reader)?, dec_vec3_bin(reader)?, dec_vec3_bin(reader)?])
+    Ok([dec_vec3_bin(reader).await?, dec_vec3_bin(reader).await?, dec_vec3_bin(reader).await?])
 }
 pub(crate) async fn enc_triangle_bin(t: &StlTriangle, out: &mut Vec<u8>) {
     enc_vec3_bin(&t.normal, out);
     enc_vertices_bin(&t.vertices, out);
 }
 pub(crate) async fn dec_triangle_bin(reader: &mut store::ByteReader<'_>) -> Result<StlTriangle, String> {
-    Ok(StlTriangle { normal: dec_vec3_bin(reader)?, vertices: dec_vertices_bin(reader)? })
+    Ok(StlTriangle { normal: dec_vec3_bin(reader).await?, vertices: dec_vertices_bin(reader).await? })
 }
 //#endregion 🔖️ValueBinaryCodecs
 
@@ -568,7 +568,7 @@ async fn enc_triangle_diff(d: &StlTriangleDiff) -> String {
     format!("[{}]", parts.join(","))
 }
 async fn dec_triangle_diff(s: &str) -> Result<StlTriangleDiff, String> {
-    let inner = strip_brackets(s)?;
+    let inner = strip_brackets(s).await?;
     let mut d = StlTriangleDiff::default();
     for entry in split_top_level(inner, ',') {
         if entry.is_empty() {
@@ -576,8 +576,8 @@ async fn dec_triangle_diff(s: &str) -> Result<StlTriangleDiff, String> {
         }
         let (tag, val) = entry.split_once(':').ok_or_else(|| format!("triangle diff: bad entry {entry:?}"))?;
         match tag {
-            "N" => d.normal = Some(dec_vec3(val)?),
-            "V" => d.vertices = Some(dec_vertices(val)?),
+            "N" => d.normal = Some(dec_vec3(val).await?),
+            "V" => d.vertices = Some(dec_vertices(val).await?),
             other => return Err(format!("triangle diff: unknown tag {other:?}")),
         }
     }
@@ -593,9 +593,9 @@ pub(crate) async fn enc_collection_triple(name: &str, removed: &[usize], modifie
     format!("{name}{{[{removed}];[{modified}];[{added}]}}")
 }
 pub(crate) async fn dec_collection_triple(body: &str) -> Result<(Vec<usize>, Vec<(usize, String)>, Vec<(usize, String)>), String> {
-    let three = split_top_level(body, ';');
+    let three = split_top_level(body, ';').await;
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("collection: expected 3 sections, got {}", three.len())) };
-    let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
+    let removed = split_top_level(strip_brackets(removed_s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
     let parse_entries = |s: &str| -> Result<Vec<(usize, String)>, String> {
         split_top_level(strip_brackets(s)?, ',')
             .into_iter()
@@ -610,10 +610,10 @@ pub(crate) async fn dec_collection_triple(body: &str) -> Result<(Vec<usize>, Vec
 }
 
 async fn enc_triangles_diff(d: &StlTrianglesDiff) -> String {
-    enc_collection_triple("triangles", &d.removed, &d.modified.iter().map(|m| (m.index, enc_triangle_diff(&m.diff))).collect::<Vec<_>>(), &d.added.iter().map(|a| (a.index, enc_triangle(&a.triangle))).collect::<Vec<_>>())
+    enc_collection_triple("triangles", &d.removed, &d.modified.iter().map(|m| (m.index, enc_triangle_diff(&m.diff))).collect::<Vec<_>>(), &d.added.iter().map(|a| (a.index, enc_triangle(&a.triangle))).collect::<Vec<_>>()).await
 }
 async fn dec_triangles_diff(body: &str) -> Result<StlTrianglesDiff, String> {
-    let (removed, modified, added) = dec_collection_triple(body)?;
+    let (removed, modified, added) = dec_collection_triple(body).await?;
     Ok(StlTrianglesDiff {
         removed,
         modified: modified.into_iter().map(|(index, enc)| Ok(StlTriangleModified { index, diff: dec_triangle_diff(&enc)? })).collect::<Result<Vec<_>, String>>()?,
@@ -636,8 +636,8 @@ pub(crate) async fn enc_triangle_diff_bin(d: &StlTriangleDiff, out: &mut Vec<u8>
     write_option_bin(out, &d.vertices, |v, o| enc_vertices_bin(v, o));
 }
 pub(crate) async fn dec_triangle_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<StlTriangleDiff, String> {
-    let normal = read_option_bin(reader, dec_vec3_bin)?;
-    let vertices = read_option_bin(reader, dec_vertices_bin)?;
+    let normal = read_option_bin(reader, dec_vec3_bin).await?;
+    let vertices = read_option_bin(reader, dec_vertices_bin).await?;
     Ok(StlTriangleDiff { normal, vertices })
 }
 pub(crate) async fn enc_triangles_diff_bin(d: &StlTrianglesDiff, out: &mut Vec<u8>) {
@@ -657,23 +657,23 @@ pub(crate) async fn enc_triangles_diff_bin(d: &StlTrianglesDiff, out: &mut Vec<u
     }
 }
 pub(crate) async fn dec_triangles_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<StlTrianglesDiff, String> {
-    let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let removed_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(removed_count as usize);
     for _ in 0..removed_count {
-        removed.push(reader.read_varint_u64().map_err(|e| e.to_string())? as usize);
+        removed.push(reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize);
     }
-    let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let modified_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut modified = Vec::with_capacity(modified_count as usize);
     for _ in 0..modified_count {
-        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-        let diff = dec_triangle_diff_bin(reader)?;
+        let index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+        let diff = dec_triangle_diff_bin(reader).await?;
         modified.push(StlTriangleModified { index, diff });
     }
-    let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let added_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut added = Vec::with_capacity(added_count as usize);
     for _ in 0..added_count {
-        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-        let triangle = dec_triangle_bin(reader)?;
+        let index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+        let triangle = dec_triangle_bin(reader).await?;
         added.push(StlTriangleAdded { index, triangle });
     }
     Ok(StlTrianglesDiff { removed, modified, added })
@@ -687,7 +687,7 @@ async fn print_stl_diff(d: &StlDiff) -> String {
         tokens.push(format!("solid-name={}", hex_encode_str(v)));
     }
     if let Some(v) = &d.triangles {
-        tokens.push(enc_triangles_diff(v));
+        tokens.push(enc_triangles_diff(v).await);
     }
     tokens.join(" ")
 }
@@ -698,9 +698,9 @@ async fn parse_stl_diff(line: &str) -> Result<StlDiff, String> {
     }
     for token in line.split(' ') {
         if let Some(rest) = token.strip_prefix("solid-name=") {
-            d.solid_name = Some(hex_decode_str(rest)?);
+            d.solid_name = Some(hex_decode_str(rest).await?);
         } else if let Some(rest) = token.strip_prefix("triangles{") {
-            d.triangles = Some(dec_triangles_diff(rest.strip_suffix('}').ok_or_else(|| "triangles: missing closing brace".to_string())?)?);
+            d.triangles = Some(dec_triangles_diff(rest.strip_suffix('}').ok_or_else(|| "triangles: missing closing brace".to_string())?).await?);
         } else {
             return Err(format!("stl diff: unknown token {token:?}"));
         }
@@ -710,10 +710,10 @@ async fn parse_stl_diff(line: &str) -> Result<StlDiff, String> {
 
 impl protocol::DiffCodec for StlDiff {
     async fn print_diff(&self) -> String {
-        print_stl_diff(self)
+        print_stl_diff(self).await
     }
     async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
-        parse_stl_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_stl_diff(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// 🧪️ P2-FG1-FIX: REAL binary frame (`format u8 | flags u8 | [solid_name] | [triangles]`),
     /// matching `../💾️binary/📡️component.protocol.semio`'s `header fixed 2` + `chain payload
@@ -750,11 +750,11 @@ impl protocol::DiffCodec for StlDiff {
         Ok(out)
     }
     async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let mut reader = store::ByteReader::new(bytes);
-        let _format = reader.read_u8().map_err(|e| protocol::ProtocolError::Malformed { what: "diff format", offset: 0, detail: e.to_string() })?;
-        let flags = reader.read_u8().map_err(|e| protocol::ProtocolError::Malformed { what: "diff flags", offset: 1, detail: e.to_string() })?;
-        let solid_name = if flags & 0b01 != 0 { Some(read_str_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff solid_name", offset: reader.position() as u64, detail: e })?) } else { None };
-        let triangles = if flags & 0b10 != 0 { Some(dec_triangles_diff_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff triangles", offset: reader.position() as u64, detail: e })?) } else { None };
+        let mut reader = store::ByteReader::new(bytes).await;
+        let _format = reader.read_u8().await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff format", offset: 0, detail: e.to_string() })?;
+        let flags = reader.read_u8().await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff flags", offset: 1, detail: e.to_string() })?;
+        let solid_name = if flags & 0b01 != 0 { Some(read_str_bin(&mut reader).await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff solid_name", offset: semio_framework_plugin::resolve_ready(reader.position()) as u64, detail: e })?) } else { None };
+        let triangles = if flags & 0b10 != 0 { Some(dec_triangles_diff_bin(&mut reader).await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff triangles", offset: semio_framework_plugin::resolve_ready(reader.position()) as u64, detail: e })?) } else { None };
         Ok(StlDiff { solid_name, triangles })
     }
 }

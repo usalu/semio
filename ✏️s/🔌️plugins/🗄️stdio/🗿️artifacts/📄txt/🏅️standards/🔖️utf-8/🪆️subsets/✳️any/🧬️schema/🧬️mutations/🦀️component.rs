@@ -50,13 +50,13 @@ pub enum TxtMutation {
 /// ▶️ Applies `mutation` to `snapshot`. Diff is the single semantics source: computed once,
 /// applied once, returned once.
 pub async fn apply_txt_mutation(snapshot: &mut TxtSnapshot, mutation: &TxtMutation) -> protocol::MutationOutcome<TxtDiff> {
-    let outcome = <TxtMutation as Mutation<TxtSnapshot>>::diff(mutation, &*snapshot);
-    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
+    let outcome = <TxtMutation as Mutation<TxtSnapshot>>::diff(mutation, &*snapshot).await;
+    match protocol::MutationDiff::apply(outcome.diff().await, snapshot).await {
         Ok(next) => {
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).await.absorb_messages(outcome.messages().await.to_vec()).await,
     }
 }
 //#endregion 🔖️Apply
@@ -68,7 +68,7 @@ impl Mutation<TxtSnapshot> for TxtMutation {
     async fn diff(&self, base: &TxtSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             TxtMutation::NoMutation => TxtDiff::default(),
-            TxtMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
+            TxtMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot).await,
             TxtMutation::SetTrailingNewline { value } => {
                 if base.trailing_newline == *value {
                     TxtDiff::default()
@@ -98,7 +98,7 @@ impl Mutation<TxtSnapshot> for TxtMutation {
                     TxtDiff { lines: Some(TxtLinesDiff { removed: vec![], modified: vec![TxtLineModified { index: *index, text: text.clone() }], added: vec![] }), ..Default::default() }
                 }
             }
-        })
+        }).await
     }
 
     async fn inverse(&self, base: &TxtSnapshot) -> Vec<Self> {
@@ -135,17 +135,17 @@ impl OpText for TxtMutation {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
-                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
+                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline }).await?;
+                return <Self as dsl::DslVariants>::from_named_record(keyword, &record).await;
             }
         }
         Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
     }
     async fn print_op(&self) -> String {
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
+        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self).await;
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
+        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline).await
     }
 }
 
@@ -154,10 +154,10 @@ impl OpText for TxtMutation {
 /// type. Zero per-artifact logic.
 impl OpBinary for TxtMutation {
     async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        dsl::variants_binary::encode_op(self)
+        dsl::variants_binary::encode_op(self).await
     }
     async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        dsl::variants_binary::decode_op(bytes)
+        dsl::variants_binary::decode_op(bytes).await
     }
 }
 //#endregion OpCodecs

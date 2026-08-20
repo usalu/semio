@@ -220,7 +220,7 @@ where
     for m in &diff.modified {
         if let Some(original) = base_items.get(m.index) {
             let next_index = transform_index(m.index, &diff.removed, &diff.added);
-            modified.push(IndexModified { index: next_index, diff: inverse_item(original, &m.diff) });
+            modified.push(IndexModified { index: next_index.await, diff: inverse_item(original, &m.diff) });
         }
     }
     let mut added = Vec::new();
@@ -283,7 +283,7 @@ where
         base_len += 1;
     }
 
-    let mid = simulate_mid_origins(base_len, &d1.removed, &d1.added);
+    let mid = simulate_mid_origins(base_len, &d1.removed, &d1.added).await;
 
     let mut removed = d1.removed.clone();
     let mut modified = d1.modified;
@@ -333,7 +333,7 @@ where
             continue;
         }
         let final_index = transform_index(add.index, &d2.removed, &d2.added);
-        added.push(IndexAdded { index: final_index, item: add.item });
+        added.push(IndexAdded { index: final_index.await, item: add.item });
     }
     for a2 in &d2.added {
         added.push(a2.clone());
@@ -560,8 +560,8 @@ async fn diff_shape(old: &SlideShape, new: &SlideShape) -> Option<SlideShapeDiff
     }
     match (old, new) {
         (SlideShape::TextBox { frame: of, blocks: ob }, SlideShape::TextBox { frame: nf, blocks: nb }) => {
-            let frame = diff_frame(of, nf);
-            let blocks = between_indexed(ob, nb, diff_doc_block);
+            let frame = diff_frame(of, nf).await;
+            let blocks = between_indexed(ob, nb, diff_doc_block).await;
             if frame.is_none() && blocks.is_none() {
                 None
             } else {
@@ -569,8 +569,8 @@ async fn diff_shape(old: &SlideShape, new: &SlideShape) -> Option<SlideShapeDiff
             }
         }
         (SlideShape::Picture { frame: of, image: oi }, SlideShape::Picture { frame: nf, image: ni }) => {
-            let frame = diff_frame(of, nf);
-            let image = diff_image(oi, ni);
+            let frame = diff_frame(of, nf).await;
+            let image = diff_image(oi, ni).await;
             if frame.is_none() && image.is_none() {
                 None
             } else {
@@ -578,8 +578,8 @@ async fn diff_shape(old: &SlideShape, new: &SlideShape) -> Option<SlideShapeDiff
             }
         }
         (SlideShape::Table { frame: of, rows: or }, SlideShape::Table { frame: nf, rows: nr }) => {
-            let frame = diff_frame(of, nf);
-            let rows = between_indexed(or, nr, diff_table_row);
+            let frame = diff_frame(of, nf).await;
+            let rows = between_indexed(or, nr, diff_table_row).await;
             if frame.is_none() && rows.is_none() {
                 None
             } else {
@@ -587,7 +587,7 @@ async fn diff_shape(old: &SlideShape, new: &SlideShape) -> Option<SlideShapeDiff
             }
         }
         (SlideShape::Placeholder { frame: of, kind: ok }, SlideShape::Placeholder { frame: nf, kind: nk }) => {
-            let frame = diff_frame(of, nf);
+            let frame = diff_frame(of, nf).await;
             let kind = (ok != nk).then(|| nk.clone());
             if frame.is_none() && kind.is_none() {
                 None
@@ -600,11 +600,11 @@ async fn diff_shape(old: &SlideShape, new: &SlideShape) -> Option<SlideShapeDiff
 }
 
 async fn diff_table_cell(old: &SlideTableCell, new: &SlideTableCell) -> Option<SlideTableCellDiff> {
-    let blocks = between_indexed(&old.blocks, &new.blocks, diff_doc_block);
+    let blocks = between_indexed(&old.blocks, &new.blocks, diff_doc_block).await;
     blocks.map(|blocks| SlideTableCellDiff { blocks: Some(blocks) })
 }
 async fn diff_table_row(old: &SlideTableRow, new: &SlideTableRow) -> Option<SlideTableRowDiff> {
-    let cells = between_indexed(&old.cells, &new.cells, diff_table_cell);
+    let cells = between_indexed(&old.cells, &new.cells, diff_table_cell).await;
     cells.map(|cells| SlideTableRowDiff { cells: Some(cells) })
 }
 
@@ -705,20 +705,20 @@ async fn inverse_table_cell(base: &SlideTableCell, diff: &SlideTableCellDiff) ->
 async fn absorb_shape(a: SlideShapeDiff, b: SlideShapeDiff) -> SlideShapeDiff {
     match (a, b) {
         (_, SlideShapeDiff::Replace { shape }) => SlideShapeDiff::Replace { shape },
-        (SlideShapeDiff::Replace { shape }, b) => SlideShapeDiff::Replace { shape: shape_with_diff_applied(&shape, &b) },
+        (SlideShapeDiff::Replace { shape }, b) => SlideShapeDiff::Replace { shape: shape_with_diff_applied(&shape, &b).await },
         (SlideShapeDiff::TextBox { frame: fa, blocks: ba }, SlideShapeDiff::TextBox { frame: fb, blocks: bb }) => {
-            SlideShapeDiff::TextBox { frame: absorb_opt(fa, fb, absorb_frame), blocks: absorb_opt(ba, bb, |x, y| absorb_indexed(x, y, absorb_doc_block, doc_block_with_diff_applied)) }
+            SlideShapeDiff::TextBox { frame: absorb_opt(fa, fb, absorb_frame).await, blocks: absorb_opt(ba, bb, |x, y| absorb_indexed(x, y, absorb_doc_block, doc_block_with_diff_applied)).await }
         }
-        (SlideShapeDiff::Picture { frame: fa, image: ia }, SlideShapeDiff::Picture { frame: fb, image: ib }) => SlideShapeDiff::Picture { frame: absorb_opt(fa, fb, absorb_frame), image: absorb_opt(ia, ib, absorb_image) },
+        (SlideShapeDiff::Picture { frame: fa, image: ia }, SlideShapeDiff::Picture { frame: fb, image: ib }) => SlideShapeDiff::Picture { frame: absorb_opt(fa, fb, absorb_frame).await, image: absorb_opt(ia, ib, absorb_image).await },
         (SlideShapeDiff::Table { frame: fa, rows: ra }, SlideShapeDiff::Table { frame: fb, rows: rb }) => {
-            SlideShapeDiff::Table { frame: absorb_opt(fa, fb, absorb_frame), rows: absorb_opt(ra, rb, |x, y| absorb_indexed(x, y, absorb_table_row_diff, table_row_with_diff_applied)) }
+            SlideShapeDiff::Table { frame: absorb_opt(fa, fb, absorb_frame).await, rows: absorb_opt(ra, rb, |x, y| absorb_indexed(x, y, absorb_table_row_diff, table_row_with_diff_applied)).await }
         }
-        (SlideShapeDiff::Placeholder { frame: fa, kind: ka }, SlideShapeDiff::Placeholder { frame: fb, kind: kb }) => SlideShapeDiff::Placeholder { frame: absorb_opt(fa, fb, absorb_frame), kind: kb.or(ka) },
+        (SlideShapeDiff::Placeholder { frame: fa, kind: ka }, SlideShapeDiff::Placeholder { frame: fb, kind: kb }) => SlideShapeDiff::Placeholder { frame: absorb_opt(fa, fb, absorb_frame).await, kind: kb.or(ka) },
         (_, b) => b,
     }
 }
 async fn absorb_table_cell_diff(mut a: SlideTableCellDiff, b: SlideTableCellDiff) -> SlideTableCellDiff {
-    a.blocks = absorb_opt(a.blocks.take(), b.blocks, |x, y| absorb_indexed(x, y, absorb_doc_block, doc_block_with_diff_applied));
+    a.blocks = absorb_opt(a.blocks.take(), b.blocks, |x, y| absorb_indexed(x, y, absorb_doc_block, doc_block_with_diff_applied)).await;
     a
 }
 async fn absorb_table_row_diff(mut a: SlideTableRowDiff, b: SlideTableRowDiff) -> SlideTableRowDiff {
@@ -728,19 +728,19 @@ async fn absorb_table_row_diff(mut a: SlideTableRowDiff, b: SlideTableRowDiff) -
             apply_table_cell(&mut out, d);
             out
         })
-    });
+    }).await;
     a
 }
 //#endregion 🔖️ShapeDiffLogic
 
 //#region 🔖️StructureDiffLogic
 async fn diff_master(old: &SlideMaster, new: &SlideMaster) -> Option<SlideMasterDiff> {
-    let shapes = between_indexed(&old.shapes, &new.shapes, diff_shape);
+    let shapes = between_indexed(&old.shapes, &new.shapes, diff_shape).await;
     shapes.map(|shapes| SlideMasterDiff { shapes: Some(shapes) })
 }
 async fn diff_layout(old: &SlideLayout, new: &SlideLayout) -> Option<SlideLayoutDiff> {
     let master_id = (old.master_id != new.master_id).then(|| new.master_id.clone());
-    let shapes = between_indexed(&old.shapes, &new.shapes, diff_shape);
+    let shapes = between_indexed(&old.shapes, &new.shapes, diff_shape).await;
     if master_id.is_none() && shapes.is_none() {
         None
     } else {
@@ -749,8 +749,8 @@ async fn diff_layout(old: &SlideLayout, new: &SlideLayout) -> Option<SlideLayout
 }
 async fn diff_slide(old: &Slide, new: &Slide) -> Option<SlideDiff> {
     let layout_id = (old.layout_id != new.layout_id).then(|| new.layout_id.clone());
-    let shapes = between_indexed(&old.shapes, &new.shapes, diff_shape);
-    let notes = between_indexed(&old.notes, &new.notes, diff_doc_block);
+    let shapes = between_indexed(&old.shapes, &new.shapes, diff_shape).await;
+    let notes = between_indexed(&old.notes, &new.notes, diff_doc_block).await;
     if layout_id.is_none() && shapes.is_none() && notes.is_none() {
         None
     } else {
@@ -803,30 +803,30 @@ async fn inverse_slide(base: &Slide, diff: &SlideDiff) -> SlideDiff {
 }
 
 async fn absorb_master_diff(mut a: SlideMasterDiff, b: SlideMasterDiff) -> SlideMasterDiff {
-    a.shapes = absorb_opt(a.shapes.take(), b.shapes, |x, y| absorb_indexed(x, y, absorb_shape, shape_with_diff_applied));
+    a.shapes = absorb_opt(a.shapes.take(), b.shapes, |x, y| absorb_indexed(x, y, absorb_shape, shape_with_diff_applied)).await;
     a
 }
 async fn absorb_layout_diff(mut a: SlideLayoutDiff, b: SlideLayoutDiff) -> SlideLayoutDiff {
     if b.master_id.is_some() {
         a.master_id = b.master_id;
     }
-    a.shapes = absorb_opt(a.shapes.take(), b.shapes, |x, y| absorb_indexed(x, y, absorb_shape, shape_with_diff_applied));
+    a.shapes = absorb_opt(a.shapes.take(), b.shapes, |x, y| absorb_indexed(x, y, absorb_shape, shape_with_diff_applied)).await;
     a
 }
 async fn absorb_slide_diff(mut a: SlideDiff, b: SlideDiff) -> SlideDiff {
     if b.layout_id.is_some() {
         a.layout_id = b.layout_id;
     }
-    a.shapes = absorb_opt(a.shapes.take(), b.shapes, |x, y| absorb_indexed(x, y, absorb_shape, shape_with_diff_applied));
-    a.notes = absorb_opt(a.notes.take(), b.notes, |x, y| absorb_indexed(x, y, absorb_doc_block, doc_block_with_diff_applied));
+    a.shapes = absorb_opt(a.shapes.take(), b.shapes, |x, y| absorb_indexed(x, y, absorb_shape, shape_with_diff_applied)).await;
+    a.notes = absorb_opt(a.notes.take(), b.notes, |x, y| absorb_indexed(x, y, absorb_doc_block, doc_block_with_diff_applied)).await;
     a
 }
 
 async fn diff_snapshot(base: &SemioPresentationSnapshot, other: &SemioPresentationSnapshot) -> SemioPresentationDiff {
     SemioPresentationDiff {
-        masters: between_named(&base.masters, &other.masters, |m| m.id.clone(), diff_master),
-        layouts: between_named(&base.layouts, &other.layouts, |l| l.id.clone(), diff_layout),
-        slides: between_indexed(&base.slides, &other.slides, diff_slide),
+        masters: between_named(&base.masters, &other.masters, |m| m.id.clone(), diff_master).await,
+        layouts: between_named(&base.layouts, &other.layouts, |l| l.id.clone(), diff_layout).await,
+        slides: between_indexed(&base.slides, &other.slides, diff_slide).await,
     }
 }
 //#endregion 🔖️StructureDiffLogic
@@ -836,24 +836,24 @@ impl MutationDiff<SemioPresentationSnapshot> for SemioPresentationDiff {
     async fn apply(&self, base: &SemioPresentationSnapshot) -> protocol::MutationApplyResult<SemioPresentationSnapshot> {
         let mut next = base.clone();
         if let Some(d) = &self.masters {
-            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&next.masters, d, |item| item.id.clone(), |item| item.id.clone(), ["masters"])?;
+            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&next.masters, d, |item| item.id.clone(), |item| item.id.clone(), ["masters"]).await?;
             apply_named(&mut next.masters, d, |m| m.id.clone(), apply_master);
         }
         if let Some(d) = &self.layouts {
-            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&next.layouts, d, |item| item.id.clone(), |item| item.id.clone(), ["layouts"])?;
+            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&next.layouts, d, |item| item.id.clone(), |item| item.id.clone(), ["layouts"]).await?;
             apply_named(&mut next.layouts, d, |l| l.id.clone(), apply_layout);
         }
         if let Some(d) = &self.slides {
-            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_indexed_triple(d, next.slides.len(), ["slides"])?;
+            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_indexed_triple(d, next.slides.len(), ["slides"]).await?;
             apply_indexed(&mut next.slides, d, apply_slide);
         }
         Ok(next)
     }
 
     async fn absorb(&mut self, other: Self) {
-        self.masters = absorb_opt(self.masters.take(), other.masters, |a, b| absorb_named(a, b, |m| m.id.clone(), absorb_master_diff, apply_master));
-        self.layouts = absorb_opt(self.layouts.take(), other.layouts, |a, b| absorb_named(a, b, |l| l.id.clone(), absorb_layout_diff, apply_layout));
-        self.slides = absorb_opt(self.slides.take(), other.slides, |a, b| absorb_indexed(a, b, absorb_slide_diff, slide_with_diff_applied));
+        self.masters = absorb_opt(self.masters.take(), other.masters, |a, b| absorb_named(a, b, |m| m.id.clone(), absorb_master_diff, apply_master)).await;
+        self.layouts = absorb_opt(self.layouts.take(), other.layouts, |a, b| absorb_named(a, b, |l| l.id.clone(), absorb_layout_diff, apply_layout)).await;
+        self.slides = absorb_opt(self.slides.take(), other.slides, |a, b| absorb_indexed(a, b, absorb_slide_diff, slide_with_diff_applied)).await;
     }
 }
 //#endregion 🔖️Apply
@@ -869,7 +869,7 @@ impl DiffAlgebra<SemioPresentationSnapshot> for SemioPresentationDiff {
     }
 
     async fn between(base: &SemioPresentationSnapshot, other: &SemioPresentationSnapshot) -> Self {
-        diff_snapshot(base, other)
+        diff_snapshot(base, other).await
     }
 
     async fn is_empty(&self) -> bool {
@@ -882,7 +882,7 @@ impl DiffAlgebra<SemioPresentationSnapshot> for SemioPresentationDiff {
 /// 🧩 `SetSnapshot`'s diff — no `snapshot: Option<...>` full-replace slot, this IS
 /// `SemioPresentationDiff::between`.
 pub async fn diff_set_snapshot(base: &SemioPresentationSnapshot, next: &SemioPresentationSnapshot) -> SemioPresentationDiff {
-    SemioPresentationDiff::between(base, next)
+    SemioPresentationDiff::between(base, next).await
 }
 
 async fn wrap_slide_diff(index: usize, sd: SlideDiff) -> SemioPresentationDiff {
@@ -890,7 +890,7 @@ async fn wrap_slide_diff(index: usize, sd: SlideDiff) -> SemioPresentationDiff {
 }
 async fn wrap_shape_diff(slide_index: usize, shape_index: usize, shape_diff: SlideShapeDiff) -> SemioPresentationDiff {
     let shapes_diff = SlideShapesDiff { modified: vec![IndexModified { index: shape_index, diff: shape_diff }], ..Default::default() };
-    wrap_slide_diff(slide_index, SlideDiff { layout_id: None, shapes: Some(shapes_diff), notes: None })
+    wrap_slide_diff(slide_index, SlideDiff { layout_id: None, shapes: Some(shapes_diff), notes: None }).await
 }
 
 /// 🧩 Diff for inserting `slide` at `index` (FINAL-state index).
@@ -907,38 +907,38 @@ pub async fn diff_set_slide_layout(base: &SemioPresentationSnapshot, index: usiz
     if slide.layout_id == layout_id {
         return SemioPresentationDiff::default();
     }
-    wrap_slide_diff(index, SlideDiff { layout_id: Some(layout_id), shapes: None, notes: None })
+    wrap_slide_diff(index, SlideDiff { layout_id: Some(layout_id), shapes: None, notes: None }).await
 }
 /// 🧩 Diff for replacing slide `index`'s `notes`, via a real structural comparison.
 pub async fn diff_set_slide_notes(base: &SemioPresentationSnapshot, index: usize, notes: Vec<DocBlock>) -> SemioPresentationDiff {
     let Some(slide) = base.slides.get(index) else { return SemioPresentationDiff::default() };
-    let Some(notes_diff) = between_indexed(&slide.notes, &notes, diff_doc_block) else { return SemioPresentationDiff::default() };
-    wrap_slide_diff(index, SlideDiff { layout_id: None, shapes: None, notes: Some(notes_diff) })
+    let Some(notes_diff) = between_indexed(&slide.notes, &notes, diff_doc_block).await else { return SemioPresentationDiff::default() };
+    wrap_slide_diff(index, SlideDiff { layout_id: None, shapes: None, notes: Some(notes_diff) }).await
 }
 /// 🧩 Diff for inserting `shape` at `shape_index` on slide `slide_index`.
 pub async fn diff_insert_shape(slide_index: usize, shape_index: usize, shape: SlideShape) -> SemioPresentationDiff {
     let shapes_diff = SlideShapesDiff { added: vec![IndexAdded { index: shape_index, item: shape }], ..Default::default() };
-    wrap_slide_diff(slide_index, SlideDiff { layout_id: None, shapes: Some(shapes_diff), notes: None })
+    wrap_slide_diff(slide_index, SlideDiff { layout_id: None, shapes: Some(shapes_diff), notes: None }).await
 }
 /// 🧩 Diff for removing the shape at `shape_index` on slide `slide_index`.
 pub async fn diff_remove_shape(slide_index: usize, shape_index: usize) -> SemioPresentationDiff {
     let shapes_diff = SlideShapesDiff { removed: vec![shape_index], ..Default::default() };
-    wrap_slide_diff(slide_index, SlideDiff { layout_id: None, shapes: Some(shapes_diff), notes: None })
+    wrap_slide_diff(slide_index, SlideDiff { layout_id: None, shapes: Some(shapes_diff), notes: None }).await
 }
 /// 🧩 Diff for setting shape `shape_index`'s frame on slide `slide_index`, via a real structural
 /// comparison against the shape's current frame.
 pub async fn diff_set_shape_frame(base: &SemioPresentationSnapshot, slide_index: usize, shape_index: usize, frame: SlideFrame) -> SemioPresentationDiff {
     let Some(shape) = base.slides.get(slide_index).and_then(|s| s.shapes.get(shape_index)) else { return SemioPresentationDiff::default() };
-    let Some(frame_diff) = diff_frame(frame_of(shape), &frame) else { return SemioPresentationDiff::default() };
-    wrap_shape_diff(slide_index, shape_index, shape_diff_frame_only(shape, frame_diff))
+    let Some(frame_diff) = diff_frame(frame_of(shape).await, &frame).await else { return SemioPresentationDiff::default() };
+    wrap_shape_diff(slide_index, shape_index, shape_diff_frame_only(shape, frame_diff).await).await
 }
 /// 🧩 Diff for replacing a `TextBox` shape's `blocks`, via a real structural comparison.
 pub async fn diff_set_textbox_blocks(base: &SemioPresentationSnapshot, slide_index: usize, shape_index: usize, blocks: Vec<DocBlock>) -> SemioPresentationDiff {
     let Some(SlideShape::TextBox { blocks: old, .. }) = base.slides.get(slide_index).and_then(|s| s.shapes.get(shape_index)) else {
         return SemioPresentationDiff::default();
     };
-    let Some(blocks_diff) = between_indexed(old, &blocks, diff_doc_block) else { return SemioPresentationDiff::default() };
-    wrap_shape_diff(slide_index, shape_index, SlideShapeDiff::TextBox { frame: None, blocks: Some(blocks_diff) })
+    let Some(blocks_diff) = between_indexed(old, &blocks, diff_doc_block).await else { return SemioPresentationDiff::default() };
+    wrap_shape_diff(slide_index, shape_index, SlideShapeDiff::TextBox { frame: None, blocks: Some(blocks_diff) }).await
 }
 /// 🧭️ Read-only accessor: every `SlideShape` variant carries a `frame`.
 pub async fn frame_of(shape: &SlideShape) -> &SlideFrame {
@@ -995,10 +995,10 @@ pub(crate) async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
 pub(crate) async fn enc_str(s: &str) -> String {
-    hex_encode(s.as_bytes())
+    hex_encode(s.as_bytes()).await
 }
 pub(crate) async fn dec_str(s: &str) -> Result<String, String> {
-    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
+    String::from_utf8(hex_decode(s).await?).map_err(|e| e.to_string())
 }
 pub(crate) async fn enc_f64(v: f64) -> String {
     v.to_bits().to_string()
@@ -1016,8 +1016,8 @@ pub(crate) async fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String
     }
 }
 pub(crate) async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
-    let inner = strip_brackets(s)?;
-    match split_top_level(inner, ',').as_slice() {
+    let inner = strip_brackets(s).await?;
+    match split_top_level(inner, ',').await.as_slice() {
         ["0"] => Ok(None),
         [tag, value] if *tag == "1" => Ok(Some(dec(value)?)),
         other => Err(format!("option decode: bad shape {other:?}")),
@@ -1027,7 +1027,7 @@ pub(crate) async fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> Stri
     format!("[{}]", items.iter().map(|i| enc(i)).collect::<Vec<_>>().join(","))
 }
 pub(crate) async fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
-    split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec).collect()
+    split_top_level(strip_brackets(s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec).collect()
 }
 //#endregion 🔖️Primitives
 
@@ -1036,28 +1036,28 @@ pub(crate) async fn enc_semio_point2(p: &SemioPoint2) -> String {
     format!("[{},{}]", enc_f64(p.x), enc_f64(p.y))
 }
 pub(crate) async fn dec_semio_point2(s: &str) -> Result<SemioPoint2, String> {
-    let inner = strip_brackets(s)?;
-    let parts = split_top_level(inner, ',');
+    let inner = strip_brackets(s).await?;
+    let parts = split_top_level(inner, ',').await;
     let [x, y] = parts.as_slice() else { return Err(format!("point2: expected 2 fields, got {}", parts.len())) };
-    Ok(SemioPoint2 { x: dec_f64(x)?, y: dec_f64(y)? })
+    Ok(SemioPoint2 { x: dec_f64(x).await?, y: dec_f64(y).await? })
 }
 pub(crate) async fn enc_frame(f: &SlideFrame) -> String {
     format!("[{},{},{}]", enc_semio_point2(&f.origin), enc_f64(f.width), enc_f64(f.height))
 }
 pub(crate) async fn dec_frame(s: &str) -> Result<SlideFrame, String> {
-    let inner = strip_brackets(s)?;
-    let parts = split_top_level(inner, ',');
+    let inner = strip_brackets(s).await?;
+    let parts = split_top_level(inner, ',').await;
     let [origin, width, height] = parts.as_slice() else { return Err(format!("frame: expected 3 fields, got {}", parts.len())) };
-    Ok(SlideFrame { origin: dec_semio_point2(origin)?, width: dec_f64(width)?, height: dec_f64(height)? })
+    Ok(SlideFrame { origin: dec_semio_point2(origin).await?, width: dec_f64(width).await?, height: dec_f64(height).await? })
 }
 pub(crate) async fn enc_image(i: &SlidePictureImage) -> String {
     format!("[{},{},{}]", enc_str(&i.asset_id), enc_str(&i.mime), hex_encode(&i.bytes))
 }
 pub(crate) async fn dec_image(s: &str) -> Result<SlidePictureImage, String> {
-    let inner = strip_brackets(s)?;
-    let parts = split_top_level(inner, ',');
+    let inner = strip_brackets(s).await?;
+    let parts = split_top_level(inner, ',').await;
     let [asset_id, mime, bytes] = parts.as_slice() else { return Err(format!("image: expected 3 fields, got {}", parts.len())) };
-    Ok(SlidePictureImage { asset_id: dec_str(asset_id)?, mime: dec_str(mime)?, bytes: hex_decode(bytes)? })
+    Ok(SlidePictureImage { asset_id: dec_str(asset_id).await?, mime: dec_str(mime).await?, bytes: hex_decode(bytes).await? })
 }
 pub(crate) async fn enc_placeholder_kind(k: &PlaceholderKind) -> String {
     match k {
@@ -1078,7 +1078,7 @@ pub(crate) async fn dec_placeholder_kind(s: &str) -> Result<PlaceholderKind, Str
         "F" => Ok(PlaceholderKind::Footer),
         "N" => Ok(PlaceholderKind::SlideNumber),
         "D" => Ok(PlaceholderKind::DateTime),
-        other if other.starts_with('O') => Ok(PlaceholderKind::Other { value: dec_str(strip_brackets(&other[1..])?)? }),
+        other if other.starts_with('O') => Ok(PlaceholderKind::Other { value: dec_str(strip_brackets(&other[1..]).await?).await? }),
         other => Err(format!("placeholder kind: unknown tag {other:?}")),
     }
 }
@@ -1090,16 +1090,16 @@ pub(crate) async fn dec_placeholder_kind(s: &str) -> Result<PlaceholderKind, Str
 /// `rows: Vec<DocTableRow>` -> `cells: Vec<DocTableCell>`, Quote's recursive `Vec<DocBlock>`) — a
 /// prior draft of this file duplicated all of these, a real policy violation this wave fixes.
 pub(crate) async fn enc_table_cell(c: &SlideTableCell) -> String {
-    enc_list(&c.blocks, enc_block)
+    enc_list(&c.blocks, enc_block).await
 }
 pub(crate) async fn dec_table_cell(s: &str) -> Result<SlideTableCell, String> {
-    Ok(SlideTableCell { blocks: dec_list(s, dec_block)? })
+    Ok(SlideTableCell { blocks: dec_list(s, dec_block).await? })
 }
 pub(crate) async fn enc_table_row(r: &SlideTableRow) -> String {
-    enc_list(&r.cells, enc_table_cell)
+    enc_list(&r.cells, enc_table_cell).await
 }
 pub(crate) async fn dec_table_row(s: &str) -> Result<SlideTableRow, String> {
-    Ok(SlideTableRow { cells: dec_list(s, dec_table_cell)? })
+    Ok(SlideTableRow { cells: dec_list(s, dec_table_cell).await? })
 }
 /// 🌳️ `X[frame,blocks]` TextBox / `P[frame,image]` Picture / `T[frame,rows]` Table /
 /// `H[frame,kind]` placeHolder.
@@ -1113,24 +1113,24 @@ pub(crate) async fn enc_shape(shape: &SlideShape) -> String {
 }
 pub(crate) async fn dec_shape(s: &str) -> Result<SlideShape, String> {
     let (tag, rest) = s.split_at(1);
-    let inner = strip_brackets(rest)?;
-    let parts = split_top_level(inner, ',');
+    let inner = strip_brackets(rest).await?;
+    let parts = split_top_level(inner, ',').await;
     match tag {
         "X" => {
             let [frame, blocks] = parts.as_slice() else { return Err(format!("textbox: expected 2 fields, got {}", parts.len())) };
-            Ok(SlideShape::TextBox { frame: dec_frame(frame)?, blocks: dec_list(blocks, dec_block)? })
+            Ok(SlideShape::TextBox { frame: dec_frame(frame).await?, blocks: dec_list(blocks, dec_block).await? })
         }
         "P" => {
             let [frame, image] = parts.as_slice() else { return Err(format!("picture: expected 2 fields, got {}", parts.len())) };
-            Ok(SlideShape::Picture { frame: dec_frame(frame)?, image: dec_image(image)? })
+            Ok(SlideShape::Picture { frame: dec_frame(frame).await?, image: dec_image(image).await? })
         }
         "T" => {
             let [frame, rows] = parts.as_slice() else { return Err(format!("table: expected 2 fields, got {}", parts.len())) };
-            Ok(SlideShape::Table { frame: dec_frame(frame)?, rows: dec_list(rows, dec_table_row)? })
+            Ok(SlideShape::Table { frame: dec_frame(frame).await?, rows: dec_list(rows, dec_table_row).await? })
         }
         "H" => {
             let [frame, kind] = parts.as_slice() else { return Err(format!("placeholder: expected 2 fields, got {}", parts.len())) };
-            Ok(SlideShape::Placeholder { frame: dec_frame(frame)?, kind: dec_placeholder_kind(kind)? })
+            Ok(SlideShape::Placeholder { frame: dec_frame(frame).await?, kind: dec_placeholder_kind(kind).await? })
         }
         other => Err(format!("shape: unknown tag {other:?}")),
     }
@@ -1139,38 +1139,38 @@ pub(crate) async fn enc_master(m: &SlideMaster) -> String {
     format!("[{},{}]", enc_str(&m.id), enc_list(&m.shapes, enc_shape))
 }
 pub(crate) async fn dec_master(s: &str) -> Result<SlideMaster, String> {
-    let inner = strip_brackets(s)?;
-    let parts = split_top_level(inner, ',');
+    let inner = strip_brackets(s).await?;
+    let parts = split_top_level(inner, ',').await;
     let [id, shapes] = parts.as_slice() else { return Err(format!("master: expected 2 fields, got {}", parts.len())) };
-    Ok(SlideMaster { id: dec_str(id)?, shapes: dec_list(shapes, dec_shape)? })
+    Ok(SlideMaster { id: dec_str(id).await?, shapes: dec_list(shapes, dec_shape).await? })
 }
 pub(crate) async fn enc_layout(l: &SlideLayout) -> String {
     format!("[{},{},{}]", enc_str(&l.id), enc_str(&l.master_id), enc_list(&l.shapes, enc_shape))
 }
 pub(crate) async fn dec_layout(s: &str) -> Result<SlideLayout, String> {
-    let inner = strip_brackets(s)?;
-    let parts = split_top_level(inner, ',');
+    let inner = strip_brackets(s).await?;
+    let parts = split_top_level(inner, ',').await;
     let [id, master_id, shapes] = parts.as_slice() else { return Err(format!("layout: expected 3 fields, got {}", parts.len())) };
-    Ok(SlideLayout { id: dec_str(id)?, master_id: dec_str(master_id)?, shapes: dec_list(shapes, dec_shape)? })
+    Ok(SlideLayout { id: dec_str(id).await?, master_id: dec_str(master_id).await?, shapes: dec_list(shapes, dec_shape).await? })
 }
 pub(crate) async fn enc_slide(sl: &Slide) -> String {
     format!("[{},{},{},{}]", enc_str(&sl.id), encode_option(&sl.layout_id, |v| enc_str(v)), enc_list(&sl.shapes, enc_shape), enc_list(&sl.notes, enc_block))
 }
 pub(crate) async fn dec_slide(s: &str) -> Result<Slide, String> {
-    let inner = strip_brackets(s)?;
-    let parts = split_top_level(inner, ',');
+    let inner = strip_brackets(s).await?;
+    let parts = split_top_level(inner, ',').await;
     let [id, layout_id, shapes, notes] = parts.as_slice() else { return Err(format!("slide: expected 4 fields, got {}", parts.len())) };
-    Ok(Slide { id: dec_str(id)?, layout_id: decode_option(layout_id, dec_str)?, shapes: dec_list(shapes, dec_shape)?, notes: dec_list(notes, dec_block)? })
+    Ok(Slide { id: dec_str(id).await?, layout_id: decode_option(layout_id, dec_str).await?, shapes: dec_list(shapes, dec_shape).await?, notes: dec_list(notes, dec_block).await? })
 }
 /// 🌱 Full (non-diff) snapshot codec — only `SetSnapshot`'s whole-payload op encoding needs this.
 pub(crate) async fn enc_presentation_snapshot(s: &SemioPresentationSnapshot) -> String {
     format!("[{},{},{},{}]", enc_str(&s.schema), enc_list(&s.masters, enc_master), enc_list(&s.layouts, enc_layout), enc_list(&s.slides, enc_slide))
 }
 pub(crate) async fn dec_presentation_snapshot(s: &str) -> Result<SemioPresentationSnapshot, String> {
-    let inner = strip_brackets(s)?;
-    let parts = split_top_level(inner, ',');
+    let inner = strip_brackets(s).await?;
+    let parts = split_top_level(inner, ',').await;
     let [schema, masters, layouts, slides] = parts.as_slice() else { return Err(format!("snapshot: expected 4 fields, got {}", parts.len())) };
-    Ok(SemioPresentationSnapshot { schema: dec_str(schema)?, masters: dec_list(masters, dec_master)?, layouts: dec_list(layouts, dec_layout)?, slides: dec_list(slides, dec_slide)? })
+    Ok(SemioPresentationSnapshot { schema: dec_str(schema).await?, masters: dec_list(masters, dec_master).await?, layouts: dec_list(layouts, dec_layout).await?, slides: dec_list(slides, dec_slide).await? })
 }
 //#endregion 🔖️ValueCodecs
 
@@ -1184,10 +1184,10 @@ async fn enc_indexed_triple<D, T>(diff: &IndexedTripleDiff<D, T>, enc_d: impl Fn
     format!("[{removed}];[{modified}];[{added}]")
 }
 async fn dec_indexed_triple<D, T>(body: &str, dec_d: impl Fn(&str) -> Result<D, String>, dec_t: impl Fn(&str) -> Result<T, String>) -> Result<IndexedTripleDiff<D, T>, String> {
-    let three = split_top_level(body, ';');
+    let three = split_top_level(body, ';').await;
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("indexed triple: expected 3 sections, got {}", three.len())) };
-    let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
-    let modified = split_top_level(strip_brackets(modified_s)?, ',')
+    let removed = split_top_level(strip_brackets(removed_s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
+    let modified = split_top_level(strip_brackets(modified_s).await?, ',')
         .into_iter()
         .filter(|s| !s.is_empty())
         .map(|entry| {
@@ -1195,7 +1195,7 @@ async fn dec_indexed_triple<D, T>(body: &str, dec_d: impl Fn(&str) -> Result<D, 
             Ok(IndexModified { index: parse_usize(idx)?, diff: dec_d(rest)? })
         })
         .collect::<Result<Vec<_>, String>>()?;
-    let added = split_top_level(strip_brackets(added_s)?, ',')
+    let added = split_top_level(strip_brackets(added_s).await?, ',')
         .into_iter()
         .filter(|s| !s.is_empty())
         .map(|entry| {
@@ -1213,10 +1213,10 @@ async fn enc_named_triple<K, D, T>(diff: &NamedTripleDiff<K, D, T>, enc_k: impl 
     format!("[{removed}];[{modified}];[{added}]")
 }
 async fn dec_named_triple<K, D, T>(s: &str, dec_k: impl Fn(&str) -> Result<K, String>, dec_d: impl Fn(&str) -> Result<D, String>, dec_t: impl Fn(&str) -> Result<T, String>) -> Result<NamedTripleDiff<K, D, T>, String> {
-    let three = split_top_level(s, ';');
+    let three = split_top_level(s, ';').await;
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("named triple: expected 3 sections, got {}", three.len())) };
-    let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|e| dec_k(e)).collect::<Result<Vec<_>, String>>()?;
-    let modified = split_top_level(strip_brackets(modified_s)?, ',')
+    let removed = split_top_level(strip_brackets(removed_s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(|e| dec_k(e)).collect::<Result<Vec<_>, String>>()?;
+    let modified = split_top_level(strip_brackets(modified_s).await?, ',')
         .into_iter()
         .filter(|s| !s.is_empty())
         .map(|entry| {
@@ -1224,7 +1224,7 @@ async fn dec_named_triple<K, D, T>(s: &str, dec_k: impl Fn(&str) -> Result<K, St
             Ok(NamedModified { key: dec_k(k)?, diff: dec_d(rest)? })
         })
         .collect::<Result<Vec<_>, String>>()?;
-    let added = split_top_level(strip_brackets(added_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|e| dec_t(e)).collect::<Result<Vec<_>, String>>()?;
+    let added = split_top_level(strip_brackets(added_s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(|e| dec_t(e)).collect::<Result<Vec<_>, String>>()?;
     Ok(NamedTripleDiff { removed, modified, added })
 }
 //#endregion 🔖️GenericTripleCodecs
@@ -1234,55 +1234,55 @@ async fn enc_frame_diff(d: &SlideFrameDiff) -> String {
     format!("[{},{},{}]", encode_option(&d.origin, |v| enc_semio_point2(v)), encode_option(&d.width, |v| enc_f64(*v)), encode_option(&d.height, |v| enc_f64(*v)))
 }
 async fn dec_frame_diff(s: &str) -> Result<SlideFrameDiff, String> {
-    let inner = strip_brackets(s)?;
-    let parts = split_top_level(inner, ',');
+    let inner = strip_brackets(s).await?;
+    let parts = split_top_level(inner, ',').await;
     let [origin, width, height] = parts.as_slice() else { return Err(format!("frame diff: expected 3 fields, got {}", parts.len())) };
-    Ok(SlideFrameDiff { origin: decode_option(origin, dec_semio_point2)?, width: decode_option(width, dec_f64)?, height: decode_option(height, dec_f64)? })
+    Ok(SlideFrameDiff { origin: decode_option(origin, dec_semio_point2).await?, width: decode_option(width, dec_f64).await?, height: decode_option(height, dec_f64).await? })
 }
 async fn enc_image_diff(d: &SlidePictureImageDiff) -> String {
     format!("[{},{},{}]", encode_option(&d.asset_id, |v| enc_str(v)), encode_option(&d.mime, |v| enc_str(v)), encode_option(&d.bytes, |v: &Vec<u8>| hex_encode(v)))
 }
 async fn dec_image_diff(s: &str) -> Result<SlidePictureImageDiff, String> {
-    let inner = strip_brackets(s)?;
-    let parts = split_top_level(inner, ',');
+    let inner = strip_brackets(s).await?;
+    let parts = split_top_level(inner, ',').await;
     let [asset_id, mime, bytes] = parts.as_slice() else { return Err(format!("image diff: expected 3 fields, got {}", parts.len())) };
-    Ok(SlidePictureImageDiff { asset_id: decode_option(asset_id, dec_str)?, mime: decode_option(mime, dec_str)?, bytes: decode_option(bytes, hex_decode)? })
+    Ok(SlidePictureImageDiff { asset_id: decode_option(asset_id, dec_str).await?, mime: decode_option(mime, dec_str).await?, bytes: decode_option(bytes, hex_decode).await? })
 }
 async fn enc_doc_blocks_diff(d: &DocBlocksDiff) -> String {
-    enc_indexed_triple(d, enc_block, enc_block)
+    enc_indexed_triple(d, enc_block, enc_block).await
 }
 async fn dec_doc_blocks_diff(s: &str) -> Result<DocBlocksDiff, String> {
-    dec_indexed_triple(s, dec_block, dec_block)
+    dec_indexed_triple(s, dec_block, dec_block).await
 }
 async fn enc_table_cell_diff(d: &SlideTableCellDiff) -> String {
     format!("[{}]", encode_option(&d.blocks, enc_doc_blocks_diff))
 }
 async fn dec_table_cell_diff(s: &str) -> Result<SlideTableCellDiff, String> {
-    Ok(SlideTableCellDiff { blocks: decode_option(strip_brackets(s)?, dec_doc_blocks_diff)? })
+    Ok(SlideTableCellDiff { blocks: decode_option(strip_brackets(s).await?, dec_doc_blocks_diff).await? })
 }
 async fn enc_table_cells_diff(d: &SlideTableCellsDiff) -> String {
-    enc_indexed_triple(d, enc_table_cell_diff, enc_table_cell)
+    enc_indexed_triple(d, enc_table_cell_diff, enc_table_cell).await
 }
 async fn dec_table_cells_diff(s: &str) -> Result<SlideTableCellsDiff, String> {
-    dec_indexed_triple(s, dec_table_cell_diff, dec_table_cell)
+    dec_indexed_triple(s, dec_table_cell_diff, dec_table_cell).await
 }
 async fn enc_table_row_diff(d: &SlideTableRowDiff) -> String {
     format!("[{}]", encode_option(&d.cells, enc_table_cells_diff))
 }
 async fn dec_table_row_diff(s: &str) -> Result<SlideTableRowDiff, String> {
-    Ok(SlideTableRowDiff { cells: decode_option(strip_brackets(s)?, dec_table_cells_diff)? })
+    Ok(SlideTableRowDiff { cells: decode_option(strip_brackets(s).await?, dec_table_cells_diff).await? })
 }
 async fn enc_table_rows_diff(d: &SlideTableRowsDiff) -> String {
-    enc_indexed_triple(d, enc_table_row_diff, enc_table_row)
+    enc_indexed_triple(d, enc_table_row_diff, enc_table_row).await
 }
 async fn dec_table_rows_diff(s: &str) -> Result<SlideTableRowsDiff, String> {
-    dec_indexed_triple(s, dec_table_row_diff, dec_table_row)
+    dec_indexed_triple(s, dec_table_row_diff, dec_table_row).await
 }
 async fn enc_shapes_diff(d: &SlideShapesDiff) -> String {
-    enc_indexed_triple(d, enc_shape_diff, enc_shape)
+    enc_indexed_triple(d, enc_shape_diff, enc_shape).await
 }
 async fn dec_shapes_diff(s: &str) -> Result<SlideShapesDiff, String> {
-    dec_indexed_triple(s, dec_shape_diff, dec_shape)
+    dec_indexed_triple(s, dec_shape_diff, dec_shape).await
 }
 /// 🌳️ `X[frame,blocks]`/`P[frame,image]`/`T[frame,rows]`/`H[frame,kind]`/`R[shape]` (wholesale
 /// replace, shape KIND changed).
@@ -1297,29 +1297,29 @@ async fn enc_shape_diff(d: &SlideShapeDiff) -> String {
 }
 async fn dec_shape_diff(s: &str) -> Result<SlideShapeDiff, String> {
     let (tag, rest) = s.split_at(1);
-    let inner = strip_brackets(rest)?;
+    let inner = strip_brackets(rest).await?;
     match tag {
         "X" => {
-            let parts = split_top_level(inner, ',');
+            let parts = split_top_level(inner, ',').await;
             let [frame, blocks] = parts.as_slice() else { return Err(format!("textbox diff: expected 2 fields, got {}", parts.len())) };
-            Ok(SlideShapeDiff::TextBox { frame: decode_option(frame, dec_frame_diff)?, blocks: decode_option(blocks, dec_doc_blocks_diff)? })
+            Ok(SlideShapeDiff::TextBox { frame: decode_option(frame, dec_frame_diff).await?, blocks: decode_option(blocks, dec_doc_blocks_diff).await? })
         }
         "P" => {
-            let parts = split_top_level(inner, ',');
+            let parts = split_top_level(inner, ',').await;
             let [frame, image] = parts.as_slice() else { return Err(format!("picture diff: expected 2 fields, got {}", parts.len())) };
-            Ok(SlideShapeDiff::Picture { frame: decode_option(frame, dec_frame_diff)?, image: decode_option(image, dec_image_diff)? })
+            Ok(SlideShapeDiff::Picture { frame: decode_option(frame, dec_frame_diff).await?, image: decode_option(image, dec_image_diff).await? })
         }
         "T" => {
-            let parts = split_top_level(inner, ',');
+            let parts = split_top_level(inner, ',').await;
             let [frame, rows] = parts.as_slice() else { return Err(format!("table diff: expected 2 fields, got {}", parts.len())) };
-            Ok(SlideShapeDiff::Table { frame: decode_option(frame, dec_frame_diff)?, rows: decode_option(rows, dec_table_rows_diff)? })
+            Ok(SlideShapeDiff::Table { frame: decode_option(frame, dec_frame_diff).await?, rows: decode_option(rows, dec_table_rows_diff).await? })
         }
         "H" => {
-            let parts = split_top_level(inner, ',');
+            let parts = split_top_level(inner, ',').await;
             let [frame, kind] = parts.as_slice() else { return Err(format!("placeholder diff: expected 2 fields, got {}", parts.len())) };
-            Ok(SlideShapeDiff::Placeholder { frame: decode_option(frame, dec_frame_diff)?, kind: decode_option(kind, dec_placeholder_kind)? })
+            Ok(SlideShapeDiff::Placeholder { frame: decode_option(frame, dec_frame_diff).await?, kind: decode_option(kind, dec_placeholder_kind).await? })
         }
-        "R" => Ok(SlideShapeDiff::Replace { shape: dec_shape(inner)? }),
+        "R" => Ok(SlideShapeDiff::Replace { shape: dec_shape(inner).await? }),
         other => Err(format!("shape diff: unknown tag {other:?}")),
     }
 }
@@ -1327,43 +1327,43 @@ async fn enc_master_diff(d: &SlideMasterDiff) -> String {
     format!("[{}]", encode_option(&d.shapes, enc_shapes_diff))
 }
 async fn dec_master_diff(s: &str) -> Result<SlideMasterDiff, String> {
-    Ok(SlideMasterDiff { shapes: decode_option(strip_brackets(s)?, dec_shapes_diff)? })
+    Ok(SlideMasterDiff { shapes: decode_option(strip_brackets(s).await?, dec_shapes_diff).await? })
 }
 async fn enc_layout_diff(d: &SlideLayoutDiff) -> String {
     format!("[{},{}]", encode_option(&d.master_id, |v| enc_str(v)), encode_option(&d.shapes, enc_shapes_diff))
 }
 async fn dec_layout_diff(s: &str) -> Result<SlideLayoutDiff, String> {
-    let inner = strip_brackets(s)?;
-    let parts = split_top_level(inner, ',');
+    let inner = strip_brackets(s).await?;
+    let parts = split_top_level(inner, ',').await;
     let [master_id, shapes] = parts.as_slice() else { return Err(format!("layout diff: expected 2 fields, got {}", parts.len())) };
-    Ok(SlideLayoutDiff { master_id: decode_option(master_id, dec_str)?, shapes: decode_option(shapes, dec_shapes_diff)? })
+    Ok(SlideLayoutDiff { master_id: decode_option(master_id, dec_str).await?, shapes: decode_option(shapes, dec_shapes_diff).await? })
 }
 async fn enc_slide_diff(d: &SlideDiff) -> String {
     format!("[{},{},{}]", encode_option(&d.layout_id, |inner: &Option<String>| encode_option(inner, |v| enc_str(v))), encode_option(&d.shapes, enc_shapes_diff), encode_option(&d.notes, enc_doc_blocks_diff))
 }
 async fn dec_slide_diff(s: &str) -> Result<SlideDiff, String> {
-    let inner = strip_brackets(s)?;
-    let parts = split_top_level(inner, ',');
+    let inner = strip_brackets(s).await?;
+    let parts = split_top_level(inner, ',').await;
     let [layout_id, shapes, notes] = parts.as_slice() else { return Err(format!("slide diff: expected 3 fields, got {}", parts.len())) };
-    Ok(SlideDiff { layout_id: decode_option(layout_id, |s| decode_option(s, dec_str))?, shapes: decode_option(shapes, dec_shapes_diff)?, notes: decode_option(notes, dec_doc_blocks_diff)? })
+    Ok(SlideDiff { layout_id: decode_option(layout_id, |s| decode_option(s, dec_str)).await?, shapes: decode_option(shapes, dec_shapes_diff).await?, notes: decode_option(notes, dec_doc_blocks_diff).await? })
 }
 async fn enc_masters_diff(d: &SlideMastersDiff) -> String {
-    enc_named_triple(d, |k| enc_str(k), enc_master_diff, enc_master)
+    enc_named_triple(d, |k| enc_str(k), enc_master_diff, enc_master).await
 }
 async fn dec_masters_diff(s: &str) -> Result<SlideMastersDiff, String> {
-    dec_named_triple(s, dec_str, dec_master_diff, dec_master)
+    dec_named_triple(s, dec_str, dec_master_diff, dec_master).await
 }
 async fn enc_layouts_diff(d: &SlideLayoutsDiff) -> String {
-    enc_named_triple(d, |k| enc_str(k), enc_layout_diff, enc_layout)
+    enc_named_triple(d, |k| enc_str(k), enc_layout_diff, enc_layout).await
 }
 async fn dec_layouts_diff(s: &str) -> Result<SlideLayoutsDiff, String> {
-    dec_named_triple(s, dec_str, dec_layout_diff, dec_layout)
+    dec_named_triple(s, dec_str, dec_layout_diff, dec_layout).await
 }
 async fn enc_slides_diff(d: &SlidesDiff) -> String {
-    enc_indexed_triple(d, enc_slide_diff, enc_slide)
+    enc_indexed_triple(d, enc_slide_diff, enc_slide).await
 }
 async fn dec_slides_diff(s: &str) -> Result<SlidesDiff, String> {
-    dec_indexed_triple(s, dec_slide_diff, dec_slide)
+    dec_indexed_triple(s, dec_slide_diff, dec_slide).await
 }
 //#endregion 🔖️DiffValueCodecs
 
@@ -1388,11 +1388,11 @@ async fn parse_presentation_diff(line: &str) -> Result<SemioPresentationDiff, St
     }
     for token in line.split(' ') {
         if let Some(rest) = token.strip_prefix("masters=") {
-            d.masters = Some(dec_masters_diff(rest)?);
+            d.masters = Some(dec_masters_diff(rest).await?);
         } else if let Some(rest) = token.strip_prefix("layouts=") {
-            d.layouts = Some(dec_layouts_diff(rest)?);
+            d.layouts = Some(dec_layouts_diff(rest).await?);
         } else if let Some(rest) = token.strip_prefix("slides=") {
-            d.slides = Some(dec_slides_diff(rest)?);
+            d.slides = Some(dec_slides_diff(rest).await?);
         } else {
             return Err(format!("presentation diff: unknown token {token:?}"));
         }
@@ -1409,23 +1409,23 @@ pub(crate) async fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
     out.extend_from_slice(bytes);
 }
 pub(crate) async fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
+    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec())
 }
 pub(crate) async fn write_str_lp(out: &mut Vec<u8>, s: &str) {
     write_bytes_lp(out, s.as_bytes());
 }
 pub(crate) async fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
-    String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
+    String::from_utf8(read_bytes_lp(reader).await?).map_err(|e| e.to_string())
 }
 //#endregion 🔖️BinaryPrimitives
 
 impl protocol::DiffCodec for SemioPresentationDiff {
     async fn print_diff(&self) -> String {
-        print_presentation_diff(self)
+        print_presentation_diff(self).await
     }
     async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
-        parse_presentation_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_presentation_diff(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// ⚡️ ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION presentation wave: real
     /// binary diff frame, replacing the old `print_diff().into_bytes()` text-as-binary shortcut.
@@ -1471,20 +1471,20 @@ impl protocol::DiffCodec for SemioPresentationDiff {
         let presence = bytes[1];
         let mut reader = store::ByteReader::new(&bytes[2..]);
         let masters = if presence & 0b001 != 0 {
-            let text = read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff masters blob", offset: 2, detail: e })?;
-            Some(dec_masters_diff(&text).map_err(|e| protocol::ProtocolError::Malformed { what: "diff masters text", offset: 2, detail: e })?)
+            let text = read_str_lp(&mut reader).await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff masters blob", offset: 2, detail: e })?;
+            Some(dec_masters_diff(&text).await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff masters text", offset: 2, detail: e })?)
         } else {
             None
         };
         let layouts = if presence & 0b010 != 0 {
-            let text = read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff layouts blob", offset: 2, detail: e })?;
-            Some(dec_layouts_diff(&text).map_err(|e| protocol::ProtocolError::Malformed { what: "diff layouts text", offset: 2, detail: e })?)
+            let text = read_str_lp(&mut reader).await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff layouts blob", offset: 2, detail: e })?;
+            Some(dec_layouts_diff(&text).await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff layouts text", offset: 2, detail: e })?)
         } else {
             None
         };
         let slides = if presence & 0b100 != 0 {
-            let text = read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff slides blob", offset: 2, detail: e })?;
-            Some(dec_slides_diff(&text).map_err(|e| protocol::ProtocolError::Malformed { what: "diff slides text", offset: 2, detail: e })?)
+            let text = read_str_lp(&mut reader).await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff slides blob", offset: 2, detail: e })?;
+            Some(dec_slides_diff(&text).await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff slides text", offset: 2, detail: e })?)
         } else {
             None
         };

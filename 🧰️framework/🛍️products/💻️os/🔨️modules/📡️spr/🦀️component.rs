@@ -272,7 +272,7 @@ mod tests {
     //#region 🔖️Sync
     #[semio_framework_async_macros::async_test]
     async fn extract_range_returns_contiguous_slice_covering_requested_edits() {
-        let bytes = build_history_bytes("doc-1", "schema-1", 4);
+        let bytes = build_history_bytes("doc-1", "schema-1", 4).await;
 
         // Independently compute each edit frame's [offset, offset+frame_len) span for cross-check.
         let mut cursor = FrameCursor::new(&bytes, crate::os_spr::format::HEADER_SIZE as u64).await;
@@ -303,14 +303,14 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn extract_range_rejects_empty_and_out_of_bounds_ranges() {
-        let bytes = build_history_bytes("doc-1", "schema-1", 2);
+        let bytes = build_history_bytes("doc-1", "schema-1", 2).await;
         assert!(extract_range(&bytes, 1..1).await.is_err());
         assert!(extract_range(&bytes, 0..5).await.is_err());
     }
 
     #[semio_framework_async_macros::async_test]
     async fn verify_slice_accepts_genuine_content_and_rejects_tamper() {
-        let bytes = build_history_bytes("doc-1", "schema-1", 3);
+        let bytes = build_history_bytes("doc-1", "schema-1", 3).await;
         let slice = extract_range(&bytes, 0..2).await.unwrap();
 
         let expected = slice_content_chain(slice.bytes).await.unwrap();
@@ -325,7 +325,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn content_frontier_reports_head_edit_and_chain_tip() {
-        let bytes = build_history_bytes("doc-1", "schema-1", 3);
+        let bytes = build_history_bytes("doc-1", "schema-1", 3).await;
         let frontier = content_frontier(&bytes).await.unwrap();
 
         assert_eq!(frontier.document_id, "doc-1");
@@ -335,9 +335,9 @@ mod tests {
         assert!(frontier.alternatives.is_empty());
 
         // Cross-check chain_hash independently via the last REC_COMMIT frame's payload.
-        let mut reverse = ReverseFrameCursor::at_end(&bytes[crate::os_spr::format::HEADER_SIZE..]);
+        let mut reverse = ReverseFrameCursor::at_end(&bytes[crate::os_spr::format::HEADER_SIZE..]).await;
         let last_commit = loop {
-            let frame = reverse.await.prev_frame().await.unwrap().unwrap();
+            let frame = reverse.prev_frame().await.unwrap().unwrap();
             if frame.kind == crate::os_spr::REC_COMMIT {
                 break frame;
             }
@@ -349,7 +349,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn content_frontier_on_empty_history_reports_zero_head_and_no_alternatives() {
         let bytes = build_history_bytes("doc-1", "schema-1", 0);
-        let frontier = content_frontier(&bytes).await.unwrap();
+        let frontier = content_frontier(&bytes.await).await.unwrap();
         assert_eq!(frontier.head_edit_ordinal, 0);
         assert_eq!(frontier.head_edit_id, "");
         assert_eq!(frontier.last_commit_seq, 0);

@@ -33,7 +33,7 @@ pub mod derived_composition {
             if native.is_empty() {
                 return Err(ComposeError { message: "HtmlComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() });
             }
-            let analysis = HtmlAnalyzer::analyze(&native);
+            let analysis = HtmlAnalyzer::analyze(&native).await;
             let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError { message: "HtmlComposerComposition: analysis produced no snapshot".into(), diagnostics: analysis.diagnostics.clone() })?;
             Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics })
         }
@@ -44,18 +44,18 @@ pub mod derived_composition {
     /// 📌️ Registers this subset's schema descriptor, document codec. Called from
     /// this artifact's standard-level `engine::register()`.
     pub async fn register() {
-        ::schema::register_artifact_schema_descriptor(crate::artifacts::html::standards::v5::subsets::any::schema::html_artifact_schema_descriptor());
+        ::schema::register_artifact_schema_descriptor(crate::artifacts::html::standards::v5::subsets::any::schema::html_artifact_schema_descriptor().await);
         register_artifact_inferences();
         let _ = store::register_document_codec(store::ArtifactCodec::of::<HtmlSnapshot, crate::artifacts::html::standards::v5::subsets::any::schema::mutations::HtmlMutation>(
             crate::artifacts::html::standards::v5::subsets::any::schema::snapshot::STDIO_HTML_DOCUMENT_SCHEMA,
-        ));
+        ).await);
     }
 
     /// 💡️ Registers `s.stdio.html.inference`'s facet leaves into the OS-wide inference catalog —
     /// sibling to the artifact schema descriptor above (separate registry, ticket
     /// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
     pub async fn register_artifact_inferences() {
-        ::schema::register_artifact_inference_descriptor(crate::artifacts::html::standards::v5::subsets::any::schema::inferences::html_artifact_inference_descriptor());
+        ::schema::register_artifact_inference_descriptor(crate::artifacts::html::standards::v5::subsets::any::schema::inferences::html_artifact_inference_descriptor().await);
     }
     //#endregion 🔖️Register
 }
@@ -101,7 +101,8 @@ pub mod io_registry {
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 
-    pub async fn entries() -> &'static [ComposerEntry] {
+    // 🚫️async: E1 pure table accessor consumed by OnceLock::get_or_init's sync closure — see R9
+    pub fn entries() -> &'static [ComposerEntry] {
         ENTRIES.get_or_init(|| vec![composer_entry_of::<HtmlRawAnyComposer>()]).as_slice()
     }
 }

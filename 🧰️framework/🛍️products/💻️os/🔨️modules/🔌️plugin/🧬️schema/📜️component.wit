@@ -1,8 +1,9 @@
 package semio:framework@1.0.0;
 
 /// 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (A2, design-abi.md §1): shared primitives used by
-/// every other interface in this package. `pure` is the only interface any world ever *imports* —
-/// everything below is plain data, carried across the `poll`/`start-job`/`checkpoint` exports.
+/// every other interface in this package. `pure` and `host-async` are the only interfaces `world
+/// actor` *imports* (B1 world-collapse) — everything below is plain data, carried across the
+/// `poll`/`start-job`/`checkpoint` exports and the `host-async` imports alike.
 interface types {
   /// 📦️ The container-less dynamic-value wire grammar (`store::pack_rt::encode_wire_value` /
   /// `pack::encode_record_body`) — no JSON string, no `resource`, anywhere on this ABI's data path.
@@ -156,8 +157,9 @@ interface capabilities {
 ///
 /// ⚠️ Same `resource` deviation as `capabilities.wit`/`ui.wit`: `document`/`transaction`/`blob` are
 /// plain id-carrying records, not WIT `resource`s — reads/writes happen through effects+events
-/// (async request/response over `poll`), never through a resource method call, because `pure` is
-/// the only import interface this world has.
+/// (async request/response over `poll`) or through the `host-async` imports, never through a
+/// resource method call: `world actor` imports only `pure` and `host-async` (B1 world-collapse),
+/// and neither of them IS this interface, so a `resource` here would have no host-callable methods.
 interface documents {
   use types.{revision};
 
@@ -766,8 +768,9 @@ interface events {
 /// `base-revision` mismatch via `event.patch-rejected`.
 ///
 /// ⚠️ Deviation from the design table's literal `resource surface`: same reasoning as
-/// `capabilities.wit`'s `capability-token` — `pure` is the only import, so a `resource` here would
-/// have no host-callable methods. `surface-ref` (an `(instance, surface)` id pair) is the real
+/// `capabilities.wit`'s `capability-token` — `pure` and `host-async` are `world actor`'s only
+/// imports (B1 world-collapse) and neither of them is `ui`, so a `resource` here would have no
+/// host-callable methods. `surface-ref` (an `(instance, surface)` id pair) is the real
 /// handle carried on every UI-facing effect/event; `surface` is declared as an empty marker
 /// resource purely so the design table's vocabulary has a nominal type, and is not referenced by
 /// any function signature in this wave.
@@ -815,11 +818,13 @@ interface ui {
   }
 }
 
-/// 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (A2, design-abi.md §1): the ONLY interface `world
-/// actor` ever imports. Everything else the guest needs from the host — reads, writes, network,
-/// dialogs, jobs — is an `effect` returned from `poll`, answered by an `event` on a later `poll`
-/// call. Keeping the import surface to these three side-effect-free/idempotent calls is what lets
-/// a pooled multi-instance actor stay `Send`-free and reentrancy-safe.
+/// 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (A2 → B1 world-collapse). One of `world actor`'s two
+/// imports (the other is `host-async`) — these three side-effect-free/idempotent calls are the only
+/// ones a guest may call SYNCHRONOUSLY; every stateful host operation goes through `host-async`'s
+/// awaitable imports instead (design-abi.md §1's original poll/effect/event round trip is now the
+/// pattern `reactor::poll` uses INTERNALLY when it awaits a `host-async` import mid-turn, not a
+/// separate calling convention). Keeping THESE three sync is what lets a pooled multi-instance
+/// actor log/clock/trace without a suspension point.
 interface pure {
   log: func(level: string, message: string);
   now-ms: func() -> s64;
@@ -830,10 +835,16 @@ interface pure {
 /// point every actor exports — replaces `exchange`, the poll-backbone + refresh-ui heartbeat, and
 /// every per-verb surface (`handle-action`, `handle-command`, `update-window`, `refresh-ui`,
 /// `context-menu`, `apply-mutations[-text]`, `read/load-app-document-{text,pack}`,
-/// `attach/detach-backbone`, `consume/produce-media`). Deliberately not dependent on stackful-
-/// async component-model features (still incomplete in wasmtime) — the reactor/effect shape gets
-/// the same async ergonomics without needing them. Rust SSOT for `budget`/`turn-status`/
+/// `attach/detach-backbone`, `consume/produce-media`). Rust SSOT for `budget`/`turn-status`/
 /// `turn-result`: `semio_framework::kernel::{Budget, TurnResult}` (packet A3).
+///
+/// 🧬️ B1 world-collapse: `poll` itself is now `async func`, and the earlier "deliberately not
+/// dependent on stackful-async component-model features" framing is RETIRED — S7 (terra-probe-
+/// spikes, reproduced on this ticket) found a plain sync `func` EXPORT is uncallable at all on any
+/// Store with `wasm_component_model_async(true)`, and `world actor` now imports `host-async`, which
+/// requires exactly such a Store. What `poll` still avoids is a SECOND long-lived call shape (the
+/// deleted `runner::run`'s `stream<event>`) — it stays one call in, one `turn-result` out, it just
+/// runs on an async-capable Store like every other export in this world.
 interface reactor {
   use types.{plugin-error};
   use effects.{effect};
@@ -860,10 +871,11 @@ interface reactor {
     status: turn-status,
     fuel-used: u64,
   }
-  poll: func(events: list<event>, budget: budget) -> result<turn-result, plugin-error>;
+  poll: async func(events: list<event>, budget: budget) -> result<turn-result, plugin-error>;
 }
 
-/// 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (async-worlds). WASI 0.3-style async counterpart to
+/// 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (B1 world-collapse). `world actor`'s async import
+/// surface — WASI 0.3-style async counterpart to
 /// `effects.wit`'s completable variants (`req: request-id` payloads): every function below takes
 /// the SAME `*-params` record `effects` already carries — the whole point of the W0 `-params`
 /// refactor was to let this import and the poll-world `effect` case share one payload shape and
@@ -952,19 +964,6 @@ interface host-async {
   emit-patch: func(patch: ui-patch);
 }
 
-/// 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (async-worlds). `world actor-async`'s turn-loop entry
-/// point — the host writes `event`s into the stream and the guest consumes until the host closes
-/// it, replacing `world actor`'s `reactor::poll` call/response loop with one long-lived async call.
-/// UI patches and effects travel the OTHER direction through `host-async`'s `emit`/`emit-patch` (or
-/// a direct `host-async` async import) as the guest produces them, rather than being collected into
-/// a `turn-result` and returned — there is no `turn-result` in this world.
-interface runner {
-  use types.{plugin-error};
-  use events.{event};
-
-  run: async func(events: stream<event>) -> result<_, plugin-error>;
-}
-
 /// 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (A2, design-abi.md §1). Drives a job-hosting
 /// instance directly (host calls these WIT exports on the instance the job was placed on) —
 /// distinct from the `effects::spawn-job`/`cancel-job` a normal actor emits from `poll` to ASK the
@@ -989,9 +988,9 @@ interface jobs {
     done(list<u8>),
     failed(list<u8>),
   }
-  start-job: func(job: u64, kind: string, input: list<u8>) -> result<_, plugin-error>;
-  step-job: func(job: u64, budget: job-budget) -> result<job-step, plugin-error>;
-  cancel-job: func(job: u64);
+  start-job: async func(job: u64, kind: string, input: list<u8>) -> result<_, plugin-error>;
+  step-job: async func(job: u64, budget: job-budget) -> result<job-step, plugin-error>;
+  cancel-job: async func(job: u64);
 }
 
 /// 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (A2, design-abi.md §4). No more
@@ -1003,8 +1002,8 @@ interface jobs {
 interface checkpoint {
   use types.{plugin-error};
 
-  checkpoint: func() -> result<list<u8>, plugin-error>;
-  restore: func(state: list<u8>) -> result<_, plugin-error>;
+  checkpoint: async func() -> result<list<u8>, plugin-error>;
+  restore: async func(state: list<u8>) -> result<_, plugin-error>;
 }
 
 /// 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (A2, design-abi.md §1 + §3). Build-time only, never
@@ -1016,7 +1015,7 @@ interface checkpoint {
 /// `list-artifact-inferences`, `list-artifact-mutations`, `list-io-entries`) is now static data
 /// inside this one descriptor instead.
 interface describe {
-  describe: func() -> list<u8>;
+  describe: async func() -> list<u8>;
 }
 
 /// 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (A2, design-abi.md §1). One world for both roles —
@@ -1026,25 +1025,18 @@ interface describe {
 /// the `contributor`/`host` interfaces, and the `manifest`/`instantiate-app`/`exchange`/
 /// `clear-instance-guard`/`activate`/`deactivate`/`invoke` exports — see `types.wit`/`effects.wit`/
 /// `events.wit`/`jobs.wit`/`describe.wit` for where each one's job went.
+///
+/// 🧬️ B1 world-collapse (📋️master-u.md §B1): as of this packet ONE world for both the poll-loop AND
+/// the async-import surface — `interface runner` and `world actor-async` are DELETED, not merely
+/// unreferenced. Every export below is now `async func` (S7's categorical finding: a plain sync
+/// export is uncallable on the async-configured Store this world's `host-async` import now
+/// requires, so the seven exports had to go async together — there is no staged path). This world
+/// is no longer a "sync/poll compatibility backend" for anything — it is the only backend, on
+/// native wasmtime and on jco/web alike.
 world actor {
   import pure;
-  export reactor;
-  export jobs;
-  export checkpoint;
-  export describe;
-}
-
-/// 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (async-worlds). WASI 0.3 async counterpart to `world
-/// actor` above — every record/variant is shared verbatim between the two worlds, only the
-/// turn-loop shape and the completable-effect calling convention differ (`reactor::poll`'s
-/// call/response loop vs. `runner::run`'s long-lived `stream<event>` plus `host-async`'s awaitable
-/// imports). `world actor` itself is UNCHANGED by this world's existence — it stays the
-/// compatibility backend for web/jco and the fallback everywhere a wasmtime async host is not
-/// available.
-world actor-async {
-  import pure;
   import host-async;
-  export runner;
+  export reactor;
   export jobs;
   export checkpoint;
   export describe;

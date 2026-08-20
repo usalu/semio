@@ -23,7 +23,7 @@ pub const BODY_KEY: &str = DocumentWindowKit::KIND_ID;
 //#region 🔖️Definition
 /// 🧱️ Stitched into the editor manifest by `crate::editor::pdf17vt::create_pdf17_vt_editor`.
 pub async fn definition() -> WindowKindDefinition {
-    WindowKindDefinition { label: LocalizedLabel::native("Pages", "Seiten"), icon_id: "file-text".into(), ..DocumentWindowKit::editable_window_kind() }
+    WindowKindDefinition { label: LocalizedLabel::native("Pages", "Seiten"), icon_id: "file-text".into(), ..DocumentWindowKit::editable_window_kind().await }
 }
 //#endregion 🔖️Definition
 
@@ -38,7 +38,7 @@ async fn page_summary(index: usize, page: &PdfPage) -> String {
 
 pub async fn render(document: &PdfSnapshot) -> UiNode {
     let pages = document.pages.iter().enumerate().map(|(index, page)| DocumentPage { text: page_summary(index, page) }).collect();
-    DocumentWindowKit::render(&DocumentView { pages })
+    DocumentWindowKit::render(&DocumentView { pages }).await
 }
 //#endregion 🔖️Render
 

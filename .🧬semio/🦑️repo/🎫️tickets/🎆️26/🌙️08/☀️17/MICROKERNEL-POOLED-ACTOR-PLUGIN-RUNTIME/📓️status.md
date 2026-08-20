@@ -5486,3 +5486,1092 @@ Each brief carries the session's hard-won traps: feature unification, suites tha
 **silent no-ops that compile clean** (two found today — a traversal that never ran, an encoder writing
 almost nothing), never codemod generated output, and that the shared tool has been wrong **seven** times,
 twice from my own fixes — *a fix is a new claim about the world and needs its own evidence.*
+
+
+## 📊️ END-TO-END WAVE RESULT — 12 agents, 0 failures, and two agents overruled my briefs correctly
+
+### Gate state, measured by me (not from reports)
+```
+semio-framework-os-kernel  --lib          EXIT 0
+semio-framework-os-kernel  --all-targets  2,746 → 1,545   (44%, genuine fixpoint, hand-work left)
+semio-framework            --lib          EXIT 0
+semio-framework            --all-targets  EXIT 0   ← closed this session (was 30)
+semio-framework            cargo test     EXIT 0, 160 passed / 0 failed  ← FIRST EVER RUN of this crate's tests
+semio-framework-plugin     --lib          339 → 139
+semio-framework-actor      --lib          267 → 98   (I ran the fixpoint: 200 edits)
+first-party dyn            576 → 84 → and falling
+```
+
+### 🧠 `dyn-emit-runtime` OVERRULED my brief, and was right
+I suggested `dyn_enum_close!` for `Emit`. It read the code first and refused: an enum naming `db_observe`'s
+sink types **would have reintroduced the exact dependency the trait exists to invert** — `db_artifact`,
+`db_actor` and `db_security` are documented as staying `db_observe`-free. It applied **R11 per site**
+instead: generics where the set is genuinely open (`SecurityGate`, `Database`), and the concrete `NullEmit`
+where every real call site is R11's single-impl case. **That is the difference between following a rule and
+understanding what the rule is for.** It also fixed a pre-existing latent type error found on the way
+(a bare `Arc<StorageScheduler>` missing its required generic).
+
+### 🛑 `dyn-http-tail` STOPPED on `Operator` — correctly
+`Operator` is sync, 1 method, **~138 impls**, and `OperatorImpl.operator: Box<dyn Operator>` is a **public
+field constructed by struct literal at 60+ call sites across ~20 fleet files** — outside its scope. It
+wrote up the recommended fix (generic registration API with `dyn Fn`-erased private storage, which stays
+R1-legal) and left it. It also **rebuilt the census from scratch rather than trusting a prior packet's
+comments**, confirming `HttpBody`/`HttpTransport`/`RouterEffectHandler` are still sync and correctly left
+`dyn` — and found two same-shape stragglers nobody had listed.
+It further found that a blocker cited in `🪐️space` is **stale**: the two host functions it names already
+return the concrete `Arc<OsBackbonePorts>` enum. **A stale blocker is worse than an open one** — it stops
+work that is no longer blocked.
+
+## 🚨 NEW BLOCKER FOUND AND CONFIRMED: `semio-framework-actor` is red
+Two siblings independently hit it and correctly reported it as not-theirs. **I verified: 267 errors, and
+`semio-framework-plugin-host` shows exactly those 267 verbatim** — so the pure actor crate is blocking the
+host crate and both renderers. `git diff --stat HEAD` on it is **empty**, meaning it is broken *as
+committed*, not mid-edit — most likely a peer's auto-committed conversion landing between passes.
+
+I ran the fixpoint (**267 → 98**, 200 edits) and dispatched **`actor-green`** for the residue, with the
+crate's one architectural constraint stated in the strongest terms: `🎭️actor` must stay **pure** — no
+`wasm_bindgen`, `web_sys`, `winit`, `tokio` or `std::thread` in its core, transports injected. That purity
+is what keeps a mobile backend possible, so **"add a runtime dependency" is never the fix** for its 23
+`E0271` callback mismatches.
+
+Also dispatched **`oskernel-alltargets`**, aimed not at a green check but at a **running test suite**: 779
+tests have been unverifiable all session, and this program has already found two silent no-op bugs that
+*only a running test* would catch. Its brief forbids reaching green by deleting or `#[ignore]`-ing a test —
+a deleted test is a lost invariant — and asks for failures reported faithfully by name.
+
+## 👥️ A peer interactive session is live in this repo
+`ListAgents` shows `semio-1d`, started ~1h ago. That explains the concurrent churn several packets reported
+(files changing mid-read, a crate broken as-committed with an empty working diff). Recorded so nobody
+misattributes it to a sibling packet — and it reinforces the standing rule: **settle attribution by
+measuring index/HEAD/worktree, never by naming a suspect.**
+
+
+## 🏁 THE GUEST SDK IS **27 ERRORS** FROM GREEN — and its own files are already at zero
+
+`sdk-green` drove `semio-framework-plugin`'s own errors **890 → 0**, then correctly reported that the only
+thing still failing was a **syntax error in `🏪️store`, outside its scope** — and filed a lease instead of
+reaching across. Its fixes along the way: recursive async fns needing `Box::pin`, `Iterator::map`/`.collect()`
+chains over per-item async calls rewritten as explicit loops, unawaited-constructor residue, `?`-inside-
+`LocalKey::with` shapes, a missing `M: Send` bound, and **7 call sites using a `From<MemoryBackbone>` impl
+that does not exist** (fixed to `Backbones::Memory(..)` directly — a real defect, not a conversion artifact).
+
+### 🔁 The store bug had RECURRED — and it was worse the second time
+`🏪️store:11457` is the exact line I repaired earlier today; it was **reintroduced** (the file has three
+commits since, and a **peer interactive session is live in this repo**). This time it was not one line but a
+whole cluster, and reading it showed the real cause:
+
+```rust
+let clean = severity_mutation_envelope_at(..);        // constructor NOT awaited
+let mutation_ids = vec![clean.await.mutation_id, ..]; // so every use awaits the binding…
+actors: vec![clean.await.actor.clone(), ..],          // …and awaits it AGAIN (illegal)
+timestamp.await,                                       // …and in shorthand position it cannot even parse
+```
+Fixed at the root — await the **constructors**, use the bindings plainly — not by deleting the awaits.
+
+### ☠️ And a repair tool had written into STRING LITERALS
+The same block contained `unwrap_err()await.;` and, worse, `expect("writawait.e")`, `expect("readawait.")`,
+`expect("overawait.write")` — a tool inserted `await.` at byte offsets that landed **inside string
+literals**. That is the sharpest possible illustration of why **R10 demands span-exact, diagnostic-driven
+edits**: an offset-based insertion that is even slightly wrong corrupts data silently, and a string literal
+will never fail to compile in a way that points at the real cause.
+
+**I checked whether it had spread.** My first scan said 491 sites — but that was my own too-broad regex
+counting legitimate `.await.expect(..)` chains. Re-run with proper string-span parsing and three precise
+patterns (`)await` with no dot · dangling `await.` before `;`/`)` · `await` genuinely inside a string):
+**the real damage was ~8 lines in one block.** Everything else flagged was correct code, or a test
+asserting on the literal text `"await"`, or the dispatch macro's own `quote! { .await }`.
+*A too-broad query is as misleading as a too-narrow one — I nearly reported a 491-site catastrophe.*
+
+Both blocks repaired (strings restored to their intended text, awaits moved onto the async calls), and:
+```
+semio-framework-os-kernel --lib   EXIT 0
+semio-framework           --lib   EXIT 0
+semio-framework-plugin    --lib   27 errors  ← the true remaining count, finally visible
+```
+
+`sdk-final` dispatched for the last 27: **2 × `.await` inside a sync closure**, **1 async-closure lifetime
+error** (a closure returning a future that borrows a `format!` temporary — told explicitly that adding
+`Send` is the *wrong* fix, since guest futures are deliberately `?Send`), and a small tail. Its acceptance
+includes **the first fleet compile of the entire program** — `semio-s-plugin-note` and `semio-s-plugin-stdio`
+— because whatever those numbers are, they scope the fleet fan-out.
+
+
+## ✅️ `semio-framework-actor` GREEN — and its finding is the most important of the session
+
+Verified by me independently: `--lib` **EXIT 0**, `--all-targets` **EXIT 0**, `cargo test` **70 passed /
+0 failed** — an exact match to the historical baseline. 98 errors → 0.
+
+### 🕳️ Tests that were passing VACUOUSLY
+Its root-cause work found that **missing `.await` on a `()`-returning call compiles clean and silently does
+nothing**, so most of the damage was invisible to the compiler. It built a diagnostic scanner for
+statement-position dropped futures and found that `Kernel`/`Scheduler` mutators — `register_actor`,
+`submit`, `on_clean_turn` — were being **dropped**. The consequence:
+
+> **the DRR-fairness test and the interactive-isolation test were passing against an EMPTY scheduler.**
+
+Those are two of the load-bearing correctness tests for the whole pooled-actor design, and they were green
+while measuring nothing. This is the third and worst instance of the silent-no-op class today (after the
+graph traversal that never ran and the encoder writing almost no bytes) and it is the definitive argument
+for this program's standing rule: **prove it RUNS, not that it compiles.** A green suite is not evidence
+until you know the assertions actually observed something.
+
+It also demoted 14 fns to sync under R9 (pure accessors consumed by `Debug`/`Default`/sync iterator
+combinators), worked around a genuine rustc HRTB limitation with async closures using concrete non-generic
+helpers, and wired ~37 async tests to the shared `#[async_test]` macro.
+
+## 🛑 STOPPING the repair loop — the remaining breakage is a LIVE PEER SESSION, not our damage
+
+For the last several rounds I have been repairing parse-level corruption in `🗣️dsl/🧬️schema`, `🏪️store`,
+`📡️spr/🧪️testkit`, `📇️directory/🔌️client` and `💡️inference` — statement separators deleted, `.iter(`
+and `.recv(` spans removed leaving stray parens, text written **inside string literals**, statements fused
+into unparseable expressions. Each fix revealed another.
+
+**It is not a loop I can win, because the files are being edited right now by another session.** Measured:
+
+| file | uncommitted vs HEAD |
+|---|---|
+| `🏪️store/🦀️component.rs` | **313 insertions / 308 deletions** |
+| `💡️inference/🦀️component.rs` | 60 / 64 |
+| `🗣️dsl/🧬️schema/🦀️component.rs` | 48 / 50 |
+
+mtimes moved **within seconds** of my checks, and `ListAgents` shows a peer interactive session
+(`semio-1d`) live in this repo. `actor-green` independently reached the same conclusion and wrote it into
+this file as a cross-packet finding before I did.
+
+**Continuing to patch would be editing another session's in-flight refactor** — precisely what rule 25 and
+the path-ownership discipline exist to prevent, and the failure that once left a crate with 84 errors.
+So I am stopping the repair loop and escalating rather than fighting for the same files. Everything I
+verified green is recorded below; the parse breakage in those five files belongs to whoever is editing them.
+
+### 📍️ Verified state at the stop point
+```
+semio-framework-actor        --lib EXIT 0 · --all-targets EXIT 0 · test 70/0
+semio-framework-async        green (17 tests)      semio-framework-pack       green (44 tests)
+semio-framework-geometry     green (57 tests)      semio-framework-math       green (191 tests)
+semio-framework-replication  green (--lib + --all-targets)
+semio-framework-dispatch-macros green (28 tests)   semio-framework            test 160/0
+semio-framework-schema       --lib EXIT 0          semio-framework-ui         --lib --features wgpu EXIT 0
+TypeScript: framework 87/0 · actor 46/0 · kernel 29/0 · os 206/1 · react 325/336 (known subset)
+first-party dyn 576 → 84   ·   async ratio 86.7%   ·   337+ E-tags
+os-kernel / semio-framework / plugin: transiently RED on the peer's parse errors, not ours
+```
+
+
+## ✅️ `sdk-final` — SDK **26 → 8**, and the last 7 are a STRUCTURAL blocker, not effort
+
+Fixed 19, each at the root rather than at the symptom:
+- **E0728 ×2** — the `.await`-in-a-sync-closure pair. Root cause was that
+  `InteractionView::peers_selecting`/`peers_hovering` had been wrongly made `async` on a **pure,
+  I/O-free filter**; R9 applied, both de-asyncified and tagged. Corroborated rather than assumed: a
+  pre-existing test already called them synchronously, which is independent evidence of the intended shape.
+- **4 lifetime errors** — hoisted the `format!` temporary out, then found a *second, separate* lifetime
+  problem (a future-returning plain closure mixing per-call and captured-state borrows) and **deleted the
+  closure**, inlining its 4 call sites. Removing the construct beat fighting its lifetimes.
+- **11 "future cannot be sent"** in the `erased_compose` E4 thunks — fixed with the file's own established
+  `resolve_ready()` bridge (already used ~30× there) **instead of adding `+ Send` anywhere**. Exactly right
+  under R3: guest futures are deliberately `?Send`, and `+ Send` would have been the plausible wrong fix.
+
+### ⛔️ The remaining 7 are blocked by Rust's ORPHAN RULE — no amount of effort clears them from there
+`dispatch_group`/`MemberFactory` needs a **production** `MemberFactory` impl for `ArtifactStore`, and the
+only one that exists is behind `#[cfg(test)]` in `🏪️store`. Both the trait and the type are **foreign to
+the plugin crate**, so the impl is *structurally impossible* to supply from there. This reconfirms a
+predecessor's finding independently.
+
+**The fix must land in `🏪️store` — which the peer session is editing right now** (modified 2 minutes ago,
+313 uncommitted lines). So it waits. This is a genuine hand-off, not a deferral: `store-dedyn` introduced
+`MemberFactory` with only a test impl, and the production impl was never written.
+
+Two further findings, flagged not absorbed: SDK **`--all-targets` is 1,381 errors**, almost entirely
+`#[cfg(test)]` code — an order of magnitude beyond that packet's brief; and the fleet payoff checks
+**never reach the SDK at all**.
+
+## 🔢 The real fleet blocker is a crate nobody was looking at
+
+`cargo check -p semio-s-plugin-note` and `-p semio-s-plugin-stdio` abort on **`semio-framework-number`:
+601 errors** — and its source has **not been touched in 12.5 hours**. It is stale, unowned, and sits
+between the entire 63-crate fleet and any compile at all. Every fleet-readiness estimate this session
+assumed the SDK was the only gate; **it was not.**
+
+Dispatched `number-green`. Its brief predicts the shape rather than leaving it to discovery: a numeric/units
+crate is almost certainly **pure computation** consumed by `Display`/`FromStr`/serde impls and sync
+iterator combinators, so **R9 reversions should dominate, not await-insertion** — with the explicit caveat
+to verify I/O-freedom per function and not blanket-revert. Its acceptance includes the **first fleet crate
+compile of the program**, and if that merely aborts on yet another unowned crate, naming that crate is
+worth as much as green.
+
+### 📍️ Verified now
+```
+semio-framework-os-kernel --lib  EXIT 0      semio-framework --lib  EXIT 0
+semio-framework-plugin    --lib  8 errors    (7 orphan-rule + 1)
+semio-framework-number    --lib  601 errors  ← the true fleet gate, stale 12.5h, now owned
+peer session STILL LIVE in 🏪️store (2 min), 🗣️dsl/🧬️schema (1 min) — hands off both
+```
+
+
+## ✅️ `semio-framework-number` GREEN (601 → 0) — and the fleet gate is now FULLY ENUMERATED
+
+Verified by me: `--lib` **EXIT 0**. That crate had sat stale and unowned for 12.5 hours between the entire
+fleet and any compile at all.
+
+### 🔍️ Then I stopped discovering blockers one at a time
+Clearing `number` let `semio-s-plugin-note` compile far enough to fail on **another** unowned crate. Rather
+than repeat that cycle, I ran the whole dependency closure with `--keep-going`. **The complete remaining
+gate, measured once:**
+
+| crate | errors |
+|---|---:|
+| `semio-framework-graph` | **576** |
+| `semio-framework-3d` | **295** |
+| `semio-framework-os-services` | 21 |
+| `semio-framework-plugin` | 8 (orphan-rule blocked, handled separately) |
+| **`semio-s-plugin-note`'s own source** | 304 — *reached at last* |
+
+**This is the correction that matters**: every fleet-readiness estimate this session assumed the guest SDK
+was the last gate. **It never was.** Three other crates sat in front of it, and only an actual build
+revealed them — which is exactly why "run the payoff check even if you expect it to fail" was written into
+those briefs.
+
+## ▶️ `fleet-gate-clear` dispatched — 3 agents + an independent measurement
+Each brief predicts the crate's likely shape so budget goes on fixing rather than discovering:
+- **`graph` (576)** — also owns `QueryableGraph`, whose 5 impls span `🕸️graph`/`📐️cad`/`🌀️procedural`: a
+  **cross-crate open set**, so R11 says generics at the consumers, *not* an enum that structurally cannot
+  name fleet types. Warned about its `🤖️generated/**` fixtures.
+- **`3d` (295)** — pointed at `📓️terra-geometry-residue-report.md` as its near-twin: geometry went green on
+  **R9 reversions, not await-insertion** (pure field accessors consumed inside `sort_by`/`dedup_by`
+  closures), and that reasoning should transfer almost directly — with the caveat to verify per function.
+- **`services` (21)** — the cheapest, so told to be the most thorough, and reminded of the invariant that
+  makes it special: **tokio is confined to this crate by policy and must not appear in any public
+  signature.** Also told to match `HostAsyncRuntime` **as it stands on disk**, not as any brief describes it.
+
+Every brief carries the hard-won traps, and — because **two agents today ended their turns waiting on a
+background monitor and returned nothing** — an explicit instruction to run cargo in the foreground and
+finish in one turn.
+
+The measurement agent's headline is **the first real fleet compile of the program**, plus `🗄️stdio`
+(which every plugin depends on, so its number matters more than any other single fleet crate).
+
+### 📍️ Verified now
+```
+number EXIT 0 · actor EXIT 0 (70 tests) · os-kernel --lib EXIT 0 · semio-framework --lib EXIT 0 (160 tests)
+plugin 8 (orphan-rule) · graph 576 · 3d 295 · services 21 · note's own source 304
+peer session STILL LIVE in 🏪️store / 🗣️dsl/🧬️schema — hands off
+```
+
+
+## 🔢 `number-green` ACCEPTED — 620 → 0, **97 tests passing**, via a WHOLE-CRATE R9 reversion
+
+```
+cargo check -p semio-framework-number --lib          EXIT 0
+cargo check -p semio-framework-number --all-targets  EXIT 0
+cargo test  -p semio-framework-number                EXIT 0   97 passed / 0 failed
+cargo check -p semio-framework-os-kernel --lib       EXIT 0   (57 warnings, all R7-sanctioned)
+cargo check -p semio-framework          --lib        EXIT 0   (27 warnings, same class)
+```
+
+**It diagnosed before editing, and the diagnosis is what justified the scale.** Measured on the 4,290-line
+file *before* touching it: **0 `.await` anywhere · 0 I/O markers of any kind · 0 `async move`/`async {}`
+blocks · 0 pre-existing exception tags.** A pure arbitrary-precision arithmetic library —
+`Natural`/`Integer`/`Rational`/`ModInt` — whose entire public surface is consumed through **E1 impls**
+(`Display`, `FromStr`, `Ord`, `PartialOrd`, `From`).
+
+So **R9 propagates through the whole call graph, not a subset**, and the correct fix was to revert all
+**384** `async fn` signatures. `git diff HEAD --stat`: 384 insertions / 384 deletions, line count unchanged.
+Tool kept in the folder per R10 (structural substitution, not name-keyed).
+
+### ⚖️ A tension worth stating plainly rather than burying
+The owner's directive was *"every single function must have async keyword… doesn't matter if it breaks the
+code"*, followed by *"now get everything running again end to end."* **This crate is where those two
+instructions genuinely collide**: there is no suspension point anywhere in it, and every consumer is a
+std-trait impl that cannot be async. 384 functions carrying `async` would mean 384 futures that resolve
+immediately, reached only through impls that cannot await them — i.e. it cannot compile, and there is no
+version of it that both compiles and keeps the keyword.
+
+R9 is the reconciliation and it was applied correctly here. But **this is the largest single block of
+exceptions in the program**, and it is worth the owner knowing that "universal async" now has a principled
+carve-out of this size — pure computational libraries consumed via std traits. `semio-framework-3d` looks
+like the same shape and is being worked now; `📐️geometry` already went green on the identical reasoning.
+
+### 🎯 And it did the thing that keeps paying off
+It ran the fleet payoff check even though it expected failure, and **named the next blocker**:
+`semio-framework-3d` (296 errors, same async-residue pattern, in `🥽️mesh/🦀️component.rs`) — confirmed
+identically from **both** `semio-s-plugin-note` and `semio-s-plugin-stdio`. It lifted that into
+`📌️important.md` rather than leaving it in a report, per the standing rule that **naming an aborting crate
+is worth as much as fixing one**. That is precisely how the current 3-crate fan-out got scoped.
+
+
+## 🧩 The SDK's last 7 errors — diagnosis CONFIRMED by me, and it is a real design gap
+
+`sdk-final` reported the remainder as an orphan-rule blocker. **I verified it rather than accepting it**, and
+it is exactly right — with one extra detail that makes it a design gap rather than a missing line:
+
+`impl<P, Mutation> super::MemberFactory for ArtifactStore<P, Mutation>` exists at
+`🏪️store/🦀️component.rs:9090` — **inside `#[cfg(test)] mod tests` (opened at :8962)**. And its own
+docstring says it is deliberately *not* production-equivalent:
+
+> *"empty genesis packs default to `P::default()` … production `create_member_store` **deliberately rejects
+> an empty pack**, this fixture-only default is NOT that."*
+
+So:
+- The **only** `MemberFactory for ArtifactStore` impl is a **test fixture with intentionally different
+  semantics**.
+- `dispatch_group` needs a **production** one.
+- Rust's **orphan rule** makes it structurally impossible to supply from `semio-framework-plugin`: both the
+  trait and the type are foreign to that crate. **No amount of work inside the SDK can clear these 7.**
+
+**This is fallout from `store-dedyn`**, which introduced `MemberFactory` to replace the global
+`dyn ChildStoreFactory` registry — correct in design, but the production impl was never written, and the
+test fixture masked its absence for as long as nothing outside tests needed it.
+
+### ⏸️ Not fixed, deliberately — and not for lack of a plan
+The fix belongs in `🏪️store/**`, which the **peer session modified 1.6 minutes ago**. Editing a file another
+session is mid-refactor in is precisely the failure this ticket's ownership rules exist to prevent, and I
+have already had repairs there overwritten twice today. Writing a production impl into it now would be both
+a collision *and* a semantics decision (what `create` should do with an empty genesis pack) made without the
+owner of that code.
+
+**Hand-off, precisely specified so it is a small job for whoever holds `🏪️store`:**
+1. Add a **production** `impl<P, Mutation> MemberFactory for ArtifactStore<P, Mutation>` **outside**
+   `mod tests`, delegating to `create_member_store` and **preserving production semantics — reject an empty
+   genesis pack** rather than defaulting it.
+2. Keep the fixture impl, but scope it so the two cannot collide (the fixture's empty-pack default is
+   load-bearing for existing tests — deleting it would break them).
+3. Re-run `cargo check -p semio-framework-plugin --lib`; those 7 should clear together.
+
+Everything else in the SDK is already fixed: its own files reached **zero** earlier, and the current count
+is **8** — the 7 above plus one straggler.
+
+
+# 🟢️ THE FRAMEWORK IS GREEN — every crate but the SDK, which is down to **5 errors, one root cause**
+
+Coordinator-measured:
+```
+async · pack · replication · geometry · math · number · schema · ui · dispatch-macros   EXIT 0
+actor      EXIT 0   70 tests        graph    EXIT 0   174 tests
+3d         EXIT 0   62 tests        services EXIT 0   30 tests
+os-kernel  EXIT 0 --lib AND --all-targets · cargo test 779 passed / 0 failed
+semio-framework EXIT 0 --lib · 160 tests
+semio-framework-plugin  5 errors  ← the last blocker
+semio-s-plugin-note     130 errors of its OWN, waiting behind it
+```
+
+## 🏁 The last three gate crates, and what they found
+- **`graph` 576 → 0**, `--all-targets` 723 → 0, **174 tests**. Its dropped-future haul is the most alarming
+  of the program: `Storage::add_edge_with`/`remove_edge`/`remove_node` dropped their adjacency mutators, so
+  **edges never updated `successors`/`predecessors`**; `MappedHeap`'s `sift_up`/`sift_down`/`swap` were
+  dropped at *every* call site, so **the binary-heap invariant was never maintained**; `FlowNetwork::max_flow`
+  dropped both of its helpers, so **Dinic's algorithm never actually ran**; force-layout repulsion was never
+  applied; and `build.rs`'s staleness check could never detect a stale generated file. **All compiled clean.**
+- **`3d` 295 → 0**, **62 tests**. Shape 2 dominant — `Vec3::x/y/z` re-awaited per arithmetic expression, and
+  `knife_cut`'s `cut_dir` re-awaited **inside a loop**, which is a real bug the conversion exposed. Found
+  `mark_uv_seam` silently a no-op at all 3 call sites — caught only by *running* the suite.
+- **`services` → 0**, **30 tests**, with the tokio-confinement invariant re-verified.
+
+## ✅️ I fixed the orphan-rule blocker myself
+Added a **production** `impl MemberFactory for ArtifactStore` in `🏪️store` after `open_member_store`,
+delegating to `create_member_store` — which **rejects an empty genesis pack**, unlike the `#[cfg(test)]`
+fixture that defaults it. Both impls kept: the fixture's default is load-bearing for existing tests, and
+production must not silently invent a child document. **SDK 8 → 5, `os-kernel` still EXIT 0.**
+
+## 🎯 The final 5 are ONE design decision, and I have made it
+`dispatch_group<M: SpaceMember + MemberFactory>` uses **one type parameter for both the parent and the
+children**. That worked when members were `dyn SpaceMember` and everything coerced; under **O1** they are
+concrete types, and the parent (`ArtifactStore<A::Snapshot, A::Mutation>`) and the children (`M`) **do not
+unify in the general case**.
+
+**Ruling: split it — `dispatch_group<Mp: SpaceMember, Mc: SpaceMember + MemberFactory>`.**
+The rationale is also the correctness argument: **`MemberFactory` exists to *construct* members, and only
+children are ever constructed** — the parent is always already live and is only mutated. So requiring
+`MemberFactory` on the parent was **wrong from the start**, not merely inconvenient. `GroupReceipt`'s
+`created_children` are `Mc`, never `Mp`.
+
+The predecessor packet that hit this left a precise inline analysis naming both candidate fixes and
+**stopped rather than guessing** — its comment at `🔌️plugin/🦀️component.rs:11518-11524` is exactly the
+escalation this program is meant to produce. `dispatch-group-split` dispatched to implement the decision,
+with an explicit prohibition on "fixing" it by reintroducing `dyn SpaceMember`, and with the standing
+requirement that **`os-kernel` must stay green including its 779 tests**.
+
+
+## 🎯 GATE 1 PASSED — guest SDK compiles (2026-08-20, sol)
+
+`cargo check -p semio-framework-plugin --lib` **EXIT 0, 0 errors**. This is the plan's Gate 1
+(zero E0038) and the end of the de-dyn compile wall that stopped the tree.
+
+Regression guards re-run by sol at the same commit, all green:
+
+| check | result |
+|---|---|
+| `semio-framework-plugin --lib` | EXIT 0 |
+| `semio-framework-os-kernel --lib` | EXIT 0 |
+| `semio-framework-os-kernel --all-targets` | EXIT 0 |
+| `cargo test -p semio-framework-os-kernel --lib` | **779 passed / 0 failed** |
+| `semio-framework --lib` | EXIT 0 |
+
+Closing move was the `dispatch_group` parent/child type split (packet `dispatch-group-split`),
+on the ruling that `MemberFactory` exists to CONSTRUCT members and only children are ever
+constructed — the parent is always already live. Requiring the bound on the parent was wrong
+from the start, not merely inconvenient.
+
+## 🔭 Fleet fan-out scoping — the blocker is NOT in the fleet
+
+sol measured the first two fleet crates rather than assuming the fan-out shape. Result overturns
+the working assumption that 63 crates each carry their own damage:
+
+* `semio-s-plugin-note --lib` = 123 errors, and **note's own code contributes ZERO of them**.
+  All 123 have primary spans in `🔌️plugin/🖥️host/**`. Fix plugin-host and note is green.
+* `semio-framework-plugin-host --lib` = 124 errors (45 E0308, 35 E0277, 24 E0599, 3 E0107,
+  2 E0600, 1 E0609, 1 E0282) — the classic missing-await residue. This is the fleet spine.
+* `semio-framework-plugin --lib --all-features` = **EXIT 101, 28 errors**, though default
+  features are green. Feature-gated SDK code has never been compiled during this conversion;
+  stdio's feature selection alone put 1045 errors inside the SDK's own component.rs.
+* `semio-s-plugin-stdio --lib` = 44,102 errors across 1,526 files, **73% carrying a
+  machine-applicable `await` suggested_replacement** — i.e. dominated by the span-keyed
+  `insert-await.py` fixpoint loop, not by design work.
+
+Methodological note worth keeping: a fleet crate's RAW error count is close to meaningless
+because it includes everything inherited from shared framework crates. The number that scopes
+work is errors whose primary span belongs to the crate itself. Reporting raw counts would have
+sized note at 123 units of work when its true cost is zero.
+
+### Packets dispatched off this measurement
+* `host-repair` (terra) — plugin-host's 124, scope `🔌️plugin/🖥️host/**`.
+* `sdk-features` (terra) — the 28 `--all-features` errors + a per-feature error mapping.
+* `luna-fleet-scope` (luna, read-only) — per-crate OWN error counts across the whole fleet,
+  taxonomy, and a ≤8-batch partition proposal.
+
+All three briefed: no git-modifying commands, no ticket_close/reopen, scratchpad CARGO_TARGET_DIR,
+foreground acceptance in-turn, and the 779-test os-kernel guard as a hard regression gate.
+
+
+## ✅ sdk-features accepted + 🔇 97 dropped futures found in the SDK (2026-08-20, sol)
+
+`sdk-features` accepted, independently re-verified by sol:
+`semio-framework-plugin --lib --all-features` **EXIT 0** (was 101/28), default `--lib` still EXIT 0,
+`os-kernel --lib` EXIT 0, `cargo test -p semio-framework-os-kernel --lib` **779 passed / 0 failed**.
+
+Durable finding from that packet: **100% of the 27 errors were gated by exactly one feature**,
+`component-guest-async`; `component-guest` and `component-extension-guest` were clean alone and
+combined. All 27 were missing `.await` on already-async calls inside already-async callers, fixed
+span-keyed under R10. The per-feature map is the reusable part — feature-gated SDK code had never
+been compiled during this conversion.
+
+### The bigger finding: 97 silently dead operations in the SDK
+
+That packet surfaced 97 `unused implementer of std::future::Future` warnings. sol verified and
+localized them — **identical under default features and `--all-features`**, so not an edge config:
+
+| file | count |
+|---|---|
+| `🔌️plugin/🦀️component.rs` | 66 |
+| `🔌️plugin/🌐host/🦀️component.rs` | 23 |
+| `🔌️plugin/⚛️reactor/💼️jobs/🦀️component.rs` | 7 |
+| `🔌️plugin/🏗️builder/🦀️component.rs` | 1 |
+| `semio-framework-os-kernel` (control, `--all-features`) | **0** |
+
+Each is an operation that never runs, in the crate all 33 plugins are built on. Packet
+`sdk-dropped-futures` dispatched: hand-judged site by site (no codemod — these carry no
+`suggested_replacement` and pattern-keyed await editing is banned under R10), every site must end
+awaited / explicitly detached / E-tagged, and it must report **what behaviour was missing**, plus
+whether any site sits under a passing test (a dropped future under a green test means the test
+asserts nothing).
+
+### Measurement incident — logged as R12
+
+sol's first census returned **0 dropped futures repo-wide** and was wrong twice over: the target dir
+was warm (cargo does not re-emit warnings for an up-to-date crate) AND the grep pattern used
+`` `Future` `` instead of `` `std::future::Future` ``. Forcing `cargo clean -p` and fixing the
+pattern reproduced the agent's 97 exactly. Ratified as R12/R13 in `📌️important.md`.
+
+
+## 🔭 Fleet scope RESOLVED — it is two repairs, not sixty-four (2026-08-20, sol)
+
+`luna-fleet-scope` returned: 64 fleet crates, 51,851 total errors, and the headline claim that
+**stdio owns 43,055 and all 63 others own zero**. sol spot-checked before acting on it, and the
+spot-check initially CONTRADICTED it: `semio-s-plugin-process` measured own=43,055 — the exact same
+number attributed to stdio. An identical count across two crates is shared code, not coincidence.
+
+Resolving the physical file locations settled it:
+
+| crate | errors | where they physically live |
+|---|---|---|
+| `semio-s-plugin-process` | 44,227 | **42,973 under `✏️s/🔌️plugins/🗄️stdio`** (process depends on stdio) + 1,172 framework |
+| `semio-s-plugin-cad` | 147 | all `🧰️framework/🛍️products` (plugin-host) |
+| `semio-s-plugin-flow` | 854 | all `🧰️framework/🔨️modules` |
+| `semio-s-plugin-note` | 123 | all `🔌️plugin/🖥️host` |
+
+So the report's CONCLUSION was right and its arithmetic was wrong: the "own errors" it credited to
+other crates are stdio's files reached through the dependency edge. sol's own own-vs-inherited
+heuristic shared the defect — it only excluded `🧰️framework/`, so stdio-owned files counted as
+"own" for every dependent. **Correct rule: classify by the file's PHYSICAL owning crate directory,
+not by "not-framework".**
+
+### Consequence for staffing
+The fleet reduces to exactly two repairs — `plugin-host` (packet `host-repair`, live) and
+`🗄️stdio`'s artifact-codec tree (packet `stdio-await`, dispatched). Everything else inherits.
+
+**No wide fan-out, and the reason generalizes:** the unit of cost here is a whole-crate compile that
+every parallel worker would have to repeat. Splitting stdio across agents by artifact subtree would
+MULTIPLY the 44k-diagnostic build rather than divide it. Parallelism pays only when workers do not
+each have to rebuild the same compilation unit. Recorded here because the instinct to fan out 63
+ways was the plan of record until it was measured.
+
+`stdio-await` briefed with: span-keyed `insert-await.py` only (R10), `--scope '🔌️plugins/🗄️stdio'`,
+a deliberate raised `--max-files` (~1,500 files, the guard would abort at default), the E1-E5 classes
+for the ~27% non-await residue, a forced-rebuild dropped-future census per R12/R13, and the 779-test
+os-kernel guard.
+
+
+## ✅ sdk-dropped-futures — 97 → 0, accepted after an agent crash (2026-08-20, sol)
+
+The packet's agent **died mid-turn on an API error**, after editing but before writing its report.
+Per the standing rule "live predicate, not derived artifact", sol did not infer the outcome from the
+agent's last words — it measured the tree:
+
+| check | result |
+|---|---|
+| forced-rebuild dropped futures in `semio-framework-plugin` | **0** (was 97) |
+| `semio-framework-plugin --lib` | EXIT 0 |
+| `semio-framework-plugin --lib --all-features` | EXIT 0 |
+| `semio-framework-os-kernel --lib` | EXIT 0 |
+| `cargo test -p semio-framework-os-kernel --lib` | **779 passed / 0 failed** |
+
+**A vanished warning is not a restored behaviour.** 97 sites could be taken to zero by writing
+`let _ = ...` at each one — the lint disappears and the code stays exactly as dead. That outcome
+would be indistinguishable from success in the counts above, so sol classified the actual diff
+against HEAD across the four files:
+
+* **280** added `.await`
+* **1** `let _ =`
+* **5** `spawn`
+* **8** `// 🚫️async: E<n>` tags
+* one E5 `resolve_ready` bridge carrying an inline written rationale for why the bridged calls have
+  no suspension point of their own
+
+That distribution is the signature of restored behaviour, not silenced diagnostics. Accepted.
+
+Outstanding from the crash: the per-site behaviour table — *what* was silently broken, which is the
+finding that matters fleet-wide. The agent was resumed via SendMessage to write the report only,
+explicitly told not to redo or re-verify any code work, and told to record honest gaps rather than
+reconstruct plausible stories for sites it is unsure about.
+
+
+## 🚨 R14 — the guest export surface had NEVER been compiled (2026-08-20, sol)
+
+`sdk-dropped-futures` reported its two headline findings: `ensure_plugin_initialized` /
+`ensure_extension_initialized` being dropped meant **the plugin/extension bundle installer never ran
+on any WIT export entry point**, and all 23 `HostAdapter::emit` wrappers — every effect-emitting host
+API — were no-ops. It also corrected sol's diff-vs-HEAD attribution: the 280 `.await` / 5 spawn /
+8 E-tag figures included other packets' work on the same shared files; this packet's own contribution
+was ~96 `.await`, 1 `let _ =`, 0 spawns, 0 new E-tags. **Correction accepted — sol's classification
+conflated concurrent packets in shared files, and the agent was right to flag it.** The qualitative
+conclusion (behaviour restored, not silenced) still holds on the corrected numbers.
+
+Chasing the first finding is what exposed R14. The six `ensure_plugin_initialized()` calls at
+`🔌️plugin/🦀️component.rs:34,41,47,61,66,73` are still bare — and **cannot be seen by any native
+build**, because line 10 gates the whole module on `target_arch="wasm32", target_env="p2"`.
+
+sol compiled the real target for the first time. Getting there required clearing two os-kernel
+blockers that were themselves invisible natively (both fixed by sol, in `📇️directory/🔌️client`):
+
+* **5 un-awaited `is_cancelled()` cancellation checks** — 2 behind `#[cfg(target_arch="wasm32")]`,
+  3 behind `#[cfg(all(feature="ureq", feature="sync", …))]`. One sat in a `.map_err` closure where
+  `.await` is illegal, so it was restructured to sample cancellation AFTER the request fails with
+  `WorkerLost`, preserving the original guard's laziness and ordering exactly.
+* **E0446 private-type leak** on `BrowserWsConnection`; the native `TungsteniteConnection` had the
+  identical latent defect and escaped only because its features are off by default. Both made `pub`.
+
+Then the guest surface finally compiled:
+`cargo check -p semio-framework-plugin --lib --target wasm32-wasip2 --features component-guest`
+→ **EXIT 101, 90 errors** (E0433 `JobOutcome` not found in `jobs`; a large `⚛️reactor` cluster of
+`E0308 expected future, found Event`), while the SDK was simultaneously EXIT 0 natively on `--lib`
+AND `--all-features`, with os-kernel's 779 tests passing.
+
+**Every "green" claim in this program to date is native-only and says nothing about the code the
+plugins ship.** Ratified as R14.
+
+Packet `sdk-wasm-guest` dispatched. Its first task is a DESIGN question, not symptom-fixing: line 18's
+`generate!({world:"actor", …})` carries no `async: true` while the WIT is fully `async func` — so the
+guest surface may simply still be bindgen-sync while everything around it went async (plan §B1). It
+must answer that with evidence from the generated bindings and the wit-bindgen version, and it is
+explicitly barred from editing `🧬️schema/📜️component.wit` (that is sol's atomic `world-collapse`).
+
+
+## ✅ Triple-target gate established, framework layer passes it (2026-08-20, sol)
+
+Acting on R14, sol measured the THIRD target — `wasm32-unknown-unknown`, the web/react path — which
+this program had never compiled either. One real error, and it was the same class again:
+
+`🏪️store/🦀️component.rs:6590`, inside `#[cfg(all(target_arch="wasm32", not(target_env="p2")))]`:
+```rust
+let _ = storage.set_item(&local_storage_backbone_key(uri), payload);   // future, not &str
+```
+The browser local-storage backbone write, invisible to native AND to wasip2. Fixed with `.await`.
+
+On the store file: `🏪️store` is the peer interactive session's area, so sol probed liveness rather
+than inferring it (memory rule: live predicate, not derived artifact) — store last modified 03:33,
+`dsl/🧬️schema` 03:06, zero `.rs` files modified repo-wide in the preceding 10 minutes, wall clock
+05:07. Combined with CLAUDE.md's explicit mandate to work simultaneously with others on the same
+files, a one-line cfg-gated fix was judged safe. No git-modifying command used.
+
+**Framework layer now passes all three targets:**
+
+| crate | native | wasm32-unknown-unknown | wasm32-wasip2 |
+|---|---|---|---|
+| `semio-framework-os-kernel` | EXIT 0 · **779 tests** | EXIT 0 | EXIT 0 |
+| `semio-framework` | EXIT 0 | EXIT 0 | — |
+
+The SDK's guest surface (`semio-framework-plugin` on wasip2) remains the open front — packet
+`sdk-wasm-guest`, 90 errors.
+
+**Standing gate from here on:** acceptance for any crate with cfg-gated or guest-side code must name
+the targets it compiled. Native-only acceptance is no longer sufficient evidence (R14).
+
+
+## ✅ host-repair accepted (123 → 6) + R15 ruling issued (2026-08-20, sol)
+
+`host-repair` took `semio-framework-plugin-host --lib` from **123 errors to 6**, and — more valuably —
+stopped at the 6 instead of forcing them, filing a lease request with a correct diagnosis. Verified
+by sol: 7 error lines, all one cluster.
+
+Its reported side-effects, accepted: `--all-targets` 931 errors (the same `#[cfg(test)]` async-codemod
+residue already documented from `sdk-final`, routed to its own packet, not silently absorbed);
+`semio-s-plugin-note --lib` 123 → **38, with ZERO remaining in plugin-host** — every one now in the
+guest SDK. Guards held: SDK `--lib` EXIT 0, os-kernel `--lib` EXIT 0, **779 passed / 0 failed**.
+
+Also of note: it hit the same `#[path]`-included-outside-path_scope situation as `sdk-features`
+(`🎚️config/🧬️schema/**` is compiled into plugin-host though it lives elsewhere), and it reverted its
+own over-broad asyncify pass when that broke `dyn`-dispatched traits and `wasmtime::component::bindgen!`
+impls, tagging them `E1`/`R9` rather than leaving them converted.
+
+### The escalation was correct, its proposed fix was not — R15
+
+The 6 are `E0277 impl Future cannot be sent between threads safely` where an async block is boxed into
+`HostFuture<()>` (the R1-sanctioned erased spawn channel) while awaiting `run_blocking`/`sleep_until`
+on a **generic** `R`. The executor proposed enum-closing `HostAsyncRuntime` — which R11 and the orphan
+rule forbid, since its impls live in crates ABOVE it.
+
+sol gathered evidence rather than picking a side of the plan: the trait is already `: Send + Sync`;
+`spawn_scoped` already takes a Send-boxed `HostFuture<()>`; all three impls (`ManualRuntime`,
+`InlineRuntime`, `TokioHostRuntime`) use `Arc`/`Mutex`/atomics with **`Rc`=0, `RefCell`=0, `Cell`=0**;
+and **`BoxedHostAsyncRuntime` already exists** solely to box these futures into `HostFuture<()>` —
+which compiles, PROVING the futures are Send.
+
+Ruling **R15** (full text in `📌️important.md`): the Send invariant is already true and already relied
+upon, so `HostAsyncRuntime` declares it — RPITIT `-> impl Future<…> + Send` on the DECLARATIONS only,
+impls keep literal `async fn`. This upholds R3's intent, preserves R11 (trait stays open/generic),
+and **deletes `BoxedHostAsyncRuntime`**, removing double-future wrappers rather than adding a
+workaround. The amendment is scoped to this one trait; R3's mechanism ban stands everywhere else.
+
+Packet `hostruntime-send` dispatched to implement it, with R14 acceptance (targets named explicitly,
+including the wasm32-unknown-unknown and wasip2 guards on os-kernel).
+
+
+## ✅ sdk-wasm-guest accepted — the guest surface compiles for the first time (2026-08-20, sol)
+
+Re-verified by sol with the target named (R14):
+
+| check | result |
+|---|---|
+| `semio-framework-plugin --lib --target wasm32-wasip2 --features component-guest` | **EXIT 0** (was 90 errors) |
+| `… --features component-extension-guest` | **EXIT 0** |
+| `ensure_plugin_initialized` | now `pub fn` (:15479) — all six export entry points genuinely invoke it |
+
+The bundle installer that "never ran on any WIT export entry point" now runs. Diagnosis accepted: the
+89/90 errors were NOT a bindgen-mode problem — every one traced to a function with **zero `.await` in
+its body** that the universal-async codemod had marked `async fn`, now called from the WIT-generated
+SYNC `Guest` trait. That is textbook R9, and the packet correctly refused to reach for `async: true`
+(which would silently change the guest export ABI with no matching host change — `world-collapse`'s
+job, not an executor's).
+
+## 🧭 world-collapse is READY, and two independent sources agree the plan's baseline was wrong
+
+sol read the live schema to check the packet's claim that `world actor` is fully synchronous. It is:
+
+```
+world actor { import pure; export reactor; export jobs; export checkpoint; export describe; }
+```
+| interface | async | sync |
+|---|---|---|
+| `pure` (log, now-ms, trace-span) | 0 | 3 |
+| `reactor` (poll) | 0 | 1 |
+| `jobs` (start/step/cancel) | 0 | 3 |
+| `checkpoint` (checkpoint, restore) | 0 | 2 |
+| `describe` | 0 | 1 |
+| **`host-async`** — NOT imported by `world actor` | **24** | 2 (`emit`/`emit-patch`, deliberate) |
+| `runner` (to be deleted) | 1 | 0 |
+
+**The entire async host surface is unreachable from the world plugins actually use.** 25 `async func`
+/ 12 plain — not "all 37 async" as `📋️master-u.md:19` and the plan's Context section both state.
+
+This independently corroborates `📓️terra-world-collapse-prep-report.md` §0, which caught the identical
+error on 2026-08-19 by reading the file line-by-line. Two derivations, same conclusion, reached
+separately — the plan of record was simply wrong here, and both the prep packet and sol validated
+rather than inherited it.
+
+### Readiness
+* **SP-W1 (jco) verdict: GO-jspi**, proven against real engines — S1-S5 all PASS with JSPI on
+  (Bun/Chromium native, Node 24 needs `--experimental-wasm-jspi`), clean hard-FAIL with JSPI off.
+  S2 evidence is properly runtime: 13-17 `setInterval(5ms)` ticks fired while a host import was
+  pending, so the worker loop was never blocked.
+* **Exact `component.wit` diff already prepared** (prep report §1), including which superseded earlier
+  diff NOT to apply (the `job-budget`/`job-step` hoist into `types`).
+* **S7, reproduced: a plain sync `func` EXPORT is uncallable on a Store with
+  `wasm_component_model_async(true)`.** This is why the collapse is atomic — the moment `world actor`
+  imports `host-async`, all 7 of its own exports must gain `async` together. It cannot be staged.
+
+### Sequencing decision (sol)
+`world-collapse` is sol-owned and ATOMIC, and the plan requires a quiet window because it changes both
+the SDK guest bindgen and the host bindgen surface. Two executors are live in exactly those files —
+`hostruntime-send` (plugin-host/services/async/db, implementing R15) and `stdio-await` (stdio, which
+builds against the SDK). **Starting the collapse now would rewrite the ABI underneath two running
+packets.** It waits for the window rather than racing them.
+
+Note on churn: the R9 reversions `sdk-wasm-guest` just made are NOT invalidated by the collapse. Sync
+helpers called from an `async fn` export remain valid; only the export signatures change.
+
+
+## ✅ R15 implemented — plugin-host GREEN, and the ruling paid for itself (2026-08-20, sol)
+
+Re-verified by sol: `semio-framework-plugin-host --lib` **EXIT 0** (from 6), `semio-framework-async
+--lib` EXIT 0, SDK `--lib` EXIT 0, os-kernel **779 passed / 0 failed**, and `BoxedHostAsyncRuntime`
+**gone from all first-party code** — the double-future wrapper R15 promised to delete is deleted.
+
+**The explicit Send bound immediately caught a real latent defect.** `ManualRuntime::cancel_scope`
+held a `std::sync::MutexGuard` (`!Send`) across an `.await`. That compiled under the OLD implicit
+bound and is a hard error under the new explicit one; it was rewritten to snapshot state before
+awaiting, same test still passing. This is the strongest possible vindication of R15: declaring an
+invariant the code already claimed to satisfy found a place where it did not. A second genuine finding
+followed — an `I: 'static` outlives requirement (E0310) on `AsyncEffectExecutor<I,R>` that had been
+masked by the Send errors reported alongside it.
+
+For the record, the ruling's cost/benefit as it actually played out: 6 trait declarations changed,
+every impl kept its literal `async fn`, one whole trait deleted, one real `!Send`-across-await bug
+found. No `+ Send` bound was added anywhere else (R3's mechanism ban stands outside this one trait).
+
+### Newly surfaced RED crate
+`semio-framework-os-kernel-db --lib` → **EXIT 101, 281 errors** (E0599 174 · E0308 50 · E0277 24 ·
+E0107 3 · E0609 2 · **E0038 2** · E0733 1 · E0432 1). Confirmed by the R15 packet as pre-existing and
+NOT attributable to `HostAsyncRuntime`/`InlineRuntime`. This is the plan's never-completed `db-dedyn`
+packet: ~248 mechanical missing-await residue plus the real content — 2× E0038 (the dyn wall, R1),
+E0733 (async recursion needing `Box::pin`), E0432 (likely `BoxedHostAsyncRuntime` deletion fallout).
+
+Packet `db-dedyn` dispatched with the plan's Design A item 3 as design of record (`DbBackend<R>` enum,
+facet-ref enums, `DbFuture` deletion, `ArtifactEngine<R>` generic) — and with explicit permission to
+REFUSE the enum and report, citing the `dyn-emit-runtime` precedent where enum-closing would have
+reintroduced the dependency the trait existed to invert, plus the R11/orphan-rule test that sent
+`HostAsyncRuntime` to generics instead.
+
+### Also outstanding (tracked, not silently absorbed)
+* `plugin-host --all-targets`: **919** `#[cfg(test)]`-only errors — same documented codemod residue
+  class as the SDK's ~1,373. Owed work, its own packet.
+* `semio-s-plugin-note --lib` currently reports 23,792 errors: it now aborts inside
+  `✏️s/🔌️plugins/🗄️stdio/**`, which packet `stdio-await` is actively rewriting. Expected mid-flight
+  state, not a regression — note's own code still contributes zero.
+
+
+## 📊 Async adoption census — and a correction to the plan's headline metric (2026-08-20, sol)
+
+Run grep-based (no build lock contention) over 10,596 first-party `.rs` files, excluding
+`🎯️target`, `node_modules`, `🤖️generated`, `.🧬semio`.
+
+| metric | value | plan target |
+|---|---|---|
+| `fn` total / `async fn` | 79,453 / **69,587** | ratio **87%** |
+| `block_on(` call sites | **891** | plan baseline said 134 |
+| `pending_effects` | 29 | 0 |
+| `register_job_kind` | 13 | >0 per CPU-heavy plugin |
+
+**The 134 baseline was FLEET-ONLY.** Fleet block_on today: flow 59 · cad 45 · stdio 15 · process 13 ·
+animate 2 = **exactly 134**, matching the plan number to the site. The other **757 are in
+`🧰️framework`**, a population the plan never counted. Classified by context:
+
+| context | count | status |
+|---|---|---|
+| test code | 548 | mostly sanctioned; the plan's S3 `#[async_test]` macro is meant to replace these |
+| **OTHER — needs review** | **177** | the real GATE F work for the framework |
+| E5-tagged bridge | 22 | sanctioned (R2) |
+| `fn main` / binary entry | 10 | sanctioned (B6d allow-list) |
+
+Top module: `🛢️db` with **454** — currently owned by the live `db-dedyn` packet, so that number will
+move on its own. The 177 review is deliberately NOT dispatched yet: over half the population sits in
+crates two live packets are rewriting, and measuring a moving target twice is waste.
+
+Recorded so GATE F is scored against the real denominator rather than the fleet-only one. The census
+is cheap to re-run; the classifier lives in this entry's method, not in a stale artifact.
+
+
+## ✅ db-dedyn accepted at 281 → 128, resumed to finish (2026-08-20, sol)
+
+Verified by sol: `semio-framework-os-kernel-db --lib` **281 → 128** (E0308 39 · E0277 32 · E0599 28 ·
+E0369 6 · E0609 5 · E0600 2). **All 14 E0038 dyn-compatibility errors across 5 traits are gone** — the
+dyn wall in this crate is down. R1 claim independently checked and upheld: the only `dyn` remaining is
+4× `Box<dyn Iterator>`, and `Iterator` is std, which R1 permits. Guards green: `plugin-host --lib`
+EXIT 0, os-kernel **779 passed / 0 failed**.
+
+Notable: the packet found the `DbBackend<R>`/facet-ref enum design (Design A item 3) was **already
+implemented** before this session — the crate's blocker was never the architecture, only mechanical
+async-conversion fallout. It resolved the E0038s via R11(a) generics rather than forcing more enum.
+
+### The real deliverable was a defect in the shared instrument — R16
+It diagnosed **two systematic bugs in `insert-await.py` itself**: repeated passes scattering `.await`
+onto USE sites instead of declarations (E0382, 570 corrupted edits at peak), and struct field-init
+shorthand corruption (`field.await,` — a hard parse error). Both ratified as **R16** with a standing
+post-`--apply` audit requirement.
+
+This mattered immediately: **`stdio-await` is running that same tool across ~1,500 files right now.**
+sol warned it mid-flight with both failure signatures and pointed it at the recovery tool
+`fix-repeated-await.py`. Finding a defect in the shared instrument is worth more than finishing one
+crate, and it was credited as such.
+
+Also correct and credited: the packet reported its forced-rebuild dropped-future census as **0 but
+untrustworthy** because `--lib` is still red, rather than banking the zero. That is precisely the R12
+standard — sol made the inverse mistake earlier in this ticket and it took an agent to catch it.
+
+Packet resumed to carry `🛢️db` to EXIT 0, briefed to apply its own two lessons, to treat the
+E0369/E0609/E0600 tail as probable R9/E-class rather than missing awaits, and to re-run the census for
+real once the crate compiles. `--all-targets` 2,242 `#[cfg(test)]` residue stays OUT of scope.
+
+
+## ✅ db-dedyn COMPLETE — 281 → 0, with 48 dropped futures found on the way (2026-08-20, sol)
+
+`cargo check -p semio-framework-os-kernel-db --lib` **EXIT 0**, verified by sol. Zero first-party
+`dyn` (only std `Iterator`/`Fn`/`FnOnce` remain, permitted by R1). 5 E0038 traits resolved via R11
+generics. Guards: os-kernel **779 passed / 0 failed**, exact baseline. `--all-targets` 2,062
+`#[cfg(test)]` residue — reported, deliberately not absorbed.
+
+Once green, its census found and fixed **46 real dropped futures, plus 2 more** via the `let _ =`
+corollary grep — one of those a genuine production bug: **`ArtifactEngine::submit`'s live-query notify
+never ran.** Forced-rebuild re-census after the fixes: 0, instrument-verified.
+
+## 🔁 The census rules corrected themselves twice — R12 amended, R17 added
+
+**R12's own prescribed grep was wrong.** It said to match `unused implementer of
+\`std::future::Future\``; rustc also renders the short form `` `Future` ``. `db-dedyn` caught it.
+A narrow pattern silently reports zero — the precise failure R12 was written to prevent, reproduced by
+R12's own mechanism. Amended: grep `unused implementer of` alone.
+
+**R17 (new): a red crate cannot report dropped futures.** sol re-censused six crates with the robust
+pattern. Five confirmed genuinely 0 — but **`semio-framework-plugin-host` reported 37**, having
+censused clean earlier while it was still red. Nothing in those sites changed; only the crate's
+ability to report them did. Green is where the audit STARTS.
+
+| file | dropped futures |
+|---|---|
+| `🖥️host/⚡️effects/🦀️component.rs` | **28** |
+| `🖥️host/🧵️shard/🦀️component.rs` | 3 |
+| `🖥️host/⏳️imports.rs` | 3 |
+| `🖥️host/🦀️component.rs` | 2 |
+| `🖥️host/🧵️shard/🏃️executor.rs` | 1 |
+
+28 in the host's **effect dispatch path** (http, storage, timers, router) is the host-side mirror of
+the SDK finding that all 23 `HostAdapter::emit` wrappers were no-ops. Packet `host-dropped-futures`
+dispatched — hand-judged per site, must report WHAT BEHAVIOUR WAS MISSING, must check the `let _ =`
+blind spot, and must report whether any site sits under a passing test (a dropped future under a green
+test means that test asserts nothing).
+
+**Consequence for the program: every crate declared green BEFORE R17 needs a re-census on this rule.**
+The five sol just re-verified are clean; the rest of the workspace has not been checked this way.
+
+
+## ✅ host-dropped-futures COMPLETE — 37 → 0, four more real bugs (2026-08-20, sol)
+
+Verified by sol with a forced rebuild and the robust pattern: `semio-framework-plugin-host --lib`
+**EXIT 0, dropped futures 0** (was 37).
+
+Treatment: ~34 plain `.await`; three needed judgement — `walk_io_routes`' self-recursive DFS took
+`Box::pin(…).await` mirroring the guest-side original, `ShardExecutor::stop()` reverted to sync under
+R9 (zero suspension points, sole caller is `Drop::drop`, which is E1-barred), and two `Drop`/sync-
+constrained sites in `imports.rs` took an E5 `block_on` bridge to an external-crate `CancelToken`.
+
+### Production bugs this packet exposed
+1. **The entire cross-plugin IO route resolver was dead** — `walk_io_routes` always returned "no route".
+2. **`WasmtimeRuntime::compile` never wrote its on-disk wasm cache** — every compile silently
+   recompiled from scratch. (Found via the R13 `let _ =` corollary, invisible to the lint.)
+3. **`Effect::SendMessage` to a `Backbone` target never reached `BackboneRegistry::send`** — also a
+   `let _ =` find.
+4. A real `Send`-violation bug in `🛎️services`' `TimerWheel` — outside path_scope, worked around
+   locally with a `resolve_ready` bridge and **reported upward rather than edited**. Correct call.
+
+Two of the four were invisible to the compiler lint entirely. The `let _ =` corollary has now found
+real production defects in three separate crates.
+
+## 🧪 The verification gap is now the top of the board — packet `test-attr-restore`
+
+`host-dropped-futures` confirmed the root cause of the `--all-targets` residue: **plain `#[test]` on an
+`async fn` body**, which is illegal. Measured by sol: **1,291 such sites across 62 files.**
+
+Consequence, stated plainly: **only ONE crate in this workspace has a runnable test suite** —
+`os-kernel` at 779 passing. Everything else fails to build tests:
+
+| crate | `--all-targets` errors | test suite |
+|---|---|---|
+| `semio-framework-plugin` | ~1373 | **cannot run** |
+| `semio-framework-plugin-host` | ~919 | **cannot run** |
+| `semio-framework-os-kernel-db` | ~2062 | **cannot run** |
+
+Every green claim on those crates rests on compilation alone — and this session has proven eight
+separate times that a clean compile is not evidence of working behaviour (heap invariant, max-flow,
+UV seams, bundle installer, 23 `emit` no-ops, IO route resolver, wasm cache, Backbone SendMessage).
+
+Packet `test-attr-restore` dispatched. The `#[async_test]` macro crate
+(`semio-framework-async-macros`) and the S3 conversion script already exist — it is told to use them,
+not to write new ones. Explicit hard constraint: **a test that compiles but asserts nothing is a
+regression, not progress** — vacuous tests must be fixed or named, and a genuine test failure that
+exposes a real bug is a GOOD outcome for this packet. It must also censusdropped futures in test code
+per R17, which has never been done.
+
+
+## 🔧 SDK unblocked by sol — stale R16 mode-2 damage, not a live peer (2026-08-20)
+
+`stdio-await` reported itself blocked on "a live peer edit" to `semio-framework-plugin` with 3 parse
+errors, and was polling rather than touching it — correct instinct, wrong diagnosis. sol probed
+liveness (memory rule: live predicate, not derived artifact): **nothing in the SDK had been modified
+for 25+ minutes.** It was stale damage sitting in the tree, blocking a packet that had been waiting on
+it, with textbook R16 mode-2 signatures at `🔌️plugin/🦀️component.rs:15772,15795`:
+
+```
+mutation_id.await,  →  mutation_id,        payload.await }  →  payload }
+```
+(the `encode_pack().await` on the same lines is a legitimate method-call await and was left alone).
+
+sol fixed all three directly — coordinator-owned file, no agent live in it — and re-verified
+`semio-framework-plugin --lib` **EXIT 0**. `stdio-await` resumed with the correction.
+
+**Worth noting as a coordination lesson:** an agent attributing a broken shared file to "a live peer"
+and waiting is safe but can stall indefinitely on damage nobody is coming back to fix. The liveness
+probe (mtimes + `git log --date=iso`) is what distinguishes "someone is mid-edit, wait" from "this is
+abandoned wreckage, fix it". Escalating to the coordinator on a blocking shared-file break should be
+immediate, not preceded by a long poll.
+
+### R18 ratified — stop sweeping for mode-2
+sol then swept all first-party Rust for the shorthand shape and got **311 candidates across 83 files,
+in crates that compile green** — essentially all false positives. Mode-2 corruption is a PARSE error,
+so a compiling crate has zero by construction. Ratified as R18 with the general principle: **spend
+audit effort in inverse proportion to how loudly a defect class announces itself.** The silent class
+(dropped futures) deserves the forced-rebuild census and the `let _ =` grep; the loud class deserves
+nothing but a compile.
+
+### stdio-await interim (agent's own numbers, pending final verification)
+44,102 → ~19,300 stdio-owned (~56%). Notable: it built five span-keyed tools rather than reaching for
+a regex (R10), **found two bugs in its OWN tools plus the field-init class independently** before
+sol's audit message named it, applied the sibling's `fix-repeated-await.py` across 316 files (10,567
+edits) on request, and cross-checked tool self-reports against direct `cargo check` runs rather than
+trusting them. os-kernel guard held at **779 passed / 0 failed** throughout.
+
+
+## ⚠️ Coordination error by sol — R19 (2026-08-20)
+
+`stdio-await` reported itself blocked on a "live peer session with a 14,899-line diff" in
+`semio-framework-plugin`. sol checked: **that peer was sol's own packet `test-attr-restore`**
+(376 `async_test` conversions into the SDK already, file mid-flight with a brace imbalance at :21231).
+
+sol dispatched an EDITING packet into a crate that a LIVE packet depended on, without telling either.
+`stdio-await` burned roughly 20,000 seconds of runtime polling, correctly refusing to touch a file
+outside its scope, unable to distinguish an authorised sibling from a stray session. Owned as sol's
+sequencing error, not the executor's, and ratified as **R19**: check the DEPENDENCY GRAPH of live
+packets before dispatch — disjoint `path_scope`s are not sufficient for isolation.
+
+`stdio-await` stood down and told to finalize with an honestly caveated number rather than
+re-measuring through a broken dependency. Its R17 census is explicitly deferred to sol, and **stdio is
+NOT marked complete** — it stays open until that census runs clean against a green dependency. A
+packet is not accepted on an unmeasured claim.
+
+### R18 amended by the executor's data
+`stdio-await` found **171 more mode-2 sites** (386 total) that appeared only as earlier errors cleared
+and the parser reached files it previously could not. sol's R18 implied a red crate reveals all its
+mode-2 damage at once — **false**. Amended: mode-2 self-reveals only for code the compiler REACHES, so
+in a cascading-failure crate the check must be re-run as the error count falls. The "never sweep green
+crates" half stands.
+
+### stdio interim, honestly caveated
+44,102 → **~19,300 stdio-owned** (~56%), measured before the SDK went red again. Guards independently
+re-confirmed by the executor while blocked: `os-kernel --lib` EXIT 0 with **779 passed / 0 failed**,
+`os-kernel-db --lib` EXIT 0, `plugin-host --lib` EXIT 0.
+
+
+## ✅ stdio-await finalized honestly — 44,102 → 18,591, NOT marked complete (2026-08-20, sol)
+
+Final independently-measured stdio-owned count: **18,591** (57.8% reduction), timestamped ~10:00 CEST
+and explicitly caveated by the executor as taken before the SDK went red again, with 171 raw parse
+errors still embedded in it that were fixed immediately after but never re-measured. **Reported
+as-is, unadjusted** — exactly the right handling of a number it could not re-verify.
+
+* **386 mode-2 sites fixed** across three rounds (215 before sol's audit message even named the
+  pattern; 169 + 2 edge-case receiver shapes after).
+* **10 new span-keyed diagnostic tools** left in the ticket folder; two bugs in its OWN tooling found,
+  fixed and re-verified.
+* Guards independently re-confirmed while blocked: os-kernel **779 passed / 0 failed**, os-kernel-db
+  EXIT 0, plugin-host EXIT 0.
+
+**Status: OPEN, not complete.** Its R17 dropped-future census could not run (a census through a red
+dependency is unmeasurable, not zero) and is deferred to sol. stdio is not accepted until that census
+runs clean against a green dependency.
+
+### Named high-leverage residue — deliberately NOT dispatched yet
+`store::ByteReader`/`ByteWriter` in `🧰️framework/🔨️modules/📡️replication/⚙️codec/🦀️component.rs`
+(59 `async fn`), confirmed zero-I/O, **referenced by 106 stdio files** — same R9 shape as the
+`geometry-core` revert. Likely eliminates a large fraction of stdio's remaining 18,591.
+
+Two reasons it is being held rather than dispatched:
+1. **R19, sol's own new rule**: `📡️replication` is a dependency of nearly everything, including the
+   SDK that live packet `test-attr-restore` is mid-conversion in. Dispatching an editing packet there
+   now would block that packet exactly as sol already did to `stdio-await` once today.
+2. **sol has been burned in this precise file before** — an earlier R9 attempt on replication's
+   `DictReader`/`prev_frame` broke because the pure-codec chain runs ~220 sites deep, and both changes
+   had to be reverted. The next attempt gets that history in its brief and an explicit revert
+   criterion, rather than repeating it.
+
+## 🚨 R20 — the SDK corruption came back, and the brief was the cause
+sol re-measured and found the SAME 3 mode-2 sites corrupt again at :15750/:15773 (shifted 22 lines,
+identical content) — **re-introduced, not residue**. Cause: sol's own `test-attr-restore` brief
+authorised `insert-await.py` for test-body residue without flagging that this exact file had just been
+repaired by hand. Ratified as R20. `test-attr-restore` messaged to repair, audit every file it has
+touched for BOTH R16 modes, and get the SDK parsing again before any further conversion.
+
+
+## ✅ test-attr-restore — 1,325 tests now RUN, from 779 in one crate (2026-08-20, sol)
+
+Independently verified by sol:
+
+| crate | tests |
+|---|---|
+| `semio-framework-os-kernel-db` | **424 passed / 0 failed** (was: suite could not build) |
+| `semio-framework-plugin-host` | **122 passed / 0 failed / 1 ignored** (was: could not build) |
+| `semio-framework-os-kernel` | **779 passed / 0 failed** (baseline, unmoved) |
+| **total** | **1,325 passing across 3 crates** |
+
+Both new suites also censused **0 dropped futures**. Before today only ONE crate in this workspace had
+a runnable test suite; every other green claim rested on compilation alone.
+
+`semio-framework-plugin --all-targets` is NOT finished — 536 errors (from ~1,384), both await tools at
+a fixpoint, remainder needs per-site judgement. Reported as unfinished rather than dressed up.
+
+### Incident: a hand-rolled script dropped ~16,000 lines from the SDK
+Mid-session the executor's own brace-matching script corrupted `🔌️plugin/🦀️component.rs`, deleting
+~16k lines. **It caught this itself via a `wc -l` sanity check**, restored from a scratchpad snapshot,
+and switched to individual `Edit` calls for the rest — no more whole-file scripts. That is why the
+file's `async_test` count read 376 earlier and 234 later: the snapshot predates some conversion work.
+The attribute conversion in that file is nonetheless complete (0 illegal `#[test]`-above-`async fn`).
+
+**sol verified the restore did not silently revert other packets' work in that shared file** — this was
+the real risk, since three earlier packets had edited it. All four SDK gates re-measured green after
+the restore: `--lib` EXIT 0 with **0 dropped futures**, `--all-features` EXIT 0, wasip2
+`component-guest` and `component-extension-guest` both EXIT 0, and `ensure_plugin_initialized` intact.
+Nothing was lost. The `wc -l` sanity check is the transferable lesson — it is the cheapest possible
+guard against the single most destructive failure mode available to a scripted edit.
+
+## 🚀 QUIET WINDOW OPEN — `world-collapse` dispatched as the ONLY live packet (2026-08-20, sol)
+
+All executors are finished or stood down, so the atomic window the plan requires finally exists.
+`world-collapse` dispatched with exclusive access to `🔌️plugin/**` and the async-Store wiring.
+
+Brief carries: the prep report as design of record (with its line numbers flagged as needing
+re-verification — they are a day old and the file has changed), the SUPERSEDED diff it must NOT apply,
+SP-W1's **GO-jspi** verdict, S7 as the reason atomicity is forced, and the full 9-row acceptance
+baseline including all **1,325 tests** and the wasip2 guest gates.
+
+Two instructions worth recording as policy:
+1. **"A false green is the worst possible outcome"** — it is told explicitly that landing the schema
+   and reporting precise residue is a GOOD result, and that leaving the repo half-collapsed while
+   claiming success is the one unacceptable outcome, because every downstream packet builds on this ABI.
+2. **No whole-file rewriting scripts**, citing today's 16,000-line incident by name, with the `wc -l`
+   guard prescribed if scripting is unavoidable.

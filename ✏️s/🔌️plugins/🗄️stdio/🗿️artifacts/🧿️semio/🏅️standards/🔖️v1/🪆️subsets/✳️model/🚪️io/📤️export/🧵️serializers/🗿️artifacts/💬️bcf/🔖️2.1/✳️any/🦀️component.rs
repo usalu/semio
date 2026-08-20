@@ -29,7 +29,7 @@ impl ArtifactSerializer for SemioModelToBcf {
     const INTO: Dialect = Dialect { artifact_kind: "s.stdio.bcf", standard: StandardId("2.1"), subset: SubsetId::ANY };
 
     async fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
-        Ok(bcf_from_model(from))
+        Ok(bcf_from_model(from).await)
     }
 }
 
@@ -56,14 +56,14 @@ async fn topic_from_element(element: &crate::artifacts::semio::standards::v1::su
     let topic_props = element.psets.iter().find(|p| p.name == "Pset_BcfTopic").map(|p| p.properties.as_slice()).unwrap_or(&empty);
     let comments_props = element.psets.iter().find(|p| p.name == "Pset_BcfComments").map(|p| p.properties.as_slice()).unwrap_or(&empty);
 
-    let count = number_property(comments_props, "count").unwrap_or(0.0) as usize;
+    let count = number_property(comments_props, "count").await.unwrap_or(0.0) as usize;
     let comments = (0..count)
         .map(|i| BcfComment {
-            guid: text_property(comments_props, &format!("comment_{i}_guid")).unwrap_or_default().to_string(),
-            date: text_property(comments_props, &format!("comment_{i}_date")).unwrap_or_default().to_string(),
-            author: text_property(comments_props, &format!("comment_{i}_author")).unwrap_or_default().to_string(),
-            text: text_property(comments_props, &format!("comment_{i}_text")).unwrap_or_default().to_string(),
-            viewpoint_ref: text_property(comments_props, &format!("comment_{i}_viewpointRef")).map(str::to_string),
+            guid: semio_framework_plugin::resolve_ready(text_property(comments_props, &format!("comment_{i}_guid"))).unwrap_or_default().to_string(),
+            date: semio_framework_plugin::resolve_ready(text_property(comments_props, &format!("comment_{i}_date"))).unwrap_or_default().to_string(),
+            author: semio_framework_plugin::resolve_ready(text_property(comments_props, &format!("comment_{i}_author"))).unwrap_or_default().to_string(),
+            text: semio_framework_plugin::resolve_ready(text_property(comments_props, &format!("comment_{i}_text"))).unwrap_or_default().to_string(),
+            viewpoint_ref: semio_framework_plugin::resolve_ready(text_property(comments_props, &format!("comment_{i}_viewpointRef"))).map(str::to_string),
         })
         .collect();
 
@@ -75,13 +75,13 @@ async fn topic_from_element(element: &crate::artifacts::semio::standards::v1::su
 
     BcfTopic {
         guid: element.id.clone(),
-        title: text_property(topic_props, "title").unwrap_or_default().to_string(),
-        description: text_property(topic_props, "description").unwrap_or_default().to_string(),
-        status: text_property(topic_props, "status").unwrap_or_default().to_string(),
-        priority: text_property(topic_props, "priority").unwrap_or_default().to_string(),
-        labels: text_property(topic_props, "labels").map(|s| s.split('|').filter(|l| !l.is_empty()).map(str::to_string).collect()).unwrap_or_default(),
-        creation_date: text_property(topic_props, "creationDate").unwrap_or_default().to_string(),
-        creation_author: text_property(topic_props, "creationAuthor").unwrap_or_default().to_string(),
+        title: text_property(topic_props, "title").await.unwrap_or_default().to_string(),
+        description: text_property(topic_props, "description").await.unwrap_or_default().to_string(),
+        status: text_property(topic_props, "status").await.unwrap_or_default().to_string(),
+        priority: text_property(topic_props, "priority").await.unwrap_or_default().to_string(),
+        labels: text_property(topic_props, "labels").await.map(|s| s.split('|').filter(|l| !l.is_empty()).map(str::to_string).collect()).unwrap_or_default(),
+        creation_date: text_property(topic_props, "creationDate").await.unwrap_or_default().to_string(),
+        creation_author: text_property(topic_props, "creationAuthor").await.unwrap_or_default().to_string(),
         comments,
         viewpoints,
     }

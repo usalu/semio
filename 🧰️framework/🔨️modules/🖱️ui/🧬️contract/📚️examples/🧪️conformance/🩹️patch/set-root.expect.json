@@ -1,0 +1,32 @@
+{
+  "case": "set-root",
+  "kind": "patch",
+  "description": "UiPatchOp::SetRoot repoints the document root from node 0 to the already-existing node 1, paired with SetChildren+Remove to detach and discard the old root in the same patch — SetRoot alone would leave node 0 dangling, which validate_state forbids.",
+  "outcome": "accept",
+  "limits": null,
+  "baseRevision": 0,
+  "resultRevision": 1,
+  "tree": {
+    "root": 1,
+    "nodeCount": 1,
+    "shape": [
+      {
+        "id": 1,
+        "key": "alt-root",
+        "type": "container",
+        "children": []
+      }
+    ]
+  },
+  "accessibility": [
+    {
+      "id": 1,
+      "label": null,
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    }
+  ],
+  "actionIds": []
+}

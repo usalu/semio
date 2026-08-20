@@ -39,12 +39,12 @@ pub struct GltfAreaVolumeInference;
 
 impl GltfAreaVolumeInference {
     pub(crate) async fn infer_pair_contact(pair: &GltfPairGeometry) -> GltfMeasure<f64> {
-        contact_area::infer_pair(pair)
+        contact_area::infer_pair(pair).await
     }
 
     pub(crate) async fn infer_assembly(indicators: &mut GltfAreaVolumeIndicators, part_count: usize, contact_area: f64, contact_area_complete: bool, sample_count: usize, topology: Topology) {
-        indicators.contact_area = contact_area::from_assembly(part_count, contact_area, contact_area_complete, sample_count, topology);
-        indicators.exposed_area = exposed_area::from_assembly(&indicators.surface_area, part_count, contact_area, contact_area_complete, sample_count, topology);
+        indicators.contact_area = contact_area::from_assembly(part_count, contact_area, contact_area_complete, sample_count, topology).await;
+        indicators.exposed_area = exposed_area::from_assembly(&indicators.surface_area, part_count, contact_area, contact_area_complete, sample_count, topology).await;
     }
 }
 
@@ -53,27 +53,27 @@ impl GltfInferenceStage<GltfGeometryContext<'_>> for GltfAreaVolumeInference {
 
     async fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
         Self::Output {
-            surface_area: surface_area::infer(context),
-            total_area: total_area::infer(context),
-            exposed_area: exposed_area::infer(context),
-            contact_area: contact_area::infer(context),
-            volume: volume::infer(context),
-            enclosed_volume: enclosed_volume::infer(context),
-            material_volume: material_volume::infer(context),
-            void_volume: void_volume::infer(context),
+            surface_area: surface_area::infer(context).await,
+            total_area: total_area::infer(context).await,
+            exposed_area: exposed_area::infer(context).await,
+            contact_area: contact_area::infer(context).await,
+            volume: volume::infer(context).await,
+            enclosed_volume: enclosed_volume::infer(context).await,
+            material_volume: material_volume::infer(context).await,
+            void_volume: void_volume::infer(context).await,
         }
     }
 
     async fn unavailable(diagnostic_ids: &[String]) -> Self::Output {
         Self::Output {
-            surface_area: surface_area::unavailable_measure(diagnostic_ids),
-            total_area: total_area::unavailable_measure(diagnostic_ids),
-            exposed_area: exposed_area::unavailable_measure(diagnostic_ids),
-            contact_area: contact_area::unavailable_measure(diagnostic_ids),
-            volume: volume::unavailable_measure(diagnostic_ids),
-            enclosed_volume: enclosed_volume::unavailable_measure(diagnostic_ids),
-            material_volume: material_volume::unavailable_measure(diagnostic_ids),
-            void_volume: void_volume::unavailable_measure(diagnostic_ids),
+            surface_area: surface_area::unavailable_measure(diagnostic_ids).await,
+            total_area: total_area::unavailable_measure(diagnostic_ids).await,
+            exposed_area: exposed_area::unavailable_measure(diagnostic_ids).await,
+            contact_area: contact_area::unavailable_measure(diagnostic_ids).await,
+            volume: volume::unavailable_measure(diagnostic_ids).await,
+            enclosed_volume: enclosed_volume::unavailable_measure(diagnostic_ids).await,
+            material_volume: material_volume::unavailable_measure(diagnostic_ids).await,
+            void_volume: void_volume::unavailable_measure(diagnostic_ids).await,
         }
     }
 }

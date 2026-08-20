@@ -1,0 +1,9 @@
+crate,unused_future,must_use_unused
+semio-framework-os-kernel,0,0
+semio-framework,0,0
+semio-framework-graph,0,0
+semio-framework-3d,0,0
+semio-framework-actor,0,0
+semio-framework-math,0,0
+semio-framework-replication,0,0
+semio-framework-pack,0,0

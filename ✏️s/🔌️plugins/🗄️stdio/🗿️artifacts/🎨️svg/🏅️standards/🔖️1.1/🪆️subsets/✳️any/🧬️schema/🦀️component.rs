@@ -257,17 +257,17 @@ pub mod derived_construction {
             self
         }
         pub async fn add_path(mut self, path: PathBuilder, common: CommonAttrs) -> Self {
-            self.children.push(SvgElement::Path { common, d: path.build() });
+            self.children.push(SvgElement::Path { common, d: path.build().await });
             self
         }
         /// 🧬 Nests a `<g>` group: `build` receives a fresh `ElementBuilder` scoped to the group.
         pub async fn add_group(mut self, common: CommonAttrs, build: impl FnOnce(ElementBuilder) -> ElementBuilder) -> Self {
-            let inner = build(ElementBuilder::new());
+            let inner = build(ElementBuilder::new().await);
             self.children.push(SvgElement::Group { common, children: inner.children });
             self
         }
         pub async fn add_defs(mut self, common: CommonAttrs, build: impl FnOnce(ElementBuilder) -> ElementBuilder) -> Self {
-            let inner = build(ElementBuilder::new());
+            let inner = build(ElementBuilder::new().await);
             self.children.push(SvgElement::Defs { common, children: inner.children });
             self
         }
@@ -342,59 +342,59 @@ pub mod derived_construction {
             self
         }
         pub async fn add_rect(mut self, x: f64, y: f64, width: f64, height: f64, common: CommonAttrs) -> Self {
-            self.elements = self.elements.add_rect(x, y, width, height, common);
+            self.elements = self.elements.add_rect(x, y, width, height, common).await;
             self
         }
         pub async fn add_rect_rounded(mut self, x: f64, y: f64, width: f64, height: f64, rx: f64, ry: f64, common: CommonAttrs) -> Self {
-            self.elements = self.elements.add_rect_rounded(x, y, width, height, rx, ry, common);
+            self.elements = self.elements.add_rect_rounded(x, y, width, height, rx, ry, common).await;
             self
         }
         pub async fn add_circle(mut self, cx: f64, cy: f64, r: f64, common: CommonAttrs) -> Self {
-            self.elements = self.elements.add_circle(cx, cy, r, common);
+            self.elements = self.elements.add_circle(cx, cy, r, common).await;
             self
         }
         pub async fn add_ellipse(mut self, cx: f64, cy: f64, rx: f64, ry: f64, common: CommonAttrs) -> Self {
-            self.elements = self.elements.add_ellipse(cx, cy, rx, ry, common);
+            self.elements = self.elements.add_ellipse(cx, cy, rx, ry, common).await;
             self
         }
         pub async fn add_line(mut self, x1: f64, y1: f64, x2: f64, y2: f64, common: CommonAttrs) -> Self {
-            self.elements = self.elements.add_line(x1, y1, x2, y2, common);
+            self.elements = self.elements.add_line(x1, y1, x2, y2, common).await;
             self
         }
         pub async fn add_polyline(mut self, points: Vec<(f64, f64)>, common: CommonAttrs) -> Self {
-            self.elements = self.elements.add_polyline(points, common);
+            self.elements = self.elements.add_polyline(points, common).await;
             self
         }
         pub async fn add_polygon(mut self, points: Vec<(f64, f64)>, common: CommonAttrs) -> Self {
-            self.elements = self.elements.add_polygon(points, common);
+            self.elements = self.elements.add_polygon(points, common).await;
             self
         }
         pub async fn add_path(mut self, path: PathBuilder, common: CommonAttrs) -> Self {
-            self.elements = self.elements.add_path(path, common);
+            self.elements = self.elements.add_path(path, common).await;
             self
         }
         pub async fn add_group(mut self, common: CommonAttrs, build: impl FnOnce(ElementBuilder) -> ElementBuilder) -> Self {
-            self.elements = self.elements.add_group(common, build);
+            self.elements = self.elements.add_group(common, build).await;
             self
         }
         pub async fn add_defs(mut self, common: CommonAttrs, build: impl FnOnce(ElementBuilder) -> ElementBuilder) -> Self {
-            self.elements = self.elements.add_defs(common, build);
+            self.elements = self.elements.add_defs(common, build).await;
             self
         }
         pub async fn add_text(mut self, x: Option<f64>, y: Option<f64>, text: impl Into<String>, common: CommonAttrs) -> Self {
-            self.elements = self.elements.add_text(x, y, text, common);
+            self.elements = self.elements.add_text(x, y, text, common).await;
             self
         }
         pub async fn add_use(mut self, href: impl Into<String>, x: Option<f64>, y: Option<f64>, width: Option<f64>, height: Option<f64>, common: CommonAttrs) -> Self {
-            self.elements = self.elements.add_use(href, x, y, width, height, common);
+            self.elements = self.elements.add_use(href, x, y, width, height, common).await;
             self
         }
         pub async fn define_linear_gradient(mut self, id: impl Into<String>, x1: Option<f64>, y1: Option<f64>, x2: Option<f64>, y2: Option<f64>, stops: Vec<GradientStopSpec>) -> Self {
-            self.elements = self.elements.define_linear_gradient(id, x1, y1, x2, y2, stops);
+            self.elements = self.elements.define_linear_gradient(id, x1, y1, x2, y2, stops).await;
             self
         }
         pub async fn define_radial_gradient(mut self, id: impl Into<String>, cx: Option<f64>, cy: Option<f64>, r: Option<f64>, fx: Option<f64>, fy: Option<f64>, stops: Vec<GradientStopSpec>) -> Self {
-            self.elements = self.elements.define_radial_gradient(id, cx, cy, r, fx, fy, stops);
+            self.elements = self.elements.define_radial_gradient(id, cx, cy, r, fx, fy, stops).await;
             self
         }
         //#endregion TypedConstructors
@@ -405,23 +405,23 @@ pub mod derived_construction {
         type Mutation = SvgMutation;
         type Diff = SvgDiff;
         async fn empty() -> Self {
-            Self { snapshot: SvgSnapshot::default(), diagnostics: Vec::new(), elements: ElementBuilder::new(), view_box: None, width: None, height: None, xmlns: None }
+            Self { snapshot: SvgSnapshot::default(), diagnostics: Vec::new(), elements: ElementBuilder::new().await, view_box: None, width: None, height: None, xmlns: None }
         }
         async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
-            Self { snapshot, diagnostics: Vec::new(), elements: ElementBuilder::new(), view_box: None, width: None, height: None, xmlns: None }
+            Self { snapshot, diagnostics: Vec::new(), elements: ElementBuilder::new().await, view_box: None, width: None, height: None, xmlns: None }
         }
         async fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self::from_snapshot(<SvgSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+            Ok(Self::from_snapshot(<SvgSnapshot as store::ArtifactDsl>::parse_dsl(text).await?).await)
         }
         async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<SvgSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+            Ok(Self::from_snapshot(<SvgSnapshot as store::ArtifactPack>::decode_pack(bytes).await?).await)
         }
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::svg::schema::mutations::apply_svg_mutation(&mut self.snapshot, &mutation);
-            (self, diff)
+            (self, diff.await)
         }
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            self.snapshot = <SvgDiff as protocol::MutationDiff<SvgSnapshot>>::apply(&diff, &self.snapshot)?;
+            self.snapshot = <SvgDiff as protocol::MutationDiff<SvgSnapshot>>::apply(&diff, &self.snapshot).await?;
             Ok(self)
         }
         /// 🏗️ Lowers any pending typed constructor calls into `snapshot.doc`'s root `<svg>` children
@@ -429,7 +429,7 @@ pub mod derived_construction {
         /// produce a complete, valid SVG 1.1 document purely from typed calls.
         async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
             let mut snapshot = self.snapshot;
-            let pending = self.elements.build();
+            let pending = self.elements.build().await;
             if !pending.is_empty() || self.view_box.is_some() || self.width.is_some() || self.height.is_some() || self.xmlns.is_some() {
                 if snapshot.doc.root.is_none() {
                     snapshot.doc.root = Some(XmlNode::Element { name: "svg".into(), attrs: vec![], children: vec![] });
@@ -439,7 +439,7 @@ pub mod derived_construction {
                         set_element_attr(root, "xmlns", Some(xmlns.clone()));
                     }
                     if let Some(vb) = &self.view_box {
-                        set_element_attr(root, "viewBox", Some(view_box_to_string(vb)));
+                        set_element_attr(root, "viewBox", Some(view_box_to_string(vb).await));
                     }
                     if let Some(w) = &self.width {
                         set_element_attr(root, "width", Some(w.clone()));
@@ -496,7 +496,7 @@ pub mod derived_analysis {
         /// constant. Binary sources aren't XML text, so they're never claimed here.
         async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             match source {
-                AnalyzeSource::Text(text) => match xml_document_from_text(text) {
+                AnalyzeSource::Text(text) => match xml_document_from_text(text).await {
                     Ok(doc) => match &doc.root {
                         Some(XmlNode::Element { name, .. }) if name == "svg" || name.ends_with(":svg") => IoConfidence::High,
                         Some(_) => IoConfidence::Low,
@@ -517,9 +517,9 @@ pub mod derived_analysis {
             for source in sources {
                 match source {
                     AnalyzeSource::Text(text) => {
-                        match if store::semio_format::split_text_preamble(text).is_ok() { <SvgSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string()) } else { SvgSnapshot::import_utf8(text.as_bytes()) } {
+                        match if store::semio_format::split_text_preamble(text).is_ok() { <SvgSnapshot as store::ArtifactDsl>::parse_dsl(text).await.map_err(|error| error.to_string()) } else { SvgSnapshot::import_utf8(text.as_bytes()).await } {
                             Ok(snapshot) => {
-                                match svg_document_to_typed(&snapshot.doc) {
+                                match svg_document_to_typed(&snapshot.doc).await {
                                     Ok(typed) => parts.typed = Some(typed),
                                     Err(err) => {
                                         confidence = IoConfidence::Low;
@@ -534,9 +534,9 @@ pub mod derived_analysis {
                             }
                         }
                     }
-                    AnalyzeSource::Binary(bytes) => match <SvgSnapshot as store::ArtifactPack>::decode_pack(bytes) {
+                    AnalyzeSource::Binary(bytes) => match <SvgSnapshot as store::ArtifactPack>::decode_pack(bytes).await {
                         Ok(snapshot) => {
-                            if let Ok(typed) = svg_document_to_typed(&snapshot.doc) {
+                            if let Ok(typed) = svg_document_to_typed(&snapshot.doc).await {
                                 parts.typed = Some(typed);
                             }
                             parts.snapshot = Some(snapshot);

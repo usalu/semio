@@ -48,7 +48,7 @@ pub mod derived_composition {
             if native.is_empty() {
                 return Err(ComposeError { message: "PdfComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() });
             }
-            let analysis = PdfAnalyzer::analyze(&native);
+            let analysis = PdfAnalyzer::analyze(&native).await;
             let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError { message: "PdfComposerComposition: analysis produced no snapshot".into(), diagnostics: analysis.diagnostics.clone() })?;
             Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics })
         }
@@ -63,7 +63,7 @@ pub async fn encode_pdf(snap: &PdfSnapshot) -> Result<Vec<u8>, String> {
     let w = page.width.max(1.0);
     let h = page.height.max(1.0);
     let stream = format!("BT /F1 12 Tf 72 {} Td ({}) Tj ET", h - 72.0, escape_pdf(&page.text));
-    let compressed = crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(stream.as_bytes())?;
+    let compressed = crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(stream.as_bytes()).await?;
     let mut body: Vec<u8> = Vec::new();
     body.extend_from_slice(b"%PDF-1.4\n");
     let o1 = body.len();
@@ -107,9 +107,9 @@ pub async fn decode_pdf(data: &[u8]) -> Result<PdfSnapshot, String> {
     let w = 612.0f64;
     let h = 792.0f64;
     let mut content = String::new();
-    if let Some(i) = find_subslice(data, b"stream") {
+    if let Some(i) = find_subslice(data, b"stream").await {
         let rest = &data[i + 6..];
-        if let Some(j) = find_subslice(rest, b"endstream") {
+        if let Some(j) = find_subslice(rest, b"endstream").await {
             let raw_slice = &rest[..j];
             // `stream` is followed by an EOL before the real payload begins (ISO 32000-1
             // §7.3.8.1) and the payload itself may carry a trailing EOL before `endstream` --
@@ -117,7 +117,7 @@ pub async fn decode_pdf(data: &[u8]) -> Result<PdfSnapshot, String> {
             let start = raw_slice.iter().position(|b| !b.is_ascii_whitespace()).unwrap_or(raw_slice.len());
             let end = raw_slice.iter().rposition(|b| !b.is_ascii_whitespace()).map(|p| p + 1).unwrap_or(start);
             let raw = &raw_slice[start..end];
-            if let Ok(dec) = crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_decompress(raw) {
+            if let Ok(dec) = crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_decompress(raw).await {
                 content = String::from_utf8_lossy(&dec).into_owned();
             }
         }
@@ -300,7 +300,8 @@ pub mod io_registry {
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 
-    pub async fn entries() -> &'static [ComposerEntry] {
+    // 🚫️async: E1 pure table accessor consumed by OnceLock::get_or_init's sync closure — see R9
+    pub fn entries() -> &'static [ComposerEntry] {
         ENTRIES.get_or_init(|| vec![composer_entry_of::<PdfRawAnyComposer>(), composer_entry_of::<PdfAComposer>(), composer_entry_of::<PdfXComposer>()]).as_slice()
     }
 }

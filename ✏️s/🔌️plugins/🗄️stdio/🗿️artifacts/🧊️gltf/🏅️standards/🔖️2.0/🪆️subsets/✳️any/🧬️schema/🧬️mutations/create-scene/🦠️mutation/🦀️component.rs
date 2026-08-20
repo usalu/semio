@@ -13,12 +13,12 @@ pub struct GltfCreateScenePayload {
 }
 
 pub async fn validate(payload: &GltfCreateScenePayload, base: &GltfSnapshot) -> Result<(), GltfCreateSceneRejection> {
-    insertion_position(payload.position, base).map(|_| ())
+    insertion_position(payload.position, base).await.map(|_| ())
 }
 
 pub async fn apply(payload: &GltfCreateScenePayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfCreateSceneRejection> {
-    let position = insertion_position(payload.position, base)?;
+    let position = insertion_position(payload.position, base).await?;
     let mut next = base.clone();
-    insert_empty_scene(&mut next, position)?;
+    insert_empty_scene(&mut next, position).await?;
     Ok(next)
 }

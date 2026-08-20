@@ -32,10 +32,10 @@ pub async fn scene_count(scenes: &[GltfScene]) -> Result<u32, GltfCreateSceneRej
 }
 
 pub async fn validate_scene_sequence(scenes: &[GltfScene]) -> Result<(), GltfCreateSceneRejection> {
-    scene_count(scenes)?;
+    scene_count(scenes).await?;
     for (scene_index, scene) in scenes.iter().enumerate() {
         for node_index in &scene.nodes {
-            u32_index(*node_index, format!("document/scenes/{scene_index}/nodes"))?;
+            u32_index(*node_index, format!("document/scenes/{scene_index}/nodes")).await?;
         }
     }
     Ok(())
@@ -44,7 +44,7 @@ pub async fn validate_scene_sequence(scenes: &[GltfScene]) -> Result<(), GltfCre
 
 //#region 🎬️SceneState
 pub async fn default_scene(snapshot: &GltfSnapshot) -> Result<Option<u32>, GltfCreateSceneRejection> {
-    validate_scene_sequence(&snapshot.document.scenes)?;
+    validate_scene_sequence(&snapshot.document.scenes).await?;
     snapshot
         .document
         .scene
@@ -56,17 +56,17 @@ pub async fn default_scene(snapshot: &GltfSnapshot) -> Result<Option<u32>, GltfC
 }
 
 pub async fn insertion_position(position: u32, snapshot: &GltfSnapshot) -> Result<usize, GltfCreateSceneRejection> {
-    default_scene(snapshot)?;
-    if scene_count(&snapshot.document.scenes)? == u32::MAX {
-        return Err(reject("gltf.mutation.collection-overflow", "document/scenes", "creating a scene would exceed the u32 command domain"));
+    default_scene(snapshot).await?;
+    if scene_count(&snapshot.document.scenes).await? == u32::MAX {
+        return Err(reject("gltf.mutation.collection-overflow", "document/scenes", "creating a scene would exceed the u32 command domain").await);
     }
-    let position = usize_index(position, "document/scenes")?;
+    let position = usize_index(position, "document/scenes").await?;
     (position <= snapshot.document.scenes.len()).then_some(position).ok_or_else(|| reject("gltf.mutation.insert-out-of-range", "document/scenes", "position must be within the collection"))
 }
 
 pub async fn existing_position(position: u32, snapshot: &GltfSnapshot) -> Result<usize, GltfCreateSceneRejection> {
-    default_scene(snapshot)?;
-    let position = usize_index(position, "document/scenes")?;
+    default_scene(snapshot).await?;
+    let position = usize_index(position, "document/scenes").await?;
     (position < snapshot.document.scenes.len()).then_some(position).ok_or_else(|| reject("gltf.mutation.index-out-of-range", "document/scenes", "position must address an existing scene"))
 }
 
@@ -75,8 +75,8 @@ pub async fn default_after(default_scene: Option<u32>, position: u32) -> Result<
 }
 
 pub async fn insert_empty_scene(snapshot: &mut GltfSnapshot, position: usize) -> Result<(), GltfCreateSceneRejection> {
-    let default_scene_before = default_scene(snapshot)?;
-    snapshot.document.scene = default_after(default_scene_before, u32_index(position, "document/scenes")?)?.map(|scene| usize_index(scene, "document/scene")).transpose()?;
+    let default_scene_before = default_scene(snapshot).await?;
+    snapshot.document.scene = default_after(default_scene_before, u32_index(position, "document/scenes").await?).await?.map(|scene| usize_index(scene, "document/scene")).transpose()?;
     snapshot.document.scenes.insert(position, GltfScene::default());
     Ok(())
 }

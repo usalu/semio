@@ -61,7 +61,7 @@ impl DiffAlgebra<WavSnapshot> for WavDiff {
 
 /// 🧩 Builds a set-snapshot diff: the sparse field-by-field delta, never a full-replace slot.
 pub async fn diff_set_snapshot(base: &WavSnapshot, snapshot: &WavSnapshot) -> WavDiff {
-    WavDiff::between(base, snapshot)
+    WavDiff::between(base, snapshot).await
 }
 /// 🧩 Builds a set-fmt diff.
 pub async fn diff_set_fmt(fmt: WavFmt) -> WavDiff {
@@ -130,8 +130,8 @@ async fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String
     }
 }
 async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
-    let inner = strip_brackets(s)?;
-    match split_top_level(inner, ',').as_slice() {
+    let inner = strip_brackets(s).await?;
+    match split_top_level(inner, ',').await.as_slice() {
         ["0"] => Ok(None),
         [tag, value] if *tag == "1" => Ok(Some(dec(value)?)),
         other => Err(format!("option decode: bad shape {other:?}")),
@@ -144,8 +144,8 @@ async fn enc_wav_fmt(f: &WavFmt) -> String {
     format!("[{},{},{},{},{},{},{}]", f.audio_format, f.channels, f.sample_rate, f.byte_rate, f.block_align, f.bits_per_sample, encode_option(&f.ext, |v| hex_encode(v)))
 }
 async fn dec_wav_fmt(s: &str) -> Result<WavFmt, String> {
-    let inner = strip_brackets(s)?;
-    let parts = split_top_level(inner, ',');
+    let inner = strip_brackets(s).await?;
+    let parts = split_top_level(inner, ',').await;
     if parts.len() != 7 {
         return Err(format!("wav fmt: expected 7 fields, got {}", parts.len()));
     }
@@ -156,7 +156,7 @@ async fn dec_wav_fmt(s: &str) -> Result<WavFmt, String> {
         byte_rate: parts[3].parse().map_err(|e: std::num::ParseIntError| e.to_string())?,
         block_align: parts[4].parse().map_err(|e: std::num::ParseIntError| e.to_string())?,
         bits_per_sample: parts[5].parse().map_err(|e: std::num::ParseIntError| e.to_string())?,
-        ext: decode_option(parts[6], hex_decode)?,
+        ext: decode_option(parts[6], hex_decode).await?,
     })
 }
 
@@ -170,7 +170,7 @@ async fn enc_wav_data(d: &WavData) -> String {
 }
 async fn dec_wav_data(s: &str) -> Result<WavData, String> {
     let (tag, rest) = s.split_once(':').ok_or_else(|| format!("wav data: missing tag in {s:?}"))?;
-    let bytes = hex_decode(rest)?;
+    let bytes = hex_decode(rest).await?;
     match tag {
         "p16" => {
             if bytes.len() % 2 != 0 {
@@ -196,18 +196,18 @@ async fn enc_riff_chunk(c: &RiffChunk) -> String {
     format!("[{},{}]", c.fourcc, hex_encode(&c.data))
 }
 async fn dec_riff_chunk(s: &str) -> Result<RiffChunk, String> {
-    let inner = strip_brackets(s)?;
-    let parts = split_top_level(inner, ',');
+    let inner = strip_brackets(s).await?;
+    let parts = split_top_level(inner, ',').await;
     if parts.len() != 2 {
         return Err(format!("riff chunk: expected 2 fields, got {}", parts.len()));
     }
-    Ok(RiffChunk { fourcc: parts[0].to_string(), data: hex_decode(parts[1])? })
+    Ok(RiffChunk { fourcc: parts[0].to_string(), data: hex_decode(parts[1]).await? })
 }
 async fn enc_riff_chunks(chunks: &[RiffChunk]) -> String {
     format!("[{}]", chunks.iter().map(enc_riff_chunk).collect::<Vec<_>>().join(";"))
 }
 async fn dec_riff_chunks(s: &str) -> Result<Vec<RiffChunk>, String> {
-    let inner = strip_brackets(s)?;
+    let inner = strip_brackets(s).await?;
     split_top_level(inner, ';').into_iter().filter(|p| !p.is_empty()).map(dec_riff_chunk).collect()
 }
 //#endregion 🔖️ValueCodecs
@@ -233,11 +233,11 @@ async fn parse_wav_diff(line: &str) -> Result<WavDiff, String> {
     }
     for token in line.split(' ') {
         if let Some(rest) = token.strip_prefix("fmt=") {
-            d.fmt = Some(dec_wav_fmt(rest)?);
+            d.fmt = Some(dec_wav_fmt(rest).await?);
         } else if let Some(rest) = token.strip_prefix("data=") {
-            d.data = Some(dec_wav_data(rest)?);
+            d.data = Some(dec_wav_data(rest).await?);
         } else if let Some(rest) = token.strip_prefix("other-chunks=") {
-            d.other_chunks = Some(dec_riff_chunks(rest)?);
+            d.other_chunks = Some(dec_riff_chunks(rest).await?);
         } else {
             return Err(format!("wav diff: unknown token {token:?}"));
         }
@@ -247,19 +247,19 @@ async fn parse_wav_diff(line: &str) -> Result<WavDiff, String> {
 
 impl protocol::DiffCodec for WavDiff {
     async fn print_diff(&self) -> String {
-        print_wav_diff(self)
+        print_wav_diff(self).await
     }
     async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
-        parse_wav_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_wav_diff(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// ⚡️ Binary = the text bytes verbatim (same simplification `DeflateDiff`/`GifDiff`'s
     /// hand-rolled `DiffCodec` impls use).
     async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(self.print_diff().into_bytes())
+        Ok(self.print_diff().await.into_bytes())
     }
     async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let line = std::str::from_utf8(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "diff utf8", offset: 0, detail: e.to_string() })?;
-        Self::parse_diff(line).map_err(|e| protocol::ProtocolError::Malformed { what: "diff text", offset: 0, detail: e.to_string() })
+        Self::parse_diff(line).await.map_err(|e| protocol::ProtocolError::Malformed { what: "diff text", offset: 0, detail: e.to_string() })
     }
 }
 //#endregion 🔖️TopLevel

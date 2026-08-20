@@ -32,7 +32,7 @@ async fn color_table_bit_depth(colors_len: usize) -> u8 {
 /// 📐️ Computes [`GifDimensions`] from a snapshot's screen descriptor + GCT — pure, total, O(1).
 pub async fn compute_gif_dimensions(snapshot: &GifSnapshot) -> GifDimensions {
     let bit_depth = match &snapshot.gct {
-        Some(table) => color_table_bit_depth(table.colors.len()),
+        Some(table) => color_table_bit_depth(table.colors.len()).await,
         None => 8,
     };
     GifDimensions { width: snapshot.width, height: snapshot.height, bit_depth, has_alpha: false, pixel_count: snapshot.width as u64 * snapshot.height as u64 }

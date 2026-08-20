@@ -278,7 +278,7 @@ thread_local! {
     /// 🧵️ A SEPARATE `LocalExecutor` instance from the reactor turn loop's own — see module doc.
     // 🌉️ `thread_local!` initializer runs in a plain non-async context — bridged via `resolve_ready`
     // since `LocalExecutor::new()` is a pure `Self::default()`.
-    static JOBS_EXECUTOR: super::executor::LocalExecutor = semio_framework::io::resolve_ready(super::executor::LocalExecutor::new());
+    static JOBS_EXECUTOR: super::executor::LocalExecutor = super::executor::LocalExecutor::new();
 }
 
 /// ▶️ Same bound the reactor turn loop's own `EXECUTOR.run_until_idle` uses — a defensive cap
@@ -300,7 +300,7 @@ const STALL_LIMIT: u32 = 3;
 /// view — see `restore_job` for the checkpoint-replay counterpart, which threads `restored` bytes
 /// this entry point always passes as `None`.
 pub async fn start_job(job: u64, kind: &str, input: &[u8]) {
-    spawn_job(job, kind, input, None);
+    spawn_job(job, kind, input, None).await;
 }
 
 /// 📸️ Checkpoint-restore replay counterpart to `start_job` — never called from the WIT boundary
@@ -309,7 +309,7 @@ pub async fn start_job(job: u64, kind: &str, input: &[u8]) {
 /// packed, handing each kind's `JobFn` the last `checkpoint()` bytes it produced before the actor
 /// was torn down.
 pub async fn restore_job(job: u64, kind: &str, input: &[u8], checkpoint: Option<Vec<u8>>) {
-    spawn_job(job, kind, input, checkpoint);
+    spawn_job(job, kind, input, checkpoint).await;
 }
 
 async fn spawn_job(job: u64, kind: &str, input: &[u8], restored: Option<Vec<u8>>) {
@@ -322,7 +322,7 @@ async fn spawn_job(job: u64, kind: &str, input: &[u8], restored: Option<Vec<u8>>
         job,
         state: state.clone(),
         #[cfg(feature = "component-guest-async")]
-        host: crate::reactor::host(),
+        host: crate::reactor::host().await,
     };
     let future = run(ctx, input.to_vec(), restored);
     let outcome_state = state.clone();
@@ -330,10 +330,10 @@ async fn spawn_job(job: u64, kind: &str, input: &[u8], restored: Option<Vec<u8>>
     // registers the task and hands back its id; the real awaiting happens later when
     // `JOBS_EXECUTOR` polls the parked future, not here.
     let task = JOBS_EXECUTOR.with(|executor| {
-        semio_framework::io::resolve_ready(executor.spawn(async move {
+        executor.spawn(async move {
             let result = future.await;
             outcome_state.borrow_mut().outcome = Some(result);
-        }))
+        })
     });
     JOBS.with(|jobs| jobs.borrow_mut().insert(job, JobSlot { kind: kind.to_string(), input: input.to_vec(), body: JobBody::Running { task, state } }));
 }
@@ -386,6 +386,10 @@ pub async fn step_job(job: u64, budget: JobBudget) -> JobStep {
         is_static
     };
 
+    // 🌉️ `LocalKey::with`'s closure is sync — bridged via `resolve_ready`, same pattern as
+    // `spawn_job`'s own `JOBS_EXECUTOR.with` call above. Neither `wake` nor `run_until_idle` has a
+    // real suspension point of ITS OWN (the job future they drive internally may legitimately return
+    // `Poll::Pending`, but `run_until_idle` handles that without ever yielding its own future).
     JOBS_EXECUTOR.with(|executor| {
         executor.wake(task);
         executor.run_until_idle(SLICE_MAX_ITERATIONS);
@@ -497,12 +501,12 @@ where
     if restored.as_deref() != Some(PHASE_DECODED) {
         ctx.tick().await;
         let progress = decode().await?;
-        ctx.progress(progress);
-        ctx.checkpoint(PHASE_DECODED.to_vec());
+        ctx.progress(progress).await;
+        ctx.checkpoint(PHASE_DECODED.to_vec()).await;
     }
     ctx.tick().await;
     let result = execute().await?;
-    ctx.progress(b"phase.executed".to_vec());
+    ctx.progress(b"phase.executed".to_vec()).await;
     Ok(result)
 }
 //#endregion
@@ -575,7 +579,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn step_job_on_an_unknown_id_fails_without_panicking() {
-        match step_job(999, JobBudget::default()) {
+        match step_job(999, JobBudget::default()).await {
             JobStep::Failed(_) => {}
             _ => panic!("an unregistered job id must fail, not succeed"),
         }
@@ -585,7 +589,7 @@ mod tests {
     async fn cancel_job_removes_a_pending_record_so_a_later_step_fails() {
         start_job(1, JOB_KIND_IO_RUN, b"{}");
         cancel_job(1);
-        match step_job(1, JobBudget::default()) {
+        match step_job(1, JobBudget::default()).await {
             JobStep::Failed(_) => {}
             _ => panic!("a cancelled job must not still be steppable"),
         }
@@ -594,7 +598,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn step_job_on_an_unknown_kind_fails_with_a_named_fault() {
         start_job(2, "semio.not-a-real-kind", b"{}");
-        match step_job(2, JobBudget::default()) {
+        match step_job(2, JobBudget::default()).await {
             JobStep::Failed(bytes) => {
                 let fault = dsl::decode_fault_bytes(&bytes);
                 assert_eq!(fault.code.0, "job.unknown-kind");
@@ -610,7 +614,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn io_run_dispatches_through_the_registry_and_keeps_its_decode_fault_code() {
         start_job(3, JOB_KIND_IO_RUN, b"not json");
-        match step_job(3, JobBudget::default()) {
+        match step_job(3, JobBudget::default()).await {
             JobStep::Failed(bytes) => {
                 let fault = dsl::decode_fault_bytes(&bytes);
                 assert_eq!(fault.code.0, "job.io-run.decode", "must reach run_io_run, not job.unknown-kind");
@@ -622,7 +626,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn io_sniff_dispatches_through_the_registry_and_keeps_its_decode_fault_code() {
         start_job(4, JOB_KIND_IO_SNIFF, b"not json");
-        match step_job(4, JobBudget::default()) {
+        match step_job(4, JobBudget::default()).await {
             JobStep::Failed(bytes) => {
                 let fault = dsl::decode_fault_bytes(&bytes);
                 assert_eq!(fault.code.0, "job.io-sniff.decode", "must reach run_io_sniff, not job.unknown-kind");
@@ -656,15 +660,15 @@ mod tests {
         register_job_kind("test.resumable-counter", resumable_counter_job);
         start_job(10, "test.resumable-counter", &[7]);
 
-        match step_job(10, JobBudget { fuel: 1, deadline_ms: 1 }) {
+        match step_job(10, JobBudget { fuel: 1, deadline_ms: 1 }).await {
             JobStep::Running(Some(bytes)) => assert_eq!(bytes, vec![1]),
             _ => panic!("slice 1 must be Running(Some([1])), got a Done/Failed/None step"),
         }
-        match step_job(10, JobBudget { fuel: 1, deadline_ms: 1 }) {
+        match step_job(10, JobBudget { fuel: 1, deadline_ms: 1 }).await {
             JobStep::Running(Some(bytes)) => assert_eq!(bytes, vec![2]),
             _ => panic!("slice 2 must be Running(Some([2]))"),
         }
-        match step_job(10, JobBudget { fuel: 1, deadline_ms: 1 }) {
+        match step_job(10, JobBudget { fuel: 1, deadline_ms: 1 }).await {
             JobStep::Done(bytes) => assert_eq!(bytes, vec![3, 7]),
             _ => panic!("slice 3 must be Done([3, 7])"),
         }
@@ -675,9 +679,9 @@ mod tests {
         async fn budget_echo_job(ctx: JobCtx, _input: Vec<u8>, _restored: Option<Vec<u8>>) -> Pin<Box<dyn Future<Output = Result<Vec<u8>, semio_framework::Fault>>>> {
             Box::pin(async move {
                 ctx.tick().await;
-                ctx.progress(vec![ctx.budget().fuel as u8]);
+                ctx.progress(vec![ctx.budget().await.fuel as u8]);
                 ctx.tick().await;
-                ctx.progress(vec![ctx.budget().fuel as u8]);
+                ctx.progress(vec![ctx.budget().await.fuel as u8]);
                 ctx.tick().await;
                 Ok(vec![0])
             })
@@ -685,11 +689,11 @@ mod tests {
         register_job_kind("test.budget-echo", budget_echo_job);
         start_job(11, "test.budget-echo", b"[]");
 
-        match step_job(11, JobBudget { fuel: 5, deadline_ms: 1 }) {
+        match step_job(11, JobBudget { fuel: 5, deadline_ms: 1 }).await {
             JobStep::Running(Some(bytes)) => assert_eq!(bytes, vec![5], "first tick must see the first budget"),
             _ => panic!("slice 1 must be Running"),
         }
-        match step_job(11, JobBudget { fuel: 9, deadline_ms: 1 }) {
+        match step_job(11, JobBudget { fuel: 9, deadline_ms: 1 }).await {
             JobStep::Running(Some(bytes)) => assert_eq!(bytes, vec![9], "second tick must see the NEW budget, not the stale one"),
             _ => panic!("slice 2 must be Running"),
         }
@@ -699,12 +703,12 @@ mod tests {
     async fn cancelling_a_job_mid_slice_frees_its_slot_for_the_id() {
         register_job_kind("test.resumable-counter", resumable_counter_job);
         start_job(12, "test.resumable-counter", b"[]");
-        match step_job(12, JobBudget { fuel: 1, deadline_ms: 1 }) {
+        match step_job(12, JobBudget { fuel: 1, deadline_ms: 1 }).await {
             JobStep::Running(_) => {}
             _ => panic!("job must be mid-slice (parked) before cancelling"),
         }
         cancel_job(12);
-        match step_job(12, JobBudget { fuel: 1, deadline_ms: 1 }) {
+        match step_job(12, JobBudget { fuel: 1, deadline_ms: 1 }).await {
             JobStep::Failed(bytes) => {
                 let fault = dsl::decode_fault_bytes(&bytes);
                 assert_eq!(fault.code.0, "job.unknown", "the id must be free, not still bound to the cancelled task");
@@ -721,7 +725,7 @@ mod tests {
         start_job(20, "test.resumable-counter", &[42]);
         step_job(20, JobBudget::default());
         step_job(20, JobBudget::default());
-        let baseline = match step_job(20, JobBudget::default()) {
+        let baseline = match step_job(20, JobBudget::default()).await {
             JobStep::Done(bytes) => bytes,
             _ => panic!("uninterrupted run must finish Done within 3 slices"),
         };
@@ -732,7 +736,7 @@ mod tests {
         start_job(21, "test.resumable-counter", &[42]);
         step_job(21, JobBudget::default());
         let entries = checkpoint_jobs();
-        let entry = entries.iter().find(|entry| entry.job == 21).expect("job 21 must appear in checkpoint_jobs()");
+        let entry = entries.await.iter().find(|entry| entry.job == 21).expect("job 21 must appear in checkpoint_jobs()");
         assert_eq!(entry.kind, "test.resumable-counter");
         assert_eq!(entry.input, vec![42]);
         let checkpoint = entry.checkpoint.clone();
@@ -740,7 +744,7 @@ mod tests {
 
         restore_job(21, "test.resumable-counter", &[42], checkpoint);
         step_job(21, JobBudget::default());
-        let restored_final = match step_job(21, JobBudget::default()) {
+        let restored_final = match step_job(21, JobBudget::default()).await {
             JobStep::Done(bytes) => bytes,
             _ => panic!("restored run must finish Done within 2 more slices"),
         };
@@ -761,12 +765,12 @@ mod tests {
 
         let same_budget = JobBudget { fuel: 100, deadline_ms: 50 };
         for call in 0..STALL_LIMIT {
-            match step_job(30, same_budget) {
+            match step_job(30, same_budget).await {
                 JobStep::Running(None) => {}
                 _ => panic!("call {call} must still be Running(None) before the stall limit"),
             }
         }
-        match step_job(30, same_budget) {
+        match step_job(30, same_budget).await {
             JobStep::Failed(bytes) => {
                 let fault = dsl::decode_fault_bytes(&bytes);
                 assert_eq!(fault.code.0, "job.stalled");

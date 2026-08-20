@@ -26,7 +26,7 @@ pub struct StlInference {
 
 impl protocol::Inference<StlSnapshot> for StlInference {
     async fn infer(snapshot: &StlSnapshot) -> Self {
-        Self { bounds: compute_stl_bounds(snapshot) }
+        Self { bounds: compute_stl_bounds(snapshot).await }
     }
 }
 

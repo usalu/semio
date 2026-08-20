@@ -1,0 +1,154 @@
+{
+  "surface": "conformance.composite.dialog",
+  "revision": 0,
+  "root": 0,
+  "nodes": [
+    {
+      "id": 0,
+      "key": "#0",
+      "component": {
+        "type": "container"
+      },
+      "layout": {
+        "kind": "overlay",
+        "anchor": "center",
+        "inset": {
+          "all": "none"
+        },
+        "dismissible": true
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {
+        "label": "Discard changes?",
+        "description": "Unsaved changes will be lost."
+      },
+      "children": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "id": 1,
+      "key": "#0",
+      "component": {
+        "type": "text",
+        "value": "Discard changes?",
+        "emphasize": true
+      },
+      "layout": {
+        "kind": "leaf",
+        "width": "hug",
+        "height": "hug"
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {}
+    },
+    {
+      "id": 2,
+      "key": "#1",
+      "component": {
+        "type": "text",
+        "value": "Unsaved changes will be lost."
+      },
+      "layout": {
+        "kind": "leaf",
+        "width": "hug",
+        "height": "hug"
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {}
+    },
+    {
+      "id": 3,
+      "key": "#2",
+      "component": {
+        "type": "container",
+        "role": "toolbar"
+      },
+      "layout": {
+        "kind": "stack",
+        "axis": "horizontal",
+        "gap": "none",
+        "padding": {
+          "all": "none"
+        },
+        "align": "stretch",
+        "justify": "end",
+        "grow": false,
+        "wrap": false
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {},
+      "children": [
+        4,
+        5
+      ]
+    },
+    {
+      "id": 4,
+      "key": "#0",
+      "component": {
+        "type": "button",
+        "icon": "trash",
+        "label": "Discard"
+      },
+      "layout": {
+        "kind": "leaf",
+        "width": "hug",
+        "height": "hug"
+      },
+      "style": {
+        "tone": "danger"
+      },
+      "activity": "idle",
+      "accessibility": {
+        "label": "Discard"
+      },
+      "bindings": [
+        {
+          "trigger": "activate",
+          "action": {
+            "scope": "app",
+            "name": "discard",
+            "version": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "key": "#1",
+      "component": {
+        "type": "button",
+        "icon": "close",
+        "label": "Cancel"
+      },
+      "layout": {
+        "kind": "leaf",
+        "width": "hug",
+        "height": "hug"
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {
+        "label": "Cancel"
+      },
+      "bindings": [
+        {
+          "trigger": "activate",
+          "action": {
+            "scope": "app",
+            "name": "cancel",
+            "version": 1
+          }
+        }
+      ]
+    }
+  ],
+  "layoutEpoch": 0
+}

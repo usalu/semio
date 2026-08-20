@@ -7,7 +7,7 @@ use crate::artifacts::dxf::DxfSnapshot;
 /// full-replace slot on `DxfDiff` to short-circuit into; see `🔺️diff` module docs).
 pub async fn diff(base: &DxfSnapshot, snapshot: &DxfSnapshot) -> protocol::MutationOutcome<DxfDiff> {
     if base == snapshot {
-        return protocol::MutationOutcome::new(DxfDiff::default()).warn("mutation.no-op", "set-snapshot: new snapshot is identical to the current one");
+        return protocol::MutationOutcome::new(DxfDiff::default()).await.warn("mutation.no-op", "set-snapshot: new snapshot is identical to the current one").await;
     }
     protocol::MutationOutcome::new(diff_set_snapshot(base, snapshot))
 }

@@ -61,4 +61,5 @@ sqlx = { version = "0.8", default-features = false, features = ["runtime-tokio",
 neo4rs = { version = "0.8", optional = true }
 
 [dev-dependencies]
+semio-framework-async-macros = { path = "../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-framework-async = { workspace = true, features = ["testkit"] }

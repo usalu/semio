@@ -1,0 +1,28 @@
+{
+  "crate": "semio-framework-os-kernel-db",
+  "history": [
+    {
+      "pass": 1,
+      "errors": 4,
+      "edits": 1,
+      "ambiguous": 0,
+      "other": 1
+    },
+    {
+      "pass": 2,
+      "errors": 3,
+      "edits": 0,
+      "ambiguous": 0,
+      "other": 1
+    }
+  ],
+  "residual_errors": 3,
+  "ambiguous": [],
+  "other": [
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/../../🔄️sync/🦀️component.rs:104",
+      "code": "(no code)",
+      "msg": "expected one of `,`, `:`, or `}`, found `.`"
+    }
+  ]
+}

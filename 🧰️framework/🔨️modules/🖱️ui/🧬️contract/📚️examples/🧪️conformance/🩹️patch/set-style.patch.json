@@ -1,0 +1,15 @@
+{
+  "surface": "conformance.patch",
+  "baseRevision": 0,
+  "revision": 1,
+  "ops": [
+    {
+      "type": "setStyle",
+      "id": 1,
+      "style": {
+        "variant": "outline",
+        "tone": "danger"
+      }
+    }
+  ]
+}

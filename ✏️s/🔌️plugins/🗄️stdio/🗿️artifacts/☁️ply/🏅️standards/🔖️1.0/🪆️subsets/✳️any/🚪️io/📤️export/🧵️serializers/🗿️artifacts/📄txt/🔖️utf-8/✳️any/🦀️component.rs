@@ -11,13 +11,13 @@ pub async fn register() {}
 /// encode — no more `write_ply_text(vertices, faces)` mesh-only shortcut, see Ticket
 /// 26/08/10/ARTIFACT-SYSTEM-OVERHAUL).
 pub async fn serialize(from: &PlySnapshot) -> Result<TxtSnapshot, store::PackError> {
-    let bytes = crate::artifacts::ply::engine::encode_ply(from).map_err(store::PackError::Schema)?;
+    let bytes = crate::artifacts::ply::engine::encode_ply(from).await.map_err(store::PackError::Schema)?;
     let text = String::from_utf8(bytes).map_err(|e| store::PackError::Schema(format!("ply: encoded body not utf8: {e}")))?;
-    Ok(TxtSnapshot::from_body(&text))
+    Ok(TxtSnapshot::from_body(&text).await)
 }
 
 /// 📤️ Encode as txt DSL.
 pub async fn serialize_text(from: &PlySnapshot) -> Result<String, store::PackError> {
-    Ok(store::ArtifactDsl::print_dsl(&serialize(from)?))
+    Ok(store::ArtifactDsl::print_dsl(&serialize(from).await?).await)
 }
 //#endregion 🔖️Codec

@@ -91,10 +91,10 @@ impl Vec2 {
         self.x * o.y - self.y * o.x
     }
     pub async fn norm(self) -> f64 {
-        self.dot(self).sqrt()
+        self.dot(self).await.sqrt()
     }
     pub async fn norm_sq(self) -> f64 {
-        self.dot(self)
+        self.dot(self).await
     }
     /// 📐️ Returns `None` when the vector is (numerically) zero-length rather than dividing by
     /// zero into a `NaN`/`inf` direction.
@@ -107,7 +107,7 @@ impl Vec2 {
         }
     }
     pub async fn perp(self) -> Vec2 {
-        Vec2::new(-self.y, self.x)
+        Vec2::new(-self.y, self.x).await
     }
     pub async fn lerp(self, o: Vec2, t: f64) -> Vec2 {
         self * (1.0 - t) + o * t
@@ -147,16 +147,16 @@ impl Pnt2 {
         Pnt2 { x, y }
     }
     pub async fn to_vec(self) -> Vec2 {
-        Vec2::new(self.x, self.y)
+        Vec2::new(self.x, self.y).await
     }
     pub async fn lerp(self, o: Pnt2, t: f64) -> Pnt2 {
-        Pnt2::new(self.x + (o.x - self.x) * t, self.y + (o.y - self.y) * t)
+        Pnt2::new(self.x + (o.x - self.x) * t, self.y + (o.y - self.y) * t).await
     }
     pub async fn distance(self, o: Pnt2) -> f64 {
-        (self - o).norm()
+        (self - o).norm().await
     }
     pub async fn distance_sq(self, o: Pnt2) -> f64 {
-        (self - o).norm_sq()
+        (self - o).norm_sq().await
     }
 }
 impl std::ops::Sub for Pnt2 {
@@ -202,7 +202,7 @@ impl Vec3 {
         Vec3 { x, y, z }
     }
     pub async fn from_array(a: [f64; 3]) -> Self {
-        Vec3::new(a[0], a[1], a[2])
+        Vec3::new(a[0], a[1], a[2]).await
     }
     pub async fn to_array(self) -> [f64; 3] {
         [self.x, self.y, self.z]
@@ -211,13 +211,13 @@ impl Vec3 {
         self.x * o.x + self.y * o.y + self.z * o.z
     }
     pub async fn cross(self, o: Vec3) -> Vec3 {
-        Vec3::new(self.y * o.z - self.z * o.y, self.z * o.x - self.x * o.z, self.x * o.y - self.y * o.x)
+        Vec3::new(self.y * o.z - self.z * o.y, self.z * o.x - self.x * o.z, self.x * o.y - self.y * o.x).await
     }
     pub async fn norm(self) -> f64 {
-        self.dot(self).sqrt()
+        self.dot(self).await.sqrt()
     }
     pub async fn norm_sq(self) -> f64 {
-        self.dot(self)
+        self.dot(self).await
     }
     pub async fn normalized(self) -> Option<Vec3> {
         let n = self.norm();
@@ -244,12 +244,12 @@ impl Vec3 {
         } else {
             Vec3::Z
         };
-        self.cross(seed).normalized().unwrap_or(Vec3::X)
+        self.cross(seed).await.normalized().await.unwrap_or(Vec3::X)
     }
     pub async fn angle_to(self, o: Vec3) -> f64 {
-        let cross = self.cross(o).norm();
+        let cross = self.cross(o).await.norm();
         let dot = self.dot(o);
-        cross.atan2(dot)
+        cross.await.atan2(dot.await)
     }
 }
 
@@ -283,22 +283,22 @@ impl Pnt3 {
         Pnt3 { x, y, z }
     }
     pub async fn from_array(a: [f64; 3]) -> Self {
-        Pnt3::new(a[0], a[1], a[2])
+        Pnt3::new(a[0], a[1], a[2]).await
     }
     pub async fn to_array(self) -> [f64; 3] {
         [self.x, self.y, self.z]
     }
     pub async fn to_vec(self) -> Vec3 {
-        Vec3::new(self.x, self.y, self.z)
+        Vec3::new(self.x, self.y, self.z).await
     }
     pub async fn lerp(self, o: Pnt3, t: f64) -> Pnt3 {
-        Pnt3::new(self.x + (o.x - self.x) * t, self.y + (o.y - self.y) * t, self.z + (o.z - self.z) * t)
+        Pnt3::new(self.x + (o.x - self.x) * t, self.y + (o.y - self.y) * t, self.z + (o.z - self.z) * t).await
     }
     pub async fn distance(self, o: Pnt3) -> f64 {
-        (self - o).norm()
+        (self - o).norm().await
     }
     pub async fn distance_sq(self, o: Pnt3) -> f64 {
-        (self - o).norm_sq()
+        (self - o).norm_sq().await
     }
 }
 impl std::ops::Sub for Pnt3 {

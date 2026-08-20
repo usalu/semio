@@ -1,0 +1,37 @@
+{
+  "surface": "conformance.component.button",
+  "revision": 0,
+  "root": 0,
+  "nodes": [
+    {
+      "id": 0,
+      "key": "#0",
+      "component": {
+        "type": "button",
+        "icon": "save",
+        "label": "Save"
+      },
+      "layout": {
+        "kind": "leaf",
+        "width": "hug",
+        "height": "hug"
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {
+        "label": "Save"
+      },
+      "bindings": [
+        {
+          "trigger": "activate",
+          "action": {
+            "scope": "app",
+            "name": "save",
+            "version": 1
+          }
+        }
+      ]
+    }
+  ],
+  "layoutEpoch": 0
+}

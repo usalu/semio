@@ -91,8 +91,8 @@ pub enum SemioFlowMutation {
 /// ▶️ Applies `mutation` to `snapshot`: `let d = mutation.diff(&*snapshot); *snapshot =
 /// d.apply(snapshot); d` — the diff is the single semantics source (mirrors docx/gif convention).
 pub async fn apply_semio_flow_mutation(snapshot: &mut SemioFlowSnapshot, mutation: &SemioFlowMutation) -> protocol::MutationOutcome<SemioFlowDiff> {
-    let outcome = Mutation::diff(mutation, snapshot);
-    outcome.apply_to(snapshot)
+    let outcome = Mutation::diff(mutation, snapshot).await;
+    outcome.apply_to(snapshot).await
 }
 //#endregion 🔖️Apply
 
@@ -104,7 +104,7 @@ async fn edge_at<'a>(base: &'a SemioFlowSnapshot, id: &str) -> Option<&'a FlowEd
     base.edges.iter().find(|e| e.id == id)
 }
 async fn param_value_at<'a>(base: &'a SemioFlowSnapshot, id: &str, key: &str) -> Option<&'a str> {
-    node_at(base, id)?.params.iter().find(|p| p.key == key).map(|p| p.value.as_str())
+    node_at(base, id).await?.params.iter().find(|p| p.key == key).map(|p| p.value.as_str())
 }
 //#endregion 🔖️Helpers
 
@@ -115,12 +115,12 @@ impl Mutation<SemioFlowSnapshot> for SemioFlowMutation {
     async fn diff(&self, base: &SemioFlowSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             SemioFlowMutation::NoMutation => SemioFlowDiff::default(),
-            SemioFlowMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
-            SemioFlowMutation::InsertNode { node } => diff_insert_node(node.clone()),
-            SemioFlowMutation::RemoveNode { id } => diff_remove_node(id),
-            SemioFlowMutation::SetNodeKind { id, kind } => diff_set_node_kind(id, kind),
-            SemioFlowMutation::SetNodeLabel { id, label } => diff_set_node_label(id, label),
-            SemioFlowMutation::SetNodePosition { id, position } => diff_set_node_position(id, *position),
+            SemioFlowMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot).await,
+            SemioFlowMutation::InsertNode { node } => diff_insert_node(node.clone()).await,
+            SemioFlowMutation::RemoveNode { id } => diff_remove_node(id).await,
+            SemioFlowMutation::SetNodeKind { id, kind } => diff_set_node_kind(id, kind).await,
+            SemioFlowMutation::SetNodeLabel { id, label } => diff_set_node_label(id, label).await,
+            SemioFlowMutation::SetNodePosition { id, position } => diff_set_node_position(id, *position).await,
             SemioFlowMutation::SetNodeParam { id, key, value } => diff_set_node_param(base, id, key, value),
             SemioFlowMutation::RemoveNodeParam { id, key } => diff_remove_node_param(id, key),
             SemioFlowMutation::InsertEdge { edge } => diff_insert_edge(edge.clone()),
@@ -135,40 +135,40 @@ impl Mutation<SemioFlowSnapshot> for SemioFlowMutation {
             SemioFlowMutation::NoMutation => vec![SemioFlowMutation::NoMutation],
             SemioFlowMutation::SetSnapshot { .. } => vec![SemioFlowMutation::SetSnapshot { snapshot: base.clone() }],
             SemioFlowMutation::InsertNode { node } => vec![SemioFlowMutation::RemoveNode { id: node.id.clone() }],
-            SemioFlowMutation::RemoveNode { id } => match node_at(base, id) {
+            SemioFlowMutation::RemoveNode { id } => match node_at(base, id).await {
                 Some(node) => vec![SemioFlowMutation::InsertNode { node: node.clone() }],
                 None => vec![SemioFlowMutation::NoMutation],
             },
-            SemioFlowMutation::SetNodeKind { id, .. } => match node_at(base, id) {
+            SemioFlowMutation::SetNodeKind { id, .. } => match node_at(base, id).await {
                 Some(node) => vec![SemioFlowMutation::SetNodeKind { id: id.clone(), kind: node.kind.clone() }],
                 None => vec![SemioFlowMutation::NoMutation],
             },
-            SemioFlowMutation::SetNodeLabel { id, .. } => match node_at(base, id) {
+            SemioFlowMutation::SetNodeLabel { id, .. } => match node_at(base, id).await {
                 Some(node) => vec![SemioFlowMutation::SetNodeLabel { id: id.clone(), label: node.label.clone() }],
                 None => vec![SemioFlowMutation::NoMutation],
             },
-            SemioFlowMutation::SetNodePosition { id, .. } => match node_at(base, id) {
+            SemioFlowMutation::SetNodePosition { id, .. } => match node_at(base, id).await {
                 Some(node) => vec![SemioFlowMutation::SetNodePosition { id: id.clone(), position: node.position }],
                 None => vec![SemioFlowMutation::NoMutation],
             },
-            SemioFlowMutation::SetNodeParam { id, key, .. } => match param_value_at(base, id, key) {
+            SemioFlowMutation::SetNodeParam { id, key, .. } => match param_value_at(base, id, key).await {
                 Some(value) => vec![SemioFlowMutation::SetNodeParam { id: id.clone(), key: key.clone(), value: value.to_string() }],
                 None => vec![SemioFlowMutation::RemoveNodeParam { id: id.clone(), key: key.clone() }],
             },
-            SemioFlowMutation::RemoveNodeParam { id, key } => match param_value_at(base, id, key) {
+            SemioFlowMutation::RemoveNodeParam { id, key } => match param_value_at(base, id, key).await {
                 Some(value) => vec![SemioFlowMutation::SetNodeParam { id: id.clone(), key: key.clone(), value: value.to_string() }],
                 None => vec![SemioFlowMutation::NoMutation],
             },
             SemioFlowMutation::InsertEdge { edge } => vec![SemioFlowMutation::RemoveEdge { id: edge.id.clone() }],
-            SemioFlowMutation::RemoveEdge { id } => match edge_at(base, id) {
+            SemioFlowMutation::RemoveEdge { id } => match edge_at(base, id).await {
                 Some(edge) => vec![SemioFlowMutation::InsertEdge { edge: edge.clone() }],
                 None => vec![SemioFlowMutation::NoMutation],
             },
-            SemioFlowMutation::SetEdgeEndpoints { id, .. } => match edge_at(base, id) {
+            SemioFlowMutation::SetEdgeEndpoints { id, .. } => match edge_at(base, id).await {
                 Some(edge) => vec![SemioFlowMutation::SetEdgeEndpoints { id: id.clone(), from: edge.from.clone(), to: edge.to.clone() }],
                 None => vec![SemioFlowMutation::NoMutation],
             },
-            SemioFlowMutation::SetEdgeKind { id, .. } => match edge_at(base, id) {
+            SemioFlowMutation::SetEdgeKind { id, .. } => match edge_at(base, id).await {
                 Some(edge) => vec![SemioFlowMutation::SetEdgeKind { id: id.clone(), kind: edge.kind.clone() }],
                 None => vec![SemioFlowMutation::NoMutation],
             },
@@ -187,12 +187,12 @@ async fn enc_semio_flow_snapshot(s: &SemioFlowSnapshot) -> String {
     format!("[{},{},{}]", enc_str(&s.schema), format!("[{}]", s.nodes.iter().map(enc_node).collect::<Vec<_>>().join(",")), format!("[{}]", s.edges.iter().map(enc_edge).collect::<Vec<_>>().join(",")))
 }
 async fn dec_semio_flow_snapshot(s: &str) -> Result<SemioFlowSnapshot, String> {
-    let inner = strip_brackets(s)?;
-    let parts = split_top_level(inner, ',');
+    let inner = strip_brackets(s).await?;
+    let parts = split_top_level(inner, ',').await;
     let [schema, nodes, edges] = parts.as_slice() else { return Err(format!("snapshot: expected 3 fields, got {}", parts.len())) };
-    let nodes = split_top_level(strip_brackets(nodes)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_node).collect::<Result<Vec<_>, String>>()?;
-    let edges = split_top_level(strip_brackets(edges)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_edge).collect::<Result<Vec<_>, String>>()?;
-    Ok(SemioFlowSnapshot { schema: dec_str(schema)?, nodes, edges })
+    let nodes = split_top_level(strip_brackets(nodes).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_node).collect::<Result<Vec<_>, String>>()?;
+    let edges = split_top_level(strip_brackets(edges).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_edge).collect::<Result<Vec<_>, String>>()?;
+    Ok(SemioFlowSnapshot { schema: dec_str(schema).await?, nodes, edges })
 }
 
 async fn print_flow_mutation(m: &SemioFlowMutation) -> String {
@@ -220,28 +220,28 @@ async fn parse_flow_mutation(line: &str) -> Result<SemioFlowMutation, String> {
     let args: std::collections::BTreeMap<&str, &str> = rest.split(' ').filter(|s| !s.is_empty()).map(|tok| tok.split_once('=').ok_or_else(|| format!("flow mutation: bad arg token {tok:?}"))).collect::<Result<Vec<_>, String>>()?.into_iter().collect();
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("flow mutation: missing arg '{k}' for '{keyword}'"));
     match keyword {
-        "set-snapshot" => Ok(SemioFlowMutation::SetSnapshot { snapshot: dec_semio_flow_snapshot(arg("snapshot")?)? }),
-        "insert-node" => Ok(SemioFlowMutation::InsertNode { node: dec_node(arg("node")?)? }),
-        "remove-node" => Ok(SemioFlowMutation::RemoveNode { id: dec_str(arg("id")?)? }),
-        "set-node-kind" => Ok(SemioFlowMutation::SetNodeKind { id: dec_str(arg("id")?)?, kind: dec_str(arg("kind")?)? }),
-        "set-node-label" => Ok(SemioFlowMutation::SetNodeLabel { id: dec_str(arg("id")?)?, label: dec_str(arg("label")?)? }),
-        "set-node-position" => Ok(SemioFlowMutation::SetNodePosition { id: dec_str(arg("id")?)?, position: dec_point2(arg("position")?)? }),
-        "set-node-param" => Ok(SemioFlowMutation::SetNodeParam { id: dec_str(arg("id")?)?, key: dec_str(arg("key")?)?, value: dec_str(arg("value")?)? }),
-        "remove-node-param" => Ok(SemioFlowMutation::RemoveNodeParam { id: dec_str(arg("id")?)?, key: dec_str(arg("key")?)? }),
-        "insert-edge" => Ok(SemioFlowMutation::InsertEdge { edge: dec_edge(arg("edge")?)? }),
-        "remove-edge" => Ok(SemioFlowMutation::RemoveEdge { id: dec_str(arg("id")?)? }),
-        "set-edge-endpoints" => Ok(SemioFlowMutation::SetEdgeEndpoints { id: dec_str(arg("id")?)?, from: dec_port_ref(arg("from")?)?, to: dec_port_ref(arg("to")?)? }),
-        "set-edge-kind" => Ok(SemioFlowMutation::SetEdgeKind { id: dec_str(arg("id")?)?, kind: dec_str(arg("kind")?)? }),
+        "set-snapshot" => Ok(SemioFlowMutation::SetSnapshot { snapshot: dec_semio_flow_snapshot(arg("snapshot")?).await? }),
+        "insert-node" => Ok(SemioFlowMutation::InsertNode { node: dec_node(arg("node")?).await? }),
+        "remove-node" => Ok(SemioFlowMutation::RemoveNode { id: dec_str(arg("id")?).await? }),
+        "set-node-kind" => Ok(SemioFlowMutation::SetNodeKind { id: dec_str(arg("id")?).await?, kind: dec_str(arg("kind")?).await? }),
+        "set-node-label" => Ok(SemioFlowMutation::SetNodeLabel { id: dec_str(arg("id")?).await?, label: dec_str(arg("label")?).await? }),
+        "set-node-position" => Ok(SemioFlowMutation::SetNodePosition { id: dec_str(arg("id")?).await?, position: dec_point2(arg("position")?).await? }),
+        "set-node-param" => Ok(SemioFlowMutation::SetNodeParam { id: dec_str(arg("id")?).await?, key: dec_str(arg("key")?).await?, value: dec_str(arg("value")?).await? }),
+        "remove-node-param" => Ok(SemioFlowMutation::RemoveNodeParam { id: dec_str(arg("id")?).await?, key: dec_str(arg("key")?).await? }),
+        "insert-edge" => Ok(SemioFlowMutation::InsertEdge { edge: dec_edge(arg("edge")?).await? }),
+        "remove-edge" => Ok(SemioFlowMutation::RemoveEdge { id: dec_str(arg("id")?).await? }),
+        "set-edge-endpoints" => Ok(SemioFlowMutation::SetEdgeEndpoints { id: dec_str(arg("id")?).await?, from: dec_port_ref(arg("from")?).await?, to: dec_port_ref(arg("to")?).await? }),
+        "set-edge-kind" => Ok(SemioFlowMutation::SetEdgeKind { id: dec_str(arg("id")?).await?, kind: dec_str(arg("kind")?).await? }),
         other => Err(format!("flow mutation: unknown keyword {other:?}")),
     }
 }
 
 impl OpText for SemioFlowMutation {
     async fn print_op(&self) -> String {
-        print_flow_mutation(self)
+        print_flow_mutation(self).await
     }
     async fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_flow_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_flow_mutation(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
 
@@ -270,7 +270,7 @@ async fn variant_ordinal(m: &SemioFlowMutation) -> u8 {
 /// `no-mutation`) — the binary frame's `tag` byte already carries the keyword, so the text
 /// keyword itself is redundant in the binary payload.
 async fn print_flow_mutation_args(m: &SemioFlowMutation) -> String {
-    match print_flow_mutation(m).split_once(' ') {
+    match print_flow_mutation(m).await.split_once(' ') {
         Some((_, rest)) => rest.to_string(),
         None => String::new(),
     }
@@ -285,8 +285,8 @@ async fn print_flow_mutation_args(m: &SemioFlowMutation) -> String {
 impl OpBinary for SemioFlowMutation {
     async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
-        let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self)];
-        out.extend_from_slice(print_flow_mutation_args(self).as_bytes());
+        let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self).await];
+        out.extend_from_slice(print_flow_mutation_args(self).await.as_bytes());
         Ok(out)
     }
     async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
@@ -301,7 +301,7 @@ impl OpBinary for SemioFlowMutation {
         let keyword = OP_KEYWORDS.get(tag as usize).ok_or_else(|| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("tag {tag} out of range for {} declared variants", OP_KEYWORDS.len()) })?;
         let args = std::str::from_utf8(&bytes[2..]).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 2, detail: e.to_string() })?;
         let line = if args.is_empty() { keyword.to_string() } else { format!("{keyword} {args}") };
-        Self::parse_op(&line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 2, detail: e.to_string() })
+        Self::parse_op(&line).await.map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 2, detail: e.to_string() })
     }
 }
 //#endregion OpCodecs

@@ -27,7 +27,7 @@ async fn walk(node: &XmlNode, depth: u32) -> (u32, u32) {
             let mut count = 1u32;
             let mut max_depth = depth;
             for child in children {
-                let (c, d) = walk(child, depth + 1);
+                let (c, d) = Box::pin(walk(child, depth + 1)).await;
                 count += c;
                 max_depth = max_depth.max(d);
             }
@@ -40,7 +40,7 @@ async fn walk(node: &XmlNode, depth: u32) -> (u32, u32) {
 impl XmlOutline {
     pub async fn compute(snapshot: &XmlSnapshot) -> Self {
         let (element_count, max_depth) = match &snapshot.doc.root {
-            Some(root) => walk(root, 1),
+            Some(root) => walk(root, 1).await,
             None => (0, 0),
         };
         Self { element_count, max_depth, has_doctype: snapshot.doc.doctype.is_some() }

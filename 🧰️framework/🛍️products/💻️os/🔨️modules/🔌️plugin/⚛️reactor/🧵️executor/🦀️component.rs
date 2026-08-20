@@ -31,13 +31,13 @@ pub struct LocalExecutor {
 }
 
 impl LocalExecutor {
-    pub async fn new() -> Self {
+    pub fn new() -> Self {
         Self::default()
     }
 
     /// 🌱️ Spawns a task and schedules it ready for the next `run_until_idle` — used both for a
     /// fresh `Emit::tasks` follow-up and for the top-level `app-command` dispatch future.
-    pub async fn spawn(&self, future: impl Future<Output = ()> + 'static) -> TaskId {
+    pub fn spawn(&self, future: impl Future<Output = ()> + 'static) -> TaskId {
         let mut inner = self.inner.borrow_mut();
         let id = if let Some(id) = inner.free.pop() {
             inner.slots[id] = Some(Box::pin(future));
@@ -55,7 +55,7 @@ impl LocalExecutor {
     /// embed its OWN id (post-completion bookkeeping keyed by `TaskId` — `⚛️reactor::spawn_task`'s
     /// `TASK_RECORDS`/`TASK_KEYS` cleanup) without a capture-after-construct `Cell` dance. `spawn`
     /// above stays as the simpler entry point for callers that never need their own id.
-    pub async fn spawn_with_id(&self, make_future: impl FnOnce(TaskId) -> Pin<Box<dyn Future<Output = ()>>>) -> TaskId {
+    pub fn spawn_with_id(&self, make_future: impl FnOnce(TaskId) -> Pin<Box<dyn Future<Output = ()>>>) -> TaskId {
         let id = {
             let mut inner = self.inner.borrow_mut();
             if let Some(id) = inner.free.pop() {
@@ -79,7 +79,7 @@ impl LocalExecutor {
     /// Used for key-dedupe (spawning onto a live `(instance, key)` cancels the stale task first)
     /// and `Event::InstanceClose` (every task that instance owns). Idempotent: cancelling an
     /// already-finished or unknown id is a no-op.
-    pub async fn cancel(&self, id: TaskId) {
+    pub fn cancel(&self, id: TaskId) {
         let mut inner = self.inner.borrow_mut();
         let index = id as usize;
         if index < inner.slots.len() {
@@ -92,7 +92,7 @@ impl LocalExecutor {
     }
 
     /// 🔔️ Re-queues `id`. Idempotent within one turn (never double-queues an already-ready task).
-    pub async fn wake(&self, id: TaskId) {
+    pub fn wake(&self, id: TaskId) {
         let mut inner = self.inner.borrow_mut();
         let id = id as usize;
         if id < inner.slots.len() && inner.slots[id].is_some() && !inner.ready.contains(&id) {
@@ -105,14 +105,14 @@ impl LocalExecutor {
     /// re-waking itself forever inside one turn — `reactor::poll` treats hitting the cap as
     /// `turn-status::more-work`, not `idle`). Returns whether any task is still alive (ready or
     /// parked) when it returns.
-    pub async fn run_until_idle(&self, max_iterations: u32) -> bool {
+    pub fn run_until_idle(&self, max_iterations: u32) -> bool {
         for _ in 0..max_iterations {
             let Some(id) = self.inner.borrow_mut().ready.pop_front() else {
                 break;
             };
             let future = self.inner.borrow_mut().slots[id].take();
             let Some(mut future) = future else { continue };
-            let waker = self.waker_for(id as TaskId).await;
+            let waker = self.waker_for(id as TaskId);
             let mut cx = Context::from_waker(&waker);
             match future.as_mut().poll(&mut cx) {
                 Poll::Ready(()) => {
@@ -125,18 +125,18 @@ impl LocalExecutor {
                 }
             }
         }
-        self.has_pending().await
+        self.has_pending()
     }
 
-    pub async fn has_ready(&self) -> bool {
+    pub fn has_ready(&self) -> bool {
         !self.inner.borrow().ready.is_empty()
     }
 
-    pub async fn has_pending(&self) -> bool {
+    pub fn has_pending(&self) -> bool {
         self.inner.borrow().slots.iter().any(Option::is_some)
     }
 
-    async fn waker_for(&self, id: TaskId) -> Waker {
+    fn waker_for(&self, id: TaskId) -> Waker {
         let data = Rc::new(WakerData { inner: self.inner.clone(), id: id as usize });
         unsafe { Waker::from_raw(raw_waker(data)) }
     }
@@ -211,28 +211,28 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn spawn_runs_a_ready_task_to_completion() {
-        let executor = LocalExecutor::new().await;
+        let executor = LocalExecutor::new();
         let ran = Rc::new(Cell::new(false));
         let ran_inner = ran.clone();
         executor.spawn(async move {
             ran_inner.set(true);
-        }).await;
-        let pending = executor.run_until_idle(8).await;
+        });
+        let pending = executor.run_until_idle(8);
         assert!(ran.get(), "task body must have run");
         assert!(!pending, "no task should remain pending");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn a_self_waking_task_is_polled_again_within_the_same_pass() {
-        let executor = LocalExecutor::new().await;
-        executor.spawn(YieldOnce { yielded: false }).await;
-        let pending = executor.run_until_idle(8).await;
+        let executor = LocalExecutor::new();
+        executor.spawn(YieldOnce { yielded: false });
+        let pending = executor.run_until_idle(8);
         assert!(!pending, "YieldOnce must complete within the iteration budget");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn a_task_that_never_wakes_stays_pending_until_woken() {
-        let executor = LocalExecutor::new().await;
+        let executor = LocalExecutor::new();
         let waker_cell: Rc<RefCell<Option<Waker>>> = Rc::new(RefCell::new(None));
         let waker_cell_inner = waker_cell.clone();
         struct ParkForever {
@@ -252,14 +252,14 @@ mod tests {
         }
         let done = Rc::new(Cell::new(false));
         let done_inner = done.clone();
-        executor.spawn(ParkForever { cell: waker_cell_inner, done: done_inner }).await;
-        let pending = executor.run_until_idle(8).await;
+        executor.spawn(ParkForever { cell: waker_cell_inner, done: done_inner });
+        let pending = executor.run_until_idle(8);
         assert!(pending, "task must stay parked until its waker fires");
-        assert!(!executor.has_ready().await, "a parked task must not remain in the ready queue");
+        assert!(!executor.has_ready(), "a parked task must not remain in the ready queue");
 
         done.set(true);
         waker_cell.borrow().as_ref().expect("poll must have captured a waker").wake_by_ref();
-        let pending = executor.run_until_idle(8).await;
+        let pending = executor.run_until_idle(8);
         assert!(!pending, "waking must let the task observe `done` and complete");
     }
 
@@ -271,7 +271,7 @@ mod tests {
                 self.0.set(true);
             }
         }
-        let executor = LocalExecutor::new().await;
+        let executor = LocalExecutor::new();
         let polled = Rc::new(Cell::new(false));
         let dropped = Rc::new(Cell::new(false));
         let polled_inner = polled.clone();
@@ -279,9 +279,9 @@ mod tests {
         let id = executor.spawn(async move {
             let _flag = flag;
             polled_inner.set(true);
-        }).await;
-        executor.cancel(id).await;
-        let pending = executor.run_until_idle(8).await;
+        });
+        executor.cancel(id);
+        let pending = executor.run_until_idle(8);
         assert!(!polled.get(), "a cancelled task's body must never run");
         assert!(dropped.get(), "cancelling must drop the future (and everything it owns)");
         assert!(!pending, "nothing should remain pending after cancelling the only task");
@@ -289,7 +289,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn cancel_of_a_parked_task_drops_it_and_frees_its_slot_for_reuse() {
-        let executor = LocalExecutor::new().await;
+        let executor = LocalExecutor::new();
         let waker_cell: Rc<RefCell<Option<Waker>>> = Rc::new(RefCell::new(None));
         let waker_cell_inner = waker_cell.clone();
         struct ParkForever {
@@ -302,38 +302,38 @@ mod tests {
                 StdPoll::Pending
             }
         }
-        let id = executor.spawn(ParkForever { cell: waker_cell_inner }).await;
-        let pending = executor.run_until_idle(8).await;
+        let id = executor.spawn(ParkForever { cell: waker_cell_inner });
+        let pending = executor.run_until_idle(8);
         assert!(pending, "task must be parked");
-        executor.cancel(id).await;
-        assert!(!executor.has_pending().await, "cancelling the only parked task must clear has_pending");
+        executor.cancel(id);
+        assert!(!executor.has_pending(), "cancelling the only parked task must clear has_pending");
         // 🔁️ The freed slot is reused by the next spawn — cancel must not leak the index forever.
-        let reused = executor.spawn(async move {}).await;
+        let reused = executor.spawn(async move {});
         assert_eq!(reused, id, "a cancelled slot must be reusable by a later spawn");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn spawn_with_id_hands_the_reserved_id_to_the_future_builder_before_it_ever_runs() {
-        let executor = LocalExecutor::new().await;
+        let executor = LocalExecutor::new();
         let seen_id: Rc<Cell<Option<TaskId>>> = Rc::new(Cell::new(None));
         let seen_id_inner = seen_id.clone();
         let id = executor.spawn_with_id(move |id| {
             Box::pin(async move {
                 seen_id_inner.set(Some(id));
             })
-        }).await;
-        let pending = executor.run_until_idle(8).await;
+        });
+        let pending = executor.run_until_idle(8);
         assert!(!pending);
         assert_eq!(seen_id.get(), Some(id), "the future must observe the SAME id spawn_with_id returned");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn cancel_is_idempotent_for_an_unknown_or_already_finished_id() {
-        let executor = LocalExecutor::new().await;
-        executor.cancel(999).await; // never spawned
-        let id = executor.spawn(async move {}).await;
-        let _ = executor.run_until_idle(8).await; // finishes and frees the slot
-        executor.cancel(id).await; // already finished
-        executor.cancel(id).await; // cancel twice in a row
+        let executor = LocalExecutor::new();
+        executor.cancel(999); // never spawned
+        let id = executor.spawn(async move {});
+        let _ = executor.run_until_idle(8); // finishes and frees the slot
+        executor.cancel(id); // already finished
+        executor.cancel(id); // cancel twice in a row
     }
 }

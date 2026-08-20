@@ -31,7 +31,7 @@ pub struct SemioObjectInference {
 
 impl protocol::Inference<SemioObjectSnapshot> for SemioObjectInference {
     async fn infer(snapshot: &SemioObjectSnapshot) -> Self {
-        Self { composition: compute_semio_object_composition(snapshot) }
+        Self { composition: compute_semio_object_composition(snapshot).await }
     }
 }
 

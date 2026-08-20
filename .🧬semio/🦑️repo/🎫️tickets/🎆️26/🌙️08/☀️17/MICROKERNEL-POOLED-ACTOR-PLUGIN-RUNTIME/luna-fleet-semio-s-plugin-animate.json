@@ -1,0 +1,11 @@
+{
+  "crate_name": "semio-s-plugin-animate",
+  "path": "",
+  "total_errors": 0,
+  "own_errors": 0,
+  "inherited_errors": 0,
+  "build_status": "timeout",
+  "error_codes": {},
+  "await_suggestions_count": 0,
+  "await_fraction": 0.0
+}

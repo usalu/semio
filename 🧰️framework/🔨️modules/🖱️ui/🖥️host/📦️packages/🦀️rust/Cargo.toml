@@ -1,0 +1,42 @@
+[package]
+name = "semio-framework-ui-host"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Platform layer: window/event-loop hosting, platform event normalization, and the per-target concrete graphics backend alias"
+
+[package.metadata.semio]
+role = "framework"
+id = "ui-host"
+
+[lints]
+workspace = true
+
+[lib]
+path = "📦️glue.rs"
+
+[dependencies]
+ui_render = { path = "../../../🖼️render/📦️packages/🦀️rust", package = "semio-framework-ui-render" }
+ui_contract = { path = "../../../🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
+raw-window-handle = "0.6"
+
+# 🪟️ Native windowing. Absent on wasm, where the browser canvas host takes over.
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+winit = { version = "0.30.12", default-features = false, features = ["rwh_06"] }
+arboard = "3"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+backend_metal = { path = "../../../🖼️render/🎯️targets/🍎️metal/📦️packages/🦀️rust", package = "semio-framework-ui-backend-metal" }
+
+[target.'cfg(target_os = "windows")'.dependencies]
+backend_d3d12 = { path = "../../../🖼️render/🎯️targets/🪟️d3d12/📦️packages/🦀️rust", package = "semio-framework-ui-backend-d3d12" }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+backend_vulkan = { path = "../../../🖼️render/🎯️targets/🌋️vulkan/📦️packages/🦀️rust", package = "semio-framework-ui-backend-vulkan" }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+backend_webgpu = { path = "../../../🖼️render/🎯️targets/🧊️webgpu/📦️packages/🦀️rust", package = "semio-framework-ui-backend-webgpu" }
+js-sys = "0.3.83"
+wasm-bindgen = "0.2.106"
+wasm-bindgen-futures = "0.4.71"
+web-sys = { version = "0.3.98", features = ["Window", "Document", "HtmlCanvasElement", "ResizeObserver", "PointerEvent", "KeyboardEvent", "WheelEvent", "Performance", "Navigator", "Clipboard", "Element", "HtmlElement", "CssStyleDeclaration", "EventTarget"] }

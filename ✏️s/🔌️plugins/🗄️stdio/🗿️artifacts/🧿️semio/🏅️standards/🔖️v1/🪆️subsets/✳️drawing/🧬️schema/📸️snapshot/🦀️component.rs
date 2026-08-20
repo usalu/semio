@@ -185,10 +185,10 @@ pub(crate) async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
 pub(crate) async fn enc_str(s: &str) -> String {
-    hex_encode(s.as_bytes())
+    hex_encode(s.as_bytes()).await
 }
 pub(crate) async fn dec_str(s: &str) -> Result<String, String> {
-    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
+    String::from_utf8(hex_decode(s).await?).map_err(|e| e.to_string())
 }
 pub(crate) async fn parse_f64(s: &str) -> Result<f64, String> {
     s.parse().map_err(|e: std::num::ParseFloatError| e.to_string())
@@ -214,7 +214,7 @@ pub(crate) async fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> Stri
     format!("[{}]", items.iter().map(|it| enc(it)).collect::<Vec<_>>().join(","))
 }
 pub(crate) async fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
-    split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| dec(entry)).collect()
+    split_top_level(strip_brackets(s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| dec(entry)).collect()
 }
 /// 🏳️ Single-state option: `[0]` = `None`, `[1,<value>]` = `Some(value)` — used by snapshot-level
 /// `Option<T>` fields (never tri-state; tri-state `Option<Option<T>>` is a `🔺️diff`-only concept).
@@ -225,8 +225,8 @@ pub(crate) async fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String
     }
 }
 pub(crate) async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
-    let inner = strip_brackets(s)?;
-    match split_top_level(inner, ',').as_slice() {
+    let inner = strip_brackets(s).await?;
+    match split_top_level(inner, ',').await.as_slice() {
         ["0"] => Ok(None),
         [tag, value] if *tag == "1" => Ok(Some(dec(value)?)),
         other => Err(format!("option decode: bad shape {other:?}")),
@@ -237,41 +237,41 @@ pub(crate) async fn enc_point2(p: &SemioPoint2) -> String {
     format!("[{},{}]", p.x, p.y)
 }
 pub(crate) async fn dec_point2(s: &str) -> Result<SemioPoint2, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [x, y] = parts.as_slice() else { return Err(format!("point2: expected 2 fields, got {}", parts.len())) };
-    Ok(SemioPoint2 { x: parse_f64(x)?, y: parse_f64(y)? })
+    Ok(SemioPoint2 { x: parse_f64(x).await?, y: parse_f64(y).await? })
 }
 pub(crate) async fn enc_point3(p: &SemioPoint3) -> String {
     format!("[{},{},{}]", p.x, p.y, p.z)
 }
 pub(crate) async fn dec_point3(s: &str) -> Result<SemioPoint3, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [x, y, z] = parts.as_slice() else { return Err(format!("point3: expected 3 fields, got {}", parts.len())) };
-    Ok(SemioPoint3 { x: parse_f64(x)?, y: parse_f64(y)?, z: parse_f64(z)? })
+    Ok(SemioPoint3 { x: parse_f64(x).await?, y: parse_f64(y).await?, z: parse_f64(z).await? })
 }
 pub(crate) async fn enc_quaternion(q: &SemioQuaternion) -> String {
     format!("[{},{},{},{}]", q.x, q.y, q.z, q.w)
 }
 pub(crate) async fn dec_quaternion(s: &str) -> Result<SemioQuaternion, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [x, y, z, w] = parts.as_slice() else { return Err(format!("quaternion: expected 4 fields, got {}", parts.len())) };
-    Ok(SemioQuaternion { x: parse_f64(x)?, y: parse_f64(y)?, z: parse_f64(z)?, w: parse_f64(w)? })
+    Ok(SemioQuaternion { x: parse_f64(x).await?, y: parse_f64(y).await?, z: parse_f64(z).await?, w: parse_f64(w).await? })
 }
 pub(crate) async fn enc_transform(t: &SemioTransform) -> String {
     format!("[{},{},{}]", enc_point3(&t.translation), enc_quaternion(&t.rotation), enc_point3(&t.scale))
 }
 pub(crate) async fn dec_transform(s: &str) -> Result<SemioTransform, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [translation, rotation, scale] = parts.as_slice() else { return Err(format!("transform: expected 3 fields, got {}", parts.len())) };
-    Ok(SemioTransform { translation: dec_point3(translation)?, rotation: dec_quaternion(rotation)?, scale: dec_point3(scale)? })
+    Ok(SemioTransform { translation: dec_point3(translation).await?, rotation: dec_quaternion(rotation).await?, scale: dec_point3(scale).await? })
 }
 pub(crate) async fn enc_rgba(c: &SemioRgba) -> String {
     format!("[{},{},{},{}]", c.r, c.g, c.b, c.a)
 }
 pub(crate) async fn dec_rgba(s: &str) -> Result<SemioRgba, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [r, g, b, a] = parts.as_slice() else { return Err(format!("rgba: expected 4 fields, got {}", parts.len())) };
-    Ok(SemioRgba { r: parse_f32(r)?, g: parse_f32(g)?, b: parse_f32(b)?, a: parse_f32(a)? })
+    Ok(SemioRgba { r: parse_f32(r).await?, g: parse_f32(g).await?, b: parse_f32(b).await?, a: parse_f32(a).await? })
 }
 
 /// 📐️ `M[to]` (MoveTo) / `L[to]` (LineTo) / `C[c1,c2,to]` (CubicTo) / `Q[c,to]` (QuadTo) /
@@ -293,28 +293,28 @@ pub(crate) async fn dec_path_segment(s: &str) -> Result<PathSegment, String> {
         return Ok(PathSegment::Close);
     }
     let (tag, rest) = s.split_at(1);
-    let inner = strip_brackets(rest)?;
-    let parts = split_top_level(inner, ',');
+    let inner = strip_brackets(rest).await?;
+    let parts = split_top_level(inner, ',').await;
     match tag {
         "M" => {
             let [to] = parts.as_slice() else { return Err(format!("moveTo: expected 1 field, got {}", parts.len())) };
-            Ok(PathSegment::MoveTo { to: dec_point2(to)? })
+            Ok(PathSegment::MoveTo { to: dec_point2(to).await? })
         }
         "L" => {
             let [to] = parts.as_slice() else { return Err(format!("lineTo: expected 1 field, got {}", parts.len())) };
-            Ok(PathSegment::LineTo { to: dec_point2(to)? })
+            Ok(PathSegment::LineTo { to: dec_point2(to).await? })
         }
         "C" => {
             let [c1, c2, to] = parts.as_slice() else { return Err(format!("cubicTo: expected 3 fields, got {}", parts.len())) };
-            Ok(PathSegment::CubicTo { c1: dec_point2(c1)?, c2: dec_point2(c2)?, to: dec_point2(to)? })
+            Ok(PathSegment::CubicTo { c1: dec_point2(c1).await?, c2: dec_point2(c2).await?, to: dec_point2(to).await? })
         }
         "Q" => {
             let [c, to] = parts.as_slice() else { return Err(format!("quadTo: expected 2 fields, got {}", parts.len())) };
-            Ok(PathSegment::QuadTo { c: dec_point2(c)?, to: dec_point2(to)? })
+            Ok(PathSegment::QuadTo { c: dec_point2(c).await?, to: dec_point2(to).await? })
         }
         "A" => {
             let [rx, ry, x_rotation, large_arc, sweep, to] = parts.as_slice() else { return Err(format!("arcTo: expected 6 fields, got {}", parts.len())) };
-            Ok(PathSegment::ArcTo { rx: parse_f64(rx)?, ry: parse_f64(ry)?, x_rotation: parse_f64(x_rotation)?, large_arc: parse_bool(large_arc)?, sweep: parse_bool(sweep)?, to: dec_point2(to)? })
+            Ok(PathSegment::ArcTo { rx: parse_f64(rx).await?, ry: parse_f64(ry).await?, x_rotation: parse_f64(x_rotation).await?, large_arc: parse_bool(large_arc).await?, sweep: parse_bool(sweep).await?, to: dec_point2(to).await? })
         }
         other => Err(format!("path segment: unknown tag {other:?}")),
     }
@@ -326,33 +326,33 @@ pub(crate) async fn enc_node(n: &DrawNode) -> String {
     match n {
         DrawNode::Path { segments, style } => format!("P[{},{}]", enc_list(segments, enc_path_segment), encode_option(style, |s| enc_str(s))),
         DrawNode::Text { value, at, style } => format!("T[{},{},{}]", enc_str(value), enc_point2(at), encode_option(style, |s| enc_str(s))),
-        DrawNode::Group { transform, children } => format!("G[{},{}]", enc_transform(transform), enc_list(children, enc_node)),
+        DrawNode::Group { transform, children } => format!("G[{},{}.await]", enc_transform(transform), enc_list(children, enc_node)),
         DrawNode::Image { at, width, height, mime, bytes } => format!("I[{},{},{},{},{}]", enc_point2(at), width, height, enc_str(mime), hex_encode(bytes)),
     }
 }
 pub(crate) async fn dec_node(s: &str) -> Result<DrawNode, String> {
     let (tag, rest) = s.split_at(1);
-    let inner = strip_brackets(rest)?;
+    let inner = strip_brackets(rest).await?;
     match tag {
         "P" => {
-            let parts = split_top_level(inner, ',');
+            let parts = split_top_level(inner, ',').await;
             let [segments, style] = parts.as_slice() else { return Err(format!("path node: expected 2 fields, got {}", parts.len())) };
-            Ok(DrawNode::Path { segments: dec_list(segments, dec_path_segment)?, style: decode_option(style, dec_str)? })
+            Ok(DrawNode::Path { segments: dec_list(segments, dec_path_segment).await?, style: decode_option(style, dec_str).await? })
         }
         "T" => {
-            let parts = split_top_level(inner, ',');
+            let parts = split_top_level(inner, ',').await;
             let [value, at, style] = parts.as_slice() else { return Err(format!("text node: expected 3 fields, got {}", parts.len())) };
-            Ok(DrawNode::Text { value: dec_str(value)?, at: dec_point2(at)?, style: decode_option(style, dec_str)? })
+            Ok(DrawNode::Text { value: dec_str(value).await?, at: dec_point2(at).await?, style: decode_option(style, dec_str).await? })
         }
         "G" => {
-            let parts = split_top_level(inner, ',');
+            let parts = split_top_level(inner, ',').await;
             let [transform, children] = parts.as_slice() else { return Err(format!("group node: expected 2 fields, got {}", parts.len())) };
-            Ok(DrawNode::Group { transform: dec_transform(transform)?, children: dec_list(children, dec_node)? })
+            Ok(DrawNode::Group { transform: dec_transform(transform).await?, children: dec_list(children, dec_node).await? })
         }
         "I" => {
-            let parts = split_top_level(inner, ',');
+            let parts = split_top_level(inner, ',').await;
             let [at, width, height, mime, bytes] = parts.as_slice() else { return Err(format!("image node: expected 5 fields, got {}", parts.len())) };
-            Ok(DrawNode::Image { at: dec_point2(at)?, width: parse_f64(width)?, height: parse_f64(height)?, mime: dec_str(mime)?, bytes: hex_decode(bytes)? })
+            Ok(DrawNode::Image { at: dec_point2(at).await?, width: parse_f64(width).await?, height: parse_f64(height).await?, mime: dec_str(mime).await?, bytes: hex_decode(bytes).await? })
         }
         other => Err(format!("node: unknown tag {other:?}")),
     }
@@ -362,27 +362,27 @@ pub(crate) async fn enc_style(s: &DrawStyle) -> String {
     format!("[{},{},{},{},{}]", enc_str(&s.name), encode_option(&s.fill, enc_rgba), encode_option(&s.stroke, enc_rgba), encode_option(&s.stroke_width, |v: &f64| v.to_string()), encode_option(&s.opacity, |v: &f32| v.to_string()),)
 }
 pub(crate) async fn dec_style(s: &str) -> Result<DrawStyle, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [name, fill, stroke, stroke_width, opacity] = parts.as_slice() else { return Err(format!("style: expected 5 fields, got {}", parts.len())) };
-    Ok(DrawStyle { name: dec_str(name)?, fill: decode_option(fill, dec_rgba)?, stroke: decode_option(stroke, dec_rgba)?, stroke_width: decode_option(stroke_width, parse_f64)?, opacity: decode_option(opacity, parse_f32)? })
+    Ok(DrawStyle { name: dec_str(name).await?, fill: decode_option(fill, dec_rgba).await?, stroke: decode_option(stroke, dec_rgba).await?, stroke_width: decode_option(stroke_width, parse_f64).await?, opacity: decode_option(opacity, parse_f32).await? })
 }
 
 pub(crate) async fn enc_layer(l: &DrawLayer) -> String {
     format!("[{},{},{},{}]", enc_str(&l.id), enc_str(&l.name), enc_bool(l.visible), enc_node(&l.root))
 }
 pub(crate) async fn dec_layer(s: &str) -> Result<DrawLayer, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [id, name, visible, root] = parts.as_slice() else { return Err(format!("layer: expected 4 fields, got {}", parts.len())) };
-    Ok(DrawLayer { id: dec_str(id)?, name: dec_str(name)?, visible: parse_bool(visible)?, root: dec_node(root)? })
+    Ok(DrawLayer { id: dec_str(id).await?, name: dec_str(name).await?, visible: parse_bool(visible).await?, root: dec_node(root).await? })
 }
 
 pub(crate) async fn enc_canvas(c: &DrawCanvas) -> String {
     format!("[{},{},{}]", c.width, c.height, encode_option(&c.background, enc_rgba))
 }
 pub(crate) async fn dec_canvas(s: &str) -> Result<DrawCanvas, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [width, height, background] = parts.as_slice() else { return Err(format!("canvas: expected 3 fields, got {}", parts.len())) };
-    Ok(DrawCanvas { width: parse_f64(width)?, height: parse_f64(height)?, background: decode_option(background, dec_rgba)? })
+    Ok(DrawCanvas { width: parse_f64(width).await?, height: parse_f64(height).await?, background: decode_option(background, dec_rgba).await? })
 }
 
 /// 📄️ The real structured text body: four lines — `schema=<hex>`, `canvas=<canvas>`,
@@ -403,13 +403,13 @@ async fn parse_drawing_snapshot_body(body: &str) -> Result<SemioDrawingSnapshot,
             continue;
         }
         if let Some(rest) = line.strip_prefix("schema=") {
-            schema = Some(dec_str(rest)?);
+            schema = Some(dec_str(rest).await?);
         } else if let Some(rest) = line.strip_prefix("canvas=") {
-            canvas = Some(dec_canvas(rest)?);
+            canvas = Some(dec_canvas(rest).await?);
         } else if let Some(rest) = line.strip_prefix("styles=") {
-            styles = dec_list(rest, dec_style)?;
+            styles = dec_list(rest, dec_style).await?;
         } else if let Some(rest) = line.strip_prefix("layers=") {
-            layers = dec_list(rest, dec_layer)?;
+            layers = dec_list(rest, dec_layer).await?;
         } else {
             return Err(format!("drawing snapshot: unknown line {line:?}"));
         }
@@ -430,21 +430,21 @@ async fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
     out.extend_from_slice(bytes);
 }
 async fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
+    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec())
 }
 async fn write_str_lp(out: &mut Vec<u8>, s: &str) {
     write_bytes_lp(out, s.as_bytes());
 }
 async fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
-    String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
+    String::from_utf8(read_bytes_lp(reader).await?).map_err(|e| e.to_string())
 }
 async fn write_point2(out: &mut Vec<u8>, p: &SemioPoint2) {
     out.extend_from_slice(&p.x.to_le_bytes());
     out.extend_from_slice(&p.y.to_le_bytes());
 }
 async fn read_point2(reader: &mut store::ByteReader<'_>) -> Result<SemioPoint2, String> {
-    Ok(SemioPoint2 { x: reader.read_f64_le().map_err(|e| e.to_string())?, y: reader.read_f64_le().map_err(|e| e.to_string())? })
+    Ok(SemioPoint2 { x: reader.read_f64_le().await.map_err(|e| e.to_string())?, y: reader.read_f64_le().await.map_err(|e| e.to_string())? })
 }
 async fn write_point3(out: &mut Vec<u8>, p: &SemioPoint3) {
     out.extend_from_slice(&p.x.to_le_bytes());
@@ -452,7 +452,7 @@ async fn write_point3(out: &mut Vec<u8>, p: &SemioPoint3) {
     out.extend_from_slice(&p.z.to_le_bytes());
 }
 async fn read_point3(reader: &mut store::ByteReader<'_>) -> Result<SemioPoint3, String> {
-    Ok(SemioPoint3 { x: reader.read_f64_le().map_err(|e| e.to_string())?, y: reader.read_f64_le().map_err(|e| e.to_string())?, z: reader.read_f64_le().map_err(|e| e.to_string())? })
+    Ok(SemioPoint3 { x: reader.read_f64_le().await.map_err(|e| e.to_string())?, y: reader.read_f64_le().await.map_err(|e| e.to_string())?, z: reader.read_f64_le().await.map_err(|e| e.to_string())? })
 }
 async fn write_quaternion(out: &mut Vec<u8>, q: &SemioQuaternion) {
     out.extend_from_slice(&q.x.to_le_bytes());
@@ -461,7 +461,7 @@ async fn write_quaternion(out: &mut Vec<u8>, q: &SemioQuaternion) {
     out.extend_from_slice(&q.w.to_le_bytes());
 }
 async fn read_quaternion(reader: &mut store::ByteReader<'_>) -> Result<SemioQuaternion, String> {
-    Ok(SemioQuaternion { x: reader.read_f64_le().map_err(|e| e.to_string())?, y: reader.read_f64_le().map_err(|e| e.to_string())?, z: reader.read_f64_le().map_err(|e| e.to_string())?, w: reader.read_f64_le().map_err(|e| e.to_string())? })
+    Ok(SemioQuaternion { x: reader.read_f64_le().await.map_err(|e| e.to_string())?, y: reader.read_f64_le().await.map_err(|e| e.to_string())?, z: reader.read_f64_le().await.map_err(|e| e.to_string())?, w: reader.read_f64_le().await.map_err(|e| e.to_string())? })
 }
 async fn write_transform(out: &mut Vec<u8>, t: &SemioTransform) {
     write_point3(out, &t.translation);
@@ -469,11 +469,11 @@ async fn write_transform(out: &mut Vec<u8>, t: &SemioTransform) {
     write_point3(out, &t.scale);
 }
 async fn read_transform(reader: &mut store::ByteReader<'_>) -> Result<SemioTransform, String> {
-    Ok(SemioTransform { translation: read_point3(reader)?, rotation: read_quaternion(reader)?, scale: read_point3(reader)? })
+    Ok(SemioTransform { translation: read_point3(reader).await?, rotation: read_quaternion(reader).await?, scale: read_point3(reader).await? })
 }
 /// 🩹️ `store::ByteReader` has no native `f32` reader (only `f64_le`) — read 4 raw bytes instead.
 async fn read_f32_le(reader: &mut store::ByteReader<'_>) -> Result<f32, String> {
-    let bytes = reader.read_bytes(4).map_err(|e| e.to_string())?;
+    let bytes = reader.read_bytes(4).await.map_err(|e| e.to_string())?;
     let arr: [u8; 4] = bytes.try_into().map_err(|_| "f32 read: truncated".to_string())?;
     Ok(f32::from_le_bytes(arr))
 }
@@ -484,13 +484,13 @@ async fn write_rgba(out: &mut Vec<u8>, c: &SemioRgba) {
     out.extend_from_slice(&c.a.to_le_bytes());
 }
 async fn read_rgba(reader: &mut store::ByteReader<'_>) -> Result<SemioRgba, String> {
-    Ok(SemioRgba { r: read_f32_le(reader)?, g: read_f32_le(reader)?, b: read_f32_le(reader)?, a: read_f32_le(reader)? })
+    Ok(SemioRgba { r: read_f32_le(reader).await?, g: read_f32_le(reader).await?, b: read_f32_le(reader).await?, a: read_f32_le(reader).await? })
 }
 async fn write_bool(out: &mut Vec<u8>, b: bool) {
     out.push(if b { 1 } else { 0 });
 }
 async fn read_bool(reader: &mut store::ByteReader<'_>) -> Result<bool, String> {
-    Ok(reader.read_u8().map_err(|e| e.to_string())? != 0)
+    Ok(reader.read_u8().await.map_err(|e| e.to_string())? != 0)
 }
 async fn write_option<T>(out: &mut Vec<u8>, opt: &Option<T>, write: impl Fn(&mut Vec<u8>, &T)) {
     match opt {
@@ -502,7 +502,7 @@ async fn write_option<T>(out: &mut Vec<u8>, opt: &Option<T>, write: impl Fn(&mut
     }
 }
 async fn read_option<T>(reader: &mut store::ByteReader<'_>, read: impl Fn(&mut store::ByteReader<'_>) -> Result<T, String>) -> Result<Option<T>, String> {
-    match reader.read_u8().map_err(|e| e.to_string())? {
+    match reader.read_u8().await.map_err(|e| e.to_string())? {
         0 => Ok(None),
         1 => Ok(Some(read(reader)?)),
         other => Err(format!("option: bad tag byte {other}")),
@@ -544,19 +544,19 @@ async fn write_path_segment(out: &mut Vec<u8>, seg: &PathSegment) {
     }
 }
 async fn read_path_segment(reader: &mut store::ByteReader<'_>) -> Result<PathSegment, String> {
-    let tag = reader.read_u8().map_err(|e| e.to_string())?;
+    let tag = reader.read_u8().await.map_err(|e| e.to_string())?;
     match tag {
-        0 => Ok(PathSegment::MoveTo { to: read_point2(reader)? }),
-        1 => Ok(PathSegment::LineTo { to: read_point2(reader)? }),
-        2 => Ok(PathSegment::CubicTo { c1: read_point2(reader)?, c2: read_point2(reader)?, to: read_point2(reader)? }),
-        3 => Ok(PathSegment::QuadTo { c: read_point2(reader)?, to: read_point2(reader)? }),
+        0 => Ok(PathSegment::MoveTo { to: read_point2(reader).await? }),
+        1 => Ok(PathSegment::LineTo { to: read_point2(reader).await? }),
+        2 => Ok(PathSegment::CubicTo { c1: read_point2(reader).await?, c2: read_point2(reader).await?, to: read_point2(reader).await? }),
+        3 => Ok(PathSegment::QuadTo { c: read_point2(reader).await?, to: read_point2(reader).await? }),
         4 => Ok(PathSegment::ArcTo {
-            rx: reader.read_f64_le().map_err(|e| e.to_string())?,
-            ry: reader.read_f64_le().map_err(|e| e.to_string())?,
-            x_rotation: reader.read_f64_le().map_err(|e| e.to_string())?,
-            large_arc: read_bool(reader)?,
-            sweep: read_bool(reader)?,
-            to: read_point2(reader)?,
+            rx: reader.read_f64_le().await.map_err(|e| e.to_string())?,
+            ry: reader.read_f64_le().await.map_err(|e| e.to_string())?,
+            x_rotation: reader.read_f64_le().await.map_err(|e| e.to_string())?,
+            large_arc: read_bool(reader).await?,
+            sweep: read_bool(reader).await?,
+            to: read_point2(reader).await?,
         }),
         5 => Ok(PathSegment::Close),
         other => Err(format!("path segment: unknown binary tag {other}")),
@@ -599,38 +599,38 @@ async fn write_node(out: &mut Vec<u8>, n: &DrawNode) {
     }
 }
 async fn read_node(reader: &mut store::ByteReader<'_>) -> Result<DrawNode, String> {
-    let tag = reader.read_u8().map_err(|e| e.to_string())?;
+    let tag = reader.read_u8().await.map_err(|e| e.to_string())?;
     match tag {
         0 => {
-            let n = reader.read_varint_u64().map_err(|e| e.to_string())?;
+            let n = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
             let mut segments = Vec::with_capacity(n as usize);
             for _ in 0..n {
-                segments.push(read_path_segment(reader)?);
+                segments.push(read_path_segment(reader).await?);
             }
-            let style = read_option(reader, read_str_lp)?;
+            let style = read_option(reader, read_str_lp).await?;
             Ok(DrawNode::Path { segments, style })
         }
         1 => {
-            let value = read_str_lp(reader)?;
-            let at = read_point2(reader)?;
-            let style = read_option(reader, read_str_lp)?;
+            let value = read_str_lp(reader).await?;
+            let at = read_point2(reader).await?;
+            let style = read_option(reader, read_str_lp).await?;
             Ok(DrawNode::Text { value, at, style })
         }
         2 => {
-            let transform = read_transform(reader)?;
-            let n = reader.read_varint_u64().map_err(|e| e.to_string())?;
+            let transform = read_transform(reader).await?;
+            let n = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
             let mut children = Vec::with_capacity(n as usize);
             for _ in 0..n {
-                children.push(read_node(reader)?);
+                children.push(read_node(reader).await?);
             }
             Ok(DrawNode::Group { transform, children })
         }
         3 => {
-            let at = read_point2(reader)?;
-            let width = reader.read_f64_le().map_err(|e| e.to_string())?;
-            let height = reader.read_f64_le().map_err(|e| e.to_string())?;
-            let mime = read_str_lp(reader)?;
-            let bytes = read_bytes_lp(reader)?;
+            let at = read_point2(reader).await?;
+            let width = reader.read_f64_le().await.map_err(|e| e.to_string())?;
+            let height = reader.read_f64_le().await.map_err(|e| e.to_string())?;
+            let mime = read_str_lp(reader).await?;
+            let bytes = read_bytes_lp(reader).await?;
             Ok(DrawNode::Image { at, width, height, mime, bytes })
         }
         other => Err(format!("node: unknown binary tag {other}")),
@@ -645,11 +645,11 @@ async fn write_style(out: &mut Vec<u8>, s: &DrawStyle) {
     write_option(out, &s.opacity, |out, v| out.extend_from_slice(&v.to_le_bytes()));
 }
 async fn read_style(reader: &mut store::ByteReader<'_>) -> Result<DrawStyle, String> {
-    let name = read_str_lp(reader)?;
-    let fill = read_option(reader, read_rgba)?;
-    let stroke = read_option(reader, read_rgba)?;
-    let stroke_width = read_option(reader, |r| r.read_f64_le().map_err(|e| e.to_string()))?;
-    let opacity = read_option(reader, read_f32_le)?;
+    let name = read_str_lp(reader).await?;
+    let fill = read_option(reader, read_rgba).await?;
+    let stroke = read_option(reader, read_rgba).await?;
+    let stroke_width = read_option(reader, |r| semio_framework_plugin::resolve_ready(r.read_f64_le()).map_err(|e| e.to_string())).await?;
+    let opacity = read_option(reader, read_f32_le).await?;
     Ok(DrawStyle { name, fill, stroke, stroke_width, opacity })
 }
 
@@ -660,7 +660,7 @@ async fn write_layer(out: &mut Vec<u8>, l: &DrawLayer) {
     write_node(out, &l.root);
 }
 async fn read_layer(reader: &mut store::ByteReader<'_>) -> Result<DrawLayer, String> {
-    Ok(DrawLayer { id: read_str_lp(reader)?, name: read_str_lp(reader)?, visible: read_bool(reader)?, root: read_node(reader)? })
+    Ok(DrawLayer { id: read_str_lp(reader).await?, name: read_str_lp(reader).await?, visible: read_bool(reader).await?, root: read_node(reader).await? })
 }
 
 async fn write_canvas(out: &mut Vec<u8>, c: &DrawCanvas) {
@@ -669,9 +669,9 @@ async fn write_canvas(out: &mut Vec<u8>, c: &DrawCanvas) {
     write_option(out, &c.background, write_rgba);
 }
 async fn read_canvas(reader: &mut store::ByteReader<'_>) -> Result<DrawCanvas, String> {
-    let width = reader.read_f64_le().map_err(|e| e.to_string())?;
-    let height = reader.read_f64_le().map_err(|e| e.to_string())?;
-    let background = read_option(reader, read_rgba)?;
+    let width = reader.read_f64_le().await.map_err(|e| e.to_string())?;
+    let height = reader.read_f64_le().await.map_err(|e| e.to_string())?;
+    let background = read_option(reader, read_rgba).await?;
     Ok(DrawCanvas { width, height, background })
 }
 
@@ -693,22 +693,22 @@ async fn encode_drawing_snapshot_binary(s: &SemioDrawingSnapshot) -> Vec<u8> {
 }
 async fn decode_drawing_snapshot_binary(bytes: &[u8]) -> Result<SemioDrawingSnapshot, String> {
     const PACK_BINARY_FORMAT: u8 = 1;
-    let mut reader = store::ByteReader::new(bytes);
-    let format = reader.read_u8().map_err(|e| e.to_string())?;
+    let mut reader = store::ByteReader::new(bytes).await;
+    let format = reader.read_u8().await.map_err(|e| e.to_string())?;
     if format != PACK_BINARY_FORMAT {
         return Err(format!("unsupported pack format {format}"));
     }
-    let schema = read_str_lp(&mut reader)?;
-    let canvas = read_canvas(&mut reader)?;
-    let style_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let schema = read_str_lp(&mut reader).await?;
+    let canvas = read_canvas(&mut reader).await?;
+    let style_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut styles = Vec::with_capacity(style_count as usize);
     for _ in 0..style_count {
-        styles.push(read_style(&mut reader)?);
+        styles.push(read_style(&mut reader).await?);
     }
-    let layer_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let layer_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut layers = Vec::with_capacity(layer_count as usize);
     for _ in 0..layer_count {
-        layers.push(read_layer(&mut reader)?);
+        layers.push(read_layer(&mut reader).await?);
     }
     Ok(SemioDrawingSnapshot { schema, canvas, styles, layers })
 }
@@ -729,12 +729,12 @@ impl store::ArtifactDsl for SemioDrawingSnapshot {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        parse_drawing_snapshot_body(body).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_drawing_snapshot_body(body).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 
     async fn print_dsl(&self) -> String {
         let body = print_drawing_snapshot_body(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -743,7 +743,7 @@ impl store::ArtifactPack for SemioDrawingSnapshot {
     async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = encode_drawing_snapshot_binary(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
 
@@ -753,7 +753,7 @@ impl store::ArtifactPack for SemioDrawingSnapshot {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
-        decode_drawing_snapshot_binary(&inner).map_err(store::PackError::Schema)
+        decode_drawing_snapshot_binary(&inner).await.map_err(store::PackError::Schema)
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs

@@ -50,21 +50,21 @@ impl GltfInferenceStage<GltfGeometryContext<'_>> for GltfCompactnessInference {
     async fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
         let raw = raw(context);
         Self::Output {
-            compactness: compactness::from_raw(context, &raw),
-            surface_to_volume_ratio: surface_to_volume_ratio::from_raw(context, &raw),
-            sphericity: sphericity::from_raw(context, &raw),
-            compactness_index: compactness_index::from_raw(context, &raw),
-            hull_fill_ratio: hull_fill_ratio::from_raw(context, &raw),
+            compactness: compactness::from_raw(context, &raw).await,
+            surface_to_volume_ratio: surface_to_volume_ratio::from_raw(context, &raw).await,
+            sphericity: sphericity::from_raw(context, &raw).await,
+            compactness_index: compactness_index::from_raw(context, &raw).await,
+            hull_fill_ratio: hull_fill_ratio::from_raw(context, &raw).await,
         }
     }
 
     async fn unavailable(diagnostic_ids: &[String]) -> Self::Output {
         Self::Output {
-            compactness: compactness::unavailable_measure(diagnostic_ids),
-            surface_to_volume_ratio: surface_to_volume_ratio::unavailable_measure(diagnostic_ids),
-            sphericity: sphericity::unavailable_measure(diagnostic_ids),
-            compactness_index: compactness_index::unavailable_measure(diagnostic_ids),
-            hull_fill_ratio: hull_fill_ratio::unavailable_measure(diagnostic_ids),
+            compactness: compactness::unavailable_measure(diagnostic_ids).await,
+            surface_to_volume_ratio: surface_to_volume_ratio::unavailable_measure(diagnostic_ids).await,
+            sphericity: sphericity::unavailable_measure(diagnostic_ids).await,
+            compactness_index: compactness_index::unavailable_measure(diagnostic_ids).await,
+            hull_fill_ratio: hull_fill_ratio::unavailable_measure(diagnostic_ids).await,
         }
     }
 }

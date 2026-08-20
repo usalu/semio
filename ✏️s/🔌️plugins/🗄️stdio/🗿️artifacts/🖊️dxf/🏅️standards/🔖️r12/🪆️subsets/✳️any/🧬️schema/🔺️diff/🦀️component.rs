@@ -123,7 +123,7 @@ async fn generic_absorb_pair<T: DxfIndexElem>(
 
     let base_labels: Vec<Lbl> = (0..l1).map(Lbl::Base).collect();
     let d1_added_lbl: Vec<(usize, Lbl)> = d1_added.iter().enumerate().map(|(j, (idx, _))| (*idx, Lbl::Added1(j))).collect();
-    let mut mid_labels = simulate_labels(base_labels, d1_removed, &d1_added_lbl);
+    let mut mid_labels = simulate_labels(base_labels, d1_removed, &d1_added_lbl).await;
 
     let mut mid_pos_of_base: HashMap<usize, usize> = HashMap::new();
     let mut mid_pos_of_added1: HashMap<usize, usize> = HashMap::new();
@@ -370,12 +370,12 @@ impl DxfHeaderVarsDiff {
     async fn apply(&self, base: &[DxfHeaderVar]) -> Vec<DxfHeaderVar> {
         let modified: Vec<(String, DxfHeaderVarDiff)> = self.modified.iter().map(|m| (m.name.clone(), m.diff.clone())).collect();
         let added: Vec<(usize, DxfHeaderVar)> = self.added.iter().map(|a| (a.index, a.header_var.clone())).collect();
-        named_apply(base, &self.removed, &modified, &added)
+        named_apply(base, &self.removed, &modified, &added).await
     }
     async fn between(base: &[DxfHeaderVar], other: &[DxfHeaderVar]) -> Option<Self> {
-        let (removed, modified, added) = named_between(base, other);
+        let (removed, modified, added) = named_between(base, other).await;
         let d = Self { removed, modified: modified.into_iter().map(|(name, diff)| DxfHeaderVarModified { name, diff }).collect(), added: added.into_iter().map(|(index, header_var)| DxfHeaderVarAdded { index, header_var }).collect() };
-        if d.is_empty() {
+        if d.is_empty().await {
             None
         } else {
             Some(d)
@@ -386,9 +386,9 @@ impl DxfHeaderVarsDiff {
         let d1a: Vec<(usize, DxfHeaderVar)> = d1.added.into_iter().map(|a| (a.index, a.header_var)).collect();
         let d2m: Vec<(String, DxfHeaderVarDiff)> = d2.modified.into_iter().map(|m| (m.name, m.diff)).collect();
         let d2a: Vec<(usize, DxfHeaderVar)> = d2.added.into_iter().map(|a| (a.index, a.header_var)).collect();
-        let (removed, modified, added) = named_absorb_pair::<DxfHeaderVar>(&d1.removed, &d1m, &d1a, &d2.removed, &d2m, &d2a);
+        let (removed, modified, added) = named_absorb_pair::<DxfHeaderVar>(&d1.removed, &d1m, &d1a, &d2.removed, &d2m, &d2a).await;
         let d = Self { removed, modified: modified.into_iter().map(|(name, diff)| DxfHeaderVarModified { name, diff }).collect(), added: added.into_iter().map(|(index, header_var)| DxfHeaderVarAdded { index, header_var }).collect() };
-        if d.is_empty() {
+        if d.is_empty().await {
             None
         } else {
             Some(d)
@@ -481,12 +481,12 @@ impl DxfLayersDiff {
     async fn apply(&self, base: &[DxfLayer]) -> Vec<DxfLayer> {
         let modified: Vec<(String, DxfLayerDiff)> = self.modified.iter().map(|m| (m.name.clone(), m.diff.clone())).collect();
         let added: Vec<(usize, DxfLayer)> = self.added.iter().map(|a| (a.index, a.layer.clone())).collect();
-        named_apply(base, &self.removed, &modified, &added)
+        named_apply(base, &self.removed, &modified, &added).await
     }
     async fn between(base: &[DxfLayer], other: &[DxfLayer]) -> Option<Self> {
-        let (removed, modified, added) = named_between(base, other);
+        let (removed, modified, added) = named_between(base, other).await;
         let d = Self { removed, modified: modified.into_iter().map(|(name, diff)| DxfLayerModified { name, diff }).collect(), added: added.into_iter().map(|(index, layer)| DxfLayerAdded { index, layer }).collect() };
-        if d.is_empty() {
+        if d.is_empty().await {
             None
         } else {
             Some(d)
@@ -497,9 +497,9 @@ impl DxfLayersDiff {
         let d1a: Vec<(usize, DxfLayer)> = d1.added.into_iter().map(|a| (a.index, a.layer)).collect();
         let d2m: Vec<(String, DxfLayerDiff)> = d2.modified.into_iter().map(|m| (m.name, m.diff)).collect();
         let d2a: Vec<(usize, DxfLayer)> = d2.added.into_iter().map(|a| (a.index, a.layer)).collect();
-        let (removed, modified, added) = named_absorb_pair::<DxfLayer>(&d1.removed, &d1m, &d1a, &d2.removed, &d2m, &d2a);
+        let (removed, modified, added) = named_absorb_pair::<DxfLayer>(&d1.removed, &d1m, &d1a, &d2.removed, &d2m, &d2a).await;
         let d = Self { removed, modified: modified.into_iter().map(|(name, diff)| DxfLayerModified { name, diff }).collect(), added: added.into_iter().map(|(index, layer)| DxfLayerAdded { index, layer }).collect() };
-        if d.is_empty() {
+        if d.is_empty().await {
             None
         } else {
             Some(d)
@@ -583,12 +583,12 @@ impl DxfStylesDiff {
     async fn apply(&self, base: &[DxfStyle]) -> Vec<DxfStyle> {
         let modified: Vec<(String, DxfStyleDiff)> = self.modified.iter().map(|m| (m.name.clone(), m.diff.clone())).collect();
         let added: Vec<(usize, DxfStyle)> = self.added.iter().map(|a| (a.index, a.style.clone())).collect();
-        named_apply(base, &self.removed, &modified, &added)
+        named_apply(base, &self.removed, &modified, &added).await
     }
     async fn between(base: &[DxfStyle], other: &[DxfStyle]) -> Option<Self> {
-        let (removed, modified, added) = named_between(base, other);
+        let (removed, modified, added) = named_between(base, other).await;
         let d = Self { removed, modified: modified.into_iter().map(|(name, diff)| DxfStyleModified { name, diff }).collect(), added: added.into_iter().map(|(index, style)| DxfStyleAdded { index, style }).collect() };
-        if d.is_empty() {
+        if d.is_empty().await {
             None
         } else {
             Some(d)
@@ -599,9 +599,9 @@ impl DxfStylesDiff {
         let d1a: Vec<(usize, DxfStyle)> = d1.added.into_iter().map(|a| (a.index, a.style)).collect();
         let d2m: Vec<(String, DxfStyleDiff)> = d2.modified.into_iter().map(|m| (m.name, m.diff)).collect();
         let d2a: Vec<(usize, DxfStyle)> = d2.added.into_iter().map(|a| (a.index, a.style)).collect();
-        let (removed, modified, added) = named_absorb_pair::<DxfStyle>(&d1.removed, &d1m, &d1a, &d2.removed, &d2m, &d2a);
+        let (removed, modified, added) = named_absorb_pair::<DxfStyle>(&d1.removed, &d1m, &d1a, &d2.removed, &d2m, &d2a).await;
         let d = Self { removed, modified: modified.into_iter().map(|(name, diff)| DxfStyleModified { name, diff }).collect(), added: added.into_iter().map(|(index, style)| DxfStyleAdded { index, style }).collect() };
-        if d.is_empty() {
+        if d.is_empty().await {
             None
         } else {
             Some(d)
@@ -685,12 +685,12 @@ impl DxfLinetypesDiff {
     async fn apply(&self, base: &[DxfLinetype]) -> Vec<DxfLinetype> {
         let modified: Vec<(String, DxfLinetypeDiff)> = self.modified.iter().map(|m| (m.name.clone(), m.diff.clone())).collect();
         let added: Vec<(usize, DxfLinetype)> = self.added.iter().map(|a| (a.index, a.linetype.clone())).collect();
-        named_apply(base, &self.removed, &modified, &added)
+        named_apply(base, &self.removed, &modified, &added).await
     }
     async fn between(base: &[DxfLinetype], other: &[DxfLinetype]) -> Option<Self> {
-        let (removed, modified, added) = named_between(base, other);
+        let (removed, modified, added) = named_between(base, other).await;
         let d = Self { removed, modified: modified.into_iter().map(|(name, diff)| DxfLinetypeModified { name, diff }).collect(), added: added.into_iter().map(|(index, linetype)| DxfLinetypeAdded { index, linetype }).collect() };
-        if d.is_empty() {
+        if d.is_empty().await {
             None
         } else {
             Some(d)
@@ -701,9 +701,9 @@ impl DxfLinetypesDiff {
         let d1a: Vec<(usize, DxfLinetype)> = d1.added.into_iter().map(|a| (a.index, a.linetype)).collect();
         let d2m: Vec<(String, DxfLinetypeDiff)> = d2.modified.into_iter().map(|m| (m.name, m.diff)).collect();
         let d2a: Vec<(usize, DxfLinetype)> = d2.added.into_iter().map(|a| (a.index, a.linetype)).collect();
-        let (removed, modified, added) = named_absorb_pair::<DxfLinetype>(&d1.removed, &d1m, &d1a, &d2.removed, &d2m, &d2a);
+        let (removed, modified, added) = named_absorb_pair::<DxfLinetype>(&d1.removed, &d1m, &d1a, &d2.removed, &d2m, &d2a).await;
         let d = Self { removed, modified: modified.into_iter().map(|(name, diff)| DxfLinetypeModified { name, diff }).collect(), added: added.into_iter().map(|(index, linetype)| DxfLinetypeAdded { index, linetype }).collect() };
-        if d.is_empty() {
+        if d.is_empty().await {
             None
         } else {
             Some(d)
@@ -732,22 +732,22 @@ impl DxfTablesDiff {
     async fn apply(&self, base: &DxfTables) -> DxfTables {
         DxfTables {
             layers: match &self.layers {
-                Some(d) => d.apply(&base.layers),
+                Some(d) => d.apply(&base.layers).await,
                 None => base.layers.clone(),
             },
             styles: match &self.styles {
-                Some(d) => d.apply(&base.styles),
+                Some(d) => d.apply(&base.styles).await,
                 None => base.styles.clone(),
             },
             linetypes: match &self.linetypes {
-                Some(d) => d.apply(&base.linetypes),
+                Some(d) => d.apply(&base.linetypes).await,
                 None => base.linetypes.clone(),
             },
         }
     }
     async fn between(base: &DxfTables, other: &DxfTables) -> Option<Self> {
-        let d = Self { layers: DxfLayersDiff::between(&base.layers, &other.layers), styles: DxfStylesDiff::between(&base.styles, &other.styles), linetypes: DxfLinetypesDiff::between(&base.linetypes, &other.linetypes) };
-        if d.is_empty() {
+        let d = Self { layers: DxfLayersDiff::between(&base.layers, &other.layers).await, styles: DxfStylesDiff::between(&base.styles, &other.styles).await, linetypes: DxfLinetypesDiff::between(&base.linetypes, &other.linetypes).await };
+        if d.is_empty().await {
             None
         } else {
             Some(d)
@@ -758,22 +758,22 @@ impl DxfTablesDiff {
             (None, None) => None,
             (Some(x), None) => Some(x),
             (None, Some(y)) => Some(y),
-            (Some(x), Some(y)) => DxfLayersDiff::absorb(x, y),
+            (Some(x), Some(y)) => DxfLayersDiff::absorb(x, y).await,
         };
         let styles = match (a.styles, b.styles) {
             (None, None) => None,
             (Some(x), None) => Some(x),
             (None, Some(y)) => Some(y),
-            (Some(x), Some(y)) => DxfStylesDiff::absorb(x, y),
+            (Some(x), Some(y)) => DxfStylesDiff::absorb(x, y).await,
         };
         let linetypes = match (a.linetypes, b.linetypes) {
             (None, None) => None,
             (Some(x), None) => Some(x),
             (None, Some(y)) => Some(y),
-            (Some(x), Some(y)) => DxfLinetypesDiff::absorb(x, y),
+            (Some(x), Some(y)) => DxfLinetypesDiff::absorb(x, y).await,
         };
         let d = Self { layers, styles, linetypes };
-        if d.is_empty() {
+        if d.is_empty().await {
             None
         } else {
             Some(d)
@@ -985,7 +985,7 @@ async fn apply_line_diff(d: &DxfLineDiff, start: &mut [f64; 3], end: &mut [f64; 
 /// recipe's canonical `Insert+SetField` "patch into added payload" case).
 async fn apply_entity_diff(d: &DxfEntityDiff, item: &mut DxfEntity) {
     match (d, item) {
-        (DxfEntityDiff::Line(ld), DxfEntity::Line { start, end, layer, unknown_group_codes }) => apply_line_diff(ld, start, end, layer, unknown_group_codes),
+        (DxfEntityDiff::Line(ld), DxfEntity::Line { start, end, layer, unknown_group_codes }) => apply_line_diff(ld, start, end, layer, unknown_group_codes).await,
         (DxfEntityDiff::Circle(cd), DxfEntity::Circle { center, radius, layer, unknown_group_codes }) => {
             if let Some(v) = cd.center {
                 *center = v;
@@ -1094,10 +1094,10 @@ async fn apply_entity_diff(d: &DxfEntityDiff, item: &mut DxfEntity) {
 impl DxfIndexElem for DxfEntity {
     type Diff = DxfEntityDiff;
     async fn diff_is_empty(d: &Self::Diff) -> bool {
-        entity_diff_is_empty(d)
+        entity_diff_is_empty(d).await
     }
     async fn diff_between(a: &Self, b: &Self) -> Self::Diff {
-        entity_diff_between(a, b)
+        entity_diff_between(a, b).await
     }
     async fn diff_apply(d: &Self::Diff, item: &mut Self) {
         if let DxfEntityDiff::Replace { entity } = d {
@@ -1280,12 +1280,12 @@ impl DxfEntitiesDiff {
     async fn apply(&self, base: &[DxfEntity]) -> Vec<DxfEntity> {
         let modified: Vec<(usize, DxfEntityDiff)> = self.modified.iter().map(|m| (m.index, m.diff.clone())).collect();
         let added: Vec<(usize, DxfEntity)> = self.added.iter().map(|a| (a.index, a.entity.clone())).collect();
-        generic_apply(base, &self.removed, &modified, &added)
+        generic_apply(base, &self.removed, &modified, &added).await
     }
     async fn between(base: &[DxfEntity], other: &[DxfEntity]) -> Option<Self> {
-        let (removed, modified, added) = generic_between(base, other);
+        let (removed, modified, added) = generic_between(base, other).await;
         let d = Self { removed, modified: modified.into_iter().map(|(index, diff)| DxfEntityModified { index, diff }).collect(), added: added.into_iter().map(|(index, entity)| DxfEntityAdded { index, entity }).collect() };
-        if d.is_empty() {
+        if d.is_empty().await {
             None
         } else {
             Some(d)
@@ -1296,9 +1296,9 @@ impl DxfEntitiesDiff {
         let d1a: Vec<(usize, DxfEntity)> = d1.added.into_iter().map(|a| (a.index, a.entity)).collect();
         let d2m: Vec<(usize, DxfEntityDiff)> = d2.modified.into_iter().map(|m| (m.index, m.diff)).collect();
         let d2a: Vec<(usize, DxfEntity)> = d2.added.into_iter().map(|a| (a.index, a.entity)).collect();
-        let (removed, modified, added) = generic_absorb_pair::<DxfEntity>(&d1.removed, &d1m, &d1a, &d2.removed, &d2m, &d2a);
+        let (removed, modified, added) = generic_absorb_pair::<DxfEntity>(&d1.removed, &d1m, &d1a, &d2.removed, &d2m, &d2a).await;
         let d = Self { removed, modified: modified.into_iter().map(|(index, diff)| DxfEntityModified { index, diff }).collect(), added: added.into_iter().map(|(index, entity)| DxfEntityAdded { index, entity }).collect() };
-        if d.is_empty() {
+        if d.is_empty().await {
             None
         } else {
             Some(d)
@@ -1329,7 +1329,7 @@ impl DxfIndexElem for DxfBlock {
         DxfBlockDiff {
             name: (a.name != b.name).then(|| b.name.clone()),
             base_point: (a.base_point != b.base_point).then_some(b.base_point),
-            entities: DxfEntitiesDiff::between(&a.entities, &b.entities),
+            entities: DxfEntitiesDiff::between(&a.entities, &b.entities).await,
             unknown_group_codes: (a.unknown_group_codes != b.unknown_group_codes).then(|| b.unknown_group_codes.clone()),
         }
     }
@@ -1341,7 +1341,7 @@ impl DxfIndexElem for DxfBlock {
             item.base_point = v;
         }
         if let Some(ed) = &d.entities {
-            item.entities = ed.apply(&item.entities);
+            item.entities = ed.apply(&item.entities).await;
         }
         if let Some(v) = &d.unknown_group_codes {
             item.unknown_group_codes = v.clone();
@@ -1358,7 +1358,7 @@ impl DxfIndexElem for DxfBlock {
             (None, None) => None,
             (Some(a), None) => Some(a),
             (None, Some(b)) => Some(b),
-            (Some(a), Some(b)) => DxfEntitiesDiff::absorb(a, b),
+            (Some(a), Some(b)) => DxfEntitiesDiff::absorb(a, b).await,
         };
         if other.unknown_group_codes.is_some() {
             base.unknown_group_codes = other.unknown_group_codes;
@@ -1394,12 +1394,12 @@ impl DxfBlocksDiff {
     async fn apply(&self, base: &[DxfBlock]) -> Vec<DxfBlock> {
         let modified: Vec<(usize, DxfBlockDiff)> = self.modified.iter().map(|m| (m.index, m.diff.clone())).collect();
         let added: Vec<(usize, DxfBlock)> = self.added.iter().map(|a| (a.index, a.block.clone())).collect();
-        generic_apply(base, &self.removed, &modified, &added)
+        generic_apply(base, &self.removed, &modified, &added).await
     }
     async fn between(base: &[DxfBlock], other: &[DxfBlock]) -> Option<Self> {
-        let (removed, modified, added) = generic_between(base, other);
+        let (removed, modified, added) = generic_between(base, other).await;
         let d = Self { removed, modified: modified.into_iter().map(|(index, diff)| DxfBlockModified { index, diff }).collect(), added: added.into_iter().map(|(index, block)| DxfBlockAdded { index, block }).collect() };
-        if d.is_empty() {
+        if d.is_empty().await {
             None
         } else {
             Some(d)
@@ -1410,9 +1410,9 @@ impl DxfBlocksDiff {
         let d1a: Vec<(usize, DxfBlock)> = d1.added.into_iter().map(|a| (a.index, a.block)).collect();
         let d2m: Vec<(usize, DxfBlockDiff)> = d2.modified.into_iter().map(|m| (m.index, m.diff)).collect();
         let d2a: Vec<(usize, DxfBlock)> = d2.added.into_iter().map(|a| (a.index, a.block)).collect();
-        let (removed, modified, added) = generic_absorb_pair::<DxfBlock>(&d1.removed, &d1m, &d1a, &d2.removed, &d2m, &d2a);
+        let (removed, modified, added) = generic_absorb_pair::<DxfBlock>(&d1.removed, &d1m, &d1a, &d2.removed, &d2m, &d2a).await;
         let d = Self { removed, modified: modified.into_iter().map(|(index, diff)| DxfBlockModified { index, diff }).collect(), added: added.into_iter().map(|(index, block)| DxfBlockAdded { index, block }).collect() };
-        if d.is_empty() {
+        if d.is_empty().await {
             None
         } else {
             Some(d)
@@ -1442,7 +1442,7 @@ pub struct DxfDiff {
 }
 
 async fn target_error(code: &'static str, message: &'static str, target: Vec<String>) -> MutationApplyError {
-    MutationApplyError::new(code, message).at(target)
+    MutationApplyError::new(code, message).await.at(target).await
 }
 
 async fn validate_indexed_targets(base_len: usize, removed_indices: &[usize], modified_indices: impl IntoIterator<Item = usize>, added_indices: impl IntoIterator<Item = usize>, prefix: &[String]) -> MutationApplyResult<()> {
@@ -1451,7 +1451,7 @@ async fn validate_indexed_targets(base_len: usize, removed_indices: &[usize], mo
         let mut target = prefix.to_vec();
         target.push(index.to_string());
         if index >= base_len || !removed.insert(index) {
-            return Err(target_error("invalid-remove-index", "removal target must exist exactly once", target));
+            return Err(target_error("invalid-remove-index", "removal target must exist exactly once", target).await);
         }
     }
     let mut modified = BTreeSet::new();
@@ -1459,7 +1459,7 @@ async fn validate_indexed_targets(base_len: usize, removed_indices: &[usize], mo
         let mut target = prefix.to_vec();
         target.push(index.to_string());
         if index >= base_len || removed.contains(&index) || !modified.insert(index) {
-            return Err(target_error("invalid-modify-index", "modification target must exist exactly once and remain present", target));
+            return Err(target_error("invalid-modify-index", "modification target must exist exactly once and remain present", target).await);
         }
     }
     let mut length = base_len - removed.len();
@@ -1470,7 +1470,7 @@ async fn validate_indexed_targets(base_len: usize, removed_indices: &[usize], mo
         let mut target = prefix.to_vec();
         target.push(index.to_string());
         if index > length || previous == Some(index) {
-            return Err(target_error("invalid-add-index", "addition target must be unique and within the evolving sequence", target));
+            return Err(target_error("invalid-add-index", "addition target must be unique and within the evolving sequence", target).await);
         }
         previous = Some(index);
         length += 1;
@@ -1490,7 +1490,7 @@ async fn validate_named_targets<'a>(
         let mut target = prefix.to_vec();
         target.push(key.to_string());
         if !base.insert(key) {
-            return Err(target_error("duplicate-base-target", "base names must be unique", target));
+            return Err(target_error("duplicate-base-target", "base names must be unique", target).await);
         }
     }
     let mut removed = BTreeSet::new();
@@ -1498,7 +1498,7 @@ async fn validate_named_targets<'a>(
         let mut target = prefix.to_vec();
         target.push(key.to_string());
         if !base.contains(key) || !removed.insert(key) {
-            return Err(target_error("invalid-remove-target", "removal target must exist exactly once", target));
+            return Err(target_error("invalid-remove-target", "removal target must exist exactly once", target).await);
         }
     }
     let mut modified = BTreeSet::new();
@@ -1506,7 +1506,7 @@ async fn validate_named_targets<'a>(
         let mut target = prefix.to_vec();
         target.push(key.to_string());
         if !base.contains(key) || removed.contains(key) || !modified.insert(key) {
-            return Err(target_error("invalid-modify-target", "modification target must exist exactly once and remain present", target));
+            return Err(target_error("invalid-modify-target", "modification target must exist exactly once and remain present", target).await);
         }
     }
     let mut length = base.len() - removed.len();
@@ -1518,7 +1518,7 @@ async fn validate_named_targets<'a>(
         let mut target = prefix.to_vec();
         target.push(key.to_string());
         if base.contains(key) || !added_keys.insert(key) || index > length || previous == Some(index) {
-            return Err(target_error("invalid-add-target", "addition name and position must be unique and valid", target));
+            return Err(target_error("invalid-add-target", "addition name and position must be unique and valid", target).await);
         }
         previous = Some(index);
         length += 1;
@@ -1542,12 +1542,12 @@ async fn entity_diff_matches(entity: &DxfEntity, diff: &DxfEntityDiff) -> bool {
 }
 
 async fn validate_entities_diff(base: &[DxfEntity], diff: &DxfEntitiesDiff, prefix: &[String]) -> MutationApplyResult<()> {
-    validate_indexed_targets(base.len(), &diff.removed, diff.modified.iter().map(|entry| entry.index), diff.added.iter().map(|entry| entry.index), prefix)?;
+    validate_indexed_targets(base.len(), &diff.removed, diff.modified.iter().map(|entry| entry.index), diff.added.iter().map(|entry| entry.index), prefix).await?;
     for entry in &diff.modified {
         if !entity_diff_matches(&base[entry.index], &entry.diff) {
             let mut target = prefix.to_vec();
             target.push(entry.index.to_string());
-            return Err(target_error("entity-kind-mismatch", "kind-specific entity diff must match its target entity", target));
+            return Err(target_error("entity-kind-mismatch", "kind-specific entity diff must match its target entity", target).await);
         }
     }
     Ok(())
@@ -1561,7 +1561,7 @@ async fn validate_dxf_diff(diff: &DxfDiff, base: &DxfSnapshot) -> MutationApplyR
             value.modified.iter().map(|entry| entry.name.as_str()),
             value.added.iter().map(|entry| (entry.index, entry.header_var.name.as_str())),
             &["headerVars".to_string()],
-        )?;
+        ).await?;
     }
     if let Some(tables) = &diff.tables {
         if let Some(value) = &tables.layers {
@@ -1571,7 +1571,7 @@ async fn validate_dxf_diff(diff: &DxfDiff, base: &DxfSnapshot) -> MutationApplyR
                 value.modified.iter().map(|entry| entry.name.as_str()),
                 value.added.iter().map(|entry| (entry.index, entry.layer.name.as_str())),
                 &["tables".to_string(), "layers".to_string()],
-            )?;
+            ).await?;
         }
         if let Some(value) = &tables.styles {
             validate_named_targets(
@@ -1580,7 +1580,7 @@ async fn validate_dxf_diff(diff: &DxfDiff, base: &DxfSnapshot) -> MutationApplyR
                 value.modified.iter().map(|entry| entry.name.as_str()),
                 value.added.iter().map(|entry| (entry.index, entry.style.name.as_str())),
                 &["tables".to_string(), "styles".to_string()],
-            )?;
+            ).await?;
         }
         if let Some(value) = &tables.linetypes {
             validate_named_targets(
@@ -1589,19 +1589,19 @@ async fn validate_dxf_diff(diff: &DxfDiff, base: &DxfSnapshot) -> MutationApplyR
                 value.modified.iter().map(|entry| entry.name.as_str()),
                 value.added.iter().map(|entry| (entry.index, entry.linetype.name.as_str())),
                 &["tables".to_string(), "linetypes".to_string()],
-            )?;
+            ).await?;
         }
     }
     if let Some(value) = &diff.blocks {
-        validate_indexed_targets(base.blocks.len(), &value.removed, value.modified.iter().map(|entry| entry.index), value.added.iter().map(|entry| entry.index), &["blocks".to_string()])?;
+        validate_indexed_targets(base.blocks.len(), &value.removed, value.modified.iter().map(|entry| entry.index), value.added.iter().map(|entry| entry.index), &["blocks".to_string()]).await?;
         for entry in &value.modified {
             if let Some(entities) = &entry.diff.entities {
-                validate_entities_diff(&base.blocks[entry.index].entities, entities, &["blocks".to_string(), entry.index.to_string(), "entities".to_string()])?;
+                validate_entities_diff(&base.blocks[entry.index].entities, entities, &["blocks".to_string(), entry.index.to_string(), "entities".to_string()]).await?;
             }
         }
     }
     if let Some(value) = &diff.entities {
-        validate_entities_diff(&base.entities, value, &["entities".to_string()])?;
+        validate_entities_diff(&base.entities, value, &["entities".to_string()]).await?;
     }
     Ok(())
 }
@@ -1619,8 +1619,8 @@ async fn apply_dxf_diff_unchecked(diff: &DxfDiff, base: &DxfSnapshot) -> DxfSnap
 
 impl MutationDiff<DxfSnapshot> for DxfDiff {
     async fn apply(&self, base: &DxfSnapshot) -> MutationApplyResult<DxfSnapshot> {
-        validate_dxf_diff(self, base)?;
-        Ok(apply_dxf_diff_unchecked(self, base))
+        validate_dxf_diff(self, base).await?;
+        Ok(apply_dxf_diff_unchecked(self, base).await)
     }
 
     /// ➕️ Structural, total, base-free sequential-coalesce (`## Absorb` contract): every
@@ -1631,25 +1631,25 @@ impl MutationDiff<DxfSnapshot> for DxfDiff {
             (None, None) => None,
             (Some(a), None) => Some(a),
             (None, Some(b)) => Some(b),
-            (Some(a), Some(b)) => DxfHeaderVarsDiff::absorb(a, b),
+            (Some(a), Some(b)) => DxfHeaderVarsDiff::absorb(a, b).await,
         };
         self.tables = match (self.tables.take(), other.tables) {
             (None, None) => None,
             (Some(a), None) => Some(a),
             (None, Some(b)) => Some(b),
-            (Some(a), Some(b)) => DxfTablesDiff::absorb(a, b),
+            (Some(a), Some(b)) => DxfTablesDiff::absorb(a, b).await,
         };
         self.blocks = match (self.blocks.take(), other.blocks) {
             (None, None) => None,
             (Some(a), None) => Some(a),
             (None, Some(b)) => Some(b),
-            (Some(a), Some(b)) => DxfBlocksDiff::absorb(a, b),
+            (Some(a), Some(b)) => DxfBlocksDiff::absorb(a, b).await,
         };
         self.entities = match (self.entities.take(), other.entities) {
             (None, None) => None,
             (Some(a), None) => Some(a),
             (None, Some(b)) => Some(b),
-            (Some(a), Some(b)) => DxfEntitiesDiff::absorb(a, b),
+            (Some(a), Some(b)) => DxfEntitiesDiff::absorb(a, b).await,
         };
     }
 }
@@ -1658,15 +1658,15 @@ impl DiffAlgebra<DxfSnapshot> for DxfDiff {
     /// 🔁️ Diff-level undo, derived generically (correct by construction) via `apply` + `between`.
     async fn inverse(&self, base: &DxfSnapshot) -> Self {
         let mutated = apply_dxf_diff_unchecked(self, base);
-        Self::between(&mutated, base)
+        Self::between(&mutated, base).await
     }
 
     async fn between(base: &DxfSnapshot, other: &DxfSnapshot) -> Self {
         DxfDiff {
-            header_vars: DxfHeaderVarsDiff::between(&base.header_vars, &other.header_vars),
-            tables: DxfTablesDiff::between(&base.tables, &other.tables),
-            blocks: DxfBlocksDiff::between(&base.blocks, &other.blocks),
-            entities: DxfEntitiesDiff::between(&base.entities, &other.entities),
+            header_vars: DxfHeaderVarsDiff::between(&base.header_vars, &other.header_vars).await,
+            tables: DxfTablesDiff::between(&base.tables, &other.tables).await,
+            blocks: DxfBlocksDiff::between(&base.blocks, &other.blocks).await,
+            entities: DxfEntitiesDiff::between(&base.entities, &other.entities).await,
         }
     }
 
@@ -1681,7 +1681,7 @@ impl DiffAlgebra<DxfSnapshot> for DxfDiff {
 /// 🧩 `SetSnapshot`'s diff is the sparse field-by-field `between(base, next)` — no full-replace
 /// slot exists on `DxfDiff` to short-circuit into.
 pub async fn diff_set_snapshot(base: &DxfSnapshot, next: &DxfSnapshot) -> DxfDiff {
-    DxfDiff::between(base, next)
+    DxfDiff::between(base, next).await
 }
 //#endregion 🔖️Diff
 
@@ -1702,7 +1702,7 @@ pub async fn linetype_diff_between(a: &DxfLinetype, b: &DxfLinetype) -> DxfLinet
     <DxfLinetype as DxfNamedElem>::diff_between(a, b)
 }
 pub async fn entity_diff_between_pub(a: &DxfEntity, b: &DxfEntity) -> DxfEntityDiff {
-    entity_diff_between(a, b)
+    entity_diff_between(a, b).await
 }
 pub async fn block_diff_between(a: &DxfBlock, b: &DxfBlock) -> DxfBlockDiff {
     <DxfBlock as DxfIndexElem>::diff_between(a, b)
@@ -1797,10 +1797,10 @@ pub(crate) async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
 pub(crate) async fn enc_str(s: &str) -> String {
-    hex_encode(s.as_bytes())
+    hex_encode(s.as_bytes()).await
 }
 pub(crate) async fn dec_str(s: &str) -> Result<String, String> {
-    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
+    String::from_utf8(hex_decode(s).await?).map_err(|e| e.to_string())
 }
 async fn parse_usize(s: &str) -> Result<usize, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
@@ -1843,8 +1843,8 @@ pub(crate) async fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String
     }
 }
 pub(crate) async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
-    let inner = strip_brackets(s)?;
-    match split_top_level(inner, ',').as_slice() {
+    let inner = strip_brackets(s).await?;
+    match split_top_level(inner, ',').await.as_slice() {
         ["0"] => Ok(None),
         [tag, value] if *tag == "1" => Ok(Some(dec(value)?)),
         other => Err(format!("option decode: bad shape {other:?}")),
@@ -1856,7 +1856,7 @@ pub(crate) async fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> Stri
     format!("[{}]", items.iter().map(enc).collect::<Vec<_>>().join(","))
 }
 pub(crate) async fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
-    split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec).collect()
+    split_top_level(strip_brackets(s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec).collect()
 }
 //#endregion 🔖️Primitives
 
@@ -1865,15 +1865,15 @@ pub(crate) async fn enc_point3(p: &[f64; 3]) -> String {
     format!("[{},{},{}]", enc_f64(p[0]), enc_f64(p[1]), enc_f64(p[2]))
 }
 pub(crate) async fn dec_point3(s: &str) -> Result<[f64; 3], String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [x, y, z] = parts.as_slice() else { return Err(format!("point3: expected 3 fields, got {}", parts.len())) };
-    Ok([dec_f64(x)?, dec_f64(y)?, dec_f64(z)?])
+    Ok([dec_f64(x).await?, dec_f64(y).await?, dec_f64(z).await?])
 }
 async fn enc_points4(p: &[[f64; 3]; 4]) -> String {
-    enc_list(p.as_slice(), enc_point3)
+    enc_list(p.as_slice(), enc_point3).await
 }
 async fn dec_points4(s: &str) -> Result<[[f64; 3]; 4], String> {
-    let v = dec_list(s, dec_point3)?;
+    let v = dec_list(s, dec_point3).await?;
     let arr: [[f64; 3]; 4] = v.clone().try_into().map_err(|_| format!("points4: expected 4 points, got {}", v.len()))?;
     Ok(arr)
 }
@@ -1892,15 +1892,15 @@ pub(crate) async fn enc_dxf_value(v: &DxfValue) -> String {
 }
 pub(crate) async fn dec_dxf_value(s: &str) -> Result<DxfValue, String> {
     let (tag, rest) = s.split_at(1);
-    let inner = strip_brackets(rest)?;
+    let inner = strip_brackets(rest).await?;
     match tag {
-        "S" => Ok(DxfValue::Str { value: dec_str(inner)? }),
+        "S" => Ok(DxfValue::Str { value: dec_str(inner).await? }),
         "I" => Ok(DxfValue::Int { value: inner.parse().map_err(|e: std::num::ParseIntError| e.to_string())? }),
-        "D" => Ok(DxfValue::Double { value: dec_f64(inner)? }),
+        "D" => Ok(DxfValue::Double { value: dec_f64(inner).await? }),
         "P" => {
-            let parts = split_top_level(inner, ',');
+            let parts = split_top_level(inner, ',').await;
             let [x, y, z] = parts.as_slice() else { return Err(format!("dxf value point: expected 3 fields, got {}", parts.len())) };
-            Ok(DxfValue::Point { value: [dec_f64(x)?, dec_f64(y)?, dec_f64(z)?] })
+            Ok(DxfValue::Point { value: [dec_f64(x).await?, dec_f64(y).await?, dec_f64(z).await?] })
         }
         other => Err(format!("dxf value: unknown tag {other:?}")),
     }
@@ -1909,15 +1909,15 @@ pub(crate) async fn enc_group_code(pair: &(i32, DxfValue)) -> String {
     format!("[{},{}]", pair.0, enc_dxf_value(&pair.1))
 }
 pub(crate) async fn dec_group_code(s: &str) -> Result<(i32, DxfValue), String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [code, value] = parts.as_slice() else { return Err(format!("group code: expected 2 fields, got {}", parts.len())) };
-    Ok((code.parse().map_err(|e: std::num::ParseIntError| e.to_string())?, dec_dxf_value(value)?))
+    Ok((code.parse().map_err(|e: std::num::ParseIntError| e.to_string())?, dec_dxf_value(value).await?))
 }
 pub(crate) async fn enc_group_codes(v: &[(i32, DxfValue)]) -> String {
-    enc_list(v, enc_group_code)
+    enc_list(v, enc_group_code).await
 }
 pub(crate) async fn dec_group_codes(s: &str) -> Result<Vec<(i32, DxfValue)>, String> {
-    dec_list(s, dec_group_code)
+    dec_list(s, dec_group_code).await
 }
 //#endregion 🔖️ValueCodecs
 
@@ -1926,15 +1926,15 @@ pub(crate) async fn enc_vertex(v: &DxfVertex) -> String {
     format!("[{},{},{},{},{}]", enc_f64(v.x), enc_f64(v.y), enc_f64(v.z), enc_f64(v.bulge), enc_group_codes(&v.unknown_group_codes))
 }
 pub(crate) async fn dec_vertex(s: &str) -> Result<DxfVertex, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [x, y, z, bulge, unknown] = parts.as_slice() else { return Err(format!("vertex: expected 5 fields, got {}", parts.len())) };
-    Ok(DxfVertex { x: dec_f64(x)?, y: dec_f64(y)?, z: dec_f64(z)?, bulge: dec_f64(bulge)?, unknown_group_codes: dec_group_codes(unknown)? })
+    Ok(DxfVertex { x: dec_f64(x).await?, y: dec_f64(y).await?, z: dec_f64(z).await?, bulge: dec_f64(bulge).await?, unknown_group_codes: dec_group_codes(unknown).await? })
 }
 pub(crate) async fn enc_vertices(vs: &[DxfVertex]) -> String {
-    enc_list(vs, enc_vertex)
+    enc_list(vs, enc_vertex).await
 }
 pub(crate) async fn dec_vertices(s: &str) -> Result<Vec<DxfVertex>, String> {
-    dec_list(s, dec_vertex)
+    dec_list(s, dec_vertex).await
 }
 
 /// 📐️ `DxfEntity` (data-carrying enum, the whole entity — not its diff): tag prefix per kind,
@@ -1963,56 +1963,56 @@ pub(crate) async fn enc_dxf_entity(e: &DxfEntity) -> String {
 }
 pub(crate) async fn dec_dxf_entity(s: &str) -> Result<DxfEntity, String> {
     let (tag, rest) = s.split_at(1);
-    let inner = strip_brackets(rest)?;
+    let inner = strip_brackets(rest).await?;
     match tag {
         "L" => {
-            let parts = split_top_level(inner, ',');
+            let parts = split_top_level(inner, ',').await;
             let [start, end, layer, unknown] = parts.as_slice() else { return Err(format!("entity line: expected 4 fields, got {}", parts.len())) };
-            Ok(DxfEntity::Line { start: dec_point3(start)?, end: dec_point3(end)?, layer: dec_str(layer)?, unknown_group_codes: dec_group_codes(unknown)? })
+            Ok(DxfEntity::Line { start: dec_point3(start).await?, end: dec_point3(end).await?, layer: dec_str(layer).await?, unknown_group_codes: dec_group_codes(unknown).await? })
         }
         "C" => {
-            let parts = split_top_level(inner, ',');
+            let parts = split_top_level(inner, ',').await;
             let [center, radius, layer, unknown] = parts.as_slice() else { return Err(format!("entity circle: expected 4 fields, got {}", parts.len())) };
-            Ok(DxfEntity::Circle { center: dec_point3(center)?, radius: dec_f64(radius)?, layer: dec_str(layer)?, unknown_group_codes: dec_group_codes(unknown)? })
+            Ok(DxfEntity::Circle { center: dec_point3(center).await?, radius: dec_f64(radius).await?, layer: dec_str(layer).await?, unknown_group_codes: dec_group_codes(unknown).await? })
         }
         "A" => {
-            let parts = split_top_level(inner, ',');
+            let parts = split_top_level(inner, ',').await;
             let [center, radius, start_angle, end_angle, layer, unknown] = parts.as_slice() else { return Err(format!("entity arc: expected 6 fields, got {}", parts.len())) };
-            Ok(DxfEntity::Arc { center: dec_point3(center)?, radius: dec_f64(radius)?, start_angle: dec_f64(start_angle)?, end_angle: dec_f64(end_angle)?, layer: dec_str(layer)?, unknown_group_codes: dec_group_codes(unknown)? })
+            Ok(DxfEntity::Arc { center: dec_point3(center).await?, radius: dec_f64(radius).await?, start_angle: dec_f64(start_angle).await?, end_angle: dec_f64(end_angle).await?, layer: dec_str(layer).await?, unknown_group_codes: dec_group_codes(unknown).await? })
         }
         "W" => {
-            let parts = split_top_level(inner, ',');
+            let parts = split_top_level(inner, ',').await;
             let [vertices, closed, layer, unknown] = parts.as_slice() else { return Err(format!("entity polyline: expected 4 fields, got {}", parts.len())) };
-            Ok(DxfEntity::Polyline { vertices: dec_vertices(vertices)?, closed: *closed == "1", layer: dec_str(layer)?, unknown_group_codes: dec_group_codes(unknown)? })
+            Ok(DxfEntity::Polyline { vertices: dec_vertices(vertices).await?, closed: *closed == "1", layer: dec_str(layer).await?, unknown_group_codes: dec_group_codes(unknown).await? })
         }
         "T" => {
-            let parts = split_top_level(inner, ',');
+            let parts = split_top_level(inner, ',').await;
             let [position, height, value, layer, unknown] = parts.as_slice() else { return Err(format!("entity text: expected 5 fields, got {}", parts.len())) };
-            Ok(DxfEntity::Text { position: dec_point3(position)?, height: dec_f64(height)?, value: dec_str(value)?, layer: dec_str(layer)?, unknown_group_codes: dec_group_codes(unknown)? })
+            Ok(DxfEntity::Text { position: dec_point3(position).await?, height: dec_f64(height).await?, value: dec_str(value).await?, layer: dec_str(layer).await?, unknown_group_codes: dec_group_codes(unknown).await? })
         }
         "S" => {
-            let parts = split_top_level(inner, ',');
+            let parts = split_top_level(inner, ',').await;
             let [points, layer, unknown] = parts.as_slice() else { return Err(format!("entity solid: expected 3 fields, got {}", parts.len())) };
-            Ok(DxfEntity::Solid { points: dec_points4(points)?, layer: dec_str(layer)?, unknown_group_codes: dec_group_codes(unknown)? })
+            Ok(DxfEntity::Solid { points: dec_points4(points).await?, layer: dec_str(layer).await?, unknown_group_codes: dec_group_codes(unknown).await? })
         }
         "I" => {
-            let parts = split_top_level(inner, ',');
+            let parts = split_top_level(inner, ',').await;
             let [block_name, position, scale, rotation, layer, unknown] = parts.as_slice() else { return Err(format!("entity insert: expected 6 fields, got {}", parts.len())) };
-            Ok(DxfEntity::Insert { block_name: dec_str(block_name)?, position: dec_point3(position)?, scale: dec_point3(scale)?, rotation: dec_f64(rotation)?, layer: dec_str(layer)?, unknown_group_codes: dec_group_codes(unknown)? })
+            Ok(DxfEntity::Insert { block_name: dec_str(block_name).await?, position: dec_point3(position).await?, scale: dec_point3(scale).await?, rotation: dec_f64(rotation).await?, layer: dec_str(layer).await?, unknown_group_codes: dec_group_codes(unknown).await? })
         }
         "O" => {
-            let parts = split_top_level(inner, ',');
+            let parts = split_top_level(inner, ',').await;
             let [kind, group_codes] = parts.as_slice() else { return Err(format!("entity other: expected 2 fields, got {}", parts.len())) };
-            Ok(DxfEntity::Other { kind: dec_str(kind)?, group_codes: dec_group_codes(group_codes)? })
+            Ok(DxfEntity::Other { kind: dec_str(kind).await?, group_codes: dec_group_codes(group_codes).await? })
         }
         other => Err(format!("dxf entity: unknown tag {other:?}")),
     }
 }
 pub(crate) async fn enc_dxf_entities(es: &[DxfEntity]) -> String {
-    enc_list(es, enc_dxf_entity)
+    enc_list(es, enc_dxf_entity).await
 }
 pub(crate) async fn dec_dxf_entities(s: &str) -> Result<Vec<DxfEntity>, String> {
-    dec_list(s, dec_dxf_entity)
+    dec_list(s, dec_dxf_entity).await
 }
 //#endregion 🔖️EntityValueCodecs
 
@@ -2024,71 +2024,71 @@ pub(crate) async fn enc_header_var(hv: &DxfHeaderVar) -> String {
     format!("[{},{},{},{}]", enc_str(&hv.name), hv.group_code, enc_dxf_value(&hv.value), enc_group_codes(&hv.extra_group_codes))
 }
 pub(crate) async fn dec_header_var(s: &str) -> Result<DxfHeaderVar, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [name, group_code, value, extra] = parts.as_slice() else { return Err(format!("header var: expected 4 fields, got {}", parts.len())) };
-    Ok(DxfHeaderVar { name: dec_str(name)?, group_code: group_code.parse().map_err(|e: std::num::ParseIntError| e.to_string())?, value: dec_dxf_value(value)?, extra_group_codes: dec_group_codes(extra)? })
+    Ok(DxfHeaderVar { name: dec_str(name).await?, group_code: group_code.parse().map_err(|e: std::num::ParseIntError| e.to_string())?, value: dec_dxf_value(value).await?, extra_group_codes: dec_group_codes(extra).await? })
 }
 pub(crate) async fn enc_layer(l: &DxfLayer) -> String {
     format!("[{},{},{},{},{}]", enc_str(&l.name), l.color, enc_str(&l.linetype), l.flags, enc_group_codes(&l.unknown_group_codes))
 }
 pub(crate) async fn dec_layer(s: &str) -> Result<DxfLayer, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [name, color, linetype, flags, unknown] = parts.as_slice() else { return Err(format!("layer: expected 5 fields, got {}", parts.len())) };
     Ok(DxfLayer {
-        name: dec_str(name)?,
+        name: dec_str(name).await?,
         color: color.parse().map_err(|e: std::num::ParseIntError| e.to_string())?,
-        linetype: dec_str(linetype)?,
+        linetype: dec_str(linetype).await?,
         flags: flags.parse().map_err(|e: std::num::ParseIntError| e.to_string())?,
-        unknown_group_codes: dec_group_codes(unknown)?,
+        unknown_group_codes: dec_group_codes(unknown).await?,
     })
 }
 pub(crate) async fn enc_style(s: &DxfStyle) -> String {
     format!("[{},{},{},{}]", enc_str(&s.name), s.flags, enc_str(&s.font_name), enc_group_codes(&s.unknown_group_codes))
 }
 pub(crate) async fn dec_style(s: &str) -> Result<DxfStyle, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [name, flags, font_name, unknown] = parts.as_slice() else { return Err(format!("style: expected 4 fields, got {}", parts.len())) };
-    Ok(DxfStyle { name: dec_str(name)?, flags: flags.parse().map_err(|e: std::num::ParseIntError| e.to_string())?, font_name: dec_str(font_name)?, unknown_group_codes: dec_group_codes(unknown)? })
+    Ok(DxfStyle { name: dec_str(name).await?, flags: flags.parse().map_err(|e: std::num::ParseIntError| e.to_string())?, font_name: dec_str(font_name).await?, unknown_group_codes: dec_group_codes(unknown).await? })
 }
 pub(crate) async fn enc_linetype(l: &DxfLinetype) -> String {
     format!("[{},{},{},{}]", enc_str(&l.name), l.flags, enc_str(&l.description), enc_group_codes(&l.unknown_group_codes))
 }
 pub(crate) async fn dec_linetype(s: &str) -> Result<DxfLinetype, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [name, flags, description, unknown] = parts.as_slice() else { return Err(format!("linetype: expected 4 fields, got {}", parts.len())) };
-    Ok(DxfLinetype { name: dec_str(name)?, flags: flags.parse().map_err(|e: std::num::ParseIntError| e.to_string())?, description: dec_str(description)?, unknown_group_codes: dec_group_codes(unknown)? })
+    Ok(DxfLinetype { name: dec_str(name).await?, flags: flags.parse().map_err(|e: std::num::ParseIntError| e.to_string())?, description: dec_str(description).await?, unknown_group_codes: dec_group_codes(unknown).await? })
 }
 pub(crate) async fn enc_block(b: &DxfBlock) -> String {
     format!("[{},{},{},{}]", enc_str(&b.name), enc_point3(&b.base_point), enc_dxf_entities(&b.entities), enc_group_codes(&b.unknown_group_codes))
 }
 pub(crate) async fn dec_block(s: &str) -> Result<DxfBlock, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [name, base_point, entities, unknown] = parts.as_slice() else { return Err(format!("block: expected 4 fields, got {}", parts.len())) };
-    Ok(DxfBlock { name: dec_str(name)?, base_point: dec_point3(base_point)?, entities: dec_dxf_entities(entities)?, unknown_group_codes: dec_group_codes(unknown)? })
+    Ok(DxfBlock { name: dec_str(name).await?, base_point: dec_point3(base_point).await?, entities: dec_dxf_entities(entities).await?, unknown_group_codes: dec_group_codes(unknown).await? })
 }
 pub(crate) async fn enc_dxf_tag(t: &DxfTag) -> String {
     format!("[{},{}]", t.code, enc_str(&t.value))
 }
 pub(crate) async fn dec_dxf_tag(s: &str) -> Result<DxfTag, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [code, value] = parts.as_slice() else { return Err(format!("tag: expected 2 fields, got {}", parts.len())) };
-    Ok(DxfTag { code: code.parse().map_err(|e: std::num::ParseIntError| e.to_string())?, value: dec_str(value)? })
+    Ok(DxfTag { code: code.parse().map_err(|e: std::num::ParseIntError| e.to_string())?, value: dec_str(value).await? })
 }
 pub(crate) async fn enc_other_table(t: &DxfOtherTable) -> String {
     format!("[{},{}]", enc_str(&t.name), enc_list(&t.tags, enc_dxf_tag))
 }
 pub(crate) async fn dec_other_table(s: &str) -> Result<DxfOtherTable, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [name, tags] = parts.as_slice() else { return Err(format!("other table: expected 2 fields, got {}", parts.len())) };
-    Ok(DxfOtherTable { name: dec_str(name)?, tags: dec_list(tags, dec_dxf_tag)? })
+    Ok(DxfOtherTable { name: dec_str(name).await?, tags: dec_list(tags, dec_dxf_tag).await? })
 }
 pub(crate) async fn enc_dxf_tables(t: &DxfTables) -> String {
     format!("[{},{},{}]", enc_list(&t.layers, enc_layer), enc_list(&t.styles, enc_style), enc_list(&t.linetypes, enc_linetype))
 }
 pub(crate) async fn dec_dxf_tables(s: &str) -> Result<DxfTables, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [layers, styles, linetypes] = parts.as_slice() else { return Err(format!("tables: expected 3 fields, got {}", parts.len())) };
-    Ok(DxfTables { layers: dec_list(layers, dec_layer)?, styles: dec_list(styles, dec_style)?, linetypes: dec_list(linetypes, dec_linetype)? })
+    Ok(DxfTables { layers: dec_list(layers, dec_layer).await?, styles: dec_list(styles, dec_style).await?, linetypes: dec_list(linetypes, dec_linetype).await? })
 }
 /// 🧬️ Whole `DxfSnapshot` — needed by `🧬️mutations::DxfMutation::SetSnapshot`'s `OpText`/
 /// `OpBinary` payload (§3a's mutation-side blocker: `SetSnapshot` always carries the whole
@@ -2098,17 +2098,17 @@ pub(crate) async fn enc_dxf_snapshot(s: &DxfSnapshot) -> String {
     format!("[{},{},{},{},{},{}]", enc_str(&s.schema), enc_list(&s.header_vars, enc_header_var), enc_dxf_tables(&s.tables), enc_list(&s.other_tables, enc_other_table), enc_list(&s.blocks, enc_block), enc_dxf_entities(&s.entities),)
 }
 pub(crate) async fn dec_dxf_snapshot(s: &str) -> Result<DxfSnapshot, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [schema, header_vars, tables, other_tables, blocks, entities] = parts.as_slice() else {
         return Err(format!("snapshot: expected 6 fields, got {}", parts.len()));
     };
     Ok(DxfSnapshot {
-        schema: dec_str(schema)?,
-        header_vars: dec_list(header_vars, dec_header_var)?,
-        tables: dec_dxf_tables(tables)?,
-        other_tables: dec_list(other_tables, dec_other_table)?,
-        blocks: dec_list(blocks, dec_block)?,
-        entities: dec_dxf_entities(entities)?,
+        schema: dec_str(schema).await?,
+        header_vars: dec_list(header_vars, dec_header_var).await?,
+        tables: dec_dxf_tables(tables).await?,
+        other_tables: dec_list(other_tables, dec_other_table).await?,
+        blocks: dec_list(blocks, dec_block).await?,
+        entities: dec_dxf_entities(entities).await?,
     })
 }
 //#endregion 🔖️ItemCodecs
@@ -2118,38 +2118,38 @@ async fn enc_header_var_diff(d: &DxfHeaderVarDiff) -> String {
     format!("[{},{},{}]", encode_option(&d.group_code, |v| v.to_string()), encode_option(&d.value, enc_dxf_value), encode_option(&d.extra_group_codes, |v| enc_group_codes(v)),)
 }
 async fn dec_header_var_diff(s: &str) -> Result<DxfHeaderVarDiff, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [group_code, value, extra] = parts.as_slice() else { return Err(format!("header var diff: expected 3 fields, got {}", parts.len())) };
-    Ok(DxfHeaderVarDiff { group_code: decode_option(group_code, |v| v.parse().map_err(|e: std::num::ParseIntError| e.to_string()))?, value: decode_option(value, dec_dxf_value)?, extra_group_codes: decode_option(extra, dec_group_codes)? })
+    Ok(DxfHeaderVarDiff { group_code: decode_option(group_code, |v| v.parse().map_err(|e: std::num::ParseIntError| e.to_string())).await?, value: decode_option(value, dec_dxf_value).await?, extra_group_codes: decode_option(extra, dec_group_codes).await? })
 }
 async fn enc_layer_diff(d: &DxfLayerDiff) -> String {
     format!("[{},{},{},{}]", encode_option(&d.color, |v| v.to_string()), encode_option(&d.linetype, |v| enc_str(v)), encode_option(&d.flags, |v| v.to_string()), encode_option(&d.unknown_group_codes, |v| enc_group_codes(v)),)
 }
 async fn dec_layer_diff(s: &str) -> Result<DxfLayerDiff, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [color, linetype, flags, unknown] = parts.as_slice() else { return Err(format!("layer diff: expected 4 fields, got {}", parts.len())) };
     Ok(DxfLayerDiff {
-        color: decode_option(color, |v| v.parse().map_err(|e: std::num::ParseIntError| e.to_string()))?,
-        linetype: decode_option(linetype, dec_str)?,
-        flags: decode_option(flags, |v| v.parse().map_err(|e: std::num::ParseIntError| e.to_string()))?,
-        unknown_group_codes: decode_option(unknown, dec_group_codes)?,
+        color: decode_option(color, |v| v.parse().map_err(|e: std::num::ParseIntError| e.to_string())).await?,
+        linetype: decode_option(linetype, dec_str).await?,
+        flags: decode_option(flags, |v| v.parse().map_err(|e: std::num::ParseIntError| e.to_string())).await?,
+        unknown_group_codes: decode_option(unknown, dec_group_codes).await?,
     })
 }
 async fn enc_style_diff(d: &DxfStyleDiff) -> String {
     format!("[{},{},{}]", encode_option(&d.flags, |v| v.to_string()), encode_option(&d.font_name, |v| enc_str(v)), encode_option(&d.unknown_group_codes, |v| enc_group_codes(v)),)
 }
 async fn dec_style_diff(s: &str) -> Result<DxfStyleDiff, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [flags, font_name, unknown] = parts.as_slice() else { return Err(format!("style diff: expected 3 fields, got {}", parts.len())) };
-    Ok(DxfStyleDiff { flags: decode_option(flags, |v| v.parse().map_err(|e: std::num::ParseIntError| e.to_string()))?, font_name: decode_option(font_name, dec_str)?, unknown_group_codes: decode_option(unknown, dec_group_codes)? })
+    Ok(DxfStyleDiff { flags: decode_option(flags, |v| v.parse().map_err(|e: std::num::ParseIntError| e.to_string())).await?, font_name: decode_option(font_name, dec_str).await?, unknown_group_codes: decode_option(unknown, dec_group_codes).await? })
 }
 async fn enc_linetype_diff(d: &DxfLinetypeDiff) -> String {
     format!("[{},{},{}]", encode_option(&d.flags, |v| v.to_string()), encode_option(&d.description, |v| enc_str(v)), encode_option(&d.unknown_group_codes, |v| enc_group_codes(v)),)
 }
 async fn dec_linetype_diff(s: &str) -> Result<DxfLinetypeDiff, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [flags, description, unknown] = parts.as_slice() else { return Err(format!("linetype diff: expected 3 fields, got {}", parts.len())) };
-    Ok(DxfLinetypeDiff { flags: decode_option(flags, |v| v.parse().map_err(|e: std::num::ParseIntError| e.to_string()))?, description: decode_option(description, dec_str)?, unknown_group_codes: decode_option(unknown, dec_group_codes)? })
+    Ok(DxfLinetypeDiff { flags: decode_option(flags, |v| v.parse().map_err(|e: std::num::ParseIntError| e.to_string())).await?, description: decode_option(description, dec_str).await?, unknown_group_codes: decode_option(unknown, dec_group_codes).await? })
 }
 
 /// 🌳 `DxfEntityDiff` itself needs a tag (like `SvgNodeDiff`/`XmlNode`) since it appears standalone
@@ -2201,70 +2201,70 @@ async fn enc_entity_diff(d: &DxfEntityDiff) -> String {
 }
 async fn dec_entity_diff(s: &str) -> Result<DxfEntityDiff, String> {
     let (tag, rest) = s.split_at(1);
-    let inner = strip_brackets(rest)?;
+    let inner = strip_brackets(rest).await?;
     match tag {
-        "R" => Ok(DxfEntityDiff::Replace { entity: dec_dxf_entity(inner)? }),
+        "R" => Ok(DxfEntityDiff::Replace { entity: dec_dxf_entity(inner).await? }),
         "L" => {
-            let parts = split_top_level(inner, ',');
+            let parts = split_top_level(inner, ',').await;
             let [start, end, layer, unknown] = parts.as_slice() else { return Err(format!("line diff: expected 4 fields, got {}", parts.len())) };
-            Ok(DxfEntityDiff::Line(DxfLineDiff { start: decode_option(start, dec_point3)?, end: decode_option(end, dec_point3)?, layer: decode_option(layer, dec_str)?, unknown_group_codes: decode_option(unknown, dec_group_codes)? }))
+            Ok(DxfEntityDiff::Line(DxfLineDiff { start: decode_option(start, dec_point3).await?, end: decode_option(end, dec_point3).await?, layer: decode_option(layer, dec_str).await?, unknown_group_codes: decode_option(unknown, dec_group_codes).await? }))
         }
         "C" => {
-            let parts = split_top_level(inner, ',');
+            let parts = split_top_level(inner, ',').await;
             let [center, radius, layer, unknown] = parts.as_slice() else { return Err(format!("circle diff: expected 4 fields, got {}", parts.len())) };
-            Ok(DxfEntityDiff::Circle(DxfCircleDiff { center: decode_option(center, dec_point3)?, radius: decode_option(radius, dec_f64)?, layer: decode_option(layer, dec_str)?, unknown_group_codes: decode_option(unknown, dec_group_codes)? }))
+            Ok(DxfEntityDiff::Circle(DxfCircleDiff { center: decode_option(center, dec_point3).await?, radius: decode_option(radius, dec_f64).await?, layer: decode_option(layer, dec_str).await?, unknown_group_codes: decode_option(unknown, dec_group_codes).await? }))
         }
         "A" => {
-            let parts = split_top_level(inner, ',');
+            let parts = split_top_level(inner, ',').await;
             let [center, radius, start_angle, end_angle, layer, unknown] = parts.as_slice() else { return Err(format!("arc diff: expected 6 fields, got {}", parts.len())) };
             Ok(DxfEntityDiff::Arc(DxfArcDiff {
-                center: decode_option(center, dec_point3)?,
-                radius: decode_option(radius, dec_f64)?,
-                start_angle: decode_option(start_angle, dec_f64)?,
-                end_angle: decode_option(end_angle, dec_f64)?,
-                layer: decode_option(layer, dec_str)?,
-                unknown_group_codes: decode_option(unknown, dec_group_codes)?,
+                center: decode_option(center, dec_point3).await?,
+                radius: decode_option(radius, dec_f64).await?,
+                start_angle: decode_option(start_angle, dec_f64).await?,
+                end_angle: decode_option(end_angle, dec_f64).await?,
+                layer: decode_option(layer, dec_str).await?,
+                unknown_group_codes: decode_option(unknown, dec_group_codes).await?,
             }))
         }
         "W" => {
-            let parts = split_top_level(inner, ',');
+            let parts = split_top_level(inner, ',').await;
             let [vertices, closed, layer, unknown] = parts.as_slice() else { return Err(format!("polyline diff: expected 4 fields, got {}", parts.len())) };
             Ok(DxfEntityDiff::Polyline(DxfPolylineDiff {
-                vertices: decode_option(vertices, dec_vertices)?,
-                closed: decode_option(closed, |v| Ok(v == "1"))?,
-                layer: decode_option(layer, dec_str)?,
-                unknown_group_codes: decode_option(unknown, dec_group_codes)?,
+                vertices: decode_option(vertices, dec_vertices).await?,
+                closed: decode_option(closed, |v| Ok(v == "1")).await?,
+                layer: decode_option(layer, dec_str).await?,
+                unknown_group_codes: decode_option(unknown, dec_group_codes).await?,
             }))
         }
         "T" => {
-            let parts = split_top_level(inner, ',');
+            let parts = split_top_level(inner, ',').await;
             let [position, height, value, layer, unknown] = parts.as_slice() else { return Err(format!("text diff: expected 5 fields, got {}", parts.len())) };
             Ok(DxfEntityDiff::Text(DxfTextDiff {
-                position: decode_option(position, dec_point3)?,
-                height: decode_option(height, dec_f64)?,
-                value: decode_option(value, dec_str)?,
-                layer: decode_option(layer, dec_str)?,
-                unknown_group_codes: decode_option(unknown, dec_group_codes)?,
+                position: decode_option(position, dec_point3).await?,
+                height: decode_option(height, dec_f64).await?,
+                value: decode_option(value, dec_str).await?,
+                layer: decode_option(layer, dec_str).await?,
+                unknown_group_codes: decode_option(unknown, dec_group_codes).await?,
             }))
         }
         "S" => {
-            let parts = split_top_level(inner, ',');
+            let parts = split_top_level(inner, ',').await;
             let [points, layer, unknown] = parts.as_slice() else { return Err(format!("solid diff: expected 3 fields, got {}", parts.len())) };
-            Ok(DxfEntityDiff::Solid(DxfSolidDiff { points: decode_option(points, dec_points4)?, layer: decode_option(layer, dec_str)?, unknown_group_codes: decode_option(unknown, dec_group_codes)? }))
+            Ok(DxfEntityDiff::Solid(DxfSolidDiff { points: decode_option(points, dec_points4).await?, layer: decode_option(layer, dec_str).await?, unknown_group_codes: decode_option(unknown, dec_group_codes).await? }))
         }
         "I" => {
-            let parts = split_top_level(inner, ',');
+            let parts = split_top_level(inner, ',').await;
             let [block_name, position, scale, rotation, layer, unknown] = parts.as_slice() else { return Err(format!("insert diff: expected 6 fields, got {}", parts.len())) };
             Ok(DxfEntityDiff::Insert(DxfInsertDiff {
-                block_name: decode_option(block_name, dec_str)?,
-                position: decode_option(position, dec_point3)?,
-                scale: decode_option(scale, dec_point3)?,
-                rotation: decode_option(rotation, dec_f64)?,
-                layer: decode_option(layer, dec_str)?,
-                unknown_group_codes: decode_option(unknown, dec_group_codes)?,
+                block_name: decode_option(block_name, dec_str).await?,
+                position: decode_option(position, dec_point3).await?,
+                scale: decode_option(scale, dec_point3).await?,
+                rotation: decode_option(rotation, dec_f64).await?,
+                layer: decode_option(layer, dec_str).await?,
+                unknown_group_codes: decode_option(unknown, dec_group_codes).await?,
             }))
         }
-        "O" => Ok(DxfEntityDiff::Other(DxfOtherDiff { group_codes: decode_option(inner, dec_group_codes)? })),
+        "O" => Ok(DxfEntityDiff::Other(DxfOtherDiff { group_codes: decode_option(inner, dec_group_codes).await? })),
         other => Err(format!("entity diff: unknown tag {other:?}")),
     }
 }
@@ -2272,17 +2272,17 @@ async fn enc_block_diff(d: &DxfBlockDiff) -> String {
     format!("[{},{},{},{}]", encode_option(&d.name, |v| enc_str(v)), encode_option(&d.base_point, enc_point3), encode_option(&d.entities, enc_entities_diff), encode_option(&d.unknown_group_codes, |v| enc_group_codes(v)),)
 }
 async fn dec_block_diff(s: &str) -> Result<DxfBlockDiff, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [name, base_point, entities, unknown] = parts.as_slice() else { return Err(format!("block diff: expected 4 fields, got {}", parts.len())) };
-    Ok(DxfBlockDiff { name: decode_option(name, dec_str)?, base_point: decode_option(base_point, dec_point3)?, entities: decode_option(entities, dec_entities_diff)?, unknown_group_codes: decode_option(unknown, dec_group_codes)? })
+    Ok(DxfBlockDiff { name: decode_option(name, dec_str).await?, base_point: decode_option(base_point, dec_point3).await?, entities: decode_option(entities, dec_entities_diff).await?, unknown_group_codes: decode_option(unknown, dec_group_codes).await? })
 }
 async fn enc_tables_diff(t: &DxfTablesDiff) -> String {
     format!("[{},{},{}]", encode_option(&t.layers, enc_layers_diff), encode_option(&t.styles, enc_styles_diff), encode_option(&t.linetypes, enc_linetypes_diff),)
 }
 async fn dec_tables_diff(s: &str) -> Result<DxfTablesDiff, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [layers, styles, linetypes] = parts.as_slice() else { return Err(format!("tables diff: expected 3 fields, got {}", parts.len())) };
-    Ok(DxfTablesDiff { layers: decode_option(layers, dec_layers_diff)?, styles: decode_option(styles, dec_styles_diff)?, linetypes: decode_option(linetypes, dec_linetypes_diff)? })
+    Ok(DxfTablesDiff { layers: decode_option(layers, dec_layers_diff).await?, styles: decode_option(styles, dec_styles_diff).await?, linetypes: decode_option(linetypes, dec_linetypes_diff).await? })
 }
 //#endregion 🔖️DiffValueCodecs
 
@@ -2300,10 +2300,10 @@ async fn enc_name_triple<T, D>(removed: &[String], modified: &[(String, D)], add
     format!("[{removed_s}];[{modified_s}];[{added_s}]")
 }
 async fn dec_name_triple<T, D>(body: &str, dec_diff: impl Fn(&str) -> Result<D, String>, dec_item: impl Fn(&str) -> Result<T, String>) -> Result<(Vec<String>, Vec<(String, D)>, Vec<(usize, T)>), String> {
-    let three = split_top_level(body, ';');
+    let three = split_top_level(body, ';').await;
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("name triple: expected 3 sections, got {}", three.len())) };
-    let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_str).collect::<Result<Vec<_>, String>>()?;
-    let modified = split_top_level(strip_brackets(modified_s)?, ',')
+    let removed = split_top_level(strip_brackets(removed_s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_str).collect::<Result<Vec<_>, String>>()?;
+    let modified = split_top_level(strip_brackets(modified_s).await?, ',')
         .into_iter()
         .filter(|s| !s.is_empty())
         .map(|entry| {
@@ -2311,7 +2311,7 @@ async fn dec_name_triple<T, D>(body: &str, dec_diff: impl Fn(&str) -> Result<D, 
             Ok((dec_str(name)?, dec_diff(rest)?))
         })
         .collect::<Result<Vec<_>, String>>()?;
-    let added = split_top_level(strip_brackets(added_s)?, ',')
+    let added = split_top_level(strip_brackets(added_s).await?, ',')
         .into_iter()
         .filter(|s| !s.is_empty())
         .map(|entry| {
@@ -2330,10 +2330,10 @@ async fn enc_index_triple<T, D>(removed: &[usize], modified: &[(usize, D)], adde
     format!("[{removed_s}];[{modified_s}];[{added_s}]")
 }
 async fn dec_index_triple<T, D>(body: &str, dec_diff: impl Fn(&str) -> Result<D, String>, dec_item: impl Fn(&str) -> Result<T, String>) -> Result<(Vec<usize>, Vec<(usize, D)>, Vec<(usize, T)>), String> {
-    let three = split_top_level(body, ';');
+    let three = split_top_level(body, ';').await;
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("index triple: expected 3 sections, got {}", three.len())) };
-    let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
-    let modified = split_top_level(strip_brackets(modified_s)?, ',')
+    let removed = split_top_level(strip_brackets(removed_s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
+    let modified = split_top_level(strip_brackets(modified_s).await?, ',')
         .into_iter()
         .filter(|s| !s.is_empty())
         .map(|entry| {
@@ -2341,7 +2341,7 @@ async fn dec_index_triple<T, D>(body: &str, dec_diff: impl Fn(&str) -> Result<D,
             Ok((parse_usize(idx)?, dec_diff(rest)?))
         })
         .collect::<Result<Vec<_>, String>>()?;
-    let added = split_top_level(strip_brackets(added_s)?, ',')
+    let added = split_top_level(strip_brackets(added_s).await?, ',')
         .into_iter()
         .filter(|s| !s.is_empty())
         .map(|entry| {
@@ -2355,55 +2355,55 @@ async fn dec_index_triple<T, D>(body: &str, dec_diff: impl Fn(&str) -> Result<D,
 async fn enc_header_vars_diff(d: &DxfHeaderVarsDiff) -> String {
     let modified: Vec<(String, DxfHeaderVarDiff)> = d.modified.iter().map(|m| (m.name.clone(), m.diff.clone())).collect();
     let added: Vec<(usize, DxfHeaderVar)> = d.added.iter().map(|a| (a.index, a.header_var.clone())).collect();
-    enc_name_triple(&d.removed, &modified, &added, enc_header_var_diff, enc_header_var)
+    enc_name_triple(&d.removed, &modified, &added, enc_header_var_diff, enc_header_var).await
 }
 async fn dec_header_vars_diff(s: &str) -> Result<DxfHeaderVarsDiff, String> {
-    let (removed, modified, added) = dec_name_triple(s, dec_header_var_diff, dec_header_var)?;
+    let (removed, modified, added) = dec_name_triple(s, dec_header_var_diff, dec_header_var).await?;
     Ok(DxfHeaderVarsDiff { removed, modified: modified.into_iter().map(|(name, diff)| DxfHeaderVarModified { name, diff }).collect(), added: added.into_iter().map(|(index, header_var)| DxfHeaderVarAdded { index, header_var }).collect() })
 }
 async fn enc_layers_diff(d: &DxfLayersDiff) -> String {
     let modified: Vec<(String, DxfLayerDiff)> = d.modified.iter().map(|m| (m.name.clone(), m.diff.clone())).collect();
     let added: Vec<(usize, DxfLayer)> = d.added.iter().map(|a| (a.index, a.layer.clone())).collect();
-    enc_name_triple(&d.removed, &modified, &added, enc_layer_diff, enc_layer)
+    enc_name_triple(&d.removed, &modified, &added, enc_layer_diff, enc_layer).await
 }
 async fn dec_layers_diff(s: &str) -> Result<DxfLayersDiff, String> {
-    let (removed, modified, added) = dec_name_triple(s, dec_layer_diff, dec_layer)?;
+    let (removed, modified, added) = dec_name_triple(s, dec_layer_diff, dec_layer).await?;
     Ok(DxfLayersDiff { removed, modified: modified.into_iter().map(|(name, diff)| DxfLayerModified { name, diff }).collect(), added: added.into_iter().map(|(index, layer)| DxfLayerAdded { index, layer }).collect() })
 }
 async fn enc_styles_diff(d: &DxfStylesDiff) -> String {
     let modified: Vec<(String, DxfStyleDiff)> = d.modified.iter().map(|m| (m.name.clone(), m.diff.clone())).collect();
     let added: Vec<(usize, DxfStyle)> = d.added.iter().map(|a| (a.index, a.style.clone())).collect();
-    enc_name_triple(&d.removed, &modified, &added, enc_style_diff, enc_style)
+    enc_name_triple(&d.removed, &modified, &added, enc_style_diff, enc_style).await
 }
 async fn dec_styles_diff(s: &str) -> Result<DxfStylesDiff, String> {
-    let (removed, modified, added) = dec_name_triple(s, dec_style_diff, dec_style)?;
+    let (removed, modified, added) = dec_name_triple(s, dec_style_diff, dec_style).await?;
     Ok(DxfStylesDiff { removed, modified: modified.into_iter().map(|(name, diff)| DxfStyleModified { name, diff }).collect(), added: added.into_iter().map(|(index, style)| DxfStyleAdded { index, style }).collect() })
 }
 async fn enc_linetypes_diff(d: &DxfLinetypesDiff) -> String {
     let modified: Vec<(String, DxfLinetypeDiff)> = d.modified.iter().map(|m| (m.name.clone(), m.diff.clone())).collect();
     let added: Vec<(usize, DxfLinetype)> = d.added.iter().map(|a| (a.index, a.linetype.clone())).collect();
-    enc_name_triple(&d.removed, &modified, &added, enc_linetype_diff, enc_linetype)
+    enc_name_triple(&d.removed, &modified, &added, enc_linetype_diff, enc_linetype).await
 }
 async fn dec_linetypes_diff(s: &str) -> Result<DxfLinetypesDiff, String> {
-    let (removed, modified, added) = dec_name_triple(s, dec_linetype_diff, dec_linetype)?;
+    let (removed, modified, added) = dec_name_triple(s, dec_linetype_diff, dec_linetype).await?;
     Ok(DxfLinetypesDiff { removed, modified: modified.into_iter().map(|(name, diff)| DxfLinetypeModified { name, diff }).collect(), added: added.into_iter().map(|(index, linetype)| DxfLinetypeAdded { index, linetype }).collect() })
 }
 async fn enc_entities_diff(d: &DxfEntitiesDiff) -> String {
     let modified: Vec<(usize, DxfEntityDiff)> = d.modified.iter().map(|m| (m.index, m.diff.clone())).collect();
     let added: Vec<(usize, DxfEntity)> = d.added.iter().map(|a| (a.index, a.entity.clone())).collect();
-    enc_index_triple(&d.removed, &modified, &added, enc_entity_diff, enc_dxf_entity)
+    enc_index_triple(&d.removed, &modified, &added, enc_entity_diff, enc_dxf_entity).await
 }
 async fn dec_entities_diff(s: &str) -> Result<DxfEntitiesDiff, String> {
-    let (removed, modified, added) = dec_index_triple(s, dec_entity_diff, dec_dxf_entity)?;
+    let (removed, modified, added) = dec_index_triple(s, dec_entity_diff, dec_dxf_entity).await?;
     Ok(DxfEntitiesDiff { removed, modified: modified.into_iter().map(|(index, diff)| DxfEntityModified { index, diff }).collect(), added: added.into_iter().map(|(index, entity)| DxfEntityAdded { index, entity }).collect() })
 }
 async fn enc_blocks_diff(d: &DxfBlocksDiff) -> String {
     let modified: Vec<(usize, DxfBlockDiff)> = d.modified.iter().map(|m| (m.index, m.diff.clone())).collect();
     let added: Vec<(usize, DxfBlock)> = d.added.iter().map(|a| (a.index, a.block.clone())).collect();
-    enc_index_triple(&d.removed, &modified, &added, enc_block_diff, enc_block)
+    enc_index_triple(&d.removed, &modified, &added, enc_block_diff, enc_block).await
 }
 async fn dec_blocks_diff(s: &str) -> Result<DxfBlocksDiff, String> {
-    let (removed, modified, added) = dec_index_triple(s, dec_block_diff, dec_block)?;
+    let (removed, modified, added) = dec_index_triple(s, dec_block_diff, dec_block).await?;
     Ok(DxfBlocksDiff { removed, modified: modified.into_iter().map(|(index, diff)| DxfBlockModified { index, diff }).collect(), added: added.into_iter().map(|(index, block)| DxfBlockAdded { index, block }).collect() })
 }
 //#endregion 🔖️CollectionTripleCodecs
@@ -2421,14 +2421,14 @@ pub(crate) async fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
     out.extend_from_slice(bytes);
 }
 pub(crate) async fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
+    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec())
 }
 pub(crate) async fn write_str_lp(out: &mut Vec<u8>, s: &str) {
     write_bytes_lp(out, s.as_bytes());
 }
 pub(crate) async fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
-    String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
+    String::from_utf8(read_bytes_lp(reader).await?).map_err(|e| e.to_string())
 }
 pub(crate) async fn write_option_bin<T>(out: &mut Vec<u8>, opt: &Option<T>, enc: impl Fn(&T, &mut Vec<u8>)) {
     match opt {
@@ -2440,7 +2440,7 @@ pub(crate) async fn write_option_bin<T>(out: &mut Vec<u8>, opt: &Option<T>, enc:
     }
 }
 pub(crate) async fn read_option_bin<T>(reader: &mut store::ByteReader<'_>, dec: impl Fn(&mut store::ByteReader<'_>) -> Result<T, String>) -> Result<Option<T>, String> {
-    let tag = reader.read_u8().map_err(|e| e.to_string())?;
+    let tag = reader.read_u8().await.map_err(|e| e.to_string())?;
     match tag {
         0 => Ok(None),
         1 => Ok(Some(dec(reader)?)),
@@ -2460,7 +2460,7 @@ pub(crate) async fn write_f64_bin(out: &mut Vec<u8>, v: f64) {
     out.extend_from_slice(&v.to_le_bytes());
 }
 pub(crate) async fn read_f64_bin(reader: &mut store::ByteReader<'_>) -> Result<f64, String> {
-    reader.read_f64_le().map_err(|e| e.to_string())
+    reader.read_f64_le().await.map_err(|e| e.to_string())
 }
 pub(crate) async fn write_point3_bin(out: &mut Vec<u8>, p: &[f64; 3]) {
     write_f64_bin(out, p[0]);
@@ -2468,7 +2468,7 @@ pub(crate) async fn write_point3_bin(out: &mut Vec<u8>, p: &[f64; 3]) {
     write_f64_bin(out, p[2]);
 }
 pub(crate) async fn read_point3_bin(reader: &mut store::ByteReader<'_>) -> Result<[f64; 3], String> {
-    Ok([read_f64_bin(reader)?, read_f64_bin(reader)?, read_f64_bin(reader)?])
+    Ok([read_f64_bin(reader).await?, read_f64_bin(reader).await?, read_f64_bin(reader).await?])
 }
 pub(crate) async fn write_points4_bin(out: &mut Vec<u8>, p: &[[f64; 3]; 4]) {
     for pt in p {
@@ -2476,7 +2476,7 @@ pub(crate) async fn write_points4_bin(out: &mut Vec<u8>, p: &[[f64; 3]; 4]) {
     }
 }
 pub(crate) async fn read_points4_bin(reader: &mut store::ByteReader<'_>) -> Result<[[f64; 3]; 4], String> {
-    Ok([read_point3_bin(reader)?, read_point3_bin(reader)?, read_point3_bin(reader)?, read_point3_bin(reader)?])
+    Ok([read_point3_bin(reader).await?, read_point3_bin(reader).await?, read_point3_bin(reader).await?, read_point3_bin(reader).await?])
 }
 
 pub(crate) async fn enc_dxf_value_bin(v: &DxfValue, out: &mut Vec<u8>) {
@@ -2500,12 +2500,12 @@ pub(crate) async fn enc_dxf_value_bin(v: &DxfValue, out: &mut Vec<u8>) {
     }
 }
 pub(crate) async fn dec_dxf_value_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfValue, String> {
-    let tag = reader.read_u8().map_err(|e| e.to_string())?;
+    let tag = reader.read_u8().await.map_err(|e| e.to_string())?;
     match tag {
-        0 => Ok(DxfValue::Str { value: read_str_lp(reader)? }),
-        1 => Ok(DxfValue::Int { value: reader.read_varint_i64().map_err(|e| e.to_string())? }),
-        2 => Ok(DxfValue::Double { value: read_f64_bin(reader)? }),
-        3 => Ok(DxfValue::Point { value: read_point3_bin(reader)? }),
+        0 => Ok(DxfValue::Str { value: read_str_lp(reader).await? }),
+        1 => Ok(DxfValue::Int { value: reader.read_varint_i64().await.map_err(|e| e.to_string())? }),
+        2 => Ok(DxfValue::Double { value: read_f64_bin(reader).await? }),
+        3 => Ok(DxfValue::Point { value: read_point3_bin(reader).await? }),
         other => Err(format!("dxf value binary: unknown tag {other}")),
     }
 }
@@ -2514,8 +2514,8 @@ pub(crate) async fn enc_group_code_bin(pair: &(i32, DxfValue), out: &mut Vec<u8>
     enc_dxf_value_bin(&pair.1, out);
 }
 pub(crate) async fn dec_group_code_bin(reader: &mut store::ByteReader<'_>) -> Result<(i32, DxfValue), String> {
-    let code = reader.read_varint_i64().map_err(|e| e.to_string())? as i32;
-    let value = dec_dxf_value_bin(reader)?;
+    let code = reader.read_varint_i64().await.map_err(|e| e.to_string())? as i32;
+    let value = dec_dxf_value_bin(reader).await?;
     Ok((code, value))
 }
 pub(crate) async fn enc_group_codes_bin(v: &[(i32, DxfValue)], out: &mut Vec<u8>) {
@@ -2525,10 +2525,10 @@ pub(crate) async fn enc_group_codes_bin(v: &[(i32, DxfValue)], out: &mut Vec<u8>
     }
 }
 pub(crate) async fn dec_group_codes_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<(i32, DxfValue)>, String> {
-    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut out = Vec::with_capacity(count as usize);
     for _ in 0..count {
-        out.push(dec_group_code_bin(reader)?);
+        out.push(dec_group_code_bin(reader).await?);
     }
     Ok(out)
 }
@@ -2541,11 +2541,11 @@ pub(crate) async fn enc_vertex_bin(v: &DxfVertex, out: &mut Vec<u8>) {
     enc_group_codes_bin(&v.unknown_group_codes, out);
 }
 pub(crate) async fn dec_vertex_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfVertex, String> {
-    let x = read_f64_bin(reader)?;
-    let y = read_f64_bin(reader)?;
-    let z = read_f64_bin(reader)?;
-    let bulge = read_f64_bin(reader)?;
-    let unknown_group_codes = dec_group_codes_bin(reader)?;
+    let x = read_f64_bin(reader).await?;
+    let y = read_f64_bin(reader).await?;
+    let z = read_f64_bin(reader).await?;
+    let bulge = read_f64_bin(reader).await?;
+    let unknown_group_codes = dec_group_codes_bin(reader).await?;
     Ok(DxfVertex { x, y, z, bulge, unknown_group_codes })
 }
 pub(crate) async fn enc_vertices_bin(vs: &[DxfVertex], out: &mut Vec<u8>) {
@@ -2555,10 +2555,10 @@ pub(crate) async fn enc_vertices_bin(vs: &[DxfVertex], out: &mut Vec<u8>) {
     }
 }
 pub(crate) async fn dec_vertices_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<DxfVertex>, String> {
-    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut out = Vec::with_capacity(count as usize);
     for _ in 0..count {
-        out.push(dec_vertex_bin(reader)?);
+        out.push(dec_vertex_bin(reader).await?);
     }
     Ok(out)
 }
@@ -2629,64 +2629,64 @@ pub(crate) async fn enc_dxf_entity_bin(e: &DxfEntity, out: &mut Vec<u8>) {
     }
 }
 pub(crate) async fn dec_dxf_entity_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfEntity, String> {
-    let tag = reader.read_u8().map_err(|e| e.to_string())?;
+    let tag = reader.read_u8().await.map_err(|e| e.to_string())?;
     match tag {
         0 => {
-            let start = read_point3_bin(reader)?;
-            let end = read_point3_bin(reader)?;
-            let layer = read_str_lp(reader)?;
-            let unknown_group_codes = dec_group_codes_bin(reader)?;
+            let start = read_point3_bin(reader).await?;
+            let end = read_point3_bin(reader).await?;
+            let layer = read_str_lp(reader).await?;
+            let unknown_group_codes = dec_group_codes_bin(reader).await?;
             Ok(DxfEntity::Line { start, end, layer, unknown_group_codes })
         }
         1 => {
-            let center = read_point3_bin(reader)?;
-            let radius = read_f64_bin(reader)?;
-            let layer = read_str_lp(reader)?;
-            let unknown_group_codes = dec_group_codes_bin(reader)?;
+            let center = read_point3_bin(reader).await?;
+            let radius = read_f64_bin(reader).await?;
+            let layer = read_str_lp(reader).await?;
+            let unknown_group_codes = dec_group_codes_bin(reader).await?;
             Ok(DxfEntity::Circle { center, radius, layer, unknown_group_codes })
         }
         2 => {
-            let center = read_point3_bin(reader)?;
-            let radius = read_f64_bin(reader)?;
-            let start_angle = read_f64_bin(reader)?;
-            let end_angle = read_f64_bin(reader)?;
-            let layer = read_str_lp(reader)?;
-            let unknown_group_codes = dec_group_codes_bin(reader)?;
+            let center = read_point3_bin(reader).await?;
+            let radius = read_f64_bin(reader).await?;
+            let start_angle = read_f64_bin(reader).await?;
+            let end_angle = read_f64_bin(reader).await?;
+            let layer = read_str_lp(reader).await?;
+            let unknown_group_codes = dec_group_codes_bin(reader).await?;
             Ok(DxfEntity::Arc { center, radius, start_angle, end_angle, layer, unknown_group_codes })
         }
         3 => {
-            let vertices = dec_vertices_bin(reader)?;
-            let closed = reader.read_u8().map_err(|e| e.to_string())? != 0;
-            let layer = read_str_lp(reader)?;
-            let unknown_group_codes = dec_group_codes_bin(reader)?;
+            let vertices = dec_vertices_bin(reader).await?;
+            let closed = reader.read_u8().await.map_err(|e| e.to_string())? != 0;
+            let layer = read_str_lp(reader).await?;
+            let unknown_group_codes = dec_group_codes_bin(reader).await?;
             Ok(DxfEntity::Polyline { vertices, closed, layer, unknown_group_codes })
         }
         4 => {
-            let position = read_point3_bin(reader)?;
-            let height = read_f64_bin(reader)?;
-            let value = read_str_lp(reader)?;
-            let layer = read_str_lp(reader)?;
-            let unknown_group_codes = dec_group_codes_bin(reader)?;
+            let position = read_point3_bin(reader).await?;
+            let height = read_f64_bin(reader).await?;
+            let value = read_str_lp(reader).await?;
+            let layer = read_str_lp(reader).await?;
+            let unknown_group_codes = dec_group_codes_bin(reader).await?;
             Ok(DxfEntity::Text { position, height, value, layer, unknown_group_codes })
         }
         5 => {
-            let points = read_points4_bin(reader)?;
-            let layer = read_str_lp(reader)?;
-            let unknown_group_codes = dec_group_codes_bin(reader)?;
+            let points = read_points4_bin(reader).await?;
+            let layer = read_str_lp(reader).await?;
+            let unknown_group_codes = dec_group_codes_bin(reader).await?;
             Ok(DxfEntity::Solid { points, layer, unknown_group_codes })
         }
         6 => {
-            let block_name = read_str_lp(reader)?;
-            let position = read_point3_bin(reader)?;
-            let scale = read_point3_bin(reader)?;
-            let rotation = read_f64_bin(reader)?;
-            let layer = read_str_lp(reader)?;
-            let unknown_group_codes = dec_group_codes_bin(reader)?;
+            let block_name = read_str_lp(reader).await?;
+            let position = read_point3_bin(reader).await?;
+            let scale = read_point3_bin(reader).await?;
+            let rotation = read_f64_bin(reader).await?;
+            let layer = read_str_lp(reader).await?;
+            let unknown_group_codes = dec_group_codes_bin(reader).await?;
             Ok(DxfEntity::Insert { block_name, position, scale, rotation, layer, unknown_group_codes })
         }
         7 => {
-            let kind = read_str_lp(reader)?;
-            let group_codes = dec_group_codes_bin(reader)?;
+            let kind = read_str_lp(reader).await?;
+            let group_codes = dec_group_codes_bin(reader).await?;
             Ok(DxfEntity::Other { kind, group_codes })
         }
         other => Err(format!("dxf entity binary: unknown tag {other}")),
@@ -2699,10 +2699,10 @@ pub(crate) async fn enc_dxf_entities_bin(es: &[DxfEntity], out: &mut Vec<u8>) {
     }
 }
 pub(crate) async fn dec_dxf_entities_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<DxfEntity>, String> {
-    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut out = Vec::with_capacity(count as usize);
     for _ in 0..count {
-        out.push(dec_dxf_entity_bin(reader)?);
+        out.push(dec_dxf_entity_bin(reader).await?);
     }
     Ok(out)
 }
@@ -2714,10 +2714,10 @@ pub(crate) async fn enc_header_var_bin(hv: &DxfHeaderVar, out: &mut Vec<u8>) {
     enc_group_codes_bin(&hv.extra_group_codes, out);
 }
 pub(crate) async fn dec_header_var_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfHeaderVar, String> {
-    let name = read_str_lp(reader)?;
-    let group_code = reader.read_varint_i64().map_err(|e| e.to_string())? as i32;
-    let value = dec_dxf_value_bin(reader)?;
-    let extra_group_codes = dec_group_codes_bin(reader)?;
+    let name = read_str_lp(reader).await?;
+    let group_code = reader.read_varint_i64().await.map_err(|e| e.to_string())? as i32;
+    let value = dec_dxf_value_bin(reader).await?;
+    let extra_group_codes = dec_group_codes_bin(reader).await?;
     Ok(DxfHeaderVar { name, group_code, value, extra_group_codes })
 }
 pub(crate) async fn enc_layer_bin(l: &DxfLayer, out: &mut Vec<u8>) {
@@ -2728,11 +2728,11 @@ pub(crate) async fn enc_layer_bin(l: &DxfLayer, out: &mut Vec<u8>) {
     enc_group_codes_bin(&l.unknown_group_codes, out);
 }
 pub(crate) async fn dec_layer_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfLayer, String> {
-    let name = read_str_lp(reader)?;
-    let color = reader.read_varint_i64().map_err(|e| e.to_string())? as i32;
-    let linetype = read_str_lp(reader)?;
-    let flags = reader.read_varint_i64().map_err(|e| e.to_string())? as i32;
-    let unknown_group_codes = dec_group_codes_bin(reader)?;
+    let name = read_str_lp(reader).await?;
+    let color = reader.read_varint_i64().await.map_err(|e| e.to_string())? as i32;
+    let linetype = read_str_lp(reader).await?;
+    let flags = reader.read_varint_i64().await.map_err(|e| e.to_string())? as i32;
+    let unknown_group_codes = dec_group_codes_bin(reader).await?;
     Ok(DxfLayer { name, color, linetype, flags, unknown_group_codes })
 }
 pub(crate) async fn enc_style_bin(s: &DxfStyle, out: &mut Vec<u8>) {
@@ -2742,10 +2742,10 @@ pub(crate) async fn enc_style_bin(s: &DxfStyle, out: &mut Vec<u8>) {
     enc_group_codes_bin(&s.unknown_group_codes, out);
 }
 pub(crate) async fn dec_style_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfStyle, String> {
-    let name = read_str_lp(reader)?;
-    let flags = reader.read_varint_i64().map_err(|e| e.to_string())? as i32;
-    let font_name = read_str_lp(reader)?;
-    let unknown_group_codes = dec_group_codes_bin(reader)?;
+    let name = read_str_lp(reader).await?;
+    let flags = reader.read_varint_i64().await.map_err(|e| e.to_string())? as i32;
+    let font_name = read_str_lp(reader).await?;
+    let unknown_group_codes = dec_group_codes_bin(reader).await?;
     Ok(DxfStyle { name, flags, font_name, unknown_group_codes })
 }
 pub(crate) async fn enc_linetype_bin(l: &DxfLinetype, out: &mut Vec<u8>) {
@@ -2755,10 +2755,10 @@ pub(crate) async fn enc_linetype_bin(l: &DxfLinetype, out: &mut Vec<u8>) {
     enc_group_codes_bin(&l.unknown_group_codes, out);
 }
 pub(crate) async fn dec_linetype_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfLinetype, String> {
-    let name = read_str_lp(reader)?;
-    let flags = reader.read_varint_i64().map_err(|e| e.to_string())? as i32;
-    let description = read_str_lp(reader)?;
-    let unknown_group_codes = dec_group_codes_bin(reader)?;
+    let name = read_str_lp(reader).await?;
+    let flags = reader.read_varint_i64().await.map_err(|e| e.to_string())? as i32;
+    let description = read_str_lp(reader).await?;
+    let unknown_group_codes = dec_group_codes_bin(reader).await?;
     Ok(DxfLinetype { name, flags, description, unknown_group_codes })
 }
 pub(crate) async fn enc_block_bin(b: &DxfBlock, out: &mut Vec<u8>) {
@@ -2768,10 +2768,10 @@ pub(crate) async fn enc_block_bin(b: &DxfBlock, out: &mut Vec<u8>) {
     enc_group_codes_bin(&b.unknown_group_codes, out);
 }
 pub(crate) async fn dec_block_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfBlock, String> {
-    let name = read_str_lp(reader)?;
-    let base_point = read_point3_bin(reader)?;
-    let entities = dec_dxf_entities_bin(reader)?;
-    let unknown_group_codes = dec_group_codes_bin(reader)?;
+    let name = read_str_lp(reader).await?;
+    let base_point = read_point3_bin(reader).await?;
+    let entities = dec_dxf_entities_bin(reader).await?;
+    let unknown_group_codes = dec_group_codes_bin(reader).await?;
     Ok(DxfBlock { name, base_point, entities, unknown_group_codes })
 }
 pub(crate) async fn enc_dxf_tag_bin(t: &DxfTag, out: &mut Vec<u8>) {
@@ -2779,8 +2779,8 @@ pub(crate) async fn enc_dxf_tag_bin(t: &DxfTag, out: &mut Vec<u8>) {
     write_str_lp(out, &t.value);
 }
 pub(crate) async fn dec_dxf_tag_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfTag, String> {
-    let code = reader.read_varint_i64().map_err(|e| e.to_string())? as i32;
-    let value = read_str_lp(reader)?;
+    let code = reader.read_varint_i64().await.map_err(|e| e.to_string())? as i32;
+    let value = read_str_lp(reader).await?;
     Ok(DxfTag { code, value })
 }
 pub(crate) async fn enc_other_table_bin(t: &DxfOtherTable, out: &mut Vec<u8>) {
@@ -2791,11 +2791,11 @@ pub(crate) async fn enc_other_table_bin(t: &DxfOtherTable, out: &mut Vec<u8>) {
     }
 }
 pub(crate) async fn dec_other_table_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfOtherTable, String> {
-    let name = read_str_lp(reader)?;
-    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let name = read_str_lp(reader).await?;
+    let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut tags = Vec::with_capacity(count as usize);
     for _ in 0..count {
-        tags.push(dec_dxf_tag_bin(reader)?);
+        tags.push(dec_dxf_tag_bin(reader).await?);
     }
     Ok(DxfOtherTable { name, tags })
 }
@@ -2814,20 +2814,20 @@ pub(crate) async fn enc_dxf_tables_bin(t: &DxfTables, out: &mut Vec<u8>) {
     }
 }
 pub(crate) async fn dec_dxf_tables_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfTables, String> {
-    let lc = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let lc = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut layers = Vec::with_capacity(lc as usize);
     for _ in 0..lc {
-        layers.push(dec_layer_bin(reader)?);
+        layers.push(dec_layer_bin(reader).await?);
     }
-    let sc = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let sc = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut styles = Vec::with_capacity(sc as usize);
     for _ in 0..sc {
-        styles.push(dec_style_bin(reader)?);
+        styles.push(dec_style_bin(reader).await?);
     }
-    let ltc = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let ltc = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut linetypes = Vec::with_capacity(ltc as usize);
     for _ in 0..ltc {
-        linetypes.push(dec_linetype_bin(reader)?);
+        linetypes.push(dec_linetype_bin(reader).await?);
     }
     Ok(DxfTables { layers, styles, linetypes })
 }
@@ -2851,24 +2851,24 @@ pub(crate) async fn enc_dxf_snapshot_bin(s: &DxfSnapshot, out: &mut Vec<u8>) {
     enc_dxf_entities_bin(&s.entities, out);
 }
 pub(crate) async fn dec_dxf_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfSnapshot, String> {
-    let schema = read_str_lp(reader)?;
-    let hvc = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let schema = read_str_lp(reader).await?;
+    let hvc = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut header_vars = Vec::with_capacity(hvc as usize);
     for _ in 0..hvc {
-        header_vars.push(dec_header_var_bin(reader)?);
+        header_vars.push(dec_header_var_bin(reader).await?);
     }
-    let tables = dec_dxf_tables_bin(reader)?;
-    let otc = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let tables = dec_dxf_tables_bin(reader).await?;
+    let otc = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut other_tables = Vec::with_capacity(otc as usize);
     for _ in 0..otc {
-        other_tables.push(dec_other_table_bin(reader)?);
+        other_tables.push(dec_other_table_bin(reader).await?);
     }
-    let bc = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let bc = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut blocks = Vec::with_capacity(bc as usize);
     for _ in 0..bc {
-        blocks.push(dec_block_bin(reader)?);
+        blocks.push(dec_block_bin(reader).await?);
     }
-    let entities = dec_dxf_entities_bin(reader)?;
+    let entities = dec_dxf_entities_bin(reader).await?;
     Ok(DxfSnapshot { schema, header_vars, tables, other_tables, blocks, entities })
 }
 //#endregion 🔖️ItemBinaryCodecs
@@ -2885,9 +2885,9 @@ pub(crate) async fn enc_header_var_diff_bin(d: &DxfHeaderVarDiff, out: &mut Vec<
     write_option_bin(out, &d.extra_group_codes, |v, out| enc_group_codes_bin(v, out));
 }
 pub(crate) async fn dec_header_var_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfHeaderVarDiff, String> {
-    let group_code = read_option_bin(reader, |r| Ok(r.read_varint_i64().map_err(|e| e.to_string())? as i32))?;
-    let value = read_option_bin(reader, dec_dxf_value_bin)?;
-    let extra_group_codes = read_option_bin(reader, dec_group_codes_bin)?;
+    let group_code = read_option_bin(reader, |r| Ok(semio_framework_plugin::resolve_ready(r.read_varint_i64()).map_err(|e| e.to_string())? as i32)).await?;
+    let value = read_option_bin(reader, dec_dxf_value_bin).await?;
+    let extra_group_codes = read_option_bin(reader, dec_group_codes_bin).await?;
     Ok(DxfHeaderVarDiff { group_code, value, extra_group_codes })
 }
 pub(crate) async fn enc_layer_diff_bin(d: &DxfLayerDiff, out: &mut Vec<u8>) {
@@ -2897,10 +2897,10 @@ pub(crate) async fn enc_layer_diff_bin(d: &DxfLayerDiff, out: &mut Vec<u8>) {
     write_option_bin(out, &d.unknown_group_codes, |v, out| enc_group_codes_bin(v, out));
 }
 pub(crate) async fn dec_layer_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfLayerDiff, String> {
-    let color = read_option_bin(reader, |r| Ok(r.read_varint_i64().map_err(|e| e.to_string())? as i32))?;
-    let linetype = read_option_bin(reader, read_str_lp)?;
-    let flags = read_option_bin(reader, |r| Ok(r.read_varint_i64().map_err(|e| e.to_string())? as i32))?;
-    let unknown_group_codes = read_option_bin(reader, dec_group_codes_bin)?;
+    let color = read_option_bin(reader, |r| Ok(semio_framework_plugin::resolve_ready(r.read_varint_i64()).map_err(|e| e.to_string())? as i32)).await?;
+    let linetype = read_option_bin(reader, read_str_lp).await?;
+    let flags = read_option_bin(reader, |r| Ok(semio_framework_plugin::resolve_ready(r.read_varint_i64()).map_err(|e| e.to_string())? as i32)).await?;
+    let unknown_group_codes = read_option_bin(reader, dec_group_codes_bin).await?;
     Ok(DxfLayerDiff { color, linetype, flags, unknown_group_codes })
 }
 pub(crate) async fn enc_style_diff_bin(d: &DxfStyleDiff, out: &mut Vec<u8>) {
@@ -2909,9 +2909,9 @@ pub(crate) async fn enc_style_diff_bin(d: &DxfStyleDiff, out: &mut Vec<u8>) {
     write_option_bin(out, &d.unknown_group_codes, |v, out| enc_group_codes_bin(v, out));
 }
 pub(crate) async fn dec_style_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfStyleDiff, String> {
-    let flags = read_option_bin(reader, |r| Ok(r.read_varint_i64().map_err(|e| e.to_string())? as i32))?;
-    let font_name = read_option_bin(reader, read_str_lp)?;
-    let unknown_group_codes = read_option_bin(reader, dec_group_codes_bin)?;
+    let flags = read_option_bin(reader, |r| Ok(semio_framework_plugin::resolve_ready(r.read_varint_i64()).map_err(|e| e.to_string())? as i32)).await?;
+    let font_name = read_option_bin(reader, read_str_lp).await?;
+    let unknown_group_codes = read_option_bin(reader, dec_group_codes_bin).await?;
     Ok(DxfStyleDiff { flags, font_name, unknown_group_codes })
 }
 pub(crate) async fn enc_linetype_diff_bin(d: &DxfLinetypeDiff, out: &mut Vec<u8>) {
@@ -2920,9 +2920,9 @@ pub(crate) async fn enc_linetype_diff_bin(d: &DxfLinetypeDiff, out: &mut Vec<u8>
     write_option_bin(out, &d.unknown_group_codes, |v, out| enc_group_codes_bin(v, out));
 }
 pub(crate) async fn dec_linetype_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfLinetypeDiff, String> {
-    let flags = read_option_bin(reader, |r| Ok(r.read_varint_i64().map_err(|e| e.to_string())? as i32))?;
-    let description = read_option_bin(reader, read_str_lp)?;
-    let unknown_group_codes = read_option_bin(reader, dec_group_codes_bin)?;
+    let flags = read_option_bin(reader, |r| Ok(semio_framework_plugin::resolve_ready(r.read_varint_i64()).map_err(|e| e.to_string())? as i32)).await?;
+    let description = read_option_bin(reader, read_str_lp).await?;
+    let unknown_group_codes = read_option_bin(reader, dec_group_codes_bin).await?;
     Ok(DxfLinetypeDiff { flags, description, unknown_group_codes })
 }
 
@@ -2995,64 +2995,64 @@ pub(crate) async fn enc_entity_diff_bin(d: &DxfEntityDiff, out: &mut Vec<u8>) {
     }
 }
 pub(crate) async fn dec_entity_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfEntityDiff, String> {
-    let tag = reader.read_u8().map_err(|e| e.to_string())?;
+    let tag = reader.read_u8().await.map_err(|e| e.to_string())?;
     match tag {
-        8 => Ok(DxfEntityDiff::Replace { entity: dec_dxf_entity_bin(reader)? }),
+        8 => Ok(DxfEntityDiff::Replace { entity: dec_dxf_entity_bin(reader).await? }),
         0 => {
-            let start = read_option_bin(reader, read_point3_bin)?;
-            let end = read_option_bin(reader, read_point3_bin)?;
-            let layer = read_option_bin(reader, read_str_lp)?;
-            let unknown_group_codes = read_option_bin(reader, dec_group_codes_bin)?;
+            let start = read_option_bin(reader, read_point3_bin).await?;
+            let end = read_option_bin(reader, read_point3_bin).await?;
+            let layer = read_option_bin(reader, read_str_lp).await?;
+            let unknown_group_codes = read_option_bin(reader, dec_group_codes_bin).await?;
             Ok(DxfEntityDiff::Line(DxfLineDiff { start, end, layer, unknown_group_codes }))
         }
         1 => {
-            let center = read_option_bin(reader, read_point3_bin)?;
-            let radius = read_option_bin(reader, read_f64_bin)?;
-            let layer = read_option_bin(reader, read_str_lp)?;
-            let unknown_group_codes = read_option_bin(reader, dec_group_codes_bin)?;
+            let center = read_option_bin(reader, read_point3_bin).await?;
+            let radius = read_option_bin(reader, read_f64_bin).await?;
+            let layer = read_option_bin(reader, read_str_lp).await?;
+            let unknown_group_codes = read_option_bin(reader, dec_group_codes_bin).await?;
             Ok(DxfEntityDiff::Circle(DxfCircleDiff { center, radius, layer, unknown_group_codes }))
         }
         2 => {
-            let center = read_option_bin(reader, read_point3_bin)?;
-            let radius = read_option_bin(reader, read_f64_bin)?;
-            let start_angle = read_option_bin(reader, read_f64_bin)?;
-            let end_angle = read_option_bin(reader, read_f64_bin)?;
-            let layer = read_option_bin(reader, read_str_lp)?;
-            let unknown_group_codes = read_option_bin(reader, dec_group_codes_bin)?;
+            let center = read_option_bin(reader, read_point3_bin).await?;
+            let radius = read_option_bin(reader, read_f64_bin).await?;
+            let start_angle = read_option_bin(reader, read_f64_bin).await?;
+            let end_angle = read_option_bin(reader, read_f64_bin).await?;
+            let layer = read_option_bin(reader, read_str_lp).await?;
+            let unknown_group_codes = read_option_bin(reader, dec_group_codes_bin).await?;
             Ok(DxfEntityDiff::Arc(DxfArcDiff { center, radius, start_angle, end_angle, layer, unknown_group_codes }))
         }
         3 => {
-            let vertices = read_option_bin(reader, dec_vertices_bin)?;
-            let closed = read_option_bin(reader, |r| Ok(r.read_u8().map_err(|e| e.to_string())? != 0))?;
-            let layer = read_option_bin(reader, read_str_lp)?;
-            let unknown_group_codes = read_option_bin(reader, dec_group_codes_bin)?;
+            let vertices = read_option_bin(reader, dec_vertices_bin).await?;
+            let closed = read_option_bin(reader, |r| Ok(semio_framework_plugin::resolve_ready(r.read_u8()).map_err(|e| e.to_string())? != 0)).await?;
+            let layer = read_option_bin(reader, read_str_lp).await?;
+            let unknown_group_codes = read_option_bin(reader, dec_group_codes_bin).await?;
             Ok(DxfEntityDiff::Polyline(DxfPolylineDiff { vertices, closed, layer, unknown_group_codes }))
         }
         4 => {
-            let position = read_option_bin(reader, read_point3_bin)?;
-            let height = read_option_bin(reader, read_f64_bin)?;
-            let value = read_option_bin(reader, read_str_lp)?;
-            let layer = read_option_bin(reader, read_str_lp)?;
-            let unknown_group_codes = read_option_bin(reader, dec_group_codes_bin)?;
+            let position = read_option_bin(reader, read_point3_bin).await?;
+            let height = read_option_bin(reader, read_f64_bin).await?;
+            let value = read_option_bin(reader, read_str_lp).await?;
+            let layer = read_option_bin(reader, read_str_lp).await?;
+            let unknown_group_codes = read_option_bin(reader, dec_group_codes_bin).await?;
             Ok(DxfEntityDiff::Text(DxfTextDiff { position, height, value, layer, unknown_group_codes }))
         }
         5 => {
-            let points = read_option_bin(reader, read_points4_bin)?;
-            let layer = read_option_bin(reader, read_str_lp)?;
-            let unknown_group_codes = read_option_bin(reader, dec_group_codes_bin)?;
+            let points = read_option_bin(reader, read_points4_bin).await?;
+            let layer = read_option_bin(reader, read_str_lp).await?;
+            let unknown_group_codes = read_option_bin(reader, dec_group_codes_bin).await?;
             Ok(DxfEntityDiff::Solid(DxfSolidDiff { points, layer, unknown_group_codes }))
         }
         6 => {
-            let block_name = read_option_bin(reader, read_str_lp)?;
-            let position = read_option_bin(reader, read_point3_bin)?;
-            let scale = read_option_bin(reader, read_point3_bin)?;
-            let rotation = read_option_bin(reader, read_f64_bin)?;
-            let layer = read_option_bin(reader, read_str_lp)?;
-            let unknown_group_codes = read_option_bin(reader, dec_group_codes_bin)?;
+            let block_name = read_option_bin(reader, read_str_lp).await?;
+            let position = read_option_bin(reader, read_point3_bin).await?;
+            let scale = read_option_bin(reader, read_point3_bin).await?;
+            let rotation = read_option_bin(reader, read_f64_bin).await?;
+            let layer = read_option_bin(reader, read_str_lp).await?;
+            let unknown_group_codes = read_option_bin(reader, dec_group_codes_bin).await?;
             Ok(DxfEntityDiff::Insert(DxfInsertDiff { block_name, position, scale, rotation, layer, unknown_group_codes }))
         }
         7 => {
-            let group_codes = read_option_bin(reader, dec_group_codes_bin)?;
+            let group_codes = read_option_bin(reader, dec_group_codes_bin).await?;
             Ok(DxfEntityDiff::Other(DxfOtherDiff { group_codes }))
         }
         other => Err(format!("entity diff binary: unknown tag {other}")),
@@ -3065,10 +3065,10 @@ pub(crate) async fn enc_block_diff_bin(d: &DxfBlockDiff, out: &mut Vec<u8>) {
     write_option_bin(out, &d.unknown_group_codes, |v, out| enc_group_codes_bin(v, out));
 }
 pub(crate) async fn dec_block_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfBlockDiff, String> {
-    let name = read_option_bin(reader, read_str_lp)?;
-    let base_point = read_option_bin(reader, read_point3_bin)?;
-    let entities = read_option_bin(reader, dec_entities_diff_bin)?;
-    let unknown_group_codes = read_option_bin(reader, dec_group_codes_bin)?;
+    let name = read_option_bin(reader, read_str_lp).await?;
+    let base_point = read_option_bin(reader, read_point3_bin).await?;
+    let entities = read_option_bin(reader, dec_entities_diff_bin).await?;
+    let unknown_group_codes = read_option_bin(reader, dec_group_codes_bin).await?;
     Ok(DxfBlockDiff { name, base_point, entities, unknown_group_codes })
 }
 pub(crate) async fn enc_tables_diff_bin(t: &DxfTablesDiff, out: &mut Vec<u8>) {
@@ -3077,9 +3077,9 @@ pub(crate) async fn enc_tables_diff_bin(t: &DxfTablesDiff, out: &mut Vec<u8>) {
     write_option_bin(out, &t.linetypes, |v, out| enc_linetypes_diff_bin(v, out));
 }
 pub(crate) async fn dec_tables_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfTablesDiff, String> {
-    let layers = read_option_bin(reader, dec_layers_diff_bin)?;
-    let styles = read_option_bin(reader, dec_styles_diff_bin)?;
-    let linetypes = read_option_bin(reader, dec_linetypes_diff_bin)?;
+    let layers = read_option_bin(reader, dec_layers_diff_bin).await?;
+    let styles = read_option_bin(reader, dec_styles_diff_bin).await?;
+    let linetypes = read_option_bin(reader, dec_linetypes_diff_bin).await?;
     Ok(DxfTablesDiff { layers, styles, linetypes })
 }
 //#endregion 🔖️DiffBinaryCodecs
@@ -3109,22 +3109,22 @@ async fn dec_name_triple_bin<T, D>(
     dec_diff: impl Fn(&mut store::ByteReader<'_>) -> Result<D, String>,
     dec_item: impl Fn(&mut store::ByteReader<'_>) -> Result<T, String>,
 ) -> Result<(Vec<String>, Vec<(String, D)>, Vec<(usize, T)>), String> {
-    let rc = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let rc = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(rc as usize);
     for _ in 0..rc {
-        removed.push(read_str_lp(reader)?);
+        removed.push(read_str_lp(reader).await?);
     }
-    let mc = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mc = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut modified = Vec::with_capacity(mc as usize);
     for _ in 0..mc {
-        let name = read_str_lp(reader)?;
+        let name = read_str_lp(reader).await?;
         let d = dec_diff(reader)?;
         modified.push((name, d));
     }
-    let ac = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let ac = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut added = Vec::with_capacity(ac as usize);
     for _ in 0..ac {
-        let idx = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+        let idx = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
         let item = dec_item(reader)?;
         added.push((idx, item));
     }
@@ -3151,22 +3151,22 @@ async fn dec_index_triple_bin<T, D>(
     dec_diff: impl Fn(&mut store::ByteReader<'_>) -> Result<D, String>,
     dec_item: impl Fn(&mut store::ByteReader<'_>) -> Result<T, String>,
 ) -> Result<(Vec<usize>, Vec<(usize, D)>, Vec<(usize, T)>), String> {
-    let rc = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let rc = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(rc as usize);
     for _ in 0..rc {
-        removed.push(reader.read_varint_u64().map_err(|e| e.to_string())? as usize);
+        removed.push(reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize);
     }
-    let mc = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mc = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut modified = Vec::with_capacity(mc as usize);
     for _ in 0..mc {
-        let idx = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+        let idx = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
         let d = dec_diff(reader)?;
         modified.push((idx, d));
     }
-    let ac = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let ac = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut added = Vec::with_capacity(ac as usize);
     for _ in 0..ac {
-        let idx = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+        let idx = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
         let item = dec_item(reader)?;
         added.push((idx, item));
     }
@@ -3179,7 +3179,7 @@ pub(crate) async fn enc_header_vars_diff_bin(d: &DxfHeaderVarsDiff, out: &mut Ve
     enc_name_triple_bin(&d.removed, &modified, &added, out, enc_header_var_diff_bin, enc_header_var_bin);
 }
 pub(crate) async fn dec_header_vars_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfHeaderVarsDiff, String> {
-    let (removed, modified, added) = dec_name_triple_bin(reader, dec_header_var_diff_bin, dec_header_var_bin)?;
+    let (removed, modified, added) = dec_name_triple_bin(reader, dec_header_var_diff_bin, dec_header_var_bin).await?;
     Ok(DxfHeaderVarsDiff { removed, modified: modified.into_iter().map(|(name, diff)| DxfHeaderVarModified { name, diff }).collect(), added: added.into_iter().map(|(index, header_var)| DxfHeaderVarAdded { index, header_var }).collect() })
 }
 pub(crate) async fn enc_layers_diff_bin(d: &DxfLayersDiff, out: &mut Vec<u8>) {
@@ -3188,7 +3188,7 @@ pub(crate) async fn enc_layers_diff_bin(d: &DxfLayersDiff, out: &mut Vec<u8>) {
     enc_name_triple_bin(&d.removed, &modified, &added, out, enc_layer_diff_bin, enc_layer_bin);
 }
 pub(crate) async fn dec_layers_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfLayersDiff, String> {
-    let (removed, modified, added) = dec_name_triple_bin(reader, dec_layer_diff_bin, dec_layer_bin)?;
+    let (removed, modified, added) = dec_name_triple_bin(reader, dec_layer_diff_bin, dec_layer_bin).await?;
     Ok(DxfLayersDiff { removed, modified: modified.into_iter().map(|(name, diff)| DxfLayerModified { name, diff }).collect(), added: added.into_iter().map(|(index, layer)| DxfLayerAdded { index, layer }).collect() })
 }
 pub(crate) async fn enc_styles_diff_bin(d: &DxfStylesDiff, out: &mut Vec<u8>) {
@@ -3197,7 +3197,7 @@ pub(crate) async fn enc_styles_diff_bin(d: &DxfStylesDiff, out: &mut Vec<u8>) {
     enc_name_triple_bin(&d.removed, &modified, &added, out, enc_style_diff_bin, enc_style_bin);
 }
 pub(crate) async fn dec_styles_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfStylesDiff, String> {
-    let (removed, modified, added) = dec_name_triple_bin(reader, dec_style_diff_bin, dec_style_bin)?;
+    let (removed, modified, added) = dec_name_triple_bin(reader, dec_style_diff_bin, dec_style_bin).await?;
     Ok(DxfStylesDiff { removed, modified: modified.into_iter().map(|(name, diff)| DxfStyleModified { name, diff }).collect(), added: added.into_iter().map(|(index, style)| DxfStyleAdded { index, style }).collect() })
 }
 pub(crate) async fn enc_linetypes_diff_bin(d: &DxfLinetypesDiff, out: &mut Vec<u8>) {
@@ -3206,7 +3206,7 @@ pub(crate) async fn enc_linetypes_diff_bin(d: &DxfLinetypesDiff, out: &mut Vec<u
     enc_name_triple_bin(&d.removed, &modified, &added, out, enc_linetype_diff_bin, enc_linetype_bin);
 }
 pub(crate) async fn dec_linetypes_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfLinetypesDiff, String> {
-    let (removed, modified, added) = dec_name_triple_bin(reader, dec_linetype_diff_bin, dec_linetype_bin)?;
+    let (removed, modified, added) = dec_name_triple_bin(reader, dec_linetype_diff_bin, dec_linetype_bin).await?;
     Ok(DxfLinetypesDiff { removed, modified: modified.into_iter().map(|(name, diff)| DxfLinetypeModified { name, diff }).collect(), added: added.into_iter().map(|(index, linetype)| DxfLinetypeAdded { index, linetype }).collect() })
 }
 pub(crate) async fn enc_entities_diff_bin(d: &DxfEntitiesDiff, out: &mut Vec<u8>) {
@@ -3215,7 +3215,7 @@ pub(crate) async fn enc_entities_diff_bin(d: &DxfEntitiesDiff, out: &mut Vec<u8>
     enc_index_triple_bin(&d.removed, &modified, &added, out, enc_entity_diff_bin, enc_dxf_entity_bin);
 }
 pub(crate) async fn dec_entities_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfEntitiesDiff, String> {
-    let (removed, modified, added) = dec_index_triple_bin(reader, dec_entity_diff_bin, dec_dxf_entity_bin)?;
+    let (removed, modified, added) = dec_index_triple_bin(reader, dec_entity_diff_bin, dec_dxf_entity_bin).await?;
     Ok(DxfEntitiesDiff { removed, modified: modified.into_iter().map(|(index, diff)| DxfEntityModified { index, diff }).collect(), added: added.into_iter().map(|(index, entity)| DxfEntityAdded { index, entity }).collect() })
 }
 pub(crate) async fn enc_blocks_diff_bin(d: &DxfBlocksDiff, out: &mut Vec<u8>) {
@@ -3224,7 +3224,7 @@ pub(crate) async fn enc_blocks_diff_bin(d: &DxfBlocksDiff, out: &mut Vec<u8>) {
     enc_index_triple_bin(&d.removed, &modified, &added, out, enc_block_diff_bin, enc_block_bin);
 }
 pub(crate) async fn dec_blocks_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfBlocksDiff, String> {
-    let (removed, modified, added) = dec_index_triple_bin(reader, dec_block_diff_bin, dec_block_bin)?;
+    let (removed, modified, added) = dec_index_triple_bin(reader, dec_block_diff_bin, dec_block_bin).await?;
     Ok(DxfBlocksDiff { removed, modified: modified.into_iter().map(|(index, diff)| DxfBlockModified { index, diff }).collect(), added: added.into_iter().map(|(index, block)| DxfBlockAdded { index, block }).collect() })
 }
 //#endregion 🔖️CollectionTripleBinaryCodecs
@@ -3253,13 +3253,13 @@ async fn parse_dxf_diff(line: &str) -> Result<DxfDiff, String> {
     }
     for token in line.split(' ') {
         if let Some(rest) = token.strip_prefix("header-vars=") {
-            d.header_vars = Some(dec_header_vars_diff(rest)?);
+            d.header_vars = Some(dec_header_vars_diff(rest).await?);
         } else if let Some(rest) = token.strip_prefix("tables=") {
-            d.tables = Some(dec_tables_diff(rest)?);
+            d.tables = Some(dec_tables_diff(rest).await?);
         } else if let Some(rest) = token.strip_prefix("blocks=") {
-            d.blocks = Some(dec_blocks_diff(rest)?);
+            d.blocks = Some(dec_blocks_diff(rest).await?);
         } else if let Some(rest) = token.strip_prefix("entities=") {
-            d.entities = Some(dec_entities_diff(rest)?);
+            d.entities = Some(dec_entities_diff(rest).await?);
         } else {
             return Err(format!("dxf diff: unknown token {token:?}"));
         }
@@ -3269,10 +3269,10 @@ async fn parse_dxf_diff(line: &str) -> Result<DxfDiff, String> {
 
 impl protocol::DiffCodec for DxfDiff {
     async fn print_diff(&self) -> String {
-        print_dxf_diff(self)
+        print_dxf_diff(self).await
     }
     async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
-        parse_dxf_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_dxf_diff(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// 🧪️ P2-FG1: REAL binary frame (`format u8 | flags u8 | per-present-field payload`), matching
     /// `../💾️binary/📡️component.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape —
@@ -3314,14 +3314,14 @@ impl protocol::DiffCodec for DxfDiff {
         Ok(out)
     }
     async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let mut reader = store::ByteReader::new(bytes);
+        let mut reader = store::ByteReader::new(bytes).await;
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
-        let _format = reader.read_u8().map_err(|e| malformed("diff format", 0, e.to_string()))?;
-        let flags = reader.read_u8().map_err(|e| malformed("diff flags", 1, e.to_string()))?;
-        let header_vars = if flags & 0b0001 != 0 { Some(dec_header_vars_diff_bin(&mut reader).map_err(|e| malformed("diff header_vars", reader.position(), e))?) } else { None };
-        let tables = if flags & 0b0010 != 0 { Some(dec_tables_diff_bin(&mut reader).map_err(|e| malformed("diff tables", reader.position(), e))?) } else { None };
-        let blocks = if flags & 0b0100 != 0 { Some(dec_blocks_diff_bin(&mut reader).map_err(|e| malformed("diff blocks", reader.position(), e))?) } else { None };
-        let entities = if flags & 0b1000 != 0 { Some(dec_entities_diff_bin(&mut reader).map_err(|e| malformed("diff entities", reader.position(), e))?) } else { None };
+        let _format = reader.read_u8().await.map_err(|e| malformed("diff format", 0, e.to_string()))?;
+        let flags = reader.read_u8().await.map_err(|e| malformed("diff flags", 1, e.to_string()))?;
+        let header_vars = if flags & 0b0001 != 0 { Some(dec_header_vars_diff_bin(&mut reader).await.map_err(|e| malformed("diff header_vars", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
+        let tables = if flags & 0b0010 != 0 { Some(dec_tables_diff_bin(&mut reader).await.map_err(|e| malformed("diff tables", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
+        let blocks = if flags & 0b0100 != 0 { Some(dec_blocks_diff_bin(&mut reader).await.map_err(|e| malformed("diff blocks", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
+        let entities = if flags & 0b1000 != 0 { Some(dec_entities_diff_bin(&mut reader).await.map_err(|e| malformed("diff entities", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
         Ok(DxfDiff { header_vars, tables, blocks, entities })
     }
 }

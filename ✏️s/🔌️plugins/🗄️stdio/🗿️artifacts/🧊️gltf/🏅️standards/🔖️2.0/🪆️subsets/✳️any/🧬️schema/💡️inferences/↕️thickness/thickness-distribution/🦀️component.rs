@@ -17,16 +17,16 @@ pub async fn descriptor() -> GltfInferenceLeafDescriptor {
 }
 
 pub(crate) async fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<GltfStatistics> {
-    let samples = super::samples(context);
+    let samples = super::samples(context).await;
     if samples.is_empty() {
-        unavailable(GltfUnit::Metre, context.unavailable_volume, Vec::new(), context.sample_count, Some(context.topology))
+        unavailable(GltfUnit::Metre, context.unavailable_volume, Vec::new(), context.sample_count, Some(context.topology)).await
     } else {
-        estimate(super::statistics(&samples, &context.policy.histogram_edges), GltfUnit::Metre, samples.len(), Some(context.topology))
+        estimate(super::statistics(&samples, &context.policy.histogram_edges), GltfUnit::Metre, samples.len(), Some(context.topology)).await
     }
 }
 
 pub async fn unavailable_measure(ids: &[String]) -> GltfMeasure<GltfStatistics> {
-    unavailable(GltfUnit::Metre, GltfAvailability::Unavailable, ids.to_vec(), 0, None)
+    unavailable(GltfUnit::Metre, GltfAvailability::Unavailable, ids.to_vec(), 0, None).await
 }
 
 pub async fn encode_result(indicators: &GltfEntityIndicators) -> Result<serde_json::Value, serde_json::Error> {

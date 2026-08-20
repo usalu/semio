@@ -73,8 +73,8 @@ impl ArtifactEditor for StlAnyEditor {
 
     async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
-            main::BODY_KEY => main::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
+            main::BODY_KEY => main::render(doc.snapshot).await,
+            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))).await,
         }
     }
 }
@@ -83,12 +83,12 @@ impl ArtifactEditor for StlAnyEditor {
 //#region 🔖️Manifest
 pub async fn create_stl_any_editor() -> semio_framework_plugin::AppDefinition {
     Editor::builder(STL_ANY_DIALECT)
-        .document(["stdio", "stl"])
-        .icon_id("box")
-        .mode_def(edit::definition())
-        .default_mode_id(edit::STL_ANY_EDIT_MODE_ID)
-        .window_kind_def(main::definition())
-        .default_layout(edit::layout())
+        .await.document(["stdio", "stl"])
+        .await.icon_id("box")
+        .await.mode_def(edit::definition().await)
+        .await.default_mode_id(edit::STL_ANY_EDIT_MODE_ID)
+        .await.window_kind_def(main::definition().await)
+        .await.default_layout(edit::layout())
         .build_definition()
 }
 //#endregion 🔖️Manifest

@@ -62,18 +62,18 @@ pub async fn artifact_kind() -> ArtifactKindSpec {
 /// now orphaned/uncalled — deleting it means editing `⚙️engine/`, off-limits here.
 /// 🧩️ Binds this executable root to its sole schema-owned definition.
 pub async fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
-    crate::registry::runtime_assembly("md", definition, declaration)
+    crate::registry::runtime_assembly("md", definition, declaration).await
 }
 
 pub async fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
-    let formats = crate::registry::format_descriptors_for("md")?;
+    let formats = crate::registry::format_descriptors_for("md").await?;
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
-        .schema(crate::artifacts::md::schema::md_artifact_schema_descriptor())
-        .formats(formats)
-        .inferences([crate::artifacts::md::standards::v_commonmark::subsets::any::schema::inferences::md_artifact_inference_descriptor()])
-        .composers(crate::artifacts::md::standards::v_commonmark::subsets::any::io::io_registry::entries())
-        .languages(pilot_languages())
-        .document_codec_bare::<MdSnapshot, MdMutation>(STDIO_MD_DOCUMENT_SCHEMA)
+        .await.schema(crate::artifacts::md::schema::md_artifact_schema_descriptor().await)
+        .await.formats(formats)
+        .await.inferences([crate::artifacts::md::standards::v_commonmark::subsets::any::schema::inferences::md_artifact_inference_descriptor()])
+        .await.composers(crate::artifacts::md::standards::v_commonmark::subsets::any::io::io_registry::entries())
+        .await.languages(pilot_languages().await)
+        .await.document_codec_bare::<MdSnapshot, MdMutation>(STDIO_MD_DOCUMENT_SCHEMA)
         .try_build()
 }
 
@@ -150,7 +150,8 @@ pub mod io_registry {
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 
-    pub async fn entries() -> &'static [&'static ComposerEntry] {
+    // 🚫️async: E1 pure table accessor consumed by OnceLock::get_or_init's sync closure — see R9
+    pub fn entries() -> &'static [&'static ComposerEntry] {
         ENTRIES.get_or_init(|| v_commonmark::entries().iter().collect()).as_slice()
     }
 

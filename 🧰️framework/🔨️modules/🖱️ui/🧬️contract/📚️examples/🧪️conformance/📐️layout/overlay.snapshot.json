@@ -1,0 +1,48 @@
+{
+  "surface": "conformance.layout.overlay",
+  "revision": 0,
+  "root": 0,
+  "nodes": [
+    {
+      "id": 0,
+      "key": "#0",
+      "component": {
+        "type": "container"
+      },
+      "layout": {
+        "kind": "overlay",
+        "anchor": "bottomEnd",
+        "inset": {
+          "symmetric": {
+            "vertical": "md",
+            "horizontal": "lg"
+          }
+        },
+        "dismissible": true
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {},
+      "children": [
+        1
+      ]
+    },
+    {
+      "id": 1,
+      "key": "#0",
+      "component": {
+        "type": "text",
+        "value": "Content"
+      },
+      "layout": {
+        "kind": "leaf",
+        "width": "hug",
+        "height": "hug"
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {}
+    }
+  ],
+  "layoutEpoch": 0
+}

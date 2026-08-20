@@ -11,10 +11,10 @@ pub async fn diff(payload: &AddType, base: &SemioKitSnapshot) -> protocol::Mutat
             "mutation.duplicate-id",
             format!("A type with id \"{}\" already exists.", payload.id),
             [payload.id.clone()],
-        );
+        ).await;
     }
     let mut types = base.types.clone();
     types.push(SemioKitType { id: payload.id.clone(), name: payload.name.clone(), category: payload.category.clone() });
-    protocol::MutationOutcome::new(SemioKitDiff { types: Some(SemioKitTypeList { values: types }), ..Default::default() })
+    protocol::MutationOutcome::new(SemioKitDiff { types: Some(SemioKitTypeList { values: types }), ..Default::default() }).await
 }
 //#endregion 🔖️Diff

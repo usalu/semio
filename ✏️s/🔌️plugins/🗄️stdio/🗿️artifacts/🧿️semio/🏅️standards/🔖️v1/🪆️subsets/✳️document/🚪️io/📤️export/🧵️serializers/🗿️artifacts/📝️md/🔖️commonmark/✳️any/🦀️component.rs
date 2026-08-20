@@ -46,8 +46,8 @@ async fn runs_to_inlines(runs: &[DocRun]) -> Vec<MdInline> {
 /// inline image, since CommonMark has no block-level image construct).
 pub(crate) async fn map_semio_block(block: &DocBlock) -> Vec<MdBlock> {
     match block {
-        DocBlock::Paragraph { runs, .. } => vec![MdBlock::Paragraph { inlines: runs_to_inlines(runs) }],
-        DocBlock::Heading { level, runs, .. } => vec![MdBlock::Heading { level: *level, inlines: runs_to_inlines(runs) }],
+        DocBlock::Paragraph { runs, .. } => vec![MdBlock::Paragraph { inlines: runs_to_inlines(runs).await }],
+        DocBlock::Heading { level, runs, .. } => vec![MdBlock::Heading { level: *level, inlines: runs_to_inlines(runs).await }],
         DocBlock::List { ordered, items } => vec![MdBlock::List { ordered: *ordered, start: None, tight: true, items: items.iter().map(|item| item.blocks.iter().flat_map(map_semio_block).collect()).collect() }],
         DocBlock::Table { rows } => rows.iter().flat_map(|row| row.cells.iter().flat_map(|cell| cell.blocks.iter().flat_map(map_semio_block))).collect(),
         DocBlock::Code { language, text } => vec![MdBlock::CodeBlock { info: language.clone(), literal: text.clone() }],

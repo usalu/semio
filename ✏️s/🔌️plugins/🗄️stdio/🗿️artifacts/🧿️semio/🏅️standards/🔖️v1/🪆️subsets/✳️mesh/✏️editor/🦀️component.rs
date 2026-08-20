@@ -97,13 +97,13 @@ impl ArtifactEditor for SemioMeshEditor {
             vertex_index: args.vertex_index,
             new_point,
         });
-        Ok(Emit::mutations(vec![mutation]))
+        Ok(Emit::mutations(vec![mutation]).await)
     }
 
     async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
-            main::BODY_KEY => main::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
+            main::BODY_KEY => main::render(doc.snapshot).await,
+            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))).await,
         }
     }
 
@@ -131,12 +131,12 @@ impl ArtifactEditor for SemioMeshEditor {
 //#region 🔖️Manifest
 pub async fn create_semio_mesh_editor() -> semio_framework_plugin::AppDefinition {
     Editor::builder(SEMIO_MESH_DIALECT)
-        .document(["stdio", "semio"])
-        .icon_id("box")
-        .mode_def(edit::definition())
-        .default_mode_id(edit::SEMIO_MESH_EDIT_MODE_ID)
-        .window_kind_def(main::definition())
-        .default_layout(edit::layout())
+        .await.document(["stdio", "semio"])
+        .await.icon_id("box")
+        .await.mode_def(edit::definition().await)
+        .await.default_mode_id(edit::SEMIO_MESH_EDIT_MODE_ID)
+        .await.window_kind_def(main::definition().await)
+        .await.default_layout(edit::layout())
         .build_definition()
 }
 //#endregion 🔖️Manifest

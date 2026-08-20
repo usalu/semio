@@ -39,7 +39,7 @@ impl ArtifactSerializer for SemioModelToIfc {
     const INTO: Dialect = Dialect { artifact_kind: "s.stdio.ifc", standard: StandardId("4"), subset: SubsetId::ANY };
 
     async fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
-        Ok(ifc_from_model(from))
+        Ok(ifc_from_model(from).await)
     }
 }
 
@@ -112,18 +112,18 @@ async fn build_placement(instances: &mut Vec<Part21Instance>, alloc: &mut IdAllo
     let r = quat_to_rotation_columns(&transform.rotation);
     let loc_id = alloc.next();
     instances.push(Part21Instance {
-        id: loc_id,
+        id: loc_id.await,
         entities: vec![("IFCCARTESIANPOINT".into(), vec![Part21Value::List(vec![Part21Value::Real(transform.translation.x.into()), Part21Value::Real(transform.translation.y.into()), Part21Value::Real(transform.translation.z.into())])])],
     });
     let axis_id = alloc.next();
-    instances.push(Part21Instance { id: axis_id, entities: vec![("IFCDIRECTION".into(), vec![Part21Value::List(vec![Part21Value::Real(r[0][2].into()), Part21Value::Real(r[1][2].into()), Part21Value::Real(r[2][2].into())])])] });
+    instances.push(Part21Instance { id: axis_id.await, entities: vec![("IFCDIRECTION".into(), vec![Part21Value::List(vec![Part21Value::Real(r[0][2].into()), Part21Value::Real(r[1][2].into()), Part21Value::Real(r[2][2].into())])])] });
     let refdir_id = alloc.next();
-    instances.push(Part21Instance { id: refdir_id, entities: vec![("IFCDIRECTION".into(), vec![Part21Value::List(vec![Part21Value::Real(r[0][0].into()), Part21Value::Real(r[1][0].into()), Part21Value::Real(r[2][0].into())])])] });
+    instances.push(Part21Instance { id: refdir_id.await, entities: vec![("IFCDIRECTION".into(), vec![Part21Value::List(vec![Part21Value::Real(r[0][0].into()), Part21Value::Real(r[1][0].into()), Part21Value::Real(r[2][0].into())])])] });
     let placement3d_id = alloc.next();
-    instances.push(Part21Instance { id: placement3d_id, entities: vec![("IFCAXIS2PLACEMENT3D".into(), vec![Part21Value::Ref(loc_id), Part21Value::Ref(axis_id), Part21Value::Ref(refdir_id)])] });
+    instances.push(Part21Instance { id: placement3d_id.await, entities: vec![("IFCAXIS2PLACEMENT3D".into(), vec![Part21Value::Ref(loc_id.await), Part21Value::Ref(axis_id.await), Part21Value::Ref(refdir_id.await)])] });
     let local_id = alloc.next();
-    instances.push(Part21Instance { id: local_id, entities: vec![("IFCLOCALPLACEMENT".into(), vec![Part21Value::Unset, Part21Value::Ref(placement3d_id)])] });
-    local_id
+    instances.push(Part21Instance { id: local_id.await, entities: vec![("IFCLOCALPLACEMENT".into(), vec![Part21Value::Unset, Part21Value::Ref(placement3d_id.await)])] });
+    local_id.await
 }
 
 async fn spatial_instance(id: u64, ifc_type: &str, guid: &str, owner_id: u64, name: &str, placement_id: u64) -> Part21Instance {
@@ -199,12 +199,12 @@ async fn build_pset(instances: &mut Vec<Part21Instance>, alloc: &mut IdAlloc, ow
     let mut prop_ids = Vec::new();
     for prop in &pset.properties {
         let pid = alloc.next();
-        instances.push(Part21Instance { id: pid, entities: vec![("IFCPROPERTYSINGLEVALUE".into(), vec![Part21Value::Str(prop.key.clone()), Part21Value::Unset, part21_value_of_pset_value(&prop.value), Part21Value::Unset])] });
+        instances.push(Part21Instance { id: pid.await, entities: vec![("IFCPROPERTYSINGLEVALUE".into(), vec![Part21Value::Str(prop.key.clone()), Part21Value::Unset, part21_value_of_pset_value(&prop.value).await, Part21Value::Unset])] });
         prop_ids.push(pid);
     }
     let pset_id = alloc.next();
     instances.push(Part21Instance {
-        id: pset_id,
+        id: pset_id.await,
         entities: vec![(
             "IFCPROPERTYSET".into(),
             vec![Part21Value::Str(format!("pset-{pset_id}")), Part21Value::Ref(owner_id), Part21Value::Str(pset.name.clone()), Part21Value::Unset, Part21Value::List(prop_ids.iter().map(|p| Part21Value::Ref(*p)).collect())],
@@ -212,10 +212,10 @@ async fn build_pset(instances: &mut Vec<Part21Instance>, alloc: &mut IdAlloc, ow
     });
     let rel_id = alloc.next();
     instances.push(Part21Instance {
-        id: rel_id,
+        id: rel_id.await,
         entities: vec![(
             "IFCRELDEFINESBYPROPERTIES".into(),
-            vec![Part21Value::Str(format!("rel-{rel_id}")), Part21Value::Ref(owner_id), Part21Value::Unset, Part21Value::Unset, Part21Value::List(vec![Part21Value::Ref(element_id)]), Part21Value::Ref(pset_id)],
+            vec![Part21Value::Str(format!("rel-{rel_id}")), Part21Value::Ref(owner_id), Part21Value::Unset, Part21Value::Unset, Part21Value::List(vec![Part21Value::Ref(element_id)]), Part21Value::Ref(pset_id.await)],
         )],
     });
 }
@@ -226,16 +226,16 @@ pub async fn ifc_from_model(from: &SemioModelSnapshot) -> IfcSnapshot {
     let mut instances: Vec<Part21Instance> = Vec::new();
     let mut alloc = IdAlloc(0);
     let owner_id = alloc.next();
-    instances.push(owner_history_instance(owner_id));
+    instances.push(owner_history_instance(owner_id.await).await);
     let project_id = alloc.next();
-    instances.push(project_instance(project_id, owner_id));
+    instances.push(project_instance(project_id.await, owner_id.await).await);
 
     let mut spatial_ids: HashMap<String, u64> = HashMap::new();
     for node in &from.spatial {
         let placement_id = build_placement(&mut instances, &mut alloc, &node.placement);
         let numeric_id = alloc.next();
-        instances.push(spatial_instance(numeric_id, ifc_type_of_spatial_kind(node.kind), &node.id, owner_id, &node.name, placement_id));
-        spatial_ids.insert(node.id.clone(), numeric_id);
+        instances.push(spatial_instance(numeric_id.await, ifc_type_of_spatial_kind(node.kind).await, &node.id, owner_id.await, &node.name, placement_id.await).await);
+        spatial_ids.insert(node.id.clone(), numeric_id.await);
     }
 
     let mut project_children = Vec::new();
@@ -249,21 +249,21 @@ pub async fn ifc_from_model(from: &SemioModelSnapshot) -> IfcSnapshot {
     }
     if !project_children.is_empty() {
         let rel_id = alloc.next();
-        instances.push(rel_aggregates_instance(rel_id, owner_id, project_id, &project_children));
+        instances.push(rel_aggregates_instance(rel_id.await, owner_id.await, project_id.await, &project_children).await);
     }
     for (parent_guid, children) in &spatial_children {
         let rel_id = alloc.next();
-        instances.push(rel_aggregates_instance(rel_id, owner_id, spatial_ids[parent_guid], children));
+        instances.push(rel_aggregates_instance(rel_id.await, owner_id.await, spatial_ids[parent_guid], children).await);
     }
 
     let mut element_ids: HashMap<String, u64> = HashMap::new();
     for el in &from.elements {
         let placement_id = build_placement(&mut instances, &mut alloc, &el.placement);
         let numeric_id = alloc.next();
-        instances.push(element_instance(numeric_id, &ifc_type_of_element_class(&el.class), &el.id, owner_id, placement_id));
-        element_ids.insert(el.id.clone(), numeric_id);
+        instances.push(element_instance(numeric_id.await, &ifc_type_of_element_class(&el.class), &el.id, owner_id.await, placement_id.await).await);
+        element_ids.insert(el.id.clone(), numeric_id.await);
         for pset in &el.psets {
-            build_pset(&mut instances, &mut alloc, owner_id, numeric_id, pset);
+            build_pset(&mut instances, &mut alloc, owner_id.await, numeric_id.await, pset);
         }
     }
     let mut spatial_elements: HashMap<String, Vec<u64>> = HashMap::new();
@@ -276,7 +276,7 @@ pub async fn ifc_from_model(from: &SemioModelSnapshot) -> IfcSnapshot {
     }
     for (spatial_guid, els) in &spatial_elements {
         let rel_id = alloc.next();
-        instances.push(rel_contained_instance(rel_id, owner_id, spatial_ids[spatial_guid], els));
+        instances.push(rel_contained_instance(rel_id.await, owner_id.await, spatial_ids[spatial_guid], els).await);
     }
 
     let doc = Part21Document {
@@ -295,7 +295,7 @@ pub async fn ifc_from_model(from: &SemioModelSnapshot) -> IfcSnapshot {
         },
         instances,
     };
-    crate::artifacts::ifc::schema::snapshot::from_part21_document(crate::artifacts::ifc::STDIO_IFC_DOCUMENT_SCHEMA, &doc)
+    crate::artifacts::ifc::schema::snapshot::from_part21_document(crate::artifacts::ifc::STDIO_IFC_DOCUMENT_SCHEMA, &doc).await
 }
 //#endregion 🔖️Entry
 

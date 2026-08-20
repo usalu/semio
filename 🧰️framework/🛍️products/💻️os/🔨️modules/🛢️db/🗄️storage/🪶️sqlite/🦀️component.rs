@@ -116,6 +116,7 @@ CREATE TABLE IF NOT EXISTS lease (
     // 🔒️ Used as a bare fn-pointer error mapper (`.map_err(sqlite_err)`) throughout this file —
     // `Result::map_err`'s `FnOnce(E) -> F2` bound always calls the mapper with an owned `E`.
     #[allow(clippy::needless_pass_by_value)]
+    // 🚫️async: E4 fn-pointer slot
     fn sqlite_err(err: rusqlite::Error) -> DbError {
         DbError::Io(err.to_string())
     }
@@ -124,7 +125,7 @@ CREATE TABLE IF NOT EXISTS lease (
     /// indices (segment/generation/run ids, epochs, millisecond timestamps) are validated to fit
     /// before being cast, rather than silently reinterpreting an out-of-range value's bit pattern
     /// as negative.
-    fn to_sql_i64(value: u64, what: &'static str) -> Result<i64, DbError> {
+    async fn to_sql_i64(value: u64, what: &'static str) -> Result<i64, DbError> {
         i64::try_from(value).map_err(|_| DbError::LimitExceeded(what))
     }
     //#endregion 🔖️Errors
@@ -145,7 +146,7 @@ CREATE TABLE IF NOT EXISTS lease (
     /// @emoji 🩹️ Recovers the connection mutex from a poisoned lock instead of panicking — a
     /// single panicking caller must not turn every subsequent storage call into a cascading
     /// panic (mirrors `db_storage::MemoryStorage`'s own `lock` helper).
-    fn lock(conn: &Mutex<Connection>) -> std::sync::MutexGuard<'_, Connection> {
+    async fn lock(conn: &Mutex<Connection>) -> std::sync::MutexGuard<'_, Connection> {
         conn.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
     }
 
@@ -174,7 +175,7 @@ CREATE TABLE IF NOT EXISTS lease (
             Self::init(conn, runtime, scope)
         }
 
-        fn init(conn: Connection, runtime: Arc<R>, scope: ScopeHandle) -> Result<Self, DbError> {
+        async fn init(conn: Connection, runtime: Arc<R>, scope: ScopeHandle) -> Result<Self, DbError> {
             // 🎯️ `journal_mode = WAL` is a no-op (silently stays `memory`) on an in-memory
             // connection — SQLite doesn't error on the pragma either way, so `open_in_memory`
             // shares this path.
@@ -839,7 +840,7 @@ CREATE TABLE IF NOT EXISTS lease (
         /// future a `SqliteStorage` driven by `semio_framework_async::testkit::ManualRuntime` hands
         /// back resolves on its first poll (`ManualRuntime::run_blocking` executes synchronously),
         /// so this drives one to completion without needing a real executor.
-        fn poll_once<T>(fut: impl Future<Output = T>) -> T {
+        async fn poll_once<T>(fut: impl Future<Output = T>) -> T {
             let mut fut = std::pin::pin!(fut);
             let waker = std::task::Waker::noop();
             let mut cx = std::task::Context::from_waker(&waker);
@@ -849,11 +850,11 @@ CREATE TABLE IF NOT EXISTS lease (
             }
         }
 
-        fn block_on_ready<T>(fut: impl Future<Output = Result<T, DbError>>) -> Result<T, DbError> {
+        async fn block_on_ready<T>(fut: impl Future<Output = Result<T, DbError>>) -> Result<T, DbError> {
             poll_once(fut)
         }
 
-        fn test_runtime_and_scope() -> (Arc<semio_framework_async::testkit::ManualRuntime>, ScopeHandle) {
+        async fn test_runtime_and_scope() -> (Arc<semio_framework_async::testkit::ManualRuntime>, ScopeHandle) {
             let runtime = Arc::new(semio_framework_async::testkit::ManualRuntime::new(0));
             let scope = poll_once(runtime.open_scope(semio_framework_async::ScopeOwner::Service("db_storage_sqlite_test"), None));
             (runtime, scope)
@@ -865,20 +866,20 @@ CREATE TABLE IF NOT EXISTS lease (
         /// `std::env::temp_dir()` — a REAL on-disk `.sqlite3` file (not `:memory:`), so tests
         /// that reopen it exercise genuine persistence, mirroring `db_storage::FsStorage`'s own
         /// scratch helper convention (no external `tempfile` crate dependency).
-        fn sqlite_scratch_path(name: &str) -> std::path::PathBuf {
+        async fn sqlite_scratch_path(name: &str) -> std::path::PathBuf {
             let pid = std::process::id();
             let counter = SCRATCH_COUNTER.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
             std::env::temp_dir().join(format!("db_storage_sqlite_test_{name}_{pid}_{counter}.sqlite3"))
         }
 
-        fn sqlite_scratch(name: &str) -> SqliteStorage<semio_framework_async::testkit::ManualRuntime> {
+        async fn sqlite_scratch(name: &str) -> SqliteStorage<semio_framework_async::testkit::ManualRuntime> {
             let (runtime, scope) = test_runtime_and_scope();
             poll_once(SqliteStorage::open(runtime, scope, &sqlite_scratch_path(name))).unwrap()
         }
 
         //#region 🔖️WalStorage
-        #[test]
-        fn wal_storage_append_seal_truncate_and_bounds_laws() {
+        #[semio_framework_async_macros::async_test]
+        async fn wal_storage_append_seal_truncate_and_bounds_laws() {
             let storage = sqlite_scratch("wal_laws");
             let document: ArtifactId = "doc-wal".into();
 
@@ -917,8 +918,8 @@ CREATE TABLE IF NOT EXISTS lease (
         //#endregion 🔖️WalStorage
 
         //#region 🔖️SnapshotStorage
-        #[test]
-        fn snapshot_storage_generations_overwrite_and_delete_laws() {
+        #[semio_framework_async_macros::async_test]
+        async fn snapshot_storage_generations_overwrite_and_delete_laws() {
             let storage = sqlite_scratch("snapshot_laws");
             let document: ArtifactId = "doc-snap".into();
             assert_eq!(block_on_ready(storage.latest_generation(&document)).unwrap(), None);
@@ -939,8 +940,8 @@ CREATE TABLE IF NOT EXISTS lease (
         //#endregion 🔖️SnapshotStorage
 
         //#region 🔖️PayloadStorage
-        #[test]
-        fn payload_storage_is_content_addressed_and_idempotent() {
+        #[semio_framework_async_macros::async_test]
+        async fn payload_storage_is_content_addressed_and_idempotent() {
             let storage = sqlite_scratch("payload_laws");
             let bytes = b"a payload blob that gets content-addressed";
             let hash_a = block_on_ready(storage.put(bytes)).unwrap();
@@ -963,8 +964,8 @@ CREATE TABLE IF NOT EXISTS lease (
         //#endregion 🔖️PayloadStorage
 
         //#region 🔖️CatalogStorage
-        #[test]
-        fn catalog_storage_cas_root_fences_stale_writers() {
+        #[semio_framework_async_macros::async_test]
+        async fn catalog_storage_cas_root_fences_stale_writers() {
             let storage = sqlite_scratch("catalog_laws");
             assert_eq!(block_on_ready(storage.read_root()).unwrap(), None);
 
@@ -984,8 +985,8 @@ CREATE TABLE IF NOT EXISTS lease (
         //#endregion 🔖️CatalogStorage
 
         //#region 🔖️IndexStorage
-        #[test]
-        fn index_storage_runs_list_read_and_delete_laws() {
+        #[semio_framework_async_macros::async_test]
+        async fn index_storage_runs_list_read_and_delete_laws() {
             let storage = sqlite_scratch("index_laws");
             let document: ArtifactId = "doc-index".into();
             block_on_ready(storage.write_run(&document, 0, b"run-zero")).unwrap();
@@ -1000,8 +1001,8 @@ CREATE TABLE IF NOT EXISTS lease (
         //#endregion 🔖️IndexStorage
 
         //#region 🔖️LeaseStorage
-        #[test]
-        fn lease_storage_acquire_renew_fence_and_handoff_laws() {
+        #[semio_framework_async_macros::async_test]
+        async fn lease_storage_acquire_renew_fence_and_handoff_laws() {
             let storage = sqlite_scratch("lease_laws");
             let fence_1 = block_on_ready(storage.acquire("shard-1", "node-a", 1_000, 0)).unwrap();
             assert_eq!(fence_1, EpochFence::INITIAL);
@@ -1037,8 +1038,8 @@ CREATE TABLE IF NOT EXISTS lease (
         //#endregion 🔖️LeaseStorage
 
         //#region 🔖️DbBackend
-        #[test]
-        fn db_backend_accessors_and_capabilities() {
+        #[semio_framework_async_macros::async_test]
+        async fn db_backend_accessors_and_capabilities() {
             let (runtime, scope) = test_runtime_and_scope();
             let storage: crate::db_storage::DbBackend<semio_framework_async::testkit::ManualRuntime> =
                 crate::db_storage::DbBackend::Sqlite(poll_once(SqliteStorage::open(runtime, scope, &sqlite_scratch_path("umbrella"))).unwrap());
@@ -1057,8 +1058,8 @@ CREATE TABLE IF NOT EXISTS lease (
         //#endregion 🔖️DbBackend
 
         //#region 🔖️Connection
-        #[test]
-        fn write_survives_reopen_across_instances_against_a_real_file() {
+        #[semio_framework_async_macros::async_test]
+        async fn write_survives_reopen_across_instances_against_a_real_file() {
             let path = sqlite_scratch_path("reopen");
             {
                 let (runtime, scope) = test_runtime_and_scope();
@@ -1077,8 +1078,8 @@ CREATE TABLE IF NOT EXISTS lease (
             }
         }
 
-        #[test]
-        fn in_memory_storage_works_without_a_file() {
+        #[semio_framework_async_macros::async_test]
+        async fn in_memory_storage_works_without_a_file() {
             let (runtime, scope) = test_runtime_and_scope();
             let storage = poll_once(SqliteStorage::open_in_memory(runtime, scope)).unwrap();
             let document: ArtifactId = "doc-mem".into();

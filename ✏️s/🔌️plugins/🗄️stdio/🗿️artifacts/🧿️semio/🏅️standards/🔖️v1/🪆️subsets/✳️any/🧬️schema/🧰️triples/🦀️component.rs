@@ -84,13 +84,13 @@ pub async fn validate_indexed_triple<D, T>(diff: &IndexedTripleDiff<D, T>, base_
     let mut removed = std::collections::BTreeSet::new();
     for &index in &diff.removed {
         if index >= base_len || !removed.insert(index) {
-            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-remove-index", format!("remove index {index} is absent or duplicated")).at(target.clone()));
+            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-remove-index", format!("remove index {index} is absent or duplicated")).await.at(target.clone()).await);
         }
     }
     let mut modified = std::collections::BTreeSet::new();
     for entry in &diff.modified {
         if entry.index >= base_len || removed.contains(&entry.index) || !modified.insert(entry.index) {
-            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-modify-index", format!("modify index {} is absent, removed, or duplicated", entry.index)).at(target.clone()));
+            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-modify-index", format!("modify index {} is absent, removed, or duplicated", entry.index)).await.at(target.clone()).await);
         }
     }
     let mut added = std::collections::BTreeSet::new();
@@ -99,7 +99,7 @@ pub async fn validate_indexed_triple<D, T>(diff: &IndexedTripleDiff<D, T>, base_
     additions.sort_unstable();
     for index in additions {
         if index > length || !added.insert(index) {
-            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-add-index", format!("add index {index} is out of range or duplicated")).at(target.clone()));
+            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-add-index", format!("add index {index} is out of range or duplicated")).await.at(target.clone()).await);
         }
         length += 1;
     }
@@ -116,21 +116,21 @@ where
     for item in base {
         let key = key_of_base(item);
         if base_keys.contains(&key) {
-            return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-base-key", format!("base key {key:?} is duplicated")).at(target.clone()));
+            return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-base-key", format!("base key {key:?} is duplicated")).await.at(target.clone()).await);
         }
         base_keys.push(key);
     }
     let mut removed = Vec::new();
     for key in &diff.removed {
         if !base_keys.contains(key) || removed.contains(key) {
-            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-remove-key", format!("remove key {key:?} is absent or duplicated")).at(target.clone()));
+            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-remove-key", format!("remove key {key:?} is absent or duplicated")).await.at(target.clone()).await);
         }
         removed.push(key.clone());
     }
     let mut modified = Vec::new();
     for entry in &diff.modified {
         if !base_keys.contains(&entry.key) || removed.contains(&entry.key) || modified.contains(&entry.key) {
-            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-modify-key", format!("modify key {:?} is absent, removed, or duplicated", entry.key)).at(target.clone()));
+            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-modify-key", format!("modify key {:?} is absent, removed, or duplicated", entry.key)).await.at(target.clone()).await);
         }
         modified.push(entry.key.clone());
     }
@@ -138,7 +138,7 @@ where
     for item in &diff.added {
         let key = key_of_added(item);
         if base_keys.contains(&key) || added.contains(&key) {
-            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-add-key", format!("add key {key:?} already exists or is duplicated")).at(target.clone()));
+            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-add-key", format!("add key {key:?} already exists or is duplicated")).await.at(target.clone()).await);
         }
         added.push(key);
     }
@@ -202,10 +202,10 @@ pub async fn enc_indexed_triple<D, T>(diff: &IndexedTripleDiff<D, T>, enc_d: imp
 }
 
 pub async fn dec_indexed_triple<D, T>(body: &str, dec_d: impl Fn(&str) -> Result<D, String>, dec_t: impl Fn(&str) -> Result<T, String>) -> Result<IndexedTripleDiff<D, T>, String> {
-    let three = split_top_level(body, ';');
+    let three = split_top_level(body, ';').await;
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("indexed triple: expected 3 sections, got {}", three.len())) };
-    let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|s| s.parse::<usize>().map_err(|e: std::num::ParseIntError| e.to_string())).collect::<Result<Vec<_>, String>>()?;
-    let modified = split_top_level(strip_brackets(modified_s)?, ',')
+    let removed = split_top_level(strip_brackets(removed_s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(|s| s.parse::<usize>().map_err(|e: std::num::ParseIntError| e.to_string())).collect::<Result<Vec<_>, String>>()?;
+    let modified = split_top_level(strip_brackets(modified_s).await?, ',')
         .into_iter()
         .filter(|s| !s.is_empty())
         .map(|entry| {
@@ -213,7 +213,7 @@ pub async fn dec_indexed_triple<D, T>(body: &str, dec_d: impl Fn(&str) -> Result
             Ok(IndexModified { index: idx.parse::<usize>().map_err(|e: std::num::ParseIntError| e.to_string())?, diff: dec_d(rest)? })
         })
         .collect::<Result<Vec<_>, String>>()?;
-    let added = split_top_level(strip_brackets(added_s)?, ',')
+    let added = split_top_level(strip_brackets(added_s).await?, ',')
         .into_iter()
         .filter(|s| !s.is_empty())
         .map(|entry| {
@@ -234,10 +234,10 @@ pub async fn enc_named_triple<K, D, T>(triple: &NamedTripleDiff<K, D, T>, enc_k:
 }
 
 pub async fn dec_named_triple<K, D, T>(s: &str, dec_k: impl Fn(&str) -> Result<K, String>, dec_d: impl Fn(&str) -> Result<D, String>, dec_t: impl Fn(&str) -> Result<T, String>) -> Result<NamedTripleDiff<K, D, T>, String> {
-    let three = split_top_level(s, ';');
+    let three = split_top_level(s, ';').await;
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("named triple: expected 3 sections, got {}", three.len())) };
-    let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|e| dec_k(e)).collect::<Result<Vec<_>, String>>()?;
-    let modified = split_top_level(strip_brackets(modified_s)?, ',')
+    let removed = split_top_level(strip_brackets(removed_s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(|e| dec_k(e)).collect::<Result<Vec<_>, String>>()?;
+    let modified = split_top_level(strip_brackets(modified_s).await?, ',')
         .into_iter()
         .filter(|s| !s.is_empty())
         .map(|entry| {
@@ -245,7 +245,7 @@ pub async fn dec_named_triple<K, D, T>(s: &str, dec_k: impl Fn(&str) -> Result<K
             Ok(NamedModified { key: dec_k(k)?, diff: dec_d(rest)? })
         })
         .collect::<Result<Vec<_>, String>>()?;
-    let added = split_top_level(strip_brackets(added_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|e| dec_t(e)).collect::<Result<Vec<_>, String>>()?;
+    let added = split_top_level(strip_brackets(added_s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(|e| dec_t(e)).collect::<Result<Vec<_>, String>>()?;
     Ok(NamedTripleDiff { removed, modified, added })
 }
 

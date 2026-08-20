@@ -1,0 +1,95 @@
+{
+  "surface": "conformance.component.tree",
+  "revision": 0,
+  "root": 0,
+  "nodes": [
+    {
+      "id": 0,
+      "key": "#0",
+      "component": {
+        "type": "tree",
+        "interactionDomain": "selection"
+      },
+      "layout": {
+        "kind": "stack",
+        "axis": "vertical",
+        "gap": "none",
+        "padding": {
+          "all": "none"
+        },
+        "align": "stretch",
+        "justify": "start",
+        "grow": false,
+        "wrap": false
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {},
+      "children": [
+        1
+      ]
+    },
+    {
+      "id": 1,
+      "key": "section-1",
+      "component": {
+        "type": "treeSection",
+        "label": "Section",
+        "defaultOpen": true
+      },
+      "layout": {
+        "kind": "stack",
+        "axis": "vertical",
+        "gap": "none",
+        "padding": {
+          "all": "none"
+        },
+        "align": "stretch",
+        "justify": "start",
+        "grow": false,
+        "wrap": false
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {},
+      "children": [
+        2
+      ]
+    },
+    {
+      "id": 2,
+      "key": "item-1",
+      "component": {
+        "type": "treeItem",
+        "label": "First item",
+        "icon": "file",
+        "rowActions": [
+          {
+            "icon": "trash",
+            "label": "Delete",
+            "action": {
+              "trigger": "activate",
+              "action": {
+                "scope": "cad-play",
+                "name": "deleteItem",
+                "version": 1
+              }
+            },
+            "placement": "menu"
+          }
+        ]
+      },
+      "layout": {
+        "kind": "leaf",
+        "width": "hug",
+        "height": "hug"
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {
+        "label": "First item"
+      }
+    }
+  ],
+  "layoutEpoch": 0
+}

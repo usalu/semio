@@ -73,11 +73,11 @@ impl protocol::OpText for JsonAnyEditorCommand {
 
 impl protocol::OpBinary for JsonAnyEditorCommand {
     async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(<Self as protocol::OpText>::print_op(self).into_bytes())
+        Ok(<Self as protocol::OpText>::print_op(self).await.into_bytes())
     }
     async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let line = String::from_utf8(bytes.to_vec()).map_err(|error| protocol::ProtocolError::Malformed { what: "json editor command utf8", offset: 0, detail: error.to_string() })?;
-        <Self as protocol::OpText>::parse_op(&line).map_err(|error| protocol::ProtocolError::Malformed { what: "json editor command", offset: 0, detail: error.to_string() })
+        <Self as protocol::OpText>::parse_op(&line).await.map_err(|error| protocol::ProtocolError::Malformed { what: "json editor command", offset: 0, detail: error.to_string() })
     }
 }
 //#endregion 🔖️Command
@@ -118,14 +118,14 @@ impl ArtifactEditor for JsonAnyEditor {
         _engines: &store::EngineHandles,
     ) -> Result<Emit<Self::Mutation>, Fault> {
         let JsonAnyEditorCommand::SetNode { node_id, value } = command;
-        let Ok(path) = decode_path_id(node_id) else { return Ok(Emit::default()) };
+        let Ok(path) = decode_path_id(node_id).await else { return Ok(Emit::default()) };
         Ok(Emit { artifact_mutations: vec![JsonMutation::SetScalar { path, value: JsonValue::String { value: value.clone() } }], description: Some(format!("Set node {node_id}")), ..Default::default() })
     }
 
     async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
-            main::BODY_KEY => main::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
+            main::BODY_KEY => main::render(doc.snapshot).await,
+            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))).await,
         }
     }
 }
@@ -134,12 +134,12 @@ impl ArtifactEditor for JsonAnyEditor {
 //#region 🔖️Manifest
 pub async fn create_json_editor() -> semio_framework_plugin::AppDefinition {
     Editor::builder(JSON_EDITOR_DIALECT)
-        .document(["semio", "stdio", "json"])
-        .icon_id("list-tree")
-        .mode_def(edit::definition())
-        .default_mode_id(edit::JSON_EDIT_MODE_ID)
-        .window_kind_def(main::definition())
-        .default_layout(edit::layout())
+        .await.document(["semio", "stdio", "json"])
+        .await.icon_id("list-tree")
+        .await.mode_def(edit::definition().await)
+        .await.default_mode_id(edit::JSON_EDIT_MODE_ID)
+        .await.window_kind_def(main::definition().await)
+        .await.default_layout(edit::layout())
         .build_definition()
 }
 //#endregion 🔖️Manifest

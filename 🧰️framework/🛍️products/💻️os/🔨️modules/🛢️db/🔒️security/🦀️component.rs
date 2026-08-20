@@ -61,6 +61,7 @@ pub struct Principal {
 
 impl Principal {
     /// @emoji 🆕️ Builds a principal from its three parts.
+    // 🚫️async: E1 pure constructor, used inside a sync `Fn(&ActorId) -> Principal` closure slot — see R9
     pub fn new(actor: protocol::ActorId, tenant: TenantId, roles: Vec<String>) -> Self {
         Self { actor, tenant, roles }
     }
@@ -138,7 +139,7 @@ impl AuthzScope {
     }
 
     /// @emoji 📄️ The document this scope is nested under, or `None` for `AuthzScope::Database`.
-    pub fn document(&self) -> Option<&protocol::ArtifactId> {
+    pub async fn document(&self) -> Option<&protocol::ArtifactId> {
         match self {
             AuthzScope::Database => None,
             AuthzScope::Document { document } | AuthzScope::CommandKind { document, .. } | AuthzScope::Object { document, .. } | AuthzScope::Field { document, .. } | AuthzScope::Historical { document } | AuthzScope::Preview { document } => {
@@ -167,12 +168,13 @@ pub enum Decision {
 }
 
 impl Decision {
+    // 🚫️async: E1 pure accessor consumed synchronously by dozens of test/production call sites — see R9
     pub fn is_allowed(&self) -> bool {
         matches!(self, Decision::Allow)
     }
 
     /// @emoji 🔀️ Collapses the decision into the family's standard `Result` shape.
-    pub fn into_result(self) -> Result<(), DbError> {
+    pub async fn into_result(self) -> Result<(), DbError> {
         match self {
             Decision::Allow => Ok(()),
             Decision::Deny { reason } => Err(DbError::Unauthorized(reason)),
@@ -199,6 +201,7 @@ impl Grant {
 
     /// @emoji 🚫️ A deny rule — see `RoleBasedPolicy::evaluate`: any matching deny short-circuits
     /// to `Decision::Deny` regardless of any allow grant, matched or not yet evaluated.
+    // 🚫️async: E1 pure constructor consumed synchronously by `impl Default` — see R9
     pub fn deny(role: impl Into<String>, pattern: &[&str], actions: &[Action]) -> Self {
         Self { role: role.into(), pattern: pattern.iter().map(|s| s.to_string()).collect(), actions: actions.iter().copied().collect(), effect: Effect::Deny }
     }
@@ -229,11 +232,15 @@ pub struct RoleBasedPolicy {
 }
 
 impl RoleBasedPolicy {
+    // 🚫️async: E1 pure constructor — used as a bare `fold`/`Default`-adjacent builder
+    // (`RoleBasedPolicy::with_grant` as an `Iterator::fold` fn-pointer accumulator, and
+    // `ArtifactEngineConfig`'s `impl Default`, itself E1) throughout this crate — see R9
     pub fn new() -> Self {
         Self::default()
     }
 
     /// @emoji ➕️ Adds one grant (builder-style).
+    // 🚫️async: E1 pure builder, used as a bare `Iterator::fold` fn-pointer accumulator — see R9
     pub fn with_grant(mut self, grant: Grant) -> Self {
         self.grants.push(grant);
         self
@@ -243,7 +250,7 @@ impl RoleBasedPolicy {
     /// contains `action`, matching `pattern` against `scope.segments()`. A matching `Deny`
     /// short-circuits immediately; otherwise the result is `Allow` iff at least one matching
     /// `Allow` grant was found, `Deny` (default-deny) otherwise.
-    pub fn evaluate(&self, principal: &Principal, scope: &AuthzScope, action: Action) -> Decision {
+    pub async fn evaluate(&self, principal: &Principal, scope: &AuthzScope, action: Action) -> Decision {
         let segments = scope.segments();
         let mut allowed_by: Option<&Grant> = None;
         for grant in &self.grants {
@@ -283,7 +290,7 @@ impl RoleBasedPolicy {
 /// (`🌎️hub`'s WS handler) builds a fresh `RoleBasedPolicy`/`SecurityGate` per connection, and a
 /// connection is already scoped to exactly one space's one document — the wildcard never needs to
 /// discriminate across spaces because it is never evaluated against another space's document.
-pub fn space_grants(_space_id: &str, kind: &str) -> Vec<Grant> {
+pub async fn space_grants(_space_id: &str, kind: &str) -> Vec<Grant> {
     let mut grants = vec![Grant::allow("author", &["db", "document", "*", "**"], &[Action::Read, Action::Write]), Grant::allow("spectator", &["db", "document", "*", "**"], &[Action::Read])];
     if kind == "archive" {
         grants.push(Grant::deny("author", &["db", "document", "*", "**"], &[Action::Write]));
@@ -305,6 +312,7 @@ pub struct Signature {
 
 /// @emoji 🔀️ Maps `protocol::ProtocolError` (the error type `Signer`/`SignatureVerifier` return)
 /// onto this family's `DbError` by category, mirroring `db_core`'s `From<pack::PackError>`.
+// 🚫️async: E4 fn-pointer slot
 fn map_protocol_error(err: protocol::ProtocolError) -> DbError {
     match err {
         protocol::ProtocolError::LimitExceeded(what) => DbError::LimitExceeded(what),
@@ -317,17 +325,22 @@ fn map_protocol_error(err: protocol::ProtocolError) -> DbError {
 /// @emoji ✍️ Signs `message` (typically a commit/frontier `chain_hash`) with an injected
 /// `Signer` — this crate never picks a concrete scheme, matching the contract's "signatures via
 /// injected `Signer`/`Verifier` traits" wording.
-pub fn sign_message(signer: &dyn protocol::Signer, message: &[u8; 32]) -> Result<Signature, DbError> {
-    let bytes = signer.sign(message).map_err(map_protocol_error)?;
-    Ok(Signature { scheme: signer.scheme().to_string(), key_id: signer.key_id().to_string(), bytes })
+// 🔀️ `signer: &impl protocol::Signer` (was `&dyn`) — `Signer` is an OPEN extension point (its own
+// module doc: "zero impls in this family — supplied by the integration layer"), and its `async fn`
+// methods make `dyn Signer` non-object-safe (R1). R11(a): parameter-position dyn erasure is
+// trivially generic, so this is just a signature change, no design question.
+pub async fn sign_message(signer: &impl protocol::Signer, message: &[u8; 32]) -> Result<Signature, DbError> {
+    let bytes = signer.sign(message).await.map_err(map_protocol_error)?;
+    Ok(Signature { scheme: signer.scheme().await.to_string(), key_id: signer.key_id().await.to_string(), bytes })
 }
 
 /// @emoji ✅️ Verifies `signature` over `message` with an injected `SignatureVerifier`. Distinct
 /// from a raw `bool` return: a cryptographically-valid-but-false verification and a
 /// verifier-internal error both surface as `Err`, but with different `DbError` variants, so a
 /// caller can tell "rejected" from "verifier broken" without inspecting a string.
-pub fn verify_signature(verifier: &dyn protocol::SignatureVerifier, signature: &Signature, message: &[u8; 32]) -> Result<(), DbError> {
-    let ok = verifier.verify(&signature.scheme, &signature.key_id, message, &signature.bytes).map_err(map_protocol_error)?;
+// 🔀️ `verifier: &impl protocol::SignatureVerifier` (was `&dyn`) — same rationale as `sign_message`.
+pub async fn verify_signature(verifier: &impl protocol::SignatureVerifier, signature: &Signature, message: &[u8; 32]) -> Result<(), DbError> {
+    let ok = verifier.verify(&signature.scheme, &signature.key_id, message, &signature.bytes).await.map_err(map_protocol_error)?;
     if ok {
         Ok(())
     } else {
@@ -361,7 +374,7 @@ impl ReplayGuard {
     /// rejects with `DbError::Conflict` if `mutation_id` is still tracked; otherwise records it
     /// (evicting the oldest entry first if `capacity_per_actor` would be exceeded) and returns
     /// `Ok`.
-    pub fn check_and_record(&mut self, actor: &protocol::ActorId, mutation_id: &protocol::MutationId, physical_ms: u64) -> Result<(), DbError> {
+    pub async fn check_and_record(&mut self, actor: &protocol::ActorId, mutation_id: &protocol::MutationId, physical_ms: u64) -> Result<(), DbError> {
         let deque = self.order.entry(actor.clone()).or_default();
         let set = self.seen.entry(actor.clone()).or_default();
 
@@ -437,6 +450,7 @@ impl BudgetRegistry {
 
     /// @emoji 🎟️ Attempts to consume `cost` tokens from `key`'s bucket at `now_ms`. Returns
     /// `DbError::LimitExceeded` if the bucket doesn't have enough tokens yet.
+    // 🚫️async: E1 pure accessor, `TokenBucket`'s own methods are sync — see R9
     pub fn try_consume(&mut self, key: &str, cost: u32, now_ms: u64) -> Result<(), DbError> {
         let (capacity, refill_per_sec) = (self.capacity, self.refill_per_sec);
         let bucket = self.buckets.entry(key.to_string()).or_insert_with(|| TokenBucket::new(capacity, refill_per_sec, now_ms));
@@ -459,7 +473,7 @@ const MAX_REDACT_DEPTH: usize = 64;
 
 /// @emoji 🕳️ The marker `redact_fields` substitutes for a denied subtree — an object tagged
 /// `{"$redacted": true}` rather than `null`, so a caller can tell "hidden" from "genuinely null".
-fn redacted_marker() -> serde_json::Value {
+async fn redacted_marker() -> serde_json::Value {
     let mut object = serde_json::Map::new();
     object.insert("$redacted".to_string(), serde_json::Value::Bool(true));
     serde_json::Value::Object(object)
@@ -473,18 +487,18 @@ fn redacted_marker() -> serde_json::Value {
 /// payload-schema knowledge this crate must not depend on per the module doc). A denied subtree
 /// is never recursed into further — its whole value is replaced, so nested fields under a denied
 /// field are never separately evaluated (and can't leak).
-pub fn redact_fields(policy: &RoleBasedPolicy, principal: &Principal, document: &protocol::ArtifactId, object_id: &str, value: &serde_json::Value) -> serde_json::Value {
-    redact_fields_at(policy, principal, document, object_id, "", value, 0)
+pub async fn redact_fields(policy: &RoleBasedPolicy, principal: &Principal, document: &protocol::ArtifactId, object_id: &str, value: &serde_json::Value) -> serde_json::Value {
+    redact_fields_at(policy, principal, document, object_id, "", value, 0).await
 }
 
-fn redact_fields_at(policy: &RoleBasedPolicy, principal: &Principal, document: &protocol::ArtifactId, object_id: &str, path: &str, value: &serde_json::Value, depth: usize) -> serde_json::Value {
+async fn redact_fields_at(policy: &RoleBasedPolicy, principal: &Principal, document: &protocol::ArtifactId, object_id: &str, path: &str, value: &serde_json::Value, depth: usize) -> serde_json::Value {
     if depth > MAX_REDACT_DEPTH {
-        return redacted_marker();
+        return redacted_marker().await;
     }
     if !path.is_empty() {
         let scope = AuthzScope::Field { document: document.clone(), object_id: object_id.to_string(), field: path.to_string() };
-        if !policy.evaluate(principal, &scope, Action::Read).is_allowed() {
-            return redacted_marker();
+        if !policy.evaluate(principal, &scope, Action::Read).await.is_allowed() {
+            return redacted_marker().await;
         }
     }
     match value {
@@ -492,7 +506,7 @@ fn redact_fields_at(policy: &RoleBasedPolicy, principal: &Principal, document: &
             let mut out = serde_json::Map::with_capacity(map.len());
             for (key, child) in map {
                 let child_path = if path.is_empty() { key.clone() } else { format!("{path}.{key}") };
-                out.insert(key.clone(), redact_fields_at(policy, principal, document, object_id, &child_path, child, depth + 1));
+                out.insert(key.clone(), Box::pin(redact_fields_at(policy, principal, document, object_id, &child_path, child, depth + 1)).await);
             }
             serde_json::Value::Object(out)
         }
@@ -507,38 +521,38 @@ fn redact_fields_at(policy: &RoleBasedPolicy, principal: &Principal, document: &
 /// stays generic over `E: Emit` rather than depending on `db_observe` directly — dedyn-emit-runtime,
 /// O1/R11(a): a caller-supplied, stored implementation is trivially generic, exactly like
 /// `db_artifact::ArtifactEngineConfig`'s own `A: AuthzHook`/`V: VersionGraph` params).
-pub fn audit_decision<E: Emit>(emit: &E, principal: &Principal, scope: &AuthzScope, action: Action, decision: &Decision) {
+pub async fn audit_decision<E: Emit>(emit: &E, principal: &Principal, scope: &AuthzScope, action: Action, decision: &Decision) {
     let name = if decision.is_allowed() { "security.authz_allowed" } else { "security.authz_denied" };
     let mut event = EmitEvent::new(name)
         .field("actor", EmitField::Text(principal.actor.0.clone()))
         .field("tenant", EmitField::Text(principal.tenant.0.clone()))
         .field("action", EmitField::Text(format!("{action:?}")))
         .field("scope", EmitField::Text(scope.segments().join("/")));
-    if let Some(document) = scope.document() {
+    if let Some(document) = scope.document().await {
         event = event.with_document(ArtifactId::from(document.0.clone()));
     }
     if let Decision::Deny { reason } = decision {
         event = event.field("reason", EmitField::Text(reason.clone()));
     }
-    emit.emit(event);
+    emit.emit(event).await;
 }
 
 /// @emoji 📣️ Emits a `security.replay_rejected` event — `SecurityGate::admit_command` calls this
 /// when `ReplayGuard` rejects an operation, so a replay attempt is auditable even though it never
 /// reaches a `Decision`.
-pub fn audit_replay_rejected<E: Emit>(emit: &E, actor: &protocol::ActorId, mutation_id: &protocol::MutationId, document: &protocol::ArtifactId) {
+pub async fn audit_replay_rejected<E: Emit>(emit: &E, actor: &protocol::ActorId, mutation_id: &protocol::MutationId, document: &protocol::ArtifactId) {
     emit.emit(
         EmitEvent::new("security.replay_rejected")
             .with_document(ArtifactId::from(document.0.clone()))
             .field("actor", EmitField::Text(actor.0.clone()))
             .field("mutation_id", EmitField::Text(mutation_id.0.clone())),
-    );
+    ).await;
 }
 
 /// @emoji 📣️ Emits a `security.budget_exceeded` event — `SecurityGate::admit_command` calls this
 /// when `BudgetRegistry` rejects a submission.
-pub fn audit_budget_exceeded<E: Emit>(emit: &E, key: &str, document: &protocol::ArtifactId) {
-    emit.emit(EmitEvent::new("security.budget_exceeded").with_document(ArtifactId::from(document.0.clone())).field("key", EmitField::Text(key.to_string())));
+pub async fn audit_budget_exceeded<E: Emit>(emit: &E, key: &str, document: &protocol::ArtifactId) {
+    emit.emit(EmitEvent::new("security.budget_exceeded").with_document(ArtifactId::from(document.0.clone())).field("key", EmitField::Text(key.to_string()))).await;
 }
 //#endregion 🔖️Audit
 
@@ -546,6 +560,7 @@ pub fn audit_budget_exceeded<E: Emit>(emit: &E, key: &str, document: &protocol::
 /// @emoji 🔓️ Recovers a `Mutex`'s inner value even if a prior holder panicked while holding it —
 /// mirrors `db_observe`'s `lock` helper: a security check must never itself become a source of
 /// panic-under-panic for the actor code that calls into it, often mid-crash-handling.
+// 🚫️async: E1 pure accessor (no suspension) — see R9
 fn lock<T>(mutex: &std::sync::Mutex<T>) -> std::sync::MutexGuard<'_, T> {
     mutex.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
 }
@@ -574,10 +589,10 @@ impl<E: Emit + 'static> SecurityGate<E> {
     /// @emoji ⚖️ Evaluates `scope`/`action` against the gate's policy, audits the decision, and
     /// collapses it into a `Result` — the single authz entry point every scope granularity (db,
     /// document, command-kind, object, field, historical, preview) shares.
-    pub fn authorize(&self, principal: &Principal, scope: &AuthzScope, action: Action) -> Result<(), DbError> {
-        let decision = self.policy.evaluate(principal, scope, action);
-        audit_decision(self.emit.as_ref(), principal, scope, action, &decision);
-        decision.into_result()
+    pub async fn authorize(&self, principal: &Principal, scope: &AuthzScope, action: Action) -> Result<(), DbError> {
+        let decision = self.policy.evaluate(principal, scope, action).await;
+        audit_decision(self.emit.as_ref(), principal, scope, action, &decision).await;
+        decision.into_result().await
     }
 
     /// @emoji ✅️ The admit/dedupe/authz stages for one command submission: tenant isolation,
@@ -586,7 +601,7 @@ impl<E: Emit + 'static> SecurityGate<E> {
     /// id, which may differ from `principal.actor` under delegated/service submission — this
     /// crate does not assume they're always the same identity).
     #[allow(clippy::too_many_arguments)]
-    pub fn admit_command(
+    pub async fn admit_command(
         &self,
         principal: &Principal,
         resource_tenant: &TenantId,
@@ -597,13 +612,13 @@ impl<E: Emit + 'static> SecurityGate<E> {
         physical_ms: u64,
     ) -> Result<(), DbError> {
         check_tenant(principal, resource_tenant)?;
-        self.authorize(principal, &AuthzScope::CommandKind { document: document.clone(), kind: kind.to_string() }, Action::Write)?;
+        self.authorize(principal, &AuthzScope::CommandKind { document: document.clone(), kind: kind.to_string() }, Action::Write).await?;
         if lock(&self.budgets).try_consume(&principal.actor.0, 1, physical_ms).is_err() {
-            audit_budget_exceeded(self.emit.as_ref(), &principal.actor.0, document);
+            audit_budget_exceeded(self.emit.as_ref(), &principal.actor.0, document).await;
             return Err(DbError::LimitExceeded("dos budget exceeded"));
         }
-        if lock(&self.replay).check_and_record(envelope_actor, mutation_id, physical_ms).is_err() {
-            audit_replay_rejected(self.emit.as_ref(), envelope_actor, mutation_id, document);
+        if lock(&self.replay).check_and_record(envelope_actor, mutation_id, physical_ms).await.is_err() {
+            audit_replay_rejected(self.emit.as_ref(), envelope_actor, mutation_id, document).await;
             return Err(DbError::Conflict(format!("replayed operation '{}' by actor '{}'", mutation_id.0, envelope_actor.0)));
         }
         Ok(())
@@ -611,8 +626,8 @@ impl<E: Emit + 'static> SecurityGate<E> {
 
     /// @emoji 🫥️ Convenience forward to the free `redact_fields` function using the gate's own
     /// policy.
-    pub fn redact(&self, principal: &Principal, document: &protocol::ArtifactId, object_id: &str, value: &serde_json::Value) -> serde_json::Value {
-        redact_fields(&self.policy, principal, document, object_id, value)
+    pub async fn redact(&self, principal: &Principal, document: &protocol::ArtifactId, object_id: &str, value: &serde_json::Value) -> serde_json::Value {
+        redact_fields(&self.policy, principal, document, object_id, value).await
     }
 }
 //#endregion 🔖️Gate
@@ -622,55 +637,55 @@ impl<E: Emit + 'static> SecurityGate<E> {
 mod tests {
     use super::*;
 
-    fn doc(id: &str) -> protocol::ArtifactId {
+    async fn doc(id: &str) -> protocol::ArtifactId {
         protocol::ArtifactId(id.to_string())
     }
-    fn actor(id: &str) -> protocol::ActorId {
+    async fn actor(id: &str) -> protocol::ActorId {
         protocol::ActorId(id.to_string())
     }
-    fn op(id: &str) -> protocol::MutationId {
+    async fn op(id: &str) -> protocol::MutationId {
         protocol::MutationId(id.to_string())
     }
-    fn principal(role: &str) -> Principal {
-        Principal::new(actor("alice"), TenantId::from("tenant-1"), vec![role.to_string()])
+    async fn principal(role: &str) -> Principal {
+        Principal::new(actor("alice").await, TenantId::from("tenant-1"), vec![role.to_string()])
     }
 
     //#region 🔖️Identity
-    #[test]
-    fn check_tenant_allows_matching_and_rejects_mismatched() {
-        let p = principal("editor");
+    #[semio_framework_async_macros::async_test]
+    async fn check_tenant_allows_matching_and_rejects_mismatched() {
+        let p = principal("editor").await;
         assert!(check_tenant(&p, &TenantId::from("tenant-1")).is_ok());
         assert!(matches!(check_tenant(&p, &TenantId::from("tenant-2")), Err(DbError::Unauthorized(_))));
     }
 
-    #[test]
-    fn principal_has_role_matches_exactly() {
-        let p = Principal::new(actor("alice"), TenantId::from("t1"), vec!["editor".to_string(), "viewer".to_string()]);
+    #[semio_framework_async_macros::async_test]
+    async fn principal_has_role_matches_exactly() {
+        let p = Principal::new(actor("alice").await, TenantId::from("t1"), vec!["editor".to_string(), "viewer".to_string()]);
         assert!(p.has_role("editor"));
         assert!(!p.has_role("admin"));
     }
     //#endregion 🔖️Identity
 
     //#region 🔖️Scope
-    #[test]
-    fn scope_segments_nest_under_document() {
+    #[semio_framework_async_macros::async_test]
+    async fn scope_segments_nest_under_document() {
         assert_eq!(AuthzScope::Database.segments(), vec!["db"]);
-        assert_eq!(AuthzScope::Document { document: doc("doc-1") }.segments(), vec!["db", "document", "doc-1"]);
-        assert_eq!(AuthzScope::CommandKind { document: doc("doc-1"), kind: "edit".to_string() }.segments(), vec!["db", "document", "doc-1", "kind", "edit"]);
-        assert_eq!(AuthzScope::Field { document: doc("doc-1"), object_id: "obj-1".to_string(), field: "name".to_string() }.segments(), vec!["db", "document", "doc-1", "object", "obj-1", "field", "name"]);
+        assert_eq!(AuthzScope::Document { document: doc("doc-1").await }.segments(), vec!["db", "document", "doc-1"]);
+        assert_eq!(AuthzScope::CommandKind { document: doc("doc-1").await, kind: "edit".to_string() }.segments(), vec!["db", "document", "doc-1", "kind", "edit"]);
+        assert_eq!(AuthzScope::Field { document: doc("doc-1").await, object_id: "obj-1".to_string(), field: "name".to_string() }.segments(), vec!["db", "document", "doc-1", "object", "obj-1", "field", "name"]);
     }
 
-    #[test]
-    fn scope_document_extracts_owning_document_or_none() {
-        assert_eq!(AuthzScope::Database.document(), None);
-        assert_eq!(AuthzScope::Historical { document: doc("doc-1") }.document(), Some(&doc("doc-1")));
-        assert_eq!(AuthzScope::Preview { document: doc("doc-1") }.document(), Some(&doc("doc-1")));
+    #[semio_framework_async_macros::async_test]
+    async fn scope_document_extracts_owning_document_or_none() {
+        assert_eq!(AuthzScope::Database.document().await, None);
+        assert_eq!(AuthzScope::Historical { document: doc("doc-1").await }.document().await, Some(&doc("doc-1").await));
+        assert_eq!(AuthzScope::Preview { document: doc("doc-1").await }.document().await, Some(&doc("doc-1").await));
     }
     //#endregion 🔖️Scope
 
     //#region 🔖️Policy
-    #[test]
-    fn pattern_matches_exact_wildcard_and_trailing_double_star() {
+    #[semio_framework_async_macros::async_test]
+    async fn pattern_matches_exact_wildcard_and_trailing_double_star() {
         let seg = |s: &[&str]| s.iter().map(|x| x.to_string()).collect::<Vec<_>>();
         let pat = |s: &[&str]| s.iter().map(|x| x.to_string()).collect::<Vec<_>>();
 
@@ -683,61 +698,61 @@ mod tests {
         assert!(!pattern_matches(&pat(&["db", "document", "doc-1"]), &seg(&["db", "document", "doc-1", "kind", "edit"])));
     }
 
-    #[test]
-    fn evaluate_default_denies_with_no_matching_grant() {
+    #[semio_framework_async_macros::async_test]
+    async fn evaluate_default_denies_with_no_matching_grant() {
         let policy = RoleBasedPolicy::new();
-        let decision = policy.evaluate(&principal("editor"), &AuthzScope::Document { document: doc("doc-1") }, Action::Read);
+        let decision = policy.evaluate(&principal("editor").await, &AuthzScope::Document { document: doc("doc-1").await }, Action::Read).await;
         assert!(!decision.is_allowed());
     }
 
-    #[test]
-    fn evaluate_allows_on_matching_role_pattern_and_action() {
+    #[semio_framework_async_macros::async_test]
+    async fn evaluate_allows_on_matching_role_pattern_and_action() {
         let policy = RoleBasedPolicy::new().with_grant(Grant::allow("editor", &["db", "document", "*", "**"], &[Action::Read, Action::Write]));
-        let decision = policy.evaluate(&principal("editor"), &AuthzScope::CommandKind { document: doc("doc-1"), kind: "edit".to_string() }, Action::Write);
+        let decision = policy.evaluate(&principal("editor").await, &AuthzScope::CommandKind { document: doc("doc-1").await, kind: "edit".to_string() }, Action::Write).await;
         assert!(decision.is_allowed());
 
-        let wrong_role = policy.evaluate(&principal("viewer"), &AuthzScope::Document { document: doc("doc-1") }, Action::Read);
+        let wrong_role = policy.evaluate(&principal("viewer").await, &AuthzScope::Document { document: doc("doc-1").await }, Action::Read).await;
         assert!(!wrong_role.is_allowed());
     }
 
-    #[test]
-    fn evaluate_explicit_deny_always_wins_over_allow() {
+    #[semio_framework_async_macros::async_test]
+    async fn evaluate_explicit_deny_always_wins_over_allow() {
         let policy = RoleBasedPolicy::new().with_grant(Grant::allow("editor", &["db", "document", "doc-1", "**"], &[Action::Read])).with_grant(Grant::deny("editor", &["db", "document", "doc-1", "object", "secret", "**"], &[Action::Read]));
-        let allowed = policy.evaluate(&principal("editor"), &AuthzScope::Object { document: doc("doc-1"), object_id: "public".to_string() }, Action::Read);
+        let allowed = policy.evaluate(&principal("editor").await, &AuthzScope::Object { document: doc("doc-1").await, object_id: "public".to_string() }, Action::Read).await;
         assert!(allowed.is_allowed());
 
-        let denied = policy.evaluate(&principal("editor"), &AuthzScope::Field { document: doc("doc-1"), object_id: "secret".to_string(), field: "value".to_string() }, Action::Read);
+        let denied = policy.evaluate(&principal("editor").await, &AuthzScope::Field { document: doc("doc-1").await, object_id: "secret".to_string(), field: "value".to_string() }, Action::Read).await;
         assert!(!denied.is_allowed());
     }
 
-    #[test]
-    fn decision_into_result_maps_deny_to_unauthorized() {
-        assert!(Decision::Allow.into_result().is_ok());
-        let err = Decision::Deny { reason: "nope".to_string() }.into_result().unwrap_err();
+    #[semio_framework_async_macros::async_test]
+    async fn decision_into_result_maps_deny_to_unauthorized() {
+        assert!(Decision::Allow.into_result().await.is_ok());
+        let err = Decision::Deny { reason: "nope".to_string() }.into_result().await.unwrap_err();
         assert!(matches!(err, DbError::Unauthorized(reason) if reason == "nope"));
     }
     //#endregion 🔖️Policy
 
     //#region 🔖️SpaceGrants
-    #[test]
-    fn space_grants_studio_allows_author_write_and_spectator_read_only() {
+    #[semio_framework_async_macros::async_test]
+    async fn space_grants_studio_allows_author_write_and_spectator_read_only() {
         let policy = RoleBasedPolicy::new();
-        let policy = space_grants("space-1", "studio").into_iter().fold(policy, RoleBasedPolicy::with_grant);
-        let scope = AuthzScope::CommandKind { document: doc("space-1:doc-1"), kind: "edit".to_string() };
+        let policy = space_grants("space-1", "studio").await.into_iter().fold(policy, RoleBasedPolicy::with_grant);
+        let scope = AuthzScope::CommandKind { document: doc("space-1:doc-1").await, kind: "edit".to_string() };
 
-        assert!(policy.evaluate(&principal("author"), &scope, Action::Write).is_allowed());
-        assert!(policy.evaluate(&principal("author"), &scope, Action::Read).is_allowed());
-        assert!(policy.evaluate(&principal("spectator"), &scope, Action::Read).is_allowed());
-        assert!(!policy.evaluate(&principal("spectator"), &scope, Action::Write).is_allowed());
+        assert!(policy.evaluate(&principal("author").await, &scope, Action::Write).await.is_allowed());
+        assert!(policy.evaluate(&principal("author").await, &scope, Action::Read).await.is_allowed());
+        assert!(policy.evaluate(&principal("spectator").await, &scope, Action::Read).await.is_allowed());
+        assert!(!policy.evaluate(&principal("spectator").await, &scope, Action::Write).await.is_allowed());
     }
 
-    #[test]
-    fn space_grants_archive_denies_author_write_even_though_allow_also_matches() {
-        let policy = space_grants("space-1", "archive").into_iter().fold(RoleBasedPolicy::new(), RoleBasedPolicy::with_grant);
-        let scope = AuthzScope::CommandKind { document: doc("space-1:doc-1"), kind: "edit".to_string() };
+    #[semio_framework_async_macros::async_test]
+    async fn space_grants_archive_denies_author_write_even_though_allow_also_matches() {
+        let policy = space_grants("space-1", "archive").await.into_iter().fold(RoleBasedPolicy::new(), RoleBasedPolicy::with_grant);
+        let scope = AuthzScope::CommandKind { document: doc("space-1:doc-1").await, kind: "edit".to_string() };
 
-        assert!(!policy.evaluate(&principal("author"), &scope, Action::Write).is_allowed(), "deny must win over the author allow grant");
-        assert!(policy.evaluate(&principal("author"), &scope, Action::Read).is_allowed(), "archive still permits reads");
+        assert!(!policy.evaluate(&principal("author").await, &scope, Action::Write).await.is_allowed(), "deny must win over the author allow grant");
+        assert!(policy.evaluate(&principal("author").await, &scope, Action::Read).await.is_allowed(), "archive still permits reads");
     }
     //#endregion 🔖️SpaceGrants
 
@@ -746,25 +761,25 @@ mod tests {
         signature: Vec<u8>,
     }
     impl protocol::Signer for FixedSigner {
-        fn scheme(&self) -> &str {
+        async fn scheme(&self) -> &str {
             "test-scheme"
         }
-        fn key_id(&self) -> &str {
+        async fn key_id(&self) -> &str {
             "test-key"
         }
-        fn sign(&self, _message: &[u8; 32]) -> Result<Vec<u8>, protocol::ProtocolError> {
+        async fn sign(&self, _message: &[u8; 32]) -> Result<Vec<u8>, protocol::ProtocolError> {
             Ok(self.signature.clone())
         }
     }
     struct FailingSigner;
     impl protocol::Signer for FailingSigner {
-        fn scheme(&self) -> &str {
+        async fn scheme(&self) -> &str {
             "test-scheme"
         }
-        fn key_id(&self) -> &str {
+        async fn key_id(&self) -> &str {
             "test-key"
         }
-        fn sign(&self, _message: &[u8; 32]) -> Result<Vec<u8>, protocol::ProtocolError> {
+        async fn sign(&self, _message: &[u8; 32]) -> Result<Vec<u8>, protocol::ProtocolError> {
             Err(protocol::ProtocolError::LimitExceeded("too big"))
         }
     }
@@ -772,81 +787,81 @@ mod tests {
         expected: Vec<u8>,
     }
     impl protocol::SignatureVerifier for ExactVerifier {
-        fn verify(&self, _scheme: &str, _key_id: &str, _message: &[u8; 32], signature: &[u8]) -> Result<bool, protocol::ProtocolError> {
+        async fn verify(&self, _scheme: &str, _key_id: &str, _message: &[u8; 32], signature: &[u8]) -> Result<bool, protocol::ProtocolError> {
             Ok(signature == self.expected.as_slice())
         }
     }
 
-    #[test]
-    fn sign_then_verify_round_trips() {
+    #[semio_framework_async_macros::async_test]
+    async fn sign_then_verify_round_trips() {
         let signer = FixedSigner { signature: vec![1, 2, 3, 4] };
         let message = [7u8; 32];
-        let signature = sign_message(&signer, &message).unwrap();
+        let signature = sign_message(&signer, &message).await.unwrap();
         assert_eq!(signature.scheme, "test-scheme");
         assert_eq!(signature.bytes, vec![1, 2, 3, 4]);
 
         let verifier = ExactVerifier { expected: vec![1, 2, 3, 4] };
-        assert!(verify_signature(&verifier, &signature, &message).is_ok());
+        assert!(verify_signature(&verifier, &signature, &message).await.is_ok());
     }
 
-    #[test]
-    fn verify_rejects_mismatched_signature_without_panicking() {
+    #[semio_framework_async_macros::async_test]
+    async fn verify_rejects_mismatched_signature_without_panicking() {
         let signature = Signature { scheme: "test-scheme".to_string(), key_id: "test-key".to_string(), bytes: vec![9, 9, 9] };
         let verifier = ExactVerifier { expected: vec![1, 2, 3] };
-        let err = verify_signature(&verifier, &signature, &[0u8; 32]).unwrap_err();
+        let err = verify_signature(&verifier, &signature, &[0u8; 32]).await.unwrap_err();
         assert!(matches!(err, DbError::Unauthorized(_)));
     }
 
-    #[test]
-    fn sign_message_maps_protocol_error_by_category() {
-        let err = sign_message(&FailingSigner, &[0u8; 32]).unwrap_err();
+    #[semio_framework_async_macros::async_test]
+    async fn sign_message_maps_protocol_error_by_category() {
+        let err = sign_message(&FailingSigner, &[0u8; 32]).await.unwrap_err();
         assert_eq!(err, DbError::LimitExceeded("too big"));
     }
     //#endregion 🔖️Signing
 
     //#region 🔖️Replay
-    #[test]
-    fn replay_guard_rejects_duplicate_operation_within_window() {
+    #[semio_framework_async_macros::async_test]
+    async fn replay_guard_rejects_duplicate_operation_within_window() {
         let mut guard = ReplayGuard::new(1_000, 16);
-        let a = actor("alice");
-        let o = op("op-1");
-        assert!(guard.check_and_record(&a, &o, 0).is_ok());
-        let err = guard.check_and_record(&a, &o, 500).unwrap_err();
+        let a = actor("alice").await;
+        let o = op("op-1").await;
+        assert!(guard.check_and_record(&a, &o, 0).await.is_ok());
+        let err = guard.check_and_record(&a, &o, 500).await.unwrap_err();
         assert!(matches!(err, DbError::Conflict(_)));
     }
 
-    #[test]
-    fn replay_guard_allows_same_operation_id_after_window_expires() {
+    #[semio_framework_async_macros::async_test]
+    async fn replay_guard_allows_same_operation_id_after_window_expires() {
         let mut guard = ReplayGuard::new(1_000, 16);
-        let a = actor("alice");
-        let o = op("op-1");
-        assert!(guard.check_and_record(&a, &o, 0).is_ok());
-        assert!(guard.check_and_record(&a, &o, 2_000).is_ok());
+        let a = actor("alice").await;
+        let o = op("op-1").await;
+        assert!(guard.check_and_record(&a, &o, 0).await.is_ok());
+        assert!(guard.check_and_record(&a, &o, 2_000).await.is_ok());
     }
 
-    #[test]
-    fn replay_guard_is_isolated_per_actor() {
+    #[semio_framework_async_macros::async_test]
+    async fn replay_guard_is_isolated_per_actor() {
         let mut guard = ReplayGuard::new(1_000, 16);
-        let o = op("op-1");
-        assert!(guard.check_and_record(&actor("alice"), &o, 0).is_ok());
-        assert!(guard.check_and_record(&actor("bob"), &o, 0).is_ok());
+        let o = op("op-1").await;
+        assert!(guard.check_and_record(&actor("alice").await, &o, 0).await.is_ok());
+        assert!(guard.check_and_record(&actor("bob").await, &o, 0).await.is_ok());
     }
 
-    #[test]
-    fn replay_guard_evicts_oldest_beyond_capacity_bounding_memory() {
+    #[semio_framework_async_macros::async_test]
+    async fn replay_guard_evicts_oldest_beyond_capacity_bounding_memory() {
         let mut guard = ReplayGuard::new(1_000_000, 2);
-        let a = actor("alice");
-        assert!(guard.check_and_record(&a, &op("op-1"), 0).is_ok());
-        assert!(guard.check_and_record(&a, &op("op-2"), 0).is_ok());
-        assert!(guard.check_and_record(&a, &op("op-3"), 0).is_ok());
-        assert!(guard.check_and_record(&a, &op("op-1"), 0).is_ok(), "op-1 should have been evicted to bound memory");
-        assert!(guard.check_and_record(&a, &op("op-3"), 0).is_err(), "op-3 is still within capacity and must still be caught");
+        let a = actor("alice").await;
+        assert!(guard.check_and_record(&a, &op("op-1").await, 0).await.is_ok());
+        assert!(guard.check_and_record(&a, &op("op-2").await, 0).await.is_ok());
+        assert!(guard.check_and_record(&a, &op("op-3").await, 0).await.is_ok());
+        assert!(guard.check_and_record(&a, &op("op-1").await, 0).await.is_ok(), "op-1 should have been evicted to bound memory");
+        assert!(guard.check_and_record(&a, &op("op-3").await, 0).await.is_err(), "op-3 is still within capacity and must still be caught");
     }
     //#endregion 🔖️Replay
 
     //#region 🔖️Budget
-    #[test]
-    fn budget_registry_exhausts_then_refills_over_time() {
+    #[semio_framework_async_macros::async_test]
+    async fn budget_registry_exhausts_then_refills_over_time() {
         let mut budgets = BudgetRegistry::new(2, 1);
         assert!(budgets.try_consume("alice", 1, 0).is_ok());
         assert!(budgets.try_consume("alice", 1, 0).is_ok());
@@ -854,8 +869,8 @@ mod tests {
         assert!(budgets.try_consume("alice", 1, 1_000).is_ok());
     }
 
-    #[test]
-    fn budget_registry_keys_are_independent() {
+    #[semio_framework_async_macros::async_test]
+    async fn budget_registry_keys_are_independent() {
         let mut budgets = BudgetRegistry::new(1, 1);
         assert!(budgets.try_consume("alice", 1, 0).is_ok());
         assert!(budgets.try_consume("bob", 1, 0).is_ok());
@@ -864,8 +879,8 @@ mod tests {
     //#endregion 🔖️Budget
 
     //#region 🔖️Redaction
-    #[test]
-    fn redact_fields_hides_denied_nested_field_and_keeps_allowed_siblings() {
+    #[semio_framework_async_macros::async_test]
+    async fn redact_fields_hides_denied_nested_field_and_keeps_allowed_siblings() {
         let policy = RoleBasedPolicy::new().with_grant(Grant::allow("viewer", &["db", "document", "doc-1", "object", "obj-1", "field", "**"], &[Action::Read])).with_grant(Grant::deny(
             "viewer",
             &["db", "document", "doc-1", "object", "obj-1", "field", "ssn"],
@@ -873,37 +888,37 @@ mod tests {
         ));
         let value = serde_json::json!({"name": "Ada", "ssn": "123-45-6789", "address": {"city": "Zurich"}});
 
-        let redacted = redact_fields(&policy, &principal("viewer"), &doc("doc-1"), "obj-1", &value);
+        let redacted = redact_fields(&policy, &principal("viewer").await, &doc("doc-1").await, "obj-1", &value).await;
 
         assert_eq!(redacted["name"], serde_json::json!("Ada"));
         assert_eq!(redacted["ssn"], serde_json::json!({"$redacted": true}));
         assert_eq!(redacted["address"]["city"], serde_json::json!("Zurich"));
     }
 
-    #[test]
-    fn redact_fields_does_not_recurse_into_a_denied_subtree() {
+    #[semio_framework_async_macros::async_test]
+    async fn redact_fields_does_not_recurse_into_a_denied_subtree() {
         let policy = RoleBasedPolicy::new().with_grant(Grant::deny("viewer", &["db", "document", "doc-1", "object", "obj-1", "field", "secret"], &[Action::Read]));
         let value = serde_json::json!({"secret": {"nested": "value"}});
-        let redacted = redact_fields(&policy, &principal("viewer"), &doc("doc-1"), "obj-1", &value);
+        let redacted = redact_fields(&policy, &principal("viewer").await, &doc("doc-1").await, "obj-1", &value).await;
         assert_eq!(redacted["secret"], serde_json::json!({"$redacted": true}));
     }
 
-    #[test]
-    fn redact_fields_top_level_object_itself_is_never_field_checked() {
+    #[semio_framework_async_macros::async_test]
+    async fn redact_fields_top_level_object_itself_is_never_field_checked() {
         let policy = RoleBasedPolicy::new();
         let value = serde_json::json!({"a": 1});
-        let redacted = redact_fields(&policy, &principal("viewer"), &doc("doc-1"), "obj-1", &value);
+        let redacted = redact_fields(&policy, &principal("viewer").await, &doc("doc-1").await, "obj-1", &value).await;
         assert_eq!(redacted["a"], serde_json::json!({"$redacted": true}));
     }
 
-    #[test]
-    fn redact_fields_beyond_depth_ceiling_is_conservatively_redacted() {
+    #[semio_framework_async_macros::async_test]
+    async fn redact_fields_beyond_depth_ceiling_is_conservatively_redacted() {
         let policy = RoleBasedPolicy::new().with_grant(Grant::allow("viewer", &["db", "document", "doc-1", "object", "obj-1", "field", "**"], &[Action::Read]));
         let mut value = serde_json::json!("leaf");
         for _ in 0..(MAX_REDACT_DEPTH + 5) {
             value = serde_json::json!({ "n": value });
         }
-        let redacted = redact_fields(&policy, &principal("viewer"), &doc("doc-1"), "obj-1", &value);
+        let redacted = redact_fields(&policy, &principal("viewer").await, &doc("doc-1").await, "obj-1", &value).await;
 
         let mut cursor = &redacted;
         for _ in 0..MAX_REDACT_DEPTH {
@@ -920,16 +935,16 @@ mod tests {
         events: std::sync::Mutex<Vec<EmitEvent>>,
     }
     impl Emit for RecordingEmit {
-        fn emit(&self, event: EmitEvent) {
+        async fn emit(&self, event: EmitEvent) {
             self.events.lock().unwrap().push(event);
         }
     }
 
-    #[test]
-    fn audit_decision_emits_named_event_with_reason_on_deny() {
+    #[semio_framework_async_macros::async_test]
+    async fn audit_decision_emits_named_event_with_reason_on_deny() {
         let sink = RecordingEmit { events: std::sync::Mutex::new(Vec::new()) };
         let decision = Decision::Deny { reason: "no grant".to_string() };
-        audit_decision(&sink, &principal("editor"), &AuthzScope::Document { document: doc("doc-1") }, Action::Read, &decision);
+        audit_decision(&sink, &principal("editor").await, &AuthzScope::Document { document: doc("doc-1").await }, Action::Read, &decision).await;
         let events = sink.events.lock().unwrap();
         assert_eq!(events[0].name, "security.authz_denied");
         assert_eq!(events[0].document, Some(ArtifactId::from("doc-1")));
@@ -937,36 +952,36 @@ mod tests {
     //#endregion 🔖️Audit
 
     //#region 🔖️Gate
-    #[test]
-    fn security_gate_admit_command_enforces_authz_then_budget_then_replay() {
+    #[semio_framework_async_macros::async_test]
+    async fn security_gate_admit_command_enforces_authz_then_budget_then_replay() {
         let policy = RoleBasedPolicy::new().with_grant(Grant::allow("editor", &["db", "document", "*", "**"], &[Action::Write]));
         let sink = std::sync::Arc::new(RecordingEmit { events: std::sync::Mutex::new(Vec::new()) });
         let gate = SecurityGate::new(policy, ReplayGuard::new(10_000, 16), BudgetRegistry::new(1, 1), sink.clone());
-        let editor = principal("editor");
+        let editor = principal("editor").await;
 
-        assert!(gate.admit_command(&editor, &TenantId::from("tenant-1"), &doc("doc-1"), "edit", &actor("alice"), &op("op-1"), 0).is_ok());
+        assert!(gate.admit_command(&editor, &TenantId::from("tenant-1"), &doc("doc-1").await, "edit", &actor("alice").await, &op("op-1").await, 0).await.is_ok());
 
-        let budget_err = gate.admit_command(&editor, &TenantId::from("tenant-1"), &doc("doc-1"), "edit", &actor("alice"), &op("op-2"), 0).unwrap_err();
+        let budget_err = gate.admit_command(&editor, &TenantId::from("tenant-1"), &doc("doc-1").await, "edit", &actor("alice").await, &op("op-2").await, 0).await.unwrap_err();
         assert!(matches!(budget_err, DbError::LimitExceeded(_)));
 
         let gate2 = SecurityGate::new(RoleBasedPolicy::new().with_grant(Grant::allow("editor", &["db", "document", "*", "**"], &[Action::Write])), ReplayGuard::new(10_000, 16), BudgetRegistry::new(10, 1), sink);
-        assert!(gate2.admit_command(&editor, &TenantId::from("tenant-1"), &doc("doc-1"), "edit", &actor("alice"), &op("op-1"), 0).is_ok());
-        let replay_err = gate2.admit_command(&editor, &TenantId::from("tenant-1"), &doc("doc-1"), "edit", &actor("alice"), &op("op-1"), 100).unwrap_err();
+        assert!(gate2.admit_command(&editor, &TenantId::from("tenant-1"), &doc("doc-1").await, "edit", &actor("alice").await, &op("op-1").await, 0).await.is_ok());
+        let replay_err = gate2.admit_command(&editor, &TenantId::from("tenant-1"), &doc("doc-1").await, "edit", &actor("alice").await, &op("op-1").await, 100).await.unwrap_err();
         assert!(matches!(replay_err, DbError::Conflict(_)));
     }
 
-    #[test]
-    fn security_gate_admit_command_rejects_cross_tenant_before_authz() {
+    #[semio_framework_async_macros::async_test]
+    async fn security_gate_admit_command_rejects_cross_tenant_before_authz() {
         let policy = RoleBasedPolicy::new().with_grant(Grant::allow("editor", &["db", "**"], &[Action::Write]));
         let sink = std::sync::Arc::new(RecordingEmit { events: std::sync::Mutex::new(Vec::new()) });
         let gate = SecurityGate::new(policy, ReplayGuard::new(10_000, 16), BudgetRegistry::new(10, 1), sink);
-        let editor = principal("editor");
-        let err = gate.admit_command(&editor, &TenantId::from("tenant-2"), &doc("doc-1"), "edit", &actor("alice"), &op("op-1"), 0).unwrap_err();
+        let editor = principal("editor").await;
+        let err = gate.admit_command(&editor, &TenantId::from("tenant-2"), &doc("doc-1").await, "edit", &actor("alice").await, &op("op-1").await, 0).await.unwrap_err();
         assert!(matches!(err, DbError::Unauthorized(_)));
     }
 
-    #[test]
-    fn security_gate_redact_forwards_to_policy() {
+    #[semio_framework_async_macros::async_test]
+    async fn security_gate_redact_forwards_to_policy() {
         let policy = RoleBasedPolicy::new().with_grant(Grant::allow("editor", &["db", "document", "doc-1", "object", "obj-1", "field", "**"], &[Action::Read])).with_grant(Grant::deny(
             "editor",
             &["db", "document", "doc-1", "object", "obj-1", "field", "secret"],
@@ -975,7 +990,7 @@ mod tests {
         let sink = std::sync::Arc::new(RecordingEmit { events: std::sync::Mutex::new(Vec::new()) });
         let gate = SecurityGate::new(policy, ReplayGuard::new(1_000, 16), BudgetRegistry::new(10, 1), sink);
         let value = serde_json::json!({"secret": "hidden", "open": "visible"});
-        let redacted = gate.redact(&principal("editor"), &doc("doc-1"), "obj-1", &value);
+        let redacted = gate.redact(&principal("editor").await, &doc("doc-1").await, "obj-1", &value).await;
         assert_eq!(redacted["secret"], serde_json::json!({"$redacted": true}));
         assert_eq!(redacted["open"], serde_json::json!("visible"));
     }

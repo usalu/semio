@@ -9,7 +9,7 @@ pub async fn register() {}
 
 /// UTF-8 encode text into a BinarySnapshot.
 pub async fn serialize(from: &TxtSnapshot) -> BinarySnapshot {
-    BinarySnapshot { schema: STDIO_BINARY_DOCUMENT_SCHEMA.into(), bytes: from.to_body().into_bytes() }
+    BinarySnapshot { schema: STDIO_BINARY_DOCUMENT_SCHEMA.into(), bytes: from.to_body().await.into_bytes() }
 }
 
 /// Encode as binary pack bytes.

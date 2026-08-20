@@ -1,0 +1,6 @@
+{
+  "title": "Ticket Oversized Artifact Purge",
+  "status": "closed",
+  "summary": "Enforced ticket-folder artifact limits (files >5 MiB, folders >10 MiB): automatic purge on ticket_close via FinishTicket, new ticket purge-artifacts CLI for bulk cleanup, and one-time purge of 3463 ticket folders (9295 oversized files down to 0).",
+  "client": "cursor-chat"
+}

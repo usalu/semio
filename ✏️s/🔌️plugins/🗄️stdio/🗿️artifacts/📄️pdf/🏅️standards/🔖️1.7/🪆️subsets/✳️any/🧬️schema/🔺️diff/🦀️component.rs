@@ -146,7 +146,7 @@ async fn pages_diff_between(a: &[PdfPage], b: &[PdfPage]) -> PdfPagesDiff {
     for i in 0..min {
         let d = page_diff_between(&a[i], &b[i]);
         if !is_page_diff_empty(&d) {
-            modified.push(PdfPageModified { index: i, diff: d });
+            modified.push(PdfPageModified { index: i, diff: d.await });
         }
     }
     let removed: Vec<usize> = if a.len() > b.len() { (b.len()..a.len()).collect() } else { Vec::new() };
@@ -231,7 +231,7 @@ async fn absorb_law_pages_diff(d1: PdfPagesDiff, d2: PdfPagesDiff) -> PdfPagesDi
                         }
                         None => m.diff.clone(),
                     };
-                    *diff = if is_page_diff_empty(&combined) { None } else { Some(combined) };
+                    *diff = if is_page_diff_empty(&combined).await { None } else { Some(combined) };
                 }
                 AfterSlot::D1Added { patch, .. } => {
                     let combined = match patch.take() {
@@ -241,7 +241,7 @@ async fn absorb_law_pages_diff(d1: PdfPagesDiff, d2: PdfPagesDiff) -> PdfPagesDi
                         }
                         None => m.diff.clone(),
                     };
-                    *patch = if is_page_diff_empty(&combined) { None } else { Some(combined) };
+                    *patch = if is_page_diff_empty(&combined).await { None } else { Some(combined) };
                 }
                 AfterSlot::D2Added(_) => {}
             }
@@ -317,7 +317,7 @@ async fn apply_dict_diff(diff: &PdfDictDiff, base: &[PdfDictEntry]) -> Vec<PdfDi
     for m in &diff.modified {
         if let Some(pos) = entries.iter().position(|e| e.key == m.key) {
             let old = entries[pos].value.clone();
-            entries[pos].value = apply_value_diff(&m.diff, &old);
+            entries[pos].value = Box::pin(apply_value_diff(&m.diff, &old)).await;
         }
     }
     for key in &diff.removed {
@@ -339,7 +339,7 @@ async fn dict_diff_between(a: &[PdfDictEntry], b: &[PdfDictEntry]) -> PdfDictDif
     for ae in a {
         match b.iter().find(|be| be.key == ae.key) {
             Some(be) => {
-                if let Some(d) = value_diff_between(&ae.value, &be.value) {
+                if let Some(d) = Box::pin(value_diff_between(&ae.value, &be.value)).await {
                     modified.push(PdfDictModified { key: ae.key.clone(), diff: d });
                 }
             }
@@ -379,13 +379,13 @@ async fn absorb_dict_diff(d1: PdfDictDiff, d2: PdfDictDiff) -> PdfDictDiff {
     }
     for m in d2.modified {
         if let Some(a) = added.iter_mut().find(|a| a.key == m.key) {
-            a.item = apply_value_diff(&m.diff, &a.item);
+            a.item = apply_value_diff(&m.diff, &a.item).await;
         } else if let Some(pos) = modified.iter().position(|e| e.key == m.key) {
             let combined = absorb_value_diff(modified[pos].diff.clone(), m.diff.clone());
-            if is_value_diff_effectively_empty(&combined) {
+            if is_value_diff_effectively_empty(&combined).await {
                 modified.remove(pos);
             } else {
-                modified[pos].diff = combined;
+                modified[pos].diff = combined.await;
             }
         } else if !removed.contains(&m.key) {
             modified.push(PdfDictModified { key: m.key, diff: m.diff });
@@ -439,7 +439,7 @@ async fn apply_array_diff(diff: &PdfArrayDiff, base: &[PdfObject]) -> Vec<PdfObj
     for m in &diff.modified {
         if let Some(old) = base.get(m.index) {
             if let Some(slot) = items.get_mut(m.index) {
-                *slot = apply_value_diff(&m.diff, old);
+                *slot = Box::pin(apply_value_diff(&m.diff, old)).await;
             }
         }
     }
@@ -463,7 +463,7 @@ async fn array_diff_between(a: &[PdfObject], b: &[PdfObject]) -> PdfArrayDiff {
     let min = a.len().min(b.len());
     let mut modified = Vec::new();
     for i in 0..min {
-        if let Some(d) = value_diff_between(&a[i], &b[i]) {
+        if let Some(d) = Box::pin(value_diff_between(&a[i], &b[i])).await {
             modified.push(PdfArrayModified { index: i, diff: d });
         }
     }
@@ -541,17 +541,17 @@ async fn absorb_array_diff(d1: PdfArrayDiff, d2: PdfArrayDiff) -> PdfArrayDiff {
             match slot {
                 AfterSlot::Base { diff, .. } => {
                     let combined = match diff.take() {
-                        Some(existing) => absorb_value_diff(existing, m.diff.clone()),
+                        Some(existing) => Box::pin(absorb_value_diff(existing, m.diff.clone())).await,
                         None => m.diff.clone(),
                     };
-                    *diff = if is_value_diff_effectively_empty(&combined) { None } else { Some(combined) };
+                    *diff = if is_value_diff_effectively_empty(&combined).await { None } else { Some(combined) };
                 }
                 AfterSlot::D1Added { patch, .. } => {
                     let combined = match patch.take() {
-                        Some(existing) => absorb_value_diff(existing, m.diff.clone()),
+                        Some(existing) => absorb_value_diff(existing, m.diff.clone()).await,
                         None => m.diff.clone(),
                     };
-                    *patch = if is_value_diff_effectively_empty(&combined) { None } else { Some(combined) };
+                    *patch = if is_value_diff_effectively_empty(&combined).await { None } else { Some(combined) };
                 }
                 AfterSlot::D2Added(_) => {}
             }
@@ -573,7 +573,7 @@ async fn absorb_array_diff(d1: PdfArrayDiff, d2: PdfArrayDiff) -> PdfArrayDiff {
             AfterSlot::D1Added { tag, patch } => {
                 let mut item = d1.added[tag].item.clone();
                 if let Some(patch) = patch {
-                    item = apply_value_diff(&patch, &item);
+                    item = apply_value_diff(&patch, &item).await;
                 }
                 added.push(PdfArrayAdded { index: pos, item });
             }
@@ -646,7 +646,7 @@ pub async fn apply_value_diff(diff: &PdfValueDiff, base: &PdfObject) -> PdfObjec
                 PdfObject::Array(a) => a.as_slice(),
                 _ => &[],
             };
-            PdfObject::Array(apply_array_diff(diff, items))
+            PdfObject::Array(Box::pin(apply_array_diff(diff, items)).await)
         }
         PdfValueDiff::Dict { diff } => {
             let entries: &[PdfDictEntry] = match base {
@@ -654,7 +654,7 @@ pub async fn apply_value_diff(diff: &PdfValueDiff, base: &PdfObject) -> PdfObjec
                 PdfObject::Stream { dict, .. } => dict.as_slice(),
                 _ => &[],
             };
-            PdfObject::Dict(apply_dict_diff(diff, entries))
+            PdfObject::Dict(Box::pin(apply_dict_diff(diff, entries)).await)
         }
         PdfValueDiff::Stream { dict, data, filters } => {
             let (base_dict, base_data, base_filters): (&[PdfDictEntry], &[u8], &[PdfStreamFilter]) = match base {
@@ -663,7 +663,7 @@ pub async fn apply_value_diff(diff: &PdfValueDiff, base: &PdfObject) -> PdfObjec
             };
             PdfObject::Stream {
                 dict: match dict {
-                    Some(d) => apply_dict_diff(d, base_dict),
+                    Some(d) => apply_dict_diff(d, base_dict).await,
                     None => base_dict.to_vec(),
                 },
                 data: data.clone().unwrap_or_else(|| base_data.to_vec()),
@@ -688,16 +688,16 @@ pub async fn value_diff_between(a: &PdfObject, b: &PdfObject) -> Option<PdfValue
         (PdfObject::Name(_), PdfObject::Name(nb)) => Some(PdfValueDiff::Name { value: nb.clone() }),
         (PdfObject::Ref(_), PdfObject::Ref(nb)) => Some(PdfValueDiff::Ref { value: *nb }),
         (PdfObject::Array(av), PdfObject::Array(bv)) => {
-            let d = array_diff_between(av, bv);
-            if d.is_empty() {
+            let d = Box::pin(array_diff_between(av, bv)).await;
+            if d.is_empty().await {
                 None
             } else {
                 Some(PdfValueDiff::Array { diff: d })
             }
         }
         (PdfObject::Dict(ad), PdfObject::Dict(bd)) => {
-            let d = dict_diff_between(ad, bd);
-            if d.is_empty() {
+            let d = Box::pin(dict_diff_between(ad, bd)).await;
+            if d.is_empty().await {
                 None
             } else {
                 Some(PdfValueDiff::Dict { diff: d })
@@ -705,8 +705,8 @@ pub async fn value_diff_between(a: &PdfObject, b: &PdfObject) -> Option<PdfValue
         }
         (PdfObject::Stream { dict: ad, data: adata, filters: af }, PdfObject::Stream { dict: bd, data: bdata, filters: bf }) => {
             let dict_d = {
-                let d = dict_diff_between(ad, bd);
-                if d.is_empty() {
+                let d = dict_diff_between(ad, bd).await;
+                if d.is_empty().await {
                     None
                 } else {
                     Some(d)
@@ -729,8 +729,8 @@ pub async fn value_diff_between(a: &PdfObject, b: &PdfObject) -> Option<PdfValue
 /// documented behavior), but an empty collection triple genuinely changes nothing.
 async fn is_value_diff_effectively_empty(d: &PdfValueDiff) -> bool {
     match d {
-        PdfValueDiff::Array { diff } => diff.is_empty(),
-        PdfValueDiff::Dict { diff } => diff.is_empty(),
+        PdfValueDiff::Array { diff } => diff.is_empty().await,
+        PdfValueDiff::Dict { diff } => diff.is_empty().await,
         PdfValueDiff::Stream { dict, data, filters } => dict.is_none() && data.is_none() && filters.is_none(),
         _ => false,
     }
@@ -745,7 +745,7 @@ async fn absorb_value_diff(d1: PdfValueDiff, d2: PdfValueDiff) -> PdfValueDiff {
         return d2;
     }
     if let PdfValueDiff::Replace { value } = d1 {
-        return PdfValueDiff::Replace { value: apply_value_diff(&d2, &value) };
+        return PdfValueDiff::Replace { value: apply_value_diff(&d2, &value).await };
     }
     match (d1, d2) {
         (PdfValueDiff::Bool { .. }, PdfValueDiff::Bool { value }) => PdfValueDiff::Bool { value },
@@ -754,13 +754,13 @@ async fn absorb_value_diff(d1: PdfValueDiff, d2: PdfValueDiff) -> PdfValueDiff {
         (PdfValueDiff::Str { .. }, PdfValueDiff::Str { value }) => PdfValueDiff::Str { value },
         (PdfValueDiff::Name { .. }, PdfValueDiff::Name { value }) => PdfValueDiff::Name { value },
         (PdfValueDiff::Ref { .. }, PdfValueDiff::Ref { value }) => PdfValueDiff::Ref { value },
-        (PdfValueDiff::Array { diff: a1 }, PdfValueDiff::Array { diff: a2 }) => PdfValueDiff::Array { diff: absorb_array_diff(a1, a2) },
-        (PdfValueDiff::Dict { diff: d1 }, PdfValueDiff::Dict { diff: d2 }) => PdfValueDiff::Dict { diff: absorb_dict_diff(d1, d2) },
+        (PdfValueDiff::Array { diff: a1 }, PdfValueDiff::Array { diff: a2 }) => PdfValueDiff::Array { diff: Box::pin(absorb_array_diff(a1, a2)).await },
+        (PdfValueDiff::Dict { diff: d1 }, PdfValueDiff::Dict { diff: d2 }) => PdfValueDiff::Dict { diff: absorb_dict_diff(d1, d2).await },
         (PdfValueDiff::Stream { dict: d1, data: da1, filters: f1 }, PdfValueDiff::Stream { dict: d2, data: da2, filters: f2 }) => PdfValueDiff::Stream {
             dict: match (d1, d2) {
                 (None, x) => x,
                 (x, None) => x,
-                (Some(a), Some(b)) => Some(absorb_dict_diff(a, b)),
+                (Some(a), Some(b)) => Some(absorb_dict_diff(a, b).await),
             },
             data: da2.or(da1),
             filters: f2.or(f1),
@@ -813,7 +813,7 @@ async fn apply_objects_diff(diff: &PdfObjectsDiff, base: &[PdfIndirectObject]) -
     for m in &diff.modified {
         if let Some(pos) = objects.iter().position(|o| o.id == m.id) {
             let old = objects[pos].value.clone();
-            objects[pos].value = apply_value_diff(&m.diff, &old);
+            objects[pos].value = apply_value_diff(&m.diff, &old).await;
         }
     }
     for id in &diff.removed {
@@ -835,7 +835,7 @@ async fn objects_diff_between(a: &[PdfIndirectObject], b: &[PdfIndirectObject]) 
     for ao in a {
         match b.iter().find(|bo| bo.id == ao.id) {
             Some(bo) => {
-                if let Some(d) = value_diff_between(&ao.value, &bo.value) {
+                if let Some(d) = value_diff_between(&ao.value, &bo.value).await {
                     modified.push(PdfObjectModified { id: ao.id, diff: d });
                 }
             }
@@ -873,13 +873,13 @@ async fn absorb_law_objects_diff(d1: PdfObjectsDiff, d2: PdfObjectsDiff) -> PdfO
     }
     for m in d2.modified {
         if let Some(a) = added.iter_mut().find(|a| a.id == m.id) {
-            a.value = apply_value_diff(&m.diff, &a.value);
+            a.value = apply_value_diff(&m.diff, &a.value).await;
         } else if let Some(pos) = modified.iter().position(|e| e.id == m.id) {
             let combined = absorb_value_diff(modified[pos].diff.clone(), m.diff.clone());
-            if is_value_diff_effectively_empty(&combined) {
+            if is_value_diff_effectively_empty(&combined).await {
                 modified.remove(pos);
             } else {
-                modified[pos].diff = combined;
+                modified[pos].diff = combined.await;
             }
         } else if !removed.contains(&m.id) {
             modified.push(PdfObjectModified { id: m.id, diff: m.diff });
@@ -974,71 +974,71 @@ async fn validate_index_triple(base_len: usize, removed: &[usize], modified: &[u
     let mut removed_set = HashSet::new();
     for &index in removed {
         if index >= base_len {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "indexed removal target does not exist").at(vec![field.to_string(), index.to_string()]));
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "indexed removal target does not exist").await.at(vec![field.to_string(), index.to_string()]).await);
         }
         if !removed_set.insert(index) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "indexed removal target is repeated").at(vec![field.to_string(), index.to_string()]));
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "indexed removal target is repeated").await.at(vec![field.to_string(), index.to_string()]).await);
         }
     }
     let mut modified_set = HashSet::new();
     for &index in modified {
         if index >= base_len {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "indexed modification target does not exist").at(vec![field.to_string(), index.to_string()]));
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "indexed modification target does not exist").await.at(vec![field.to_string(), index.to_string()]).await);
         }
         if removed_set.contains(&index) {
-            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "indexed modification targets a removed item").at(vec![field.to_string(), index.to_string()]));
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "indexed modification targets a removed item").await.at(vec![field.to_string(), index.to_string()]).await);
         }
         if !modified_set.insert(index) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "indexed modification target is repeated").at(vec![field.to_string(), index.to_string()]));
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "indexed modification target is repeated").await.at(vec![field.to_string(), index.to_string()]).await);
         }
     }
     let final_len = base_len - removed_set.len() + added.len();
     let mut added_set = HashSet::new();
     for &index in added {
         if index >= final_len {
-            return Err(MutationApplyError::new("mutation.apply.invalid-index", "indexed addition is outside the final collection").at(vec![field.to_string(), index.to_string()]));
+            return Err(MutationApplyError::new("mutation.apply.invalid-index", "indexed addition is outside the final collection").await.at(vec![field.to_string(), index.to_string()]).await);
         }
         if !added_set.insert(index) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "indexed addition occupies a repeated final position").at(vec![field.to_string(), index.to_string()]));
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "indexed addition occupies a repeated final position").await.at(vec![field.to_string(), index.to_string()]).await);
         }
     }
     Ok(())
 }
 
 async fn validate_pages_diff(diff: &PdfPagesDiff, base: &[PdfPage]) -> MutationApplyResult<()> {
-    validate_index_triple(base.len(), &diff.removed, &diff.modified.iter().map(|item| item.index).collect::<Vec<_>>(), &diff.added.iter().map(|item| item.index).collect::<Vec<_>>(), "pages")
+    validate_index_triple(base.len(), &diff.removed, &diff.modified.iter().map(|item| item.index).collect::<Vec<_>>(), &diff.added.iter().map(|item| item.index).collect::<Vec<_>>(), "pages").await
 }
 
 async fn validate_named_keys<K: Eq + std::hash::Hash + Clone>(base: &[K], removed: &[K], modified: &[K], added: &[K], field: &str) -> MutationApplyResult<()> {
     let base_set: HashSet<K> = base.iter().cloned().collect();
     if base_set.len() != base.len() {
-        return Err(MutationApplyError::new("mutation.apply.duplicate-target", "base collection contains duplicate keys").at([field]));
+        return Err(MutationApplyError::new("mutation.apply.duplicate-target", "base collection contains duplicate keys").await.at([field]).await);
     }
     let mut removed_set = HashSet::new();
     for key in removed {
         if !base_set.contains(key) {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "named removal target does not exist").at([field]));
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "named removal target does not exist").await.at([field]).await);
         }
         if !removed_set.insert(key.clone()) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "named removal target is repeated").at([field]));
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "named removal target is repeated").await.at([field]).await);
         }
     }
     let mut modified_set = HashSet::new();
     for key in modified {
         if !base_set.contains(key) {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "named modification target does not exist").at([field]));
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "named modification target does not exist").await.at([field]).await);
         }
         if removed_set.contains(key) {
-            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "named modification targets a removed item").at([field]));
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "named modification targets a removed item").await.at([field]).await);
         }
         if !modified_set.insert(key.clone()) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "named modification target is repeated").at([field]));
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "named modification target is repeated").await.at([field]).await);
         }
     }
     let mut added_set = HashSet::new();
     for key in added {
         if base_set.contains(key) || !added_set.insert(key.clone()) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "named addition target already exists").at([field]));
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "named addition target already exists").await.at([field]).await);
         }
     }
     Ok(())
@@ -1051,20 +1051,20 @@ async fn validate_dict_diff(diff: &PdfDictDiff, base: &[PdfDictEntry]) -> Mutati
         &diff.modified.iter().map(|item| item.key.clone()).collect::<Vec<_>>(),
         &diff.added.iter().map(|item| item.key.clone()).collect::<Vec<_>>(),
         "dict",
-    )?;
+    ).await?;
     for modified in &diff.modified {
-        let entry = base.iter().find(|entry| entry.key == modified.key).ok_or_else(|| MutationApplyError::new("mutation.apply.missing-target", "dictionary modification target does not exist").at(vec!["dict".to_string(), modified.key.clone()]))?;
-        validate_value_diff(&modified.diff, &entry.value).map_err(|error| error.under(vec!["dict".to_string(), modified.key.clone()]))?;
+        let entry = base.iter().find(|entry| entry.key == modified.key).ok_or_else(|| semio_framework_plugin::resolve_ready(MutationApplyError::new("mutation.apply.missing-target", "dictionary modification target does not exist")).at(vec!["dict".to_string(), modified.key.clone()]))?;
+        validate_value_diff(&modified.diff, &entry.value).await.map_err(|error| error.under(vec!["dict".to_string(), modified.key.clone()]))?;
     }
     let removed_indices: Vec<usize> = (0..diff.removed.len()).collect();
-    validate_index_triple(base.len(), &removed_indices, &[], &diff.added.iter().map(|item| item.index).collect::<Vec<_>>(), "dict")
+    validate_index_triple(base.len(), &removed_indices, &[], &diff.added.iter().map(|item| item.index).collect::<Vec<_>>(), "dict").await
 }
 
 async fn validate_array_diff(diff: &PdfArrayDiff, base: &[PdfObject]) -> MutationApplyResult<()> {
-    validate_index_triple(base.len(), &diff.removed, &diff.modified.iter().map(|item| item.index).collect::<Vec<_>>(), &diff.added.iter().map(|item| item.index).collect::<Vec<_>>(), "array")?;
+    validate_index_triple(base.len(), &diff.removed, &diff.modified.iter().map(|item| item.index).collect::<Vec<_>>(), &diff.added.iter().map(|item| item.index).collect::<Vec<_>>(), "array").await?;
     for modified in &diff.modified {
-        let item = base.get(modified.index).ok_or_else(|| MutationApplyError::new("mutation.apply.missing-target", "array modification target does not exist").at(vec!["array".to_string(), modified.index.to_string()]))?;
-        validate_value_diff(&modified.diff, item).map_err(|error| error.under(vec!["array".to_string(), modified.index.to_string()]))?;
+        let item = base.get(modified.index).ok_or_else(|| semio_framework_plugin::resolve_ready(MutationApplyError::new("mutation.apply.missing-target", "array modification target does not exist")).at(vec!["array".to_string(), modified.index.to_string()]))?;
+        validate_value_diff(&modified.diff, item).await.map_err(|error| error.under(vec!["array".to_string(), modified.index.to_string()]))?;
     }
     Ok(())
 }
@@ -1079,47 +1079,47 @@ async fn validate_value_diff(diff: &PdfValueDiff, base: &PdfObject) -> MutationA
         PdfValueDiff::Name { .. } if matches!(base, PdfObject::Name(_)) => Ok(()),
         PdfValueDiff::Ref { .. } if matches!(base, PdfObject::Ref(_)) => Ok(()),
         PdfValueDiff::Array { diff } => match base {
-            PdfObject::Array(items) => validate_array_diff(diff, items),
-            _ => Err(MutationApplyError::new("mutation.apply.kind-mismatch", "array diff targets a non-array value")),
+            PdfObject::Array(items) => validate_array_diff(diff, items).await,
+            _ => Err(MutationApplyError::new("mutation.apply.kind-mismatch", "array diff targets a non-array value").await),
         },
         PdfValueDiff::Dict { diff } => match base {
-            PdfObject::Dict(entries) => validate_dict_diff(diff, entries),
-            _ => Err(MutationApplyError::new("mutation.apply.kind-mismatch", "dictionary diff targets a non-dictionary value")),
+            PdfObject::Dict(entries) => validate_dict_diff(diff, entries).await,
+            _ => Err(MutationApplyError::new("mutation.apply.kind-mismatch", "dictionary diff targets a non-dictionary value").await),
         },
         PdfValueDiff::Stream { dict, .. } => match base {
             PdfObject::Stream { dict: entries, .. } => {
                 if let Some(dict) = dict {
-                    validate_dict_diff(dict, entries)?;
+                    validate_dict_diff(dict, entries).await?;
                 }
                 Ok(())
             }
-            _ => Err(MutationApplyError::new("mutation.apply.kind-mismatch", "stream diff targets a non-stream value")),
+            _ => Err(MutationApplyError::new("mutation.apply.kind-mismatch", "stream diff targets a non-stream value").await),
         },
-        _ => Err(MutationApplyError::new("mutation.apply.kind-mismatch", "scalar diff targets a value of another kind")),
+        _ => Err(MutationApplyError::new("mutation.apply.kind-mismatch", "scalar diff targets a value of another kind").await),
     }
 }
 
 async fn validate_objects_diff(diff: &PdfObjectsDiff, base: &[PdfIndirectObject]) -> MutationApplyResult<()> {
     let keys: Vec<ObjRef> = base.iter().map(|object| object.id).collect();
-    validate_named_keys(&keys, &diff.removed, &diff.modified.iter().map(|item| item.id).collect::<Vec<_>>(), &diff.added.iter().map(|item| item.id).collect::<Vec<_>>(), "objects")?;
+    validate_named_keys(&keys, &diff.removed, &diff.modified.iter().map(|item| item.id).collect::<Vec<_>>(), &diff.added.iter().map(|item| item.id).collect::<Vec<_>>(), "objects").await?;
     let removed_indices: Vec<usize> = (0..diff.removed.len()).collect();
-    validate_index_triple(base.len(), &removed_indices, &[], &diff.added.iter().map(|item| item.index).collect::<Vec<_>>(), "objects")?;
+    validate_index_triple(base.len(), &removed_indices, &[], &diff.added.iter().map(|item| item.index).collect::<Vec<_>>(), "objects").await?;
     for modified in &diff.modified {
-        let object = base.iter().find(|object| object.id == modified.id).ok_or_else(|| MutationApplyError::new("mutation.apply.missing-target", "object modification target does not exist").at(["objects"]))?;
-        validate_value_diff(&modified.diff, &object.value).map_err(|error| error.under(["objects"]))?;
+        let object = base.iter().find(|object| object.id == modified.id).ok_or_else(|| semio_framework_plugin::resolve_ready(MutationApplyError::new("mutation.apply.missing-target", "object modification target does not exist")).at(["objects"]))?;
+        validate_value_diff(&modified.diff, &object.value).await.map_err(|error| error.under(["objects"]))?;
     }
     Ok(())
 }
 
 async fn validate_pdf_diff(diff: &PdfDiff, base: &PdfSnapshot) -> MutationApplyResult<()> {
     if let Some(pages) = &diff.pages {
-        validate_pages_diff(pages, &base.pages).map_err(|error| error.under(["pages"]))?;
+        validate_pages_diff(pages, &base.pages).await.map_err(|error| error.under(["pages"]))?;
     }
     if let Some(objects) = &diff.objects {
-        validate_objects_diff(objects, &base.objects).map_err(|error| error.under(["objects"]))?;
+        validate_objects_diff(objects, &base.objects).await.map_err(|error| error.under(["objects"]))?;
     }
     if let Some(trailer) = &diff.trailer {
-        validate_dict_diff(trailer, &base.trailer).map_err(|error| error.under(["trailer"]))?;
+        validate_dict_diff(trailer, &base.trailer).await.map_err(|error| error.under(["trailer"]))?;
     }
     Ok(())
 }
@@ -1133,21 +1133,21 @@ async fn apply_pdf_diff_unchecked(diff: &PdfDiff, base: &PdfSnapshot) -> PdfSnap
         next.info = v.clone();
     }
     if let Some(pd) = &diff.pages {
-        next.pages = apply_pages_diff(pd, &base.pages);
+        next.pages = apply_pages_diff(pd, &base.pages).await;
     }
     if let Some(od) = &diff.objects {
-        next.objects = apply_objects_diff(od, &base.objects);
+        next.objects = apply_objects_diff(od, &base.objects).await;
     }
     if let Some(td) = &diff.trailer {
-        next.trailer = apply_dict_diff(td, &base.trailer);
+        next.trailer = apply_dict_diff(td, &base.trailer).await;
     }
     next
 }
 
 impl MutationDiff<PdfSnapshot> for PdfDiff {
     async fn apply(&self, base: &PdfSnapshot) -> MutationApplyResult<PdfSnapshot> {
-        validate_pdf_diff(self, base)?;
-        Ok(apply_pdf_diff_unchecked(self, base))
+        validate_pdf_diff(self, base).await?;
+        Ok(apply_pdf_diff_unchecked(self, base).await)
     }
 
     /// ➕️ Structural, total, base-free sequential-coalesce absorb (`## Absorb` contract).
@@ -1164,8 +1164,8 @@ impl MutationDiff<PdfSnapshot> for PdfDiff {
             (None, b) => b,
             (a, None) => a,
             (Some(a), Some(b)) => {
-                let m = absorb_law_pages_diff(a, b);
-                if m.is_empty() {
+                let m = absorb_law_pages_diff(a, b).await;
+                if m.is_empty().await {
                     None
                 } else {
                     Some(m)
@@ -1176,8 +1176,8 @@ impl MutationDiff<PdfSnapshot> for PdfDiff {
             (None, b) => b,
             (a, None) => a,
             (Some(a), Some(b)) => {
-                let m = absorb_law_objects_diff(a, b);
-                if m.is_empty() {
+                let m = absorb_law_objects_diff(a, b).await;
+                if m.is_empty().await {
                     None
                 } else {
                     Some(m)
@@ -1188,8 +1188,8 @@ impl MutationDiff<PdfSnapshot> for PdfDiff {
             (None, b) => b,
             (a, None) => a,
             (Some(a), Some(b)) => {
-                let m = absorb_dict_diff(a, b);
-                if m.is_empty() {
+                let m = absorb_dict_diff(a, b).await;
+                if m.is_empty().await {
                     None
                 } else {
                     Some(m)
@@ -1204,7 +1204,7 @@ impl DiffAlgebra<PdfSnapshot> for PdfDiff {
     /// state delta from `self.apply(base)` back to `base`.
     async fn inverse(&self, base: &PdfSnapshot) -> Self {
         let mid = apply_pdf_diff_unchecked(self, base);
-        Self::between(&mid, base)
+        Self::between(&mid, base).await
     }
 
     /// 🧭️ State delta (compose `GetXDiff`): `pages` positionally matched (index key), `objects`
@@ -1213,24 +1213,24 @@ impl DiffAlgebra<PdfSnapshot> for PdfDiff {
         let declared_version = (base.declared_version != other.declared_version).then(|| other.declared_version.clone());
         let info = (base.info != other.info).then(|| other.info.clone());
         let pages = {
-            let d = pages_diff_between(&base.pages, &other.pages);
-            if d.is_empty() {
+            let d = pages_diff_between(&base.pages, &other.pages).await;
+            if d.is_empty().await {
                 None
             } else {
                 Some(d)
             }
         };
         let objects = {
-            let d = objects_diff_between(&base.objects, &other.objects);
-            if d.is_empty() {
+            let d = objects_diff_between(&base.objects, &other.objects).await;
+            if d.is_empty().await {
                 None
             } else {
                 Some(d)
             }
         };
         let trailer = {
-            let d = dict_diff_between(&base.trailer, &other.trailer);
-            if d.is_empty() {
+            let d = dict_diff_between(&base.trailer, &other.trailer).await;
+            if d.is_empty().await {
                 None
             } else {
                 Some(d)
@@ -1247,7 +1247,7 @@ impl DiffAlgebra<PdfSnapshot> for PdfDiff {
 /// 🧩️ `SetSnapshot`'s diff is the sparse field-by-field `between(base, next)` -- no full-replace
 /// slot exists on `PdfDiff` to short-circuit into.
 pub async fn diff_set_snapshot(base: &PdfSnapshot, next: &PdfSnapshot) -> PdfDiff {
-    PdfDiff::between(base, next)
+    PdfDiff::between(base, next).await
 }
 //#endregion 🔖️Diff
 
@@ -1286,11 +1286,11 @@ pub async fn diff_remove_object(id: ObjRef) -> PdfDiff {
 /// position) otherwise.
 pub async fn diff_set_object_value(base: &PdfSnapshot, id: ObjRef, value: PdfObject) -> PdfDiff {
     match base.objects.iter().find(|o| o.id == id) {
-        Some(existing) => match value_diff_between(&existing.value, &value) {
+        Some(existing) => match value_diff_between(&existing.value, &value).await {
             None => PdfDiff::default(),
             Some(d) => PdfDiff { objects: Some(PdfObjectsDiff { modified: vec![PdfObjectModified { id, diff: d }], ..Default::default() }), ..Default::default() },
         },
-        None => diff_insert_object(id, base.objects.len(), value),
+        None => diff_insert_object(id, base.objects.len(), value).await,
     }
 }
 /// 🔧️ Upserts `key` at `path` inside object `id`'s value tree (`modified` if `key` already
@@ -1298,36 +1298,36 @@ pub async fn diff_set_object_value(base: &PdfSnapshot, id: ObjRef, value: PdfObj
 /// resolve to a real `Dict`/`Stream` container in `base`.
 pub async fn diff_set_dict_entry(base: &PdfSnapshot, id: ObjRef, path: &[PdfPathSegment], key: &str, value: PdfObject) -> PdfDiff {
     let Some(obj) = base.objects.iter().find(|o| o.id == id) else { return PdfDiff::default() };
-    let Some(container) = resolve_value(&obj.value, path) else { return PdfDiff::default() };
-    let Some(entries) = dict_entries_of(container) else { return PdfDiff::default() };
+    let Some(container) = resolve_value(&obj.value, path).await else { return PdfDiff::default() };
+    let Some(entries) = dict_entries_of(container).await else { return PdfDiff::default() };
     let is_root_stream = path.is_empty() && matches!(obj.value, PdfObject::Stream { .. });
     let leaf = match entries.iter().position(|e| e.key == key) {
-        Some(pos) => match value_diff_between(&entries[pos].value, &value) {
+        Some(pos) => match value_diff_between(&entries[pos].value, &value).await {
             None => return PdfDiff::default(),
             Some(d) => PdfDictDiff { modified: vec![PdfDictModified { key: key.to_string(), diff: d }], ..Default::default() },
         },
         None => PdfDictDiff { added: vec![PdfDictAdded { index: entries.len(), key: key.to_string(), item: value }], ..Default::default() },
     };
-    diff_at_object_path(id, path, is_root_stream, leaf)
+    diff_at_object_path(id, path, is_root_stream, leaf).await
 }
 /// 🔧️ Removes `key` at `path` inside object `id`'s value tree. Graceful empty diff if the key
 /// isn't actually present in `base` (matches `apply`'s no-op-on-missing-key rule).
 pub async fn diff_remove_dict_entry(base: &PdfSnapshot, id: ObjRef, path: &[PdfPathSegment], key: &str) -> PdfDiff {
     let Some(obj) = base.objects.iter().find(|o| o.id == id) else { return PdfDiff::default() };
-    let Some(container) = resolve_value(&obj.value, path) else { return PdfDiff::default() };
-    let Some(entries) = dict_entries_of(container) else { return PdfDiff::default() };
+    let Some(container) = resolve_value(&obj.value, path).await else { return PdfDiff::default() };
+    let Some(entries) = dict_entries_of(container).await else { return PdfDiff::default() };
     if !entries.iter().any(|e| e.key == key) {
         return PdfDiff::default();
     }
     let is_root_stream = path.is_empty() && matches!(obj.value, PdfObject::Stream { .. });
     let leaf = PdfDictDiff { removed: vec![key.to_string()], ..Default::default() };
-    diff_at_object_path(id, path, is_root_stream, leaf)
+    diff_at_object_path(id, path, is_root_stream, leaf).await
 }
 /// 🔧️ Upserts `key` in the top-level trailer dictionary (name-keyed, reuses `PdfDictDiff`
 /// directly -- no object/path addressing needed at this level).
 pub async fn diff_set_trailer_entry(base: &PdfSnapshot, key: &str, value: PdfObject) -> PdfDiff {
     let leaf = match base.trailer.iter().position(|e| e.key == key) {
-        Some(pos) => match value_diff_between(&base.trailer[pos].value, &value) {
+        Some(pos) => match value_diff_between(&base.trailer[pos].value, &value).await {
             None => return PdfDiff::default(),
             Some(d) => PdfDictDiff { modified: vec![PdfDictModified { key: key.to_string(), diff: d }], ..Default::default() },
         },
@@ -1365,10 +1365,10 @@ pub(crate) async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
 pub(crate) async fn enc_str(s: &str) -> String {
-    hex_encode(s.as_bytes())
+    hex_encode(s.as_bytes()).await
 }
 pub(crate) async fn dec_str(s: &str) -> Result<String, String> {
-    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
+    String::from_utf8(hex_decode(s).await?).map_err(|e| e.to_string())
 }
 async fn parse_usize(s: &str) -> Result<usize, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
@@ -1407,8 +1407,8 @@ pub(crate) async fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String
     }
 }
 pub(crate) async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
-    let inner = strip_brackets(s)?;
-    match split_top_level(inner, ',').as_slice() {
+    let inner = strip_brackets(s).await?;
+    match split_top_level(inner, ',').await.as_slice() {
         ["0"] => Ok(None),
         [tag, value] if *tag == "1" => Ok(Some(dec(value)?)),
         other => Err(format!("option decode: bad shape {other:?}")),
@@ -1418,7 +1418,7 @@ pub(crate) async fn enc_box(b: &[f64; 4]) -> String {
     format!("[{},{},{},{}]", b[0], b[1], b[2], b[3])
 }
 pub(crate) async fn dec_box(s: &str) -> Result<[f64; 4], String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [a, b, c, d] = parts.as_slice() else { return Err(format!("box: expected 4 fields, got {}", parts.len())) };
     let f = |s: &str| s.parse::<f64>().map_err(|e: std::num::ParseFloatError| e.to_string());
     Ok([f(a)?, f(b)?, f(c)?, f(d)?])
@@ -1438,7 +1438,7 @@ pub(crate) async fn enc_stream_filters(filters: &[PdfStreamFilter]) -> String {
     format!("[{values}]")
 }
 pub(crate) async fn dec_stream_filters(s: &str) -> Result<Vec<PdfStreamFilter>, String> {
-    split_top_level(strip_brackets(s)?, ',')
+    split_top_level(strip_brackets(s).await?, ',')
         .into_iter()
         .filter(|value| !value.is_empty())
         .map(|value| match value {
@@ -1446,7 +1446,7 @@ pub(crate) async fn dec_stream_filters(s: &str) -> Result<Vec<PdfStreamFilter>, 
             "A" => Ok(PdfStreamFilter::Ascii85),
             "L" => Ok(PdfStreamFilter::RunLength),
             _ if value.starts_with("F[") => {
-                let fields = split_top_level(strip_brackets(&value[1..])?, ',');
+                let fields = semio_framework_plugin::resolve_ready(split_top_level(strip_brackets(&value[1..])?, ','));
                 match fields.as_slice() {
                     ["0"] => Ok(PdfStreamFilter::Flate { predictor: None }),
                     ["1", predictor, colors, bits_per_component, columns] => Ok(PdfStreamFilter::Flate {
@@ -1471,7 +1471,7 @@ pub(crate) async fn enc_objref(r: &ObjRef) -> String {
     format!("[{},{}]", r.num, r.gen)
 }
 pub(crate) async fn dec_objref(s: &str) -> Result<ObjRef, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [num, gen] = parts.as_slice() else { return Err(format!("objref: expected 2 fields, got {}", parts.len())) };
     Ok(ObjRef { num: num.parse().map_err(|e: std::num::ParseIntError| e.to_string())?, gen: gen.parse().map_err(|e: std::num::ParseIntError| e.to_string())? })
 }
@@ -1479,9 +1479,9 @@ pub(crate) async fn enc_dict_entry(e: &PdfDictEntry) -> String {
     format!("[{},{}]", enc_str(&e.key), enc_pdf_object(&e.value))
 }
 pub(crate) async fn dec_dict_entry(s: &str) -> Result<PdfDictEntry, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [key, value] = parts.as_slice() else { return Err(format!("dict entry: expected 2 fields, got {}", parts.len())) };
-    Ok(PdfDictEntry { key: dec_str(key)?, value: dec_pdf_object(value)? })
+    Ok(PdfDictEntry { key: dec_str(key).await?, value: dec_pdf_object(value).await? })
 }
 /// 🌳 Recursive: `Z`=Null (bare, no payload) / `B[0|1]`=Bool / `I[n]`=Int / `R[n]`=Real /
 /// `S[hex]`=Str / `N[hex]`=Name / `A[items]`=Array / `D[entries]`=Dict / `F[num,gen]`=Ref /
@@ -1507,22 +1507,22 @@ pub(crate) async fn dec_pdf_object(s: &str) -> Result<PdfObject, String> {
         return Ok(PdfObject::Null);
     }
     let (tag, rest) = s.split_at(1);
-    let inner = strip_brackets(rest)?;
+    let inner = strip_brackets(rest).await?;
     match tag {
         "B" => Ok(PdfObject::Bool(inner == "1")),
         "I" => Ok(PdfObject::Int(inner.parse().map_err(|e: std::num::ParseIntError| e.to_string())?)),
-        "R" => Ok(PdfObject::Real(PdfDecimal::parse(inner)?)),
-        "S" => Ok(PdfObject::Str(hex_decode(inner)?)),
-        "N" => Ok(PdfObject::Name(dec_str(inner)?)),
+        "R" => Ok(PdfObject::Real(PdfDecimal::parse(inner).await?)),
+        "S" => Ok(PdfObject::Str(hex_decode(inner).await?)),
+        "N" => Ok(PdfObject::Name(dec_str(inner).await?)),
         "A" => Ok(PdfObject::Array(split_top_level(inner, ',').into_iter().filter(|s| !s.is_empty()).map(dec_pdf_object).collect::<Result<Vec<_>, String>>()?)),
         "D" => Ok(PdfObject::Dict(split_top_level(inner, ',').into_iter().filter(|s| !s.is_empty()).map(dec_dict_entry).collect::<Result<Vec<_>, String>>()?)),
-        "F" => Ok(PdfObject::Ref(dec_objref(inner)?)),
+        "F" => Ok(PdfObject::Ref(dec_objref(inner).await?)),
         "T" => {
-            let parts = split_top_level(inner, ',');
+            let parts = split_top_level(inner, ',').await;
             let [dict_s, data_s, filters_s] = parts.as_slice() else { return Err(format!("stream: expected 3 fields, got {}", parts.len())) };
-            let dict = split_top_level(strip_brackets(dict_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_dict_entry).collect::<Result<Vec<_>, String>>()?;
-            let filters = dec_stream_filters(filters_s)?;
-            Ok(PdfObject::Stream { dict, data: hex_decode(data_s)?, filters })
+            let dict = split_top_level(strip_brackets(dict_s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_dict_entry).collect::<Result<Vec<_>, String>>()?;
+            let filters = dec_stream_filters(filters_s).await?;
+            Ok(PdfObject::Stream { dict, data: hex_decode(data_s).await?, filters })
         }
         other => Err(format!("pdf object: unknown tag {other:?}")),
     }
@@ -1531,9 +1531,9 @@ pub(crate) async fn enc_pdf_page(p: &PdfPage) -> String {
     format!("[{},{},{},{}]", enc_box(&p.media_box), encode_option(&p.crop_box, enc_box), p.rotate, enc_str(&p.text))
 }
 pub(crate) async fn dec_pdf_page(s: &str) -> Result<PdfPage, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [media_box, crop_box, rotate, text] = parts.as_slice() else { return Err(format!("page: expected 4 fields, got {}", parts.len())) };
-    Ok(PdfPage { media_box: dec_box(media_box)?, crop_box: decode_option(crop_box, dec_box)?, rotate: rotate.parse().map_err(|e: std::num::ParseIntError| e.to_string())?, text: dec_str(text)? })
+    Ok(PdfPage { media_box: dec_box(media_box).await?, crop_box: decode_option(crop_box, dec_box).await?, rotate: rotate.parse().map_err(|e: std::num::ParseIntError| e.to_string())?, text: dec_str(text).await? })
 }
 pub(crate) async fn enc_pdf_info(i: &PdfInfo) -> String {
     format!(
@@ -1547,15 +1547,15 @@ pub(crate) async fn enc_pdf_info(i: &PdfInfo) -> String {
     )
 }
 pub(crate) async fn dec_pdf_info(s: &str) -> Result<PdfInfo, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [title, author, subject, keywords, creator, producer] = parts.as_slice() else { return Err(format!("info: expected 6 fields, got {}", parts.len())) };
     Ok(PdfInfo {
-        title: decode_option(title, dec_str)?,
-        author: decode_option(author, dec_str)?,
-        subject: decode_option(subject, dec_str)?,
-        keywords: decode_option(keywords, dec_str)?,
-        creator: decode_option(creator, dec_str)?,
-        producer: decode_option(producer, dec_str)?,
+        title: decode_option(title, dec_str).await?,
+        author: decode_option(author, dec_str).await?,
+        subject: decode_option(subject, dec_str).await?,
+        keywords: decode_option(keywords, dec_str).await?,
+        creator: decode_option(creator, dec_str).await?,
+        producer: decode_option(producer, dec_str).await?,
     })
 }
 //#endregion 🔖️ObjectValueCodecs
@@ -1571,20 +1571,20 @@ pub(crate) async fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
     out.extend_from_slice(bytes);
 }
 pub(crate) async fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
+    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec())
 }
 pub(crate) async fn write_str_lp(out: &mut Vec<u8>, s: &str) {
     write_bytes_lp(out, s.as_bytes());
 }
 pub(crate) async fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
-    String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
+    String::from_utf8(read_bytes_lp(reader).await?).map_err(|e| e.to_string())
 }
 pub(crate) async fn write_f64_bin(out: &mut Vec<u8>, v: f64) {
     out.extend_from_slice(&v.to_le_bytes());
 }
 pub(crate) async fn read_f64_bin(reader: &mut store::ByteReader<'_>) -> Result<f64, String> {
-    reader.read_f64_le().map_err(|e| e.to_string())
+    reader.read_f64_le().await.map_err(|e| e.to_string())
 }
 pub(crate) async fn write_pdf_decimal_bin(out: &mut Vec<u8>, value: &PdfDecimal) {
     out.push(value.negative as u8);
@@ -1592,9 +1592,9 @@ pub(crate) async fn write_pdf_decimal_bin(out: &mut Vec<u8>, value: &PdfDecimal)
     store::pack_rt::write_varint_u64(out, value.scale as u64);
 }
 pub(crate) async fn read_pdf_decimal_bin(reader: &mut store::ByteReader<'_>) -> Result<PdfDecimal, String> {
-    let negative = reader.read_u8().map_err(|error| error.to_string())? != 0;
-    let coefficient = read_str_lp(reader)?;
-    let scale = reader.read_varint_u64().map_err(|error| error.to_string())? as u32;
+    let negative = reader.read_u8().await.map_err(|error| error.to_string())? != 0;
+    let coefficient = read_str_lp(reader).await?;
+    let scale = reader.read_varint_u64().await.map_err(|error| error.to_string())? as u32;
     if coefficient.is_empty() || !coefficient.bytes().all(|byte| byte.is_ascii_digit()) {
         return Err("invalid PDF decimal coefficient".into());
     }
@@ -1632,18 +1632,18 @@ pub(crate) async fn enc_stream_filters_bin(filters: &[PdfStreamFilter], out: &mu
     }
 }
 pub(crate) async fn dec_stream_filters_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<PdfStreamFilter>, String> {
-    let count = reader.read_varint_u64().map_err(|error| error.to_string())?;
+    let count = reader.read_varint_u64().await.map_err(|error| error.to_string())?;
     let mut filters = Vec::with_capacity(count as usize);
     for _ in 0..count {
-        filters.push(match reader.read_u8().map_err(|error| error.to_string())? {
+        filters.push(match reader.read_u8().await.map_err(|error| error.to_string())? {
             0 => {
-                let predictor = match reader.read_u8().map_err(|error| error.to_string())? {
+                let predictor = match reader.read_u8().await.map_err(|error| error.to_string())? {
                     0 => None,
                     1 => Some(PdfPredictor {
-                        predictor: reader.read_varint_u64().map_err(|error| error.to_string())? as u32,
-                        colors: reader.read_varint_u64().map_err(|error| error.to_string())? as u32,
-                        bits_per_component: reader.read_varint_u64().map_err(|error| error.to_string())? as u32,
-                        columns: reader.read_varint_u64().map_err(|error| error.to_string())? as u32,
+                        predictor: reader.read_varint_u64().await.map_err(|error| error.to_string())? as u32,
+                        colors: reader.read_varint_u64().await.map_err(|error| error.to_string())? as u32,
+                        bits_per_component: reader.read_varint_u64().await.map_err(|error| error.to_string())? as u32,
+                        columns: reader.read_varint_u64().await.map_err(|error| error.to_string())? as u32,
                     }),
                     tag => return Err(format!("flate predictor presence: unknown tag {tag}")),
                 };
@@ -1671,8 +1671,8 @@ pub(crate) async fn enc_objref_bin(r: &ObjRef, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, r.gen as u64);
 }
 pub(crate) async fn dec_objref_bin(reader: &mut store::ByteReader<'_>) -> Result<ObjRef, String> {
-    let num = reader.read_varint_u64().map_err(|e| e.to_string())? as u32;
-    let gen = reader.read_varint_u64().map_err(|e| e.to_string())? as u16;
+    let num = reader.read_varint_u64().await.map_err(|e| e.to_string())? as u32;
+    let gen = reader.read_varint_u64().await.map_err(|e| e.to_string())? as u16;
     Ok(ObjRef { num, gen })
 }
 pub(crate) async fn enc_box_bin(b: &[f64; 4], out: &mut Vec<u8>) {
@@ -1681,7 +1681,7 @@ pub(crate) async fn enc_box_bin(b: &[f64; 4], out: &mut Vec<u8>) {
     }
 }
 pub(crate) async fn dec_box_bin(reader: &mut store::ByteReader<'_>) -> Result<[f64; 4], String> {
-    Ok([read_f64_bin(reader)?, read_f64_bin(reader)?, read_f64_bin(reader)?, read_f64_bin(reader)?])
+    Ok([read_f64_bin(reader).await?, read_f64_bin(reader).await?, read_f64_bin(reader).await?, read_f64_bin(reader).await?])
 }
 pub(crate) async fn enc_path_segment_bin(seg: &PdfPathSegment, out: &mut Vec<u8>) {
     match seg {
@@ -1696,10 +1696,10 @@ pub(crate) async fn enc_path_segment_bin(seg: &PdfPathSegment, out: &mut Vec<u8>
     }
 }
 pub(crate) async fn dec_path_segment_bin(reader: &mut store::ByteReader<'_>) -> Result<PdfPathSegment, String> {
-    let tag = reader.read_u8().map_err(|e| e.to_string())?;
+    let tag = reader.read_u8().await.map_err(|e| e.to_string())?;
     match tag {
-        0 => Ok(PdfPathSegment::ArrayIndex { index: reader.read_varint_u64().map_err(|e| e.to_string())? as usize }),
-        1 => Ok(PdfPathSegment::DictKey { key: read_str_lp(reader)? }),
+        0 => Ok(PdfPathSegment::ArrayIndex { index: reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize }),
+        1 => Ok(PdfPathSegment::DictKey { key: read_str_lp(reader).await? }),
         other => Err(format!("path segment binary: unknown tag {other}")),
     }
 }
@@ -1710,10 +1710,10 @@ pub(crate) async fn enc_path_bin(path: &[PdfPathSegment], out: &mut Vec<u8>) {
     }
 }
 pub(crate) async fn dec_path_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<PdfPathSegment>, String> {
-    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut path = Vec::with_capacity(count as usize);
     for _ in 0..count {
-        path.push(dec_path_segment_bin(reader)?);
+        path.push(dec_path_segment_bin(reader).await?);
     }
     Ok(path)
 }
@@ -1722,8 +1722,8 @@ pub(crate) async fn enc_dict_entry_bin(e: &PdfDictEntry, out: &mut Vec<u8>) {
     enc_pdf_object_bin(&e.value, out);
 }
 pub(crate) async fn dec_dict_entry_bin(reader: &mut store::ByteReader<'_>) -> Result<PdfDictEntry, String> {
-    let key = read_str_lp(reader)?;
-    let value = dec_pdf_object_bin(reader)?;
+    let key = read_str_lp(reader).await?;
+    let value = Box::pin(dec_pdf_object_bin(reader)).await?;
     Ok(PdfDictEntry { key, value })
 }
 /// 🌳 Recursive: a 1-byte kind tag (`0`=Null/`1`=Bool/`2`=Int/`3`=Real/`4`=Str/`5`=Name/`6`=Array/
@@ -1784,39 +1784,39 @@ pub(crate) async fn enc_pdf_object_bin(v: &PdfObject, out: &mut Vec<u8>) {
     }
 }
 pub(crate) async fn dec_pdf_object_bin(reader: &mut store::ByteReader<'_>) -> Result<PdfObject, String> {
-    let tag = reader.read_u8().map_err(|e| e.to_string())?;
+    let tag = reader.read_u8().await.map_err(|e| e.to_string())?;
     match tag {
         0 => Ok(PdfObject::Null),
-        1 => Ok(PdfObject::Bool(reader.read_u8().map_err(|e| e.to_string())? != 0)),
-        2 => Ok(PdfObject::Int(reader.read_varint_i64().map_err(|e| e.to_string())?)),
-        3 => Ok(PdfObject::Real(read_pdf_decimal_bin(reader)?)),
-        4 => Ok(PdfObject::Str(read_bytes_lp(reader)?)),
-        5 => Ok(PdfObject::Name(read_str_lp(reader)?)),
+        1 => Ok(PdfObject::Bool(reader.read_u8().await.map_err(|e| e.to_string())? != 0)),
+        2 => Ok(PdfObject::Int(reader.read_varint_i64().await.map_err(|e| e.to_string())?)),
+        3 => Ok(PdfObject::Real(read_pdf_decimal_bin(reader).await?)),
+        4 => Ok(PdfObject::Str(read_bytes_lp(reader).await?)),
+        5 => Ok(PdfObject::Name(read_str_lp(reader).await?)),
         6 => {
-            let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+            let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
             let mut items = Vec::with_capacity(count as usize);
             for _ in 0..count {
-                items.push(dec_pdf_object_bin(reader)?);
+                items.push(Box::pin(dec_pdf_object_bin(reader)).await?);
             }
             Ok(PdfObject::Array(items))
         }
         7 => {
-            let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+            let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
             let mut entries = Vec::with_capacity(count as usize);
             for _ in 0..count {
-                entries.push(dec_dict_entry_bin(reader)?);
+                entries.push(Box::pin(dec_dict_entry_bin(reader)).await?);
             }
             Ok(PdfObject::Dict(entries))
         }
-        8 => Ok(PdfObject::Ref(dec_objref_bin(reader)?)),
+        8 => Ok(PdfObject::Ref(dec_objref_bin(reader).await?)),
         9 => {
-            let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+            let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
             let mut dict = Vec::with_capacity(count as usize);
             for _ in 0..count {
-                dict.push(dec_dict_entry_bin(reader)?);
+                dict.push(dec_dict_entry_bin(reader).await?);
             }
-            let data = read_bytes_lp(reader)?;
-            let filters = dec_stream_filters_bin(reader)?;
+            let data = read_bytes_lp(reader).await?;
+            let filters = dec_stream_filters_bin(reader).await?;
             Ok(PdfObject::Stream { dict, data, filters })
         }
         other => Err(format!("pdf object binary: unknown tag {other}")),
@@ -1832,10 +1832,10 @@ pub(crate) async fn enc_pdf_page_bin(p: &PdfPage, out: &mut Vec<u8>) {
     write_str_lp(out, &p.text);
 }
 pub(crate) async fn dec_pdf_page_bin(reader: &mut store::ByteReader<'_>) -> Result<PdfPage, String> {
-    let media_box = dec_box_bin(reader)?;
-    let crop_box = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_box_bin(reader)?) } else { None };
-    let rotate = reader.read_varint_i64().map_err(|e| e.to_string())? as i32;
-    let text = read_str_lp(reader)?;
+    let media_box = dec_box_bin(reader).await?;
+    let crop_box = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_box_bin(reader).await?) } else { None };
+    let rotate = reader.read_varint_i64().await.map_err(|e| e.to_string())? as i32;
+    let text = read_str_lp(reader).await?;
     Ok(PdfPage { media_box, crop_box, rotate, text })
 }
 pub(crate) async fn enc_pdf_info_bin(i: &PdfInfo, out: &mut Vec<u8>) {
@@ -1847,7 +1847,7 @@ pub(crate) async fn enc_pdf_info_bin(i: &PdfInfo, out: &mut Vec<u8>) {
     }
 }
 pub(crate) async fn dec_pdf_info_bin(reader: &mut store::ByteReader<'_>) -> Result<PdfInfo, String> {
-    let mut read_opt = || -> Result<Option<String>, String> { Ok(if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None }) };
+    let mut read_opt = || -> Result<Option<String>, String> { Ok(if semio_framework_plugin::resolve_ready(reader.read_u8()).map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None }) };
     Ok(PdfInfo { title: read_opt()?, author: read_opt()?, subject: read_opt()?, keywords: read_opt()?, creator: read_opt()?, producer: read_opt()? })
 }
 pub(crate) async fn enc_pdf_snapshot_bin(s: &PdfSnapshot, out: &mut Vec<u8>) {
@@ -1869,25 +1869,25 @@ pub(crate) async fn enc_pdf_snapshot_bin(s: &PdfSnapshot, out: &mut Vec<u8>) {
     }
 }
 pub(crate) async fn dec_pdf_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<PdfSnapshot, String> {
-    let schema = read_str_lp(reader)?;
-    let declared_version = read_str_lp(reader)?;
-    let page_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let schema = read_str_lp(reader).await?;
+    let declared_version = read_str_lp(reader).await?;
+    let page_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut pages = Vec::with_capacity(page_count as usize);
     for _ in 0..page_count {
-        pages.push(dec_pdf_page_bin(reader)?);
+        pages.push(dec_pdf_page_bin(reader).await?);
     }
-    let info = dec_pdf_info_bin(reader)?;
-    let obj_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let info = dec_pdf_info_bin(reader).await?;
+    let obj_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut objects = Vec::with_capacity(obj_count as usize);
     for _ in 0..obj_count {
-        let id = dec_objref_bin(reader)?;
-        let value = dec_pdf_object_bin(reader)?;
+        let id = dec_objref_bin(reader).await?;
+        let value = dec_pdf_object_bin(reader).await?;
         objects.push(PdfIndirectObject { id, value });
     }
-    let trailer_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let trailer_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut trailer = Vec::with_capacity(trailer_count as usize);
     for _ in 0..trailer_count {
-        trailer.push(dec_dict_entry_bin(reader)?);
+        trailer.push(dec_dict_entry_bin(reader).await?);
     }
     Ok(PdfSnapshot { schema, declared_version, pages, info, objects, trailer })
 }
@@ -1904,10 +1904,10 @@ async fn enc_pages_diff(d: &PdfPagesDiff) -> String {
     format!("[{removed}];[{modified}];[{added}]")
 }
 async fn dec_pages_diff(body: &str) -> Result<PdfPagesDiff, String> {
-    let three = split_top_level(body, ';');
+    let three = split_top_level(body, ';').await;
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("pages diff: expected 3 sections, got {}", three.len())) };
-    let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
-    let modified = split_top_level(strip_brackets(modified_s)?, ',')
+    let removed = split_top_level(strip_brackets(removed_s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
+    let modified = split_top_level(strip_brackets(modified_s).await?, ',')
         .into_iter()
         .filter(|s| !s.is_empty())
         .map(|entry| {
@@ -1915,7 +1915,7 @@ async fn dec_pages_diff(body: &str) -> Result<PdfPagesDiff, String> {
             Ok(PdfPageModified { index: parse_usize(idx)?, diff: dec_page_diff(rest)? })
         })
         .collect::<Result<Vec<_>, String>>()?;
-    let added = split_top_level(strip_brackets(added_s)?, ',')
+    let added = split_top_level(strip_brackets(added_s).await?, ',')
         .into_iter()
         .filter(|s| !s.is_empty())
         .map(|entry| {
@@ -1945,7 +1945,7 @@ async fn enc_page_diff(d: &PdfPageDiff) -> String {
     format!("[{}]", parts.join(","))
 }
 async fn dec_page_diff(s: &str) -> Result<PdfPageDiff, String> {
-    let inner = strip_brackets(s)?;
+    let inner = strip_brackets(s).await?;
     let mut d = PdfPageDiff::default();
     for entry in split_top_level(inner, ',') {
         if entry.is_empty() {
@@ -1953,10 +1953,10 @@ async fn dec_page_diff(s: &str) -> Result<PdfPageDiff, String> {
         }
         let (tag, val) = entry.split_once(':').ok_or_else(|| format!("page diff: bad entry {entry:?}"))?;
         match tag {
-            "M" => d.media_box = Some(dec_box(val)?),
-            "C" => d.crop_box = Some(decode_option(val, dec_box)?),
+            "M" => d.media_box = Some(dec_box(val).await?),
+            "C" => d.crop_box = Some(decode_option(val, dec_box).await?),
             "R" => d.rotate = Some(val.parse().map_err(|e: std::num::ParseIntError| e.to_string())?),
-            "X" => d.text = Some(dec_str(val)?),
+            "X" => d.text = Some(dec_str(val).await?),
             other => return Err(format!("page diff: unknown tag {other:?}")),
         }
     }
@@ -1972,10 +1972,10 @@ async fn enc_dict_diff(d: &PdfDictDiff) -> String {
     format!("[{removed}];[{modified}];[{added}]")
 }
 async fn dec_dict_diff(body: &str) -> Result<PdfDictDiff, String> {
-    let three = split_top_level(body, ';');
+    let three = split_top_level(body, ';').await;
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("dict diff: expected 3 sections, got {}", three.len())) };
-    let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_str).collect::<Result<Vec<_>, String>>()?;
-    let modified = split_top_level(strip_brackets(modified_s)?, ',')
+    let removed = split_top_level(strip_brackets(removed_s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_str).collect::<Result<Vec<_>, String>>()?;
+    let modified = split_top_level(strip_brackets(modified_s).await?, ',')
         .into_iter()
         .filter(|s| !s.is_empty())
         .map(|entry| {
@@ -1983,7 +1983,7 @@ async fn dec_dict_diff(body: &str) -> Result<PdfDictDiff, String> {
             Ok(PdfDictModified { key: dec_str(key)?, diff: dec_value_diff(rest)? })
         })
         .collect::<Result<Vec<_>, String>>()?;
-    let added = split_top_level(strip_brackets(added_s)?, ',')
+    let added = split_top_level(strip_brackets(added_s).await?, ',')
         .into_iter()
         .filter(|s| !s.is_empty())
         .map(|entry| {
@@ -2002,10 +2002,10 @@ async fn enc_array_diff(d: &PdfArrayDiff) -> String {
     format!("[{removed}];[{modified}];[{added}]")
 }
 async fn dec_array_diff(body: &str) -> Result<PdfArrayDiff, String> {
-    let three = split_top_level(body, ';');
+    let three = split_top_level(body, ';').await;
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("array diff: expected 3 sections, got {}", three.len())) };
-    let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
-    let modified = split_top_level(strip_brackets(modified_s)?, ',')
+    let removed = split_top_level(strip_brackets(removed_s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
+    let modified = split_top_level(strip_brackets(modified_s).await?, ',')
         .into_iter()
         .filter(|s| !s.is_empty())
         .map(|entry| {
@@ -2013,7 +2013,7 @@ async fn dec_array_diff(body: &str) -> Result<PdfArrayDiff, String> {
             Ok(PdfArrayModified { index: parse_usize(idx)?, diff: dec_value_diff(rest)? })
         })
         .collect::<Result<Vec<_>, String>>()?;
-    let added = split_top_level(strip_brackets(added_s)?, ',')
+    let added = split_top_level(strip_brackets(added_s).await?, ',')
         .into_iter()
         .filter(|s| !s.is_empty())
         .map(|entry| {
@@ -2054,17 +2054,17 @@ async fn enc_value_diff(d: &PdfValueDiff) -> String {
 }
 async fn dec_value_diff(s: &str) -> Result<PdfValueDiff, String> {
     let (tag, rest) = s.split_at(1);
-    let inner = strip_brackets(rest)?;
+    let inner = strip_brackets(rest).await?;
     match tag {
-        "L" => Ok(PdfValueDiff::Replace { value: dec_pdf_object(inner)? }),
+        "L" => Ok(PdfValueDiff::Replace { value: dec_pdf_object(inner).await? }),
         "B" => Ok(PdfValueDiff::Bool { value: inner == "1" }),
         "I" => Ok(PdfValueDiff::Int { value: inner.parse().map_err(|e: std::num::ParseIntError| e.to_string())? }),
-        "R" => Ok(PdfValueDiff::Real { value: PdfDecimal::parse(inner)? }),
-        "S" => Ok(PdfValueDiff::Str { value: hex_decode(inner)? }),
-        "N" => Ok(PdfValueDiff::Name { value: dec_str(inner)? }),
-        "F" => Ok(PdfValueDiff::Ref { value: dec_objref(inner)? }),
-        "A" => Ok(PdfValueDiff::Array { diff: dec_array_diff(inner)? }),
-        "D" => Ok(PdfValueDiff::Dict { diff: dec_dict_diff(inner)? }),
+        "R" => Ok(PdfValueDiff::Real { value: PdfDecimal::parse(inner).await? }),
+        "S" => Ok(PdfValueDiff::Str { value: hex_decode(inner).await? }),
+        "N" => Ok(PdfValueDiff::Name { value: dec_str(inner).await? }),
+        "F" => Ok(PdfValueDiff::Ref { value: dec_objref(inner).await? }),
+        "A" => Ok(PdfValueDiff::Array { diff: dec_array_diff(inner).await? }),
+        "D" => Ok(PdfValueDiff::Dict { diff: dec_dict_diff(inner).await? }),
         "T" => {
             let mut dict = None;
             let mut data = None;
@@ -2075,9 +2075,9 @@ async fn dec_value_diff(s: &str) -> Result<PdfValueDiff, String> {
                 }
                 let (etag, val) = entry.split_once(':').ok_or_else(|| format!("stream diff: bad entry {entry:?}"))?;
                 match etag {
-                    "D" => dict = Some(dec_dict_diff(val)?),
-                    "A" => data = Some(hex_decode(val)?),
-                    "F" => filters = Some(dec_stream_filters(val)?),
+                    "D" => dict = Some(dec_dict_diff(val).await?),
+                    "A" => data = Some(hex_decode(val).await?),
+                    "F" => filters = Some(dec_stream_filters(val).await?),
                     other => return Err(format!("stream diff: unknown tag {other:?}")),
                 }
             }
@@ -2094,10 +2094,10 @@ async fn enc_objects_diff(d: &PdfObjectsDiff) -> String {
     format!("[{removed}];[{modified}];[{added}]")
 }
 async fn dec_objects_diff(body: &str) -> Result<PdfObjectsDiff, String> {
-    let three = split_top_level(body, ';');
+    let three = split_top_level(body, ';').await;
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("objects diff: expected 3 sections, got {}", three.len())) };
-    let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_objref).collect::<Result<Vec<_>, String>>()?;
-    let modified = split_top_level(strip_brackets(modified_s)?, ',')
+    let removed = split_top_level(strip_brackets(removed_s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_objref).collect::<Result<Vec<_>, String>>()?;
+    let modified = split_top_level(strip_brackets(modified_s).await?, ',')
         .into_iter()
         .filter(|s| !s.is_empty())
         .map(|entry| {
@@ -2105,7 +2105,7 @@ async fn dec_objects_diff(body: &str) -> Result<PdfObjectsDiff, String> {
             Ok(PdfObjectModified { id: dec_objref(id)?, diff: dec_value_diff(rest)? })
         })
         .collect::<Result<Vec<_>, String>>()?;
-    let added = split_top_level(strip_brackets(added_s)?, ',')
+    let added = split_top_level(strip_brackets(added_s).await?, ',')
         .into_iter()
         .filter(|s| !s.is_empty())
         .map(|entry| {
@@ -2150,17 +2150,17 @@ async fn enc_page_diff_bin(d: &PdfPageDiff, out: &mut Vec<u8>) {
 }
 async fn dec_page_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<PdfPageDiff, String> {
     let mut d = PdfPageDiff::default();
-    if reader.read_u8().map_err(|e| e.to_string())? != 0 {
-        d.media_box = Some(dec_box_bin(reader)?);
+    if reader.read_u8().await.map_err(|e| e.to_string())? != 0 {
+        d.media_box = Some(dec_box_bin(reader).await?);
     }
-    if reader.read_u8().map_err(|e| e.to_string())? != 0 {
-        d.crop_box = Some(if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_box_bin(reader)?) } else { None });
+    if reader.read_u8().await.map_err(|e| e.to_string())? != 0 {
+        d.crop_box = Some(if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_box_bin(reader).await?) } else { None });
     }
-    if reader.read_u8().map_err(|e| e.to_string())? != 0 {
-        d.rotate = Some(reader.read_varint_i64().map_err(|e| e.to_string())? as i32);
+    if reader.read_u8().await.map_err(|e| e.to_string())? != 0 {
+        d.rotate = Some(reader.read_varint_i64().await.map_err(|e| e.to_string())? as i32);
     }
-    if reader.read_u8().map_err(|e| e.to_string())? != 0 {
-        d.text = Some(read_str_lp(reader)?);
+    if reader.read_u8().await.map_err(|e| e.to_string())? != 0 {
+        d.text = Some(read_str_lp(reader).await?);
     }
     Ok(d)
 }
@@ -2181,23 +2181,23 @@ async fn enc_pages_diff_bin(d: &PdfPagesDiff, out: &mut Vec<u8>) {
     }
 }
 async fn dec_pages_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<PdfPagesDiff, String> {
-    let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let removed_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(removed_count as usize);
     for _ in 0..removed_count {
-        removed.push(reader.read_varint_u64().map_err(|e| e.to_string())? as usize);
+        removed.push(reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize);
     }
-    let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let modified_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut modified = Vec::with_capacity(modified_count as usize);
     for _ in 0..modified_count {
-        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-        let diff = dec_page_diff_bin(reader)?;
+        let index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+        let diff = dec_page_diff_bin(reader).await?;
         modified.push(PdfPageModified { index, diff });
     }
-    let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let added_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut added = Vec::with_capacity(added_count as usize);
     for _ in 0..added_count {
-        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-        let page = dec_pdf_page_bin(reader)?;
+        let index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+        let page = dec_pdf_page_bin(reader).await?;
         added.push(PdfPageAdded { index, page });
     }
     Ok(PdfPagesDiff { removed, modified, added })
@@ -2221,24 +2221,24 @@ async fn enc_dict_diff_bin(d: &PdfDictDiff, out: &mut Vec<u8>) {
     }
 }
 async fn dec_dict_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<PdfDictDiff, String> {
-    let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let removed_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(removed_count as usize);
     for _ in 0..removed_count {
-        removed.push(read_str_lp(reader)?);
+        removed.push(read_str_lp(reader).await?);
     }
-    let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let modified_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut modified = Vec::with_capacity(modified_count as usize);
     for _ in 0..modified_count {
-        let key = read_str_lp(reader)?;
-        let diff = dec_value_diff_bin(reader)?;
+        let key = read_str_lp(reader).await?;
+        let diff = Box::pin(dec_value_diff_bin(reader)).await?;
         modified.push(PdfDictModified { key, diff });
     }
-    let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let added_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut added = Vec::with_capacity(added_count as usize);
     for _ in 0..added_count {
-        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-        let key = read_str_lp(reader)?;
-        let item = dec_pdf_object_bin(reader)?;
+        let index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+        let key = read_str_lp(reader).await?;
+        let item = dec_pdf_object_bin(reader).await?;
         added.push(PdfDictAdded { index, key, item });
     }
     Ok(PdfDictDiff { removed, modified, added })
@@ -2261,23 +2261,23 @@ async fn enc_array_diff_bin(d: &PdfArrayDiff, out: &mut Vec<u8>) {
     }
 }
 async fn dec_array_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<PdfArrayDiff, String> {
-    let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let removed_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(removed_count as usize);
     for _ in 0..removed_count {
-        removed.push(reader.read_varint_u64().map_err(|e| e.to_string())? as usize);
+        removed.push(reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize);
     }
-    let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let modified_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut modified = Vec::with_capacity(modified_count as usize);
     for _ in 0..modified_count {
-        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-        let diff = dec_value_diff_bin(reader)?;
+        let index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+        let diff = Box::pin(dec_value_diff_bin(reader)).await?;
         modified.push(PdfArrayModified { index, diff });
     }
-    let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let added_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut added = Vec::with_capacity(added_count as usize);
     for _ in 0..added_count {
-        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-        let item = dec_pdf_object_bin(reader)?;
+        let index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+        let item = dec_pdf_object_bin(reader).await?;
         added.push(PdfArrayAdded { index, item });
     }
     Ok(PdfArrayDiff { removed, modified, added })
@@ -2339,21 +2339,21 @@ async fn enc_value_diff_bin(d: &PdfValueDiff, out: &mut Vec<u8>) {
     }
 }
 async fn dec_value_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<PdfValueDiff, String> {
-    let tag = reader.read_u8().map_err(|e| e.to_string())?;
+    let tag = reader.read_u8().await.map_err(|e| e.to_string())?;
     match tag {
-        0 => Ok(PdfValueDiff::Replace { value: dec_pdf_object_bin(reader)? }),
-        1 => Ok(PdfValueDiff::Bool { value: reader.read_u8().map_err(|e| e.to_string())? != 0 }),
-        2 => Ok(PdfValueDiff::Int { value: reader.read_varint_i64().map_err(|e| e.to_string())? }),
-        3 => Ok(PdfValueDiff::Real { value: read_pdf_decimal_bin(reader)? }),
-        4 => Ok(PdfValueDiff::Str { value: read_bytes_lp(reader)? }),
-        5 => Ok(PdfValueDiff::Name { value: read_str_lp(reader)? }),
-        6 => Ok(PdfValueDiff::Ref { value: dec_objref_bin(reader)? }),
-        7 => Ok(PdfValueDiff::Array { diff: dec_array_diff_bin(reader)? }),
-        8 => Ok(PdfValueDiff::Dict { diff: dec_dict_diff_bin(reader)? }),
+        0 => Ok(PdfValueDiff::Replace { value: dec_pdf_object_bin(reader).await? }),
+        1 => Ok(PdfValueDiff::Bool { value: reader.read_u8().await.map_err(|e| e.to_string())? != 0 }),
+        2 => Ok(PdfValueDiff::Int { value: reader.read_varint_i64().await.map_err(|e| e.to_string())? }),
+        3 => Ok(PdfValueDiff::Real { value: read_pdf_decimal_bin(reader).await? }),
+        4 => Ok(PdfValueDiff::Str { value: read_bytes_lp(reader).await? }),
+        5 => Ok(PdfValueDiff::Name { value: read_str_lp(reader).await? }),
+        6 => Ok(PdfValueDiff::Ref { value: dec_objref_bin(reader).await? }),
+        7 => Ok(PdfValueDiff::Array { diff: Box::pin(dec_array_diff_bin(reader)).await? }),
+        8 => Ok(PdfValueDiff::Dict { diff: Box::pin(dec_dict_diff_bin(reader)).await? }),
         9 => {
-            let dict = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_dict_diff_bin(reader)?) } else { None };
-            let data = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_bytes_lp(reader)?) } else { None };
-            let filters = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_stream_filters_bin(reader)?) } else { None };
+            let dict = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_dict_diff_bin(reader).await?) } else { None };
+            let data = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(read_bytes_lp(reader).await?) } else { None };
+            let filters = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_stream_filters_bin(reader).await?) } else { None };
             Ok(PdfValueDiff::Stream { dict, data, filters })
         }
         other => Err(format!("value diff binary: unknown tag {other}")),
@@ -2378,24 +2378,24 @@ async fn enc_objects_diff_bin(d: &PdfObjectsDiff, out: &mut Vec<u8>) {
     }
 }
 async fn dec_objects_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<PdfObjectsDiff, String> {
-    let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let removed_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(removed_count as usize);
     for _ in 0..removed_count {
-        removed.push(dec_objref_bin(reader)?);
+        removed.push(dec_objref_bin(reader).await?);
     }
-    let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let modified_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut modified = Vec::with_capacity(modified_count as usize);
     for _ in 0..modified_count {
-        let id = dec_objref_bin(reader)?;
-        let diff = dec_value_diff_bin(reader)?;
+        let id = dec_objref_bin(reader).await?;
+        let diff = dec_value_diff_bin(reader).await?;
         modified.push(PdfObjectModified { id, diff });
     }
-    let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let added_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut added = Vec::with_capacity(added_count as usize);
     for _ in 0..added_count {
-        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-        let id = dec_objref_bin(reader)?;
-        let value = dec_pdf_object_bin(reader)?;
+        let index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+        let id = dec_objref_bin(reader).await?;
+        let value = dec_pdf_object_bin(reader).await?;
         added.push(PdfObjectAdded { index, id, value });
     }
     Ok(PdfObjectsDiff { removed, modified, added })
@@ -2436,15 +2436,15 @@ async fn parse_pdf_diff(line: &str) -> Result<PdfDiff, String> {
     }
     for token in line.split(' ') {
         if let Some(rest) = token.strip_prefix("declared-version=") {
-            d.declared_version = Some(dec_str(rest)?);
+            d.declared_version = Some(dec_str(rest).await?);
         } else if let Some(rest) = token.strip_prefix("info=") {
-            d.info = Some(dec_pdf_info(rest)?);
+            d.info = Some(dec_pdf_info(rest).await?);
         } else if let Some(rest) = token.strip_prefix("pages=") {
-            d.pages = Some(dec_pages_diff(rest)?);
+            d.pages = Some(dec_pages_diff(rest).await?);
         } else if let Some(rest) = token.strip_prefix("objects=") {
-            d.objects = Some(dec_objects_diff(rest)?);
+            d.objects = Some(dec_objects_diff(rest).await?);
         } else if let Some(rest) = token.strip_prefix("trailer=") {
-            d.trailer = Some(dec_dict_diff(rest)?);
+            d.trailer = Some(dec_dict_diff(rest).await?);
         } else {
             return Err(format!("pdf diff: unknown token {token:?}"));
         }
@@ -2454,10 +2454,10 @@ async fn parse_pdf_diff(line: &str) -> Result<PdfDiff, String> {
 
 impl protocol::DiffCodec for PdfDiff {
     async fn print_diff(&self) -> String {
-        print_pdf_diff(self)
+        print_pdf_diff(self).await
     }
     async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
-        parse_pdf_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_pdf_diff(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// 🧪️ P2-FG3: REAL binary frame (`format u8 | flags u8 | [declared_version][info][pages]
     /// [objects][trailer]`), matching `../💾️binary/📡️component.protocol.semio`'s `header fixed 2`
@@ -2502,23 +2502,23 @@ impl protocol::DiffCodec for PdfDiff {
         Ok(out)
     }
     async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let mut reader = store::ByteReader::new(bytes);
+        let mut reader = store::ByteReader::new(bytes).await;
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
-        let format = reader.read_u8().map_err(|e| malformed("diff format", 0, e.to_string()))?;
+        let format = reader.read_u8().await.map_err(|e| malformed("diff format", 0, e.to_string()))?;
         if format != store::pack_rt::OP_BINARY_FORMAT {
             return Err(malformed("diff format", 0, format!("expected {}, got {format}", store::pack_rt::OP_BINARY_FORMAT)));
         }
-        let flags = reader.read_u8().map_err(|e| malformed("diff flags", 1, e.to_string()))?;
+        let flags = reader.read_u8().await.map_err(|e| malformed("diff flags", 1, e.to_string()))?;
         if flags & !0b0001_1111 != 0 {
             return Err(malformed("diff flags", 1, format!("unknown flag bits {:#010b}", flags & !0b0001_1111)));
         }
-        let declared_version = if flags & 0b00001 != 0 { Some(read_str_lp(&mut reader).map_err(|e| malformed("diff declared_version", reader.position(), e))?) } else { None };
-        let info = if flags & 0b00010 != 0 { Some(dec_pdf_info_bin(&mut reader).map_err(|e| malformed("diff info", reader.position(), e))?) } else { None };
-        let pages = if flags & 0b00100 != 0 { Some(dec_pages_diff_bin(&mut reader).map_err(|e| malformed("diff pages", reader.position(), e))?) } else { None };
-        let objects = if flags & 0b01000 != 0 { Some(dec_objects_diff_bin(&mut reader).map_err(|e| malformed("diff objects", reader.position(), e))?) } else { None };
-        let trailer = if flags & 0b010000 != 0 { Some(dec_dict_diff_bin(&mut reader).map_err(|e| malformed("diff trailer", reader.position(), e))?) } else { None };
+        let declared_version = if flags & 0b00001 != 0 { Some(read_str_lp(&mut reader).await.map_err(|e| malformed("diff declared_version", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
+        let info = if flags & 0b00010 != 0 { Some(dec_pdf_info_bin(&mut reader).await.map_err(|e| malformed("diff info", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
+        let pages = if flags & 0b00100 != 0 { Some(dec_pages_diff_bin(&mut reader).await.map_err(|e| malformed("diff pages", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
+        let objects = if flags & 0b01000 != 0 { Some(dec_objects_diff_bin(&mut reader).await.map_err(|e| malformed("diff objects", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
+        let trailer = if flags & 0b010000 != 0 { Some(dec_dict_diff_bin(&mut reader).await.map_err(|e| malformed("diff trailer", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
         if reader.remaining() != 0 {
-            return Err(malformed("diff trailing bytes", reader.position(), format!("{} trailing bytes", reader.remaining())));
+            return Err(malformed("diff trailing bytes", reader.position().await, format!("{} trailing bytes", reader.remaining())));
         }
         Ok(PdfDiff { declared_version, info, pages, objects, trailer })
     }

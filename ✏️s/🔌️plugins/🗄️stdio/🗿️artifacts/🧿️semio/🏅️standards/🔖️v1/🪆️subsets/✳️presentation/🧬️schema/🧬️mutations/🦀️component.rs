@@ -102,8 +102,8 @@ pub enum SemioPresentationMutation {
 /// ▶️ `let d = mutation.diff(&*snapshot); *snapshot = d.apply(snapshot); d` -- the diff is the
 /// single semantics source, never a separate imperative apply path (apply-and-capture is banned).
 pub async fn apply_semio_presentation_mutation(snapshot: &mut SemioPresentationSnapshot, mutation: &SemioPresentationMutation) -> protocol::MutationOutcome<SemioPresentationDiff> {
-    let outcome = Mutation::diff(mutation, snapshot);
-    outcome.apply_to(snapshot)
+    let outcome = Mutation::diff(mutation, snapshot).await;
+    outcome.apply_to(snapshot).await
 }
 //#endregion 🔖️Apply
 
@@ -126,12 +126,12 @@ impl Mutation<SemioPresentationSnapshot> for SemioPresentationMutation {
     async fn diff(&self, base: &SemioPresentationSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             SemioPresentationMutation::NoMutation => SemioPresentationDiff::default(),
-            SemioPresentationMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
-            SemioPresentationMutation::InsertSlide { index, slide } => diff_insert_slide(*index, slide.clone()),
-            SemioPresentationMutation::RemoveSlide { index } => diff_remove_slide(*index),
-            SemioPresentationMutation::SetSlideLayout { index, layout_id } => diff_set_slide_layout(base, *index, layout_id.clone()),
-            SemioPresentationMutation::SetSlideNotes { index, notes } => diff_set_slide_notes(base, *index, notes.clone()),
-            SemioPresentationMutation::InsertShape { slide_index, shape_index, shape } => diff_insert_shape(*slide_index, *shape_index, shape.clone()),
+            SemioPresentationMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot).await,
+            SemioPresentationMutation::InsertSlide { index, slide } => diff_insert_slide(*index, slide.clone()).await,
+            SemioPresentationMutation::RemoveSlide { index } => diff_remove_slide(*index).await,
+            SemioPresentationMutation::SetSlideLayout { index, layout_id } => diff_set_slide_layout(base, *index, layout_id.clone()).await,
+            SemioPresentationMutation::SetSlideNotes { index, notes } => diff_set_slide_notes(base, *index, notes.clone()).await,
+            SemioPresentationMutation::InsertShape { slide_index, shape_index, shape } => diff_insert_shape(*slide_index, *shape_index, shape.clone()).await,
             SemioPresentationMutation::RemoveShape { slide_index, shape_index } => diff_remove_shape(*slide_index, *shape_index),
             SemioPresentationMutation::SetShapeFrame { slide_index, shape_index, frame } => diff_set_shape_frame(base, *slide_index, *shape_index, *frame),
             SemioPresentationMutation::SetTextBoxBlocks { slide_index, shape_index, blocks } => diff_set_textbox_blocks(base, *slide_index, *shape_index, blocks.clone()),
@@ -163,31 +163,31 @@ impl Mutation<SemioPresentationSnapshot> for SemioPresentationMutation {
             SemioPresentationMutation::InsertShape { slide_index, shape_index, .. } => {
                 vec![SemioPresentationMutation::RemoveShape { slide_index: *slide_index, shape_index: *shape_index }]
             }
-            SemioPresentationMutation::RemoveShape { slide_index, shape_index } => match shape_at(base, *slide_index, *shape_index) {
+            SemioPresentationMutation::RemoveShape { slide_index, shape_index } => match shape_at(base, *slide_index, *shape_index).await {
                 Some(shape) => vec![SemioPresentationMutation::InsertShape { slide_index: *slide_index, shape_index: *shape_index, shape: shape.clone() }],
                 None => vec![SemioPresentationMutation::NoMutation],
             },
-            SemioPresentationMutation::SetShapeFrame { slide_index, shape_index, .. } => match shape_at(base, *slide_index, *shape_index) {
+            SemioPresentationMutation::SetShapeFrame { slide_index, shape_index, .. } => match shape_at(base, *slide_index, *shape_index).await {
                 Some(shape) => vec![SemioPresentationMutation::SetShapeFrame { slide_index: *slide_index, shape_index: *shape_index, frame: *frame_of(shape) }],
                 None => vec![SemioPresentationMutation::NoMutation],
             },
-            SemioPresentationMutation::SetTextBoxBlocks { slide_index, shape_index, .. } => match shape_at(base, *slide_index, *shape_index) {
+            SemioPresentationMutation::SetTextBoxBlocks { slide_index, shape_index, .. } => match shape_at(base, *slide_index, *shape_index).await {
                 Some(SlideShape::TextBox { blocks, .. }) => {
                     vec![SemioPresentationMutation::SetTextBoxBlocks { slide_index: *slide_index, shape_index: *shape_index, blocks: blocks.clone() }]
                 }
                 _ => vec![SemioPresentationMutation::NoMutation],
             },
             SemioPresentationMutation::InsertMaster { master } => vec![SemioPresentationMutation::RemoveMaster { id: master.id.clone() }],
-            SemioPresentationMutation::RemoveMaster { id } => match master_at(base, id) {
+            SemioPresentationMutation::RemoveMaster { id } => match master_at(base, id).await {
                 Some(m) => vec![SemioPresentationMutation::InsertMaster { master: m.clone() }],
                 None => vec![SemioPresentationMutation::NoMutation],
             },
             SemioPresentationMutation::InsertLayout { layout } => vec![SemioPresentationMutation::RemoveLayout { id: layout.id.clone() }],
-            SemioPresentationMutation::RemoveLayout { id } => match layout_at(base, id) {
+            SemioPresentationMutation::RemoveLayout { id } => match layout_at(base, id).await {
                 Some(l) => vec![SemioPresentationMutation::InsertLayout { layout: l.clone() }],
                 None => vec![SemioPresentationMutation::NoMutation],
             },
-            SemioPresentationMutation::SetLayoutMaster { id, .. } => match layout_at(base, id) {
+            SemioPresentationMutation::SetLayoutMaster { id, .. } => match layout_at(base, id).await {
                 Some(l) => vec![SemioPresentationMutation::SetLayoutMaster { id: id.clone(), master_id: l.master_id.clone() }],
                 None => vec![SemioPresentationMutation::NoMutation],
             },
@@ -230,30 +230,30 @@ async fn parse_presentation_mutation(line: &str) -> Result<SemioPresentationMuta
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("presentation mutation: missing arg '{k}' for '{keyword}'"));
     let usize_arg = |k: &str| -> Result<usize, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
     match keyword {
-        "set-snapshot" => Ok(SemioPresentationMutation::SetSnapshot { snapshot: crate::artifacts::semio::standards::v1::subsets::presentation::schema::diff::dec_presentation_snapshot(arg("snapshot")?)? }),
-        "insert-slide" => Ok(SemioPresentationMutation::InsertSlide { index: usize_arg("index")?, slide: dec_slide(arg("slide")?)? }),
+        "set-snapshot" => Ok(SemioPresentationMutation::SetSnapshot { snapshot: crate::artifacts::semio::standards::v1::subsets::presentation::schema::diff::dec_presentation_snapshot(arg("snapshot")?).await? }),
+        "insert-slide" => Ok(SemioPresentationMutation::InsertSlide { index: usize_arg("index")?, slide: dec_slide(arg("slide")?).await? }),
         "remove-slide" => Ok(SemioPresentationMutation::RemoveSlide { index: usize_arg("index")? }),
-        "set-slide-layout" => Ok(SemioPresentationMutation::SetSlideLayout { index: usize_arg("index")?, layout_id: decode_option(arg("layout-id")?, dec_str)? }),
-        "set-slide-notes" => Ok(SemioPresentationMutation::SetSlideNotes { index: usize_arg("index")?, notes: dec_list(arg("notes")?, dec_block)? }),
-        "insert-shape" => Ok(SemioPresentationMutation::InsertShape { slide_index: usize_arg("slide-index")?, shape_index: usize_arg("shape-index")?, shape: dec_shape(arg("shape")?)? }),
+        "set-slide-layout" => Ok(SemioPresentationMutation::SetSlideLayout { index: usize_arg("index")?, layout_id: decode_option(arg("layout-id")?, dec_str).await? }),
+        "set-slide-notes" => Ok(SemioPresentationMutation::SetSlideNotes { index: usize_arg("index")?, notes: dec_list(arg("notes")?, dec_block).await? }),
+        "insert-shape" => Ok(SemioPresentationMutation::InsertShape { slide_index: usize_arg("slide-index")?, shape_index: usize_arg("shape-index")?, shape: dec_shape(arg("shape")?).await? }),
         "remove-shape" => Ok(SemioPresentationMutation::RemoveShape { slide_index: usize_arg("slide-index")?, shape_index: usize_arg("shape-index")? }),
-        "set-shape-frame" => Ok(SemioPresentationMutation::SetShapeFrame { slide_index: usize_arg("slide-index")?, shape_index: usize_arg("shape-index")?, frame: dec_frame(arg("frame")?)? }),
-        "set-textbox-blocks" => Ok(SemioPresentationMutation::SetTextBoxBlocks { slide_index: usize_arg("slide-index")?, shape_index: usize_arg("shape-index")?, blocks: dec_list(arg("blocks")?, dec_block)? }),
-        "insert-master" => Ok(SemioPresentationMutation::InsertMaster { master: dec_master(arg("master")?)? }),
-        "remove-master" => Ok(SemioPresentationMutation::RemoveMaster { id: dec_str(arg("id")?)? }),
-        "insert-layout" => Ok(SemioPresentationMutation::InsertLayout { layout: dec_layout(arg("layout")?)? }),
-        "remove-layout" => Ok(SemioPresentationMutation::RemoveLayout { id: dec_str(arg("id")?)? }),
-        "set-layout-master" => Ok(SemioPresentationMutation::SetLayoutMaster { id: dec_str(arg("id")?)?, master_id: dec_str(arg("master-id")?)? }),
+        "set-shape-frame" => Ok(SemioPresentationMutation::SetShapeFrame { slide_index: usize_arg("slide-index")?, shape_index: usize_arg("shape-index")?, frame: dec_frame(arg("frame")?).await? }),
+        "set-textbox-blocks" => Ok(SemioPresentationMutation::SetTextBoxBlocks { slide_index: usize_arg("slide-index")?, shape_index: usize_arg("shape-index")?, blocks: dec_list(arg("blocks")?, dec_block).await? }),
+        "insert-master" => Ok(SemioPresentationMutation::InsertMaster { master: dec_master(arg("master")?).await? }),
+        "remove-master" => Ok(SemioPresentationMutation::RemoveMaster { id: dec_str(arg("id")?).await? }),
+        "insert-layout" => Ok(SemioPresentationMutation::InsertLayout { layout: dec_layout(arg("layout")?).await? }),
+        "remove-layout" => Ok(SemioPresentationMutation::RemoveLayout { id: dec_str(arg("id")?).await? }),
+        "set-layout-master" => Ok(SemioPresentationMutation::SetLayoutMaster { id: dec_str(arg("id")?).await?, master_id: dec_str(arg("master-id")?).await? }),
         other => Err(format!("presentation mutation: unknown keyword {other:?}")),
     }
 }
 
 impl OpText for SemioPresentationMutation {
     async fn print_op(&self) -> String {
-        print_presentation_mutation(self)
+        print_presentation_mutation(self).await
     }
     async fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_presentation_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_presentation_mutation(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
 
@@ -300,7 +300,7 @@ async fn variant_ordinal(m: &SemioPresentationMutation) -> u8 {
 /// `no-mutation`) — the binary frame's `tag` byte already carries the keyword, so the text keyword
 /// itself is redundant in the binary payload.
 async fn print_presentation_mutation_args(m: &SemioPresentationMutation) -> String {
-    match print_presentation_mutation(m).split_once(' ') {
+    match print_presentation_mutation(m).await.split_once(' ') {
         Some((_, rest)) => rest.to_string(),
         None => String::new(),
     }
@@ -318,8 +318,8 @@ async fn print_presentation_mutation_args(m: &SemioPresentationMutation) -> Stri
 impl OpBinary for SemioPresentationMutation {
     async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
-        let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self)];
-        out.extend_from_slice(print_presentation_mutation_args(self).as_bytes());
+        let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self).await];
+        out.extend_from_slice(print_presentation_mutation_args(self).await.as_bytes());
         Ok(out)
     }
     async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
@@ -334,7 +334,7 @@ impl OpBinary for SemioPresentationMutation {
         let keyword = OP_KEYWORDS.get(tag as usize).ok_or_else(|| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("tag {tag} out of range for {} declared variants", OP_KEYWORDS.len()) })?;
         let args = std::str::from_utf8(&bytes[2..]).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 2, detail: e.to_string() })?;
         let line = if args.is_empty() { keyword.to_string() } else { format!("{keyword} {args}") };
-        Self::parse_op(&line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 2, detail: e.to_string() })
+        Self::parse_op(&line).await.map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 2, detail: e.to_string() })
     }
 }
 //#endregion OpCodecs

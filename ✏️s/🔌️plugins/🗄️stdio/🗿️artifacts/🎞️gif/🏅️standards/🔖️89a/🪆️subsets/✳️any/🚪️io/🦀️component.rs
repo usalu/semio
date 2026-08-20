@@ -35,7 +35,7 @@ pub mod derived_composition {
             if native.is_empty() {
                 return Err(ComposeError { message: "GifComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() });
             }
-            let analysis = GifAnalyzer::analyze(&native);
+            let analysis = GifAnalyzer::analyze(&native).await;
             let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError { message: "GifComposerComposition: analysis produced no snapshot".into(), diagnostics: analysis.diagnostics.clone() })?;
             Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics })
         }
@@ -101,7 +101,7 @@ pub async fn encode_gif(snap: &GifSnapshot) -> Result<Vec<u8>, String> {
     let gct_bytes = snap.gct.as_ref().map(color_table_to_bytes);
     match &gct_bytes {
         Some(colors) => {
-            let size_field = validated_color_table_size_field(colors.len(), "gif89a: global")?;
+            let size_field = validated_color_table_size_field(colors.len(), "gif89a: global").await?;
             let sorted = snap.gct.as_ref().map(|t| t.sorted).unwrap_or(false);
             out.push(0x80 | (sorted as u8) << 3 | size_field);
         }
@@ -181,7 +181,7 @@ pub async fn encode_gif(snap: &GifSnapshot) -> Result<Vec<u8>, String> {
         let mut ipacked = (frame.interlace as u8) << 6;
         let min_code_size;
         if let Some(colors) = &local_bytes {
-            let size_field = validated_color_table_size_field(colors.len(), &format!("gif89a: frame {index} local"))?;
+            let size_field = validated_color_table_size_field(colors.len(), &format!("gif89a: frame {index} local")).await?;
             let sorted = frame.lct.as_ref().map(|t| t.sorted).unwrap_or(false);
             ipacked |= 0x80 | (sorted as u8) << 5 | size_field;
             min_code_size = codec::min_code_size_for(colors.len());
@@ -192,9 +192,9 @@ pub async fn encode_gif(snap: &GifSnapshot) -> Result<Vec<u8>, String> {
         if let Some(colors) = &local_bytes {
             codec::write_color_table(&mut out, colors);
         }
-        let on_disk_indices = if frame.interlace { codec::interlace_rows(&frame.indices, frame.width as usize, frame.height as usize) } else { frame.indices.clone() };
-        out.push(min_code_size);
-        out.extend_from_slice(&codec::pack_sub_blocks(&codec::lzw_encode(&on_disk_indices, min_code_size)));
+        let on_disk_indices = if frame.interlace { codec::interlace_rows(&frame.indices, frame.width as usize, frame.height as usize).await } else { frame.indices.clone() };
+        out.push(min_code_size.await);
+        out.extend_from_slice(&codec::pack_sub_blocks(&codec::lzw_encode(&on_disk_indices, min_code_size.await)));
     }
     out.push(0x3B);
     Ok(out)
@@ -207,7 +207,7 @@ async fn validated_color_table_size_field(len: usize, what: &str) -> Result<u8, 
     if len > 256 {
         return Err(format!("{what} color table length {len} exceeds the on-disk maximum of 256"));
     }
-    Ok(codec::color_table_size_field(len))
+    Ok(codec::color_table_size_field(len).await)
 }
 
 async fn write_gce(out: &mut Vec<u8>, frame: &GifFrame) {
@@ -253,7 +253,7 @@ pub async fn decode_gif(data: &[u8]) -> Result<GifSnapshot, String> {
     let mut pos = 13usize;
     let gct = if (screen_packed & 0x80) != 0 {
         let sorted = (screen_packed & 0x08) != 0;
-        Some(color_table_from_bytes(codec::read_color_table(data, &mut pos, screen_packed & 0x07)?, sorted))
+        Some(color_table_from_bytes(codec::read_color_table(data, &mut pos, screen_packed & 0x07).await?, sorted))
     } else {
         None
     };
@@ -270,7 +270,7 @@ pub async fn decode_gif(data: &[u8]) -> Result<GifSnapshot, String> {
             0x21 => {
                 let label = *data.get(pos + 1).ok_or("truncated gif89a: extension introducer")?;
                 pos += 2;
-                let body = codec::unpack_sub_blocks(data, &mut pos)?;
+                let body = codec::unpack_sub_blocks(data, &mut pos).await?;
                 match label {
                     0xF9 => {
                         if body.len() < 4 {
@@ -307,7 +307,7 @@ pub async fn decode_gif(data: &[u8]) -> Result<GifSnapshot, String> {
                             lct: None,
                             indices: Vec::new(),
                             delay_cs,
-                            disposal: GifDisposal::from_bits(disposal_bits),
+                            disposal: GifDisposal::from_bits(disposal_bits).await,
                             transparent_index: if transparent_flag { Some(transparent_index) } else { None },
                             user_input,
                             plain_text: Some(plain_text),
@@ -343,7 +343,7 @@ pub async fn decode_gif(data: &[u8]) -> Result<GifSnapshot, String> {
                 pos += 10;
                 let local = if (ipacked & 0x80) != 0 {
                     let sorted = (ipacked & 0x20) != 0;
-                    Some(color_table_from_bytes(codec::read_color_table(data, &mut pos, ipacked & 0x07)?, sorted))
+                    Some(color_table_from_bytes(codec::read_color_table(data, &mut pos, ipacked & 0x07).await?, sorted))
                 } else {
                     None
                 };
@@ -352,15 +352,15 @@ pub async fn decode_gif(data: &[u8]) -> Result<GifSnapshot, String> {
                 }
                 let min_code_size = *data.get(pos).ok_or("truncated gif89a: missing lzw minimum code size")?;
                 pos += 1;
-                let sub = codec::unpack_sub_blocks(data, &mut pos)?;
-                let mut indices = codec::lzw_decode(&sub, min_code_size)?;
+                let sub = codec::unpack_sub_blocks(data, &mut pos).await?;
+                let mut indices = codec::lzw_decode(&sub, min_code_size).await?;
                 let expected = (iw as usize) * (ih as usize);
                 if indices.len() < expected {
                     return Err("gif89a: lzw stream decoded fewer pixels than the frame needs".into());
                 }
                 indices.truncate(expected);
                 if interlaced {
-                    indices = codec::deinterlace_rows(&indices, iw as usize, ih as usize);
+                    indices = codec::deinterlace_rows(&indices, iw as usize, ih as usize).await;
                 }
                 let (disposal_bits, user_input, transparent_flag, delay_cs, transparent_index) = pending_gce.take().unwrap_or((0, false, false, 0, 0));
                 frames.push(GifFrame {
@@ -372,7 +372,7 @@ pub async fn decode_gif(data: &[u8]) -> Result<GifSnapshot, String> {
                     lct: local,
                     indices,
                     delay_cs,
-                    disposal: GifDisposal::from_bits(disposal_bits),
+                    disposal: GifDisposal::from_bits(disposal_bits).await,
                     transparent_index: if transparent_flag { Some(transparent_index) } else { None },
                     user_input,
                     plain_text: None,
@@ -401,18 +401,18 @@ pub async fn decode_gif(data: &[u8]) -> Result<GifSnapshot, String> {
 /// function itself ever runs — composer entries are NOT registered here to avoid a redundant
 /// second registration attempt).
 pub async fn register() {
-    ::schema::register_artifact_schema_descriptor(crate::artifacts::gif::standards::v89a::subsets::any::schema::gif_artifact_schema_descriptor());
+    ::schema::register_artifact_schema_descriptor(crate::artifacts::gif::standards::v89a::subsets::any::schema::gif_artifact_schema_descriptor().await);
     register_artifact_inferences();
     register_pilot_languages();
     register_schema_specs();
-    let _ = store::register_document_codec(store::ArtifactCodec::of::<GifSnapshot, GifMutation>(STDIO_GIF89A_DOCUMENT_SCHEMA));
+    let _ = store::register_document_codec(store::ArtifactCodec::of::<GifSnapshot, GifMutation>(STDIO_GIF89A_DOCUMENT_SCHEMA).await);
 }
 
 /// 💡️ Registers `s.stdio.gif.89a.inference`'s facet leaves into the OS-wide inference catalog —
 /// sibling to `register_artifact_schema_descriptor` above (separate registry, ticket
 /// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
 pub async fn register_artifact_inferences() {
-    ::schema::register_artifact_inference_descriptor(crate::artifacts::gif::standards::v89a::subsets::any::schema::inferences::gif89a_artifact_inference_descriptor());
+    ::schema::register_artifact_inference_descriptor(crate::artifacts::gif::standards::v89a::subsets::any::schema::inferences::gif89a_artifact_inference_descriptor().await);
 }
 
 /// 📌️ P2-FG2: 5-role `LanguageSpec` registration (Document/Ops/Diff/Pack/Spr) — same shape as
@@ -795,7 +795,8 @@ pub mod io_registry {
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 
-    pub async fn entries() -> &'static [ComposerEntry] {
+    // 🚫️async: E1 pure table accessor consumed by OnceLock::get_or_init's sync closure — see R9
+    pub fn entries() -> &'static [ComposerEntry] {
         ENTRIES.get_or_init(|| vec![composer_entry_of::<GifRawAnyComposer>()]).as_slice()
     }
 }

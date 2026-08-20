@@ -3,5 +3,5 @@ use crate::artifacts::ply::{PlyDiff, PlySnapshot};
 
 /// ▶️ Applies a set-snapshot mutation.
 pub async fn apply(projection: &mut PlySnapshot, mutation: &PlyMutation) -> protocol::MutationOutcome<PlyDiff> {
-    apply_ply_mutation(projection, mutation)
+    apply_ply_mutation(projection, mutation).await
 }

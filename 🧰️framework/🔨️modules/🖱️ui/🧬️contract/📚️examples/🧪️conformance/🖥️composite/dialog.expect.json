@@ -1,0 +1,110 @@
+{
+  "case": "dialog",
+  "kind": "composite",
+  "description": "A dismissible Overlay-laid-out dialog with title/body Text and a Confirm/Cancel toolbar.",
+  "outcome": "accept",
+  "limits": null,
+  "tree": {
+    "root": 0,
+    "nodeCount": 6,
+    "shape": [
+      {
+        "id": 0,
+        "key": "#0",
+        "type": "container",
+        "children": [
+          1,
+          2,
+          3
+        ]
+      },
+      {
+        "id": 1,
+        "key": "#0",
+        "type": "text",
+        "children": []
+      },
+      {
+        "id": 2,
+        "key": "#1",
+        "type": "text",
+        "children": []
+      },
+      {
+        "id": 3,
+        "key": "#2",
+        "type": "container",
+        "children": [
+          4,
+          5
+        ]
+      },
+      {
+        "id": 4,
+        "key": "#0",
+        "type": "button",
+        "children": []
+      },
+      {
+        "id": 5,
+        "key": "#1",
+        "type": "button",
+        "children": []
+      }
+    ]
+  },
+  "accessibility": [
+    {
+      "id": 0,
+      "label": "Discard changes?",
+      "description": "Unsaved changes will be lost.",
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    },
+    {
+      "id": 1,
+      "label": null,
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    },
+    {
+      "id": 2,
+      "label": null,
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    },
+    {
+      "id": 3,
+      "label": null,
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    },
+    {
+      "id": 4,
+      "label": "Discard",
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    },
+    {
+      "id": 5,
+      "label": "Cancel",
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    }
+  ],
+  "actionIds": [
+    "app.discard@1",
+    "app.cancel@1"
+  ]
+}

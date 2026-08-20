@@ -24,7 +24,7 @@ pub struct TsvInference {
 
 impl protocol::Inference<TsvSnapshot> for TsvInference {
     async fn infer(snapshot: &TsvSnapshot) -> Self {
-        Self { outline: TsvOutline::compute(snapshot) }
+        Self { outline: TsvOutline::compute(snapshot).await }
     }
 }
 

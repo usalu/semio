@@ -85,7 +85,7 @@ async fn resolve_image_bytes(document: &GltfDocument, buffers: &[Vec<u8>], image
         return Vec::new();
     }
     match &image.uri {
-        Some(uri) if uri.starts_with("data:") => decode_data_uri(uri).unwrap_or_default(),
+        Some(uri) if uri.starts_with("data:") => decode_data_uri(uri).await.unwrap_or_default(),
         _ => Vec::new(),
     }
 }
@@ -93,31 +93,31 @@ async fn resolve_image_bytes(document: &GltfDocument, buffers: &[Vec<u8>], image
 
 //#region 🔖️PrimitiveMapping
 async fn decode_primitive(document: &GltfDocument, buffers: &[Vec<u8>], prim: &GltfPrimitive, id: String, material_id: Option<String>) -> Result<SemioPrimitive, String> {
-    let topology = gltf_mode_to_topology(prim.mode)?;
+    let topology = gltf_mode_to_topology(prim.mode).await?;
 
-    let pos_idx = find_attr(&prim.attributes, "POSITION").ok_or("primitive missing mandatory POSITION attribute")?;
-    let pos_acc = decode_accessor(document, buffers, pos_idx)?;
+    let pos_idx = find_attr(&prim.attributes, "POSITION").await.ok_or("primitive missing mandatory POSITION attribute")?;
+    let pos_acc = decode_accessor(document, buffers, pos_idx).await?;
     let positions: Vec<SemioPoint3> = pos_acc.components.chunks(3).map(|c| SemioPoint3 { x: c[0], y: c[1], z: c[2] }).collect();
 
-    let normals: Vec<SemioPoint3> = match find_attr(&prim.attributes, "NORMAL") {
-        Some(idx) => decode_accessor(document, buffers, idx)?.components.chunks(3).map(|c| SemioPoint3 { x: c[0], y: c[1], z: c[2] }).collect(),
+    let normals: Vec<SemioPoint3> = match find_attr(&prim.attributes, "NORMAL").await {
+        Some(idx) => decode_accessor(document, buffers, idx).await?.components.chunks(3).map(|c| SemioPoint3 { x: c[0], y: c[1], z: c[2] }).collect(),
         None => Vec::new(),
     };
 
-    let uvs: Vec<SemioUv> = match find_attr(&prim.attributes, "TEXCOORD_0") {
-        Some(idx) => decode_accessor(document, buffers, idx)?.components.chunks(2).map(|c| SemioUv { u: c[0], v: c[1] }).collect(),
+    let uvs: Vec<SemioUv> = match find_attr(&prim.attributes, "TEXCOORD_0").await {
+        Some(idx) => decode_accessor(document, buffers, idx).await?.components.chunks(2).map(|c| SemioUv { u: c[0], v: c[1] }).collect(),
         None => Vec::new(),
     };
 
-    let colors: Vec<SemioRgba> = match find_attr(&prim.attributes, "COLOR_0") {
+    let colors: Vec<SemioRgba> = match find_attr(&prim.attributes, "COLOR_0").await {
         Some(idx) => {
-            let acc = decode_accessor(document, buffers, idx)?;
+            let acc = decode_accessor(document, buffers, idx).await?;
             let nc = acc.accessor_type.components();
             if nc != 3 && nc != 4 {
                 return Err(format!("COLOR_0 accessor must be VEC3 or VEC4, got {nc}-component"));
             }
             acc.components
-                .chunks(nc)
+                .chunks(nc.await)
                 .map(|c| SemioRgba {
                     r: normalize_component(c[0], acc.component_type, acc.normalized) as f32,
                     g: normalize_component(c[1], acc.component_type, acc.normalized) as f32,
@@ -130,7 +130,7 @@ async fn decode_primitive(document: &GltfDocument, buffers: &[Vec<u8>], prim: &G
     };
 
     let indices: Vec<u32> = match prim.indices {
-        Some(idx) => decode_accessor(document, buffers, idx)?.components.iter().map(|&v| v.round() as u32).collect(),
+        Some(idx) => decode_accessor(document, buffers, idx).await?.components.iter().map(|&v| v.round() as u32).collect(),
         None => Vec::new(),
     };
 
@@ -172,7 +172,7 @@ impl ArtifactDeserializer for SemioMeshFromGltf {
             let mut primitives = Vec::with_capacity(gmesh.primitives.len());
             for (pi, prim) in gmesh.primitives.iter().enumerate() {
                 let material_id = prim.material.map(|idx| format!("mat-{idx}"));
-                let sp = decode_primitive(document, &from.buffers, prim, format!("{mesh_id}-prim-{pi}"), material_id).map_err(|e| store::PackError::Schema(format!("SemioMeshFromGltf: mesh {mi} primitive {pi}: {e}")))?;
+                let sp = decode_primitive(document, &from.buffers, prim, format!("{mesh_id}-prim-{pi}"), material_id).await.map_err(|e| store::PackError::Schema(format!("SemioMeshFromGltf: mesh {mi} primitive {pi}: {e}")))?;
                 primitives.push(sp);
             }
             meshes.push(SemioMesh { id: mesh_id, primitives });

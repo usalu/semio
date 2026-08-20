@@ -59,19 +59,19 @@ use protocol::MutationEnvelope;
 /// encode/decode pair. `db_projection` never interprets the bytes it stores — only the
 /// `ProjectionClass` that produced them does (see the module doc's "no operation semantics" note).
 pub trait ProjectionState: Clone + Send + Sync + 'static {
-    fn encode(&self) -> Vec<u8>;
-    fn decode(bytes: &[u8]) -> Result<Self, DbError>
+    async fn encode(&self) -> Vec<u8>;
+    async fn decode(bytes: &[u8]) -> Result<Self, DbError>
     where
         Self: Sized;
 }
 
 /// @emoji 🔢️ A ready-made `ProjectionState` for the common "just count/accumulate a `u64`" shape.
 impl ProjectionState for u64 {
-    fn encode(&self) -> Vec<u8> {
+    async fn encode(&self) -> Vec<u8> {
         self.to_le_bytes().to_vec()
     }
 
-    fn decode(bytes: &[u8]) -> Result<Self, DbError> {
+    async fn decode(bytes: &[u8]) -> Result<Self, DbError> {
         let array: [u8; 8] = bytes.try_into().map_err(|_| DbError::Corrupt("expected an 8-byte little-endian u64 projection state".to_string()))?;
         Ok(u64::from_le_bytes(array))
     }
@@ -79,11 +79,11 @@ impl ProjectionState for u64 {
 
 /// @emoji 🔤️ A ready-made `ProjectionState` for a UTF-8 text projection.
 impl ProjectionState for String {
-    fn encode(&self) -> Vec<u8> {
+    async fn encode(&self) -> Vec<u8> {
         self.as_bytes().to_vec()
     }
 
-    fn decode(bytes: &[u8]) -> Result<Self, DbError> {
+    async fn decode(bytes: &[u8]) -> Result<Self, DbError> {
         String::from_utf8(bytes.to_vec()).map_err(|_| DbError::Corrupt("projection state is not valid utf-8".to_string()))
     }
 }
@@ -91,11 +91,11 @@ impl ProjectionState for String {
 /// @emoji 📦️ A ready-made `ProjectionState` for callers that already have their own opaque byte
 /// encoding and just want the checkpoint machinery, not another codec layer.
 impl ProjectionState for Vec<u8> {
-    fn encode(&self) -> Vec<u8> {
+    async fn encode(&self) -> Vec<u8> {
         self.clone()
     }
 
-    fn decode(bytes: &[u8]) -> Result<Self, DbError> {
+    async fn decode(bytes: &[u8]) -> Result<Self, DbError> {
         Ok(bytes.to_vec())
     }
 }
@@ -106,7 +106,7 @@ const VERSION_PREFIX_LEN: usize = 4;
 
 /// @emoji ✍️ Prefixes `state_bytes` with `schema_version` — the exact shape persisted via
 /// `ProjectionIndex::record`.
-fn encode_versioned(schema_version: u32, state_bytes: &[u8]) -> Vec<u8> {
+async fn encode_versioned(schema_version: u32, state_bytes: &[u8]) -> Vec<u8> {
     let mut out = Vec::with_capacity(VERSION_PREFIX_LEN + state_bytes.len());
     out.extend_from_slice(&schema_version.to_le_bytes());
     out.extend_from_slice(state_bytes);
@@ -115,7 +115,7 @@ fn encode_versioned(schema_version: u32, state_bytes: &[u8]) -> Vec<u8> {
 
 /// @emoji 📖️ Inverse of `encode_versioned`: splits the version prefix from the state bytes,
 /// erroring `Corrupt` (never panicking) if `bytes` is shorter than the prefix itself.
-fn decode_versioned(bytes: &[u8]) -> Result<(u32, &[u8]), DbError> {
+async fn decode_versioned(bytes: &[u8]) -> Result<(u32, &[u8]), DbError> {
     if bytes.len() < VERSION_PREFIX_LEN {
         return Err(DbError::Corrupt("projection checkpoint is shorter than its version prefix".to_string()));
     }
@@ -139,14 +139,17 @@ pub struct DepView {
 impl DepView {
     /// @emoji 🔍️ The raw encoded bytes a dependency computed this step, or `None` if `projection_id`
     /// isn't a registered dependency (or hasn't run yet — shouldn't happen given topological order).
-    pub fn get_raw(&self, projection_id: &str) -> Option<&Vec<u8>> {
+    pub async fn get_raw(&self, projection_id: &str) -> Option<&Vec<u8>> {
         self.states.get(&projection_id.to_string())
     }
 
     /// @emoji 🔍️ `get_raw` decoded through `S::decode` — the typed convenience most `apply` impls
     /// reach for when they know a dependency's concrete `ProjectionState` shape by convention.
-    pub fn get<S: ProjectionState>(&self, projection_id: &str) -> Result<Option<S>, DbError> {
-        self.get_raw(projection_id).map(|bytes| S::decode(bytes)).transpose()
+    pub async fn get<S: ProjectionState>(&self, projection_id: &str) -> Result<Option<S>, DbError> {
+        match self.get_raw(projection_id).await {
+            Some(bytes) => S::decode(bytes).await.map(Some),
+            None => Ok(None),
+        }
     }
 }
 
@@ -159,15 +162,15 @@ pub trait ProjectionClass: Send + Sync {
     type State: ProjectionState;
 
     /// @emoji 🪪️ A stable, unique-within-one-`ProjectionEngine` identifier.
-    fn id(&self) -> &'static str;
+    async fn id(&self) -> &'static str;
 
     /// @emoji 🔢️ This projection's current schema version (see the module doc's versioning note).
-    fn schema_version(&self) -> u32;
+    async fn schema_version(&self) -> u32;
 
     /// @emoji 🕸️ The ids of other registered projections this one reads via `DepView` — must all
     /// resolve to projections registered in the same `ProjectionEngine`, and must not form a cycle
     /// (`ProjectionGraph::build` validates both). Defaults to none.
-    fn dependencies(&self) -> &'static [&'static str] {
+    async fn dependencies(&self) -> &'static [&'static str] {
         &[]
     }
 
@@ -178,25 +181,25 @@ pub trait ProjectionClass: Send + Sync {
     /// `dependencies()`) leaves this empty; one that wants to see every step overrides
     /// `affected_by` directly rather than relying on any "empty means everything" implicit
     /// default (there is deliberately none, to avoid that footgun).
-    fn reads(&self) -> &'static [&'static str] {
+    async fn reads(&self) -> &'static [&'static str] {
         &[]
     }
 
     /// @emoji 🎯️ True iff `touched` should trigger this projection's `apply` on its own,
     /// independent of any dependency cascade (`ProjectionEngine`'s `should_run` layers that on
     /// top). Default: any declared `reads()` path intersects any touched region.
-    fn affected_by(&self, touched: &TouchedSet) -> bool {
-        let reads = self.reads();
+    async fn affected_by(&self, touched: &TouchedSet) -> bool {
+        let reads = self.reads().await;
         touched.regions.iter().any(|region| reads.iter().any(|&path| region.path_intersects(&TouchedRegion::read(path))))
     }
 
     /// @emoji 🌱️ The state of a brand-new instance of this projection, before any envelope has
     /// been applied.
-    fn initial(&self) -> Self::State;
+    async fn initial(&self) -> Self::State;
 
     /// @emoji ⏩️ Computes the next state from `state`, `envelope`, and this step's already-computed
     /// sibling states (`deps`).
-    fn apply(&self, state: &Self::State, envelope: &MutationEnvelope, deps: &DepView) -> Result<Self::State, DbError>;
+    async fn apply(&self, state: &Self::State, envelope: &MutationEnvelope, deps: &DepView) -> Result<Self::State, DbError>;
 }
 
 /// @emoji 🎭️ The object-safe view of a `ProjectionClass` — every method operates on raw encoded
@@ -211,13 +214,13 @@ pub trait ProjectionClass: Send + Sync {
 /// directly, no enum needed. Implemented automatically for any `ProjectionClass` via `erase`; not
 /// meant to be implemented by hand except for `NoProjections` below.
 pub trait ErasedProjection: Send + Sync {
-    fn id(&self) -> &'static str;
-    fn schema_version(&self) -> u32;
-    fn dependencies(&self) -> &'static [&'static str];
-    fn reads(&self) -> &'static [&'static str];
-    fn affected_by(&self, touched: &TouchedSet) -> bool;
-    fn initial_bytes(&self) -> Vec<u8>;
-    fn apply_bytes(&self, state_bytes: &[u8], envelope: &MutationEnvelope, deps: &DepView) -> Result<Vec<u8>, DbError>;
+    async fn id(&self) -> &'static str;
+    async fn schema_version(&self) -> u32;
+    async fn dependencies(&self) -> &'static [&'static str];
+    async fn reads(&self) -> &'static [&'static str];
+    async fn affected_by(&self, touched: &TouchedSet) -> bool;
+    async fn initial_bytes(&self) -> Vec<u8>;
+    async fn apply_bytes(&self, state_bytes: &[u8], envelope: &MutationEnvelope, deps: &DepView) -> Result<Vec<u8>, DbError>;
 }
 
 /// @emoji 🚫️ Zero-variant `ErasedProjection` — `db_artifact::ArtifactEngineConfig`'s `projections`
@@ -231,31 +234,31 @@ pub trait ErasedProjection: Send + Sync {
 pub enum NoProjections {}
 
 impl ErasedProjection for NoProjections {
-    fn id(&self) -> &'static str {
+    async fn id(&self) -> &'static str {
         match *self {}
     }
 
-    fn schema_version(&self) -> u32 {
+    async fn schema_version(&self) -> u32 {
         match *self {}
     }
 
-    fn dependencies(&self) -> &'static [&'static str] {
+    async fn dependencies(&self) -> &'static [&'static str] {
         match *self {}
     }
 
-    fn reads(&self) -> &'static [&'static str] {
+    async fn reads(&self) -> &'static [&'static str] {
         match *self {}
     }
 
-    fn affected_by(&self, _touched: &TouchedSet) -> bool {
+    async fn affected_by(&self, _touched: &TouchedSet) -> bool {
         match *self {}
     }
 
-    fn initial_bytes(&self) -> Vec<u8> {
+    async fn initial_bytes(&self) -> Vec<u8> {
         match *self {}
     }
 
-    fn apply_bytes(&self, _state_bytes: &[u8], _envelope: &MutationEnvelope, _deps: &DepView) -> Result<Vec<u8>, DbError> {
+    async fn apply_bytes(&self, _state_bytes: &[u8], _envelope: &MutationEnvelope, _deps: &DepView) -> Result<Vec<u8>, DbError> {
         match *self {}
     }
 }
@@ -263,33 +266,33 @@ impl ErasedProjection for NoProjections {
 pub struct ErasedWrapper<P: ProjectionClass>(P);
 
 impl<P: ProjectionClass> ErasedProjection for ErasedWrapper<P> {
-    fn id(&self) -> &'static str {
-        self.0.id()
+    async fn id(&self) -> &'static str {
+        self.0.id().await
     }
 
-    fn schema_version(&self) -> u32 {
-        self.0.schema_version()
+    async fn schema_version(&self) -> u32 {
+        self.0.schema_version().await
     }
 
-    fn dependencies(&self) -> &'static [&'static str] {
-        self.0.dependencies()
+    async fn dependencies(&self) -> &'static [&'static str] {
+        self.0.dependencies().await
     }
 
-    fn reads(&self) -> &'static [&'static str] {
-        self.0.reads()
+    async fn reads(&self) -> &'static [&'static str] {
+        self.0.reads().await
     }
 
-    fn affected_by(&self, touched: &TouchedSet) -> bool {
-        self.0.affected_by(touched)
+    async fn affected_by(&self, touched: &TouchedSet) -> bool {
+        self.0.affected_by(touched).await
     }
 
-    fn initial_bytes(&self) -> Vec<u8> {
-        self.0.initial().encode()
+    async fn initial_bytes(&self) -> Vec<u8> {
+        self.0.initial().await.encode().await
     }
 
-    fn apply_bytes(&self, state_bytes: &[u8], envelope: &MutationEnvelope, deps: &DepView) -> Result<Vec<u8>, DbError> {
-        let state = P::State::decode(state_bytes)?;
-        Ok(self.0.apply(&state, envelope, deps)?.encode())
+    async fn apply_bytes(&self, state_bytes: &[u8], envelope: &MutationEnvelope, deps: &DepView) -> Result<Vec<u8>, DbError> {
+        let state = P::State::decode(state_bytes).await?;
+        Ok(self.0.apply(&state, envelope, deps).await?.encode().await)
     }
 }
 
@@ -297,6 +300,7 @@ impl<P: ProjectionClass> ErasedProjection for ErasedWrapper<P> {
 /// into a `ProjectionEngine`. Returns the concrete `ErasedWrapper<P>` (not boxed/erased) — a caller
 /// mixing several `ProjectionClass` types converts each into its own small closed enum instead (see
 /// `ErasedProjection`'s own doc).
+// 🚫️async: E1 pure constructor, used inside a sync `|| vec![...]` factory closure slot — see R9
 pub fn erase<P: ProjectionClass + 'static>(class: P) -> ErasedWrapper<P> {
     ErasedWrapper(class)
 }
@@ -317,11 +321,11 @@ impl ProjectionGraph {
     /// registered projection, and the dependency relation is acyclic — then computes one
     /// deterministic topological order (ties broken lexicographically by id, so the same
     /// registration set always yields the same order across runs/processes).
-    fn build<E: ErasedProjection>(projections: &[E]) -> Result<ProjectionGraph, DbError> {
+    async fn build<E: ErasedProjection>(projections: &[E]) -> Result<ProjectionGraph, DbError> {
         let mut graph: PGraph<String, (), ()> = PGraph::new();
         let mut ids: Vec<String> = Vec::with_capacity(projections.len());
         for projection in projections {
-            let id = projection.id().to_string();
+            let id = projection.id().await.to_string();
             if graph.contains_node(&id) {
                 return Err(DbError::AlreadyExists(format!("projection id {id:?} is registered more than once")));
             }
@@ -329,8 +333,8 @@ impl ProjectionGraph {
             ids.push(id);
         }
         for projection in projections {
-            let id = projection.id().to_string();
-            for &dependency in projection.dependencies() {
+            let id = projection.id().await.to_string();
+            for &dependency in projection.dependencies().await {
                 if !graph.contains_node(&dependency.to_string()) {
                     return Err(DbError::NotFound(format!("projection {id:?} depends on unregistered projection {dependency:?}")));
                 }
@@ -340,10 +344,10 @@ impl ProjectionGraph {
 
         let mut index_of_id: std::collections::HashMap<String, usize> = std::collections::HashMap::with_capacity(ids.len());
         for (index, projection) in projections.iter().enumerate() {
-            index_of_id.insert(projection.id().to_string(), index);
+            index_of_id.insert(projection.id().await.to_string(), index);
         }
 
-        let sorted_ids = topological_sort(&graph, &ids)?;
+        let sorted_ids = topological_sort(&graph, &ids).await?;
         let order = sorted_ids.into_iter().map(|id| index_of_id[&id]).collect();
         Ok(ProjectionGraph { order })
     }
@@ -353,7 +357,7 @@ impl ProjectionGraph {
 /// lexicographically-smallest zero-in-degree node, appends it, and decrements its successors'
 /// in-degree. `ids.len() > order.len()` at the end means a cycle remains (some node's in-degree
 /// never reached zero) — reported as `DbError::InvalidArgument` rather than silently truncating.
-fn topological_sort(graph: &PGraph<String, (), ()>, ids: &[String]) -> Result<Vec<String>, DbError> {
+async fn topological_sort(graph: &PGraph<String, (), ()>, ids: &[String]) -> Result<Vec<String>, DbError> {
     let mut in_degree: std::collections::HashMap<String, usize> = ids.iter().map(|id| (id.clone(), graph.predecessors(id).len())).collect();
     let mut ready: Vec<String> = in_degree.iter().filter(|(_, &degree)| degree == 0).map(|(id, _)| id.clone()).collect();
     ready.sort();
@@ -393,8 +397,8 @@ fn topological_sort(graph: &PGraph<String, (), ()>, ids: &[String]) -> Result<Ve
 /// checkpoint-resuming path and `rebuild_in_memory`'s pure replay path — see the module doc's
 /// "incremental triggering" design-choice note for why that shared call site is what makes the
 /// rebuild == incremental-apply law hold by construction.
-fn should_run<E: ErasedProjection>(projection: &E, touched: &TouchedSet, changed_this_step: &std::collections::HashSet<&'static str>) -> bool {
-    projection.affected_by(touched) || projection.dependencies().iter().any(|dependency| changed_this_step.contains(dependency))
+async fn should_run<E: ErasedProjection>(projection: &E, touched: &TouchedSet, changed_this_step: &std::collections::HashSet<&'static str>) -> bool {
+    projection.affected_by(touched).await || projection.dependencies().await.iter().any(|dependency| changed_this_step.contains(dependency))
 }
 
 /// @emoji 🚂️ Drives a fixed set of registered `ErasedProjection`s for one document: incremental
@@ -416,33 +420,46 @@ impl<'a, S: IndexStorage, E: ErasedProjection> ProjectionEngine<'a, S, E> {
     /// @emoji 🏗️ Registers `projections` for `document` against `storage`, validating the
     /// dependency DAG up front (see `ProjectionGraph::build`) so a misconfigured cycle/dangling
     /// dependency fails at construction rather than mid-apply.
-    pub fn new(storage: &'a S, document: ArtifactId, projections: Vec<E>) -> Result<Self, DbError> {
-        let graph = ProjectionGraph::build(&projections)?;
+    pub async fn new(storage: &'a S, document: ArtifactId, projections: Vec<E>) -> Result<Self, DbError> {
+        let graph = ProjectionGraph::build(&projections).await?;
         Ok(ProjectionEngine { storage, document, projections, graph })
     }
 
     /// @emoji 📋️ Every registered projection's id, in topological (dependency-respecting) order —
     /// exposed for callers/tests that want to observe or assert on the resolved DAG order.
-    pub fn topological_order(&self) -> Vec<&'static str> {
-        self.graph.order.iter().map(|&index| self.projections[index].id()).collect()
+    pub async fn topological_order(&self) -> Vec<&'static str> {
+        {
+            let mut ids = Vec::with_capacity(self.graph.order.len());
+            for &index in &self.graph.order {
+                ids.push(self.projections[index].id().await);
+            }
+            ids
+        }
     }
 
-    fn projection_by_id(&self, projection_id: &str) -> Result<&E, DbError> {
-        self.projections.iter().find(|projection| projection.id() == projection_id).ok_or_else(|| DbError::NotFound(format!("projection {projection_id:?} is not registered on this engine")))
+    async fn projection_by_id(&self, projection_id: &str) -> Result<&E, DbError> {
+        // 🔀️ `ErasedProjection::id` genuinely awaits (an open trait, R9 does not apply) — hoisted
+        // out of `Iterator::find`'s sync closure (R10 residue shape 1) into an explicit loop.
+        for projection in &self.projections {
+            if projection.id().await == projection_id {
+                return Ok(projection);
+            }
+        }
+        Err(DbError::NotFound(format!("projection {projection_id:?} is not registered on this engine")))
     }
 
-    fn index_for(&self, projection_id: &str) -> ProjectionIndex<'a, S> {
+    async fn index_for(&self, projection_id: &str) -> ProjectionIndex<'a, S> {
         let _ = projection_id; // ProjectionIndex is per-document, not per-projection-id; kept as a parameter for call-site clarity.
-        ProjectionIndex::new(self.storage, self.document.clone())
+        ProjectionIndex::new(self.storage, self.document.clone()).await
     }
 
     /// @emoji 🔓️ Decodes a raw `ProjectionIndex` value (version prefix + state bytes), rejecting a
     /// stale schema version with `DbError::Conflict` rather than misinterpreting incompatible
     /// bytes — the shared guard behind both `load_checkpoint` and `state_at`.
-    fn decode_checkpoint(&self, projection: &E, versioned_bytes: &[u8]) -> Result<Vec<u8>, DbError> {
-        let (stored_version, state_bytes) = decode_versioned(versioned_bytes)?;
-        if stored_version != projection.schema_version() {
-            return Err(DbError::Conflict(format!("projection {:?} checkpoint schema version {stored_version} does not match registered version {} — rebuild required", projection.id(), projection.schema_version())));
+    async fn decode_checkpoint(&self, projection: &E, versioned_bytes: &[u8]) -> Result<Vec<u8>, DbError> {
+        let (stored_version, state_bytes) = decode_versioned(versioned_bytes).await?;
+        if stored_version != projection.schema_version().await {
+            return Err(DbError::Conflict(format!("projection {:?} checkpoint schema version {stored_version} does not match registered version {} — rebuild required", projection.id().await, projection.schema_version().await)));
         }
         Ok(state_bytes.to_vec())
     }
@@ -450,14 +467,14 @@ impl<'a, S: IndexStorage, E: ErasedProjection> ProjectionEngine<'a, S, E> {
     /// @emoji 📥️ `projection`'s persisted state at or before `at_or_before`, or its `initial()`
     /// bytes if nothing has been persisted at or before that point yet.
     async fn load_checkpoint(&self, projection: &E, at_or_before: u64) -> Result<Vec<u8>, DbError> {
-        let index = self.index_for(projection.id());
-        match index.latest_at_or_before(projection.id(), at_or_before).await? {
-            Some((_, versioned_bytes)) => self.decode_checkpoint(projection, &versioned_bytes),
-            None => Ok(projection.initial_bytes()),
+        let index = self.index_for(projection.id().await).await;
+        match index.latest_at_or_before(projection.id().await, at_or_before).await? {
+            Some((_, versioned_bytes)) => self.decode_checkpoint(projection, &versioned_bytes).await,
+            None => Ok(projection.initial_bytes().await),
         }
     }
 
-    fn require_matching_document(&self, envelope: &MutationEnvelope) -> Result<(), DbError> {
+    async fn require_matching_document(&self, envelope: &MutationEnvelope) -> Result<(), DbError> {
         if envelope.document_id.0 != self.document.0 {
             return Err(DbError::InvalidArgument(format!("envelope document {:?} does not match this engine's document {:?}", envelope.document_id.0, self.document.0)));
         }
@@ -475,24 +492,24 @@ impl<'a, S: IndexStorage, E: ErasedProjection> ProjectionEngine<'a, S, E> {
     /// carried forward unchanged for `DepView`/the returned map. Returns every projection's
     /// (possibly carried-forward) state, keyed by id.
     pub async fn apply_envelope(&self, command_seq: u64, envelope: &MutationEnvelope, touched: &TouchedSet) -> Result<PMap<String, Vec<u8>>, DbError> {
-        self.require_matching_document(envelope)?;
+        self.require_matching_document(envelope).await?;
         let mut deps = DepView::default();
         let mut out: PMap<String, Vec<u8>> = PMap::new();
         let mut changed_this_step: std::collections::HashSet<&'static str> = std::collections::HashSet::new();
         for &index in &self.graph.order {
             let projection = &self.projections[index];
             let prior = self.load_checkpoint(projection, command_seq.saturating_sub(1)).await?;
-            let new_state = if should_run(projection, touched, &changed_this_step) {
-                let computed = projection.apply_bytes(&prior, envelope, &deps)?;
-                let index_handle = self.index_for(projection.id());
-                index_handle.record(projection.id(), command_seq, encode_versioned(projection.schema_version(), &computed)).await?;
-                changed_this_step.insert(projection.id());
+            let new_state = if should_run(projection, touched, &changed_this_step).await {
+                let computed = projection.apply_bytes(&prior, envelope, &deps).await?;
+                let index_handle = self.index_for(projection.id().await).await;
+                index_handle.record(projection.id().await, command_seq, encode_versioned(projection.schema_version().await, &computed).await).await?;
+                changed_this_step.insert(projection.id().await);
                 computed
             } else {
                 prior
             };
-            deps.states = deps.states.insert(projection.id().to_string(), new_state.clone());
-            out = out.insert(projection.id().to_string(), new_state);
+            deps.states = deps.states.insert(projection.id().await.to_string(), new_state.clone());
+            out = out.insert(projection.id().await.to_string(), new_state);
         }
         Ok(out)
     }
@@ -503,28 +520,28 @@ impl<'a, S: IndexStorage, E: ErasedProjection> ProjectionEngine<'a, S, E> {
     /// the exact same `should_run` call `apply_envelope` uses. This is the ground truth
     /// `apply_envelope`'s persisted, checkpoint-resuming path is checked against by the
     /// rebuild==incremental law (see `🧪️Tests::rebuild_equals_incremental_after_checkpoint_resume`).
-    pub fn rebuild_in_memory(&self, events: &[(u64, MutationEnvelope, TouchedSet)]) -> Result<PMap<String, Vec<u8>>, DbError> {
-        let mut states: Vec<Vec<u8>> = self.projections.iter().map(|projection| projection.initial_bytes()).collect();
+    pub async fn rebuild_in_memory(&self, events: &[(u64, MutationEnvelope, TouchedSet)]) -> Result<PMap<String, Vec<u8>>, DbError> {
+        let mut states: Vec<Vec<u8>> = { let mut v = Vec::with_capacity(self.projections.len()); for projection in &self.projections { v.push(projection.initial_bytes().await); } v };
         for (_, envelope, touched) in events {
-            self.require_matching_document(envelope)?;
+            self.require_matching_document(envelope).await?;
             let mut deps = DepView::default();
             let mut changed_this_step: std::collections::HashSet<&'static str> = std::collections::HashSet::new();
             for &index in &self.graph.order {
                 let projection = &self.projections[index];
-                let new_state = if should_run(projection, touched, &changed_this_step) {
-                    let computed = projection.apply_bytes(&states[index], envelope, &deps)?;
-                    changed_this_step.insert(projection.id());
+                let new_state = if should_run(projection, touched, &changed_this_step).await {
+                    let computed = projection.apply_bytes(&states[index], envelope, &deps).await?;
+                    changed_this_step.insert(projection.id().await);
                     computed
                 } else {
                     states[index].clone()
                 };
-                deps.states = deps.states.insert(projection.id().to_string(), new_state.clone());
+                deps.states = deps.states.insert(projection.id().await.to_string(), new_state.clone());
                 states[index] = new_state;
             }
         }
         let mut out = PMap::new();
         for (index, projection) in self.projections.iter().enumerate() {
-            out = out.insert(projection.id().to_string(), states[index].clone());
+            out = out.insert(projection.id().await.to_string(), states[index].clone());
         }
         Ok(out)
     }
@@ -535,12 +552,12 @@ impl<'a, S: IndexStorage, E: ErasedProjection> ProjectionEngine<'a, S, E> {
     /// surfaced by `apply_envelope`/`state_at` — a projection whose `schema_version()` was bumped
     /// gets a fresh, current-version checkpoint by replaying its full history once.
     pub async fn rebuild_and_persist(&self, events: &[(u64, MutationEnvelope, TouchedSet)], final_command_seq: u64) -> Result<PMap<String, Vec<u8>>, DbError> {
-        let final_states = self.rebuild_in_memory(events)?;
+        let final_states = self.rebuild_in_memory(events).await?;
         for projection in &self.projections {
-            let id = projection.id().to_string();
+            let id = projection.id().await.to_string();
             let bytes = final_states.get(&id).expect("rebuild_in_memory populates every registered projection id");
-            let index_handle = self.index_for(projection.id());
-            index_handle.record(projection.id(), final_command_seq, encode_versioned(projection.schema_version(), bytes)).await?;
+            let index_handle = self.index_for(projection.id().await).await;
+            index_handle.record(projection.id().await, final_command_seq, encode_versioned(projection.schema_version().await, bytes).await).await?;
         }
         Ok(final_states)
     }
@@ -549,11 +566,11 @@ impl<'a, S: IndexStorage, E: ErasedProjection> ProjectionEngine<'a, S, E> {
     /// (past its version prefix), or `Ok(None)` if nothing was ever persisted at or before that
     /// frontier. Errors `DbError::Conflict` if the nearest checkpoint's schema version is stale.
     pub async fn state_at(&self, projection_id: &str, frontier_seq: u64) -> Result<Option<Vec<u8>>, DbError> {
-        let projection = self.projection_by_id(projection_id)?;
-        let index_handle = self.index_for(projection_id);
+        let projection = self.projection_by_id(projection_id).await?;
+        let index_handle = self.index_for(projection_id).await;
         match index_handle.latest_at_or_before(projection_id, frontier_seq).await? {
             None => Ok(None),
-            Some((_, versioned_bytes)) => Ok(Some(self.decode_checkpoint(projection, &versioned_bytes)?)),
+            Some((_, versioned_bytes)) => Ok(Some(self.decode_checkpoint(projection, &versioned_bytes).await?)),
         }
     }
 
@@ -565,19 +582,19 @@ impl<'a, S: IndexStorage, E: ErasedProjection> ProjectionEngine<'a, S, E> {
     /// are the DEPENDENCIES' own canonical state at `base_frontier_seq` — a preview augments one
     /// projection, it does not cascade a preview through the whole DAG.
     pub async fn preview_augmented(&self, projection_id: &str, base_frontier_seq: u64, preview_envelope: &MutationEnvelope) -> Result<Vec<u8>, DbError> {
-        self.require_matching_document(preview_envelope)?;
-        let projection = self.projection_by_id(projection_id)?;
+        self.require_matching_document(preview_envelope).await?;
+        let projection = self.projection_by_id(projection_id).await?;
         let base = match self.state_at(projection_id, base_frontier_seq).await? {
             Some(bytes) => bytes,
-            None => projection.initial_bytes(),
+            None => projection.initial_bytes().await,
         };
         let mut deps = DepView::default();
-        for &dependency_id in projection.dependencies() {
+        for &dependency_id in projection.dependencies().await {
             if let Some(dependency_bytes) = self.state_at(dependency_id, base_frontier_seq).await? {
                 deps.states = deps.states.insert(dependency_id.to_string(), dependency_bytes);
             }
         }
-        projection.apply_bytes(&base, preview_envelope, &deps)
+        projection.apply_bytes(&base, preview_envelope, &deps).await
     }
 }
 //#endregion 🔖️Engine
@@ -603,27 +620,27 @@ mod tests {
     impl ProjectionClass for CounterProjection {
         type State = u64;
 
-        fn id(&self) -> &'static str {
+        async fn id(&self) -> &'static str {
             self.id
         }
 
-        fn schema_version(&self) -> u32 {
+        async fn schema_version(&self) -> u32 {
             self.schema_version
         }
 
-        fn dependencies(&self) -> &'static [&'static str] {
+        async fn dependencies(&self) -> &'static [&'static str] {
             self.dependencies
         }
 
-        fn reads(&self) -> &'static [&'static str] {
+        async fn reads(&self) -> &'static [&'static str] {
             self.reads
         }
 
-        fn initial(&self) -> u64 {
+        async fn initial(&self) -> u64 {
             0
         }
 
-        fn apply(&self, state: &u64, _envelope: &MutationEnvelope, _deps: &DepView) -> Result<u64, DbError> {
+        async fn apply(&self, state: &u64, _envelope: &MutationEnvelope, _deps: &DepView) -> Result<u64, DbError> {
             Ok(state + 1)
         }
     }
@@ -640,28 +657,28 @@ mod tests {
     impl ProjectionClass for SumWithDependencyProjection {
         type State = u64;
 
-        fn id(&self) -> &'static str {
+        async fn id(&self) -> &'static str {
             self.id
         }
 
-        fn schema_version(&self) -> u32 {
+        async fn schema_version(&self) -> u32 {
             1
         }
 
-        fn dependencies(&self) -> &'static [&'static str] {
+        async fn dependencies(&self) -> &'static [&'static str] {
             self.dependencies
         }
 
-        fn reads(&self) -> &'static [&'static str] {
+        async fn reads(&self) -> &'static [&'static str] {
             self.reads
         }
 
-        fn initial(&self) -> u64 {
+        async fn initial(&self) -> u64 {
             0
         }
 
-        fn apply(&self, state: &u64, _envelope: &MutationEnvelope, deps: &DepView) -> Result<u64, DbError> {
-            let dependency_value: u64 = deps.get(self.dependency_id)?.unwrap_or(0);
+        async fn apply(&self, state: &u64, _envelope: &MutationEnvelope, deps: &DepView) -> Result<u64, DbError> {
+            let dependency_value: u64 = deps.get(self.dependency_id).await?.unwrap_or(0);
             Ok(state + 1 + dependency_value)
         }
     }
@@ -680,69 +697,73 @@ mod tests {
     }
 
     impl ErasedProjection for AnyTestProjection {
-        fn id(&self) -> &'static str {
+        async fn id(&self) -> &'static str {
             match self {
-                Self::Counter(p) => p.id(),
-                Self::SumWithDependency(p) => p.id(),
+                Self::Counter(p) => p.id().await,
+                Self::SumWithDependency(p) => p.id().await,
             }
         }
 
-        fn schema_version(&self) -> u32 {
+        async fn schema_version(&self) -> u32 {
             match self {
-                Self::Counter(p) => p.schema_version(),
-                Self::SumWithDependency(p) => p.schema_version(),
+                Self::Counter(p) => p.schema_version().await,
+                Self::SumWithDependency(p) => p.schema_version().await,
             }
         }
 
-        fn dependencies(&self) -> &'static [&'static str] {
+        async fn dependencies(&self) -> &'static [&'static str] {
             match self {
-                Self::Counter(p) => p.dependencies(),
-                Self::SumWithDependency(p) => p.dependencies(),
+                Self::Counter(p) => p.dependencies().await,
+                Self::SumWithDependency(p) => p.dependencies().await,
             }
         }
 
-        fn reads(&self) -> &'static [&'static str] {
+        async fn reads(&self) -> &'static [&'static str] {
             match self {
-                Self::Counter(p) => p.reads(),
-                Self::SumWithDependency(p) => p.reads(),
+                Self::Counter(p) => p.reads().await,
+                Self::SumWithDependency(p) => p.reads().await,
             }
         }
 
-        fn affected_by(&self, touched: &TouchedSet) -> bool {
+        async fn affected_by(&self, touched: &TouchedSet) -> bool {
             match self {
-                Self::Counter(p) => p.affected_by(touched),
-                Self::SumWithDependency(p) => p.affected_by(touched),
+                Self::Counter(p) => p.affected_by(touched).await,
+                Self::SumWithDependency(p) => p.affected_by(touched).await,
             }
         }
 
-        fn initial_bytes(&self) -> Vec<u8> {
+        async fn initial_bytes(&self) -> Vec<u8> {
             match self {
-                Self::Counter(p) => p.initial_bytes(),
-                Self::SumWithDependency(p) => p.initial_bytes(),
+                Self::Counter(p) => p.initial_bytes().await,
+                Self::SumWithDependency(p) => p.initial_bytes().await,
             }
         }
 
-        fn apply_bytes(&self, state_bytes: &[u8], envelope: &MutationEnvelope, deps: &DepView) -> Result<Vec<u8>, DbError> {
+        async fn apply_bytes(&self, state_bytes: &[u8], envelope: &MutationEnvelope, deps: &DepView) -> Result<Vec<u8>, DbError> {
             match self {
-                Self::Counter(p) => p.apply_bytes(state_bytes, envelope, deps),
-                Self::SumWithDependency(p) => p.apply_bytes(state_bytes, envelope, deps),
+                Self::Counter(p) => p.apply_bytes(state_bytes, envelope, deps).await,
+                Self::SumWithDependency(p) => p.apply_bytes(state_bytes, envelope, deps).await,
             }
         }
     }
 
     impl From<ErasedWrapper<CounterProjection>> for AnyTestProjection {
+        // 🚫️async: E1 impl of std::convert::From — signature fixed outside this repo; body is a
+        // pure zero-suspension enum-variant wrap, see R9.
         fn from(wrapper: ErasedWrapper<CounterProjection>) -> Self {
             Self::Counter(wrapper)
         }
     }
 
     impl From<ErasedWrapper<SumWithDependencyProjection>> for AnyTestProjection {
+        // 🚫️async: E1 impl of std::convert::From — signature fixed outside this repo; body is a
+        // pure zero-suspension enum-variant wrap, see R9.
         fn from(wrapper: ErasedWrapper<SumWithDependencyProjection>) -> Self {
             Self::SumWithDependency(wrapper)
         }
     }
 
-    fn envelope(document: &str, operation: &str, seq: u64) -> MutationEnvelope {
+    async fn envelope(document: &str, operation: &str, seq: u64) -> MutationEnvelope {
         MutationEnvelope {
             mutation_id: protocol::MutationId(operation.to_string()),
             document_id: protocol::ArtifactId(document.to_string()),
@@ -750,12 +771,12 @@ mod tests {
             dependencies: Vec::new(),
             diff: protocol::ArtifactDiff { schema: protocol::SchemaId("test".to_string()), payload: Default::default() },
             inverse: protocol::InverseMutation { schema: protocol::SchemaId("test".to_string()), payload: Default::default() },
-            timestamp: protocol::HybridLogicalTimestamp::new(1, seq),
+            timestamp: protocol::HybridLogicalTimestamp::new(1, seq).await,
         }
     }
 
     /// @emoji 👆️ Builds a `TouchedSet` recording a write against every one of `paths`.
-    fn touch(paths: &[&str]) -> TouchedSet {
+    async fn touch(paths: &[&str]) -> TouchedSet {
         let mut touched = TouchedSet::new();
         for path in paths {
             touched.record(TouchedRegion::write(*path));
@@ -765,184 +786,184 @@ mod tests {
     //#endregion 🔖️Fixtures
 
     //#region 🔖️State
-    #[test]
-    fn versioned_round_trips_and_rejects_short_input() {
-        let bytes = encode_versioned(7, &[1, 2, 3]);
-        let (version, state) = decode_versioned(&bytes).unwrap();
+    #[semio_framework_async_macros::async_test]
+    async fn versioned_round_trips_and_rejects_short_input() {
+        let bytes = encode_versioned(7, &[1, 2, 3]).await;
+        let (version, state) = decode_versioned(&bytes).await.unwrap();
         assert_eq!(version, 7);
         assert_eq!(state, &[1, 2, 3]);
 
-        assert!(matches!(decode_versioned(&[0u8, 1, 2]), Err(DbError::Corrupt(_))));
+        assert!(matches!(decode_versioned(&[0u8, 1, 2]).await, Err(DbError::Corrupt(_))));
     }
 
-    #[test]
-    fn u64_and_string_and_bytes_projection_states_round_trip() {
-        assert_eq!(u64::decode(&42u64.encode()).unwrap(), 42u64);
-        assert_eq!(String::decode(&"hello".to_string().encode()).unwrap(), "hello".to_string());
-        assert_eq!(Vec::<u8>::decode(&vec![9u8, 8, 7].encode()).unwrap(), vec![9u8, 8, 7]);
-        assert!(matches!(u64::decode(&[1, 2, 3]), Err(DbError::Corrupt(_))));
+    #[semio_framework_async_macros::async_test]
+    async fn u64_and_string_and_bytes_projection_states_round_trip() {
+        assert_eq!(u64::decode(&42u64.encode().await).await.unwrap(), 42u64);
+        assert_eq!(String::decode(&"hello".to_string().encode().await).await.unwrap(), "hello".to_string());
+        assert_eq!(Vec::<u8>::decode(&vec![9u8, 8, 7].encode().await).await.unwrap(), vec![9u8, 8, 7]);
+        assert!(matches!(u64::decode(&[1, 2, 3]).await, Err(DbError::Corrupt(_))));
     }
     //#endregion 🔖️State
 
     //#region 🔖️Graph
-    #[test]
-    fn topological_order_respects_dependency_edges() {
+    #[semio_framework_async_macros::async_test]
+    async fn topological_order_respects_dependency_edges() {
         let projections = vec![
             erase(CounterProjection { id: "b", schema_version: 1, dependencies: &["a"], reads: &[] }),
             erase(CounterProjection { id: "a", schema_version: 1, dependencies: &[], reads: &[] }),
             erase(CounterProjection { id: "c", schema_version: 1, dependencies: &["a", "b"], reads: &[] }),
         ];
-        let storage = MemoryStorage::new();
-        let engine = ProjectionEngine::new(&storage, "doc-1".into(), projections).unwrap();
-        let order = engine.topological_order();
+        let storage = MemoryStorage::new().await;
+        let engine = ProjectionEngine::new(&storage, "doc-1".into(), projections).await.unwrap();
+        let order = engine.topological_order().await;
         let position = |id: &str| order.iter().position(|candidate| *candidate == id).unwrap();
         assert!(position("a") < position("b"));
         assert!(position("a") < position("c"));
         assert!(position("b") < position("c"));
     }
 
-    #[test]
-    fn build_rejects_duplicate_ids() {
+    #[semio_framework_async_macros::async_test]
+    async fn build_rejects_duplicate_ids() {
         let projections = vec![erase(CounterProjection { id: "a", schema_version: 1, dependencies: &[], reads: &[] }), erase(CounterProjection { id: "a", schema_version: 1, dependencies: &[], reads: &[] })];
-        let storage = MemoryStorage::new();
-        assert!(matches!(ProjectionEngine::new(&storage, "doc-1".into(), projections), Err(DbError::AlreadyExists(_))));
+        let storage = MemoryStorage::new().await;
+        assert!(matches!(ProjectionEngine::new(&storage, "doc-1".into(), projections).await, Err(DbError::AlreadyExists(_))));
     }
 
-    #[test]
-    fn build_rejects_unknown_dependency() {
+    #[semio_framework_async_macros::async_test]
+    async fn build_rejects_unknown_dependency() {
         let projections = vec![erase(CounterProjection { id: "a", schema_version: 1, dependencies: &["ghost"], reads: &[] })];
-        let storage = MemoryStorage::new();
-        assert!(matches!(ProjectionEngine::new(&storage, "doc-1".into(), projections), Err(DbError::NotFound(_))));
+        let storage = MemoryStorage::new().await;
+        assert!(matches!(ProjectionEngine::new(&storage, "doc-1".into(), projections).await, Err(DbError::NotFound(_))));
     }
 
-    #[test]
-    fn build_rejects_a_dependency_cycle() {
+    #[semio_framework_async_macros::async_test]
+    async fn build_rejects_a_dependency_cycle() {
         let projections = vec![erase(CounterProjection { id: "a", schema_version: 1, dependencies: &["b"], reads: &[] }), erase(CounterProjection { id: "b", schema_version: 1, dependencies: &["a"], reads: &[] })];
-        let storage = MemoryStorage::new();
-        assert!(matches!(ProjectionEngine::new(&storage, "doc-1".into(), projections), Err(DbError::InvalidArgument(_))));
+        let storage = MemoryStorage::new().await;
+        assert!(matches!(ProjectionEngine::new(&storage, "doc-1".into(), projections).await, Err(DbError::InvalidArgument(_))));
     }
     //#endregion 🔖️Graph
 
     //#region 🔖️Engine
-    #[test]
-    fn apply_envelope_advances_and_persists_incrementally() {
+    #[semio_framework_async_macros::async_test]
+    async fn apply_envelope_advances_and_persists_incrementally() {
         let projections = vec![erase(CounterProjection { id: "count", schema_version: 1, dependencies: &[], reads: &["doc"] })];
-        let storage = MemoryStorage::new();
-        let engine = ProjectionEngine::new(&storage, "doc-1".into(), projections).unwrap();
+        let storage = MemoryStorage::new().await;
+        let engine = ProjectionEngine::new(&storage, "doc-1".into(), projections).await.unwrap();
 
         for seq in 1..=3u64 {
-            let result = db_actor::block_on(engine.apply_envelope(seq, &envelope("doc-1", &format!("op-{seq}"), seq), &touch(&["doc"]))).unwrap();
-            assert_eq!(u64::decode(result.get(&"count".to_string()).unwrap()).unwrap(), seq);
+            let result = db_actor::block_on(engine.apply_envelope(seq, &envelope("doc-1", &format!("op-{seq}"), seq).await, &touch(&["doc"]).await)).unwrap();
+            assert_eq!(u64::decode(result.get(&"count".to_string()).unwrap()).await.unwrap(), seq);
         }
 
         let persisted = db_actor::block_on(engine.state_at("count", 3)).unwrap().unwrap();
-        assert_eq!(u64::decode(&persisted).unwrap(), 3);
-        assert_eq!(db_actor::block_on(engine.state_at("count", 1)).unwrap().map(|bytes| u64::decode(&bytes).unwrap()), Some(1));
+        assert_eq!(u64::decode(&persisted).await.unwrap(), 3);
+        assert_eq!(db_actor::block_on(engine.state_at("count", 1)).unwrap().map(|bytes| db_actor::block_on(u64::decode(&bytes)).unwrap()), Some(1));
         assert_eq!(db_actor::block_on(engine.state_at("count", 0)).unwrap(), None);
     }
 
-    #[test]
-    fn apply_envelope_rejects_a_mismatched_document() {
+    #[semio_framework_async_macros::async_test]
+    async fn apply_envelope_rejects_a_mismatched_document() {
         let projections = vec![erase(CounterProjection { id: "count", schema_version: 1, dependencies: &[], reads: &["doc"] })];
-        let storage = MemoryStorage::new();
-        let engine = ProjectionEngine::new(&storage, "doc-1".into(), projections).unwrap();
-        assert!(matches!(db_actor::block_on(engine.apply_envelope(1, &envelope("doc-OTHER", "op-1", 1), &touch(&["doc"]))), Err(DbError::InvalidArgument(_))));
+        let storage = MemoryStorage::new().await;
+        let engine = ProjectionEngine::new(&storage, "doc-1".into(), projections).await.unwrap();
+        assert!(matches!(db_actor::block_on(engine.apply_envelope(1, &envelope("doc-OTHER", "op-1", 1).await, &touch(&["doc"]).await)), Err(DbError::InvalidArgument(_))));
     }
 
-    #[test]
-    fn dependent_projection_sees_its_dependencys_state_from_the_same_step() {
+    #[semio_framework_async_macros::async_test]
+    async fn dependent_projection_sees_its_dependencys_state_from_the_same_step() {
         let projections: Vec<AnyTestProjection> =
             vec![erase(SumWithDependencyProjection { id: "sum", dependency_id: "count", dependencies: &["count"], reads: &[] }).into(), erase(CounterProjection { id: "count", schema_version: 1, dependencies: &[], reads: &["doc"] }).into()];
-        let storage = MemoryStorage::new();
-        let engine = ProjectionEngine::new(&storage, "doc-1".into(), projections).unwrap();
+        let storage = MemoryStorage::new().await;
+        let engine = ProjectionEngine::new(&storage, "doc-1".into(), projections).await.unwrap();
 
         // Step 1: count -> 1, sum sees count's *this-step* value (1): sum = 1 + 1 = 2.
-        let result = db_actor::block_on(engine.apply_envelope(1, &envelope("doc-1", "op-1", 1), &touch(&["doc"]))).unwrap();
-        assert_eq!(u64::decode(result.get(&"count".to_string()).unwrap()).unwrap(), 1);
-        assert_eq!(u64::decode(result.get(&"sum".to_string()).unwrap()).unwrap(), 2);
+        let result = db_actor::block_on(engine.apply_envelope(1, &envelope("doc-1", "op-1", 1).await, &touch(&["doc"]).await)).unwrap();
+        assert_eq!(u64::decode(result.get(&"count".to_string()).unwrap()).await.unwrap(), 1);
+        assert_eq!(u64::decode(result.get(&"sum".to_string()).unwrap()).await.unwrap(), 2);
 
         // Step 2: count -> 2, sum = (prior sum 2) + 1 + (this-step count 2) = 5.
-        let result = db_actor::block_on(engine.apply_envelope(2, &envelope("doc-1", "op-2", 2), &touch(&["doc"]))).unwrap();
-        assert_eq!(u64::decode(result.get(&"count".to_string()).unwrap()).unwrap(), 2);
-        assert_eq!(u64::decode(result.get(&"sum".to_string()).unwrap()).unwrap(), 5);
+        let result = db_actor::block_on(engine.apply_envelope(2, &envelope("doc-1", "op-2", 2).await, &touch(&["doc"]).await)).unwrap();
+        assert_eq!(u64::decode(result.get(&"count".to_string()).unwrap()).await.unwrap(), 2);
+        assert_eq!(u64::decode(result.get(&"sum".to_string()).unwrap()).await.unwrap(), 5);
     }
 
-    #[test]
-    fn stale_schema_version_checkpoint_is_reported_as_conflict_not_misread() {
-        let storage = MemoryStorage::new();
+    #[semio_framework_async_macros::async_test]
+    async fn stale_schema_version_checkpoint_is_reported_as_conflict_not_misread() {
+        let storage = MemoryStorage::new().await;
         {
             let projections = vec![erase(CounterProjection { id: "count", schema_version: 1, dependencies: &[], reads: &["doc"] })];
-            let engine = ProjectionEngine::new(&storage, "doc-1".into(), projections).unwrap();
-            db_actor::block_on(engine.apply_envelope(1, &envelope("doc-1", "op-1", 1), &touch(&["doc"]))).unwrap();
+            let engine = ProjectionEngine::new(&storage, "doc-1".into(), projections).await.unwrap();
+            db_actor::block_on(engine.apply_envelope(1, &envelope("doc-1", "op-1", 1).await, &touch(&["doc"]).await)).unwrap();
         }
         // A fresh engine registers the SAME projection id at a bumped schema version.
         let projections = vec![erase(CounterProjection { id: "count", schema_version: 2, dependencies: &[], reads: &["doc"] })];
-        let engine = ProjectionEngine::new(&storage, "doc-1".into(), projections).unwrap();
+        let engine = ProjectionEngine::new(&storage, "doc-1".into(), projections).await.unwrap();
         assert!(matches!(db_actor::block_on(engine.state_at("count", 1)), Err(DbError::Conflict(_))));
-        assert!(matches!(db_actor::block_on(engine.apply_envelope(2, &envelope("doc-1", "op-2", 2), &touch(&["doc"]))), Err(DbError::Conflict(_))));
+        assert!(matches!(db_actor::block_on(engine.apply_envelope(2, &envelope("doc-1", "op-2", 2).await, &touch(&["doc"]).await)), Err(DbError::Conflict(_))));
 
         // rebuild_and_persist recovers: replays from scratch and re-persists at the current version.
-        let events = vec![(1u64, envelope("doc-1", "op-1", 1), touch(&["doc"]))];
+        let events = vec![(1u64, envelope("doc-1", "op-1", 1).await, touch(&["doc"]).await)];
         db_actor::block_on(engine.rebuild_and_persist(&events, 1)).unwrap();
-        assert_eq!(db_actor::block_on(engine.state_at("count", 1)).unwrap().map(|bytes| u64::decode(&bytes).unwrap()), Some(1));
+        assert_eq!(db_actor::block_on(engine.state_at("count", 1)).unwrap().map(|bytes| db_actor::block_on(u64::decode(&bytes)).unwrap()), Some(1));
     }
 
-    #[test]
-    fn preview_augmented_never_persists_and_does_not_affect_canonical_state() {
+    #[semio_framework_async_macros::async_test]
+    async fn preview_augmented_never_persists_and_does_not_affect_canonical_state() {
         let projections = vec![erase(CounterProjection { id: "count", schema_version: 1, dependencies: &[], reads: &["doc"] })];
-        let storage = MemoryStorage::new();
-        let engine = ProjectionEngine::new(&storage, "doc-1".into(), projections).unwrap();
-        db_actor::block_on(engine.apply_envelope(1, &envelope("doc-1", "op-1", 1), &touch(&["doc"]))).unwrap();
+        let storage = MemoryStorage::new().await;
+        let engine = ProjectionEngine::new(&storage, "doc-1".into(), projections).await.unwrap();
+        db_actor::block_on(engine.apply_envelope(1, &envelope("doc-1", "op-1", 1).await, &touch(&["doc"]).await)).unwrap();
 
-        let previewed = db_actor::block_on(engine.preview_augmented("count", 1, &envelope("doc-1", "preview-op", 2))).unwrap();
-        assert_eq!(u64::decode(&previewed).unwrap(), 2);
+        let previewed = db_actor::block_on(engine.preview_augmented("count", 1, &envelope("doc-1", "preview-op", 2).await)).unwrap();
+        assert_eq!(u64::decode(&previewed).await.unwrap(), 2);
 
         // Canonical state at the same frontier is untouched by the preview.
-        assert_eq!(db_actor::block_on(engine.state_at("count", 1)).unwrap().map(|bytes| u64::decode(&bytes).unwrap()), Some(1));
+        assert_eq!(db_actor::block_on(engine.state_at("count", 1)).unwrap().map(|bytes| db_actor::block_on(u64::decode(&bytes)).unwrap()), Some(1));
         // And no checkpoint was ever recorded past seq 1 (the preview never persisted anything).
-        assert_eq!(db_actor::block_on(engine.state_at("count", 2)).unwrap().map(|bytes| u64::decode(&bytes).unwrap()), Some(1));
+        assert_eq!(db_actor::block_on(engine.state_at("count", 2)).unwrap().map(|bytes| db_actor::block_on(u64::decode(&bytes)).unwrap()), Some(1));
     }
     //#endregion 🔖️Engine
 
     //#region 🔖️IncrementalTriggering
-    #[test]
-    fn apply_envelope_skips_a_projection_whose_reads_dont_intersect_the_touched_set() {
+    #[semio_framework_async_macros::async_test]
+    async fn apply_envelope_skips_a_projection_whose_reads_dont_intersect_the_touched_set() {
         let projections = vec![erase(CounterProjection { id: "counter", schema_version: 1, dependencies: &[], reads: &["counter"] })];
-        let storage = MemoryStorage::new();
-        let engine = ProjectionEngine::new(&storage, "doc-1".into(), projections).unwrap();
+        let storage = MemoryStorage::new().await;
+        let engine = ProjectionEngine::new(&storage, "doc-1".into(), projections).await.unwrap();
 
         // Untouched: the projection must not run, and nothing must be persisted for it.
-        let result = db_actor::block_on(engine.apply_envelope(1, &envelope("doc-1", "op-1", 1), &touch(&["unrelated"]))).unwrap();
-        assert_eq!(u64::decode(result.get(&"counter".to_string()).unwrap()).unwrap(), 0, "carried-forward initial state, not incremented");
+        let result = db_actor::block_on(engine.apply_envelope(1, &envelope("doc-1", "op-1", 1).await, &touch(&["unrelated"]).await)).unwrap();
+        assert_eq!(u64::decode(result.get(&"counter".to_string()).unwrap()).await.unwrap(), 0, "carried-forward initial state, not incremented");
         assert_eq!(db_actor::block_on(engine.state_at("counter", 1)).unwrap(), None, "an unaffected projection must not advance its frontier");
 
         // Directly touched: now it runs and persists.
-        db_actor::block_on(engine.apply_envelope(2, &envelope("doc-1", "op-2", 2), &touch(&["counter"]))).unwrap();
+        db_actor::block_on(engine.apply_envelope(2, &envelope("doc-1", "op-2", 2).await, &touch(&["counter"]).await)).unwrap();
         assert_eq!(db_actor::block_on(engine.state_at("counter", 1)).unwrap(), None, "still nothing at seq 1 — the skip was never retroactively persisted");
-        assert_eq!(db_actor::block_on(engine.state_at("counter", 2)).unwrap().map(|bytes| u64::decode(&bytes).unwrap()), Some(1));
+        assert_eq!(db_actor::block_on(engine.state_at("counter", 2)).unwrap().map(|bytes| db_actor::block_on(u64::decode(&bytes)).unwrap()), Some(1));
     }
 
-    #[test]
-    fn apply_envelope_cascades_to_a_dependent_with_no_reads_of_its_own() {
+    #[semio_framework_async_macros::async_test]
+    async fn apply_envelope_cascades_to_a_dependent_with_no_reads_of_its_own() {
         let projections: Vec<AnyTestProjection> = vec![
             erase(CounterProjection { id: "counter", schema_version: 1, dependencies: &[], reads: &["counter"] }).into(),
             // "cascade" has an EMPTY reads() — per the module doc's design note, empty reads means
             // "not directly triggered by anything"; it must only ever run via the dependency cascade.
             erase(SumWithDependencyProjection { id: "cascade", dependency_id: "counter", dependencies: &["counter"], reads: &[] }).into(),
         ];
-        let storage = MemoryStorage::new();
-        let engine = ProjectionEngine::new(&storage, "doc-1".into(), projections).unwrap();
+        let storage = MemoryStorage::new().await;
+        let engine = ProjectionEngine::new(&storage, "doc-1".into(), projections).await.unwrap();
 
         // "counter" is untouched -> "cascade" has nothing to cascade from -> neither runs.
-        db_actor::block_on(engine.apply_envelope(1, &envelope("doc-1", "op-1", 1), &touch(&["unrelated"]))).unwrap();
+        db_actor::block_on(engine.apply_envelope(1, &envelope("doc-1", "op-1", 1).await, &touch(&["unrelated"]).await)).unwrap();
         assert_eq!(db_actor::block_on(engine.state_at("counter", 1)).unwrap(), None);
         assert_eq!(db_actor::block_on(engine.state_at("cascade", 1)).unwrap(), None);
 
         // "counter" is touched -> runs -> "cascade" cascades even though "unrelated" (not "counter")
         // is the only path in this step's touched set that "cascade" itself would ever have read.
-        db_actor::block_on(engine.apply_envelope(2, &envelope("doc-1", "op-2", 2), &touch(&["counter"]))).unwrap();
-        assert_eq!(db_actor::block_on(engine.state_at("counter", 2)).unwrap().map(|bytes| u64::decode(&bytes).unwrap()), Some(1));
-        assert_eq!(db_actor::block_on(engine.state_at("cascade", 2)).unwrap().map(|bytes| u64::decode(&bytes).unwrap()), Some(2), "cascade = prior(0) + 1 + counter's this-step value(1) = 2");
+        db_actor::block_on(engine.apply_envelope(2, &envelope("doc-1", "op-2", 2).await, &touch(&["counter"]).await)).unwrap();
+        assert_eq!(db_actor::block_on(engine.state_at("counter", 2)).unwrap().map(|bytes| db_actor::block_on(u64::decode(&bytes)).unwrap()), Some(1));
+        assert_eq!(db_actor::block_on(engine.state_at("cascade", 2)).unwrap().map(|bytes| db_actor::block_on(u64::decode(&bytes)).unwrap()), Some(2), "cascade = prior(0) + 1 + counter's this-step value(1) = 2");
     }
     //#endregion 🔖️IncrementalTriggering
 
@@ -954,9 +975,9 @@ mod tests {
     /// and reconstructed mid-stream so `apply_envelope` genuinely resumes from a persisted
     /// checkpoint rather than in-process memory, and including projections that are skipped on some
     /// steps and cascaded-to on others.
-    #[test]
-    fn rebuild_equals_incremental_after_checkpoint_resume() {
-        let storage = MemoryStorage::new();
+    #[semio_framework_async_macros::async_test]
+    async fn rebuild_equals_incremental_after_checkpoint_resume() {
+        let storage = MemoryStorage::new().await;
         let make_projections = || -> Vec<AnyTestProjection> {
             vec![
                 erase(CounterProjection { id: "count", schema_version: 1, dependencies: &[], reads: &["doc"] }).into(),
@@ -968,19 +989,24 @@ mod tests {
         // Alternating touched paths so "count"/"sum" run on some steps and are skipped on others —
         // "never" is never touched and has no dependents, so it should stay at its initial state.
         let touched_paths: [&[&str]; 5] = [&["doc"], &["unrelated"], &["doc"], &["doc", "unrelated"], &["unrelated"]];
-        let events: Vec<(u64, MutationEnvelope, TouchedSet)> = (1..=5u64).map(|seq| (seq, envelope("doc-1", &format!("op-{seq}"), seq), touch(touched_paths[(seq - 1) as usize]))).collect();
+        // 🪡 `.map` takes a sync closure, so the per-step async envelope/touch construction is
+        // hoisted into an explicit loop instead of the original closure-chain shape.
+        let mut events: Vec<(u64, MutationEnvelope, TouchedSet)> = Vec::new();
+        for seq in 1..=5u64 {
+            events.push((seq, envelope("doc-1", &format!("op-{seq}"), seq).await, touch(touched_paths[(seq - 1) as usize]).await));
+        }
 
         // Incremental path: apply seqs 1-3 against one engine instance, drop it, then resume with a
         // FRESH engine instance (forcing seqs 4-5 to load their checkpoint from `storage`, not from
         // any in-memory state the first engine instance happened to hold).
         {
-            let engine = ProjectionEngine::new(&storage, "doc-1".into(), make_projections()).unwrap();
+            let engine = ProjectionEngine::new(&storage, "doc-1".into(), make_projections()).await.unwrap();
             for (seq, env, touched) in &events[..3] {
                 db_actor::block_on(engine.apply_envelope(*seq, env, touched)).unwrap();
             }
         }
         let incremental_final = {
-            let engine = ProjectionEngine::new(&storage, "doc-1".into(), make_projections()).unwrap();
+            let engine = ProjectionEngine::new(&storage, "doc-1".into(), make_projections()).await.unwrap();
             let mut last = PMap::new();
             for (seq, env, touched) in &events[3..] {
                 last = db_actor::block_on(engine.apply_envelope(*seq, env, touched)).unwrap();
@@ -989,13 +1015,13 @@ mod tests {
         };
 
         // Ground-truth path: one pure in-memory replay of the whole history, touching no storage.
-        let rebuild_engine = ProjectionEngine::new(&storage, "doc-1".into(), make_projections()).unwrap();
-        let rebuilt_final = rebuild_engine.rebuild_in_memory(&events).unwrap();
+        let rebuild_engine = ProjectionEngine::new(&storage, "doc-1".into(), make_projections()).await.unwrap();
+        let rebuilt_final = rebuild_engine.rebuild_in_memory(&events).await.unwrap();
 
         for id in ["count", "sum", "never"] {
             assert_eq!(incremental_final.get(&id.to_string()), rebuilt_final.get(&id.to_string()), "projection {id} diverged between checkpoint-resumed incremental application and full in-memory rebuild");
         }
-        assert_eq!(u64::decode(rebuilt_final.get(&"never".to_string()).unwrap()).unwrap(), 0, "sanity: 'never' truly never ran");
+        assert_eq!(u64::decode(rebuilt_final.get(&"never".to_string()).unwrap()).await.unwrap(), 0, "sanity: 'never' truly never ran");
     }
     //#endregion 🔖️RebuildEqualsIncremental
 }

@@ -27,7 +27,7 @@ pub struct SemioKitInference {
 
 impl protocol::Inference<SemioKitSnapshot> for SemioKitInference {
     async fn infer(snapshot: &SemioKitSnapshot) -> Self {
-        Self { entries: compute_semio_kit_entries(snapshot) }
+        Self { entries: compute_semio_kit_entries(snapshot).await }
     }
 }
 

@@ -19,10 +19,10 @@ pub(crate) async fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<Gltf
         GltfUnit::Unitless,
         context.sample_count,
         Some(context.topology),
-    )
+    ).await
 }
 pub async fn unavailable_measure(ids: &[String]) -> GltfMeasure<GltfVec3> {
-    unavailable(GltfUnit::Unitless, GltfAvailability::Unavailable, ids.to_vec(), 0, None)
+    unavailable(GltfUnit::Unitless, GltfAvailability::Unavailable, ids.to_vec(), 0, None).await
 }
 pub async fn encode_result(indicators: &GltfEntityIndicators) -> Result<serde_json::Value, serde_json::Error> {
     serde_json::to_value(&indicators.proportion.aspect_ratios)

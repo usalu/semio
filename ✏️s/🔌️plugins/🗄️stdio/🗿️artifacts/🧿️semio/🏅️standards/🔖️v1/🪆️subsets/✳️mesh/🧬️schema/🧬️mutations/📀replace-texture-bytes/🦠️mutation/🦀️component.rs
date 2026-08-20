@@ -15,10 +15,10 @@ impl protocol::MutationKind<SemioMeshSnapshot, SemioMeshMutation> for ReplaceTex
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "texture-bytes", kind: "replace-texture-bytes", record: "ReplacedTextureBytes" };
 
     async fn diff(&self, base: &SemioMeshSnapshot) -> protocol::MutationOutcome<<SemioMeshMutation as protocol::Mutation<SemioMeshSnapshot>>::Diff> {
-        super::diff::diff(self, base)
+        super::diff::diff(self, base).await
     }
     async fn inverse(&self, base: &SemioMeshSnapshot) -> Vec<SemioMeshMutation> {
-        super::inverse::inverse(self, base)
+        super::inverse::inverse(self, base).await
     }
     async fn label(&self) -> String {
         format!("Replace texture \"{}\" bytes", self.id)

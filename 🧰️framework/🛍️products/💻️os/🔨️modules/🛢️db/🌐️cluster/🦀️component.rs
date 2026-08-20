@@ -23,6 +23,7 @@
 //! rather than re-deriving.
 use crate::*;
 use crate::db_durability::Frontier;
+use db_storage::SnapshotStorage as _;
 /// @emoji 🏷️ A cluster node's identity — the consistent-hash ring's key type and the `holder`
 /// string `db_storage::LeaseStorage` records ownership grants under.
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
@@ -54,6 +55,7 @@ pub const DEFAULT_VIRTUAL_NODES: u32 = 128;
 
 /// @emoji #⃣ A small, dependency-free 64-bit FNV-1a — see the module doc for why this crate
 /// doesn't reach for `blake3` here (ring placement needs distribution, not content-addressing).
+// 🚫️async: E1 pure accessor consumed synchronously (once inline inside a temp-borrowing expression) — see R9
 fn fnv1a_64(bytes: &[u8]) -> u64 {
     const OFFSET_BASIS: u64 = 0xcbf2_9ce4_8422_2325;
     const PRIME: u64 = 0x0000_0100_0000_01b3;
@@ -77,13 +79,13 @@ pub struct ShardMap {
 
 impl ShardMap {
     /// @emoji 🆕️ An empty ring with `virtual_nodes` (clamped to at least 1) vnodes per node added.
-    pub fn new(virtual_nodes: u32) -> Self {
+    pub async fn new(virtual_nodes: u32) -> Self {
         Self { virtual_nodes: virtual_nodes.max(1), ring: std::collections::BTreeMap::new() }
     }
 
     /// @emoji ➕️ Adds `node`'s vnodes to the ring. Idempotent: re-adding an already-present node
     /// recomputes (but does not duplicate) its ring positions.
-    pub fn add_node(&mut self, node: &NodeId) {
+    pub async fn add_node(&mut self, node: &NodeId) {
         for vnode in 0..self.virtual_nodes {
             let key = fnv1a_64(format!("{}#{vnode}", node.0).as_bytes());
             self.ring.insert(key, node.clone());
@@ -93,23 +95,23 @@ impl ShardMap {
     /// @emoji ➖️ Removes every one of `node`'s vnodes from the ring. Idempotent if absent. Per
     /// consistent hashing's defining law, this only changes the owner of documents that were
     /// previously owned by `node` — every other document's owner is unaffected (see `🧪️Tests`).
-    pub fn remove_node(&mut self, node: &NodeId) {
+    pub async fn remove_node(&mut self, node: &NodeId) {
         self.ring.retain(|_, owner| owner != node);
     }
 
     /// @emoji 📋️ Every distinct physical node currently on the ring.
-    pub fn nodes(&self) -> std::collections::BTreeSet<NodeId> {
+    pub async fn nodes(&self) -> std::collections::BTreeSet<NodeId> {
         self.ring.values().cloned().collect()
     }
 
     /// @emoji 🕳️ True iff the ring has no nodes at all.
-    pub fn is_empty(&self) -> bool {
+    pub async fn is_empty(&self) -> bool {
         self.ring.is_empty()
     }
 
     /// @emoji 🎯️ The node owning `document`: the first ring position at or after `document`'s hash,
     /// wrapping to the ring's lowest position past the maximum key. `None` iff the ring is empty.
-    pub fn owner(&self, document: &ArtifactId) -> Option<NodeId> {
+    pub async fn owner(&self, document: &ArtifactId) -> Option<NodeId> {
         if self.ring.is_empty() {
             return None;
         }
@@ -152,7 +154,7 @@ impl ShardOwnership {
 
     /// @emoji ✅️ Validates a write presented under `presented` against this ownership's fence — the
     /// primitive every shard-scoped write path calls before mutating storage.
-    pub fn validate(&self, presented: EpochFence) -> Result<(), DbError> {
+    pub async fn validate(&self, presented: EpochFence) -> Result<(), DbError> {
         self.fence.check(presented)
     }
 }
@@ -211,7 +213,7 @@ pub async fn replicate_document<R: semio_framework_async::HostAsyncRuntime>(lead
             let (mut wal, _report) = db_wal::ArtifactWal::open(&follower.wal().await, document.clone(), policy, now_ms).await?;
             for envelope in &envelopes {
                 let bytes = db_sync::encode_command_envelope(envelope);
-                wal.submit(&follower.wal().await, &[db_wal::WalRecord::Command(bytes)], DurabilityClass::Fsync, now_ms).await?;
+                wal.submit(&follower.wal().await, &[db_wal::WalRecord::Command(bytes.await)], DurabilityClass::Fsync, now_ms).await?;
             }
             let frontier = db_sync::replay_sync_state(&follower.wal().await, document).await?.frontier;
             Ok(ReplicationOutcome::TailApplied { frontier, count })
@@ -237,26 +239,27 @@ pub struct QuorumTracker {
 
 impl QuorumTracker {
     /// @emoji 🆕️ A tracker requiring `threshold` distinct acks to be satisfied.
-    pub fn new(threshold: u8) -> Self {
+    pub async fn new(threshold: u8) -> Self {
         Self { threshold, acked: std::collections::BTreeSet::new() }
     }
 
     /// @emoji ✅️ Records `node`'s ack. Returns `true` iff this call is the one that first reached
     /// the threshold (edge-triggered — the primitive `ClusterEvent::QuorumReached` fires exactly
     /// once from).
-    pub fn ack(&mut self, node: NodeId) -> bool {
+    pub async fn ack(&mut self, node: NodeId) -> bool {
         let was_satisfied = self.satisfied();
         self.acked.insert(node);
         !was_satisfied && self.satisfied()
     }
 
     /// @emoji 🥇️ True iff at least `threshold` distinct nodes have acked.
+    // 🚫️async: E1 pure accessor consumed synchronously by tests and `ack` — see R9
     pub fn satisfied(&self) -> bool {
         self.acked.len() >= self.threshold as usize
     }
 
     /// @emoji 🔢️ How many distinct nodes have acked so far.
-    pub fn ack_count(&self) -> usize {
+    pub async fn ack_count(&self) -> usize {
         self.acked.len()
     }
 }
@@ -265,7 +268,7 @@ impl QuorumTracker {
 /// `Memory`/`Os`/`Fsync` are single-node durability concerns (satisfied the moment the local write
 /// completes, before any cluster-level tracking is even consulted); only `Quorum(n)` needs a
 /// cluster-wide ack count, which this fn gates on.
-pub fn durability_satisfied(class: DurabilityClass, replica_ack_count: usize) -> bool {
+pub async fn durability_satisfied(class: DurabilityClass, replica_ack_count: usize) -> bool {
     match class {
         DurabilityClass::Quorum(n) => replica_ack_count >= n as usize,
         _ => true,
@@ -305,7 +308,7 @@ pub struct ReplicaStatus {
 /// @emoji 🧭️ Picks a target node for `intent` among `replicas`. Errors `Unavailable` if no
 /// candidate satisfies `intent` (no leader present for `Canonical`/`Preview`, no replica meets
 /// `BoundedStaleness`'s floor, or an empty replica set).
-pub fn route_read(intent: &ReadIntent, replicas: &[ReplicaStatus]) -> Result<NodeId, DbError> {
+pub async fn route_read(intent: &ReadIntent, replicas: &[ReplicaStatus]) -> Result<NodeId, DbError> {
     match intent {
         ReadIntent::Canonical | ReadIntent::Preview => {
             replicas.iter().find(|status| status.is_leader).map(|status| status.node.clone()).ok_or_else(|| DbError::Unavailable("no leader available to serve a canonical/preview read".to_string()))
@@ -340,7 +343,7 @@ pub enum SplitBrainOutcome {
 }
 
 /// @emoji ⚖️ Compares `local`'s claimed epoch against `remote`'s.
-pub fn resolve_split_brain(local: EpochFence, remote: EpochFence) -> SplitBrainOutcome {
+pub async fn resolve_split_brain(local: EpochFence, remote: EpochFence) -> SplitBrainOutcome {
     match local.epoch.cmp(&remote.epoch) {
         std::cmp::Ordering::Greater => SplitBrainOutcome::LocalWins,
         std::cmp::Ordering::Less => SplitBrainOutcome::RemoteWins,
@@ -357,7 +360,7 @@ pub async fn reconcile_shard_owner(storage: &impl db_storage::LeaseStorage, shar
     match ownership_status(storage, shard, now_ms).await? {
         OwnershipStatus::Vacant => Ok(SplitBrainOutcome::LocalWins),
         OwnershipStatus::Held { holder, fence, .. } if holder == claimed.holder && fence == claimed.fence => Ok(SplitBrainOutcome::LocalWins),
-        OwnershipStatus::Held { fence, .. } => Ok(resolve_split_brain(claimed.fence, fence)),
+        OwnershipStatus::Held { fence, .. } => Ok(resolve_split_brain(claimed.fence, fence).await),
     }
 }
 //#endregion 🔖️SplitBrain
@@ -380,7 +383,7 @@ pub enum ClusterEvent {
 impl ClusterEvent {
     /// @emoji 🚦️ The mailbox lane this event is admitted under — see the type's own doc for why
     /// ownership loss preempts everything else.
-    pub fn priority(&self) -> Priority {
+    pub async fn priority(&self) -> Priority {
         match self {
             ClusterEvent::OwnershipLost { .. } => Priority::System,
             ClusterEvent::ReplicationCaughtUp { .. } => Priority::Recovery,
@@ -390,7 +393,7 @@ impl ClusterEvent {
 }
 
 /// @emoji 📬️ A fresh `db_actor` mailbox for `ClusterEvent`s, sized per `capacities`.
-pub fn cluster_mailbox(capacities: MailboxCapacities) -> (db_actor::Address<ClusterEvent>, db_actor::Receiver<ClusterEvent>) {
+pub async fn cluster_mailbox(capacities: MailboxCapacities) -> (db_actor::Address<ClusterEvent>, db_actor::Receiver<ClusterEvent>) {
     db_actor::mailbox(capacities)
 }
 //#endregion 🔖️Coordinator
@@ -401,36 +404,36 @@ mod tests {
     use super::*;
 
     //#region 🔖️ShardMap
-    #[test]
-    fn shard_map_owner_is_stable_for_a_fixed_ring() {
-        let mut map = ShardMap::new(32);
-        map.add_node(&NodeId::from("node-a"));
-        map.add_node(&NodeId::from("node-b"));
-        map.add_node(&NodeId::from("node-c"));
+    #[semio_framework_async_macros::async_test]
+    async fn shard_map_owner_is_stable_for_a_fixed_ring() {
+        let mut map = ShardMap::new(32).await;
+        map.add_node(&NodeId::from("node-a")).await;
+        map.add_node(&NodeId::from("node-b")).await;
+        map.add_node(&NodeId::from("node-c")).await;
         let doc: ArtifactId = "doc-42".into();
-        assert_eq!(map.owner(&doc), map.owner(&doc));
-        assert!(map.owner(&doc).is_some());
+        assert_eq!(map.owner(&doc).await, map.owner(&doc).await);
+        assert!(map.owner(&doc).await.is_some());
     }
 
-    #[test]
-    fn shard_map_owner_is_none_for_an_empty_ring() {
-        let map = ShardMap::new(32);
-        assert_eq!(map.owner(&"doc-1".into()), None);
+    #[semio_framework_async_macros::async_test]
+    async fn shard_map_owner_is_none_for_an_empty_ring() {
+        let map = ShardMap::new(32).await;
+        assert_eq!(map.owner(&"doc-1".into()).await, None);
     }
 
-    #[test]
-    fn shard_map_removing_a_node_only_remaps_documents_it_owned() {
-        let mut map = ShardMap::new(64);
+    #[semio_framework_async_macros::async_test]
+    async fn shard_map_removing_a_node_only_remaps_documents_it_owned() {
+        let mut map = ShardMap::new(64).await;
         let (a, b, c) = (NodeId::from("node-a"), NodeId::from("node-b"), NodeId::from("node-c"));
-        map.add_node(&a);
-        map.add_node(&b);
-        map.add_node(&c);
+        map.add_node(&a).await;
+        map.add_node(&b).await;
+        map.add_node(&c).await;
 
         let docs: Vec<ArtifactId> = (0..200).map(|i| ArtifactId(format!("doc-{i}"))).collect();
-        let before: Vec<NodeId> = docs.iter().map(|doc| map.owner(doc).unwrap()).collect();
+        let before: Vec<NodeId> = docs.iter().map(|doc| db_actor::block_on(map.owner(doc)).unwrap()).collect();
 
-        map.remove_node(&b);
-        let after: Vec<NodeId> = docs.iter().map(|doc| map.owner(doc).unwrap()).collect();
+        map.remove_node(&b).await;
+        let after: Vec<NodeId> = docs.iter().map(|doc| db_actor::block_on(map.owner(doc)).unwrap()).collect();
 
         for (prior, later) in before.iter().zip(after.iter()) {
             if *prior == b {
@@ -442,18 +445,18 @@ mod tests {
         assert!(before.contains(&b), "sanity: node-b must have owned at least one sample document before removal");
     }
 
-    #[test]
-    fn shard_map_adding_a_node_remaps_only_a_minority_of_documents() {
-        let mut map = ShardMap::new(128);
-        map.add_node(&NodeId::from("node-a"));
-        map.add_node(&NodeId::from("node-b"));
-        map.add_node(&NodeId::from("node-c"));
+    #[semio_framework_async_macros::async_test]
+    async fn shard_map_adding_a_node_remaps_only_a_minority_of_documents() {
+        let mut map = ShardMap::new(128).await;
+        map.add_node(&NodeId::from("node-a")).await;
+        map.add_node(&NodeId::from("node-b")).await;
+        map.add_node(&NodeId::from("node-c")).await;
 
         let docs: Vec<ArtifactId> = (0..1000).map(|i| ArtifactId(format!("doc-{i}"))).collect();
-        let before: Vec<NodeId> = docs.iter().map(|doc| map.owner(doc).unwrap()).collect();
+        let before: Vec<NodeId> = docs.iter().map(|doc| db_actor::block_on(map.owner(doc)).unwrap()).collect();
 
-        map.add_node(&NodeId::from("node-d"));
-        let after: Vec<NodeId> = docs.iter().map(|doc| map.owner(doc).unwrap()).collect();
+        map.add_node(&NodeId::from("node-d")).await;
+        let after: Vec<NodeId> = docs.iter().map(|doc| db_actor::block_on(map.owner(doc)).unwrap()).collect();
 
         let moved = before.iter().zip(after.iter()).filter(|(prior, later)| prior != later).count();
         assert!(moved > 0, "adding a node should move at least some documents to it");
@@ -462,27 +465,27 @@ mod tests {
     //#endregion 🔖️ShardMap
 
     //#region 🔖️Ownership
-    #[test]
-    fn shard_ownership_acquire_renew_and_validate_round_trip() {
-        let storage = db_storage::MemoryStorage::new();
+    #[semio_framework_async_macros::async_test]
+    async fn shard_ownership_acquire_renew_and_validate_round_trip() {
+        let storage = db_storage::MemoryStorage::new().await;
         let owner = db_actor::block_on(ShardOwnership::acquire(&storage, "shard-0", NodeId::from("node-a"), 1_000, 0)).unwrap();
         assert_eq!(owner.fence, EpochFence::INITIAL);
-        assert!(owner.validate(EpochFence::INITIAL).is_ok());
-        assert!(owner.validate(EpochFence::INITIAL.next()).is_err());
+        assert!(owner.validate(EpochFence::INITIAL).await.is_ok());
+        assert!(owner.validate(EpochFence::INITIAL.next()).await.is_err());
 
         db_actor::block_on(owner.renew(&storage, 1_000, 500)).unwrap();
         assert_eq!(db_actor::block_on(ownership_status(&storage, "shard-0", 500)).unwrap(), OwnershipStatus::Held { holder: NodeId::from("node-a"), fence: EpochFence::INITIAL, expires_at_ms: 1_500 });
     }
 
-    #[test]
-    fn ownership_status_reports_vacant_before_any_acquire() {
-        let storage = db_storage::MemoryStorage::new();
+    #[semio_framework_async_macros::async_test]
+    async fn ownership_status_reports_vacant_before_any_acquire() {
+        let storage = db_storage::MemoryStorage::new().await;
         assert_eq!(db_actor::block_on(ownership_status(&storage, "shard-0", 0)).unwrap(), OwnershipStatus::Vacant);
     }
 
-    #[test]
-    fn shard_ownership_release_frees_the_resource_for_a_fresh_acquire() {
-        let storage = db_storage::MemoryStorage::new();
+    #[semio_framework_async_macros::async_test]
+    async fn shard_ownership_release_frees_the_resource_for_a_fresh_acquire() {
+        let storage = db_storage::MemoryStorage::new().await;
         let owner = db_actor::block_on(ShardOwnership::acquire(&storage, "shard-0", NodeId::from("node-a"), 1_000, 0)).unwrap();
         db_actor::block_on(owner.release(&storage)).unwrap();
         assert_eq!(db_actor::block_on(ownership_status(&storage, "shard-0", 0)).unwrap(), OwnershipStatus::Vacant);
@@ -491,9 +494,9 @@ mod tests {
         assert_eq!(reacquired.fence, EpochFence::INITIAL);
     }
 
-    #[test]
-    fn failover_via_lease_expiry_bumps_the_epoch_and_hands_off_to_the_new_leader() {
-        let storage = db_storage::MemoryStorage::new();
+    #[semio_framework_async_macros::async_test]
+    async fn failover_via_lease_expiry_bumps_the_epoch_and_hands_off_to_the_new_leader() {
+        let storage = db_storage::MemoryStorage::new().await;
         let stale = db_actor::block_on(ShardOwnership::acquire(&storage, "shard-0", NodeId::from("node-a"), 100, 0)).unwrap();
         assert_eq!(stale.fence, EpochFence::INITIAL);
 
@@ -504,7 +507,7 @@ mod tests {
     //#endregion 🔖️Ownership
 
     //#region 🔖️Replication
-    fn sample_envelope(id: &str, seq: u64) -> protocol::MutationEnvelope {
+    async fn sample_envelope(id: &str, seq: u64) -> protocol::MutationEnvelope {
         protocol::MutationEnvelope {
             mutation_id: protocol::MutationId(id.to_string()),
             document_id: protocol::ArtifactId("doc-1".to_string()),
@@ -512,27 +515,27 @@ mod tests {
             dependencies: Vec::new(),
             diff: protocol::ArtifactDiff { schema: protocol::SchemaId("diff.v1".to_string()), payload: seq.to_le_bytes().to_vec() },
             inverse: protocol::InverseMutation { schema: protocol::SchemaId("diff.v1".to_string()), payload: Vec::new() },
-            timestamp: protocol::HybridLogicalTimestamp::new(1, seq),
+            timestamp: protocol::HybridLogicalTimestamp::new(1, seq).await,
         }
     }
 
-    fn seed_leader_wal(storage: &db_storage::MemoryStorage, document: &ArtifactId, count: u64) {
+    async fn seed_leader_wal(storage: &db_storage::MemoryStorage, document: &ArtifactId, count: u64) {
         let mut wal = db_actor::block_on(db_wal::ArtifactWal::create(storage, document.clone(), db_wal::GroupCommitPolicy::default(), 0)).unwrap();
         for i in 0..count {
-            let envelope = sample_envelope(&format!("op-{i}"), i);
-            let bytes = db_sync::encode_command_envelope(&envelope);
+            let envelope = sample_envelope(&format!("op-{i}"), i).await;
+            let bytes = db_sync::encode_command_envelope(&envelope).await;
             db_actor::block_on(wal.submit(storage, &[db_wal::WalRecord::Command(bytes)], DurabilityClass::Fsync, i)).unwrap();
         }
     }
 
-    #[test]
-    fn replicate_document_applies_missing_tail_commands_to_a_fresh_follower() {
-        let leader = db_storage::MemoryStorage::new();
-        let follower = db_storage::MemoryStorage::new();
+    #[semio_framework_async_macros::async_test]
+    async fn replicate_document_applies_missing_tail_commands_to_a_fresh_follower() {
+        let leader = db_storage::MemoryStorage::new().await;
+        let follower = db_storage::MemoryStorage::new().await;
         let document: ArtifactId = "doc-1".into();
-        seed_leader_wal(&leader, &document, 4);
-        let leader = db_storage::DbBackend::Memory(leader);
-        let follower = db_storage::DbBackend::Memory(follower);
+        seed_leader_wal(&leader, &document, 4).await;
+        let leader: db_storage::DbBackend<db_storage::InlineRuntime> = db_storage::DbBackend::Memory(leader);
+        let follower: db_storage::DbBackend<db_storage::InlineRuntime> = db_storage::DbBackend::Memory(follower);
 
         let outcome = db_actor::block_on(replicate_document(&leader, &follower, document.clone(), db_wal::GroupCommitPolicy::default(), 0)).unwrap();
         match outcome {
@@ -549,14 +552,14 @@ mod tests {
         assert_eq!(follower_state.commands[3].mutation_id.0, "op-3");
     }
 
-    #[test]
-    fn replicate_document_reports_up_to_date_once_a_follower_catches_up() {
-        let leader = db_storage::MemoryStorage::new();
-        let follower = db_storage::MemoryStorage::new();
+    #[semio_framework_async_macros::async_test]
+    async fn replicate_document_reports_up_to_date_once_a_follower_catches_up() {
+        let leader = db_storage::MemoryStorage::new().await;
+        let follower = db_storage::MemoryStorage::new().await;
         let document: ArtifactId = "doc-1".into();
-        seed_leader_wal(&leader, &document, 2);
-        let leader = db_storage::DbBackend::Memory(leader);
-        let follower = db_storage::DbBackend::Memory(follower);
+        seed_leader_wal(&leader, &document, 2).await;
+        let leader: db_storage::DbBackend<db_storage::InlineRuntime> = db_storage::DbBackend::Memory(leader);
+        let follower: db_storage::DbBackend<db_storage::InlineRuntime> = db_storage::DbBackend::Memory(follower);
 
         let first = db_actor::block_on(replicate_document(&leader, &follower, document.clone(), db_wal::GroupCommitPolicy::default(), 0)).unwrap();
         assert!(matches!(first, ReplicationOutcome::TailApplied { count: 2, .. }));
@@ -565,12 +568,12 @@ mod tests {
         assert!(matches!(second, ReplicationOutcome::UpToDate { .. }));
     }
 
-    #[test]
-    fn replicate_document_transfers_a_snapshot_when_the_follower_is_below_the_retained_floor() {
-        let leader = db_storage::MemoryStorage::new();
-        let follower = db_storage::MemoryStorage::new();
+    #[semio_framework_async_macros::async_test]
+    async fn replicate_document_transfers_a_snapshot_when_the_follower_is_below_the_retained_floor() {
+        let leader = db_storage::MemoryStorage::new().await;
+        let follower = db_storage::MemoryStorage::new().await;
         let document: ArtifactId = "doc-1".into();
-        seed_leader_wal(&leader, &document, 5);
+        seed_leader_wal(&leader, &document, 5).await;
 
         let floor_frontier = Frontier { document: document.clone(), head_seq: 4, commit_seq: 4, chain_hash: [1u8; 32], epoch: 0 };
         {
@@ -578,8 +581,8 @@ mod tests {
             db_actor::block_on(wal.submit(&leader, &[db_wal::WalRecord::SnapshotPub { generation: 9, frontier: floor_frontier }], DurabilityClass::Fsync, 1_000)).unwrap();
         }
         db_actor::block_on(db_storage::SnapshotStorage::write_generation(&leader, &document, 9, b"snapshot-bytes")).unwrap();
-        let leader = db_storage::DbBackend::Memory(leader);
-        let follower = db_storage::DbBackend::Memory(follower);
+        let leader: db_storage::DbBackend<db_storage::InlineRuntime> = db_storage::DbBackend::Memory(leader);
+        let follower: db_storage::DbBackend<db_storage::InlineRuntime> = db_storage::DbBackend::Memory(follower);
 
         let outcome = db_actor::block_on(replicate_document(&leader, &follower, document.clone(), db_wal::GroupCommitPolicy::default(), 0)).unwrap();
         match outcome {
@@ -589,115 +592,119 @@ mod tests {
             }
             other => panic!("expected SnapshotTransferred, got {other:?}"),
         }
-        let copied = db_actor::block_on(db_storage::SnapshotStorage::read_generation(&follower, &document, 9)).unwrap();
+        // 🪡 `DbBackend<R>` itself carries no blanket `SnapshotStorage` impl (only its variant
+        // payloads do — `MemoryStorage`, `FsStorage<R>`, …), so the read must go through the
+        // matched-out `Memory` payload, not the enum wrapper `replicate_document` above took by reference.
+        let db_storage::DbBackend::Memory(ref follower_storage) = follower else { panic!("expected a Memory backend") };
+        let copied = db_actor::block_on(db_storage::SnapshotStorage::read_generation(follower_storage, &document, 9)).unwrap();
         assert_eq!(copied, b"snapshot-bytes");
     }
     //#endregion 🔖️Replication
 
     //#region 🔖️Quorum
-    #[test]
-    fn quorum_tracker_is_ack_idempotent_and_edge_triggers_exactly_once() {
-        let mut tracker = QuorumTracker::new(2);
+    #[semio_framework_async_macros::async_test]
+    async fn quorum_tracker_is_ack_idempotent_and_edge_triggers_exactly_once() {
+        let mut tracker = QuorumTracker::new(2).await;
         assert!(!tracker.satisfied());
-        assert!(!tracker.ack(NodeId::from("node-a")));
-        assert!(!tracker.ack(NodeId::from("node-a")), "acking the same node twice must not count twice");
-        assert_eq!(tracker.ack_count(), 1);
-        assert!(tracker.ack(NodeId::from("node-b")), "the second distinct ack should cross the threshold");
+        assert!(!tracker.ack(NodeId::from("node-a")).await);
+        assert!(!tracker.ack(NodeId::from("node-a")).await, "acking the same node twice must not count twice");
+        assert_eq!(tracker.ack_count().await, 1);
+        assert!(tracker.ack(NodeId::from("node-b")).await, "the second distinct ack should cross the threshold");
         assert!(tracker.satisfied());
-        assert!(!tracker.ack(NodeId::from("node-c")), "already satisfied, so a further ack is not edge-triggering");
+        assert!(!tracker.ack(NodeId::from("node-c")).await, "already satisfied, so a further ack is not edge-triggering");
     }
 
-    #[test]
-    fn durability_satisfied_only_gates_the_quorum_class_on_ack_count() {
-        assert!(durability_satisfied(DurabilityClass::Memory, 0));
-        assert!(durability_satisfied(DurabilityClass::Os, 0));
-        assert!(durability_satisfied(DurabilityClass::Fsync, 0));
-        assert!(!durability_satisfied(DurabilityClass::Quorum(3), 2));
-        assert!(durability_satisfied(DurabilityClass::Quorum(3), 3));
+    #[semio_framework_async_macros::async_test]
+    async fn durability_satisfied_only_gates_the_quorum_class_on_ack_count() {
+        assert!(durability_satisfied(DurabilityClass::Memory, 0).await);
+        assert!(durability_satisfied(DurabilityClass::Os, 0).await);
+        assert!(durability_satisfied(DurabilityClass::Fsync, 0).await);
+        assert!(!durability_satisfied(DurabilityClass::Quorum(3), 2).await);
+        assert!(durability_satisfied(DurabilityClass::Quorum(3), 3).await);
     }
     //#endregion 🔖️Quorum
 
     //#region 🔖️ReadRouting
-    fn replica(node: &str, head_seq: u64, is_leader: bool) -> ReplicaStatus {
+    async fn replica(node: &str, head_seq: u64, is_leader: bool) -> ReplicaStatus {
         ReplicaStatus { node: NodeId::from(node), frontier: Frontier { document: "doc-1".into(), head_seq, commit_seq: head_seq, chain_hash: [0u8; 32], epoch: 0 }, is_leader }
     }
 
-    #[test]
-    fn route_read_canonical_requires_the_leader() {
-        let replicas = vec![replica("follower-1", 10, false), replica("leader", 10, true)];
-        assert_eq!(route_read(&ReadIntent::Canonical, &replicas).unwrap(), NodeId::from("leader"));
-        assert!(route_read(&ReadIntent::Canonical, &[replica("follower-1", 10, false)]).is_err());
+    #[semio_framework_async_macros::async_test]
+    async fn route_read_canonical_requires_the_leader() {
+        let replicas = vec![replica("follower-1", 10, false).await, replica("leader", 10, true).await];
+        assert_eq!(route_read(&ReadIntent::Canonical, &replicas).await.unwrap(), NodeId::from("leader"));
+        assert!(route_read(&ReadIntent::Canonical, &[replica("follower-1", 10, false).await]).await.is_err());
     }
 
-    #[test]
-    fn route_read_preview_also_requires_the_leader() {
-        assert_eq!(route_read(&ReadIntent::Preview, &[replica("leader", 5, true)]).unwrap(), NodeId::from("leader"));
+    #[semio_framework_async_macros::async_test]
+    async fn route_read_preview_also_requires_the_leader() {
+        assert_eq!(route_read(&ReadIntent::Preview, &[replica("leader", 5, true).await]).await.unwrap(), NodeId::from("leader"));
     }
 
-    #[test]
-    fn route_read_bounded_staleness_prefers_a_qualifying_follower_over_the_leader() {
+    #[semio_framework_async_macros::async_test]
+    async fn route_read_bounded_staleness_prefers_a_qualifying_follower_over_the_leader() {
         let at_least = Frontier { document: "doc-1".into(), head_seq: 5, commit_seq: 5, chain_hash: [0u8; 32], epoch: 0 };
-        let qualifying = vec![replica("leader", 10, true), replica("follower-1", 8, false)];
-        assert_eq!(route_read(&ReadIntent::BoundedStaleness { at_least: at_least.clone() }, &qualifying).unwrap(), NodeId::from("follower-1"));
+        let qualifying = vec![replica("leader", 10, true).await, replica("follower-1", 8, false).await];
+        assert_eq!(route_read(&ReadIntent::BoundedStaleness { at_least: at_least.clone() }, &qualifying).await.unwrap(), NodeId::from("follower-1"));
 
-        let none_qualify = vec![replica("leader", 10, true), replica("follower-1", 2, false)];
-        assert_eq!(route_read(&ReadIntent::BoundedStaleness { at_least }, &none_qualify).unwrap(), NodeId::from("leader"));
+        let none_qualify = vec![replica("leader", 10, true).await, replica("follower-1", 2, false).await];
+        assert_eq!(route_read(&ReadIntent::BoundedStaleness { at_least }, &none_qualify).await.unwrap(), NodeId::from("leader"));
     }
 
-    #[test]
-    fn route_read_bounded_staleness_errors_when_nothing_qualifies() {
+    #[semio_framework_async_macros::async_test]
+    async fn route_read_bounded_staleness_errors_when_nothing_qualifies() {
         let at_least = Frontier { document: "doc-1".into(), head_seq: 5, commit_seq: 5, chain_hash: [0u8; 32], epoch: 0 };
-        assert!(route_read(&ReadIntent::BoundedStaleness { at_least }, &[replica("follower-1", 1, false)]).is_err());
+        assert!(route_read(&ReadIntent::BoundedStaleness { at_least }, &[replica("follower-1", 1, false).await]).await.is_err());
     }
 
-    #[test]
-    fn route_read_any_replica_picks_the_freshest() {
-        let replicas = vec![replica("follower-1", 3, false), replica("leader", 10, true), replica("follower-2", 7, false)];
-        assert_eq!(route_read(&ReadIntent::AnyReplica, &replicas).unwrap(), NodeId::from("leader"));
+    #[semio_framework_async_macros::async_test]
+    async fn route_read_any_replica_picks_the_freshest() {
+        let replicas = vec![replica("follower-1", 3, false).await, replica("leader", 10, true).await, replica("follower-2", 7, false).await];
+        assert_eq!(route_read(&ReadIntent::AnyReplica, &replicas).await.unwrap(), NodeId::from("leader"));
     }
 
-    #[test]
-    fn route_read_errors_on_an_empty_replica_set() {
-        assert!(route_read(&ReadIntent::AnyReplica, &[]).is_err());
+    #[semio_framework_async_macros::async_test]
+    async fn route_read_errors_on_an_empty_replica_set() {
+        assert!(route_read(&ReadIntent::AnyReplica, &[]).await.is_err());
     }
     //#endregion 🔖️ReadRouting
 
     //#region 🔖️SplitBrain
-    #[test]
-    fn resolve_split_brain_prefers_the_higher_epoch() {
+    #[semio_framework_async_macros::async_test]
+    async fn resolve_split_brain_prefers_the_higher_epoch() {
         let low = EpochFence::INITIAL;
         let high = low.next();
-        assert_eq!(resolve_split_brain(high, low), SplitBrainOutcome::LocalWins);
-        assert_eq!(resolve_split_brain(low, high), SplitBrainOutcome::RemoteWins);
-        assert_eq!(resolve_split_brain(low, low), SplitBrainOutcome::Tie);
+        assert_eq!(resolve_split_brain(high, low).await, SplitBrainOutcome::LocalWins);
+        assert_eq!(resolve_split_brain(low, high).await, SplitBrainOutcome::RemoteWins);
+        assert_eq!(resolve_split_brain(low, low).await, SplitBrainOutcome::Tie);
     }
 
-    #[test]
-    fn reconcile_shard_owner_confirms_a_still_valid_local_claim() {
-        let storage = db_storage::MemoryStorage::new();
+    #[semio_framework_async_macros::async_test]
+    async fn reconcile_shard_owner_confirms_a_still_valid_local_claim() {
+        let storage = db_storage::MemoryStorage::new().await;
         let owner = db_actor::block_on(ShardOwnership::acquire(&storage, "shard-0", NodeId::from("node-a"), 1_000, 0)).unwrap();
         assert_eq!(db_actor::block_on(reconcile_shard_owner(&storage, "shard-0", &owner, 0)).unwrap(), SplitBrainOutcome::LocalWins);
     }
 
-    #[test]
-    fn reconcile_shard_owner_reports_vacant_shard_as_uncontested_local_win() {
-        let storage = db_storage::MemoryStorage::new();
+    #[semio_framework_async_macros::async_test]
+    async fn reconcile_shard_owner_reports_vacant_shard_as_uncontested_local_win() {
+        let storage = db_storage::MemoryStorage::new().await;
         let owner = ShardOwnership { shard: "shard-0".to_string(), holder: NodeId::from("node-a"), fence: EpochFence::INITIAL };
         assert_eq!(db_actor::block_on(reconcile_shard_owner(&storage, "shard-0", &owner, 0)).unwrap(), SplitBrainOutcome::LocalWins);
     }
     //#endregion 🔖️SplitBrain
 
     //#region 🔖️Coordinator
-    #[test]
-    fn cluster_mailbox_drains_higher_priority_events_before_lower_ones() {
-        let (address, receiver) = cluster_mailbox(MailboxCapacities::uniform(8));
+    #[semio_framework_async_macros::async_test]
+    async fn cluster_mailbox_drains_higher_priority_events_before_lower_ones() {
+        let (address, receiver) = cluster_mailbox(MailboxCapacities::uniform(8)).await;
         let live = ClusterEvent::QuorumReached { document: "doc-1".into(), frontier: Frontier::genesis("doc-1".into()), acked: 2 };
         let recovery = ClusterEvent::ReplicationCaughtUp { document: "doc-1".into(), frontier: Frontier::genesis("doc-1".into()) };
         let system = ClusterEvent::OwnershipLost { shard: "shard-0".to_string(), fence: EpochFence::INITIAL };
 
-        address.try_send(live.priority(), live.clone()).unwrap();
-        address.try_send(recovery.priority(), recovery.clone()).unwrap();
-        address.try_send(system.priority(), system.clone()).unwrap();
+        address.try_send(live.priority().await, live.clone()).unwrap();
+        address.try_send(recovery.priority().await, recovery.clone()).unwrap();
+        address.try_send(system.priority().await, system.clone()).unwrap();
 
         assert_eq!(receiver.try_recv().unwrap().payload, system);
         assert_eq!(receiver.try_recv().unwrap().payload, recovery);

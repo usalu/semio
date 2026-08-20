@@ -129,8 +129,8 @@ impl DiffAlgebra<DwgSnapshot> for DwgDiff {
     /// 🔁️ Diff-level undo, derived generically (correct by construction): the state delta from
     /// `self.apply(base)` back to `base`.
     async fn inverse(&self, base: &DwgSnapshot) -> Self {
-        let mutated = self.apply(base).unwrap();
-        Self::between(&mutated, base)
+        let mutated = self.apply(base).await.unwrap();
+        Self::between(&mutated, base).await
     }
 
     /// 🧭️ Computes a field-by-field logical state delta.
@@ -175,13 +175,13 @@ impl DiffAlgebra<DwgSnapshot> for DwgDiff {
 /// 🧩 `SetSnapshot`'s diff is the sparse field-by-field `between(base, next)` — no full-replace
 /// slot exists on `DwgDiff` to short-circuit into.
 pub async fn diff_set_snapshot(base: &DwgSnapshot, next: &DwgSnapshot) -> DwgDiff {
-    DwgDiff::between(base, next)
+    DwgDiff::between(base, next).await
 }
 
 pub async fn diff_set_version_info(base: &DwgSnapshot, version: &str, maintenance_version: u8, codepage: u16) -> DwgDiff {
     let mut next = base.clone();
-    crate::artifacts::dwg::schema::snapshot::synchronize_version_info(&mut next, version, maintenance_version, codepage).expect("SetVersionInfo requires a valid DWG version sentinel");
-    DwgDiff::between(base, &next)
+    crate::artifacts::dwg::schema::snapshot::synchronize_version_info(&mut next, version, maintenance_version, codepage).await.expect("SetVersionInfo requires a valid DWG version sentinel");
+    DwgDiff::between(base, &next).await
 }
 
 //#endregion 🔖️MutationDiffBuilders

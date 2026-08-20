@@ -15,7 +15,7 @@ pub const BODY_KEY: &str = TableWindowKit::KIND_ID;
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `create_xlsx_strict_viewer` (subset root).
 pub async fn definition() -> WindowKindDefinition {
-    WindowKindDefinition { label: LocalizedLabel::native("Cells", "Zellen"), icon_id: "table-2".into(), ..TableWindowKit::window_kind() }
+    WindowKindDefinition { label: LocalizedLabel::native("Cells", "Zellen"), icon_id: "table-2".into(), ..TableWindowKit::window_kind().await }
 }
 //#endregion 🔖️Definition
 
@@ -26,7 +26,7 @@ pub async fn render(document: &XlsxSnapshot) -> UiNode {
     let shared_strings = &document.workbook.shared_strings;
     let columns = vec!["sheet".to_string(), "row".to_string(), "col".to_string(), "value".to_string()];
     let rows = xlsx_flat_cells(document).into_iter().map(|(sheet, row, col, value)| vec![sheet, row.to_string(), col.to_string(), render_xlsx_cell_value(&value, shared_strings)]).collect();
-    TableWindowKit::render(&TableView { columns, rows })
+    TableWindowKit::render(&TableView { columns, rows }).await
 }
 //#endregion 🔖️Render
 

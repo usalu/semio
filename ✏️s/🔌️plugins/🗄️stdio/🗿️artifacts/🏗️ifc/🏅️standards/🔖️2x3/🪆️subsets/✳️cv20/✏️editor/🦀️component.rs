@@ -73,8 +73,8 @@ impl ArtifactEditor for Ifc2x3Cv20Editor {
 
     async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
-            main::BODY_KEY => main::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
+            main::BODY_KEY => main::render(doc.snapshot).await,
+            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))).await,
         }
     }
 }
@@ -83,12 +83,12 @@ impl ArtifactEditor for Ifc2x3Cv20Editor {
 //#region 🔖️Manifest
 pub async fn create_ifc2x3_cv20_editor() -> semio_framework_plugin::AppDefinition {
     Editor::builder(IFC2X3_CV20_DIALECT)
-        .document(["stdio", "ifc2x3"])
-        .icon_id("box")
-        .mode_def(edit::definition())
-        .default_mode_id(edit::IFC2X3_CV20_EDIT_MODE_ID)
-        .window_kind_def(main::definition())
-        .default_layout(edit::layout())
+        .await.document(["stdio", "ifc2x3"])
+        .await.icon_id("box")
+        .await.mode_def(edit::definition().await)
+        .await.default_mode_id(edit::IFC2X3_CV20_EDIT_MODE_ID)
+        .await.window_kind_def(main::definition().await)
+        .await.default_layout(edit::layout())
         .build_definition()
 }
 //#endregion 🔖️Manifest

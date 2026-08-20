@@ -156,7 +156,7 @@ pub async fn diff_at_path(path: &[usize], leaf: SvgNodeDiff) -> SvgDiff {
 impl MutationDiff<SvgSnapshot> for SvgDiff {
     async fn apply(&self, base: &SvgSnapshot) -> MutationApplyResult<SvgSnapshot> {
         if let Some(root) = &self.root {
-            validate_svg_node(base.doc.root.as_ref(), root)?;
+            validate_svg_node(base.doc.root.as_ref(), root).await?;
         }
         let mut next = base.clone();
         if let Some(prolog) = &self.prolog {
@@ -169,7 +169,7 @@ impl MutationDiff<SvgSnapshot> for SvgDiff {
             next.doc.doctype = doctype.clone();
         }
         if let Some(node_diff) = &self.root {
-            next.doc.root = apply_root_diff(next.doc.root.as_ref(), node_diff);
+            next.doc.root = apply_root_diff(next.doc.root.as_ref(), node_diff).await;
         }
         Ok(next)
     }
@@ -187,7 +187,7 @@ impl MutationDiff<SvgSnapshot> for SvgDiff {
         self.root = match (self.root.take(), other.root) {
             (None, b) => b,
             (a, None) => a,
-            (Some(a), Some(b)) => Some(absorb_node_diff(a, b)),
+            (Some(a), Some(b)) => Some(absorb_node_diff(a, b).await),
         };
     }
 }
@@ -197,21 +197,21 @@ async fn validate_svg_node(current: Option<&XmlNode>, diff: &SvgNodeDiff) -> Mut
         SvgNodeDiff::Replace { .. } => Ok(()),
         SvgNodeDiff::Text { .. } => match current {
             Some(XmlNode::Text { .. }) => Ok(()),
-            Some(_) => Err(MutationApplyError::new("mutation.apply.kind-mismatch", "text diff targets a non-text node")),
-            None => Err(MutationApplyError::new("mutation.apply.missing-target", "text diff targets a missing root")),
+            Some(_) => Err(MutationApplyError::new("mutation.apply.kind-mismatch", "text diff targets a non-text node").await),
+            None => Err(MutationApplyError::new("mutation.apply.missing-target", "text diff targets a missing root").await),
         },
         SvgNodeDiff::Element(element) => match current {
             Some(XmlNode::Element { attrs, children, .. }) => {
                 if let Some(attributes) = &element.attributes {
-                    validate_svg_attrs(attrs, attributes)?;
+                    validate_svg_attrs(attrs, attributes).await?;
                 }
                 if let Some(children_diff) = &element.children {
-                    validate_svg_children(children, children_diff)?;
+                    validate_svg_children(children, children_diff).await?;
                 }
                 Ok(())
             }
-            Some(_) => Err(MutationApplyError::new("mutation.apply.kind-mismatch", "element diff targets a non-element node")),
-            None => Err(MutationApplyError::new("mutation.apply.missing-target", "element diff targets a missing root")),
+            Some(_) => Err(MutationApplyError::new("mutation.apply.kind-mismatch", "element diff targets a non-element node").await),
+            None => Err(MutationApplyError::new("mutation.apply.missing-target", "element diff targets a missing root").await),
         },
     }
 }
@@ -219,18 +219,18 @@ async fn validate_svg_node(current: Option<&XmlNode>, diff: &SvgNodeDiff) -> Mut
 async fn validate_svg_attrs(base: &[XmlAttr], diff: &SvgAttributesDiff) -> MutationApplyResult<()> {
     for (position, name) in diff.removed.iter().enumerate() {
         if !base.iter().any(|attr| attr.name == *name) {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "attribute removal target does not exist"));
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "attribute removal target does not exist").await);
         }
         if diff.removed[..position].contains(name) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "attribute removal target is repeated"));
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "attribute removal target is repeated").await);
         }
     }
     for (position, modified) in diff.modified.iter().enumerate() {
         if !base.iter().any(|attr| attr.name == modified.name) {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "attribute modification target does not exist"));
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "attribute modification target does not exist").await);
         }
         if diff.removed.contains(&modified.name) || diff.modified[..position].iter().any(|candidate| candidate.name == modified.name) {
-            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "attribute modification target conflicts or repeats"));
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "attribute modification target conflicts or repeats").await);
         }
     }
     let final_len = base.len() - diff.removed.len() + diff.added.len();
@@ -241,7 +241,7 @@ async fn validate_svg_attrs(base: &[XmlAttr], diff: &SvgAttributesDiff) -> Mutat
             || diff.removed.contains(&added.name)
             || diff.modified.iter().any(|candidate| candidate.name == added.name)
         {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "attribute addition target is invalid or conflicting"));
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "attribute addition target is invalid or conflicting").await);
         }
     }
     Ok(())
@@ -251,30 +251,30 @@ async fn validate_svg_children(base: &[XmlNode], diff: &SvgChildrenDiff) -> Muta
     let mut removed = std::collections::HashSet::new();
     for &index in &diff.removed {
         if index >= base.len() {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "child removal target does not exist"));
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "child removal target does not exist").await);
         }
         if !removed.insert(index) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "child removal target is repeated"));
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "child removal target is repeated").await);
         }
     }
     let mut modified = std::collections::HashSet::new();
     for entry in &diff.modified {
         if entry.index >= base.len() {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "child modification target does not exist"));
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "child modification target does not exist").await);
         }
         if removed.contains(&entry.index) {
-            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "child modification targets a removed node"));
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "child modification targets a removed node").await);
         }
         if !modified.insert(entry.index) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "child modification target is repeated"));
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "child modification target is repeated").await);
         }
-        validate_svg_node(Some(&base[entry.index]), &entry.diff).map_err(|error| error.under(vec!["modified".to_string(), entry.index.to_string()]))?;
+        validate_svg_node(Some(&base[entry.index]), &entry.diff).await.map_err(|error| error.under(vec!["modified".to_string(), entry.index.to_string()]))?;
     }
     let final_len = base.len() - removed.len() + diff.added.len();
     let mut added = std::collections::HashSet::new();
     for entry in &diff.added {
         if entry.index > final_len || !added.insert(entry.index) {
-            return Err(MutationApplyError::new("mutation.apply.invalid-index", "child addition position is invalid or repeated"));
+            return Err(MutationApplyError::new("mutation.apply.invalid-index", "child addition position is invalid or repeated").await);
         }
     }
     Ok(())
@@ -298,11 +298,11 @@ async fn apply_node_diff(node: &XmlNode, diff: &SvgNodeDiff) -> XmlNode {
             XmlNode::Element { name, attrs, children } => XmlNode::Element {
                 name: element_diff.name.clone().unwrap_or_else(|| name.clone()),
                 attrs: match &element_diff.attributes {
-                    Some(attrs_diff) => apply_attrs_diff(attrs, attrs_diff),
+                    Some(attrs_diff) => apply_attrs_diff(attrs, attrs_diff).await,
                     None => attrs.clone(),
                 },
                 children: match &element_diff.children {
-                    Some(children_diff) => apply_children_diff(children, children_diff),
+                    Some(children_diff) => Box::pin(apply_children_diff(children, children_diff)).await,
                     None => children.clone(),
                 },
             },
@@ -334,7 +334,7 @@ async fn apply_children_diff(children: &[XmlNode], diff: &SvgChildrenDiff) -> Ve
     for m in &diff.modified {
         if let Some(Some(node)) = slots.get(m.index) {
             let patched = apply_node_diff(node, &m.diff);
-            slots[m.index] = Some(patched);
+            slots[m.index] = Some(Box::pin(patched).await);
         }
     }
     let mut removed_sorted = diff.removed.clone();
@@ -372,7 +372,7 @@ impl DiffAlgebra<SvgSnapshot> for SvgDiff {
             prolog: if base.doc.prolog != other.doc.prolog { Some(other.doc.prolog.clone()) } else { None },
             declaration: if base.doc.declaration != other.doc.declaration { Some(other.doc.declaration.clone()) } else { None },
             doctype: if base.doc.doctype != other.doc.doctype { Some(other.doc.doctype.clone()) } else { None },
-            root: between_root(base.doc.root.as_ref(), other.doc.root.as_ref()),
+            root: between_root(base.doc.root.as_ref(), other.doc.root.as_ref()).await,
         }
     }
 
@@ -426,7 +426,7 @@ async fn inverse_children_diff(base_children: &[XmlNode], diff: &SvgChildrenDiff
     for m in &diff.modified {
         if let Some(original) = base_children.get(m.index) {
             let next_index = transform_index(m.index, &diff.removed, &diff.added);
-            modified.push(SvgChildModified { index: next_index, diff: inverse_node_diff(Some(original), &m.diff) });
+            modified.push(SvgChildModified { index: next_index.await, diff: inverse_node_diff(Some(original), &m.diff).await });
         }
     }
     let mut added = Vec::new();
@@ -444,7 +444,7 @@ async fn between_root(base: Option<&XmlNode>, other: Option<&XmlNode>) -> Option
         (None, None) => None,
         (None, Some(n)) => Some(SvgNodeDiff::Replace { node: Some(n.clone()) }),
         (Some(_), None) => Some(SvgNodeDiff::Replace { node: None }),
-        (Some(b), Some(o)) => between_node(b, o),
+        (Some(b), Some(o)) => between_node(b, o).await,
     }
 }
 
@@ -456,8 +456,8 @@ async fn between_node(base: &XmlNode, other: &XmlNode) -> Option<SvgNodeDiff> {
         (XmlNode::Text { .. }, XmlNode::Text { text: ot }) => Some(SvgNodeDiff::Text { text: Some(ot.clone()) }),
         (XmlNode::Element { name: bn, attrs: ba, children: bc }, XmlNode::Element { name: on, attrs: oa, children: oc }) => {
             let name = if bn != on { Some(on.clone()) } else { None };
-            let attributes = between_attrs(ba, oa);
-            let children = between_children(bc, oc);
+            let attributes = between_attrs(ba, oa).await;
+            let children = Box::pin(between_children(bc, oc)).await;
             if name.is_none() && attributes.is_none() && children.is_none() {
                 None
             } else {
@@ -499,7 +499,7 @@ async fn between_children(base: &[XmlNode], other: &[XmlNode]) -> Option<SvgChil
     let mut modified = Vec::new();
     for i in 0..min_len {
         if base[i] != other[i] {
-            if let Some(d) = between_node(&base[i], &other[i]) {
+            if let Some(d) = Box::pin(between_node(&base[i], &other[i])).await {
                 modified.push(SvgChildModified { index: i, diff: d });
             }
         }
@@ -558,11 +558,11 @@ async fn simulate_mid_origins(base_len: usize, removed: &[usize], added: &[SvgCh
 async fn absorb_node_diff(a: SvgNodeDiff, b: SvgNodeDiff) -> SvgNodeDiff {
     match (a, b) {
         (_, SvgNodeDiff::Replace { node: Some(n) }) => SvgNodeDiff::Replace { node: Some(n) },
-        (SvgNodeDiff::Replace { node: Some(n) }, b) => SvgNodeDiff::Replace { node: Some(apply_node_diff(&n, &b)) },
+        (SvgNodeDiff::Replace { node: Some(n) }, b) => SvgNodeDiff::Replace { node: Some(apply_node_diff(&n, &b).await) },
         (_, SvgNodeDiff::Replace { node: None }) => SvgNodeDiff::Replace { node: None },
         (SvgNodeDiff::Replace { node: None }, _) => SvgNodeDiff::Replace { node: None },
         (SvgNodeDiff::Text { text: ta }, SvgNodeDiff::Text { text: tb }) => SvgNodeDiff::Text { text: tb.or(ta) },
-        (SvgNodeDiff::Element(ea), SvgNodeDiff::Element(eb)) => SvgNodeDiff::Element(absorb_element_diff(ea, eb)),
+        (SvgNodeDiff::Element(ea), SvgNodeDiff::Element(eb)) => SvgNodeDiff::Element(Box::pin(absorb_element_diff(ea, eb)).await),
         (_, b) => b,
     }
 }
@@ -574,12 +574,12 @@ async fn absorb_element_diff(mut a: SvgElementDiff, b: SvgElementDiff) -> SvgEle
     a.attributes = match (a.attributes.take(), b.attributes) {
         (None, x) => x,
         (x, None) => x,
-        (Some(ad), Some(bd)) => Some(absorb_attrs_diff(ad, bd)),
+        (Some(ad), Some(bd)) => Some(absorb_attrs_diff(ad, bd).await),
     };
     a.children = match (a.children.take(), b.children) {
         (None, x) => x,
         (x, None) => x,
-        (Some(ad), Some(bd)) => Some(absorb_children_diff(ad, bd)),
+        (Some(ad), Some(bd)) => Some(Box::pin(absorb_children_diff(ad, bd)).await),
     };
     a
 }
@@ -640,7 +640,7 @@ async fn absorb_children_diff(d1: SvgChildrenDiff, d2: SvgChildrenDiff) -> SvgCh
         base_len += 1;
     }
 
-    let mid = simulate_mid_origins(base_len, &d1.removed, &d1.added);
+    let mid = simulate_mid_origins(base_len, &d1.removed, &d1.added).await;
 
     let mut removed = d1.removed.clone();
     let mut modified = d1.modified.clone();
@@ -668,7 +668,7 @@ async fn absorb_children_diff(d1: SvgChildrenDiff, d2: SvgChildrenDiff) -> SvgCh
                     continue;
                 }
                 match modified.iter_mut().find(|m| &m.index == bi) {
-                    Some(existing) => existing.diff = absorb_node_diff(existing.diff.clone(), m2.diff.clone()),
+                    Some(existing) => existing.diff = Box::pin(absorb_node_diff(existing.diff.clone(), m2.diff.clone())).await,
                     None => modified.push(SvgChildModified { index: *bi, diff: m2.diff.clone() }),
                 }
             }
@@ -677,7 +677,7 @@ async fn absorb_children_diff(d1: SvgChildrenDiff, d2: SvgChildrenDiff) -> SvgCh
                     continue;
                 }
                 if let Some(add) = working_added.get_mut(*k) {
-                    add.item = apply_node_diff(&add.item, &m2.diff);
+                    add.item = apply_node_diff(&add.item, &m2.diff).await;
                 }
             }
             None => {}
@@ -690,7 +690,7 @@ async fn absorb_children_diff(d1: SvgChildrenDiff, d2: SvgChildrenDiff) -> SvgCh
             continue;
         }
         let final_index = transform_index(add.index, &d2.removed, &d2.added);
-        added.push(SvgChildAdded { index: final_index, item: add.item });
+        added.push(SvgChildAdded { index: final_index.await, item: add.item });
     }
     for a2 in &d2.added {
         added.push(a2.clone());
@@ -705,7 +705,7 @@ async fn absorb_children_diff(d1: SvgChildrenDiff, d2: SvgChildrenDiff) -> SvgCh
 /// 🧩️ Builds the sparse field-by-field diff for a `SetSnapshot` mutation. No `snapshot:
 /// Option<SvgSnapshot>` full-replace slot -- this IS `SvgDiff::between`.
 pub async fn diff_set_snapshot(base: &SvgSnapshot, next: &SvgSnapshot) -> SvgDiff {
-    SvgDiff::between(base, next)
+    SvgDiff::between(base, next).await
 }
 //#endregion 🔖️SetSnapshot
 
@@ -729,10 +729,10 @@ pub(crate) async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
 pub(crate) async fn enc_str(s: &str) -> String {
-    hex_encode(s.as_bytes())
+    hex_encode(s.as_bytes()).await
 }
 pub(crate) async fn dec_str(s: &str) -> Result<String, String> {
-    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
+    String::from_utf8(hex_decode(s).await?).map_err(|e| e.to_string())
 }
 async fn parse_usize(s: &str) -> Result<usize, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
@@ -769,8 +769,8 @@ pub(crate) async fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String
     }
 }
 pub(crate) async fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
-    let inner = strip_brackets(s)?;
-    match split_top_level(inner, ',').as_slice() {
+    let inner = strip_brackets(s).await?;
+    match split_top_level(inner, ',').await.as_slice() {
         ["0"] => Ok(None),
         [tag, value] if *tag == "1" => Ok(Some(dec(value)?)),
         other => Err(format!("option decode: bad shape {other:?}")),
@@ -782,7 +782,7 @@ pub(crate) async fn enc_prolog(prolog: &Vec<XmlNode>) -> String {
 }
 
 pub(crate) async fn dec_prolog(s: &str) -> Result<Vec<XmlNode>, String> {
-    split_top_level(strip_brackets(s)?, ',').into_iter().map(dec_xml_node).collect()
+    split_top_level(strip_brackets(s).await?, ',').into_iter().map(dec_xml_node).collect()
 }
 
 //#region 🔖️BinaryPrimitives
@@ -797,14 +797,14 @@ pub(crate) async fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
     out.extend_from_slice(bytes);
 }
 pub(crate) async fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
+    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec())
 }
 pub(crate) async fn write_str_lp(out: &mut Vec<u8>, s: &str) {
     write_bytes_lp(out, s.as_bytes());
 }
 pub(crate) async fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
-    String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
+    String::from_utf8(read_bytes_lp(reader).await?).map_err(|e| e.to_string())
 }
 
 pub(crate) async fn enc_prolog_bin(prolog: &Vec<XmlNode>, out: &mut Vec<u8>) {
@@ -815,7 +815,7 @@ pub(crate) async fn enc_prolog_bin(prolog: &Vec<XmlNode>, out: &mut Vec<u8>) {
 }
 
 pub(crate) async fn dec_prolog_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<XmlNode>, String> {
-    let count = reader.read_varint_u64().map_err(|error| error.to_string())? as usize;
+    let count = reader.read_varint_u64().await.map_err(|error| error.to_string())? as usize;
     (0..count).map(|_| dec_xml_node_bin(reader)).collect()
 }
 //#endregion 🔖️BinaryPrimitives
@@ -826,17 +826,17 @@ async fn enc_attr(a: &XmlAttr) -> String {
     format!("[{},{}]", enc_str(&a.name), enc_str(&a.value))
 }
 async fn dec_attr(s: &str) -> Result<XmlAttr, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [name, value] = parts.as_slice() else { return Err(format!("attr: expected 2 fields, got {}", parts.len())) };
-    Ok(XmlAttr { name: dec_str(name)?, value: dec_str(value)? })
+    Ok(XmlAttr { name: dec_str(name).await?, value: dec_str(value).await? })
 }
 pub(crate) async fn enc_declaration(d: &XmlDeclaration) -> String {
     format!("[{},{},{}]", enc_str(&d.version), encode_option(&d.encoding, |v| enc_str(v)), encode_option(&d.standalone, |v| if *v { "1".to_string() } else { "0".to_string() }),)
 }
 pub(crate) async fn dec_declaration(s: &str) -> Result<XmlDeclaration, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [version, encoding, standalone] = parts.as_slice() else { return Err(format!("declaration: expected 3 fields, got {}", parts.len())) };
-    Ok(XmlDeclaration { version: dec_str(version)?, encoding: decode_option(encoding, dec_str)?, standalone: decode_option(standalone, |v| Ok(v == "1"))? })
+    Ok(XmlDeclaration { version: dec_str(version).await?, encoding: decode_option(encoding, dec_str).await?, standalone: decode_option(standalone, |v| Ok(v == "1")).await? })
 }
 pub(crate) async fn enc_doctype(doctype: &XmlDoctype) -> String {
     let external = encode_option(&doctype.external_id, |external| match external {
@@ -856,32 +856,32 @@ pub(crate) async fn enc_doctype(doctype: &XmlDoctype) -> String {
     format!("[{},{},[{}]]", enc_str(&doctype.name), external, declarations)
 }
 pub(crate) async fn dec_doctype(s: &str) -> Result<XmlDoctype, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [name, external, declarations] = parts.as_slice() else {
         return Err(format!("doctype: expected 3 fields, got {}", parts.len()));
     };
     let external_id = decode_option(external, |value| {
         let (tag, rest) = value.split_at(1);
-        let fields = split_top_level(strip_brackets(rest)?, ',');
+        let fields = semio_framework_plugin::resolve_ready(split_top_level(strip_brackets(rest)?, ','));
         match (tag, fields.as_slice()) {
             ("S", [system_id]) => Ok(XmlExternalId::System { system_id: dec_str(system_id)? }),
             ("P", [public_id, system_id]) => Ok(XmlExternalId::Public { public_id: dec_str(public_id)?, system_id: dec_str(system_id)? }),
             _ => Err(format!("doctype external id: bad shape {value:?}")),
         }
-    })?;
-    let declarations = split_top_level(strip_brackets(declarations)?, ',')
+    }).await?;
+    let declarations = split_top_level(strip_brackets(declarations).await?, ',')
         .into_iter()
         .filter(|value| !value.is_empty())
         .map(|value| {
             let (tag, rest) = value.split_at(1);
             let fields = split_top_level(strip_brackets(rest)?, ',');
-            match (tag, fields.as_slice()) {
+            match (tag, semio_framework_plugin::resolve_ready(fields.await.as_slice())) {
                 ("E", [parameter, name, value]) => Ok(XmlDtdDeclaration::Entity { parameter: *parameter == "1", name: dec_str(name)?, value: dec_str(value)? }),
                 _ => Err(format!("doctype declaration: bad shape {value:?}")),
             }
         })
         .collect::<Result<Vec<_>, String>>()?;
-    Ok(XmlDoctype { name: dec_str(name)?, external_id, declarations })
+    Ok(XmlDoctype { name: dec_str(name).await?, external_id, declarations })
 }
 pub(crate) async fn enc_doctype_bin(doctype: &XmlDoctype, out: &mut Vec<u8>) {
     write_str_lp(out, &doctype.name);
@@ -910,18 +910,18 @@ pub(crate) async fn enc_doctype_bin(doctype: &XmlDoctype, out: &mut Vec<u8>) {
     }
 }
 pub(crate) async fn dec_doctype_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlDoctype, String> {
-    let name = read_str_lp(reader)?;
-    let external_id = match reader.read_u8().map_err(|error| error.to_string())? {
+    let name = read_str_lp(reader).await?;
+    let external_id = match reader.read_u8().await.map_err(|error| error.to_string())? {
         0 => None,
-        1 => Some(XmlExternalId::System { system_id: read_str_lp(reader)? }),
-        2 => Some(XmlExternalId::Public { public_id: read_str_lp(reader)?, system_id: read_str_lp(reader)? }),
+        1 => Some(XmlExternalId::System { system_id: read_str_lp(reader).await? }),
+        2 => Some(XmlExternalId::Public { public_id: read_str_lp(reader).await?, system_id: read_str_lp(reader).await? }),
         tag => return Err(format!("unknown XML external id tag {tag}")),
     };
-    let count = reader.read_varint_u64().map_err(|error| error.to_string())? as usize;
+    let count = reader.read_varint_u64().await.map_err(|error| error.to_string())? as usize;
     let mut declarations = Vec::with_capacity(count);
     for _ in 0..count {
-        match reader.read_u8().map_err(|error| error.to_string())? {
-            1 => declarations.push(XmlDtdDeclaration::Entity { parameter: reader.read_u8().map_err(|error| error.to_string())? != 0, name: read_str_lp(reader)?, value: read_str_lp(reader)? }),
+        match reader.read_u8().await.map_err(|error| error.to_string())? {
+            1 => declarations.push(XmlDtdDeclaration::Entity { parameter: reader.read_u8().await.map_err(|error| error.to_string())? != 0, name: read_str_lp(reader).await?, value: read_str_lp(reader).await? }),
             tag => return Err(format!("unknown XML DTD declaration tag {tag}")),
         }
     }
@@ -945,22 +945,22 @@ pub(crate) async fn enc_xml_node(n: &XmlNode) -> String {
 }
 pub(crate) async fn dec_xml_node(s: &str) -> Result<XmlNode, String> {
     let (tag, rest) = s.split_at(1);
-    let inner = strip_brackets(rest)?;
+    let inner = strip_brackets(rest).await?;
     match tag {
         "E" => {
-            let parts = split_top_level(inner, ',');
+            let parts = split_top_level(inner, ',').await;
             let [name, attrs, children] = parts.as_slice() else { return Err(format!("element: expected 3 fields, got {}", parts.len())) };
-            let attrs = split_top_level(strip_brackets(attrs)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_attr).collect::<Result<Vec<_>, String>>()?;
-            let children = split_top_level(strip_brackets(children)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_xml_node).collect::<Result<Vec<_>, String>>()?;
-            Ok(XmlNode::Element { name: dec_str(name)?, attrs, children })
+            let attrs = split_top_level(strip_brackets(attrs).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_attr).collect::<Result<Vec<_>, String>>()?;
+            let children = split_top_level(strip_brackets(children).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_xml_node).collect::<Result<Vec<_>, String>>()?;
+            Ok(XmlNode::Element { name: dec_str(name).await?, attrs, children })
         }
-        "T" => Ok(XmlNode::Text { text: dec_str(inner)? }),
-        "D" => Ok(XmlNode::CData { text: dec_str(inner)? }),
-        "M" => Ok(XmlNode::Comment { text: dec_str(inner)? }),
+        "T" => Ok(XmlNode::Text { text: dec_str(inner).await? }),
+        "D" => Ok(XmlNode::CData { text: dec_str(inner).await? }),
+        "M" => Ok(XmlNode::Comment { text: dec_str(inner).await? }),
         "P" => {
-            let parts = split_top_level(inner, ',');
+            let parts = split_top_level(inner, ',').await;
             let [target, data] = parts.as_slice() else { return Err(format!("PI: expected 2 fields, got {}", parts.len())) };
-            Ok(XmlNode::ProcessingInstruction { target: dec_str(target)?, data: dec_str(data)? })
+            Ok(XmlNode::ProcessingInstruction { target: dec_str(target).await?, data: dec_str(data).await? })
         }
         other => Err(format!("xml node: unknown tag {other:?}")),
     }
@@ -980,8 +980,8 @@ pub(crate) async fn enc_attr_bin(a: &XmlAttr, out: &mut Vec<u8>) {
     write_str_lp(out, &a.value);
 }
 pub(crate) async fn dec_attr_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlAttr, String> {
-    let name = read_str_lp(reader)?;
-    let value = read_str_lp(reader)?;
+    let name = read_str_lp(reader).await?;
+    let value = read_str_lp(reader).await?;
     Ok(XmlAttr { name, value })
 }
 pub(crate) async fn enc_declaration_bin(d: &XmlDeclaration, out: &mut Vec<u8>) {
@@ -996,9 +996,9 @@ pub(crate) async fn enc_declaration_bin(d: &XmlDeclaration, out: &mut Vec<u8>) {
     }
 }
 pub(crate) async fn dec_declaration_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlDeclaration, String> {
-    let version = read_str_lp(reader)?;
-    let encoding = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
-    let standalone = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(reader.read_u8().map_err(|e| e.to_string())? != 0) } else { None };
+    let version = read_str_lp(reader).await?;
+    let encoding = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader).await?) } else { None };
+    let standalone = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(reader.read_u8().await.map_err(|e| e.to_string())? != 0) } else { None };
     Ok(XmlDeclaration { version, encoding, standalone })
 }
 pub(crate) async fn enc_xml_node_bin(node: &XmlNode, out: &mut Vec<u8>) {
@@ -1035,28 +1035,28 @@ pub(crate) async fn enc_xml_node_bin(node: &XmlNode, out: &mut Vec<u8>) {
     }
 }
 pub(crate) async fn dec_xml_node_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlNode, String> {
-    let tag = reader.read_u8().map_err(|e| e.to_string())?;
+    let tag = reader.read_u8().await.map_err(|e| e.to_string())?;
     match tag {
         0 => {
-            let name = read_str_lp(reader)?;
-            let attr_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+            let name = read_str_lp(reader).await?;
+            let attr_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
             let mut attrs = Vec::with_capacity(attr_count as usize);
             for _ in 0..attr_count {
-                attrs.push(dec_attr_bin(reader)?);
+                attrs.push(dec_attr_bin(reader).await?);
             }
-            let child_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+            let child_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
             let mut children = Vec::with_capacity(child_count as usize);
             for _ in 0..child_count {
-                children.push(dec_xml_node_bin(reader)?);
+                children.push(Box::pin(dec_xml_node_bin(reader)).await?);
             }
             Ok(XmlNode::Element { name, attrs, children })
         }
-        1 => Ok(XmlNode::Text { text: read_str_lp(reader)? }),
-        2 => Ok(XmlNode::CData { text: read_str_lp(reader)? }),
-        3 => Ok(XmlNode::Comment { text: read_str_lp(reader)? }),
+        1 => Ok(XmlNode::Text { text: read_str_lp(reader).await? }),
+        2 => Ok(XmlNode::CData { text: read_str_lp(reader).await? }),
+        3 => Ok(XmlNode::Comment { text: read_str_lp(reader).await? }),
         4 => {
-            let target = read_str_lp(reader)?;
-            let data = read_str_lp(reader)?;
+            let target = read_str_lp(reader).await?;
+            let data = read_str_lp(reader).await?;
             Ok(XmlNode::ProcessingInstruction { target, data })
         }
         other => Err(format!("xml node binary: unknown tag {other}")),
@@ -1073,10 +1073,10 @@ async fn enc_attrs_diff(d: &SvgAttributesDiff) -> String {
     format!("[{removed}];[{modified}];[{added}]")
 }
 async fn dec_attrs_diff(body: &str) -> Result<SvgAttributesDiff, String> {
-    let three = split_top_level(body, ';');
+    let three = split_top_level(body, ';').await;
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("attrs diff: expected 3 sections, got {}", three.len())) };
-    let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_str).collect::<Result<Vec<_>, String>>()?;
-    let modified = split_top_level(strip_brackets(modified_s)?, ',')
+    let removed = split_top_level(strip_brackets(removed_s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_str).collect::<Result<Vec<_>, String>>()?;
+    let modified = split_top_level(strip_brackets(modified_s).await?, ',')
         .into_iter()
         .filter(|s| !s.is_empty())
         .map(|entry| {
@@ -1084,7 +1084,7 @@ async fn dec_attrs_diff(body: &str) -> Result<SvgAttributesDiff, String> {
             Ok(SvgAttrModified { name: dec_str(name)?, value: dec_str(value)? })
         })
         .collect::<Result<Vec<_>, String>>()?;
-    let added = split_top_level(strip_brackets(added_s)?, ',')
+    let added = split_top_level(strip_brackets(added_s).await?, ',')
         .into_iter()
         .filter(|s| !s.is_empty())
         .map(|entry| {
@@ -1119,25 +1119,25 @@ async fn enc_node_diff(d: &SvgNodeDiff) -> String {
 }
 async fn dec_node_diff(s: &str) -> Result<SvgNodeDiff, String> {
     let (tag, rest) = s.split_at(1);
-    let inner = strip_brackets(rest)?;
+    let inner = strip_brackets(rest).await?;
     match tag {
         "E" => {
-            let parts = split_top_level(inner, ',');
+            let parts = split_top_level(inner, ',').await;
             let [name, attributes, children] = parts.as_slice() else { return Err(format!("node diff element: expected 3 fields, got {}", parts.len())) };
-            let attributes = match split_top_level(strip_brackets(attributes)?, ',').as_slice() {
+            let attributes = match split_top_level(strip_brackets(attributes).await?, ',').await.as_slice() {
                 ["0"] => None,
-                [tag, rest @ ..] if *tag == "1" => Some(dec_attrs_diff(&rest.join(","))?),
+                [tag, rest @ ..] if *tag == "1" => Some(dec_attrs_diff(&rest.join(",")).await?),
                 other => return Err(format!("node diff element attrs: bad shape {other:?}")),
             };
-            let children = match split_top_level(strip_brackets(children)?, ',').as_slice() {
+            let children = match split_top_level(strip_brackets(children).await?, ',').await.as_slice() {
                 ["0"] => None,
-                [tag, rest @ ..] if *tag == "1" => Some(dec_children_diff(&rest.join(","))?),
+                [tag, rest @ ..] if *tag == "1" => Some(dec_children_diff(&rest.join(",")).await?),
                 other => return Err(format!("node diff element children: bad shape {other:?}")),
             };
-            Ok(SvgNodeDiff::Element(SvgElementDiff { name: decode_option(name, dec_str)?, attributes, children }))
+            Ok(SvgNodeDiff::Element(SvgElementDiff { name: decode_option(name, dec_str).await?, attributes, children }))
         }
-        "T" => Ok(SvgNodeDiff::Text { text: decode_option(inner, dec_str)? }),
-        "R" => Ok(SvgNodeDiff::Replace { node: decode_option(inner, dec_xml_node)? }),
+        "T" => Ok(SvgNodeDiff::Text { text: decode_option(inner, dec_str).await? }),
+        "R" => Ok(SvgNodeDiff::Replace { node: decode_option(inner, dec_xml_node).await? }),
         other => Err(format!("node diff: unknown tag {other:?}")),
     }
 }
@@ -1148,10 +1148,10 @@ async fn enc_children_diff(d: &SvgChildrenDiff) -> String {
     format!("[{removed}];[{modified}];[{added}]")
 }
 async fn dec_children_diff(body: &str) -> Result<SvgChildrenDiff, String> {
-    let three = split_top_level(body, ';');
+    let three = split_top_level(body, ';').await;
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("children diff: expected 3 sections, got {}", three.len())) };
-    let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
-    let modified = split_top_level(strip_brackets(modified_s)?, ',')
+    let removed = split_top_level(strip_brackets(removed_s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
+    let modified = split_top_level(strip_brackets(modified_s).await?, ',')
         .into_iter()
         .filter(|s| !s.is_empty())
         .map(|entry| {
@@ -1159,7 +1159,7 @@ async fn dec_children_diff(body: &str) -> Result<SvgChildrenDiff, String> {
             Ok(SvgChildModified { index: parse_usize(idx)?, diff: dec_node_diff(rest)? })
         })
         .collect::<Result<Vec<_>, String>>()?;
-    let added = split_top_level(strip_brackets(added_s)?, ',')
+    let added = split_top_level(strip_brackets(added_s).await?, ',')
         .into_iter()
         .filter(|s| !s.is_empty())
         .map(|entry| {
@@ -1211,20 +1211,20 @@ async fn enc_node_diff_bin(diff: &SvgNodeDiff, out: &mut Vec<u8>) {
     }
 }
 async fn dec_node_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<SvgNodeDiff, String> {
-    let tag = reader.read_u8().map_err(|e| e.to_string())?;
+    let tag = reader.read_u8().await.map_err(|e| e.to_string())?;
     match tag {
         0 => {
-            let name = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
-            let attributes = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_attrs_diff_bin(reader)?) } else { None };
-            let children = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_children_diff_bin(reader)?) } else { None };
+            let name = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader).await?) } else { None };
+            let attributes = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_attrs_diff_bin(reader).await?) } else { None };
+            let children = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(Box::pin(dec_children_diff_bin(reader)).await?) } else { None };
             Ok(SvgNodeDiff::Element(SvgElementDiff { name, attributes, children }))
         }
         1 => {
-            let text = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
+            let text = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader).await?) } else { None };
             Ok(SvgNodeDiff::Text { text })
         }
         2 => {
-            let node = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_xml_node_bin(reader)?) } else { None };
+            let node = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_xml_node_bin(reader).await?) } else { None };
             Ok(SvgNodeDiff::Replace { node })
         }
         other => Err(format!("svg node diff binary: unknown tag {other}")),
@@ -1249,24 +1249,24 @@ async fn enc_attrs_diff_bin(diff: &SvgAttributesDiff, out: &mut Vec<u8>) {
     }
 }
 async fn dec_attrs_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<SvgAttributesDiff, String> {
-    let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let removed_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(removed_count as usize);
     for _ in 0..removed_count {
-        removed.push(read_str_lp(reader)?);
+        removed.push(read_str_lp(reader).await?);
     }
-    let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let modified_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut modified = Vec::with_capacity(modified_count as usize);
     for _ in 0..modified_count {
-        let name = read_str_lp(reader)?;
-        let value = read_str_lp(reader)?;
+        let name = read_str_lp(reader).await?;
+        let value = read_str_lp(reader).await?;
         modified.push(SvgAttrModified { name, value });
     }
-    let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let added_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut added = Vec::with_capacity(added_count as usize);
     for _ in 0..added_count {
-        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-        let name = read_str_lp(reader)?;
-        let value = read_str_lp(reader)?;
+        let index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+        let name = read_str_lp(reader).await?;
+        let value = read_str_lp(reader).await?;
         added.push(SvgAttrAdded { index, name, value });
     }
     Ok(SvgAttributesDiff { removed, modified, added })
@@ -1289,23 +1289,23 @@ async fn enc_children_diff_bin(diff: &SvgChildrenDiff, out: &mut Vec<u8>) {
     }
 }
 async fn dec_children_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<SvgChildrenDiff, String> {
-    let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let removed_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(removed_count as usize);
     for _ in 0..removed_count {
-        removed.push(reader.read_varint_u64().map_err(|e| e.to_string())? as usize);
+        removed.push(reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize);
     }
-    let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let modified_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut modified = Vec::with_capacity(modified_count as usize);
     for _ in 0..modified_count {
-        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-        let diff = dec_node_diff_bin(reader)?;
+        let index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+        let diff = Box::pin(dec_node_diff_bin(reader)).await?;
         modified.push(SvgChildModified { index, diff });
     }
-    let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let added_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut added = Vec::with_capacity(added_count as usize);
     for _ in 0..added_count {
-        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-        let item = dec_xml_node_bin(reader)?;
+        let index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+        let item = dec_xml_node_bin(reader).await?;
         added.push(SvgChildAdded { index, item });
     }
     Ok(SvgChildrenDiff { removed, modified, added })
@@ -1337,13 +1337,13 @@ async fn parse_svg_diff(line: &str) -> Result<SvgDiff, String> {
     }
     for token in line.split(' ') {
         if let Some(rest) = token.strip_prefix("prolog=") {
-            d.prolog = Some(dec_prolog(rest)?);
+            d.prolog = Some(dec_prolog(rest).await?);
         } else if let Some(rest) = token.strip_prefix("declaration=") {
-            d.declaration = Some(decode_option(rest, dec_declaration)?);
+            d.declaration = Some(decode_option(rest, dec_declaration).await?);
         } else if let Some(rest) = token.strip_prefix("doctype=") {
-            d.doctype = Some(decode_option(rest, dec_doctype)?);
+            d.doctype = Some(decode_option(rest, dec_doctype).await?);
         } else if let Some(rest) = token.strip_prefix("root=") {
-            d.root = Some(dec_node_diff(rest)?);
+            d.root = Some(dec_node_diff(rest).await?);
         } else {
             return Err(format!("svg diff: unknown token {token:?}"));
         }
@@ -1353,10 +1353,10 @@ async fn parse_svg_diff(line: &str) -> Result<SvgDiff, String> {
 
 impl protocol::DiffCodec for SvgDiff {
     async fn print_diff(&self) -> String {
-        print_svg_diff(self)
+        print_svg_diff(self).await
     }
     async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
-        parse_svg_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_svg_diff(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// 🧪️ P2-FG3: REAL binary frame (`format u8 | flags u8 | [declaration][doctype][root]`),
     /// matching `../💾️binary/📡️component.protocol.semio`'s `header fixed 2` + `chain payload
@@ -1400,24 +1400,24 @@ impl protocol::DiffCodec for SvgDiff {
         Ok(out)
     }
     async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let mut reader = store::ByteReader::new(bytes);
+        let mut reader = store::ByteReader::new(bytes).await;
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
-        let _format = reader.read_u8().map_err(|e| malformed("diff format", 0, e.to_string()))?;
-        let flags = reader.read_u8().map_err(|e| malformed("diff flags", 1, e.to_string()))?;
-        let prolog = if flags & 0b1000 != 0 { Some(dec_prolog_bin(&mut reader).map_err(|e| malformed("diff prolog", reader.position(), e))?) } else { None };
+        let _format = reader.read_u8().await.map_err(|e| malformed("diff format", 0, e.to_string()))?;
+        let flags = reader.read_u8().await.map_err(|e| malformed("diff flags", 1, e.to_string()))?;
+        let prolog = if flags & 0b1000 != 0 { Some(dec_prolog_bin(&mut reader).await.map_err(|e| malformed("diff prolog", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
         let declaration = if flags & 0b001 != 0 {
-            let has = reader.read_u8().map_err(|e| malformed("diff declaration presence", reader.position(), e.to_string()))?;
-            Some(if has != 0 { Some(dec_declaration_bin(&mut reader).map_err(|e| malformed("diff declaration", reader.position(), e))?) } else { None })
+            let has = reader.read_u8().await.map_err(|e| malformed("diff declaration presence", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
+            Some(if has != 0 { Some(dec_declaration_bin(&mut reader).await.map_err(|e| malformed("diff declaration", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None })
         } else {
             None
         };
         let doctype = if flags & 0b010 != 0 {
-            let has = reader.read_u8().map_err(|e| malformed("diff doctype presence", reader.position(), e.to_string()))?;
-            Some(if has != 0 { Some(dec_doctype_bin(&mut reader).map_err(|e| malformed("diff doctype", reader.position(), e))?) } else { None })
+            let has = reader.read_u8().await.map_err(|e| malformed("diff doctype presence", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
+            Some(if has != 0 { Some(dec_doctype_bin(&mut reader).await.map_err(|e| malformed("diff doctype", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None })
         } else {
             None
         };
-        let root = if flags & 0b100 != 0 { Some(dec_node_diff_bin(&mut reader).map_err(|e| malformed("diff root", reader.position(), e))?) } else { None };
+        let root = if flags & 0b100 != 0 { Some(dec_node_diff_bin(&mut reader).await.map_err(|e| malformed("diff root", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
         Ok(SvgDiff { prolog, declaration, doctype, root })
     }
 }

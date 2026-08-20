@@ -117,7 +117,7 @@ async fn absorb_palette(d1: BmpPaletteDiff, d2: BmpPaletteDiff) -> BmpPaletteDif
     };
     let needed_mid_len = d2.removed.iter().copied().chain(d2.modified.iter().map(|m| m.index)).max().map(|m| m + 1).unwrap_or(0);
     let base_len = base_len_hint(&d1.removed, d1.modified.iter().map(|m| m.index), d1_added_indices.iter().copied()).max((needed_mid_len + removed_count).saturating_sub(d1.added.len()));
-    let mid_slots = simulate_slots(base_len, &d1.removed, &d1_added_indices);
+    let mid_slots = simulate_slots(base_len, &d1.removed, &d1_added_indices).await;
     //#endregion 🔖️PhiBaseToMid
 
     //#region 🔖️Seed
@@ -177,7 +177,7 @@ async fn absorb_palette(d1: BmpPaletteDiff, d2: BmpPaletteDiff) -> BmpPaletteDif
         .collect();
     let d2_added_indices: Vec<usize> = d2.added.iter().map(|a| a.index).collect();
     let mid_len = d2.removed.iter().copied().chain(d2.modified.iter().map(|m| m.index)).chain(alive_mid_positions.iter().copied()).chain(d2_added_indices.iter().copied()).max().map(|m| m + 1).unwrap_or(0);
-    let after_slots = simulate_slots(mid_len, &d2.removed, &d2_added_indices);
+    let after_slots = simulate_slots(mid_len, &d2.removed, &d2_added_indices).await;
     let mut mid_to_after: HashMap<usize, usize> = HashMap::new();
     for (pos, slot) in after_slots.iter().enumerate() {
         if let Slot::Base(m) = slot {
@@ -272,7 +272,7 @@ pub struct BmpDiff {
 impl MutationDiff<BmpSnapshot> for BmpDiff {
     async fn apply(&self, base: &BmpSnapshot) -> MutationApplyResult<BmpSnapshot> {
         if let Some(palette) = &self.palette {
-            validate_bmp_palette(base.palette.len(), palette)?;
+            validate_bmp_palette(base.palette.len(), palette).await?;
         }
         let mut next = base.clone();
         if let Some(v) = self.header_size {
@@ -381,7 +381,7 @@ impl MutationDiff<BmpSnapshot> for BmpDiff {
         if let Some(pd2) = other.palette {
             match self.palette.take() {
                 None => self.palette = Some(pd2),
-                Some(pd1) => self.palette = Some(absorb_palette(pd1, pd2)),
+                Some(pd1) => self.palette = Some(absorb_palette(pd1, pd2).await),
             }
         }
         if other.pixels.is_some() {
@@ -394,20 +394,20 @@ async fn validate_bmp_palette(base_len: usize, diff: &BmpPaletteDiff) -> Mutatio
     let mut removed = HashSet::new();
     for &index in &diff.removed {
         if index >= base_len || !removed.insert(index) {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "palette removal is missing or duplicated").at(["palette", "removed"]));
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "palette removal is missing or duplicated").await.at(["palette", "removed"]).await);
         }
     }
     let mut modified = HashSet::new();
     for entry in &diff.modified {
         if entry.index >= base_len || !modified.insert(entry.index) || removed.contains(&entry.index) {
-            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "palette modification is missing, duplicated, or removed").at(["palette", "modified"]));
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "palette modification is missing, duplicated, or removed").await.at(["palette", "modified"]).await);
         }
     }
     let final_len = base_len.saturating_sub(diff.removed.len()).saturating_add(diff.added.len());
     let mut added = HashSet::new();
     for entry in &diff.added {
         if entry.index > final_len || !added.insert(entry.index) {
-            return Err(MutationApplyError::new("mutation.apply.invalid-index", "palette addition index is invalid or duplicated").at(["palette", "added"]));
+            return Err(MutationApplyError::new("mutation.apply.invalid-index", "palette addition index is invalid or duplicated").await.at(["palette", "added"]).await);
         }
     }
     Ok(())
@@ -415,8 +415,8 @@ async fn validate_bmp_palette(base_len: usize, diff: &BmpPaletteDiff) -> Mutatio
 
 impl DiffAlgebra<BmpSnapshot> for BmpDiff {
     async fn inverse(&self, base: &BmpSnapshot) -> Self {
-        let applied = self.apply(base).unwrap();
-        Self::between(&applied, base)
+        let applied = self.apply(base).await.unwrap();
+        Self::between(&applied, base).await
     }
 
     async fn between(base: &BmpSnapshot, other: &BmpSnapshot) -> Self {
@@ -477,7 +477,7 @@ impl DiffAlgebra<BmpSnapshot> for BmpDiff {
 
 /// 🧩 Builds a set-snapshot diff (sparse field-by-field delta, never a full-replace slot).
 pub async fn diff_set_snapshot(base: &BmpSnapshot, next: &BmpSnapshot) -> BmpDiff {
-    BmpDiff::between(base, next)
+    BmpDiff::between(base, next).await
 }
 //#endregion 🔖️Diff
 

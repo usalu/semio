@@ -33,7 +33,7 @@ pub mod derived_composition {
             if native.is_empty() {
                 return Err(ComposeError { message: "BinaryComposerComposition: no source in dialect stdio.binary/raw/*".into(), diagnostics: Vec::new() });
             }
-            let analysis = BinaryAnalyzer::analyze(&native);
+            let analysis = BinaryAnalyzer::analyze(&native).await;
             let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError { message: "BinaryComposerComposition: analysis produced no snapshot".into(), diagnostics: analysis.diagnostics.clone() })?;
             Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics })
         }
@@ -57,7 +57,8 @@ pub mod io_registry {
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 
     /// 🎹️ Every composer entry this standard can serve.
-    pub async fn entries() -> &'static [ComposerEntry] {
+    // 🚫️async: E1 pure table accessor consumed by OnceLock::get_or_init's sync closure — see R9
+    pub fn entries() -> &'static [ComposerEntry] {
         ENTRIES.get_or_init(|| vec![composer_entry_of::<BinaryRawAnyComposer>()]).as_slice()
     }
 }
@@ -79,7 +80,7 @@ pub async fn register() {
     register_schema_specs();
     let _ = store::register_document_codec(store::ArtifactCodec::of::<crate::artifacts::binary::standards::v_raw::subsets::any::schema::snapshot::BinarySnapshot, crate::artifacts::binary::standards::v_raw::subsets::any::schema::mutations::BinaryMutation>(
         crate::artifacts::binary::STDIO_BINARY_DOCUMENT_SCHEMA,
-    ));
+    ).await);
 }
 
 /// 📇️ P2-P3 follow-up fix: `dsl::registry::register_schema_spec` (P2-M3's `FullResolver` insertion
@@ -160,14 +161,14 @@ pub async fn register_pilot_languages() {
 
 /// 📌️ Registers schema leaves for `s.stdio.binary`.
 pub async fn register_artifact_schema() {
-    ::schema::register_artifact_schema_descriptor(crate::artifacts::binary::standards::v_raw::subsets::any::schema::binary_artifact_schema_descriptor());
+    ::schema::register_artifact_schema_descriptor(crate::artifacts::binary::standards::v_raw::subsets::any::schema::binary_artifact_schema_descriptor().await);
 }
 
 /// 💡️ Registers `s.stdio.binary.inference`'s facet leaves into the OS-wide inference catalog —
 /// sibling to `register_artifact_schema` above (separate registry, ticket
 /// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING P2/S3+S4).
 pub async fn register_artifact_inferences() {
-    ::schema::register_artifact_inference_descriptor(crate::artifacts::binary::standards::v_raw::subsets::any::schema::inferences::binary_artifact_inference_descriptor());
+    ::schema::register_artifact_inference_descriptor(crate::artifacts::binary::standards::v_raw::subsets::any::schema::inferences::binary_artifact_inference_descriptor().await);
 }
 //#endregion 🔖️Register
 
@@ -196,7 +197,7 @@ pub async fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
             diff: LanguagePair { text: None, binary: None },
             mutations: LanguagePair { text: None, binary: None },
             inferences: None,
-            codec: store::ArtifactCodec::of::<BinarySnapshot, BinaryMutation>(crate::artifacts::binary::STDIO_BINARY_DOCUMENT_SCHEMA.to_string()),
+            codec: store::ArtifactCodec::of::<BinarySnapshot, BinaryMutation>(crate::artifacts::binary::STDIO_BINARY_DOCUMENT_SCHEMA.to_string()).await,
         },
         entries: &[],
     }

@@ -1,0 +1,30 @@
+{
+  "case": "live-region",
+  "kind": "accessibility",
+  "description": "A Text node in an assertive ARIA live region — updates are announced immediately.",
+  "outcome": "accept",
+  "limits": null,
+  "tree": {
+    "root": 0,
+    "nodeCount": 1,
+    "shape": [
+      {
+        "id": 0,
+        "key": "#0",
+        "type": "text",
+        "children": []
+      }
+    ]
+  },
+  "accessibility": [
+    {
+      "id": 0,
+      "label": null,
+      "description": null,
+      "live": "assertive",
+      "shortcut": null,
+      "hidden": false
+    }
+  ],
+  "actionIds": []
+}

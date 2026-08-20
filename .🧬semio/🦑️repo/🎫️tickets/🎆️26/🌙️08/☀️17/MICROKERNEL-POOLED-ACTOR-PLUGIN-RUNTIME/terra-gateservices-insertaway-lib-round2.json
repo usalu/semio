@@ -1,0 +1,33 @@
+{
+  "crate": "semio-framework-os-services",
+  "history": [
+    {
+      "pass": 1,
+      "errors": 20,
+      "edits": 11,
+      "ambiguous": 0,
+      "other": 2
+    },
+    {
+      "pass": 2,
+      "errors": 9,
+      "edits": 0,
+      "ambiguous": 0,
+      "other": 2
+    }
+  ],
+  "residual_errors": 9,
+  "ambiguous": [],
+  "other": [
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:1071",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:986",
+      "code": "E0600",
+      "msg": "cannot apply unary operator `!` to type `impl Future<Output = bool>`"
+    }
+  ]
+}

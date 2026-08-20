@@ -36,11 +36,11 @@ async fn line_entities(ids: &mut IdGen, a: &crate::artifacts::semio::standards::
     let (dx, dy) = (b.x - a.x, b.y - a.y);
     let magnitude = (dx * dx + dy * dy).sqrt();
     let (ndx, ndy) = if magnitude > 0.0 { (dx / magnitude, dy / magnitude) } else { (1.0, 0.0) };
-    let p = point_entity(ids.next(), a.x, a.y);
-    let dir = StepEntity { id: ids.next(), name: "DIRECTION".into(), args: vec![StepValue::String(String::new()), StepValue::Aggregate(vec![StepValue::Real(ndx), StepValue::Real(ndy), StepValue::Real(0.0)])], complex: vec![] };
+    let p = point_entity(ids.next().await, a.x, a.y).await;
+    let dir = StepEntity { id: ids.next().await, name: "DIRECTION".into(), args: vec![StepValue::String(String::new()), StepValue::Aggregate(vec![StepValue::Real(ndx), StepValue::Real(ndy), StepValue::Real(0.0)])], complex: vec![] };
     let vec_id = ids.next();
-    let vector = StepEntity { id: vec_id, name: "VECTOR".into(), args: vec![StepValue::String(String::new()), StepValue::Reference(dir.id), StepValue::Real(magnitude)], complex: vec![] };
-    let line = StepEntity { id: ids.next(), name: "LINE".into(), args: vec![StepValue::String(String::new()), StepValue::Reference(p.id), StepValue::Reference(vector.id)], complex: vec![] };
+    let vector = StepEntity { id: vec_id.await, name: "VECTOR".into(), args: vec![StepValue::String(String::new()), StepValue::Reference(dir.id), StepValue::Real(magnitude)], complex: vec![] };
+    let line = StepEntity { id: ids.next().await, name: "LINE".into(), args: vec![StepValue::String(String::new()), StepValue::Reference(p.id), StepValue::Reference(vector.id)], complex: vec![] };
     vec![p, dir, vector, line]
 }
 
@@ -48,9 +48,9 @@ async fn line_entities(ids: &mut IdGen, a: &crate::artifacts::semio::standards::
 /// left `Unset` — `$`, spec-legal for an unoriented 2D-only placement, matching real AP214 usage
 /// when orientation is unspecified).
 async fn circle_entities(ids: &mut IdGen, center: &crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2, radius: f64) -> Vec<StepEntity> {
-    let p = point_entity(ids.next(), center.x, center.y);
-    let placement = StepEntity { id: ids.next(), name: "AXIS2_PLACEMENT_3D".into(), args: vec![StepValue::String(String::new()), StepValue::Reference(p.id), StepValue::Unset, StepValue::Unset], complex: vec![] };
-    let circle = StepEntity { id: ids.next(), name: "CIRCLE".into(), args: vec![StepValue::String(String::new()), StepValue::Reference(placement.id), StepValue::Real(radius)], complex: vec![] };
+    let p = point_entity(ids.next().await, center.x, center.y).await;
+    let placement = StepEntity { id: ids.next().await, name: "AXIS2_PLACEMENT_3D".into(), args: vec![StepValue::String(String::new()), StepValue::Reference(p.id), StepValue::Unset, StepValue::Unset], complex: vec![] };
+    let circle = StepEntity { id: ids.next().await, name: "CIRCLE".into(), args: vec![StepValue::String(String::new()), StepValue::Reference(placement.id), StepValue::Real(radius)], complex: vec![] };
     vec![p, placement, circle]
 }
 //#endregion 🔖️GraphBuild

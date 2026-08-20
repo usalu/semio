@@ -17,11 +17,11 @@ pub async fn descriptor() -> GltfInferenceLeafDescriptor {
 }
 
 pub(crate) async fn from_raw(context: &GltfGeometryContext<'_>, raw: &super::GltfRoughnessRaw) -> GltfMeasure<GltfStatistics> {
-    exact(super::statistics(&raw.normal_angles, &context.policy.histogram_edges), GltfUnit::Radian, raw.normal_angles.len(), Some(context.topology))
+    exact(super::statistics(&raw.normal_angles, &context.policy.histogram_edges), GltfUnit::Radian, raw.normal_angles.len(), Some(context.topology)).await
 }
 
 pub async fn unavailable_measure(ids: &[String]) -> GltfMeasure<GltfStatistics> {
-    unavailable(GltfUnit::Radian, GltfAvailability::Unavailable, ids.to_vec(), 0, None)
+    unavailable(GltfUnit::Radian, GltfAvailability::Unavailable, ids.to_vec(), 0, None).await
 }
 
 pub async fn encode_result(indicators: &GltfEntityIndicators) -> Result<serde_json::Value, serde_json::Error> {

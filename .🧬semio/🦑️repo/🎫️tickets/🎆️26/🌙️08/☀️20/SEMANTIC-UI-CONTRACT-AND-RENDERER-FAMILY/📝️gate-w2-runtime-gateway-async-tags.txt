@@ -1,0 +1,23 @@
+runtime-gateway packet — cheap non-cargo sanity checks (U4: no cargo run by executor)
+date: 2026-08-20T00:25:10Z
+
+== 🦀️gateway.rs ==
+brace balance ok: True final depth: 0
+region opens/closes: 5 5
+async fn count (must be 0): 0
+non-test fn count: 10, missing U1 tag: 0
+
+== 🦀️inbox.rs ==
+brace balance ok: True final depth: 0
+region opens/closes: 2 2
+async fn count (must be 0): 0
+non-test fn count: 6, missing U1 tag: 0
+
+== 🦀️presence.rs ==
+brace balance ok: True final depth: 0
+region opens/closes: 2 2
+async fn count (must be 0): 0
+non-test fn count: 7, missing U1 tag: 0
+
+grep for real (non-doc-comment) dyn CommandSink usage:
+🦀️gateway.rs:12://! [`CommandSink`] (U3) is a generic parameter, never `Box<dyn CommandSink>` — the host supplies a

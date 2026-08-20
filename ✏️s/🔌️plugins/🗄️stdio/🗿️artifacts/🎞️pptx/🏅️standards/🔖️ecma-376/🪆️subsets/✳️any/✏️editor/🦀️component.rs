@@ -51,11 +51,11 @@ impl protocol::OpText for PptxEditorCommand {
 
 impl protocol::OpBinary for PptxEditorCommand {
     async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(<Self as protocol::OpText>::print_op(self).into_bytes())
+        Ok(<Self as protocol::OpText>::print_op(self).await.into_bytes())
     }
     async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let line = String::from_utf8(bytes.to_vec()).map_err(|error| protocol::ProtocolError::Malformed { what: "pptx editor command utf8", offset: 0, detail: error.to_string() })?;
-        <Self as protocol::OpText>::parse_op(&line).map_err(|error| protocol::ProtocolError::Malformed { what: "pptx editor command", offset: 0, detail: error.to_string() })
+        <Self as protocol::OpText>::parse_op(&line).await.map_err(|error| protocol::ProtocolError::Malformed { what: "pptx editor command", offset: 0, detail: error.to_string() })
     }
 }
 //#endregion 🔖️Command
@@ -72,7 +72,7 @@ async fn first_text_shape_index(slide: &PptxSlide) -> Option<usize> {
 /// text-bearing shape on that slide" — both documented no-ops.
 async fn build_set_page_mutation(snapshot: &PptxSnapshot, slide_index: usize, text: &str) -> Option<PptxMutation> {
     let slide = snapshot.presentation.slides.get(slide_index)?;
-    let shape_index = first_text_shape_index(slide)?;
+    let shape_index = first_text_shape_index(slide).await?;
     let text_frame: Vec<PptxParagraph> = text.split('\n').map(PptxParagraph::text).collect();
     Some(PptxMutation::SetShapeText { slide_index, shape_index, text_frame })
 }
@@ -119,7 +119,7 @@ impl ArtifactEditor for PptxEditor {
     ) -> Result<Emit<Self::Mutation>, Fault> {
         let PptxEditorCommand::SetPage { index, text } = command;
         let slide_index = *index as usize;
-        match build_set_page_mutation(doc.snapshot, slide_index, text) {
+        match build_set_page_mutation(doc.snapshot, slide_index, text).await {
             Some(mutation) => Ok(Emit { artifact_mutations: vec![mutation], description: Some(format!("Set page {slide_index}")), ..Default::default() }),
             None => Ok(Emit::default()),
         }
@@ -127,8 +127,8 @@ impl ArtifactEditor for PptxEditor {
 
     async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
-            main::BODY_KEY => main::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
+            main::BODY_KEY => main::render(doc.snapshot).await,
+            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))).await,
         }
     }
 }
@@ -137,12 +137,12 @@ impl ArtifactEditor for PptxEditor {
 //#region 🔖️Manifest
 pub async fn create_pptx_editor() -> semio_framework_plugin::AppDefinition {
     Editor::builder(PPTX_EDITOR_DIALECT)
-        .document(["semio", "stdio", "pptx"])
-        .icon_id("presentation")
-        .mode_def(edit::definition())
-        .default_mode_id(edit::PPTX_EDIT_MODE_ID)
-        .window_kind_def(main::definition())
-        .default_layout(edit::layout())
+        .await.document(["semio", "stdio", "pptx"])
+        .await.icon_id("presentation")
+        .await.mode_def(edit::definition().await)
+        .await.default_mode_id(edit::PPTX_EDIT_MODE_ID)
+        .await.window_kind_def(main::definition().await)
+        .await.default_layout(edit::layout())
         .build_definition()
 }
 //#endregion 🔖️Manifest

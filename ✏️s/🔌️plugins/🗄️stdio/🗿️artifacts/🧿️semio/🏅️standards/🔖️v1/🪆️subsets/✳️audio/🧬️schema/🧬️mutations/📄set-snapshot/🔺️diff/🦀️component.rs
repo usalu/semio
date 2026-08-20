@@ -4,7 +4,7 @@ use crate::artifacts::semio::standards::v1::subsets::audio::schema::snapshot::Se
 /// 🔺️ Diff helper for set-snapshot.
 pub async fn diff(base: &SemioAudioSnapshot, snapshot: &SemioAudioSnapshot) -> protocol::MutationOutcome<SemioAudioDiff> {
     if base == snapshot {
-        return protocol::MutationOutcome::new(SemioAudioDiff::default()).warn("mutation.no-op", "set-snapshot: new snapshot is identical to the current one");
+        return protocol::MutationOutcome::new(SemioAudioDiff::default()).await.warn("mutation.no-op", "set-snapshot: new snapshot is identical to the current one").await;
     }
     protocol::MutationOutcome::new(diff_set_snapshot(base, snapshot))
 }

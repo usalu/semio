@@ -6,7 +6,7 @@ use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::{Pdf
 pub async fn register() {}
 
 pub async fn deserialize(from: &DeflateSnapshot) -> Result<PdfSnapshot, store::PackError> {
-    let mut snap = crate::artifacts::pdf::standards::v1_7::subsets::any::io::decode_pdf(&from.payload).map_err(|e| store::PackError::Schema(e.to_string()))?;
+    let mut snap = crate::artifacts::pdf::standards::v1_7::subsets::any::io::decode_pdf(&from.payload).await.map_err(|e| store::PackError::Schema(e.to_string()))?;
     snap.schema = STDIO_PDF17_DOCUMENT_SCHEMA.into();
     Ok(snap)
 }

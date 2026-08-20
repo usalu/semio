@@ -21,11 +21,11 @@ pub async fn descriptor() -> GltfInferenceLeafDescriptor {
 }
 
 pub(crate) async fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<GltfStatistics> {
-    unavailable(GltfUnit::Metre, GltfAvailability::Unavailable, Vec::new(), context.sample_count, Some(context.topology))
+    unavailable(GltfUnit::Metre, GltfAvailability::Unavailable, Vec::new(), context.sample_count, Some(context.topology)).await
 }
 
 pub(crate) async fn infer_pair(pair: &GltfPairGeometry, policy: &GltfAnalysisPolicy) -> GltfMeasure<GltfStatistics> {
-    estimate(statistics(&[pair.minimum_distance], &policy.histogram_edges), GltfUnit::Metre, pair.sample_count, None)
+    estimate(statistics(&[pair.minimum_distance], &policy.histogram_edges), GltfUnit::Metre, pair.sample_count, None).await
 }
 
 pub(crate) async fn from_assembly(distances: &[f64], policy: &GltfAnalysisPolicy, sample_count: usize, topology: Topology) -> Option<GltfMeasure<GltfStatistics>> {
@@ -33,7 +33,7 @@ pub(crate) async fn from_assembly(distances: &[f64], policy: &GltfAnalysisPolicy
 }
 
 pub async fn unavailable_measure(ids: &[String]) -> GltfMeasure<GltfStatistics> {
-    unavailable(GltfUnit::Metre, GltfAvailability::Unavailable, ids.to_vec(), 0, None)
+    unavailable(GltfUnit::Metre, GltfAvailability::Unavailable, ids.to_vec(), 0, None).await
 }
 
 pub async fn encode_result(indicators: &GltfEntityIndicators) -> Result<serde_json::Value, serde_json::Error> {

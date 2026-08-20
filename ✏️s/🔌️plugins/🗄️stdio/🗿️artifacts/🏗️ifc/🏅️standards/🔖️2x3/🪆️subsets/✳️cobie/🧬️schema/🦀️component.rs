@@ -13,7 +13,7 @@ pub mod derived_construction {
     use semio_framework_plugin::ArtifactBuilder;
 
     async fn stage_mutation_errors(diagnostics: &mut Vec<Diagnostic>, outcome: &protocol::MutationOutcome<Ifc2x3Diff>) {
-        diagnostics.extend(outcome.messages().iter().filter(|message| message.level >= Severity::Error).map(|message| Diagnostic {
+        diagnostics.extend(outcome.messages().await.iter().filter(|message| message.level >= Severity::Error).map(|message| Diagnostic {
             code: message.code.clone(),
             severity: message.level,
             span: dsl::TextSpan::at(1, 1),
@@ -46,7 +46,7 @@ pub mod derived_construction {
 
     impl Ifc2x3CobieBuilderConstruction {
         pub async fn new() -> Self {
-            Self { snapshot: Ifc2x3Snapshot { schema: "stdio.ifc.2x3".into(), document: seeded_document(), edm_preamble: None }, next_id: 100, diagnostics: Vec::new() }
+            Self { snapshot: Ifc2x3Snapshot { schema: "stdio.ifc.2x3".into(), document: seeded_document().await, edm_preamble: None }, next_id: 100, diagnostics: Vec::new() }
         }
 
         /// 🏷️ Adds a named `IFCSPACE` (COBie's `Space` sheet row).
@@ -72,23 +72,23 @@ pub mod derived_construction {
         type Diff = Ifc2x3Diff;
 
         async fn empty() -> Self {
-            Self::new()
+            Self::new().await
         }
         async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, next_id: 100, diagnostics: Vec::new() }
         }
         async fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self::from_snapshot(<Ifc2x3Snapshot as store::ArtifactDsl>::parse_dsl(text)?))
+            Ok(Self::from_snapshot(<Ifc2x3Snapshot as store::ArtifactDsl>::parse_dsl(text).await?).await)
         }
         async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<Ifc2x3Snapshot as store::ArtifactPack>::decode_pack(bytes)?))
+            Ok(Self::from_snapshot(<Ifc2x3Snapshot as store::ArtifactPack>::decode_pack(bytes).await?).await)
         }
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = apply_ifc2x3_mutation(&mut self.snapshot, &mutation);
-            (self, diff)
+            (self, diff.await)
         }
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            self.snapshot = <Ifc2x3Diff as protocol::MutationDiff<Ifc2x3Snapshot>>::apply(&diff, &self.snapshot)?;
+            self.snapshot = <Ifc2x3Diff as protocol::MutationDiff<Ifc2x3Snapshot>>::apply(&diff, &self.snapshot).await?;
             Ok(self)
         }
         async fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
@@ -152,7 +152,7 @@ pub mod derived_analysis {
     }
 
     async fn declares_schema(snapshot: &Ifc2x3Snapshot, name: &str) -> bool {
-        snapshot.document.header.file_schema.iter().any(|v| v.as_list().map(|items| items.iter().any(|item| item.as_str() == Some(name))).unwrap_or(false))
+        snapshot.document.header.file_schema.iter().any(|v| semio_framework_plugin::resolve_ready(v.as_list()).map(|items| items.iter().any(|item| item.as_str() == Some(name))).unwrap_or(false))
     }
     async fn view_definition_names(snapshot: &Ifc2x3Snapshot, view: &str) -> bool {
         snapshot.document.header.file_description.first().and_then(|v| v.as_list()).map(|items| items.iter().any(|item| item.as_str().map(|s| s.contains(view)).unwrap_or(false))).unwrap_or(false)
@@ -188,7 +188,7 @@ pub mod derived_analysis {
             ));
         }
 
-        let has_type = snapshot.document.instances.iter().any(|i| i.primary().map(|(name, _)| name.ends_with("TYPE")).unwrap_or(false));
+        let has_type = snapshot.document.instances.iter().any(|i| semio_framework_plugin::resolve_ready(i.primary()).map(|(name, _)| name.ends_with("TYPE")).unwrap_or(false));
         let has_type_rel = snapshot.document.by_type("IFCRELDEFINESBYTYPE").next().is_some();
         if !has_type || !has_type_rel {
             out.push(soft(CODE_TYPE_ASSIGNMENT, "no real IFC*TYPE + IFCRELDEFINESBYTYPE pairing found -- COBie's Type sheet needs maintainable products related to a type".into()));
@@ -206,15 +206,15 @@ pub mod derived_analysis {
         const DIALECT: Dialect = DIALECT;
 
         async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
-            Ifc2x3AnyAnalyzer::sniff(source)
+            Ifc2x3AnyAnalyzer::sniff(source).await
         }
 
         async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
-            let inner = Ifc2x3AnyAnalyzer::analyze(sources);
+            let inner = Ifc2x3AnyAnalyzer::analyze(sources).await;
             let mut diagnostics = inner.diagnostics.clone();
             let mut confidence = inner.confidence;
             if let Some(snapshot) = &inner.parts.snapshot {
-                let checks = check_cobie_conformance(snapshot);
+                let checks = check_cobie_conformance(snapshot).await;
                 if checks.iter().any(|d| matches!(d.severity, Severity::Error | Severity::Fatal)) {
                     confidence = IoConfidence::Low;
                 }

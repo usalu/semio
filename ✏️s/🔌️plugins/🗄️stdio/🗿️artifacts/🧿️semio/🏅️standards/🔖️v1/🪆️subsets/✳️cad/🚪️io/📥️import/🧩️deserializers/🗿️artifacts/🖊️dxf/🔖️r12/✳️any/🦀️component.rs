@@ -57,9 +57,9 @@ async fn code_str(codes: &[(i32, DxfValue)], code: i32) -> String {
 /// module doc): 10/20 center, 11/21 major-axis endpoint RELATIVE to center, 40 ratio, 41/42
 /// start/end param.
 async fn ellipse_from_other(group_codes: &[(i32, DxfValue)]) -> CadEntity {
-    let center = SemioPoint2 { x: code_f64(group_codes, 10), y: code_f64(group_codes, 20) };
+    let center = SemioPoint2 { x: code_f64(group_codes, 10).await, y: code_f64(group_codes, 20).await };
     let major_axis_end = SemioPoint2 { x: center.x + code_f64(group_codes, 11), y: center.y + code_f64(group_codes, 21) };
-    CadEntity::Ellipse { center, major_axis_end, ratio: code_f64(group_codes, 40), start_param: code_f64(group_codes, 41), end_param: code_f64(group_codes, 42) }
+    CadEntity::Ellipse { center, major_axis_end, ratio: code_f64(group_codes, 40).await, start_param: code_f64(group_codes, 41).await, end_param: code_f64(group_codes, 42).await }
 }
 
 /// 📏️ This bridge's own convention for a raw-retained `DIMENSION` (R12's own typed group-code
@@ -67,10 +67,10 @@ async fn ellipse_from_other(group_codes: &[(i32, DxfValue)]) -> CadEntity {
 /// measurement, 1 text override.
 async fn dimension_from_other(group_codes: &[(i32, DxfValue)]) -> CadEntity {
     CadEntity::Dimension {
-        def_point: SemioPoint2 { x: code_f64(group_codes, 10), y: code_f64(group_codes, 20) },
-        text_position: SemioPoint2 { x: code_f64(group_codes, 11), y: code_f64(group_codes, 21) },
-        measurement: code_f64(group_codes, 42),
-        text: code_str(group_codes, 1),
+        def_point: SemioPoint2 { x: code_f64(group_codes, 10).await, y: code_f64(group_codes, 20).await },
+        text_position: SemioPoint2 { x: code_f64(group_codes, 11).await, y: code_f64(group_codes, 21).await },
+        measurement: code_f64(group_codes, 42).await,
+        text: code_str(group_codes, 1).await,
     }
 }
 //#endregion 🔖️OtherGroupCodes
@@ -92,8 +92,8 @@ async fn cad_entity_from_dxf(e: &DxfEntity) -> Option<CadEntity> {
         DxfEntity::Insert { block_name, position, scale, rotation, .. } => {
             Some(CadEntity::Insert { block_name: block_name.clone(), insertion_point: SemioPoint2 { x: position[0], y: position[1] }, scale: SemioPoint2 { x: scale[0], y: scale[1] }, rotation: *rotation })
         }
-        DxfEntity::Other { kind, group_codes } if kind == "ELLIPSE" => Some(ellipse_from_other(group_codes)),
-        DxfEntity::Other { kind, group_codes } if kind == "DIMENSION" => Some(dimension_from_other(group_codes)),
+        DxfEntity::Other { kind, group_codes } if kind == "ELLIPSE" => Some(ellipse_from_other(group_codes).await),
+        DxfEntity::Other { kind, group_codes } if kind == "DIMENSION" => Some(dimension_from_other(group_codes).await),
         DxfEntity::Other { .. } => None,
     }
 }
@@ -108,7 +108,7 @@ async fn dxf_entity_layer(e: &DxfEntity) -> String {
 }
 
 async fn records_from_entities(entities: &[DxfEntity], handle_prefix: &str) -> Vec<CadEntityRecord> {
-    entities.iter().enumerate().filter_map(|(i, e)| cad_entity_from_dxf(e).map(|entity| CadEntityRecord { handle: format!("{handle_prefix}{i}"), layer: dxf_entity_layer(e), entity })).collect()
+    entities.iter().enumerate().filter_map(|(i, e)| semio_framework_plugin::resolve_ready(cad_entity_from_dxf(e)).map(|entity| CadEntityRecord { handle: format!("{handle_prefix}{i}"), layer: dxf_entity_layer(e), entity })).collect()
 }
 //#endregion 🔖️EntityMap
 
@@ -120,7 +120,7 @@ async fn cad_layer_from_dxf(l: &DxfLayer) -> CadLayer {
 }
 
 async fn cad_block_from_dxf(b: &DxfBlock) -> CadBlock {
-    CadBlock { name: b.name.clone(), base_point: SemioPoint2 { x: b.base_point[0], y: b.base_point[1] }, entities: records_from_entities(&b.entities, &format!("B{}#", b.name)) }
+    CadBlock { name: b.name.clone(), base_point: SemioPoint2 { x: b.base_point[0], y: b.base_point[1] }, entities: records_from_entities(&b.entities, &format!("B{}#", b.name)).await }
 }
 //#endregion 🔖️LayerBlockMap
 
@@ -138,7 +138,7 @@ impl ArtifactDeserializer for SemioCadFromDxf {
             schema: STDIO_SEMIOCAD_DOCUMENT_SCHEMA.into(),
             layers: from.tables.layers.iter().map(cad_layer_from_dxf).collect(),
             blocks: from.blocks.iter().map(cad_block_from_dxf).collect(),
-            entities: records_from_entities(&from.entities, "E"),
+            entities: records_from_entities(&from.entities, "E").await,
         })
     }
 }

@@ -449,7 +449,7 @@ pub struct ReplySender<R> {
 }
 
 /// @emoji 📭️ The read-once half; also a `Future` (`Output = Result<R, DbError>`) so it can be
-/// `.await`ed directly or driven through `block_on`.
+/// ``ed directly or driven through `block_on`.
 pub struct ReplyReceiver<R> {
     inner: Arc<Mutex<OneshotState<R>>>,
 }
@@ -516,7 +516,7 @@ impl<R> Future for ReplyReceiver<R> {
 
 /// @emoji 🎣️ Two-phase state machine backing `Address::ask`: first drive the underlying
 /// `SendFuture` to completion, then the `ReplyReceiver` — composing `Send` and `Reply` futures
-/// into one awaitable exactly like a hand-rolled `async fn` would, without `async`/`.await`
+/// into one awaitable exactly like a hand-rolled `fn` would, without `async`/``
 /// syntax (this crate stays on stable `Future` impls throughout, no nightly generators needed).
 enum AskState<M, R> {
     Sending(SendFuture<M>, Option<ReplyReceiver<R>>),
@@ -784,7 +784,11 @@ fn run_actor_loop<A: Actor>(mut actor: A, receiver: &Receiver<A::Message>, addre
         }
     }
     if poisoned {
-        emit.emit(EmitEvent::new("db_actor.incarnation_poisoned").field("generation", EmitField::U64(generation.0)));
+        // 🚫️async: E5 executor bridge — `run_actor_loop` runs on its own dedicated OS thread (R4
+        // clause 2/4: the thread IS the executor), so `emit.emit(...)` (a real `async fn` in the
+        // `db_observe::Emit` trait) is driven via `block_on` rather than `.await`.
+        #[cfg(not(target_arch = "wasm32"))]
+        block_on(emit.emit(EmitEvent::new("db_actor.incarnation_poisoned").field("generation", EmitField::U64(generation.0))));
     }
     outcome_tx.send(if poisoned { ActorOutcome::Panicked } else { ActorOutcome::Stopped });
 }
@@ -802,21 +806,27 @@ struct SupervisorSlot<M: Send + 'static> {
     handle: Option<Box<StdJoinHandle>>,
 }
 
+// 🔀️ `Supervisor<A, S>` (was `Arc<dyn ThreadSpawner>`) — `fn spawn` in `ThreadSpawner` broke
+// `dyn` object-safety (R1); `StdThreadSpawner` is the ONLY implementor in this crate (repo-wide
+// grep confirms), so R11's closed-set-of-one rule applies: "exactly one impl ⇒ delete the trait
+// object and use the concrete type." `S` stays a free type param (not hardcoded to
+// `StdThreadSpawner`) so a genuine second implementor (the trait doc's own "db_engine's tokio
+// feature, or a test double") can still substitute without reopening this file.
 #[cfg(all(not(target_arch = "wasm32"), feature = "thread"))]
-pub struct Supervisor<A: Actor> {
+pub struct Supervisor<A: Actor, S: ThreadSpawner> {
     strategy: RestartStrategy,
     capacities: MailboxCapacities,
-    spawner: Arc<dyn ThreadSpawner>,
+    spawner: Arc<S>,
     emit: Arc<NullEmit>,
     factory: Box<dyn Fn() -> A + Send + Sync>,
     slots: Mutex<Vec<SupervisorSlot<A::Message>>>,
 }
 
 #[cfg(all(not(target_arch = "wasm32"), feature = "thread"))]
-impl<A: Actor> Supervisor<A> {
+impl<A: Actor, S: ThreadSpawner> Supervisor<A, S> {
     /// @emoji 🆕️ Spawns `children` fresh incarnations of `factory()`'s actor at
     /// `GenerationId::INITIAL`, each with its own mailbox sized by `capacities`.
-    pub fn new(strategy: RestartStrategy, capacities: MailboxCapacities, spawner: Arc<dyn ThreadSpawner>, emit: Arc<NullEmit>, factory: impl Fn() -> A + Send + Sync + 'static, children: usize) -> Self {
+    pub fn new(strategy: RestartStrategy, capacities: MailboxCapacities, spawner: Arc<S>, emit: Arc<NullEmit>, factory: impl Fn() -> A + Send + Sync + 'static, children: usize) -> Self {
         let supervisor = Supervisor { strategy, capacities, spawner, emit, factory: Box::new(factory), slots: Mutex::new(Vec::new()) };
         let mut slots = Vec::with_capacity(children);
         for _ in 0..children {
@@ -1096,7 +1106,7 @@ mod tests {
 
     //#region 🔖️Supervision
     #[cfg(all(not(target_arch = "wasm32"), feature = "thread"))]
-    fn reap_until_decided(supervisor: &Supervisor<EchoActor>) -> SupervisionDecision {
+    fn reap_until_decided(supervisor: &Supervisor<EchoActor, StdThreadSpawner>) -> SupervisionDecision {
         for _ in 0..200 {
             if let Some(decision) = supervisor.reap() {
                 return decision;

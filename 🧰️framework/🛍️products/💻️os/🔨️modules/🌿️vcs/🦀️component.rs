@@ -512,21 +512,21 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn collection_diff_from_op_projects_each_variant() {
         let items: Vec<DemoItem> = vec![DemoItem { id: "a".into(), value: 1 }, DemoItem { id: "b".into(), value: 2 }];
-        let added = collection_diff_from_mutation::<String, DemoItem, DemoItemPatch>(&items, &CollectionMutation::Add { index: 0, item: DemoItem { id: "c".into(), value: 3 } });
-        assert_eq!(added.await.added.len(), 1);
-        assert!(added.await.removed.is_empty() && added.await.modified.is_empty());
+        let added = collection_diff_from_mutation::<String, DemoItem, DemoItemPatch>(&items, &CollectionMutation::Add { index: 0, item: DemoItem { id: "c".into(), value: 3 } }).await;
+        assert_eq!(added.added.len(), 1);
+        assert!(added.removed.is_empty() && added.modified.is_empty());
 
-        let removed = collection_diff_from_mutation::<String, DemoItem, DemoItemPatch>(&items, &CollectionMutation::Remove { id: "a".into() });
-        assert_eq!(removed.await.removed, vec!["a".to_string()]);
+        let removed = collection_diff_from_mutation::<String, DemoItem, DemoItemPatch>(&items, &CollectionMutation::Remove { id: "a".into() }).await;
+        assert_eq!(removed.removed, vec!["a".to_string()]);
 
-        let patched = collection_diff_from_mutation(&items, &CollectionMutation::Patch { id: "b".into(), patch: DemoItemPatch { value: Some(9) } });
-        assert_eq!(patched.await.modified.len(), 1);
-        assert_eq!(patched.await.modified[0].id, "b");
+        let patched = collection_diff_from_mutation(&items, &CollectionMutation::Patch { id: "b".into(), patch: DemoItemPatch { value: Some(9) } }).await;
+        assert_eq!(patched.modified.len(), 1);
+        assert_eq!(patched.modified[0].id, "b");
 
-        let moved = collection_diff_from_mutation::<String, DemoItem, DemoItemPatch>(&items, &CollectionMutation::Move { id: "a".into(), to_index: 1 });
-        assert_eq!(moved.await.removed, vec!["a".to_string()], "move is encoded as remove + re-add by identity");
-        assert_eq!(moved.await.added.len(), 1);
-        assert_eq!(moved.await.added[0].id, "a");
+        let moved = collection_diff_from_mutation::<String, DemoItem, DemoItemPatch>(&items, &CollectionMutation::Move { id: "a".into(), to_index: 1 }).await;
+        assert_eq!(moved.removed, vec!["a".to_string()], "move is encoded as remove + re-add by identity");
+        assert_eq!(moved.added.len(), 1);
+        assert_eq!(moved.added[0].id, "a");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -534,11 +534,11 @@ mod tests {
         let items: Vec<DemoItem> = vec![DemoItem { id: "a".into(), value: 1 }];
         let operation = CollectionMutation::Add { index: 1, item: DemoItem { id: "b".into(), value: 2 } };
         let mut applied = items.clone();
-        apply_collection_mutation(&mut applied, &operation);
+        apply_collection_mutation(&mut applied, &operation).await;
         assert_eq!(applied.len(), 2);
         assert_eq!(applied[1].id, "b");
         let inverse = inverse_collection_mutation(&items, &operation);
-        apply_collection_mutation(&mut applied, &inverse);
+        apply_collection_mutation(&mut applied, &inverse.await).await;
         assert_eq!(applied, items);
     }
 
@@ -547,10 +547,10 @@ mod tests {
         let items: Vec<DemoItem> = vec![DemoItem { id: "a".into(), value: 1 }, DemoItem { id: "b".into(), value: 2 }, DemoItem { id: "c".into(), value: 3 }];
         let operation = CollectionMutation::Move { id: "a".into(), to_index: 2 };
         let mut applied = items.clone();
-        apply_collection_mutation(&mut applied, &operation);
+        apply_collection_mutation(&mut applied, &operation).await;
         assert_eq!(applied.iter().map(|i| i.id.clone()).collect::<Vec<_>>(), vec!["b", "c", "a"]);
         let inverse = inverse_collection_mutation(&items, &operation);
-        apply_collection_mutation(&mut applied, &inverse);
+        apply_collection_mutation(&mut applied, &inverse.await).await;
         assert_eq!(applied, items);
     }
 
@@ -559,10 +559,10 @@ mod tests {
         let items: Vec<DemoItem> = vec![DemoItem { id: "a".into(), value: 1 }];
         let operation = CollectionMutation::Patch { id: "a".into(), patch: DemoItemPatch { value: Some(9) } };
         let mut applied = items.clone();
-        apply_collection_mutation(&mut applied, &operation);
+        apply_collection_mutation(&mut applied, &operation).await;
         assert_eq!(applied[0].value, 9);
         let inverse = inverse_collection_mutation(&items, &operation);
-        apply_collection_mutation(&mut applied, &inverse);
+        apply_collection_mutation(&mut applied, &inverse.await).await;
         assert_eq!(applied, items);
     }
 
@@ -571,10 +571,10 @@ mod tests {
         let items: Vec<DemoItem> = vec![DemoItem { id: "a".into(), value: 1 }, DemoItem { id: "b".into(), value: 2 }];
         let operation = CollectionMutation::Remove { id: "a".into() };
         let mut applied = items.clone();
-        apply_collection_mutation(&mut applied, &operation);
+        apply_collection_mutation(&mut applied, &operation).await;
         assert_eq!(applied.len(), 1);
         let inverse = inverse_collection_mutation(&items, &operation);
-        apply_collection_mutation(&mut applied, &inverse);
+        apply_collection_mutation(&mut applied, &inverse.await).await;
         assert_eq!(applied, items);
     }
 
@@ -588,18 +588,18 @@ mod tests {
         let change_ids = vec!["change-root".to_string()];
         let authors = vec![Author { id: "a1".into(), name: "Alice".into(), avatar: None }];
 
-        let id_a = content_addressed_checkpoint_id(None, &change_ids, &changes, Some("root"), &authors, "2026-07-27T00:00:01Z", &[]);
-        let id_b = content_addressed_checkpoint_id(None, &change_ids, &changes, Some("root"), &authors, "2026-07-27T00:00:01Z", &[]);
+        let id_a = content_addressed_checkpoint_id(None, &change_ids, &changes, Some("root"), &authors, "2026-07-27T00:00:01Z", &[]).await;
+        let id_b = content_addressed_checkpoint_id(None, &change_ids, &changes, Some("root"), &authors, "2026-07-27T00:00:01Z", &[]).await;
         assert_eq!(id_a, id_b, "identical inputs converge on the identical id");
-        assert!(id_a.await.starts_with("ck-"), "got {id_a}");
+        assert!(id_a.starts_with("ck-"), "got {id_a}");
 
-        let id_different_message = content_addressed_checkpoint_id(None, &change_ids, &changes, Some("other message"), &authors, "2026-07-27T00:00:01Z", &[]);
+        let id_different_message = content_addressed_checkpoint_id(None, &change_ids, &changes, Some("other message"), &authors, "2026-07-27T00:00:01Z", &[]).await;
         assert_ne!(id_a, id_different_message, "a different message must change the id");
 
-        let id_different_parent = content_addressed_checkpoint_id(Some("ck-parent"), &change_ids, &changes, Some("root"), &authors, "2026-07-27T00:00:01Z", &[]);
+        let id_different_parent = content_addressed_checkpoint_id(Some("ck-parent"), &change_ids, &changes, Some("root"), &authors, "2026-07-27T00:00:01Z", &[]).await;
         assert_ne!(id_a, id_different_parent, "a different parent must change the id");
 
-        let id_different_timestamp = content_addressed_checkpoint_id(None, &change_ids, &changes, Some("root"), &authors, "2026-07-27T00:00:02Z", &[]);
+        let id_different_timestamp = content_addressed_checkpoint_id(None, &change_ids, &changes, Some("root"), &authors, "2026-07-27T00:00:02Z", &[]).await;
         assert_ne!(id_a, id_different_timestamp, "a different timestamp must change the id");
     }
 
@@ -639,24 +639,24 @@ mod tests {
         let legacy_digest = *blake3::hash(&legacy_input).as_bytes();
         let legacy_hex16: String = legacy_digest[..8].iter().map(|byte| format!("{byte:02x}")).collect();
         let legacy_id = format!("ck-{legacy_hex16}");
-        let id_no_pins = content_addressed_checkpoint_id(args.0, args.1, args.2, args.3, args.4, args.5, &[]);
+        let id_no_pins = content_addressed_checkpoint_id(args.0, args.1, args.2, args.3, args.4, args.5, &[]).await;
         assert_eq!(id_no_pins, legacy_id, "an empty pin list must not change a single byte of the pre-existing hash input");
 
         // (2) A non-empty pin set changes the id relative to no pins at all.
         let child_a_ref = crate::os_io::ArtifactRef::parse_uri("child-a!s.stdio.mesh@87a/mesh").await.expect("valid test fixture uri");
         let child_b_ref = crate::os_io::ArtifactRef::parse_uri("child-b!s.stdio.image@87a/image").await.expect("valid test fixture uri");
         let pins_one = vec![CompositionPin { child_ref: child_a_ref.clone(), checkpoint_id: "ck-child-a-1".into() }];
-        let id_with_pins = content_addressed_checkpoint_id(args.0, args.1, args.2, args.3, args.4, args.5, &pins_one);
+        let id_with_pins = content_addressed_checkpoint_id(args.0, args.1, args.2, args.3, args.4, args.5, &pins_one).await;
         assert_ne!(id_no_pins, id_with_pins, "a non-empty pin list must change the id relative to no composition");
 
         // (3) Identical pins in identical order converge on the identical id.
-        let id_with_pins_again = content_addressed_checkpoint_id(args.0, args.1, args.2, args.3, args.4, args.5, &pins_one);
+        let id_with_pins_again = content_addressed_checkpoint_id(args.0, args.1, args.2, args.3, args.4, args.5, &pins_one).await;
         assert_eq!(id_with_pins, id_with_pins_again, "identical pins in identical order converge on the identical id");
 
         // (4) A different pin CONTENT (same child, different pinned checkpoint) changes the id.
         let pins_one_moved = vec![CompositionPin { child_ref: child_a_ref.clone(), checkpoint_id: "ck-child-a-2".into() }];
         let id_pin_moved = content_addressed_checkpoint_id(args.0, args.1, args.2, args.3, args.4, args.5, &pins_one_moved);
-        assert_ne!(id_with_pins, id_pin_moved, "a different pinned checkpoint_id for the same child must change the id");
+        assert_ne!(id_with_pins, id_pin_moved.await, "a different pinned checkpoint_id for the same child must change the id");
 
         // (5) Two peers that discover the same pin SET in different order (e.g. concurrent
         // parallel-child dispatch) still converge — the function sorts by `child_ref.to_uri()` internally.
@@ -670,23 +670,23 @@ mod tests {
         ];
         let id_ordered = content_addressed_checkpoint_id(args.0, args.1, args.2, args.3, args.4, args.5, &pins_two_ordered);
         let id_reordered = content_addressed_checkpoint_id(args.0, args.1, args.2, args.3, args.4, args.5, &pins_two_reordered);
-        assert_eq!(id_ordered, id_reordered, "two peers discovering the same pin set in different incidental order must converge on the identical id");
+        assert_eq!(id_ordered.await, id_reordered.await, "two peers discovering the same pin set in different incidental order must converge on the identical id");
     }
 
     //#region 🆔️Ids
     #[semio_framework_async_macros::async_test]
     async fn content_addressed_entity_and_mint_helpers_are_deterministic() {
-        assert_eq!(content_addressed_entity_id("x", b"payload"), content_addressed_entity_id("x", b"payload"));
-        assert_ne!(content_addressed_entity_id("x", b"a"), content_addressed_entity_id("x", b"b"));
-        assert_eq!(edit_scoped_id("edit-1", 0), edit_scoped_id("edit-1", 0));
-        assert_ne!(edit_scoped_id("edit-1", 0), edit_scoped_id("edit-1", 1));
+        assert_eq!(content_addressed_entity_id("x", b"payload").await, content_addressed_entity_id("x", b"payload").await);
+        assert_ne!(content_addressed_entity_id("x", b"a").await, content_addressed_entity_id("x", b"b").await);
+        assert_eq!(edit_scoped_id("edit-1", 0).await, edit_scoped_id("edit-1", 0).await);
+        assert_ne!(edit_scoped_id("edit-1", 0).await, edit_scoped_id("edit-1", 1).await);
         assert!(edit_scoped_id("edit-1", 0).await.starts_with("scoped-"));
-        assert_eq!(mint_edit_id(Some("alice"), 3, b"fwd"), mint_edit_id(Some("alice"), 3, b"fwd"));
-        assert_ne!(mint_edit_id(Some("alice"), 3, b"fwd"), mint_edit_id(Some("bob"), 3, b"fwd"));
-        assert_eq!(mint_change_id(&["e1".into(), "e2".into()], Some("msg")), mint_change_id(&["e1".into(), "e2".into()], Some("msg")));
-        assert_eq!(mint_alternative_id("main", &["ck1".into()]), mint_alternative_id("main", &["ck1".into()]));
-        assert_eq!(mint_mutation_id(b"op-bytes"), mint_mutation_id(b"op-bytes"));
-        assert_eq!(create_document_vcs_id("draft"), create_document_vcs_id("draft"));
+        assert_eq!(mint_edit_id(Some("alice"), 3, b"fwd").await, mint_edit_id(Some("alice"), 3, b"fwd").await);
+        assert_ne!(mint_edit_id(Some("alice"), 3, b"fwd").await, mint_edit_id(Some("bob"), 3, b"fwd").await);
+        assert_eq!(mint_change_id(&["e1".into(), "e2".into()], Some("msg")).await, mint_change_id(&["e1".into(), "e2".into()], Some("msg")).await);
+        assert_eq!(mint_alternative_id("main", &["ck1".into()]).await, mint_alternative_id("main", &["ck1".into()]).await);
+        assert_eq!(mint_mutation_id(b"op-bytes").await, mint_mutation_id(b"op-bytes").await);
+        assert_eq!(create_document_vcs_id("draft").await, create_document_vcs_id("draft").await);
         assert!(create_document_vcs_id("draft").await.starts_with("draft-"));
     }
     //#endregion 🆔️Ids

@@ -56,17 +56,17 @@ async fn compress_knots(flat: &[f64]) -> (Vec<i64>, Vec<f64>) {
 
 //#region 🔖️Build
 async fn point_to_part21(b: &mut Part21Builder, p: SemioPoint3) -> u64 {
-    b.alloc("CARTESIAN_POINT", vec![s(""), xyz(p)])
+    b.alloc("CARTESIAN_POINT", vec![s("").await, xyz(p).await]).await
 }
 async fn direction_to_part21(b: &mut Part21Builder, d: SemioPoint3) -> u64 {
-    b.alloc("DIRECTION", vec![s(""), xyz(d)])
+    b.alloc("DIRECTION", vec![s("").await, xyz(d).await]).await
 }
 /// 📐️ `AXIS2_PLACEMENT_3D` with the ref_direction (in-plane rotation) always `$` — see module
 /// doc comment.
 async fn axis_placement_to_part21(b: &mut Part21Builder, origin: SemioPoint3, axis: SemioPoint3) -> u64 {
     let origin_id = point_to_part21(b, origin);
     let axis_id = direction_to_part21(b, axis);
-    b.alloc("AXIS2_PLACEMENT_3D", vec![s(""), Part21Value::Ref(origin_id), Part21Value::Ref(axis_id), Part21Value::Unset])
+    b.alloc("AXIS2_PLACEMENT_3D", vec![s("").await, Part21Value::Ref(origin_id.await), Part21Value::Ref(axis_id.await), Part21Value::Unset]).await
 }
 
 async fn curve_to_part21(b: &mut Part21Builder, curve: &BrepCurve) -> u64 {
@@ -74,20 +74,20 @@ async fn curve_to_part21(b: &mut Part21Builder, curve: &BrepCurve) -> u64 {
         BrepCurve::Line { origin, direction } => {
             let point_id = point_to_part21(b, *origin);
             let dir_id = direction_to_part21(b, *direction);
-            let vector_id = b.alloc("VECTOR", vec![s(""), Part21Value::Ref(dir_id), Part21Value::Real(1.0.into())]);
-            b.alloc("LINE", vec![s(""), Part21Value::Ref(point_id), Part21Value::Ref(vector_id)])
+            let vector_id = b.alloc("VECTOR", vec![s("").await, Part21Value::Ref(dir_id.await), Part21Value::Real(1.0.into())]);
+            b.alloc("LINE", vec![s("").await, Part21Value::Ref(point_id.await), Part21Value::Ref(vector_id.await)]).await
         }
         BrepCurve::Circle { center, axis, radius } => {
             let pos_id = axis_placement_to_part21(b, *center, *axis);
-            b.alloc("CIRCLE", vec![s(""), Part21Value::Ref(pos_id), Part21Value::Real((*radius).into())])
+            b.alloc("CIRCLE", vec![s("").await, Part21Value::Ref(pos_id.await), Part21Value::Real((*radius).into())]).await
         }
         BrepCurve::Ellipse { center, axis, radius_major, radius_minor } => {
             let pos_id = axis_placement_to_part21(b, *center, *axis);
-            b.alloc("ELLIPSE", vec![s(""), Part21Value::Ref(pos_id), Part21Value::Real((*radius_major).into()), Part21Value::Real((*radius_minor).into())])
+            b.alloc("ELLIPSE", vec![s("").await, Part21Value::Ref(pos_id.await), Part21Value::Real((*radius_major).into()), Part21Value::Real((*radius_minor).into())]).await
         }
         BrepCurve::Nurbs { control_points, weights, degree, knots } => {
             let cp_ids: Vec<Part21Value> = control_points.iter().map(|p| Part21Value::Ref(point_to_part21(b, *p))).collect();
-            let (mults, uniq_knots) = compress_knots(knots);
+            let (mults, uniq_knots) = compress_knots(knots).await;
             let base_args = vec![
                 s(""),
                 Part21Value::Int(*degree as i64),
@@ -105,7 +105,7 @@ async fn curve_to_part21(b: &mut Part21Builder, curve: &BrepCurve) -> u64 {
                 let weight_args = vec![Part21Value::List(weights.iter().map(|w| Part21Value::Real((*w).into())).collect())];
                 b.instances.last_mut().expect("just allocated above").entities.push(("RATIONAL_B_SPLINE_CURVE".to_string(), weight_args));
             }
-            id
+            id.await
         }
     }
 }
@@ -114,23 +114,23 @@ async fn surface_to_part21(b: &mut Part21Builder, surface: &BrepSurface) -> u64 
     match surface {
         BrepSurface::Plane { origin, normal } => {
             let pos_id = axis_placement_to_part21(b, *origin, *normal);
-            b.alloc("PLANE", vec![s(""), Part21Value::Ref(pos_id)])
+            b.alloc("PLANE", vec![s("").await, Part21Value::Ref(pos_id.await)]).await
         }
         BrepSurface::Cylinder { origin, axis, radius } => {
             let pos_id = axis_placement_to_part21(b, *origin, *axis);
-            b.alloc("CYLINDRICAL_SURFACE", vec![s(""), Part21Value::Ref(pos_id), Part21Value::Real((*radius).into())])
+            b.alloc("CYLINDRICAL_SURFACE", vec![s("").await, Part21Value::Ref(pos_id.await), Part21Value::Real((*radius).into())]).await
         }
         BrepSurface::Cone { origin, axis, radius, half_angle } => {
             let pos_id = axis_placement_to_part21(b, *origin, *axis);
-            b.alloc("CONICAL_SURFACE", vec![s(""), Part21Value::Ref(pos_id), Part21Value::Real((*radius).into()), Part21Value::Real((*half_angle).into())])
+            b.alloc("CONICAL_SURFACE", vec![s("").await, Part21Value::Ref(pos_id.await), Part21Value::Real((*radius).into()), Part21Value::Real((*half_angle).into())]).await
         }
         BrepSurface::Sphere { center, radius } => {
             let pos_id = axis_placement_to_part21(b, *center, SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 });
-            b.alloc("SPHERICAL_SURFACE", vec![s(""), Part21Value::Ref(pos_id), Part21Value::Real((*radius).into())])
+            b.alloc("SPHERICAL_SURFACE", vec![s("").await, Part21Value::Ref(pos_id.await), Part21Value::Real((*radius).into())]).await
         }
         BrepSurface::Torus { center, axis, major_radius, minor_radius } => {
             let pos_id = axis_placement_to_part21(b, *center, *axis);
-            b.alloc("TOROIDAL_SURFACE", vec![s(""), Part21Value::Ref(pos_id), Part21Value::Real((*major_radius).into()), Part21Value::Real((*minor_radius).into())])
+            b.alloc("TOROIDAL_SURFACE", vec![s("").await, Part21Value::Ref(pos_id.await), Part21Value::Real((*major_radius).into()), Part21Value::Real((*minor_radius).into())]).await
         }
         BrepSurface::Nurbs { control_points, weights, u_count, v_count, degree_u, degree_v, knots_u, knots_v } => {
             let (u, v) = (*u_count as usize, *v_count as usize);
@@ -138,12 +138,12 @@ async fn surface_to_part21(b: &mut Part21Builder, surface: &BrepSurface) -> u64 
             for ui in 0..u {
                 let mut row = Vec::with_capacity(v);
                 for vi in 0..v {
-                    row.push(Part21Value::Ref(point_to_part21(b, control_points[ui * v + vi])));
+                    row.push(Part21Value::Ref(point_to_part21(b, control_points[ui * v + vi]).await));
                 }
                 rows.push(Part21Value::List(row));
             }
-            let (u_mults, u_uniq) = compress_knots(knots_u);
-            let (v_mults, v_uniq) = compress_knots(knots_v);
+            let (u_mults, u_uniq) = compress_knots(knots_u).await;
+            let (v_mults, v_uniq) = compress_knots(knots_v).await;
             let base_args = vec![
                 s(""),
                 Part21Value::Int(*degree_u as i64),
@@ -172,18 +172,18 @@ async fn surface_to_part21(b: &mut Part21Builder, surface: &BrepSurface) -> u64 
                 }
                 b.instances.last_mut().expect("just allocated above").entities.push(("RATIONAL_B_SPLINE_SURFACE".to_string(), vec![Part21Value::List(wrows)]));
             }
-            id
+            id.await
         }
     }
 }
 
 async fn build_part21(snapshot: &SemioBrepSnapshot) -> Result<crate::artifacts::step::engine::part21::Part21Document, String> {
-    let mut b = Part21Builder::new();
+    let mut b = Part21Builder::new().await;
 
     let mut vertex_ids: HashMap<&str, u64> = HashMap::new();
     for v in &snapshot.vertices {
         let point_id = point_to_part21(&mut b, v.point);
-        let vertex_id = b.alloc("VERTEX_POINT", vec![s(""), Part21Value::Ref(point_id)]);
+        let vertex_id = b.alloc("VERTEX_POINT", vec![s("").await, Part21Value::Ref(point_id.await)]).await;
         vertex_ids.insert(v.id.as_str(), vertex_id);
     }
 
@@ -192,7 +192,7 @@ async fn build_part21(snapshot: &SemioBrepSnapshot) -> Result<crate::artifacts::
         let &start = vertex_ids.get(e.start_vertex.as_str()).ok_or_else(|| format!("edge {:?}: dangling start_vertex {:?}", e.id, e.start_vertex))?;
         let &end = vertex_ids.get(e.end_vertex.as_str()).ok_or_else(|| format!("edge {:?}: dangling end_vertex {:?}", e.id, e.end_vertex))?;
         let curve_id = curve_to_part21(&mut b, &e.curve);
-        let edge_id = b.alloc("EDGE_CURVE", vec![s(""), Part21Value::Ref(start), Part21Value::Ref(end), Part21Value::Ref(curve_id), bool_enum(true)]);
+        let edge_id = b.alloc("EDGE_CURVE", vec![s("").await, Part21Value::Ref(start), Part21Value::Ref(end), Part21Value::Ref(curve_id.await), bool_enum(true).await]).await;
         edge_ids.insert(e.id.as_str(), edge_id);
     }
 
@@ -201,25 +201,25 @@ async fn build_part21(snapshot: &SemioBrepSnapshot) -> Result<crate::artifacts::
         let mut members = Vec::with_capacity(l.edges.len());
         for le in &l.edges {
             let &edge_ref = edge_ids.get(le.edge.as_str()).ok_or_else(|| format!("loop {:?}: dangling edge {:?}", l.id, le.edge))?;
-            let oe_id = b.alloc("ORIENTED_EDGE", vec![s(""), Part21Value::Derived, Part21Value::Derived, Part21Value::Ref(edge_ref), bool_enum(le.orientation)]);
+            let oe_id = b.alloc("ORIENTED_EDGE", vec![s("").await, Part21Value::Derived, Part21Value::Derived, Part21Value::Ref(edge_ref), bool_enum(le.orientation).await]).await;
             members.push(Part21Value::Ref(oe_id));
         }
-        let loop_id = b.alloc("EDGE_LOOP", vec![s(""), Part21Value::List(members)]);
+        let loop_id = b.alloc("EDGE_LOOP", vec![s("").await, Part21Value::List(members)]).await;
         loop_ids.insert(l.id.as_str(), loop_id);
     }
 
     let mut face_ids: HashMap<&str, u64> = HashMap::new();
     for f in &snapshot.faces {
         let &outer_ref = loop_ids.get(f.outer_loop.as_str()).ok_or_else(|| format!("face {:?}: dangling outer_loop {:?}", f.id, f.outer_loop))?;
-        let outer_bound_id = b.alloc("FACE_OUTER_BOUND", vec![s(""), Part21Value::Ref(outer_ref), bool_enum(true)]);
+        let outer_bound_id = b.alloc("FACE_OUTER_BOUND", vec![s("").await, Part21Value::Ref(outer_ref), bool_enum(true).await]).await;
         let mut bounds = vec![Part21Value::Ref(outer_bound_id)];
         for il in &f.inner_loops {
             let &loop_ref = loop_ids.get(il.as_str()).ok_or_else(|| format!("face {:?}: dangling inner_loop {:?}", f.id, il))?;
-            let bound_id = b.alloc("FACE_BOUND", vec![s(""), Part21Value::Ref(loop_ref), bool_enum(true)]);
+            let bound_id = b.alloc("FACE_BOUND", vec![s("").await, Part21Value::Ref(loop_ref), bool_enum(true).await]).await;
             bounds.push(Part21Value::Ref(bound_id));
         }
         let surface_id = surface_to_part21(&mut b, &f.surface);
-        let face_id = b.alloc("ADVANCED_FACE", vec![s(""), Part21Value::List(bounds), Part21Value::Ref(surface_id), bool_enum(f.orientation)]);
+        let face_id = b.alloc("ADVANCED_FACE", vec![s("").await, Part21Value::List(bounds), Part21Value::Ref(surface_id.await), bool_enum(f.orientation).await]).await;
         face_ids.insert(f.id.as_str(), face_id);
     }
 
@@ -230,14 +230,14 @@ async fn build_part21(snapshot: &SemioBrepSnapshot) -> Result<crate::artifacts::
             let &face_ref = face_ids.get(sf.face.as_str()).ok_or_else(|| format!("shell {:?}: dangling face {:?}", sh.id, sf.face))?;
             members.push(Part21Value::Ref(face_ref));
         }
-        let shell_id = b.alloc("CLOSED_SHELL", vec![s(""), Part21Value::List(members)]);
+        let shell_id = b.alloc("CLOSED_SHELL", vec![s("").await, Part21Value::List(members)]).await;
         shell_ids.insert(sh.id.as_str(), shell_id);
     }
 
     for so in &snapshot.solids {
         let outer = so.shells.iter().find(|m| !m.is_void).ok_or_else(|| format!("solid {:?}: has no non-void outer shell", so.id))?;
         let &outer_ref = shell_ids.get(outer.shell.as_str()).ok_or_else(|| format!("solid {:?}: dangling outer shell {:?}", so.id, outer.shell))?;
-        b.alloc("MANIFOLD_SOLID_BREP", vec![s(""), Part21Value::Ref(outer_ref)]);
+        b.alloc("MANIFOLD_SOLID_BREP", vec![s("").await, Part21Value::Ref(outer_ref)]).await;
         let void_refs: Vec<Part21Value> =
             so.shells.iter().filter(|m| m.is_void).map(|m| shell_ids.get(m.shell.as_str()).copied().map(Part21Value::Ref).ok_or_else(|| format!("solid {:?}: dangling void shell {:?}", so.id, m.shell))).collect::<Result<Vec<_>, _>>()?;
         if !void_refs.is_empty() {
@@ -246,11 +246,11 @@ async fn build_part21(snapshot: &SemioBrepSnapshot) -> Result<crate::artifacts::
     }
 
     let header = Part21Header {
-        file_description: vec![Part21Value::List(vec![s("")]), s("2;1")],
-        file_name: vec![s("semio.step"), s(""), Part21Value::List(vec![s("")]), Part21Value::List(vec![s("")]), s("semio"), s(""), s("")],
-        file_schema: vec![Part21Value::List(vec![s("AUTOMOTIVE_DESIGN")])],
+        file_description: vec![Part21Value::List(vec![s("").await]), s("2;1").await],
+        file_name: vec![s("semio.step").await, s("").await, Part21Value::List(vec![s("").await]), Part21Value::List(vec![s("").await]), s("semio").await, s("").await, s("").await],
+        file_schema: vec![Part21Value::List(vec![s("AUTOMOTIVE_DESIGN").await])],
     };
-    Ok(b.build(header))
+    Ok(b.build(header).await)
 }
 //#endregion 🔖️Build
 
@@ -269,8 +269,8 @@ impl ArtifactSerializer for SemioBrepToStep {
     const INTO: Dialect = STEP_DIALECT;
 
     async fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
-        let doc = build_part21(from).map_err(|m| store::PackError::Schema(format!("semio brep -> step: {m}")))?;
-        Ok(StepSnapshot::from_part21_document(doc))
+        let doc = build_part21(from).await.map_err(|m| store::PackError::Schema(format!("semio brep -> step: {m}")))?;
+        Ok(StepSnapshot::from_part21_document(doc).await)
     }
 }
 //#endregion 🔖️Serializer

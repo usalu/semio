@@ -170,13 +170,13 @@ async fn strip_inner_preamble(text: &str) -> &str {
 async fn enc_semio_snapshot_body(snap: &SemioSnapshot) -> String {
     let tag = subset_tag(&snap.subset);
     let inner_printed = match &snap.subset {
-        SemioSubsetSnapshot::Brep(s) => <SemioBrepSnapshot as store::ArtifactDsl>::print_dsl(s),
-        SemioSubsetSnapshot::Mesh(s) => <SemioMeshSnapshot as store::ArtifactDsl>::print_dsl(s),
-        SemioSubsetSnapshot::Model(s) => <SemioModelSnapshot as store::ArtifactDsl>::print_dsl(s),
-        SemioSubsetSnapshot::Value(s) => <SemioValueSnapshot as store::ArtifactDsl>::print_dsl(s),
-        SemioSubsetSnapshot::Document(s) => <SemioDocumentSnapshot as store::ArtifactDsl>::print_dsl(s),
-        SemioSubsetSnapshot::Cad(s) => <SemioCadSnapshot as store::ArtifactDsl>::print_dsl(s),
-        SemioSubsetSnapshot::Drawing(s) => <SemioDrawingSnapshot as store::ArtifactDsl>::print_dsl(s),
+        SemioSubsetSnapshot::Brep(s) => <SemioBrepSnapshot as store::ArtifactDsl>::print_dsl(s).await,
+        SemioSubsetSnapshot::Mesh(s) => <SemioMeshSnapshot as store::ArtifactDsl>::print_dsl(s).await,
+        SemioSubsetSnapshot::Model(s) => <SemioModelSnapshot as store::ArtifactDsl>::print_dsl(s).await,
+        SemioSubsetSnapshot::Value(s) => <SemioValueSnapshot as store::ArtifactDsl>::print_dsl(s).await,
+        SemioSubsetSnapshot::Document(s) => <SemioDocumentSnapshot as store::ArtifactDsl>::print_dsl(s).await,
+        SemioSubsetSnapshot::Cad(s) => <SemioCadSnapshot as store::ArtifactDsl>::print_dsl(s).await,
+        SemioSubsetSnapshot::Drawing(s) => <SemioDrawingSnapshot as store::ArtifactDsl>::print_dsl(s).await,
         SemioSubsetSnapshot::Image(s) => <SemioImageSnapshot as store::ArtifactDsl>::print_dsl(s),
         SemioSubsetSnapshot::Video(s) => <SemioVideoSnapshot as store::ArtifactDsl>::print_dsl(s),
         SemioSubsetSnapshot::Audio(s) => <SemioAudioSnapshot as store::ArtifactDsl>::print_dsl(s),
@@ -199,27 +199,27 @@ async fn dec_semio_snapshot_body(body: &str) -> Result<SemioSnapshot, String> {
     let tag = subset_line.strip_prefix("subset=").ok_or_else(|| format!("semio snapshot: expected subset= line, got {subset_line:?}"))?;
     let schema_line = parts.next().ok_or_else(|| "semio snapshot: missing schema line".to_string())?.trim();
     let schema_hex = schema_line.strip_prefix("schema=").ok_or_else(|| format!("semio snapshot: expected schema= line, got {schema_line:?}"))?;
-    let schema = String::from_utf8(hex_decode(schema_hex)?).map_err(|e| e.to_string())?;
+    let schema = String::from_utf8(hex_decode(schema_hex).await?).map_err(|e| e.to_string())?;
     let inner_body = parts.next().unwrap_or("");
     let subset = match tag {
-        "brep" => SemioSubsetSnapshot::Brep(<SemioBrepSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
-        "mesh" => SemioSubsetSnapshot::Mesh(<SemioMeshSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
-        "model" => SemioSubsetSnapshot::Model(<SemioModelSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
-        "value" => SemioSubsetSnapshot::Value(<SemioValueSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
-        "document" => SemioSubsetSnapshot::Document(<SemioDocumentSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
-        "cad" => SemioSubsetSnapshot::Cad(<SemioCadSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
-        "drawing" => SemioSubsetSnapshot::Drawing(<SemioDrawingSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
-        "image" => SemioSubsetSnapshot::Image(<SemioImageSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
-        "video" => SemioSubsetSnapshot::Video(<SemioVideoSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
-        "audio" => SemioSubsetSnapshot::Audio(<SemioAudioSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
-        "animation" => SemioSubsetSnapshot::Animation(<SemioAnimationSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
-        "presentation" => SemioSubsetSnapshot::Presentation(<SemioPresentationSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
-        "flow" => SemioSubsetSnapshot::Flow(<SemioFlowSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
-        "text" => SemioSubsetSnapshot::Text(<SemioTextSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
-        "table" => SemioSubsetSnapshot::Table(<SemioTableSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
-        "graph" => SemioSubsetSnapshot::Graph(<SemioGraphSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
-        "object" => SemioSubsetSnapshot::Object(<SemioObjectSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
-        "kit" => SemioSubsetSnapshot::Kit(<SemioKitSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
+        "brep" => SemioSubsetSnapshot::Brep(<SemioBrepSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).await.map_err(|e| e.to_string())?),
+        "mesh" => SemioSubsetSnapshot::Mesh(<SemioMeshSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).await.map_err(|e| e.to_string())?),
+        "model" => SemioSubsetSnapshot::Model(<SemioModelSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).await.map_err(|e| e.to_string())?),
+        "value" => SemioSubsetSnapshot::Value(<SemioValueSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).await.map_err(|e| e.to_string())?),
+        "document" => SemioSubsetSnapshot::Document(<SemioDocumentSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).await.map_err(|e| e.to_string())?),
+        "cad" => SemioSubsetSnapshot::Cad(<SemioCadSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).await.map_err(|e| e.to_string())?),
+        "drawing" => SemioSubsetSnapshot::Drawing(<SemioDrawingSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).await.map_err(|e| e.to_string())?),
+        "image" => SemioSubsetSnapshot::Image(<SemioImageSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).await.map_err(|e| e.to_string())?),
+        "video" => SemioSubsetSnapshot::Video(<SemioVideoSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).await.map_err(|e| e.to_string())?),
+        "audio" => SemioSubsetSnapshot::Audio(<SemioAudioSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).await.map_err(|e| e.to_string())?),
+        "animation" => SemioSubsetSnapshot::Animation(<SemioAnimationSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).await.map_err(|e| e.to_string())?),
+        "presentation" => SemioSubsetSnapshot::Presentation(<SemioPresentationSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).await.map_err(|e| e.to_string())?),
+        "flow" => SemioSubsetSnapshot::Flow(<SemioFlowSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).await.map_err(|e| e.to_string())?),
+        "text" => SemioSubsetSnapshot::Text(<SemioTextSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).await.map_err(|e| e.to_string())?),
+        "table" => SemioSubsetSnapshot::Table(<SemioTableSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).await.map_err(|e| e.to_string())?),
+        "graph" => SemioSubsetSnapshot::Graph(<SemioGraphSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).await.map_err(|e| e.to_string())?),
+        "object" => SemioSubsetSnapshot::Object(<SemioObjectSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).await.map_err(|e| e.to_string())?),
+        "kit" => SemioSubsetSnapshot::Kit(<SemioKitSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).await.map_err(|e| e.to_string())?),
         other => return Err(format!("semio snapshot: unknown subset tag {other:?}")),
     };
     Ok(SemioSnapshot { schema, subset })
@@ -237,8 +237,8 @@ async fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
     out.extend_from_slice(bytes);
 }
 async fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
+    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec())
 }
 
 const PACK_BINARY_FORMAT: u8 = 1;
@@ -246,16 +246,16 @@ const PACK_BINARY_FORMAT: u8 = 1;
 async fn encode_semio_snapshot_binary(snap: &SemioSnapshot) -> Vec<u8> {
     let mut out = Vec::new();
     out.push(PACK_BINARY_FORMAT);
-    out.push(subset_ordinal(&snap.subset));
+    out.push(subset_ordinal(&snap.subset).await);
     write_bytes_lp(&mut out, snap.schema.as_bytes());
     let payload = match &snap.subset {
-        SemioSubsetSnapshot::Brep(s) => <SemioBrepSnapshot as store::ArtifactPack>::encode_pack(s),
-        SemioSubsetSnapshot::Mesh(s) => <SemioMeshSnapshot as store::ArtifactPack>::encode_pack(s),
-        SemioSubsetSnapshot::Model(s) => <SemioModelSnapshot as store::ArtifactPack>::encode_pack(s),
-        SemioSubsetSnapshot::Value(s) => <SemioValueSnapshot as store::ArtifactPack>::encode_pack(s),
-        SemioSubsetSnapshot::Document(s) => <SemioDocumentSnapshot as store::ArtifactPack>::encode_pack(s),
-        SemioSubsetSnapshot::Cad(s) => <SemioCadSnapshot as store::ArtifactPack>::encode_pack(s),
-        SemioSubsetSnapshot::Drawing(s) => <SemioDrawingSnapshot as store::ArtifactPack>::encode_pack(s),
+        SemioSubsetSnapshot::Brep(s) => <SemioBrepSnapshot as store::ArtifactPack>::encode_pack(s).await,
+        SemioSubsetSnapshot::Mesh(s) => <SemioMeshSnapshot as store::ArtifactPack>::encode_pack(s).await,
+        SemioSubsetSnapshot::Model(s) => <SemioModelSnapshot as store::ArtifactPack>::encode_pack(s).await,
+        SemioSubsetSnapshot::Value(s) => <SemioValueSnapshot as store::ArtifactPack>::encode_pack(s).await,
+        SemioSubsetSnapshot::Document(s) => <SemioDocumentSnapshot as store::ArtifactPack>::encode_pack(s).await,
+        SemioSubsetSnapshot::Cad(s) => <SemioCadSnapshot as store::ArtifactPack>::encode_pack(s).await,
+        SemioSubsetSnapshot::Drawing(s) => <SemioDrawingSnapshot as store::ArtifactPack>::encode_pack(s).await,
         SemioSubsetSnapshot::Image(s) => <SemioImageSnapshot as store::ArtifactPack>::encode_pack(s),
         SemioSubsetSnapshot::Video(s) => <SemioVideoSnapshot as store::ArtifactPack>::encode_pack(s),
         SemioSubsetSnapshot::Audio(s) => <SemioAudioSnapshot as store::ArtifactPack>::encode_pack(s),
@@ -273,33 +273,33 @@ async fn encode_semio_snapshot_binary(snap: &SemioSnapshot) -> Vec<u8> {
 }
 
 async fn decode_semio_snapshot_binary(bytes: &[u8]) -> Result<SemioSnapshot, String> {
-    let mut reader = store::ByteReader::new(bytes);
-    let format = reader.read_u8().map_err(|e| e.to_string())?;
+    let mut reader = store::ByteReader::new(bytes).await;
+    let format = reader.read_u8().await.map_err(|e| e.to_string())?;
     if format != PACK_BINARY_FORMAT {
         return Err(format!("unsupported pack format {format}"));
     }
-    let tag = reader.read_u8().map_err(|e| e.to_string())?;
-    let schema = String::from_utf8(read_bytes_lp(&mut reader)?).map_err(|e| e.to_string())?;
-    let payload = reader.read_bytes(reader.remaining()).map_err(|e| e.to_string())?;
+    let tag = reader.read_u8().await.map_err(|e| e.to_string())?;
+    let schema = String::from_utf8(read_bytes_lp(&mut reader).await?).map_err(|e| e.to_string())?;
+    let payload = reader.read_bytes(reader.remaining().await).await.map_err(|e| e.to_string())?;
     let subset = match tag {
-        0 => SemioSubsetSnapshot::Brep(<SemioBrepSnapshot as store::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
-        1 => SemioSubsetSnapshot::Mesh(<SemioMeshSnapshot as store::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
-        2 => SemioSubsetSnapshot::Model(<SemioModelSnapshot as store::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
-        3 => SemioSubsetSnapshot::Value(<SemioValueSnapshot as store::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
-        4 => SemioSubsetSnapshot::Document(<SemioDocumentSnapshot as store::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
-        5 => SemioSubsetSnapshot::Cad(<SemioCadSnapshot as store::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
-        6 => SemioSubsetSnapshot::Drawing(<SemioDrawingSnapshot as store::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
-        7 => SemioSubsetSnapshot::Image(<SemioImageSnapshot as store::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
-        8 => SemioSubsetSnapshot::Video(<SemioVideoSnapshot as store::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
-        9 => SemioSubsetSnapshot::Audio(<SemioAudioSnapshot as store::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
-        10 => SemioSubsetSnapshot::Animation(<SemioAnimationSnapshot as store::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
-        11 => SemioSubsetSnapshot::Presentation(<SemioPresentationSnapshot as store::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
-        12 => SemioSubsetSnapshot::Flow(<SemioFlowSnapshot as store::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
-        13 => SemioSubsetSnapshot::Text(<SemioTextSnapshot as store::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
-        14 => SemioSubsetSnapshot::Table(<SemioTableSnapshot as store::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
-        15 => SemioSubsetSnapshot::Graph(<SemioGraphSnapshot as store::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
-        16 => SemioSubsetSnapshot::Object(<SemioObjectSnapshot as store::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
-        17 => SemioSubsetSnapshot::Kit(<SemioKitSnapshot as store::ArtifactPack>::decode_pack(payload).map_err(|e| e.to_string())?),
+        0 => SemioSubsetSnapshot::Brep(<SemioBrepSnapshot as store::ArtifactPack>::decode_pack(payload).await.map_err(|e| e.to_string())?),
+        1 => SemioSubsetSnapshot::Mesh(<SemioMeshSnapshot as store::ArtifactPack>::decode_pack(payload).await.map_err(|e| e.to_string())?),
+        2 => SemioSubsetSnapshot::Model(<SemioModelSnapshot as store::ArtifactPack>::decode_pack(payload).await.map_err(|e| e.to_string())?),
+        3 => SemioSubsetSnapshot::Value(<SemioValueSnapshot as store::ArtifactPack>::decode_pack(payload).await.map_err(|e| e.to_string())?),
+        4 => SemioSubsetSnapshot::Document(<SemioDocumentSnapshot as store::ArtifactPack>::decode_pack(payload).await.map_err(|e| e.to_string())?),
+        5 => SemioSubsetSnapshot::Cad(<SemioCadSnapshot as store::ArtifactPack>::decode_pack(payload).await.map_err(|e| e.to_string())?),
+        6 => SemioSubsetSnapshot::Drawing(<SemioDrawingSnapshot as store::ArtifactPack>::decode_pack(payload).await.map_err(|e| e.to_string())?),
+        7 => SemioSubsetSnapshot::Image(<SemioImageSnapshot as store::ArtifactPack>::decode_pack(payload).await.map_err(|e| e.to_string())?),
+        8 => SemioSubsetSnapshot::Video(<SemioVideoSnapshot as store::ArtifactPack>::decode_pack(payload).await.map_err(|e| e.to_string())?),
+        9 => SemioSubsetSnapshot::Audio(<SemioAudioSnapshot as store::ArtifactPack>::decode_pack(payload).await.map_err(|e| e.to_string())?),
+        10 => SemioSubsetSnapshot::Animation(<SemioAnimationSnapshot as store::ArtifactPack>::decode_pack(payload).await.map_err(|e| e.to_string())?),
+        11 => SemioSubsetSnapshot::Presentation(<SemioPresentationSnapshot as store::ArtifactPack>::decode_pack(payload).await.map_err(|e| e.to_string())?),
+        12 => SemioSubsetSnapshot::Flow(<SemioFlowSnapshot as store::ArtifactPack>::decode_pack(payload).await.map_err(|e| e.to_string())?),
+        13 => SemioSubsetSnapshot::Text(<SemioTextSnapshot as store::ArtifactPack>::decode_pack(payload).await.map_err(|e| e.to_string())?),
+        14 => SemioSubsetSnapshot::Table(<SemioTableSnapshot as store::ArtifactPack>::decode_pack(payload).await.map_err(|e| e.to_string())?),
+        15 => SemioSubsetSnapshot::Graph(<SemioGraphSnapshot as store::ArtifactPack>::decode_pack(payload).await.map_err(|e| e.to_string())?),
+        16 => SemioSubsetSnapshot::Object(<SemioObjectSnapshot as store::ArtifactPack>::decode_pack(payload).await.map_err(|e| e.to_string())?),
+        17 => SemioSubsetSnapshot::Kit(<SemioKitSnapshot as store::ArtifactPack>::decode_pack(payload).await.map_err(|e| e.to_string())?),
         other => return Err(format!("semio snapshot: unknown subset tag {other}")),
     };
     Ok(SemioSnapshot { schema, subset })
@@ -322,12 +322,12 @@ impl store::ArtifactDsl for SemioSnapshot {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        dec_semio_snapshot_body(body).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        dec_semio_snapshot_body(body).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 
     async fn print_dsl(&self) -> String {
         let body = enc_semio_snapshot_body(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -336,7 +336,7 @@ impl store::ArtifactPack for SemioSnapshot {
     async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = encode_semio_snapshot_binary(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
 
@@ -346,7 +346,7 @@ impl store::ArtifactPack for SemioSnapshot {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
-        decode_semio_snapshot_binary(&inner).map_err(store::PackError::Schema)
+        decode_semio_snapshot_binary(&inner).await.map_err(store::PackError::Schema)
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs

@@ -40,8 +40,8 @@ impl ArtifactDeserializer for SemioAnimationFromGltf {
             let mut channels = Vec::with_capacity(anim.channels.len());
             for ch in &anim.channels {
                 let sampler = anim.samplers.get(ch.sampler).ok_or_else(|| store::PackError::Schema(format!("animation channel references out-of-range sampler {}", ch.sampler)))?;
-                let times = decode_accessor(document, &from.buffers, sampler.input).map_err(store::PackError::Schema)?;
-                let values = decode_accessor(document, &from.buffers, sampler.output).map_err(store::PackError::Schema)?;
+                let times = decode_accessor(document, &from.buffers, sampler.input).await.map_err(store::PackError::Schema)?;
+                let values = decode_accessor(document, &from.buffers, sampler.output).await.map_err(store::PackError::Schema)?;
                 let keyframe_count = times.count;
                 let is_cubic = matches!(sampler.interpolation, crate::artifacts::gltf::schema::snapshot::GltfInterpolation::CubicSpline);
                 let multiplier = if is_cubic { 3 } else { 1 };

@@ -104,7 +104,7 @@ mod tests {
         let _ = crate::app::register_artifact_inference_service(ArtifactInferenceService::new(TEST_METADATA, echo_infer));
         start_job(200, JOB_KIND_INFER, &request_bytes());
 
-        match step_job(200, JobBudget { fuel: 1, deadline_ms: 1 }) {
+        match step_job(200, JobBudget { fuel: 1, deadline_ms: 1 }).await {
             JobStep::Running(Some(progress)) => {
                 let (artifact_kind, inference_schema): (String, String) = serde_json::from_slice(&progress).expect("slice 1 progress decodes");
                 assert_eq!(artifact_kind, TEST_METADATA.artifact_kind);
@@ -116,7 +116,7 @@ mod tests {
             }
             _ => panic!("slice 1 must be Running(Some(identity))"),
         }
-        match step_job(200, JobBudget { fuel: 1, deadline_ms: 1 }) {
+        match step_job(200, JobBudget { fuel: 1, deadline_ms: 1 }).await {
             JobStep::Done(bytes) => {
                 let result: crate::app::WireArtifactInferenceResult = serde_json::from_slice(&bytes).expect("slice 2 result decodes");
                 assert_eq!(result.canonical_payload, vec![9, 8, 7]);
@@ -141,7 +141,7 @@ mod tests {
 
         start_job(201, JOB_KIND_INFER, &input);
         step_job(201, JobBudget::default());
-        let baseline = match step_job(201, JobBudget::default()) {
+        let baseline = match step_job(201, JobBudget::default()).await {
             JobStep::Done(bytes) => bytes,
             _ => panic!("uninterrupted run must finish Done within 2 slices"),
         };
@@ -149,13 +149,13 @@ mod tests {
         start_job(202, JOB_KIND_INFER, &input);
         step_job(202, JobBudget::default());
         let entries = checkpoint_jobs();
-        let entry = entries.iter().find(|entry| entry.job == 202).expect("job 202 must appear in checkpoint_jobs()");
+        let entry = entries.await.iter().find(|entry| entry.job == 202).expect("job 202 must appear in checkpoint_jobs()");
         assert_eq!(entry.checkpoint.as_deref(), Some(PHASE_DECODED), "slice 1 must have checkpointed PHASE_DECODED");
         let checkpoint = entry.checkpoint.clone();
         cancel_job(202);
 
         restore_job(202, JOB_KIND_INFER, &input, checkpoint);
-        let restored_final = match step_job(202, JobBudget::default()) {
+        let restored_final = match step_job(202, JobBudget::default()).await {
             JobStep::Done(bytes) => bytes,
             JobStep::Running(_) => panic!("a restore from PHASE_DECODED must finish Done on its FIRST step_job call (only the execute tick remains)"),
             JobStep::Failed(bytes) => {
@@ -169,7 +169,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn infer_job_reports_a_named_decode_fault_on_garbage_input() {
         start_job(203, JOB_KIND_INFER, b"not json");
-        match step_job(203, JobBudget::default()) {
+        match step_job(203, JobBudget::default()).await {
             JobStep::Failed(bytes) => {
                 let fault = dsl::decode_fault_bytes(&bytes);
                 assert_eq!(fault.code.0, "job.infer.decode");

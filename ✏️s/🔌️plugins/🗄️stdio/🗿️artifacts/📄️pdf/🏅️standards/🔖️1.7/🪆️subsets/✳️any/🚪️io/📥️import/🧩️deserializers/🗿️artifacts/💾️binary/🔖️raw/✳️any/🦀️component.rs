@@ -6,11 +6,11 @@ use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::{Pdf
 pub async fn register() {}
 
 pub async fn deserialize(from: &BinarySnapshot) -> Result<PdfSnapshot, store::PackError> {
-    let mut snap = crate::artifacts::pdf::standards::v1_7::subsets::any::io::decode_pdf(&from.bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
+    let mut snap = crate::artifacts::pdf::standards::v1_7::subsets::any::io::decode_pdf(&from.bytes).await.map_err(|e| store::PackError::Schema(e.to_string()))?;
     snap.schema = STDIO_PDF17_DOCUMENT_SCHEMA.into();
     Ok(snap)
 }
 
 pub async fn deserialize_bytes(bytes: &[u8]) -> Result<PdfSnapshot, store::PackError> {
-    deserialize(&<BinarySnapshot as store::ArtifactPack>::decode_pack(bytes)?)
+    deserialize(&<BinarySnapshot as store::ArtifactPack>::decode_pack(bytes).await?).await
 }

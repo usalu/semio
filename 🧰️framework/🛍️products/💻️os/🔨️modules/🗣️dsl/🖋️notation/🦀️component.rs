@@ -369,15 +369,15 @@ mod tests {
     async fn parses_plain_directed_arrow() {
         let value = parse_edge_text("a->b").await.expect("parse_edge_text");
         assert_eq!(value.link.as_ref().unwrap().directed, true);
-        assert!(value.link.as_ref().unwrap().label.is_empty());
-        assert_eq!(print_edge(&value), "a->b");
+        assert!(value.link.as_ref().unwrap().label.is_empty().await);
+        assert_eq!(print_edge(&value).await, "a->b");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn parses_plain_undirected_dash() {
         let value = parse_edge_text("a--b").await.expect("parse_edge_text");
         assert_eq!(value.link.as_ref().unwrap().directed, false);
-        assert_eq!(print_edge(&value), "a--b");
+        assert_eq!(print_edge(&value).await, "a--b");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -387,7 +387,7 @@ mod tests {
         assert_eq!(value.link.as_ref().unwrap().to, node("b").await);
         assert_eq!(value.link.as_ref().unwrap().directed, true);
         // Canonical print never re-emits `<-`.
-        assert_eq!(print_edge(&value), "a->b");
+        assert_eq!(print_edge(&value).await, "a->b");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -397,7 +397,7 @@ mod tests {
         assert_eq!(link.directed, true);
         assert_eq!(link.label, EdgeLabel { id: Some("e1".to_string()), kind: Some("Connection".to_string()) });
         assert_eq!(link.to, node("b").await);
-        assert_eq!(print_edge(&EdgeValue { from: node("a").await, link: Some(link) }), "a -e1:Connection>b");
+        assert_eq!(print_edge(&EdgeValue { from: node("a").await, link: Some(link) }).await, "a -e1:Connection>b");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -406,7 +406,7 @@ mod tests {
         let link = value.link.expect("link");
         assert_eq!(link.directed, false);
         assert_eq!(link.label, EdgeLabel { id: Some("e1".to_string()), kind: None });
-        assert_eq!(print_edge(&EdgeValue { from: node("a").await, link: Some(link) }), "a -e1-b");
+        assert_eq!(print_edge(&EdgeValue { from: node("a").await, link: Some(link) }).await, "a -e1-b");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -414,7 +414,7 @@ mod tests {
         let value = parse_edge_text("a -:Connection>b").await.expect("parse_edge_text");
         let link = value.link.expect("link");
         assert_eq!(link.label, EdgeLabel { id: None, kind: Some("Connection".to_string()) });
-        assert_eq!(print_edge(&EdgeValue { from: node("a").await, link: Some(link) }), "a -:Connection>b");
+        assert_eq!(print_edge(&EdgeValue { from: node("a").await, link: Some(link) }).await, "a -:Connection>b");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -428,7 +428,7 @@ mod tests {
     async fn labeled_back_arrow_is_sugar_normalized_by_endpoint_swap() {
         let value = parse_edge_text("b<-[e1:Connection]-a").await.expect("parse_edge_text");
         assert_eq!(value.from, node("a").await);
-        let printed = print_edge(&value);
+        let printed = print_edge(&value).await;
         let link = value.link.expect("link");
         assert_eq!(link.to, node("b").await);
         assert_eq!(link.directed, true);
@@ -447,7 +447,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn node_kind_and_port_round_trip() {
         let value = parse_edge_text("v1:Vertex@p0->v2:Vertex@p1").await.expect("parse_edge_text");
-        assert_eq!(print_edge(&value), "v1:Vertex@p0->v2:Vertex@p1");
+        assert_eq!(print_edge(&value).await, "v1:Vertex@p0->v2:Vertex@p1");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -468,7 +468,7 @@ mod tests {
             },
         ];
         for case in cases {
-            let printed = print_edge(&case);
+            let printed = print_edge(&case).await;
             let reparsed = parse_edge_text(&printed).await.unwrap_or_else(|e| panic!("reparse of {printed:?} failed: {e:?}"));
             assert_eq!(reparsed, case, "round trip mismatch for {printed:?}");
         }
@@ -479,7 +479,7 @@ mod tests {
         let gpa = crate::os_dsl::unit_by_symbol("GPa").await.unwrap();
         let value = parse_quantity_text("210GPa", gpa).await.expect("parse_quantity_text");
         assert!((value - 210.0).abs() < 1e-9);
-        assert_eq!(print_quantity(value, gpa), "210GPa");
+        assert_eq!(print_quantity(value, gpa).await, "210GPa");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -515,7 +515,7 @@ mod tests {
     async fn parses_and_prints_angles_in_degrees() {
         let value = parse_angle_text("45").await.expect("parse_angle_text");
         assert!((value - 45.0).abs() < 1e-9);
-        assert_eq!(print_angle(value), "45°");
+        assert_eq!(print_angle(value).await, "45°");
     }
 
     #[semio_framework_async_macros::async_test]

@@ -35,52 +35,52 @@ async fn dummy_coedge() -> CoedgeId {
 /// ✂️ Creates a new vertex, recording it as generated.
 pub async fn make_vertex(body: &mut Body, position: Pnt3, tol: Tol, rec: &mut OpRecorder) -> VertexId {
     let label = body.new_label();
-    rec.record_generated(label);
-    body.vertices.insert(Vertex { position, tol, label })
+    rec.record_generated(label.await);
+    body.vertices.insert(Vertex { position, tol, label }).await
 }
 
 /// ✂️ Creates a new edge referencing shared curve geometry, recording it as generated.
 pub async fn make_edge(body: &mut Body, curve: Curve3Id, range: (f64, f64), v0: VertexId, v1: VertexId, tol: Tol, rec: &mut OpRecorder) -> EdgeId {
     let label = body.new_label();
-    rec.record_generated(label);
-    body.edges.insert(Edge { curve, range, v0, v1, tol, label })
+    rec.record_generated(label.await);
+    body.edges.insert(Edge { curve, range, v0, v1, tol, label }).await
 }
 
 /// ✂️ Builds a closed coedge ring from `members` (one `(edge, forward)` pair per coedge, in ring
 /// order) and links it into a new [`Loop`]. Loops/coedges have no [`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::PersistentLabel`]
 /// of their own (they are structural, not independently document-nameable), so nothing is recorded.
 pub async fn make_loop(body: &mut Body, face: FaceId, members: &[(EdgeId, bool)]) -> LoopId {
-    let loop_id = body.loops.insert(Loop { first: dummy_coedge(), face });
+    let loop_id = body.loops.insert(Loop { first: dummy_coedge().await, face });
     let coedge_ids: Vec<CoedgeId> = members.iter().map(|&(edge, forward)| body.coedges.insert(Coedge { edge, forward, pcurve: None, prange: (0.0, 0.0), loop_id, next: dummy_coedge(), prev: dummy_coedge() })).collect();
     let n = coedge_ids.len();
     for i in 0..n {
-        let coedge = body.coedges.get_mut(coedge_ids[i]).unwrap();
+        let coedge = body.coedges.get_mut(coedge_ids[i]).await.unwrap();
         coedge.next = coedge_ids[(i + 1) % n];
         coedge.prev = coedge_ids[(i + n - 1) % n];
     }
-    body.loops.get_mut(loop_id).unwrap().first = coedge_ids[0];
-    loop_id
+    body.loops.get_mut(loop_id.await).await.unwrap().first = coedge_ids[0];
+    loop_id.await
 }
 
 /// ✂️ Creates a new face, recording it as generated.
 pub async fn add_face(body: &mut Body, surface: SurfaceId, outer: Option<LoopId>, inners: Vec<LoopId>, flipped: bool, tol: Tol, rec: &mut OpRecorder) -> FaceId {
     let label = body.new_label();
-    rec.record_generated(label);
-    body.faces.insert(Face { surface, outer, inners, flipped, tol, label })
+    rec.record_generated(label.await);
+    body.faces.insert(Face { surface, outer, inners, flipped, tol, label }).await
 }
 
 /// ✂️ Creates a new shell, recording it as generated.
 pub async fn add_shell(body: &mut Body, faces: Vec<FaceId>, rec: &mut OpRecorder) -> ShellId {
     let label = body.new_label();
-    rec.record_generated(label);
-    body.shells.insert(Shell { faces, label })
+    rec.record_generated(label.await);
+    body.shells.insert(Shell { faces, label }).await
 }
 
 /// ✂️ Creates a new solid, recording it as generated.
 pub async fn add_solid(body: &mut Body, outer: ShellId, inners: Vec<ShellId>, rec: &mut OpRecorder) -> SolidId {
     let label = body.new_label();
-    rec.record_generated(label);
-    body.solids.insert(Solid { outer, inners, label })
+    rec.record_generated(label.await);
+    body.solids.insert(Solid { outer, inners, label }).await
 }
 
 // #endregion 🔖️Make
@@ -95,43 +95,43 @@ pub async fn add_solid(body: &mut Body, outer: ShellId, inners: Vec<ShellId>, re
 /// `(first_half, second_half, new_vertex)`, where "first"/"second" are relative to the edge's own
 /// `v0 → v1` direction (not any particular coedge's orientation).
 pub async fn split_edge(body: &mut Body, edge_id: EdgeId, t: f64, position: Pnt3, rec: &mut OpRecorder) -> (EdgeId, EdgeId, VertexId) {
-    let old_edge = body.edges.get(edge_id).expect("split_edge requires a live edge id").clone();
+    let old_edge = body.edges.get(edge_id).await.expect("split_edge requires a live edge id").clone();
     debug_assert!(t > old_edge.range.0 && t < old_edge.range.1, "split parameter must lie strictly within the edge's range");
     let new_vertex = make_vertex(body, position, old_edge.tol, rec);
-    let e1 = make_edge(body, old_edge.curve, (old_edge.range.0, t), old_edge.v0, new_vertex, old_edge.tol, rec);
-    let e2 = make_edge(body, old_edge.curve, (t, old_edge.range.1), new_vertex, old_edge.v1, old_edge.tol, rec);
-    let affected: Vec<CoedgeId> = body.edge_coedges(edge_id);
+    let e1 = make_edge(body, old_edge.curve, (old_edge.range.0, t), old_edge.v0, new_vertex.await, old_edge.tol, rec);
+    let e2 = make_edge(body, old_edge.curve, (t, old_edge.range.1), new_vertex.await, old_edge.v1, old_edge.tol, rec);
+    let affected: Vec<CoedgeId> = body.edge_coedges(edge_id).await;
     for coedge_id in affected {
-        let coedge = body.coedges.get(coedge_id).unwrap().clone();
+        let coedge = body.coedges.get(coedge_id).await.unwrap().clone();
         let (first_edge, second_edge) = if coedge.forward { (e1, e2) } else { (e2, e1) };
         let self_loop = coedge.prev == coedge_id && coedge.next == coedge_id;
-        let c1 = body.coedges.insert(Coedge { edge: first_edge, forward: coedge.forward, pcurve: None, prange: (0.0, 0.0), loop_id: coedge.loop_id, next: dummy_coedge(), prev: dummy_coedge() });
-        let c2 = body.coedges.insert(Coedge { edge: second_edge, forward: coedge.forward, pcurve: None, prange: (0.0, 0.0), loop_id: coedge.loop_id, next: dummy_coedge(), prev: dummy_coedge() });
+        let c1 = body.coedges.insert(Coedge { edge: first_edge.await, forward: coedge.forward, pcurve: None, prange: (0.0, 0.0), loop_id: coedge.loop_id, next: dummy_coedge().await, prev: dummy_coedge().await });
+        let c2 = body.coedges.insert(Coedge { edge: second_edge.await, forward: coedge.forward, pcurve: None, prange: (0.0, 0.0), loop_id: coedge.loop_id, next: dummy_coedge().await, prev: dummy_coedge().await });
         if self_loop {
-            body.coedges.get_mut(c1).unwrap().prev = c2;
-            body.coedges.get_mut(c1).unwrap().next = c2;
-            body.coedges.get_mut(c2).unwrap().prev = c1;
-            body.coedges.get_mut(c2).unwrap().next = c1;
+            body.coedges.get_mut(c1.await).await.unwrap().prev = c2.await;
+            body.coedges.get_mut(c1.await).await.unwrap().next = c2.await;
+            body.coedges.get_mut(c2.await).await.unwrap().prev = c1.await;
+            body.coedges.get_mut(c2.await).await.unwrap().next = c1.await;
         } else {
             let prev_id = coedge.prev;
             let next_id = coedge.next;
-            body.coedges.get_mut(c1).unwrap().prev = prev_id;
-            body.coedges.get_mut(c1).unwrap().next = c2;
-            body.coedges.get_mut(c2).unwrap().prev = c1;
-            body.coedges.get_mut(c2).unwrap().next = next_id;
-            body.coedges.get_mut(prev_id).unwrap().next = c1;
-            body.coedges.get_mut(next_id).unwrap().prev = c2;
+            body.coedges.get_mut(c1.await).await.unwrap().prev = prev_id;
+            body.coedges.get_mut(c1.await).await.unwrap().next = c2.await;
+            body.coedges.get_mut(c2.await).await.unwrap().prev = c1.await;
+            body.coedges.get_mut(c2.await).await.unwrap().next = next_id;
+            body.coedges.get_mut(prev_id).await.unwrap().next = c1.await;
+            body.coedges.get_mut(next_id).await.unwrap().prev = c2.await;
         }
-        if let Some(lp) = body.loops.get_mut(coedge.loop_id) {
+        if let Some(lp) = body.loops.get_mut(coedge.loop_id).await {
             if lp.first == coedge_id {
-                lp.first = c1;
+                lp.first = c1.await;
             }
         }
         body.coedges.remove(coedge_id);
     }
     body.edges.remove(edge_id);
     rec.record_deleted(old_edge.label);
-    (e1, e2, new_vertex)
+    (e1.await, e2.await, new_vertex.await)
 }
 
 // #endregion 🔖️SplitJoin
@@ -144,17 +144,17 @@ pub async fn split_edge(body: &mut Body, edge_id: EdgeId, t: f64, position: Pnt3
 /// edges (or reuses existing vertices when the hit lands on a corner), inserts a chord edge, and
 /// rebuilds two outer loops via Euler editors. Returns `(original_face, new_face)`.
 pub async fn split_planar_face_by_line(body: &mut Body, face: FaceId, p0: Pnt3, p1: Pnt3) -> Result<(FaceId, FaceId), KernelError> {
-    let face_data = body.faces.get(face).ok_or_else(|| KernelError::MissingEntity(format!("face {face}")))?.clone();
+    let face_data = body.faces.get(face).await.ok_or_else(|| KernelError::MissingEntity(format!("face {face}")))?.clone();
     let outer = face_data.outer.ok_or_else(|| KernelError::Operation(format!("face {face} has no outer loop")))?;
     if !face_data.inners.is_empty() {
         return Err(KernelError::Operation("split_planar_face_by_line does not support faces with inner loops yet".into()));
     }
-    let surface = body.surfaces.get(face_data.surface).ok_or_else(|| KernelError::MissingEntity(format!("surface {}", face_data.surface)))?.clone();
+    let surface = body.surfaces.get(face_data.surface).await.ok_or_else(|| KernelError::MissingEntity(format!("surface {}", face_data.surface)))?.clone();
     let Surface::Plane { frame } = surface else {
         return Err(KernelError::InvalidInput("split_planar_face_by_line requires a planar face".into()));
     };
     let tol = face_data.tol;
-    let linear = tol.value().max(1e-12);
+    let linear = tol.value().await.max(1e-12);
     if (p1 - p0).norm() <= linear {
         return Err(KernelError::InvalidInput("cutting line endpoints must be distinct".into()));
     }
@@ -164,29 +164,29 @@ pub async fn split_planar_face_by_line(body: &mut Body, face: FaceId, p0: Pnt3, 
         return Err(KernelError::InvalidInput("cutting line is orthogonal to the face plane".into()));
     }
 
-    let coedges = body.loop_coedges(outer);
+    let coedges = body.loop_coedges(outer).await;
     if coedges.len() < 3 {
         return Err(KernelError::Operation(format!("face {face} outer loop needs at least 3 coedges")));
     }
 
     let mut hits: Vec<BoundaryHit> = Vec::new();
     for &cid in &coedges {
-        let coedge = body.coedges.get(cid).ok_or_else(|| KernelError::MissingEntity(format!("coedge {cid}")))?;
+        let coedge = body.coedges.get(cid).await.ok_or_else(|| KernelError::MissingEntity(format!("coedge {cid}")))?;
         let edge_id = coedge.edge;
         if hits.iter().any(|h| h.edge == edge_id) {
             continue;
         }
-        let edge = body.edges.get(edge_id).ok_or_else(|| KernelError::MissingEntity(format!("edge {edge_id}")))?.clone();
-        let v0 = body.vertices.get(edge.v0).ok_or_else(|| KernelError::MissingEntity(format!("vertex {}", edge.v0)))?.position;
-        let v1 = body.vertices.get(edge.v1).ok_or_else(|| KernelError::MissingEntity(format!("vertex {}", edge.v1)))?.position;
+        let edge = body.edges.get(edge_id).await.ok_or_else(|| KernelError::MissingEntity(format!("edge {edge_id}")))?.clone();
+        let v0 = body.vertices.get(edge.v0).await.ok_or_else(|| KernelError::MissingEntity(format!("vertex {}", edge.v0)))?.position;
+        let v1 = body.vertices.get(edge.v1).await.ok_or_else(|| KernelError::MissingEntity(format!("vertex {}", edge.v1)))?.position;
         let a = project_uv(&frame, v0);
         let b = project_uv(&frame, v1);
-        let Some((_t_seg, point_uv)) = intersect_segment_line_uv(a, b, uv0, uv1, linear) else {
+        let Some((_t_seg, point_uv)) = intersect_segment_line_uv(a.await, b.await, uv0.await, uv1.await, linear).await else {
             continue;
         };
-        let point = frame.to_world(Pnt3::new(point_uv.x, point_uv.y, 0.0));
-        let curve_t = edge_param_at_point(body, &edge, point, linear)?;
-        if let Some(existing) = endpoint_vertex(&edge, curve_t, linear) {
+        let point = frame.to_world(Pnt3::new(point_uv.x, point_uv.y, 0.0).await);
+        let curve_t = edge_param_at_point(body, &edge, point.await, linear).await?;
+        if let Some(existing) = endpoint_vertex(&edge, curve_t, linear).await {
             if !hits.iter().any(|h| h.vertex_hint == Some(existing) || h.point.distance(point) <= linear) {
                 hits.push(BoundaryHit { edge: edge_id, curve_t, point, vertex_hint: Some(existing) });
             }
@@ -219,11 +219,11 @@ pub async fn split_planar_face_by_line(body: &mut Body, face: FaceId, p0: Pnt3, 
         }
         let edge_for_split = if i == 1 && hits[0].edge == hits[1].edge {
             let (e1, e2) = surviving_same_edge.ok_or_else(|| KernelError::Operation("same-edge double hit missing first split survivors".into()))?;
-            resolve_edge_containing_param(body, e1, e2, hit.curve_t)?
+            resolve_edge_containing_param(body, e1, e2, hit.curve_t).await?
         } else {
             hit.edge
         };
-        let (e1, e2, v) = split_edge(body, edge_for_split, hit.curve_t, hit.point, &mut rec);
+        let (e1, e2, v) = split_edge(body, edge_for_split, hit.curve_t, hit.point, &mut rec).await;
         split_vertices[i] = v;
         if i == 0 && hits[0].edge == hits[1].edge {
             surviving_same_edge = Some((e1, e2));
@@ -235,24 +235,24 @@ pub async fn split_planar_face_by_line(body: &mut Body, face: FaceId, p0: Pnt3, 
         return Err(KernelError::Operation("cutting line degenerates to a single boundary vertex".into()));
     }
 
-    let (verts, members) = loop_walk(body, outer)?;
+    let (verts, members) = loop_walk(body, outer).await?;
     let ia = verts.iter().position(|&v| v == va).ok_or_else(|| KernelError::Operation("split vertex A missing from outer loop".into()))?;
     let ib = verts.iter().position(|&v| v == vb).ok_or_else(|| KernelError::Operation("split vertex B missing from outer loop".into()))?;
-    let chain_ab = member_chain(&members, ia, ib);
-    let chain_ba = member_chain(&members, ib, ia);
+    let chain_ab = member_chain(&members, ia, ib).await;
+    let chain_ba = member_chain(&members, ib, ia).await;
     if chain_ab.is_empty() || chain_ba.is_empty() {
         return Err(KernelError::Operation("cutting line does not partition the outer loop into two non-empty chains".into()));
     }
 
-    let pa = body.vertices.get(va).expect("vertex A").position;
-    let pb = body.vertices.get(vb).expect("vertex B").position;
+    let pa = body.vertices.get(va.await).await.expect("vertex A").position;
+    let pb = body.vertices.get(vb.await).await.expect("vertex B").position;
     let cut_curve = body.curves3.insert(Curve3::Line { origin: pa, dir: pb - pa });
-    let cut = make_edge(body, cut_curve, (0.0, 1.0), va, vb, tol, &mut rec);
+    let cut = make_edge(body, cut_curve.await, (0.0, 1.0), va.await, vb.await, tol, &mut rec);
 
     let mut members_a = chain_ab;
-    members_a.push((cut, false));
+    members_a.push((cut.await, false));
     let mut members_b = chain_ba;
-    members_b.push((cut, true));
+    members_b.push((cut.await, true));
 
     for cid in body.loop_coedges(outer) {
         body.coedges.remove(cid);
@@ -261,14 +261,14 @@ pub async fn split_planar_face_by_line(body: &mut Body, face: FaceId, p0: Pnt3, 
 
     let loop_a = make_loop(body, face, &members_a);
     {
-        let f = body.faces.get_mut(face).ok_or_else(|| KernelError::MissingEntity(format!("face {face}")))?;
-        f.outer = Some(loop_a);
+        let f = body.faces.get_mut(face).await.ok_or_else(|| KernelError::MissingEntity(format!("face {face}")))?;
+        f.outer = Some(loop_a.await);
         f.inners.clear();
     }
 
-    let loop_b = make_loop(body, FaceId::from_raw(0, 0), &members_b);
-    let face_b = add_face(body, face_data.surface, Some(loop_b), vec![], face_data.flipped, tol, &mut rec);
-    body.loops.get_mut(loop_b).ok_or_else(|| KernelError::MissingEntity(format!("loop {loop_b}")))?.face = face_b;
+    let loop_b = make_loop(body, FaceId::from_raw(0, 0).await, &members_b);
+    let face_b = add_face(body, face_data.surface, Some(loop_b.await), vec![], face_data.flipped, tol, &mut rec);
+    body.loops.get_mut(loop_b.await).await.ok_or_else(|| KernelError::MissingEntity(format!("loop {loop_b}")))?.face = face_b.await;
 
     for (_, shell) in body.shells.iter_mut() {
         if shell.faces.iter().any(|&f| f == face) && !shell.faces.iter().any(|&f| f == face_b) {
@@ -276,7 +276,7 @@ pub async fn split_planar_face_by_line(body: &mut Body, face: FaceId, p0: Pnt3, 
         }
     }
 
-    Ok((face, face_b))
+    Ok((face, face_b.await))
 }
 
 // #endregion 🔖️Api
@@ -292,14 +292,14 @@ struct BoundaryHit {
 }
 
 async fn project_uv(frame: &Frame3, p: Pnt3) -> Pnt2 {
-    let local = frame.to_local(p);
-    Pnt2::new(local.x, local.y)
+    let local = frame.to_local(p).await;
+    Pnt2::new(local.x, local.y).await
 }
 
 async fn intersect_segment_line_uv(a: Pnt2, b: Pnt2, p0: Pnt2, p1: Pnt2, tol: f64) -> Option<(f64, Pnt2)> {
     let r = b - a;
     let s = p1 - p0;
-    let rxs = r.cross(s);
+    let rxs = r.cross(s).await;
     if rxs.abs() <= tol * tol.max(1.0) {
         return None;
     }
@@ -319,7 +319,7 @@ async fn intersect_segment_line_uv(a: Pnt2, b: Pnt2, p0: Pnt2, p1: Pnt2, tol: f6
 }
 
 async fn edge_param_at_point(body: &Body, edge: &Edge, point: Pnt3, tol: f64) -> Result<f64, KernelError> {
-    let curve = body.curves3.get(edge.curve).ok_or_else(|| KernelError::MissingEntity(format!("curve {}", edge.curve)))?;
+    let curve = body.curves3.get(edge.curve).await.ok_or_else(|| KernelError::MissingEntity(format!("curve {}", edge.curve)))?;
     match curve {
         Curve3::Line { origin, dir } => {
             let denom = dir.norm_sq();
@@ -335,9 +335,9 @@ async fn edge_param_at_point(body: &Body, edge: &Edge, point: Pnt3, tol: f64) ->
             for i in 0..=32 {
                 let u = i as f64 / 32.0;
                 let t = t0 + (t1 - t0) * u;
-                let d = curve.eval(t).distance(point);
+                let d = curve.eval(t).await.distance(point);
                 if d < best_d {
-                    best_d = d;
+                    best_d = d.await;
                     best_t = t;
                 }
             }
@@ -363,12 +363,12 @@ async fn endpoint_vertex(edge: &Edge, curve_t: f64, linear: f64) -> Option<Verte
 }
 
 async fn loop_walk(body: &Body, loop_id: LoopId) -> Result<(Vec<VertexId>, Vec<(EdgeId, bool)>), KernelError> {
-    let coedges = body.loop_coedges(loop_id);
+    let coedges = body.loop_coedges(loop_id).await;
     let mut verts = Vec::with_capacity(coedges.len());
     let mut members = Vec::with_capacity(coedges.len());
     for cid in coedges {
-        let (start, _) = body.coedge_endpoints(cid).ok_or_else(|| KernelError::Operation(format!("coedge {cid} missing endpoints")))?;
-        let coedge = body.coedges.get(cid).ok_or_else(|| KernelError::MissingEntity(format!("coedge {cid}")))?;
+        let (start, _) = body.coedge_endpoints(cid).await.ok_or_else(|| KernelError::Operation(format!("coedge {cid} missing endpoints")))?;
+        let coedge = body.coedges.get(cid).await.ok_or_else(|| KernelError::MissingEntity(format!("coedge {cid}")))?;
         verts.push(start);
         members.push((coedge.edge, coedge.forward));
     }
@@ -393,7 +393,7 @@ async fn member_chain(members: &[(EdgeId, bool)], from: usize, to: usize) -> Vec
 
 async fn resolve_edge_containing_param(body: &Body, e1: EdgeId, e2: EdgeId, t: f64) -> Result<EdgeId, KernelError> {
     for edge_id in [e1, e2] {
-        let Some(edge) = body.edges.get(edge_id) else { continue };
+        let Some(edge) = body.edges.get(edge_id).await else { continue };
         if t > edge.range.0 + 1e-14 && t < edge.range.1 - 1e-14 {
             return Ok(edge_id);
         }

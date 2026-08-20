@@ -60,10 +60,10 @@ pub(crate) async fn node_path_from_key(key: &str) -> NodePath {
 /// (component-wise).
 pub(crate) async fn compose_transform(parent: SemioTransform, child: SemioTransform) -> SemioTransform {
     let scaled_child_translation = SemioPoint3 { x: child.translation.x * parent.scale.x, y: child.translation.y * parent.scale.y, z: child.translation.z * parent.scale.z };
-    let rotated = rotate_point(parent.rotation, scaled_child_translation);
+    let rotated = rotate_point(parent.rotation, scaled_child_translation).await;
     SemioTransform {
         translation: SemioPoint3 { x: parent.translation.x + rotated.x, y: parent.translation.y + rotated.y, z: parent.translation.z + rotated.z },
-        rotation: normalize_quaternion(multiply_quaternion(parent.rotation, child.rotation)),
+        rotation: normalize_quaternion(multiply_quaternion(parent.rotation, child.rotation).await).await,
         scale: SemioPoint3 { x: parent.scale.x * child.scale.x, y: parent.scale.y * child.scale.y, z: parent.scale.z * child.scale.z },
     }
 }
@@ -176,7 +176,7 @@ impl store::InferredField<SemioDrawingSnapshot> for DrawFlattenedScene {
     async fn dep_input(snapshot: &SemioDrawingSnapshot, key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
         let np = node_path_from_key(key);
         let mut bytes = Vec::new();
-        match node_at(snapshot, &np) {
+        match node_at(snapshot, &np).await {
             Some(DrawNode::Group { transform, .. }) => {
                 push_number(&mut bytes, transform.translation.x);
                 push_number(&mut bytes, transform.translation.y);
@@ -189,7 +189,7 @@ impl store::InferredField<SemioDrawingSnapshot> for DrawFlattenedScene {
                 push_number(&mut bytes, transform.scale.y);
                 push_number(&mut bytes, transform.scale.z);
             }
-            Some(DrawNode::Path { style, .. }) | Some(DrawNode::Text { style, .. }) => push_style_dep(&mut bytes, snapshot, style),
+            Some(DrawNode::Path { style, .. }) | Some(DrawNode::Text { style, .. }) => push_style_dep(&mut bytes, snapshot, style).await,
             Some(DrawNode::Image { .. }) | None => {}
         }
         bytes
@@ -198,9 +198,9 @@ impl store::InferredField<SemioDrawingSnapshot> for DrawFlattenedScene {
     async fn compute(snapshot: &SemioDrawingSnapshot, key: &Self::Key, parents: &[Self::Value]) -> Self::Value {
         let np = node_path_from_key(key);
         let parent_transform = parents.first().map(|p| p.world_transform).unwrap_or_else(SemioTransform::identity);
-        match node_at(snapshot, &np) {
-            Some(DrawNode::Group { transform, .. }) => FlattenedNode { world_transform: compose_transform(parent_transform, *transform), resolved_style: None },
-            Some(DrawNode::Path { style, .. }) | Some(DrawNode::Text { style, .. }) => FlattenedNode { world_transform: parent_transform, resolved_style: resolve_style(snapshot, style) },
+        match node_at(snapshot, &np).await {
+            Some(DrawNode::Group { transform, .. }) => FlattenedNode { world_transform: compose_transform(parent_transform, *transform).await, resolved_style: None },
+            Some(DrawNode::Path { style, .. }) | Some(DrawNode::Text { style, .. }) => FlattenedNode { world_transform: parent_transform, resolved_style: resolve_style(snapshot, style).await },
             Some(DrawNode::Image { .. }) | None => FlattenedNode { world_transform: parent_transform, resolved_style: None },
         }
     }

@@ -136,11 +136,11 @@ async fn numbered_path(path: &str, prefix: &str) -> Option<u32> {
 async fn content_type_override_key(path: &str) -> (u8, u32, &str) {
     if path == "/ppt/presentation.xml" {
         (0, 0, path)
-    } else if let Some(number) = numbered_path(path, "/ppt/slideMasters/slideMaster") {
+    } else if let Some(number) = numbered_path(path, "/ppt/slideMasters/slideMaster").await {
         (1, number, path)
-    } else if let Some(number) = numbered_path(path, "/ppt/slides/slide") {
+    } else if let Some(number) = numbered_path(path, "/ppt/slides/slide").await {
         (2, number, path)
-    } else if let Some(number) = numbered_path(path, "/ppt/notesMasters/notesMaster") {
+    } else if let Some(number) = numbered_path(path, "/ppt/notesMasters/notesMaster").await {
         (3, number, path)
     } else if path == "/ppt/presProps.xml" {
         (4, 0, path)
@@ -150,9 +150,9 @@ async fn content_type_override_key(path: &str) -> (u8, u32, &str) {
         (6, 1, path)
     } else if path == "/ppt/tableStyles.xml" {
         (7, 0, path)
-    } else if let Some(number) = numbered_path(path, "/ppt/slideLayouts/slideLayout") {
+    } else if let Some(number) = numbered_path(path, "/ppt/slideLayouts/slideLayout").await {
         (8, number, path)
-    } else if let Some(number) = numbered_path(path, "/ppt/theme/theme") {
+    } else if let Some(number) = numbered_path(path, "/ppt/theme/theme").await {
         (9, number, path)
     } else if path == "/docProps/core.xml" {
         (10, 0, path)
@@ -258,7 +258,7 @@ impl PptxSnapshotRecord {
             }
             opc.relationships.insert(group.owner, dsl::from_dsl_value(group.relationships)?);
         }
-        let mut snapshot = PptxSnapshot::from_parts(opc, dsl::from_dsl_value(self.xml_parts)?, dsl::from_dsl_value(self.presentation)?);
+        let mut snapshot = PptxSnapshot::from_parts(opc, dsl::from_dsl_value(self.xml_parts)?, dsl::from_dsl_value(self.presentation)?).await;
         snapshot.schema = schema;
         Ok(snapshot)
     }
@@ -282,12 +282,12 @@ impl store::ArtifactDsl for PptxSnapshot {
         for i in (0..hex.len()).step_by(2) {
             bytes.push(u8::from_str_radix(&hex[i..i + 2], 16).map_err(|e| store::TextError::new(format!("invalid hex: {e}"), dsl::TextSpan::at(1, 1)))?);
         }
-        crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::import::deserializers::decode_pptx(&bytes).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
+        crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::import::deserializers::decode_pptx(&bytes).await.map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
     }
     async fn print_dsl(&self) -> String {
-        let bytes = crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::export::serializers::encode_pptx(self).unwrap_or_default();
+        let bytes = crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::export::serializers::encode_pptx(self).await.unwrap_or_default();
         let body: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -295,8 +295,8 @@ impl store::ArtifactDsl for PptxSnapshot {
 impl store::ArtifactPack for PptxSnapshot {
     async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
-        let raw = crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::export::serializers::encode_pptx(self).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let raw = crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::export::serializers::encode_pptx(self).await.map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
     async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
@@ -305,7 +305,7 @@ impl store::ArtifactPack for PptxSnapshot {
             return Err(store::PackError::Schema("pack envelope mismatch".into()));
         }
         let _ = options;
-        crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::import::deserializers::decode_pptx(&inner).map_err(|e| store::PackError::Schema(e.to_string()))
+        crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::import::deserializers::decode_pptx(&inner).await.map_err(|e| store::PackError::Schema(e.to_string()))
     }
 }
 

@@ -26,7 +26,7 @@ pub struct GltfChangeMaterialAlphaModePayload {
     pub alpha_mode: GltfAlphaMode,
 }
 pub async fn validate(payload: &GltfChangeMaterialAlphaModePayload, base: &GltfSnapshot) -> Result<(), GltfChangeMaterialAlphaModeRejection> {
-    index(&base.document.materials, payload.material, "document/materials").map_err(failure)?;
+    index(&base.document.materials, payload.material, "document/materials").await.map_err(failure)?;
     (base.document.materials[payload.material].alpha_mode != payload.alpha_mode).then_some(()).ok_or_else(|| GltfChangeMaterialAlphaModeRejection {
         code: "gltf.mutation.no-observable-change".into(),
         path: format!("document/materials/{}/alphaMode", payload.material),
@@ -34,7 +34,7 @@ pub async fn validate(payload: &GltfChangeMaterialAlphaModePayload, base: &GltfS
     })
 }
 pub async fn apply(snapshot: &mut GltfSnapshot, payload: &GltfChangeMaterialAlphaModePayload) -> Result<(), GltfChangeMaterialAlphaModeRejection> {
-    validate(payload, snapshot)?;
+    validate(payload, snapshot).await?;
     snapshot.document.materials[payload.material].alpha_mode = payload.alpha_mode;
     Ok(())
 }

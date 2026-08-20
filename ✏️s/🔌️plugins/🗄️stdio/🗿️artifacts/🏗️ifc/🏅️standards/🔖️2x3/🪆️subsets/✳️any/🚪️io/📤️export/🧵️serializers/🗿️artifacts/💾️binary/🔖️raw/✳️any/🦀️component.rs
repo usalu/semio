@@ -9,12 +9,12 @@ pub async fn register() {}
 
 /// Encode via the real IFC2X3 SPF writer into a BinarySnapshot.
 pub async fn serialize(from: &Ifc2x3Snapshot) -> Result<BinarySnapshot, store::PackError> {
-    let bytes = crate::artifacts::ifc::standards::v2x3::engine::encode_ifc2x3(from).map_err(store::PackError::Schema)?;
+    let bytes = crate::artifacts::ifc::standards::v2x3::engine::encode_ifc2x3(from).await.map_err(store::PackError::Schema)?;
     Ok(BinarySnapshot { schema: STDIO_BINARY_DOCUMENT_SCHEMA.into(), bytes })
 }
 
 /// Encode as binary pack bytes.
 pub async fn serialize_bytes(from: &Ifc2x3Snapshot) -> Result<Vec<u8>, store::PackError> {
-    store::ArtifactPack::encode_pack_with(&serialize(from)?, &store::PackEncodeOptions::default())
+    store::ArtifactPack::encode_pack_with(&serialize(from).await?, &store::PackEncodeOptions::default()).await
 }
 //#endregion Codec

@@ -17,28 +17,28 @@ async fn encode<T: Serialize>(value: &T) -> Result<Vec<u8>, GltfMutationLeafErro
     serde_json::to_vec(value).map_err(|error| GltfMutationLeafError { code: "gltf.mutation.encode-failed".into(), path: "payload".into(), detail: error.to_string() })
 }
 async fn plan(payload: &[u8], base: &GltfSnapshot) -> Result<GltfMutationLeafPlan, GltfMutationLeafError> {
-    let payload = decode::<mutation::GltfChangeMaterialDoubleSidedPayload>(payload)?;
-    let diff = diff::derive(&payload, base).map_err(rejection)?;
-    let inverse = inverse::reconstruct(&payload, base).map_err(rejection)?;
-    Ok(GltfMutationLeafPlan { diff_payload: encode(&diff)?, inverse_payload: encode(&inverse)?, touched_paths: diff.expected_touched_paths() })
+    let payload = decode::<mutation::GltfChangeMaterialDoubleSidedPayload>(payload).await?;
+    let diff = diff::derive(&payload, base).await.map_err(rejection)?;
+    let inverse = inverse::reconstruct(&payload, base).await.map_err(rejection)?;
+    Ok(GltfMutationLeafPlan { diff_payload: encode(&diff).await?, inverse_payload: encode(&inverse).await?, touched_paths: diff.expected_touched_paths().await })
 }
 async fn plan_inverse(payload: &[u8], base: &GltfSnapshot) -> Result<GltfMutationLeafPlan, GltfMutationLeafError> {
-    let inverse = decode::<inverse::GltfChangeMaterialDoubleSidedInverse>(payload)?;
+    let inverse = decode::<inverse::GltfChangeMaterialDoubleSidedInverse>(payload).await?;
     let mut candidate = base.clone();
-    inverse.apply(&mut candidate).map_err(rejection)?;
-    Ok(GltfMutationLeafPlan { diff_payload: encode(&inverse)?, inverse_payload: Vec::new(), touched_paths: inverse.expected_touched_paths() })
+    inverse.apply(&mut candidate).await.map_err(rejection)?;
+    Ok(GltfMutationLeafPlan { diff_payload: encode(&inverse).await?, inverse_payload: Vec::new(), touched_paths: inverse.expected_touched_paths().await })
 }
 async fn apply_diff(payload: &[u8], base: &GltfSnapshot) -> Result<GltfMutationLeafApplication, GltfMutationLeafError> {
-    let diff = decode::<diff::GltfChangeMaterialDoubleSidedDiff>(payload)?;
+    let diff = decode::<diff::GltfChangeMaterialDoubleSidedDiff>(payload).await?;
     let touched_paths = diff.expected_touched_paths();
     let mut snapshot = base.clone();
-    diff.apply(&mut snapshot).map_err(rejection)?;
+    diff.apply(&mut snapshot).await.map_err(rejection)?;
     Ok(GltfMutationLeafApplication { snapshot, touched_paths })
 }
 async fn apply_inverse(payload: &[u8], base: &GltfSnapshot) -> Result<GltfMutationLeafApplication, GltfMutationLeafError> {
-    let inverse = decode::<inverse::GltfChangeMaterialDoubleSidedInverse>(payload)?;
+    let inverse = decode::<inverse::GltfChangeMaterialDoubleSidedInverse>(payload).await?;
     let touched_paths = inverse.expected_touched_paths();
     let mut snapshot = base.clone();
-    inverse.apply(&mut snapshot).map_err(rejection)?;
+    inverse.apply(&mut snapshot).await.map_err(rejection)?;
     Ok(GltfMutationLeafApplication { snapshot, touched_paths })
 }

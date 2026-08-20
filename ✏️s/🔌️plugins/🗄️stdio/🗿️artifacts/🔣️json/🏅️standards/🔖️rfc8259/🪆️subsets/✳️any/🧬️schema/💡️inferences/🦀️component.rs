@@ -25,7 +25,7 @@ pub struct JsonInference {
 
 impl Inference<JsonSnapshot> for JsonInference {
     async fn infer(snapshot: &JsonSnapshot) -> Self {
-        Self { outline: JsonOutline::compute(snapshot) }
+        Self { outline: JsonOutline::compute(snapshot).await }
     }
 }
 

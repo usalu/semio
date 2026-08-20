@@ -282,7 +282,7 @@ mod tests {
     //#region 🔖️Sweep
     #[semio_framework_async_macros::async_test]
     async fn repo_wide_dsl_fixture_law_sweep() {
-        let root = repo_root();
+        let root = repo_root().await;
         let dirs = example_dirs(&root);
         assert!(!dirs.is_empty(), "found zero 📚️examples directories under {root:?} — sweep would vacuously pass");
 
@@ -337,7 +337,7 @@ mod tests {
         // Target: each artifact `📚️examples/<slug>/` has `🖼️assets/` with ≥1 `.semio`.
         // Mid-migration (W1b→W3): soft-skip slugs that still lack `🖼️assets/` with a clear message.
         // Empty `🖼️assets/` after the dir exists is a hard gap.
-        let root = repo_root();
+        let root = repo_root().await;
         let plugins = root.join("✏️s").join("🔌️plugins");
         let mut gaps: Vec<String> = Vec::new();
         let mut migrated = 0usize;
@@ -419,7 +419,7 @@ mod example_asset_discovery {
         for entry in entries.flatten() {
             let path = entry.path();
             if path.is_dir() {
-                collect_files(&path, out);
+                Box::pin(collect_files(&path, out)).await;
             } else {
                 out.push(path);
             }
@@ -445,9 +445,9 @@ mod example_asset_discovery {
             }
             let assets = slug.join(ASSETS_DIR_NAME);
             if assets.is_dir() {
-                collect_files(&assets, &mut candidates);
+                collect_files(&assets, &mut candidates).await;
             } else {
-                collect_files(&slug, &mut candidates);
+                collect_files(&slug, &mut candidates).await;
             }
         }
         candidates.retain(|path| {
@@ -530,7 +530,7 @@ mod pilot_resolve {
                 if skip_dir_name(&name).await {
                     continue;
                 }
-                collect_files(&path, out);
+                Box::pin(collect_files(&path, out)).await;
             } else if path.is_file() {
                 out.push(path);
             }
@@ -563,14 +563,14 @@ mod pilot_resolve {
             let assets = slug.join(ASSETS_DIR_NAME);
             let mut files = Vec::new();
             if assets.is_dir() {
-                collect_files(&assets, &mut files);
+                collect_files(&assets, &mut files).await;
                 for file in files {
                     if name_matches_kind(&file, kind_suffix).await {
                         preferred.push(file);
                     }
                 }
             } else {
-                collect_files(&slug, &mut files);
+                collect_files(&slug, &mut files).await;
                 for file in files {
                     if name_matches_kind(&file, kind_suffix).await {
                         fallback.push(file);
@@ -760,7 +760,7 @@ mod m5_auto_discovery {
                 if skip_dir_name(&name).await {
                     continue;
                 }
-                walk(&path, hits);
+                Box::pin(walk(&path, hits)).await;
                 continue;
             }
             let Some(file_name) = path.file_name().and_then(|n| n.to_str()) else { continue };
@@ -800,19 +800,17 @@ mod m5_auto_discovery {
 
     /// @emoji 📖️ Every `🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio` under [`discovery_roots`].
     pub async fn discover_grammar_snapshot_facets() -> Vec<DiscoveredGrammarFacet> {
-        let repo_root = pilot_resolve::repo_root();
+        let repo_root = pilot_resolve::repo_root().await;
         let mut hits = RawHits::default();
-        for root in discovery_roots(&repo_root) {
-            walk(&root, &mut hits);
+        for root in discovery_roots(&repo_root).await {
+            walk(&root, &mut hits).await;
         }
-        let mut out: Vec<DiscoveredGrammarFacet> = hits
-            .grammar_snapshot
-            .into_iter()
-            .filter_map(|file_path| {
-                let (plugin, artifact, standard, is_stdio, artifact_rel, label) = derive_identity(&file_path, &repo_root)?;
-                Some(DiscoveredGrammarFacet { plugin, artifact, standard, is_stdio, file_path, artifact_rel, label })
-            })
-            .collect();
+        let mut out: Vec<DiscoveredGrammarFacet> = Vec::new();
+        for file_path in hits.grammar_snapshot {
+            if let Some((plugin, artifact, standard, is_stdio, artifact_rel, label)) = derive_identity(&file_path, &repo_root).await {
+                out.push(DiscoveredGrammarFacet { plugin, artifact, standard, is_stdio, file_path, artifact_rel, label });
+            }
+        }
         out.sort_by(|a, b| a.label.cmp(&b.label));
         out
     }
@@ -820,10 +818,10 @@ mod m5_auto_discovery {
     /// @emoji 📡️ Every `🧬️schema/📸️snapshot/💾️binary/📡️component.protocol.semio` (pack) and
     /// `🧬️schema/🧬️mutations/💾️binary/📡️component.protocol.semio` (spr) under [`discovery_roots`].
     pub async fn discover_protocol_facets() -> Vec<DiscoveredProtocolFacet> {
-        let repo_root = pilot_resolve::repo_root();
+        let repo_root = pilot_resolve::repo_root().await;
         let mut hits = RawHits::default();
-        for root in discovery_roots(&repo_root) {
-            walk(&root, &mut hits);
+        for root in discovery_roots(&repo_root).await {
+            walk(&root, &mut hits).await;
         }
         let mut out: Vec<DiscoveredProtocolFacet> = Vec::new();
         for (kind, files) in [(ProtocolFacetKind::Pack, hits.protocol_pack), (ProtocolFacetKind::Spr, hits.protocol_spr)] {
@@ -1171,7 +1169,7 @@ mod m5_handcrafted_grammar_conformance {
         }
         let recognizer = Recognizer::compile(&grammar);
         let body = dsl_body_from_fixture(fixture_semio);
-        let ok = recognizer.await.recognize(&body).await.map_err(|error| format!("recognize failed: {error:?}"))?;
+        let ok = recognizer.await.recognize(&body.await).await.map_err(|error| format!("recognize failed: {error:?}"))?;
         if !ok {
             return Err("grammar did not recognize shipped fixture DSL body".to_string());
         }
@@ -1180,9 +1178,9 @@ mod m5_handcrafted_grammar_conformance {
 
     #[semio_framework_async_macros::async_test]
     async fn all_discovered_snapshot_grammars_recognize_their_shipped_fixtures() {
-        let facets = m5_auto_discovery::discover_grammar_snapshot_facets();
+        let facets = m5_auto_discovery::discover_grammar_snapshot_facets().await;
         assert!(
-            !facets.await.is_empty(),
+            !facets.is_empty(),
             "auto-discovery found zero 🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio files under ✏️s/🔌️plugins — discovery walk is broken"
         );
 
@@ -1220,7 +1218,7 @@ mod m5_handcrafted_grammar_conformance {
 
         eprintln!(
             "[dsl-fixture-sweep] m5 grammar auto-discovery: {} facet(s) found, {} checked, {} soft-skipped, {} stdio-exempt soft failure(s), {} hard failure(s)",
-            facets.await.len(),
+            facets.len(),
             checked,
             soft_skipped,
             soft_failures.len(),
@@ -1272,9 +1270,9 @@ mod m5_handcrafted_protocol_conformance {
 
     #[semio_framework_async_macros::async_test]
     async fn all_discovered_snapshot_protocols_walk_their_shipped_fixtures() {
-        let facets = m5_auto_discovery::discover_protocol_facets();
+        let facets = m5_auto_discovery::discover_protocol_facets().await;
         assert!(
-            !facets.await.is_empty(),
+            !facets.is_empty(),
             "auto-discovery found zero 🧬️schema/{{📸️snapshot,🧬️mutations}}/💾️binary/📡️component.protocol.semio files under ✏️s/🔌️plugins — discovery walk is broken"
         );
 
@@ -1327,7 +1325,7 @@ mod m5_handcrafted_protocol_conformance {
 
         eprintln!(
             "[dsl-fixture-sweep] m5 protocol auto-discovery: {} facet(s) found, {} checked, {} soft-skipped, {} stdio-exempt-or-known-gap soft failure(s), {} hard failure(s)",
-            facets.await.len(),
+            facets.len(),
             checked,
             soft_skipped,
             soft_failures.len(),
@@ -1372,7 +1370,7 @@ mod m5_cross_artifact_rejection {
     async fn all_non_stdio_grammars_reject_each_others_shipped_fixtures() {
         let facets = m5_auto_discovery::discover_grammar_snapshot_facets();
         let mut usable: Vec<(String, Recognizer, String)> = Vec::new();
-        for facet in &facets {
+        for facet in &facets.await {
             if facet.is_stdio {
                 continue;
             }
@@ -1450,8 +1448,8 @@ mod m5_production_coverage {
 
     #[semio_framework_async_macros::async_test]
     async fn all_discovered_grammars_report_uncovered_productions_for_their_shipped_fixture() {
-        let facets = m5_auto_discovery::discover_grammar_snapshot_facets();
-        assert!(!facets.await.is_empty(), "auto-discovery found zero snapshot grammar.semio files — discovery walk is broken");
+        let facets = m5_auto_discovery::discover_grammar_snapshot_facets().await;
+        assert!(!facets.is_empty(), "auto-discovery found zero snapshot grammar.semio files — discovery walk is broken");
 
         let mut hard_failures: Vec<String> = Vec::new();
         let mut soft_failures: Vec<String> = Vec::new();
@@ -1472,16 +1470,16 @@ mod m5_production_coverage {
             // A grammar that fails to even parse is grammar_conformance's failure to surface —
             // this diagnostic only covers the uncovered-productions signal once a grammar parses.
             let Ok(grammar) = parse_grammar(&grammar_text).await else { continue };
-            let recognizer = Recognizer::compile(&grammar);
-            let body = dsl_body_from_fixture(&fixture_text);
-            let Ok(uncovered) = recognizer.await.uncovered_productions(&body).await else { continue };
+            let recognizer = Recognizer::compile(&grammar).await;
+            let body = dsl_body_from_fixture(&fixture_text).await;
+            let Ok(uncovered) = recognizer.uncovered_productions(&body).await else { continue };
             if !uncovered.is_empty() {
                 eprintln!("[DEBUG] {}: uncovered productions ({}) = {}", facet.label, uncovered.len(), uncovered.join(", "));
             }
             checked += 1;
             // Soft assertion for now (matches the pre-P2-M3 design): recognition must succeed;
             // the uncovered list itself stays advisory until a later wave enforces full coverage.
-            if !recognizer.await.recognize(&body).await.unwrap_or(false) {
+            if !recognizer.recognize(&body).await.unwrap_or(false) {
                 if facet.is_stdio && m5_auto_discovery::stdio_is_exempt(ConformanceFacet::Grammar, &facet.artifact, facet.standard.as_deref()).await {
                     soft_failures.push(facet.label.clone());
                 } else {
@@ -1492,7 +1490,7 @@ mod m5_production_coverage {
 
         eprintln!(
             "[dsl-fixture-sweep] m5 production coverage auto-discovery: {} facet(s) found, {} checked, {} stdio-exempt soft failure(s), {} hard failure(s)",
-            facets.await.len(),
+            facets.len(),
             checked,
             soft_failures.len(),
             hard_failures.len()

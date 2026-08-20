@@ -1,0 +1,30 @@
+{
+  "case": "decorative-image",
+  "kind": "accessibility",
+  "description": "An Image marked hidden/decorative — built via ImageBuilder::decorative(), so it carries no alt text and is hidden from the accessibility tree.",
+  "outcome": "accept",
+  "limits": null,
+  "tree": {
+    "root": 0,
+    "nodeCount": 1,
+    "shape": [
+      {
+        "id": 0,
+        "key": "#0",
+        "type": "image",
+        "children": []
+      }
+    ]
+  },
+  "accessibility": [
+    {
+      "id": 0,
+      "label": null,
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": true
+    }
+  ],
+  "actionIds": []
+}

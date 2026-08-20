@@ -1,0 +1,26 @@
+{
+  "surface": "conformance.component.icon-select",
+  "revision": 0,
+  "root": 0,
+  "nodes": [
+    {
+      "id": 0,
+      "key": "#0",
+      "component": {
+        "type": "iconSelect",
+        "value": "circle",
+        "uniform": true,
+        "classifierKind": "shape"
+      },
+      "layout": {
+        "kind": "leaf",
+        "width": "hug",
+        "height": "hug"
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {}
+    }
+  ],
+  "layoutEpoch": 0
+}

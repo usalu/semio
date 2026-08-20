@@ -14,10 +14,10 @@ impl protocol::MutationKind<SemioTextSnapshot, SemioTextMutation> for RemoveRun 
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "run", kind: "remove-run", record: "RemovedRun" };
 
     async fn diff(&self, base: &SemioTextSnapshot) -> protocol::MutationOutcome<<SemioTextMutation as protocol::Mutation<SemioTextSnapshot>>::Diff> {
-        super::diff::diff(self, base)
+        super::diff::diff(self, base).await
     }
     async fn inverse(&self, base: &SemioTextSnapshot) -> Vec<SemioTextMutation> {
-        super::inverse::inverse(self, base)
+        super::inverse::inverse(self, base).await
     }
     async fn label(&self) -> String {
         format!("Remove run #{}", self.index)

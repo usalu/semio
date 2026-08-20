@@ -17,10 +17,10 @@ pub async fn descriptor() -> GltfInferenceLeafDescriptor {
 }
 pub(crate) async fn infer(context: &GltfGeometryContext<'_>) -> GltfMeasure<GltfStatistics> {
     let projected = [0, 1, 2].map(|axis| context.faces.iter().map(|face| 0.5 * cross(sub(context.points[face[1]], context.points[face[0]]), sub(context.points[face[2]], context.points[face[0]]))[axis].abs()).sum::<f64>());
-    estimate(statistics(&projected, &context.policy.histogram_edges), GltfUnit::SquareMetre, context.sample_count, Some(context.topology))
+    estimate(statistics(&projected, &context.policy.histogram_edges), GltfUnit::SquareMetre, context.sample_count, Some(context.topology)).await
 }
 pub async fn unavailable_measure(ids: &[String]) -> GltfMeasure<GltfStatistics> {
-    unavailable(GltfUnit::SquareMetre, GltfAvailability::Unavailable, ids.to_vec(), 0, None)
+    unavailable(GltfUnit::SquareMetre, GltfAvailability::Unavailable, ids.to_vec(), 0, None).await
 }
 
 pub async fn encode_result(indicators: &GltfEntityIndicators) -> Result<serde_json::Value, serde_json::Error> {

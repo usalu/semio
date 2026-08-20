@@ -103,7 +103,7 @@ async fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
     format!("[{}]", items.iter().map(|it| enc(it)).collect::<Vec<_>>().join(","))
 }
 async fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
-    split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| dec(entry)).collect()
+    split_top_level(strip_brackets(s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| dec(entry)).collect()
 }
 
 pub(crate) async fn enc_cell_kind(k: SemioTableCellKind) -> char {
@@ -131,15 +131,15 @@ pub(crate) async fn enc_column(c: &SemioTableColumn) -> String {
     format!("[{},{}]", enc_str(&c.name), enc_cell_kind(c.kind))
 }
 pub(crate) async fn dec_column(s: &str) -> Result<SemioTableColumn, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [name, kind] = parts.as_slice() else { return Err(format!("column: expected 2 fields, got {}", parts.len())) };
-    Ok(SemioTableColumn { name: dec_str(name)?, kind: dec_cell_kind(kind)? })
+    Ok(SemioTableColumn { name: dec_str(name).await?, kind: dec_cell_kind(kind).await? })
 }
 pub(crate) async fn enc_row(r: &SemioTableRow) -> String {
-    enc_list(&r.cells, enc_semio_value)
+    enc_list(&r.cells, enc_semio_value).await
 }
 pub(crate) async fn dec_row(s: &str) -> Result<SemioTableRow, String> {
-    Ok(SemioTableRow { cells: dec_list(s, dec_semio_value)? })
+    Ok(SemioTableRow { cells: dec_list(s, dec_semio_value).await? })
 }
 
 /// 📄️ The real structured text body: three lines — `schema=<hex>`, `columns=[<col>,...]`,
@@ -159,11 +159,11 @@ async fn parse_table_snapshot_body(body: &str) -> Result<SemioTableSnapshot, Str
             continue;
         }
         if let Some(rest) = line.strip_prefix("schema=") {
-            schema = Some(dec_str(rest)?);
+            schema = Some(dec_str(rest).await?);
         } else if let Some(rest) = line.strip_prefix("columns=") {
-            columns = dec_list(rest, dec_column)?;
+            columns = dec_list(rest, dec_column).await?;
         } else if let Some(rest) = line.strip_prefix("rows=") {
-            rows = dec_list(rest, dec_row)?;
+            rows = dec_list(rest, dec_row).await?;
         } else {
             return Err(format!("semio table snapshot: unknown line {line:?}"));
         }
@@ -188,8 +188,8 @@ pub(crate) async fn write_column(out: &mut Vec<u8>, c: &SemioTableColumn) {
     });
 }
 pub(crate) async fn read_column(reader: &mut store::ByteReader<'_>) -> Result<SemioTableColumn, String> {
-    let name = read_str_lp(reader)?;
-    let tag = reader.read_u8().map_err(|e| e.to_string())?;
+    let name = read_str_lp(reader).await?;
+    let tag = reader.read_u8().await.map_err(|e| e.to_string())?;
     let kind = match tag {
         0 => SemioTableCellKind::Null,
         1 => SemioTableCellKind::Bool,
@@ -208,10 +208,10 @@ pub(crate) async fn write_row(out: &mut Vec<u8>, r: &SemioTableRow) {
     }
 }
 pub(crate) async fn read_row(reader: &mut store::ByteReader<'_>) -> Result<SemioTableRow, String> {
-    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut cells = Vec::with_capacity(count as usize);
     for _ in 0..count {
-        cells.push(crate::artifacts::semio::standards::v1::subsets::value::schema::diff::dec_semio_value_bin(reader)?);
+        cells.push(crate::artifacts::semio::standards::v1::subsets::value::schema::diff::dec_semio_value_bin(reader).await?);
     }
     Ok(SemioTableRow { cells })
 }
@@ -238,21 +238,21 @@ async fn encode_table_snapshot_binary(s: &SemioTableSnapshot) -> Vec<u8> {
 }
 async fn decode_table_snapshot_binary(bytes: &[u8]) -> Result<SemioTableSnapshot, String> {
     const PACK_BINARY_FORMAT: u8 = 1;
-    let mut reader = store::ByteReader::new(bytes);
-    let format = reader.read_u8().map_err(|e| e.to_string())?;
+    let mut reader = store::ByteReader::new(bytes).await;
+    let format = reader.read_u8().await.map_err(|e| e.to_string())?;
     if format != PACK_BINARY_FORMAT {
         return Err(format!("unsupported pack format {format}"));
     }
-    let schema = read_str_lp(&mut reader)?;
-    let column_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let schema = read_str_lp(&mut reader).await?;
+    let column_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut columns = Vec::with_capacity(column_count as usize);
     for _ in 0..column_count {
-        columns.push(read_column(&mut reader)?);
+        columns.push(read_column(&mut reader).await?);
     }
-    let row_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let row_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut rows = Vec::with_capacity(row_count as usize);
     for _ in 0..row_count {
-        rows.push(read_row(&mut reader)?);
+        rows.push(read_row(&mut reader).await?);
     }
     Ok(SemioTableSnapshot { schema, columns, rows })
 }
@@ -271,12 +271,12 @@ impl store::ArtifactDsl for SemioTableSnapshot {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        parse_table_snapshot_body(body).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_table_snapshot_body(body).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 
     async fn print_dsl(&self) -> String {
         let body = print_table_snapshot_body(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -285,7 +285,7 @@ impl store::ArtifactPack for SemioTableSnapshot {
     async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = encode_table_snapshot_binary(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
 
@@ -295,7 +295,7 @@ impl store::ArtifactPack for SemioTableSnapshot {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
-        decode_table_snapshot_binary(&inner).map_err(store::PackError::Schema)
+        decode_table_snapshot_binary(&inner).await.map_err(store::PackError::Schema)
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs

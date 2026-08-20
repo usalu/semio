@@ -95,13 +95,13 @@ pub enum LasMutation {
 /// also independently recomputes both at encode time — see `LasHeader`'s doc comment — so this
 /// sync is a snapshot-level consistency guarantee, not the sole source of correctness).
 pub async fn apply_las_mutation(snapshot: &mut LasSnapshot, mutation: &LasMutation) -> protocol::MutationOutcome<LasDiff> {
-    let outcome = <LasMutation as Mutation<LasSnapshot>>::diff(mutation, snapshot);
-    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
+    let outcome = <LasMutation as Mutation<LasSnapshot>>::diff(mutation, snapshot).await;
+    match protocol::MutationDiff::apply(outcome.diff().await, snapshot).await {
         Ok(next) => {
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).await.absorb_messages(outcome.messages().await.to_vec()).await,
     }
 }
 //#endregion 🔖️Apply
@@ -113,12 +113,12 @@ impl Mutation<LasSnapshot> for LasMutation {
     async fn diff(&self, base: &LasSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             LasMutation::NoMutation => LasDiff::default(),
-            LasMutation::SetSnapshot { snapshot } => diff::diff_set_snapshot(base, snapshot),
-            LasMutation::SetVersion { major, minor } => diff::diff_set_version(*major, *minor),
-            LasMutation::SetSystemIdentifier { system_identifier } => diff::diff_set_system_identifier(system_identifier),
-            LasMutation::SetSoftwareInfo { generating_software } => diff::diff_set_software_info(generating_software),
-            LasMutation::SetCreationDate { day_of_year, year } => diff::diff_set_creation_date(*day_of_year, *year),
-            LasMutation::SetScaleAndOffset { scale, offset } => diff::diff_set_scale_and_offset(*scale, *offset),
+            LasMutation::SetSnapshot { snapshot } => diff::diff_set_snapshot(base, snapshot).await,
+            LasMutation::SetVersion { major, minor } => diff::diff_set_version(*major, *minor).await,
+            LasMutation::SetSystemIdentifier { system_identifier } => diff::diff_set_system_identifier(system_identifier).await,
+            LasMutation::SetSoftwareInfo { generating_software } => diff::diff_set_software_info(generating_software).await,
+            LasMutation::SetCreationDate { day_of_year, year } => diff::diff_set_creation_date(*day_of_year, *year).await,
+            LasMutation::SetScaleAndOffset { scale, offset } => diff::diff_set_scale_and_offset(*scale, *offset).await,
             LasMutation::SetBounds { max, min } => diff::diff_set_bounds(*max, *min),
             LasMutation::SetPointsByReturn { counts } => diff::diff_set_points_by_return(*counts),
             LasMutation::InsertVlr { index, vlr } => diff::diff_insert_vlr(base, *index, vlr.clone()),
@@ -194,8 +194,8 @@ async fn enc_header(h: &LasHeader) -> String {
     let fields: Vec<String> = vec![
         h.version_major.to_string(),
         h.version_minor.to_string(),
-        diff::hex_encode(h.system_identifier.as_bytes()),
-        diff::hex_encode(h.generating_software.as_bytes()),
+        diff::hex_encode(h.system_identifier.as_bytes()).await,
+        diff::hex_encode(h.generating_software.as_bytes()).await,
         h.creation_day_of_year.to_string(),
         h.creation_year.to_string(),
         h.header_size.to_string(),
@@ -204,7 +204,7 @@ async fn enc_header(h: &LasHeader) -> String {
         h.point_data_format_id.to_string(),
         h.point_data_record_length.to_string(),
         h.number_of_point_records.to_string(),
-        diff::enc_u32x5(&h.points_by_return),
+        diff::enc_u32x5(&h.points_by_return).await,
         h.x_scale.to_string(),
         h.y_scale.to_string(),
         h.z_scale.to_string(),
@@ -221,38 +221,38 @@ async fn enc_header(h: &LasHeader) -> String {
     format!("[{}]", fields.join(","))
 }
 async fn dec_header(s: &str) -> Result<LasHeader, String> {
-    let parts = diff::split_top_level(diff::strip_brackets(s)?, ',');
+    let parts = diff::split_top_level(diff::strip_brackets(s).await?, ',').await;
     let [version_major, version_minor, system_identifier, generating_software, creation_day_of_year, creation_year, header_size, offset_to_point_data, number_of_vlrs, point_data_format_id, point_data_record_length, number_of_point_records, points_by_return, x_scale, y_scale, z_scale, x_offset, y_offset, z_offset, max_x, min_x, max_y, min_y, max_z, min_z] =
         parts.as_slice()
     else {
         return Err(format!("header: expected 25 fields, got {}", parts.len()));
     };
     Ok(LasHeader {
-        version_major: diff::parse_u8(version_major)?,
-        version_minor: diff::parse_u8(version_minor)?,
-        system_identifier: String::from_utf8(diff::hex_decode(system_identifier)?).map_err(|e| e.to_string())?,
-        generating_software: String::from_utf8(diff::hex_decode(generating_software)?).map_err(|e| e.to_string())?,
-        creation_day_of_year: diff::parse_u16(creation_day_of_year)?,
-        creation_year: diff::parse_u16(creation_year)?,
-        header_size: diff::parse_u16(header_size)?,
-        offset_to_point_data: diff::parse_u32(offset_to_point_data)?,
-        number_of_vlrs: diff::parse_u32(number_of_vlrs)?,
-        point_data_format_id: diff::parse_u8(point_data_format_id)?,
-        point_data_record_length: diff::parse_u16(point_data_record_length)?,
-        number_of_point_records: diff::parse_u32(number_of_point_records)?,
-        points_by_return: diff::dec_u32x5(points_by_return)?,
-        x_scale: diff::parse_f64(x_scale)?,
-        y_scale: diff::parse_f64(y_scale)?,
-        z_scale: diff::parse_f64(z_scale)?,
-        x_offset: diff::parse_f64(x_offset)?,
-        y_offset: diff::parse_f64(y_offset)?,
-        z_offset: diff::parse_f64(z_offset)?,
-        max_x: diff::parse_f64(max_x)?,
-        min_x: diff::parse_f64(min_x)?,
-        max_y: diff::parse_f64(max_y)?,
-        min_y: diff::parse_f64(min_y)?,
-        max_z: diff::parse_f64(max_z)?,
-        min_z: diff::parse_f64(min_z)?,
+        version_major: diff::parse_u8(version_major).await?,
+        version_minor: diff::parse_u8(version_minor).await?,
+        system_identifier: String::from_utf8(diff::hex_decode(system_identifier).await?).map_err(|e| e.to_string())?,
+        generating_software: String::from_utf8(diff::hex_decode(generating_software).await?).map_err(|e| e.to_string())?,
+        creation_day_of_year: diff::parse_u16(creation_day_of_year).await?,
+        creation_year: diff::parse_u16(creation_year).await?,
+        header_size: diff::parse_u16(header_size).await?,
+        offset_to_point_data: diff::parse_u32(offset_to_point_data).await?,
+        number_of_vlrs: diff::parse_u32(number_of_vlrs).await?,
+        point_data_format_id: diff::parse_u8(point_data_format_id).await?,
+        point_data_record_length: diff::parse_u16(point_data_record_length).await?,
+        number_of_point_records: diff::parse_u32(number_of_point_records).await?,
+        points_by_return: diff::dec_u32x5(points_by_return).await?,
+        x_scale: diff::parse_f64(x_scale).await?,
+        y_scale: diff::parse_f64(y_scale).await?,
+        z_scale: diff::parse_f64(z_scale).await?,
+        x_offset: diff::parse_f64(x_offset).await?,
+        y_offset: diff::parse_f64(y_offset).await?,
+        z_offset: diff::parse_f64(z_offset).await?,
+        max_x: diff::parse_f64(max_x).await?,
+        min_x: diff::parse_f64(min_x).await?,
+        max_y: diff::parse_f64(max_y).await?,
+        min_y: diff::parse_f64(min_y).await?,
+        max_z: diff::parse_f64(max_z).await?,
+        min_z: diff::parse_f64(min_z).await?,
     })
 }
 async fn enc_snapshot(s: &LasSnapshot) -> String {
@@ -261,14 +261,14 @@ async fn enc_snapshot(s: &LasSnapshot) -> String {
     format!("[{},[{}],[{}]]", enc_header(&s.header), vlrs, points)
 }
 async fn dec_snapshot(s: &str) -> Result<LasSnapshot, String> {
-    let inner = diff::strip_brackets(s)?;
-    let parts = diff::split_top_level(inner, ',');
+    let inner = diff::strip_brackets(s).await?;
+    let parts = diff::split_top_level(inner, ',').await;
     let [header_s, vlrs_s, points_s] = parts.as_slice() else {
         return Err(format!("snapshot: expected 3 top-level fields, got {}", parts.len()));
     };
-    let header = dec_header(header_s)?;
-    let vlrs = diff::split_top_level(diff::strip_brackets(vlrs_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(diff::dec_vlr).collect::<Result<Vec<_>, String>>()?;
-    let points = diff::split_top_level(diff::strip_brackets(points_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(diff::dec_point).collect::<Result<Vec<_>, String>>()?;
+    let header = dec_header(header_s).await?;
+    let vlrs = diff::split_top_level(diff::strip_brackets(vlrs_s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(diff::dec_vlr).collect::<Result<Vec<_>, String>>()?;
+    let points = diff::split_top_level(diff::strip_brackets(points_s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(diff::dec_point).collect::<Result<Vec<_>, String>>()?;
     Ok(LasSnapshot { schema: crate::artifacts::las::STDIO_LAS_DOCUMENT_SCHEMA.into(), header, vlrs, points })
 }
 //#endregion 🔖️SnapshotCodec
@@ -278,9 +278,9 @@ async fn enc_f64x3(t: &(f64, f64, f64)) -> String {
     format!("[{},{},{}]", t.0, t.1, t.2)
 }
 async fn dec_f64x3(s: &str) -> Result<(f64, f64, f64), String> {
-    let parts = diff::split_top_level(diff::strip_brackets(s)?, ',');
+    let parts = diff::split_top_level(diff::strip_brackets(s).await?, ',').await;
     let [a, b, c] = parts.as_slice() else { return Err(format!("f64x3: expected 3 fields, got {}", parts.len())) };
-    Ok((diff::parse_f64(a)?, diff::parse_f64(b)?, diff::parse_f64(c)?))
+    Ok((diff::parse_f64(a).await?, diff::parse_f64(b).await?, diff::parse_f64(c).await?))
 }
 //#endregion 🔖️TupleCodec
 
@@ -311,20 +311,20 @@ async fn parse_las_mutation(line: &str) -> Result<LasMutation, String> {
     let arg = |key: &str| -> Result<&str, String> { rest.iter().find_map(|t| t.strip_prefix(key)).ok_or_else(|| format!("{keyword}: missing arg {key:?}")) };
     match keyword {
         "no-mutation" => Ok(LasMutation::NoMutation),
-        "set-snapshot" => Ok(LasMutation::SetSnapshot { snapshot: dec_snapshot(arg("snapshot=")?)? }),
-        "set-version" => Ok(LasMutation::SetVersion { major: diff::parse_u8(arg("major=")?)?, minor: diff::parse_u8(arg("minor=")?)? }),
-        "set-system-identifier" => Ok(LasMutation::SetSystemIdentifier { system_identifier: String::from_utf8(diff::hex_decode(arg("system-identifier=")?)?).map_err(|e| e.to_string())? }),
-        "set-software-info" => Ok(LasMutation::SetSoftwareInfo { generating_software: String::from_utf8(diff::hex_decode(arg("generating-software=")?)?).map_err(|e| e.to_string())? }),
-        "set-creation-date" => Ok(LasMutation::SetCreationDate { day_of_year: diff::parse_u16(arg("day-of-year=")?)?, year: diff::parse_u16(arg("year=")?)? }),
-        "set-scale-and-offset" => Ok(LasMutation::SetScaleAndOffset { scale: dec_f64x3(arg("scale=")?)?, offset: dec_f64x3(arg("offset=")?)? }),
-        "set-bounds" => Ok(LasMutation::SetBounds { max: dec_f64x3(arg("max=")?)?, min: dec_f64x3(arg("min=")?)? }),
-        "set-points-by-return" => Ok(LasMutation::SetPointsByReturn { counts: diff::dec_u32x5(arg("counts=")?)? }),
-        "insert-vlr" => Ok(LasMutation::InsertVlr { index: diff::parse_usize(arg("index=")?)?, vlr: diff::dec_vlr(arg("vlr=")?)? }),
-        "remove-vlr" => Ok(LasMutation::RemoveVlr { index: diff::parse_usize(arg("index=")?)? }),
-        "set-vlr-data" => Ok(LasMutation::SetVlrData { index: diff::parse_usize(arg("index=")?)?, data: diff::hex_decode(arg("data=")?)? }),
-        "insert-point" => Ok(LasMutation::InsertPoint { index: diff::parse_usize(arg("index=")?)?, point: diff::dec_point(arg("point=")?)? }),
-        "remove-point" => Ok(LasMutation::RemovePoint { index: diff::parse_usize(arg("index=")?)? }),
-        "set-point" => Ok(LasMutation::SetPoint { index: diff::parse_usize(arg("index=")?)?, point: diff::dec_point(arg("point=")?)? }),
+        "set-snapshot" => Ok(LasMutation::SetSnapshot { snapshot: dec_snapshot(arg("snapshot=")?).await? }),
+        "set-version" => Ok(LasMutation::SetVersion { major: diff::parse_u8(arg("major=")?).await?, minor: diff::parse_u8(arg("minor=")?).await? }),
+        "set-system-identifier" => Ok(LasMutation::SetSystemIdentifier { system_identifier: String::from_utf8(diff::hex_decode(arg("system-identifier=")?).await?).map_err(|e| e.to_string())? }),
+        "set-software-info" => Ok(LasMutation::SetSoftwareInfo { generating_software: String::from_utf8(diff::hex_decode(arg("generating-software=")?).await?).map_err(|e| e.to_string())? }),
+        "set-creation-date" => Ok(LasMutation::SetCreationDate { day_of_year: diff::parse_u16(arg("day-of-year=")?).await?, year: diff::parse_u16(arg("year=")?).await? }),
+        "set-scale-and-offset" => Ok(LasMutation::SetScaleAndOffset { scale: dec_f64x3(arg("scale=")?).await?, offset: dec_f64x3(arg("offset=")?).await? }),
+        "set-bounds" => Ok(LasMutation::SetBounds { max: dec_f64x3(arg("max=")?).await?, min: dec_f64x3(arg("min=")?).await? }),
+        "set-points-by-return" => Ok(LasMutation::SetPointsByReturn { counts: diff::dec_u32x5(arg("counts=")?).await? }),
+        "insert-vlr" => Ok(LasMutation::InsertVlr { index: diff::parse_usize(arg("index=")?).await?, vlr: diff::dec_vlr(arg("vlr=")?).await? }),
+        "remove-vlr" => Ok(LasMutation::RemoveVlr { index: diff::parse_usize(arg("index=")?).await? }),
+        "set-vlr-data" => Ok(LasMutation::SetVlrData { index: diff::parse_usize(arg("index=")?).await?, data: diff::hex_decode(arg("data=")?).await? }),
+        "insert-point" => Ok(LasMutation::InsertPoint { index: diff::parse_usize(arg("index=")?).await?, point: diff::dec_point(arg("point=")?).await? }),
+        "remove-point" => Ok(LasMutation::RemovePoint { index: diff::parse_usize(arg("index=")?).await? }),
+        "set-point" => Ok(LasMutation::SetPoint { index: diff::parse_usize(arg("index=")?).await?, point: diff::dec_point(arg("point=")?).await? }),
         other => Err(format!("las mutation: unknown keyword {other:?}")),
     }
 }
@@ -332,10 +332,10 @@ async fn parse_las_mutation(line: &str) -> Result<LasMutation, String> {
 
 impl protocol::OpText for LasMutation {
     async fn print_op(&self) -> String {
-        print_las_mutation(self)
+        print_las_mutation(self).await
     }
     async fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_las_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_las_mutation(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
 
@@ -355,7 +355,7 @@ async fn enc_f64x3_bin(t: (f64, f64, f64), out: &mut Vec<u8>) {
     out.extend_from_slice(&t.2.to_le_bytes());
 }
 async fn dec_f64x3_bin(reader: &mut store::ByteReader<'_>) -> Result<(f64, f64, f64), String> {
-    Ok((reader.read_f64_le().map_err(|e| e.to_string())?, reader.read_f64_le().map_err(|e| e.to_string())?, reader.read_f64_le().map_err(|e| e.to_string())?))
+    Ok((reader.read_f64_le().await.map_err(|e| e.to_string())?, reader.read_f64_le().await.map_err(|e| e.to_string())?, reader.read_f64_le().await.map_err(|e| e.to_string())?))
 }
 
 /// 🧭️ A whole `LasSnapshot` — `schema` (real, genuinely round-tripped identity field) + the full
@@ -373,11 +373,11 @@ async fn enc_snapshot_bin(s: &LasSnapshot, out: &mut Vec<u8>) {
     }
 }
 async fn dec_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<LasSnapshot, String> {
-    let schema = diff::read_str_lp(reader)?;
-    let header = diff::dec_header_bin(reader)?;
-    let vlr_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let schema = diff::read_str_lp(reader).await?;
+    let header = diff::dec_header_bin(reader).await?;
+    let vlr_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let vlrs = (0..vlr_count).map(|_| diff::dec_vlr_bin(reader)).collect::<Result<Vec<_>, String>>()?;
-    let point_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let point_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let points = (0..point_count).map(|_| diff::dec_point_bin(reader)).collect::<Result<Vec<_>, String>>()?;
     Ok(LasSnapshot { schema, header, vlrs, points })
 }
@@ -481,38 +481,38 @@ impl protocol::OpBinary for LasMutation {
     }
     async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         async fn go(bytes: &[u8]) -> Result<LasMutation, String> {
-            let mut reader = store::ByteReader::new(bytes);
-            let format = reader.read_u8().map_err(|e| e.to_string())?;
+            let mut reader = store::ByteReader::new(bytes).await;
+            let format = reader.read_u8().await.map_err(|e| e.to_string())?;
             if format != store::pack_rt::OP_BINARY_FORMAT {
                 return Err(format!("bad op format byte {format}"));
             }
-            let tag = reader.read_u8().map_err(|e| e.to_string())?;
+            let tag = reader.read_u8().await.map_err(|e| e.to_string())?;
             Ok(match tag {
                 TAG_NO_MUTATION => LasMutation::NoMutation,
-                TAG_SET_SNAPSHOT => LasMutation::SetSnapshot { snapshot: dec_snapshot_bin(&mut reader)? },
-                TAG_SET_VERSION => LasMutation::SetVersion { major: reader.read_u8().map_err(|e| e.to_string())?, minor: reader.read_u8().map_err(|e| e.to_string())? },
-                TAG_SET_SYSTEM_IDENTIFIER => LasMutation::SetSystemIdentifier { system_identifier: diff::read_str_lp(&mut reader)? },
-                TAG_SET_SOFTWARE_INFO => LasMutation::SetSoftwareInfo { generating_software: diff::read_str_lp(&mut reader)? },
-                TAG_SET_CREATION_DATE => LasMutation::SetCreationDate { day_of_year: reader.read_varint_u64().map_err(|e| e.to_string())? as u16, year: reader.read_varint_u64().map_err(|e| e.to_string())? as u16 },
-                TAG_SET_SCALE_AND_OFFSET => LasMutation::SetScaleAndOffset { scale: dec_f64x3_bin(&mut reader)?, offset: dec_f64x3_bin(&mut reader)? },
-                TAG_SET_BOUNDS => LasMutation::SetBounds { max: dec_f64x3_bin(&mut reader)?, min: dec_f64x3_bin(&mut reader)? },
+                TAG_SET_SNAPSHOT => LasMutation::SetSnapshot { snapshot: dec_snapshot_bin(&mut reader).await? },
+                TAG_SET_VERSION => LasMutation::SetVersion { major: reader.read_u8().await.map_err(|e| e.to_string())?, minor: reader.read_u8().await.map_err(|e| e.to_string())? },
+                TAG_SET_SYSTEM_IDENTIFIER => LasMutation::SetSystemIdentifier { system_identifier: diff::read_str_lp(&mut reader).await? },
+                TAG_SET_SOFTWARE_INFO => LasMutation::SetSoftwareInfo { generating_software: diff::read_str_lp(&mut reader).await? },
+                TAG_SET_CREATION_DATE => LasMutation::SetCreationDate { day_of_year: reader.read_varint_u64().await.map_err(|e| e.to_string())? as u16, year: reader.read_varint_u64().await.map_err(|e| e.to_string())? as u16 },
+                TAG_SET_SCALE_AND_OFFSET => LasMutation::SetScaleAndOffset { scale: dec_f64x3_bin(&mut reader).await?, offset: dec_f64x3_bin(&mut reader).await? },
+                TAG_SET_BOUNDS => LasMutation::SetBounds { max: dec_f64x3_bin(&mut reader).await?, min: dec_f64x3_bin(&mut reader).await? },
                 TAG_SET_POINTS_BY_RETURN => {
                     let mut counts = [0u32; 5];
                     for slot in counts.iter_mut() {
-                        *slot = reader.read_varint_u64().map_err(|e| e.to_string())? as u32;
+                        *slot = reader.read_varint_u64().await.map_err(|e| e.to_string())? as u32;
                     }
                     LasMutation::SetPointsByReturn { counts }
                 }
-                TAG_INSERT_VLR => LasMutation::InsertVlr { index: reader.read_varint_u64().map_err(|e| e.to_string())? as usize, vlr: diff::dec_vlr_bin(&mut reader)? },
-                TAG_REMOVE_VLR => LasMutation::RemoveVlr { index: reader.read_varint_u64().map_err(|e| e.to_string())? as usize },
-                TAG_SET_VLR_DATA => LasMutation::SetVlrData { index: reader.read_varint_u64().map_err(|e| e.to_string())? as usize, data: diff::read_bytes_lp(&mut reader)? },
-                TAG_INSERT_POINT => LasMutation::InsertPoint { index: reader.read_varint_u64().map_err(|e| e.to_string())? as usize, point: diff::dec_point_bin(&mut reader)? },
-                TAG_REMOVE_POINT => LasMutation::RemovePoint { index: reader.read_varint_u64().map_err(|e| e.to_string())? as usize },
-                TAG_SET_POINT => LasMutation::SetPoint { index: reader.read_varint_u64().map_err(|e| e.to_string())? as usize, point: diff::dec_point_bin(&mut reader)? },
+                TAG_INSERT_VLR => LasMutation::InsertVlr { index: reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize, vlr: diff::dec_vlr_bin(&mut reader).await? },
+                TAG_REMOVE_VLR => LasMutation::RemoveVlr { index: reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize },
+                TAG_SET_VLR_DATA => LasMutation::SetVlrData { index: reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize, data: diff::read_bytes_lp(&mut reader).await? },
+                TAG_INSERT_POINT => LasMutation::InsertPoint { index: reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize, point: diff::dec_point_bin(&mut reader).await? },
+                TAG_REMOVE_POINT => LasMutation::RemovePoint { index: reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize },
+                TAG_SET_POINT => LasMutation::SetPoint { index: reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize, point: diff::dec_point_bin(&mut reader).await? },
                 other => return Err(format!("las mutation: unknown binary tag {other}")),
             })
         }
-        go(bytes).map_err(|e| protocol::ProtocolError::Malformed { what: "las op binary", offset: 0, detail: e })
+        go(bytes).await.map_err(|e| protocol::ProtocolError::Malformed { what: "las op binary", offset: 0, detail: e })
     }
 }
 //#endregion OpCodecs

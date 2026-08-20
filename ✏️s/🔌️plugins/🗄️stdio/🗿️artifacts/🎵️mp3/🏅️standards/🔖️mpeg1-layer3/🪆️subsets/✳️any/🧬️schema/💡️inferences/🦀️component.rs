@@ -25,7 +25,7 @@ pub struct Mp3Inference {
 
 impl protocol::Inference<Mp3Snapshot> for Mp3Inference {
     async fn infer(snapshot: &Mp3Snapshot) -> Self {
-        Self { duration: compute_mp3_duration(snapshot) }
+        Self { duration: compute_mp3_duration(snapshot).await }
     }
 }
 

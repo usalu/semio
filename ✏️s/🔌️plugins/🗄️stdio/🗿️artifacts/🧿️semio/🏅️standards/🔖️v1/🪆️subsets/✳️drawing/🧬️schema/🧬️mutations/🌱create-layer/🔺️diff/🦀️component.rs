@@ -10,9 +10,9 @@ use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::
 //#region 🔖️Diff
 pub async fn diff(payload: &CreateLayer, base: &SemioDrawingSnapshot) -> protocol::MutationOutcome<SemioDrawingDiff> {
     if base.layers.iter().any(|l| l.id == payload.layer.id) {
-        return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A layer with id \"{}\" already exists.", payload.layer.id), [payload.layer.id.clone()]);
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A layer with id \"{}\" already exists.", payload.layer.id), [payload.layer.id.clone()]).await;
     }
     let at = payload.index.min(base.layers.len());
-    protocol::MutationOutcome::new(SemioDrawingDiff { canvas: None, styles: None, layers: Some(IndexedTripleDiff { removed: Vec::new(), modified: Vec::new(), added: vec![IndexAdded { index: at, item: payload.layer.clone() }] }) })
+    protocol::MutationOutcome::new(SemioDrawingDiff { canvas: None, styles: None, layers: Some(IndexedTripleDiff { removed: Vec::new(), modified: Vec::new(), added: vec![IndexAdded { index: at, item: payload.layer.clone() }] }) }).await
 }
 //#endregion 🔖️Diff

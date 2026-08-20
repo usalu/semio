@@ -1,0 +1,273 @@
+E0053 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🛂️manifest/🦀️component.rs:97 | method `shape` has an incompatible type for trait
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:294 | mismatched types
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:294 | mismatched types
+E0271 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:435 | expected `as_f64` to return `Option<_>`, but it returns `impl Future<Output = Option<f64>>`
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:460 | mismatched types
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:460 | mismatched types
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:462 | `impl Future<Output = impl Iterator<Item = u64>>` is not an iterator
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:462 | `impl Future<Output = impl Iterator<Item = u64>>` is not an iterator
+E0369 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:474 | cannot add `impl Future<Output = usize>` to `impl Future<Output = usize>`
+E0271 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:515 | expected `as_f64` to return `Option<_>`, but it returns `impl Future<Output = Option<f64>>`
+E0599 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:536 | `impl Future<Output = impl Iterator<Item = u64>>` is not an iterator
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:544 | `impl Future<Output = impl Iterator<Item = EdgeRef>>` is not an iterator
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:622 | mismatched types
+E0599 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:637 | `impl Future<Output = impl Iterator<Item = EdgeRef>>` is not an iterator
+E0599 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:640 | `impl Future<Output = impl Iterator<Item = EdgeRef>>` is not an iterator
+E0599 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:643 | `impl Future<Output = impl Iterator<Item = u64>>` is not an iterator
+E0599 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:646 | `impl Future<Output = impl Iterator<Item = u64>>` is not an iterator
+E0599 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:649 | `impl Future<Output = impl Iterator<Item = u64>>` is not an iterator
+E0369 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:653 | cannot add `impl Future<Output = usize>` to `impl Future<Output = usize>`
+E0599 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:659 | `impl Future<Output = impl Iterator<Item = u64>>` is not an iterator
+E0599 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:659 | `impl Future<Output = impl Iterator<Item = EdgeRef>>` is not an iterator
+E0599 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:663 | `impl Future<Output = impl Iterator<Item = u64>>` is not an iterator
+E0599 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:663 | `impl Future<Output = impl Iterator<Item = EdgeRef>>` is not an iterator
+E0599 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:676 | `impl Future<Output = impl Iterator<Item = EdgeRef>>` is not an iterator
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:707 | `impl Future<Output = impl Iterator<Item = EdgeRef>>` is not an iterator
+E0599 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:731 | `impl Future<Output = impl Iterator<Item = EdgeRef>>` is not an iterator
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:733 | `impl Future<Output = impl Iterator<Item = u64>>` is not an iterator
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:733 | `impl Future<Output = impl Iterator<Item = u64>>` is not an iterator
+E0599 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:739 | `impl Future<Output = impl Iterator<Item = EdgeRef>>` is not an iterator
+E0600 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:742 | cannot apply unary operator `!` to type `impl Future<Output = bool>`
+E0599 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:753 | `impl Future<Output = impl Iterator<Item = EdgeRef>>` is not an iterator
+E0599 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:755 | `impl Future<Output = impl Iterator<Item = u64>>` is not an iterator
+E0369 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:760 | cannot add `impl Future<Output = usize>` to `impl Future<Output = usize>`
+E0599 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:766 | `impl Future<Output = impl Iterator<Item = u64>>` is not an iterator
+E0599 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:766 | `impl Future<Output = impl Iterator<Item = EdgeRef>>` is not an iterator
+E0599 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:770 | `impl Future<Output = impl Iterator<Item = u64>>` is not an iterator
+E0599 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:770 | `impl Future<Output = impl Iterator<Item = EdgeRef>>` is not an iterator
+E0599 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:782 | `impl Future<Output = impl Iterator<Item = EdgeRef>>` is not an iterator
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:821 | `impl Future<Output = impl Iterator<Item = u64>>` is not an iterator
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:821 | `impl Future<Output = impl Iterator<Item = u64>>` is not an iterator
+E0599 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:831 | `impl Future<Output = impl Iterator<Item = EdgeRef>>` is not an iterator
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:833 | `impl Future<Output = impl Iterator<Item = u64>>` is not an iterator
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:833 | `impl Future<Output = impl Iterator<Item = u64>>` is not an iterator
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:836 | `impl Future<Output = impl Iterator<Item = u64>>` is not an iterator
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:836 | `impl Future<Output = impl Iterator<Item = u64>>` is not an iterator
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:839 | `impl Future<Output = impl Iterator<Item = u64>>` is not an iterator
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:839 | `impl Future<Output = impl Iterator<Item = u64>>` is not an iterator
+E0599 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:858 | `impl Future<Output = impl Iterator<Item = EdgeRef>>` is not an iterator
+E0599 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:893 | `impl Future<Output = impl Iterator<Item = u64>>` is not an iterator
+E0599 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:896 | `impl Future<Output = impl Iterator<Item = u64>>` is not an iterator
+E0599 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:902 | `impl Future<Output = impl Iterator<Item = EdgeRef>>` is not an iterator
+E0599 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:905 | `impl Future<Output = impl Iterator<Item = EdgeRef>>` is not an iterator
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:907 | `impl Future<Output = impl Iterator<Item = u64>>` is not an iterator
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:907 | `impl Future<Output = impl Iterator<Item = u64>>` is not an iterator
+E0599 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:912 | `impl Future<Output = impl Iterator<Item = u64>>` is not an iterator
+E0599 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:944 | `impl Future<Output = impl Iterator<Item = EdgeRef>>` is not an iterator
+E0599 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:912 | no method named `next` found for opaque type `impl Future<Output = impl Iterator<Item = EdgeRef>>` in the current scope
+E0599 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:916 | `impl Future<Output = impl Iterator<Item = u64>>` is not an iterator
+E0599 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:916 | no method named `next` found for opaque type `impl Future<Output = impl Iterator<Item = EdgeRef>>` in the current scope
+E0369 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:920 | cannot add `impl Future<Output = usize>` to `impl Future<Output = usize>`
+E0599 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:926 | `impl Future<Output = impl Iterator<Item = u64>>` is not an iterator
+E0599 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:926 | `impl Future<Output = impl Iterator<Item = EdgeRef>>` is not an iterator
+E0599 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:930 | `impl Future<Output = impl Iterator<Item = u64>>` is not an iterator
+E0599 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:930 | `impl Future<Output = impl Iterator<Item = EdgeRef>>` is not an iterator
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:979 | `impl Future<Output = impl Iterator<Item = u64>>` is not an iterator
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:979 | `impl Future<Output = impl Iterator<Item = u64>>` is not an iterator
+E0599 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:989 | `impl Future<Output = impl Iterator<Item = EdgeRef>>` is not an iterator
+E0599 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:992 | `impl Future<Output = impl Iterator<Item = u64>>` is not an iterator
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:994 | `impl Future<Output = impl Iterator<Item = u64>>` is not an iterator
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:994 | `impl Future<Output = impl Iterator<Item = u64>>` is not an iterator
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:997 | `impl Future<Output = impl Iterator<Item = u64>>` is not an iterator
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:997 | `impl Future<Output = impl Iterator<Item = u64>>` is not an iterator
+E0599 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:1004 | `impl Future<Output = impl Iterator<Item = u64>>` is not an iterator
+E0599 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:1004 | `impl Future<Output = impl Iterator<Item = EdgeRef>>` is not an iterator
+E0599 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:1016 | `impl Future<Output = impl Iterator<Item = EdgeRef>>` is not an iterator
+E0382 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:1055 | use of moved value: `interner`
+E0369 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:2196 | binary operation `>` cannot be applied to type `impl Future<Output = f64>`
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:2197 | cannot subtract-assign `impl Future<Output = f64>` from `f64`
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:2198 | cannot add-assign `impl Future<Output = f64>` to `f64`
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:2199 | `f64` is not a future
+E0608 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:2215 | cannot index into a value of type `impl Future<Output = Vec<std::option::Option<u32>>>`
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:2220 | mismatched types
+E0369 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:2221 | binary operation `<=` cannot be applied to type `impl Future<Output = f64>`
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:2224 | cannot add-assign `impl Future<Output = f64>` to `{float}`
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🧮️algorithms/🦀️component.rs:88 | the `?` operator can only be applied to values that implement `Try`
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🧮️algorithms/🦀️component.rs:88 | the `?` operator can only be applied to values that implement `Try`
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🧮️algorithms/🦀️component.rs:238 | mismatched types
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🧮️algorithms/🦀️component.rs:238 | mismatched types
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🧮️algorithms/🦀️component.rs:241 | mismatched types
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🧮️algorithms/🦀️component.rs:242 | mismatched types
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🧮️algorithms/🦀️component.rs:257 | `std::option::Option<_>` is not a future
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🧮️algorithms/🦀️component.rs:293 | `usize` is not a future
+E0369 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🧮️algorithms/🦀️component.rs:300 | binary operation `==` cannot be applied to type `impl Future<Output = usize>`
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🧮️algorithms/🦀️component.rs:303 | the type `[u8]` cannot be indexed by `impl Future<Output = usize>`
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🧮️algorithms/🦀️component.rs:303 | the type `[u8]` cannot be indexed by `impl Future<Output = usize>`
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🧮️algorithms/🦀️component.rs:304 | the type `[usize]` cannot be indexed by `impl Future<Output = usize>`
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🧮️algorithms/🦀️component.rs:305 | the type `[usize]` cannot be indexed by `impl Future<Output = usize>`
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🧮️algorithms/🦀️component.rs:307 | the type `[usize]` cannot be indexed by `impl Future<Output = usize>`
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🧮️algorithms/🦀️component.rs:308 | the type `[u8]` cannot be indexed by `impl Future<Output = usize>`
+E0369 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🧮️algorithms/🦀️component.rs:314 | binary operation `==` cannot be applied to type `impl Future<Output = usize>`
+E0382 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🧮️algorithms/🦀️component.rs:323 | use of moved value: `uf`
+E0382 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🧮️algorithms/🦀️component.rs:329 | use of moved value: `uf`
+E0716 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🧮️algorithms/🦀️component.rs:329 | temporary value dropped while borrowed
+E0382 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:69 | use of moved value: `f`
+E0369 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:104 | cannot multiply `impl Future<Output = Vec2>` by `f64`
+E0369 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:116 | binary operation `>` cannot be applied to type `impl Future<Output = f64>`
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:117 | cannot divide `f64` by `impl Future<Output = f64>`
+E0369 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:137 | binary operation `<` cannot be applied to type `impl Future<Output = f64>`
+E0369 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:141 | cannot subtract `{float}` from `impl Future<Output = f64>`
+E0369 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:142 | cannot subtract `{float}` from `impl Future<Output = f64>`
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:156 | mismatched types
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:172 | a value of type `Vec<Vec2>` cannot be built from an iterator over elements of type `impl Future<Output = Vec2>`
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:225 | the trait bound `ShapeRef<'_>: From<&impl Future<Output = semio_framework_geometry::Rect>>` is not satisfied
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:225 | mismatched types
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:225 | the trait bound `ShapeRef<'_>: From<&impl Future<Output = semio_framework_geometry::Rect>>` is not satisfied
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:228 | the trait bound `ShapeRef<'_>: From<&impl Future<Output = semio_framework_geometry::Circle>>` is not satisfied
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:228 | mismatched types
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:228 | the trait bound `ShapeRef<'_>: From<&impl Future<Output = semio_framework_geometry::Circle>>` is not satisfied
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:233 | the trait bound `ShapeRef<'_>: From<&impl Future<Output = semio_framework_geometry::Rect>>` is not satisfied
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:233 | mismatched types
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:233 | the trait bound `ShapeRef<'_>: From<&impl Future<Output = semio_framework_geometry::Rect>>` is not satisfied
+E0369 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:244 | binary operation `<` cannot be applied to type `impl Future<Output = f64>`
+E0369 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:270 | binary operation `<` cannot be applied to type `impl Future<Output = f64>`
+E0609 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:273 | no field `y` on type `impl Future<Output = Vec2>`
+E0609 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:273 | no field `x` on type `impl Future<Output = Vec2>`
+E0369 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:274 | cannot multiply `impl Future<Output = Vec2>` by `f64`
+E0369 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:275 | cannot multiply `impl Future<Output = Vec2>` by `f64`
+E0369 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:279 | binary operation `<=` cannot be applied to type `impl Future<Output = f64>`
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:291 | mismatched types
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:295 | the trait bound `ShapeRef<'_>: From<&impl Future<Output = semio_framework_geometry::Circle>>` is not satisfied
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:295 | mismatched types
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:295 | the trait bound `ShapeRef<'_>: From<&impl Future<Output = semio_framework_geometry::Circle>>` is not satisfied
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:304 | mismatched types
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:307 | the trait bound `ShapeRef<'_>: From<&impl Future<Output = semio_framework_geometry::Circle>>` is not satisfied
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:307 | mismatched types
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:307 | the trait bound `ShapeRef<'_>: From<&impl Future<Output = semio_framework_geometry::Circle>>` is not satisfied
+E0609 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:324 | no field `x` on type `impl Future<Output = Point>`
+E0609 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:324 | no field `y` on type `impl Future<Output = Point>`
+E0609 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:336 | no field `x` on type `impl Future<Output = Vec2>`
+E0609 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:336 | no field `y` on type `impl Future<Output = Vec2>`
+E0369 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:343 | binary operation `<` cannot be applied to type `impl Future<Output = f64>`
+E0369 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:346 | cannot multiply `impl Future<Output = Vec2>` by `f64`
+E0369 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:353 | binary operation `<` cannot be applied to type `impl Future<Output = f64>`
+E0609 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:356 | no field `y` on type `impl Future<Output = Vec2>`
+E0609 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:356 | no field `x` on type `impl Future<Output = Vec2>`
+E0369 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:357 | cannot multiply `impl Future<Output = Vec2>` by `f64`
+E0369 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:359 | cannot multiply `impl Future<Output = Vec2>` by `f64`
+E0369 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:360 | cannot multiply `impl Future<Output = Vec2>` by `f64`
+E0369 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:373 | binary operation `<` cannot be applied to type `impl Future<Output = f64>`
+E0609 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:376 | no field `y` on type `impl Future<Output = Vec2>`
+E0609 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:376 | no field `x` on type `impl Future<Output = Vec2>`
+E0369 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:377 | cannot multiply `impl Future<Output = Vec2>` by `f64`
+E0369 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:379 | cannot multiply `impl Future<Output = Vec2>` by `f64`
+E0369 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:380 | cannot multiply `impl Future<Output = Vec2>` by `f64`
+E0369 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:398 | cannot multiply `impl Future<Output = Vec2>` by `{float}`
+E0369 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:399 | cannot multiply `impl Future<Output = Vec2>` by `{float}`
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:405 | the trait bound `(f64, f64): From<impl Future<Output = Point>>` is not satisfied
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:406 | the trait bound `(f64, f64): From<impl Future<Output = Point>>` is not satisfied
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:409 | the trait bound `(f64, f64): From<impl Future<Output = Point>>` is not satisfied
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:410 | the trait bound `(f64, f64): From<impl Future<Output = Point>>` is not satisfied
+E0369 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:420 | binary operation `==` cannot be applied to type `impl Future<Output = Vec2>`
+E0369 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:424 | binary operation `==` cannot be applied to type `impl Future<Output = Vec2>`
+E0600 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:425 | cannot apply unary operator `-` to type `impl Future<Output = Vec2>`
+E0369 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:428 | cannot multiply `impl Future<Output = f64>` by `{float}`
+E0369 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:429 | cannot multiply `impl Future<Output = Vec2>` by `impl Future<Output = f64>`
+E0369 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🖊️drawing/🦀️component.rs:430 | cannot multiply `impl Future<Output = Vec2>` by `impl Future<Output = f64>`
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🛂️manifest/🦀️component.rs:80 | a value of type `Vec<DslValue>` cannot be built from an iterator over elements of type `impl Future<Output = DslValue>`
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🛂️manifest/🦀️component.rs:81 | a value of type `Vec<(std::string::String, DslValue)>` cannot be built from an iterator over elements of type `(std::string::String, impl Future<Outpu
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🛂️manifest/🦀️component.rs:91 | a value of type `Vec<PropertyValue>` cannot be built from an iterator over elements of type `impl Future<Output = PropertyValue>`
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🛂️manifest/🦀️component.rs:92 | a value of type `BTreeMap<std::string::String, PropertyValue>` cannot be built from an iterator over elements of type `(std::string::String, impl Futu
+E0600 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🛂️manifest/🦀️component.rs:475 | cannot apply unary operator `!` to type `impl Future<Output = bool>`
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🛂️manifest/🦀️component.rs:516 | mismatched types
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:92 | `impl Future<Output = Vec<std::string::String>>` is not an iterator
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:107 | `impl Future<Output = Vec<QueryableEdge>>` is not an iterator
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:120 | `impl Future<Output = Vec<std::string::String>>` is not an iterator
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:137 | `impl Future<Output = Vec<QueryableEdge>>` is not an iterator
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:370 | a value of type `Vec<DslValue>` cannot be built from an iterator over elements of type `impl Future<Output = DslValue>`
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:371 | a value of type `Vec<(std::string::String, DslValue)>` cannot be built from an iterator over elements of type `(std::string::String, impl Future<Outpu
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:381 | a value of type `Vec<PropertyValue>` cannot be built from an iterator over elements of type `impl Future<Output = PropertyValue>`
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:382 | a value of type `BTreeMap<std::string::String, PropertyValue>` cannot be built from an iterator over elements of type `(std::string::String, impl Futu
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:387 | a value of type `Vec<(std::string::String, DslValue)>` cannot be built from an iterator over elements of type `(std::string::String, impl Future<Outpu
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:392 | a value of type `BTreeMap<std::string::String, PropertyValue>` cannot be built from an iterator over elements of type `(std::string::String, impl Futu
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:401 | mismatched types
+E0599 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:424 | the method `join` exists for struct `Vec<impl Future<Output = std::string::String>>`, but its trait bounds were not satisfied
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1000 | mismatched types
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1004 | mismatched types
+E0599 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1172 | `impl Future<Output = Vec<std::string::String>>` is not an iterator
+E0599 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1172 | `impl Future<Output = Vec<std::string::String>>` is not an iterator
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1173 | mismatched types
+E0599 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1177 | `impl Future<Output = Vec<std::string::String>>` is not an iterator
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1178 | mismatched types
+E0599 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1182 | `impl Future<Output = Vec<std::string::String>>` is not an iterator
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1183 | mismatched types
+E0599 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1188 | `impl Future<Output = Vec<std::string::String>>` is not an iterator
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1189 | mismatched types
+E0369 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1192 | binary operation `==` cannot be applied to type `impl Future<Output = std::option::Option<char>>`
+E0599 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1193 | `impl Future<Output = Vec<std::string::String>>` is not an iterator
+E0599 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1195 | `impl Future<Output = Vec<std::string::String>>` is not an iterator
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1197 | mismatched types
+E0599 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1200 | `impl Future<Output = Vec<std::string::String>>` is not an iterator
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1201 | mismatched types
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1206 | mismatched types
+E0599 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1214 | `impl Future<Output = BTreeSet<std::string::String>>` is not an iterator
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1215 | mismatched types
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1221 | mismatched types
+E0599 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1331 | `impl Future<Output = Vec<std::string::String>>` is not an iterator
+E0599 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1332 | `impl Future<Output = Vec<std::string::String>>` is not an iterator
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1368 | `impl Future<Output = Vec<(std::string::String, usize, usize)>>` is not an iterator
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1368 | the size for values of type `str` cannot be known at compilation time
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1368 | the size for values of type `str` cannot be known at compilation time
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1371 | the size for values of type `str` cannot be known at compilation time
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1404 | `impl Future<Output = Vec<TokenSpan>>` is not an iterator
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1410 | `impl Future<Output = Vec<dsl::Diagnostic>>` is not an iterator
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1478 | mismatched types
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1496 | mismatched types
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1501 | mismatched types
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1511 | mismatched types
+E0599 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1574 | `impl Future<Output = Vec<TokenSpan>>` is not an iterator
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1602 | mismatched types
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1602 | mismatched types
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1602 | mismatched types
+E0599 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1611 | `impl Future<Output = Vec<TokenSpan>>` is not an iterator
+E0599 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1655 | `impl Future<Output = Vec<Completion>>` is not an iterator
+E0599 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1696 | no method named `clone` found for opaque type `impl Future<Output = &Token>` in the current scope
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1712 | mismatched types
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1720 | mismatched types
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1729 | mismatched types
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1733 | mismatched types
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1742 | mismatched types
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1746 | mismatched types
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1755 | mismatched types
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1764 | mismatched types
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1768 | mismatched types
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1777 | mismatched types
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1784 | mismatched types
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1723 | mismatched types
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1736 | mismatched types
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1749 | mismatched types
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1758 | mismatched types
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1771 | mismatched types
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1789 | mismatched types
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1791 | mismatched types
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1799 | `impl Future<Output = &Token>` doesn't implement `Debug`
+E0599 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1813 | no method named `clone` found for opaque type `impl Future<Output = &Token>` in the current scope
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1821 | mismatched types
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1824 | mismatched types
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1828 | mismatched types
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1832 | `impl Future<Output = &Token>` doesn't implement `Debug`
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1843 | mismatched types
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1866 | mismatched types
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1867 | mismatched types
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1881 | mismatched types
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1892 | mismatched types
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1916 | mismatched types
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1926 | mismatched types
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1961 | `impl Future<Output = &Token>` doesn't implement `Debug`
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:1988 | mismatched types
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2033 | `impl Future<Output = Vec<std::string::String>>` is not an iterator
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2040 | `impl Future<Output = Vec<QueryableEdge>>` is not an iterator
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2081 | `impl Future<Output = Vec<std::string::String>>` is not an iterator
+E0369 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2101 | binary operation `==` cannot be applied to type `impl Future<Output = std::option::Option<PropertyValue>>`
+E0369 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2102 | binary operation `!=` cannot be applied to type `impl Future<Output = std::option::Option<PropertyValue>>`
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2103 | `bool` is not a future
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2103 | `bool` is not a future
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2104 | `bool` is not a future
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2104 | `bool` is not a future
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2120 | mismatched types
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🗣️dsl/🦀️component.rs:2161 | mismatched types
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:169 | mismatched types
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../⚙️engine/🦀️component.rs:1174 | mismatched types
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🛂️manifest/🦀️component.rs:166 | the `?` operator can only be applied to values that implement `Try`
+E0308 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🛂️manifest/🦀️component.rs:166 | mismatched types
+E0277 | 🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/../../🛂️manifest/🦀️component.rs:166 | the `?` operator can only be applied to values that implement `Try`

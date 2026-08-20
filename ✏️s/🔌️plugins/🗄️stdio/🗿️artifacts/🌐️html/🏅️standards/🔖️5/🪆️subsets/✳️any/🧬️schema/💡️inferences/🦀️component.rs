@@ -25,7 +25,7 @@ pub struct HtmlInference {
 
 impl Inference<HtmlSnapshot> for HtmlInference {
     async fn infer(snapshot: &HtmlSnapshot) -> Self {
-        Self { outline: HtmlOutline::compute(snapshot) }
+        Self { outline: HtmlOutline::compute(snapshot).await }
     }
 }
 

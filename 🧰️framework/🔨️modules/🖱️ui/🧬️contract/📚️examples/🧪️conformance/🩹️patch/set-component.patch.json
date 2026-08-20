@@ -1,0 +1,16 @@
+{
+  "surface": "conformance.patch",
+  "baseRevision": 0,
+  "revision": 1,
+  "ops": [
+    {
+      "type": "setComponent",
+      "id": 1,
+      "component": {
+        "type": "button",
+        "icon": "star",
+        "label": "Now a button"
+      }
+    }
+  ]
+}

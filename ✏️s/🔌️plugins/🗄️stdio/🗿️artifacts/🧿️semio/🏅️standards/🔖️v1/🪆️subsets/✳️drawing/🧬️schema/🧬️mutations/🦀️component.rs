@@ -67,8 +67,8 @@ pub enum SemioDrawingMutation {
 /// (consumed by `../🦀️component.rs`'s `SemioDrawingBuilderConstruction::mutate`).
 pub async fn apply_semio_drawing_mutation(snapshot: &mut SemioDrawingSnapshot, mutation: &SemioDrawingMutation) -> protocol::MutationOutcome<SemioDrawingDiff> {
     use protocol::Mutation;
-    let outcome = <SemioDrawingMutation as Mutation<SemioDrawingSnapshot>>::diff(mutation, snapshot);
-    outcome.apply_to(snapshot)
+    let outcome = <SemioDrawingMutation as Mutation<SemioDrawingSnapshot>>::diff(mutation, snapshot).await;
+    outcome.apply_to(snapshot).await
 }
 //#endregion 🔖️Apply
 

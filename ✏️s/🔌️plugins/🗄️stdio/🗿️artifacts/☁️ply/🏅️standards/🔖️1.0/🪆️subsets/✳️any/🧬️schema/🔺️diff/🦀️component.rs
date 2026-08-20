@@ -153,7 +153,7 @@ async fn rows_between(properties: &[PlyProperty], a: &[PlyRow], b: &[PlyRow]) ->
         if a[i] == b[i] {
             continue;
         }
-        let d = row_between(properties, &a[i], &b[i]);
+        let d = row_between(properties, &a[i], &b[i]).await;
         if !d.fields.is_empty() {
             modified.push(PlyRowModified { index: i, diff: d });
         }
@@ -161,7 +161,7 @@ async fn rows_between(properties: &[PlyProperty], a: &[PlyRow], b: &[PlyRow]) ->
     let removed: Vec<usize> = (min_len..a.len()).collect();
     let added: Vec<PlyRowAdded> = (min_len..b.len()).map(|i| PlyRowAdded { index: i, row: b[i].clone() }).collect();
     let d = PlyRowsDiff { removed, modified, added };
-    if d.is_empty() {
+    if d.is_empty().await {
         None
     } else {
         Some(d)
@@ -214,7 +214,7 @@ async fn absorb_rows(d1: PlyRowsDiff, d2: PlyRowsDiff) -> PlyRowsDiff {
     };
     let needed_mid_len = d2.removed.iter().copied().chain(d2.modified.iter().map(|m| m.index)).max().map(|m| m + 1).unwrap_or(0);
     let base_len = row_base_len_hint(&d1.removed, d1.modified.iter().map(|m| m.index), d1_added_indices.iter().copied()).max((needed_mid_len + removed_count).saturating_sub(d1.added.len()));
-    let mid_slots = row_simulate_slots(base_len, &d1.removed, &d1_added_indices);
+    let mid_slots = row_simulate_slots(base_len, &d1.removed, &d1_added_indices).await;
 
     let mut final_removed: Vec<usize> = d1.removed.clone();
     let mut modified_map: BTreeMap<usize, PlyRowDiff> = d1.modified.into_iter().map(|m| (m.index, m.diff)).collect();
@@ -264,7 +264,7 @@ async fn absorb_rows(d1: PlyRowsDiff, d2: PlyRowsDiff) -> PlyRowsDiff {
         .collect();
     let d2_added_indices: Vec<usize> = d2.added.iter().map(|a| a.index).collect();
     let mid_len = d2.removed.iter().copied().chain(d2.modified.iter().map(|m| m.index)).chain(alive_mid_positions.iter().copied()).chain(d2_added_indices.iter().copied()).max().map(|m| m + 1).unwrap_or(0);
-    let after_slots = row_simulate_slots(mid_len, &d2.removed, &d2_added_indices);
+    let after_slots = row_simulate_slots(mid_len, &d2.removed, &d2_added_indices).await;
     let mut mid_to_after: std::collections::HashMap<usize, usize> = std::collections::HashMap::new();
     for (pos, slot) in after_slots.iter().enumerate() {
         if let RowSlot::Base(m) = slot {
@@ -349,7 +349,7 @@ async fn absorb_element_diff(base: &mut PlyElementDiff, other: PlyElementDiff) {
         (None, None) => None,
         (Some(d1), None) => Some(d1),
         (None, Some(d2)) => Some(d2),
-        (Some(d1), Some(d2)) => Some(absorb_rows(d1, d2)),
+        (Some(d1), Some(d2)) => Some(absorb_rows(d1, d2).await),
     };
 }
 
@@ -364,9 +364,9 @@ async fn element_between(a: &PlyElement, b: &PlyElement) -> PlyElementDiff {
         let removed: Vec<usize> = (0..a.rows.len()).collect();
         let added: Vec<PlyRowAdded> = b.rows.iter().enumerate().map(|(i, r)| PlyRowAdded { index: i, row: r.clone() }).collect();
         let rd = PlyRowsDiff { removed, modified: vec![], added };
-        return PlyElementDiff { properties: Some(b.properties.clone()), rows: if rd.is_empty() { None } else { Some(rd) } };
+        return PlyElementDiff { properties: Some(b.properties.clone()), rows: if rd.is_empty().await { None } else { Some(rd) } };
     }
-    PlyElementDiff { properties: None, rows: rows_between(&a.properties, &a.rows, &b.rows) }
+    PlyElementDiff { properties: None, rows: rows_between(&a.properties, &a.rows, &b.rows).await }
 }
 //#endregion 🔖️ElementDiff
 
@@ -464,7 +464,7 @@ async fn absorb_elements(d1: Option<PlyElementsDiff>, d2: Option<PlyElementsDiff
 
     merged_added.extend(d2.added);
     let merged = PlyElementsDiff { removed: merged_removed, modified: merged_modified, added: merged_added };
-    if merged.is_empty() {
+    if merged.is_empty().await {
         None
     } else {
         Some(merged)
@@ -490,7 +490,7 @@ pub struct PlyDiff {
 }
 
 async fn target_error(code: &'static str, message: &'static str, target: Vec<String>) -> MutationApplyError {
-    MutationApplyError::new(code, message).at(target)
+    MutationApplyError::new(code, message).await.at(target).await
 }
 
 async fn validate_rows_diff(properties: &[PlyProperty], rows: &[PlyRow], diff: &PlyRowsDiff, prefix: &[String]) -> MutationApplyResult<()> {
@@ -499,7 +499,7 @@ async fn validate_rows_diff(properties: &[PlyProperty], rows: &[PlyRow], diff: &
         if property_positions.insert(property.name(), index).is_some() {
             let mut target = prefix.to_vec();
             target.extend(["properties".to_string(), property.name().to_string()]);
-            return Err(target_error("duplicate-base-target", "property names must be unique", target));
+            return Err(target_error("duplicate-base-target", "property names must be unique", target).await);
         }
     }
     let mut removed = BTreeSet::new();
@@ -507,7 +507,7 @@ async fn validate_rows_diff(properties: &[PlyProperty], rows: &[PlyRow], diff: &
         let mut target = prefix.to_vec();
         target.extend(["rows".to_string(), index.to_string()]);
         if index >= rows.len() || !removed.insert(index) {
-            return Err(target_error("invalid-remove-index", "row removal target must exist exactly once", target));
+            return Err(target_error("invalid-remove-index", "row removal target must exist exactly once", target).await);
         }
     }
     let mut modified = BTreeSet::new();
@@ -515,7 +515,7 @@ async fn validate_rows_diff(properties: &[PlyProperty], rows: &[PlyRow], diff: &
         let mut row_target = prefix.to_vec();
         row_target.extend(["rows".to_string(), entry.index.to_string()]);
         if entry.index >= rows.len() || removed.contains(&entry.index) || !modified.insert(entry.index) {
-            return Err(target_error("invalid-modify-index", "row modification target must exist exactly once and remain present", row_target));
+            return Err(target_error("invalid-modify-index", "row modification target must exist exactly once and remain present", row_target).await);
         }
         let mut fields = BTreeSet::new();
         for field in &entry.diff.fields {
@@ -523,7 +523,7 @@ async fn validate_rows_diff(properties: &[PlyProperty], rows: &[PlyRow], diff: &
             target.extend(["rows".to_string(), entry.index.to_string(), "fields".to_string(), field.name.clone()]);
             let position = property_positions.get(field.name.as_str()).copied();
             if !fields.insert(field.name.as_str()) || position.is_none() || position.map_or(false, |value| value >= rows[entry.index].values.len()) {
-                return Err(target_error("invalid-field-target", "row field target must be unique and resolve to an existing cell", target));
+                return Err(target_error("invalid-field-target", "row field target must be unique and resolve to an existing cell", target).await);
             }
         }
     }
@@ -535,7 +535,7 @@ async fn validate_rows_diff(properties: &[PlyProperty], rows: &[PlyRow], diff: &
         let mut target = prefix.to_vec();
         target.extend(["rows".to_string(), index.to_string()]);
         if index > length || previous == Some(index) {
-            return Err(target_error("invalid-add-index", "row addition target must be unique and within the evolving sequence", target));
+            return Err(target_error("invalid-add-index", "row addition target must be unique and within the evolving sequence", target).await);
         }
         previous = Some(index);
         length += 1;
@@ -547,24 +547,24 @@ async fn validate_elements_diff(base: &[PlyElement], diff: &PlyElementsDiff) -> 
     let mut base_by_name = BTreeMap::new();
     for element in base {
         if base_by_name.insert(element.name.as_str(), element).is_some() {
-            return Err(target_error("duplicate-base-target", "base element names must be unique", vec!["elements".to_string(), element.name.clone()]));
+            return Err(target_error("duplicate-base-target", "base element names must be unique", vec!["elements".to_string(), element.name.clone()]).await);
         }
     }
     let mut removed = BTreeSet::new();
     for name in &diff.removed {
         if !base_by_name.contains_key(name.as_str()) || !removed.insert(name.as_str()) {
-            return Err(target_error("invalid-remove-target", "element removal target must exist exactly once", vec!["elements".to_string(), name.clone()]));
+            return Err(target_error("invalid-remove-target", "element removal target must exist exactly once", vec!["elements".to_string(), name.clone()]).await);
         }
     }
     let mut modified = BTreeSet::new();
     for entry in &diff.modified {
         let base_element = base_by_name.get(entry.name.as_str()).copied();
         if base_element.is_none() || removed.contains(entry.name.as_str()) || !modified.insert(entry.name.as_str()) {
-            return Err(target_error("invalid-modify-target", "element modification target must exist exactly once and remain present", vec!["elements".to_string(), entry.name.clone()]));
+            return Err(target_error("invalid-modify-target", "element modification target must exist exactly once and remain present", vec!["elements".to_string(), entry.name.clone()]).await);
         }
         if let (Some(rows), Some(element)) = (&entry.diff.rows, base_element) {
             let properties = entry.diff.properties.as_deref().unwrap_or(&element.properties);
-            validate_rows_diff(properties, &element.rows, rows, &["elements".to_string(), entry.name.clone()])?;
+            validate_rows_diff(properties, &element.rows, rows, &["elements".to_string(), entry.name.clone()]).await?;
         }
     }
     let mut length = base.len() - removed.len();
@@ -574,7 +574,7 @@ async fn validate_elements_diff(base: &[PlyElement], diff: &PlyElementsDiff) -> 
     let mut previous = None;
     for entry in additions {
         if base_by_name.contains_key(entry.element.name.as_str()) || !added_names.insert(entry.element.name.as_str()) || entry.index > length || previous == Some(entry.index) {
-            return Err(target_error("invalid-add-target", "element name and position must be unique and valid", vec!["elements".to_string(), entry.element.name.clone()]));
+            return Err(target_error("invalid-add-target", "element name and position must be unique and valid", vec!["elements".to_string(), entry.element.name.clone()]).await);
         }
         previous = Some(entry.index);
         length += 1;
@@ -612,9 +612,9 @@ async fn apply_ply_diff_unchecked(diff: &PlyDiff, base: &PlySnapshot) -> PlySnap
 impl MutationDiff<PlySnapshot> for PlyDiff {
     async fn apply(&self, base: &PlySnapshot) -> MutationApplyResult<PlySnapshot> {
         if let Some(diff) = &self.elements {
-            validate_elements_diff(&base.elements, diff)?;
+            validate_elements_diff(&base.elements, diff).await?;
         }
-        Ok(apply_ply_diff_unchecked(self, base))
+        Ok(apply_ply_diff_unchecked(self, base).await)
     }
 
     /// ➕️ Structural, total, base-free sequential-coalesce (`## Absorb` contract). Scalars: LWW.
@@ -627,7 +627,7 @@ impl MutationDiff<PlySnapshot> for PlyDiff {
         if other.comments.is_some() {
             self.comments = other.comments;
         }
-        self.elements = absorb_elements(self.elements.take(), other.elements);
+        self.elements = absorb_elements(self.elements.take(), other.elements).await;
     }
 }
 
@@ -635,7 +635,7 @@ impl DiffAlgebra<PlySnapshot> for PlyDiff {
     /// 🔁️ Diff-level undo, derived generically (correct by construction) from `between`.
     async fn inverse(&self, base: &PlySnapshot) -> Self {
         let mutated = apply_ply_diff_unchecked(self, base);
-        Self::between(&mutated, base)
+        Self::between(&mutated, base).await
     }
 
     /// 🧭️ State delta (compose `GetXDiff`): name-keyed matching over `elements`, each modified
@@ -654,8 +654,8 @@ impl DiffAlgebra<PlySnapshot> for PlyDiff {
             let mut modified = Vec::new();
             for be in &base.elements {
                 if let Some(oe) = other.elements.iter().find(|o| o.name == be.name) {
-                    let d = element_between(be, oe);
-                    if !d.is_empty() {
+                    let d = element_between(be, oe).await;
+                    if !d.is_empty().await {
                         modified.push(PlyElementModified { name: be.name.clone(), diff: d });
                     }
                 }
@@ -664,7 +664,7 @@ impl DiffAlgebra<PlySnapshot> for PlyDiff {
             let added: Vec<PlyElementAdded> = other.elements.iter().enumerate().filter(|(_, e)| !base_names.contains(e.name.as_str())).map(|(index, e)| PlyElementAdded { index, element: e.clone() }).collect();
 
             let d = PlyElementsDiff { removed, modified, added };
-            if d.is_empty() {
+            if d.is_empty().await {
                 None
             } else {
                 Some(d)
@@ -683,7 +683,7 @@ impl DiffAlgebra<PlySnapshot> for PlyDiff {
 /// 🧩 `SetSnapshot`'s diff is the sparse field-by-field `between(base, next)` — no full-replace
 /// slot exists on `PlyDiff` to short-circuit into.
 pub async fn diff_set_snapshot(base: &PlySnapshot, next: &PlySnapshot) -> PlyDiff {
-    PlyDiff::between(base, next)
+    PlyDiff::between(base, next).await
 }
 
 pub async fn diff_set_format(format: PlyFormat) -> PlyDiff {
@@ -707,11 +707,11 @@ async fn diff_element_field(name: &str, diff: PlyElementDiff) -> PlyDiff {
 }
 
 pub async fn diff_insert_row(element_name: &str, index: usize, row: PlyRow) -> PlyDiff {
-    diff_element_field(element_name, PlyElementDiff { properties: None, rows: Some(PlyRowsDiff { removed: vec![], modified: vec![], added: vec![PlyRowAdded { index, row }] }) })
+    diff_element_field(element_name, PlyElementDiff { properties: None, rows: Some(PlyRowsDiff { removed: vec![], modified: vec![], added: vec![PlyRowAdded { index, row }] }) }).await
 }
 
 pub async fn diff_remove_row(element_name: &str, index: usize) -> PlyDiff {
-    diff_element_field(element_name, PlyElementDiff { properties: None, rows: Some(PlyRowsDiff { removed: vec![index], modified: vec![], added: vec![] }) })
+    diff_element_field(element_name, PlyElementDiff { properties: None, rows: Some(PlyRowsDiff { removed: vec![index], modified: vec![], added: vec![] }) }).await
 }
 
 pub async fn diff_set_row_property(element_name: &str, row_index: usize, property_name: &str, value: PlyValue) -> PlyDiff {
@@ -721,7 +721,7 @@ pub async fn diff_set_row_property(element_name: &str, row_index: usize, propert
             properties: None,
             rows: Some(PlyRowsDiff { removed: vec![], modified: vec![PlyRowModified { index: row_index, diff: PlyRowDiff { fields: vec![PlyRowFieldChange { name: property_name.to_string(), value }] } }], added: vec![] }),
         },
-    )
+    ).await
 }
 //#endregion 🔖️MutationDiffBuilders
 
@@ -790,10 +790,10 @@ pub(crate) async fn strip_brackets(s: &str) -> Result<&str, String> {
 
 //#region 🔖️ValueCodecs
 pub(crate) async fn enc_str(s: &str) -> String {
-    hex_encode(s.as_bytes())
+    hex_encode(s.as_bytes()).await
 }
 pub(crate) async fn dec_str(s: &str) -> Result<String, String> {
-    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
+    String::from_utf8(hex_decode(s).await?).map_err(|e| e.to_string())
 }
 
 pub(crate) async fn enc_format(f: PlyFormat) -> char {
@@ -854,16 +854,16 @@ pub(crate) async fn dec_property(s: &str) -> Result<PlyProperty, String> {
         return Err(format!("property: too short {s:?}"));
     }
     let (tag, rest) = s.split_at(1);
-    let inner = strip_brackets(rest)?;
-    let parts = split_top_level(inner, ',');
+    let inner = strip_brackets(rest).await?;
+    let parts = split_top_level(inner, ',').await;
     match tag {
         "S" => {
             let [name, kind] = parts.as_slice() else { return Err(format!("scalar property: expected 2 fields, got {}", parts.len())) };
-            Ok(PlyProperty::Scalar { name: dec_str(name)?, kind: dec_scalar_type(kind)? })
+            Ok(PlyProperty::Scalar { name: dec_str(name).await?, kind: dec_scalar_type(kind).await? })
         }
         "L" => {
             let [name, count_kind, value_kind] = parts.as_slice() else { return Err(format!("list property: expected 3 fields, got {}", parts.len())) };
-            Ok(PlyProperty::List { name: dec_str(name)?, count_kind: dec_scalar_type(count_kind)?, value_kind: dec_scalar_type(value_kind)? })
+            Ok(PlyProperty::List { name: dec_str(name).await?, count_kind: dec_scalar_type(count_kind).await?, value_kind: dec_scalar_type(value_kind).await? })
         }
         other => Err(format!("property: unknown tag {other:?}")),
     }
@@ -890,19 +890,19 @@ pub(crate) async fn dec_value(s: &str) -> Result<PlyValue, String> {
         return Err(format!("value: too short {s:?}"));
     }
     let (tag, rest) = s.split_at(1);
-    let inner = strip_brackets(rest)?;
+    let inner = strip_brackets(rest).await?;
     async fn parse_i<T: std::str::FromStr<Err = std::num::ParseIntError>>(s: &str) -> Result<T, String> {
         s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
     }
     let parse_f32 = |s: &str| s.parse::<f32>().map_err(|e: std::num::ParseFloatError| e.to_string());
     let parse_f64 = |s: &str| s.parse::<f64>().map_err(|e: std::num::ParseFloatError| e.to_string());
     match tag {
-        "c" => Ok(PlyValue::Char(parse_i(inner)?)),
-        "C" => Ok(PlyValue::UChar(parse_i(inner)?)),
-        "s" => Ok(PlyValue::Short(parse_i(inner)?)),
-        "w" => Ok(PlyValue::UShort(parse_i(inner)?)),
-        "i" => Ok(PlyValue::Int(parse_i(inner)?)),
-        "u" => Ok(PlyValue::UInt(parse_i(inner)?)),
+        "c" => Ok(PlyValue::Char(parse_i(inner).await?)),
+        "C" => Ok(PlyValue::UChar(parse_i(inner).await?)),
+        "s" => Ok(PlyValue::Short(parse_i(inner).await?)),
+        "w" => Ok(PlyValue::UShort(parse_i(inner).await?)),
+        "i" => Ok(PlyValue::Int(parse_i(inner).await?)),
+        "u" => Ok(PlyValue::UInt(parse_i(inner).await?)),
         "f" => Ok(PlyValue::Float(parse_f32(inner)?)),
         "d" => Ok(PlyValue::Double(parse_f64(inner)?)),
         "L" => Ok(PlyValue::List(split_top_level(inner, ',').into_iter().filter(|s| !s.is_empty()).map(dec_value).collect::<Result<Vec<_>, String>>()?)),
@@ -914,7 +914,7 @@ pub(crate) async fn enc_row(r: &PlyRow) -> String {
     format!("[{}]", r.values.iter().map(enc_value).collect::<Vec<_>>().join(","))
 }
 pub(crate) async fn dec_row(s: &str) -> Result<PlyRow, String> {
-    let inner = strip_brackets(s)?;
+    let inner = strip_brackets(s).await?;
     let values = split_top_level(inner, ',').into_iter().filter(|s| !s.is_empty()).map(dec_value).collect::<Result<Vec<_>, String>>()?;
     Ok(PlyRow { values })
 }
@@ -923,14 +923,14 @@ pub(crate) async fn enc_element(e: &PlyElement) -> String {
     format!("[{},{},[{}],[{}]]", enc_str(&e.name), e.count, e.properties.iter().map(enc_property).collect::<Vec<_>>().join(","), e.rows.iter().map(enc_row).collect::<Vec<_>>().join(","),)
 }
 pub(crate) async fn dec_element(s: &str) -> Result<PlyElement, String> {
-    let inner = strip_brackets(s)?;
-    let parts = split_top_level(inner, ',');
+    let inner = strip_brackets(s).await?;
+    let parts = split_top_level(inner, ',').await;
     let [name, count, properties, rows] = parts.as_slice() else { return Err(format!("element: expected 4 fields, got {}", parts.len())) };
     Ok(PlyElement {
-        name: dec_str(name)?,
-        count: parse_usize(count)?,
-        properties: split_top_level(strip_brackets(properties)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_property).collect::<Result<Vec<_>, String>>()?,
-        rows: split_top_level(strip_brackets(rows)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_row).collect::<Result<Vec<_>, String>>()?,
+        name: dec_str(name).await?,
+        count: parse_usize(count).await?,
+        properties: split_top_level(strip_brackets(properties).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_property).collect::<Result<Vec<_>, String>>()?,
+        rows: split_top_level(strip_brackets(rows).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_row).collect::<Result<Vec<_>, String>>()?,
     })
 }
 //#endregion 🔖️ValueCodecs
@@ -940,15 +940,15 @@ async fn enc_row_field_change(c: &PlyRowFieldChange) -> String {
     format!("[{},{}]", enc_str(&c.name), enc_value(&c.value))
 }
 async fn dec_row_field_change(s: &str) -> Result<PlyRowFieldChange, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [name, value] = parts.as_slice() else { return Err(format!("row field change: expected 2 fields, got {}", parts.len())) };
-    Ok(PlyRowFieldChange { name: dec_str(name)?, value: dec_value(value)? })
+    Ok(PlyRowFieldChange { name: dec_str(name).await?, value: dec_value(value).await? })
 }
 async fn enc_row_diff(d: &PlyRowDiff) -> String {
     format!("[{}]", d.fields.iter().map(enc_row_field_change).collect::<Vec<_>>().join(","))
 }
 async fn dec_row_diff(s: &str) -> Result<PlyRowDiff, String> {
-    let inner = strip_brackets(s)?;
+    let inner = strip_brackets(s).await?;
     let fields = split_top_level(inner, ',').into_iter().filter(|s| !s.is_empty()).map(dec_row_field_change).collect::<Result<Vec<_>, String>>()?;
     Ok(PlyRowDiff { fields })
 }
@@ -959,9 +959,9 @@ async fn dec_row_diff(s: &str) -> Result<PlyRowDiff, String> {
 /// `removed` and `modified`).
 async fn dec_index_triple_body(body: &str) -> Result<(Vec<usize>, Vec<(usize, String)>, Vec<(usize, String)>), String> {
     let inner = body.strip_prefix('{').and_then(|s| s.strip_suffix('}')).ok_or_else(|| format!("triple: expected {{...}}, got {body:?}"))?;
-    let three = split_top_level(inner, ';');
+    let three = split_top_level(inner, ';').await;
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("triple: expected 3 sections, got {}", three.len())) };
-    let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
+    let removed = split_top_level(strip_brackets(removed_s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
     let parse_entries = |s: &str| -> Result<Vec<(usize, String)>, String> {
         split_top_level(strip_brackets(s)?, ',')
             .into_iter()
@@ -982,7 +982,7 @@ async fn enc_rows_diff(d: &PlyRowsDiff) -> String {
     format!("{{[{removed}];[{modified}];[{added}]}}")
 }
 async fn dec_rows_diff(body: &str) -> Result<PlyRowsDiff, String> {
-    let (removed, modified, added) = dec_index_triple_body(body)?;
+    let (removed, modified, added) = dec_index_triple_body(body).await?;
     Ok(PlyRowsDiff {
         removed,
         modified: modified.into_iter().map(|(index, enc)| Ok(PlyRowModified { index, diff: dec_row_diff(&enc)? })).collect::<Result<Vec<_>, String>>()?,
@@ -1003,7 +1003,7 @@ async fn enc_element_diff(d: &PlyElementDiff) -> String {
     format!("[{}]", parts.join(","))
 }
 async fn dec_element_diff(s: &str) -> Result<PlyElementDiff, String> {
-    let inner = strip_brackets(s)?;
+    let inner = strip_brackets(s).await?;
     let mut d = PlyElementDiff::default();
     for entry in split_top_level(inner, ',') {
         if entry.is_empty() {
@@ -1012,11 +1012,11 @@ async fn dec_element_diff(s: &str) -> Result<PlyElementDiff, String> {
         let (tag, val) = entry.split_once(':').ok_or_else(|| format!("element diff: bad entry {entry:?}"))?;
         match tag {
             "P" => {
-                let props_inner = strip_brackets(val)?;
+                let props_inner = strip_brackets(val).await?;
                 d.properties = Some(split_top_level(props_inner, ',').into_iter().filter(|s| !s.is_empty()).map(dec_property).collect::<Result<Vec<_>, String>>()?);
             }
             "R" => {
-                d.rows = Some(dec_rows_diff(val)?);
+                d.rows = Some(dec_rows_diff(val).await?);
             }
             other => return Err(format!("element diff: unknown tag {other:?}")),
         }
@@ -1036,10 +1036,10 @@ async fn enc_elements_diff(d: &PlyElementsDiff) -> String {
 }
 async fn dec_elements_diff(body: &str) -> Result<PlyElementsDiff, String> {
     let inner = body.strip_prefix('{').and_then(|s| s.strip_suffix('}')).ok_or_else(|| format!("elements triple: expected {{...}}, got {body:?}"))?;
-    let three = split_top_level(inner, ';');
+    let three = split_top_level(inner, ';').await;
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("elements triple: expected 3 sections, got {}", three.len())) };
-    let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_str).collect::<Result<Vec<_>, String>>()?;
-    let modified = split_top_level(strip_brackets(modified_s)?, ',')
+    let removed = split_top_level(strip_brackets(removed_s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_str).collect::<Result<Vec<_>, String>>()?;
+    let modified = split_top_level(strip_brackets(modified_s).await?, ',')
         .into_iter()
         .filter(|s| !s.is_empty())
         .map(|entry| {
@@ -1047,7 +1047,7 @@ async fn dec_elements_diff(body: &str) -> Result<PlyElementsDiff, String> {
             Ok(PlyElementModified { name: dec_str(name_hex)?, diff: dec_element_diff(rest)? })
         })
         .collect::<Result<Vec<_>, String>>()?;
-    let added = split_top_level(strip_brackets(added_s)?, ',')
+    let added = split_top_level(strip_brackets(added_s).await?, ',')
         .into_iter()
         .filter(|s| !s.is_empty())
         .map(|entry| {
@@ -1075,14 +1075,14 @@ pub(crate) async fn write_bin_blob(w: &mut dsl::ByteWriter, bytes: &[u8]) {
     w.write_bytes(bytes);
 }
 pub(crate) async fn read_bin_blob(r: &mut dsl::ByteReader<'_>) -> Result<Vec<u8>, dsl::PackError> {
-    let len = r.read_varint_u64()? as usize;
-    Ok(r.read_bytes(len)?.to_vec())
+    let len = r.read_varint_u64().await? as usize;
+    Ok(r.read_bytes(len).await?.to_vec())
 }
 pub(crate) async fn write_bin_str(w: &mut dsl::ByteWriter, s: &str) {
     write_bin_blob(w, s.as_bytes());
 }
 pub(crate) async fn read_bin_str(r: &mut dsl::ByteReader<'_>) -> Result<String, dsl::PackError> {
-    let bytes = read_bin_blob(r)?;
+    let bytes = read_bin_blob(r).await?;
     String::from_utf8(bytes).map_err(|e| dsl::PackError::Malformed { what: "ply binary utf8 string", offset: 0, detail: e.to_string() })
 }
 pub(crate) async fn write_bin_vec<T>(w: &mut dsl::ByteWriter, items: &[T], write_item: impl Fn(&mut dsl::ByteWriter, &T)) {
@@ -1092,7 +1092,7 @@ pub(crate) async fn write_bin_vec<T>(w: &mut dsl::ByteWriter, items: &[T], write
     }
 }
 pub(crate) async fn read_bin_vec<T>(r: &mut dsl::ByteReader<'_>, mut read_item: impl FnMut(&mut dsl::ByteReader<'_>) -> Result<T, dsl::PackError>) -> Result<Vec<T>, dsl::PackError> {
-    let n = r.read_varint_u64()? as usize;
+    let n = r.read_varint_u64().await? as usize;
     let mut out = Vec::with_capacity(n);
     for _ in 0..n {
         out.push(read_item(r)?);
@@ -1102,7 +1102,7 @@ pub(crate) async fn read_bin_vec<T>(r: &mut dsl::ByteReader<'_>, mut read_item: 
 /// 🧩 2-way presence flag (`0`=None, `1`=Some) — shared by every plain `Option<T>` field.
 pub(crate) async fn write_bin_option<T>(w: &mut dsl::ByteWriter, v: &Option<T>, write_value: impl FnOnce(&mut dsl::ByteWriter, &T)) {
     match v {
-        None => w.write_u8(0),
+        None => w.write_u8(0).await,
         Some(val) => {
             w.write_u8(1);
             write_value(w, val);
@@ -1110,7 +1110,7 @@ pub(crate) async fn write_bin_option<T>(w: &mut dsl::ByteWriter, v: &Option<T>, 
     }
 }
 pub(crate) async fn read_bin_option<T>(r: &mut dsl::ByteReader<'_>, read_value: impl FnOnce(&mut dsl::ByteReader<'_>) -> Result<T, dsl::PackError>) -> Result<Option<T>, dsl::PackError> {
-    match r.read_u8()? {
+    match r.read_u8().await? {
         0 => Ok(None),
         1 => Ok(Some(read_value(r)?)),
         other => Err(dsl::PackError::Malformed { what: "ply binary option tag", offset: 0, detail: format!("unknown tag {other}") }),
@@ -1124,7 +1124,7 @@ pub(crate) async fn write_bin_format(w: &mut dsl::ByteWriter, f: PlyFormat) {
     });
 }
 pub(crate) async fn read_bin_format(r: &mut dsl::ByteReader<'_>) -> Result<PlyFormat, dsl::PackError> {
-    match r.read_u8()? {
+    match r.read_u8().await? {
         0 => Ok(PlyFormat::Ascii),
         1 => Ok(PlyFormat::BinaryLittleEndian),
         2 => Ok(PlyFormat::BinaryBigEndian),
@@ -1144,7 +1144,7 @@ pub(crate) async fn write_bin_scalar_type(w: &mut dsl::ByteWriter, k: PlyScalarT
     });
 }
 pub(crate) async fn read_bin_scalar_type(r: &mut dsl::ByteReader<'_>) -> Result<PlyScalarType, dsl::PackError> {
-    match r.read_u8()? {
+    match r.read_u8().await? {
         0 => Ok(PlyScalarType::Char),
         1 => Ok(PlyScalarType::UChar),
         2 => Ok(PlyScalarType::Short),
@@ -1202,16 +1202,16 @@ pub(crate) async fn write_bin_value(w: &mut dsl::ByteWriter, v: &PlyValue) {
 }
 pub(crate) async fn read_bin_value(r: &mut dsl::ByteReader<'_>) -> Result<PlyValue, dsl::PackError> {
     let malformed = |offset: usize, detail: String| dsl::PackError::Malformed { what: "ply binary value", offset: offset as u64, detail };
-    match r.read_u8()? {
-        0 => Ok(PlyValue::Char(i8::from_le_bytes(r.read_bytes(1)?.try_into().map_err(|_| malformed(r.position(), "expected 1 byte".into()))?))),
-        1 => Ok(PlyValue::UChar(r.read_u8()?)),
-        2 => Ok(PlyValue::Short(i16::from_le_bytes(r.read_bytes(2)?.try_into().map_err(|_| malformed(r.position(), "expected 2 bytes".into()))?))),
-        3 => Ok(PlyValue::UShort(r.read_u16_le()?)),
-        4 => Ok(PlyValue::Int(i32::from_le_bytes(r.read_bytes(4)?.try_into().map_err(|_| malformed(r.position(), "expected 4 bytes".into()))?))),
-        5 => Ok(PlyValue::UInt(r.read_u32_le()?)),
-        6 => Ok(PlyValue::Float(f32::from_le_bytes(r.read_bytes(4)?.try_into().map_err(|_| malformed(r.position(), "expected 4 bytes".into()))?))),
-        7 => Ok(PlyValue::Double(r.read_f64_le()?)),
-        8 => Ok(PlyValue::List(read_bin_vec(r, read_bin_value)?)),
+    match r.read_u8().await? {
+        0 => Ok(PlyValue::Char(i8::from_le_bytes(r.read_bytes(1).await?.try_into().map_err(|_| malformed(r.position(), "expected 1 byte".into()))?))),
+        1 => Ok(PlyValue::UChar(r.read_u8().await?)),
+        2 => Ok(PlyValue::Short(i16::from_le_bytes(r.read_bytes(2).await?.try_into().map_err(|_| malformed(r.position(), "expected 2 bytes".into()))?))),
+        3 => Ok(PlyValue::UShort(r.read_u16_le().await?)),
+        4 => Ok(PlyValue::Int(i32::from_le_bytes(r.read_bytes(4).await?.try_into().map_err(|_| malformed(r.position(), "expected 4 bytes".into()))?))),
+        5 => Ok(PlyValue::UInt(r.read_u32_le().await?)),
+        6 => Ok(PlyValue::Float(f32::from_le_bytes(r.read_bytes(4).await?.try_into().map_err(|_| malformed(r.position(), "expected 4 bytes".into()))?))),
+        7 => Ok(PlyValue::Double(r.read_f64_le().await?)),
+        8 => Ok(PlyValue::List(read_bin_vec(r, read_bin_value).await?)),
         other => Err(dsl::PackError::Malformed { what: "ply binary value tag", offset: 0, detail: format!("unknown tag {other}") }),
     }
 }
@@ -1232,9 +1232,9 @@ pub(crate) async fn write_bin_property(w: &mut dsl::ByteWriter, p: &PlyProperty)
     }
 }
 pub(crate) async fn read_bin_property(r: &mut dsl::ByteReader<'_>) -> Result<PlyProperty, dsl::PackError> {
-    match r.read_u8()? {
-        0 => Ok(PlyProperty::Scalar { name: read_bin_str(r)?, kind: read_bin_scalar_type(r)? }),
-        1 => Ok(PlyProperty::List { name: read_bin_str(r)?, count_kind: read_bin_scalar_type(r)?, value_kind: read_bin_scalar_type(r)? }),
+    match r.read_u8().await? {
+        0 => Ok(PlyProperty::Scalar { name: read_bin_str(r).await?, kind: read_bin_scalar_type(r).await? }),
+        1 => Ok(PlyProperty::List { name: read_bin_str(r).await?, count_kind: read_bin_scalar_type(r).await?, value_kind: read_bin_scalar_type(r).await? }),
         other => Err(dsl::PackError::Malformed { what: "ply binary property tag", offset: 0, detail: format!("unknown tag {other}") }),
     }
 }
@@ -1242,7 +1242,7 @@ pub(crate) async fn write_bin_row(w: &mut dsl::ByteWriter, row: &PlyRow) {
     write_bin_vec(w, &row.values, write_bin_value);
 }
 pub(crate) async fn read_bin_row(r: &mut dsl::ByteReader<'_>) -> Result<PlyRow, dsl::PackError> {
-    Ok(PlyRow { values: read_bin_vec(r, read_bin_value)? })
+    Ok(PlyRow { values: read_bin_vec(r, read_bin_value).await? })
 }
 pub(crate) async fn write_bin_element(w: &mut dsl::ByteWriter, e: &PlyElement) {
     write_bin_str(w, &e.name);
@@ -1251,10 +1251,10 @@ pub(crate) async fn write_bin_element(w: &mut dsl::ByteWriter, e: &PlyElement) {
     write_bin_vec(w, &e.rows, write_bin_row);
 }
 pub(crate) async fn read_bin_element(r: &mut dsl::ByteReader<'_>) -> Result<PlyElement, dsl::PackError> {
-    let name = read_bin_str(r)?;
-    let count = r.read_varint_u64()? as usize;
-    let properties = read_bin_vec(r, read_bin_property)?;
-    let rows = read_bin_vec(r, read_bin_row)?;
+    let name = read_bin_str(r).await?;
+    let count = r.read_varint_u64().await? as usize;
+    let properties = read_bin_vec(r, read_bin_property).await?;
+    let rows = read_bin_vec(r, read_bin_row).await?;
     Ok(PlyElement { name, count, properties, rows })
 }
 /// 🔣️ `PlySnapshot` real binary — needed by `PlyMutation::SetSnapshot`'s own real binary op frame
@@ -1267,10 +1267,10 @@ pub(crate) async fn write_bin_snapshot(w: &mut dsl::ByteWriter, s: &PlySnapshot)
     write_bin_vec(w, &s.elements, write_bin_element);
 }
 pub(crate) async fn read_bin_snapshot(r: &mut dsl::ByteReader<'_>) -> Result<PlySnapshot, dsl::PackError> {
-    let schema = read_bin_str(r)?;
-    let format = read_bin_format(r)?;
-    let comments = read_bin_vec(r, read_bin_str)?;
-    let elements = read_bin_vec(r, read_bin_element)?;
+    let schema = read_bin_str(r).await?;
+    let format = read_bin_format(r).await?;
+    let comments = read_bin_vec(r, read_bin_str).await?;
+    let elements = read_bin_vec(r, read_bin_element).await?;
     Ok(PlySnapshot { schema, format, comments, elements })
 }
 async fn diff_pack_err(e: dsl::PackError) -> protocol::ProtocolError {
@@ -1291,13 +1291,13 @@ async fn write_bin_row_field_change(w: &mut dsl::ByteWriter, c: &PlyRowFieldChan
     write_bin_value(w, &c.value);
 }
 async fn read_bin_row_field_change(r: &mut dsl::ByteReader<'_>) -> Result<PlyRowFieldChange, dsl::PackError> {
-    Ok(PlyRowFieldChange { name: read_bin_str(r)?, value: read_bin_value(r)? })
+    Ok(PlyRowFieldChange { name: read_bin_str(r).await?, value: read_bin_value(r).await? })
 }
 async fn write_bin_row_diff(w: &mut dsl::ByteWriter, d: &PlyRowDiff) {
     write_bin_vec(w, &d.fields, write_bin_row_field_change);
 }
 async fn read_bin_row_diff(r: &mut dsl::ByteReader<'_>) -> Result<PlyRowDiff, dsl::PackError> {
-    Ok(PlyRowDiff { fields: read_bin_vec(r, read_bin_row_field_change)? })
+    Ok(PlyRowDiff { fields: read_bin_vec(r, read_bin_row_field_change).await? })
 }
 async fn write_bin_rows_diff(w: &mut dsl::ByteWriter, d: &PlyRowsDiff) {
     write_bin_vec(w, &d.removed, |w, v: &usize| w.write_varint_u64(*v as u64));
@@ -1311,17 +1311,17 @@ async fn write_bin_rows_diff(w: &mut dsl::ByteWriter, d: &PlyRowsDiff) {
     });
 }
 async fn read_bin_rows_diff(r: &mut dsl::ByteReader<'_>) -> Result<PlyRowsDiff, dsl::PackError> {
-    let removed = read_bin_vec(r, |r| Ok(r.read_varint_u64()? as usize))?;
+    let removed = read_bin_vec(r, |r| Ok(r.read_varint_u64()? as usize)).await?;
     let modified = read_bin_vec(r, |r| {
         let index = r.read_varint_u64()? as usize;
         let diff = read_bin_row_diff(r)?;
         Ok(PlyRowModified { index, diff })
-    })?;
+    }).await?;
     let added = read_bin_vec(r, |r| {
         let index = r.read_varint_u64()? as usize;
         let row = read_bin_row(r)?;
         Ok(PlyRowAdded { index, row })
-    })?;
+    }).await?;
     Ok(PlyRowsDiff { removed, modified, added })
 }
 async fn write_bin_element_diff(w: &mut dsl::ByteWriter, d: &PlyElementDiff) {
@@ -1329,12 +1329,12 @@ async fn write_bin_element_diff(w: &mut dsl::ByteWriter, d: &PlyElementDiff) {
     write_bin_option(w, &d.rows, write_bin_rows_diff);
 }
 async fn read_bin_element_diff(r: &mut dsl::ByteReader<'_>) -> Result<PlyElementDiff, dsl::PackError> {
-    let properties = read_bin_option(r, |r| read_bin_vec(r, read_bin_property))?;
-    let rows = read_bin_option(r, read_bin_rows_diff)?;
+    let properties = read_bin_option(r, |r| read_bin_vec(r, read_bin_property)).await?;
+    let rows = read_bin_option(r, read_bin_rows_diff).await?;
     Ok(PlyElementDiff { properties, rows })
 }
 async fn enc_elements_diff_bin(d: &PlyElementsDiff) -> Vec<u8> {
-    let mut w = dsl::ByteWriter::new();
+    let mut w = dsl::ByteWriter::new().await;
     write_bin_vec(&mut w, &d.removed, |w, n: &String| write_bin_str(w, n));
     write_bin_vec(&mut w, &d.modified, |w, m: &PlyElementModified| {
         write_bin_str(w, &m.name);
@@ -1344,21 +1344,21 @@ async fn enc_elements_diff_bin(d: &PlyElementsDiff) -> Vec<u8> {
         w.write_varint_u64(a.index as u64);
         write_bin_element(w, &a.element);
     });
-    w.into_bytes()
+    w.into_bytes().await
 }
 async fn dec_elements_diff_bin(bytes: &[u8]) -> Result<PlyElementsDiff, dsl::PackError> {
     let mut r = dsl::ByteReader::new(bytes);
-    let removed = read_bin_vec(&mut r, read_bin_str)?;
+    let removed = read_bin_vec(&mut r, read_bin_str).await?;
     let modified = read_bin_vec(&mut r, |r| {
         let name = read_bin_str(r)?;
         let diff = read_bin_element_diff(r)?;
         Ok(PlyElementModified { name, diff })
-    })?;
+    }).await?;
     let added = read_bin_vec(&mut r, |r| {
         let index = r.read_varint_u64()? as usize;
         let element = read_bin_element(r)?;
         Ok(PlyElementAdded { index, element })
-    })?;
+    }).await?;
     Ok(PlyElementsDiff { removed, modified, added })
 }
 //#endregion 🔖️RealBinaryDiffFrame
@@ -1384,11 +1384,11 @@ async fn parse_ply_diff(line: &str) -> Result<PlyDiff, String> {
     }
     for token in line.split(' ') {
         if let Some(rest) = token.strip_prefix("format=") {
-            d.format = Some(dec_format(rest)?);
+            d.format = Some(dec_format(rest).await?);
         } else if let Some(rest) = token.strip_prefix("comments=") {
-            d.comments = Some(split_top_level(strip_brackets(rest)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_str).collect::<Result<Vec<_>, String>>()?);
+            d.comments = Some(split_top_level(strip_brackets(rest).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_str).collect::<Result<Vec<_>, String>>()?);
         } else if let Some(rest) = token.strip_prefix("elements=") {
-            d.elements = Some(dec_elements_diff(rest)?);
+            d.elements = Some(dec_elements_diff(rest).await?);
         } else {
             return Err(format!("ply diff: unknown token {token:?}"));
         }
@@ -1398,36 +1398,36 @@ async fn parse_ply_diff(line: &str) -> Result<PlyDiff, String> {
 
 impl DiffCodec for PlyDiff {
     async fn print_diff(&self) -> String {
-        print_ply_diff(self)
+        print_ply_diff(self).await
     }
     async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
-        parse_ply_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_ply_diff(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// ⚡️ P2-FG3: real binary diff-frame — upgraded from the F6-era `print_diff().into_bytes()`
     /// text-as-binary shortcut (100% of stdio's `DiffCodec` impls were still on that shortcut per
     /// the P2-W0 census). Matches `../💾️binary/📡️component.protocol.semio`'s real flag-per-field
     /// layout exactly, field for field, in struct order (`format`, `comments`, `elements`).
     async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        let mut w = dsl::ByteWriter::new();
+        let mut w = dsl::ByteWriter::new().await;
         write_bin_option(&mut w, &self.format, |w, f| write_bin_format(w, *f));
         write_bin_option(&mut w, &self.comments, |w, v: &Vec<String>| {
             let mut inner = dsl::ByteWriter::new();
             write_bin_vec(&mut inner, v, |w, c: &String| write_bin_str(w, c));
-            write_bin_blob(w, &inner.into_bytes());
+            write_bin_blob(w, &semio_framework_plugin::resolve_ready(inner.await.into_bytes()));
         });
         write_bin_option(&mut w, &self.elements, |w, v| write_bin_blob(w, &enc_elements_diff_bin(v)));
-        Ok(w.into_bytes())
+        Ok(w.into_bytes().await)
     }
     async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let mut r = dsl::ByteReader::new(bytes);
-        let format = read_bin_option(&mut r, |r| read_bin_format(r)).map_err(diff_pack_err)?;
+        let format = read_bin_option(&mut r, |r| read_bin_format(r)).await.map_err(diff_pack_err)?;
         let comments = read_bin_option(&mut r, |r| {
             let blob = read_bin_blob(r)?;
             let mut inner = dsl::ByteReader::new(&blob);
             read_bin_vec(&mut inner, read_bin_str)
         })
-        .map_err(diff_pack_err)?;
-        let elements = read_bin_option(&mut r, |r| dec_elements_diff_bin(&read_bin_blob(r)?)).map_err(diff_pack_err)?;
+        .await.map_err(diff_pack_err)?;
+        let elements = read_bin_option(&mut r, |r| dec_elements_diff_bin(&read_bin_blob(r)?)).await.map_err(diff_pack_err)?;
         Ok(PlyDiff { format, comments, elements })
     }
 }

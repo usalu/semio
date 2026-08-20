@@ -20,7 +20,7 @@ const SEMIO_VIDEO_EDIT_DEFAULT_CAMERA_FOV: f64 = 45.0;
 /// 🧱️ Stitched into the editor manifest by the surface root's `create_*_editor`. The EDITABLE
 /// variant — `MeshWindowKit::editable_window_kind()` — carries the frozen `set-vertex` action.
 pub async fn definition() -> WindowKindDefinition {
-    MeshWindowKit::editable_window_kind()
+    MeshWindowKit::editable_window_kind().await
 }
 //#endregion 🔖️Definition
 
@@ -38,7 +38,7 @@ async fn entity_count(document: &SemioVideoSnapshot) -> usize {
 
 async fn world_instances_json(document: &SemioVideoSnapshot) -> String {
     let count = entity_count(document);
-    let instances: Vec<serde_json::Value> = (0..count)
+    let instances: Vec<serde_json::Value> = (0..count.await)
         .map(|index| {
             serde_json::json!({
                 "id": format!("semio_video-{index}"),
@@ -57,12 +57,12 @@ async fn world_instances_json(document: &SemioVideoSnapshot) -> String {
 pub async fn render(document: &SemioVideoSnapshot) -> UiNode {
     let meshes_json = serde_json::to_string(&[serde_json::json!({ "id": SEMIO_VIDEO_EDIT_FALLBACK_MESH_KIND, "data": mesh_from_kind(SEMIO_VIDEO_EDIT_FALLBACK_MESH_KIND) })]).unwrap_or_else(|_| "[]".into());
     let view = MeshView {
-        camera_json: world3d_camera_json(SEMIO_VIDEO_EDIT_DEFAULT_CAMERA_POSITION, SEMIO_VIDEO_EDIT_DEFAULT_CAMERA_TARGET, SEMIO_VIDEO_EDIT_DEFAULT_CAMERA_FOV),
+        camera_json: world3d_camera_json(SEMIO_VIDEO_EDIT_DEFAULT_CAMERA_POSITION, SEMIO_VIDEO_EDIT_DEFAULT_CAMERA_TARGET, SEMIO_VIDEO_EDIT_DEFAULT_CAMERA_FOV).await,
         meshes_json,
-        instances_json: world_instances_json(document),
-        selection_json: world3d_selection_json("rectangle", &[], None),
+        instances_json: world_instances_json(document).await,
+        selection_json: world3d_selection_json("rectangle", &[], None).await,
     };
-    MeshWindowKit::render(&view)
+    MeshWindowKit::render(&view).await
 }
 //#endregion 🔖️Render
 

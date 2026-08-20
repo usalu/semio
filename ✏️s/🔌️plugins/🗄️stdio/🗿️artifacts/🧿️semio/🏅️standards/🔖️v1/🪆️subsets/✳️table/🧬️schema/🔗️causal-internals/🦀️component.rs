@@ -78,7 +78,7 @@ impl CausalDag {
             }
         }
         let adj = semio_framework_graph::algorithms::adjacency(n, edges, true);
-        let topo = semio_framework_graph::algorithms::topo_sort(&adj).map_err(|e| CausalError::NotADag(e.cycle))?;
+        let topo = semio_framework_graph::algorithms::topo_sort(&adj).await.map_err(|e| CausalError::NotADag(e.cycle))?;
         let mut parents = vec![Vec::new(); n];
         let mut children = vec![Vec::new(); n];
         for &(a, b) in edges {
@@ -106,7 +106,7 @@ impl CausalDag {
             let bi = *index.get(b).ok_or_else(|| CausalError::VariableNotFound(b.to_string()))?;
             resolved.push((ai, bi));
         }
-        Self::new(names, &resolved)
+        Self::new(names, &resolved).await
     }
 
     pub async fn n(&self) -> usize {
@@ -177,11 +177,11 @@ impl CausalDag {
         let mut edges: BTreeSet<(usize, usize)> = BTreeSet::new();
         for (child, parents) in self.parents.iter().enumerate() {
             for &parent in parents {
-                edges.insert(norm_pair(parent, child));
+                edges.insert(norm_pair(parent, child).await);
             }
             for i in 0..parents.len() {
                 for j in (i + 1)..parents.len() {
-                    edges.insert(norm_pair(parents[i], parents[j]));
+                    edges.insert(norm_pair(parents[i], parents[j]).await);
                 }
             }
         }
@@ -281,13 +281,13 @@ impl Cpdag {
     /// 🧭️ The CPDAG of `dag`'s Markov equivalence class: skeleton + v-structures, closed under
     /// [`apply_meek_rules`] (sound and complete for this step per Meek 1995).
     pub async fn from_dag(dag: &CausalDag) -> Cpdag {
-        let mut cpdag = Cpdag::new(dag.names().to_vec());
+        let mut cpdag = Cpdag::new(dag.names().await.to_vec()).await;
         for (a, b) in dag.edges() {
-            cpdag.undirected.insert(norm_pair(a, b));
+            cpdag.undirected.insert(norm_pair(a, b).await);
         }
         let mut to_orient = Vec::new();
-        for c in 0..dag.n() {
-            let parents = dag.parents(c);
+        for c in 0..dag.n().await {
+            let parents = dag.parents(c).await;
             for i in 0..parents.len() {
                 for j in (i + 1)..parents.len() {
                     let (a, b) = (parents[i], parents[j]);
@@ -313,7 +313,7 @@ impl Cpdag {
         let n = self.n();
         let mut directed: Vec<(usize, usize)> = self.directed.iter().copied().collect();
         let mut remaining_undirected: BTreeSet<(usize, usize)> = self.undirected.clone();
-        let mut active: BTreeSet<usize> = (0..n).collect();
+        let mut active: BTreeSet<usize> = (0..n.await).collect();
         let skeleton_adjacent = |a: usize, b: usize| self.has_edge(a, b);
         while !remaining_undirected.is_empty() {
             let mut found: Option<(usize, Vec<usize>)> = None;
@@ -352,7 +352,7 @@ impl Cpdag {
             }
             active.remove(&x);
         }
-        CausalDag::new(self.names.clone(), &directed).ok()
+        CausalDag::new(self.names.clone(), &directed).await.ok()
     }
 }
 
@@ -371,7 +371,7 @@ pub async fn apply_meek_rules(cpdag: &mut Cpdag) {
         // R1: a->b, b-c undirected, a and c not adjacent => b->c.
         for (a, b) in cpdag.directed_edges() {
             for c in cpdag.adjacent(b) {
-                if c != a && cpdag.is_undirected(b, c) && !cpdag.has_edge(a, c) {
+                if c != a && cpdag.is_undirected(b, c).await && !cpdag.has_edge(a, c) {
                     cpdag.orient(b, c);
                     changed = true;
                 }
@@ -381,7 +381,7 @@ pub async fn apply_meek_rules(cpdag: &mut Cpdag) {
         // R2: a->b->c, a-c undirected => a->c.
         for (a, b) in cpdag.directed_edges() {
             for c in cpdag.adjacent(b) {
-                if cpdag.is_directed(b, c) && cpdag.is_undirected(a, c) {
+                if cpdag.is_directed(b, c).await && cpdag.is_undirected(a, c).await {
                     cpdag.orient(a, c);
                     changed = true;
                 }
@@ -389,7 +389,7 @@ pub async fn apply_meek_rules(cpdag: &mut Cpdag) {
         }
 
         // R3: a-b, a-c, a-d undirected, c->b, d->b, c and d not adjacent => a->b.
-        for a in 0..n {
+        for a in 0..n.await {
             let undirected_neighbors: Vec<usize> = cpdag.adjacent(a).into_iter().filter(|&x| cpdag.is_undirected(a, x)).collect();
             for &b in &undirected_neighbors {
                 let candidates: Vec<usize> = undirected_neighbors.iter().copied().filter(|&x| x != b && cpdag.is_directed(x, b)).collect();
@@ -438,18 +438,18 @@ pub async fn d_separated(dag: &CausalDag, x: &[usize], y: &[usize], z: &[usize])
     // does) would wrongly marry co-parents of children that fall outside the ancestral set.
     let mut moral_edges: BTreeSet<(usize, usize)> = BTreeSet::new();
     for &child in &relevant {
-        let parents: Vec<usize> = dag.parents(child).iter().copied().filter(|p| relevant.contains(p)).collect();
+        let parents: Vec<usize> = dag.parents(child).await.iter().copied().filter(|p| relevant.contains(p)).collect();
         for &p in &parents {
-            moral_edges.insert(norm_pair(p, child));
+            moral_edges.insert(norm_pair(p, child).await);
         }
         for i in 0..parents.len() {
             for j in (i + 1)..parents.len() {
-                moral_edges.insert(norm_pair(parents[i], parents[j]));
+                moral_edges.insert(norm_pair(parents[i], parents[j]).await);
             }
         }
     }
     let filtered_edges: Vec<(usize, usize)> = moral_edges.into_iter().filter(|&(a, b)| !z.contains(&a) && !z.contains(&b)).collect();
-    let adj = semio_framework_graph::algorithms::adjacency(dag.n(), &filtered_edges, false);
+    let adj = semio_framework_graph::algorithms::adjacency(dag.n().await, &filtered_edges, false);
     let labels = semio_framework_graph::algorithms::connected_components(&adj);
     x.iter().all(|&xi| y.iter().all(|&yi| z.contains(&xi) || z.contains(&yi) || labels[xi] != labels[yi]))
 }
@@ -459,10 +459,10 @@ pub async fn d_separated(dag: &CausalDag, x: &[usize], y: &[usize], z: &[usize])
 pub async fn implied_independencies(dag: &CausalDag) -> Vec<CiStatement> {
     let n = dag.n();
     let mut out = Vec::new();
-    for v in 0..n {
-        let parents = dag.parents(v).to_vec();
+    for v in 0..n.await {
+        let parents = dag.parents(v).await.to_vec();
         let descendants: HashSet<usize> = dag.descendants(v).into_iter().collect();
-        for w in 0..n {
+        for w in 0..n.await {
             if w == v || descendants.contains(&w) || parents.contains(&w) {
                 continue;
             }
@@ -513,7 +513,7 @@ impl FisherZ {
     /// 🔬️ Precomputes the complete-case correlation matrix over `columns` (in the same order as
     /// the paired [`CausalDag`]'s variable indices).
     pub async fn for_table(data: &crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table, columns: &[usize]) -> Result<Self, CausalError> {
-        let (corr, n) = crate::artifacts::semio::standards::v1::subsets::table::schema::statistics_internals::correlation_from_table(data, columns)?;
+        let (corr, n) = crate::artifacts::semio::standards::v1::subsets::table::schema::statistics_internals::correlation_from_table(data, columns).await?;
         Ok(Self { corr, n })
     }
 }
@@ -526,7 +526,7 @@ impl CiTest for FisherZ {
         y: usize,
         z: &[usize],
     ) -> Result<crate::artifacts::semio::standards::v1::subsets::table::schema::statistics_internals::TestResult, CausalError> {
-        Ok(crate::artifacts::semio::standards::v1::subsets::table::schema::statistics_internals::fisher_z_test(&self.corr, x, y, z, self.n)?)
+        Ok(crate::artifacts::semio::standards::v1::subsets::table::schema::statistics_internals::fisher_z_test(&self.corr, x, y, z, self.n).await?)
     }
 }
 
@@ -541,12 +541,12 @@ impl CiTest for GSquared {
         y: usize,
         z: &[usize],
     ) -> Result<crate::artifacts::semio::standards::v1::subsets::table::schema::statistics_internals::TestResult, CausalError> {
-        let cat_x = data.categorical(x)?;
-        let cat_y = data.categorical(y)?;
+        let cat_x = data.categorical(x).await?;
+        let cat_y = data.categorical(y).await?;
         let given_cols: Vec<&crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::CategoricalColumn> = z.iter().map(|&zi| data.categorical(zi)).collect::<Result<_, _>>()?;
         let given_codes: Vec<&[u32]> = given_cols.iter().map(|c| c.codes()).collect();
         let given_levels: Vec<usize> = given_cols.iter().map(|c| c.n_levels()).collect();
-        Ok(crate::artifacts::semio::standards::v1::subsets::table::schema::statistics_internals::g2_ci_test(cat_x.codes(), cat_y.codes(), &given_codes, (cat_x.n_levels(), cat_y.n_levels(), &given_levels))?)
+        Ok(crate::artifacts::semio::standards::v1::subsets::table::schema::statistics_internals::g2_ci_test(cat_x.codes().await, cat_y.codes().await, &given_codes, (cat_x.n_levels().await, cat_y.n_levels().await, &given_levels)).await?)
     }
 }
 // #endregion 🔖️CiTest
@@ -568,12 +568,12 @@ async fn covariance_pop(a: &[f64], b: &[f64]) -> f64 {
 }
 
 async fn variance_pop(a: &[f64]) -> f64 {
-    covariance_pop(a, a)
+    covariance_pop(a, a).await
 }
 
 async fn correlation_pop(a: &[f64], b: &[f64]) -> f64 {
-    let sa = variance_pop(a).sqrt().max(1e-12);
-    let sb = variance_pop(b).sqrt().max(1e-12);
+    let sa = variance_pop(a).await.sqrt().max(1e-12);
+    let sb = variance_pop(b).await.sqrt().max(1e-12);
     covariance_pop(a, b) / (sa * sb)
 }
 
@@ -622,14 +622,14 @@ pub struct PcResult {
 #[allow(clippy::needless_range_loop, reason = "x indexes both adj_snapshot and, via the inner loop, cpdag/removals by the same variable id — enumerate() over one Vec wouldn't simplify the rest")]
 pub async fn pc_stable<T: CiTest>(data: &crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table, test: &T, opts: PcOptions) -> Result<PcResult, CausalError> {
     let n = data.n_cols();
-    let mut cpdag = Cpdag::complete(data.names().to_vec());
+    let mut cpdag = Cpdag::complete(data.names().await.to_vec()).await;
     let mut sepsets: HashMap<(usize, usize), Vec<usize>> = HashMap::new();
     for level in 0..=opts.max_cond_size {
-        let adj_snapshot: Vec<Vec<usize>> = (0..n).map(|v| cpdag.adjacent(v)).collect();
+        let adj_snapshot: Vec<Vec<usize>> = (0..n.await).map(|v| semio_framework_plugin::resolve_ready(cpdag.adjacent(v))).collect();
         let mut removals: Vec<(usize, usize, Vec<usize>)> = Vec::new();
-        for x in 0..n {
+        for x in 0..n.await {
             for &y in &adj_snapshot[x] {
-                if y <= x || !cpdag.has_edge(x, y) {
+                if y <= x || !cpdag.has_edge(x, y).await {
                     continue;
                 }
                 let neighbors: Vec<usize> = adj_snapshot[x].iter().copied().filter(|&z| z != y).collect();
@@ -637,7 +637,7 @@ pub async fn pc_stable<T: CiTest>(data: &crate::artifacts::semio::standards::v1:
                     continue;
                 }
                 for subset in combinations(&neighbors, level) {
-                    let result = test.test(data, x, y, &subset)?;
+                    let result = test.test(data, x, y, &subset).await?;
                     if result.p_value > opts.alpha {
                         removals.push((x, y, subset));
                         break;
@@ -646,8 +646,8 @@ pub async fn pc_stable<T: CiTest>(data: &crate::artifacts::semio::standards::v1:
             }
         }
         for (x, y, z) in removals {
-            cpdag.remove_edge(x, y);
-            sepsets.insert(norm_pair(x, y), z);
+            cpdag.remove_edge(x, y).await;
+            sepsets.insert(norm_pair(x, y).await, z);
         }
     }
     orient_v_structures(&mut cpdag, &sepsets);
@@ -660,16 +660,16 @@ pub async fn pc_stable<T: CiTest>(data: &crate::artifacts::semio::standards::v1:
 pub async fn orient_v_structures(cpdag: &mut Cpdag, sepsets: &HashMap<(usize, usize), Vec<usize>>) {
     let n = cpdag.n();
     let mut to_orient = Vec::new();
-    for c in 0..n {
-        let neighbors = cpdag.adjacent(c);
+    for c in 0..n.await {
+        let neighbors = cpdag.adjacent(c).await;
         for i in 0..neighbors.len() {
             for j in (i + 1)..neighbors.len() {
                 let (a, b) = (neighbors[i], neighbors[j]);
-                if cpdag.has_edge(a, b) {
+                if cpdag.has_edge(a, b).await {
                     continue;
                 }
                 let c_in_sepset = sepsets.get(&norm_pair(a, b)).is_some_and(|s| s.contains(&c));
-                if !c_in_sepset && cpdag.is_undirected(a, c) && cpdag.is_undirected(b, c) {
+                if !c_in_sepset && cpdag.is_undirected(a, c).await && cpdag.is_undirected(b, c).await {
                     to_orient.push((a, c));
                     to_orient.push((b, c));
                 }
@@ -677,7 +677,7 @@ pub async fn orient_v_structures(cpdag: &mut Cpdag, sepsets: &HashMap<(usize, us
         }
     }
     for (a, b) in to_orient {
-        if cpdag.is_undirected(a, b) {
+        if cpdag.is_undirected(a, b).await {
             cpdag.orient(a, b);
         }
     }
@@ -687,23 +687,23 @@ pub async fn orient_v_structures(cpdag: &mut Cpdag, sepsets: &HashMap<(usize, us
 /// `-n/2 * ln(sigma^2) - (|parents|+1)/2 * ln(n)`, the per-node summand a score-based search adds/removes.
 #[allow(clippy::needless_range_loop, reason = "row indexes both the MatD design matrix by (row, col) and the values slice — enumerate() would only remove the values index")]
 pub async fn local_bic(data: &crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table, node: usize, parents: &[usize]) -> Result<f64, CausalError> {
-    let y = data.continuous(node)?;
+    let y = data.continuous(node).await?;
     let n = y.len();
     let p = parents.len();
     if parents.is_empty() {
-        let m = crate::artifacts::semio::standards::v1::subsets::table::schema::statistics_internals::mean(y)?;
+        let m = crate::artifacts::semio::standards::v1::subsets::table::schema::statistics_internals::mean(y).await?;
         let ss: f64 = y.iter().map(|v| (v - m).powi(2)).sum();
         let sigma2 = (ss / n as f64).max(1e-12);
         return Ok(-0.5 * n as f64 * sigma2.ln() - 0.5 * (n as f64).ln());
     }
-    let mut design = crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::MatD::zeros(n, p);
+    let mut design = crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::MatD::zeros(n, p).await;
     for (col, &parent) in parents.iter().enumerate() {
-        let values = data.continuous(parent)?;
+        let values = data.continuous(parent).await?;
         for row in 0..n {
-            design.set(row, col, values[row]);
+            design.set(row, col, values[row]).await;
         }
     }
-    let fit = crate::artifacts::semio::standards::v1::subsets::table::schema::statistics_internals::ols(&design, y, true)?;
+    let fit = crate::artifacts::semio::standards::v1::subsets::table::schema::statistics_internals::ols(&design, y, true).await?;
     let ss_res: f64 = fit.residuals.iter().map(|r| r * r).sum();
     let sigma2 = (ss_res / n as f64).max(1e-12);
     Ok(-0.5 * n as f64 * sigma2.ln() - 0.5 * (p as f64 + 1.0) * (n as f64).ln())
@@ -711,7 +711,7 @@ pub async fn local_bic(data: &crate::artifacts::semio::standards::v1::subsets::t
 
 /// 📉️ Sum of local BICs over every node of `dag` given its own parent set.
 pub async fn dag_bic(data: &crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table, dag: &CausalDag) -> Result<f64, CausalError> {
-    (0..dag.n()).map(|v| local_bic(data, v, dag.parents(v))).sum()
+    (0..dag.n().await).map(|v| local_bic(data, v, dag.parents(v))).sum()
 }
 
 /// 📦️ DirectLiNGAM output: the recovered causal order and the pruned weighted adjacency (`weights[child][parent]`).
@@ -733,10 +733,10 @@ pub struct LingamResult {
 #[allow(clippy::needless_range_loop, reason = "row indexes both the MatD design matrix by (row, col) and the columns[parent] slice — enumerate() would only remove one of the two")]
 pub async fn direct_lingam(data: &crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table, prune_alpha: f64) -> Result<LingamResult, CausalError> {
     let n = data.n_cols();
-    let columns: Vec<Vec<f64>> = (0..n).map(|i| data.continuous(i).map(<[f64]>::to_vec)).collect::<Result<_, _>>()?;
-    let mut working: HashMap<usize, Vec<f64>> = (0..n).map(|i| (i, standardize(&columns[i]))).collect();
-    let mut remaining: Vec<usize> = (0..n).collect();
-    let mut order: Vec<usize> = Vec::with_capacity(n);
+    let columns: Vec<Vec<f64>> = (0..n.await).map(|i| semio_framework_plugin::resolve_ready(data.continuous(i)).map(<[f64]>::to_vec)).collect::<Result<_, _>>()?;
+    let mut working: HashMap<usize, Vec<f64>> = (0..n.await).map(|i| (i, standardize(&columns[i]))).collect();
+    let mut remaining: Vec<usize> = (0..n.await).collect();
+    let mut order: Vec<usize> = Vec::with_capacity(n.await);
 
     while remaining.len() > 1 {
         let mut best = remaining[0];
@@ -749,10 +749,10 @@ pub async fn direct_lingam(data: &crate::artifacts::semio::standards::v1::subset
                     continue;
                 }
                 let xj = &working[&j];
-                let beta = covariance_pop(xm, xj) / variance_pop(xm).max(1e-12);
+                let beta = covariance_pop(xm, xj) / variance_pop(xm).await.max(1e-12);
                 let residual: Vec<f64> = xj.iter().zip(xm).map(|(&xjv, &xmv)| xjv - beta * xmv).collect();
                 let r3: Vec<f64> = residual.iter().map(|r| r.powi(3)).collect();
-                score += correlation_pop(xm, &r3).abs();
+                score += correlation_pop(xm, &r3).await.abs();
             }
             if score < best_score {
                 best_score = score;
@@ -765,7 +765,7 @@ pub async fn direct_lingam(data: &crate::artifacts::semio::standards::v1::subset
             if j == best {
                 continue;
             }
-            let beta = covariance_pop(&xm, &working[&j]) / variance_pop(&xm).max(1e-12);
+            let beta = covariance_pop(&xm, &working[&j]) / variance_pop(&xm).await.max(1e-12);
             let xj = working.get_mut(&j).expect("j is in `remaining` and thus in `working`");
             for (v, &xmv) in xj.iter_mut().zip(&xm) {
                 *v -= beta * xmv;
@@ -775,7 +775,7 @@ pub async fn direct_lingam(data: &crate::artifacts::semio::standards::v1::subset
     }
     order.push(remaining[0]);
 
-    let mut weights = crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::MatD::zeros(n, n);
+    let mut weights = crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::MatD::zeros(n.await, n.await).await;
     let mut edges = Vec::new();
     for (pos, &child) in order.iter().enumerate() {
         let candidate_parents = &order[..pos];
@@ -783,27 +783,27 @@ pub async fn direct_lingam(data: &crate::artifacts::semio::standards::v1::subset
             continue;
         }
         let n_rows = columns[child].len();
-        let mut design = crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::MatD::zeros(n_rows, candidate_parents.len());
+        let mut design = crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::MatD::zeros(n_rows, candidate_parents.len()).await;
         for (col, &parent) in candidate_parents.iter().enumerate() {
             for row in 0..n_rows {
-                design.set(row, col, columns[parent][row]);
+                design.set(row, col, columns[parent][row]).await;
             }
         }
-        let fit = crate::artifacts::semio::standards::v1::subsets::table::schema::statistics_internals::ols(&design, &columns[child], true)?;
+        let fit = crate::artifacts::semio::standards::v1::subsets::table::schema::statistics_internals::ols(&design, &columns[child], true).await?;
         for (col, &parent) in candidate_parents.iter().enumerate() {
             let coeff = fit.coefficients[col + 1];
             let se = fit.std_errors[col + 1];
             if se > 1e-12 {
                 let t_stat = coeff / se;
-                let p_value = 2.0 * (1.0 - crate::artifacts::semio::standards::v1::subsets::table::schema::probability_internals::StudentT::new(fit.dof as f64)?.cdf(t_stat.abs()));
+                let p_value = 2.0 * (1.0 - crate::artifacts::semio::standards::v1::subsets::table::schema::probability_internals::StudentT::new(fit.dof as f64).await?.cdf(t_stat.abs()));
                 if p_value < prune_alpha {
-                    weights.set(child, parent, coeff);
+                    weights.set(child, parent, coeff).await;
                     edges.push((parent, child));
                 }
             }
         }
     }
-    let dag = CausalDag::new(data.names().to_vec(), &edges)?;
+    let dag = CausalDag::new(data.names().await.to_vec(), &edges).await?;
     Ok(LingamResult { order, weights, dag })
 }
 
@@ -814,22 +814,22 @@ pub async fn direct_lingam(data: &crate::artifacts::semio::standards::v1::subset
 /// Markov equivalence class.
 pub async fn ges(data: &crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table) -> Result<Cpdag, CausalError> {
     let n = data.n_cols();
-    let names = data.names().to_vec();
+    let names = data.names().await.to_vec();
     let mut edges: Vec<(usize, usize)> = Vec::new();
 
     loop {
-        let baseline = CausalDag::new(names.clone(), &edges)?;
-        let baseline_score = dag_bic(data, &baseline)?;
+        let baseline = CausalDag::new(names.clone(), &edges).await?;
+        let baseline_score = dag_bic(data, &baseline).await?;
         let mut best: Option<((usize, usize), f64)> = None;
-        for u in 0..n {
-            for v in 0..n {
+        for u in 0..n.await {
+            for v in 0..n.await {
                 if u == v || edges.contains(&(u, v)) {
                     continue;
                 }
                 let mut candidate = edges.clone();
                 candidate.push((u, v));
-                let Ok(dag) = CausalDag::new(names.clone(), &candidate) else { continue };
-                let Ok(score) = dag_bic(data, &dag) else { continue };
+                let Ok(dag) = CausalDag::new(names.clone(), &candidate).await else { continue };
+                let Ok(score) = dag_bic(data, &dag).await else { continue };
                 if best.as_ref().is_none_or(|&(_, b)| score > b) {
                     best = Some(((u, v), score));
                 }
@@ -842,14 +842,14 @@ pub async fn ges(data: &crate::artifacts::semio::standards::v1::subsets::table::
     }
 
     loop {
-        let baseline = CausalDag::new(names.clone(), &edges)?;
-        let baseline_score = dag_bic(data, &baseline)?;
+        let baseline = CausalDag::new(names.clone(), &edges).await?;
+        let baseline_score = dag_bic(data, &baseline).await?;
         let mut best: Option<(usize, f64)> = None;
         for i in 0..edges.len() {
             let mut candidate = edges.clone();
             candidate.remove(i);
-            let Ok(dag) = CausalDag::new(names.clone(), &candidate) else { continue };
-            let Ok(score) = dag_bic(data, &dag) else { continue };
+            let Ok(dag) = CausalDag::new(names.clone(), &candidate).await else { continue };
+            let Ok(score) = dag_bic(data, &dag).await else { continue };
             if best.as_ref().is_none_or(|&(_, b)| score > b) {
                 best = Some((i, score));
             }
@@ -862,8 +862,8 @@ pub async fn ges(data: &crate::artifacts::semio::standards::v1::subsets::table::
         }
     }
 
-    let final_dag = CausalDag::new(names, &edges)?;
-    Ok(Cpdag::from_dag(&final_dag))
+    let final_dag = CausalDag::new(names, &edges).await?;
+    Ok(Cpdag::from_dag(&final_dag).await)
 }
 // #endregion 🔖️Discovery
 
@@ -876,10 +876,10 @@ pub async fn backdoor_satisfied(dag: &CausalDag, x: usize, y: usize, z: &[usize]
         return false;
     }
     let pruned_edges: Vec<(usize, usize)> = dag.edges().into_iter().filter(|&(a, _)| a != x).collect();
-    let Ok(pruned) = CausalDag::new(dag.names().to_vec(), &pruned_edges) else {
+    let Ok(pruned) = CausalDag::new(dag.names().await.to_vec(), &pruned_edges).await else {
         return false;
     };
-    d_separated(&pruned, &[x], &[y], z)
+    d_separated(&pruned, &[x], &[y], z).await
 }
 
 /// 🚪️ Every inclusion-minimal backdoor set up to `max_size`, searched over
@@ -901,7 +901,7 @@ pub async fn minimal_backdoor_sets(dag: &CausalDag, x: usize, y: usize, max_size
             if found.iter().any(|existing| existing.iter().all(|v| subset.contains(v))) {
                 continue;
             }
-            if backdoor_satisfied(dag, x, y, &subset) {
+            if backdoor_satisfied(dag, x, y, &subset).await {
                 found.push(subset);
             }
         }
@@ -918,13 +918,13 @@ pub async fn frontdoor_satisfied(dag: &CausalDag, x: usize, y: usize, m: &[usize
         return false;
     }
     let edges_without_m: Vec<(usize, usize)> = dag.edges().into_iter().filter(|&(a, b)| !m_set.contains(&a) && !m_set.contains(&b)).collect();
-    if let Ok(pruned) = CausalDag::new(dag.names().to_vec(), &edges_without_m) {
-        if pruned.descendants(x).contains(&y) {
+    if let Ok(pruned) = CausalDag::new(dag.names().await.to_vec(), &edges_without_m).await {
+        if pruned.descendants(x).await.contains(&y) {
             return false;
         }
     }
     for &mi in m {
-        if !dag.descendants(x).contains(&mi) || !dag.descendants(mi).contains(&y) {
+        if !dag.descendants(x).await.contains(&mi) || !dag.descendants(mi).await.contains(&y) {
             return false;
         }
         if !backdoor_satisfied(dag, x, mi, &[]) {
@@ -932,10 +932,10 @@ pub async fn frontdoor_satisfied(dag: &CausalDag, x: usize, y: usize, m: &[usize
         }
     }
     let edges_without_m_out: Vec<(usize, usize)> = dag.edges().into_iter().filter(|&(a, _)| !m_set.contains(&a)).collect();
-    let Ok(pruned_out) = CausalDag::new(dag.names().to_vec(), &edges_without_m_out) else {
+    let Ok(pruned_out) = CausalDag::new(dag.names().await.to_vec(), &edges_without_m_out).await else {
         return false;
     };
-    d_separated(&pruned_out, m, &[y], &[x])
+    d_separated(&pruned_out, m, &[y], &[x]).await
 }
 
 /// 🧾️ How an interventional query was identified — drives which estimator is applicable.
@@ -953,17 +953,17 @@ pub enum Identification {
 /// Shpitser–Pearl ID algorithm needs an ADMG (bidirected-edge) graph representation that
 /// [`CausalDag`] does not model in v1, and is out of scope here.
 pub async fn identify(dag: &CausalDag, x: usize, y: usize) -> Result<Identification, CausalError> {
-    if backdoor_satisfied(dag, x, y, &[]) {
+    if backdoor_satisfied(dag, x, y, &[]).await {
         return Ok(Identification::NoConfounding);
     }
-    let sets = minimal_backdoor_sets(dag, x, y, dag.n());
+    let sets = minimal_backdoor_sets(dag, x, y, dag.n().await);
     if let Some(adjustment) = sets.into_iter().min_by_key(Vec::len) {
         return Ok(Identification::Backdoor { adjustment });
     }
-    let other_vars: Vec<usize> = (0..dag.n()).filter(|&v| v != x && v != y).collect();
+    let other_vars: Vec<usize> = (0..dag.n().await).filter(|&v| v != x && v != y).collect();
     for m_size in 1..=other_vars.len() {
         for mediators in combinations(&other_vars, m_size) {
-            if frontdoor_satisfied(dag, x, y, &mediators) {
+            if frontdoor_satisfied(dag, x, y, &mediators).await {
                 return Ok(Identification::Frontdoor { mediators });
             }
         }
@@ -987,31 +987,31 @@ impl LinearGaussianScm {
     #[allow(clippy::needless_range_loop, reason = "row indexes both the MatD design matrix by (row, col) and the pv slice — enumerate() would only remove one of the two")]
     pub async fn fit(dag: &CausalDag, data: &crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table) -> Result<Self, CausalError> {
         let n = dag.n();
-        let mut weights = crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::MatD::zeros(n, n);
-        let mut intercepts = crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::VecD::zeros(n);
-        let mut noise_var = crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::VecD::zeros(n);
-        for v in 0..n {
-            let y = data.continuous(v)?;
-            let parents = dag.parents(v);
+        let mut weights = crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::MatD::zeros(n.await, n.await).await;
+        let mut intercepts = crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::VecD::zeros(n.await).await;
+        let mut noise_var = crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::VecD::zeros(n.await).await;
+        for v in 0..n.await {
+            let y = data.continuous(v).await?;
+            let parents = dag.parents(v).await;
             if parents.is_empty() {
-                intercepts.set(v, crate::artifacts::semio::standards::v1::subsets::table::schema::statistics_internals::mean(y)?);
-                noise_var.set(v, crate::artifacts::semio::standards::v1::subsets::table::schema::statistics_internals::variance(y).unwrap_or(1e-12).max(1e-12));
+                intercepts.set(v, crate::artifacts::semio::standards::v1::subsets::table::schema::statistics_internals::mean(y).await?).await;
+                noise_var.set(v, crate::artifacts::semio::standards::v1::subsets::table::schema::statistics_internals::variance(y).await.unwrap_or(1e-12).max(1e-12)).await;
                 continue;
             }
             let n_rows = y.len();
-            let mut design = crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::MatD::zeros(n_rows, parents.len());
+            let mut design = crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::MatD::zeros(n_rows, parents.len()).await;
             for (col, &p) in parents.iter().enumerate() {
-                let pv = data.continuous(p)?;
+                let pv = data.continuous(p).await?;
                 for row in 0..n_rows {
-                    design.set(row, col, pv[row]);
+                    design.set(row, col, pv[row]).await;
                 }
             }
-            let fit = crate::artifacts::semio::standards::v1::subsets::table::schema::statistics_internals::ols(&design, y, true)?;
-            intercepts.set(v, fit.coefficients[0]);
+            let fit = crate::artifacts::semio::standards::v1::subsets::table::schema::statistics_internals::ols(&design, y, true).await?;
+            intercepts.set(v, fit.coefficients[0]).await;
             for (col, &p) in parents.iter().enumerate() {
-                weights.set(v, p, fit.coefficients[col + 1]);
+                weights.set(v, p, fit.coefficients[col + 1]).await;
             }
-            noise_var.set(v, fit.sigma2.max(1e-12));
+            noise_var.set(v, fit.sigma2.max(1e-12)).await;
         }
         Ok(Self { dag: dag.clone(), weights, intercepts, noise_var })
     }
@@ -1020,36 +1020,36 @@ impl LinearGaussianScm {
     #[allow(clippy::needless_range_loop, reason = "row indexes a per-variable column selected by the inner topological-order loop, not a single Vec — no single iterator covers both loop levels")]
     pub async fn simulate(&self, n_samples: usize, rng: &mut semio_framework_geometry::random::Rng) -> Result<crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table, CausalError> {
         let n = self.dag.n();
-        let mut columns = vec![vec![0.0f64; n_samples]; n];
+        let mut columns = vec![vec![0.0f64; n_samples]; n.await];
         for row in 0..n_samples {
             for &v in self.dag.topological_order() {
                 let mut val = self.intercepts.get(v);
                 for &p in self.dag.parents(v) {
                     val += self.weights.get(v, p) * columns[p][row];
                 }
-                let sd = self.noise_var.get(v).sqrt().max(1e-12);
-                val += crate::artifacts::semio::standards::v1::subsets::table::schema::probability_internals::Normal::new(0.0, sd)?.sample(rng);
-                columns[v][row] = val;
+                let sd = self.noise_var.get(v).await.sqrt().max(1e-12);
+                val += crate::artifacts::semio::standards::v1::subsets::table::schema::probability_internals::Normal::new(0.0, sd).await?.sample(rng);
+                columns[v][row] = val.await;
             }
         }
-        Ok(crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table::from_f64_columns(self.dag.names().to_vec(), columns)?)
+        Ok(crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table::from_f64_columns(self.dag.names().await.to_vec(), columns).await?)
     }
 
     /// ✂️ `do(v := value)` for each entry: cuts `v`'s incoming edges, fixes `intercept = value`, `noise_var = 0`.
     pub async fn intervened(&self, interventions: &[(usize, f64)]) -> Result<Self, CausalError> {
         let intervened_set: HashSet<usize> = interventions.iter().map(|&(v, _)| v).collect();
         let remaining_edges: Vec<(usize, usize)> = self.dag.edges().into_iter().filter(|&(_, child)| !intervened_set.contains(&child)).collect();
-        let new_dag = CausalDag::new(self.dag.names().to_vec(), &remaining_edges)?;
+        let new_dag = CausalDag::new(self.dag.names().await.to_vec(), &remaining_edges).await?;
         let n = self.dag.n();
-        let mut weights = crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::MatD::zeros(n, n);
+        let mut weights = crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::MatD::zeros(n.await, n.await).await;
         let mut intercepts = self.intercepts.clone();
         let mut noise_var = self.noise_var.clone();
-        for v in 0..n {
+        for v in 0..n.await {
             if intervened_set.contains(&v) {
                 continue;
             }
             for &p in self.dag.parents(v) {
-                weights.set(v, p, self.weights.get(v, p));
+                weights.set(v, p, self.weights.get(v, p).await).await;
             }
         }
         for &(v, value) in interventions {
@@ -1061,13 +1061,13 @@ impl LinearGaussianScm {
 
     /// 🧮️ `E[v]` for every `v`, via forward substitution in topological order.
     pub async fn mean(&self) -> crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::VecD {
-        let mut mu = crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::VecD::zeros(self.dag.n());
+        let mut mu = crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::VecD::zeros(self.dag.n().await).await;
         for &v in self.dag.topological_order() {
             let mut val = self.intercepts.get(v);
             for &p in self.dag.parents(v) {
-                val += self.weights.get(v, p) * mu.get(p);
+                val += self.weights.get(v, p) * mu.get(p).await;
             }
-            mu.set(v, val);
+            mu.set(v, val.await).await;
         }
         mu
     }
@@ -1075,24 +1075,24 @@ impl LinearGaussianScm {
     /// 🧮️ Implied covariance `(I−B)⁻¹ D (I−B)⁻ᵀ`.
     pub async fn implied_covariance(&self) -> Result<crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::MatD, CausalError> {
         let n = self.dag.n();
-        let mut i_minus_b = crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::MatD::identity(n);
-        for v in 0..n {
+        let mut i_minus_b = crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::MatD::identity(n.await).await;
+        for v in 0..n.await {
             for &p in self.dag.parents(v) {
-                i_minus_b.set(v, p, -self.weights.get(v, p));
+                i_minus_b.set(v, p, -self.weights.get(v, p)).await;
             }
         }
-        let inv = crate::artifacts::semio::standards::v1::subsets::table::schema::statistics_internals::invert(&i_minus_b)?;
-        let mut d = crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::MatD::zeros(n, n);
-        for v in 0..n {
-            d.set(v, v, self.noise_var.get(v));
+        let inv = crate::artifacts::semio::standards::v1::subsets::table::schema::statistics_internals::invert(&i_minus_b).await?;
+        let mut d = crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::MatD::zeros(n.await, n.await).await;
+        for v in 0..n.await {
+            d.set(v, v, self.noise_var.get(v).await).await;
         }
-        Ok(inv.matmul(&d).matmul(&inv.transpose()))
+        Ok(inv.matmul(&d).await.matmul(&inv.transpose()).await)
     }
 
     /// 🎯️ `∂E[y]/∂(do x)`: sum over directed `x -> ... -> y` paths of the product of edge
     /// weights, via topological dynamic programming.
     pub async fn total_effect(&self, x: usize, y: usize) -> f64 {
-        let mut sensitivity = vec![0.0f64; self.dag.n()];
+        let mut sensitivity = vec![0.0f64; self.dag.n().await];
         sensitivity[x] = 1.0;
         for &v in self.dag.topological_order() {
             if v == x {
@@ -1110,7 +1110,7 @@ impl LinearGaussianScm {
     /// 🎯️ `E[y | do(x=1)] − E[y | do(x=0)]`; equals [`LinearGaussianScm::total_effect`] for a
     /// linear model, kept as a distinct name for symmetry with the potential-outcomes estimators.
     pub async fn ate(&self, x: usize, y: usize) -> f64 {
-        self.total_effect(x, y)
+        self.total_effect(x, y).await
     }
 
     /// 🔮️ Abduction–action–prediction (Pearl 2009 ch. 7, Thm 7.1.7): recovers every exogenous
@@ -1121,8 +1121,8 @@ impl LinearGaussianScm {
         if observed.len() != n {
             return Err(CausalError::DimensionMismatch(format!("observed row has {} entries, expected {n}", observed.len())));
         }
-        let mut noise = vec![0.0f64; n];
-        for v in 0..n {
+        let mut noise = vec![0.0f64; n.await];
+        for v in 0..n.await {
             let mut predicted = self.intercepts.get(v);
             for &p in self.dag.parents(v) {
                 predicted += self.weights.get(v, p) * observed[p];
@@ -1130,25 +1130,25 @@ impl LinearGaussianScm {
             noise[v] = observed[v] - predicted;
         }
         let intervened_map: HashMap<usize, f64> = interventions.iter().copied().collect();
-        let mut out = crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::VecD::zeros(n);
+        let mut out = crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::VecD::zeros(n.await).await;
         for &v in self.dag.topological_order() {
             if let Some(&value) = intervened_map.get(&v) {
-                out.set(v, value);
+                out.set(v, value).await;
                 continue;
             }
             let mut val = self.intercepts.get(v);
             for &p in self.dag.parents(v) {
-                val += self.weights.get(v, p) * out.get(p);
+                val += self.weights.get(v, p) * out.get(p).await;
             }
             val += noise[v];
-            out.set(v, val);
+            out.set(v, val.await).await;
         }
         Ok(out)
     }
 
     /// 🔮️ `E[target | do(interventions)]`: the mean of the intervened model at `target`.
     pub async fn interventional_mean(&self, target: usize, interventions: &[(usize, f64)]) -> Result<f64, CausalError> {
-        Ok(self.intervened(interventions)?.mean().get(target))
+        Ok(self.intervened(interventions).await?.mean().await.get(target).await)
     }
 }
 // #endregion 🔖️ScmLinear
@@ -1179,14 +1179,14 @@ impl DiscreteScm {
     /// 📊️ MLE CPTs from categorical columns with additive (Laplace) smoothing `pseudocount` (`0.0` = pure MLE).
     pub async fn fit(dag: &CausalDag, data: &crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table, pseudocount: f64) -> Result<Self, CausalError> {
         let n = dag.n();
-        let columns: Vec<&crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::CategoricalColumn> = (0..n).map(|i| data.categorical(i)).collect::<Result<_, _>>()?;
-        let cardinalities: Vec<usize> = (0..n).map(|v| columns[v].n_levels()).collect();
-        let mut cpts = Vec::with_capacity(n);
-        for v in 0..n {
-            let parents = dag.parents(v).to_vec();
+        let columns: Vec<&crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::CategoricalColumn> = (0..n.await).map(|i| data.categorical(i)).collect::<Result<_, _>>()?;
+        let cardinalities: Vec<usize> = (0..n.await).map(|v| columns[v].n_levels()).collect();
+        let mut cpts = Vec::with_capacity(n.await);
+        for v in 0..n.await {
+            let parents = dag.parents(v).await.to_vec();
             let n_configs = parents.iter().map(|&p| cardinalities[p]).product::<usize>().max(1);
             let mut counts = vec![pseudocount; n_configs * cardinalities[v]];
-            for row in 0..data.n_rows() {
+            for row in 0..data.n_rows().await {
                 let own = columns[v].codes()[row];
                 if own == crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::MISSING_CODE {
                     continue;
@@ -1226,7 +1226,7 @@ impl DiscreteScm {
     #[allow(clippy::needless_range_loop, reason = "row indexes a per-variable column selected by the inner topological-order loop, not a single Vec — no single iterator covers both loop levels")]
     pub async fn simulate(&self, n_samples: usize, rng: &mut semio_framework_geometry::random::Rng) -> Result<crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table, CausalError> {
         let n = self.dag.n();
-        let mut codes = vec![vec![0u32; n_samples]; n];
+        let mut codes = vec![vec![0u32; n_samples]; n.await];
         for row in 0..n_samples {
             for &v in self.dag.topological_order() {
                 let cpt = &self.cpts[v];
@@ -1250,16 +1250,16 @@ impl DiscreteScm {
                 codes[v][row] = chosen as u32;
             }
         }
-        let names = self.dag.names().to_vec();
-        let columns: Vec<(Vec<u32>, Vec<String>)> = (0..n).map(|v| (codes[v].clone(), (0..self.cardinalities[v]).map(|k| format!("l{k}")).collect())).collect();
-        Ok(crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table::from_categorical_columns(names, columns)?)
+        let names = self.dag.names().await.to_vec();
+        let columns: Vec<(Vec<u32>, Vec<String>)> = (0..n.await).map(|v| (codes[v].clone(), (0..self.cardinalities[v]).map(|k| format!("l{k}")).collect())).collect();
+        Ok(crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table::from_categorical_columns(names, columns).await?)
     }
 
     /// ✂️ `do(v := value)` for each entry: replaces `v`'s CPT with a point mass and drops its parents.
     pub async fn intervened(&self, interventions: &[(usize, u32)]) -> Result<Self, CausalError> {
         let intervened_map: HashMap<usize, u32> = interventions.iter().copied().collect();
         let remaining_edges: Vec<(usize, usize)> = self.dag.edges().into_iter().filter(|&(_, child)| !intervened_map.contains_key(&child)).collect();
-        let new_dag = CausalDag::new(self.dag.names().to_vec(), &remaining_edges)?;
+        let new_dag = CausalDag::new(self.dag.names().await.to_vec(), &remaining_edges).await?;
         let mut cpts = self.cpts.clone();
         for (&v, &value) in &intervened_map {
             let card = self.cardinalities[v];
@@ -1279,10 +1279,10 @@ impl DiscreteScm {
         let mut factors: Vec<Factor> = self.cpts.iter().map(|cpt| Factor::from_cpt(cpt, &self.cardinalities)).collect();
         for (&v, &value) in &evidence_map {
             for factor in factors.iter_mut() {
-                *factor = factor.restrict(v, value);
+                *factor = factor.restrict(v, value).await;
             }
         }
-        let mut eliminate: Vec<usize> = (0..n).filter(|v| *v != target && !evidence_map.contains_key(v)).collect();
+        let mut eliminate: Vec<usize> = (0..n.await).filter(|v| *v != target && !evidence_map.contains_key(v)).collect();
         while !eliminate.is_empty() {
             let (pos, &var) = eliminate.iter().enumerate().min_by_key(|&(_, &v)| factors.iter().filter(|f| f.vars.contains(&v)).count()).expect("eliminate is non-empty");
             eliminate.remove(pos);
@@ -1293,17 +1293,17 @@ impl DiscreteScm {
             }
             let mut product = involved[0].clone();
             for f in &involved[1..] {
-                product = product.multiply(f);
+                product = product.multiply(f).await;
                 if product.values.len() > MAX_FACTOR_ENTRIES {
                     return Err(CausalError::InferenceTooLarge(product.values.len(), MAX_FACTOR_ENTRIES));
                 }
             }
-            rest.push(product.marginalize(var));
+            rest.push(product.marginalize(var).await);
             factors = rest;
         }
         let mut result = factors[0].clone();
         for f in &factors[1..] {
-            result = result.multiply(f);
+            result = result.multiply(f).await;
         }
         let total: f64 = result.values.iter().sum();
         if total <= 0.0 {
@@ -1314,7 +1314,7 @@ impl DiscreteScm {
 
     /// 🔮️ `P(target | do(interventions), evidence)`: posterior on the intervened network.
     pub async fn interventional_distribution(&self, target: usize, interventions: &[(usize, u32)], evidence: &[(usize, u32)]) -> Result<Vec<f64>, CausalError> {
-        self.intervened(interventions)?.posterior(target, evidence)
+        self.intervened(interventions).await?.posterior(target, evidence).await
     }
 }
 
@@ -1353,7 +1353,7 @@ impl Factor {
         let total_new = new_cards.iter().product::<usize>().max(1);
         let mut values = Vec::with_capacity(total_new);
         for idx in 0..total_new {
-            let mut assignment = decode(&new_vars, &new_cards, idx);
+            let mut assignment = decode(&new_vars, &new_cards, idx).await;
             assignment.insert(var, value);
             values.push(self.values[self.encode(&assignment)]);
         }
@@ -1387,7 +1387,7 @@ impl Factor {
         let total_new = new_cards.iter().product::<usize>().max(1);
         let mut values = vec![0.0; total_new];
         for (new_idx, slot) in values.iter_mut().enumerate() {
-            let mut assignment = decode(&new_vars, &new_cards, new_idx);
+            let mut assignment = decode(&new_vars, &new_cards, new_idx).await;
             let mut sum = 0.0;
             for k in 0..self.cards[pos] {
                 assignment.insert(var, k as u32);
@@ -1439,12 +1439,12 @@ async fn bootstrap_ci(
     opts: &BootstrapOptions,
     point_fn: &dyn Fn(&crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table) -> Result<f64, CausalError>,
 ) -> (f64, f64) {
-    let mut rng = semio_framework_geometry::random::Rng::from_seed(opts.seed);
+    let mut rng = semio_framework_geometry::random::Rng::from_seed(opts.seed).await;
     let n = data.n_rows();
     let mut estimates = Vec::with_capacity(opts.replicates);
     for _ in 0..opts.replicates {
-        let indices: Vec<usize> = (0..n).map(|_| rng.next_range(0, n as u64) as usize).collect();
-        if let Ok(resampled) = data.select_rows(&indices) {
+        let indices: Vec<usize> = (0..n.await).map(|_| semio_framework_plugin::resolve_ready(rng.next_range(0, n as u64)) as usize).collect();
+        if let Ok(resampled) = data.select_rows(&indices).await {
             if let Ok(estimate) = point_fn(&resampled) {
                 estimates.push(estimate);
             }
@@ -1468,7 +1468,7 @@ async fn wrap_estimate(
 ) -> EffectEstimate {
     match &opts.bootstrap {
         Some(bootstrap_opts) => {
-            let (lo, hi) = bootstrap_ci(data, bootstrap_opts, point_fn);
+            let (lo, hi) = bootstrap_ci(data, bootstrap_opts, point_fn).await;
             EffectEstimate { estimate: point, ci: Some((lo, hi)), ci_level: bootstrap_opts.level }
         }
         None => EffectEstimate { estimate: point, ci: None, ci_level: 0.0 },
@@ -1476,8 +1476,8 @@ async fn wrap_estimate(
 }
 
 async fn naive_difference_point(data: &crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table, treatment: usize, outcome: usize) -> Result<f64, CausalError> {
-    let t = data.continuous(treatment)?;
-    let y = data.continuous(outcome)?;
+    let t = data.continuous(treatment).await?;
+    let y = data.continuous(outcome).await?;
     let (mut sum1, mut n1, mut sum0, mut n0) = (0.0, 0usize, 0.0, 0usize);
     for (&ti, &yi) in t.iter().zip(y) {
         if ti > 0.5 {
@@ -1496,8 +1496,8 @@ async fn naive_difference_point(data: &crate::artifacts::semio::standards::v1::s
 
 /// 📏️ Level-1 baseline: `E[y|t=1] − E[y|t=0]` — biased under confounding, useful as a comparison point.
 pub async fn naive_difference(data: &crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table, treatment: usize, outcome: usize, opts: &EstimationOptions) -> Result<EffectEstimate, CausalError> {
-    let point = naive_difference_point(data, treatment, outcome)?;
-    Ok(wrap_estimate(point, data, opts, &|d| naive_difference_point(d, treatment, outcome)))
+    let point = naive_difference_point(data, treatment, outcome).await?;
+    Ok(wrap_estimate(point, data, opts, &|d| naive_difference_point(d, treatment, outcome)).await)
 }
 
 #[allow(clippy::needless_range_loop, reason = "row indexes both the MatD design matrix by (row, col) and a values/t slice — enumerate() would only remove one of the two")]
@@ -1508,59 +1508,59 @@ async fn design_with_treatment(
     treatment_value: Option<f64>,
 ) -> Result<crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::MatD, CausalError> {
     let n = data.n_rows();
-    let mut design = crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::MatD::zeros(n, covariates.len() + 1);
-    let t = data.continuous(treatment)?;
-    for row in 0..n {
-        design.set(row, 0, treatment_value.unwrap_or(t[row]));
+    let mut design = crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::MatD::zeros(n.await, covariates.len() + 1).await;
+    let t = data.continuous(treatment).await?;
+    for row in 0..n.await {
+        design.set(row, 0, treatment_value.unwrap_or(t[row])).await;
     }
     for (col, &c) in covariates.iter().enumerate() {
-        let values = data.continuous(c)?;
-        for row in 0..n {
-            design.set(row, col + 1, values[row]);
+        let values = data.continuous(c).await?;
+        for row in 0..n.await {
+            design.set(row, col + 1, values[row]).await;
         }
     }
     Ok(design)
 }
 
 async fn g_formula_point(data: &crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table, treatment: usize, outcome: usize, covariates: &[usize]) -> Result<f64, CausalError> {
-    let y = data.continuous(outcome)?;
-    let design = design_with_treatment(data, treatment, covariates, None)?;
-    let fit = crate::artifacts::semio::standards::v1::subsets::table::schema::statistics_internals::ols(&design, y, true)?;
+    let y = data.continuous(outcome).await?;
+    let design = design_with_treatment(data, treatment, covariates, None).await?;
+    let fit = crate::artifacts::semio::standards::v1::subsets::table::schema::statistics_internals::ols(&design, y, true).await?;
     let predict_mean = |design: &crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::MatD| -> f64 {
         let n = design.rows;
         let p = design.cols;
         let total: f64 = (0..n).map(|row| fit.coefficients[0] + (0..p).map(|col| fit.coefficients[col + 1] * design.get(row, col)).sum::<f64>()).sum();
         total / n as f64
     };
-    let design_t1 = design_with_treatment(data, treatment, covariates, Some(1.0))?;
-    let design_t0 = design_with_treatment(data, treatment, covariates, Some(0.0))?;
+    let design_t1 = design_with_treatment(data, treatment, covariates, Some(1.0)).await?;
+    let design_t0 = design_with_treatment(data, treatment, covariates, Some(0.0)).await?;
     Ok(predict_mean(&design_t1) - predict_mean(&design_t0))
 }
 
 /// 📏️ G-formula / regression-adjustment ATE: fit `y ~ t + covariates` by OLS, then average the
 /// model's predicted `y` at `t=1` minus at `t=0` over the empirical covariate distribution.
 pub async fn g_formula_ate(data: &crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table, treatment: usize, outcome: usize, covariates: &[usize], opts: &EstimationOptions) -> Result<EffectEstimate, CausalError> {
-    let point = g_formula_point(data, treatment, outcome, covariates)?;
-    Ok(wrap_estimate(point, data, opts, &|d| g_formula_point(d, treatment, outcome, covariates)))
+    let point = g_formula_point(data, treatment, outcome, covariates).await?;
+    Ok(wrap_estimate(point, data, opts, &|d| g_formula_point(d, treatment, outcome, covariates)).await)
 }
 
 #[allow(clippy::needless_range_loop, reason = "row indexes both the MatD design matrix by (row, col) and the values slice — enumerate() would only remove the values index")]
 async fn ipw_point(data: &crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table, treatment: usize, outcome: usize, covariates: &[usize]) -> Result<f64, CausalError> {
     const EPS: f64 = 1e-6;
     let n = data.n_rows();
-    let mut design = crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::MatD::zeros(n, covariates.len());
+    let mut design = crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::MatD::zeros(n.await, covariates.len()).await;
     for (col, &c) in covariates.iter().enumerate() {
-        let values = data.continuous(c)?;
-        for row in 0..n {
-            design.set(row, col, values[row]);
+        let values = data.continuous(c).await?;
+        for row in 0..n.await {
+            design.set(row, col, values[row]).await;
         }
     }
-    let t = data.continuous(treatment)?;
-    let fit = crate::artifacts::semio::standards::v1::subsets::table::schema::statistics_internals::logistic(&design, t, true)?;
-    let propensity = crate::artifacts::semio::standards::v1::subsets::table::schema::statistics_internals::logistic_predict(&fit, &design, true)?;
-    let y = data.continuous(outcome)?;
+    let t = data.continuous(treatment).await?;
+    let fit = crate::artifacts::semio::standards::v1::subsets::table::schema::statistics_internals::logistic(&design, t, true).await?;
+    let propensity = crate::artifacts::semio::standards::v1::subsets::table::schema::statistics_internals::logistic_predict(&fit, &design, true).await?;
+    let y = data.continuous(outcome).await?;
     let (mut num1, mut den1, mut num0, mut den0) = (0.0, 0.0, 0.0, 0.0);
-    for row in 0..n {
+    for row in 0..n.await {
         let e = propensity[row].clamp(EPS, 1.0 - EPS);
         if t[row] > 0.5 {
             num1 += y[row] / e;
@@ -1579,8 +1579,8 @@ async fn ipw_point(data: &crate::artifacts::semio::standards::v1::subsets::table
 /// 📏️ Inverse-probability weighting ATE: logistic propensity model, Hájek (normalized-weight)
 /// estimator, propensities clipped to `[1e-6, 1-1e-6]`.
 pub async fn ipw_ate(data: &crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table, treatment: usize, outcome: usize, covariates: &[usize], opts: &EstimationOptions) -> Result<EffectEstimate, CausalError> {
-    let point = ipw_point(data, treatment, outcome, covariates)?;
-    Ok(wrap_estimate(point, data, opts, &|d| ipw_point(d, treatment, outcome, covariates)))
+    let point = ipw_point(data, treatment, outcome, covariates).await?;
+    Ok(wrap_estimate(point, data, opts, &|d| ipw_point(d, treatment, outcome, covariates)).await)
 }
 // #endregion 🔖️Estimation
 
@@ -1614,16 +1614,16 @@ impl LinearGaussianScm {
     /// out of scope for v1 (needs conditional-MVN abduction) and returns `InvalidQuery`.
     pub async fn query(&self, target: usize, what_if: &WhatIf) -> Result<f64, CausalError> {
         if what_if.evidence.is_empty() {
-            return self.interventional_mean(target, &what_if.interventions);
+            return self.interventional_mean(target, &what_if.interventions).await;
         }
         if what_if.evidence.len() != self.dag.n() {
             return Err(CausalError::InvalidQuery("counterfactual queries need evidence for every variable in v1 (partial-evidence abduction is out of scope)".to_string()));
         }
-        let mut observed = vec![0.0; self.dag.n()];
+        let mut observed = vec![0.0; self.dag.n().await];
         for &(v, value) in &what_if.evidence {
             observed[v] = value;
         }
-        Ok(self.counterfactual(&observed, &what_if.interventions)?.get(target))
+        Ok(self.counterfactual(&observed, &what_if.interventions).await?.get(target).await)
     }
 }
 // #endregion 🔖️Query

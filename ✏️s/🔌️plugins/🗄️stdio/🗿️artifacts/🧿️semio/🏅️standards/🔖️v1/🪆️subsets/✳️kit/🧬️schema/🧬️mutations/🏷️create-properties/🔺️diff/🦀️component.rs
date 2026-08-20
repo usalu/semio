@@ -11,8 +11,8 @@ pub async fn diff(payload: &CreateProperties, base: &SemioKitSnapshot) -> protoc
             "mutation.duplicate-id",
             "The kit already has a properties child.".to_string(),
             ["properties".to_string()],
-        );
+        ).await;
     }
-    protocol::MutationOutcome::new(SemioKitDiff { properties: Some(Some(store::ArtifactChild::new(payload.child_id.clone(), payload.target.clone()))), ..Default::default() })
+    protocol::MutationOutcome::new(SemioKitDiff { properties: Some(Some(store::ArtifactChild::new(payload.child_id.clone(), payload.target.clone()).await)), ..Default::default() }).await
 }
 //#endregion 🔖️Diff

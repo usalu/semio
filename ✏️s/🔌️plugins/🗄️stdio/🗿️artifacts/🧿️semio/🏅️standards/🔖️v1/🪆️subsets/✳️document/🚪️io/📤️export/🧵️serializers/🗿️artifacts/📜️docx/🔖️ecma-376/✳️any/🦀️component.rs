@@ -35,10 +35,10 @@ async fn map_semio_runs(runs: &[DocRun]) -> Vec<DocxRun> {
 /// (docx has no page-break block).
 pub(crate) async fn map_semio_block(block: &DocBlock) -> Vec<DocxBlock> {
     match block {
-        DocBlock::Paragraph { style_id, runs } => vec![DocxBlock::Paragraph(DocxParagraph { runs: map_semio_runs(runs), style: style_id.clone(), extra_paragraph_properties: Vec::new() })],
+        DocBlock::Paragraph { style_id, runs } => vec![DocxBlock::Paragraph(DocxParagraph { runs: map_semio_runs(runs).await, style: style_id.clone(), extra_paragraph_properties: Vec::new() })],
         DocBlock::Heading { level, style_id, runs } => {
             let style = style_id.clone().or_else(|| Some(format!("Heading{level}")));
-            vec![DocxBlock::Paragraph(DocxParagraph { runs: map_semio_runs(runs), style, extra_paragraph_properties: Vec::new() })]
+            vec![DocxBlock::Paragraph(DocxParagraph { runs: map_semio_runs(runs).await, style, extra_paragraph_properties: Vec::new() })]
         }
         DocBlock::List { items, .. } => items.iter().flat_map(|item| item.blocks.iter().flat_map(map_semio_block)).collect(),
         DocBlock::Table { rows } => vec![DocxBlock::Table(DocxTable {
@@ -48,9 +48,9 @@ pub(crate) async fn map_semio_block(block: &DocBlock) -> Vec<DocxBlock> {
                 .collect(),
             extra_table_properties: Vec::new(),
         })],
-        DocBlock::Code { text, .. } => vec![DocxBlock::paragraph(text.clone())],
+        DocBlock::Code { text, .. } => vec![DocxBlock::paragraph(text.clone()).await],
         DocBlock::Quote { blocks } => blocks.iter().flat_map(map_semio_block).collect(),
-        DocBlock::Image { alt, .. } => vec![DocxBlock::paragraph(alt.clone())],
+        DocBlock::Image { alt, .. } => vec![DocxBlock::paragraph(alt.clone()).await],
         DocBlock::PageBreak => Vec::new(),
     }
 }
@@ -68,7 +68,7 @@ impl ArtifactSerializer for SemioDocumentToDocx {
     async fn serialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
         let styles = from.styles.iter().map(|s| DocxStyle { id: s.id.clone(), name: s.name.clone(), based_on: s.based_on.clone() }).collect();
         let body = from.blocks.iter().flat_map(map_semio_block).collect();
-        Ok(DocxSnapshot::from_parts(OpcPackage::default(), DocxDocument { body, styles }))
+        Ok(DocxSnapshot::from_parts(OpcPackage::default(), DocxDocument { body, styles }).await)
     }
 }
 //#endregion 🔖️Serializer

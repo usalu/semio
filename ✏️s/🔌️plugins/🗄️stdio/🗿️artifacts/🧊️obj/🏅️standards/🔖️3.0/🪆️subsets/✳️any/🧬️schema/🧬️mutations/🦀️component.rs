@@ -123,13 +123,13 @@ pub enum ObjMutation {
 /// ▶️ Applies `mutation` to `snapshot`: `let d = mutation.diff(&*snapshot); *snapshot =
 /// d.apply(snapshot); d` — the diff is the single semantics source.
 pub async fn apply_obj_mutation(snapshot: &mut ObjSnapshot, mutation: &ObjMutation) -> protocol::MutationOutcome<ObjDiff> {
-    let outcome = <ObjMutation as Mutation<ObjSnapshot>>::diff(mutation, snapshot);
-    match MutationDiff::apply(outcome.diff(), snapshot) {
+    let outcome = <ObjMutation as Mutation<ObjSnapshot>>::diff(mutation, snapshot).await;
+    match MutationDiff::apply(outcome.diff().await, snapshot).await {
         Ok(next) => {
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).await.absorb_messages(outcome.messages().await.to_vec()).await,
     }
 }
 //#endregion 🔖️Apply
@@ -141,34 +141,34 @@ impl Mutation<ObjSnapshot> for ObjMutation {
     async fn diff(&self, base: &ObjSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             ObjMutation::NoMutation => ObjDiff::default(),
-            ObjMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
+            ObjMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot).await,
 
-            ObjMutation::InsertVertex { index, vertex } => diff_insert_vertex(*index, vertex.clone()),
-            ObjMutation::RemoveVertex { index } => diff_remove_vertex(*index),
+            ObjMutation::InsertVertex { index, vertex } => diff_insert_vertex(*index, vertex.clone()).await,
+            ObjMutation::RemoveVertex { index } => diff_remove_vertex(*index).await,
             ObjMutation::SetVertex { index, vertex } => {
                 let old = base.vertices.get(*index).cloned().unwrap_or_default();
-                diff_set_vertex(*index, vertex_diff_between(&old, vertex))
+                diff_set_vertex(*index, vertex_diff_between(&old, vertex).await).await
             }
 
-            ObjMutation::InsertTexCoord { index, texcoord } => diff_insert_texcoord(*index, texcoord.clone()),
-            ObjMutation::RemoveTexCoord { index } => diff_remove_texcoord(*index),
+            ObjMutation::InsertTexCoord { index, texcoord } => diff_insert_texcoord(*index, texcoord.clone()).await,
+            ObjMutation::RemoveTexCoord { index } => diff_remove_texcoord(*index).await,
             ObjMutation::SetTexCoord { index, texcoord } => {
                 let old = base.texcoords.get(*index).cloned().unwrap_or_default();
-                diff_set_texcoord(*index, texcoord_diff_between(&old, texcoord))
+                diff_set_texcoord(*index, texcoord_diff_between(&old, texcoord).await)
             }
 
             ObjMutation::InsertNormal { index, normal } => diff_insert_normal(*index, normal.clone()),
             ObjMutation::RemoveNormal { index } => diff_remove_normal(*index),
             ObjMutation::SetNormal { index, normal } => {
                 let old = base.normals.get(*index).cloned().unwrap_or_default();
-                diff_set_normal(*index, normal_diff_between(&old, normal))
+                diff_set_normal(*index, normal_diff_between(&old, normal).await)
             }
 
             ObjMutation::InsertFace { index, face } => diff_insert_face(*index, face.clone()),
             ObjMutation::RemoveFace { index } => diff_remove_face(*index),
             ObjMutation::SetFace { index, face } => {
                 let old = base.faces.get(*index).cloned().unwrap_or_default();
-                diff_set_face(*index, face_diff_between(&old, face))
+                diff_set_face(*index, face_diff_between(&old, face).await)
             }
 
             ObjMutation::SetGroup { name, faces } => {
@@ -270,27 +270,27 @@ impl OpText for ObjMutation {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
-                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
+                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline }).await?;
+                return <Self as dsl::DslVariants>::from_named_record(keyword, &record).await;
             }
         }
         Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
     }
     async fn print_op(&self) -> String {
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
+        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self).await;
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
+        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline).await
     }
 }
 
 /// ⚡️ Handcrafted `OpBinary` (P6) — pure forward to `dsl::variants_binary`.
 impl OpBinary for ObjMutation {
     async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        dsl::variants_binary::encode_op(self)
+        dsl::variants_binary::encode_op(self).await
     }
     async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        dsl::variants_binary::decode_op(bytes)
+        dsl::variants_binary::decode_op(bytes).await
     }
 }
 //#endregion OpCodecs

@@ -16,7 +16,7 @@ pub const BODY_KEY: &str = DocumentWindowKit::KIND_ID;
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `create_docx_viewer` (this subset's surface root).
 pub async fn definition() -> WindowKindDefinition {
-    WindowKindDefinition { label: LocalizedLabel::native("Document", "Dokument"), icon_id: "file-text".into(), ..DocumentWindowKit::window_kind() }
+    WindowKindDefinition { label: LocalizedLabel::native("Document", "Dokument"), icon_id: "file-text".into(), ..DocumentWindowKit::window_kind().await }
 }
 //#endregion 🔖️Definition
 
@@ -33,7 +33,7 @@ async fn block_text(block: &DocxBlock) -> String {
 /// 👁️ Pure `DocxSnapshot -> UiNode` read: one `DocumentPage` per top-level `document.body` block.
 pub async fn render(document: &DocxSnapshot) -> UiNode {
     let pages = document.document.body.iter().map(|block| DocumentPage { text: block_text(block) }).collect();
-    DocumentWindowKit::render(&DocumentView { pages })
+    DocumentWindowKit::render(&DocumentView { pages }).await
 }
 //#endregion 🔖️Render
 

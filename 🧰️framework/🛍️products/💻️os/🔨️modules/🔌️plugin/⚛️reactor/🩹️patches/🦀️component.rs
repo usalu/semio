@@ -30,13 +30,13 @@ pub struct PatchTracker {
 }
 
 impl PatchTracker {
-    pub async fn new() -> Self {
+    pub fn new() -> Self {
         Self::default()
     }
 
     /// 🩹️ Records `body` as `surface`'s new state and returns the `UiPatch` to emit — `None` when
     /// `body` is identical to what was last recorded (nothing dirty).
-    pub async fn diff(&self, surface: &str, body: UiNode) -> Option<UiPatch> {
+    pub fn diff(&self, surface: &str, body: UiNode) -> Option<UiPatch> {
         let mut last = self.last.borrow_mut();
         let base_revision = last.get(surface).map(|state| state.revision).unwrap_or(0);
         let unchanged = last.get(surface).map(|state| state.body == body).unwrap_or(false);
@@ -52,14 +52,14 @@ impl PatchTracker {
     /// diff) — dropping the tracked revision back to 0 forces the NEXT `diff()` call for this
     /// surface to treat everything as dirty again with a fresh `base_revision` of 0, matching the
     /// host's own reset expectation on rejection.
-    pub async fn mark_rejected(&self, surface: &str) {
+    pub fn mark_rejected(&self, surface: &str) {
         self.last.borrow_mut().remove(surface);
     }
 
     /// 🩹️ `Event::PatchAck` handling — no-op today (the tracker already advanced its revision
     /// optimistically in `diff()`); kept as a real entry point so a future ack-then-advance
     /// scheme doesn't need a new method name.
-    pub async fn mark_ack(&self, _surface: &str, _revision: u64) {}
+    pub fn mark_ack(&self, _surface: &str, _revision: u64) {}
 }
 
 #[cfg(test)]
@@ -71,13 +71,13 @@ mod tests {
     /// mirrors the exact `UiNode::Text(UiTextNode { .. })` construction already used elsewhere in
     /// the codebase (e.g. `🖱️ui/🧱️elements/👥️PresenceBar/🧊️component.rs`).
     async fn node(text: &str) -> UiNode {
-        UiNode::Text(UiTextNode { value: Label::data(text), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None })
+        UiNode::Text(UiTextNode { value: Label::data(text).await, emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None })
     }
 
     #[semio_framework_async_macros::async_test]
     async fn first_diff_for_a_surface_is_dirty_with_base_revision_zero() {
         let tracker = PatchTracker::new();
-        let patch = tracker.diff("main", node("a")).expect("first observation of a surface must be dirty");
+        let patch = tracker.diff("main", node("a").await).expect("first observation of a surface must be dirty");
         assert_eq!(patch.base_revision, 0);
         assert_eq!(patch.revision, 1);
     }
@@ -85,15 +85,15 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn an_identical_body_produces_no_patch() {
         let tracker = PatchTracker::new();
-        tracker.diff("main", node("a"));
-        assert!(tracker.diff("main", node("a")).is_none(), "an unchanged body must not re-emit a patch");
+        tracker.diff("main", node("a").await);
+        assert!(tracker.diff("main", node("a").await).is_none(), "an unchanged body must not re-emit a patch");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn a_changed_body_advances_the_revision() {
         let tracker = PatchTracker::new();
-        tracker.diff("main", node("a"));
-        let patch = tracker.diff("main", node("b")).expect("a changed body must be dirty");
+        tracker.diff("main", node("a").await);
+        let patch = tracker.diff("main", node("b").await).expect("a changed body must be dirty");
         assert_eq!(patch.base_revision, 1);
         assert_eq!(patch.revision, 2);
     }
@@ -101,9 +101,9 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn mark_rejected_resets_the_surface_to_base_revision_zero() {
         let tracker = PatchTracker::new();
-        tracker.diff("main", node("a"));
+        tracker.diff("main", node("a").await);
         tracker.mark_rejected("main");
-        let patch = tracker.diff("main", node("b")).expect("a surface must be dirty again right after rejection");
+        let patch = tracker.diff("main", node("b").await).expect("a surface must be dirty again right after rejection");
         assert_eq!(patch.base_revision, 0);
     }
 }

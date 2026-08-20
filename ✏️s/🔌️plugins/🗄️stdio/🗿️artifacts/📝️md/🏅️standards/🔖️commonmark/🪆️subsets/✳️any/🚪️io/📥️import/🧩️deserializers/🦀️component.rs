@@ -161,7 +161,7 @@ async fn dedent_by_chars(line: &str, width: usize) -> Option<String> {
 /// 📥 Top-level entry: parses `text` into the complete block sequence.
 pub async fn parse_markdown_blocks(text: &str) -> Vec<MdBlock> {
     let lines: Vec<&str> = text.lines().collect();
-    parse_blocks(&lines)
+    parse_blocks(&lines).await
 }
 
 /// 📥 Recursive block parser over an already-dedented line slice -- called at the top level and
@@ -176,16 +176,16 @@ async fn parse_blocks(lines: &[&str]) -> Vec<MdBlock> {
             i += 1;
             continue;
         }
-        if thematic_break(line) {
+        if thematic_break(line).await {
             blocks.push(MdBlock::ThematicBreak);
             i += 1;
             continue;
         }
-        if let Some((fence_char, fence_len, info)) = fence_open(line) {
+        if let Some((fence_char, fence_len, info)) = fence_open(line).await {
             let mut code_lines = Vec::new();
             i += 1;
             while i < lines.len() {
-                if let Some((c2, len2, _)) = fence_open(lines[i]) {
+                if let Some((c2, len2, _)) = fence_open(lines[i]).await {
                     if c2 == fence_char && len2 >= fence_len && lines[i].trim().chars().all(|c| c == fence_char) {
                         i += 1;
                         break;
@@ -197,11 +197,11 @@ async fn parse_blocks(lines: &[&str]) -> Vec<MdBlock> {
             blocks.push(MdBlock::CodeBlock { info: if info.is_empty() { None } else { Some(info) }, literal: code_lines.join("\n") });
             continue;
         }
-        if let Some(rest) = indented_code_line(line) {
+        if let Some(rest) = indented_code_line(line).await {
             let mut code_lines = vec![rest.to_string()];
             i += 1;
             while i < lines.len() {
-                match indented_code_line(lines[i]) {
+                match indented_code_line(lines[i]).await {
                     Some(r) => {
                         code_lines.push(r.to_string());
                         i += 1;
@@ -212,10 +212,10 @@ async fn parse_blocks(lines: &[&str]) -> Vec<MdBlock> {
             blocks.push(MdBlock::CodeBlock { info: None, literal: code_lines.join("\n") });
             continue;
         }
-        if blockquote_marker(line).is_some() {
+        if blockquote_marker(line).await.is_some() {
             let mut quote_lines = Vec::new();
             while i < lines.len() {
-                match blockquote_marker(lines[i]) {
+                match blockquote_marker(lines[i]).await {
                     Some(content) => {
                         quote_lines.push(content.to_string());
                         i += 1;
@@ -224,15 +224,15 @@ async fn parse_blocks(lines: &[&str]) -> Vec<MdBlock> {
                 }
             }
             let quote_refs: Vec<&str> = quote_lines.iter().map(|s| s.as_str()).collect();
-            blocks.push(MdBlock::BlockQuote { blocks: parse_blocks(&quote_refs) });
+            blocks.push(MdBlock::BlockQuote { blocks: parse_blocks(&quote_refs).await });
             continue;
         }
-        if let Some((level, rest)) = atx_heading(line) {
-            blocks.push(MdBlock::Heading { level, inlines: parse_inline(rest) });
+        if let Some((level, rest)) = atx_heading(line).await {
+            blocks.push(MdBlock::Heading { level, inlines: parse_inline(rest).await });
             i += 1;
             continue;
         }
-        if html_block_start(line) {
+        if html_block_start(line).await {
             let mut html_lines = vec![line];
             i += 1;
             while i < lines.len() && !lines[i].trim().is_empty() {
@@ -242,8 +242,8 @@ async fn parse_blocks(lines: &[&str]) -> Vec<MdBlock> {
             blocks.push(MdBlock::HtmlBlock { raw: html_lines.join("\n") });
             continue;
         }
-        if let Some((ordered, start, _, _)) = list_item_marker(line) {
-            let (list_block, consumed) = parse_list(&lines[i..], ordered, start);
+        if let Some((ordered, start, _, _)) = list_item_marker(line).await {
+            let (list_block, consumed) = parse_list(&lines[i..], ordered, start).await;
             blocks.push(list_block);
             i += consumed;
             continue;
@@ -252,13 +252,13 @@ async fn parse_blocks(lines: &[&str]) -> Vec<MdBlock> {
         i += 1;
         while i < lines.len() {
             let l = lines[i];
-            if l.trim().is_empty() || fence_open(l).is_some() || indented_code_line(l).is_some() || atx_heading(l).is_some() || list_item_marker(l).is_some() || blockquote_marker(l).is_some() || thematic_break(l) || html_block_start(l) {
+            if l.trim().is_empty() || fence_open(l).await.is_some() || indented_code_line(l).await.is_some() || atx_heading(l).await.is_some() || list_item_marker(l).await.is_some() || blockquote_marker(l).await.is_some() || thematic_break(l).await || html_block_start(l).await {
                 break;
             }
             para_lines.push(l);
             i += 1;
         }
-        blocks.push(MdBlock::Paragraph { inlines: parse_inline_lines(&para_lines) });
+        blocks.push(MdBlock::Paragraph { inlines: parse_inline_lines(&para_lines).await });
     }
     blocks
 }
@@ -285,7 +285,7 @@ async fn parse_list(lines: &[&str], ordered: bool, start: Option<u32>) -> (MdBlo
             if j >= lines.len() {
                 break;
             }
-            let continues_as_item = matches!(list_item_marker(lines[j]), Some((ord2, ..)) if ord2 == ordered);
+            let continues_as_item = matches!(list_item_marker(lines[j]).await, Some((ord2, ..)) if ord2 == ordered);
             let continues_as_indent = leading_spaces(lines[j]) >= 2 && !continues_as_item;
             if continues_as_item || continues_as_indent {
                 saw_blank = true;
@@ -294,7 +294,7 @@ async fn parse_list(lines: &[&str], ordered: bool, start: Option<u32>) -> (MdBlo
             }
             break;
         }
-        let Some((ord2, _, marker_width, first_content)) = list_item_marker(lines[i]) else { break };
+        let Some((ord2, _, marker_width, first_content)) = list_item_marker(lines[i]).await else { break };
         if ord2 != ordered {
             break;
         }
@@ -309,7 +309,7 @@ async fn parse_list(lines: &[&str], ordered: bool, start: Option<u32>) -> (MdBlo
                 while j < lines.len() && lines[j].trim().is_empty() {
                     j += 1;
                 }
-                if j < lines.len() && dedent_by_chars(lines[j], marker_width).is_some() && leading_spaces(lines[j]) >= marker_width {
+                if j < lines.len() && dedent_by_chars(lines[j], marker_width).await.is_some() && leading_spaces(lines[j]) >= marker_width {
                     for _ in i..j {
                         item_lines.push(String::new());
                     }
@@ -319,7 +319,7 @@ async fn parse_list(lines: &[&str], ordered: bool, start: Option<u32>) -> (MdBlo
                 }
                 break;
             }
-            match dedent_by_chars(lines[i], marker_width) {
+            match dedent_by_chars(lines[i], marker_width).await {
                 Some(dedented) => {
                     item_lines.push(dedented);
                     i += 1;
@@ -328,7 +328,7 @@ async fn parse_list(lines: &[&str], ordered: bool, start: Option<u32>) -> (MdBlo
             }
         }
         let item_refs: Vec<&str> = item_lines.iter().map(|s| s.as_str()).collect();
-        items.push(parse_blocks(&item_refs));
+        items.push(parse_blocks(&item_refs).await);
     }
     (MdBlock::List { ordered, start, tight: !saw_blank, items }, i)
 }
@@ -439,14 +439,14 @@ async fn try_parse_bracket_paren(chars: &[char], start: usize) -> Option<((usize
         return None;
     }
     let inside: String = chars[url_start..k].iter().collect();
-    let (url, title) = split_url_title(&inside);
+    let (url, title) = split_url_title(&inside).await;
     Some(((text_start, text_end), url, title, k + 1 - start))
 }
 
 async fn try_parse_link(chars: &[char], start: usize) -> Option<(MdInline, usize)> {
-    let ((text_start, text_end), url, title, consumed) = try_parse_bracket_paren(chars, start)?;
+    let ((text_start, text_end), url, title, consumed) = try_parse_bracket_paren(chars, start).await?;
     let text: String = chars[text_start..text_end].iter().collect();
-    Some((MdInline::Link { text: parse_inline(&text), url, title }, consumed))
+    Some((MdInline::Link { text: Box::pin(parse_inline(&text)).await, url, title }, consumed))
 }
 
 async fn try_parse_image(chars: &[char], start: usize) -> Option<(MdInline, usize)> {
@@ -454,7 +454,7 @@ async fn try_parse_image(chars: &[char], start: usize) -> Option<(MdInline, usiz
     if chars.get(start + 1) != Some(&'[') {
         return None;
     }
-    let ((text_start, text_end), url, title, consumed) = try_parse_bracket_paren(chars, start + 1)?;
+    let ((text_start, text_end), url, title, consumed) = try_parse_bracket_paren(chars, start + 1).await?;
     let alt: String = chars[text_start..text_end].iter().collect();
     Some((MdInline::Image { alt, url, title }, consumed + 1))
 }
@@ -507,7 +507,7 @@ pub async fn parse_inline(text: &str) -> Vec<MdInline> {
     let mut i = 0usize;
     while i < chars.len() {
         if chars[i] == '!' && chars.get(i + 1) == Some(&'[') {
-            if let Some((image, consumed)) = try_parse_image(&chars, i) {
+            if let Some((image, consumed)) = try_parse_image(&chars, i).await {
                 if !buf.is_empty() {
                     nodes.push(MdInline::Text { text: std::mem::take(&mut buf) });
                 }
@@ -517,7 +517,7 @@ pub async fn parse_inline(text: &str) -> Vec<MdInline> {
             }
         }
         if chars[i] == '[' {
-            if let Some((link, consumed)) = try_parse_link(&chars, i) {
+            if let Some((link, consumed)) = Box::pin(try_parse_link(&chars, i)).await {
                 if !buf.is_empty() {
                     nodes.push(MdInline::Text { text: std::mem::take(&mut buf) });
                 }
@@ -527,7 +527,7 @@ pub async fn parse_inline(text: &str) -> Vec<MdInline> {
             }
         }
         if chars[i] == '`' {
-            if let Some((code, consumed)) = try_parse_code_span(&chars, i) {
+            if let Some((code, consumed)) = try_parse_code_span(&chars, i).await {
                 if !buf.is_empty() {
                     nodes.push(MdInline::Text { text: std::mem::take(&mut buf) });
                 }
@@ -537,7 +537,7 @@ pub async fn parse_inline(text: &str) -> Vec<MdInline> {
             }
         }
         if chars[i] == '<' {
-            if let Some((raw, consumed)) = try_parse_html_inline(&chars, i) {
+            if let Some((raw, consumed)) = try_parse_html_inline(&chars, i).await {
                 if !buf.is_empty() {
                     nodes.push(MdInline::Text { text: std::mem::take(&mut buf) });
                 }
@@ -547,21 +547,21 @@ pub async fn parse_inline(text: &str) -> Vec<MdInline> {
             }
         }
         if (chars[i] == '*' || chars[i] == '_') && chars.get(i + 1) == Some(&chars[i]) {
-            if let Some((inner, consumed)) = try_parse_delim(&chars, i, chars[i], 2) {
+            if let Some((inner, consumed)) = try_parse_delim(&chars, i, chars[i], 2).await {
                 if !buf.is_empty() {
                     nodes.push(MdInline::Text { text: std::mem::take(&mut buf) });
                 }
-                nodes.push(MdInline::Strong { inlines: parse_inline(&inner) });
+                nodes.push(MdInline::Strong { inlines: Box::pin(parse_inline(&inner)).await });
                 i += consumed;
                 continue;
             }
         }
         if chars[i] == '*' || chars[i] == '_' {
-            if let Some((inner, consumed)) = try_parse_delim(&chars, i, chars[i], 1) {
+            if let Some((inner, consumed)) = try_parse_delim(&chars, i, chars[i], 1).await {
                 if !buf.is_empty() {
                     nodes.push(MdInline::Text { text: std::mem::take(&mut buf) });
                 }
-                nodes.push(MdInline::Emphasis { inlines: parse_inline(&inner) });
+                nodes.push(MdInline::Emphasis { inlines: Box::pin(parse_inline(&inner)).await });
                 i += consumed;
                 continue;
             }

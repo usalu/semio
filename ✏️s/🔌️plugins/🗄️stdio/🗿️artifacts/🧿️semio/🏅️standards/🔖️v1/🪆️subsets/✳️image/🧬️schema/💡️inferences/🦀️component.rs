@@ -25,7 +25,7 @@ pub struct SemioImageInference {
 
 impl protocol::Inference<SemioImageSnapshot> for SemioImageInference {
     async fn infer(snapshot: &SemioImageSnapshot) -> Self {
-        Self { dimensions: compute_semio_image_dimensions(snapshot) }
+        Self { dimensions: compute_semio_image_dimensions(snapshot).await }
     }
 }
 

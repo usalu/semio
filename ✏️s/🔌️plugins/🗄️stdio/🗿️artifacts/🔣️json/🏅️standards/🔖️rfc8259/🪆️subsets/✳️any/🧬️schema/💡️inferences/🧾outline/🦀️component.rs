@@ -37,7 +37,7 @@ async fn walk(value: &JsonValue, depth: u32) -> (u32, u32) {
             let mut count = 1u32;
             let mut max_depth = depth;
             for item in items {
-                let (c, d) = walk(item, depth + 1);
+                let (c, d) = Box::pin(walk(item, depth + 1)).await;
                 count += c;
                 max_depth = max_depth.max(d);
             }
@@ -47,7 +47,7 @@ async fn walk(value: &JsonValue, depth: u32) -> (u32, u32) {
             let mut count = 1u32;
             let mut max_depth = depth;
             for member in members {
-                let (c, d) = walk(&member.value, depth + 1);
+                let (c, d) = Box::pin(walk(&member.value, depth + 1)).await;
                 count += c;
                 max_depth = max_depth.max(d);
             }
@@ -59,7 +59,7 @@ async fn walk(value: &JsonValue, depth: u32) -> (u32, u32) {
 
 impl JsonOutline {
     pub async fn compute(snapshot: &JsonSnapshot) -> Self {
-        let (node_count, max_depth) = walk(&snapshot.value, 1);
+        let (node_count, max_depth) = walk(&snapshot.value, 1).await;
         Self { node_count, max_depth, root_kind: root_kind_name(&snapshot.value).to_string() }
     }
 }

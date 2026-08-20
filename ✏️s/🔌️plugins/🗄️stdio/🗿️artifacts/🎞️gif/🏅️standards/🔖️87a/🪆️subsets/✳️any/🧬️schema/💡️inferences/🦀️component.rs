@@ -25,7 +25,7 @@ pub struct GifInference {
 
 impl protocol::Inference<GifSnapshot> for GifInference {
     async fn infer(snapshot: &GifSnapshot) -> Self {
-        Self { dimensions: compute_gif_dimensions(snapshot) }
+        Self { dimensions: compute_gif_dimensions(snapshot).await }
     }
 }
 

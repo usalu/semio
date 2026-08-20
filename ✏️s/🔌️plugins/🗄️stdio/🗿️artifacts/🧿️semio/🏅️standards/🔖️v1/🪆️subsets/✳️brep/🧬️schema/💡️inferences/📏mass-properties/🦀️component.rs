@@ -42,36 +42,36 @@ pub enum PointSolidClassification {
 
 /// 📐 Signed volume of `solid` via divergence theorem surface quadrature (`V = (1/3) ∫ P·n dA`).
 pub async fn solid_volume(body: &Body, solid: SolidId, chord_tol: f64) -> Result<f64, KernelError> {
-    if let Some(v) = try_analytic_sphere_volume(body, solid) {
+    if let Some(v) = try_analytic_sphere_volume(body, solid).await {
         return Ok(v);
     }
-    let faces = body.solid_faces(solid);
+    let faces = body.solid_faces(solid).await;
     if faces.is_empty() {
         return Err(KernelError::MissingEntity("solid has no faces".into()));
     }
     let mut total = 0.0;
     for face in faces {
-        total += face_volume_contribution(body, face, chord_tol)?;
+        total += face_volume_contribution(body, face, chord_tol).await?;
     }
     Ok(total.abs())
 }
 
 /// 📐 Total outer surface area of `solid`.
 pub async fn solid_surface_area(body: &Body, solid: SolidId, chord_tol: f64) -> Result<f64, KernelError> {
-    let faces = body.solid_faces(solid);
+    let faces = body.solid_faces(solid).await;
     if faces.is_empty() {
         return Err(KernelError::MissingEntity("solid has no faces".into()));
     }
     let mut total = 0.0;
     for face in faces {
-        total += face_area(body, face, chord_tol)?;
+        total += face_area(body, face, chord_tol).await?;
     }
     Ok(total)
 }
 
 /// 📐 Center of mass of `solid` at uniform density (tetrahedral decomposition weighted by signed volume).
 pub async fn solid_center_of_mass(body: &Body, solid: SolidId, chord_tol: f64) -> Result<Pnt3, KernelError> {
-    let faces = body.solid_faces(solid);
+    let faces = body.solid_faces(solid).await;
     if faces.is_empty() {
         return Err(KernelError::MissingEntity("solid has no faces".into()));
     }
@@ -80,7 +80,7 @@ pub async fn solid_center_of_mass(body: &Body, solid: SolidId, chord_tol: f64) -
     let mut my = 0.0;
     let mut mz = 0.0;
     for face in faces {
-        let (sv, cx, cy, cz) = face_volume_moments(body, face, chord_tol)?;
+        let (sv, cx, cy, cz) = face_volume_moments(body, face, chord_tol).await?;
         vol += sv;
         mx += cx;
         my += cy;
@@ -90,20 +90,20 @@ pub async fn solid_center_of_mass(body: &Body, solid: SolidId, chord_tol: f64) -
         return Err(KernelError::InvalidInput("solid has zero volume".into()));
     }
     let denom = 4.0 * vol;
-    Ok(Pnt3::new(mx / denom, my / denom, mz / denom))
+    Ok(Pnt3::new(mx / denom, my / denom, mz / denom).await)
 }
 
 /// 📦 Conservative axis-aligned bounding box of `solid` (vertices plus analytic surface expansion).
 pub async fn solid_bounding_box(body: &Body, solid: SolidId) -> Result<AxisAlignedBox, KernelError> {
-    let faces = body.solid_faces(solid);
+    let faces = body.solid_faces(solid).await;
     if faces.is_empty() {
         return Err(KernelError::MissingEntity("solid has no faces".into()));
     }
-    let mut min = Pnt3::new(f64::INFINITY, f64::INFINITY, f64::INFINITY);
-    let mut max = Pnt3::new(f64::NEG_INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY);
+    let mut min = Pnt3::new(f64::INFINITY, f64::INFINITY, f64::INFINITY).await;
+    let mut max = Pnt3::new(f64::NEG_INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY).await;
     let mut any = false;
     for face in faces {
-        for p in face_sample_points(body, face)? {
+        for p in face_sample_points(body, face).await? {
             any = true;
             min.x = min.x.min(p.x);
             min.y = min.y.min(p.y);
@@ -112,7 +112,7 @@ pub async fn solid_bounding_box(body: &Body, solid: SolidId) -> Result<AxisAlign
             max.y = max.y.max(p.y);
             max.z = max.z.max(p.z);
         }
-        if let Some(surface) = body.faces.get(face).and_then(|f| body.surfaces.get(f.surface)) {
+        if let Some(surface) = body.faces.get(face).await.and_then(|f| body.surfaces.get(f.surface)) {
             expand_bbox_for_surface(&mut min, &mut max, surface);
         }
     }
@@ -128,24 +128,24 @@ pub async fn solid_bounding_box(body: &Body, solid: SolidId) -> Result<AxisAlign
 
 /// 📐 Area of one face (`outer` minus `inner` loops).
 pub async fn face_area(body: &Body, face: FaceId, chord_tol: f64) -> Result<f64, KernelError> {
-    let Some(face_ent) = body.faces.get(face) else {
+    let Some(face_ent) = body.faces.get(face).await else {
         return Err(KernelError::MissingEntity("face".into()));
     };
     let mut area = 0.0;
     if let Some(outer) = face_ent.outer {
-        area += loop_area(body, face, outer, chord_tol)?;
+        area += loop_area(body, face, outer, chord_tol).await?;
     }
     for &inner in &face_ent.inners {
-        area -= loop_area(body, face, inner, chord_tol)?;
+        area -= loop_area(body, face, inner, chord_tol).await?;
     }
     Ok(area.abs())
 }
 
 /// 📐 Arc length of an edge over its trimmed parameter range.
 pub async fn edge_length(body: &Body, edge: EdgeId) -> Result<f64, KernelError> {
-    let edge_ent = body.edges.get(edge).ok_or_else(|| KernelError::MissingEntity("edge".into()))?;
-    let curve = body.curves3.get(edge_ent.curve).ok_or_else(|| KernelError::MissingEntity("curve".into()))?;
-    Ok(curve_ops::arc_length(curve, edge_ent.range.0, edge_ent.range.1, 1e-9))
+    let edge_ent = body.edges.get(edge).await.ok_or_else(|| KernelError::MissingEntity("edge".into()))?;
+    let curve = body.curves3.get(edge_ent.curve).await.ok_or_else(|| KernelError::MissingEntity("curve".into()))?;
+    Ok(curve_ops::arc_length(curve, edge_ent.range.0, edge_ent.range.1, 1e-9).await)
 }
 
 // #endregion 🔖️FaceEdge
@@ -154,24 +154,24 @@ pub async fn edge_length(body: &Body, edge: EdgeId) -> Result<f64, KernelError> 
 
 /// 📏 Minimum distance between two closed solids.
 pub async fn distance_solid_solid(body: &Body, a: SolidId, b: SolidId) -> Result<f64, KernelError> {
-    let bb_a = solid_bounding_box(body, a)?;
-    let bb_b = solid_bounding_box(body, b)?;
+    let bb_a = solid_bounding_box(body, a).await?;
+    let bb_b = solid_bounding_box(body, b).await?;
     let separated = axis_aligned_box_distance(&bb_a, &bb_b);
     if separated > 1e-9 {
-        return Ok(separated);
+        return Ok(separated.await);
     }
     let mut best = f64::INFINITY;
     for face in body.solid_faces(a) {
-        for p in face_sample_points(body, face)? {
-            let (_, d) = closest_point_on_solid(body, b, p)?;
+        for p in face_sample_points(body, face).await? {
+            let (_, d) = closest_point_on_solid(body, b, p).await?;
             if d > 1e-9 {
                 best = best.min(d);
             }
         }
     }
     for face in body.solid_faces(b) {
-        for p in face_sample_points(body, face)? {
-            let (_, d) = closest_point_on_solid(body, a, p)?;
+        for p in face_sample_points(body, face).await? {
+            let (_, d) = closest_point_on_solid(body, a, p).await?;
             if d > 1e-9 {
                 best = best.min(d);
             }
@@ -185,14 +185,14 @@ pub async fn distance_solid_solid(body: &Body, a: SolidId, b: SolidId) -> Result
 
 /// 📏 Closest point on `solid` to `point` and the Euclidean distance.
 pub async fn closest_point_on_solid(body: &Body, solid: SolidId, point: Pnt3) -> Result<(Pnt3, f64), KernelError> {
-    let faces = body.solid_faces(solid);
+    let faces = body.solid_faces(solid).await;
     if faces.is_empty() {
         return Err(KernelError::MissingEntity("solid has no faces".into()));
     }
     let mut best_p = point;
     let mut best_d = f64::INFINITY;
     for face in faces {
-        let (p, d) = closest_point_on_face(body, face, point)?;
+        let (p, d) = closest_point_on_face(body, face, point).await?;
         if d < best_d {
             best_d = d;
             best_p = p;
@@ -211,7 +211,7 @@ pub async fn classify_point_on_solid(body: &Body, solid: SolidId, point: Pnt3) -
     let mut boundary_hits = 0;
     let mut parity_votes = 0;
     for dir in RAY_DIRS {
-        match ray_hits_solid(body, solid, point, dir)? {
+        match ray_hits_solid(body, solid, point, dir).await? {
             RayHit::OnBoundary => boundary_hits += 1,
             RayHit::Inside => parity_votes += 1,
             RayHit::Outside => {}
@@ -234,10 +234,10 @@ enum RayHit {
 }
 
 async fn ray_hits_solid(body: &Body, solid: SolidId, origin: Pnt3, dir: Vec3) -> Result<RayHit, KernelError> {
-    let d = dir.normalized().unwrap_or(Vec3::X);
+    let d = dir.normalized().await.unwrap_or(Vec3::X);
     let mut hits = 0usize;
     for face in body.solid_faces(solid) {
-        if let Some(t) = ray_face_intersection(body, face, origin, d)? {
+        if let Some(t) = ray_face_intersection(body, face, origin, d).await? {
             if t < 1e-9 {
                 return Ok(RayHit::OnBoundary);
             }
@@ -322,16 +322,16 @@ async fn gap_1d(a0: f64, a1: f64, b0: f64, b1: f64) -> f64 {
 }
 
 async fn loop_area(body: &Body, face: FaceId, loop_id: crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::LoopId, _chord_tol: f64) -> Result<f64, KernelError> {
-    let surface = face_surface(body, face)?;
-    let flipped = body.faces.get(face).map(|f| f.flipped).unwrap_or(false);
+    let surface = face_surface(body, face).await?;
+    let flipped = body.faces.get(face).await.map(|f| f.flipped).unwrap_or(false);
     match surface {
         Surface::Plane { frame } => {
-            let pts = loop_positions(body, loop_id)?;
-            Ok(newell_area(&pts, outward_plane_normal(&frame, flipped)))
+            let pts = loop_positions(body, loop_id).await?;
+            Ok(newell_area(&pts, outward_plane_normal(&frame, flipped).await).await)
         }
         _ => {
-            let (u0, u1, v0, v1) = loop_uv_bounds(body, face, loop_id, surface)?;
-            let boundary = loop_uv_polygon(body, loop_id, surface)?;
+            let (u0, u1, v0, v1) = loop_uv_bounds(body, face, loop_id, surface).await?;
+            let boundary = loop_uv_polygon(body, loop_id, surface).await?;
             let area = integrate_parametric_face(u0, u1, v0, v1, |u, v| {
                 if !point_in_uv_polygon(u, v, &boundary) {
                     return 0.0;
@@ -343,27 +343,27 @@ async fn loop_area(body: &Body, face: FaceId, loop_id: crate::artifacts::semio::
                     None => 0.0,
                 }
             });
-            Ok(area)
+            Ok(area.await)
         }
     }
 }
 
 async fn face_volume_contribution(body: &Body, face: FaceId, chord_tol: f64) -> Result<f64, KernelError> {
-    let Some(face_ent) = body.faces.get(face) else {
+    let Some(face_ent) = body.faces.get(face).await else {
         return Err(KernelError::MissingEntity("face".into()));
     };
     let mut vol = 0.0;
     if let Some(outer) = face_ent.outer {
-        vol += loop_volume_contribution(body, face, outer, chord_tol)?;
+        vol += loop_volume_contribution(body, face, outer, chord_tol).await?;
     }
     for &inner in &face_ent.inners {
-        vol -= loop_volume_contribution(body, face, inner, chord_tol)?;
+        vol -= loop_volume_contribution(body, face, inner, chord_tol).await?;
     }
     Ok(vol)
 }
 
 async fn face_volume_moments(body: &Body, face: FaceId, chord_tol: f64) -> Result<(f64, f64, f64, f64), KernelError> {
-    let Some(face_ent) = body.faces.get(face) else {
+    let Some(face_ent) = body.faces.get(face).await else {
         return Err(KernelError::MissingEntity("face".into()));
     };
     let mut sv = 0.0;
@@ -371,14 +371,14 @@ async fn face_volume_moments(body: &Body, face: FaceId, chord_tol: f64) -> Resul
     let mut my = 0.0;
     let mut mz = 0.0;
     if let Some(outer) = face_ent.outer {
-        let (a, b, c, d) = loop_volume_moments(body, face, outer, chord_tol)?;
+        let (a, b, c, d) = loop_volume_moments(body, face, outer, chord_tol).await?;
         sv += a;
         mx += b;
         my += c;
         mz += d;
     }
     for &inner in &face_ent.inners {
-        let (a, b, c, d) = loop_volume_moments(body, face, inner, chord_tol)?;
+        let (a, b, c, d) = loop_volume_moments(body, face, inner, chord_tol).await?;
         sv -= a;
         mx -= b;
         my -= c;
@@ -388,23 +388,23 @@ async fn face_volume_moments(body: &Body, face: FaceId, chord_tol: f64) -> Resul
 }
 
 async fn loop_volume_contribution(body: &Body, face: FaceId, loop_id: crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::LoopId, chord_tol: f64) -> Result<f64, KernelError> {
-    let (sv, _, _, _) = loop_volume_moments(body, face, loop_id, chord_tol)?;
+    let (sv, _, _, _) = loop_volume_moments(body, face, loop_id, chord_tol).await?;
     Ok(sv / 6.0)
 }
 
 async fn loop_volume_moments(body: &Body, face: FaceId, loop_id: crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::LoopId, chord_tol: f64) -> Result<(f64, f64, f64, f64), KernelError> {
-    let surface = face_surface(body, face)?;
-    let flipped = body.faces.get(face).map(|f| f.flipped).unwrap_or(false);
+    let surface = face_surface(body, face).await?;
+    let flipped = body.faces.get(face).await.map(|f| f.flipped).unwrap_or(false);
     match surface {
         Surface::Plane { .. } => {
-            let pts = loop_positions(body, loop_id)?;
-            Ok(signed_tetra_sum(&pts))
+            let pts = loop_positions(body, loop_id).await?;
+            Ok(signed_tetra_sum(&pts).await)
         }
         _ => {
-            let (u0, u1, v0, v1) = loop_uv_bounds(body, face, loop_id, surface)?;
-            let boundary = loop_uv_polygon(body, loop_id, surface)?;
+            let (u0, u1, v0, v1) = loop_uv_bounds(body, face, loop_id, surface).await?;
+            let boundary = loop_uv_polygon(body, loop_id, surface).await?;
             let samples = gauss_samples(chord_tol);
-            Ok(parametric_volume_moments(surface, flipped, u0, u1, v0, v1, &boundary, samples))
+            Ok(parametric_volume_moments(surface, flipped, u0, u1, v0, v1, &boundary, samples.await).await)
         }
     }
 }
@@ -419,10 +419,10 @@ async fn signed_tetra_sum(pts: &[Pnt3]) -> (f64, f64, f64, f64) {
     let mut my = 0.0;
     let mut mz = 0.0;
     for i in 1..pts.len() - 1 {
-        let a = p0.to_vec();
+        let a = p0.to_vec().await;
         let b = pts[i] - p0;
         let c = pts[i + 1] - p0;
-        let tet = a.dot(b.cross(c));
+        let tet = a.dot(b.cross(c).await).await;
         sv += tet;
         mx += tet * (p0.x + pts[i].x + pts[i + 1].x);
         my += tet * (p0.y + pts[i].y + pts[i + 1].y);
@@ -434,16 +434,16 @@ async fn signed_tetra_sum(pts: &[Pnt3]) -> (f64, f64, f64, f64) {
 async fn loop_positions(body: &Body, loop_id: crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::LoopId) -> Result<Vec<Pnt3>, KernelError> {
     let mut pts = Vec::new();
     for coedge in body.loop_coedges(loop_id) {
-        let (v0, _) = body.coedge_endpoints(coedge).ok_or_else(|| KernelError::InvalidInput("open coedge".into()))?;
-        let v = body.vertices.get(v0).ok_or_else(|| KernelError::MissingEntity("vertex".into()))?;
+        let (v0, _) = body.coedge_endpoints(coedge).await.ok_or_else(|| KernelError::InvalidInput("open coedge".into()))?;
+        let v = body.vertices.get(v0).await.ok_or_else(|| KernelError::MissingEntity("vertex".into()))?;
         pts.push(v.position);
     }
     Ok(pts)
 }
 
 async fn face_surface<'a>(body: &'a Body, face: FaceId) -> Result<&'a Surface, KernelError> {
-    let face_ent = body.faces.get(face).ok_or_else(|| KernelError::MissingEntity("face".into()))?;
-    body.surfaces.get(face_ent.surface).ok_or_else(|| KernelError::MissingEntity("surface".into()))
+    let face_ent = body.faces.get(face).await.ok_or_else(|| KernelError::MissingEntity("face".into()))?;
+    body.surfaces.get(face_ent.surface).await.ok_or_else(|| KernelError::MissingEntity("surface".into()))
 }
 
 async fn outward_plane_normal(frame: &crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3, flipped: bool) -> Vec3 {
@@ -455,7 +455,7 @@ async fn outward_plane_normal(frame: &crate::artifacts::semio::standards::v1::su
 }
 
 async fn outward_normal(surface: &Surface, u: f64, v: f64, flipped: bool) -> Option<Vec3> {
-    let mut n = surface.normal(u, v)?;
+    let mut n = surface.normal(u, v).await?;
     if flipped {
         n = -n;
     }
@@ -475,12 +475,12 @@ async fn newell_area(pts: &[Pnt3], normal: Vec3) -> f64 {
         cy += pts[i].z * pts[j].x - pts[i].x * pts[j].z;
         cz += pts[i].x * pts[j].y - pts[i].y * pts[j].x;
     }
-    let area_vec = Vec3::new(cx, cy, cz);
-    0.5 * area_vec.dot(normal).abs()
+    let area_vec = Vec3::new(cx, cy, cz).await;
+    0.5 * area_vec.dot(normal).await.abs()
 }
 
 async fn loop_uv_bounds(_body: &Body, _face: FaceId, loop_id: crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::LoopId, surface: &Surface) -> Result<(f64, f64, f64, f64), KernelError> {
-    let poly = loop_uv_polygon(_body, loop_id, surface)?;
+    let poly = loop_uv_polygon(_body, loop_id, surface).await?;
     if poly.is_empty() {
         return Err(KernelError::InvalidInput("empty loop".into()));
     }
@@ -503,12 +503,12 @@ async fn loop_uv_polygon(body: &Body, loop_id: crate::artifacts::semio::standard
     let mut poly = Vec::new();
     let mut prev_u: Option<f64> = None;
     for coedge in body.loop_coedges(loop_id) {
-        let (v0, _) = body.coedge_endpoints(coedge).ok_or_else(|| KernelError::InvalidInput("open coedge".into()))?;
-        let v = body.vertices.get(v0).ok_or_else(|| KernelError::MissingEntity("vertex".into()))?;
-        let mut uv = surface_uv(surface, v.position);
-        if surface.is_u_periodic() {
+        let (v0, _) = body.coedge_endpoints(coedge).await.ok_or_else(|| KernelError::InvalidInput("open coedge".into()))?;
+        let v = body.vertices.get(v0).await.ok_or_else(|| KernelError::MissingEntity("vertex".into()))?;
+        let mut uv = surface_uv(surface, v.position).await;
+        if surface.is_u_periodic().await {
             if let Some(pu) = prev_u {
-                uv.x = unwrap_u(pu, uv.x);
+                uv.x = unwrap_u(pu, uv.x).await;
             }
             prev_u = Some(uv.x);
         }
@@ -532,37 +532,37 @@ async fn unwrap_u(prev: f64, u: f64) -> f64 {
 async fn surface_uv(surface: &Surface, p: Pnt3) -> Pnt2 {
     match surface {
         Surface::Plane { frame } => {
-            let l = frame.to_local(p);
-            Pnt2::new(l.x, l.y)
+            let l = frame.to_local(p).await;
+            Pnt2::new(l.x, l.y).await
         }
         Surface::Cylinder { frame, radius: _ } => {
-            let l = frame.to_local(p);
+            let l = frame.to_local(p).await;
             let u = l.y.atan2(l.x).rem_euclid(std::f64::consts::TAU);
-            Pnt2::new(u, l.z)
+            Pnt2::new(u, l.z).await
         }
         Surface::Cone { frame, half_angle } => {
-            let l = frame.to_local(p);
+            let l = frame.to_local(p).await;
             let u = l.y.atan2(l.x).rem_euclid(std::f64::consts::TAU);
             let v = l.z / half_angle.tan().max(1e-15);
-            Pnt2::new(u, v)
+            Pnt2::new(u, v).await
         }
         Surface::Sphere { frame, radius } => {
-            let l = (p - frame.origin).normalized().unwrap_or(Vec3::Z);
+            let l = (p - frame.origin).normalized().await.unwrap_or(Vec3::Z);
             let v = l.z.clamp(-1.0, 1.0).asin();
             let u = l.y.atan2(l.x).rem_euclid(std::f64::consts::TAU);
             let _ = radius;
-            Pnt2::new(u, v)
+            Pnt2::new(u, v).await
         }
         Surface::Torus { frame, major_radius, minor_radius } => {
-            let l = frame.to_local(p);
+            let l = frame.to_local(p).await;
             let u = l.y.atan2(l.x).rem_euclid(std::f64::consts::TAU);
             let radial = (l.x * l.x + l.y * l.y).sqrt();
             let v = ((radial - *major_radius) / minor_radius.max(1e-15)).clamp(-1.0, 1.0).acos();
-            Pnt2::new(u, v)
+            Pnt2::new(u, v).await
         }
         Surface::Nurbs { .. } => {
             let dom = surface.domain();
-            Pnt2::new(dom.0 .0, dom.1 .0)
+            Pnt2::new(dom.0 .0, dom.1 .0).await
         }
     }
 }
@@ -597,14 +597,14 @@ async fn face_sample_points(body: &Body, face: FaceId) -> Result<Vec<Pnt3>, Kern
     let mut pts = Vec::new();
     for loop_id in body.face_loops(face) {
         for coedge in body.loop_coedges(loop_id) {
-            let edge_ent = body.coedges.get(coedge).and_then(|c| body.edges.get(c.edge));
+            let edge_ent = body.coedges.get(coedge).await.and_then(|c| body.edges.get(c.edge));
             if let Some(edge) = edge_ent {
-                if let Some(curve) = body.curves3.get(edge.curve) {
+                if let Some(curve) = body.curves3.get(edge.curve).await {
                     let mid = 0.5 * (edge.range.0 + edge.range.1);
                     pts.push(curve.eval(mid));
                 }
                 for vid in [edge.v0, edge.v1] {
-                    if let Some(v) = body.vertices.get(vid) {
+                    if let Some(v) = body.vertices.get(vid).await {
                         pts.push(v.position);
                     }
                 }
@@ -652,15 +652,15 @@ async fn expand_bbox_for_surface(min: &mut Pnt3, max: &mut Pnt3, surface: &Surfa
 }
 
 async fn try_analytic_sphere_volume(body: &Body, solid: SolidId) -> Option<f64> {
-    let faces = body.solid_faces(solid);
+    let faces = body.solid_faces(solid).await;
     if faces.is_empty() {
         return None;
     }
     let mut origin: Option<Pnt3> = None;
     let mut radius: Option<f64> = None;
     for fid in faces {
-        let face = body.faces.get(fid)?;
-        let surf = body.surfaces.get(face.surface)?;
+        let face = body.faces.get(fid).await?;
+        let surf = body.surfaces.get(face.surface).await?;
         let Surface::Sphere { frame, radius: r } = surf else {
             return None;
         };
@@ -678,58 +678,58 @@ async fn try_analytic_sphere_volume(body: &Body, solid: SolidId) -> Option<f64> 
 }
 
 async fn closest_point_on_face(body: &Body, face: FaceId, point: Pnt3) -> Result<(Pnt3, f64), KernelError> {
-    let surface = face_surface(body, face)?;
+    let surface = face_surface(body, face).await?;
     match surface {
-        Surface::Plane { .. } => closest_point_on_planar_face(body, face, point),
+        Surface::Plane { .. } => closest_point_on_planar_face(body, face, point).await,
         _ => {
             let domain = surface.domain();
-            let (u, v, d) = surface_ops::closest_point(surface, domain, point, 24);
-            Ok((surface.eval(u, v), d))
+            let (u, v, d) = surface_ops::closest_point(surface, domain.await, point, 24).await;
+            Ok((surface.eval(u, v).await, d))
         }
     }
 }
 
 async fn closest_point_on_planar_face(body: &Body, face: FaceId, point: Pnt3) -> Result<(Pnt3, f64), KernelError> {
-    let surface = face_surface(body, face)?;
+    let surface = face_surface(body, face).await?;
     let domain = surface.domain();
-    let (u, v, d) = surface_ops::closest_point(surface, domain, point, 8);
+    let (u, v, d) = surface_ops::closest_point(surface, domain.await, point, 8).await;
     let p = surface.eval(u, v);
-    if point_in_face_plane(body, face, p)? {
-        return Ok((p, d));
+    if point_in_face_plane(body, face, p.await).await? {
+        return Ok((p.await, d));
     }
     let mut best_p = p;
     let mut best_d = f64::INFINITY;
     for loop_id in body.face_loops(face) {
         for coedge in body.loop_coedges(loop_id) {
-            let co = body.coedges.get(coedge).ok_or_else(|| KernelError::MissingEntity("coedge".into()))?;
-            let edge = body.edges.get(co.edge).ok_or_else(|| KernelError::MissingEntity("edge".into()))?;
-            let curve = body.curves3.get(edge.curve).ok_or_else(|| KernelError::MissingEntity("curve".into()))?;
-            let (t, dist) = curve_ops::closest_point(curve, edge.range, point, 16);
+            let co = body.coedges.get(coedge).await.ok_or_else(|| KernelError::MissingEntity("coedge".into()))?;
+            let edge = body.edges.get(co.edge).await.ok_or_else(|| KernelError::MissingEntity("edge".into()))?;
+            let curve = body.curves3.get(edge.curve).await.ok_or_else(|| KernelError::MissingEntity("curve".into()))?;
+            let (t, dist) = curve_ops::closest_point(curve, edge.range, point, 16).await;
             if dist < best_d {
                 best_d = dist;
                 best_p = curve.eval(t);
             }
         }
     }
-    Ok((best_p, best_d))
+    Ok((best_p.await, best_d))
 }
 
 async fn ray_face_intersection(body: &Body, face: FaceId, origin: Pnt3, dir: Vec3) -> Result<Option<f64>, KernelError> {
-    let surface = face_surface(body, face)?;
-    let flipped = body.faces.get(face).map(|f| f.flipped).unwrap_or(false);
+    let surface = face_surface(body, face).await?;
+    let flipped = body.faces.get(face).await.map(|f| f.flipped).unwrap_or(false);
     match surface {
         Surface::Plane { frame } => {
-            let n = outward_plane_normal(frame, flipped);
-            let denom = n.dot(dir);
+            let n = outward_plane_normal(frame, flipped).await;
+            let denom = n.dot(dir).await;
             if denom.abs() < 1e-12 {
                 return Ok(None);
             }
-            let t = n.dot(frame.origin - origin) / denom;
+            let t = n.dot(frame.origin - origin).await / denom;
             if t < 0.0 {
                 return Ok(None);
             }
             let hit = origin + dir * t;
-            if point_in_face_plane(body, face, hit)? {
+            if point_in_face_plane(body, face, hit).await? {
                 Ok(Some(t))
             } else {
                 Ok(None)
@@ -738,7 +738,7 @@ async fn ray_face_intersection(body: &Body, face: FaceId, origin: Pnt3, dir: Vec
         _ => {
             let samples = 16;
             let domain = surface.domain();
-            let (u_dom, v_dom) = domain;
+            let (u_dom, v_dom) = domain.await;
             let mut best: Option<f64> = None;
             for i in 0..=samples {
                 for j in 0..=samples {
@@ -746,8 +746,8 @@ async fn ray_face_intersection(body: &Body, face: FaceId, origin: Pnt3, dir: Vec
                     let v = v_dom.0 + (v_dom.1 - v_dom.0) * (j as f64 / samples as f64);
                     let p = surface.eval(u, v);
                     let w = p - origin;
-                    let cross = dir.cross(w);
-                    let cross_norm = cross.norm();
+                    let cross = dir.cross(w).await;
+                    let cross_norm = cross.norm().await;
                     if cross_norm < 1e-9 && w.dot(dir) > 0.0 {
                         let t = w.dot(dir);
                         best = Some(best.map_or(t, |b: f64| b.min(t)));
@@ -760,21 +760,21 @@ async fn ray_face_intersection(body: &Body, face: FaceId, origin: Pnt3, dir: Vec
 }
 
 async fn point_in_face_plane(body: &Body, face: FaceId, point: Pnt3) -> Result<bool, KernelError> {
-    let surface = face_surface(body, face)?;
+    let surface = face_surface(body, face).await?;
     let Surface::Plane { frame } = surface else {
         return Ok(true);
     };
-    let uv = surface_uv(surface, point);
-    let Some(outer) = body.faces.get(face).and_then(|f| f.outer) else {
+    let uv = surface_uv(surface, point).await;
+    let Some(outer) = body.faces.get(face).await.and_then(|f| f.outer) else {
         return Ok(false);
     };
-    let boundary = loop_uv_polygon(body, outer, surface)?;
+    let boundary = loop_uv_polygon(body, outer, surface).await?;
     if !point_in_uv_polygon(uv.x, uv.y, &boundary) {
         return Ok(false);
     }
-    for inner in &body.faces.get(face).unwrap().inners {
-        let hole = loop_uv_polygon(body, *inner, surface)?;
-        if point_in_uv_polygon(uv.x, uv.y, &hole) {
+    for inner in &body.faces.get(face).await.unwrap().inners {
+        let hole = loop_uv_polygon(body, *inner, surface).await?;
+        if point_in_uv_polygon(uv.x, uv.y, &hole).await {
             return Ok(false);
         }
     }
@@ -1029,39 +1029,39 @@ pub mod oracle {
         pub async fn eval(&self, p: Pnt3) -> f64 {
             match self {
                 Sdf::Box { half_extents, placement } => {
-                    let local = placement.inverse().apply_point(p);
-                    let dx = local.x.abs() - half_extents.x;
-                    let dy = local.y.abs() - half_extents.y;
-                    let dz = local.z.abs() - half_extents.z;
+                    let local = placement.inverse().await.apply_point(p);
+                    let dx = local.await.x.abs() - half_extents.x;
+                    let dy = local.await.y.abs() - half_extents.y;
+                    let dz = local.await.z.abs() - half_extents.z;
                     let outside = (dx.max(0.0).powi(2) + dy.max(0.0).powi(2) + dz.max(0.0).powi(2)).sqrt();
                     let inside = dx.max(dy).max(dz).min(0.0);
                     outside + inside
                 }
                 Sdf::Sphere { radius, placement } => {
-                    let local = placement.inverse().apply_point(p);
-                    local.to_vec().norm() - radius
+                    let local = placement.inverse().await.apply_point(p);
+                    local.await.to_vec().await.norm() - radius
                 }
                 Sdf::Cylinder { radius, half_height, placement } => {
-                    let local = placement.inverse().apply_point(p);
-                    let radial = (local.x * local.x + local.y * local.y).sqrt() - radius;
-                    let axial = local.z.abs() - half_height;
+                    let local = placement.inverse().await.apply_point(p);
+                    let radial = (local.await.x * local.await.x + local.await.y * local.await.y).sqrt() - radius;
+                    let axial = local.await.z.abs() - half_height;
                     let outside = (radial.max(0.0).powi(2) + axial.max(0.0).powi(2)).sqrt();
                     let inside = radial.max(axial).min(0.0);
                     outside + inside
                 }
                 Sdf::Cone { radius, half_height, placement } => {
-                    let local = placement.inverse().apply_point(p);
-                    capped_cone_z(&local, *half_height, *radius, 0.0)
+                    let local = placement.inverse().await.apply_point(p);
+                    capped_cone_z(&local, *half_height, *radius, 0.0).await
                 }
                 Sdf::Torus { major_radius, minor_radius, placement } => {
-                    let local = placement.inverse().apply_point(p);
-                    let qx = (local.x * local.x + local.y * local.y).sqrt() - major_radius;
-                    let qz = local.z;
+                    let local = placement.inverse().await.apply_point(p);
+                    let qx = (local.await.x * local.await.x + local.await.y * local.await.y).sqrt() - major_radius;
+                    let qz = local.await.z;
                     (qx * qx + qz * qz).sqrt() - minor_radius
                 }
-                Sdf::Union(a, b) => a.eval(p).min(b.eval(p)),
-                Sdf::Intersect(a, b) => a.eval(p).max(b.eval(p)),
-                Sdf::Difference(a, b) => a.eval(p).max(-b.eval(p)),
+                Sdf::Union(a, b) => a.eval(p).await.min(b.eval(p).await),
+                Sdf::Intersect(a, b) => a.eval(p).await.max(b.eval(p).await),
+                Sdf::Difference(a, b) => a.eval(p).await.max(-b.eval(p)),
             }
         }
         /// 🔮️ `true` when `p` is inside (or on, within `tol`) the field's boundary.
@@ -1165,7 +1165,7 @@ pub mod oracle {
     pub async fn count_boundary_edges(body: &Body) -> usize {
         let mut count = 0usize;
         for (edge_id, _) in body.edges.iter() {
-            let valence = body.edge_coedges(edge_id).len();
+            let valence = body.edge_coedges(edge_id).await.len();
             if valence != 2 {
                 count += 1;
             }
@@ -1175,7 +1175,7 @@ pub mod oracle {
 
     /// 🔮️ Real watertightness probe from body topology (boundary/non-manifold edge valence).
     pub async fn watertightness_of_body(body: &Body) -> WatertightnessReport {
-        watertightness_from_boundary_edge_count(count_boundary_edges(body))
+        watertightness_from_boundary_edge_count(count_boundary_edges(body).await).await
     }
 
     /// 🔮️ Compatibility alias retained for older call sites; prefer [`watertightness_of_body`].
@@ -1282,9 +1282,9 @@ pub mod oracle {
         use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
         let mut body = Body::new();
         let mut rec = OpRecorder::new();
-        let solid = make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
+        let solid = make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).await.unwrap();
         let _ = solid;
-        let report = watertightness_of_body(&body);
+        let report = watertightness_of_body(&body).await;
         assert_eq!(report.verdict, WatertightnessVerdict::Watertight);
     }
 

@@ -59,8 +59,8 @@ pub enum SemioAudioMutation {
 /// ▶️ Applies `mutation` to `snapshot`. Out-of-range channel/tag indices are no-ops rather than
 /// panics — a stale index (e.g. from a concurrent edit) degrades gracefully.
 pub async fn apply_semio_audio_mutation(snapshot: &mut SemioAudioSnapshot, mutation: &SemioAudioMutation) -> protocol::MutationOutcome<SemioAudioDiff> {
-    let outcome = <SemioAudioMutation as Mutation<SemioAudioSnapshot>>::diff(mutation, snapshot);
-    outcome.apply_to(snapshot)
+    let outcome = <SemioAudioMutation as Mutation<SemioAudioSnapshot>>::diff(mutation, snapshot).await;
+    outcome.apply_to(snapshot).await
 }
 //#endregion 🔖️Apply
 
@@ -71,7 +71,7 @@ impl Mutation<SemioAudioSnapshot> for SemioAudioMutation {
     async fn diff(&self, base: &SemioAudioSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             SemioAudioMutation::NoMutation => SemioAudioDiff::default(),
-            SemioAudioMutation::SetSnapshot { snapshot } => diff::diff_set_snapshot(base, snapshot),
+            SemioAudioMutation::SetSnapshot { snapshot } => diff::diff_set_snapshot(base, snapshot).await,
             SemioAudioMutation::SetSampleRate { sample_rate } => SemioAudioDiff { sample_rate: (*sample_rate != base.sample_rate).then_some(*sample_rate), ..Default::default() },
             SemioAudioMutation::SetFormat { format } => SemioAudioDiff { format: (*format != base.format).then_some(*format), ..Default::default() },
             SemioAudioMutation::InsertChannel { index, channel } => {
@@ -88,7 +88,7 @@ impl Mutation<SemioAudioSnapshot> for SemioAudioMutation {
                 Some(t) => SemioAudioDiff { tags: Some(IndexedTripleDiff { modified: vec![IndexModified { index: *index, diff: SemioAudioTag { key: t.key.clone(), value: value.clone() } }], ..Default::default() }), ..Default::default() },
                 None => SemioAudioDiff::default(),
             },
-        })
+        }).await
     }
 
     /// ↩️ Real, round-trippable inverses: `apply(inverse(m, base), apply(m, base)) == base` for
@@ -150,26 +150,26 @@ async fn parse_audio_mutation(line: &str) -> Result<SemioAudioMutation, String> 
     }
     let (keyword, rest) = line.split_once(' ').ok_or_else(|| format!("audio mutation: missing payload in {line:?}"))?;
     match keyword {
-        "set-snapshot" => Ok(SemioAudioMutation::SetSnapshot { snapshot: dec_snapshot(rest)? }),
-        "set-sample-rate" => Ok(SemioAudioMutation::SetSampleRate { sample_rate: parse_u32(rest)? }),
-        "set-format" => Ok(SemioAudioMutation::SetFormat { format: dec_format(rest)? }),
+        "set-snapshot" => Ok(SemioAudioMutation::SetSnapshot { snapshot: dec_snapshot(rest).await? }),
+        "set-sample-rate" => Ok(SemioAudioMutation::SetSampleRate { sample_rate: parse_u32(rest).await? }),
+        "set-format" => Ok(SemioAudioMutation::SetFormat { format: dec_format(rest).await? }),
         "insert-channel" => {
             let (idx, enc) = rest.split_once(' ').ok_or_else(|| "insert-channel: missing channel payload".to_string())?;
-            Ok(SemioAudioMutation::InsertChannel { index: parse_usize(idx)?, channel: dec_channel(enc)? })
+            Ok(SemioAudioMutation::InsertChannel { index: parse_usize(idx).await?, channel: dec_channel(enc).await? })
         }
-        "remove-channel" => Ok(SemioAudioMutation::RemoveChannel { index: parse_usize(rest)? }),
+        "remove-channel" => Ok(SemioAudioMutation::RemoveChannel { index: parse_usize(rest).await? }),
         "set-channel-samples" => {
             let (idx, enc) = rest.split_once(' ').ok_or_else(|| "set-channel-samples: missing payload".to_string())?;
-            Ok(SemioAudioMutation::SetChannelSamples { index: parse_usize(idx)?, samples: dec_f32_list(enc)? })
+            Ok(SemioAudioMutation::SetChannelSamples { index: parse_usize(idx).await?, samples: dec_f32_list(enc).await? })
         }
         "insert-tag" => {
             let (idx, enc) = rest.split_once(' ').ok_or_else(|| "insert-tag: missing payload".to_string())?;
-            Ok(SemioAudioMutation::InsertTag { index: parse_usize(idx)?, tag: dec_tag(enc)? })
+            Ok(SemioAudioMutation::InsertTag { index: parse_usize(idx).await?, tag: dec_tag(enc).await? })
         }
-        "remove-tag" => Ok(SemioAudioMutation::RemoveTag { index: parse_usize(rest)? }),
+        "remove-tag" => Ok(SemioAudioMutation::RemoveTag { index: parse_usize(rest).await? }),
         "set-tag-value" => {
             let (idx, enc) = rest.split_once(' ').ok_or_else(|| "set-tag-value: missing payload".to_string())?;
-            Ok(SemioAudioMutation::SetTagValue { index: parse_usize(idx)?, value: hex_decode_string(enc)? })
+            Ok(SemioAudioMutation::SetTagValue { index: parse_usize(idx).await?, value: hex_decode_string(enc).await? })
         }
         other => Err(format!("audio mutation: unknown keyword {other:?}")),
     }
@@ -177,10 +177,10 @@ async fn parse_audio_mutation(line: &str) -> Result<SemioAudioMutation, String> 
 
 impl OpText for SemioAudioMutation {
     async fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_audio_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_audio_mutation(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     async fn print_op(&self) -> String {
-        print_audio_mutation(self)
+        print_audio_mutation(self).await
     }
 }
 
@@ -207,7 +207,7 @@ async fn variant_ordinal(m: &SemioAudioMutation) -> u8 {
 /// frame's `tag` byte already carries the keyword, so the text keyword itself (and its separating
 /// space) is redundant in the binary payload.
 async fn print_audio_mutation_args(m: &SemioAudioMutation) -> String {
-    match print_audio_mutation(m).split_once(' ') {
+    match print_audio_mutation(m).await.split_once(' ') {
         Some((_, rest)) => rest.to_string(),
         None => String::new(),
     }
@@ -221,8 +221,8 @@ async fn print_audio_mutation_args(m: &SemioAudioMutation) -> String {
 impl OpBinary for SemioAudioMutation {
     async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
-        let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self)];
-        out.extend_from_slice(print_audio_mutation_args(self).as_bytes());
+        let mut out = vec![OP_BINARY_FORMAT, variant_ordinal(self).await];
+        out.extend_from_slice(print_audio_mutation_args(self).await.as_bytes());
         Ok(out)
     }
     async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
@@ -237,7 +237,7 @@ impl OpBinary for SemioAudioMutation {
         let keyword = OP_KEYWORDS.get(tag as usize).ok_or_else(|| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("tag {tag} out of range for {} declared variants", OP_KEYWORDS.len()) })?;
         let args = std::str::from_utf8(&bytes[2..]).map_err(|e| protocol::ProtocolError::Malformed { what: "op utf8", offset: 2, detail: e.to_string() })?;
         let line = if args.is_empty() { keyword.to_string() } else { format!("{keyword} {args}") };
-        Self::parse_op(&line).map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 2, detail: e.to_string() })
+        Self::parse_op(&line).await.map_err(|e| protocol::ProtocolError::Malformed { what: "op text", offset: 2, detail: e.to_string() })
     }
 }
 //#endregion OpCodecs

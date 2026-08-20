@@ -29,29 +29,34 @@ impl Mutation<OpeningPreferences> for OpeningConfigMutation {
     /// 🧮️ Mechanical wrap only (26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-
     /// CONFLICTS W0): both leaves already return `MutationOutcome<OpeningPreferences>` (`Self::Diff`
     /// here IS `OpeningPreferences`, so no `.map` needed), forwarded as-is.
-    fn diff(&self, base: &OpeningPreferences) -> MutationOutcome<OpeningPreferences> {
+    async fn diff(&self, base: &OpeningPreferences) -> MutationOutcome<OpeningPreferences> {
         match self {
-            OpeningConfigMutation::SetDefaultApp(op) => op.diff(base),
-            OpeningConfigMutation::ClearDefaultApp(op) => op.diff(base),
+            OpeningConfigMutation::SetDefaultApp(op) => op.diff(base).await,
+            OpeningConfigMutation::ClearDefaultApp(op) => op.diff(base).await,
         }
     }
 
-    fn inverse(&self, base: &OpeningPreferences) -> Vec<Self> {
+    async fn inverse(&self, base: &OpeningPreferences) -> Vec<Self> {
         match self {
-            OpeningConfigMutation::SetDefaultApp(op) => op.inverse(base),
-            OpeningConfigMutation::ClearDefaultApp(op) => op.inverse(base),
+            OpeningConfigMutation::SetDefaultApp(op) => op.inverse(base).await,
+            OpeningConfigMutation::ClearDefaultApp(op) => op.inverse(base).await,
         }
     }
 }
 
-/// 🧮️ Diff-first apply — `operation.diff(base).apply(base)`, matching every other migrated facet.
+// 🚫️async: E5 sync/async bridge — `apply_opening_config_mutation`/`inverse_opening_config_mutation`
+// are the crate's PUBLIC sync API, called from `🏃️run/🦀️component.rs` (a different crate entirely,
+// out of this packet's `🔌️plugin/🖥️host` scope) with a sync signature this packet cannot change
+// without breaking that caller. `protocol::Mutation`/`MutationOutcome::diff`/`MutationDiff::apply`
+// (all external, `📡️replication`) are async only because that crate's own universal-async pass made
+// them so — none of this does real I/O (pure struct diffing), so `block_on` never actually parks.
 pub fn apply_opening_config_mutation(snapshot: &mut OpeningPreferences, mutation: &OpeningConfigMutation) -> protocol::MutationApplyResult<()> {
-    *snapshot = mutation.diff(snapshot).diff().apply(snapshot)?;
+    *snapshot = semio_framework_async::block_on(async { mutation.diff(snapshot).await.diff().await.apply(snapshot).await })?;
     Ok(())
 }
 
 pub fn inverse_opening_config_mutation(snapshot: &OpeningPreferences, mutation: &OpeningConfigMutation) -> Vec<OpeningConfigMutation> {
-    mutation.inverse(snapshot)
+    semio_framework_async::block_on(mutation.inverse(snapshot))
 }
 
 pub use super::set_default_app::mutation::{set_default_app, SetDefaultApp};
@@ -67,19 +72,19 @@ mod tests {
     use super::super::super::DefaultApp;
     use semio_framework::{AppRef, AppRole, ArtifactDialect};
 
-    #[test]
-    fn set_default_app_and_clear_default_app_invert_each_other() {
+    #[semio_framework_async_macros::async_test]
+    async fn set_default_app_and_clear_default_app_invert_each_other() {
         let dialect = ArtifactDialect { artifact_kind: "s.cad.cad".to_string(), standard: "1".to_string(), subset: "*".to_string() };
         let app = AppRef { plugin_id: "cad".to_string(), app_id: "s.cad.cad@1/*#editor".to_string() };
         let base = OpeningPreferences::default();
 
         let set_op = OpeningConfigMutation::SetDefaultApp(SetDefaultApp { dialect: dialect.clone(), role: AppRole::Editor, app: app.clone() });
-        let after_set = set_op.diff(&base).diff().apply(&base).expect("valid set-default diff");
+        let after_set = set_op.diff(&base).await.diff().await.apply(&base).await.expect("valid set-default diff");
         assert_eq!(after_set.defaults, vec![DefaultApp { dialect: dialect.clone(), role: AppRole::Editor, app: app.clone() }]);
 
-        let undo = set_op.inverse(&base);
+        let undo = set_op.inverse(&base).await;
         assert_eq!(undo, vec![OpeningConfigMutation::ClearDefaultApp(ClearDefaultApp { dialect: dialect.clone(), role: AppRole::Editor })]);
-        let restored = undo[0].diff(&after_set).diff().apply(&after_set);
+        let restored = undo[0].diff(&after_set).await.diff().await.apply(&after_set).await;
         assert_eq!(restored, Ok(base));
     }
 
@@ -88,25 +93,25 @@ mod tests {
     /// `set`/`clear` have no missing-target or Fatal-domain case (an upsert and an idempotent
     /// removal never reference an external entity that could be absent or invariant-violating), so
     /// the only real outcome-law surface here is `mutation.no-op` on the idempotent path.
-    #[test]
-    fn set_default_app_already_pinned_is_no_op() {
+    #[semio_framework_async_macros::async_test]
+    async fn set_default_app_already_pinned_is_no_op() {
         let dialect = ArtifactDialect { artifact_kind: "s.cad.cad".to_string(), standard: "1".to_string(), subset: "*".to_string() };
         let app = AppRef { plugin_id: "cad".to_string(), app_id: "s.cad.cad@1/*#editor".to_string() };
         let base = OpeningPreferences { defaults: vec![DefaultApp { dialect: dialect.clone(), role: AppRole::Editor, app: app.clone() }] };
-        let outcome = OpeningConfigMutation::SetDefaultApp(SetDefaultApp { dialect, role: AppRole::Editor, app }).diff(&base);
-        assert_eq!(outcome.worst_level(), Some(protocol::Severity::Warning));
-        assert!(outcome.messages().iter().any(|message| message.code.0 == "mutation.no-op"));
-        assert_eq!(outcome.diff(), &base);
+        let outcome = OpeningConfigMutation::SetDefaultApp(SetDefaultApp { dialect, role: AppRole::Editor, app }).diff(&base).await;
+        assert_eq!(outcome.worst_level().await, Some(protocol::Severity::Warning));
+        assert!(outcome.messages().await.iter().any(|message| message.code.0 == "mutation.no-op"));
+        assert_eq!(outcome.diff().await, &base);
     }
 
-    #[test]
-    fn clear_default_app_without_a_pin_is_no_op() {
+    #[semio_framework_async_macros::async_test]
+    async fn clear_default_app_without_a_pin_is_no_op() {
         let dialect = ArtifactDialect { artifact_kind: "s.cad.cad".to_string(), standard: "1".to_string(), subset: "*".to_string() };
         let base = OpeningPreferences::default();
-        let outcome = OpeningConfigMutation::ClearDefaultApp(ClearDefaultApp { dialect, role: AppRole::Viewer }).diff(&base);
-        assert_eq!(outcome.worst_level(), Some(protocol::Severity::Warning));
-        assert!(outcome.messages().iter().any(|message| message.code.0 == "mutation.no-op"));
-        assert_eq!(outcome.diff(), &base);
+        let outcome = OpeningConfigMutation::ClearDefaultApp(ClearDefaultApp { dialect, role: AppRole::Viewer }).diff(&base).await;
+        assert_eq!(outcome.worst_level().await, Some(protocol::Severity::Warning));
+        assert!(outcome.messages().await.iter().any(|message| message.code.0 == "mutation.no-op"));
+        assert_eq!(outcome.diff().await, &base);
     }
     //#endregion 🔖️OutcomeLaws
 }

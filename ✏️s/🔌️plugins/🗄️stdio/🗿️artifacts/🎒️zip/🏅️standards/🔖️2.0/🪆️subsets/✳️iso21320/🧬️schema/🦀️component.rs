@@ -51,7 +51,7 @@ pub mod derived_construction {
         type Diff = ZipDiff;
 
         async fn empty() -> Self {
-            Self::new()
+            Self::new().await
         }
 
         async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
@@ -59,20 +59,20 @@ pub mod derived_construction {
         }
 
         async fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self::from_snapshot(<ZipSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+            Ok(Self::from_snapshot(<ZipSnapshot as store::ArtifactDsl>::parse_dsl(text).await?).await)
         }
 
         async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<ZipSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+            Ok(Self::from_snapshot(<ZipSnapshot as store::ArtifactPack>::decode_pack(bytes).await?).await)
         }
 
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = apply_zip_mutation(&mut self.snapshot, &mutation);
-            (self, diff)
+            (self, diff.await)
         }
 
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            self.snapshot = <ZipDiff as protocol::MutationDiff<ZipSnapshot>>::apply(&diff, &self.snapshot)?;
+            self.snapshot = <ZipDiff as protocol::MutationDiff<ZipSnapshot>>::apply(&diff, &self.snapshot).await?;
             Ok(self)
         }
 
@@ -185,9 +185,9 @@ pub mod derived_analysis {
 
     /// 🛡️ Checks ISO/IEC 21320-1 header policy against raw ZIP container bytes.
     pub async fn check_iso21320_wire_conformance(data: &[u8]) -> Vec<Diagnostic> {
-        match crate::artifacts::zip::standards::v2_0::subsets::any::io::inspect_zip_central_entry_headers(data) {
-            Ok(headers) => check_iso21320_entry_headers(&headers),
-            Err(err) => vec![hard("stdio.zip.iso21320.wire-inspect-failed", format!("ISO/IEC 21320-1 wire inspection failed: {err}"))],
+        match crate::artifacts::zip::standards::v2_0::subsets::any::io::inspect_zip_central_entry_headers(data).await {
+            Ok(headers) => check_iso21320_entry_headers(&headers).await,
+            Err(err) => vec![hard("stdio.zip.iso21320.wire-inspect-failed", format!("ISO/IEC 21320-1 wire inspection failed: {err}")).await],
         }
     }
 
@@ -195,9 +195,9 @@ pub mod derived_analysis {
     /// canonical wire form and inspecting central-directory headers. Logical snapshots never carry
     /// forbidden general-purpose flag bits — native violations are only observable on wire bytes.
     pub async fn check_iso21320_conformance(snapshot: &ZipSnapshot) -> Vec<Diagnostic> {
-        match crate::artifacts::zip::standards::v2_0::subsets::any::io::encode_zip(snapshot) {
-            Ok(bytes) => check_iso21320_wire_conformance(&bytes),
-            Err(err) => vec![hard("stdio.zip.iso21320.encode-failed", format!("ISO/IEC 21320-1 conformance preflight encode failed: {err}"))],
+        match crate::artifacts::zip::standards::v2_0::subsets::any::io::encode_zip(snapshot).await {
+            Ok(bytes) => check_iso21320_wire_conformance(&bytes).await,
+            Err(err) => vec![hard("stdio.zip.iso21320.encode-failed", format!("ISO/IEC 21320-1 conformance preflight encode failed: {err}")).await],
         }
     }
     //#endregion 🔖️Conformance
@@ -215,17 +215,17 @@ pub mod derived_analysis {
         const DIALECT: Dialect = DIALECT;
 
         async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
-            ZipAnyAnalyzer::sniff(source)
+            ZipAnyAnalyzer::sniff(source).await
         }
 
         async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
-            let inner = ZipAnyAnalyzer::analyze(sources);
+            let inner = ZipAnyAnalyzer::analyze(sources).await;
             let mut diagnostics = inner.diagnostics.clone();
             let mut confidence = inner.confidence;
             let mut wire_checked = false;
             for source in sources {
                 if let AnalyzeSource::Binary(bytes) = source {
-                    let checks = check_iso21320_wire_conformance(bytes);
+                    let checks = check_iso21320_wire_conformance(bytes).await;
                     if checks.iter().any(|d| matches!(d.severity, Severity::Error | Severity::Fatal)) {
                         confidence = IoConfidence::Low;
                     }
@@ -235,7 +235,7 @@ pub mod derived_analysis {
             }
             if !wire_checked {
                 if let Some(snapshot) = &inner.parts.snapshot {
-                    let checks = check_iso21320_conformance(snapshot);
+                    let checks = check_iso21320_conformance(snapshot).await;
                     if checks.iter().any(|d| matches!(d.severity, Severity::Error | Severity::Fatal)) {
                         confidence = IoConfidence::Low;
                     }

@@ -258,10 +258,10 @@ async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
 async fn enc_str(s: &str) -> String {
-    hex_encode(s.as_bytes())
+    hex_encode(s.as_bytes()).await
 }
 async fn dec_str(s: &str) -> Result<String, String> {
-    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
+    String::from_utf8(hex_decode(s).await?).map_err(|e| e.to_string())
 }
 async fn parse_f64(s: &str) -> Result<f64, String> {
     s.parse().map_err(|e: std::num::ParseFloatError| e.to_string())
@@ -287,16 +287,16 @@ async fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
     format!("[{}]", items.iter().map(|it| enc(it)).collect::<Vec<_>>().join(","))
 }
 async fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
-    split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| dec(entry)).collect()
+    split_top_level(strip_brackets(s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| dec(entry)).collect()
 }
 
 async fn enc_point3(p: &SemioPoint3) -> String {
     format!("[{},{},{}]", p.x, p.y, p.z)
 }
 async fn dec_point3(s: &str) -> Result<SemioPoint3, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [x, y, z] = parts.as_slice() else { return Err(format!("point3: expected 3 fields, got {}", parts.len())) };
-    Ok(SemioPoint3 { x: parse_f64(x)?, y: parse_f64(y)?, z: parse_f64(z)? })
+    Ok(SemioPoint3 { x: parse_f64(x).await?, y: parse_f64(y).await?, z: parse_f64(z).await? })
 }
 
 /// 📈️ `L[origin,direction]` / `C[center,axis,radius]` / `E[center,axis,radiusMajor,radiusMinor]` /
@@ -314,24 +314,24 @@ async fn enc_curve(c: &BrepCurve) -> String {
 }
 async fn dec_curve(s: &str) -> Result<BrepCurve, String> {
     let (tag, rest) = s.split_at(1);
-    let inner = strip_brackets(rest)?;
-    let parts = split_top_level(inner, ',');
+    let inner = strip_brackets(rest).await?;
+    let parts = split_top_level(inner, ',').await;
     match tag {
         "L" => {
             let [origin, direction] = parts.as_slice() else { return Err(format!("curve line: expected 2 fields, got {}", parts.len())) };
-            Ok(BrepCurve::Line { origin: dec_point3(origin)?, direction: dec_point3(direction)? })
+            Ok(BrepCurve::Line { origin: dec_point3(origin).await?, direction: dec_point3(direction).await? })
         }
         "C" => {
             let [center, axis, radius] = parts.as_slice() else { return Err(format!("curve circle: expected 3 fields, got {}", parts.len())) };
-            Ok(BrepCurve::Circle { center: dec_point3(center)?, axis: dec_point3(axis)?, radius: parse_f64(radius)? })
+            Ok(BrepCurve::Circle { center: dec_point3(center).await?, axis: dec_point3(axis).await?, radius: parse_f64(radius).await? })
         }
         "E" => {
             let [center, axis, radius_major, radius_minor] = parts.as_slice() else { return Err(format!("curve ellipse: expected 4 fields, got {}", parts.len())) };
-            Ok(BrepCurve::Ellipse { center: dec_point3(center)?, axis: dec_point3(axis)?, radius_major: parse_f64(radius_major)?, radius_minor: parse_f64(radius_minor)? })
+            Ok(BrepCurve::Ellipse { center: dec_point3(center).await?, axis: dec_point3(axis).await?, radius_major: parse_f64(radius_major).await?, radius_minor: parse_f64(radius_minor).await? })
         }
         "N" => {
             let [control_points, weights, degree, knots] = parts.as_slice() else { return Err(format!("curve nurbs: expected 4 fields, got {}", parts.len())) };
-            Ok(BrepCurve::Nurbs { control_points: dec_list(control_points, dec_point3)?, weights: dec_list(weights, parse_f64)?, degree: parse_u32(degree)?, knots: dec_list(knots, parse_f64)? })
+            Ok(BrepCurve::Nurbs { control_points: dec_list(control_points, dec_point3).await?, weights: dec_list(weights, parse_f64).await?, degree: parse_u32(degree).await?, knots: dec_list(knots, parse_f64).await? })
         }
         other => Err(format!("curve: unknown tag {other:?}")),
     }
@@ -362,42 +362,42 @@ async fn enc_surface(s: &BrepSurface) -> String {
 }
 async fn dec_surface(s: &str) -> Result<BrepSurface, String> {
     let (tag, rest) = s.split_at(1);
-    let inner = strip_brackets(rest)?;
-    let parts = split_top_level(inner, ',');
+    let inner = strip_brackets(rest).await?;
+    let parts = split_top_level(inner, ',').await;
     match tag {
         "P" => {
             let [origin, normal] = parts.as_slice() else { return Err(format!("surface plane: expected 2 fields, got {}", parts.len())) };
-            Ok(BrepSurface::Plane { origin: dec_point3(origin)?, normal: dec_point3(normal)? })
+            Ok(BrepSurface::Plane { origin: dec_point3(origin).await?, normal: dec_point3(normal).await? })
         }
         "C" => {
             let [origin, axis, radius] = parts.as_slice() else { return Err(format!("surface cylinder: expected 3 fields, got {}", parts.len())) };
-            Ok(BrepSurface::Cylinder { origin: dec_point3(origin)?, axis: dec_point3(axis)?, radius: parse_f64(radius)? })
+            Ok(BrepSurface::Cylinder { origin: dec_point3(origin).await?, axis: dec_point3(axis).await?, radius: parse_f64(radius).await? })
         }
         "O" => {
             let [origin, axis, radius, half_angle] = parts.as_slice() else { return Err(format!("surface cone: expected 4 fields, got {}", parts.len())) };
-            Ok(BrepSurface::Cone { origin: dec_point3(origin)?, axis: dec_point3(axis)?, radius: parse_f64(radius)?, half_angle: parse_f64(half_angle)? })
+            Ok(BrepSurface::Cone { origin: dec_point3(origin).await?, axis: dec_point3(axis).await?, radius: parse_f64(radius).await?, half_angle: parse_f64(half_angle).await? })
         }
         "S" => {
             let [center, radius] = parts.as_slice() else { return Err(format!("surface sphere: expected 2 fields, got {}", parts.len())) };
-            Ok(BrepSurface::Sphere { center: dec_point3(center)?, radius: parse_f64(radius)? })
+            Ok(BrepSurface::Sphere { center: dec_point3(center).await?, radius: parse_f64(radius).await? })
         }
         "T" => {
             let [center, axis, major_radius, minor_radius] = parts.as_slice() else { return Err(format!("surface torus: expected 4 fields, got {}", parts.len())) };
-            Ok(BrepSurface::Torus { center: dec_point3(center)?, axis: dec_point3(axis)?, major_radius: parse_f64(major_radius)?, minor_radius: parse_f64(minor_radius)? })
+            Ok(BrepSurface::Torus { center: dec_point3(center).await?, axis: dec_point3(axis).await?, major_radius: parse_f64(major_radius).await?, minor_radius: parse_f64(minor_radius).await? })
         }
         "N" => {
             let [control_points, weights, u_count, v_count, degree_u, degree_v, knots_u, knots_v] = parts.as_slice() else {
                 return Err(format!("surface nurbs: expected 8 fields, got {}", parts.len()));
             };
             Ok(BrepSurface::Nurbs {
-                control_points: dec_list(control_points, dec_point3)?,
-                weights: dec_list(weights, parse_f64)?,
-                u_count: parse_u32(u_count)?,
-                v_count: parse_u32(v_count)?,
-                degree_u: parse_u32(degree_u)?,
-                degree_v: parse_u32(degree_v)?,
-                knots_u: dec_list(knots_u, parse_f64)?,
-                knots_v: dec_list(knots_v, parse_f64)?,
+                control_points: dec_list(control_points, dec_point3).await?,
+                weights: dec_list(weights, parse_f64).await?,
+                u_count: parse_u32(u_count).await?,
+                v_count: parse_u32(v_count).await?,
+                degree_u: parse_u32(degree_u).await?,
+                degree_v: parse_u32(degree_v).await?,
+                knots_u: dec_list(knots_u, parse_f64).await?,
+                knots_v: dec_list(knots_v, parse_f64).await?,
             })
         }
         other => Err(format!("surface: unknown tag {other:?}")),
@@ -408,81 +408,81 @@ async fn enc_loop_edge(le: &BrepLoopEdge) -> String {
     format!("[{},{}]", enc_str(&le.edge), enc_bool(le.orientation))
 }
 async fn dec_loop_edge(s: &str) -> Result<BrepLoopEdge, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [edge, orientation] = parts.as_slice() else { return Err(format!("loop edge: expected 2 fields, got {}", parts.len())) };
-    Ok(BrepLoopEdge { edge: dec_str(edge)?, orientation: parse_bool(orientation)? })
+    Ok(BrepLoopEdge { edge: dec_str(edge).await?, orientation: parse_bool(orientation).await? })
 }
 
 async fn enc_shell_face(sf: &BrepShellFace) -> String {
     format!("[{},{}]", enc_str(&sf.face), enc_bool(sf.orientation))
 }
 async fn dec_shell_face(s: &str) -> Result<BrepShellFace, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [face, orientation] = parts.as_slice() else { return Err(format!("shell face: expected 2 fields, got {}", parts.len())) };
-    Ok(BrepShellFace { face: dec_str(face)?, orientation: parse_bool(orientation)? })
+    Ok(BrepShellFace { face: dec_str(face).await?, orientation: parse_bool(orientation).await? })
 }
 
 async fn enc_solid_shell(ss: &BrepSolidShell) -> String {
     format!("[{},{}]", enc_str(&ss.shell), enc_bool(ss.is_void))
 }
 async fn dec_solid_shell(s: &str) -> Result<BrepSolidShell, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [shell, is_void] = parts.as_slice() else { return Err(format!("solid shell: expected 2 fields, got {}", parts.len())) };
-    Ok(BrepSolidShell { shell: dec_str(shell)?, is_void: parse_bool(is_void)? })
+    Ok(BrepSolidShell { shell: dec_str(shell).await?, is_void: parse_bool(is_void).await? })
 }
 
 async fn enc_vertex(v: &BrepVertex) -> String {
     format!("[{},{}]", enc_str(&v.id), enc_point3(&v.point))
 }
 async fn dec_vertex(s: &str) -> Result<BrepVertex, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [id, point] = parts.as_slice() else { return Err(format!("vertex: expected 2 fields, got {}", parts.len())) };
-    Ok(BrepVertex { id: dec_str(id)?, point: dec_point3(point)? })
+    Ok(BrepVertex { id: dec_str(id).await?, point: dec_point3(point).await? })
 }
 
 async fn enc_edge(e: &BrepEdge) -> String {
     format!("[{},{},{},{}]", enc_str(&e.id), enc_str(&e.start_vertex), enc_str(&e.end_vertex), enc_curve(&e.curve))
 }
 async fn dec_edge(s: &str) -> Result<BrepEdge, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [id, start_vertex, end_vertex, curve] = parts.as_slice() else { return Err(format!("edge: expected 4 fields, got {}", parts.len())) };
-    Ok(BrepEdge { id: dec_str(id)?, start_vertex: dec_str(start_vertex)?, end_vertex: dec_str(end_vertex)?, curve: dec_curve(curve)? })
+    Ok(BrepEdge { id: dec_str(id).await?, start_vertex: dec_str(start_vertex).await?, end_vertex: dec_str(end_vertex).await?, curve: dec_curve(curve).await? })
 }
 
 async fn enc_loop(l: &BrepLoop) -> String {
     format!("[{},{}]", enc_str(&l.id), enc_list(&l.edges, enc_loop_edge))
 }
 async fn dec_loop(s: &str) -> Result<BrepLoop, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [id, edges] = parts.as_slice() else { return Err(format!("loop: expected 2 fields, got {}", parts.len())) };
-    Ok(BrepLoop { id: dec_str(id)?, edges: dec_list(edges, dec_loop_edge)? })
+    Ok(BrepLoop { id: dec_str(id).await?, edges: dec_list(edges, dec_loop_edge).await? })
 }
 
 async fn enc_face(f: &BrepFace) -> String {
     format!("[{},{},{},{},{}]", enc_str(&f.id), enc_str(&f.outer_loop), enc_list(&f.inner_loops, |s: &String| enc_str(s)), enc_surface(&f.surface), enc_bool(f.orientation),)
 }
 async fn dec_face(s: &str) -> Result<BrepFace, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [id, outer_loop, inner_loops, surface, orientation] = parts.as_slice() else { return Err(format!("face: expected 5 fields, got {}", parts.len())) };
-    Ok(BrepFace { id: dec_str(id)?, outer_loop: dec_str(outer_loop)?, inner_loops: dec_list(inner_loops, dec_str)?, surface: dec_surface(surface)?, orientation: parse_bool(orientation)? })
+    Ok(BrepFace { id: dec_str(id).await?, outer_loop: dec_str(outer_loop).await?, inner_loops: dec_list(inner_loops, dec_str).await?, surface: dec_surface(surface).await?, orientation: parse_bool(orientation).await? })
 }
 
 async fn enc_shell(sh: &BrepShell) -> String {
     format!("[{},{}]", enc_str(&sh.id), enc_list(&sh.faces, enc_shell_face))
 }
 async fn dec_shell(s: &str) -> Result<BrepShell, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [id, faces] = parts.as_slice() else { return Err(format!("shell: expected 2 fields, got {}", parts.len())) };
-    Ok(BrepShell { id: dec_str(id)?, faces: dec_list(faces, dec_shell_face)? })
+    Ok(BrepShell { id: dec_str(id).await?, faces: dec_list(faces, dec_shell_face).await? })
 }
 
 async fn enc_solid(so: &BrepSolid) -> String {
     format!("[{},{}]", enc_str(&so.id), enc_list(&so.shells, enc_solid_shell))
 }
 async fn dec_solid(s: &str) -> Result<BrepSolid, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [id, shells] = parts.as_slice() else { return Err(format!("solid: expected 2 fields, got {}", parts.len())) };
-    Ok(BrepSolid { id: dec_str(id)?, shells: dec_list(shells, dec_solid_shell)? })
+    Ok(BrepSolid { id: dec_str(id).await?, shells: dec_list(shells, dec_solid_shell).await? })
 }
 
 /// 📄️ The real structured text body: seven lines — `schema=<hex>`, `vertices=[...]`,
@@ -516,19 +516,19 @@ async fn parse_brep_snapshot_body(body: &str) -> Result<SemioBrepSnapshot, Strin
             continue;
         }
         if let Some(rest) = line.strip_prefix("schema=") {
-            schema = Some(dec_str(rest)?);
+            schema = Some(dec_str(rest).await?);
         } else if let Some(rest) = line.strip_prefix("vertices=") {
-            vertices = split_top_level(strip_brackets(rest)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_vertex).collect::<Result<Vec<_>, String>>()?;
+            vertices = split_top_level(strip_brackets(rest).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_vertex).collect::<Result<Vec<_>, String>>()?;
         } else if let Some(rest) = line.strip_prefix("edges=") {
-            edges = split_top_level(strip_brackets(rest)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_edge).collect::<Result<Vec<_>, String>>()?;
+            edges = split_top_level(strip_brackets(rest).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_edge).collect::<Result<Vec<_>, String>>()?;
         } else if let Some(rest) = line.strip_prefix("loops=") {
-            loops = split_top_level(strip_brackets(rest)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_loop).collect::<Result<Vec<_>, String>>()?;
+            loops = split_top_level(strip_brackets(rest).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_loop).collect::<Result<Vec<_>, String>>()?;
         } else if let Some(rest) = line.strip_prefix("faces=") {
-            faces = split_top_level(strip_brackets(rest)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_face).collect::<Result<Vec<_>, String>>()?;
+            faces = split_top_level(strip_brackets(rest).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_face).collect::<Result<Vec<_>, String>>()?;
         } else if let Some(rest) = line.strip_prefix("shells=") {
-            shells = split_top_level(strip_brackets(rest)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_shell).collect::<Result<Vec<_>, String>>()?;
+            shells = split_top_level(strip_brackets(rest).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_shell).collect::<Result<Vec<_>, String>>()?;
         } else if let Some(rest) = line.strip_prefix("solids=") {
-            solids = split_top_level(strip_brackets(rest)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_solid).collect::<Result<Vec<_>, String>>()?;
+            solids = split_top_level(strip_brackets(rest).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_solid).collect::<Result<Vec<_>, String>>()?;
         } else {
             return Err(format!("brep snapshot: unknown line {line:?}"));
         }
@@ -548,14 +548,14 @@ async fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
     out.extend_from_slice(bytes);
 }
 async fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
+    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec())
 }
 async fn write_str_lp(out: &mut Vec<u8>, s: &str) {
     write_bytes_lp(out, s.as_bytes());
 }
 async fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
-    String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
+    String::from_utf8(read_bytes_lp(reader).await?).map_err(|e| e.to_string())
 }
 async fn write_point3(out: &mut Vec<u8>, p: &SemioPoint3) {
     out.extend_from_slice(&p.x.to_le_bytes());
@@ -563,9 +563,9 @@ async fn write_point3(out: &mut Vec<u8>, p: &SemioPoint3) {
     out.extend_from_slice(&p.z.to_le_bytes());
 }
 async fn read_point3(reader: &mut store::ByteReader<'_>) -> Result<SemioPoint3, String> {
-    let x = reader.read_f64_le().map_err(|e| e.to_string())?;
-    let y = reader.read_f64_le().map_err(|e| e.to_string())?;
-    let z = reader.read_f64_le().map_err(|e| e.to_string())?;
+    let x = reader.read_f64_le().await.map_err(|e| e.to_string())?;
+    let y = reader.read_f64_le().await.map_err(|e| e.to_string())?;
+    let z = reader.read_f64_le().await.map_err(|e| e.to_string())?;
     Ok(SemioPoint3 { x, y, z })
 }
 async fn write_f64_vec(out: &mut Vec<u8>, v: &[f64]) {
@@ -575,10 +575,10 @@ async fn write_f64_vec(out: &mut Vec<u8>, v: &[f64]) {
     }
 }
 async fn read_f64_vec(reader: &mut store::ByteReader<'_>) -> Result<Vec<f64>, String> {
-    let n = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let n = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut v = Vec::with_capacity(n as usize);
     for _ in 0..n {
-        v.push(reader.read_f64_le().map_err(|e| e.to_string())?);
+        v.push(reader.read_f64_le().await.map_err(|e| e.to_string())?);
     }
     Ok(v)
 }
@@ -589,10 +589,10 @@ async fn write_point3_vec(out: &mut Vec<u8>, v: &[SemioPoint3]) {
     }
 }
 async fn read_point3_vec(reader: &mut store::ByteReader<'_>) -> Result<Vec<SemioPoint3>, String> {
-    let n = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let n = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut v = Vec::with_capacity(n as usize);
     for _ in 0..n {
-        v.push(read_point3(reader)?);
+        v.push(read_point3(reader).await?);
     }
     Ok(v)
 }
@@ -600,7 +600,7 @@ async fn write_bool(out: &mut Vec<u8>, b: bool) {
     out.push(if b { 1 } else { 0 });
 }
 async fn read_bool(reader: &mut store::ByteReader<'_>) -> Result<bool, String> {
-    Ok(reader.read_u8().map_err(|e| e.to_string())? != 0)
+    Ok(reader.read_u8().await.map_err(|e| e.to_string())? != 0)
 }
 
 /// 🏷️ `BrepCurve` variant tags — 0=Line, 1=Circle, 2=Ellipse, 3=Nurbs (declaration order).
@@ -634,12 +634,12 @@ async fn write_curve(out: &mut Vec<u8>, c: &BrepCurve) {
     }
 }
 async fn read_curve(reader: &mut store::ByteReader<'_>) -> Result<BrepCurve, String> {
-    let tag = reader.read_u8().map_err(|e| e.to_string())?;
+    let tag = reader.read_u8().await.map_err(|e| e.to_string())?;
     match tag {
-        0 => Ok(BrepCurve::Line { origin: read_point3(reader)?, direction: read_point3(reader)? }),
-        1 => Ok(BrepCurve::Circle { center: read_point3(reader)?, axis: read_point3(reader)?, radius: reader.read_f64_le().map_err(|e| e.to_string())? }),
-        2 => Ok(BrepCurve::Ellipse { center: read_point3(reader)?, axis: read_point3(reader)?, radius_major: reader.read_f64_le().map_err(|e| e.to_string())?, radius_minor: reader.read_f64_le().map_err(|e| e.to_string())? }),
-        3 => Ok(BrepCurve::Nurbs { control_points: read_point3_vec(reader)?, weights: read_f64_vec(reader)?, degree: reader.read_varint_u64().map_err(|e| e.to_string())? as u32, knots: read_f64_vec(reader)? }),
+        0 => Ok(BrepCurve::Line { origin: read_point3(reader).await?, direction: read_point3(reader).await? }),
+        1 => Ok(BrepCurve::Circle { center: read_point3(reader).await?, axis: read_point3(reader).await?, radius: reader.read_f64_le().await.map_err(|e| e.to_string())? }),
+        2 => Ok(BrepCurve::Ellipse { center: read_point3(reader).await?, axis: read_point3(reader).await?, radius_major: reader.read_f64_le().await.map_err(|e| e.to_string())?, radius_minor: reader.read_f64_le().await.map_err(|e| e.to_string())? }),
+        3 => Ok(BrepCurve::Nurbs { control_points: read_point3_vec(reader).await?, weights: read_f64_vec(reader).await?, degree: reader.read_varint_u64().await.map_err(|e| e.to_string())? as u32, knots: read_f64_vec(reader).await? }),
         other => Err(format!("curve: unknown binary tag {other}")),
     }
 }
@@ -691,22 +691,22 @@ async fn write_surface(out: &mut Vec<u8>, s: &BrepSurface) {
     }
 }
 async fn read_surface(reader: &mut store::ByteReader<'_>) -> Result<BrepSurface, String> {
-    let tag = reader.read_u8().map_err(|e| e.to_string())?;
+    let tag = reader.read_u8().await.map_err(|e| e.to_string())?;
     match tag {
-        0 => Ok(BrepSurface::Plane { origin: read_point3(reader)?, normal: read_point3(reader)? }),
-        1 => Ok(BrepSurface::Cylinder { origin: read_point3(reader)?, axis: read_point3(reader)?, radius: reader.read_f64_le().map_err(|e| e.to_string())? }),
-        2 => Ok(BrepSurface::Cone { origin: read_point3(reader)?, axis: read_point3(reader)?, radius: reader.read_f64_le().map_err(|e| e.to_string())?, half_angle: reader.read_f64_le().map_err(|e| e.to_string())? }),
-        3 => Ok(BrepSurface::Sphere { center: read_point3(reader)?, radius: reader.read_f64_le().map_err(|e| e.to_string())? }),
-        4 => Ok(BrepSurface::Torus { center: read_point3(reader)?, axis: read_point3(reader)?, major_radius: reader.read_f64_le().map_err(|e| e.to_string())?, minor_radius: reader.read_f64_le().map_err(|e| e.to_string())? }),
+        0 => Ok(BrepSurface::Plane { origin: read_point3(reader).await?, normal: read_point3(reader).await? }),
+        1 => Ok(BrepSurface::Cylinder { origin: read_point3(reader).await?, axis: read_point3(reader).await?, radius: reader.read_f64_le().await.map_err(|e| e.to_string())? }),
+        2 => Ok(BrepSurface::Cone { origin: read_point3(reader).await?, axis: read_point3(reader).await?, radius: reader.read_f64_le().await.map_err(|e| e.to_string())?, half_angle: reader.read_f64_le().await.map_err(|e| e.to_string())? }),
+        3 => Ok(BrepSurface::Sphere { center: read_point3(reader).await?, radius: reader.read_f64_le().await.map_err(|e| e.to_string())? }),
+        4 => Ok(BrepSurface::Torus { center: read_point3(reader).await?, axis: read_point3(reader).await?, major_radius: reader.read_f64_le().await.map_err(|e| e.to_string())?, minor_radius: reader.read_f64_le().await.map_err(|e| e.to_string())? }),
         5 => Ok(BrepSurface::Nurbs {
-            control_points: read_point3_vec(reader)?,
-            weights: read_f64_vec(reader)?,
-            u_count: reader.read_varint_u64().map_err(|e| e.to_string())? as u32,
-            v_count: reader.read_varint_u64().map_err(|e| e.to_string())? as u32,
-            degree_u: reader.read_varint_u64().map_err(|e| e.to_string())? as u32,
-            degree_v: reader.read_varint_u64().map_err(|e| e.to_string())? as u32,
-            knots_u: read_f64_vec(reader)?,
-            knots_v: read_f64_vec(reader)?,
+            control_points: read_point3_vec(reader).await?,
+            weights: read_f64_vec(reader).await?,
+            u_count: reader.read_varint_u64().await.map_err(|e| e.to_string())? as u32,
+            v_count: reader.read_varint_u64().await.map_err(|e| e.to_string())? as u32,
+            degree_u: reader.read_varint_u64().await.map_err(|e| e.to_string())? as u32,
+            degree_v: reader.read_varint_u64().await.map_err(|e| e.to_string())? as u32,
+            knots_u: read_f64_vec(reader).await?,
+            knots_v: read_f64_vec(reader).await?,
         }),
         other => Err(format!("surface: unknown binary tag {other}")),
     }
@@ -717,7 +717,7 @@ async fn write_vertex(out: &mut Vec<u8>, v: &BrepVertex) {
     write_point3(out, &v.point);
 }
 async fn read_vertex(reader: &mut store::ByteReader<'_>) -> Result<BrepVertex, String> {
-    Ok(BrepVertex { id: read_str_lp(reader)?, point: read_point3(reader)? })
+    Ok(BrepVertex { id: read_str_lp(reader).await?, point: read_point3(reader).await? })
 }
 async fn write_edge(out: &mut Vec<u8>, e: &BrepEdge) {
     write_str_lp(out, &e.id);
@@ -726,14 +726,14 @@ async fn write_edge(out: &mut Vec<u8>, e: &BrepEdge) {
     write_curve(out, &e.curve);
 }
 async fn read_edge(reader: &mut store::ByteReader<'_>) -> Result<BrepEdge, String> {
-    Ok(BrepEdge { id: read_str_lp(reader)?, start_vertex: read_str_lp(reader)?, end_vertex: read_str_lp(reader)?, curve: read_curve(reader)? })
+    Ok(BrepEdge { id: read_str_lp(reader).await?, start_vertex: read_str_lp(reader).await?, end_vertex: read_str_lp(reader).await?, curve: read_curve(reader).await? })
 }
 async fn write_loop_edge(out: &mut Vec<u8>, le: &BrepLoopEdge) {
     write_str_lp(out, &le.edge);
     write_bool(out, le.orientation);
 }
 async fn read_loop_edge(reader: &mut store::ByteReader<'_>) -> Result<BrepLoopEdge, String> {
-    Ok(BrepLoopEdge { edge: read_str_lp(reader)?, orientation: read_bool(reader)? })
+    Ok(BrepLoopEdge { edge: read_str_lp(reader).await?, orientation: read_bool(reader).await? })
 }
 async fn write_loop(out: &mut Vec<u8>, l: &BrepLoop) {
     write_str_lp(out, &l.id);
@@ -743,11 +743,11 @@ async fn write_loop(out: &mut Vec<u8>, l: &BrepLoop) {
     }
 }
 async fn read_loop(reader: &mut store::ByteReader<'_>) -> Result<BrepLoop, String> {
-    let id = read_str_lp(reader)?;
-    let n = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let id = read_str_lp(reader).await?;
+    let n = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut edges = Vec::with_capacity(n as usize);
     for _ in 0..n {
-        edges.push(read_loop_edge(reader)?);
+        edges.push(read_loop_edge(reader).await?);
     }
     Ok(BrepLoop { id, edges })
 }
@@ -762,15 +762,15 @@ async fn write_face(out: &mut Vec<u8>, f: &BrepFace) {
     write_bool(out, f.orientation);
 }
 async fn read_face(reader: &mut store::ByteReader<'_>) -> Result<BrepFace, String> {
-    let id = read_str_lp(reader)?;
-    let outer_loop = read_str_lp(reader)?;
-    let n = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let id = read_str_lp(reader).await?;
+    let outer_loop = read_str_lp(reader).await?;
+    let n = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut inner_loops = Vec::with_capacity(n as usize);
     for _ in 0..n {
-        inner_loops.push(read_str_lp(reader)?);
+        inner_loops.push(read_str_lp(reader).await?);
     }
-    let surface = read_surface(reader)?;
-    let orientation = read_bool(reader)?;
+    let surface = read_surface(reader).await?;
+    let orientation = read_bool(reader).await?;
     Ok(BrepFace { id, outer_loop, inner_loops, surface, orientation })
 }
 async fn write_shell_face(out: &mut Vec<u8>, sf: &BrepShellFace) {
@@ -778,7 +778,7 @@ async fn write_shell_face(out: &mut Vec<u8>, sf: &BrepShellFace) {
     write_bool(out, sf.orientation);
 }
 async fn read_shell_face(reader: &mut store::ByteReader<'_>) -> Result<BrepShellFace, String> {
-    Ok(BrepShellFace { face: read_str_lp(reader)?, orientation: read_bool(reader)? })
+    Ok(BrepShellFace { face: read_str_lp(reader).await?, orientation: read_bool(reader).await? })
 }
 async fn write_shell(out: &mut Vec<u8>, sh: &BrepShell) {
     write_str_lp(out, &sh.id);
@@ -788,11 +788,11 @@ async fn write_shell(out: &mut Vec<u8>, sh: &BrepShell) {
     }
 }
 async fn read_shell(reader: &mut store::ByteReader<'_>) -> Result<BrepShell, String> {
-    let id = read_str_lp(reader)?;
-    let n = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let id = read_str_lp(reader).await?;
+    let n = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut faces = Vec::with_capacity(n as usize);
     for _ in 0..n {
-        faces.push(read_shell_face(reader)?);
+        faces.push(read_shell_face(reader).await?);
     }
     Ok(BrepShell { id, faces })
 }
@@ -801,7 +801,7 @@ async fn write_solid_shell(out: &mut Vec<u8>, ss: &BrepSolidShell) {
     write_bool(out, ss.is_void);
 }
 async fn read_solid_shell(reader: &mut store::ByteReader<'_>) -> Result<BrepSolidShell, String> {
-    Ok(BrepSolidShell { shell: read_str_lp(reader)?, is_void: read_bool(reader)? })
+    Ok(BrepSolidShell { shell: read_str_lp(reader).await?, is_void: read_bool(reader).await? })
 }
 async fn write_solid(out: &mut Vec<u8>, so: &BrepSolid) {
     write_str_lp(out, &so.id);
@@ -811,11 +811,11 @@ async fn write_solid(out: &mut Vec<u8>, so: &BrepSolid) {
     }
 }
 async fn read_solid(reader: &mut store::ByteReader<'_>) -> Result<BrepSolid, String> {
-    let id = read_str_lp(reader)?;
-    let n = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let id = read_str_lp(reader).await?;
+    let n = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut shells = Vec::with_capacity(n as usize);
     for _ in 0..n {
-        shells.push(read_solid_shell(reader)?);
+        shells.push(read_solid_shell(reader).await?);
     }
     Ok(BrepSolid { id, shells })
 }
@@ -853,41 +853,41 @@ async fn encode_brep_snapshot_binary(s: &SemioBrepSnapshot) -> Vec<u8> {
 }
 async fn decode_brep_snapshot_binary(bytes: &[u8]) -> Result<SemioBrepSnapshot, String> {
     const PACK_BINARY_FORMAT: u8 = 1;
-    let mut reader = store::ByteReader::new(bytes);
-    let format = reader.read_u8().map_err(|e| e.to_string())?;
+    let mut reader = store::ByteReader::new(bytes).await;
+    let format = reader.read_u8().await.map_err(|e| e.to_string())?;
     if format != PACK_BINARY_FORMAT {
         return Err(format!("unsupported pack format {format}"));
     }
-    let schema = read_str_lp(&mut reader)?;
-    let vertex_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let schema = read_str_lp(&mut reader).await?;
+    let vertex_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut vertices = Vec::with_capacity(vertex_count as usize);
     for _ in 0..vertex_count {
-        vertices.push(read_vertex(&mut reader)?);
+        vertices.push(read_vertex(&mut reader).await?);
     }
-    let edge_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let edge_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut edges = Vec::with_capacity(edge_count as usize);
     for _ in 0..edge_count {
-        edges.push(read_edge(&mut reader)?);
+        edges.push(read_edge(&mut reader).await?);
     }
-    let loop_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let loop_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut loops = Vec::with_capacity(loop_count as usize);
     for _ in 0..loop_count {
-        loops.push(read_loop(&mut reader)?);
+        loops.push(read_loop(&mut reader).await?);
     }
-    let face_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let face_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut faces = Vec::with_capacity(face_count as usize);
     for _ in 0..face_count {
-        faces.push(read_face(&mut reader)?);
+        faces.push(read_face(&mut reader).await?);
     }
-    let shell_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let shell_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut shells = Vec::with_capacity(shell_count as usize);
     for _ in 0..shell_count {
-        shells.push(read_shell(&mut reader)?);
+        shells.push(read_shell(&mut reader).await?);
     }
-    let solid_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let solid_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut solids = Vec::with_capacity(solid_count as usize);
     for _ in 0..solid_count {
-        solids.push(read_solid(&mut reader)?);
+        solids.push(read_solid(&mut reader).await?);
     }
     Ok(SemioBrepSnapshot { schema, vertices, edges, loops, faces, shells, solids })
 }
@@ -908,12 +908,12 @@ impl store::ArtifactDsl for SemioBrepSnapshot {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        parse_brep_snapshot_body(body).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_brep_snapshot_body(body).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 
     async fn print_dsl(&self) -> String {
         let body = print_brep_snapshot_body(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -922,7 +922,7 @@ impl store::ArtifactPack for SemioBrepSnapshot {
     async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = encode_brep_snapshot_binary(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
 
@@ -932,7 +932,7 @@ impl store::ArtifactPack for SemioBrepSnapshot {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
-        decode_brep_snapshot_binary(&inner).map_err(store::PackError::Schema)
+        decode_brep_snapshot_binary(&inner).await.map_err(store::PackError::Schema)
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs

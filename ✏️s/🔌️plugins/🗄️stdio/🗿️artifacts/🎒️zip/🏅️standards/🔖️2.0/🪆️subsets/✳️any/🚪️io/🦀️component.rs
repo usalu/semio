@@ -36,7 +36,7 @@ pub mod derived_composition {
             if native.is_empty() {
                 return Err(ComposeError { message: "ZipComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() });
             }
-            let analysis = ZipAnalyzer::analyze(&native);
+            let analysis = ZipAnalyzer::analyze(&native).await;
             let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError { message: "ZipComposerComposition: analysis produced no snapshot".into(), diagnostics: analysis.diagnostics.clone() })?;
             Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics })
         }
@@ -198,7 +198,7 @@ async fn decode_zip_text(bytes: &[u8], utf8: bool, what: &'static str) -> Result
     if utf8 {
         String::from_utf8(bytes.to_vec()).map_err(|_| ZipError::Utf8 { what, name_hint: cp437_decode(bytes) })
     } else {
-        Ok(cp437_decode(bytes))
+        Ok(cp437_decode(bytes).await)
     }
 }
 
@@ -282,19 +282,19 @@ async fn parse_zip64_extra(fields: &[ParsedExtraField], need_uncomp: bool, need_
     let mut pos = 0usize;
     let mut out = Zip64Fields { uncomp_size: None, comp_size: None, local_offset: None, disk_start: None };
     if need_uncomp {
-        out.uncomp_size = Some(read_u64(&record.payload, pos)?);
+        out.uncomp_size = Some(read_u64(&record.payload, pos).await?);
         pos += 8;
     }
     if need_comp {
-        out.comp_size = Some(read_u64(&record.payload, pos)?);
+        out.comp_size = Some(read_u64(&record.payload, pos).await?);
         pos += 8;
     }
     if need_offset {
-        out.local_offset = Some(read_u64(&record.payload, pos)?);
+        out.local_offset = Some(read_u64(&record.payload, pos).await?);
         pos += 8;
     }
     if need_disk {
-        out.disk_start = Some(read_u32(&record.payload, pos)?);
+        out.disk_start = Some(read_u32(&record.payload, pos).await?);
     }
     Ok(out)
 }
@@ -314,8 +314,8 @@ pub struct ZipCentralEntryHeader {
 /// values. Does not decompress payloads — only enough structure to validate ISO/IEC 21320-1 header
 /// policy against wire bytes.
 pub async fn inspect_zip_central_entry_headers(data: &[u8]) -> Result<Vec<ZipCentralEntryHeader>, ZipError> {
-    let eocd = find_eocd(data)?;
-    let loc = resolve_central_directory(data, eocd)?;
+    let eocd = find_eocd(data).await?;
+    let loc = resolve_central_directory(data, eocd).await?;
     if loc.cd_offset + loc.cd_size > data.len() {
         return Err(ZipError::Malformed("central directory out of range".into()));
     }
@@ -323,14 +323,14 @@ pub async fn inspect_zip_central_entry_headers(data: &[u8]) -> Result<Vec<ZipCen
     let mut out = Vec::with_capacity(loc.count);
     let mut pos = loc.cd_offset;
     for _ in 0..loc.count {
-        if read_u32(data, pos)? != SIG_CENTRAL {
+        if read_u32(data, pos).await? != SIG_CENTRAL {
             return Err(ZipError::BadSignature { what: "central directory header", at: pos });
         }
-        let version_needed = read_u16(data, pos + 6)?;
-        let flags = read_u16(data, pos + 8)?;
-        let name_len = read_u16(data, pos + 28)? as usize;
-        let extra_len = read_u16(data, pos + 30)? as usize;
-        let comment_len = read_u16(data, pos + 32)? as usize;
+        let version_needed = read_u16(data, pos + 6).await?;
+        let flags = read_u16(data, pos + 8).await?;
+        let name_len = read_u16(data, pos + 28).await? as usize;
+        let extra_len = read_u16(data, pos + 30).await? as usize;
+        let comment_len = read_u16(data, pos + 32).await? as usize;
         let name_start = pos + 46;
         let name_end = name_start + name_len;
         let extra_end = name_end + extra_len;
@@ -339,7 +339,7 @@ pub async fn inspect_zip_central_entry_headers(data: &[u8]) -> Result<Vec<ZipCen
             return Err(ZipError::Truncated("central directory record (name/extra/comment)"));
         }
         let utf8 = flags & 0x0800 != 0;
-        let name = decode_zip_text(&data[name_start..name_end], utf8, "central directory filename")?;
+        let name = decode_zip_text(&data[name_start..name_end], utf8, "central directory filename").await?;
         out.push(ZipCentralEntryHeader { name, flags, version_needed });
         pos = comment_end;
     }
@@ -362,7 +362,7 @@ async fn find_eocd(data: &[u8]) -> Result<usize, ZipError> {
     let max_comment = 65535usize;
     let start = data.len().saturating_sub(22 + max_comment);
     for i in (start..=data.len() - 22).rev() {
-        if read_u32(data, i)? == SIG_EOCD {
+        if read_u32(data, i).await? == SIG_EOCD {
             return Ok(i);
         }
     }
@@ -379,10 +379,10 @@ struct CentralDirLocation {
 }
 
 async fn resolve_central_directory(data: &[u8], eocd: usize) -> Result<CentralDirLocation, ZipError> {
-    let count16 = read_u16(data, eocd + 10)?;
-    let cd_size32 = read_u32(data, eocd + 12)?;
-    let cd_offset32 = read_u32(data, eocd + 16)?;
-    let comment_len = read_u16(data, eocd + 20)? as usize;
+    let count16 = read_u16(data, eocd + 10).await?;
+    let cd_size32 = read_u32(data, eocd + 12).await?;
+    let cd_offset32 = read_u32(data, eocd + 16).await?;
+    let comment_len = read_u16(data, eocd + 20).await? as usize;
     let comment_start = eocd + 22;
     let comment_end = comment_start + comment_len;
     if comment_end > data.len() {
@@ -395,17 +395,17 @@ async fn resolve_central_directory(data: &[u8], eocd: usize) -> Result<CentralDi
         return Ok(CentralDirLocation { count: count16 as usize, cd_size: cd_size32 as usize, cd_offset: cd_offset32 as usize, comment });
     }
 
-    if eocd < 20 || read_u32(data, eocd - 20)? != SIG_EOCD64_LOCATOR {
+    if eocd < 20 || read_u32(data, eocd - 20).await? != SIG_EOCD64_LOCATOR {
         return Err(ZipError::Malformed("ZIP64 sentinel in EOCD but no ZIP64 locator record precedes it".into()));
     }
     let locator = eocd - 20;
-    let record_offset = read_u64(data, locator + 8)? as usize;
-    if read_u32(data, record_offset)? != SIG_EOCD64_RECORD {
+    let record_offset = read_u64(data, locator + 8).await? as usize;
+    if read_u32(data, record_offset).await? != SIG_EOCD64_RECORD {
         return Err(ZipError::BadSignature { what: "EOCD64 record", at: record_offset });
     }
-    let total_entries = read_u64(data, record_offset + 32)?;
-    let cd_size = read_u64(data, record_offset + 40)?;
-    let cd_offset = read_u64(data, record_offset + 48)?;
+    let total_entries = read_u64(data, record_offset + 32).await?;
+    let cd_size = read_u64(data, record_offset + 40).await?;
+    let cd_offset = read_u64(data, record_offset + 48).await?;
     Ok(CentralDirLocation { count: total_entries as usize, cd_size: cd_size as usize, cd_offset: cd_offset as usize, comment })
 }
 
@@ -414,8 +414,8 @@ async fn resolve_central_directory(data: &[u8], eocd: usize) -> Result<CentralDi
 //#region Decode
 /// 🎒️ Decode ZIP container bytes into a name-keyed logical `ZipSnapshot`.
 pub async fn decode_zip(data: &[u8]) -> Result<ZipSnapshot, ZipError> {
-    let eocd = find_eocd(data)?;
-    let loc = resolve_central_directory(data, eocd)?;
+    let eocd = find_eocd(data).await?;
+    let loc = resolve_central_directory(data, eocd).await?;
     if loc.cd_offset + loc.cd_size > data.len() {
         return Err(ZipError::Malformed("central directory out of range".into()));
     }
@@ -423,27 +423,27 @@ pub async fn decode_zip(data: &[u8]) -> Result<ZipSnapshot, ZipError> {
     let mut entries = Vec::with_capacity(loc.count);
     let mut pos = loc.cd_offset;
     for _ in 0..loc.count {
-        if read_u32(data, pos)? != SIG_CENTRAL {
+        if read_u32(data, pos).await? != SIG_CENTRAL {
             return Err(ZipError::BadSignature { what: "central directory header", at: pos });
         }
-        let version_made_by = read_u16(data, pos + 4)?;
-        let version_needed = read_u16(data, pos + 6)?;
-        let flags = read_u16(data, pos + 8)?;
+        let version_made_by = read_u16(data, pos + 4).await?;
+        let version_needed = read_u16(data, pos + 6).await?;
+        let flags = read_u16(data, pos + 8).await?;
         let utf8 = flags & 0x0800 != 0;
         let uses_descriptor = flags & 0x0008 != 0;
-        let method_code = read_u16(data, pos + 10)?;
-        let dos_time = read_u16(data, pos + 12)?;
-        let dos_date = read_u16(data, pos + 14)?;
-        let crc = read_u32(data, pos + 16)?;
-        let comp_size32 = read_u32(data, pos + 20)?;
-        let uncomp_size32 = read_u32(data, pos + 24)?;
-        let name_len = read_u16(data, pos + 28)? as usize;
-        let extra_len = read_u16(data, pos + 30)? as usize;
-        let comment_len = read_u16(data, pos + 32)? as usize;
-        let disk_start16 = read_u16(data, pos + 34)?;
-        let internal_attrs = read_u16(data, pos + 36)?;
-        let external_attrs = read_u32(data, pos + 38)?;
-        let local_off32 = read_u32(data, pos + 42)?;
+        let method_code = read_u16(data, pos + 10).await?;
+        let dos_time = read_u16(data, pos + 12).await?;
+        let dos_date = read_u16(data, pos + 14).await?;
+        let crc = read_u32(data, pos + 16).await?;
+        let comp_size32 = read_u32(data, pos + 20).await?;
+        let uncomp_size32 = read_u32(data, pos + 24).await?;
+        let name_len = read_u16(data, pos + 28).await? as usize;
+        let extra_len = read_u16(data, pos + 30).await? as usize;
+        let comment_len = read_u16(data, pos + 32).await? as usize;
+        let disk_start16 = read_u16(data, pos + 34).await?;
+        let internal_attrs = read_u16(data, pos + 36).await?;
+        let external_attrs = read_u32(data, pos + 38).await?;
+        let local_off32 = read_u32(data, pos + 42).await?;
 
         let name_start = pos + 46;
         let name_end = name_start + name_len;
@@ -455,11 +455,11 @@ pub async fn decode_zip(data: &[u8]) -> Result<ZipSnapshot, ZipError> {
             return Err(ZipError::Truncated("central directory record (name/extra/comment)"));
         }
 
-        let name = decode_zip_text(&data[name_start..name_end], utf8, "central directory filename")?;
-        let central_extra = parse_extra_fields(&data[extra_start..extra_end])?;
-        let comment = decode_zip_text(&data[comment_start..comment_end], utf8, "central directory comment")?;
+        let name = decode_zip_text(&data[name_start..name_end], utf8, "central directory filename").await?;
+        let central_extra = parse_extra_fields(&data[extra_start..extra_end]).await?;
+        let comment = decode_zip_text(&data[comment_start..comment_end], utf8, "central directory comment").await?;
 
-        let zip64 = parse_zip64_extra(&central_extra, uncomp_size32 == 0xFFFF_FFFF, comp_size32 == 0xFFFF_FFFF, local_off32 == 0xFFFF_FFFF, disk_start16 == 0xFFFF)?;
+        let zip64 = parse_zip64_extra(&central_extra, uncomp_size32 == 0xFFFF_FFFF, comp_size32 == 0xFFFF_FFFF, local_off32 == 0xFFFF_FFFF, disk_start16 == 0xFFFF).await?;
         let uncomp_size = zip64.uncomp_size.unwrap_or(uncomp_size32 as u64) as usize;
         let comp_size = zip64.comp_size.unwrap_or(comp_size32 as u64) as usize;
         let local_off = zip64.local_offset.unwrap_or(local_off32 as u64) as usize;
@@ -471,30 +471,30 @@ pub async fn decode_zip(data: &[u8]) -> Result<ZipSnapshot, ZipError> {
         pos = comment_end;
 
         // ---- Local header ----
-        if read_u32(data, local_off)? != SIG_LOCAL {
+        if read_u32(data, local_off).await? != SIG_LOCAL {
             return Err(ZipError::BadSignature { what: "local file header", at: local_off });
         }
-        let _l_version_needed = read_u16(data, local_off + 4)?;
-        let l_flags = read_u16(data, local_off + 6)?;
-        let l_method = read_u16(data, local_off + 8)?;
-        let _l_dos_time = read_u16(data, local_off + 10)?;
-        let _l_dos_date = read_u16(data, local_off + 12)?;
-        let _l_crc = read_u32(data, local_off + 14)?;
-        let _l_comp_size = read_u32(data, local_off + 18)?;
-        let _l_uncomp_size = read_u32(data, local_off + 22)?;
+        let _l_version_needed = read_u16(data, local_off + 4).await?;
+        let l_flags = read_u16(data, local_off + 6).await?;
+        let l_method = read_u16(data, local_off + 8).await?;
+        let _l_dos_time = read_u16(data, local_off + 10).await?;
+        let _l_dos_date = read_u16(data, local_off + 12).await?;
+        let _l_crc = read_u32(data, local_off + 14).await?;
+        let _l_comp_size = read_u32(data, local_off + 18).await?;
+        let _l_uncomp_size = read_u32(data, local_off + 22).await?;
         if l_method != method_code {
             return Err(ZipError::MethodMismatch { name, local: l_method, central: method_code });
         }
-        let l_name_len = read_u16(data, local_off + 26)? as usize;
-        let l_extra_len = read_u16(data, local_off + 28)? as usize;
+        let l_name_len = read_u16(data, local_off + 26).await? as usize;
+        let l_extra_len = read_u16(data, local_off + 28).await? as usize;
         let l_extra_start = local_off + 30 + l_name_len;
         let l_extra_end = l_extra_start + l_extra_len;
         if l_extra_end > data.len() {
             return Err(ZipError::Truncated("local file header name/extra"));
         }
-        let local_extra = parse_extra_fields(&data[l_extra_start..l_extra_end])?;
+        let local_extra = parse_extra_fields(&data[l_extra_start..l_extra_end]).await?;
 
-        let method = NativeCompressionMethod::from_code(method_code).ok_or_else(|| ZipError::UnsupportedMethod { name: name.clone(), method: method_code })?;
+        let method = NativeCompressionMethod::from_code(method_code).await.ok_or_else(|| ZipError::UnsupportedMethod { name: name.clone(), method: method_code })?;
 
         let data_off = l_extra_end;
         let data_end = data_off + comp_size;
@@ -506,15 +506,15 @@ pub async fn decode_zip(data: &[u8]) -> Result<ZipSnapshot, ZipError> {
         // ---- Optional trailing data descriptor (general-purpose bit 3) ----
         if uses_descriptor {
             let mut desc_pos = data_end;
-            let has_signature = read_u32(data, desc_pos)? == SIG_DATA_DESCRIPTOR;
+            let has_signature = read_u32(data, desc_pos).await? == SIG_DATA_DESCRIPTOR;
             if has_signature {
                 desc_pos += 4;
             }
             let is_zip64_entry = zip64.uncomp_size.is_some() || zip64.comp_size.is_some();
             let (d_crc, d_comp, d_uncomp) = if is_zip64_entry {
-                (read_u32(data, desc_pos)?, read_u64(data, desc_pos + 4)? as usize, read_u64(data, desc_pos + 12)? as usize)
+                (read_u32(data, desc_pos).await?, read_u64(data, desc_pos + 4).await? as usize, read_u64(data, desc_pos + 12).await? as usize)
             } else {
-                (read_u32(data, desc_pos)?, read_u32(data, desc_pos + 4)? as usize, read_u32(data, desc_pos + 8)? as usize)
+                (read_u32(data, desc_pos).await?, read_u32(data, desc_pos + 4).await? as usize, read_u32(data, desc_pos + 8).await? as usize)
             };
             if d_crc != crc || d_comp != comp_size || d_uncomp != uncomp_size {
                 return Err(ZipError::DataDescriptorMismatch { name });
@@ -524,14 +524,14 @@ pub async fn decode_zip(data: &[u8]) -> Result<ZipSnapshot, ZipError> {
 
         let raw = match method {
             NativeCompressionMethod::Stored => payload.to_vec(),
-            NativeCompressionMethod::Deflate => crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::inflate_raw(payload).map_err(ZipError::Malformed)?,
+            NativeCompressionMethod::Deflate => crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::inflate_raw(payload).await.map_err(ZipError::Malformed)?,
         };
         if raw.len() != uncomp_size {
             return Err(ZipError::Malformed(format!("{name}: decompressed size {} != declared uncompressed size {uncomp_size}", raw.len())));
         }
         let got_crc = crc32(&raw);
         if got_crc != crc {
-            return Err(ZipError::Crc32Mismatch { name, expected: crc, actual: got_crc });
+            return Err(ZipError::Crc32Mismatch { name, expected: crc, actual: got_crc.await });
         }
 
         let _ = (local_extra, central_extra, comment, dos_date, dos_time, flags, version_made_by, version_needed, internal_attrs, external_attrs);
@@ -550,7 +550,7 @@ pub async fn decode_zip(data: &[u8]) -> Result<ZipSnapshot, ZipError> {
 pub async fn encode_zip(snapshot: &ZipSnapshot) -> Result<Vec<u8>, ZipError> {
     let mut ordered: Vec<&ZipEntry> = snapshot.entries.iter().collect();
     ordered.sort_by(|left, right| left.name.cmp(&right.name));
-    encode_zip_ordered(snapshot, ordered)
+    encode_zip_ordered(snapshot, ordered).await
 }
 
 pub(crate) async fn encode_zip_with_entry_names(snapshot: &ZipSnapshot, names: &[String]) -> Result<Vec<u8>, ZipError> {
@@ -566,7 +566,7 @@ pub(crate) async fn encode_zip_with_entry_names(snapshot: &ZipSnapshot, names: &
         let entry = snapshot.entries.iter().find(|entry| &entry.name == name).ok_or_else(|| ZipError::Malformed(format!("derived entry order references missing member {name}")))?;
         ordered.push(entry);
     }
-    encode_zip_ordered(snapshot, ordered)
+    encode_zip_ordered(snapshot, ordered).await
 }
 
 async fn encode_zip_ordered(snapshot: &ZipSnapshot, ordered: Vec<&ZipEntry>) -> Result<Vec<u8>, ZipError> {
@@ -584,17 +584,17 @@ async fn encode_zip_ordered(snapshot: &ZipSnapshot, ordered: Vec<&ZipEntry>) -> 
         }
         let crc = crc32(&entry.data);
         let method = canonical_compression_method(entry);
-        let (method_out, flags_out, payload) = match method {
+        let (method_out, flags_out, payload) = match method.await {
             NativeCompressionMethod::Stored => (0u16, 0u16, entry.data.clone()),
             NativeCompressionMethod::Deflate => (
                 8u16,
                 6u16,
                 if entry.name.to_ascii_lowercase().ends_with(".bin") {
-                    crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::deflate_raw_deterministic_compact_high_search(&entry.data)
+                    crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::deflate_raw_deterministic_compact_high_search(&entry.data).await
                 } else if entry.name.to_ascii_lowercase().ends_with(".emf") {
-                    crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::deflate_raw_deterministic_high_search(&entry.data)
+                    crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::deflate_raw_deterministic_high_search(&entry.data).await
                 } else {
-                    crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::deflate_raw_deterministic(&entry.data)
+                    crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::deflate_raw_deterministic(&entry.data).await
                 }
                 .map_err(ZipError::Malformed)?,
             ),
@@ -605,7 +605,7 @@ async fn encode_zip_ordered(snapshot: &ZipSnapshot, ordered: Vec<&ZipEntry>) -> 
         let comp_size = payload.len() as u32;
         let uncomp_size = entry.data.len() as u32;
         let name_len = name.len() as u16;
-        let local_extra = canonical_local_extra(entry);
+        let local_extra = canonical_local_extra(entry).await;
         let central_extra = Vec::<u8>::new();
         let version_needed = if method_out == 0 { 10u16 } else { 20u16 };
         let version_made_by = 45u16;
@@ -624,7 +624,7 @@ async fn encode_zip_ordered(snapshot: &ZipSnapshot, ordered: Vec<&ZipEntry>) -> 
         local.extend_from_slice(&u16_le(method_out));
         local.extend_from_slice(&u16_le(dos_time));
         local.extend_from_slice(&u16_le(dos_date));
-        local.extend_from_slice(&u32_le(crc));
+        local.extend_from_slice(&u32_le(crc.await));
         local.extend_from_slice(&u32_le(comp_size));
         local.extend_from_slice(&u32_le(uncomp_size));
         local.extend_from_slice(&u16_le(name_len));
@@ -641,7 +641,7 @@ async fn encode_zip_ordered(snapshot: &ZipSnapshot, ordered: Vec<&ZipEntry>) -> 
         cen.extend_from_slice(&u16_le(method_out));
         cen.extend_from_slice(&u16_le(dos_time));
         cen.extend_from_slice(&u16_le(dos_date));
-        cen.extend_from_slice(&u32_le(crc));
+        cen.extend_from_slice(&u32_le(crc.await));
         cen.extend_from_slice(&u32_le(comp_size));
         cen.extend_from_slice(&u32_le(uncomp_size));
         cen.extend_from_slice(&u16_le(name_len));
@@ -706,7 +706,7 @@ pub async fn sniff_zip_bytes(data: &[u8]) -> SniffConfidence {
     }
     let magic = &data[0..4];
     let starts_recognized = magic == [0x50, 0x4b, 0x03, 0x04] || magic == [0x50, 0x4b, 0x05, 0x06] || magic == [0x50, 0x4b, 0x07, 0x08];
-    let eocd_ok = find_eocd(data).is_ok();
+    let eocd_ok = find_eocd(data).await.is_ok();
     match (starts_recognized, eocd_ok) {
         (true, true) => SniffConfidence::High,
         (true, false) => SniffConfidence::Medium,
@@ -1109,7 +1109,8 @@ pub mod io_registry {
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 
-    pub async fn entries() -> &'static [ComposerEntry] {
+    // 🚫️async: E1 pure table accessor consumed by OnceLock::get_or_init's sync closure — see R9
+    pub fn entries() -> &'static [ComposerEntry] {
         ENTRIES.get_or_init(|| vec![composer_entry_of::<ZipRawAnyComposer>(), composer_entry_of::<ZipIso21320Composer>()]).as_slice()
     }
 }

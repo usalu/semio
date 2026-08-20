@@ -64,13 +64,13 @@ pub enum StlMutation {
 /// ▶️ Applies `mutation` to `snapshot`, returning a typed error outcome without changing the
 /// snapshot when an index target is missing or out of range.
 pub async fn apply_stl_mutation(snapshot: &mut StlSnapshot, mutation: &StlMutation) -> protocol::MutationOutcome<StlDiff> {
-    let outcome = <StlMutation as Mutation<StlSnapshot>>::diff(mutation, snapshot);
-    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
+    let outcome = <StlMutation as Mutation<StlSnapshot>>::diff(mutation, snapshot).await;
+    match protocol::MutationDiff::apply(outcome.diff().await, snapshot).await {
         Ok(next) => {
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).await.absorb_messages(outcome.messages().await.to_vec()).await,
     }
 }
 //#endregion 🔖️Apply
@@ -82,12 +82,12 @@ impl Mutation<StlSnapshot> for StlMutation {
     async fn diff(&self, base: &StlSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             StlMutation::NoMutation => StlDiff::default(),
-            StlMutation::SetSnapshot { snapshot } => diff::diff_set_snapshot(base, snapshot),
-            StlMutation::SetSolidName { name } => diff::diff_set_solid_name(name),
-            StlMutation::InsertTriangle { index, triangle } => diff::diff_insert_triangle(*index, *triangle),
-            StlMutation::RemoveTriangle { index } => diff::diff_remove_triangle(*index),
-            StlMutation::SetTriangleNormal { index, normal } => diff::diff_set_triangle_normal(*index, *normal),
-            StlMutation::SetTriangleVertices { index, vertices } => diff::diff_set_triangle_vertices(*index, *vertices),
+            StlMutation::SetSnapshot { snapshot } => diff::diff_set_snapshot(base, snapshot).await,
+            StlMutation::SetSolidName { name } => diff::diff_set_solid_name(name).await,
+            StlMutation::InsertTriangle { index, triangle } => diff::diff_insert_triangle(*index, *triangle).await,
+            StlMutation::RemoveTriangle { index } => diff::diff_remove_triangle(*index).await,
+            StlMutation::SetTriangleNormal { index, normal } => diff::diff_set_triangle_normal(*index, *normal).await,
+            StlMutation::SetTriangleVertices { index, vertices } => diff::diff_set_triangle_vertices(*index, *vertices).await,
         })
     }
 
@@ -134,12 +134,12 @@ async fn enc_snapshot(s: &StlSnapshot) -> String {
     format!("[{},{},[{}]]", diff::hex_encode_str(&s.schema), diff::hex_encode_str(&s.solid_name), s.triangles.iter().map(diff::enc_triangle).collect::<Vec<_>>().join(","),)
 }
 async fn dec_snapshot(s: &str) -> Result<StlSnapshot, String> {
-    let parts = diff::split_top_level(diff::strip_brackets(s)?, ',');
+    let parts = diff::split_top_level(diff::strip_brackets(s).await?, ',').await;
     let [schema, solid_name, triangles] = parts.as_slice() else {
         return Err(format!("snapshot: expected 3 fields, got {}", parts.len()));
     };
-    let triangles = diff::split_top_level(diff::strip_brackets(triangles)?, ',').into_iter().filter(|s| !s.is_empty()).map(diff::dec_triangle).collect::<Result<Vec<_>, String>>()?;
-    Ok(StlSnapshot { schema: diff::hex_decode_str(schema)?, solid_name: diff::hex_decode_str(solid_name)?, triangles })
+    let triangles = diff::split_top_level(diff::strip_brackets(triangles).await?, ',').into_iter().filter(|s| !s.is_empty()).map(diff::dec_triangle).collect::<Result<Vec<_>, String>>()?;
+    Ok(StlSnapshot { schema: diff::hex_decode_str(schema).await?, solid_name: diff::hex_decode_str(solid_name).await?, triangles })
 }
 
 async fn print_stl_op(m: &StlMutation) -> String {
@@ -165,22 +165,22 @@ async fn parse_stl_op(line: &str) -> Result<StlMutation, String> {
         args.iter().find_map(|t| t.strip_prefix(probe.as_str())).ok_or_else(|| format!("stl op: missing '{key}=' in {line:?}"))
     };
     match keyword {
-        "set-snapshot" => Ok(StlMutation::SetSnapshot { snapshot: dec_snapshot(get("snapshot")?)? }),
-        "set-solid-name" => Ok(StlMutation::SetSolidName { name: diff::hex_decode_str(get("name")?)? }),
-        "insert-triangle" => Ok(StlMutation::InsertTriangle { index: diff::parse_usize(get("index")?)?, triangle: diff::dec_triangle(get("triangle")?)? }),
-        "remove-triangle" => Ok(StlMutation::RemoveTriangle { index: diff::parse_usize(get("index")?)? }),
-        "set-triangle-normal" => Ok(StlMutation::SetTriangleNormal { index: diff::parse_usize(get("index")?)?, normal: diff::dec_vec3(get("normal")?)? }),
-        "set-triangle-vertices" => Ok(StlMutation::SetTriangleVertices { index: diff::parse_usize(get("index")?)?, vertices: diff::dec_vertices(get("vertices")?)? }),
+        "set-snapshot" => Ok(StlMutation::SetSnapshot { snapshot: dec_snapshot(get("snapshot")?).await? }),
+        "set-solid-name" => Ok(StlMutation::SetSolidName { name: diff::hex_decode_str(get("name")?).await? }),
+        "insert-triangle" => Ok(StlMutation::InsertTriangle { index: diff::parse_usize(get("index")?).await?, triangle: diff::dec_triangle(get("triangle")?).await? }),
+        "remove-triangle" => Ok(StlMutation::RemoveTriangle { index: diff::parse_usize(get("index")?).await? }),
+        "set-triangle-normal" => Ok(StlMutation::SetTriangleNormal { index: diff::parse_usize(get("index")?).await?, normal: diff::dec_vec3(get("normal")?).await? }),
+        "set-triangle-vertices" => Ok(StlMutation::SetTriangleVertices { index: diff::parse_usize(get("index")?).await?, vertices: diff::dec_vertices(get("vertices")?).await? }),
         other => Err(format!("stl op: unknown keyword {other:?}")),
     }
 }
 
 impl OpText for StlMutation {
     async fn print_op(&self) -> String {
-        print_stl_op(self)
+        print_stl_op(self).await
     }
     async fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_stl_op(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_stl_op(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
 
@@ -199,12 +199,12 @@ async fn enc_snapshot_bin(s: &StlSnapshot, out: &mut Vec<u8>) {
     }
 }
 async fn dec_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<StlSnapshot, String> {
-    let schema = diff::read_str_bin(reader)?;
-    let solid_name = diff::read_str_bin(reader)?;
-    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let schema = diff::read_str_bin(reader).await?;
+    let solid_name = diff::read_str_bin(reader).await?;
+    let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut triangles = Vec::with_capacity(count as usize);
     for _ in 0..count {
-        triangles.push(diff::dec_triangle_bin(reader)?);
+        triangles.push(diff::dec_triangle_bin(reader).await?);
     }
     Ok(StlSnapshot { schema, solid_name, triangles })
 }
@@ -257,36 +257,36 @@ impl OpBinary for StlMutation {
         Ok(out)
     }
     async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let mut reader = store::ByteReader::new(bytes);
-        let _format = reader.read_u8().map_err(|e| protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: e.to_string() })?;
-        let tag = reader.read_u8().map_err(|e| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: e.to_string() })?;
+        let mut reader = store::ByteReader::new(bytes).await;
+        let _format = reader.read_u8().await.map_err(|e| protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: e.to_string() })?;
+        let tag = reader.read_u8().await.map_err(|e| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: e.to_string() })?;
         match tag {
             0 => Ok(StlMutation::NoMutation),
             1 => {
-                let snapshot = dec_snapshot_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "op snapshot", offset: reader.position() as u64, detail: e })?;
+                let snapshot = dec_snapshot_bin(&mut reader).await.map_err(|e| protocol::ProtocolError::Malformed { what: "op snapshot", offset: semio_framework_plugin::resolve_ready(reader.position()) as u64, detail: e })?;
                 Ok(StlMutation::SetSnapshot { snapshot })
             }
             2 => {
-                let name = diff::read_str_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "op name", offset: reader.position() as u64, detail: e })?;
+                let name = diff::read_str_bin(&mut reader).await.map_err(|e| protocol::ProtocolError::Malformed { what: "op name", offset: semio_framework_plugin::resolve_ready(reader.position()) as u64, detail: e })?;
                 Ok(StlMutation::SetSolidName { name })
             }
             3 => {
-                let index = reader.read_varint_u64().map_err(|e| protocol::ProtocolError::Malformed { what: "op index", offset: reader.position() as u64, detail: e.to_string() })? as usize;
-                let triangle = diff::dec_triangle_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "op triangle", offset: reader.position() as u64, detail: e })?;
+                let index = reader.read_varint_u64().await.map_err(|e| protocol::ProtocolError::Malformed { what: "op index", offset: semio_framework_plugin::resolve_ready(reader.position()) as u64, detail: e.to_string() })? as usize;
+                let triangle = diff::dec_triangle_bin(&mut reader).await.map_err(|e| protocol::ProtocolError::Malformed { what: "op triangle", offset: semio_framework_plugin::resolve_ready(reader.position()) as u64, detail: e })?;
                 Ok(StlMutation::InsertTriangle { index, triangle })
             }
             4 => {
-                let index = reader.read_varint_u64().map_err(|e| protocol::ProtocolError::Malformed { what: "op index", offset: reader.position() as u64, detail: e.to_string() })? as usize;
+                let index = reader.read_varint_u64().await.map_err(|e| protocol::ProtocolError::Malformed { what: "op index", offset: semio_framework_plugin::resolve_ready(reader.position()) as u64, detail: e.to_string() })? as usize;
                 Ok(StlMutation::RemoveTriangle { index })
             }
             5 => {
-                let index = reader.read_varint_u64().map_err(|e| protocol::ProtocolError::Malformed { what: "op index", offset: reader.position() as u64, detail: e.to_string() })? as usize;
-                let normal = diff::dec_vec3_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "op normal", offset: reader.position() as u64, detail: e })?;
+                let index = reader.read_varint_u64().await.map_err(|e| protocol::ProtocolError::Malformed { what: "op index", offset: semio_framework_plugin::resolve_ready(reader.position()) as u64, detail: e.to_string() })? as usize;
+                let normal = diff::dec_vec3_bin(&mut reader).await.map_err(|e| protocol::ProtocolError::Malformed { what: "op normal", offset: semio_framework_plugin::resolve_ready(reader.position()) as u64, detail: e })?;
                 Ok(StlMutation::SetTriangleNormal { index, normal })
             }
             6 => {
-                let index = reader.read_varint_u64().map_err(|e| protocol::ProtocolError::Malformed { what: "op index", offset: reader.position() as u64, detail: e.to_string() })? as usize;
-                let vertices = diff::dec_vertices_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "op vertices", offset: reader.position() as u64, detail: e })?;
+                let index = reader.read_varint_u64().await.map_err(|e| protocol::ProtocolError::Malformed { what: "op index", offset: semio_framework_plugin::resolve_ready(reader.position()) as u64, detail: e.to_string() })? as usize;
+                let vertices = diff::dec_vertices_bin(&mut reader).await.map_err(|e| protocol::ProtocolError::Malformed { what: "op vertices", offset: semio_framework_plugin::resolve_ready(reader.position()) as u64, detail: e })?;
                 Ok(StlMutation::SetTriangleVertices { index, vertices })
             }
             other => Err(protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("unknown tag {other}") }),

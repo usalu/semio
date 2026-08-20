@@ -46,7 +46,8 @@ impl Inner {
     /// 🔁️ The replace-and-take-waker step `resolve`/`append_chunk` both need — factored out so the
     /// chunk-reassembly cap/done paths reuse the EXACT same resolution mechanics `resolve` already
     /// had, rather than a second hand-rolled copy.
-    async fn complete(&mut self, id: u64, result: Result<Vec<u8>, Fault>) -> Option<Waker> {
+    // 🚫️async: E1 pure in-memory slot mutation consumed by `RequestRegistry`'s sync API below — R9.
+    fn complete(&mut self, id: u64, result: Result<Vec<u8>, Fault>) -> Option<Waker> {
         match self.slots.get_mut(&id) {
             Some(slot @ Slot::Pending { .. }) => {
                 let Slot::Pending { waker, .. } = std::mem::replace(slot, Slot::Ready { result }) else { unreachable!() };
@@ -71,7 +72,7 @@ pub struct RequestRegistry {
 }
 
 impl RequestRegistry {
-    pub async fn new() -> Self {
+    pub fn new() -> Self {
         Self::default()
     }
 
@@ -80,7 +81,7 @@ impl RequestRegistry {
     /// the struct doc for why this exists instead of a per-request `instance` parameter on
     /// `request()` itself: `request()`'s signature is a live cross-crate contract
     /// (`🌐host/🦀️component.rs`'s `Host::call`) this packet must not break.
-    pub async fn for_instance(&self, instance: u32) -> Self {
+    pub fn for_instance(&self, instance: u32) -> Self {
         Self { inner: self.inner.clone(), instance }
     }
 
@@ -88,7 +89,7 @@ impl RequestRegistry {
     /// variant embeds its own `req: RequestId`), queues it for the next `turn-result.effects`
     /// drain, and returns a future that resolves once `resolve(id, ...)` is called from the
     /// `Event::Completed` (or job/http-chunk) routing step of `poll`.
-    pub async fn request(&self, build: impl FnOnce(RequestId) -> Effect) -> RequestFuture {
+    pub fn request(&self, build: impl FnOnce(RequestId) -> Effect) -> RequestFuture {
         let mut inner = self.inner.borrow_mut();
         inner.next_id += 1;
         let raw = inner.next_id;
@@ -101,9 +102,9 @@ impl RequestRegistry {
     /// ✅️ Called from `poll`'s event-routing step when `Event::Completed{req, result}` (or an
     /// equivalent streaming completion) arrives. Wakes the parked task if one was already polled
     /// once (a request resolved before its future is ever polled just sits `Ready`).
-    pub async fn resolve(&self, id: RequestId, result: Result<Vec<u8>, Fault>) {
+    pub fn resolve(&self, id: RequestId, result: Result<Vec<u8>, Fault>) {
         let mut inner = self.inner.borrow_mut();
-        let waker = inner.complete(id.0, result).await;
+        let waker = inner.complete(id.0, result);
         drop(inner);
         if let Some(waker) = waker {
             waker.wake();
@@ -121,7 +122,7 @@ impl RequestRegistry {
     /// HTTP task is not itself cancelled by this, it just has nowhere left to deliver into. A chunk
     /// for an id that is not `Pending` (already resolved, or cancelled/dropped — see `RequestFuture`'s
     /// `Drop` impl) is a harmless no-op, same as `resolve` on an unknown id.
-    pub async fn append_chunk(&self, id: RequestId, bytes: Vec<u8>, done: bool, cap: usize) {
+    pub fn append_chunk(&self, id: RequestId, bytes: Vec<u8>, done: bool, cap: usize) {
         let mut inner = self.inner.borrow_mut();
         let outcome = match inner.slots.get_mut(&id.0) {
             Some(Slot::Pending { partial, .. }) => {
@@ -137,7 +138,7 @@ impl RequestRegistry {
             _ => None,
         };
         let waker = match outcome {
-            Some(result) => inner.complete(id.0, result).await,
+            Some(result) => inner.complete(id.0, result),
             None => None,
         };
         drop(inner);
@@ -150,26 +151,26 @@ impl RequestRegistry {
     /// (`⚛️reactor/🦀️component.rs`'s `Event::HttpChunk` routing step) uses this to look up the
     /// owning instance's `QuotaSchema.message_bytes` cap. `None` once the slot is gone (already
     /// resolved or cancelled), same lifetime as every other per-id lookup here.
-    pub async fn instance_of(&self, id: RequestId) -> Option<u32> {
+    pub fn instance_of(&self, id: RequestId) -> Option<u32> {
         self.inner.borrow().instance_of.get(&id.0).copied()
     }
 
     /// 🔥️ Fire-and-forget: queues `effect` (a variant with no `req`/no completion — `Notify`,
     /// `ClipboardWrite`, `Navigate`, ...) without allocating a `RequestId` or parking anything.
-    pub async fn emit(&self, effect: Effect) {
+    pub fn emit(&self, effect: Effect) {
         self.inner.borrow_mut().outbound.push(effect);
     }
 
     /// 📤️ Drains and returns every effect queued since the last drain, in request order —
     /// `reactor::poll` calls this once per turn after the executor idles.
-    pub async fn drain(&self) -> Vec<Effect> {
+    pub fn drain(&self) -> Vec<Effect> {
         std::mem::take(&mut self.inner.borrow_mut().outbound)
     }
 
     /// 📸️ `⚛️reactor/📸️checkpoint`'s `pending_requests`: the ids still `Pending` — carried in the
     /// checkpoint pack so a restored actor's host round-trips can be identified as stale/re-run
     /// (see design-abi.md §4: async tasks are never serialised, only marked re-run-on-restore).
-    pub async fn pending_ids(&self) -> Vec<RequestId> {
+    pub fn pending_ids(&self) -> Vec<RequestId> {
         self.inner.borrow().slots.iter().filter(|(_, slot)| matches!(slot, Slot::Pending { .. })).map(|(id, _)| RequestId(*id)).collect()
     }
 
@@ -181,7 +182,7 @@ impl RequestRegistry {
     /// to observe a "cancelled" resolution — this is cleanup, not notification. Returns the number
     /// of slots removed (diagnostic only). Idempotent: an instance with no pending requests removes
     /// nothing.
-    pub async fn cancel_instance(&self, instance: u32) -> usize {
+    pub fn cancel_instance(&self, instance: u32) -> usize {
         let mut inner = self.inner.borrow_mut();
         let ids: Vec<u64> = inner.instance_of.iter().filter(|(_, owner)| **owner == instance).map(|(id, _)| *id).collect();
         for id in &ids {
@@ -243,10 +244,10 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn resolve_before_first_poll_leaves_the_future_immediately_ready() {
-        let registry = RequestRegistry::new().await;
+        let registry = RequestRegistry::new();
         let future = registry.request(|req| Effect::CancelJob { job: req.0 }).await;
-        assert_eq!(registry.drain().await.len(), 1, "request() must queue exactly one effect");
-        registry.resolve(RequestId(1), Ok(b"ok".to_vec())).await;
+        assert_eq!(registry.drain().len(), 1, "request() must queue exactly one effect");
+        registry.resolve(RequestId(1), Ok(b"ok".to_vec()));
         let mut future = Box::pin(future);
         let waker = futures_test_waker();
         let mut cx = Context::from_waker(waker);
@@ -259,12 +260,12 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn append_chunk_reassembles_a_multi_chunk_body_to_the_exact_original_bytes() {
-        let registry = RequestRegistry::new().await;
+        let registry = RequestRegistry::new();
         let future = registry.request(|req| Effect::CancelJob { job: req.0 }).await;
         let original: Vec<u8> = (0u8..=255).chain(0u8..=255).chain(0u8..100).collect(); // 710 bytes, non-trivial and non-uniform
         for (index, window) in original.chunks(97).enumerate() {
             let done = (index + 1) * 97 >= original.len();
-            registry.append_chunk(RequestId(1), window.to_vec(), done, 1024 * 1024).await;
+            registry.append_chunk(RequestId(1), window.to_vec(), done, 1024 * 1024);
         }
         let mut future = Box::pin(future);
         let waker = futures_test_waker();
@@ -278,10 +279,10 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn append_chunk_over_cap_faults_instead_of_silently_truncating() {
-        let registry = RequestRegistry::new().await;
+        let registry = RequestRegistry::new();
         let future = registry.request(|req| Effect::CancelJob { job: req.0 }).await;
-        registry.append_chunk(RequestId(1), vec![0u8; 40], false, 64).await;
-        registry.append_chunk(RequestId(1), vec![0u8; 40], false, 64).await; // 80 > 64 cap — must fault here, not wait for `done`
+        registry.append_chunk(RequestId(1), vec![0u8; 40], false, 64);
+        registry.append_chunk(RequestId(1), vec![0u8; 40], false, 64); // 80 > 64 cap — must fault here, not wait for `done`
         let mut future = Box::pin(future);
         let waker = futures_test_waker();
         let mut cx = Context::from_waker(waker);
@@ -294,11 +295,11 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn append_chunk_on_an_unknown_or_already_resolved_id_is_a_harmless_no_op() {
-        let registry = RequestRegistry::new().await;
-        registry.append_chunk(RequestId(999), vec![1, 2, 3], false, 1024).await; // never requested
+        let registry = RequestRegistry::new();
+        registry.append_chunk(RequestId(999), vec![1, 2, 3], false, 1024); // never requested
         let future = registry.request(|req| Effect::CancelJob { job: req.0 }).await;
-        registry.resolve(RequestId(1), Ok(b"already done".to_vec())).await;
-        registry.append_chunk(RequestId(1), vec![9, 9, 9], true, 1024).await; // arrives after resolve
+        registry.resolve(RequestId(1), Ok(b"already done".to_vec()));
+        registry.append_chunk(RequestId(1), vec![9, 9, 9], true, 1024); // arrives after resolve
         let mut future = Box::pin(future);
         let waker = futures_test_waker();
         let mut cx = Context::from_waker(waker);
@@ -310,27 +311,27 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn pending_ids_reports_only_unresolved_requests() {
-        let registry = RequestRegistry::new().await;
+        let registry = RequestRegistry::new();
         let _first = registry.request(|req| Effect::CancelJob { job: req.0 }).await;
         let _second = registry.request(|req| Effect::CancelJob { job: req.0 }).await;
-        assert_eq!(registry.pending_ids().await.len(), 2);
-        registry.resolve(RequestId(1), Ok(Vec::new())).await;
-        assert_eq!(registry.pending_ids().await, vec![RequestId(2)]);
+        assert_eq!(registry.pending_ids().len(), 2);
+        registry.resolve(RequestId(1), Ok(Vec::new()));
+        assert_eq!(registry.pending_ids(), vec![RequestId(2)]);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn cancel_instance_removes_only_that_instances_pending_requests() {
-        let registry = RequestRegistry::new().await;
-        let scoped_to_7 = registry.for_instance(7).await;
-        let scoped_to_9 = registry.for_instance(9).await;
+        let registry = RequestRegistry::new();
+        let scoped_to_7 = registry.for_instance(7);
+        let scoped_to_9 = registry.for_instance(9);
         let _seven_a = scoped_to_7.request(|req| Effect::CancelJob { job: req.0 }).await;
         let _seven_b = scoped_to_7.request(|req| Effect::CancelJob { job: req.0 }).await;
         let nine = scoped_to_9.request(|req| Effect::CancelJob { job: req.0 }).await;
 
-        assert_eq!(registry.pending_ids().await.len(), 3, "all three requests share the one underlying queue");
-        let removed = registry.cancel_instance(7).await;
+        assert_eq!(registry.pending_ids().len(), 3, "all three requests share the one underlying queue");
+        let removed = registry.cancel_instance(7);
         assert_eq!(removed, 2, "cancel_instance must report exactly the count it removed");
-        assert_eq!(registry.pending_ids().await, vec![RequestId(3)], "only instance 9's request must survive");
+        assert_eq!(registry.pending_ids(), vec![RequestId(3)], "only instance 9's request must survive");
 
         // 🚫️ A cancelled instance's future observes neither Ready nor a wake — it simply never
         // resolves. The slot is gone outright (no leaked entry to poll against later).
@@ -342,18 +343,18 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn cancel_instance_on_an_instance_with_no_pending_requests_is_a_harmless_no_op() {
-        let registry = RequestRegistry::new().await;
-        assert_eq!(registry.cancel_instance(42).await, 0);
+        let registry = RequestRegistry::new();
+        assert_eq!(registry.cancel_instance(42), 0);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn for_instance_shares_the_same_id_counter_as_the_registry_it_was_derived_from() {
-        let registry = RequestRegistry::new().await;
-        let scoped = registry.for_instance(3).await;
+        let registry = RequestRegistry::new();
+        let scoped = registry.for_instance(3);
         let _first = registry.request(|req| Effect::CancelJob { job: req.0 }).await; // id 1, instance 0
         let _second = scoped.request(|req| Effect::CancelJob { job: req.0 }).await; // id 2, instance 3
-        assert_eq!(registry.cancel_instance(3).await, 1, "only the request allocated through the scoped handle belongs to instance 3");
-        assert_eq!(registry.pending_ids().await, vec![RequestId(1)]);
+        assert_eq!(registry.cancel_instance(3), 1, "only the request allocated through the scoped handle belongs to instance 3");
+        assert_eq!(registry.pending_ids(), vec![RequestId(1)]);
     }
 
     // 🚫️async: E4 fn-pointer slot — Waker::noop() replaces the hand-rolled RawWakerVTable outright;

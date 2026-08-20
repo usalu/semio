@@ -161,7 +161,7 @@ pub enum DocBlock {
 
 impl DocBlock {
     pub async fn paragraph(text: impl Into<String>) -> Self {
-        Self::Paragraph { style_id: None, runs: vec![DocRun::plain(text)] }
+        Self::Paragraph { style_id: None, runs: vec![DocRun::plain(text).await] }
     }
 }
 //#endregion 🔖️DocumentModel
@@ -226,15 +226,15 @@ async fn parse_document_snapshot_body(body: &str) -> Result<SemioDocumentSnapsho
             continue;
         }
         if let Some(rest) = line.strip_prefix("schema=") {
-            schema = Some(dec_str(rest)?);
+            schema = Some(dec_str(rest).await?);
         } else if let Some(rest) = line.strip_prefix("styles=") {
-            let inner = strip_brackets(rest)?;
+            let inner = strip_brackets(rest).await?;
             styles = split_top_level(inner, ',').into_iter().filter(|s| !s.is_empty()).map(dec_style).collect::<Result<Vec<_>, String>>()?;
         } else if let Some(rest) = line.strip_prefix("images=") {
-            let inner = strip_brackets(rest)?;
+            let inner = strip_brackets(rest).await?;
             images = split_top_level(inner, ',').into_iter().filter(|s| !s.is_empty()).map(dec_image).collect::<Result<Vec<_>, String>>()?;
         } else if let Some(rest) = line.strip_prefix("blocks=") {
-            let inner = strip_brackets(rest)?;
+            let inner = strip_brackets(rest).await?;
             blocks = split_top_level(inner, ',').into_iter().filter(|s| !s.is_empty()).map(dec_block).collect::<Result<Vec<_>, String>>()?;
         } else {
             return Err(format!("document snapshot: unknown line {line:?}"));
@@ -254,20 +254,20 @@ async fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
     out.extend_from_slice(bytes);
 }
 async fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
+    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec())
 }
 async fn write_str_lp(out: &mut Vec<u8>, s: &str) {
     write_bytes_lp(out, s.as_bytes());
 }
 async fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
-    String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
+    String::from_utf8(read_bytes_lp(reader).await?).map_err(|e| e.to_string())
 }
 async fn write_bool(out: &mut Vec<u8>, b: bool) {
     out.push(if b { 1 } else { 0 });
 }
 async fn read_bool(reader: &mut store::ByteReader<'_>) -> Result<bool, String> {
-    Ok(reader.read_u8().map_err(|e| e.to_string())? != 0)
+    Ok(reader.read_u8().await.map_err(|e| e.to_string())? != 0)
 }
 async fn write_opt_str(out: &mut Vec<u8>, v: &Option<String>) {
     match v {
@@ -279,9 +279,9 @@ async fn write_opt_str(out: &mut Vec<u8>, v: &Option<String>) {
     }
 }
 async fn read_opt_str(reader: &mut store::ByteReader<'_>) -> Result<Option<String>, String> {
-    match reader.read_u8().map_err(|e| e.to_string())? {
+    match reader.read_u8().await.map_err(|e| e.to_string())? {
         0 => Ok(None),
-        1 => Ok(Some(read_str_lp(reader)?)),
+        1 => Ok(Some(read_str_lp(reader).await?)),
         other => Err(format!("opt str: bad tag {other}")),
     }
 }
@@ -295,9 +295,9 @@ async fn write_opt_f64(out: &mut Vec<u8>, v: Option<f64>) {
     }
 }
 async fn read_opt_f64(reader: &mut store::ByteReader<'_>) -> Result<Option<f64>, String> {
-    match reader.read_u8().map_err(|e| e.to_string())? {
+    match reader.read_u8().await.map_err(|e| e.to_string())? {
         0 => Ok(None),
-        1 => Ok(Some(reader.read_f64_le().map_err(|e| e.to_string())?)),
+        1 => Ok(Some(reader.read_f64_le().await.map_err(|e| e.to_string())?)),
         other => Err(format!("opt f64: bad tag {other}")),
     }
 }
@@ -312,14 +312,14 @@ async fn write_run_style(out: &mut Vec<u8>, s: &RunStyle) {
     write_opt_str(out, &s.link);
 }
 async fn read_run_style(reader: &mut store::ByteReader<'_>) -> Result<RunStyle, String> {
-    Ok(RunStyle { bold: read_bool(reader)?, italic: read_bool(reader)?, underline: read_bool(reader)?, size: read_opt_f64(reader)?, font: read_opt_str(reader)?, color: read_opt_str(reader)?, link: read_opt_str(reader)? })
+    Ok(RunStyle { bold: read_bool(reader).await?, italic: read_bool(reader).await?, underline: read_bool(reader).await?, size: read_opt_f64(reader).await?, font: read_opt_str(reader).await?, color: read_opt_str(reader).await?, link: read_opt_str(reader).await? })
 }
 async fn write_run(out: &mut Vec<u8>, r: &DocRun) {
     write_str_lp(out, &r.text);
     write_run_style(out, &r.style);
 }
 async fn read_run(reader: &mut store::ByteReader<'_>) -> Result<DocRun, String> {
-    Ok(DocRun { text: read_str_lp(reader)?, style: read_run_style(reader)? })
+    Ok(DocRun { text: read_str_lp(reader).await?, style: read_run_style(reader).await? })
 }
 
 /// 🌳️ Real per-variant tag byte (0=Paragraph 1=Heading 2=List 3=Table 4=Code 5=Quote 6=Image
@@ -392,52 +392,52 @@ async fn write_block(out: &mut Vec<u8>, b: &DocBlock) {
     }
 }
 async fn read_block(reader: &mut store::ByteReader<'_>) -> Result<DocBlock, String> {
-    let tag = reader.read_u8().map_err(|e| e.to_string())?;
+    let tag = reader.read_u8().await.map_err(|e| e.to_string())?;
     match tag {
         0 => {
-            let style_id = read_opt_str(reader)?;
-            let n = reader.read_varint_u64().map_err(|e| e.to_string())?;
+            let style_id = read_opt_str(reader).await?;
+            let n = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
             let mut runs = Vec::with_capacity(n as usize);
             for _ in 0..n {
-                runs.push(read_run(reader)?);
+                runs.push(read_run(reader).await?);
             }
             Ok(DocBlock::Paragraph { style_id, runs })
         }
         1 => {
-            let level = reader.read_u8().map_err(|e| e.to_string())?;
-            let style_id = read_opt_str(reader)?;
-            let n = reader.read_varint_u64().map_err(|e| e.to_string())?;
+            let level = reader.read_u8().await.map_err(|e| e.to_string())?;
+            let style_id = read_opt_str(reader).await?;
+            let n = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
             let mut runs = Vec::with_capacity(n as usize);
             for _ in 0..n {
-                runs.push(read_run(reader)?);
+                runs.push(read_run(reader).await?);
             }
             Ok(DocBlock::Heading { level, style_id, runs })
         }
         2 => {
-            let ordered = read_bool(reader)?;
-            let n = reader.read_varint_u64().map_err(|e| e.to_string())?;
+            let ordered = read_bool(reader).await?;
+            let n = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
             let mut items = Vec::with_capacity(n as usize);
             for _ in 0..n {
-                let bn = reader.read_varint_u64().map_err(|e| e.to_string())?;
+                let bn = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
                 let mut blocks = Vec::with_capacity(bn as usize);
                 for _ in 0..bn {
-                    blocks.push(read_block(reader)?);
+                    blocks.push(Box::pin(read_block(reader)).await?);
                 }
                 items.push(DocListItem { blocks });
             }
             Ok(DocBlock::List { ordered, items })
         }
         3 => {
-            let n = reader.read_varint_u64().map_err(|e| e.to_string())?;
+            let n = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
             let mut rows = Vec::with_capacity(n as usize);
             for _ in 0..n {
-                let cn = reader.read_varint_u64().map_err(|e| e.to_string())?;
+                let cn = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
                 let mut cells = Vec::with_capacity(cn as usize);
                 for _ in 0..cn {
-                    let bn = reader.read_varint_u64().map_err(|e| e.to_string())?;
+                    let bn = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
                     let mut blocks = Vec::with_capacity(bn as usize);
                     for _ in 0..bn {
-                        blocks.push(read_block(reader)?);
+                        blocks.push(Box::pin(read_block(reader)).await?);
                     }
                     cells.push(DocTableCell { blocks });
                 }
@@ -446,23 +446,23 @@ async fn read_block(reader: &mut store::ByteReader<'_>) -> Result<DocBlock, Stri
             Ok(DocBlock::Table { rows })
         }
         4 => {
-            let language = read_opt_str(reader)?;
-            let text = read_str_lp(reader)?;
+            let language = read_opt_str(reader).await?;
+            let text = read_str_lp(reader).await?;
             Ok(DocBlock::Code { language, text })
         }
         5 => {
-            let n = reader.read_varint_u64().map_err(|e| e.to_string())?;
+            let n = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
             let mut blocks = Vec::with_capacity(n as usize);
             for _ in 0..n {
-                blocks.push(read_block(reader)?);
+                blocks.push(Box::pin(read_block(reader)).await?);
             }
             Ok(DocBlock::Quote { blocks })
         }
         6 => {
-            let image_id = read_str_lp(reader)?;
-            let alt = read_str_lp(reader)?;
-            let width = read_opt_f64(reader)?;
-            let height = read_opt_f64(reader)?;
+            let image_id = read_str_lp(reader).await?;
+            let alt = read_str_lp(reader).await?;
+            let width = read_opt_f64(reader).await?;
+            let height = read_opt_f64(reader).await?;
             Ok(DocBlock::Image { image_id, alt, width, height })
         }
         7 => Ok(DocBlock::PageBreak),
@@ -476,7 +476,7 @@ async fn write_style(out: &mut Vec<u8>, s: &DocStyle) {
     write_opt_str(out, &s.based_on);
 }
 async fn read_style(reader: &mut store::ByteReader<'_>) -> Result<DocStyle, String> {
-    Ok(DocStyle { id: read_str_lp(reader)?, name: read_str_lp(reader)?, based_on: read_opt_str(reader)? })
+    Ok(DocStyle { id: read_str_lp(reader).await?, name: read_str_lp(reader).await?, based_on: read_opt_str(reader).await? })
 }
 async fn write_image(out: &mut Vec<u8>, i: &DocImage) {
     write_str_lp(out, &i.id);
@@ -484,7 +484,7 @@ async fn write_image(out: &mut Vec<u8>, i: &DocImage) {
     write_bytes_lp(out, &i.bytes);
 }
 async fn read_image(reader: &mut store::ByteReader<'_>) -> Result<DocImage, String> {
-    Ok(DocImage { id: read_str_lp(reader)?, mime: read_str_lp(reader)?, bytes: read_bytes_lp(reader)? })
+    Ok(DocImage { id: read_str_lp(reader).await?, mime: read_str_lp(reader).await?, bytes: read_bytes_lp(reader).await? })
 }
 
 async fn encode_document_snapshot_binary(s: &SemioDocumentSnapshot) -> Vec<u8> {
@@ -508,26 +508,26 @@ async fn encode_document_snapshot_binary(s: &SemioDocumentSnapshot) -> Vec<u8> {
 }
 async fn decode_document_snapshot_binary(bytes: &[u8]) -> Result<SemioDocumentSnapshot, String> {
     const PACK_BINARY_FORMAT: u8 = 1;
-    let mut reader = store::ByteReader::new(bytes);
-    let format = reader.read_u8().map_err(|e| e.to_string())?;
+    let mut reader = store::ByteReader::new(bytes).await;
+    let format = reader.read_u8().await.map_err(|e| e.to_string())?;
     if format != PACK_BINARY_FORMAT {
         return Err(format!("unsupported pack format {format}"));
     }
-    let schema = read_str_lp(&mut reader)?;
-    let style_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let schema = read_str_lp(&mut reader).await?;
+    let style_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut styles = Vec::with_capacity(style_count as usize);
     for _ in 0..style_count {
-        styles.push(read_style(&mut reader)?);
+        styles.push(read_style(&mut reader).await?);
     }
-    let image_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let image_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut images = Vec::with_capacity(image_count as usize);
     for _ in 0..image_count {
-        images.push(read_image(&mut reader)?);
+        images.push(read_image(&mut reader).await?);
     }
-    let block_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let block_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut blocks = Vec::with_capacity(block_count as usize);
     for _ in 0..block_count {
-        blocks.push(read_block(&mut reader)?);
+        blocks.push(read_block(&mut reader).await?);
     }
     Ok(SemioDocumentSnapshot { schema, styles, images, blocks })
 }
@@ -553,12 +553,12 @@ impl store::ArtifactDsl for SemioDocumentSnapshot {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        parse_document_snapshot_body(body).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_document_snapshot_body(body).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 
     async fn print_dsl(&self) -> String {
         let body = print_document_snapshot_body(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -567,7 +567,7 @@ impl store::ArtifactPack for SemioDocumentSnapshot {
     async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = encode_document_snapshot_binary(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
 
@@ -577,7 +577,7 @@ impl store::ArtifactPack for SemioDocumentSnapshot {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
-        decode_document_snapshot_binary(&inner).map_err(store::PackError::Schema)
+        decode_document_snapshot_binary(&inner).await.map_err(store::PackError::Schema)
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs

@@ -128,23 +128,23 @@ impl Iv {
     }
     #[allow(clippy::should_implement_trait)]
     pub async fn add(self, o: Iv) -> Iv {
-        Iv::new(self.lo + o.lo, self.hi + o.hi)
+        Iv::new(self.lo + o.lo, self.hi + o.hi).await
     }
     #[allow(clippy::should_implement_trait)]
     pub async fn sub(self, o: Iv) -> Iv {
-        Iv::new(self.lo - o.hi, self.hi - o.lo)
+        Iv::new(self.lo - o.hi, self.hi - o.lo).await
     }
     #[allow(clippy::should_implement_trait)]
     pub async fn mul(self, o: Iv) -> Iv {
         let candidates = [self.lo * o.lo, self.lo * o.hi, self.hi * o.lo, self.hi * o.hi];
-        Iv::new(candidates.iter().copied().fold(f64::INFINITY, f64::min), candidates.iter().copied().fold(f64::NEG_INFINITY, f64::max))
+        Iv::new(candidates.iter().copied().fold(f64::INFINITY, f64::min), candidates.iter().copied().fold(f64::NEG_INFINITY, f64::max)).await
     }
     #[allow(clippy::should_implement_trait)]
     pub async fn neg(self) -> Iv {
-        Iv::new(-self.hi, -self.lo)
+        Iv::new(-self.hi, -self.lo).await
     }
     pub async fn widen(self, epsilon: f64) -> Iv {
-        Iv::new(self.lo - epsilon, self.hi + epsilon)
+        Iv::new(self.lo - epsilon, self.hi + epsilon).await
     }
 }
 

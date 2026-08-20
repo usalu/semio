@@ -50,7 +50,7 @@ impl ArtifactDeserializer for SemioModelFromBcf {
     const INTO: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("model") };
 
     async fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
-        Ok(model_from_bcf(from))
+        Ok(model_from_bcf(from).await)
     }
 }
 
@@ -126,10 +126,10 @@ pub async fn model_from_bcf(from: &BcfSnapshot) -> SemioModelSnapshot {
 
     for topic in &from.topics {
         let mut psets = vec![topic_pset(topic)];
-        if let Some(comments) = comments_pset(topic) {
+        if let Some(comments) = comments_pset(topic).await {
             psets.push(comments);
         }
-        elements.push(SemioModelElement { id: topic.guid.clone(), class: ElementClass::Other { name: "BcfTopic".into() }, placement: SemioTransform::identity(), geometry: GeometryRef::None, spatial_id: None, psets });
+        elements.push(SemioModelElement { id: topic.guid.clone(), class: ElementClass::Other { name: "BcfTopic".into() }, placement: SemioTransform::identity().await, geometry: GeometryRef::None, spatial_id: None, psets });
 
         let mut refs: Vec<String> = Vec::new();
         for vp in &topic.viewpoints {
@@ -140,7 +140,7 @@ pub async fn model_from_bcf(from: &BcfSnapshot) -> SemioModelSnapshot {
         for guid in &refs {
             if !known_component_ids.contains(guid) {
                 known_component_ids.push(guid.clone());
-                elements.push(SemioModelElement { id: guid.clone(), class: ElementClass::Other { name: "BcfReferencedComponent".into() }, placement: SemioTransform::identity(), geometry: GeometryRef::None, spatial_id: None, psets: vec![] });
+                elements.push(SemioModelElement { id: guid.clone(), class: ElementClass::Other { name: "BcfReferencedComponent".into() }, placement: SemioTransform::identity().await, geometry: GeometryRef::None, spatial_id: None, psets: vec![] });
             }
             relations.push(ModelRelation { id: format!("rel-bcfreferences-{}-{}", topic.guid, guid), kind: RelationKind::Other { label: "BcfReferences".into() }, from: topic.guid.clone(), to: guid.clone() });
         }

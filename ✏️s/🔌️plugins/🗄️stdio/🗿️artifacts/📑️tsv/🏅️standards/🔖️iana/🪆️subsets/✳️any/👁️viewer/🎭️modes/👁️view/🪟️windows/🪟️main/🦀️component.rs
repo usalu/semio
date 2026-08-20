@@ -14,7 +14,7 @@ pub const BODY_KEY: &str = TableWindowKit::KIND_ID;
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::tsv::create_tsv_viewer`.
 pub async fn definition() -> WindowKindDefinition {
-    WindowKindDefinition { label: LocalizedLabel::native("Table", "Tabelle"), icon_id: "table-2".into(), ..TableWindowKit::window_kind() }
+    WindowKindDefinition { label: LocalizedLabel::native("Table", "Tabelle"), icon_id: "table-2".into(), ..TableWindowKit::window_kind().await }
 }
 //#endregion 🔖️Definition
 
@@ -24,7 +24,7 @@ pub async fn render(document: &TsvSnapshot) -> UiNode {
     let width = document.records.iter().map(|record| record.len()).max().unwrap_or(0);
     let columns = (0..width).map(|index| format!("Column {}", index + 1)).collect();
     let rows = document.records.clone();
-    TableWindowKit::render(&TableView { columns, rows })
+    TableWindowKit::render(&TableView { columns, rows }).await
 }
 //#endregion 🔖️Render
 

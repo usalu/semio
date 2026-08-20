@@ -4,7 +4,7 @@ use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::M
 /// 🔺️ Diff helper for set-snapshot.
 pub async fn diff(base: &Mp4Snapshot, snapshot: &Mp4Snapshot) -> protocol::MutationOutcome<Mp4Diff> {
     if base == snapshot {
-        return protocol::MutationOutcome::new(Mp4Diff::default()).warn("mutation.no-op", "set-snapshot: new snapshot is identical to the current one");
+        return protocol::MutationOutcome::new(Mp4Diff::default()).await.warn("mutation.no-op", "set-snapshot: new snapshot is identical to the current one").await;
     }
     protocol::MutationOutcome::new(diff_set_snapshot(base, snapshot))
 }

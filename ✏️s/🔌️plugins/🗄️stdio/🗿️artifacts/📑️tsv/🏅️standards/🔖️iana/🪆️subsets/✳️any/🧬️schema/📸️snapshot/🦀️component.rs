@@ -85,7 +85,7 @@ pub async fn sniff_real_bytes(bytes: &[u8]) -> bool {
 /// verification method exactly: split on `\n`, then each line on `\t`).
 pub async fn decode_tsv(text: &str) -> TsvSnapshot {
     let line_ending = if text.contains("\r\n") { LineEnding::Crlf } else { LineEnding::Lf };
-    let sep = line_ending.as_str();
+    let sep = line_ending.as_str().await;
     let trailing_newline = text.ends_with(sep);
     let body = if trailing_newline { &text[..text.len() - sep.len()] } else { text };
     let records: Vec<Vec<String>> = if body.is_empty() { Vec::new() } else { body.split(sep).map(|line| line.split('\t').map(|s| s.to_string()).collect()).collect() };
@@ -96,9 +96,9 @@ pub async fn decode_tsv(text: &str) -> TsvSnapshot {
 /// between rows, plus a final terminator iff `trailing_newline` is set.
 pub async fn encode_tsv(snap: &TsvSnapshot) -> String {
     let sep = snap.line_ending.as_str();
-    let mut out = snap.records.iter().map(|r| r.join("\t")).collect::<Vec<_>>().join(sep);
+    let mut out = snap.records.iter().map(|r| r.join("\t")).collect::<Vec<_>>().join(sep.await);
     if snap.trailing_newline {
-        out.push_str(sep);
+        out.push_str(sep.await);
     }
     out
 }
@@ -116,11 +116,11 @@ impl store::ArtifactDsl for TsvSnapshot {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        Ok(decode_tsv(body))
+        Ok(decode_tsv(body).await)
     }
     async fn print_dsl(&self) -> String {
         let body = encode_tsv(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -128,8 +128,8 @@ impl store::ArtifactDsl for TsvSnapshot {
 impl store::ArtifactPack for TsvSnapshot {
     async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
-        let raw = encode_tsv(self).into_bytes();
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let raw = encode_tsv(self).await.into_bytes();
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
     async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
@@ -139,7 +139,7 @@ impl store::ArtifactPack for TsvSnapshot {
         }
         let _ = options;
         let text = String::from_utf8(inner).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        Ok(decode_tsv(&text))
+        Ok(decode_tsv(&text).await)
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs

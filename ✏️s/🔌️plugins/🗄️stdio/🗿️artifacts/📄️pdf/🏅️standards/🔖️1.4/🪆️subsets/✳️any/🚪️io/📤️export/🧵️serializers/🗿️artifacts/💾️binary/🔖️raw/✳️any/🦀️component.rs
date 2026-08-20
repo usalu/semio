@@ -6,6 +6,6 @@ use crate::artifacts::pdf::standards::v1_4::subsets::any::schema::snapshot::PdfS
 pub async fn register() {}
 
 pub async fn serialize(from: &PdfSnapshot) -> Result<BinarySnapshot, store::PackError> {
-    let bytes = crate::artifacts::pdf::standards::v1_4::subsets::any::io::encode_pdf(from).map_err(|e| store::PackError::Schema(e))?;
+    let bytes = crate::artifacts::pdf::standards::v1_4::subsets::any::io::encode_pdf(from).await.map_err(|e| store::PackError::Schema(e))?;
     Ok(BinarySnapshot { schema: STDIO_BINARY_DOCUMENT_SCHEMA.into(), bytes })
 }

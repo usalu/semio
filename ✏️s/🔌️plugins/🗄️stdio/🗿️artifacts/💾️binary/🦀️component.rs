@@ -16,7 +16,7 @@ pub const BINARY_ARTIFACT_SCHEMA_ID: &str = "s.stdio.binary";
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec`.
 pub async fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
-    crate::registry::definition_only_assembly("binary", definition)
+    crate::registry::definition_only_assembly("binary", definition).await
 }
 
 //#region 🔖️ArtifactDeclaration
@@ -30,7 +30,7 @@ pub async fn assembly(definition: semio_framework_plugin::ArtifactDefinition) ->
 pub async fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use store::os_io::ArtifactKindId;
-    ArtifactDeclaration { kind: ArtifactKindId::parse("s.stdio.binary").expect("canonical stdio.binary kind"), localization: &[], standards: vec![crate::artifacts::binary::standards::v_raw::standard()] }
+    ArtifactDeclaration { kind: ArtifactKindId::parse("s.stdio.binary").await.expect("canonical stdio.binary kind"), localization: &[], standards: vec![crate::artifacts::binary::standards::v_raw::standard().await] }
 }
 //#endregion 🔖️ArtifactDeclaration
 
@@ -60,7 +60,8 @@ pub mod io_registry {
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 
     /// 🎹️ Every composer entry this artifact can serve, across all its standards.
-    pub async fn entries() -> &'static [&'static ComposerEntry] {
+    // 🚫️async: E1 pure table accessor consumed by OnceLock::get_or_init's sync closure — see R9
+    pub fn entries() -> &'static [&'static ComposerEntry] {
         ENTRIES.get_or_init(|| v_raw::entries().iter().collect()).as_slice()
     }
 

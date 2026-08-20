@@ -1,0 +1,5 @@
+  SKIP 🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🦀️component.rs:1255 [E0599] — could not resolve insertion point near byte 63337
+  EDIT 🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs:11467 [E0369] insert `.await` at byte 696320
+
+applied: 1  skipped: 1  files: 2
+  E0369: 1

@@ -15,6 +15,6 @@ pub async fn deserialize(from: &TxtSnapshot) -> Result<MdSnapshot, store::TextEr
 
 /// 📥 Parse DSL/text bytes via txt then md.
 pub async fn deserialize_text(text: &str) -> Result<MdSnapshot, store::TextError> {
-    deserialize(&<TxtSnapshot as store::ArtifactDsl>::parse_dsl(text)?)
+    deserialize(&<TxtSnapshot as store::ArtifactDsl>::parse_dsl(text).await?).await
 }
 //#endregion 🔖️Codec

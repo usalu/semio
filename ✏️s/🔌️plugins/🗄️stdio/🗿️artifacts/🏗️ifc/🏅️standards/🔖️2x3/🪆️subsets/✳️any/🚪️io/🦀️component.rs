@@ -22,20 +22,20 @@ pub const IFC2X3_SCHEMA_NAME: &str = "IFC2X3";
 /// `IFC2X3` (so this decoder never silently accepts an IFC4 or plain STEP AP214 file).
 pub async fn decode_ifc2x3(bytes: &[u8]) -> Result<Ifc2x3Snapshot, String> {
     let text = std::str::from_utf8(bytes).map_err(|e| format!("ifc2x3: not valid utf-8: {e}"))?;
-    let document = parse_part21(text).map_err(|e| format!("ifc2x3 parse: {e}"))?;
-    let declares_ifc2x3 = document.header.file_schema.iter().any(|v| v.as_list().map(|items| items.iter().any(|item| item.as_str() == Some(IFC2X3_SCHEMA_NAME))).unwrap_or(false));
+    let document = parse_part21(text).await.map_err(|e| format!("ifc2x3 parse: {e}"))?;
+    let declares_ifc2x3 = document.header.file_schema.iter().any(|v| semio_framework_plugin::resolve_ready(v.as_list()).map(|items| items.iter().any(|item| item.as_str() == Some(IFC2X3_SCHEMA_NAME))).unwrap_or(false));
     if !declares_ifc2x3 {
         return Err(format!("ifc2x3: FILE_SCHEMA does not declare {IFC2X3_SCHEMA_NAME}"));
     }
-    Ok(Ifc2x3Snapshot { schema: STDIO_IFC2X3_DOCUMENT_SCHEMA.into(), document, edm_preamble: parse_edm_preamble(text) })
+    Ok(Ifc2x3Snapshot { schema: STDIO_IFC2X3_DOCUMENT_SCHEMA.into(), document, edm_preamble: parse_edm_preamble(text).await })
 }
 
 /// 📤️ Regenerates valid IFC2X3 SPF bytes from a snapshot. Losslessness is `write_part21`'s job
 /// (shared with `step`/`4`); this function's only own contribution is the byte encoding.
 pub async fn encode_ifc2x3(snapshot: &Ifc2x3Snapshot) -> Result<Vec<u8>, String> {
-    crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::validate_ifc2x3_snapshot(snapshot)?;
+    crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::validate_ifc2x3_snapshot(snapshot).await?;
     let options = Part21WriteOptions { line_ending: "\r\n", blank_after_header: snapshot.edm_preamble.is_some(), blank_before_data: true, blank_before_terminator: true, space_after_instance_equals: true };
-    Ok(write_part21_with(&snapshot.document, options, snapshot.edm_preamble.as_ref()).into_bytes())
+    Ok(write_part21_with(&snapshot.document, options, snapshot.edm_preamble.as_ref()).await.into_bytes())
 }
 //#endregion 🔖️Codec
 
@@ -129,7 +129,7 @@ pub mod derived_composition {
             if native.is_empty() {
                 return Err(ComposeError { message: "Ifc2x3ComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() });
             }
-            let analysis = Ifc2x3Analyzer::analyze(&native);
+            let analysis = Ifc2x3Analyzer::analyze(&native).await;
             let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError { message: "Ifc2x3ComposerComposition: analysis produced no snapshot".into(), diagnostics: analysis.diagnostics.clone() })?;
             Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics })
         }
@@ -391,7 +391,8 @@ pub mod io_registry {
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 
-    pub async fn entries() -> &'static [ComposerEntry] {
+    // 🚫️async: E1 pure table accessor consumed by OnceLock::get_or_init's sync closure — see R9
+    pub fn entries() -> &'static [ComposerEntry] {
         ENTRIES.get_or_init(|| vec![composer_entry_of::<Ifc2x3RawAnyComposer>(), composer_entry_of::<Ifc2x3Cv20Composer>(), composer_entry_of::<Ifc2x3SavComposer>(), composer_entry_of::<Ifc2x3CobieComposer>()]).as_slice()
     }
 }

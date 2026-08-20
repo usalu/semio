@@ -7,7 +7,7 @@ use crate::artifacts::step::StepSnapshot;
 /// full-replace slot exists on `StepDiff` to short-circuit into).
 pub async fn diff(base: &StepSnapshot, snapshot: &StepSnapshot) -> protocol::MutationOutcome<StepDiff> {
     if base == snapshot {
-        return protocol::MutationOutcome::new(StepDiff::default()).warn("mutation.no-op", "set-snapshot: new snapshot is identical to the current one");
+        return protocol::MutationOutcome::new(StepDiff::default()).await.warn("mutation.no-op", "set-snapshot: new snapshot is identical to the current one").await;
     }
     protocol::MutationOutcome::new(diff_set_snapshot(base, snapshot))
 }

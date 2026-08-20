@@ -53,33 +53,33 @@ use pack::{ByteRange, ContentHash};
 const MAX_READ_BYTES: u64 = 1024 * 1024 * 1024;
 
 /// @emoji ✍️ Encodes a byte blob for storage in a Neo4j string property.
-fn encode_bytes(bytes: &[u8]) -> String {
+async fn encode_bytes(bytes: &[u8]) -> String {
     BASE64.encode(bytes)
 }
 
 /// @emoji 📖️ Inverse of `encode_bytes`. Never panics on malformed input — a corrupt/hand-edited
 /// property surfaces as `DbError::Corrupt` rather than a driver panic.
-fn decode_bytes(encoded: &str) -> Result<Vec<u8>, DbError> {
+async fn decode_bytes(encoded: &str) -> Result<Vec<u8>, DbError> {
     BASE64.decode(encoded).map_err(|err| DbError::Corrupt(format!("invalid base64 property: {err}")))
 }
 
 /// @emoji 🔢️ Neo4j's `Integer` bolt type is a signed 64-bit value; the family's identity/sequence
 /// numbers are `u64`. Converts with an explicit range check rather than a silent wrapping `as i64`.
-fn u64_to_i64(value: u64, what: &'static str) -> Result<i64, DbError> {
+async fn u64_to_i64(value: u64, what: &'static str) -> Result<i64, DbError> {
     i64::try_from(value).map_err(|_| DbError::InvalidArgument(format!("{what} exceeds neo4j's signed 64-bit integer range: {value}")))
 }
 
 /// @emoji 🔢️ Inverse of `u64_to_i64` for values read back from a Neo4j `Integer` property. A
 /// negative value here means the property was corrupted (hand-edited or written by a bug) since
 /// every writer path exclusively writes non-negative values.
-fn i64_to_u64(value: i64, what: &'static str) -> Result<u64, DbError> {
+async fn i64_to_u64(value: i64, what: &'static str) -> Result<u64, DbError> {
     u64::try_from(value).map_err(|_| DbError::Corrupt(format!("{what} decoded as a negative neo4j integer: {value}")))
 }
 
 /// @emoji ✂️ Slices `bytes[range.offset..range.offset+range.len]`, bounds-checked against
 /// `bytes`'s actual length — the shared implementation `WalStorage::read` validates against,
 /// mirroring `MemoryStorage`/`FsStorage`'s identical bounds-checking law.
-fn slice_range(bytes: &[u8], range: ByteRange) -> Result<Vec<u8>, DbError> {
+async fn slice_range(bytes: &[u8], range: ByteRange) -> Result<Vec<u8>, DbError> {
     let end = range.offset.checked_add(range.len).ok_or_else(|| DbError::InvalidArgument("read range overflows u64".to_string()))?;
     if end > bytes.len() as u64 {
         return Err(DbError::InvalidArgument(format!("read range {}..{end} out of bounds (len {})", range.offset, bytes.len())));
@@ -92,7 +92,7 @@ fn slice_range(bytes: &[u8], range: ByteRange) -> Result<Vec<u8>, DbError> {
 /// @emoji ➕️ The pure decision behind `WalStorage::append`: reject a sealed segment, otherwise
 /// concatenate. Factored out of the Cypher-driving method so the actual law is unit-testable
 /// without a live Neo4j connection.
-fn apply_append(current: &[u8], sealed: bool, extra: &[u8]) -> Result<Vec<u8>, DbError> {
+async fn apply_append(current: &[u8], sealed: bool, extra: &[u8]) -> Result<Vec<u8>, DbError> {
     if sealed {
         return Err(DbError::InvalidArgument("cannot append to sealed wal segment".to_string()));
     }
@@ -104,7 +104,7 @@ fn apply_append(current: &[u8], sealed: bool, extra: &[u8]) -> Result<Vec<u8>, D
 
 /// @emoji ✂️ The pure decision behind `WalStorage::truncate_tail`: reject a sealed segment or a
 /// `new_len` past the current length, otherwise truncate.
-fn apply_truncate(current: &[u8], sealed: bool, new_len: u64) -> Result<Vec<u8>, DbError> {
+async fn apply_truncate(current: &[u8], sealed: bool, new_len: u64) -> Result<Vec<u8>, DbError> {
     if sealed {
         return Err(DbError::InvalidArgument("cannot truncate sealed wal segment".to_string()));
     }
@@ -121,7 +121,7 @@ type LeaseRow = (EpochFence, u64, String);
 
 /// @emoji 🤝️ The pure decision behind `LeaseStorage::acquire` — see `MemoryStorage::acquire`'s
 /// identical law in `db_storage`, factored out here for unit testing without a live connection.
-fn decide_acquire_fence(resource: &str, existing: Option<LeaseRow>, holder: &str, now_ms: u64) -> Result<EpochFence, DbError> {
+async fn decide_acquire_fence(resource: &str, existing: Option<LeaseRow>, holder: &str, now_ms: u64) -> Result<EpochFence, DbError> {
     match existing {
         Some((fence, expires_at_ms, existing_holder)) if now_ms < expires_at_ms => {
             if existing_holder != holder {
@@ -135,7 +135,7 @@ fn decide_acquire_fence(resource: &str, existing: Option<LeaseRow>, holder: &str
 }
 
 /// @emoji ♻️ The pure decision behind `LeaseStorage::renew`.
-fn validate_renew(resource: &str, existing: Option<LeaseRow>, holder: &str, fence: EpochFence, now_ms: u64) -> Result<(), DbError> {
+async fn validate_renew(resource: &str, existing: Option<LeaseRow>, holder: &str, fence: EpochFence, now_ms: u64) -> Result<(), DbError> {
     let (current_fence, expires_at_ms, current_holder) = existing.ok_or_else(|| DbError::NotFound(format!("lease for {resource} not found")))?;
     if now_ms >= expires_at_ms {
         return Err(DbError::Unavailable(format!("lease for {resource} already expired")));
@@ -147,7 +147,7 @@ fn validate_renew(resource: &str, existing: Option<LeaseRow>, holder: &str, fenc
 }
 
 /// @emoji 🕊️ The pure decision behind `LeaseStorage::release`.
-fn validate_release(resource: &str, existing: Option<LeaseRow>, holder: &str, fence: EpochFence) -> Result<(), DbError> {
+async fn validate_release(resource: &str, existing: Option<LeaseRow>, holder: &str, fence: EpochFence) -> Result<(), DbError> {
     let (current_fence, _, current_holder) = existing.ok_or_else(|| DbError::NotFound(format!("lease for {resource} not found")))?;
     if current_holder != holder {
         return Err(DbError::Unauthorized(format!("lease for {resource} is not held by {holder}")));
@@ -160,6 +160,7 @@ fn validate_release(resource: &str, existing: Option<LeaseRow>, holder: &str, fe
 /// @emoji 🚨️ Maps a `neo4rs::Error` into the family's single `DbError` — never lets a foreign
 /// error type leak through a public signature, per the repo's binding convention.
 #[allow(clippy::needless_pass_by_value)] // used as a `map_err` callback, which passes the error by value
+// 🚫️async: E4 fn-pointer slot
 fn map_neo4rs_error(err: neo4rs::Error) -> DbError {
     match &err {
         neo4rs::Error::IOError { .. } | neo4rs::Error::ConnectionError => DbError::Unavailable(err.to_string()),
@@ -174,6 +175,7 @@ fn map_neo4rs_error(err: neo4rs::Error) -> DbError {
 
 /// @emoji 🏷️ Classifies a server-reported `Neo4jError` by its `Neo4jErrorKind` (the driver's own
 /// status-code classification) into the family's `DbError`.
+// 🚫️async: E1 pure accessor called from `map_neo4rs_error`, itself an E4 fn-pointer slot — see R9
 fn map_neo4j_error(err: &neo4rs::Neo4jError) -> DbError {
     use neo4rs::{Neo4jClientErrorKind, Neo4jErrorKind};
     match err.kind() {
@@ -188,6 +190,7 @@ fn map_neo4j_error(err: &neo4rs::Neo4jError) -> DbError {
 /// `DbError::Corrupt` — a decode failure always means the stored data doesn't match this crate's
 /// own schema, never a caller mistake.
 #[allow(clippy::needless_pass_by_value)] // used as a `map_err` callback, which passes the error by value
+// 🚫️async: E4 fn-pointer slot
 fn map_de_error(err: neo4rs::DeError) -> DbError {
     DbError::Corrupt(format!("neo4j row decode error: {err}"))
 }
@@ -714,37 +717,37 @@ mod tests {
     use super::*;
 
     //#region 🔖️Codec
-    #[test]
-    fn encode_decode_bytes_round_trips() {
+    #[semio_framework_async_macros::async_test]
+    async fn encode_decode_bytes_round_trips() {
         let bytes = b"hello wal segment bytes";
         let encoded = encode_bytes(bytes);
         assert_eq!(decode_bytes(&encoded).unwrap(), bytes);
     }
 
-    #[test]
-    fn decode_bytes_rejects_malformed_base64_without_panicking() {
+    #[semio_framework_async_macros::async_test]
+    async fn decode_bytes_rejects_malformed_base64_without_panicking() {
         assert!(matches!(decode_bytes("not valid base64!!"), Err(DbError::Corrupt(_))));
     }
 
-    #[test]
-    fn u64_i64_round_trip_within_range() {
+    #[semio_framework_async_macros::async_test]
+    async fn u64_i64_round_trip_within_range() {
         assert_eq!(u64_to_i64(42, "x").unwrap(), 42i64);
         assert_eq!(i64_to_u64(42, "x").unwrap(), 42u64);
         assert_eq!(u64_to_i64(i64::MAX as u64, "x").unwrap(), i64::MAX);
     }
 
-    #[test]
-    fn u64_to_i64_rejects_values_past_i64_max() {
+    #[semio_framework_async_macros::async_test]
+    async fn u64_to_i64_rejects_values_past_i64_max() {
         assert!(matches!(u64_to_i64(u64::MAX, "x"), Err(DbError::InvalidArgument(_))));
     }
 
-    #[test]
-    fn i64_to_u64_rejects_negative_values() {
+    #[semio_framework_async_macros::async_test]
+    async fn i64_to_u64_rejects_negative_values() {
         assert!(matches!(i64_to_u64(-1, "x"), Err(DbError::Corrupt(_))));
     }
 
-    #[test]
-    fn slice_range_bounds_checks_like_the_other_backends() {
+    #[semio_framework_async_macros::async_test]
+    async fn slice_range_bounds_checks_like_the_other_backends() {
         let bytes = b"hello world";
         assert_eq!(slice_range(bytes, ByteRange { offset: 6, len: 5 }).unwrap(), b"world");
         assert!(matches!(slice_range(bytes, ByteRange { offset: 6, len: 100 }), Err(DbError::InvalidArgument(_))));
@@ -753,56 +756,56 @@ mod tests {
     //#endregion 🔖️Codec
 
     //#region 🔖️WalLaws
-    #[test]
-    fn apply_append_concatenates_when_not_sealed() {
+    #[semio_framework_async_macros::async_test]
+    async fn apply_append_concatenates_when_not_sealed() {
         assert_eq!(apply_append(b"hello ", false, b"world").unwrap(), b"hello world");
     }
 
-    #[test]
-    fn apply_append_rejects_sealed_segment() {
+    #[semio_framework_async_macros::async_test]
+    async fn apply_append_rejects_sealed_segment() {
         assert!(matches!(apply_append(b"hello", true, b"!"), Err(DbError::InvalidArgument(_))));
     }
 
-    #[test]
-    fn apply_truncate_shrinks_when_not_sealed_and_in_range() {
+    #[semio_framework_async_macros::async_test]
+    async fn apply_truncate_shrinks_when_not_sealed_and_in_range() {
         assert_eq!(apply_truncate(b"hello world", false, 5).unwrap(), b"hello");
     }
 
-    #[test]
-    fn apply_truncate_rejects_sealed_or_out_of_range() {
+    #[semio_framework_async_macros::async_test]
+    async fn apply_truncate_rejects_sealed_or_out_of_range() {
         assert!(matches!(apply_truncate(b"hello", true, 2), Err(DbError::InvalidArgument(_))));
         assert!(matches!(apply_truncate(b"hello", false, 99), Err(DbError::InvalidArgument(_))));
     }
     //#endregion 🔖️WalLaws
 
     //#region 🔖️LeaseLaws
-    #[test]
-    fn decide_acquire_fence_is_initial_when_absent() {
+    #[semio_framework_async_macros::async_test]
+    async fn decide_acquire_fence_is_initial_when_absent() {
         assert_eq!(decide_acquire_fence("r", None, "holder-a", 1_000).unwrap(), EpochFence::INITIAL);
     }
 
-    #[test]
-    fn decide_acquire_fence_is_stable_on_reacquire_by_same_holder() {
+    #[semio_framework_async_macros::async_test]
+    async fn decide_acquire_fence_is_stable_on_reacquire_by_same_holder() {
         let fence = EpochFence::INITIAL.next();
         let existing = Some((fence, 5_000, "holder-a".to_string()));
         assert_eq!(decide_acquire_fence("r", existing, "holder-a", 1_000).unwrap(), fence);
     }
 
-    #[test]
-    fn decide_acquire_fence_conflicts_on_unexpired_lease_held_by_another() {
+    #[semio_framework_async_macros::async_test]
+    async fn decide_acquire_fence_conflicts_on_unexpired_lease_held_by_another() {
         let existing = Some((EpochFence::INITIAL, 5_000, "holder-a".to_string()));
         assert!(matches!(decide_acquire_fence("r", existing, "holder-b", 1_000), Err(DbError::Conflict(_))));
     }
 
-    #[test]
-    fn decide_acquire_fence_bumps_epoch_on_handoff_after_expiry() {
+    #[semio_framework_async_macros::async_test]
+    async fn decide_acquire_fence_bumps_epoch_on_handoff_after_expiry() {
         let fence = EpochFence::INITIAL.next();
         let existing = Some((fence, 500, "holder-a".to_string()));
         assert_eq!(decide_acquire_fence("r", existing, "holder-b", 1_000).unwrap(), fence.next());
     }
 
-    #[test]
-    fn validate_renew_requires_unexpired_matching_holder_and_fence() {
+    #[semio_framework_async_macros::async_test]
+    async fn validate_renew_requires_unexpired_matching_holder_and_fence() {
         let fence = EpochFence::INITIAL.next();
         let existing = Some((fence, 5_000, "holder-a".to_string()));
         assert!(validate_renew("r", existing.clone(), "holder-a", fence, 1_000).is_ok());
@@ -812,8 +815,8 @@ mod tests {
         assert!(matches!(validate_renew("r", existing, "holder-a", EpochFence::INITIAL, 1_000), Err(DbError::Fenced { .. })));
     }
 
-    #[test]
-    fn validate_release_requires_matching_holder_and_fence_ignoring_expiry() {
+    #[semio_framework_async_macros::async_test]
+    async fn validate_release_requires_matching_holder_and_fence_ignoring_expiry() {
         let fence = EpochFence::INITIAL.next();
         let existing = Some((fence, 1, "holder-a".to_string()));
         assert!(validate_release("r", existing.clone(), "holder-a", fence).is_ok(), "release ignores expiry, unlike renew");
@@ -824,15 +827,15 @@ mod tests {
     //#endregion 🔖️LeaseLaws
 
     //#region 🔖️ErrorMapping
-    #[test]
-    fn map_neo4rs_error_maps_io_errors_to_unavailable() {
+    #[semio_framework_async_macros::async_test]
+    async fn map_neo4rs_error_maps_io_errors_to_unavailable() {
         let io_error = std::io::Error::new(std::io::ErrorKind::ConnectionRefused, "refused");
         let neo4rs_error: neo4rs::Error = io_error.into();
         assert!(matches!(map_neo4rs_error(neo4rs_error), DbError::Unavailable(_)));
     }
 
-    #[test]
-    fn map_de_error_maps_to_corrupt() {
+    #[semio_framework_async_macros::async_test]
+    async fn map_de_error_maps_to_corrupt() {
         // 🎯️ `neo4rs::DeError` has no public constructor reachable without a live row (its variants
         // are driven by real (de)serialization failures), so this exercises the mapping function's
         // shape via a value we CAN construct: a decode failure surfaced through `serde`'s generic
@@ -845,8 +848,8 @@ mod tests {
     //#endregion 🔖️ErrorMapping
 
     //#region 🔖️Cypher
-    #[test]
-    fn wal_cypher_statements_reference_the_expected_label_and_keys() {
+    #[semio_framework_async_macros::async_test]
+    async fn wal_cypher_statements_reference_the_expected_label_and_keys() {
         for statement in [CYPHER_WAL_CREATE_SEGMENT, CYPHER_WAL_READ_ROW, CYPHER_WAL_WRITE_BYTES, CYPHER_WAL_SEAL, CYPHER_WAL_LIST_SEGMENTS, CYPHER_WAL_DELETE_SEGMENT] {
             assert!(statement.contains("WalSegment"));
         }
@@ -854,8 +857,8 @@ mod tests {
         assert!(CYPHER_WAL_LIST_SEGMENTS.contains("ORDER BY"));
     }
 
-    #[test]
-    fn catalog_cas_statement_never_creates_on_a_failed_comparison() {
+    #[semio_framework_async_macros::async_test]
+    async fn catalog_cas_statement_never_creates_on_a_failed_comparison() {
         assert!(CYPHER_CATALOG_CAS.contains("OPTIONAL MATCH"), "must not unconditionally MATCH/MERGE before the WHERE filter");
         assert!(CYPHER_CATALOG_CAS.contains("WHERE currentEpoch = $expected"));
         let where_index = CYPHER_CATALOG_CAS.find("WHERE").unwrap();
@@ -863,8 +866,8 @@ mod tests {
         assert!(where_index < merge_index, "the epoch check must run before any node is created/touched");
     }
 
-    #[test]
-    fn schema_statements_are_all_idempotent_if_not_exists_forms() {
+    #[semio_framework_async_macros::async_test]
+    async fn schema_statements_are_all_idempotent_if_not_exists_forms() {
         for statement in SCHEMA_STATEMENTS {
             assert!(statement.contains("IF NOT EXISTS"), "schema bootstrap must be safe to run on every connect: {statement}");
         }
@@ -872,8 +875,8 @@ mod tests {
     //#endregion 🔖️Cypher
 
     //#region 🔖️Capabilities
-    #[test]
-    fn capabilities_report_durable_cas_and_fsync_backed_storage() {
+    #[semio_framework_async_macros::async_test]
+    async fn capabilities_report_durable_cas_and_fsync_backed_storage() {
         // 🎯️ Exercises the `capabilities()` shape without a live connection (constructing a full
         // `Neo4jStorage` needs a live `Graph`); see module doc: live-DB integration testing is
         // deferred.

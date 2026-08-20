@@ -51,7 +51,7 @@ pub async fn gamma_p(a: f64, x: f64) -> f64 {
         return 0.0;
     }
     if x < a + 1.0 {
-        gamma_series(a, x)
+        gamma_series(a, x).await
     } else {
         1.0 - gamma_cf(a, x)
     }
@@ -70,7 +70,7 @@ pub async fn gamma_q(a: f64, x: f64) -> f64 {
     if x < a + 1.0 {
         1.0 - gamma_series(a, x)
     } else {
-        gamma_cf(a, x)
+        gamma_cf(a, x).await
     }
 }
 
@@ -140,7 +140,7 @@ pub async fn erfc(x: f64) -> f64 {
     if x < 0.0 {
         1.0 + gamma_p(0.5, x * x)
     } else {
-        gamma_q(0.5, x * x)
+        gamma_q(0.5, x * x).await
     }
 }
 
@@ -312,7 +312,7 @@ async fn newton_bisect(f: impl Fn(f64) -> f64, target: f64, lo: f64, hi: f64, x0
 /// `U^(1/shape)` for `shape < 1` via the identity `Gamma(shape) = Gamma(shape+1) * U^(1/shape)`.
 async fn gamma_sample(shape: f64, rng: &mut semio_framework_geometry::random::Rng) -> f64 {
     if shape < 1.0 {
-        let u = rng.next_f64();
+        let u = rng.next_f64().await;
         return gamma_sample(shape + 1.0, rng) * u.powf(1.0 / shape);
     }
     let d = shape - 1.0 / 3.0;
@@ -329,7 +329,7 @@ async fn gamma_sample(shape: f64, rng: &mut semio_framework_geometry::random::Rn
             }
         }
         v = v * v * v;
-        let u = rng.next_f64();
+        let u = rng.next_f64().await;
         if u < 1.0 - 0.0331 * x * x * x * x {
             return d * v;
         }
@@ -364,7 +364,7 @@ impl Normal {
 
 impl Continuous for Normal {
     async fn pdf(&self, x: f64) -> f64 {
-        self.ln_pdf(x).exp()
+        self.ln_pdf(x).await.exp()
     }
 
     async fn ln_pdf(&self, x: f64) -> f64 {
@@ -427,7 +427,7 @@ impl Continuous for Uniform {
     }
 
     async fn ln_pdf(&self, x: f64) -> f64 {
-        self.pdf(x).ln()
+        self.pdf(x).await.ln()
     }
 
     async fn cdf(&self, x: f64) -> f64 {
@@ -474,7 +474,7 @@ impl Continuous for ChiSquared {
         if x < 0.0 {
             return 0.0;
         }
-        self.ln_pdf(x).exp()
+        self.ln_pdf(x).await.exp()
     }
 
     async fn ln_pdf(&self, x: f64) -> f64 {
@@ -489,7 +489,7 @@ impl Continuous for ChiSquared {
         if x < 0.0 {
             return 0.0;
         }
-        gamma_p(self.dof / 2.0, x / 2.0)
+        gamma_p(self.dof / 2.0, x / 2.0).await
     }
 
     /// 📐️ Newton's method seeded with the Wilson–Hilferty cube-root approximation, safeguarded
@@ -512,7 +512,7 @@ impl Continuous for ChiSquared {
         while self.cdf(upper) < p {
             upper *= 2.0;
         }
-        newton_bisect(|x| self.cdf(x), p, 0.0, upper, seed)
+        newton_bisect(|x| self.cdf(x), p, 0.0, upper, seed).await
     }
 
     /// 🎲️ `2 * gamma_sample(dof/2)`.
@@ -540,7 +540,7 @@ impl StudentT {
 
 impl Continuous for StudentT {
     async fn pdf(&self, x: f64) -> f64 {
-        self.ln_pdf(x).exp()
+        self.ln_pdf(x).await.exp()
     }
 
     async fn ln_pdf(&self, x: f64) -> f64 {
@@ -568,19 +568,19 @@ impl Continuous for StudentT {
         if p == 1.0 {
             return Ok(f64::INFINITY);
         }
-        let seed = normal_quantile(p);
+        let seed = normal_quantile(p).await;
         let mut bound = seed.abs().max(1.0) * 4.0 + 10.0;
         while self.cdf(bound) < p {
             bound *= 2.0;
         }
-        newton_bisect(|x| self.cdf(x), p, -bound, bound, seed)
+        newton_bisect(|x| self.cdf(x), p, -bound, bound, seed).await
     }
 
     /// 🎲️ `normal_sample / sqrt(chi2_sample(dof) / dof)`.
     async fn sample(&self, rng: &mut semio_framework_geometry::random::Rng) -> f64 {
         let z = Normal::STANDARD.sample(rng);
         let chi2 = 2.0 * gamma_sample(self.dof / 2.0, rng);
-        z / (chi2 / self.dof).sqrt()
+        z / (chi2 / self.dof).sqrt().await
     }
 }
 // #endregion 🔖️StudentT
@@ -610,7 +610,7 @@ impl Continuous for FisherF {
         if x <= 0.0 {
             return 0.0;
         }
-        self.ln_pdf(x).exp()
+        self.ln_pdf(x).await.exp()
     }
 
     async fn ln_pdf(&self, x: f64) -> f64 {
@@ -625,7 +625,7 @@ impl Continuous for FisherF {
         if x <= 0.0 {
             return 0.0;
         }
-        beta_inc(self.dof1 / 2.0, self.dof2 / 2.0, self.dof1 * x / (self.dof1 * x + self.dof2))
+        beta_inc(self.dof1 / 2.0, self.dof2 / 2.0, self.dof1 * x / (self.dof1 * x + self.dof2)).await
     }
 
     async fn quantile(&self, p: f64) -> Result<f64, ProbabilityError> {
@@ -642,7 +642,7 @@ impl Continuous for FisherF {
         while self.cdf(upper) < p {
             upper *= 2.0;
         }
-        newton_bisect(|x| self.cdf(x), p, 0.0, upper, upper / 2.0)
+        newton_bisect(|x| self.cdf(x), p, 0.0, upper, upper / 2.0).await
     }
 
     /// 🎲️ `(chi2_sample(dof1)/dof1) / (chi2_sample(dof2)/dof2)`.
@@ -684,7 +684,7 @@ impl Discrete for Bernoulli {
     }
 
     async fn ln_pmf(&self, k: u64) -> f64 {
-        self.pmf(k).ln()
+        self.pmf(k).await.ln()
     }
 
     async fn cdf(&self, k: u64) -> f64 {
@@ -729,7 +729,7 @@ impl Discrete for Binomial {
         if k > self.n {
             return 0.0;
         }
-        self.ln_pmf(k).exp()
+        self.ln_pmf(k).await.exp()
     }
 
     async fn ln_pmf(&self, k: u64) -> f64 {
@@ -761,7 +761,7 @@ impl Discrete for Binomial {
         if k >= self.n {
             return 1.0;
         }
-        beta_inc(self.n as f64 - k as f64, k as f64 + 1.0, 1.0 - self.p)
+        beta_inc(self.n as f64 - k as f64, k as f64 + 1.0, 1.0 - self.p).await
     }
 
     /// 🎯️ Walks the CDF from `0` upward — O(n), acceptable since `n` is small in the intended
@@ -817,11 +817,11 @@ impl Multinomial {
                 result += count as f64 * p.ln();
             }
         }
-        result
+        result.await
     }
 
     pub async fn pmf(&self, counts: &[u64]) -> f64 {
-        self.ln_pmf(counts).exp()
+        self.ln_pmf(counts).await.exp()
     }
 
     /// 🎲️ Sequential conditional binomial draws: category `i`'s count is `Binomial(remaining,
@@ -837,7 +837,7 @@ impl Multinomial {
             }
             let conditional_p = if remaining_prob > 0.0 { (p / remaining_prob).clamp(0.0, 1.0) } else { 0.0 };
             let draw = Binomial { n: remaining, p: conditional_p }.sample(rng);
-            counts.push(draw);
+            counts.push(draw.await);
             remaining -= draw;
             remaining_prob -= p;
         }

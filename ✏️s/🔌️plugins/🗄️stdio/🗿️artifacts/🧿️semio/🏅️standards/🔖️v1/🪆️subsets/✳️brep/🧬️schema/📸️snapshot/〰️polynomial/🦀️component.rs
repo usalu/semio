@@ -45,9 +45,9 @@ impl Poly {
     }
     pub async fn derivative(&self) -> Poly {
         if self.coeffs.len() <= 1 {
-            return Poly::new(vec![0.0]);
+            return Poly::new(vec![0.0]).await;
         }
-        Poly::new(self.coeffs.iter().enumerate().skip(1).map(|(i, &c)| c * i as f64).collect())
+        Poly::new(self.coeffs.iter().enumerate().skip(1).map(|(i, &c)| c * i as f64).collect()).await
     }
 }
 
@@ -80,7 +80,7 @@ pub async fn solve_quadratic(a: f64, b: f64, c: f64) -> Vec<f64> {
 /// for three real roots and Cardano's formula otherwise.
 pub async fn solve_cubic(a: f64, b: f64, c: f64, d: f64) -> Vec<f64> {
     if a == 0.0 {
-        return solve_quadratic(b, c, d);
+        return solve_quadratic(b, c, d).await;
     }
     let (b, c, d) = (b / a, c / a, d / a);
     let shift = b / 3.0;
@@ -158,7 +158,7 @@ impl Bernstein {
         }
         let left: Vec<f64> = (0..n).map(|i| table[i][0]).collect();
         let right: Vec<f64> = (0..n).map(|i| table[n - 1 - i][i]).collect();
-        (Bernstein::new(left), Bernstein::new(right))
+        (Bernstein::new(left).await, Bernstein::new(right).await)
     }
     /// ∿ Converts to monomial (power) basis via repeated finite differences of the control net:
     /// `coeff[k] = C(n,k) · Δ^k b_0`.
@@ -168,20 +168,20 @@ impl Bernstein {
         let mut monomial = vec![0.0; n + 1];
         monomial[0] = diffs[0];
         #[allow(clippy::needless_range_loop)]
-        for k in 1..=n {
+        for k in 1..=n.await {
             for i in 0..diffs.len() - 1 {
                 diffs[i] = diffs[i + 1] - diffs[i];
             }
             diffs.truncate(diffs.len() - 1);
-            monomial[k] = binomial(n, k) * diffs[0];
+            monomial[k] = binomial(n.await, k) * diffs[0];
         }
-        Poly::new(monomial)
+        Poly::new(monomial).await
     }
     /// ∿ Converts a monomial polynomial to Bernstein form on `[0, 1]` (inverse of [`Self::to_monomial`]).
     pub async fn from_monomial(p: &Poly) -> Bernstein {
         let n = p.degree();
-        let coeffs = (0..=n).map(|i| (0..=i).map(|j| p.coeffs.get(j).copied().unwrap_or(0.0) * binomial(i, j) / binomial(n, j)).sum::<f64>()).collect();
-        Bernstein::new(coeffs)
+        let coeffs = (0..=n.await).map(|i| (0..=i).map(|j| p.coeffs.get(j).copied().unwrap_or(0.0) * binomial(i, j) / binomial(n, j)).sum::<f64>()).collect();
+        Bernstein::new(coeffs).await
     }
     /// ∿ Descartes' rule of signs applied to the control polygon: the number of sign changes in
     /// `coeffs` (ignoring exact zeros) is an upper bound on, and has the same parity as, the
@@ -227,7 +227,7 @@ async fn isolate_recursive(b: &Bernstein, lo: f64, hi: f64, depth: u32, out: &mu
         return;
     }
     let mid = 0.5;
-    let (left, right) = b.subdivide(mid);
+    let (left, right) = b.subdivide(mid).await;
     let mid_param = lo + (hi - lo) * mid;
     isolate_recursive(&left, lo, mid_param, depth - 1, out);
     isolate_recursive(&right, mid_param, hi, depth - 1, out);
@@ -240,8 +240,8 @@ async fn isolate_recursive(b: &Bernstein, lo: f64, hi: f64, depth: u32, out: &mu
 /// ∿ Safeguarded Newton (bisection fallback whenever a Newton step would leave the bracket or
 /// fails to shrink it) — guaranteed to converge given a valid sign-changing bracket `[lo, hi]`.
 pub async fn refine_root(p: &Poly, mut lo: f64, mut hi: f64, tol: f64, max_iters: u32) -> f64 {
-    let mut f_lo = p.eval(lo);
-    let f_hi = p.eval(hi);
+    let mut f_lo = p.eval(lo).await;
+    let f_hi = p.eval(hi).await;
     if f_lo == 0.0 {
         return lo;
     }
@@ -251,7 +251,7 @@ pub async fn refine_root(p: &Poly, mut lo: f64, mut hi: f64, tol: f64, max_iters
     debug_assert!(f_lo.signum() != f_hi.signum(), "refine_root requires a sign-changing bracket");
     let mut x = 0.5 * (lo + hi);
     for _ in 0..max_iters {
-        let (fx, dfx) = p.eval_with_derivative(x);
+        let (fx, dfx) = p.eval_with_derivative(x).await;
         if fx.abs() <= tol {
             return x;
         }

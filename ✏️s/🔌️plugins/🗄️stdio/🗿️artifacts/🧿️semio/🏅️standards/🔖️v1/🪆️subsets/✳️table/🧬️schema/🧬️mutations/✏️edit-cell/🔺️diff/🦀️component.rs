@@ -9,19 +9,19 @@ use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::Se
 //#region 🔖️Diff
 pub async fn diff(payload: &EditCell, base: &SemioTableSnapshot) -> protocol::MutationOutcome<SemioTableDiff> {
     let Some(col_index) = base.columns.iter().position(|c| c.name == payload.column_name) else {
-        return protocol::MutationOutcome::error("mutation.target-missing", format!("Column \"{}\" does not exist.", payload.column_name), [payload.column_name.clone()]);
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Column \"{}\" does not exist.", payload.column_name), [payload.column_name.clone()]).await;
     };
     let Some(row) = base.rows.get(payload.row_index) else {
-        return protocol::MutationOutcome::error("mutation.target-missing", format!("Row #{} does not exist.", payload.row_index), [payload.row_index.to_string()]);
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Row #{} does not exist.", payload.row_index), [payload.row_index.to_string()]).await;
     };
     let Some(current) = row.cells.get(col_index) else {
-        return protocol::MutationOutcome::error("mutation.target-missing", format!("Row #{} has no cell for column \"{}\".", payload.row_index, payload.column_name), [payload.row_index.to_string(), payload.column_name.clone()]);
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Row #{} has no cell for column \"{}\".", payload.row_index, payload.column_name), [payload.row_index.to_string(), payload.column_name.clone()]).await;
     };
     if *current == payload.new_value {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Cell #{} {} already has this value.", payload.row_index, payload.column_name));
+        return protocol::MutationOutcome::empty().await.warn("mutation.no-op", format!("Cell #{} {} already has this value.", payload.row_index, payload.column_name)).await;
     }
     let mut rows = base.rows.clone();
     rows[payload.row_index].cells[col_index] = payload.new_value.clone();
-    protocol::MutationOutcome::new(SemioTableDiff { columns: None, rows: Some(SemioTableRowList { values: rows }) })
+    protocol::MutationOutcome::new(SemioTableDiff { columns: None, rows: Some(SemioTableRowList { values: rows }) }).await
 }
 //#endregion 🔖️Diff

@@ -1,0 +1,30 @@
+{
+  "surface": "conformance.a11y.described",
+  "revision": 0,
+  "root": 0,
+  "nodes": [
+    {
+      "id": 0,
+      "key": "#0",
+      "component": {
+        "type": "slider",
+        "value": 0.75,
+        "min": 0.0,
+        "max": 1.0,
+        "step": 0.1,
+        "unit": "%"
+      },
+      "layout": {
+        "kind": "leaf",
+        "width": "hug",
+        "height": "hug"
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {
+        "description": "Playback volume, zero to one hundred percent."
+      }
+    }
+  ],
+  "layoutEpoch": 0
+}

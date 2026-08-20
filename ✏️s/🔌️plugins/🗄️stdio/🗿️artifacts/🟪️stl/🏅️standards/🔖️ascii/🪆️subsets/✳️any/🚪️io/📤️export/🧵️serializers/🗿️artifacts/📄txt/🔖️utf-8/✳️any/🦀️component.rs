@@ -10,11 +10,11 @@ pub async fn register() {}
 /// 📤️ Encode stl into a TxtSnapshot.
 pub async fn serialize(from: &StlSnapshot) -> Result<TxtSnapshot, store::PackError> {
     let text = crate::artifacts::stl::engine::encode_stl_ascii(from);
-    Ok(TxtSnapshot::from_body(&text))
+    Ok(TxtSnapshot::from_body(&text).await)
 }
 
 /// 📤️ Encode as txt DSL.
 pub async fn serialize_text(from: &StlSnapshot) -> Result<String, store::PackError> {
-    Ok(store::ArtifactDsl::print_dsl(&serialize(from)?))
+    Ok(store::ArtifactDsl::print_dsl(&serialize(from).await?).await)
 }
 //#endregion 🔖️Codec

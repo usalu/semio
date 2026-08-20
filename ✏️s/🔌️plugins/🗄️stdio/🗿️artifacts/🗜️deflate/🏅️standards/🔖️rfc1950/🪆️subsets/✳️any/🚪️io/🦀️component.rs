@@ -35,7 +35,7 @@ pub mod derived_composition {
             if native.is_empty() {
                 return Err(ComposeError { message: "DeflateComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() });
             }
-            let analysis = DeflateAnalyzer::analyze(&native);
+            let analysis = DeflateAnalyzer::analyze(&native).await;
             let snapshot = analysis.parts.snapshot.ok_or_else(|| ComposeError { message: "DeflateComposerComposition: analysis produced no snapshot".into(), diagnostics: analysis.diagnostics.clone() })?;
             Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics })
         }
@@ -175,7 +175,7 @@ async fn build_codes(lengths: &[u8]) -> Vec<(u32, u8)> {
         if len != 0 {
             let c = next_code[len as usize];
             next_code[len as usize] += 1;
-            codes[i] = (reverse_bits(c, len), len);
+            codes[i] = (reverse_bits(c, len).await, len);
         }
     }
     codes
@@ -194,7 +194,7 @@ impl HuffDecoder {
         }
         let size = 1usize << max_bits;
         let mut table = vec![None; size.max(1)];
-        let codes = build_codes(lengths);
+        let codes = build_codes(lengths).await;
         for (sym, &(code, len)) in codes.iter().enumerate() {
             if len == 0 {
                 continue;
@@ -215,7 +215,7 @@ impl HuffDecoder {
         }
         let mut acc = 0u32;
         for len in 1..=self.max_bits {
-            let bit = br.read_bits(1)?;
+            let bit = br.read_bits(1).await?;
             acc |= bit << (len - 1);
             if let Some(Some((sym, l))) = self.table.get(acc as usize) {
                 if *l == len {
@@ -342,17 +342,17 @@ async fn distance_symbol(dist: usize) -> (usize, u32, u8) {
 pub async fn deflate_raw(data: &[u8]) -> Vec<u8> {
     let lit_codes = build_codes(&fixed_lit_lengths());
     let dist_codes = build_codes(&fixed_dist_lengths());
-    let mut bw = BitWriter::new();
-    bw.write_bits(0b011, 3); // BFINAL=1, BTYPE=01 (fixed Huffman)
+    let mut bw = BitWriter::new().await;
+    bw.write_bits(0b011, 3).await; // BFINAL=1, BTYPE=01 (fixed Huffman)
 
     if data.len() < MIN_MATCH {
         for &byte in data {
             let (code, len) = lit_codes[byte as usize];
-            bw.write_bits(code, len);
+            bw.write_bits(code, len).await;
         }
         let (eob, elen) = lit_codes[256];
-        bw.write_bits(eob, elen);
-        return bw.finish();
+        bw.write_bits(eob, elen).await;
+        return bw.finish().await;
     }
 
     const MAX_CHAIN: usize = 128;
@@ -381,28 +381,28 @@ pub async fn deflate_raw(data: &[u8]) -> Vec<u8> {
                 pos += 1;
             }
             (Some((start, len, dist)), next_m) => {
-                let better_next = matches!(next_m, Some((nlen, _)) if nlen > len);
+                let better_next = matches!(next_m.await, Some((nlen, _)) if nlen > len);
                 if better_next {
                     // Emit the deferred position as a literal, keep the new (better) match pending.
                     let (code, clen) = lit_codes[data[start] as usize];
-                    bw.write_bits(code, clen);
-                    if let Some((nlen, ndist)) = next_m {
+                    bw.write_bits(code, clen).await;
+                    if let Some((nlen, ndist)) = next_m.await {
                         pending_match = Some((pos, nlen, ndist));
                     }
                     pos += 1;
                 } else {
                     // Commit the deferred match starting at `start` (== pos - 1 here).
-                    let (lsym, lextra, lebits) = length_symbol(len);
+                    let (lsym, lextra, lebits) = length_symbol(len).await;
                     let (lcode, llen) = lit_codes[lsym];
-                    bw.write_bits(lcode, llen);
+                    bw.write_bits(lcode, llen).await;
                     if lebits > 0 {
-                        bw.write_bits(lextra, lebits);
+                        bw.write_bits(lextra, lebits).await;
                     }
-                    let (dsym, dextra, debits) = distance_symbol(dist);
+                    let (dsym, dextra, debits) = distance_symbol(dist).await;
                     let (dcode, dlen) = dist_codes[dsym];
-                    bw.write_bits(dcode, dlen);
+                    bw.write_bits(dcode, dlen).await;
                     if debits > 0 {
-                        bw.write_bits(dextra, debits);
+                        bw.write_bits(dextra, debits).await;
                     }
                     // Hash-insert every position the match covers (except `start`, `start+1`
                     // already inserted above) so future matches can reference into it.
@@ -415,30 +415,30 @@ pub async fn deflate_raw(data: &[u8]) -> Vec<u8> {
             }
             (None, None) => {
                 let (code, clen) = lit_codes[data[pos] as usize];
-                bw.write_bits(code, clen);
+                bw.write_bits(code, clen).await;
                 pos += 1;
             }
         }
     }
     if let Some((start, len, dist)) = pending_match {
-        let (lsym, lextra, lebits) = length_symbol(len);
+        let (lsym, lextra, lebits) = length_symbol(len).await;
         let (lcode, llen) = lit_codes[lsym];
-        bw.write_bits(lcode, llen);
+        bw.write_bits(lcode, llen).await;
         if lebits > 0 {
-            bw.write_bits(lextra, lebits);
+            bw.write_bits(lextra, lebits).await;
         }
-        let (dsym, dextra, debits) = distance_symbol(dist);
+        let (dsym, dextra, debits) = distance_symbol(dist).await;
         let (dcode, dlen) = dist_codes[dsym];
-        bw.write_bits(dcode, dlen);
+        bw.write_bits(dcode, dlen).await;
         if debits > 0 {
-            bw.write_bits(dextra, debits);
+            bw.write_bits(dextra, debits).await;
         }
         let _ = start;
     }
 
     let (eob, elen) = lit_codes[256];
-    bw.write_bits(eob, elen);
-    bw.finish()
+    bw.write_bits(eob, elen).await;
+    bw.finish().await
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -506,17 +506,17 @@ async fn deflate_raw_tuned(data: &[u8], _memory: i32, _good: i32, _lazy: i32, _n
 
 /// 🎯 Deterministic Office-compatible raw DEFLATE materialization for container formats.
 pub async fn deflate_raw_deterministic(data: &[u8]) -> Result<Vec<u8>, String> {
-    deflate_raw_tuned(data, 8, 1, 4, 258, 1024, true)
+    deflate_raw_tuned(data, 8, 1, 4, 258, 1024, true).await
 }
 
 /// 🖼️ Deterministic high-search raw DEFLATE materialization for vector-media payloads.
 pub async fn deflate_raw_deterministic_high_search(data: &[u8]) -> Result<Vec<u8>, String> {
-    deflate_raw_tuned(data, 8, 4, 4, 258, 4096, true)
+    deflate_raw_tuned(data, 8, 4, 4, 258, 4096, true).await
 }
 
 /// 🧳 Deterministic compact-block high-search raw DEFLATE for embedded binary payloads.
 pub async fn deflate_raw_deterministic_compact_high_search(data: &[u8]) -> Result<Vec<u8>, String> {
-    deflate_raw_tuned(data, 7, 4, 4, 258, 4096, true)
+    deflate_raw_tuned(data, 7, 4, 4, 258, 4096, true).await
 }
 
 async fn inflate_block_stored(br: &mut BitReader<'_>, out: &mut Vec<u8>) -> Result<(), String> {
@@ -541,7 +541,7 @@ async fn inflate_block_stored(br: &mut BitReader<'_>, out: &mut Vec<u8>) -> Resu
 
 async fn inflate_codes(br: &mut BitReader<'_>, out: &mut Vec<u8>, lit: &HuffDecoder, dist: &HuffDecoder) -> Result<(), String> {
     loop {
-        let sym = lit.decode(br)? as usize;
+        let sym = lit.decode(br).await? as usize;
         if sym < 256 {
             out.push(sym as u8);
         } else if sym == 256 {
@@ -554,16 +554,16 @@ async fn inflate_codes(br: &mut BitReader<'_>, out: &mut Vec<u8>, lit: &HuffDeco
             let mut length = LEN_BASE[idx] as usize;
             let extra = LEN_EXTRA[idx];
             if extra > 0 {
-                length += br.read_bits(extra)? as usize;
+                length += br.read_bits(extra).await? as usize;
             }
-            let dsym = dist.decode(br)? as usize;
+            let dsym = dist.decode(br).await? as usize;
             if dsym >= DIST_BASE.len() {
                 return Err("invalid distance symbol".into());
             }
             let mut distance = DIST_BASE[dsym] as usize;
             let dextra = DIST_EXTRA[dsym];
             if dextra > 0 {
-                distance += br.read_bits(dextra)? as usize;
+                distance += br.read_bits(dextra).await? as usize;
             }
             if distance == 0 || distance > out.len() {
                 return Err("invalid backreference".into());
@@ -580,31 +580,31 @@ async fn inflate_codes(br: &mut BitReader<'_>, out: &mut Vec<u8>, lit: &HuffDeco
 }
 
 async fn inflate_dynamic(br: &mut BitReader<'_>, out: &mut Vec<u8>) -> Result<(), String> {
-    let hlit = br.read_bits(5)? as usize + 257;
-    let hdist = br.read_bits(5)? as usize + 1;
-    let hclen = br.read_bits(4)? as usize + 4;
+    let hlit = br.read_bits(5).await? as usize + 257;
+    let hdist = br.read_bits(5).await? as usize + 1;
+    let hclen = br.read_bits(4).await? as usize + 4;
     const ORDER: [usize; 19] = [16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15];
     let mut cl_lens = vec![0u8; 19];
     for i in 0..hclen {
-        cl_lens[ORDER[i]] = br.read_bits(3)? as u8;
+        cl_lens[ORDER[i]] = br.read_bits(3).await? as u8;
     }
-    let cl_dec = HuffDecoder::from_lengths(&cl_lens)?;
+    let cl_dec = HuffDecoder::from_lengths(&cl_lens).await?;
     let mut lens = Vec::with_capacity(hlit + hdist);
     while lens.len() < hlit + hdist {
-        let sym = cl_dec.decode(br)? as usize;
+        let sym = cl_dec.decode(br).await? as usize;
         match sym {
             0..=15 => lens.push(sym as u8),
             16 => {
-                let rep = br.read_bits(2)? as usize + 3;
+                let rep = br.read_bits(2).await? as usize + 3;
                 let prev = *lens.last().ok_or("bad repeat")?;
                 lens.extend(std::iter::repeat(prev).take(rep));
             }
             17 => {
-                let rep = br.read_bits(3)? as usize + 3;
+                let rep = br.read_bits(3).await? as usize + 3;
                 lens.extend(std::iter::repeat(0u8).take(rep));
             }
             18 => {
-                let rep = br.read_bits(7)? as usize + 11;
+                let rep = br.read_bits(7).await? as usize + 11;
                 lens.extend(std::iter::repeat(0u8).take(rep));
             }
             _ => return Err("bad code-length symbol".into()),
@@ -613,26 +613,26 @@ async fn inflate_dynamic(br: &mut BitReader<'_>, out: &mut Vec<u8>) -> Result<()
     if lens.len() < hlit + hdist {
         return Err("incomplete dynamic trees".into());
     }
-    let lit = HuffDecoder::from_lengths(&lens[..hlit])?;
-    let dist = HuffDecoder::from_lengths(&lens[hlit..hlit + hdist])?;
-    inflate_codes(br, out, &lit, &dist)
+    let lit = HuffDecoder::from_lengths(&lens[..hlit]).await?;
+    let dist = HuffDecoder::from_lengths(&lens[hlit..hlit + hdist]).await?;
+    inflate_codes(br, out, &lit, &dist).await
 }
 
 /// 🗜️ Raw DEFLATE inflate (stored + fixed + dynamic).
 pub async fn inflate_raw(data: &[u8]) -> Result<Vec<u8>, String> {
-    let mut br = BitReader::new(data);
+    let mut br = BitReader::new(data).await;
     let mut out = Vec::new();
     loop {
-        let bfinal = br.read_bits(1)?;
-        let btype = br.read_bits(2)?;
+        let bfinal = br.read_bits(1).await?;
+        let btype = br.read_bits(2).await?;
         match btype {
-            0 => inflate_block_stored(&mut br, &mut out)?,
+            0 => inflate_block_stored(&mut br, &mut out).await?,
             1 => {
-                let lit = HuffDecoder::from_lengths(&fixed_lit_lengths())?;
-                let dist = HuffDecoder::from_lengths(&fixed_dist_lengths())?;
-                inflate_codes(&mut br, &mut out, &lit, &dist)?;
+                let lit = HuffDecoder::from_lengths(&fixed_lit_lengths()).await?;
+                let dist = HuffDecoder::from_lengths(&fixed_dist_lengths()).await?;
+                inflate_codes(&mut br, &mut out, &lit, &dist).await?;
             }
-            2 => inflate_dynamic(&mut br, &mut out)?,
+            2 => inflate_dynamic(&mut br, &mut out).await?,
             _ => return Err("reserved BTYPE".into()),
         }
         if bfinal == 1 {
@@ -644,12 +644,12 @@ pub async fn inflate_raw(data: &[u8]) -> Result<Vec<u8>, String> {
 
 /// 🗜️ Zlib-wrap compress (CMF/FLG + raw deflate + Adler32).
 pub async fn zlib_compress(data: &[u8]) -> Result<Vec<u8>, String> {
-    let raw = deflate_raw(data);
+    let raw = deflate_raw(data).await;
     let mut out = Vec::with_capacity(2 + raw.len() + 4);
     out.push(0x78);
     out.push(0x01);
     out.extend_from_slice(&raw);
-    out.extend_from_slice(&adler32(data).to_be_bytes());
+    out.extend_from_slice(&adler32(data).await.to_be_bytes());
     Ok(out)
 }
 
@@ -773,7 +773,7 @@ pub async fn zlib_decompress(data: &[u8]) -> Result<Vec<u8>, String> {
     let adler_bytes = &data[data.len() - 4..];
     let expect = u32::from_be_bytes([adler_bytes[0], adler_bytes[1], adler_bytes[2], adler_bytes[3]]);
     let raw = &data[2..data.len() - 4];
-    let out = inflate_raw(raw)?;
+    let out = inflate_raw(raw).await?;
     let got = adler32(&out);
     if got != expect {
         return Err(format!("adler32 mismatch: expected {expect:#010x}, got {got:#010x}"));
@@ -801,7 +801,7 @@ pub async fn encode_deflate_snapshot(snapshot: &DeflateSnapshot) -> Vec<u8> {
     let fcheck = (31 - (((cmf as u16) * 256 + flg_hi as u16) % 31)) % 31;
     let flg = flg_hi | (fcheck as u8);
 
-    let raw = deflate_raw(&snapshot.payload);
+    let raw = deflate_raw(&snapshot.payload).await;
     let mut out = Vec::with_capacity(2 + 4 + raw.len() + 4);
     out.push(cmf);
     out.push(flg);
@@ -809,7 +809,7 @@ pub async fn encode_deflate_snapshot(snapshot: &DeflateSnapshot) -> Vec<u8> {
         out.extend_from_slice(&dict_id.to_be_bytes());
     }
     out.extend_from_slice(&raw);
-    out.extend_from_slice(&adler32(&snapshot.payload).to_be_bytes());
+    out.extend_from_slice(&adler32(&snapshot.payload).await.to_be_bytes());
     out
 }
 
@@ -859,7 +859,7 @@ pub async fn decode_deflate_snapshot(data: &[u8]) -> Result<DeflateSnapshot, Str
     let adler_bytes = &data[data.len() - 4..];
     let expect = u32::from_be_bytes([adler_bytes[0], adler_bytes[1], adler_bytes[2], adler_bytes[3]]);
     let raw = &data[pos..data.len() - 4];
-    let payload = inflate_raw(raw)?;
+    let payload = inflate_raw(raw).await?;
     let got = adler32(&payload);
     if got != expect {
         return Err(format!("adler32 mismatch: expected {expect:#010x}, got {got:#010x}"));
@@ -1435,7 +1435,8 @@ pub mod io_registry {
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 
-    pub async fn entries() -> &'static [ComposerEntry] {
+    // 🚫️async: E1 pure table accessor consumed by OnceLock::get_or_init's sync closure — see R9
+    pub fn entries() -> &'static [ComposerEntry] {
         ENTRIES.get_or_init(|| vec![composer_entry_of::<DeflateRawAnyComposer>()]).as_slice()
     }
 }

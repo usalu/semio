@@ -38,7 +38,7 @@ async fn draw_node_from_entity(geometry: &DwgGeometry) -> Option<DrawNode> {
     if let DwgGeometry::Text { at, content, .. } = geometry {
         return Some(DrawNode::Text { value: content.clone(), at: SemioPoint2 { x: at[0], y: at[1] }, style: None });
     }
-    dwg_geometry_to_path_segments(geometry).map(|segments| DrawNode::Path { segments: segments.iter().map(dwg_segment_to_path).collect(), style: None })
+    dwg_geometry_to_path_segments(geometry).await.map(|segments| DrawNode::Path { segments: segments.iter().map(dwg_segment_to_path).collect(), style: None })
 }
 //#endregion 🔖️EntityMap
 
@@ -52,7 +52,7 @@ impl ArtifactDeserializer for SemioDrawingFromDwg {
     const INTO: Dialect = INTO_DIALECT;
 
     async fn deserialize(from: &Self::From) -> Result<Self::Into, store::PackError> {
-        let drawing: DwgDrawing = from.drawing.to_native().map_err(store::PackError::Schema)?;
+        let drawing: DwgDrawing = from.drawing.to_native().await.map_err(store::PackError::Schema)?;
         let layers = drawing
             .layers
             .iter()

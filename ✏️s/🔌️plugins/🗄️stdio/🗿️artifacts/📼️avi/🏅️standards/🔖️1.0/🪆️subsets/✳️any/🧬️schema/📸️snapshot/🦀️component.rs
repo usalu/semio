@@ -172,13 +172,13 @@ impl store::ArtifactDsl for AviSnapshot {
             bytes.push(byte);
             i += 2;
         }
-        engine::decode_avi(&bytes).map_err(|e| store::TextError::new(format!("avi decode: {e}"), dsl::TextSpan::at(1, 1)))
+        engine::decode_avi(&bytes).await.map_err(|e| store::TextError::new(format!("avi decode: {e}"), dsl::TextSpan::at(1, 1)))
     }
 
     async fn print_dsl(&self) -> String {
-        let bytes = engine::encode_avi(self);
+        let bytes = engine::encode_avi(self).await;
         let body: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -187,7 +187,7 @@ impl store::ArtifactPack for AviSnapshot {
     async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = engine::encode_avi(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
 
@@ -197,7 +197,7 @@ impl store::ArtifactPack for AviSnapshot {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
         }
         let _ = options;
-        engine::decode_avi(&inner).map_err(store::PackError::Schema)
+        engine::decode_avi(&inner).await.map_err(store::PackError::Schema)
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs

@@ -26,7 +26,7 @@ async fn walk(node: &HtmlNode, depth: u32) -> (u32, u32, u32) {
             let mut max_depth = depth;
             let mut text_length = 0u32;
             for child in children {
-                let (c, d, t) = walk(child, depth + 1);
+                let (c, d, t) = Box::pin(walk(child, depth + 1)).await;
                 count += c;
                 max_depth = max_depth.max(d);
                 text_length += t;
@@ -41,7 +41,7 @@ async fn walk(node: &HtmlNode, depth: u32) -> (u32, u32, u32) {
 
 impl HtmlOutline {
     pub async fn compute(snapshot: &HtmlSnapshot) -> Self {
-        let (element_count, max_depth, text_length) = walk(&snapshot.root, 1);
+        let (element_count, max_depth, text_length) = walk(&snapshot.root, 1).await;
         Self { element_count, max_depth, text_length }
     }
 }

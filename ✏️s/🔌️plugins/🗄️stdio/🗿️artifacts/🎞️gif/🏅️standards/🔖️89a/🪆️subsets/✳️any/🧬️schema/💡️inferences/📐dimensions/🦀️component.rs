@@ -33,7 +33,7 @@ async fn color_table_bit_depth(colors_len: usize) -> u8 {
 /// total, O(frames) (a single linear pass over `frames` for `transparent_index`).
 pub async fn compute_gif_dimensions(snapshot: &GifSnapshot) -> GifDimensions {
     let bit_depth = match &snapshot.gct {
-        Some(table) => color_table_bit_depth(table.colors.len()),
+        Some(table) => color_table_bit_depth(table.colors.len()).await,
         None => 8,
     };
     let has_alpha = snapshot.frames.iter().any(|frame| frame.transparent_index.is_some());

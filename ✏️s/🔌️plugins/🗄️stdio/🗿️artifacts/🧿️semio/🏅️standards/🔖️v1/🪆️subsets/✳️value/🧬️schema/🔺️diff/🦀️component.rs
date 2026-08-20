@@ -121,17 +121,17 @@ impl MutationDiff<SemioValueSnapshot> for SemioValueTreeDiff {
     async fn apply(&self, base: &SemioValueSnapshot) -> protocol::MutationApplyResult<SemioValueSnapshot> {
         let mut next = base.clone();
         if let Some(diff) = &self.root {
-            validate_value_diff(diff, &base.root, vec!["root".to_string()])?;
-            next.root = apply_value_diff(diff, &base.root);
+            validate_value_diff(diff, &base.root, vec!["root".to_string()]).await?;
+            next.root = apply_value_diff(diff, &base.root).await;
         }
         if let Some(diff) = &self.nodes {
-            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&base.nodes, diff, |node| node.id.clone(), |added| added.item.id.clone(), ["nodes"])?;
-            validate_added_positions(diff.added.iter().map(|added| added.index), base.nodes.len() - diff.removed.len(), ["nodes"])?;
+            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(&base.nodes, diff, |node| node.id.clone(), |added| added.item.id.clone(), ["nodes"]).await?;
+            validate_added_positions(diff.added.iter().map(|added| added.index), base.nodes.len() - diff.removed.len(), ["nodes"]).await?;
             for modified in &diff.modified {
-                let node = base.nodes.iter().find(|node| node.id == modified.key).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-node", format!("node {:?} is absent", modified.key)).at(["nodes"]))?;
-                validate_value_diff(&modified.diff, &node.value, vec!["nodes".to_string(), format!("{:?}", modified.key)])?;
+                let node = base.nodes.iter().find(|node| node.id == modified.key).ok_or_else(|| semio_framework_plugin::resolve_ready(protocol::MutationApplyError::new("mutation.apply.missing-node", format!("node {:?} is absent", modified.key))).at(["nodes"]))?;
+                validate_value_diff(&modified.diff, &node.value, vec!["nodes".to_string(), format!("{:?}", modified.key)]).await?;
             }
-            next.nodes = apply_nodes_diff(diff, &base.nodes);
+            next.nodes = apply_nodes_diff(diff, &base.nodes).await;
         }
         Ok(next)
     }
@@ -146,10 +146,10 @@ impl MutationDiff<SemioValueSnapshot> for SemioValueTreeDiff {
             (None, Some(d2)) => Some(d2),
             (Some(d1), Some(d2)) => {
                 let combined = absorb_value_diff(d1, d2);
-                if is_value_diff_effectively_empty(&combined) {
+                if is_value_diff_effectively_empty(&combined).await {
                     None
                 } else {
-                    Some(combined)
+                    Some(combined.await)
                 }
             }
         };
@@ -159,10 +159,10 @@ impl MutationDiff<SemioValueSnapshot> for SemioValueTreeDiff {
             (None, Some(d2)) => Some(d2),
             (Some(d1), Some(d2)) => {
                 let combined = absorb_named(d1, d2, &|n: &NamedAdded<SemioValueNode>| n.item.id.clone(), &absorb_value_diff, &apply_value_diff_to_named_node, &is_value_diff_effectively_empty);
-                if is_named_empty(&combined) {
+                if is_named_empty(&combined).await {
                     None
                 } else {
-                    Some(combined)
+                    Some(combined.await)
                 }
             }
         };
@@ -173,14 +173,14 @@ impl DiffAlgebra<SemioValueSnapshot> for SemioValueTreeDiff {
     /// 🔁️ Diff-level undo, derived generically from `between`: `mid = self.apply(base)`, then
     /// `between(mid, base)` is exactly the diff that restores `base` when applied to `mid`.
     async fn inverse(&self, base: &SemioValueSnapshot) -> Self {
-        let mid = self.apply(base).unwrap();
-        Self::between(&mid, base)
+        let mid = self.apply(base).await.unwrap();
+        Self::between(&mid, base).await
     }
 
     async fn between(base: &SemioValueSnapshot, other: &SemioValueSnapshot) -> Self {
         let root = value_diff_between(&base.root, &other.root);
         let nodes_diff = nodes_diff_between(&base.nodes, &other.nodes);
-        let nodes = if is_named_empty(&nodes_diff) { None } else { Some(nodes_diff) };
+        let nodes = if is_named_empty(&nodes_diff).await { None } else { Some(nodes_diff) };
         SemioValueTreeDiff { root, nodes }
     }
 
@@ -192,7 +192,7 @@ impl DiffAlgebra<SemioValueSnapshot> for SemioValueTreeDiff {
 /// 🧩 Builds the sparse `between(base, next)` diff for a `SetSnapshot` mutation — NOT a full
 /// `snapshot: Option<SemioValueSnapshot>` replace slot.
 pub async fn diff_set_snapshot(base: &SemioValueSnapshot, next: &SemioValueSnapshot) -> SemioValueTreeDiff {
-    SemioValueTreeDiff::between(base, next)
+    SemioValueTreeDiff::between(base, next).await
 }
 //#endregion 🔖️Diff
 
@@ -204,7 +204,7 @@ async fn validate_added_positions(indices: impl IntoIterator<Item = usize>, mut 
     let mut previous = None;
     for index in indices {
         if index > length || previous == Some(index) {
-            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-add-index", format!("add index {index} is out of range or duplicated")).at(target.clone()));
+            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-add-index", format!("add index {index} is out of range or duplicated")).await.at(target.clone()).await);
         }
         previous = Some(index);
         length += 1;
@@ -226,25 +226,25 @@ async fn validate_value_diff(diff: &SemioValueDiff, base: &SemioValue, target: V
             | (SemioValueDiff::Ref { .. }, SemioValue::Ref { .. })
     );
     if !kind_matches {
-        return Err(protocol::MutationApplyError::new("mutation.apply.value-kind-mismatch", "Semio value diff kind does not match the base value kind").at(target));
+        return Err(protocol::MutationApplyError::new("mutation.apply.value-kind-mismatch", "Semio value diff kind does not match the base value kind").await.at(target).await);
     }
     match (diff, base) {
         (SemioValueDiff::List { diff }, SemioValue::List { items }) => {
-            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_indexed_triple(diff, items.len(), target.clone())?;
+            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_indexed_triple(diff, items.len(), target.clone()).await?;
             for modified in &diff.modified {
                 let mut nested = target.clone();
                 nested.push(modified.index.to_string());
-                validate_value_diff(&modified.diff, &items[modified.index], nested)?;
+                validate_value_diff(&modified.diff, &items[modified.index], nested).await?;
             }
         }
         (SemioValueDiff::Map { diff }, SemioValue::Map { entries }) => {
-            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(entries, diff, |entry| entry.key.clone(), |added| added.item.key.clone(), target.clone())?;
-            validate_added_positions(diff.added.iter().map(|added| added.index), entries.len() - diff.removed.len(), target.clone())?;
+            crate::artifacts::semio::standards::v1::subsets::any::schema::triples::validate_named_triple(entries, diff, |entry| entry.key.clone(), |added| added.item.key.clone(), target.clone()).await?;
+            validate_added_positions(diff.added.iter().map(|added| added.index), entries.len() - diff.removed.len(), target.clone()).await?;
             for modified in &diff.modified {
-                let entry = entries.iter().find(|entry| entry.key == modified.key).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-map-entry", format!("map entry {:?} is absent", modified.key)).at(target.clone()))?;
+                let entry = entries.iter().find(|entry| entry.key == modified.key).ok_or_else(|| semio_framework_plugin::resolve_ready(protocol::MutationApplyError::new("mutation.apply.missing-map-entry", format!("map entry {:?} is absent", modified.key))).at(target.clone()))?;
                 let mut nested = target.clone();
                 nested.push(modified.key.clone());
-                validate_value_diff(&modified.diff, &entry.value, nested)?;
+                validate_value_diff(&modified.diff, &entry.value, nested).await?;
             }
         }
         _ => {}
@@ -265,25 +265,25 @@ pub async fn apply_value_diff(diff: &SemioValueDiff, base: &SemioValue) -> Semio
                 SemioValue::List { items } => items.as_slice(),
                 _ => &[],
             };
-            SemioValue::List { items: apply_list_diff(diff, items) }
+            SemioValue::List { items: Box::pin(apply_list_diff(diff, items)).await }
         }
         SemioValueDiff::Map { diff } => {
             let entries: &[SemioValueEntry] = match base {
                 SemioValue::Map { entries } => entries.as_slice(),
                 _ => &[],
             };
-            SemioValue::Map { entries: apply_map_diff(diff, entries) }
+            SemioValue::Map { entries: Box::pin(apply_map_diff(diff, entries)).await }
         }
         SemioValueDiff::Ref { id } => SemioValue::Ref { id: id.clone() },
     }
 }
 
 async fn apply_value_diff_to_named_node(diff: &SemioValueDiff, node: &NamedAdded<SemioValueNode>) -> NamedAdded<SemioValueNode> {
-    NamedAdded { index: node.index, item: SemioValueNode { id: node.item.id.clone(), value: apply_value_diff(diff, &node.item.value) } }
+    NamedAdded { index: node.index, item: SemioValueNode { id: node.item.id.clone(), value: apply_value_diff(diff, &node.item.value).await } }
 }
 
 async fn apply_value_diff_to_named_entry(diff: &SemioValueDiff, entry: &NamedAdded<SemioValueEntry>) -> NamedAdded<SemioValueEntry> {
-    NamedAdded { index: entry.index, item: SemioValueEntry { key: entry.item.key.clone(), value: apply_value_diff(diff, &entry.item.value) } }
+    NamedAdded { index: entry.index, item: SemioValueEntry { key: entry.item.key.clone(), value: apply_value_diff(diff, &entry.item.value).await } }
 }
 
 /// ▶️ Apply semantics (normative): `removed`/`modified` indices refer to BASE state (removals
@@ -294,7 +294,7 @@ pub async fn apply_list_diff(diff: &IndexedTripleDiff<SemioValueDiff, SemioValue
     for m in &diff.modified {
         if let Some(old) = base.get(m.index) {
             if let Some(slot) = items.get_mut(m.index) {
-                *slot = apply_value_diff(&m.diff, old);
+                *slot = Box::pin(apply_value_diff(&m.diff, old)).await;
             }
         }
     }
@@ -324,7 +324,7 @@ pub async fn apply_map_diff(diff: &NamedTripleDiff<String, SemioValueDiff, Named
     for m in &diff.modified {
         if let Some(pos) = entries.iter().position(|e| e.key == m.key) {
             let old = entries[pos].value.clone();
-            entries[pos].value = apply_value_diff(&m.diff, &old);
+            entries[pos].value = Box::pin(apply_value_diff(&m.diff, &old)).await;
         }
     }
     for key in &diff.removed {
@@ -347,7 +347,7 @@ pub async fn apply_nodes_diff(diff: &NamedTripleDiff<ValueId, SemioValueDiff, Na
     for m in &diff.modified {
         if let Some(pos) = nodes.iter().position(|n| n.id == m.key) {
             let old = nodes[pos].value.clone();
-            nodes[pos].value = apply_value_diff(&m.diff, &old);
+            nodes[pos].value = apply_value_diff(&m.diff, &old).await;
         }
     }
     for id in &diff.removed {
@@ -381,7 +381,7 @@ pub async fn value_diff_between(a: &SemioValue, b: &SemioValue) -> Option<SemioV
         (SemioValue::Ref { .. }, SemioValue::Ref { id }) => Some(SemioValueDiff::Ref { id: id.clone() }),
         (SemioValue::List { items: av }, SemioValue::List { items: bv }) => {
             let diff = list_diff_between(av, bv);
-            if is_indexed_empty(&diff) {
+            if is_indexed_empty(&diff).await {
                 None
             } else {
                 Some(SemioValueDiff::List { diff })
@@ -389,7 +389,7 @@ pub async fn value_diff_between(a: &SemioValue, b: &SemioValue) -> Option<SemioV
         }
         (SemioValue::Map { entries: am }, SemioValue::Map { entries: bm }) => {
             let diff = map_diff_between(am, bm);
-            if is_named_empty(&diff) {
+            if is_named_empty(&diff).await {
                 None
             } else {
                 Some(SemioValueDiff::Map { diff })
@@ -405,7 +405,7 @@ async fn list_diff_between(a: &[SemioValue], b: &[SemioValue]) -> IndexedTripleD
     let min = a.len().min(b.len());
     let mut modified = Vec::new();
     for i in 0..min {
-        if let Some(diff) = value_diff_between(&a[i], &b[i]) {
+        if let Some(diff) = value_diff_between(&a[i], &b[i]).await {
             modified.push(IndexModified { index: i, diff });
         }
     }
@@ -424,7 +424,7 @@ async fn map_diff_between(a: &[SemioValueEntry], b: &[SemioValueEntry]) -> Named
     for ae in a {
         match b.iter().find(|be| be.key == ae.key) {
             Some(be) => {
-                if let Some(diff) = value_diff_between(&ae.value, &be.value) {
+                if let Some(diff) = value_diff_between(&ae.value, &be.value).await {
                     modified.push(NamedModified { key: ae.key.clone(), diff });
                 }
             }
@@ -447,7 +447,7 @@ async fn nodes_diff_between(a: &[SemioValueNode], b: &[SemioValueNode]) -> Named
     for an in a {
         match b.iter().find(|bn| bn.id == an.id) {
             Some(bn) => {
-                if let Some(diff) = value_diff_between(&an.value, &bn.value) {
+                if let Some(diff) = value_diff_between(&an.value, &bn.value).await {
                     modified.push(NamedModified { key: an.id.clone(), diff });
                 }
             }
@@ -477,8 +477,8 @@ async fn is_named_empty<K, D, T>(d: &NamedTripleDiff<K, D, T>) -> bool {
 /// as a no-op wrapper (same rationale `json`'s `is_value_diff_effectively_empty` documents).
 async fn is_value_diff_effectively_empty(d: &SemioValueDiff) -> bool {
     match d {
-        SemioValueDiff::List { diff } => is_indexed_empty(diff),
-        SemioValueDiff::Map { diff } => is_named_empty(diff),
+        SemioValueDiff::List { diff } => is_indexed_empty(diff).await,
+        SemioValueDiff::Map { diff } => is_named_empty(diff).await,
         _ => false,
     }
 }
@@ -495,7 +495,7 @@ async fn absorb_value_diff(d1: SemioValueDiff, d2: SemioValueDiff) -> SemioValue
     }
     if let SemioValueDiff::Replace { value } = d1 {
         let merged = apply_value_diff(&d2, &value);
-        return SemioValueDiff::Replace { value: merged };
+        return SemioValueDiff::Replace { value: merged.await };
     }
     match (d1, d2) {
         (SemioValueDiff::Bool { .. }, SemioValueDiff::Bool { value }) => SemioValueDiff::Bool { value },
@@ -504,9 +504,9 @@ async fn absorb_value_diff(d1: SemioValueDiff, d2: SemioValueDiff) -> SemioValue
         (SemioValueDiff::Str { .. }, SemioValueDiff::Str { value }) => SemioValueDiff::Str { value },
         (SemioValueDiff::Bytes { .. }, SemioValueDiff::Bytes { value }) => SemioValueDiff::Bytes { value },
         (SemioValueDiff::Ref { .. }, SemioValueDiff::Ref { id }) => SemioValueDiff::Ref { id },
-        (SemioValueDiff::List { diff: a1 }, SemioValueDiff::List { diff: a2 }) => SemioValueDiff::List { diff: absorb_indexed(a1, a2, &absorb_value_diff, &apply_value_diff, &is_value_diff_effectively_empty) },
+        (SemioValueDiff::List { diff: a1 }, SemioValueDiff::List { diff: a2 }) => SemioValueDiff::List { diff: absorb_indexed(a1, a2, &absorb_value_diff, &apply_value_diff, &is_value_diff_effectively_empty).await },
         (SemioValueDiff::Map { diff: o1 }, SemioValueDiff::Map { diff: o2 }) => {
-            SemioValueDiff::Map { diff: absorb_named(o1, o2, &|e: &NamedAdded<SemioValueEntry>| e.item.key.clone(), &absorb_value_diff, &apply_value_diff_to_named_entry, &is_value_diff_effectively_empty) }
+            SemioValueDiff::Map { diff: absorb_named(o1, o2, &|e: &NamedAdded<SemioValueEntry>| e.item.key.clone(), &absorb_value_diff, &apply_value_diff_to_named_entry, &is_value_diff_effectively_empty).await }
         }
         // Defensive: a kind mismatch that isn't a Replace shouldn't arise from two diffs produced
         // by real sequential application against the same intervening state — fall back to d2
@@ -704,16 +704,16 @@ pub(crate) async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
 pub(crate) async fn enc_str(s: &str) -> String {
-    hex_encode(s.as_bytes())
+    hex_encode(s.as_bytes()).await
 }
 pub(crate) async fn dec_str(s: &str) -> Result<String, String> {
-    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
+    String::from_utf8(hex_decode(s).await?).map_err(|e| e.to_string())
 }
 pub(crate) async fn enc_value_id(id: &ValueId) -> String {
-    enc_str(&id.value)
+    enc_str(&id.value).await
 }
 pub(crate) async fn dec_value_id(s: &str) -> Result<ValueId, String> {
-    Ok(ValueId::new(dec_str(s)?))
+    Ok(ValueId::new(dec_str(s).await?).await)
 }
 //#endregion 🔖️Primitives
 
@@ -740,13 +740,13 @@ pub(crate) async fn dec_semio_value(s: &str) -> Result<SemioValue, String> {
         return Ok(SemioValue::Null);
     }
     let (tag, rest) = s.split_at(1);
-    let inner = strip_brackets(rest)?;
+    let inner = strip_brackets(rest).await?;
     match tag {
         "B" => Ok(SemioValue::Bool { value: inner == "1" }),
-        "I" => Ok(SemioValue::Int { lexeme: dec_str(inner)? }),
-        "F" => Ok(SemioValue::Float { lexeme: dec_str(inner)? }),
-        "S" => Ok(SemioValue::Str { value: dec_str(inner)? }),
-        "Y" => Ok(SemioValue::Bytes { value: hex_decode(inner)? }),
+        "I" => Ok(SemioValue::Int { lexeme: dec_str(inner).await? }),
+        "F" => Ok(SemioValue::Float { lexeme: dec_str(inner).await? }),
+        "S" => Ok(SemioValue::Str { value: dec_str(inner).await? }),
+        "Y" => Ok(SemioValue::Bytes { value: hex_decode(inner).await? }),
         "L" => Ok(SemioValue::List { items: split_top_level(inner, ',').into_iter().filter(|s| !s.is_empty()).map(dec_semio_value).collect::<Result<Vec<_>, String>>()? }),
         "M" => {
             let entries = split_top_level(inner, ',')
@@ -759,7 +759,7 @@ pub(crate) async fn dec_semio_value(s: &str) -> Result<SemioValue, String> {
                 .collect::<Result<Vec<_>, String>>()?;
             Ok(SemioValue::Map { entries })
         }
-        "R" => Ok(SemioValue::Ref { id: dec_value_id(inner)? }),
+        "R" => Ok(SemioValue::Ref { id: dec_value_id(inner).await? }),
         other => Err(format!("semio value: unknown tag {other:?}")),
     }
 }
@@ -769,7 +769,7 @@ pub(crate) async fn enc_semio_value_entry(e: &SemioValueEntry) -> String {
 }
 pub(crate) async fn dec_semio_value_entry(s: &str) -> Result<SemioValueEntry, String> {
     let (key, value) = s.split_once(':').ok_or_else(|| format!("value entry: bad entry {s:?}"))?;
-    Ok(SemioValueEntry { key: dec_str(key)?, value: dec_semio_value(value)? })
+    Ok(SemioValueEntry { key: dec_str(key).await?, value: dec_semio_value(value).await? })
 }
 
 pub(crate) async fn enc_semio_value_node(n: &SemioValueNode) -> String {
@@ -777,7 +777,7 @@ pub(crate) async fn enc_semio_value_node(n: &SemioValueNode) -> String {
 }
 pub(crate) async fn dec_semio_value_node(s: &str) -> Result<SemioValueNode, String> {
     let (id, value) = s.split_once(':').ok_or_else(|| format!("value node: bad entry {s:?}"))?;
-    Ok(SemioValueNode { id: dec_value_id(id)?, value: dec_semio_value(value)? })
+    Ok(SemioValueNode { id: dec_value_id(id).await?, value: dec_semio_value(value).await? })
 }
 
 /// 🧷 `NamedAdded<T>`-wrapping variants of the two encoders above — `index:` prefixed — used ONLY
@@ -788,14 +788,14 @@ pub(crate) async fn enc_named_added_entry(a: &NamedAdded<SemioValueEntry>) -> St
 }
 pub(crate) async fn dec_named_added_entry(s: &str) -> Result<NamedAdded<SemioValueEntry>, String> {
     let (idx, rest) = s.split_once(':').ok_or_else(|| format!("named added entry: bad entry {s:?}"))?;
-    Ok(NamedAdded { index: idx.parse().map_err(|e: std::num::ParseIntError| e.to_string())?, item: dec_semio_value_entry(rest)? })
+    Ok(NamedAdded { index: idx.parse().map_err(|e: std::num::ParseIntError| e.to_string())?, item: dec_semio_value_entry(rest).await? })
 }
 pub(crate) async fn enc_named_added_node(a: &NamedAdded<SemioValueNode>) -> String {
     format!("{}:{}", a.index, enc_semio_value_node(&a.item))
 }
 pub(crate) async fn dec_named_added_node(s: &str) -> Result<NamedAdded<SemioValueNode>, String> {
     let (idx, rest) = s.split_once(':').ok_or_else(|| format!("named added node: bad entry {s:?}"))?;
-    Ok(NamedAdded { index: idx.parse().map_err(|e: std::num::ParseIntError| e.to_string())?, item: dec_semio_value_node(rest)? })
+    Ok(NamedAdded { index: idx.parse().map_err(|e: std::num::ParseIntError| e.to_string())?, item: dec_semio_value_node(rest).await? })
 }
 //#endregion 🔖️SemioValueCodecs
 
@@ -812,24 +812,24 @@ pub(crate) async fn enc_value_diff(d: &SemioValueDiff) -> String {
         SemioValueDiff::Float { lexeme } => format!("F[{}]", enc_str(lexeme)),
         SemioValueDiff::Str { value } => format!("S[{}]", enc_str(value)),
         SemioValueDiff::Bytes { value } => format!("Y[{}]", hex_encode(value)),
-        SemioValueDiff::List { diff } => format!("L[{}]", enc_indexed_triple(diff, enc_value_diff, enc_semio_value)),
-        SemioValueDiff::Map { diff } => format!("M[{}]", enc_named_triple(diff, |k: &String| enc_str(k), enc_value_diff, enc_named_added_entry)),
+        SemioValueDiff::List { diff } => format!("L[{}.await]", enc_indexed_triple(diff, enc_value_diff, enc_semio_value)),
+        SemioValueDiff::Map { diff } => format!("M[{}.await]", enc_named_triple(diff, |k: &String| enc_str(k), enc_value_diff, enc_named_added_entry)),
         SemioValueDiff::Ref { id } => format!("R[{}]", enc_value_id(id)),
     }
 }
 pub(crate) async fn dec_value_diff(s: &str) -> Result<SemioValueDiff, String> {
     let (tag, rest) = s.split_at(1);
-    let inner = strip_brackets(rest)?;
+    let inner = strip_brackets(rest).await?;
     match tag {
-        "P" => Ok(SemioValueDiff::Replace { value: dec_semio_value(inner)? }),
+        "P" => Ok(SemioValueDiff::Replace { value: dec_semio_value(inner).await? }),
         "B" => Ok(SemioValueDiff::Bool { value: inner == "1" }),
-        "I" => Ok(SemioValueDiff::Int { lexeme: dec_str(inner)? }),
-        "F" => Ok(SemioValueDiff::Float { lexeme: dec_str(inner)? }),
-        "S" => Ok(SemioValueDiff::Str { value: dec_str(inner)? }),
-        "Y" => Ok(SemioValueDiff::Bytes { value: hex_decode(inner)? }),
-        "L" => Ok(SemioValueDiff::List { diff: dec_indexed_triple(inner, dec_value_diff, dec_semio_value)? }),
-        "M" => Ok(SemioValueDiff::Map { diff: dec_named_triple(inner, dec_str, dec_value_diff, dec_named_added_entry)? }),
-        "R" => Ok(SemioValueDiff::Ref { id: dec_value_id(inner)? }),
+        "I" => Ok(SemioValueDiff::Int { lexeme: dec_str(inner).await? }),
+        "F" => Ok(SemioValueDiff::Float { lexeme: dec_str(inner).await? }),
+        "S" => Ok(SemioValueDiff::Str { value: dec_str(inner).await? }),
+        "Y" => Ok(SemioValueDiff::Bytes { value: hex_decode(inner).await? }),
+        "L" => Ok(SemioValueDiff::List { diff: dec_indexed_triple(inner, dec_value_diff, dec_semio_value).await? }),
+        "M" => Ok(SemioValueDiff::Map { diff: dec_named_triple(inner, dec_str, dec_value_diff, dec_named_added_entry).await? }),
+        "R" => Ok(SemioValueDiff::Ref { id: dec_value_id(inner).await? }),
         other => Err(format!("semio value diff: unknown tag {other:?}")),
     }
 }
@@ -845,14 +845,14 @@ pub(crate) async fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
     out.extend_from_slice(bytes);
 }
 pub(crate) async fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
+    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec())
 }
 pub(crate) async fn write_str_lp(out: &mut Vec<u8>, s: &str) {
     write_bytes_lp(out, s.as_bytes());
 }
 pub(crate) async fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
-    String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
+    String::from_utf8(read_bytes_lp(reader).await?).map_err(|e| e.to_string())
 }
 //#endregion 🔖️BinaryPrimitives
 
@@ -908,33 +908,33 @@ pub(crate) async fn enc_semio_value_bin(value: &SemioValue, out: &mut Vec<u8>) {
     }
 }
 pub(crate) async fn dec_semio_value_bin(reader: &mut store::ByteReader<'_>) -> Result<SemioValue, String> {
-    let tag = reader.read_u8().map_err(|e| e.to_string())?;
+    let tag = reader.read_u8().await.map_err(|e| e.to_string())?;
     match tag {
         0 => Ok(SemioValue::Null),
-        1 => Ok(SemioValue::Bool { value: reader.read_u8().map_err(|e| e.to_string())? != 0 }),
-        2 => Ok(SemioValue::Int { lexeme: read_str_lp(reader)? }),
-        3 => Ok(SemioValue::Float { lexeme: read_str_lp(reader)? }),
-        4 => Ok(SemioValue::Str { value: read_str_lp(reader)? }),
-        5 => Ok(SemioValue::Bytes { value: read_bytes_lp(reader)? }),
+        1 => Ok(SemioValue::Bool { value: reader.read_u8().await.map_err(|e| e.to_string())? != 0 }),
+        2 => Ok(SemioValue::Int { lexeme: read_str_lp(reader).await? }),
+        3 => Ok(SemioValue::Float { lexeme: read_str_lp(reader).await? }),
+        4 => Ok(SemioValue::Str { value: read_str_lp(reader).await? }),
+        5 => Ok(SemioValue::Bytes { value: read_bytes_lp(reader).await? }),
         6 => {
-            let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+            let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
             let mut items = Vec::with_capacity(count as usize);
             for _ in 0..count {
-                items.push(dec_semio_value_bin(reader)?);
+                items.push(Box::pin(dec_semio_value_bin(reader)).await?);
             }
             Ok(SemioValue::List { items })
         }
         7 => {
-            let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+            let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
             let mut entries = Vec::with_capacity(count as usize);
             for _ in 0..count {
-                let key = read_str_lp(reader)?;
-                let value = dec_semio_value_bin(reader)?;
+                let key = read_str_lp(reader).await?;
+                let value = Box::pin(dec_semio_value_bin(reader)).await?;
                 entries.push(SemioValueEntry { key, value });
             }
             Ok(SemioValue::Map { entries })
         }
-        8 => Ok(SemioValue::Ref { id: ValueId::new(read_str_lp(reader)?) }),
+        8 => Ok(SemioValue::Ref { id: ValueId::new(read_str_lp(reader).await?).await }),
         other => Err(format!("semio value binary: unknown tag {other}")),
     }
 }
@@ -944,8 +944,8 @@ pub(crate) async fn enc_semio_value_node_bin(node: &SemioValueNode, out: &mut Ve
     enc_semio_value_bin(&node.value, out);
 }
 pub(crate) async fn dec_semio_value_node_bin(reader: &mut store::ByteReader<'_>) -> Result<SemioValueNode, String> {
-    let id = ValueId::new(read_str_lp(reader)?);
-    let value = dec_semio_value_bin(reader)?;
+    let id = ValueId::new(read_str_lp(reader).await?);
+    let value = dec_semio_value_bin(reader).await?;
     Ok(SemioValueNode { id, value })
 }
 //#endregion 🔖️SemioValueBinaryCodecs
@@ -995,17 +995,17 @@ pub(crate) async fn enc_value_diff_bin(d: &SemioValueDiff, out: &mut Vec<u8>) {
     }
 }
 pub(crate) async fn dec_value_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<SemioValueDiff, String> {
-    let tag = reader.read_u8().map_err(|e| e.to_string())?;
+    let tag = reader.read_u8().await.map_err(|e| e.to_string())?;
     match tag {
-        0 => Ok(SemioValueDiff::Replace { value: dec_semio_value_bin(reader)? }),
-        1 => Ok(SemioValueDiff::Bool { value: reader.read_u8().map_err(|e| e.to_string())? != 0 }),
-        2 => Ok(SemioValueDiff::Int { lexeme: read_str_lp(reader)? }),
-        3 => Ok(SemioValueDiff::Float { lexeme: read_str_lp(reader)? }),
-        4 => Ok(SemioValueDiff::Str { value: read_str_lp(reader)? }),
-        5 => Ok(SemioValueDiff::Bytes { value: read_bytes_lp(reader)? }),
-        6 => Ok(SemioValueDiff::List { diff: dec_indexed_diff_bin(reader)? }),
-        7 => Ok(SemioValueDiff::Map { diff: dec_map_diff_bin(reader)? }),
-        8 => Ok(SemioValueDiff::Ref { id: ValueId::new(read_str_lp(reader)?) }),
+        0 => Ok(SemioValueDiff::Replace { value: dec_semio_value_bin(reader).await? }),
+        1 => Ok(SemioValueDiff::Bool { value: reader.read_u8().await.map_err(|e| e.to_string())? != 0 }),
+        2 => Ok(SemioValueDiff::Int { lexeme: read_str_lp(reader).await? }),
+        3 => Ok(SemioValueDiff::Float { lexeme: read_str_lp(reader).await? }),
+        4 => Ok(SemioValueDiff::Str { value: read_str_lp(reader).await? }),
+        5 => Ok(SemioValueDiff::Bytes { value: read_bytes_lp(reader).await? }),
+        6 => Ok(SemioValueDiff::List { diff: Box::pin(dec_indexed_diff_bin(reader)).await? }),
+        7 => Ok(SemioValueDiff::Map { diff: Box::pin(dec_map_diff_bin(reader)).await? }),
+        8 => Ok(SemioValueDiff::Ref { id: ValueId::new(read_str_lp(reader).await?).await }),
         other => Err(format!("semio value diff binary: unknown tag {other}")),
     }
 }
@@ -1029,23 +1029,23 @@ async fn enc_indexed_diff_bin(diff: &IndexedTripleDiff<SemioValueDiff, SemioValu
     }
 }
 async fn dec_indexed_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<IndexedTripleDiff<SemioValueDiff, SemioValue>, String> {
-    let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let removed_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(removed_count as usize);
     for _ in 0..removed_count {
-        removed.push(reader.read_varint_u64().map_err(|e| e.to_string())? as usize);
+        removed.push(reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize);
     }
-    let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let modified_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut modified = Vec::with_capacity(modified_count as usize);
     for _ in 0..modified_count {
-        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-        let diff = dec_value_diff_bin(reader)?;
+        let index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+        let diff = Box::pin(dec_value_diff_bin(reader)).await?;
         modified.push(IndexModified { index, diff });
     }
-    let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let added_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut added = Vec::with_capacity(added_count as usize);
     for _ in 0..added_count {
-        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-        let item = dec_semio_value_bin(reader)?;
+        let index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+        let item = dec_semio_value_bin(reader).await?;
         added.push(IndexAdded { index, item });
     }
     Ok(IndexedTripleDiff { removed, modified, added })
@@ -1072,24 +1072,24 @@ async fn enc_map_diff_bin(diff: &NamedTripleDiff<String, SemioValueDiff, NamedAd
     }
 }
 async fn dec_map_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<NamedTripleDiff<String, SemioValueDiff, NamedAdded<SemioValueEntry>>, String> {
-    let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let removed_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(removed_count as usize);
     for _ in 0..removed_count {
-        removed.push(read_str_lp(reader)?);
+        removed.push(read_str_lp(reader).await?);
     }
-    let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let modified_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut modified = Vec::with_capacity(modified_count as usize);
     for _ in 0..modified_count {
-        let key = read_str_lp(reader)?;
-        let diff = dec_value_diff_bin(reader)?;
+        let key = read_str_lp(reader).await?;
+        let diff = Box::pin(dec_value_diff_bin(reader)).await?;
         modified.push(NamedModified { key, diff });
     }
-    let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let added_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut added = Vec::with_capacity(added_count as usize);
     for _ in 0..added_count {
-        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-        let key = read_str_lp(reader)?;
-        let value = dec_semio_value_bin(reader)?;
+        let index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+        let key = read_str_lp(reader).await?;
+        let value = dec_semio_value_bin(reader).await?;
         added.push(NamedAdded { index, item: SemioValueEntry { key, value } });
     }
     Ok(NamedTripleDiff { removed, modified, added })
@@ -1115,23 +1115,23 @@ async fn enc_nodes_diff_bin(diff: &NamedTripleDiff<ValueId, SemioValueDiff, Name
     }
 }
 async fn dec_nodes_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<NamedTripleDiff<ValueId, SemioValueDiff, NamedAdded<SemioValueNode>>, String> {
-    let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let removed_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(removed_count as usize);
     for _ in 0..removed_count {
-        removed.push(ValueId::new(read_str_lp(reader)?));
+        removed.push(ValueId::new(read_str_lp(reader).await?));
     }
-    let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let modified_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut modified = Vec::with_capacity(modified_count as usize);
     for _ in 0..modified_count {
-        let key = ValueId::new(read_str_lp(reader)?);
-        let diff = dec_value_diff_bin(reader)?;
+        let key = ValueId::new(read_str_lp(reader).await?);
+        let diff = dec_value_diff_bin(reader).await?;
         modified.push(NamedModified { key, diff });
     }
-    let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let added_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut added = Vec::with_capacity(added_count as usize);
     for _ in 0..added_count {
-        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-        let item = dec_semio_value_node_bin(reader)?;
+        let index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+        let item = dec_semio_value_node_bin(reader).await?;
         added.push(NamedAdded { index, item });
     }
     Ok(NamedTripleDiff { removed, modified, added })
@@ -1157,9 +1157,9 @@ async fn parse_value_tree_diff(line: &str) -> Result<SemioValueTreeDiff, String>
     }
     for token in line.split(' ') {
         if let Some(rest) = token.strip_prefix("root=") {
-            d.root = Some(dec_value_diff(rest)?);
+            d.root = Some(dec_value_diff(rest).await?);
         } else if let Some(rest) = token.strip_prefix("nodes=") {
-            d.nodes = Some(dec_named_triple(rest, dec_value_id, dec_value_diff, dec_named_added_node)?);
+            d.nodes = Some(dec_named_triple(rest, dec_value_id, dec_value_diff, dec_named_added_node).await?);
         } else {
             return Err(format!("semio value diff: unknown token {token:?}"));
         }
@@ -1169,10 +1169,10 @@ async fn parse_value_tree_diff(line: &str) -> Result<SemioValueTreeDiff, String>
 
 impl protocol::DiffCodec for SemioValueTreeDiff {
     async fn print_diff(&self) -> String {
-        print_value_tree_diff(self)
+        print_value_tree_diff(self).await
     }
     async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
-        parse_value_tree_diff(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_value_tree_diff(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
     /// 🧪️ Real binary frame (`format u8 | presence u8 | root? | nodes?`), matching
     /// `../💾️binary/📡️component.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape —
@@ -1195,12 +1195,12 @@ impl protocol::DiffCodec for SemioValueTreeDiff {
         Ok(out)
     }
     async fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let mut reader = store::ByteReader::new(bytes);
+        let mut reader = store::ByteReader::new(bytes).await;
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
-        let _format = reader.read_u8().map_err(|e| malformed("diff format", 0, e.to_string()))?;
-        let presence = reader.read_u8().map_err(|e| malformed("diff presence", 1, e.to_string()))?;
-        let root = if presence & 1 != 0 { Some(dec_value_diff_bin(&mut reader).map_err(|e| malformed("diff root", reader.position(), e))?) } else { None };
-        let nodes = if presence & 2 != 0 { Some(dec_nodes_diff_bin(&mut reader).map_err(|e| malformed("diff nodes", reader.position(), e))?) } else { None };
+        let _format = reader.read_u8().await.map_err(|e| malformed("diff format", 0, e.to_string()))?;
+        let presence = reader.read_u8().await.map_err(|e| malformed("diff presence", 1, e.to_string()))?;
+        let root = if presence & 1 != 0 { Some(dec_value_diff_bin(&mut reader).await.map_err(|e| malformed("diff root", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
+        let nodes = if presence & 2 != 0 { Some(dec_nodes_diff_bin(&mut reader).await.map_err(|e| malformed("diff nodes", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
         Ok(SemioValueTreeDiff { root, nodes })
     }
 }

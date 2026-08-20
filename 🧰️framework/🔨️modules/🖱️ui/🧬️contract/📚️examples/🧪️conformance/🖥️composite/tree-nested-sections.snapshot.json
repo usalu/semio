@@ -1,0 +1,156 @@
+{
+  "surface": "conformance.composite.tree",
+  "revision": 0,
+  "root": 0,
+  "nodes": [
+    {
+      "id": 0,
+      "key": "#0",
+      "component": {
+        "type": "tree",
+        "interactionDomain": "scene-objects"
+      },
+      "layout": {
+        "kind": "stack",
+        "axis": "vertical",
+        "gap": "none",
+        "padding": {
+          "all": "none"
+        },
+        "align": "stretch",
+        "justify": "start",
+        "grow": false,
+        "wrap": false
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {},
+      "children": [
+        1
+      ]
+    },
+    {
+      "id": 1,
+      "key": "section-1",
+      "component": {
+        "type": "treeSection",
+        "label": "Objects",
+        "defaultOpen": true
+      },
+      "layout": {
+        "kind": "stack",
+        "axis": "vertical",
+        "gap": "none",
+        "padding": {
+          "all": "none"
+        },
+        "align": "stretch",
+        "justify": "start",
+        "grow": false,
+        "wrap": false
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {},
+      "children": [
+        3,
+        4
+      ]
+    },
+    {
+      "id": 3,
+      "key": "leaf-item",
+      "component": {
+        "type": "treeItem",
+        "label": "Leaf row",
+        "icon": "file",
+        "rowActions": [
+          {
+            "icon": "trash",
+            "label": "Delete",
+            "action": {
+              "trigger": "activate",
+              "action": {
+                "scope": "cad-play",
+                "name": "deleteItem",
+                "version": 1
+              }
+            }
+          },
+          {
+            "icon": "more",
+            "action": {
+              "trigger": "activate",
+              "action": {
+                "scope": "cad-play",
+                "name": "rowMenu",
+                "version": 1
+              }
+            },
+            "placement": "menu"
+          }
+        ]
+      },
+      "layout": {
+        "kind": "leaf",
+        "width": "hug",
+        "height": "hug"
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {
+        "label": "Leaf row"
+      }
+    },
+    {
+      "id": 4,
+      "key": "parent-item",
+      "component": {
+        "type": "treeItem",
+        "label": "Parent row",
+        "icon": "folder",
+        "defaultOpen": true
+      },
+      "layout": {
+        "kind": "stack",
+        "axis": "vertical",
+        "gap": "none",
+        "padding": {
+          "all": "none"
+        },
+        "align": "stretch",
+        "justify": "start",
+        "grow": false,
+        "wrap": false
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {
+        "label": "Parent row"
+      },
+      "children": [
+        5
+      ]
+    },
+    {
+      "id": 5,
+      "key": "#0",
+      "component": {
+        "type": "treeItem",
+        "label": "Nested child",
+        "icon": "file"
+      },
+      "layout": {
+        "kind": "leaf",
+        "width": "hug",
+        "height": "hug"
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {
+        "label": "Nested child"
+      }
+    }
+  ],
+  "layoutEpoch": 0
+}

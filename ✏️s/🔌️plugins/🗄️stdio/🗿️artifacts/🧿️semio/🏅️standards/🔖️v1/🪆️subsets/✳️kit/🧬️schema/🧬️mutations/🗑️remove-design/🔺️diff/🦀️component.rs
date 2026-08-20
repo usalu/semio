@@ -11,9 +11,9 @@ pub async fn diff(payload: &RemoveDesign, base: &SemioKitSnapshot) -> protocol::
             "mutation.target-missing",
             format!("Design \"{}\" does not exist.", payload.id),
             [payload.id.clone()],
-        );
+        ).await;
     }
     let designs: Vec<_> = base.designs.iter().filter(|d| d.id != payload.id).cloned().collect();
-    protocol::MutationOutcome::new(SemioKitDiff { designs: Some(SemioKitDesignList { values: designs }), ..Default::default() })
+    protocol::MutationOutcome::new(SemioKitDiff { designs: Some(SemioKitDesignList { values: designs }), ..Default::default() }).await
 }
 //#endregion 🔖️Diff

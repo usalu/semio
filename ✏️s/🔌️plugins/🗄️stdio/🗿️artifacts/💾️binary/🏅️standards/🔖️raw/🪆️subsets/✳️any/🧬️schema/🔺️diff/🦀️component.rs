@@ -55,13 +55,13 @@ pub struct BinaryDiff {
 
 impl MutationDiff<BinarySnapshot> for BinaryDiff {
     async fn apply(&self, base: &BinarySnapshot) -> protocol::MutationApplyResult<BinarySnapshot> {
-        validate_binary_diff(self, base)?;
-        Ok(apply_binary_diff_unchecked(self, base))
+        validate_binary_diff(self, base).await?;
+        Ok(apply_binary_diff_unchecked(self, base).await)
     }
 
     /// ➕️ Sequential-coalesce absorb via [`absorb_splices`]'s byte-range index-transport.
     async fn absorb(&mut self, other: Self) {
-        self.splices = absorb_splices(&self.splices, &other.splices);
+        self.splices = absorb_splices(&self.splices, &other.splices).await;
     }
 }
 
@@ -69,13 +69,13 @@ async fn validate_binary_diff(diff: &BinaryDiff, base: &BinarySnapshot) -> proto
     let mut previous = None;
     for (position, splice) in diff.splices.iter().enumerate() {
         if splice.offset > base.bytes.len() {
-            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-index", "byte splice offset is outside the base buffer"));
+            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-index", "byte splice offset is outside the base buffer").await);
         }
         if splice.remove_len > base.bytes.len() - splice.offset {
-            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-range", "byte splice removal exceeds the base buffer"));
+            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-range", "byte splice removal exceeds the base buffer").await);
         }
         if previous == Some(splice.offset) || diff.splices[..position].iter().any(|prior| prior.offset == splice.offset) {
-            return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "byte splice offset is repeated"));
+            return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "byte splice offset is repeated").await);
         }
         previous = Some(splice.offset);
     }
@@ -97,7 +97,7 @@ async fn apply_binary_diff_unchecked(diff: &BinaryDiff, base: &BinarySnapshot) -
 impl DiffAlgebra<BinarySnapshot> for BinaryDiff {
     async fn inverse(&self, base: &BinarySnapshot) -> Self {
         let next = apply_binary_diff_unchecked(self, base);
-        Self::between(&next, base)
+        Self::between(&next, base).await
     }
 
     /// 🧭️ Minimal common-prefix/common-suffix splice: a single `ByteSplice` covering exactly
@@ -198,7 +198,7 @@ async fn absorb_splices(d1: &[ByteSplice], d2: &[ByteSplice]) -> Vec<ByteSplice>
     let base_labels: Vec<Lbl> = (0..l1).map(Lbl::Base).collect();
     let d1_removed = splice_removed_indices(d1);
     let d1_added = splice_added_targets(d1);
-    let mut mid_labels = simulate_labels(base_labels, &d1_removed, &d1_added);
+    let mut mid_labels = simulate_labels(base_labels, &d1_removed, &d1_added).await;
     while mid_labels.len() < l1 {
         mid_labels.push(Lbl::Base(usize::MAX)); // inert padding, tail-appended
     }
@@ -236,7 +236,7 @@ async fn absorb_splices(d1: &[ByteSplice], d2: &[ByteSplice]) -> Vec<ByteSplice>
 
 /// 🧩 Builds the sparse field-by-field diff for a `SetSnapshot` mutation.
 pub async fn diff_set_snapshot(base: &BinarySnapshot, snapshot: &BinarySnapshot) -> BinaryDiff {
-    BinaryDiff::between(base, snapshot)
+    BinaryDiff::between(base, snapshot).await
 }
 
 /// 🧪️ P2-P3: representative `BinaryDiff` cases (empty, single-splice, multi-splice incl. a

@@ -33,61 +33,61 @@ async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
 async fn enc_str(s: &str) -> String {
-    hex_encode(s.as_bytes())
+    hex_encode(s.as_bytes()).await
 }
 async fn dec_str(s: &str) -> Result<String, String> {
-    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
+    String::from_utf8(hex_decode(s).await?).map_err(|e| e.to_string())
 }
 async fn parse_usize(s: &str) -> Result<usize, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
 
 async fn enc_node_id(id: &GraphNodeId) -> String {
-    enc_str(&id.value)
+    enc_str(&id.value).await
 }
 async fn dec_node_id(s: &str) -> Result<GraphNodeId, String> {
-    Ok(GraphNodeId::new(dec_str(s)?))
+    Ok(GraphNodeId::new(dec_str(s).await?).await)
 }
 async fn enc_edge_id(id: &GraphEdgeId) -> String {
-    enc_str(&id.value)
+    enc_str(&id.value).await
 }
 async fn dec_edge_id(s: &str) -> Result<GraphEdgeId, String> {
-    Ok(GraphEdgeId::new(dec_str(s)?))
+    Ok(GraphEdgeId::new(dec_str(s).await?).await)
 }
 
 async fn enc_point2_fields(p: &SemioPoint2) -> String {
     format!("{},{}", enc_str(&p.x.to_string()), enc_str(&p.y.to_string()))
 }
 async fn dec_f64_hex(s: &str) -> Result<f64, String> {
-    dec_str(s)?.parse::<f64>().map_err(|e| e.to_string())
+    dec_str(s).await?.parse::<f64>().map_err(|e| e.to_string())
 }
 
 async fn enc_port_kind(k: SemioGraphPortKind) -> char {
-    crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::enc_port_kind(k)
+    crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::enc_port_kind(k).await
 }
 async fn dec_port_kind(s: &str) -> Result<SemioGraphPortKind, String> {
-    crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::dec_port_kind(s)
+    crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::dec_port_kind(s).await
 }
 async fn enc_port(p: &SemioGraphPort) -> String {
     format!("[{},{}]", enc_str(&p.name), enc_port_kind(p.kind))
 }
 async fn dec_port(s: &str) -> Result<SemioGraphPort, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [name, kind] = parts.as_slice() else { return Err(format!("port: expected 2 fields, got {}", parts.len())) };
-    Ok(SemioGraphPort { name: dec_str(name)?, kind: dec_port_kind(kind)? })
+    Ok(SemioGraphPort { name: dec_str(name).await?, kind: dec_port_kind(kind).await? })
 }
 async fn enc_property(p: &SemioValueEntry) -> String {
-    enc_semio_value_entry(p)
+    enc_semio_value_entry(p).await
 }
 async fn dec_property(s: &str) -> Result<SemioValueEntry, String> {
-    dec_semio_value_entry(s)
+    dec_semio_value_entry(s).await
 }
 
 async fn dec_ports(s: &str) -> Result<Vec<SemioGraphPort>, String> {
-    split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_port).collect()
+    split_top_level(strip_brackets(s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_port).collect()
 }
 async fn dec_properties(s: &str) -> Result<Vec<SemioValueEntry>, String> {
-    split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_property).collect()
+    split_top_level(strip_brackets(s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_property).collect()
 }
 //#endregion 🔖️Primitives
 
@@ -120,67 +120,67 @@ async fn parse_graph_mutation(line: &str) -> Result<SemioGraphMutation, String> 
     let (tag, rest) = line.split_once(':').ok_or_else(|| format!("graph mutation: missing ':' in {line:?}"))?;
     match tag {
         "createNode" => {
-            let parts = split_top_level(rest, ',');
+            let parts = split_top_level(rest, ',').await;
             let [id, kind, label, x, y, ports, properties] = parts.as_slice() else {
                 return Err(format!("createNode: expected 7 fields, got {}", parts.len()));
             };
             Ok(SemioGraphMutation::CreateNode(CreateNode {
-                id: dec_node_id(id)?,
-                kind: dec_str(kind)?,
-                label: dec_str(label)?,
-                position: SemioPoint2 { x: dec_f64_hex(x)?, y: dec_f64_hex(y)? },
-                ports: dec_ports(ports)?,
-                properties: dec_properties(properties)?,
+                id: dec_node_id(id).await?,
+                kind: dec_str(kind).await?,
+                label: dec_str(label).await?,
+                position: SemioPoint2 { x: dec_f64_hex(x).await?, y: dec_f64_hex(y).await? },
+                ports: dec_ports(ports).await?,
+                properties: dec_properties(properties).await?,
             }))
         }
-        "deleteNode" => Ok(SemioGraphMutation::DeleteNode(DeleteNode { id: dec_node_id(rest)? })),
+        "deleteNode" => Ok(SemioGraphMutation::DeleteNode(DeleteNode { id: dec_node_id(rest).await? })),
         "changeNodeKind" => {
             let (id, new_kind) = rest.split_once(',').ok_or_else(|| "changeNodeKind: missing comma".to_string())?;
-            Ok(SemioGraphMutation::ChangeNodeKind(ChangeNodeKind { id: dec_node_id(id)?, new_kind: dec_str(new_kind)? }))
+            Ok(SemioGraphMutation::ChangeNodeKind(ChangeNodeKind { id: dec_node_id(id).await?, new_kind: dec_str(new_kind).await? }))
         }
         "changeNodeLabel" => {
             let (id, new_label) = rest.split_once(',').ok_or_else(|| "changeNodeLabel: missing comma".to_string())?;
-            Ok(SemioGraphMutation::ChangeNodeLabel(ChangeNodeLabel { id: dec_node_id(id)?, new_label: dec_str(new_label)? }))
+            Ok(SemioGraphMutation::ChangeNodeLabel(ChangeNodeLabel { id: dec_node_id(id).await?, new_label: dec_str(new_label).await? }))
         }
         "moveNode" => {
-            let parts = split_top_level(rest, ',');
+            let parts = split_top_level(rest, ',').await;
             let [id, x, y] = parts.as_slice() else { return Err(format!("moveNode: expected 3 fields, got {}", parts.len())) };
-            Ok(SemioGraphMutation::MoveNode(MoveNode { id: dec_node_id(id)?, new_position: SemioPoint2 { x: dec_f64_hex(x)?, y: dec_f64_hex(y)? } }))
+            Ok(SemioGraphMutation::MoveNode(MoveNode { id: dec_node_id(id).await?, new_position: SemioPoint2 { x: dec_f64_hex(x).await?, y: dec_f64_hex(y).await? } }))
         }
         "addNodePort" => {
-            let parts = split_top_level(rest, ',');
+            let parts = split_top_level(rest, ',').await;
             let [node_id, index, port] = parts.as_slice() else { return Err(format!("addNodePort: expected 3 fields, got {}", parts.len())) };
-            Ok(SemioGraphMutation::AddNodePort(AddNodePort { node_id: dec_node_id(node_id)?, index: parse_usize(index)?, port: dec_port(port)? }))
+            Ok(SemioGraphMutation::AddNodePort(AddNodePort { node_id: dec_node_id(node_id).await?, index: parse_usize(index).await?, port: dec_port(port).await? }))
         }
         "removeNodePort" => {
             let (node_id, index) = rest.split_once(',').ok_or_else(|| "removeNodePort: missing comma".to_string())?;
-            Ok(SemioGraphMutation::RemoveNodePort(RemoveNodePort { node_id: dec_node_id(node_id)?, index: parse_usize(index)? }))
+            Ok(SemioGraphMutation::RemoveNodePort(RemoveNodePort { node_id: dec_node_id(node_id).await?, index: parse_usize(index).await? }))
         }
         "addNodeProperty" => {
-            let parts = split_top_level(rest, ',');
+            let parts = split_top_level(rest, ',').await;
             let [node_id, index, property] = parts.as_slice() else { return Err(format!("addNodeProperty: expected 3 fields, got {}", parts.len())) };
-            Ok(SemioGraphMutation::AddNodeProperty(AddNodeProperty { node_id: dec_node_id(node_id)?, index: parse_usize(index)?, property: dec_property(property)? }))
+            Ok(SemioGraphMutation::AddNodeProperty(AddNodeProperty { node_id: dec_node_id(node_id).await?, index: parse_usize(index).await?, property: dec_property(property).await? }))
         }
         "removeNodeProperty" => {
             let (node_id, index) = rest.split_once(',').ok_or_else(|| "removeNodeProperty: missing comma".to_string())?;
-            Ok(SemioGraphMutation::RemoveNodeProperty(RemoveNodeProperty { node_id: dec_node_id(node_id)?, index: parse_usize(index)? }))
+            Ok(SemioGraphMutation::RemoveNodeProperty(RemoveNodeProperty { node_id: dec_node_id(node_id).await?, index: parse_usize(index).await? }))
         }
         "createEdge" => {
-            let parts = split_top_level(rest, ',');
+            let parts = split_top_level(rest, ',').await;
             let [id, source, target, kind, label] = parts.as_slice() else { return Err(format!("createEdge: expected 5 fields, got {}", parts.len())) };
-            Ok(SemioGraphMutation::CreateEdge(CreateEdge { id: dec_edge_id(id)?, source: dec_node_id(source)?, target: dec_node_id(target)?, kind: dec_str(kind)?, label: dec_str(label)? }))
+            Ok(SemioGraphMutation::CreateEdge(CreateEdge { id: dec_edge_id(id).await?, source: dec_node_id(source).await?, target: dec_node_id(target).await?, kind: dec_str(kind).await?, label: dec_str(label).await? }))
         }
-        "deleteEdge" => Ok(SemioGraphMutation::DeleteEdge(DeleteEdge { id: dec_edge_id(rest)? })),
+        "deleteEdge" => Ok(SemioGraphMutation::DeleteEdge(DeleteEdge { id: dec_edge_id(rest).await? })),
         other => Err(format!("graph mutation: unknown keyword {other:?}")),
     }
 }
 
 impl protocol::OpText for SemioGraphMutation {
     async fn print_op(&self) -> String {
-        print_graph_mutation(self)
+        print_graph_mutation(self).await
     }
     async fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_graph_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_graph_mutation(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
 //#endregion 🔖️OpText

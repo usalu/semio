@@ -1,0 +1,32 @@
+[package]
+name = "semio-framework-ui-backend-webgpu"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Browser WebGPU backend (wgpu) — the ONLY place wgpu is permitted in this repo"
+
+[package.metadata.semio]
+role = "framework"
+id = "webgpu-backend"
+
+[lints]
+workspace = true
+
+[lib]
+path = "📦️glue.rs"
+
+[features]
+default = []
+# 🧪️ Offscreen readback + forced device loss for the cross-backend pixel conformance suite.
+backend-testing = ["ui_render/backend-testing"]
+
+[dependencies]
+bytemuck = { version = "1.24.0", features = ["derive"] }
+ui_render = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-ui-render" }
+
+# 🌐️ wgpu is confined to THIS crate and to browser builds. Natively we hand-write D3D12/Metal/Vulkan,
+# so a wgpu edge anywhere else in the graph is a boundary violation the CI `cargo tree` gate fails on.
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wgpu = { version = "27.0.1", default-features = false, features = ["webgpu", "wgsl"] }
+web-sys = { version = "0.3.98", features = ["Window", "HtmlCanvasElement"] }
+wasm-bindgen = "0.2.106"

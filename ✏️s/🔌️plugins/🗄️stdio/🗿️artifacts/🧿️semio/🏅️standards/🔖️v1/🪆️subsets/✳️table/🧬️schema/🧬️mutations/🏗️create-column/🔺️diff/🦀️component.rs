@@ -12,7 +12,7 @@ use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::Se
 //#region 🔖️Diff
 pub async fn diff(payload: &CreateColumn, base: &SemioTableSnapshot) -> protocol::MutationOutcome<SemioTableDiff> {
     if base.columns.iter().any(|c| c.name == payload.name) {
-        return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A column named \"{}\" already exists.", payload.name), [payload.name.clone()]);
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A column named \"{}\" already exists.", payload.name), [payload.name.clone()]).await;
     }
     let mut columns = base.columns.clone();
     let at = payload.index.unwrap_or(columns.len()).min(columns.len());
@@ -24,6 +24,6 @@ pub async fn diff(payload: &CreateColumn, base: &SemioTableSnapshot) -> protocol
         row.cells.insert(pos, SemioValue::Null);
     }
 
-    protocol::MutationOutcome::new(SemioTableDiff { columns: Some(SemioTableColumnList { values: columns }), rows: Some(SemioTableRowList { values: rows }) })
+    protocol::MutationOutcome::new(SemioTableDiff { columns: Some(SemioTableColumnList { values: columns }), rows: Some(SemioTableRowList { values: rows }) }).await
 }
 //#endregion 🔖️Diff

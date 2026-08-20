@@ -78,8 +78,8 @@ mod tests {
     //#region 🔖️Document
     #[semio_framework_async_macros::async_test]
     async fn facade_encode_document_decode_document_round_trip() {
-        let spec = sample_spec();
-        let record = sample_record();
+        let spec = sample_spec().await;
+        let record = sample_record().await;
 
         let bytes = encode_document(&spec, &record, &EncodeOptions::default()).await.unwrap();
         let (decoded, report) = decode_document(&bytes, &spec, &DecodeOptions::default()).await.unwrap();
@@ -93,8 +93,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn facade_content_hash_is_stable_across_two_encodes() {
-        let spec = sample_spec();
-        let record = sample_record();
+        let spec = sample_spec().await;
+        let record = sample_record().await;
         let options = EncodeOptions::default();
 
         let bytes_a = encode_document(&spec, &record, &options).await.unwrap();

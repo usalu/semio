@@ -2828,10 +2828,41 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 	addEffortFlags(changeCmd)
 	addClientFlags(changeCmd)
 
+	purgeArtifactsCmd := &cobra.Command{
+		Use:   "purge-artifacts [path]",
+		Short: "Delete ticket-folder files above 5 MiB and subfolders above 10 MiB",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			all, _ := cmd.Flags().GetBool("all")
+			if all || len(args) == 0 {
+				count, err := PurgeAllOversizedTicketArtifacts()
+				if err != nil {
+					return err
+				}
+				fmt.Fprintf(cmd.OutOrStdout(), "Purged oversized artifacts in %d ticket folders\n", count)
+				return nil
+			}
+			year, month, day, slug, err := parseTicketPath(args[0])
+			if err != nil {
+				return err
+			}
+			ticket, err := ReadTicket(year, month, day, slug)
+			if err != nil {
+				return err
+			}
+			if err := purgeOversizedTicketArtifacts(ticket.FolderPath); err != nil {
+				return err
+			}
+			fmt.Fprintf(cmd.OutOrStdout(), "Purged oversized artifacts in %s\n", ticket.FolderPath)
+			return nil
+		},
+	}
+	purgeArtifactsCmd.Flags().Bool("all", false, "Purge oversized artifacts in every ticket folder")
+
 	root.AddCommand(changeCmd)
 	root.AddCommand(openCmd)
 	root.AddCommand(closeCmd)
 	root.AddCommand(reopenCmd)
+	root.AddCommand(purgeArtifactsCmd)
 
 	return root
 }
@@ -24991,6 +25022,75 @@ func purgeOversizedTicketArtifacts(ticketDir string) error {
 		}
 	}
 	return nil
+}
+
+// 🧹️collectTicketFolderRoots returns every slug directory under the dated ticket tree.
+func collectTicketFolderRoots() ([]string, error) {
+	ticketsDir := GetTicketsDir()
+	if !FileExists(ticketsDir) {
+		return nil, nil
+	}
+	var roots []string
+	yearEntries, err := os.ReadDir(ticketsDir)
+	if err != nil {
+		return nil, err
+	}
+	for _, yearEntry := range yearEntries {
+		if !yearEntry.IsDir() {
+			continue
+		}
+		yearPath := filepath.Join(ticketsDir, yearEntry.Name())
+		monthEntries, err := os.ReadDir(yearPath)
+		if err != nil {
+			continue
+		}
+		for _, monthEntry := range monthEntries {
+			if !monthEntry.IsDir() {
+				continue
+			}
+			monthPath := filepath.Join(yearPath, monthEntry.Name())
+			dayEntries, err := os.ReadDir(monthPath)
+			if err != nil {
+				continue
+			}
+			for _, dayEntry := range dayEntries {
+				if !dayEntry.IsDir() {
+					continue
+				}
+				dayPath := filepath.Join(monthPath, dayEntry.Name())
+				slugEntries, err := os.ReadDir(dayPath)
+				if err != nil {
+					continue
+				}
+				for _, slugEntry := range slugEntries {
+					if !slugEntry.IsDir() {
+						continue
+					}
+					if strings.HasPrefix(slugEntry.Name(), ".") {
+						continue
+					}
+					roots = append(roots, filepath.Join(dayPath, slugEntry.Name()))
+				}
+			}
+		}
+	}
+	return roots, nil
+}
+
+// 🧹️PurgeAllOversizedTicketArtifacts deletes oversized artifacts in every ticket folder.
+func PurgeAllOversizedTicketArtifacts() (int, error) {
+	roots, err := collectTicketFolderRoots()
+	if err != nil {
+		return 0, err
+	}
+	purged := 0
+	for _, root := range roots {
+		if err := purgeOversizedTicketArtifacts(root); err != nil {
+			return purged, err
+		}
+		purged++
+	}
+	return purged, nil
 }
 
 // 🛡️ticketPathContained reports whether path stays inside the ticket root directory.

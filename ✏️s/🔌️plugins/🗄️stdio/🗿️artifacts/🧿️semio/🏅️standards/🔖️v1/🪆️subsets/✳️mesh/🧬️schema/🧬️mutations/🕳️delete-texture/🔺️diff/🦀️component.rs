@@ -9,8 +9,8 @@ use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::Sem
 
 //#region 🔖️Diff
 pub async fn diff(payload: &DeleteTexture, base: &SemioMeshSnapshot) -> protocol::MutationOutcome<SemioMeshDiff> {
-    if crate::artifacts::semio::standards::v1::subsets::mesh::schema::diff::texture_at(base, &payload.id).is_none() {
-        return protocol::MutationOutcome::error("mutation.target-missing", format!("Texture \"{}\" does not exist.", payload.id), [payload.id.clone()]);
+    if crate::artifacts::semio::standards::v1::subsets::mesh::schema::diff::texture_at(base, &payload.id).await.is_none() {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Texture \"{}\" does not exist.", payload.id), [payload.id.clone()]).await;
     }
     protocol::MutationOutcome::new(crate::artifacts::semio::standards::v1::subsets::mesh::schema::diff::diff_remove_texture(base, &payload.id))
 }

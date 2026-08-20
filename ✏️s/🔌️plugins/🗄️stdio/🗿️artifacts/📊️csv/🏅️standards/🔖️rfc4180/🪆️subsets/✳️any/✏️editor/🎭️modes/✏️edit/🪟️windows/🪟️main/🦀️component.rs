@@ -15,7 +15,7 @@ pub const BODY_KEY: &str = TableWindowKit::KIND_ID;
 //#region 🔖️Definition
 /// 🧱️ Stitched into the editor manifest by `crate::editor::csv::create_csv_editor`.
 pub async fn definition() -> WindowKindDefinition {
-    WindowKindDefinition { label: LocalizedLabel::native("Table", "Tabelle"), icon_id: "table-2".into(), ..TableWindowKit::editable_window_kind() }
+    WindowKindDefinition { label: LocalizedLabel::native("Table", "Tabelle"), icon_id: "table-2".into(), ..TableWindowKit::editable_window_kind().await }
 }
 //#endregion 🔖️Definition
 
@@ -32,7 +32,7 @@ pub async fn render(document: &CsvSnapshot) -> UiNode {
         ((0..width).map(|index| format!("Column {}", index + 1)).collect(), &document.records[..])
     };
     let rows = data_rows.iter().map(|record| record.fields.iter().map(|field| field.value.clone()).collect()).collect();
-    TableWindowKit::render(&TableView { columns, rows })
+    TableWindowKit::render(&TableView { columns, rows }).await
 }
 //#endregion 🔖️Render
 

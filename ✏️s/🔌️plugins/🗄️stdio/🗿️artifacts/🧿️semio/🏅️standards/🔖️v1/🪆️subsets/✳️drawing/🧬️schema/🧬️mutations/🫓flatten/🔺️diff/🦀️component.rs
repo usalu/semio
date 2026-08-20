@@ -16,10 +16,10 @@ pub(crate) async fn collect_flattened_leaves(children: &[DrawNode]) -> Option<Ve
     for child in children {
         match child {
             DrawNode::Group { transform, children: nested } => {
-                if *transform != SemioTransform::identity() {
+                if *transform != SemioTransform::identity().await {
                     return None;
                 }
-                out.extend(collect_flattened_leaves(nested)?);
+                out.extend(Box::pin(collect_flattened_leaves(nested)).await?);
             }
             leaf => out.push(leaf.clone()),
         }
@@ -30,16 +30,16 @@ pub(crate) async fn collect_flattened_leaves(children: &[DrawNode]) -> Option<Ve
 
 //#region 🔖️Diff
 pub async fn diff(payload: &FlattenNode, base: &SemioDrawingSnapshot) -> protocol::MutationOutcome<SemioDrawingDiff> {
-    let Some(node) = node_at(base, &payload.at) else {
-        return protocol::MutationOutcome::error("mutation.target-missing", format!("Node at layer #{} does not exist.", payload.at.layer), [payload.at.layer.to_string()]);
+    let Some(node) = node_at(base, &payload.at).await else {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Node at layer #{} does not exist.", payload.at.layer), [payload.at.layer.to_string()]).await;
     };
     match node {
-        DrawNode::Group { transform, children } => match collect_flattened_leaves(children) {
+        DrawNode::Group { transform, children } => match collect_flattened_leaves(children).await {
             Some(leaves) if leaves != *children => protocol::MutationOutcome::new(diff_at_path(&payload.at, DrawNodeDiff::Replace { node: DrawNode::Group { transform: *transform, children: leaves } })),
-            Some(_) => protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Node in layer #{} is already flat.", payload.at.layer)),
-            None => protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Node in layer #{} cannot be flattened without losing a descendant transform.", payload.at.layer)),
+            Some(_) => protocol::MutationOutcome::empty().await.warn("mutation.no-op", format!("Node in layer #{} is already flat.", payload.at.layer)),
+            None => protocol::MutationOutcome::empty().await.warn("mutation.no-op", format!("Node in layer #{} cannot be flattened without losing a descendant transform.", payload.at.layer)),
         },
-        _ => protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Node in layer #{} is not a group.", payload.at.layer)),
+        _ => protocol::MutationOutcome::empty().await.warn("mutation.no-op", format!("Node in layer #{} is not a group.", payload.at.layer)),
     }
 }
 //#endregion 🔖️Diff

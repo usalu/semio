@@ -52,7 +52,7 @@ impl IfcArtifact {
     /// (the analyzer's own relationship-graph traversal still walks that generic shape).
     pub async fn spatial(&self) -> crate::artifacts::ifc::engine::spatial::SpatialAnalysis {
         let document = crate::artifacts::ifc::schema::snapshot::to_part21_document(&self.to_snapshot());
-        crate::artifacts::ifc::engine::spatial::analyze_spatial(&document)
+        crate::artifacts::ifc::engine::spatial::analyze_spatial(&document).await
     }
 }
 //#endregion 🔖️Conversions
@@ -116,17 +116,17 @@ pub mod derived_construction {
             Self { snapshot, diagnostics: Vec::new() }
         }
         async fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self::from_snapshot(<IfcSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+            Ok(Self::from_snapshot(<IfcSnapshot as store::ArtifactDsl>::parse_dsl(text).await?).await)
         }
         async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<IfcSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+            Ok(Self::from_snapshot(<IfcSnapshot as store::ArtifactPack>::decode_pack(bytes).await?).await)
         }
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = crate::artifacts::ifc::schema::mutations::apply_ifc_mutation(&mut self.snapshot, &mutation);
-            (self, diff)
+            (self, diff.await)
         }
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            self.snapshot = <IfcDiff as protocol::MutationDiff<IfcSnapshot>>::apply(&diff, &self.snapshot)?;
+            self.snapshot = <IfcDiff as protocol::MutationDiff<IfcSnapshot>>::apply(&diff, &self.snapshot).await?;
             Ok(self)
         }
         async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
@@ -173,14 +173,14 @@ pub mod derived_analysis {
             let mut confidence = IoConfidence::High;
             for source in sources {
                 match source {
-                    AnalyzeSource::Text(text) => match <IfcSnapshot as store::ArtifactDsl>::parse_dsl(text) {
+                    AnalyzeSource::Text(text) => match <IfcSnapshot as store::ArtifactDsl>::parse_dsl(text).await {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
                             diagnostics.push(dsl::Diagnostic::error("stdio.analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
-                    AnalyzeSource::Binary(bytes) => match <IfcSnapshot as store::ArtifactPack>::decode_pack(bytes) {
+                    AnalyzeSource::Binary(bytes) => match <IfcSnapshot as store::ArtifactPack>::decode_pack(bytes).await {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = IoConfidence::Low;
@@ -269,7 +269,7 @@ pub async fn register() {
     register_artifact_schema();
     register_artifact_inferences();
     register_pilot_languages();
-    let _ = store::register_document_codec(store::ArtifactCodec::of::<IfcSnapshot, IfcMutation>(STDIO_IFC_DOCUMENT_SCHEMA));
+    let _ = store::register_document_codec(store::ArtifactCodec::of::<IfcSnapshot, IfcMutation>(STDIO_IFC_DOCUMENT_SCHEMA).await);
 }
 
 /// 📌️ P2-FG1: 5-role `LanguageSpec` registration (Document/Ops/Diff/Pack/Spr), per the recipe's
@@ -339,13 +339,13 @@ pub async fn register_pilot_languages() {
 
 /// 📌️ Registers schema leaves for `s.stdio.ifc`.
 pub async fn register_artifact_schema() {
-    ::schema::register_artifact_schema_descriptor(ifc_artifact_schema_descriptor());
+    ::schema::register_artifact_schema_descriptor(ifc_artifact_schema_descriptor().await);
 }
 
 /// 💡️ Registers `s.stdio.ifc.inference`'s facet leaves into the OS-wide inference catalog —
 /// sibling to `register_artifact_schema()` (separate registry, ticket
 /// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
 pub async fn register_artifact_inferences() {
-    ::schema::register_artifact_inference_descriptor(crate::artifacts::ifc::standards::v4::subsets::any::schema::inferences::ifc_artifact_inference_descriptor());
+    ::schema::register_artifact_inference_descriptor(crate::artifacts::ifc::standards::v4::subsets::any::schema::inferences::ifc_artifact_inference_descriptor().await);
 }
 //#endregion 🔖️Register

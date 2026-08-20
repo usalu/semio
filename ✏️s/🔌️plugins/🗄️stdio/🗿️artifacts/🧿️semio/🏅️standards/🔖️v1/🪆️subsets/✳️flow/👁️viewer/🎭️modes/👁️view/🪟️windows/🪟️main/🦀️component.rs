@@ -21,7 +21,7 @@ const SEMIO_FLOW_VIEW_DEFAULT_CAMERA_FOV: f64 = 45.0;
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by the surface root's `create_*_viewer`.
 pub async fn definition() -> WindowKindDefinition {
-    MeshWindowKit::window_kind()
+    MeshWindowKit::window_kind().await
 }
 //#endregion 🔖️Definition
 
@@ -40,7 +40,7 @@ async fn entity_count(document: &SemioFlowSnapshot) -> usize {
 
 async fn world_instances_json(document: &SemioFlowSnapshot) -> String {
     let count = entity_count(document);
-    let instances: Vec<serde_json::Value> = (0..count)
+    let instances: Vec<serde_json::Value> = (0..count.await)
         .map(|index| {
             serde_json::json!({
                 "id": format!("semio_flow-{index}"),
@@ -61,12 +61,12 @@ async fn world_instances_json(document: &SemioFlowSnapshot) -> String {
 pub async fn render(document: &SemioFlowSnapshot) -> UiNode {
     let meshes_json = serde_json::to_string(&[serde_json::json!({ "id": SEMIO_FLOW_VIEW_FALLBACK_MESH_KIND, "data": mesh_from_kind(SEMIO_FLOW_VIEW_FALLBACK_MESH_KIND) })]).unwrap_or_else(|_| "[]".into());
     let view = MeshView {
-        camera_json: world3d_camera_json(SEMIO_FLOW_VIEW_DEFAULT_CAMERA_POSITION, SEMIO_FLOW_VIEW_DEFAULT_CAMERA_TARGET, SEMIO_FLOW_VIEW_DEFAULT_CAMERA_FOV),
+        camera_json: world3d_camera_json(SEMIO_FLOW_VIEW_DEFAULT_CAMERA_POSITION, SEMIO_FLOW_VIEW_DEFAULT_CAMERA_TARGET, SEMIO_FLOW_VIEW_DEFAULT_CAMERA_FOV).await,
         meshes_json,
-        instances_json: world_instances_json(document),
-        selection_json: world3d_selection_json("rectangle", &[], None),
+        instances_json: world_instances_json(document).await,
+        selection_json: world3d_selection_json("rectangle", &[], None).await,
     };
-    MeshWindowKit::render(&view)
+    MeshWindowKit::render(&view).await
 }
 //#endregion 🔖️Render
 

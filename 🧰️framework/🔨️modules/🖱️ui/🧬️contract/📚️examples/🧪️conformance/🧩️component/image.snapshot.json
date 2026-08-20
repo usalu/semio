@@ -1,0 +1,27 @@
+{
+  "surface": "conformance.component.image",
+  "revision": 0,
+  "root": 0,
+  "nodes": [
+    {
+      "id": 0,
+      "key": "#0",
+      "component": {
+        "type": "image",
+        "src": "atlas://logo",
+        "alt": "Company logo"
+      },
+      "layout": {
+        "kind": "leaf",
+        "width": "hug",
+        "height": "hug"
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {
+        "label": "Company logo"
+      }
+    }
+  ],
+  "layoutEpoch": 0
+}

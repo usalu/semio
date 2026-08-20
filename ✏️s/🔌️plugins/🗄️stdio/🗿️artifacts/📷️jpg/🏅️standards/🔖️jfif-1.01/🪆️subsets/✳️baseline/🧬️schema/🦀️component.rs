@@ -24,23 +24,23 @@ pub mod derived_construction {
         type Diff = JpgDiff;
 
         async fn empty() -> Self {
-            Self(JpgAnyBuilder::empty())
+            Self(JpgAnyBuilder::empty().await)
         }
         async fn from_snapshot(snapshot: Self::Snapshot) -> Self {
-            Self(JpgAnyBuilder::from_snapshot(snapshot))
+            Self(JpgAnyBuilder::from_snapshot(snapshot).await)
         }
         async fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self(JpgAnyBuilder::from_text(text)?))
+            Ok(Self(JpgAnyBuilder::from_text(text).await?))
         }
         async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self(JpgAnyBuilder::from_binary(bytes)?))
+            Ok(Self(JpgAnyBuilder::from_binary(bytes).await?))
         }
         async fn mutate(self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let (inner, diff) = self.0.mutate(mutation);
+            let (inner, diff) = self.0.mutate(mutation).await;
             (Self(inner), diff)
         }
         async fn absorb(self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            Ok(Self(self.0.absorb(diff)?))
+            Ok(Self(self.0.absorb(diff).await?))
         }
 
         /// 🛡️ The real construction gate: however the wrapped snapshot got here, a hard baseline
@@ -48,7 +48,7 @@ pub mod derived_construction {
         /// `build` has no diagnostics-on-success channel), matching `JpgAnyBuilder::build`'s existing
         /// contract of "diagnostics accumulated during mutation, not from validation".
         async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> {
-            let snapshot = self.0.build()?;
+            let snapshot = self.0.build().await?;
             let hard: Vec<dsl::Diagnostic> = check_baseline_conformance(&snapshot).into_iter().filter(|d| matches!(d.severity, dsl::Severity::Error | dsl::Severity::Fatal)).collect();
             if hard.is_empty() {
                 Ok(snapshot)
@@ -182,15 +182,15 @@ pub mod derived_analysis {
         const DIALECT: Dialect = DIALECT;
 
         async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
-            JpgAnyAnalyzer::sniff(source)
+            JpgAnyAnalyzer::sniff(source).await
         }
 
         async fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
-            let inner = JpgAnyAnalyzer::analyze(sources);
+            let inner = JpgAnyAnalyzer::analyze(sources).await;
             let mut diagnostics = inner.diagnostics.clone();
             let mut confidence = inner.confidence;
             if let Some(snapshot) = &inner.parts.snapshot {
-                let checks = check_baseline_conformance(snapshot);
+                let checks = check_baseline_conformance(snapshot).await;
                 if checks.iter().any(|d| matches!(d.severity, Severity::Error | Severity::Fatal)) {
                     confidence = IoConfidence::Low;
                 }

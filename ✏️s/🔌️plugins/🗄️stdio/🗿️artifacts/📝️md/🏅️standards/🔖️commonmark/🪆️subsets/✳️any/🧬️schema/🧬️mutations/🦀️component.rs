@@ -68,13 +68,13 @@ pub enum MdMutation {
 /// d.apply(snapshot); d` -- the diff is the single semantics source, never a separate imperative
 /// apply path.
 pub async fn apply_md_mutation(snapshot: &mut MdSnapshot, mutation: &MdMutation) -> protocol::MutationOutcome<MdDiff> {
-    let outcome = Mutation::diff(mutation, snapshot);
-    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
+    let outcome = Mutation::diff(mutation, snapshot).await;
+    match protocol::MutationDiff::apply(outcome.diff().await, snapshot).await {
         Ok(next) => {
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).await.absorb_messages(outcome.messages().await.to_vec()).await,
     }
 }
 //#endregion 🔖️Apply
@@ -86,16 +86,16 @@ impl Mutation<MdSnapshot> for MdMutation {
     async fn diff(&self, base: &MdSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             MdMutation::NoMutation => MdDiff::default(),
-            MdMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
-            MdMutation::InsertBlock { path, index, block } => diff_at_path(path, *index, MdBlocksLeafDiff::Added(block.clone())),
-            MdMutation::RemoveBlock { path, index } => diff_at_path(path, *index, MdBlocksLeafDiff::Removed),
-            MdMutation::ReplaceBlock { path, index, block } => diff_at_path(path, *index, MdBlocksLeafDiff::Modified(MdBlockDiff::Replace { block: block.clone() })),
-            MdMutation::SetInlines { path, index, inlines } => match navigate_container(&base.blocks, path).and_then(|c| c.get(*index)) {
-                Some(MdBlock::Heading { .. }) => diff_at_path(path, *index, MdBlocksLeafDiff::Modified(MdBlockDiff::Heading { level: None, inlines: Some(inlines.clone()) })),
-                Some(MdBlock::Paragraph { .. }) => diff_at_path(path, *index, MdBlocksLeafDiff::Modified(MdBlockDiff::Paragraph { inlines: Some(inlines.clone()) })),
+            MdMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot).await,
+            MdMutation::InsertBlock { path, index, block } => diff_at_path(path, *index, MdBlocksLeafDiff::Added(block.clone())).await,
+            MdMutation::RemoveBlock { path, index } => diff_at_path(path, *index, MdBlocksLeafDiff::Removed).await,
+            MdMutation::ReplaceBlock { path, index, block } => diff_at_path(path, *index, MdBlocksLeafDiff::Modified(MdBlockDiff::Replace { block: block.clone() })).await,
+            MdMutation::SetInlines { path, index, inlines } => match navigate_container(&base.blocks, path).await.and_then(|c| c.get(*index)) {
+                Some(MdBlock::Heading { .. }) => diff_at_path(path, *index, MdBlocksLeafDiff::Modified(MdBlockDiff::Heading { level: None, inlines: Some(inlines.clone()) })).await,
+                Some(MdBlock::Paragraph { .. }) => diff_at_path(path, *index, MdBlocksLeafDiff::Modified(MdBlockDiff::Paragraph { inlines: Some(inlines.clone()) })).await,
                 _ => MdDiff::default(),
             },
-        })
+        }).await
     }
 
     async fn inverse(&self, base: &MdSnapshot) -> Vec<Self> {
@@ -103,16 +103,16 @@ impl Mutation<MdSnapshot> for MdMutation {
             MdMutation::NoMutation => vec![MdMutation::NoMutation],
             MdMutation::SetSnapshot { .. } => vec![MdMutation::SetSnapshot { snapshot: base.clone() }],
             MdMutation::InsertBlock { path, index, .. } => vec![MdMutation::RemoveBlock { path: path.clone(), index: *index }],
-            MdMutation::RemoveBlock { path, index } => match navigate_container(&base.blocks, path).and_then(|c| c.get(*index)).cloned() {
+            MdMutation::RemoveBlock { path, index } => match navigate_container(&base.blocks, path).await.and_then(|c| c.get(*index)).cloned() {
                 Some(block) => vec![MdMutation::InsertBlock { path: path.clone(), index: *index, block }],
                 None => vec![MdMutation::NoMutation],
             },
-            MdMutation::ReplaceBlock { path, index, .. } => match navigate_container(&base.blocks, path).and_then(|c| c.get(*index)).cloned() {
+            MdMutation::ReplaceBlock { path, index, .. } => match navigate_container(&base.blocks, path).await.and_then(|c| c.get(*index)).cloned() {
                 Some(block) => vec![MdMutation::ReplaceBlock { path: path.clone(), index: *index, block }],
                 None => vec![MdMutation::NoMutation],
             },
             MdMutation::SetInlines { path, index, .. } => {
-                let original = match navigate_container(&base.blocks, path).and_then(|c| c.get(*index)) {
+                let original = match navigate_container(&base.blocks, path).await.and_then(|c| c.get(*index)) {
                     Some(MdBlock::Heading { inlines, .. }) => Some(inlines.clone()),
                     Some(MdBlock::Paragraph { inlines }) => Some(inlines.clone()),
                     _ => None,
@@ -144,13 +144,13 @@ async fn enc_path_step(step: &MdPathStep) -> String {
 }
 async fn dec_path_step(s: &str) -> Result<MdPathStep, String> {
     let (tag, rest) = s.split_at(1);
-    let inner = strip_brackets(rest)?;
+    let inner = strip_brackets(rest).await?;
     match tag {
-        "Y" => Ok(MdPathStep::BlockQuote { index: parse_usize(inner)? }),
+        "Y" => Ok(MdPathStep::BlockQuote { index: parse_usize(inner).await? }),
         "Z" => {
-            let parts = split_top_level(inner, ',');
+            let parts = split_top_level(inner, ',').await;
             let [index, item] = parts.as_slice() else { return Err(format!("list item path step: expected 2 fields, got {}", parts.len())) };
-            Ok(MdPathStep::ListItem { index: parse_usize(index)?, item: parse_usize(item)? })
+            Ok(MdPathStep::ListItem { index: parse_usize(index).await?, item: parse_usize(item).await? })
         }
         other => Err(format!("path step: unknown tag {other:?}")),
     }
@@ -159,15 +159,15 @@ async fn enc_path(path: &[MdPathStep]) -> String {
     format!("[{}]", path.iter().map(enc_path_step).collect::<Vec<_>>().join(","))
 }
 async fn dec_path(s: &str) -> Result<Vec<MdPathStep>, String> {
-    split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_path_step).collect()
+    split_top_level(strip_brackets(s).await?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_path_step).collect()
 }
 async fn enc_md_snapshot(s: &MdSnapshot) -> String {
     format!("[{},{}]", enc_str(&s.schema), enc_block_list(&s.blocks))
 }
 async fn dec_md_snapshot(s: &str) -> Result<MdSnapshot, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
+    let parts = split_top_level(strip_brackets(s).await?, ',').await;
     let [schema, blocks] = parts.as_slice() else { return Err(format!("md snapshot: expected 2 fields, got {}", parts.len())) };
-    Ok(MdSnapshot { schema: dec_str(schema)?, blocks: dec_block_list(blocks)? })
+    Ok(MdSnapshot { schema: dec_str(schema).await?, blocks: dec_block_list(blocks).await? })
 }
 
 async fn print_md_mutation(m: &MdMutation) -> String {
@@ -189,21 +189,21 @@ async fn parse_md_mutation(line: &str) -> Result<MdMutation, String> {
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("md mutation: missing arg '{k}' for '{keyword}'"));
     let usize_arg = |k: &str| -> Result<usize, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
     match keyword {
-        "set-snapshot" => Ok(MdMutation::SetSnapshot { snapshot: dec_md_snapshot(arg("snapshot")?)? }),
-        "insert-block" => Ok(MdMutation::InsertBlock { path: dec_path(arg("path")?)?, index: usize_arg("index")?, block: dec_block(arg("block")?)? }),
-        "remove-block" => Ok(MdMutation::RemoveBlock { path: dec_path(arg("path")?)?, index: usize_arg("index")? }),
-        "replace-block" => Ok(MdMutation::ReplaceBlock { path: dec_path(arg("path")?)?, index: usize_arg("index")?, block: dec_block(arg("block")?)? }),
-        "set-inlines" => Ok(MdMutation::SetInlines { path: dec_path(arg("path")?)?, index: usize_arg("index")?, inlines: dec_inline_list(arg("inlines")?)? }),
+        "set-snapshot" => Ok(MdMutation::SetSnapshot { snapshot: dec_md_snapshot(arg("snapshot")?).await? }),
+        "insert-block" => Ok(MdMutation::InsertBlock { path: dec_path(arg("path")?).await?, index: usize_arg("index")?, block: dec_block(arg("block")?).await? }),
+        "remove-block" => Ok(MdMutation::RemoveBlock { path: dec_path(arg("path")?).await?, index: usize_arg("index")? }),
+        "replace-block" => Ok(MdMutation::ReplaceBlock { path: dec_path(arg("path")?).await?, index: usize_arg("index")?, block: dec_block(arg("block")?).await? }),
+        "set-inlines" => Ok(MdMutation::SetInlines { path: dec_path(arg("path")?).await?, index: usize_arg("index")?, inlines: dec_inline_list(arg("inlines")?).await? }),
         other => Err(format!("md mutation: unknown keyword {other:?}")),
     }
 }
 
 impl OpText for MdMutation {
     async fn print_op(&self) -> String {
-        print_md_mutation(self)
+        print_md_mutation(self).await
     }
     async fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_md_mutation(line).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        parse_md_mutation(line).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
 }
 
@@ -218,8 +218,8 @@ async fn enc_snapshot_bin(s: &MdSnapshot, out: &mut Vec<u8>) {
     enc_block_list_bin(&s.blocks, out);
 }
 async fn dec_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<MdSnapshot, String> {
-    let schema = read_str_bin(reader)?;
-    let blocks = dec_block_list_bin(reader)?;
+    let schema = read_str_bin(reader).await?;
+    let blocks = dec_block_list_bin(reader).await?;
     Ok(MdSnapshot { schema, blocks })
 }
 
@@ -237,12 +237,12 @@ async fn enc_path_step_bin(step: &MdPathStep, out: &mut Vec<u8>) {
     }
 }
 async fn dec_path_step_bin(reader: &mut store::ByteReader<'_>) -> Result<MdPathStep, String> {
-    let tag = reader.read_u8().map_err(|e| e.to_string())?;
+    let tag = reader.read_u8().await.map_err(|e| e.to_string())?;
     match tag {
-        0 => Ok(MdPathStep::BlockQuote { index: reader.read_varint_u64().map_err(|e| e.to_string())? as usize }),
+        0 => Ok(MdPathStep::BlockQuote { index: reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize }),
         1 => {
-            let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-            let item = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+            let index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+            let item = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
             Ok(MdPathStep::ListItem { index, item })
         }
         other => Err(format!("path step binary: unknown tag {other}")),
@@ -255,7 +255,7 @@ async fn enc_path_bin(path: &[MdPathStep], out: &mut Vec<u8>) {
     }
 }
 async fn dec_path_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<MdPathStep>, String> {
-    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     (0..count).map(|_| dec_path_step_bin(reader)).collect()
 }
 //#endregion 🔖️OpBinaryCodec
@@ -277,7 +277,7 @@ impl protocol::OpBinary for MdMutation {
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
         match self {
             MdMutation::NoMutation => {}
-            MdMutation::SetSnapshot { snapshot } => enc_snapshot_bin(snapshot, &mut out),
+            MdMutation::SetSnapshot { snapshot } => enc_snapshot_bin(snapshot, &mut out).await,
             MdMutation::InsertBlock { path, index, block } => {
                 enc_path_bin(path, &mut out);
                 store::pack_rt::write_varint_u64(&mut out, *index as u64);
@@ -302,37 +302,37 @@ impl protocol::OpBinary for MdMutation {
     }
 
     async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let mut reader = store::ByteReader::new(bytes);
+        let mut reader = store::ByteReader::new(bytes).await;
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
-        let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
-        let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
+        let _format = reader.read_u8().await.map_err(|e| malformed("op format", 0, e.to_string()))?;
+        let tag = reader.read_u8().await.map_err(|e| malformed("op tag", 1, e.to_string()))?;
         match tag {
             0 => Ok(MdMutation::NoMutation),
             1 => {
-                let snapshot = dec_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", reader.position(), e))?;
+                let snapshot = dec_snapshot_bin(&mut reader).await.map_err(|e| malformed("op snapshot", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(MdMutation::SetSnapshot { snapshot })
             }
             2 => {
-                let path = dec_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
-                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
-                let block = dec_block_bin(&mut reader).map_err(|e| malformed("op block", reader.position(), e))?;
+                let path = dec_path_bin(&mut reader).await.map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let index = reader.read_varint_u64().await.map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
+                let block = dec_block_bin(&mut reader).await.map_err(|e| malformed("op block", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(MdMutation::InsertBlock { path, index, block })
             }
             3 => {
-                let path = dec_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
-                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
+                let path = dec_path_bin(&mut reader).await.map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let index = reader.read_varint_u64().await.map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
                 Ok(MdMutation::RemoveBlock { path, index })
             }
             4 => {
-                let path = dec_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
-                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
-                let block = dec_block_bin(&mut reader).map_err(|e| malformed("op block", reader.position(), e))?;
+                let path = dec_path_bin(&mut reader).await.map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let index = reader.read_varint_u64().await.map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
+                let block = dec_block_bin(&mut reader).await.map_err(|e| malformed("op block", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(MdMutation::ReplaceBlock { path, index, block })
             }
             5 => {
-                let path = dec_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
-                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
-                let inlines = dec_inline_list_bin(&mut reader).map_err(|e| malformed("op inlines", reader.position(), e))?;
+                let path = dec_path_bin(&mut reader).await.map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let index = reader.read_varint_u64().await.map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
+                let inlines = dec_inline_list_bin(&mut reader).await.map_err(|e| malformed("op inlines", semio_framework_plugin::resolve_ready(reader.position()), e))?;
                 Ok(MdMutation::SetInlines { path, index, inlines })
             }
             other => Err(malformed("op tag", 1, format!("unknown tag {other}"))),

@@ -279,19 +279,19 @@ mod tests {
     //#region 🔖️DependencyAndContributionTests
     #[semio_framework_async_macros::async_test]
     async fn extends_matches_primary_dependency_holds_for_the_sample_and_the_vacuous_case() {
-        assert!(sample_manifest().await.extends_matches_primary_dependency());
+        assert!(sample_manifest().await.extends_matches_primary_dependency().await);
 
         let vacuous = ExtensionPackageManifest { extends: String::new(), dependencies: Vec::new(), ..sample_manifest().await };
-        assert!(vacuous.extends_matches_primary_dependency());
+        assert!(vacuous.extends_matches_primary_dependency().await);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn extends_matches_primary_dependency_rejects_mismatch_and_missing_dependency() {
         let mismatched = ExtensionPackageManifest { extends: "cad".into(), ..sample_manifest().await };
-        assert!(!mismatched.extends_matches_primary_dependency());
+        assert!(!mismatched.extends_matches_primary_dependency().await);
 
         let no_dependencies = ExtensionPackageManifest { dependencies: Vec::new(), ..sample_manifest().await };
-        assert!(!no_dependencies.extends_matches_primary_dependency(), "non-empty extends with no dependencies is inconsistent");
+        assert!(!no_dependencies.extends_matches_primary_dependency().await, "non-empty extends with no dependencies is inconsistent");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -322,7 +322,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn pack_unpack_verify_round_trip() {
-        let manifest = sample_manifest();
+        let manifest = sample_manifest().await;
         let component = b"\0asm\x01\x00\x00\x00fake-component".to_vec();
         let assets = vec![
             ("readme.txt".into(), b"hello".to_vec()),
@@ -333,24 +333,23 @@ mod tests {
         assert!(packed.starts_with(&crate::os_semio::BINARY_MAGIC));
 
         let verified = verify(&packed).await.expect("verify");
-        assert_eq!(verified, manifest.await);
-
+        assert_eq!(verified, manifest);
         let unpacked = unpack(&packed).await.expect("unpack");
-        assert_eq!(unpacked.manifest, manifest.await);
+        assert_eq!(unpacked.manifest, manifest);
         assert_eq!(unpacked.component_wasm, component);
         assert_eq!(unpacked.assets.get("readme.txt").map(Vec::as_slice), Some(b"hello".as_slice()));
         assert_eq!(unpacked.assets.get("nested/icon.svg").map(Vec::as_slice), Some(b"<svg/>".as_slice()));
 
         let again = pack(&unpacked.manifest, &unpacked.component_wasm, &unpacked.assets.iter().map(|(k, v)| (k.clone(), v.clone())).collect::<Vec<_>>()).await.expect("repack");
         assert_eq!(packed, again);
-        assert_eq!(content_hash(&packed), content_hash(&again));
+        assert_eq!(content_hash(&packed).await, content_hash(&again).await);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn content_hash_is_stable_blake3() {
-        let packed = pack(&sample_manifest(), b"component-bytes", &[]).await.expect("pack");
-        assert_eq!(content_hash(&packed), semio_framework_hash::hash_bytes(&packed));
-        assert_ne!(content_hash(&packed), content_hash(b"other"));
+        let packed = pack(&sample_manifest().await, b"component-bytes", &[]).await.expect("pack");
+        assert_eq!(content_hash(&packed).await, semio_framework_hash::hash_bytes(&packed).await);
+        assert_ne!(content_hash(&packed).await, content_hash(b"other").await);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -370,7 +369,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn pack_rejects_empty_component() {
         assert!(matches!(
-            pack(&sample_manifest(), b"", &[]).await,
+            pack(&sample_manifest().await, b"", &[]).await,
             Err(ExtensionPackageError::EmptyComponent)
         ));
     }

@@ -17,7 +17,7 @@ pub const BODY_KEY: &str = TableWindowKit::KIND_ID;
 
 //#region 🔖️Definition
 pub async fn definition() -> WindowKindDefinition {
-    TableWindowKit::window_kind()
+    TableWindowKit::window_kind().await
 }
 //#endregion 🔖️Definition
 
@@ -28,7 +28,7 @@ pub async fn render(document: &BcfSnapshot) -> UiNode {
     let columns = vec!["GUID".to_string(), "Title".to_string(), "Status".to_string(), "Priority".to_string(), "Author".to_string()];
     let rows: Vec<Vec<String>> = document.topics.iter().map(|topic| vec![topic.guid.clone(), topic.title.clone(), topic.status.clone(), topic.priority.clone(), topic.creation_author.clone()]).collect();
     let view = TableView { columns, rows };
-    TableWindowKit::render(&view)
+    TableWindowKit::render(&view).await
 }
 //#endregion 🔖️Render
 

@@ -1,0 +1,1971 @@
+{
+  "crate": "semio-framework-os-kernel",
+  "history": [
+    {
+      "pass": 1,
+      "errors": 822,
+      "edits": 0,
+      "ambiguous": 0,
+      "other": 391
+    }
+  ],
+  "residual_errors": 822,
+  "ambiguous": [],
+  "other": [
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:886",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:886",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1009",
+      "code": "E0382",
+      "msg": "use of moved value: `reader`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1017",
+      "code": "E0382",
+      "msg": "use of moved value: `reader`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1118",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1118",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1227",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1227",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1325",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1325",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1419",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1419",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1541",
+      "code": "E0382",
+      "msg": "use of moved value: `reader`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1549",
+      "code": "E0382",
+      "msg": "use of moved value: `reader`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1615",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1615",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1707",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1707",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:9123",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:9123",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:784",
+      "code": "E0053",
+      "msg": "method `parse` has an incompatible type for trait"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:788",
+      "code": "E0053",
+      "msg": "method `print` has an incompatible type for trait"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:792",
+      "code": "E0053",
+      "msg": "method `classify` has an incompatible type for trait"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:845",
+      "code": "E0053",
+      "msg": "method `id` has an incompatible type for trait"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:9792",
+      "code": "E0525",
+      "msg": "expected a closure that implements the `AsyncFn` trait, but this closure only implements `AsyncFnOnce`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:1290",
+      "code": "E0271",
+      "msg": "type mismatch resolving `<[impl Future<Output = MutationMessage>; 1] as IntoIterator>::Item == MutationMessage`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:1291",
+      "code": "E0271",
+      "msg": "type mismatch resolving `<[impl Future<Output = MutationMessage>; 1] as IntoIterator>::Item == MutationMessage`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:1291",
+      "code": "E0271",
+      "msg": "type mismatch resolving `<[impl Future<Output = MutationMessage>; 1] as IntoIterator>::Item == MutationMessage`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/💎️materialize/🦀️component.rs:663",
+      "code": "E0271",
+      "msg": "expected `collect_ids` to return `Result<(), ProtocolError>`, but it returns `impl Future<Output = Result<(), ProtocolError>>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/💎️materialize/🦀️component.rs:663",
+      "code": "E0271",
+      "msg": "expected `collect_ids` to return `Result<(), ProtocolError>`, but it returns `impl Future<Output = Result<(), ProtocolError>>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/💎️materialize/🦀️component.rs:663",
+      "code": "E0271",
+      "msg": "expected `collect_ids` to return `Result<(), ProtocolError>`, but it returns `impl Future<Output = Result<(), ProtocolError>>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/💎️materialize/🦀️component.rs:685",
+      "code": "E0271",
+      "msg": "expected `collect_ids` to return `Result<(), ProtocolError>`, but it returns `impl Future<Output = Result<(), ProtocolError>>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/💎️materialize/🦀️component.rs:685",
+      "code": "E0271",
+      "msg": "expected `collect_ids` to return `Result<(), ProtocolError>`, but it returns `impl Future<Output = Result<(), ProtocolError>>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/💎️materialize/🦀️component.rs:685",
+      "code": "E0271",
+      "msg": "expected `collect_ids` to return `Result<(), ProtocolError>`, but it returns `impl Future<Output = Result<(), ProtocolError>>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/💎️materialize/🦀️component.rs:699",
+      "code": "E0271",
+      "msg": "expected `collect_ids` to return `Result<(), ProtocolError>`, but it returns `impl Future<Output = Result<(), ProtocolError>>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/💎️materialize/🦀️component.rs:699",
+      "code": "E0271",
+      "msg": "expected `collect_ids` to return `Result<(), ProtocolError>`, but it returns `impl Future<Output = Result<(), ProtocolError>>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/💎️materialize/🦀️component.rs:699",
+      "code": "E0271",
+      "msg": "expected `collect_ids` to return `Result<(), ProtocolError>`, but it returns `impl Future<Output = Result<(), ProtocolError>>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/💎️materialize/🦀️component.rs:719",
+      "code": "E0271",
+      "msg": "expected `collect_ids` to return `Result<(), ProtocolError>`, but it returns `impl Future<Output = Result<(), ProtocolError>>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/💎️materialize/🦀️component.rs:719",
+      "code": "E0271",
+      "msg": "expected `collect_ids` to return `Result<(), ProtocolError>`, but it returns `impl Future<Output = Result<(), ProtocolError>>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/💎️materialize/🦀️component.rs:719",
+      "code": "E0271",
+      "msg": "expected `collect_ids` to return `Result<(), ProtocolError>`, but it returns `impl Future<Output = Result<(), ProtocolError>>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/🧪️testkit/🦀️component.rs:640",
+      "code": "E0271",
+      "msg": "expected `{closure@🦀️component.rs:640:25}` to return `String`, but it returns `impl Future<Output = String>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/🧪️testkit/🦀️component.rs:640",
+      "code": "E0271",
+      "msg": "expected `{closure@🦀️component.rs:640:25}` to return `String`, but it returns `impl Future<Output = String>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/🧪️testkit/🦀️component.rs:640",
+      "code": "E0271",
+      "msg": "expected `{closure@🦀️component.rs:640:25}` to return `String`, but it returns `impl Future<Output = String>`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:374",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:376",
+      "code": "E0382",
+      "msg": "use of moved value: `values`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:377",
+      "code": "E0382",
+      "msg": "use of moved value: `values`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:378",
+      "code": "E0382",
+      "msg": "use of moved value: `values`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:386",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:389",
+      "code": "E0382",
+      "msg": "use of moved value: `snapshot`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:389",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:389",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12764",
+      "code": "E0382",
+      "msg": "use of moved value: `report`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:396",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:399",
+      "code": "E0382",
+      "msg": "use of moved value: `snapshot`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:399",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:399",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:401",
+      "code": "E0382",
+      "msg": "use of moved value: `cache`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:402",
+      "code": "E0382",
+      "msg": "use of moved value: `cache`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:404",
+      "code": "E0382",
+      "msg": "use of moved value: `snapshot`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:404",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:404",
+      "code": "E0382",
+      "msg": "use of moved value: `cache`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:404",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:405",
+      "code": "E0382",
+      "msg": "use of moved value: `pure`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:406",
+      "code": "E0382",
+      "msg": "use of moved value: `cache`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12795",
+      "code": "E0382",
+      "msg": "use of moved value: `coordinator`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12795",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:412",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:414",
+      "code": "E0382",
+      "msg": "use of moved value: `snapshot`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:414",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:414",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🧩️extension/🦀️component.rs:336",
+      "code": "E0382",
+      "msg": "use of moved value: `manifest`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🧩️extension/🦀️component.rs:339",
+      "code": "E0382",
+      "msg": "use of moved value: `manifest`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:426",
+      "code": "E0382",
+      "msg": "use of moved value: `base`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:428",
+      "code": "E0382",
+      "msg": "use of moved value: `cache`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:428",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:429",
+      "code": "E0382",
+      "msg": "use of moved value: `cache`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:429",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:430",
+      "code": "E0382",
+      "msg": "use of moved value: `cache`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:430",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:438",
+      "code": "E0382",
+      "msg": "use of moved value: `values`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:439",
+      "code": "E0382",
+      "msg": "use of moved value: `values`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:448",
+      "code": "E0382",
+      "msg": "use of moved value: `base`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:450",
+      "code": "E0382",
+      "msg": "use of moved value: `cache`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:450",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:451",
+      "code": "E0382",
+      "msg": "use of moved value: `cache`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:452",
+      "code": "E0382",
+      "msg": "use of moved value: `cache`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:452",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:462",
+      "code": "E0382",
+      "msg": "use of moved value: `cache`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:462",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:463",
+      "code": "E0382",
+      "msg": "use of moved value: `base`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:463",
+      "code": "E0382",
+      "msg": "use of moved value: `cache`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:464",
+      "code": "E0382",
+      "msg": "use of moved value: `cache`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:464",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:466",
+      "code": "E0382",
+      "msg": "use of moved value: `after`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:466",
+      "code": "E0382",
+      "msg": "use of moved value: `before`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:496",
+      "code": "E0382",
+      "msg": "use of moved value: `cache`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:496",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:497",
+      "code": "E0382",
+      "msg": "use of moved value: `base`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:497",
+      "code": "E0382",
+      "msg": "use of moved value: `cache`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:498",
+      "code": "E0382",
+      "msg": "use of moved value: `cache`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:498",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:500",
+      "code": "E0382",
+      "msg": "use of moved value: `after`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:500",
+      "code": "E0382",
+      "msg": "use of moved value: `before`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:511",
+      "code": "E0382",
+      "msg": "use of moved value: `a`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:518",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:519",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:519",
+      "code": "E0382",
+      "msg": "use of moved value: `p2`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:519",
+      "code": "E0382",
+      "msg": "use of moved value: `p1`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:526",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:541",
+      "code": "E0382",
+      "msg": "use of moved value: `cache`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:542",
+      "code": "E0382",
+      "msg": "use of moved value: `cache`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:543",
+      "code": "E0382",
+      "msg": "use of moved value: `cache`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:544",
+      "code": "E0382",
+      "msg": "use of moved value: `cache`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12289",
+      "code": "E0382",
+      "msg": "use of moved value: `envelope`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12336",
+      "code": "E0382",
+      "msg": "use of moved value: `resolver`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12339",
+      "code": "E0382",
+      "msg": "use of moved value: `resolver`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12342",
+      "code": "E0382",
+      "msg": "use of moved value: `resolver`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:11422",
+      "code": "E0382",
+      "msg": "use of moved value: `fatal`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:11423",
+      "code": "E0382",
+      "msg": "use of moved value: `clean`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12368",
+      "code": "E0382",
+      "msg": "use of moved value: `graph`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12370",
+      "code": "E0382",
+      "msg": "use of moved value: `graph`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12373",
+      "code": "E0382",
+      "msg": "use of moved value: `graph`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12374",
+      "code": "E0382",
+      "msg": "use of moved value: `graph`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12375",
+      "code": "E0382",
+      "msg": "use of moved value: `graph`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12378",
+      "code": "E0382",
+      "msg": "use of moved value: `graph`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12379",
+      "code": "E0382",
+      "msg": "use of moved value: `graph`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12380",
+      "code": "E0382",
+      "msg": "use of moved value: `graph`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12381",
+      "code": "E0382",
+      "msg": "use of moved value: `graph`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:11548",
+      "code": "E0382",
+      "msg": "use of moved value: `messages`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:11549",
+      "code": "E0382",
+      "msg": "use of moved value: `messages`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:11550",
+      "code": "E0382",
+      "msg": "use of moved value: `messages`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12408",
+      "code": "E0382",
+      "msg": "use of moved value: `fingerprint_replica_1`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12408",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12409",
+      "code": "E0382",
+      "msg": "use of moved value: `fingerprint_replica_2`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12409",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12412",
+      "code": "E0382",
+      "msg": "use of moved value: `fingerprint_replica_1`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12412",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12413",
+      "code": "E0382",
+      "msg": "use of moved value: `id_replica_1`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12415",
+      "code": "E0382",
+      "msg": "use of moved value: `fingerprint_replica_1`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12415",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12416",
+      "code": "E0382",
+      "msg": "use of moved value: `id_replica_1`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:768",
+      "code": "E0382",
+      "msg": "use of moved value: `value`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12583",
+      "code": "E0382",
+      "msg": "use of moved value: `coordinator_1`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12615",
+      "code": "E0382",
+      "msg": "use of moved value: `report`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12616",
+      "code": "E0382",
+      "msg": "use of moved value: `report`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12617",
+      "code": "E0382",
+      "msg": "use of moved value: `report`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:9460",
+      "code": "E0382",
+      "msg": "use of moved value: `b`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:9461",
+      "code": "E0382",
+      "msg": "use of moved value: `a`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:10427",
+      "code": "E0382",
+      "msg": "use of moved value: `first`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:10429",
+      "code": "E0382",
+      "msg": "use of moved value: `first`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:10430",
+      "code": "E0382",
+      "msg": "use of moved value: `first`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:10437",
+      "code": "E0382",
+      "msg": "use of moved value: `first`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12646",
+      "code": "E0382",
+      "msg": "use of moved value: `report`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12647",
+      "code": "E0382",
+      "msg": "use of moved value: `report`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:12648",
+      "code": "E0382",
+      "msg": "use of moved value: `report`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:10249",
+      "code": "E0382",
+      "msg": "use of moved value: `columns`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:10250",
+      "code": "E0382",
+      "msg": "use of moved value: `columns`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:10251",
+      "code": "E0382",
+      "msg": "use of moved value: `columns`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:10252",
+      "code": "E0382",
+      "msg": "use of moved value: `columns`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:10253",
+      "code": "E0382",
+      "msg": "use of moved value: `columns`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:9580",
+      "code": "E0502",
+      "msg": "cannot borrow `target` as mutable because it is also borrowed as immutable"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:10299",
+      "code": "E0382",
+      "msg": "use of moved value: `envelope`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:10476",
+      "code": "E0502",
+      "msg": "cannot borrow `store` as mutable because it is also borrowed as immutable"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:10480",
+      "code": "E0502",
+      "msg": "cannot borrow `store` as mutable because it is also borrowed as immutable"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:10484",
+      "code": "E0502",
+      "msg": "cannot borrow `store` as mutable because it is also borrowed as immutable"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:10488",
+      "code": "E0502",
+      "msg": "cannot borrow `store` as mutable because it is also borrowed as immutable"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:10495",
+      "code": "E0502",
+      "msg": "cannot borrow `store` as mutable because it is also borrowed as immutable"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:10501",
+      "code": "E0502",
+      "msg": "cannot borrow `store` as mutable because it is also borrowed as immutable"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:9298",
+      "code": "E0382",
+      "msg": "use of moved value: `valid`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:9309",
+      "code": "E0382",
+      "msg": "use of moved value: `accepted`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:9311",
+      "code": "E0382",
+      "msg": "use of moved value: `accepted`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:9312",
+      "code": "E0382",
+      "msg": "use of moved value: `conflict`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:10511",
+      "code": "E0502",
+      "msg": "cannot borrow `store` as mutable because it is also borrowed as immutable"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:10515",
+      "code": "E0502",
+      "msg": "cannot borrow `store` as mutable because it is also borrowed as immutable"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:10519",
+      "code": "E0502",
+      "msg": "cannot borrow `store` as mutable because it is also borrowed as immutable"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:10524",
+      "code": "E0502",
+      "msg": "cannot borrow `store` as mutable because it is also borrowed as immutable"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:10529",
+      "code": "E0502",
+      "msg": "cannot borrow `store` as mutable because it is also borrowed as immutable"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:10554",
+      "code": "E0502",
+      "msg": "cannot borrow `store` as mutable because it is also borrowed as immutable"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:10601",
+      "code": "E0382",
+      "msg": "use of moved value: `inbound`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:10630",
+      "code": "E0382",
+      "msg": "use of moved value: `foreign`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/📇️directory/🔌️client/🦀️component.rs:747",
+      "code": "E0382",
+      "msg": "use of moved value: `client`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/📇️directory/🦀️component.rs:167",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/📇️directory/🦀️component.rs:170",
+      "code": "E0382",
+      "msg": "use of moved value: `model`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/📇️directory/🦀️component.rs:171",
+      "code": "E0382",
+      "msg": "use of moved value: `model`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/📇️directory/🦀️component.rs:173",
+      "code": "E0382",
+      "msg": "use of moved value: `model`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/📇️directory/🦀️component.rs:173",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/📇️directory/🦀️component.rs:190",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/📇️directory/🦀️component.rs:191",
+      "code": "E0382",
+      "msg": "use of moved value: `events`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/📇️directory/🦀️component.rs:191",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/📇️directory/🦀️component.rs:192",
+      "code": "E0382",
+      "msg": "use of moved value: `once`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/📇️directory/🔌️client/🦀️component.rs:774",
+      "code": "E0382",
+      "msg": "use of moved value: `client`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/📇️directory/🔌️client/🦀️component.rs:774",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/📇️directory/🔌️client/🦀️component.rs:777",
+      "code": "E0382",
+      "msg": "use of moved value: `stream`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/📇️directory/🔌️client/🦀️component.rs:781",
+      "code": "E0382",
+      "msg": "use of moved value: `stream`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/📇️directory/🔌️client/🦀️component.rs:783",
+      "code": "E0382",
+      "msg": "use of moved value: `stream`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/📇️directory/🔌️client/🦀️component.rs:788",
+      "code": "E0382",
+      "msg": "use of moved value: `stream`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/📇️directory/🔌️client/🦀️component.rs:810",
+      "code": "E0382",
+      "msg": "use of moved value: `ctx`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/📇️directory/🔌️client/🦀️component.rs:829",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/📇️directory/🔌️client/🦀️component.rs:829",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/📇️directory/🔌️client/🦀️component.rs:830",
+      "code": "E0382",
+      "msg": "use of moved value: `ctx`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/📇️directory/🔌️client/🦀️component.rs:845",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/📇️directory/🔌️client/🦀️component.rs:849",
+      "code": "E0382",
+      "msg": "use of moved value: `ctx`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/📇️directory/🔌️client/🦀️component.rs:850",
+      "code": "E0382",
+      "msg": "use of moved value: `stream`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🌿️vcs/🦀️component.rs:650",
+      "code": "E0382",
+      "msg": "use of moved value: `id_no_pins`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🌿️vcs/🦀️component.rs:654",
+      "code": "E0382",
+      "msg": "use of moved value: `id_with_pins`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🌿️vcs/🦀️component.rs:659",
+      "code": "E0382",
+      "msg": "use of moved value: `id_with_pins`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🌿️vcs/🦀️component.rs:515",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🌿️vcs/🦀️component.rs:517",
+      "code": "E0382",
+      "msg": "use of moved value: `added`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🌿️vcs/🦀️component.rs:517",
+      "code": "E0382",
+      "msg": "use of moved value: `added`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🌿️vcs/🦀️component.rs:519",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🌿️vcs/🦀️component.rs:522",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🌿️vcs/🦀️component.rs:524",
+      "code": "E0382",
+      "msg": "use of moved value: `patched`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🌿️vcs/🦀️component.rs:526",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🌿️vcs/🦀️component.rs:528",
+      "code": "E0382",
+      "msg": "use of moved value: `moved`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🌿️vcs/🦀️component.rs:529",
+      "code": "E0382",
+      "msg": "use of moved value: `moved`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:1511",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:1511",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:1474",
+      "code": "E0382",
+      "msg": "use of moved value: `conflict`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:1519",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:1519",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:1533",
+      "code": "E0382",
+      "msg": "use of moved value: `a`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:1534",
+      "code": "E0382",
+      "msg": "use of moved value: `a`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:1503",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:1503",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:1337",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:1352",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:1065",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:1071",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:1071",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:1362",
+      "code": "E0382",
+      "msg": "use of moved value: `conflict`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:911",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:913",
+      "code": "E0382",
+      "msg": "use of moved value: `log`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:914",
+      "code": "E0382",
+      "msg": "use of moved value: `log`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:1387",
+      "code": "E0382",
+      "msg": "use of moved value: `conflict`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:921",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:1404",
+      "code": "E0382",
+      "msg": "use of moved value: `conflict`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/💎️materialize/🦀️component.rs:552",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/💎️materialize/🦀️component.rs:554",
+      "code": "E0382",
+      "msg": "use of moved value: `record`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:936",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:938",
+      "code": "E0382",
+      "msg": "use of moved value: `envelopes`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:939",
+      "code": "E0382",
+      "msg": "use of moved value: `envelopes`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/💎️materialize/🦀️component.rs:560",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/💎️materialize/🦀️component.rs:563",
+      "code": "E0382",
+      "msg": "use of moved value: `record`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/💎️materialize/🦀️component.rs:568",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/💎️materialize/🦀️component.rs:570",
+      "code": "E0382",
+      "msg": "use of moved value: `bytes`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:992",
+      "code": "E0382",
+      "msg": "use of moved value: `zero_op_profile`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:1024",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:1024",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:1030",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:1030",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:1036",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:1036",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:1043",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:1043",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:1053",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/💎️materialize/🦀️component.rs:544",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/💎️materialize/🦀️component.rs:546",
+      "code": "E0382",
+      "msg": "use of moved value: `record`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:1320",
+      "code": "E0382",
+      "msg": "use of moved value: `once`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:1530",
+      "code": "E0382",
+      "msg": "use of moved value: `foreign`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:1531",
+      "code": "E0382",
+      "msg": "use of moved value: `foreign`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:882",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:883",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:890",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:891",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:898",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:900",
+      "code": "E0382",
+      "msg": "use of moved value: `log`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:901",
+      "code": "E0382",
+      "msg": "use of moved value: `log`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧪️testkit/🦀️component.rs:902",
+      "code": "E0382",
+      "msg": "use of moved value: `log`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:1101",
+      "code": "E0382",
+      "msg": "use of moved value: `diff`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:1101",
+      "code": "E0382",
+      "msg": "use of moved value: `diff`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:1114",
+      "code": "E0382",
+      "msg": "use of moved value: `diff`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:1462",
+      "code": "E0382",
+      "msg": "use of moved value: `diff`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:972",
+      "code": "E0382",
+      "msg": "use of moved value: `line`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:1200",
+      "code": "E0382",
+      "msg": "use of moved value: `base`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:1202",
+      "code": "E0382",
+      "msg": "use of moved value: `with_semantics`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:1203",
+      "code": "E0382",
+      "msg": "use of moved value: `with_semantics`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:1204",
+      "code": "E0382",
+      "msg": "use of moved value: `with_semantics`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧵️channel/🦀️component.rs:1372",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧵️channel/🦀️component.rs:1373",
+      "code": "E0382",
+      "msg": "use of moved value: `bytes`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧵️channel/🦀️component.rs:1379",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🧵️channel/🦀️component.rs:1380",
+      "code": "E0382",
+      "msg": "use of moved value: `bytes`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/🧪️testkit/🦀️component.rs:710",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/🧪️testkit/🦀️component.rs:712",
+      "code": "E0382",
+      "msg": "use of moved value: `record`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/🧪️testkit/🦀️component.rs:724",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/🧪️testkit/🦀️component.rs:743",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/🧪️testkit/🦀️component.rs:753",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🦀️component.rs:278",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🦀️component.rs:287",
+      "code": "E0382",
+      "msg": "use of moved value: `bytes`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🦀️component.rs:287",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🦀️component.rs:291",
+      "code": "E0382",
+      "msg": "use of moved value: `bytes`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🦀️component.rs:308",
+      "code": "E0382",
+      "msg": "use of moved value: `bytes`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/🔢️value/🦀️component.rs:1786",
+      "code": "E0382",
+      "msg": "use of moved value: `record`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/🔢️value/🦀️component.rs:1791",
+      "code": "E0382",
+      "msg": "use of moved value: `full`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/🔢️value/🦀️component.rs:1791",
+      "code": "E0382",
+      "msg": "use of moved value: `full`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/🔢️value/🦀️component.rs:1793",
+      "code": "E0382",
+      "msg": "use of moved value: `record`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/🔢️value/🦀️component.rs:1797",
+      "code": "E0382",
+      "msg": "use of moved value: `full`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/🔢️value/🦀️component.rs:1805",
+      "code": "E0382",
+      "msg": "use of moved value: `full`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/🔢️value/🦀️component.rs:1806",
+      "code": "E0382",
+      "msg": "use of moved value: `full`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🦀️component.rs:314",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:2966",
+      "code": "E0382",
+      "msg": "use of moved value: `spec`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🦀️component.rs:338",
+      "code": "E0382",
+      "msg": "use of moved value: `bytes`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🦀️component.rs:338",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🦀️component.rs:340",
+      "code": "E0382",
+      "msg": "use of moved value: `reverse`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:3000",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:3001",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:3003",
+      "code": "E0382",
+      "msg": "use of moved value: `service`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:3004",
+      "code": "E0382",
+      "msg": "use of moved value: `service`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:3033",
+      "code": "E0382",
+      "msg": "use of moved value: `spec`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/🧪️testkit/🦀️component.rs:658",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:2554",
+      "code": "E0382",
+      "msg": "use of moved value: `spec`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:2557",
+      "code": "E0382",
+      "msg": "use of moved value: `spec`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:2439",
+      "code": "E0382",
+      "msg": "use of moved value: `spec`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/🧪️testkit/🦀️component.rs:668",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:2497",
+      "code": "E0382",
+      "msg": "use of moved value: `spec`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:2498",
+      "code": "E0382",
+      "msg": "use of moved value: `spec`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:2581",
+      "code": "E0382",
+      "msg": "use of moved value: `spec`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:2890",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:2890",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:2913",
+      "code": "E0382",
+      "msg": "use of moved value: `spec`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:2915",
+      "code": "E0382",
+      "msg": "use of moved value: `spec`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:2513",
+      "code": "E0382",
+      "msg": "use of moved value: `spec`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:2621",
+      "code": "E0382",
+      "msg": "use of moved value: `spec`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:2622",
+      "code": "E0382",
+      "msg": "use of moved value: `spec`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:2623",
+      "code": "E0382",
+      "msg": "use of moved value: `spec`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:2948",
+      "code": "E0382",
+      "msg": "use of moved value: `spec`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:2950",
+      "code": "E0382",
+      "msg": "use of moved value: `spec`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:2538",
+      "code": "E0382",
+      "msg": "use of moved value: `spec`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:2647",
+      "code": "E0382",
+      "msg": "use of moved value: `spec`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:2647",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:2655",
+      "code": "E0382",
+      "msg": "use of moved value: `spec`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:2687",
+      "code": "E0382",
+      "msg": "use of moved value: `spec`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:2688",
+      "code": "E0382",
+      "msg": "use of moved value: `spec`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:2689",
+      "code": "E0382",
+      "msg": "use of moved value: `spec`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:2702",
+      "code": "E0382",
+      "msg": "use of moved value: `spec`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:2712",
+      "code": "E0382",
+      "msg": "use of moved value: `spec`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:2370",
+      "code": "E0382",
+      "msg": "use of moved value: `spec`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:2371",
+      "code": "E0382",
+      "msg": "use of moved value: `spec`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:2372",
+      "code": "E0382",
+      "msg": "use of moved value: `spec`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/📖️grammar/🦀️component.rs:3227",
+      "code": "E0382",
+      "msg": "use of moved value: `rec`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/📖️grammar/🦀️component.rs:3230",
+      "code": "E0382",
+      "msg": "use of moved value: `rec`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:335",
+      "code": "E0382",
+      "msg": "use of moved value: `ref_schema`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:337",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:339",
+      "code": "E0382",
+      "msg": "use of moved value: `quantity_schema`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/📖️grammar/🦀️component.rs:3374",
+      "code": "E0382",
+      "msg": "use of moved value: `printed`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/📖️grammar/🦀️component.rs:3051",
+      "code": "E0382",
+      "msg": "use of moved value: `rec`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/📖️grammar/🦀️component.rs:3052",
+      "code": "E0382",
+      "msg": "use of moved value: `rec`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:344",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:346",
+      "code": "E0382",
+      "msg": "use of moved value: `schema`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:351",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:353",
+      "code": "E0382",
+      "msg": "use of moved value: `list`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:355",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:357",
+      "code": "E0382",
+      "msg": "use of moved value: `tuple`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/📖️grammar/🦀️component.rs:2870",
+      "code": "E0382",
+      "msg": "use of moved value: `recognizer`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/📖️grammar/🦀️component.rs:2871",
+      "code": "E0382",
+      "msg": "use of moved value: `recognizer`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/📖️grammar/🦀️component.rs:2879",
+      "code": "E0382",
+      "msg": "use of moved value: `recognizer`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/📖️grammar/🦀️component.rs:2880",
+      "code": "E0382",
+      "msg": "use of moved value: `recognizer`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:367",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:369",
+      "code": "E0382",
+      "msg": "use of moved value: `schema`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:370",
+      "code": "E0382",
+      "msg": "use of moved value: `schema`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:371",
+      "code": "E0382",
+      "msg": "use of moved value: `schema`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:372",
+      "code": "E0382",
+      "msg": "use of moved value: `schema`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:383",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:385",
+      "code": "E0382",
+      "msg": "use of moved value: `schema`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:386",
+      "code": "E0382",
+      "msg": "use of moved value: `schema`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:399",
+      "code": "E0382",
+      "msg": "use of moved value: `schema`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/📖️grammar/🦀️component.rs:3512",
+      "code": "E0382",
+      "msg": "use of moved value: `printed`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/📖️grammar/🦀️component.rs:3513",
+      "code": "E0382",
+      "msg": "use of moved value: `printed`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🖋️notation/🦀️component.rs:432",
+      "code": "E0505",
+      "msg": "cannot move out of `value.link` because it is borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🧬️schema/🦀️component.rs:406",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/📖️grammar/🦀️component.rs:3549",
+      "code": "E0382",
+      "msg": "use of moved value: `printed`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/📖️grammar/🦀️component.rs:3144",
+      "code": "E0382",
+      "msg": "use of moved value: `printed`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/📖️grammar/🦀️component.rs:3155",
+      "code": "E0382",
+      "msg": "use of moved value: `rec`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/📖️grammar/🦀️component.rs:3174",
+      "code": "E0382",
+      "msg": "use of moved value: `rec`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/📖️grammar/🦀️component.rs:3189",
+      "code": "E0382",
+      "msg": "use of moved value: `rec`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/././../../🔨️modules/🗣️dsl/👪️family/🗂️catalog/🦀️component.rs:119",
+      "code": "E0505",
+      "msg": "cannot move out of `value.link` because it is borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/././../../🔨️modules/🗣️dsl/👪️family/🕸️graph/🦀️component.rs:194",
+      "code": "E0382",
+      "msg": "use of moved value: `edges`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/././../../🔨️modules/🗣️dsl/👪️family/🕸️graph/🦀️component.rs:195",
+      "code": "E0382",
+      "msg": "use of moved value: `edges`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/📖️grammar/🦀️component.rs:3210",
+      "code": "E0382",
+      "msg": "use of moved value: `rec`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/././../../🔨️modules/🗣️dsl/👪️family/🕸️graph/🦀️component.rs:203",
+      "code": "E0382",
+      "msg": "use of moved value: `edges`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/././../../🔨️modules/🗣️dsl/👪️family/🕸️graph/🦀️component.rs:214",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/././../../🔨️modules/🗣️dsl/👪️family/🕸️graph/🦀️component.rs:216",
+      "code": "E0382",
+      "msg": "use of moved value: `edges`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🔍️lexer/🦀️component.rs:1028",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🔍️lexer/🦀️component.rs:1030",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🔍️lexer/🦀️component.rs:883",
+      "code": "E0716",
+      "msg": "temporary value dropped while borrowed"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🔍️lexer/🦀️component.rs:909",
+      "code": "E0382",
+      "msg": "use of moved value: `classes`"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1580",
+      "code": "E0733",
+      "msg": "recursion in an async fn requires boxing"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1580",
+      "code": "E0733",
+      "msg": "recursion in an async fn requires boxing"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1064",
+      "code": "E0733",
+      "msg": "recursion in an async fn requires boxing"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:3791",
+      "code": "E0733",
+      "msg": "recursion in an async fn requires boxing"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:3998",
+      "code": "E0733",
+      "msg": "recursion in an async fn requires boxing"
+    },
+    {
+      "at": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:1064",
+      "code": "E0733",
+      "msg": "recursion in an async fn requires boxing"
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "surface": "conformance.component.state-with-menu",
+  "revision": 0,
+  "root": 0,
+  "nodes": [
+    {
+      "id": 0,
+      "key": "#0",
+      "component": {
+        "type": "treeItem",
+        "label": "Row with menu"
+      },
+      "layout": {
+        "kind": "stack",
+        "axis": "vertical",
+        "gap": "none",
+        "padding": {
+          "all": "none"
+        },
+        "align": "stretch",
+        "justify": "start",
+        "grow": false,
+        "wrap": false
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {
+        "label": "Row with menu"
+      },
+      "menu": {
+        "id": "context.tree-item",
+        "args": {
+          "row": 1
+        }
+      }
+    }
+  ],
+  "layoutEpoch": 0
+}

@@ -71,8 +71,8 @@ pub(crate) async fn raw(context: &GltfGeometryContext<'_>) -> GltfSymmetryRaw {
     let score = |axis: GltfVec3, rotation| symmetry_score(&context.points, context.centroid, axis.array(), context.diagonal, rotation, context.policy.sampling_budget as usize);
     let axes = &context.principal_frame.axes;
     GltfSymmetryRaw {
-        reflection_score: score(axes[0], false),
-        rotation_score: score(axes[0], true),
+        reflection_score: score(axes[0], false).await,
+        rotation_score: score(axes[0], true).await,
         reflections: axes.iter().map(|axis| GltfDirectionScore { direction: *axis, score: score(*axis, false), order: None }).collect(),
         rotations: axes.iter().map(|axis| GltfDirectionScore { direction: *axis, score: score(*axis, true), order: Some(2) }).collect(),
     }
@@ -108,10 +108,10 @@ pub(crate) async fn assembly_ratios(parts: &[GltfPartInference], policy: &GltfAn
 
 impl GltfSymmetryInference {
     pub(crate) async fn infer_assembly(indicators: &mut GltfSymmetryIndicators, parts: &[GltfPartInference], policy: &GltfAnalysisPolicy, topology: Topology) {
-        if let Some(measure) = repetition_ratio::from_assembly(parts, policy, topology) {
+        if let Some(measure) = repetition_ratio::from_assembly(parts, policy, topology).await {
             indicators.repetition_ratio = measure;
         }
-        if let Some(measure) = modularity_ratio::from_assembly(parts, policy, topology) {
+        if let Some(measure) = modularity_ratio::from_assembly(parts, policy, topology).await {
             indicators.modularity_ratio = measure;
         }
     }
@@ -123,23 +123,23 @@ impl GltfInferenceStage<GltfGeometryContext<'_>> for GltfSymmetryInference {
     async fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
         let raw = raw(context);
         Self::Output {
-            reflection_symmetry_score: reflection_symmetry_score::from_raw(context, &raw),
-            rotational_symmetry_score: rotational_symmetry_score::from_raw(context, &raw),
-            reflection_symmetries: reflection_symmetries::from_raw(context, &raw),
-            rotational_symmetries: rotational_symmetries::from_raw(context, &raw),
-            repetition_ratio: repetition_ratio::infer(context),
-            modularity_ratio: modularity_ratio::infer(context),
+            reflection_symmetry_score: reflection_symmetry_score::from_raw(context, &raw).await,
+            rotational_symmetry_score: rotational_symmetry_score::from_raw(context, &raw).await,
+            reflection_symmetries: reflection_symmetries::from_raw(context, &raw).await,
+            rotational_symmetries: rotational_symmetries::from_raw(context, &raw).await,
+            repetition_ratio: repetition_ratio::infer(context).await,
+            modularity_ratio: modularity_ratio::infer(context).await,
         }
     }
 
     async fn unavailable(diagnostic_ids: &[String]) -> Self::Output {
         Self::Output {
-            reflection_symmetry_score: reflection_symmetry_score::unavailable_measure(diagnostic_ids),
-            rotational_symmetry_score: rotational_symmetry_score::unavailable_measure(diagnostic_ids),
-            reflection_symmetries: reflection_symmetries::unavailable_measure(diagnostic_ids),
-            rotational_symmetries: rotational_symmetries::unavailable_measure(diagnostic_ids),
-            repetition_ratio: repetition_ratio::unavailable_measure(diagnostic_ids),
-            modularity_ratio: modularity_ratio::unavailable_measure(diagnostic_ids),
+            reflection_symmetry_score: reflection_symmetry_score::unavailable_measure(diagnostic_ids).await,
+            rotational_symmetry_score: rotational_symmetry_score::unavailable_measure(diagnostic_ids).await,
+            reflection_symmetries: reflection_symmetries::unavailable_measure(diagnostic_ids).await,
+            rotational_symmetries: rotational_symmetries::unavailable_measure(diagnostic_ids).await,
+            repetition_ratio: repetition_ratio::unavailable_measure(diagnostic_ids).await,
+            modularity_ratio: modularity_ratio::unavailable_measure(diagnostic_ids).await,
         }
     }
 }

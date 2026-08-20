@@ -11,9 +11,9 @@ pub async fn register() {}
 /// what `parse_gltf_document` (glTF's own real `.gltf` JSON text codec) expects — no
 /// `serde_json::Value` anywhere on this transfer path anymore.
 pub async fn deserialize(from: &JsonSnapshot) -> Result<GltfSnapshot, store::TextError> {
-    let text = crate::artifacts::json::schema::snapshot::write_json_text(&from.value);
-    crate::artifacts::gltf::engine::parse_gltf_document(text.as_bytes()).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+    let text = crate::artifacts::json::schema::snapshot::write_json_text(&from.value).await;
+    crate::artifacts::gltf::engine::parse_gltf_document(text.as_bytes()).await.map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
 }
 pub async fn deserialize_text(text: &str) -> Result<GltfSnapshot, store::TextError> {
-    deserialize(&<JsonSnapshot as store::ArtifactDsl>::parse_dsl(text)?)
+    deserialize(&<JsonSnapshot as store::ArtifactDsl>::parse_dsl(text).await?).await
 }

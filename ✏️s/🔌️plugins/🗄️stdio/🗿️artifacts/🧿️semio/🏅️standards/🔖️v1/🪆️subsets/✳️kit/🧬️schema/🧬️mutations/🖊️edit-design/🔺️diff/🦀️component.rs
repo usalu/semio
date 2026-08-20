@@ -11,16 +11,16 @@ pub async fn diff(payload: &EditDesign, base: &SemioKitSnapshot) -> protocol::Mu
             "mutation.target-missing",
             format!("Design \"{}\" does not exist.", payload.id),
             [payload.id.clone()],
-        );
+        ).await;
     };
     if existing.pieces == payload.pieces && existing.connections == payload.connections {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Design \"{}\" already has that content.", payload.id));
+        return protocol::MutationOutcome::empty().await.warn("mutation.no-op", format!("Design \"{}\" already has that content.", payload.id)).await;
     }
     let mut designs = base.designs.clone();
     if let Some(d) = designs.iter_mut().find(|d| d.id == payload.id) {
         d.pieces = payload.pieces.clone();
         d.connections = payload.connections.clone();
     }
-    protocol::MutationOutcome::new(SemioKitDiff { designs: Some(SemioKitDesignList { values: designs }), ..Default::default() })
+    protocol::MutationOutcome::new(SemioKitDiff { designs: Some(SemioKitDesignList { values: designs }), ..Default::default() }).await
 }
 //#endregion 🔖️Diff

@@ -30,11 +30,11 @@ impl Mutation<WavSnapshot> for WavMutation {
     async fn diff(&self, base: &WavSnapshot) -> protocol::MutationOutcome<Self::Diff> {
         protocol::MutationOutcome::new(match self {
             WavMutation::NoMutation => WavDiff::default(),
-            WavMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot),
-            WavMutation::SetFmt { fmt } => diff_set_fmt(fmt.clone()),
-            WavMutation::SetData { data } => diff_set_data(data.clone()),
-            WavMutation::SetOtherChunks { chunks } => diff_set_other_chunks(chunks.clone()),
-        })
+            WavMutation::SetSnapshot { snapshot } => diff_set_snapshot(base, snapshot).await,
+            WavMutation::SetFmt { fmt } => diff_set_fmt(fmt.clone()).await,
+            WavMutation::SetData { data } => diff_set_data(data.clone()).await,
+            WavMutation::SetOtherChunks { chunks } => diff_set_other_chunks(chunks.clone()).await,
+        }).await
     }
 
     async fn inverse(&self, base: &WavSnapshot) -> Vec<Self> {
@@ -51,13 +51,13 @@ impl Mutation<WavSnapshot> for WavMutation {
 /// ▶️ Applies a mutation to `snapshot` in place, returning the diff (the diff is the single
 /// semantics source — never apply-and-capture).
 pub async fn apply_wav_mutation(snapshot: &mut WavSnapshot, mutation: &WavMutation) -> protocol::MutationOutcome<WavDiff> {
-    let outcome = <WavMutation as Mutation<WavSnapshot>>::diff(mutation, snapshot);
-    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
+    let outcome = <WavMutation as Mutation<WavSnapshot>>::diff(mutation, snapshot).await;
+    match protocol::MutationDiff::apply(outcome.diff().await, snapshot).await {
         Ok(next) => {
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).await.absorb_messages(outcome.messages().await.to_vec()).await,
     }
 }
 //#endregion 🔖️Mutation

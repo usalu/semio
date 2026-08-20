@@ -1,0 +1,22 @@
+[package]
+name = "semio-framework-ui-runtime"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Headless UI runtime: typed entities with mutation leasing, actual-read dependency tracking, and keyed reconciliation into transactional UiPatch revisions"
+
+[package.metadata.semio]
+role = "framework"
+id = "ui-runtime"
+
+[lints]
+workspace = true
+
+[lib]
+path = "📦️glue.rs"
+
+[dependencies]
+ui_contract = { path = "../../../🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
+
+[dev-dependencies]
+serde_json = { version = "1.0.140" }

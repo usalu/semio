@@ -67,7 +67,7 @@ async fn opc_escape_text(value: &str) -> String {
 }
 
 async fn opc_escape_attr(value: &str) -> String {
-    opc_escape_text(value).replace('"', "&quot;").replace('\t', "&#x9;").replace('\n', "&#xA;").replace('\r', "&#xD;")
+    opc_escape_text(value).await.replace('"', "&quot;").replace('\t', "&#x9;").replace('\n', "&#xA;").replace('\r', "&#xD;")
 }
 
 async fn opc_node_to_text(node: &XmlNode, out: &mut String) {
@@ -120,7 +120,7 @@ async fn opc_node_to_text(node: &XmlNode, out: &mut String) {
 /// 📝️ Deterministically materializes logical OPC XML using the compact ECMA-376 convention.
 pub async fn xml_document_to_opc_text(doc: &XmlDocument) -> String {
     if doc.doctype.is_some() {
-        return xml_document_to_text(doc);
+        return xml_document_to_text(doc).await;
     }
     let mut out = String::new();
     if let Some(declaration) = &doc.declaration {
@@ -209,14 +209,14 @@ impl OpcContentTypes {
     async fn to_xml(&self) -> XmlDocument {
         let mut children = Vec::with_capacity(self.defaults.len() + self.overrides.len());
         for (ext, ct) in &self.defaults {
-            children.push(xml_elem("Default", vec![xml_attr("Extension", ext), xml_attr("ContentType", ct)], vec![]));
+            children.push(xml_elem("Default", vec![xml_attr("Extension", ext).await, xml_attr("ContentType", ct).await], vec![]));
         }
         for (part, ct) in &self.overrides {
-            children.push(xml_elem("Override", vec![xml_attr("PartName", part), xml_attr("ContentType", ct)], vec![]));
+            children.push(xml_elem("Override", vec![xml_attr("PartName", part).await, xml_attr("ContentType", ct).await], vec![]));
         }
         XmlDocument {
             prolog: Vec::new(),
-            root: Some(xml_elem("Types", vec![xml_attr("xmlns", CONTENT_TYPES_NS)], children)),
+            root: Some(xml_elem("Types", vec![xml_attr("xmlns", CONTENT_TYPES_NS).await], children).await),
             doctype: None,
             declaration: Some(crate::artifacts::xml::schema::snapshot::XmlDeclaration { version: "1.0".into(), encoding: Some("UTF-8".into()), standalone: Some(true) }),
         }
@@ -235,13 +235,13 @@ impl OpcContentTypes {
             let XmlNode::Element { name, attrs, .. } = child else { continue };
             match name.as_str() {
                 "Default" => {
-                    let ext = find_attr(attrs, "Extension").ok_or_else(|| OpcError::MalformedContentTypes("<Default> missing Extension".into()))?;
-                    let ct = find_attr(attrs, "ContentType").ok_or_else(|| OpcError::MalformedContentTypes("<Default> missing ContentType".into()))?;
+                    let ext = find_attr(attrs, "Extension").await.ok_or_else(|| OpcError::MalformedContentTypes("<Default> missing Extension".into()))?;
+                    let ct = find_attr(attrs, "ContentType").await.ok_or_else(|| OpcError::MalformedContentTypes("<Default> missing ContentType".into()))?;
                     out.defaults.push((ext.to_ascii_lowercase(), ct.to_string()));
                 }
                 "Override" => {
-                    let part = find_attr(attrs, "PartName").ok_or_else(|| OpcError::MalformedContentTypes("<Override> missing PartName".into()))?;
-                    let ct = find_attr(attrs, "ContentType").ok_or_else(|| OpcError::MalformedContentTypes("<Override> missing ContentType".into()))?;
+                    let part = find_attr(attrs, "PartName").await.ok_or_else(|| OpcError::MalformedContentTypes("<Override> missing PartName".into()))?;
+                    let ct = find_attr(attrs, "ContentType").await.ok_or_else(|| OpcError::MalformedContentTypes("<Override> missing ContentType".into()))?;
                     out.overrides.push((part.to_string(), ct.to_string()));
                 }
                 _ => {}
@@ -310,7 +310,7 @@ pub async fn resolve_relationship_target(owner: &str, target: &str) -> String {
         Some(slash) => &owner[..=slash],
         None => "",
     };
-    normalize_path(&format!("{base_dir}{target}"))
+    normalize_path(&format!("{base_dir}{target}")).await
 }
 
 /// 🧹️ Collapses `./` and `../` segments in a `/`-joined path (no filesystem access — pure
@@ -342,7 +342,7 @@ async fn relationships_to_xml(rels: &[OpcRelationship]) -> XmlDocument {
         .collect();
     XmlDocument {
         prolog: Vec::new(),
-        root: Some(xml_elem("Relationships", vec![xml_attr("xmlns", RELATIONSHIPS_NS)], children)),
+        root: Some(xml_elem("Relationships", vec![xml_attr("xmlns", RELATIONSHIPS_NS).await], children).await),
         doctype: None,
         declaration: Some(crate::artifacts::xml::schema::snapshot::XmlDeclaration { version: "1.0".into(), encoding: Some("UTF-8".into()), standalone: Some(true) }),
     }
@@ -360,10 +360,10 @@ async fn relationships_from_xml(doc: &XmlDocument, part: &str) -> Result<Vec<Opc
         if name != "Relationship" {
             continue;
         }
-        let id = find_attr(attrs, "Id").ok_or_else(|| malformed("<Relationship> missing Id".into()))?.to_string();
-        let rel_type = find_attr(attrs, "Type").ok_or_else(|| malformed("<Relationship> missing Type".into()))?.to_string();
-        let target = find_attr(attrs, "Target").ok_or_else(|| malformed("<Relationship> missing Target".into()))?.to_string();
-        let target_mode = match find_attr(attrs, "TargetMode") {
+        let id = find_attr(attrs, "Id").await.ok_or_else(|| malformed("<Relationship> missing Id".into()))?.to_string();
+        let rel_type = find_attr(attrs, "Type").await.ok_or_else(|| malformed("<Relationship> missing Type".into()))?.to_string();
+        let target = find_attr(attrs, "Target").await.ok_or_else(|| malformed("<Relationship> missing Target".into()))?.to_string();
+        let target_mode = match find_attr(attrs, "TargetMode").await {
             Some("External") => OpcTargetMode::External,
             _ => OpcTargetMode::Internal,
         };
@@ -405,7 +405,7 @@ impl OpcPackage {
     }
 
     pub async fn part_bytes(&self, path: &str) -> Option<&[u8]> {
-        self.part(path).map(|p| p.bytes.as_slice())
+        self.part(path).await.map(|p| p.bytes.as_slice())
     }
 
     /// ✍️ Inserts or replaces a content part, keeping its `[Content_Types].xml` `Override` in
@@ -433,8 +433,8 @@ impl OpcPackage {
     /// 🔎️ Follows a single relationship of `rel_type` owned by `owner`, resolving its target to
     /// an absolute part path. `None` when no such relationship exists.
     pub async fn resolve_relationship(&self, owner: &str, rel_type: &str) -> Option<String> {
-        let rel = self.relationships_for(owner).iter().find(|r| r.rel_type == rel_type)?;
-        Some(resolve_relationship_target(owner, &rel.target))
+        let rel = self.relationships_for(owner).await.iter().find(|r| r.rel_type == rel_type)?;
+        Some(resolve_relationship_target(owner, &rel.target).await)
     }
 }
 
@@ -442,12 +442,12 @@ impl OpcPackage {
 /// Every zip entry becomes exactly one of: the typed `content_types` table, a typed
 /// relationship list, or a verbatim content `OpcPart` — never dropped, never fabricated.
 pub async fn decode_opc(data: &[u8]) -> Result<OpcPackage, OpcError> {
-    let zip = crate::artifacts::zip::standards::v2_0::subsets::any::io::decode_zip(data).map_err(|e| OpcError::Zip(e.to_string()))?;
+    let zip = crate::artifacts::zip::standards::v2_0::subsets::any::io::decode_zip(data).await.map_err(|e| OpcError::Zip(e.to_string()))?;
 
     let ct_entry = zip.entries.iter().find(|e| e.name == CONTENT_TYPES_PART).ok_or(OpcError::MissingContentTypes)?;
     let ct_text = String::from_utf8(ct_entry.data.clone()).map_err(|_| OpcError::MalformedContentTypes("not valid utf-8".into()))?;
-    let ct_doc = xml_document_from_text(&ct_text).map_err(|e| OpcError::Xml { part: CONTENT_TYPES_PART.into(), detail: e })?;
-    let content_types = OpcContentTypes::from_xml(&ct_doc)?;
+    let ct_doc = xml_document_from_text(&ct_text).await.map_err(|e| OpcError::Xml { part: CONTENT_TYPES_PART.into(), detail: e })?;
+    let content_types = OpcContentTypes::from_xml(&ct_doc).await?;
 
     let mut parts = Vec::new();
     let mut relationships: HashMap<String, Vec<OpcRelationship>> = HashMap::new();
@@ -458,13 +458,13 @@ pub async fn decode_opc(data: &[u8]) -> Result<OpcPackage, OpcError> {
         }
         if entry.name.ends_with(".rels") {
             let text = String::from_utf8(entry.data.clone()).map_err(|_| OpcError::MalformedRelationships { part: entry.name.clone(), detail: "not valid utf-8".into() })?;
-            let doc = xml_document_from_text(&text).map_err(|e| OpcError::Xml { part: entry.name.clone(), detail: e })?;
-            let rels = relationships_from_xml(&doc, &entry.name)?;
-            let owner = owner_for_rels_path(&entry.name).ok_or_else(|| OpcError::Malformed(format!("relationship part at unexpected path: {}", entry.name)))?;
+            let doc = xml_document_from_text(&text).await.map_err(|e| OpcError::Xml { part: entry.name.clone(), detail: e })?;
+            let rels = relationships_from_xml(&doc, &entry.name).await?;
+            let owner = owner_for_rels_path(&entry.name).await.ok_or_else(|| OpcError::Malformed(format!("relationship part at unexpected path: {}", entry.name)))?;
             relationships.insert(owner, rels);
             continue;
         }
-        let content_type = content_types.resolve(&entry.name).ok_or_else(|| OpcError::Malformed(format!("part {} has no resolvable content type", entry.name)))?.to_string();
+        let content_type = content_types.resolve(&entry.name).await.ok_or_else(|| OpcError::Malformed(format!("part {} has no resolvable content type", entry.name)))?.to_string();
         parts.push(OpcPart { path: entry.name.clone(), content_type, bytes: entry.data.clone() });
     }
 
@@ -484,7 +484,7 @@ pub async fn encode_opc(pkg: &OpcPackage) -> Result<Vec<u8>, OpcError> {
             let content_types = paths.remove(index);
             paths.insert(0, content_types);
         }
-    })
+    }).await
 }
 
 /// 📦️ Re-encode an OPC package with metadata entries first and every remaining entry in the
@@ -516,12 +516,12 @@ pub(crate) async fn encode_opc_with_package_order(pkg: &OpcPackage) -> Result<Ve
         paths.sort();
         ordered.extend(paths.drain(..));
         *paths = ordered;
-    })
+    }).await
 }
 
 pub(crate) async fn encode_opc_with_path_order(pkg: &OpcPackage, order: impl FnOnce(&mut Vec<String>)) -> Result<Vec<u8>, OpcError> {
     let mut payloads = HashMap::<String, Vec<u8>>::new();
-    let ct_text = xml_document_to_opc_text(&pkg.content_types.to_xml());
+    let ct_text = xml_document_to_opc_text(&pkg.content_types.to_xml()).await;
     payloads.insert(CONTENT_TYPES_PART.into(), ct_text.into_bytes());
 
     let mut owners: Vec<&String> = pkg.relationships.keys().collect();
@@ -532,8 +532,8 @@ pub(crate) async fn encode_opc_with_path_order(pkg: &OpcPackage, order: impl FnO
             continue;
         }
         let path = rels_part_path_for(owner);
-        let text = xml_document_to_opc_text(&relationships_to_xml(rels));
-        payloads.insert(path, text.into_bytes());
+        let text = xml_document_to_opc_text(&relationships_to_xml(rels)).await;
+        payloads.insert(path.await, text.into_bytes());
     }
 
     for part in &pkg.parts {
@@ -549,14 +549,14 @@ pub(crate) async fn encode_opc_with_path_order(pkg: &OpcPackage, order: impl FnO
     }
 
     let snap = ZipSnapshot { schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries, comment: pkg.comment.clone() };
-    crate::artifacts::zip::standards::v2_0::subsets::any::io::encode_zip_with_entry_names(&snap, &new_paths).map_err(|e| OpcError::Zip(e.to_string()))
+    crate::artifacts::zip::standards::v2_0::subsets::any::io::encode_zip_with_entry_names(&snap, &new_paths).await.map_err(|e| OpcError::Zip(e.to_string()))
 }
 
 /// 🕵️ Structural sniff of OOXML-shaped bytes: recognizes the zip magic *and* the presence of a
 /// `[Content_Types].xml` entry — real OOXML disambiguation from a plain zip peeks part names
 /// (docx/xlsx/pptx callers inspect `word/`/`xl/`/`ppt/`-prefixed parts on top of this).
 pub async fn sniff_opc_bytes(data: &[u8]) -> bool {
-    let Ok(zip) = crate::artifacts::zip::standards::v2_0::subsets::any::io::decode_zip(data) else { return false };
+    let Ok(zip) = crate::artifacts::zip::standards::v2_0::subsets::any::io::decode_zip(data).await else { return false };
     zip.entries.iter().any(|e| e.name == CONTENT_TYPES_PART)
 }
 //#endregion 🔖️Package

@@ -2323,11 +2323,11 @@ mod tests {
 
         let mut invalid_severity = encoded.clone();
         invalid_severity[0] = 4;
-        assert!(matches!(read_history_message(&mut ByteReader::new(&invalid_severity), &reader).await, Err(ProtocolError::Malformed { .. })));
+        assert!(matches!(read_history_message(&mut ByteReader::new(&invalid_severity).await, &reader).await, Err(ProtocolError::Malformed { .. })));
 
         let mut invalid_presence = encoded;
         *invalid_presence.last_mut().expect("presence byte") = 2;
-        assert!(matches!(read_history_message(&mut ByteReader::new(&invalid_presence), &reader).await, Err(ProtocolError::Malformed { .. })));
+        assert!(matches!(read_history_message(&mut ByteReader::new(&invalid_presence).await, &reader).await, Err(ProtocolError::Malformed { .. })));
 
         let indexed = HistoryMessage { op_index: Some(0), ..message };
         let mut indexed_out = ByteWriter::new().await;
@@ -2335,7 +2335,7 @@ mod tests {
         let mut oversized_index = indexed_out.into_bytes().await;
         oversized_index.pop();
         oversized_index.extend_from_slice(&[0x80, 0x80, 0x80, 0x80, 0x10]);
-        assert!(matches!(read_history_message(&mut ByteReader::new(&oversized_index), &reader).await, Err(ProtocolError::Malformed { .. })));
+        assert!(matches!(read_history_message(&mut ByteReader::new(&oversized_index).await, &reader).await, Err(ProtocolError::Malformed { .. })));
     }
 
     #[semio_framework_async_macros::async_test]

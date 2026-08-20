@@ -28,15 +28,15 @@ impl GltfInferenceStage<GltfGeometryContext<'_>> for GltfProportionInference {
     type Output = GltfProportionIndicators;
 
     async fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
-        Self::Output { aspect_ratios: aspect_ratios::infer(context), slenderness: slenderness::infer(context), flatness: flatness::infer(context), elongation: elongation::infer(context) }
+        Self::Output { aspect_ratios: aspect_ratios::infer(context).await, slenderness: slenderness::infer(context).await, flatness: flatness::infer(context).await, elongation: elongation::infer(context).await }
     }
 
     async fn unavailable(diagnostic_ids: &[String]) -> Self::Output {
         Self::Output {
-            aspect_ratios: aspect_ratios::unavailable_measure(diagnostic_ids),
-            slenderness: slenderness::unavailable_measure(diagnostic_ids),
-            flatness: flatness::unavailable_measure(diagnostic_ids),
-            elongation: elongation::unavailable_measure(diagnostic_ids),
+            aspect_ratios: aspect_ratios::unavailable_measure(diagnostic_ids).await,
+            slenderness: slenderness::unavailable_measure(diagnostic_ids).await,
+            flatness: flatness::unavailable_measure(diagnostic_ids).await,
+            elongation: elongation::unavailable_measure(diagnostic_ids).await,
         }
     }
 }

@@ -24,7 +24,7 @@ pub struct GltfChangeMaterialDoubleSidedPayload {
     pub double_sided: bool,
 }
 pub async fn validate(payload: &GltfChangeMaterialDoubleSidedPayload, base: &GltfSnapshot) -> Result<(), GltfChangeMaterialDoubleSidedRejection> {
-    index(&base.document.materials, payload.material, "document/materials").map_err(failure)?;
+    index(&base.document.materials, payload.material, "document/materials").await.map_err(failure)?;
     (base.document.materials[payload.material].double_sided != payload.double_sided).then_some(()).ok_or_else(|| GltfChangeMaterialDoubleSidedRejection {
         code: "gltf.mutation.no-observable-change".into(),
         path: format!("document/materials/{}/doubleSided", payload.material),
@@ -32,7 +32,7 @@ pub async fn validate(payload: &GltfChangeMaterialDoubleSidedPayload, base: &Glt
     })
 }
 pub async fn apply(snapshot: &mut GltfSnapshot, payload: &GltfChangeMaterialDoubleSidedPayload) -> Result<(), GltfChangeMaterialDoubleSidedRejection> {
-    validate(payload, snapshot)?;
+    validate(payload, snapshot).await?;
     snapshot.document.materials[payload.material].double_sided = payload.double_sided;
     Ok(())
 }

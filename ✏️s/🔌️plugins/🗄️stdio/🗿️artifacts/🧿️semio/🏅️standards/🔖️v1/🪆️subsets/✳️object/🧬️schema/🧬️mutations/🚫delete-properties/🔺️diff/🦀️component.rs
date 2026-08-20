@@ -8,8 +8,8 @@ use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::S
 //#region 🔖️Diff
 pub async fn diff(_payload: &DeleteProperties, base: &SemioObjectSnapshot) -> protocol::MutationOutcome<SemioObjectDiff> {
     if base.properties.is_none() {
-        return protocol::MutationOutcome::error("mutation.target-missing", "The object has no properties to delete.".to_string(), ["properties".to_string()]);
+        return protocol::MutationOutcome::error("mutation.target-missing", "The object has no properties to delete.".to_string(), ["properties".to_string()]).await;
     }
-    protocol::MutationOutcome::new(SemioObjectDiff { properties: Some(None), ..Default::default() })
+    protocol::MutationOutcome::new(SemioObjectDiff { properties: Some(None), ..Default::default() }).await
 }
 //#endregion 🔖️Diff

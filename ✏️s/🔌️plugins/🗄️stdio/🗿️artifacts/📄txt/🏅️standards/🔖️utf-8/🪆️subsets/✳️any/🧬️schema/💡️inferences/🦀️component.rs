@@ -24,7 +24,7 @@ pub struct TxtInference {
 
 impl protocol::Inference<TxtSnapshot> for TxtInference {
     async fn infer(snapshot: &TxtSnapshot) -> Self {
-        Self { outline: TxtOutline::compute(snapshot) }
+        Self { outline: TxtOutline::compute(snapshot).await }
     }
 }
 

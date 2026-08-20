@@ -84,6 +84,9 @@ pub(crate) struct OneshotReceiver<T>(Arc<std::sync::Mutex<OneshotState<T>>>);
 /// "no external libraries for runtime purposes" discipline), so [`run_blocking_op`] hand-rolls the
 /// one primitive it needs — a completion signal from a `HostAsyncRuntime::run_blocking` worker
 /// back to the polling async task — rather than pull in a crate for it.
+// 🚫️async: E1 pure constructor — same hand-rolled-channel shape as `db_actor::oneshot`, called
+// from both async contexts (via `.await` on the surrounding fn) and a sync `Box<dyn FnOnce()>`
+// work closure (`run_blocking_op`, below) — see R9
 pub(crate) fn oneshot<T>() -> (OneshotSender<T>, OneshotReceiver<T>) {
     let state = Arc::new(std::sync::Mutex::new(OneshotState { value: None, waker: None }));
     (OneshotSender(state.clone()), OneshotReceiver(state))
@@ -93,6 +96,7 @@ impl<T> OneshotSender<T> {
     /// @emoji 📮️ Delivers `value` and wakes whatever task is currently polling the paired
     /// [`OneshotReceiver`], if any (a receiver that hasn't polled yet simply finds `value` already
     /// there on its first poll).
+    // 🚫️async: E1 pure accessor, called from a sync `Box<dyn FnOnce()>` work closure — see R9
     pub(crate) fn send(self, value: T) {
         let mut state = self.0.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         state.value = Some(value);
@@ -154,7 +158,7 @@ where
 /// bridge (R2 E5: "at most one per crate"); [`block_on_ready`] is a thin `Result`-shaped wrapper
 /// over it, not a second one.
 #[cfg(test)]
-fn poll_once<T>(fut: impl Future<Output = T>) -> T {
+async fn poll_once<T>(fut: impl Future<Output = T>) -> T {
     let mut fut = std::pin::pin!(fut);
     let waker = std::task::Waker::noop();
     let mut cx = std::task::Context::from_waker(&waker);
@@ -165,8 +169,8 @@ fn poll_once<T>(fut: impl Future<Output = T>) -> T {
 }
 
 #[cfg(test)]
-fn block_on_ready<T>(fut: impl Future<Output = Result<T, DbError>>) -> Result<T, DbError> {
-    poll_once(fut)
+async fn block_on_ready<T>(fut: impl Future<Output = Result<T, DbError>>) -> Result<T, DbError> {
+    poll_once(fut).await
 }
 //#endregion 🔖️BlockingBridge
 
@@ -495,7 +499,10 @@ impl<R: HostAsyncRuntime> DbBackend<R> {
             Self::Postgres(s) => s.capabilities().await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.capabilities().await,
-            Self::Fault(s) => s.capabilities().await,
+            // 🔀️ `FaultStorage::capabilities` calls back through `self.inner: DbBackend<R>`
+            // (`🧪️testkit`), so this arm is mutually recursive with this very fn — `Box::pin`
+            // breaks the otherwise-infinitely-sized future (E0733).
+            Self::Fault(s) => Box::pin(s.capabilities()).await,
         }
     }
 }
@@ -529,7 +536,7 @@ impl<'a, R: HostAsyncRuntime> WalStorage for WalRef<'a, R> {
             Self::Postgres(s) => s.create_segment(document, index).await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.create_segment(document, index).await,
-            Self::Fault(s) => s.create_segment(document, index).await,
+            Self::Fault(s) => Box::pin(s.create_segment(document, index)).await,
         }
     }
 
@@ -544,7 +551,7 @@ impl<'a, R: HostAsyncRuntime> WalStorage for WalRef<'a, R> {
             Self::Postgres(s) => s.append(document, index, bytes).await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.append(document, index, bytes).await,
-            Self::Fault(s) => s.append(document, index, bytes).await,
+            Self::Fault(s) => Box::pin(s.append(document, index, bytes)).await,
         }
     }
 
@@ -559,7 +566,7 @@ impl<'a, R: HostAsyncRuntime> WalStorage for WalRef<'a, R> {
             Self::Postgres(s) => s.sync(document, index, class).await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.sync(document, index, class).await,
-            Self::Fault(s) => s.sync(document, index, class).await,
+            Self::Fault(s) => Box::pin(s.sync(document, index, class)).await,
         }
     }
 
@@ -574,7 +581,7 @@ impl<'a, R: HostAsyncRuntime> WalStorage for WalRef<'a, R> {
             Self::Postgres(s) => s.seal(document, index).await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.seal(document, index).await,
-            Self::Fault(s) => s.seal(document, index).await,
+            Self::Fault(s) => Box::pin(s.seal(document, index)).await,
         }
     }
 
@@ -589,7 +596,7 @@ impl<'a, R: HostAsyncRuntime> WalStorage for WalRef<'a, R> {
             Self::Postgres(s) => s.read(document, index, range).await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.read(document, index, range).await,
-            Self::Fault(s) => s.read(document, index, range).await,
+            Self::Fault(s) => Box::pin(s.read(document, index, range)).await,
         }
     }
 
@@ -604,7 +611,7 @@ impl<'a, R: HostAsyncRuntime> WalStorage for WalRef<'a, R> {
             Self::Postgres(s) => s.segment_len(document, index).await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.segment_len(document, index).await,
-            Self::Fault(s) => s.segment_len(document, index).await,
+            Self::Fault(s) => Box::pin(s.segment_len(document, index)).await,
         }
     }
 
@@ -619,7 +626,7 @@ impl<'a, R: HostAsyncRuntime> WalStorage for WalRef<'a, R> {
             Self::Postgres(s) => s.list_segments(document).await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.list_segments(document).await,
-            Self::Fault(s) => s.list_segments(document).await,
+            Self::Fault(s) => Box::pin(s.list_segments(document)).await,
         }
     }
 
@@ -634,7 +641,7 @@ impl<'a, R: HostAsyncRuntime> WalStorage for WalRef<'a, R> {
             Self::Postgres(s) => s.truncate_tail(document, index, new_len).await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.truncate_tail(document, index, new_len).await,
-            Self::Fault(s) => s.truncate_tail(document, index, new_len).await,
+            Self::Fault(s) => Box::pin(s.truncate_tail(document, index, new_len)).await,
         }
     }
 
@@ -649,7 +656,7 @@ impl<'a, R: HostAsyncRuntime> WalStorage for WalRef<'a, R> {
             Self::Postgres(s) => s.delete_segment(document, index).await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.delete_segment(document, index).await,
-            Self::Fault(s) => s.delete_segment(document, index).await,
+            Self::Fault(s) => Box::pin(s.delete_segment(document, index)).await,
         }
     }
 }
@@ -683,7 +690,7 @@ impl<'a, R: HostAsyncRuntime> SnapshotStorage for SnapshotRef<'a, R> {
             Self::Postgres(s) => s.write_generation(document, generation, bytes).await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.write_generation(document, generation, bytes).await,
-            Self::Fault(s) => s.write_generation(document, generation, bytes).await,
+            Self::Fault(s) => Box::pin(s.write_generation(document, generation, bytes)).await,
         }
     }
 
@@ -698,7 +705,7 @@ impl<'a, R: HostAsyncRuntime> SnapshotStorage for SnapshotRef<'a, R> {
             Self::Postgres(s) => s.read_generation(document, generation).await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.read_generation(document, generation).await,
-            Self::Fault(s) => s.read_generation(document, generation).await,
+            Self::Fault(s) => Box::pin(s.read_generation(document, generation)).await,
         }
     }
 
@@ -713,7 +720,7 @@ impl<'a, R: HostAsyncRuntime> SnapshotStorage for SnapshotRef<'a, R> {
             Self::Postgres(s) => s.latest_generation(document).await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.latest_generation(document).await,
-            Self::Fault(s) => s.latest_generation(document).await,
+            Self::Fault(s) => Box::pin(s.latest_generation(document)).await,
         }
     }
 
@@ -728,7 +735,7 @@ impl<'a, R: HostAsyncRuntime> SnapshotStorage for SnapshotRef<'a, R> {
             Self::Postgres(s) => s.list_generations(document).await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.list_generations(document).await,
-            Self::Fault(s) => s.list_generations(document).await,
+            Self::Fault(s) => Box::pin(s.list_generations(document)).await,
         }
     }
 
@@ -743,7 +750,7 @@ impl<'a, R: HostAsyncRuntime> SnapshotStorage for SnapshotRef<'a, R> {
             Self::Postgres(s) => s.delete_generation(document, generation).await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.delete_generation(document, generation).await,
-            Self::Fault(s) => s.delete_generation(document, generation).await,
+            Self::Fault(s) => Box::pin(s.delete_generation(document, generation)).await,
         }
     }
 }
@@ -777,7 +784,7 @@ impl<'a, R: HostAsyncRuntime> PayloadStorage for PayloadRef<'a, R> {
             Self::Postgres(s) => s.put(bytes).await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.put(bytes).await,
-            Self::Fault(s) => s.put(bytes).await,
+            Self::Fault(s) => Box::pin(s.put(bytes)).await,
         }
     }
 
@@ -792,7 +799,7 @@ impl<'a, R: HostAsyncRuntime> PayloadStorage for PayloadRef<'a, R> {
             Self::Postgres(s) => s.get(hash).await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.get(hash).await,
-            Self::Fault(s) => s.get(hash).await,
+            Self::Fault(s) => Box::pin(s.get(hash)).await,
         }
     }
 
@@ -807,7 +814,7 @@ impl<'a, R: HostAsyncRuntime> PayloadStorage for PayloadRef<'a, R> {
             Self::Postgres(s) => s.contains(hash).await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.contains(hash).await,
-            Self::Fault(s) => s.contains(hash).await,
+            Self::Fault(s) => Box::pin(s.contains(hash)).await,
         }
     }
 
@@ -822,7 +829,7 @@ impl<'a, R: HostAsyncRuntime> PayloadStorage for PayloadRef<'a, R> {
             Self::Postgres(s) => s.delete(hash).await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.delete(hash).await,
-            Self::Fault(s) => s.delete(hash).await,
+            Self::Fault(s) => Box::pin(s.delete(hash)).await,
         }
     }
 
@@ -837,7 +844,7 @@ impl<'a, R: HostAsyncRuntime> PayloadStorage for PayloadRef<'a, R> {
             Self::Postgres(s) => s.len(hash).await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.len(hash).await,
-            Self::Fault(s) => s.len(hash).await,
+            Self::Fault(s) => Box::pin(s.len(hash)).await,
         }
     }
 }
@@ -871,7 +878,10 @@ impl<'a, R: HostAsyncRuntime> CatalogStorage for CatalogRef<'a, R> {
             Self::Postgres(s) => s.read_root().await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.read_root().await,
-            Self::Fault(s) => s.read_root().await,
+            // 🔀️ `FaultStorage::read_root` calls back through `self.inner: DbBackend<R>`, so this
+            // arm is mutually recursive with this very fn — `Box::pin` breaks the otherwise-
+            // infinitely-sized future (E0733), same as `DbBackend::capabilities`'s `Fault` arm.
+            Self::Fault(s) => Box::pin(s.read_root()).await,
         }
     }
 
@@ -886,7 +896,7 @@ impl<'a, R: HostAsyncRuntime> CatalogStorage for CatalogRef<'a, R> {
             Self::Postgres(s) => s.cas_root(expected, new_bytes).await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.cas_root(expected, new_bytes).await,
-            Self::Fault(s) => s.cas_root(expected, new_bytes).await,
+            Self::Fault(s) => Box::pin(s.cas_root(expected, new_bytes)).await,
         }
     }
 }
@@ -920,7 +930,7 @@ impl<'a, R: HostAsyncRuntime> IndexStorage for IndexRef<'a, R> {
             Self::Postgres(s) => s.write_run(document, run_id, bytes).await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.write_run(document, run_id, bytes).await,
-            Self::Fault(s) => s.write_run(document, run_id, bytes).await,
+            Self::Fault(s) => Box::pin(s.write_run(document, run_id, bytes)).await,
         }
     }
 
@@ -935,7 +945,7 @@ impl<'a, R: HostAsyncRuntime> IndexStorage for IndexRef<'a, R> {
             Self::Postgres(s) => s.read_run(document, run_id).await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.read_run(document, run_id).await,
-            Self::Fault(s) => s.read_run(document, run_id).await,
+            Self::Fault(s) => Box::pin(s.read_run(document, run_id)).await,
         }
     }
 
@@ -950,7 +960,7 @@ impl<'a, R: HostAsyncRuntime> IndexStorage for IndexRef<'a, R> {
             Self::Postgres(s) => s.list_runs(document).await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.list_runs(document).await,
-            Self::Fault(s) => s.list_runs(document).await,
+            Self::Fault(s) => Box::pin(s.list_runs(document)).await,
         }
     }
 
@@ -965,7 +975,7 @@ impl<'a, R: HostAsyncRuntime> IndexStorage for IndexRef<'a, R> {
             Self::Postgres(s) => s.delete_run(document, run_id).await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.delete_run(document, run_id).await,
-            Self::Fault(s) => s.delete_run(document, run_id).await,
+            Self::Fault(s) => Box::pin(s.delete_run(document, run_id)).await,
         }
     }
 }
@@ -999,7 +1009,7 @@ impl<'a, R: HostAsyncRuntime> LeaseStorage for LeaseRef<'a, R> {
             Self::Postgres(s) => s.acquire(resource, holder, ttl_ms, now_ms).await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.acquire(resource, holder, ttl_ms, now_ms).await,
-            Self::Fault(s) => s.acquire(resource, holder, ttl_ms, now_ms).await,
+            Self::Fault(s) => Box::pin(s.acquire(resource, holder, ttl_ms, now_ms)).await,
         }
     }
 
@@ -1014,7 +1024,7 @@ impl<'a, R: HostAsyncRuntime> LeaseStorage for LeaseRef<'a, R> {
             Self::Postgres(s) => s.renew(resource, holder, fence, ttl_ms, now_ms).await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.renew(resource, holder, fence, ttl_ms, now_ms).await,
-            Self::Fault(s) => s.renew(resource, holder, fence, ttl_ms, now_ms).await,
+            Self::Fault(s) => Box::pin(s.renew(resource, holder, fence, ttl_ms, now_ms)).await,
         }
     }
 
@@ -1029,7 +1039,7 @@ impl<'a, R: HostAsyncRuntime> LeaseStorage for LeaseRef<'a, R> {
             Self::Postgres(s) => s.release(resource, holder, fence).await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.release(resource, holder, fence).await,
-            Self::Fault(s) => s.release(resource, holder, fence).await,
+            Self::Fault(s) => Box::pin(s.release(resource, holder, fence)).await,
         }
     }
 
@@ -1044,7 +1054,7 @@ impl<'a, R: HostAsyncRuntime> LeaseStorage for LeaseRef<'a, R> {
             Self::Postgres(s) => s.current(resource, now_ms).await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.current(resource, now_ms).await,
-            Self::Fault(s) => s.current(resource, now_ms).await,
+            Self::Fault(s) => Box::pin(s.current(resource, now_ms)).await,
         }
     }
 }
@@ -1076,12 +1086,13 @@ pub struct MemoryStorage {
 /// @emoji 🩹️ Recovers a `Mutex` guard from a poisoned lock instead of panicking — a single
 /// panicking mailbox/actor elsewhere in the family must not turn every other document's storage
 /// access into a cascading panic.
+// 🚫️async: E1 pure accessor (no suspension) — see R9
 fn lock<'a, T>(mutex: &'a std::sync::Mutex<T>) -> std::sync::MutexGuard<'a, T> {
     mutex.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
 }
 
 impl MemoryStorage {
-    pub fn new() -> Self {
+    pub async fn new() -> Self {
         Self::default()
     }
 }
@@ -1349,6 +1360,7 @@ mod fs_storage {
     /// @emoji 🚨️ Wraps a `std::io::Error` into `DbError::Io` — the only place `std::io::Error` is
     /// allowed to appear, per the contract's no-`std::io::Error`-in-public-signatures rule.
     #[allow(clippy::needless_pass_by_value)] // used as a `map_err` callback, which passes the error by value
+    // 🚫️async: E4 fn-pointer slot
     fn io_err(err: std::io::Error) -> DbError {
         DbError::Io(err.to_string())
     }
@@ -1356,6 +1368,7 @@ mod fs_storage {
     /// @emoji 🧭️ Maps a `std::io::Error` to `DbError::NotFound(missing())` when it's a missing-file
     /// error, or `DbError::Io` otherwise — used everywhere an open/read/stat is expected to find a
     /// caller-addressed blob that might legitimately not exist yet.
+    // 🚫️async: E1 pure accessor called from sync `.map_err(|err| open_err(...))` closures — see R9
     fn open_err(err: std::io::Error, missing: impl FnOnce() -> String) -> DbError {
         if err.kind() == std::io::ErrorKind::NotFound {
             DbError::NotFound(missing())
@@ -1367,6 +1380,7 @@ mod fs_storage {
     /// @emoji 🛡️ Rejects a path component that could escape `root` (empty, `.`, `..`, or
     /// containing a path separator/NUL) — every document id, resource name, etc. that becomes a
     /// filesystem path component is validated through this before use.
+    // 🚫️async: E1 pure accessor, every caller is a sync `run_blocking_op` closure — see R9
     fn safe_component(raw: &str) -> Result<&str, DbError> {
         if raw.is_empty() || raw == "." || raw == ".." || raw.contains('/') || raw.contains('\\') || raw.contains('\0') {
             return Err(DbError::InvalidArgument(format!("unsafe storage path component: {raw:?}")));
@@ -1374,49 +1388,61 @@ mod fs_storage {
         Ok(raw)
     }
 
+    // 🚫️async: E1 pure accessor, every caller is a sync `run_blocking_op` closure — see R9
     fn wal_dir(root: &Path, document: &ArtifactId) -> Result<PathBuf, DbError> {
         Ok(root.join("wal").join(safe_component(&document.0)?))
     }
 
+    // 🚫️async: E1 pure accessor, every caller is a sync `run_blocking_op` closure — see R9
     fn snapshot_dir(root: &Path, document: &ArtifactId) -> Result<PathBuf, DbError> {
         Ok(root.join("snapshot").join(safe_component(&document.0)?))
     }
 
+    // 🚫️async: E1 pure accessor, every caller is a sync `run_blocking_op` closure — see R9
     fn index_dir(root: &Path, document: &ArtifactId) -> Result<PathBuf, DbError> {
         Ok(root.join("index").join(safe_component(&document.0)?))
     }
 
+    // 🚫️async: E1 pure accessor, every caller is a sync `run_blocking_op` closure — see R9
     fn payload_path(root: &Path, hash: &ContentHash) -> PathBuf {
         let hex = hash.to_string();
         root.join("payload").join(&hex[0..2]).join(format!("{hex}.bin"))
     }
 
+    // 🚫️async: E1 pure accessor, every caller is a sync `run_blocking_op` closure — see R9
     fn catalog_path(root: &Path) -> PathBuf {
         root.join("catalog").join("root.bin")
     }
 
+    // 🚫️async: E1 pure accessor, every caller is a sync `run_blocking_op` closure — see R9
     fn lease_path(root: &Path, resource: &str) -> Result<PathBuf, DbError> {
         Ok(root.join("lease").join(format!("{}.bin", safe_component(resource)?)))
     }
 
+    // 🚫️async: E1 pure accessor, every caller is a sync `run_blocking_op` closure — see R9
     fn segment_path(dir: &Path, index: u64) -> PathBuf {
         dir.join(format!("segment-{index:020}.bin"))
     }
 
+    // 🚫️async: E1 pure accessor, every caller is a sync `run_blocking_op` closure — see R9
     fn sealed_marker_path(dir: &Path, index: u64) -> PathBuf {
         dir.join(format!("segment-{index:020}.sealed"))
     }
 
+    // 🚫️async: E1 pure accessor, every caller is a sync `run_blocking_op` closure — see R9
     fn generation_path(dir: &Path, generation: u64) -> PathBuf {
         dir.join(format!("gen-{generation:020}.pack"))
     }
 
+    // 🚫️async: E1 pure accessor, every caller is a sync `run_blocking_op` closure — see R9
     fn run_path(dir: &Path, run_id: u64) -> PathBuf {
         dir.join(format!("run-{run_id:020}.bin"))
     }
 
     /// @emoji 📋️ Lists `dir`'s entries matching `<prefix><20-digit-number><suffix>`, returning the
     /// parsed numbers ascending. Returns an empty list (not an error) if `dir` doesn't exist yet.
+    // 🚫️async: E1 pure accessor (blocking `std::fs::read_dir`), every caller is a sync
+    // `run_blocking_op` closure — see R9
     fn list_indexed_files(dir: &Path, prefix: &str, suffix: &str) -> Result<Vec<u64>, DbError> {
         if !dir.exists() {
             return Ok(Vec::new());
@@ -1438,26 +1464,35 @@ mod fs_storage {
 
     /// @emoji ✍️ `epoch(8 LE) || expires_at_ms(8 LE) || holder_len(varint) || holder` — the lease
     /// file wire encoding, built on `pack`'s own byte writer rather than hand-rolled offsets.
+    // 🚫️async: E5 executor bridge — every caller is a sync `run_blocking_op` closure, but
+    // `pack::ByteWriter`'s methods are genuinely async (out-of-scope crate); bridged via
+    // `db_actor::block_on` rather than making this fn itself async — see R9
     fn encode_lease(fence: EpochFence, expires_at_ms: u64, holder: &str) -> Vec<u8> {
-        let mut writer = pack::ByteWriter::new();
-        writer.write_u64_le(fence.epoch);
-        writer.write_u64_le(expires_at_ms);
-        writer.write_varint_u64(holder.len() as u64);
-        writer.write_bytes(holder.as_bytes());
-        writer.into_bytes()
+        crate::db_actor::block_on(async {
+            let mut writer = pack::ByteWriter::new().await;
+            writer.write_u64_le(fence.epoch).await;
+            writer.write_u64_le(expires_at_ms).await;
+            writer.write_varint_u64(holder.len() as u64).await;
+            writer.write_bytes(holder.as_bytes()).await;
+            writer.into_bytes().await
+        })
     }
 
+    // 🚫️async: E5 executor bridge, same rationale as `encode_lease` — see R9
     fn decode_lease(bytes: &[u8]) -> Result<(EpochFence, u64, String), DbError> {
-        let mut reader = pack::ByteReader::new(bytes);
-        let epoch = reader.read_u64_le()?;
-        let expires_at_ms = reader.read_u64_le()?;
-        let holder_len = reader.read_varint_u64()?;
-        check_len(holder_len, MAX_READ_BYTES, "lease_storage::decode holder")?;
-        let holder_bytes = reader.read_bytes(holder_len as usize)?;
-        let holder = String::from_utf8(holder_bytes.to_vec()).map_err(|_| DbError::Corrupt("lease holder is not valid utf-8".to_string()))?;
-        Ok((EpochFence { epoch }, expires_at_ms, holder))
+        crate::db_actor::block_on(async {
+            let mut reader = pack::ByteReader::new(bytes).await;
+            let epoch = reader.read_u64_le().await?;
+            let expires_at_ms = reader.read_u64_le().await?;
+            let holder_len = reader.read_varint_u64().await?;
+            check_len(holder_len, MAX_READ_BYTES, "lease_storage::decode holder")?;
+            let holder_bytes = reader.read_bytes(holder_len as usize).await?;
+            let holder = String::from_utf8(holder_bytes.to_vec()).map_err(|_| DbError::Corrupt("lease holder is not valid utf-8".to_string()))?;
+            Ok((EpochFence { epoch }, expires_at_ms, holder))
+        })
     }
 
+    // 🚫️async: E1 pure-shaped accessor, every caller is a sync `run_blocking_op` closure — see R9
     fn read_lease_file(path: &Path) -> Result<Option<(EpochFence, u64, String)>, DbError> {
         if !path.exists() {
             return Ok(None);
@@ -1466,6 +1501,7 @@ mod fs_storage {
         decode_lease(&bytes).map(Some)
     }
 
+    // 🚫️async: E1 pure-shaped accessor, every caller is a sync `run_blocking_op` closure — see R9
     fn write_lease_file(path: &Path, fence: EpochFence, expires_at_ms: u64, holder: &str) -> Result<(), DbError> {
         if let Some(parent) = path.parent() {
             std::fs::create_dir_all(parent).map_err(io_err)?;
@@ -1523,8 +1559,8 @@ mod fs_storage {
     impl HostAsyncRuntime for InlineRuntime {
         async fn open_scope(&self, owner: semio_framework_async::ScopeOwner, parent: Option<&ScopeHandle>) -> ScopeHandle {
             let cancel = match parent {
-                Some(parent) => parent.cancel.child(),
-                None => semio_framework_async::CancelToken::root(),
+                Some(parent) => parent.cancel.child().await,
+                None => semio_framework_async::CancelToken::root().await,
             };
             ScopeHandle { id: semio_framework_async::ScopeId(0), owner, cancel }
         }
@@ -1941,6 +1977,8 @@ mod fs_storage {
 
     /// @emoji 📖️ The blocking body behind `CatalogStorage::read_root` — factored out so
     /// `cas_root` can reuse it under `catalog_lock` without recursing through `run_blocking_op`.
+    // 🚫️async: E1 pure-shaped accessor (blocking `std::fs::read`), every caller is a sync
+    // `run_blocking_op` closure — see R9
     fn read_root_sync(root: &Path) -> Result<Option<(Vec<u8>, EpochFence)>, DbError> {
         let path = catalog_path(root);
         if !path.exists() {
@@ -2129,241 +2167,241 @@ mod tests {
     use super::*;
 
     //#region 🔖️WalStorage
-    fn exercise_wal_storage(storage: &impl WalStorage) {
+    async fn exercise_wal_storage(storage: &impl WalStorage) {
         let document: ArtifactId = "doc-wal".into();
 
-        block_on_ready(storage.create_segment(&document, 0)).unwrap();
-        assert!(matches!(block_on_ready(storage.create_segment(&document, 0)), Err(DbError::AlreadyExists(_))));
+        block_on_ready(storage.create_segment(&document, 0)).await.unwrap();
+        assert!(matches!(block_on_ready(storage.create_segment(&document, 0)).await, Err(DbError::AlreadyExists(_))));
 
-        let len_after_first = block_on_ready(storage.append(&document, 0, b"hello ")).unwrap();
+        let len_after_first = block_on_ready(storage.append(&document, 0, b"hello ")).await.unwrap();
         assert_eq!(len_after_first, 6);
-        let len_after_second = block_on_ready(storage.append(&document, 0, b"world")).unwrap();
+        let len_after_second = block_on_ready(storage.append(&document, 0, b"world")).await.unwrap();
         assert_eq!(len_after_second, 11);
-        assert_eq!(block_on_ready(storage.segment_len(&document, 0)).unwrap(), 11);
+        assert_eq!(block_on_ready(storage.segment_len(&document, 0)).await.unwrap(), 11);
 
-        let read_back = block_on_ready(storage.read(&document, 0, ByteRange { offset: 6, len: 5 })).unwrap();
+        let read_back = block_on_ready(storage.read(&document, 0, ByteRange { offset: 6, len: 5 })).await.unwrap();
         assert_eq!(read_back, b"world");
-        assert!(matches!(block_on_ready(storage.read(&document, 0, ByteRange { offset: 6, len: 100 })), Err(DbError::InvalidArgument(_))));
+        assert!(matches!(block_on_ready(storage.read(&document, 0, ByteRange { offset: 6, len: 100 })).await, Err(DbError::InvalidArgument(_))));
 
-        block_on_ready(storage.sync(&document, 0, DurabilityClass::Fsync)).unwrap();
+        block_on_ready(storage.sync(&document, 0, DurabilityClass::Fsync)).await.unwrap();
 
-        block_on_ready(storage.truncate_tail(&document, 0, 6)).unwrap();
-        assert_eq!(block_on_ready(storage.segment_len(&document, 0)).unwrap(), 6);
-        assert_eq!(block_on_ready(storage.read(&document, 0, ByteRange { offset: 0, len: 6 })).unwrap(), b"hello ");
+        block_on_ready(storage.truncate_tail(&document, 0, 6)).await.unwrap();
+        assert_eq!(block_on_ready(storage.segment_len(&document, 0)).await.unwrap(), 6);
+        assert_eq!(block_on_ready(storage.read(&document, 0, ByteRange { offset: 0, len: 6 })).await.unwrap(), b"hello ");
 
-        block_on_ready(storage.create_segment(&document, 1)).unwrap();
-        assert_eq!(block_on_ready(storage.list_segments(&document)).unwrap(), vec![0, 1]);
+        block_on_ready(storage.create_segment(&document, 1)).await.unwrap();
+        assert_eq!(block_on_ready(storage.list_segments(&document)).await.unwrap(), vec![0, 1]);
 
-        block_on_ready(storage.seal(&document, 0)).unwrap();
-        assert!(matches!(block_on_ready(storage.append(&document, 0, b"!")), Err(DbError::InvalidArgument(_))));
-        assert!(matches!(block_on_ready(storage.truncate_tail(&document, 0, 0)), Err(DbError::InvalidArgument(_))));
+        block_on_ready(storage.seal(&document, 0)).await.unwrap();
+        assert!(matches!(block_on_ready(storage.append(&document, 0, b"!")).await, Err(DbError::InvalidArgument(_))));
+        assert!(matches!(block_on_ready(storage.truncate_tail(&document, 0, 0)).await, Err(DbError::InvalidArgument(_))));
 
-        block_on_ready(storage.delete_segment(&document, 1)).unwrap();
-        assert_eq!(block_on_ready(storage.list_segments(&document)).unwrap(), vec![0]);
+        block_on_ready(storage.delete_segment(&document, 1)).await.unwrap();
+        assert_eq!(block_on_ready(storage.list_segments(&document)).await.unwrap(), vec![0]);
 
-        assert!(matches!(block_on_ready(storage.append(&document, 99, b"x")), Err(DbError::NotFound(_))));
+        assert!(matches!(block_on_ready(storage.append(&document, 99, b"x")).await, Err(DbError::NotFound(_))));
     }
 
-    #[test]
-    fn memory_storage_satisfies_wal_storage_laws() {
-        exercise_wal_storage(&MemoryStorage::new());
+    #[semio_framework_async_macros::async_test]
+    async fn memory_storage_satisfies_wal_storage_laws() {
+        exercise_wal_storage(&MemoryStorage::new().await).await;
     }
 
     #[cfg(feature = "fs")]
-    #[test]
-    fn fs_storage_satisfies_wal_storage_laws() {
-        exercise_wal_storage(&fs_scratch("wal_laws"));
+    #[semio_framework_async_macros::async_test]
+    async fn fs_storage_satisfies_wal_storage_laws() {
+        exercise_wal_storage(&fs_scratch("wal_laws").await).await;
     }
     //#endregion 🔖️WalStorage
 
     //#region 🔖️SnapshotStorage
-    fn exercise_snapshot_storage(storage: &impl SnapshotStorage) {
+    async fn exercise_snapshot_storage(storage: &impl SnapshotStorage) {
         let document: ArtifactId = "doc-snap".into();
-        assert_eq!(block_on_ready(storage.latest_generation(&document)).unwrap(), None);
+        assert_eq!(block_on_ready(storage.latest_generation(&document)).await.unwrap(), None);
 
-        block_on_ready(storage.write_generation(&document, 0, b"gen-zero-bytes")).unwrap();
-        block_on_ready(storage.write_generation(&document, 1, b"gen-one-bytes")).unwrap();
-        assert_eq!(block_on_ready(storage.list_generations(&document)).unwrap(), vec![0, 1]);
-        assert_eq!(block_on_ready(storage.latest_generation(&document)).unwrap(), Some(1));
-        assert_eq!(block_on_ready(storage.read_generation(&document, 0)).unwrap(), b"gen-zero-bytes");
+        block_on_ready(storage.write_generation(&document, 0, b"gen-zero-bytes")).await.unwrap();
+        block_on_ready(storage.write_generation(&document, 1, b"gen-one-bytes")).await.unwrap();
+        assert_eq!(block_on_ready(storage.list_generations(&document)).await.unwrap(), vec![0, 1]);
+        assert_eq!(block_on_ready(storage.latest_generation(&document)).await.unwrap(), Some(1));
+        assert_eq!(block_on_ready(storage.read_generation(&document, 0)).await.unwrap(), b"gen-zero-bytes");
 
-        block_on_ready(storage.write_generation(&document, 0, b"gen-zero-overwritten")).unwrap();
-        assert_eq!(block_on_ready(storage.read_generation(&document, 0)).unwrap(), b"gen-zero-overwritten");
+        block_on_ready(storage.write_generation(&document, 0, b"gen-zero-overwritten")).await.unwrap();
+        assert_eq!(block_on_ready(storage.read_generation(&document, 0)).await.unwrap(), b"gen-zero-overwritten");
 
-        block_on_ready(storage.delete_generation(&document, 0)).unwrap();
-        assert!(matches!(block_on_ready(storage.read_generation(&document, 0)), Err(DbError::NotFound(_))));
-        assert_eq!(block_on_ready(storage.list_generations(&document)).unwrap(), vec![1]);
+        block_on_ready(storage.delete_generation(&document, 0)).await.unwrap();
+        assert!(matches!(block_on_ready(storage.read_generation(&document, 0)).await, Err(DbError::NotFound(_))));
+        assert_eq!(block_on_ready(storage.list_generations(&document)).await.unwrap(), vec![1]);
     }
 
-    #[test]
-    fn memory_storage_satisfies_snapshot_storage_laws() {
-        exercise_snapshot_storage(&MemoryStorage::new());
+    #[semio_framework_async_macros::async_test]
+    async fn memory_storage_satisfies_snapshot_storage_laws() {
+        exercise_snapshot_storage(&MemoryStorage::new().await).await;
     }
 
     #[cfg(feature = "fs")]
-    #[test]
-    fn fs_storage_satisfies_snapshot_storage_laws() {
-        exercise_snapshot_storage(&fs_scratch("snapshot_laws"));
+    #[semio_framework_async_macros::async_test]
+    async fn fs_storage_satisfies_snapshot_storage_laws() {
+        exercise_snapshot_storage(&fs_scratch("snapshot_laws").await).await;
     }
     //#endregion 🔖️SnapshotStorage
 
     //#region 🔖️PayloadStorage
-    fn exercise_payload_storage(storage: &impl PayloadStorage) {
+    async fn exercise_payload_storage(storage: &impl PayloadStorage) {
         let bytes = b"a payload blob that gets content-addressed";
-        let hash_a = block_on_ready(storage.put(bytes)).unwrap();
-        let hash_b = block_on_ready(storage.put(bytes)).unwrap();
+        let hash_a = block_on_ready(storage.put(bytes)).await.unwrap();
+        let hash_b = block_on_ready(storage.put(bytes)).await.unwrap();
         assert_eq!(hash_a, hash_b, "put is idempotent under content equality");
         assert_eq!(hash_a, ContentHash(*blake3::hash(bytes).as_bytes()));
 
-        assert!(block_on_ready(storage.contains(&hash_a)).unwrap());
-        assert_eq!(block_on_ready(storage.get(&hash_a)).unwrap(), bytes);
-        assert_eq!(block_on_ready(storage.len(&hash_a)).unwrap(), bytes.len() as u64);
+        assert!(block_on_ready(storage.contains(&hash_a)).await.unwrap());
+        assert_eq!(block_on_ready(storage.get(&hash_a)).await.unwrap(), bytes);
+        assert_eq!(block_on_ready(storage.len(&hash_a)).await.unwrap(), bytes.len() as u64);
 
         let other_hash = ContentHash([0xAB; 32]);
-        assert!(!block_on_ready(storage.contains(&other_hash)).unwrap());
-        assert!(matches!(block_on_ready(storage.get(&other_hash)), Err(DbError::NotFound(_))));
+        assert!(!block_on_ready(storage.contains(&other_hash)).await.unwrap());
+        assert!(matches!(block_on_ready(storage.get(&other_hash)).await, Err(DbError::NotFound(_))));
 
-        block_on_ready(storage.delete(&hash_a)).unwrap();
-        assert!(!block_on_ready(storage.contains(&hash_a)).unwrap());
-        assert!(matches!(block_on_ready(storage.get(&hash_a)), Err(DbError::NotFound(_))));
+        block_on_ready(storage.delete(&hash_a)).await.unwrap();
+        assert!(!block_on_ready(storage.contains(&hash_a)).await.unwrap());
+        assert!(matches!(block_on_ready(storage.get(&hash_a)).await, Err(DbError::NotFound(_))));
     }
 
-    #[test]
-    fn memory_storage_satisfies_payload_storage_laws() {
-        exercise_payload_storage(&MemoryStorage::new());
+    #[semio_framework_async_macros::async_test]
+    async fn memory_storage_satisfies_payload_storage_laws() {
+        exercise_payload_storage(&MemoryStorage::new().await).await;
     }
 
     #[cfg(feature = "fs")]
-    #[test]
-    fn fs_storage_satisfies_payload_storage_laws() {
-        exercise_payload_storage(&fs_scratch("payload_laws"));
+    #[semio_framework_async_macros::async_test]
+    async fn fs_storage_satisfies_payload_storage_laws() {
+        exercise_payload_storage(&fs_scratch("payload_laws").await).await;
     }
     //#endregion 🔖️PayloadStorage
 
     //#region 🔖️CatalogStorage
-    fn exercise_catalog_storage(storage: &impl CatalogStorage) {
-        assert_eq!(block_on_ready(storage.read_root()).unwrap(), None);
+    async fn exercise_catalog_storage(storage: &impl CatalogStorage) {
+        assert_eq!(block_on_ready(storage.read_root()).await.unwrap(), None);
 
-        let epoch_1 = block_on_ready(storage.cas_root(EpochFence::INITIAL, b"root-v1")).unwrap();
+        let epoch_1 = block_on_ready(storage.cas_root(EpochFence::INITIAL, b"root-v1")).await.unwrap();
         assert_eq!(epoch_1, EpochFence::INITIAL.next());
-        let (bytes, fence) = block_on_ready(storage.read_root()).unwrap().unwrap();
+        let (bytes, fence) = block_on_ready(storage.read_root()).await.unwrap().unwrap();
         assert_eq!(bytes, b"root-v1");
         assert_eq!(fence, epoch_1);
 
         // A stale `expected` (still `INITIAL`, but the root already moved to `epoch_1`) is fenced.
-        assert!(matches!(block_on_ready(storage.cas_root(EpochFence::INITIAL, b"root-stale")), Err(DbError::Fenced { .. })));
+        assert!(matches!(block_on_ready(storage.cas_root(EpochFence::INITIAL, b"root-stale")).await, Err(DbError::Fenced { .. })));
 
-        let epoch_2 = block_on_ready(storage.cas_root(epoch_1, b"root-v2")).unwrap();
+        let epoch_2 = block_on_ready(storage.cas_root(epoch_1, b"root-v2")).await.unwrap();
         assert_eq!(epoch_2, epoch_1.next());
-        assert_eq!(block_on_ready(storage.read_root()).unwrap().unwrap().0, b"root-v2");
+        assert_eq!(block_on_ready(storage.read_root()).await.unwrap().unwrap().0, b"root-v2");
     }
 
-    #[test]
-    fn memory_storage_satisfies_catalog_storage_laws() {
-        exercise_catalog_storage(&MemoryStorage::new());
+    #[semio_framework_async_macros::async_test]
+    async fn memory_storage_satisfies_catalog_storage_laws() {
+        exercise_catalog_storage(&MemoryStorage::new().await).await;
     }
 
     #[cfg(feature = "fs")]
-    #[test]
-    fn fs_storage_satisfies_catalog_storage_laws() {
-        exercise_catalog_storage(&fs_scratch("catalog_laws"));
+    #[semio_framework_async_macros::async_test]
+    async fn fs_storage_satisfies_catalog_storage_laws() {
+        exercise_catalog_storage(&fs_scratch("catalog_laws").await).await;
     }
     //#endregion 🔖️CatalogStorage
 
     //#region 🔖️IndexStorage
-    fn exercise_index_storage(storage: &impl IndexStorage) {
+    async fn exercise_index_storage(storage: &impl IndexStorage) {
         let document: ArtifactId = "doc-index".into();
-        block_on_ready(storage.write_run(&document, 0, b"run-zero")).unwrap();
-        block_on_ready(storage.write_run(&document, 1, b"run-one")).unwrap();
-        assert_eq!(block_on_ready(storage.list_runs(&document)).unwrap(), vec![0, 1]);
-        assert_eq!(block_on_ready(storage.read_run(&document, 1)).unwrap(), b"run-one");
+        block_on_ready(storage.write_run(&document, 0, b"run-zero")).await.unwrap();
+        block_on_ready(storage.write_run(&document, 1, b"run-one")).await.unwrap();
+        assert_eq!(block_on_ready(storage.list_runs(&document)).await.unwrap(), vec![0, 1]);
+        assert_eq!(block_on_ready(storage.read_run(&document, 1)).await.unwrap(), b"run-one");
 
-        block_on_ready(storage.delete_run(&document, 0)).unwrap();
-        assert_eq!(block_on_ready(storage.list_runs(&document)).unwrap(), vec![1]);
-        assert!(matches!(block_on_ready(storage.read_run(&document, 0)), Err(DbError::NotFound(_))));
+        block_on_ready(storage.delete_run(&document, 0)).await.unwrap();
+        assert_eq!(block_on_ready(storage.list_runs(&document)).await.unwrap(), vec![1]);
+        assert!(matches!(block_on_ready(storage.read_run(&document, 0)).await, Err(DbError::NotFound(_))));
     }
 
-    #[test]
-    fn memory_storage_satisfies_index_storage_laws() {
-        exercise_index_storage(&MemoryStorage::new());
+    #[semio_framework_async_macros::async_test]
+    async fn memory_storage_satisfies_index_storage_laws() {
+        exercise_index_storage(&MemoryStorage::new().await).await;
     }
 
     #[cfg(feature = "fs")]
-    #[test]
-    fn fs_storage_satisfies_index_storage_laws() {
-        exercise_index_storage(&fs_scratch("index_laws"));
+    #[semio_framework_async_macros::async_test]
+    async fn fs_storage_satisfies_index_storage_laws() {
+        exercise_index_storage(&fs_scratch("index_laws").await).await;
     }
     //#endregion 🔖️IndexStorage
 
     //#region 🔖️LeaseStorage
-    fn exercise_lease_storage(storage: &impl LeaseStorage) {
-        let fence_1 = block_on_ready(storage.acquire("shard-1", "node-a", 1_000, 0)).unwrap();
+    async fn exercise_lease_storage(storage: &impl LeaseStorage) {
+        let fence_1 = block_on_ready(storage.acquire("shard-1", "node-a", 1_000, 0)).await.unwrap();
         assert_eq!(fence_1, EpochFence::INITIAL);
 
         // Re-acquiring the same, unexpired lease by the same holder is idempotent (same fence).
-        let fence_reacquire = block_on_ready(storage.acquire("shard-1", "node-a", 1_000, 100)).unwrap();
+        let fence_reacquire = block_on_ready(storage.acquire("shard-1", "node-a", 1_000, 100)).await.unwrap();
         assert_eq!(fence_reacquire, fence_1);
 
         // A different holder cannot acquire an unexpired lease.
-        assert!(matches!(block_on_ready(storage.acquire("shard-1", "node-b", 1_000, 100)), Err(DbError::Conflict(_))));
+        assert!(matches!(block_on_ready(storage.acquire("shard-1", "node-b", 1_000, 100)).await, Err(DbError::Conflict(_))));
 
-        block_on_ready(storage.renew("shard-1", "node-a", fence_1, 1_000, 500)).unwrap();
-        assert!(matches!(block_on_ready(storage.renew("shard-1", "node-a", fence_1.next(), 1_000, 500)), Err(DbError::Fenced { .. })));
-        assert!(matches!(block_on_ready(storage.renew("shard-1", "node-b", fence_1, 1_000, 500)), Err(DbError::Unauthorized(_))));
+        block_on_ready(storage.renew("shard-1", "node-a", fence_1, 1_000, 500)).await.unwrap();
+        assert!(matches!(block_on_ready(storage.renew("shard-1", "node-a", fence_1.next(), 1_000, 500)).await, Err(DbError::Fenced { .. })));
+        assert!(matches!(block_on_ready(storage.renew("shard-1", "node-b", fence_1, 1_000, 500)).await, Err(DbError::Unauthorized(_))));
 
-        let current = block_on_ready(storage.current("shard-1", 600)).unwrap().unwrap();
+        let current = block_on_ready(storage.current("shard-1", 600)).await.unwrap().unwrap();
         assert_eq!(current.holder, "node-a");
         assert_eq!(current.fence, fence_1);
 
         // After expiry (renewed at 500 for 1_000ms => expires at 1_500), a different holder can
         // take over, bumping the fence — the fencing law a stale former holder is later rejected by.
-        assert_eq!(block_on_ready(storage.current("shard-1", 2_000)).unwrap(), None);
-        let fence_2 = block_on_ready(storage.acquire("shard-1", "node-b", 1_000, 2_000)).unwrap();
+        assert_eq!(block_on_ready(storage.current("shard-1", 2_000)).await.unwrap(), None);
+        let fence_2 = block_on_ready(storage.acquire("shard-1", "node-b", 1_000, 2_000)).await.unwrap();
         assert_eq!(fence_2, fence_1.next());
 
         // The old holder's stale fence is now rejected.
-        assert!(matches!(block_on_ready(storage.renew("shard-1", "node-a", fence_1, 1_000, 2_100)), Err(DbError::Unauthorized(_))));
+        assert!(matches!(block_on_ready(storage.renew("shard-1", "node-a", fence_1, 1_000, 2_100)).await, Err(DbError::Unauthorized(_))));
 
-        block_on_ready(storage.release("shard-1", "node-b", fence_2)).unwrap();
-        assert_eq!(block_on_ready(storage.current("shard-1", 2_100)).unwrap(), None);
-        assert!(matches!(block_on_ready(storage.release("shard-1", "node-b", fence_2)), Err(DbError::NotFound(_))));
+        block_on_ready(storage.release("shard-1", "node-b", fence_2)).await.unwrap();
+        assert_eq!(block_on_ready(storage.current("shard-1", 2_100)).await.unwrap(), None);
+        assert!(matches!(block_on_ready(storage.release("shard-1", "node-b", fence_2)).await, Err(DbError::NotFound(_))));
     }
 
-    #[test]
-    fn memory_storage_satisfies_lease_storage_laws() {
-        exercise_lease_storage(&MemoryStorage::new());
+    #[semio_framework_async_macros::async_test]
+    async fn memory_storage_satisfies_lease_storage_laws() {
+        exercise_lease_storage(&MemoryStorage::new().await).await;
     }
 
     #[cfg(feature = "fs")]
-    #[test]
-    fn fs_storage_satisfies_lease_storage_laws() {
-        exercise_lease_storage(&fs_scratch("lease_laws"));
+    #[semio_framework_async_macros::async_test]
+    async fn fs_storage_satisfies_lease_storage_laws() {
+        exercise_lease_storage(&fs_scratch("lease_laws").await).await;
     }
     //#endregion 🔖️LeaseStorage
 
     //#region 🔖️DbBackend
-    #[test]
-    fn memory_storage_db_backend_accessors_and_capabilities() {
-        let storage: DbBackend<InlineRuntime> = DbBackend::Memory(MemoryStorage::new());
+    #[semio_framework_async_macros::async_test]
+    async fn memory_storage_db_backend_accessors_and_capabilities() {
+        let storage: DbBackend<InlineRuntime> = DbBackend::Memory(MemoryStorage::new().await);
         let document: ArtifactId = "doc-umbrella".into();
-        block_on_ready(poll_once(storage.wal()).create_segment(&document, 0)).unwrap();
-        block_on_ready(poll_once(storage.catalog()).cas_root(EpochFence::INITIAL, b"root")).unwrap();
+        block_on_ready(poll_once(storage.wal()).await.create_segment(&document, 0)).await.unwrap();
+        block_on_ready(poll_once(storage.catalog()).await.cas_root(EpochFence::INITIAL, b"root")).await.unwrap();
 
-        let capabilities = poll_once(storage.capabilities());
+        let capabilities = poll_once(storage.capabilities()).await;
         assert!(!capabilities.durable);
         assert_eq!(capabilities.max_durability, DurabilityClass::Memory);
         assert!(capabilities.supports_cas);
     }
 
     #[cfg(feature = "fs")]
-    #[test]
-    fn fs_storage_db_backend_accessors_and_capabilities() {
-        let storage: DbBackend<semio_framework_async::testkit::ManualRuntime> = DbBackend::Fs(fs_scratch("umbrella"));
+    #[semio_framework_async_macros::async_test]
+    async fn fs_storage_db_backend_accessors_and_capabilities() {
+        let storage: DbBackend<semio_framework_async::testkit::ManualRuntime> = DbBackend::Fs(fs_scratch("umbrella").await);
         let document: ArtifactId = "doc-umbrella".into();
-        block_on_ready(poll_once(storage.index()).write_run(&document, 0, b"run")).unwrap();
-        assert_eq!(block_on_ready(poll_once(storage.index()).read_run(&document, 0)).unwrap(), b"run");
+        block_on_ready(poll_once(storage.index()).await.write_run(&document, 0, b"run")).await.unwrap();
+        assert_eq!(block_on_ready(poll_once(storage.index()).await.read_run(&document, 0)).await.unwrap(), b"run");
 
-        let capabilities = poll_once(storage.capabilities());
+        let capabilities = poll_once(storage.capabilities()).await;
         assert!(capabilities.durable);
         assert_eq!(capabilities.max_durability, DurabilityClass::Fsync);
         assert!(capabilities.supports_fsync);
@@ -2381,49 +2419,49 @@ mod tests {
     /// storage hands back resolves on its very first poll — [`block_on_ready`] above never
     /// actually parks.
     #[cfg(feature = "fs")]
-    fn fs_scratch(name: &str) -> FsStorage<semio_framework_async::testkit::ManualRuntime> {
+    async fn fs_scratch(name: &str) -> FsStorage<semio_framework_async::testkit::ManualRuntime> {
         let pid = std::process::id();
         let counter = SCRATCH_COUNTER.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         let dir = std::env::temp_dir().join(format!("db_storage_test_{name}_{pid}_{counter}"));
-        let runtime = Arc::new(semio_framework_async::testkit::ManualRuntime::new(0));
-        let scope = poll_once(runtime.open_scope(semio_framework_async::ScopeOwner::Service("db_storage_test"), None));
-        poll_once(FsStorage::open(runtime, scope, &dir)).unwrap()
+        let runtime = Arc::new(semio_framework_async::testkit::ManualRuntime::new(0).await);
+        let scope = poll_once(runtime.open_scope(semio_framework_async::ScopeOwner::Service("db_storage_test"), None)).await;
+        poll_once(FsStorage::open(runtime, scope, &dir)).await.unwrap()
     }
 
     #[cfg(feature = "fs")]
-    #[test]
-    fn fs_storage_rejects_unsafe_path_components() {
-        let storage = fs_scratch("path_safety");
+    #[semio_framework_async_macros::async_test]
+    async fn fs_storage_rejects_unsafe_path_components() {
+        let storage = fs_scratch("path_safety").await;
         let traversal_document: ArtifactId = "../escape".into();
-        assert!(matches!(block_on_ready(storage.create_segment(&traversal_document, 0)), Err(DbError::InvalidArgument(_))));
+        assert!(matches!(block_on_ready(storage.create_segment(&traversal_document, 0)).await, Err(DbError::InvalidArgument(_))));
 
         let separator_document: ArtifactId = "sub/dir".into();
-        assert!(matches!(block_on_ready(storage.create_segment(&separator_document, 0)), Err(DbError::InvalidArgument(_))));
+        assert!(matches!(block_on_ready(storage.create_segment(&separator_document, 0)).await, Err(DbError::InvalidArgument(_))));
 
         let empty_document: ArtifactId = "".into();
-        assert!(matches!(block_on_ready(storage.create_segment(&empty_document, 0)), Err(DbError::InvalidArgument(_))));
+        assert!(matches!(block_on_ready(storage.create_segment(&empty_document, 0)).await, Err(DbError::InvalidArgument(_))));
     }
 
     #[cfg(feature = "fs")]
-    #[test]
-    fn fs_storage_write_atomic_survives_reopen_across_instances() {
+    #[semio_framework_async_macros::async_test]
+    async fn fs_storage_write_atomic_survives_reopen_across_instances() {
         let pid = std::process::id();
         let counter = SCRATCH_COUNTER.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         let dir = std::env::temp_dir().join(format!("db_storage_test_reopen_{pid}_{counter}"));
 
         {
-            let runtime = Arc::new(semio_framework_async::testkit::ManualRuntime::new(0));
-            let scope = poll_once(runtime.open_scope(semio_framework_async::ScopeOwner::Service("db_storage_test"), None));
-            let storage = poll_once(FsStorage::open(runtime, scope, &dir)).unwrap();
+            let runtime = Arc::new(semio_framework_async::testkit::ManualRuntime::new(0).await);
+            let scope = poll_once(runtime.open_scope(semio_framework_async::ScopeOwner::Service("db_storage_test"), None)).await;
+            let storage = poll_once(FsStorage::open(runtime, scope, &dir)).await.unwrap();
             let document: ArtifactId = "doc-reopen".into();
-            block_on_ready(storage.write_generation(&document, 0, b"persisted across reopen")).unwrap();
+            block_on_ready(storage.write_generation(&document, 0, b"persisted across reopen")).await.unwrap();
         }
         {
-            let runtime = Arc::new(semio_framework_async::testkit::ManualRuntime::new(0));
-            let scope = poll_once(runtime.open_scope(semio_framework_async::ScopeOwner::Service("db_storage_test"), None));
-            let storage = poll_once(FsStorage::open(runtime, scope, &dir)).unwrap();
+            let runtime = Arc::new(semio_framework_async::testkit::ManualRuntime::new(0).await);
+            let scope = poll_once(runtime.open_scope(semio_framework_async::ScopeOwner::Service("db_storage_test"), None)).await;
+            let storage = poll_once(FsStorage::open(runtime, scope, &dir)).await.unwrap();
             let document: ArtifactId = "doc-reopen".into();
-            assert_eq!(block_on_ready(storage.read_generation(&document, 0)).unwrap(), b"persisted across reopen");
+            assert_eq!(block_on_ready(storage.read_generation(&document, 0)).await.unwrap(), b"persisted across reopen");
         }
     }
     //#endregion 🔖️Fs

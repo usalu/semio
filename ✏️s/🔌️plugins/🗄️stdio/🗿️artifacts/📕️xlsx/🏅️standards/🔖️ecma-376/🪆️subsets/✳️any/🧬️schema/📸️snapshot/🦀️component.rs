@@ -129,12 +129,12 @@ impl store::ArtifactDsl for XlsxSnapshot {
         for i in (0..hex.len()).step_by(2) {
             bytes.push(u8::from_str_radix(&hex[i..i + 2], 16).map_err(|e| store::TextError::new(format!("invalid hex: {e}"), dsl::TextSpan::at(1, 1)))?);
         }
-        crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::io::import::deserializers::decode_xlsx(&bytes).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
+        crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::io::import::deserializers::decode_xlsx(&bytes).await.map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
     }
     async fn print_dsl(&self) -> String {
-        let bytes = crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::io::export::serializers::encode_xlsx(self).unwrap_or_default();
+        let bytes = crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::io::export::serializers::encode_xlsx(self).await.unwrap_or_default();
         let body: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -142,8 +142,8 @@ impl store::ArtifactDsl for XlsxSnapshot {
 impl store::ArtifactPack for XlsxSnapshot {
     async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
-        let raw = crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::io::export::serializers::encode_xlsx(self).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let raw = crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::io::export::serializers::encode_xlsx(self).await.map_err(|e| store::PackError::Schema(e.to_string()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id().await, store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
     async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
@@ -152,7 +152,7 @@ impl store::ArtifactPack for XlsxSnapshot {
             return Err(store::PackError::Schema("pack envelope mismatch".into()));
         }
         let _ = options;
-        crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::io::import::deserializers::decode_xlsx(&inner).map_err(|e| store::PackError::Schema(e.to_string()))
+        crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::io::import::deserializers::decode_xlsx(&inner).await.map_err(|e| store::PackError::Schema(e.to_string()))
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs

@@ -9,8 +9,8 @@ use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::S
 //#region 🔖️Diff
 pub async fn diff(_payload: &DeleteBrep, base: &SemioObjectSnapshot) -> protocol::MutationOutcome<SemioObjectDiff> {
     if base.brep.is_none() {
-        return protocol::MutationOutcome::error("mutation.target-missing", "The object has no brep to delete.".to_string(), ["brep".to_string()]);
+        return protocol::MutationOutcome::error("mutation.target-missing", "The object has no brep to delete.".to_string(), ["brep".to_string()]).await;
     }
-    protocol::MutationOutcome::new(SemioObjectDiff { brep: Some(None), ..Default::default() })
+    protocol::MutationOutcome::new(SemioObjectDiff { brep: Some(None), ..Default::default() }).await
 }
 //#endregion 🔖️Diff

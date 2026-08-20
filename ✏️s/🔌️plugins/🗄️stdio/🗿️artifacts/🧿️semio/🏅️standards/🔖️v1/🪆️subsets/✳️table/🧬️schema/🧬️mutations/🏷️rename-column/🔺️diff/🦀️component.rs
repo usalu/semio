@@ -11,18 +11,18 @@ use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::Se
 //#region 🔖️Diff
 pub async fn diff(payload: &RenameColumn, base: &SemioTableSnapshot) -> protocol::MutationOutcome<SemioTableDiff> {
     if !base.columns.iter().any(|c| c.name == payload.name) {
-        return protocol::MutationOutcome::error("mutation.target-missing", format!("Column \"{}\" does not exist.", payload.name), [payload.name.clone()]);
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Column \"{}\" does not exist.", payload.name), [payload.name.clone()]).await;
     }
     if payload.name == payload.new_name {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Column \"{}\" is already named \"{}\".", payload.name, payload.new_name));
+        return protocol::MutationOutcome::empty().await.warn("mutation.no-op", format!("Column \"{}\" is already named \"{}\".", payload.name, payload.new_name)).await;
     }
     if base.columns.iter().any(|c| c.name == payload.new_name) {
-        return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A column named \"{}\" already exists.", payload.new_name), [payload.new_name.clone()]);
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A column named \"{}\" already exists.", payload.new_name), [payload.new_name.clone()]).await;
     }
     let mut columns = base.columns.clone();
     if let Some(col) = columns.iter_mut().find(|c| c.name == payload.name) {
         col.name = payload.new_name.clone();
     }
-    protocol::MutationOutcome::new(SemioTableDiff { columns: Some(SemioTableColumnList { values: columns }), rows: None })
+    protocol::MutationOutcome::new(SemioTableDiff { columns: Some(SemioTableColumnList { values: columns }), rows: None }).await
 }
 //#endregion 🔖️Diff

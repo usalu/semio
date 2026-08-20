@@ -23,7 +23,7 @@ pub struct SvgInference {
 
 impl protocol::Inference<SvgSnapshot> for SvgInference {
     async fn infer(snapshot: &SvgSnapshot) -> Self {
-        Self { dimensions: compute_svg_dimensions(snapshot) }
+        Self { dimensions: compute_svg_dimensions(snapshot).await }
     }
 }
 

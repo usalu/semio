@@ -33,6 +33,8 @@ use Emit as _;
 /// @emoji 🔓️ Locks `mutex`, recovering the inner value even if a prior holder panicked while
 /// holding it — an observability sink must never itself become a source of panics-under-panic
 /// for the mailbox/actor code that's often mid-crash-handling when it calls into `Emit::emit`.
+// 🚫️async: E1 pure accessor (no suspension: `Mutex::lock` on a never-genuinely-contended
+// in-process lock) — see R9
 fn lock<T>(mutex: &Mutex<T>) -> std::sync::MutexGuard<'_, T> {
     mutex.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
 }
@@ -120,7 +122,7 @@ pub fn encode_emit_event_json(event: &EmitEvent) -> String {
 /// family's error type) instead of `PackError`, and writes pre-delimited lines rather than raw
 /// byte ranges.
 pub trait EventSink: Send + Sync {
-    fn write_line(&self, line: &str) -> Result<(), DbError>;
+    async fn write_line(&self, line: &str) -> Result<(), DbError>;
 }
 
 /// @emoji 🧠️ An in-memory `EventSink` — the default for tests and for introspecting what a sink
@@ -136,13 +138,13 @@ impl MemorySink {
     }
 
     /// @emoji 📜️ A snapshot of every line written so far, oldest first.
-    pub fn lines(&self) -> Vec<String> {
+    pub async fn lines(&self) -> Vec<String> {
         lock(&self.lines).clone()
     }
 }
 
 impl EventSink for MemorySink {
-    fn write_line(&self, line: &str) -> Result<(), DbError> {
+    async fn write_line(&self, line: &str) -> Result<(), DbError> {
         lock(&self.lines).push(line.to_string());
         Ok(())
     }
@@ -164,7 +166,7 @@ impl<W: std::io::Write + Send> WriterSink<W> {
 }
 
 impl<W: std::io::Write + Send> EventSink for WriterSink<W> {
-    fn write_line(&self, line: &str) -> Result<(), DbError> {
+    async fn write_line(&self, line: &str) -> Result<(), DbError> {
         let mut writer = lock(&self.writer);
         writer.write_all(line.as_bytes()).map_err(|e| DbError::Io(e.to_string()))?;
         writer.write_all(b"\n").map_err(|e| DbError::Io(e.to_string()))?;
@@ -191,15 +193,15 @@ impl<S: EventSink> StructuredSink<S> {
     /// @emoji 🚨️ How many `emit` calls lost their event to a sink write failure. `Emit::emit`
     /// cannot return `Result` (it's invoked from hot mailbox paths), so a failed write is counted
     /// here rather than silently dropped-and-forgotten or panicking.
-    pub fn failed_writes(&self) -> u64 {
+    pub async fn failed_writes(&self) -> u64 {
         self.failed_writes.load(Ordering::Relaxed)
     }
 }
 
 impl<S: EventSink> Emit for StructuredSink<S> {
-    fn emit(&self, event: EmitEvent) {
+    async fn emit(&self, event: EmitEvent) {
         let line = encode_emit_event_json(&event);
-        if self.sink.write_line(&line).is_err() {
+        if self.sink.write_line(&line).await.is_err() {
             self.failed_writes.fetch_add(1, Ordering::Relaxed);
         }
     }
@@ -215,11 +217,11 @@ pub struct AuditLink {
     pub checksum: u32,
 }
 
-fn fold_checksum(prev_checksum: u32, line: &str) -> u32 {
+async fn fold_checksum(prev_checksum: u32, line: &str) -> u32 {
     let mut buf = Vec::with_capacity(4 + line.len());
     buf.extend_from_slice(&prev_checksum.to_le_bytes());
     buf.extend_from_slice(line.as_bytes());
-    pack::crc32c(&buf)
+    pack::crc32c(&buf).await
 }
 
 struct AuditChainState {
@@ -249,19 +251,19 @@ impl<S: EventSink> AuditSink<S> {
     /// against (oldest links are dropped once exceeded, folded into a running `base_checksum` so
     /// the chain math for the surviving window stays exact) — the durable JSON-lines themselves
     /// are unbounded (owned by `S`), only the tamper-evidence window is capped.
-    pub fn new(sink: S, max_retained: usize) -> Self {
+    pub async fn new(sink: S, max_retained: usize) -> Self {
         Self { sink, next_seq: AtomicU64::new(0), state: Mutex::new(AuditChainState { base_checksum: 0, links: VecDeque::new() }), max_retained: max_retained.max(1), failed_writes: AtomicU64::new(0) }
     }
 
     /// @emoji 🚨️ See `StructuredSink::failed_writes` — same rationale (`Emit::emit` has no
     /// `Result`); a failed durable write is never folded into the chain (the chain only ever
     /// covers records that actually made it to `S`).
-    pub fn failed_writes(&self) -> u64 {
+    pub async fn failed_writes(&self) -> u64 {
         self.failed_writes.load(Ordering::Relaxed)
     }
 
     /// @emoji 📜️ A snapshot of the retained chain window, oldest first.
-    pub fn chain(&self) -> Vec<AuditLink> {
+    pub async fn chain(&self) -> Vec<AuditLink> {
         lock(&self.state).links.iter().copied().collect()
     }
 
@@ -270,14 +272,14 @@ impl<S: EventSink> AuditSink<S> {
     /// for skipping any lines older than the window, e.g. via a companion compaction checkpoint;
     /// out of scope for this sink) and compares it link by link. `Ok(())` iff every retained link
     /// still matches; otherwise `DbError::Corrupt` naming the first divergent seq.
-    pub fn verify_chain(&self, lines: &[String]) -> Result<(), DbError> {
+    pub async fn verify_chain(&self, lines: &[String]) -> Result<(), DbError> {
         let state = lock(&self.state);
         if lines.len() != state.links.len() {
             return Err(DbError::Corrupt(format!("audit chain length mismatch: expected {} retained lines, got {}", state.links.len(), lines.len())));
         }
         let mut prev_checksum = state.base_checksum;
         for (line, expected) in lines.iter().zip(state.links.iter()) {
-            let checksum = fold_checksum(prev_checksum, line);
+            let checksum = fold_checksum(prev_checksum, line).await;
             if checksum != expected.checksum {
                 return Err(DbError::Corrupt(format!("audit chain diverges at seq {}", expected.seq)));
             }
@@ -288,16 +290,16 @@ impl<S: EventSink> AuditSink<S> {
 }
 
 impl<S: EventSink> Emit for AuditSink<S> {
-    fn emit(&self, event: EmitEvent) {
+    async fn emit(&self, event: EmitEvent) {
         let line = encode_emit_event_json(&event);
-        if self.sink.write_line(&line).is_err() {
+        if self.sink.write_line(&line).await.is_err() {
             self.failed_writes.fetch_add(1, Ordering::Relaxed);
             return;
         }
         let seq = self.next_seq.fetch_add(1, Ordering::Relaxed);
         let mut state = lock(&self.state);
         let prev_checksum = state.links.back().map_or(state.base_checksum, |link| link.checksum);
-        let checksum = fold_checksum(prev_checksum, &line);
+        let checksum = fold_checksum(prev_checksum, &line).await;
         state.links.push_back(AuditLink { seq, checksum });
         while state.links.len() > self.max_retained {
             if let Some(evicted) = state.links.pop_front() {
@@ -317,17 +319,18 @@ impl<S: EventSink> Emit for AuditSink<S> {
 pub struct Labels(Vec<(&'static str, String)>);
 
 impl Labels {
+    // 🚫️async: E1 pure constructor consumed synchronously by dozens of test/production call sites — see R9
     pub fn new(pairs: impl IntoIterator<Item = (&'static str, String)>) -> Labels {
         let mut pairs: Vec<_> = pairs.into_iter().collect();
         pairs.sort_by_key(|(k, _)| *k);
         Labels(pairs)
     }
 
-    pub fn none() -> Labels {
+    pub async fn none() -> Labels {
         Labels(Vec::new())
     }
 
-    pub fn as_slice(&self) -> &[(&'static str, String)] {
+    pub async fn as_slice(&self) -> &[(&'static str, String)] {
         &self.0
     }
 }
@@ -342,7 +345,7 @@ pub struct CardinalityLimiter {
 }
 
 impl CardinalityLimiter {
-    pub fn new(max_series_per_metric: usize) -> CardinalityLimiter {
+    pub async fn new(max_series_per_metric: usize) -> CardinalityLimiter {
         CardinalityLimiter { max_series_per_metric: max_series_per_metric.max(1), seen: Mutex::new(HashMap::new()) }
     }
 
@@ -351,7 +354,7 @@ impl CardinalityLimiter {
     /// (`[("cardinality", "overflow")]`) instead — a metric's tracked series count never exceeds
     /// `max_series_per_metric` (the overflow series itself is exactly one of those tracked slots,
     /// reused by every caller that overflows).
-    pub fn admit(&self, metric: &'static str, labels: Labels) -> Labels {
+    pub async fn admit(&self, metric: &'static str, labels: Labels) -> Labels {
         let mut seen = lock(&self.seen);
         let series = seen.entry(metric).or_default();
         if series.contains(&labels) || series.len() < self.max_series_per_metric {
@@ -371,7 +374,7 @@ impl CardinalityLimiter {
         }
     }
 
-    pub fn series_count(&self, metric: &'static str) -> usize {
+    pub async fn series_count(&self, metric: &'static str) -> usize {
         lock(&self.seen).get(metric).map_or(0, HashSet::len)
     }
 }
@@ -405,28 +408,28 @@ pub struct MetricRegistry {
 }
 
 impl MetricRegistry {
-    pub fn new(max_series_per_metric: usize) -> MetricRegistry {
-        MetricRegistry { cardinality: CardinalityLimiter::new(max_series_per_metric), counters: Mutex::new(HashMap::new()), gauges: Mutex::new(HashMap::new()), histograms: Mutex::new(HashMap::new()) }
+    pub async fn new(max_series_per_metric: usize) -> MetricRegistry {
+        MetricRegistry { cardinality: CardinalityLimiter::new(max_series_per_metric).await, counters: Mutex::new(HashMap::new()), gauges: Mutex::new(HashMap::new()), histograms: Mutex::new(HashMap::new()) }
     }
 
     /// @emoji ➕️ Monotonically increments the counter series `(name, labels)` by `delta`.
-    pub fn incr_counter(&self, name: &'static str, labels: Labels, delta: u64) {
+    pub async fn incr_counter(&self, name: &'static str, labels: Labels, delta: u64) {
         let labels = self.cardinality.admit(name, labels);
         let mut counters = lock(&self.counters);
-        *counters.entry((name, labels)).or_insert(0) += delta;
+        *counters.entry((name, labels.await)).or_insert(0) += delta;
     }
 
-    pub fn counter_value(&self, name: &'static str, labels: &Labels) -> u64 {
+    pub async fn counter_value(&self, name: &'static str, labels: &Labels) -> u64 {
         lock(&self.counters).get(&(name, labels.clone())).copied().unwrap_or(0)
     }
 
     /// @emoji 🎚️ Sets the gauge series `(name, labels)` to `value`, overwriting any prior value.
-    pub fn set_gauge(&self, name: &'static str, labels: Labels, value: f64) {
+    pub async fn set_gauge(&self, name: &'static str, labels: Labels, value: f64) {
         let labels = self.cardinality.admit(name, labels);
-        lock(&self.gauges).insert((name, labels), value);
+        lock(&self.gauges).insert((name, labels.await), value);
     }
 
-    pub fn gauge_value(&self, name: &'static str, labels: &Labels) -> Option<f64> {
+    pub async fn gauge_value(&self, name: &'static str, labels: &Labels) -> Option<f64> {
         lock(&self.gauges).get(&(name, labels.clone())).copied()
     }
 
@@ -435,13 +438,13 @@ impl MetricRegistry {
     /// observation. Later calls for the same series reuse the bounds fixed at creation — a
     /// mismatched `bounds.len()` is a caller bug (`DbError::InvalidArgument`), not silently
     /// ignored.
-    pub fn observe_histogram(&self, name: &'static str, labels: Labels, bounds: &[f64], value: f64) -> Result<(), DbError> {
+    pub async fn observe_histogram(&self, name: &'static str, labels: Labels, bounds: &[f64], value: f64) -> Result<(), DbError> {
         if bounds.is_empty() {
             return Err(DbError::InvalidArgument("histogram bounds must not be empty".to_string()));
         }
         let labels = self.cardinality.admit(name, labels);
         let mut histograms = lock(&self.histograms);
-        let state = histograms.entry((name, labels)).or_insert_with(|| HistogramState { bounds: bounds.to_vec(), bucket_counts: vec![0; bounds.len() + 1], sum: 0.0, count: 0 });
+        let state = histograms.entry((name, labels.await)).or_insert_with(|| HistogramState { bounds: bounds.to_vec(), bucket_counts: vec![0; bounds.len() + 1], sum: 0.0, count: 0 });
         if state.bounds.len() != bounds.len() {
             return Err(DbError::InvalidArgument(format!("histogram {name} bounds length changed: {} vs {}", state.bounds.len(), bounds.len())));
         }
@@ -452,7 +455,7 @@ impl MetricRegistry {
         Ok(())
     }
 
-    pub fn histogram_snapshot(&self, name: &'static str, labels: &Labels) -> Option<HistogramSnapshot> {
+    pub async fn histogram_snapshot(&self, name: &'static str, labels: &Labels) -> Option<HistogramSnapshot> {
         lock(&self.histograms).get(&(name, labels.clone())).map(|s| HistogramSnapshot { bounds: s.bounds.clone(), bucket_counts: s.bucket_counts.clone(), sum: s.sum, count: s.count })
     }
 }
@@ -463,7 +466,7 @@ impl MetricRegistry {
 /// family's `db_testkit::SimClock` (not a dependency of this crate) is the deterministic-
 /// simulation analog; this crate only needs the read side.
 pub trait Clock: Send + Sync {
-    fn now_ms(&self) -> u64;
+    async fn now_ms(&self) -> u64;
 }
 
 /// @emoji 🕰️ The real wall clock — `Database::open_at`'s default `SpanRegistry` clock.
@@ -471,7 +474,7 @@ pub trait Clock: Send + Sync {
 pub struct SystemClock;
 
 impl Clock for SystemClock {
-    fn now_ms(&self) -> u64 {
+    async fn now_ms(&self) -> u64 {
         std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |d| d.as_millis() as u64)
     }
 }
@@ -512,20 +515,20 @@ pub struct SpanRegistry<C: Clock = SystemClock> {
 }
 
 impl SpanRegistry<SystemClock> {
-    pub fn new(max_retained: usize) -> SpanRegistry<SystemClock> {
-        SpanRegistry::with_clock(SystemClock, max_retained)
+    pub async fn new(max_retained: usize) -> SpanRegistry<SystemClock> {
+        SpanRegistry::with_clock(SystemClock, max_retained).await
     }
 }
 
 impl<C: Clock> SpanRegistry<C> {
-    pub fn with_clock(clock: C, max_retained: usize) -> SpanRegistry<C> {
+    pub async fn with_clock(clock: C, max_retained: usize) -> SpanRegistry<C> {
         SpanRegistry { clock, next_id: AtomicU64::new(0), active: Mutex::new(HashMap::new()), completed: Mutex::new(VecDeque::new()), max_retained: max_retained.max(1) }
     }
 
     /// @emoji ▶️ Starts a new span, returning its id (pass to `end`).
-    pub fn start(&self, name: &'static str, parent: Option<SpanId>, document: Option<ArtifactId>) -> SpanId {
+    pub async fn start(&self, name: &'static str, parent: Option<SpanId>, document: Option<ArtifactId>) -> SpanId {
         let id = self.next_id.fetch_add(1, Ordering::Relaxed);
-        let start_ms = self.clock.now_ms();
+        let start_ms = self.clock.now_ms().await;
         lock(&self.active).insert(id, ActiveSpan { name, parent, document, start_ms });
         SpanId(id)
     }
@@ -533,9 +536,9 @@ impl<C: Clock> SpanRegistry<C> {
     /// @emoji 🏁️ Ends `id`, moving it from active into the completed ring buffer and returning
     /// it. `None` if `id` was never started or was already ended (a caller bug this reports
     /// rather than panics on).
-    pub fn end(&self, id: SpanId) -> Option<CompletedSpan> {
+    pub async fn end(&self, id: SpanId) -> Option<CompletedSpan> {
         let active = lock(&self.active).remove(&id.0)?;
-        let end_ms = self.clock.now_ms();
+        let end_ms = self.clock.now_ms().await;
         let span = CompletedSpan { id, name: active.name, parent: active.parent, document: active.document, start_ms: active.start_ms, end_ms, duration_ms: end_ms.saturating_sub(active.start_ms) };
         let mut completed = lock(&self.completed);
         completed.push_back(span.clone());
@@ -545,12 +548,12 @@ impl<C: Clock> SpanRegistry<C> {
         Some(span)
     }
 
-    pub fn active_count(&self) -> usize {
+    pub async fn active_count(&self) -> usize {
         lock(&self.active).len()
     }
 
     /// @emoji 📜️ A snapshot of the retained completed spans, oldest first.
-    pub fn completed(&self) -> Vec<CompletedSpan> {
+    pub async fn completed(&self) -> Vec<CompletedSpan> {
         lock(&self.completed).iter().cloned().collect()
     }
 }
@@ -567,6 +570,7 @@ pub enum HealthState {
 }
 
 impl HealthState {
+    // 🚫️async: E4 fn-pointer slot (used as `Iterator::max_by_key(HealthState::rank)`) — see R9
     fn rank(&self) -> u8 {
         match self {
             HealthState::Healthy => 0,
@@ -637,7 +641,7 @@ impl DeterminismVerifier {
     /// @emoji 🆕️ `expected_labels` names every stream that must agree (e.g. `["primary",
     /// "replay"]`); `max_pending` bounds how many not-yet-fully-reported sequence numbers this
     /// verifier holds onto at once — a stream that stalls forever can't grow this unboundedly.
-    pub fn new(expected_labels: impl IntoIterator<Item = impl Into<String>>, max_pending: usize) -> DeterminismVerifier {
+    pub async fn new(expected_labels: impl IntoIterator<Item = impl Into<String>>, max_pending: usize) -> DeterminismVerifier {
         DeterminismVerifier { expected_labels: expected_labels.into_iter().map(Into::into).collect(), pending: Mutex::new(HashMap::new()), max_pending: max_pending.max(1) }
     }
 
@@ -646,7 +650,7 @@ impl DeterminismVerifier {
     /// agree — either way `seq` is pruned afterward, so a completed sequence never grows the
     /// pending set. Errs with `LimitExceeded` if `seq` is new and the pending window is already
     /// full (protects against an expected label that never reports).
-    pub fn record(&self, seq: u64, label: &str, digest: ContentHash) -> Result<Option<DivergenceReport>, DbError> {
+    pub async fn record(&self, seq: u64, label: &str, digest: ContentHash) -> Result<Option<DivergenceReport>, DbError> {
         let mut pending = lock(&self.pending);
         if !pending.contains_key(&seq) && pending.len() >= self.max_pending {
             return Err(DbError::LimitExceeded("determinism verifier pending-sequence window exceeded"));
@@ -670,7 +674,7 @@ impl DeterminismVerifier {
         }
     }
 
-    pub fn pending_count(&self) -> usize {
+    pub async fn pending_count(&self) -> usize {
         lock(&self.pending).len()
     }
 }
@@ -684,7 +688,7 @@ impl DeterminismVerifier {
 /// `UnwiredOtelExporter` for the honest not-yet-implemented default.
 #[cfg(feature = "otel")]
 pub trait OtelSpanExporter: Send + Sync {
-    fn export(&self, span: &CompletedSpan) -> Result<(), DbError>;
+    async fn export(&self, span: &CompletedSpan) -> Result<(), DbError>;
 }
 
 /// @emoji 🚫️ An `OtelSpanExporter` that reports `DbError::Unimplemented` rather than silently
@@ -696,7 +700,7 @@ pub struct UnwiredOtelExporter;
 
 #[cfg(feature = "otel")]
 impl OtelSpanExporter for UnwiredOtelExporter {
-    fn export(&self, _span: &CompletedSpan) -> Result<(), DbError> {
+    async fn export(&self, _span: &CompletedSpan) -> Result<(), DbError> {
         Err(DbError::Unimplemented("otel export requires an OTLP exporter crate not yet a workspace dependency"))
     }
 }
@@ -707,13 +711,13 @@ impl OtelSpanExporter for UnwiredOtelExporter {
 mod tests {
     use super::*;
 
-    fn hash(byte: u8) -> pack::ContentHash {
+    async fn hash(byte: u8) -> pack::ContentHash {
         pack::ContentHash([byte; 32])
     }
 
     //#region 🔖️Json
-    #[test]
-    fn encode_emit_event_json_escapes_and_shapes_fields() {
+    #[semio_framework_async_macros::async_test]
+    async fn encode_emit_event_json_escapes_and_shapes_fields() {
         let event = EmitEvent::new("wal.append")
             .with_document(ArtifactId::from("doc\"1"))
             .field("bytes", EmitField::U64(42))
@@ -729,8 +733,8 @@ mod tests {
         assert!(json.ends_with("}}"));
     }
 
-    #[test]
-    fn encode_emit_event_json_never_emits_nan_or_infinity_literals() {
+    #[semio_framework_async_macros::async_test]
+    async fn encode_emit_event_json_never_emits_nan_or_infinity_literals() {
         let event = EmitEvent::new("x").field("v", EmitField::F64(f64::NAN));
         let json = encode_emit_event_json(&event);
         assert!(json.contains("\"v\":null"));
@@ -739,119 +743,119 @@ mod tests {
     //#endregion 🔖️Json
 
     //#region 🔖️Sink
-    #[test]
-    fn writer_sink_appends_newline_terminated_lines() {
+    #[semio_framework_async_macros::async_test]
+    async fn writer_sink_appends_newline_terminated_lines() {
         let sink = WriterSink::new(Vec::<u8>::new());
-        sink.write_line("a").unwrap();
-        sink.write_line("b").unwrap();
+        sink.write_line("a").await.unwrap();
+        sink.write_line("b").await.unwrap();
         let bytes = lock(&sink.writer).clone();
         assert_eq!(String::from_utf8(bytes).unwrap(), "a\nb\n");
     }
 
     struct FailingSink;
     impl EventSink for FailingSink {
-        fn write_line(&self, _line: &str) -> Result<(), DbError> {
+        async fn write_line(&self, _line: &str) -> Result<(), DbError> {
             Err(DbError::Io("disk full".to_string()))
         }
     }
     //#endregion 🔖️Sink
 
     //#region 🔖️Structured
-    #[test]
-    fn structured_sink_writes_one_json_line_per_event() {
+    #[semio_framework_async_macros::async_test]
+    async fn structured_sink_writes_one_json_line_per_event() {
         let memory = MemorySink::new();
         let structured = StructuredSink::new(memory);
-        structured.emit(EmitEvent::new("doc.commit").field("seq", EmitField::U64(7)));
-        let lines = structured.sink.lines();
+        structured.emit(EmitEvent::new("doc.commit").field("seq", EmitField::U64(7))).await;
+        let lines = structured.sink.lines().await;
         assert_eq!(lines.len(), 1);
         assert!(lines[0].contains("\"name\":\"doc.commit\""));
-        assert_eq!(structured.failed_writes(), 0);
+        assert_eq!(structured.failed_writes().await, 0);
     }
 
-    #[test]
-    fn structured_sink_counts_failed_writes_instead_of_dropping_silently_or_panicking() {
+    #[semio_framework_async_macros::async_test]
+    async fn structured_sink_counts_failed_writes_instead_of_dropping_silently_or_panicking() {
         let structured = StructuredSink::new(FailingSink);
-        structured.emit(EmitEvent::new("x"));
-        structured.emit(EmitEvent::new("y"));
-        assert_eq!(structured.failed_writes(), 2);
+        structured.emit(EmitEvent::new("x")).await;
+        structured.emit(EmitEvent::new("y")).await;
+        assert_eq!(structured.failed_writes().await, 2);
     }
     //#endregion 🔖️Structured
 
     //#region 🔖️Audit
-    #[test]
-    fn audit_sink_verify_chain_accepts_an_untampered_log() {
+    #[semio_framework_async_macros::async_test]
+    async fn audit_sink_verify_chain_accepts_an_untampered_log() {
         let memory = MemorySink::new();
-        let audit = AuditSink::new(memory, 100);
+        let audit = AuditSink::new(memory, 100).await;
         for i in 0..5u64 {
-            audit.emit(EmitEvent::new("audit.write").field("seq", EmitField::U64(i)));
+            audit.emit(EmitEvent::new("audit.write").field("seq", EmitField::U64(i))).await;
         }
-        let lines = audit.sink.lines();
+        let lines = audit.sink.lines().await;
         assert_eq!(lines.len(), 5);
-        assert_eq!(audit.chain().len(), 5);
-        assert!(audit.verify_chain(&lines).is_ok());
+        assert_eq!(audit.chain().await.len(), 5);
+        assert!(audit.verify_chain(&lines).await.is_ok());
     }
 
-    #[test]
-    fn audit_sink_verify_chain_detects_a_single_tampered_line() {
+    #[semio_framework_async_macros::async_test]
+    async fn audit_sink_verify_chain_detects_a_single_tampered_line() {
         let memory = MemorySink::new();
-        let audit = AuditSink::new(memory, 100);
+        let audit = AuditSink::new(memory, 100).await;
         for i in 0..5u64 {
-            audit.emit(EmitEvent::new("audit.write").field("seq", EmitField::U64(i)));
+            audit.emit(EmitEvent::new("audit.write").field("seq", EmitField::U64(i))).await;
         }
-        let mut lines = audit.sink.lines();
+        let mut lines = audit.sink.lines().await;
         lines[2] = lines[2].replace("\"seq\":2", "\"seq\":999");
-        let err = audit.verify_chain(&lines).unwrap_err();
+        let err = audit.verify_chain(&lines).await.unwrap_err();
         match err {
             DbError::Corrupt(message) => assert!(message.contains("seq 2")),
             other => panic!("expected Corrupt, got {other:?}"),
         }
     }
 
-    #[test]
-    fn audit_sink_bounded_retention_still_verifies_the_surviving_window() {
+    #[semio_framework_async_macros::async_test]
+    async fn audit_sink_bounded_retention_still_verifies_the_surviving_window() {
         let memory = MemorySink::new();
-        let audit = AuditSink::new(memory, 2);
+        let audit = AuditSink::new(memory, 2).await;
         for i in 0..5u64 {
-            audit.emit(EmitEvent::new("audit.write").field("seq", EmitField::U64(i)));
+            audit.emit(EmitEvent::new("audit.write").field("seq", EmitField::U64(i))).await;
         }
-        let all_lines = audit.sink.lines();
+        let all_lines = audit.sink.lines().await;
         assert_eq!(all_lines.len(), 5);
-        let chain = audit.chain();
+        let chain = audit.chain().await;
         assert_eq!(chain.len(), 2);
         assert_eq!(chain[0].seq, 3);
         assert_eq!(chain[1].seq, 4);
         let retained_lines = all_lines[3..].to_vec();
-        assert!(audit.verify_chain(&retained_lines).is_ok());
+        assert!(audit.verify_chain(&retained_lines).await.is_ok());
     }
 
-    #[test]
-    fn audit_sink_does_not_chain_a_failed_write() {
-        let audit = AuditSink::new(FailingSink, 10);
-        audit.emit(EmitEvent::new("x"));
-        assert_eq!(audit.failed_writes(), 1);
-        assert!(audit.chain().is_empty());
+    #[semio_framework_async_macros::async_test]
+    async fn audit_sink_does_not_chain_a_failed_write() {
+        let audit = AuditSink::new(FailingSink, 10).await;
+        audit.emit(EmitEvent::new("x")).await;
+        assert_eq!(audit.failed_writes().await, 1);
+        assert!(audit.chain().await.is_empty());
     }
     //#endregion 🔖️Audit
 
     //#region 🔖️Cardinality
-    #[test]
-    fn cardinality_limiter_admits_up_to_the_limit_then_collapses_to_overflow() {
-        let limiter = CardinalityLimiter::new(2);
-        let a = limiter.admit("m", Labels::new([("k", "a".to_string())]));
-        let b = limiter.admit("m", Labels::new([("k", "b".to_string())]));
-        let c = limiter.admit("m", Labels::new([("k", "c".to_string())]));
+    #[semio_framework_async_macros::async_test]
+    async fn cardinality_limiter_admits_up_to_the_limit_then_collapses_to_overflow() {
+        let limiter = CardinalityLimiter::new(2).await;
+        let a = limiter.admit("m", Labels::new([("k", "a".to_string())])).await;
+        let b = limiter.admit("m", Labels::new([("k", "b".to_string())])).await;
+        let c = limiter.admit("m", Labels::new([("k", "c".to_string())])).await;
         assert_eq!(a, Labels::new([("k", "a".to_string())]));
         assert_eq!(b, Labels::new([("k", "b".to_string())]));
         assert_eq!(c, Labels::new([("cardinality", "overflow".to_string())]));
-        assert_eq!(limiter.series_count("m"), 2);
+        assert_eq!(limiter.series_count("m").await, 2);
 
         // 🔒️ a previously-admitted series stays itself, never gets swept into overflow later.
-        let a_again = limiter.admit("m", Labels::new([("k", "a".to_string())]));
+        let a_again = limiter.admit("m", Labels::new([("k", "a".to_string())])).await;
         assert_eq!(a_again, Labels::new([("k", "a".to_string())]));
     }
 
-    #[test]
-    fn labels_canonicalize_insertion_order() {
+    #[semio_framework_async_macros::async_test]
+    async fn labels_canonicalize_insertion_order() {
         let l1 = Labels::new([("b", "2".to_string()), ("a", "1".to_string())]);
         let l2 = Labels::new([("a", "1".to_string()), ("b", "2".to_string())]);
         assert_eq!(l1, l2);
@@ -859,39 +863,39 @@ mod tests {
     //#endregion 🔖️Cardinality
 
     //#region 🔖️Metrics
-    #[test]
-    fn metric_registry_counter_accumulates_per_series() {
-        let metrics = MetricRegistry::new(16);
-        metrics.incr_counter("cmd.count", Labels::none(), 1);
-        metrics.incr_counter("cmd.count", Labels::none(), 4);
-        assert_eq!(metrics.counter_value("cmd.count", &Labels::none()), 5);
+    #[semio_framework_async_macros::async_test]
+    async fn metric_registry_counter_accumulates_per_series() {
+        let metrics = MetricRegistry::new(16).await;
+        metrics.incr_counter("cmd.count", Labels::none().await, 1).await;
+        metrics.incr_counter("cmd.count", Labels::none().await, 4).await;
+        assert_eq!(metrics.counter_value("cmd.count", &Labels::none().await).await, 5);
     }
 
-    #[test]
-    fn metric_registry_gauge_overwrites() {
-        let metrics = MetricRegistry::new(16);
-        metrics.set_gauge("mailbox.depth", Labels::none(), 3.0);
-        metrics.set_gauge("mailbox.depth", Labels::none(), 7.0);
-        assert_eq!(metrics.gauge_value("mailbox.depth", &Labels::none()), Some(7.0));
+    #[semio_framework_async_macros::async_test]
+    async fn metric_registry_gauge_overwrites() {
+        let metrics = MetricRegistry::new(16).await;
+        metrics.set_gauge("mailbox.depth", Labels::none().await, 3.0).await;
+        metrics.set_gauge("mailbox.depth", Labels::none().await, 7.0).await;
+        assert_eq!(metrics.gauge_value("mailbox.depth", &Labels::none().await).await, Some(7.0));
     }
 
-    #[test]
-    fn metric_registry_histogram_buckets_are_upper_inclusive_with_overflow_bucket() {
-        let metrics = MetricRegistry::new(16);
+    #[semio_framework_async_macros::async_test]
+    async fn metric_registry_histogram_buckets_are_upper_inclusive_with_overflow_bucket() {
+        let metrics = MetricRegistry::new(16).await;
         let bounds = [1.0, 5.0, 10.0];
         for v in [0.5, 1.0, 3.0, 5.0, 8.0, 20.0] {
-            metrics.observe_histogram("latency_ms", Labels::none(), &bounds, v).unwrap();
+            metrics.observe_histogram("latency_ms", Labels::none().await, &bounds, v).await.unwrap();
         }
-        let snap = metrics.histogram_snapshot("latency_ms", &Labels::none()).unwrap();
+        let snap = metrics.histogram_snapshot("latency_ms", &Labels::none().await).await.unwrap();
         assert_eq!(snap.bucket_counts, vec![2, 2, 1, 1]);
         assert_eq!(snap.count, 6);
     }
 
-    #[test]
-    fn metric_registry_histogram_rejects_a_bounds_length_change() {
-        let metrics = MetricRegistry::new(16);
-        metrics.observe_histogram("h", Labels::none(), &[1.0, 2.0], 1.0).unwrap();
-        let err = metrics.observe_histogram("h", Labels::none(), &[1.0], 1.0).unwrap_err();
+    #[semio_framework_async_macros::async_test]
+    async fn metric_registry_histogram_rejects_a_bounds_length_change() {
+        let metrics = MetricRegistry::new(16).await;
+        metrics.observe_histogram("h", Labels::none().await, &[1.0, 2.0], 1.0).await.unwrap();
+        let err = metrics.observe_histogram("h", Labels::none().await, &[1.0], 1.0).await.unwrap_err();
         assert!(matches!(err, DbError::InvalidArgument(_)));
     }
     //#endregion 🔖️Metrics
@@ -899,44 +903,44 @@ mod tests {
     //#region 🔖️Span
     struct FakeClock(AtomicU64);
     impl Clock for FakeClock {
-        fn now_ms(&self) -> u64 {
+        async fn now_ms(&self) -> u64 {
             self.0.fetch_add(10, Ordering::Relaxed)
         }
     }
 
-    #[test]
-    fn span_registry_records_duration_and_moves_active_to_completed() {
-        let registry = SpanRegistry::with_clock(FakeClock(AtomicU64::new(0)), 16);
-        let id = registry.start("doc.commit", None, None);
-        assert_eq!(registry.active_count(), 1);
-        let completed = registry.end(id).unwrap();
+    #[semio_framework_async_macros::async_test]
+    async fn span_registry_records_duration_and_moves_active_to_completed() {
+        let registry = SpanRegistry::with_clock(FakeClock(AtomicU64::new(0)), 16).await;
+        let id = registry.start("doc.commit", None, None).await;
+        assert_eq!(registry.active_count().await, 1);
+        let completed = registry.end(id).await.unwrap();
         assert_eq!(completed.duration_ms, 10);
-        assert_eq!(registry.active_count(), 0);
-        assert_eq!(registry.completed().len(), 1);
+        assert_eq!(registry.active_count().await, 0);
+        assert_eq!(registry.completed().await.len(), 1);
     }
 
-    #[test]
-    fn span_registry_double_end_returns_none_instead_of_panicking() {
-        let registry = SpanRegistry::with_clock(FakeClock(AtomicU64::new(0)), 16);
-        let id = registry.start("s", None, None);
-        assert!(registry.end(id).is_some());
-        assert!(registry.end(id).is_none());
+    #[semio_framework_async_macros::async_test]
+    async fn span_registry_double_end_returns_none_instead_of_panicking() {
+        let registry = SpanRegistry::with_clock(FakeClock(AtomicU64::new(0)), 16).await;
+        let id = registry.start("s", None, None).await;
+        assert!(registry.end(id).await.is_some());
+        assert!(registry.end(id).await.is_none());
     }
 
-    #[test]
-    fn span_registry_retention_is_bounded() {
-        let registry = SpanRegistry::with_clock(FakeClock(AtomicU64::new(0)), 2);
+    #[semio_framework_async_macros::async_test]
+    async fn span_registry_retention_is_bounded() {
+        let registry = SpanRegistry::with_clock(FakeClock(AtomicU64::new(0)), 2).await;
         for _ in 0..5 {
-            let id = registry.start("s", None, None);
-            registry.end(id);
+            let id = registry.start("s", None, None).await;
+            registry.end(id).await;
         }
-        assert_eq!(registry.completed().len(), 2);
+        assert_eq!(registry.completed().await.len(), 2);
     }
     //#endregion 🔖️Span
 
     //#region 🔖️Health
-    #[test]
-    fn health_registry_reports_worst_of_all_components() {
+    #[semio_framework_async_macros::async_test]
+    async fn health_registry_reports_worst_of_all_components() {
         let health = HealthRegistry::new();
         health.set("wal", HealthState::Healthy);
         health.set("storage", HealthState::Degraded("slow fsync".to_string()));
@@ -948,46 +952,46 @@ mod tests {
         assert_eq!(health.report().overall, HealthState::Unhealthy("disk full".to_string()));
     }
 
-    #[test]
-    fn health_registry_defaults_to_healthy_with_no_components() {
+    #[semio_framework_async_macros::async_test]
+    async fn health_registry_defaults_to_healthy_with_no_components() {
         let health = HealthRegistry::new();
         assert_eq!(health.report().overall, HealthState::Healthy);
     }
     //#endregion 🔖️Health
 
     //#region 🔖️Determinism
-    #[test]
-    fn determinism_verifier_reports_no_divergence_on_matching_digests() {
-        let verifier = DeterminismVerifier::new(["primary", "replay"], 16);
-        assert!(verifier.record(0, "primary", hash(1)).unwrap().is_none());
-        assert!(verifier.record(0, "replay", hash(1)).unwrap().is_none());
-        assert_eq!(verifier.pending_count(), 0);
+    #[semio_framework_async_macros::async_test]
+    async fn determinism_verifier_reports_no_divergence_on_matching_digests() {
+        let verifier = DeterminismVerifier::new(["primary", "replay"], 16).await;
+        assert!(verifier.record(0, "primary", hash(1).await).await.unwrap().is_none());
+        assert!(verifier.record(0, "replay", hash(1).await).await.unwrap().is_none());
+        assert_eq!(verifier.pending_count().await, 0);
     }
 
-    #[test]
-    fn determinism_verifier_reports_divergence_on_mismatched_digests() {
-        let verifier = DeterminismVerifier::new(["primary", "replay"], 16);
-        verifier.record(3, "primary", hash(1)).unwrap();
-        let report = verifier.record(3, "replay", hash(2)).unwrap().unwrap();
+    #[semio_framework_async_macros::async_test]
+    async fn determinism_verifier_reports_divergence_on_mismatched_digests() {
+        let verifier = DeterminismVerifier::new(["primary", "replay"], 16).await;
+        verifier.record(3, "primary", hash(1).await).await.unwrap();
+        let report = verifier.record(3, "replay", hash(2).await).await.unwrap().unwrap();
         assert_eq!(report.seq, 3);
         assert_eq!(report.digests.len(), 2);
-        assert_eq!(verifier.pending_count(), 0);
+        assert_eq!(verifier.pending_count().await, 0);
     }
 
-    #[test]
-    fn determinism_verifier_bounds_pending_window() {
-        let verifier = DeterminismVerifier::new(["primary", "replay"], 2);
-        verifier.record(0, "primary", hash(1)).unwrap();
-        verifier.record(1, "primary", hash(1)).unwrap();
-        let err = verifier.record(2, "primary", hash(1)).unwrap_err();
+    #[semio_framework_async_macros::async_test]
+    async fn determinism_verifier_bounds_pending_window() {
+        let verifier = DeterminismVerifier::new(["primary", "replay"], 2).await;
+        verifier.record(0, "primary", hash(1).await).await.unwrap();
+        verifier.record(1, "primary", hash(1).await).await.unwrap();
+        let err = verifier.record(2, "primary", hash(1).await).await.unwrap_err();
         assert!(matches!(err, DbError::LimitExceeded(_)));
     }
     //#endregion 🔖️Determinism
 
     //#region 🔖️Otel
     #[cfg(feature = "otel")]
-    #[test]
-    fn unwired_otel_exporter_reports_unimplemented_rather_than_panicking() {
+    #[semio_framework_async_macros::async_test]
+    async fn unwired_otel_exporter_reports_unimplemented_rather_than_panicking() {
         let span = CompletedSpan { id: SpanId(0), name: "s", parent: None, document: None, start_ms: 0, end_ms: 1, duration_ms: 1 };
         let err = UnwiredOtelExporter.export(&span).unwrap_err();
         assert!(matches!(err, DbError::Unimplemented(_)));

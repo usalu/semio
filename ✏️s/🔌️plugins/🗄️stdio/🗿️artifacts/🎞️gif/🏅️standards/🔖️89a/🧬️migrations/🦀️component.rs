@@ -71,9 +71,9 @@ async fn migrate_image_to_frame(image: &GifImage) -> GifFrame {
 /// Result<Vec<u8>, String>` shape: decodes 87a pack bytes to a snapshot, migrates, re-encodes as
 /// 89a pack bytes. A bare non-capturing `fn`, coercible to the registry's `fn` pointer field.
 async fn migrate_87a_to_89a_pack(pack_bytes: &[u8]) -> Result<Vec<u8>, String> {
-    let snapshot_87a = <Gif87aSnapshot as store::ArtifactPack>::decode_pack(pack_bytes).map_err(|error| error.to_string())?;
+    let snapshot_87a = <Gif87aSnapshot as store::ArtifactPack>::decode_pack(pack_bytes).await.map_err(|error| error.to_string())?;
     let snapshot_89a = migrate_87a_to_89a(&snapshot_87a);
-    Ok(<Gif89aSnapshot as store::ArtifactPack>::encode_pack(&snapshot_89a))
+    Ok(<Gif89aSnapshot as store::ArtifactPack>::encode_pack(&snapshot_89a).await)
 }
 
 /// 📝️ Wires `migrate_87a_to_89a_pack` into `store`'s dialect-migration registry (see

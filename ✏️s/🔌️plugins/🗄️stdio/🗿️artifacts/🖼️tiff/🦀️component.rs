@@ -61,18 +61,18 @@ pub async fn artifact_kind() -> ArtifactKindSpec {
 /// already exposes.
 /// 🧩️ Binds this executable root to its sole schema-owned definition.
 pub async fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Result<crate::registry::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
-    crate::registry::runtime_assembly("tiff", definition, declaration)
+    crate::registry::runtime_assembly("tiff", definition, declaration).await
 }
 
 pub async fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
-    let formats = crate::registry::format_descriptors_for("tiff")?;
+    let formats = crate::registry::format_descriptors_for("tiff").await?;
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
-        .schema(crate::artifacts::tiff::standards::v6_0::subsets::any::schema::tiff_artifact_schema_descriptor())
-        .formats(formats)
-        .inferences([crate::artifacts::tiff::standards::v6_0::subsets::any::schema::inferences::tiff_artifact_inference_descriptor()])
-        .composers(crate::artifacts::tiff::standards::v6_0::engine::io_registry::entries())
-        .subset_validators(declared_subset_validators())
-        .languages(pilot_languages())
+        .await.schema(crate::artifacts::tiff::standards::v6_0::subsets::any::schema::tiff_artifact_schema_descriptor().await)
+        .await.formats(formats)
+        .await.inferences([crate::artifacts::tiff::standards::v6_0::subsets::any::schema::inferences::tiff_artifact_inference_descriptor()])
+        .await.composers(crate::artifacts::tiff::standards::v6_0::engine::io_registry::entries())
+        .await.subset_validators(declared_subset_validators().await)
+        .await.languages(pilot_languages())
         .document_codec_bare::<TiffSnapshot, TiffMutation>(STDIO_TIFF_DOCUMENT_SCHEMA)
         .try_build()
 }
@@ -158,7 +158,8 @@ pub mod io_registry {
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
 
-    pub async fn entries() -> &'static [&'static ComposerEntry] {
+    // 🚫️async: E1 pure table accessor consumed by OnceLock::get_or_init's sync closure — see R9
+    pub fn entries() -> &'static [&'static ComposerEntry] {
         ENTRIES.get_or_init(|| v6_0::entries().iter().collect()).as_slice()
     }
 
