@@ -9,7 +9,7 @@ use crate::tui::text::{display_width, truncate_to};
 use crate::tui::theme::{Role, Surface, Theme};
 use crate::tui::widget::{InputState, WidgetSignal};
 
-pub(crate) async fn input_on_key(i: &mut InputState, ev: &KeyEvent) -> Option<WidgetSignal> {
+pub(crate) fn input_on_key(i: &mut InputState, ev: &KeyEvent) -> Option<WidgetSignal> {
     match ev.key {
         Key::Char(c) => {
             i.value.insert(i.cursor, c);
@@ -34,7 +34,7 @@ pub(crate) async fn input_on_key(i: &mut InputState, ev: &KeyEvent) -> Option<Wi
     }
 }
 
-pub(crate) async fn paint_input(i: &InputState, theme: &Theme, rect: Rect, buf: &mut CellBuffer, focused: bool) {
+pub(crate) fn paint_input(i: &InputState, theme: &Theme, rect: Rect, buf: &mut CellBuffer, focused: bool) {
     let bg = theme.surface(Surface::Panel);
     buf.fill_rect(rect, Cell::blank(theme.role(Role::Foreground), bg));
     let (text, fg) = if i.value.is_empty() { (i.placeholder.as_str(), theme.role(Role::MutedForeground)) } else { (i.value.as_str(), theme.role(Role::Foreground)) };

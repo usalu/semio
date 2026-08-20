@@ -23,20 +23,20 @@ Use the latest ueli wip branch: https://github.com/usalu/semio/tree/%F0%9F%90%99
 ---
 
 Extend/Refactor/Change clean mechanisms to properly achieve this.
-Exhaustively plan for a workforce of parallel agents.
+Exhaustively plan for work fleets of maximum possible parallel agents.
 Everything end to end (ignore everything inside ./compose folder).
 Use the main chat with Fable 5 High for creating the plan, then use the main chat with Opus 5 High for main plan coordination, then use multiple Sonnet 5 High agents for task execution, then use multiple Haiku 4.5 agents for read-only exploration.
 
 ---
 
 Extend/Refactor/Change clean mechanisms to properly achieve this.
-Exhaustively plan for a workforce of parallel agents.
+Exhaustively plan for work fleets of maximum possible parallel agents.
 Everything end to end.
 Use a single Opus 5 agent for creating the plan, a single Cursor Grok 4.5 High agent for main plan coordination, multiple Composer 2.5 agents for task execution, multiple Composer 2.5 agents for read-only exploration.
 
 ---
 
-Exhaustively plan for a workforce of as many parallel agents as you can.
+Exhaustively plan for work fleets of maximum possible parallel agents.
 Use the main chat with GPT 5.6 Sol Ultra for creating the plan, then use the main chat with GPT 5.6 Sol Extra-High for main plan coordination and use multiple GPT 5.6 Terra Extra-High agents for task execution and use multiple GPT 5.6 Luna Extra-High agents for read-only explorations and audits.
 
 ---
@@ -48,6 +48,14 @@ Everything end to end.
 # 🔍️ Research
 
 ##
+
+---
+
+
+
+---
+
+How would you architect an async multithreaded runtime with one main pure ui thread and multiple worker threads (at least one and max number of cores) for non-ui tasks in rust with wasm? We have a virtual operating system (runs on web with desktop, tablet mobile with a wpgu renderer, and native desktop with vulkan/metal/d3d12 and native mobile with swiftui, kotlin compose, etc) with plugins and plugins that have extensions. Around 50 plugins with each 50 extensions can be loaded at the same time. We have a multi-window system with interactive tools (every operation must be less than 8ms to complete).
 
 ---
 
@@ -412,9 +420,9 @@ e.g. the fill tool in puzzle should preview the tested results in realtime (show
 e.g. fem should show propagation of forces and displacements in realtime.
 e.g. wave function collapse should show the tested slots in realtime.
 
-The goal is not maximum performance of commands but maximum interactivity.‚
-
+The goal is not maximum performance of commands but maximum interactivity.
 Take all the fundamental decisions and refactor everything no matter the effort.
+The goal of the repo is to have 0 external dependencies, so all frameworks can be programmed e.g. async, mutation, diff-based, etc from bottom up
 
 ---
 

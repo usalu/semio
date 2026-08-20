@@ -19,16 +19,18 @@ use axum::response::IntoResponse;
 use axum::routing::{get, post};
 use axum::{Json, Router};
 use dashmap::DashMap;
+use db::db_storage::PayloadStorage as _;
+use directory::os_directory::{
+    self, ConnectionView, DirectoryActor, DirectoryActorKind, DirectoryCommand, DirectoryConnectionPhase, DirectoryEvent, DirectoryPresenceActor, DirectoryReadModel, DirectorySpaceRole, DirectorySpaceVisibility, DirectoryStreamMessage, DocumentView,
+    InviteView, MemberView, SpaceView,
+};
 use futures::stream::SplitSink;
 use futures::{SinkExt, StreamExt};
-use directory::os_directory::{
-    self, ConnectionView, DirectoryActor, DirectoryActorKind, DirectoryCommand, DirectoryConnectionPhase, DirectoryEvent, DirectoryPresenceActor, DirectoryReadModel, DirectorySpaceRole, DirectorySpaceVisibility, DirectoryStreamMessage, DocumentView, InviteView, MemberView, SpaceView,
-};
-use protocol::{decode_client_frame, encode_server_frame, AckStage, ActorId, ApplyOutcome, ClientFrame, ArtifactId as ProtocolArtifactId, Lane, MutationEnvelope, RuntimeFrontierSummary, ServerFrame};
-#[cfg(feature = "sqlite")]
-use semio_hub::directory::sqlite::SqliteDirectory;
+use protocol::{decode_client_frame, encode_server_frame, AckStage, ActorId, ApplyOutcome, ArtifactId as ProtocolArtifactId, ClientFrame, Lane, MutationEnvelope, RuntimeFrontierSummary, ServerFrame};
 use semio_hub::directory::error::DirectoryError;
 use semio_hub::directory::model::{InviteRecord, SpaceRole, SyncSessionRecord};
+#[cfg(feature = "sqlite")]
+use semio_hub::directory::sqlite::SqliteDirectory;
 use semio_hub::directory::{CommandResult, DirectoryService, HubDirectories, HubDirectory};
 use serde::{Deserialize, Serialize};
 use std::net::SocketAddr;
@@ -220,12 +222,12 @@ impl HubState {
     /// @emoji 🗂️ Get-or-create: a document is lazily minted in `db`'s catalog on its first Hello,
     /// tolerating the race of two sessions doing so concurrently (the loser's `AlreadyExists`
     /// resolves to the same live handle the winner just registered).
-    fn ensure_document(&self, id: &ProtocolArtifactId) -> Result<db::ArtifactHandle, db::DbError> {
-        match self.db.document(id) {
+    async fn ensure_document(&self, id: &ProtocolArtifactId) -> Result<db::ArtifactHandle, db::DbError> {
+        match self.db.document(id).await {
             Ok(handle) => Ok(handle),
-            Err(db::DbError::NotFound(_)) => match self.db.create_document(db::ArtifactSpec::new(id.clone())) {
+            Err(db::DbError::NotFound(_)) => match self.db.create_document(db::ArtifactSpec::new(id.clone()).await).await {
                 Ok(handle) => Ok(handle),
-                Err(db::DbError::AlreadyExists(_)) => self.db.document(id),
+                Err(db::DbError::AlreadyExists(_)) => self.db.document(id).await,
                 Err(other) => Err(other),
             },
             Err(other) => Err(other),
@@ -270,7 +272,10 @@ fn parse_content_hash(hex: &str) -> Option<db::ContentHash> {
 /// share-token viewer, an anonymous spectator admitted only because the space is `visibility ==
 /// "public"`, or nothing.
 enum AuthOutcome {
-    Session { user_id: String, role: SpaceRole },
+    Session {
+        user_id: String,
+        role: SpaceRole,
+    },
     ShareToken,
     /// @emoji 👁️ Public-visibility fallback — an implicit anonymous `SpaceRole::Spectator`, never
     /// persisted as a membership row. Granted only when no session/share-token access resolved AND
@@ -374,8 +379,8 @@ async fn get_document_status(Path((space_id, document_id)): Path<(String, String
     if !authorized(&state, &space_id, &document_id, bearer(&headers).as_deref()).await {
         return Err(StatusCode::UNAUTHORIZED);
     }
-    let handle = state.ensure_document(&db_artifact_id(&space_id, &document_id)).map_err(|e| db_error_status(&e))?;
-    let frontier = handle.frontier().map_err(|e| db_error_status(&e))?;
+    let handle = state.ensure_document(&db_artifact_id(&space_id, &document_id)).await.map_err(|e| db_error_status(&e))?;
+    let frontier = handle.frontier().await.map_err(|e| db_error_status(&e))?;
     Ok(Json(DocumentStatusResponse { document_id, head_seq: frontier.head_seq, commit_seq: frontier.commit_seq, epoch: frontier.epoch }))
 }
 
@@ -406,7 +411,7 @@ async fn put_blob(Path((space_id, hash)): Path<(String, String)>, headers: Heade
         return Err(StatusCode::UNAUTHORIZED);
     }
     let media_type = headers.get(axum::http::header::CONTENT_TYPE).and_then(|value| value.to_str().ok()).unwrap_or("application/octet-stream").to_string();
-    let computed = state.db.storage().payload().put(&body).await.map_err(|e| db_error_status(&e))?;
+    let computed = state.db.storage().await.payload().await.put(&body).await.map_err(|e| db_error_status(&e))?;
     let computed_hex = computed.to_string();
     // The path hash is client-supplied (content-addressed URL); a mismatch against the
     // storage-computed hash means the client sent the wrong bytes for that address — a bad
@@ -422,7 +427,7 @@ async fn get_blob(Path((space_id, hash)): Path<(String, String)>, headers: Heade
         return Err(StatusCode::UNAUTHORIZED);
     }
     let content_hash = parse_content_hash(&hash).ok_or(StatusCode::BAD_REQUEST)?;
-    match state.db.storage().payload().get(&content_hash).await {
+    match state.db.storage().await.payload().await.get(&content_hash).await {
         Ok(bytes) => Ok(([(axum::http::header::CONTENT_TYPE, "application/octet-stream")], bytes)),
         Err(db::DbError::NotFound(_)) => Err(StatusCode::NOT_FOUND),
         Err(_) => Err(StatusCode::INTERNAL_SERVER_ERROR),
@@ -434,7 +439,7 @@ async fn head_blob(Path((space_id, hash)): Path<(String, String)>, headers: Head
         return StatusCode::UNAUTHORIZED;
     }
     let Some(content_hash) = parse_content_hash(&hash) else { return StatusCode::BAD_REQUEST };
-    match state.db.storage().payload().contains(&content_hash).await {
+    match state.db.storage().await.payload().await.contains(&content_hash).await {
         Ok(true) => StatusCode::OK,
         Ok(false) => StatusCode::NOT_FOUND,
         Err(_) => StatusCode::INTERNAL_SERVER_ERROR,
@@ -458,22 +463,22 @@ async fn document_ws(ws: WebSocketUpgrade, Path((space_id, document_id)): Path<(
     ws.on_upgrade(move |socket| handle_ws(socket, space_id, document_id, surface, state))
 }
 
-fn encode(frame: &ServerFrame) -> Message {
-    Message::Binary(encode_server_frame(frame, Lane::Command).into())
+async fn encode(frame: &ServerFrame) -> Message {
+    Message::Binary(encode_server_frame(frame, Lane::Command).await.into())
 }
 
-fn error_frame(code: &str, message: impl Into<String>) -> Message {
-    encode(&ServerFrame::Error { code: code.to_string(), message: message.into() })
+async fn error_frame(code: &str, message: impl Into<String>) -> Message {
+    encode(&ServerFrame::Error { code: code.to_string(), message: message.into() }).await
 }
 
 /// @emoji 🧭️ Best-effort `RuntimeFrontierSummary` for an `Ack` when the triggering `submit` itself
 /// failed — re-reads the document's current (unaffected) frontier so the client still learns
 /// "where the server actually is", falling back to an all-zero genesis summary only if even that
 /// read fails (a document wedged badly enough that this happens has bigger problems than one Ack).
-fn best_effort_frontier(handle: &db::ArtifactHandle) -> RuntimeFrontierSummary {
-    match handle.frontier() {
+async fn best_effort_frontier(handle: &db::ArtifactHandle) -> RuntimeFrontierSummary {
+    match handle.frontier().await {
         Ok(frontier) => engine_frontier_to_wire(&frontier, String::new()),
-        Err(_) => RuntimeFrontierSummary { document_id: handle.document_id().clone(), head_edit_ordinal: 0, head_edit_id: String::new(), last_commit_seq: 0, chain_hash: [0u8; 32] },
+        Err(_) => RuntimeFrontierSummary { document_id: handle.document_id().await.clone(), head_edit_ordinal: 0, head_edit_id: String::new(), last_commit_seq: 0, chain_hash: [0u8; 32] },
     }
 }
 
@@ -540,10 +545,10 @@ fn messages_for_error(error: &db::DbError) -> Vec<u8> {
 /// dropped here rather than silently faked onto a field that doesn't exist — see this ticket's
 /// report for the gap.
 async fn submit_commands(handle: &db::ArtifactHandle, actor: &ActorId, batch_id: u64, envelopes: Vec<MutationEnvelope>, policy: protocol::MergePolicy) -> (ServerFrame, Option<ServerFrame>) {
-    let batch = match db::document::CommandBatch::new(envelopes.clone()) {
+    let batch = match db::document::CommandBatch::new(envelopes.clone()).await {
         Ok(batch) => batch,
         Err(error) => {
-            let frontier = best_effort_frontier(handle);
+            let frontier = best_effort_frontier(handle).await;
             return (ServerFrame::Ack { batch_id, stages: vec![AckStage::Applied { outcome: Box::new(ApplyOutcome::Rejected { reason: error.to_string(), messages: Vec::new() }) }], frontier }, None);
         }
     };
@@ -555,7 +560,7 @@ async fn submit_commands(handle: &db::ArtifactHandle, actor: &ActorId, batch_id:
             (ack, Some(commands))
         }
         Ok(Err(error)) | Err(error) => {
-            let frontier = best_effort_frontier(handle);
+            let frontier = best_effort_frontier(handle).await;
             let messages = messages_for_error(&error);
             (ServerFrame::Ack { batch_id, stages: vec![AckStage::Applied { outcome: Box::new(ApplyOutcome::Rejected { reason: error.to_string(), messages }) }], frontier }, None)
         }
@@ -570,8 +575,13 @@ async fn submit_commands(handle: &db::ArtifactHandle, actor: &ActorId, batch_id:
 /// `db_artifact`'s pipeline and never interprets an operation's schema/diff semantics (matches
 /// `db_security`'s own module doc — payload interpretation stays out of this layer), so command-kind
 /// granularity inside one document is not this wave's concern.
-fn admit_writes(gate: &db::security::SecurityGate, principal: &db::security::Principal, tenant: &db::security::TenantId, document: &ProtocolArtifactId, envelopes: &[MutationEnvelope], physical_ms: u64) -> Option<String> {
-    envelopes.iter().find_map(|envelope| gate.admit_command(principal, tenant, document, "write", &envelope.actor, &envelope.mutation_id, physical_ms).err().map(|error| error.to_string()))
+async fn admit_writes(gate: &db::security::SecurityGate, principal: &db::security::Principal, tenant: &db::security::TenantId, document: &ProtocolArtifactId, envelopes: &[MutationEnvelope], physical_ms: u64) -> Option<String> {
+    for envelope in envelopes {
+        if let Err(error) = gate.admit_command(principal, tenant, document, "write", &envelope.actor, &envelope.mutation_id, physical_ms).await {
+            return Some(error.to_string());
+        }
+    }
+    None
 }
 
 /// @emoji 📨️ Handles one decoded `ClientFrame` for an already-authenticated, already-`Hello`'d
@@ -594,21 +604,21 @@ async fn handle_client_frame(
 ) -> bool {
     match frame {
         ClientFrame::Commands { batch_id, envelopes } => {
-            if let Some(reason) = admit_writes(gate, principal, tenant, db_id, &envelopes, now_ms().max(0) as u64) {
-                let frontier = best_effort_frontier(handle);
+            if let Some(reason) = admit_writes(gate, principal, tenant, db_id, &envelopes, now_ms().max(0) as u64).await {
+                let frontier = best_effort_frontier(handle).await;
                 let ack = ServerFrame::Ack { batch_id, stages: vec![AckStage::Applied { outcome: Box::new(ApplyOutcome::Rejected { reason, messages: Vec::new() }) }], frontier };
-                return sender.send(encode(&ack)).await.is_ok();
+                return sender.send(encode(&ack).await).await.is_ok();
             }
             let (ack, relay) = submit_commands(handle, actor, batch_id, envelopes, state.merge_policy).await;
             if let Some(commands_frame) = relay {
                 let _ = fanout.send(commands_frame);
             }
-            sender.send(encode(&ack)).await.is_ok()
+            sender.send(encode(&ack).await).await.is_ok()
         }
         ClientFrame::FrontierAdvertise { frontier } => {
             let core_document = db_core_document_id(db_id);
-            match db::sync::handle_frontier_advertise(state.db.storage().wal(), core_document, &frontier, actor.clone()).await {
-                Ok(Some(catch_up)) => sender.send(encode(&catch_up)).await.is_ok(),
+            match db::sync::handle_frontier_advertise(&state.db.storage().await.wal().await, core_document, &frontier, actor.clone()).await {
+                Ok(Some(catch_up)) => sender.send(encode(&catch_up).await).await.is_ok(),
                 Ok(None) => true,
                 Err(_) => true,
             }
@@ -639,11 +649,11 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sur
     let (mut sender, mut receiver) = socket.split();
 
     let hello = match receiver.next().await {
-        Some(Ok(Message::Binary(bytes))) => decode_client_frame(&bytes).ok().map(|(_lane, frame)| frame),
+        Some(Ok(Message::Binary(bytes))) => decode_client_frame(&bytes).await.ok().map(|(_lane, frame)| frame),
         _ => None,
     };
     let Some(ClientFrame::Hello { pack_schema_hash, actor, token, frontier, .. }) = hello else {
-        let _ = sender.send(error_frame("protocol", "expected hello frame")).await;
+        let _ = sender.send(error_frame("protocol", "expected hello frame").await).await;
         return;
     };
 
@@ -651,7 +661,7 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sur
     if pack_schema_hash != [0u8; 32] {
         let pinned = *state.schema_hashes.entry(key.clone()).or_insert(pack_schema_hash);
         if pinned != pack_schema_hash {
-            let _ = sender.send(error_frame("schema-hash-mismatch", "pack schema hash does not match the hash already pinned for this document")).await;
+            let _ = sender.send(error_frame("schema-hash-mismatch", "pack schema hash does not match the hash already pinned for this document").await).await;
             return;
         }
     }
@@ -664,7 +674,7 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sur
         // membership row (see `AuthOutcome::Public`'s doc).
         AuthOutcome::Public => (None, Some(SpaceRole::Spectator)),
         AuthOutcome::Denied => {
-            let _ = sender.send(error_frame("unauthorized", "unauthorized")).await;
+            let _ = sender.send(error_frame("unauthorized", "unauthorized").await).await;
             return;
         }
     };
@@ -681,7 +691,7 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sur
     // `TenantId` reuses the space id: this crate has no separate tenant concept yet, and every
     // scope this gate ever evaluates already belongs to exactly this one space/document connection.
     let space_kind = state.directory.get_space(&space_id).await.ok().flatten().map_or_else(|| "studio".to_string(), |space| space.kind);
-    let policy = db::security::space_grants(&space_id, &space_kind).into_iter().fold(db::security::RoleBasedPolicy::new(), db::security::RoleBasedPolicy::with_grant);
+    let policy = db::security::space_grants(&space_id, &space_kind).await.into_iter().fold(db::security::RoleBasedPolicy::new(), db::security::RoleBasedPolicy::with_grant);
     let gate = db::security::SecurityGate::new(policy, db::security::ReplayGuard::new(60_000, 256), db::security::BudgetRegistry::new(240, 60), Arc::new(db::NullEmit));
     let tenant = db::security::TenantId::from(space_id.clone());
     // 🎯️ Role mapping: a resolved membership uses its own `SpaceRole`; `AuthOutcome::Public` (the
@@ -699,10 +709,10 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sur
     let principal = db::security::Principal::new(actor.clone(), tenant.clone(), vec![role_str]);
 
     let db_id = db_artifact_id(&space_id, &document_id);
-    let handle = match state.ensure_document(&db_id) {
+    let handle = match state.ensure_document(&db_id).await {
         Ok(handle) => handle,
         Err(error) => {
-            let _ = sender.send(error_frame("storage", error.to_string())).await;
+            let _ = sender.send(error_frame("storage", error.to_string()).await).await;
             state.release_color(&space_id, &actor.0);
             return;
         }
@@ -713,27 +723,27 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sur
     // `snapshot_chunk_bytes` fixes the threshold, not a value) — generous enough that a fresh
     // replica's typical backlog never needs a follow-up `SnapshotChunk` round trip, small enough
     // to never balloon a single WS frame unreasonably.
-    let welcome_response = match state.db.hello(&db_id, frontier.as_ref(), session_id, &actor, 64 * 1024) {
+    let welcome_response = match state.db.hello(&db_id, frontier.as_ref(), session_id, &actor, 64 * 1024).await {
         Ok(response) => response,
         Err(error) => {
-            let _ = sender.send(error_frame("storage", error.to_string())).await;
+            let _ = sender.send(error_frame("storage", error.to_string()).await).await;
             state.release_color(&space_id, &actor.0);
             return;
         }
     };
-    if sender.send(encode(&welcome_response.welcome)).await.is_err() {
+    if sender.send(encode(&welcome_response.welcome).await).await.is_err() {
         state.release_color(&space_id, &actor.0);
         return;
     }
     for frame in &welcome_response.follow_up {
-        if sender.send(encode(frame)).await.is_err() {
+        if sender.send(encode(frame).await).await.is_err() {
             state.release_color(&space_id, &actor.0);
             return;
         }
     }
     // 🎨️ Contract §C7.3: sent exactly once per connection, after `Welcome` (and its follow-up
     // bootstrap frames) and before any `Presence` frame.
-    if sender.send(encode(&ServerFrame::Session { actor: actor.0.clone(), color })).await.is_err() {
+    if sender.send(encode(&ServerFrame::Session { actor: actor.0.clone(), color }).await).await.is_err() {
         state.release_color(&space_id, &actor.0);
         return;
     }
@@ -766,7 +776,7 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sur
             incoming = receiver.next() => {
                 match incoming {
                     Some(Ok(Message::Binary(bytes))) => {
-                        if let Ok((_lane, frame)) = decode_client_frame(&bytes) {
+                        if let Ok((_lane, frame)) = decode_client_frame(&bytes).await {
                             if !handle_client_frame(&state, &handle, &db_id, &key, &space_id, &document_id, &fanout, &actor, &gate, &principal, &tenant, frame, &mut sender).await {
                                 break;
                             }
@@ -785,7 +795,7 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sur
             event = broadcast_rx.recv() => {
                 match event {
                     Ok(frame) => {
-                        if sender.send(encode(&frame)).await.is_err() {
+                        if sender.send(encode(&frame).await).await.is_err() {
                             break;
                         }
                     }
@@ -844,7 +854,7 @@ fn directory_error_status(error: DirectoryError) -> StatusCode {
 /// moving part).
 async fn load_read_model(state: &HubState) -> Result<DirectoryReadModel, StatusCode> {
     let events = state.directory.events_since(0, usize::MAX).await.map_err(directory_error_status)?;
-    Ok(os_directory::fold_all(DirectoryReadModel::default(), &events))
+    Ok(os_directory::fold_all(DirectoryReadModel::default(), &events).await)
 }
 
 fn role_wire(role: SpaceRole) -> DirectorySpaceRole {
@@ -887,10 +897,10 @@ async fn connection_view(state: &HubState, session: &SyncSessionRecord) -> Conne
 async fn documents_for_space(state: &HubState, space_id: &str) -> Vec<DocumentView> {
     let prefix = format!("{space_id}:");
     let mut views = Vec::new();
-    for entry in state.db.catalog().artifacts {
+    for entry in state.db.catalog().await.artifacts {
         let Some(document_id) = entry.document.0.strip_prefix(prefix.as_str()) else { continue };
-        let Ok(handle) = state.db.document(&entry.document) else { continue };
-        let Ok(frontier) = handle.frontier() else { continue };
+        let Ok(handle) = state.db.document(&entry.document).await else { continue };
+        let Ok(frontier) = handle.frontier().await else { continue };
         views.push(DocumentView { id: document_id.to_string(), head_seq: frontier.head_seq, commit_seq: frontier.commit_seq, epoch: frontier.epoch });
     }
     views
@@ -949,7 +959,12 @@ fn command_result_json(result: Option<CommandResult>) -> Option<serde_json::Valu
     result.and_then(|value| value.invite_token).map(|token| serde_json::json!({ "inviteToken": token }))
 }
 
-async fn post_directory_commands(headers: HeaderMap, axum::extract::ConnectInfo(peer): axum::extract::ConnectInfo<SocketAddr>, State(state): State<HubState>, Json(command): Json<DirectoryCommand>) -> Result<(StatusCode, Json<DirectoryCommandResponse>), StatusCode> {
+async fn post_directory_commands(
+    headers: HeaderMap,
+    axum::extract::ConnectInfo(peer): axum::extract::ConnectInfo<SocketAddr>,
+    State(state): State<HubState>,
+    Json(command): Json<DirectoryCommand>,
+) -> Result<(StatusCode, Json<DirectoryCommandResponse>), StatusCode> {
     let user = resolve_bearer_user(&state, bearer(&headers).as_deref()).await.ok_or(StatusCode::UNAUTHORIZED)?;
     let admin = is_admin(&state, &headers, Some(peer));
     authorize_directory_command(&state, &user.user_id, admin, &command).await?;
@@ -1221,7 +1236,7 @@ async fn admin_overview(headers: HeaderMap, axum::extract::ConnectInfo(peer): ax
         "backends": { "sqlite": cfg!(feature = "sqlite"), "postgres": cfg!(feature = "postgres"), "neo4j": cfg!(feature = "neo4j") },
         "dataDirBytes": data_dir_bytes,
         "headSeq": head_seq,
-        "openArtifacts": state.db.catalog().artifacts.len(),
+        "openArtifacts": state.db.catalog().await.artifacts.len(),
     })))
 }
 
@@ -1275,7 +1290,12 @@ struct DocumentsQuery {
     space: Option<String>,
 }
 
-async fn admin_documents(axum::extract::Query(query): axum::extract::Query<DocumentsQuery>, headers: HeaderMap, axum::extract::ConnectInfo(peer): axum::extract::ConnectInfo<SocketAddr>, State(state): State<HubState>) -> Result<Json<Vec<DocumentView>>, StatusCode> {
+async fn admin_documents(
+    axum::extract::Query(query): axum::extract::Query<DocumentsQuery>,
+    headers: HeaderMap,
+    axum::extract::ConnectInfo(peer): axum::extract::ConnectInfo<SocketAddr>,
+    State(state): State<HubState>,
+) -> Result<Json<Vec<DocumentView>>, StatusCode> {
     if !is_admin(&state, &headers, Some(peer)) {
         return Err(StatusCode::UNAUTHORIZED);
     }
@@ -1283,9 +1303,9 @@ async fn admin_documents(axum::extract::Query(query): axum::extract::Query<Docum
         Some(space_id) => Ok(Json(documents_for_space(&state, &space_id).await)),
         None => {
             let mut views = Vec::new();
-            for entry in state.db.catalog().artifacts {
-                let Ok(handle) = state.db.document(&entry.document) else { continue };
-                let Ok(frontier) = handle.frontier() else { continue };
+            for entry in state.db.catalog().await.artifacts {
+                let Ok(handle) = state.db.document(&entry.document).await else { continue };
+                let Ok(frontier) = handle.frontier().await else { continue };
                 views.push(DocumentView { id: entry.document.0.clone(), head_seq: frontier.head_seq, commit_seq: frontier.commit_seq, epoch: frontier.epoch });
             }
             Ok(Json(views))
@@ -1293,7 +1313,12 @@ async fn admin_documents(axum::extract::Query(query): axum::extract::Query<Docum
     }
 }
 
-async fn admin_events(axum::extract::Query(query): axum::extract::Query<EventsQuery>, headers: HeaderMap, axum::extract::ConnectInfo(peer): axum::extract::ConnectInfo<SocketAddr>, State(state): State<HubState>) -> Result<Json<Vec<DirectoryEvent>>, StatusCode> {
+async fn admin_events(
+    axum::extract::Query(query): axum::extract::Query<EventsQuery>,
+    headers: HeaderMap,
+    axum::extract::ConnectInfo(peer): axum::extract::ConnectInfo<SocketAddr>,
+    State(state): State<HubState>,
+) -> Result<Json<Vec<DirectoryEvent>>, StatusCode> {
     if !is_admin(&state, &headers, Some(peer)) {
         return Err(StatusCode::UNAUTHORIZED);
     }
@@ -1306,7 +1331,12 @@ async fn admin_events(axum::extract::Query(query): axum::extract::Query<EventsQu
 /// gates it). `create-space` still rejects an `Admin`-kind actor (`decide`'s own "create-space
 /// requires a user actor" law) — an admin operator creating a space needs a real user session and
 /// belongs on `/directory/commands` instead; this route is for acting ON existing spaces/members.
-async fn admin_commands(headers: HeaderMap, axum::extract::ConnectInfo(peer): axum::extract::ConnectInfo<SocketAddr>, State(state): State<HubState>, Json(command): Json<DirectoryCommand>) -> Result<(StatusCode, Json<DirectoryCommandResponse>), StatusCode> {
+async fn admin_commands(
+    headers: HeaderMap,
+    axum::extract::ConnectInfo(peer): axum::extract::ConnectInfo<SocketAddr>,
+    State(state): State<HubState>,
+    Json(command): Json<DirectoryCommand>,
+) -> Result<(StatusCode, Json<DirectoryCommandResponse>), StatusCode> {
     if !is_admin(&state, &headers, Some(peer)) {
         return Err(StatusCode::UNAUTHORIZED);
     }
@@ -1403,12 +1433,7 @@ async fn list_extensions(State(state): State<HubState>) -> Result<Json<Extension
         let value: serde_json::Value = serde_json::from_slice(&bytes).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
         extensions.push(value);
     }
-    extensions.sort_by(|left, right| {
-        left.get("extensionId")
-            .and_then(|value| value.as_str())
-            .unwrap_or_default()
-            .cmp(right.get("extensionId").and_then(|value| value.as_str()).unwrap_or_default())
-    });
+    extensions.sort_by(|left, right| left.get("extensionId").and_then(|value| value.as_str()).unwrap_or_default().cmp(right.get("extensionId").and_then(|value| value.as_str()).unwrap_or_default()));
     Ok(Json(ExtensionListResponse { extensions }))
 }
 
@@ -1526,60 +1551,35 @@ fn router(state: HubState) -> Router {
 /// matching storage feature). Independent of `connect_directory`'s own backend choice (the
 /// contract's "storage swappability" requirement applies to `db`'s substrate and the directory's
 /// substrate separately, even though both now share the same three feature names).
-/// @emoji 🌉️ Hub's own `db::semio_framework_async::HostAsyncRuntime` — hub is a real concurrent
-/// server under `#[tokio::main]` (unlike `db_cli`'s single-shot, inline-`run_blocking` runtime), so
-/// `run_blocking` genuinely dispatches onto tokio's blocking-thread pool (`spawn_blocking`) rather
-/// than ever running on (and stalling) the calling task's own worker thread. `db`'s own crates name
-/// no `tokio` themselves (see `db_storage`'s module doc) — this is the one place in this binary
-/// that bridges `db_storage::DbFuture`'s async-first boundary onto hub's already-tokio process,
-/// mirroring `🛎️services::TokioHostRuntime`'s shape at a fraction of its scope (hub needs exactly
-/// one capability off this trait: `run_blocking`).
-struct HubDbRuntime;
-
-impl db::semio_framework_async::HostAsyncRuntime for HubDbRuntime {
-    fn open_scope(&self, owner: db::semio_framework_async::ScopeOwner, parent: Option<&db::semio_framework_async::ScopeHandle>) -> db::semio_framework_async::ScopeHandle {
-        let cancel = match parent {
-            Some(parent) => parent.cancel.child(),
-            None => db::semio_framework_async::CancelToken::root(),
-        };
-        db::semio_framework_async::ScopeHandle { id: db::semio_framework_async::ScopeId(0), owner, cancel }
-    }
-
-    fn spawn_scoped(&self, _scope: &db::semio_framework_async::ScopeHandle, _ctx: db::semio_framework_async::OperationContext, fut: db::semio_framework_async::HostFuture<()>) {
-        tokio::spawn(fut);
-    }
-
-    fn run_blocking(&self, _scope: &db::semio_framework_async::ScopeHandle, _ctx: db::semio_framework_async::OperationContext, work: Box<dyn FnOnce() + Send>) {
-        tokio::task::spawn_blocking(work);
-    }
-
-    async fn sleep_until(&self, deadline_ms: u64) {
-        let now = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |duration| duration.as_millis() as u64);
-        let delay = std::time::Duration::from_millis(deadline_ms.saturating_sub(now));
-        tokio::time::sleep(delay).await;
-    }
-
-    async fn cancel_scope(&self, _owner: &db::semio_framework_async::ScopeOwner, _grace_ms: u64) -> db::semio_framework_async::ScopeDrainReport {
-        // 🎯️ Hub never opens a cancellable scope of its own on this runtime today (only
-        // `SqliteStorage::open`'s fixed internal scope, which it never cancels) — a real
-        // drain-and-report implementation is `TokioHostRuntime`'s job (packet R2), not this
-        // single-purpose bridge's.
-        db::semio_framework_async::ScopeDrainReport::default()
-    }
-
-    fn now_ms(&self) -> u64 {
-        std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |duration| duration.as_millis() as u64)
-    }
+/// @emoji 🧵️ Hub's ONE process-wide `WorkerPool` — Phase 1
+/// (`26/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR`) replaces `HubDbRuntime` (a `HostAsyncRuntime` bridge
+/// whose entire reason to exist was `run_blocking`, now deleted from that trait — see
+/// `db_storage`'s module doc) with this: `db::storage_sqlite::SqliteStorage::open`'s blocking body
+/// now dispatches onto `Lane::Io` here directly, and every `db::Database` this binary opens is
+/// wired to it via `.with_pool(..)` so `ArtifactHandle::submit`'s bridge does too (see that
+/// method's doc) — no more per-submit `"db-engine-submit-bridge"` OS thread, no more sqlite-storage
+/// calls stalling their caller's own tokio worker thread. Hub is a headless server
+/// (`ProcessKind::HeadlessBatch`: no UI thread to reserve a core for), sized to the process's visible
+/// core count.
+fn hub_worker_pool() -> Arc<db::semio_framework_async::WorkerPool> {
+    static POOL: std::sync::OnceLock<Arc<db::semio_framework_async::WorkerPool>> = std::sync::OnceLock::new();
+    POOL.get_or_init(|| {
+        let cores = std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get);
+        let config = db::semio_framework_async::WorkerPoolConfig::new(db::semio_framework_async::ProcessKind::HeadlessBatch, cores);
+        Arc::new(db::semio_framework_async::WorkerPool::new(config))
+    })
+    .clone()
 }
 
 async fn connect_db(data_dir: &std::path::Path) -> Result<db::Database, HubError> {
     let backend = std::env::var("OS_HUB_STORAGE_BACKEND").unwrap_or_else(|_| "fs".into());
     let profile = db::Profile::Prod;
+    let pool = hub_worker_pool();
     match backend.as_str() {
         "fs" | "" => {
             let root = data_dir.join("db");
             std::fs::create_dir_all(&root)?;
-            Ok(db::Database::open_at(&root, profile)?)
+            Ok(db::Database::open_at(&root, profile).await?.with_pool(pool))
         }
         #[cfg(feature = "sqlite")]
         "sqlite" => {
@@ -1587,24 +1587,14 @@ async fn connect_db(data_dir: &std::path::Path) -> Result<db::Database, HubError
             if let Some(parent) = std::path::Path::new(&path).parent() {
                 std::fs::create_dir_all(parent)?;
             }
-            // 🔀️ R11/os-hostasync: `HostAsyncRuntime` is an open extension point (every host binds
-            // its own bridge — `db::storage::InlineRuntime`, `🛎️services::TokioHostRuntime`, this
-            // crate's own `HubDbRuntime`), so it de-dyns to a GENERIC parameter at the consumer, not
-            // an enum — `SqliteStorage<R: HostAsyncRuntime>`/`FsStorage<R: HostAsyncRuntime>` already
-            // take `R` generically (see `🛢️db/🗄️storage/…`). The `use … as _` import stays: it is
-            // what brings `open_scope` into method-call scope for the concrete `HubDbRuntime` below,
-            // nothing to do with `dyn` — a trait method call still needs its trait imported.
-            use db::semio_framework_async::HostAsyncRuntime as _;
-            let runtime: std::sync::Arc<HubDbRuntime> = std::sync::Arc::new(HubDbRuntime);
-            let scope = runtime.open_scope(db::semio_framework_async::ScopeOwner::Service("hub_db_sqlite"), None);
-            let storage = db::storage_sqlite::SqliteStorage::open(runtime, scope, std::path::Path::new(&path))?;
-            Ok(db::Database::open(db::DbConfig::for_profile(profile), Arc::new(storage))?)
+            let storage = db::storage_sqlite::SqliteStorage::open(Some(pool.clone()), std::path::Path::new(&path)).await?;
+            Ok(db::Database::open(db::DbConfig::for_profile(profile), Arc::new(db::storage::DbBackend::Sqlite(storage))).await?.with_pool(pool))
         }
         #[cfg(feature = "postgres")]
         "postgres" => {
             let database_url = std::env::var("OS_HUB_DATABASE_URL").map_err(|_| HubError::UnknownStorageBackend("postgres requires OS_HUB_DATABASE_URL".into()))?;
             let storage = db::storage_postgres::PostgresStorage::connect(&database_url).await?;
-            Ok(db::Database::open(db::DbConfig::for_profile(profile), Arc::new(storage))?)
+            Ok(db::Database::open(db::DbConfig::for_profile(profile), Arc::new(db::storage::DbBackend::Postgres(storage))).await?.with_pool(pool))
         }
         #[cfg(feature = "neo4j")]
         "neo4j" => {
@@ -1612,7 +1602,7 @@ async fn connect_db(data_dir: &std::path::Path) -> Result<db::Database, HubError
             let user = std::env::var("OS_HUB_NEO4J_USER").unwrap_or_else(|_| "neo4j".into());
             let password = std::env::var("OS_HUB_NEO4J_PASSWORD").unwrap_or_default();
             let storage = db::storage_neo4j::Neo4jStorage::connect(&uri, &user, &password).await?;
-            Ok(db::Database::open(db::DbConfig::for_profile(profile), Arc::new(storage))?)
+            Ok(db::Database::open(db::DbConfig::for_profile(profile), Arc::new(db::storage::DbBackend::Neo4j(storage))).await?.with_pool(pool))
         }
         other => Err(HubError::UnknownStorageBackend(other.to_string())),
     }
@@ -1714,7 +1704,7 @@ async fn main() -> Result<(), HubError> {
 #[cfg(all(test, feature = "sqlite"))]
 mod tests {
     use super::*;
-    use protocol::{Bootstrap, ArtifactId as WireArtifactId};
+    use protocol::{ArtifactId as WireArtifactId, Bootstrap};
     use tokio_tungstenite::connect_async;
     use tokio_tungstenite::tungstenite::Message as WsMessage;
 
@@ -1734,7 +1724,7 @@ mod tests {
 
     async fn test_state() -> HubState {
         let dir = tempdir("db");
-        let database = db::Database::open_at(&dir, db::Profile::Test).expect("open db");
+        let database = db::Database::open_at(&dir, db::Profile::Test).await.expect("open db");
         let directory = SqliteDirectory::connect(":memory:").await.expect("connect directory");
         directory.seed().await.expect("seed");
         let directory: Arc<HubDirectories> = Arc::new(directory.into());
@@ -1779,15 +1769,15 @@ mod tests {
         state.directory_service.execute(actor, DirectoryCommand::UpsertMember { space_id: space_id.to_string(), email: email.to_string(), role }).await.expect("upsert member");
     }
 
-    fn sample_envelope(id: &str, document: &WireArtifactId) -> MutationEnvelope {
+    async fn sample_envelope(id: &str, document: &WireArtifactId) -> MutationEnvelope {
         MutationEnvelope {
             mutation_id: protocol::MutationId(id.to_string()),
             document_id: document.clone(),
             actor: ActorId("actor-1".to_string()),
             dependencies: Vec::new(),
-            diff: protocol::ArtifactDiff { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: db::document::encode_pathmap_json(&serde_json::json!({ "value": id })).unwrap() },
-            inverse: protocol::InverseMutation { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: db::document::encode_pathmap_json(&serde_json::json!({})).unwrap() },
-            timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
+            diff: protocol::ArtifactDiff { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: db::document::encode_pathmap_json(&serde_json::json!({ "value": id })).await.unwrap() },
+            inverse: protocol::InverseMutation { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: db::document::encode_pathmap_json(&serde_json::json!({})).await.unwrap() },
+            timestamp: protocol::HybridLogicalTimestamp::new(0, 0).await,
         }
     }
 
@@ -1816,7 +1806,7 @@ mod tests {
         let deadline = tokio::time::Instant::now() + std::time::Duration::from_secs(5);
         loop {
             match tokio::time::timeout_at(deadline, ws.next()).await {
-                Ok(Some(Ok(WsMessage::Binary(bytes)))) => return protocol::decode_server_frame(&bytes).expect("server frame").1,
+                Ok(Some(Ok(WsMessage::Binary(bytes)))) => return protocol::decode_server_frame(&bytes).await.expect("server frame").1,
                 Ok(Some(Ok(_))) => continue,
                 Ok(Some(other)) => panic!("expected binary frame, got {other:?}"),
                 Ok(None) => panic!("stream ended before server frame"),
@@ -1825,8 +1815,8 @@ mod tests {
         }
     }
 
-    fn client_binary(frame: &ClientFrame, lane: Lane) -> WsMessage {
-        WsMessage::Binary(protocol::encode_client_frame(frame, lane).into())
+    async fn client_binary(frame: &ClientFrame, lane: Lane) -> WsMessage {
+        WsMessage::Binary(protocol::encode_client_frame(frame, lane).await.into())
     }
 
     fn hello(actor: &str) -> ClientFrame {
@@ -1843,17 +1833,17 @@ mod tests {
         let url = format!("ws://{addr}/spaces/{STUDIO}/documents/default/ws");
 
         let (mut a, _) = connect_async(&url).await.unwrap();
-        a.send(client_binary(&hello("A"), Lane::Command)).await.unwrap();
+        a.send(client_binary(&hello("A"), Lane::Command).await).await.unwrap();
         assert!(matches!(next_server_frame(&mut a).await, ServerFrame::Welcome { .. }));
         assert!(matches!(next_server_frame(&mut a).await, ServerFrame::Session { .. }));
 
         let (mut b, _) = connect_async(&url).await.unwrap();
-        b.send(client_binary(&hello("B"), Lane::Command)).await.unwrap();
+        b.send(client_binary(&hello("B"), Lane::Command).await).await.unwrap();
         assert!(matches!(next_server_frame(&mut b).await, ServerFrame::Welcome { .. }));
         assert!(matches!(next_server_frame(&mut b).await, ServerFrame::Session { .. }));
 
         let document = WireArtifactId(format!("{STUDIO}:default"));
-        a.send(client_binary(&ClientFrame::Commands { batch_id: 1, envelopes: vec![sample_envelope("op-1", &document)] }, Lane::Command)).await.unwrap();
+        a.send(client_binary(&ClientFrame::Commands { batch_id: 1, envelopes: vec![sample_envelope("op-1", &document).await] }, Lane::Command).await).await.unwrap();
 
         assert!(matches!(next_server_frame(&mut a).await, ServerFrame::Ack { batch_id: 1, .. }));
 
@@ -1880,17 +1870,17 @@ mod tests {
         let document = WireArtifactId(format!("{STUDIO}:default"));
 
         let (mut a, _) = connect_async(&url).await.unwrap();
-        a.send(client_binary(&hello("A"), Lane::Command)).await.unwrap();
+        a.send(client_binary(&hello("A"), Lane::Command).await).await.unwrap();
         assert!(matches!(next_server_frame(&mut a).await, ServerFrame::Welcome { .. }));
         assert!(matches!(next_server_frame(&mut a).await, ServerFrame::Session { .. }));
-        a.send(client_binary(&ClientFrame::Commands { batch_id: 1, envelopes: vec![sample_envelope("op-1", &document)] }, Lane::Command)).await.unwrap();
+        a.send(client_binary(&ClientFrame::Commands { batch_id: 1, envelopes: vec![sample_envelope("op-1", &document).await] }, Lane::Command).await).await.unwrap();
         assert!(matches!(next_server_frame(&mut a).await, ServerFrame::Ack { .. }));
 
         // A fresh connection with no prior frontier must see the already-committed op-1 in its
         // Welcome bootstrap follow-up, sent BEFORE the connection's own `Session` frame (contract
         // §C7.3: Session is sent after Welcome AND its follow-up bootstrap frames).
         let (mut c, _) = connect_async(&url).await.unwrap();
-        c.send(client_binary(&hello("C"), Lane::Command)).await.unwrap();
+        c.send(client_binary(&hello("C"), Lane::Command).await).await.unwrap();
         assert!(matches!(next_server_frame(&mut c).await, ServerFrame::Welcome { bootstrap: Bootstrap::Tail, .. }));
         match next_server_frame(&mut c).await {
             ServerFrame::Commands { envelopes, .. } => assert_eq!(envelopes[0].mutation_id.0, "op-1"),
@@ -1909,16 +1899,16 @@ mod tests {
 
         let url_a = format!("ws://{addr}/spaces/space-a/documents/shared-doc/ws");
         let (mut a, _) = connect_async(&url_a).await.unwrap();
-        a.send(client_binary(&hello("A"), Lane::Command)).await.unwrap();
+        a.send(client_binary(&hello("A"), Lane::Command).await).await.unwrap();
         assert!(matches!(next_server_frame(&mut a).await, ServerFrame::Welcome { .. }));
         assert!(matches!(next_server_frame(&mut a).await, ServerFrame::Session { .. }));
         let document = WireArtifactId("space-a:shared-doc".to_string());
-        a.send(client_binary(&ClientFrame::Commands { batch_id: 1, envelopes: vec![sample_envelope("only-in-a", &document)] }, Lane::Command)).await.unwrap();
+        a.send(client_binary(&ClientFrame::Commands { batch_id: 1, envelopes: vec![sample_envelope("only-in-a", &document).await] }, Lane::Command).await).await.unwrap();
         assert!(matches!(next_server_frame(&mut a).await, ServerFrame::Ack { .. }));
 
         let url_b = format!("ws://{addr}/spaces/space-b/documents/shared-doc/ws");
         let (mut b, _) = connect_async(&url_b).await.unwrap();
-        b.send(client_binary(&hello("B"), Lane::Command)).await.unwrap();
+        b.send(client_binary(&hello("B"), Lane::Command).await).await.unwrap();
         assert!(matches!(next_server_frame(&mut b).await, ServerFrame::Welcome { bootstrap: Bootstrap::None, .. }), "space-b's document must not see space-a's committed op");
     }
 
@@ -1935,15 +1925,18 @@ mod tests {
 
         let url = format!("ws://{addr}/spaces/{STUDIO}/documents/guarded/ws");
         let (mut denied, _) = connect_async(&url).await.unwrap();
-        denied.send(client_binary(&hello("intruder"), Lane::Command)).await.unwrap();
+        denied.send(client_binary(&hello("intruder"), Lane::Command).await).await.unwrap();
         assert!(matches!(next_server_frame(&mut denied).await, ServerFrame::Error { code, .. } if code == "unauthorized"));
 
         let (mut allowed, _) = connect_async(&url).await.unwrap();
         allowed
-            .send(client_binary(
-                &ClientFrame::Hello { wire_version: 1, protocol_version: 1, schema: "test.v1".to_string(), pack_schema_hash: [0u8; 32], actor: ActorId("holder".to_string()), token: Some(share.0.token), resume_token: None, frontier: None },
-                Lane::Command,
-            ))
+            .send(
+                client_binary(
+                    &ClientFrame::Hello { wire_version: 1, protocol_version: 1, schema: "test.v1".to_string(), pack_schema_hash: [0u8; 32], actor: ActorId("holder".to_string()), token: Some(share.0.token), resume_token: None, frontier: None },
+                    Lane::Command,
+                )
+                .await,
+            )
             .await
             .unwrap();
         assert!(matches!(next_server_frame(&mut allowed).await, ServerFrame::Welcome { .. }));
@@ -1968,13 +1961,22 @@ mod tests {
         let addr = spawn_server(state).await;
         let url = format!("ws://{addr}/spaces/{space}/documents/gated-doc/ws");
         let document = WireArtifactId(format!("{space}:gated-doc"));
-        let hello_with_token = |actor: &str, token: String| ClientFrame::Hello { wire_version: 1, protocol_version: 1, schema: "test.v1".to_string(), pack_schema_hash: [0u8; 32], actor: ActorId(actor.to_string()), token: Some(token), resume_token: None, frontier: None };
+        let hello_with_token = |actor: &str, token: String| ClientFrame::Hello {
+            wire_version: 1,
+            protocol_version: 1,
+            schema: "test.v1".to_string(),
+            pack_schema_hash: [0u8; 32],
+            actor: ActorId(actor.to_string()),
+            token: Some(token),
+            resume_token: None,
+            frontier: None,
+        };
 
         let (mut spectator, _) = connect_async(&url).await.unwrap();
-        spectator.send(client_binary(&hello_with_token("spectator", spectator_session.0.token), Lane::Command)).await.unwrap();
+        spectator.send(client_binary(&hello_with_token("spectator", spectator_session.0.token), Lane::Command).await).await.unwrap();
         assert!(matches!(next_server_frame(&mut spectator).await, ServerFrame::Welcome { .. }));
         assert!(matches!(next_server_frame(&mut spectator).await, ServerFrame::Session { .. }));
-        spectator.send(client_binary(&ClientFrame::Commands { batch_id: 1, envelopes: vec![sample_envelope("op-spectator", &document)] }, Lane::Command)).await.unwrap();
+        spectator.send(client_binary(&ClientFrame::Commands { batch_id: 1, envelopes: vec![sample_envelope("op-spectator", &document).await] }, Lane::Command).await).await.unwrap();
         match next_server_frame(&mut spectator).await {
             ServerFrame::Ack { stages, .. } => {
                 assert_eq!(stages.len(), 1);
@@ -1987,10 +1989,10 @@ mod tests {
         }
 
         let (mut author, _) = connect_async(&url).await.unwrap();
-        author.send(client_binary(&hello_with_token("author", author_session.0.token), Lane::Command)).await.unwrap();
+        author.send(client_binary(&hello_with_token("author", author_session.0.token), Lane::Command).await).await.unwrap();
         assert!(matches!(next_server_frame(&mut author).await, ServerFrame::Welcome { .. }));
         assert!(matches!(next_server_frame(&mut author).await, ServerFrame::Session { .. }));
-        author.send(client_binary(&ClientFrame::Commands { batch_id: 1, envelopes: vec![sample_envelope("op-author", &document)] }, Lane::Command)).await.unwrap();
+        author.send(client_binary(&ClientFrame::Commands { batch_id: 1, envelopes: vec![sample_envelope("op-author", &document).await] }, Lane::Command).await).await.unwrap();
         assert!(matches!(next_server_frame(&mut author).await, ServerFrame::Ack { batch_id: 1, .. }));
     }
 
@@ -2001,7 +2003,7 @@ mod tests {
     async fn blob_put_get_head_round_trip() {
         let state = test_state().await;
         let bytes = Bytes::from_static(b"hello hub blob bytes");
-        let expected_hash = state.db.storage().payload().put(&bytes).await.unwrap().to_string();
+        let expected_hash = state.db.storage().await.payload().await.put(&bytes).await.unwrap().to_string();
         // A re-put through the route with the correct address must be idempotent and agree.
         let mut headers = HeaderMap::new();
         headers.insert(axum::http::header::CONTENT_TYPE, "text/plain".parse().unwrap());
@@ -2080,8 +2082,8 @@ mod tests {
         let status = get_document_status(Path((STUDIO.to_string(), "fresh".to_string())), HeaderMap::new(), State(state.clone())).await.expect("status");
         assert_eq!(status.0.head_seq, 0);
 
-        let handle = state.ensure_document(&db_artifact_id(STUDIO, "fresh")).expect("ensure");
-        let batch = db::document::CommandBatch::new(vec![sample_envelope("op-1", &db_artifact_id(STUDIO, "fresh"))]).unwrap();
+        let handle = state.ensure_document(&db_artifact_id(STUDIO, "fresh")).await.expect("ensure");
+        let batch = db::document::CommandBatch::new(vec![sample_envelope("op-1", &db_artifact_id(STUDIO, "fresh")).await]).await.unwrap();
         handle.submit(batch, db::document::SubmitOptions::default()).await.unwrap().unwrap();
 
         let status = get_document_status(Path((STUDIO.to_string(), "fresh".to_string())), HeaderMap::new(), State(state)).await.expect("status after submit");
@@ -2195,16 +2197,16 @@ mod tests {
         let url_viewer = format!("ws://{addr}/spaces/{STUDIO}/documents/shared/ws?surface=viewer");
 
         let (mut a, _) = connect_async(&url_editor).await.unwrap();
-        a.send(client_binary(&hello("A"), Lane::Command)).await.unwrap();
+        a.send(client_binary(&hello("A"), Lane::Command).await).await.unwrap();
         assert!(matches!(next_server_frame(&mut a).await, ServerFrame::Welcome { .. }));
         assert!(matches!(next_server_frame(&mut a).await, ServerFrame::Session { .. }));
 
         let (mut c, _) = connect_async(&url_viewer).await.unwrap();
-        c.send(client_binary(&hello("C"), Lane::Command)).await.unwrap();
+        c.send(client_binary(&hello("C"), Lane::Command).await).await.unwrap();
         assert!(matches!(next_server_frame(&mut c).await, ServerFrame::Welcome { .. }));
         assert!(matches!(next_server_frame(&mut c).await, ServerFrame::Session { .. }));
 
-        a.send(client_binary(&ClientFrame::Presence { peer: b"A-presence".to_vec() }, Lane::Command)).await.unwrap();
+        a.send(client_binary(&ClientFrame::Presence { peer: b"A-presence".to_vec() }, Lane::Command).await).await.unwrap();
         loop {
             match next_server_frame(&mut c).await {
                 ServerFrame::Presence { peers } => {
@@ -2245,17 +2247,17 @@ mod tests {
         }
 
         let (mut a1, _) = connect_async(&url("doc1")).await.unwrap();
-        a1.send(client_binary(&hello("A"), Lane::Command)).await.unwrap();
+        a1.send(client_binary(&hello("A"), Lane::Command).await).await.unwrap();
         assert_eq!(welcome_and_session(&mut a1).await, ("A".to_string(), 0));
 
         let (mut b, _) = connect_async(&url("doc1")).await.unwrap();
-        b.send(client_binary(&hello("B"), Lane::Command)).await.unwrap();
+        b.send(client_binary(&hello("B"), Lane::Command).await).await.unwrap();
         assert_eq!(welcome_and_session(&mut b).await, ("B".to_string(), 1));
 
         // A's second document socket, same space: the existing lease is reused (still 0), not a new
         // lowest-free index (which would otherwise be 2).
         let (mut a2, _) = connect_async(&url("doc2")).await.unwrap();
-        a2.send(client_binary(&hello("A"), Lane::Command)).await.unwrap();
+        a2.send(client_binary(&hello("A"), Lane::Command).await).await.unwrap();
         assert_eq!(welcome_and_session(&mut a2).await, ("A".to_string(), 0));
 
         drop(a1);
@@ -2264,7 +2266,7 @@ mod tests {
         tokio::time::sleep(std::time::Duration::from_millis(200)).await;
 
         let (mut c, _) = connect_async(&url("doc1")).await.unwrap();
-        c.send(client_binary(&hello("C"), Lane::Command)).await.unwrap();
+        c.send(client_binary(&hello("C"), Lane::Command).await).await.unwrap();
         assert_eq!(welcome_and_session(&mut c).await, ("C".to_string(), 0), "color 0 is freed once BOTH of A's document sockets disconnect, and is the lowest free index (B still holds 1)");
     }
 
@@ -2290,14 +2292,14 @@ mod tests {
 
         let doc_url = format!("ws://{addr}/spaces/{STUDIO}/documents/watched-presence/ws?surface=editor");
         let (mut doc, _) = connect_async(&doc_url).await.unwrap();
-        doc.send(client_binary(&hello("presence-actor"), Lane::Command)).await.unwrap();
+        doc.send(client_binary(&hello("presence-actor"), Lane::Command).await).await.unwrap();
         assert!(matches!(next_server_frame(&mut doc).await, ServerFrame::Welcome { .. }));
         let color = match next_server_frame(&mut doc).await {
             ServerFrame::Session { color, .. } => color,
             other => panic!("expected Session, got {other:?}"),
         };
 
-        doc.send(client_binary(&ClientFrame::Presence { peer: b"presence-actor-bytes".to_vec() }, Lane::Command)).await.unwrap();
+        doc.send(client_binary(&ClientFrame::Presence { peer: b"presence-actor-bytes".to_vec() }, Lane::Command).await).await.unwrap();
 
         loop {
             match next_directory_message(&mut observer).await {
@@ -2336,7 +2338,7 @@ mod tests {
 
         let doc_url = format!("ws://{addr}/spaces/{STUDIO}/documents/watched/ws");
         let (mut doc, _) = connect_async(&doc_url).await.unwrap();
-        doc.send(client_binary(&hello("watched-actor"), Lane::Command)).await.unwrap();
+        doc.send(client_binary(&hello("watched-actor"), Lane::Command).await).await.unwrap();
         assert!(matches!(next_server_frame(&mut doc).await, ServerFrame::Welcome { .. }));
 
         match next_directory_message(&mut observer).await {
@@ -2367,7 +2369,7 @@ mod tests {
         let addr = spawn_server(state.clone()).await;
         let doc_url = format!("ws://{addr}/spaces/{STUDIO}/documents/kickable/ws");
         let (mut doc, _) = connect_async(&doc_url).await.unwrap();
-        doc.send(client_binary(&hello("kick-me"), Lane::Command)).await.unwrap();
+        doc.send(client_binary(&hello("kick-me"), Lane::Command).await).await.unwrap();
         assert!(matches!(next_server_frame(&mut doc).await, ServerFrame::Welcome { .. }));
         assert!(matches!(next_server_frame(&mut doc).await, ServerFrame::Session { .. }));
         // Let the server side finish recording the sync session before the admin reads it back.
@@ -2383,7 +2385,7 @@ mod tests {
         let connection = connections.0.iter().find(|connection| connection.actor == "kick-me").expect("kickable connection listed");
         assert!(!connection.presence_known, "no ClientFrame::Presence published yet");
 
-        doc.send(client_binary(&ClientFrame::Presence { peer: b"kick-me-presence".to_vec() }, Lane::Command)).await.unwrap();
+        doc.send(client_binary(&ClientFrame::Presence { peer: b"kick-me-presence".to_vec() }, Lane::Command).await).await.unwrap();
         assert!(matches!(next_server_frame(&mut doc).await, ServerFrame::Presence { .. }));
         let connections = admin_connections(HeaderMap::new(), loopback_peer(), State(state.clone())).await.expect("admin connections after presence");
         let connection = connections.0.iter().find(|connection| connection.actor == "kick-me").expect("kickable connection still listed");
@@ -2432,7 +2434,7 @@ mod tests {
         let addr = spawn_server(state).await;
         let url = format!("ws://{addr}/spaces/{space_id}/documents/gone/ws");
         let (mut ws, _) = connect_async(&url).await.unwrap();
-        ws.send(client_binary(&hello("late-comer"), Lane::Command)).await.unwrap();
+        ws.send(client_binary(&hello("late-comer"), Lane::Command).await).await.unwrap();
         assert!(matches!(next_server_frame(&mut ws).await, ServerFrame::Error { code, .. } if code == "unauthorized"));
     }
 

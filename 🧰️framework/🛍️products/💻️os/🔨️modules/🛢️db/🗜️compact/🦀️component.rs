@@ -356,12 +356,12 @@ pub struct CompactionReport {
 /// @emoji 🧑️‍💼️ The top-level, fenced, budgeted orchestrator gluing every subsystem in this crate
 /// together over one `db_storage::DbStorage` backend — "online compaction with manifest CAS +
 /// fencing" (see module doc's design-choice note on the fencing mechanism).
-pub struct Compactor<'storage, R: semio_framework_async::HostAsyncRuntime> {
-    storage: &'storage db_storage::DbBackend<R>,
+pub struct Compactor<'storage> {
+    storage: &'storage db_storage::DbBackend,
 }
 
-impl<'storage, R: semio_framework_async::HostAsyncRuntime> Compactor<'storage, R> {
-    pub async fn new(storage: &'storage db_storage::DbBackend<R>) -> Compactor<'storage, R> {
+impl<'storage> Compactor<'storage> {
+    pub async fn new(storage: &'storage db_storage::DbBackend) -> Compactor<'storage> {
         Compactor { storage }
     }
 
@@ -428,7 +428,7 @@ impl<'storage, R: semio_framework_async::HostAsyncRuntime> Compactor<'storage, R
 mod tests {
     use super::*;
     use {DurabilityClass, Frontier};
-    use db_storage::{MemoryStorage, PayloadStorage as _, SnapshotStorage as _, WalStorage as _};
+    use db_storage::{MemoryStorage, PayloadStorage as _, WalStorage as _};
     use db_wal::{WalPayloadRef, WalRecord};
 
     async fn doc(id: &str) -> ArtifactId {
@@ -679,7 +679,7 @@ mod tests {
         let document = doc("doc-1").await;
         let mut wal = db_actor::block_on(db_wal::ArtifactWal::create(&storage, document.clone(), db_wal::GroupCommitPolicy::default(), 0)).unwrap();
         db_actor::block_on(wal.submit(&storage, &[WalRecord::Frontier(frontier(&document, 100).await)], DurabilityClass::Fsync, 0)).unwrap();
-        let storage: db_storage::DbBackend<db_storage::InlineRuntime> = db_storage::DbBackend::Memory(storage);
+        let storage: db_storage::DbBackend = db_storage::DbBackend::Memory(storage);
 
         let compactor = Compactor::new(&storage).await;
         let report = db_actor::block_on(compactor.run(&document, "holder-a", 1_000, false, &CompactionBudget::default(), 0)).unwrap();
@@ -700,7 +700,7 @@ mod tests {
         let command_handle = db_index::IndexHandle::new(&storage, document.clone(), db_index::IndexKind::Command).await;
         db_actor::block_on(command_handle.put(b"k1".to_vec(), b"v1".to_vec())).unwrap();
         db_actor::block_on(command_handle.put(b"k2".to_vec(), b"v2".to_vec())).unwrap();
-        let storage: db_storage::DbBackend<db_storage::InlineRuntime> = db_storage::DbBackend::Memory(storage);
+        let storage: db_storage::DbBackend = db_storage::DbBackend::Memory(storage);
 
         let compactor = Compactor::new(&storage).await;
         let report = db_actor::block_on(compactor.run(&document, "holder-a", 0, true, &CompactionBudget::default(), 0)).unwrap();
@@ -721,7 +721,7 @@ mod tests {
         let storage = MemoryStorage::new().await;
         let document = doc("doc-1").await;
         let fence = db_actor::block_on(CompactionLease::acquire(&storage, &document, "holder-a", 10_000, 0)).unwrap();
-        let storage: db_storage::DbBackend<db_storage::InlineRuntime> = db_storage::DbBackend::Memory(storage);
+        let storage: db_storage::DbBackend = db_storage::DbBackend::Memory(storage);
 
         let compactor = Compactor::new(&storage).await;
         let result = db_actor::block_on(compactor.run(&document, "holder-b", 0, false, &CompactionBudget::default(), 0));
@@ -737,7 +737,7 @@ mod tests {
         db_actor::block_on(storage.create_segment(&document, 0)).unwrap();
         db_actor::block_on(storage.append(&document, 0, b"not a valid spr segment at all")).unwrap();
         db_actor::block_on(storage.seal(&document, 0)).unwrap();
-        let storage: db_storage::DbBackend<db_storage::InlineRuntime> = db_storage::DbBackend::Memory(storage);
+        let storage: db_storage::DbBackend = db_storage::DbBackend::Memory(storage);
 
         let compactor = Compactor::new(&storage).await;
         let budget = CompactionBudget::default();
@@ -756,7 +756,7 @@ mod tests {
 
         let mut wal = db_actor::block_on(db_wal::ArtifactWal::create(&storage, document.clone(), db_wal::GroupCommitPolicy::default(), 0)).unwrap();
         db_actor::block_on(wal.submit(&storage, &[WalRecord::Frontier(frontier(&document, 42).await)], DurabilityClass::Fsync, 0)).unwrap();
-        let storage: db_storage::DbBackend<db_storage::InlineRuntime> = db_storage::DbBackend::Memory(storage);
+        let storage: db_storage::DbBackend = db_storage::DbBackend::Memory(storage);
 
         let compactor = Compactor::new(&storage).await;
         let report = db_actor::block_on(compactor.run_from_latest_snapshot(&document, "holder-a", false, &CompactionBudget::default(), 0)).unwrap();

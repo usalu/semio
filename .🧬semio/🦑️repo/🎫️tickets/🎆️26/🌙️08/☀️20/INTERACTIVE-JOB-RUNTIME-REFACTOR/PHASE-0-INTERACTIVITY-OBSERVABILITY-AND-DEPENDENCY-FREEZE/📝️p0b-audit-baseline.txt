@@ -1,0 +1,198 @@
+[verify interactivity] severity=warn scope: 4 UI root(s), 2 runtime-sanctioned root(s) exempt from the thread-pool rule.
+[verify interactivity] 180 finding(s) total:
+  blocking-bridge: 122
+  sync-clipboard: 6
+  sync-fs: 36
+  sync-process: 6
+  thread-pool: 10
+[verify interactivity] 121 block_on/run_blocking finding(s) NOT covered by the allowlist:
+  ✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🦀️component.rs:15: let handle = block_on($expr).map_err(map_kernel_error)?;
+  ✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🦀️component.rs:33: let value = block_on($expr).map_err(map_kernel_error)?;
+  ✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🦀️component.rs:48: let value = block_on($expr).map_err(map_kernel_error)?;
+  ✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🦀️component.rs:63: let value = block_on($expr).map_err(map_kernel_error)?;
+  ✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🦀️component.rs:78: let value = block_on($expr).map_err(map_kernel_error)?;
+  ✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🦀️component.rs:98: let handle = block_on(kernel.convex_hull(&points)).map_err(map_kernel_error)?;
+  ✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🦀️component.rs:116: let handle = block_on(kernel.polyline_wire(&points)).map_err(map_kernel_error)?;
+  ✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🦀️component.rs:131: let handle = block_on(kernel.interpolate_curve(&points, degree)).map_err(map_kernel_error)?;
+  ✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🦀️component.rs:144: let handle = block_on(kernel.approximate_curve(&points, degree, control_points)).map_err(map_kernel_error)?;
+  ✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🦀️component.rs:161: let handle = block_on(kernel.planar_face_from_points(&points)).map_err(map_kernel_error)?;
+  ✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🦀️component.rs:178: let handle = block_on(kernel.nurbs_surface_from_grid(&grid, degree_u, degree_v)).map_err(map_kernel_error)?;
+  ✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🦀️component.rs:189: let handle = block_on(kernel.coons_patch(&curves)).map_err(map_kernel_error)?;
+  ✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🦀️component.rs:206: let handle = block_on(kernel.extrude_wire(&wire, vector)).map_err(map_kernel_error)?;
+  ✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🦀️component.rs:223: let handle = block_on(kernel.extrude(&face, direction, distance)).map_err(map_kernel_error)?;
+  ✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🦀️component.rs:237: let handle = block_on(kernel.loft(&profiles, smooth)).map_err(map_kernel_error)?;
+  ✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🦀️component.rs:251: let handle = block_on(kernel.pipe(&profile, &path, guide)).map_err(map_kernel_error)?;
+  ✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🦀️component.rs:278: let handle = block_on(kernel.compound_cut(&target, &tools)).map_err(map_kernel_error)?;
+  ✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🦀️component.rs:319: let handle = block_on(kernel.fillet_edges(&geometry, &edges, radius)).map_err(map_kernel_error)?;
+  ✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🦀️component.rs:332: let handle = block_on(kernel.chamfer_edges(&geometry, &edges, distance)).map_err(map_kernel_error)?;
+  ✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🦀️component.rs:345: let handle = block_on(kernel.shell(&geometry, thickness, &open_faces)).map_err(map_kernel_error)?;
+  ✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🦀️component.rs:357: let handle = block_on(kernel.draft(&geometry, &faces, read_xyz(input, "pullDirection")?, read_xyz(input, "neutralPoint")?, read_channel_number(input, "angle")?)).map_err(map_kernel_error)?;
+  ✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🦀️component.rs:371: let handle = block_on(kernel.defeature(&geometry, &faces)).map_err(map_kernel_error)?;
+  ✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🦀️component.rs:383: let faces = block_on(kernel.section(&read_geometry(input, "solid")?, read_xyz(input, "planeOrigin")?, read_xyz(input, "planeNormal")?)).map_err(map_kernel_error)?;
+  ✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🦀️component.rs:394: let (positive, _negative) = block_on(kernel.split(&read_geometry(input, "solid")?, read_xyz(input, "planeOrigin")?, read_xyz(input, "planeNormal")?)).map_err(map_kernel_error)?;
+  ✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🦀️component.rs:404: let points = block_on(kernel.curve_curve_intersect(&read_geometry(input, "a")?, &read_geometry(input, "b")?, read_channel_number(input, "tolerance")?)).map_err(map_kernel_error)?;
+  ✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🦀️component.rs:415: let points = block_on(kernel.curve_surface_intersect(&read_geometry(input, "curve")?, &read_geometry(input, "surface")?, read_channel_number(input, "tolerance")?)).map_err(map_kernel_error)?;
+  ✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🦀️component.rs:426: let wires = block_on(kernel.surface_surface_intersect(&read_geometry(input, "a")?, &read_geometry(input, "b")?, read_channel_number(input, "tolerance")?)).map_err(map_kernel_error)?;
+  ✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🦀️component.rs:442: let domain = block_on(kernel.curve_domain(&read_geometry(input, "curve")?)).map_err(map_kernel_error)?;
+  ✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🦀️component.rs:465: let result = block_on(kernel.closest_point(&read_geometry(input, "geometry")?, read_xyz(input, "point")?)).map_err(map_kernel_error)?;
+  ✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🦀️component.rs:475: let classification = block_on(kernel.classify_point(&read_geometry(input, "solid")?, read_xyz(input, "point")?)).map_err(map_kernel_error)?;
+  ✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🦀️component.rs:494: let handle = block_on(kernel.sew_faces(&faces, tolerance)).map_err(map_kernel_error)?;
+  ✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🦀️component.rs:510: let value = block_on(kernel.export_step(&[geometry])).map_err(map_kernel_error)?;
+  ✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🦀️component.rs:522: let data = block_on(kernel.export_stl(&[geometry], deflection)).map_err(map_kernel_error)?;
+  ✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🦀️component.rs:534: let value = block_on(kernel.export_obj(&[geometry], deflection)).map_err(map_kernel_error)?;
+  ✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🦀️component.rs:545: let shapes = block_on(kernel.import_step(&data)).map_err(map_kernel_error)?;
+  ✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🦀️component.rs:558: let handle = block_on(kernel.import_stl(&data, tolerance)).map_err(map_kernel_error)?;
+  ✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🦀️component.rs:570: let handle = block_on(kernel.import_obj(&data, tolerance)).map_err(map_kernel_error)?;
+  ✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🦀️component.rs:582: let data = block_on(kernel.export_dwg(&[geometry], deflection)).map_err(map_kernel_error)?;
+  ✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🦀️component.rs:594: let handle = block_on(kernel.import_dwg(&data, tolerance)).map_err(map_kernel_error)?;
+  ✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/🦀️component.rs:28: let kind = block_on(kernel.kind(handle)).map_err(map_kernel_error)?;
+  ✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/🦀️component.rs:137: let handle = block_on(k.rect(x, y, width, height)).map_err(map_kernel_error)?;
+  ✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/🦀️component.rs:151: let handle = block_on(k.ellipse(cx, cy, rx, ry)).map_err(map_kernel_error)?;
+  ✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/🦀️component.rs:164: let handle = block_on(k.circle(cx, cy, r)).map_err(map_kernel_error)?;
+  ✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/🦀️component.rs:178: let handle = block_on(k.line(x1, y1, x2, y2)).map_err(map_kernel_error)?;
+  ✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/🦀️component.rs:189: let handle = block_on(k.polygon(&points)).map_err(map_kernel_error)?;
+  ✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/🦀️component.rs:202: let handle = block_on(k.polyline_path(&points)).map_err(map_kernel_error)?;
+  ✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/🦀️component.rs:216: let handle = block_on(k.rect_path(x, y, width, height)).map_err(map_kernel_error)?;
+  ✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/🦀️component.rs:230: let handle = block_on(k.set_fill(&drawing, FillStyle::Solid { color })).map_err(map_kernel_error)?;
+  ✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/🦀️component.rs:244: let handle = block_on(k.set_stroke(&drawing, stroke)).map_err(map_kernel_error)?;
+  ✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/🦀️component.rs:259: let handle = block_on(k.translate(&drawing, dx, dy)).map_err(map_kernel_error)?;
+  ✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/🦀️component.rs:271: let handle = block_on(k.rotate(&drawing, angle)).map_err(map_kernel_error)?;
+  ✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/🦀️component.rs:284: let handle = block_on(k.scale(&drawing, sx, sy)).map_err(map_kernel_error)?;
+  ✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/🦀️component.rs:298: let handle = block_on(k.group(&[a, b])).map_err(map_kernel_error)?;
+  ✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/🦀️component.rs:312: let handle = block_on(k.bool_union(&a, &b)).map_err(map_kernel_error)?;
+  ✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/🦀️component.rs:324: let handle = block_on(k.bool_difference(&a, &b)).map_err(map_kernel_error)?;
+  ✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/🦀️component.rs:336: let handle = block_on(k.bool_intersection(&a, &b)).map_err(map_kernel_error)?;
+  ✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/🦀️component.rs:352: let handle = block_on(k.text(x, y, &content, size)).map_err(map_kernel_error)?;
+  ✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/🦀️component.rs:370: let handle = block_on(k.linear_gradient_fill(&drawing, x1, y1, x2, y2, &stops)).map_err(map_kernel_error)?;
+  ✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/🦀️component.rs:384: let handle = block_on(k.apply_clip(&target, &clip)).map_err(map_kernel_error)?;
+  ✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎥️video/🦀️component.rs:696: let adapter = block_on(instance.request_adapter(&wgpu::RequestAdapterOptions { power_preference: wgpu::PowerPreference::HighPerformance, compatible_surface: None, force_fallback_adapter: false }))
+  ✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎥️video/🦀️component.rs:698: let (device, queue) = block_on(adapter.request_device(&wgpu::DeviceDescriptor {
+  ✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️component.rs:173: WorkingSolid::Box { width, depth, height } => semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.box_prim(*width, *depth, *height)).ok()?,
+  ✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️component.rs:174: WorkingSolid::Cylinder { radius, height } => semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.cylinder_prim(*radius, *height)).ok()?,
+  ✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️component.rs:175: WorkingSolid::Sphere { radius } => semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.sphere_prim(*radius)).ok()?,
+  ✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️component.rs:178: semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.kind(&handle)).ok()?;
+  ✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️component.rs:185: let rotated = if pose.angle != 0.0 { semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.rotate(&base, pose.axis, pose.angle)).ok()? } else { base };
+  ✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️component.rs:187: semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.translate(&rotated, pose.position)).ok()
+  ✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️component.rs:234: ProcessMeasure::Attach { .. } => semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(session.kernel_mut().fuse(&handle, &tool)).ok()?,
+  ✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️component.rs:235: _ => semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(session.kernel_mut().cut(&handle, &tool)).ok()?,
+  ✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️component.rs:251: let mesh = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(session.kernel().tessellate(&handle, PROCESS3D_TESSELLATION_TOLERANCE)).ok()?;
+  ✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️component.rs:259: semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(session.kernel().volume(&handle)).ok()
+  ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🕹️interaction/🦀️component.rs:520: let solid = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.box_prim(width, depth, height.max(0.05))).ok()?;
+  ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🕹️interaction/🦀️component.rs:549: let solid = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.cylinder_prim(radius, height.max(0.05))).ok()?;
+  ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🕹️interaction/🦀️component.rs:578: let solid = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.box_prim(width, depth, solid_height)).ok()?;
+  ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🕹️interaction/🦀️component.rs:613: let solid = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.sphere_prim(radius)).ok()?;
+  ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🕹️interaction/🦀️component.rs:639: let solid = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.cylinder_prim(radius, height.max(0.05))).ok()?;
+  ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🕹️interaction/🦀️component.rs:676: let solid = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.box_prim(solid_width, solid_depth, solid_height)).ok()?;
+  ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🗺️geometry-import/🦀️component.rs:270: if let Ok(handle) = block_on(kernel.polyline_wire(&points)) {
+  ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🗺️geometry-import/🦀️component.rs:279: if let Ok(handle) = block_on(kernel.planar_face_from_wire(&wire)) {
+  ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🗺️geometry-import/🦀️component.rs:283: if let Ok(handle) = block_on(kernel.face_from_wire(&wire)) {
+  ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🗺️geometry-import/🦀️component.rs:293: if let Ok(handle) = block_on(kernel.planar_face_from_points(&points)) {
+  ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🗺️geometry-import/🦀️component.rs:303: if let Ok(solid) = block_on(kernel.sew_faces(&face_handles, 0.01)) {
+  ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🗺️geometry-import/🦀️component.rs:318: if let Ok(built) = block_on(kernel.sew_faces(&face_handles, 0.01)) {
+  ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🗺️geometry-import/🦀️component.rs:406: if block_on(kernel.kind(&GeometryHandle(handle_id.into()))).is_err() {
+  ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🗺️geometry-import/🦀️component.rs:455: if let Ok(mesh) = block_on(kernel.tessellate(&handle, 0.1)) {
+  ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🗺️geometry-import/🦀️component.rs:466: let mesh = block_on(kernel.tessellate(wire, 0.1)).ok()?;
+  ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🗺️geometry-import/🦀️component.rs:521: let solid_handle = mesh_to_obj_text(mesh).and_then(|text| block_on(kernel.import_obj(&text, 0.01)).ok()).map(|handle| handle.0);
+  ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:356: let Ok(transfer) = block_on(kernel.tessellate(handle, deflection)) else { continue };
+  ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:457: let kernel_text = block_on(kernel.export_step(solids)).ok()?;
+  ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:496: let handle = block_on(kernel.import_step(text)).ok()?.into_iter().next()?;
+  ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:504: let handle = block_on(kernel.import_obj(text, 0.01)).ok()?;
+  ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:511: let handle = block_on(kernel.import_stl(bytes, 0.01)).ok()?;
+  ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️component.rs:521: let handle_id = mesh_to_obj_text_for_import(&mesh).and_then(|text| block_on(kernel.import_obj(&text, 0.01)).ok())?;
+  ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️component.rs:158: let mesh = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.tessellate(face, 0.1)).ok()?;
+  ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️component.rs:302: if semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.kind(&GeometryHandle(handle.clone()))).is_ok() {
+  ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️component.rs:309: let handle = if is_cylindrical { semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.cylinder_prim(width.max(depth) * 0.5, height)).ok() } else { semi
+  ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️component.rs:318: semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.cylinder_prim(width.max(depth) * 0.5, height)).ok()
+  ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️component.rs:320: semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.box_prim(width, depth, height)).ok()
+  ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️component.rs:331: current = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.fuse(&current, solid)).ok()?;
+  ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️component.rs:361: let topology = match semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.deconstruct(&hull)) {
+  ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️component.rs:875: if let Ok(mesh) = block_on(kernel.tessellate(&handle, 0.1)) {
+  ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️component.rs:882: let handle = block_on(async {
+  ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️component.rs:892: let mesh: MeshTransfer = match block_on(kernel.tessellate(&handle, 0.1)) {
+  ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️component.rs:895: block_on(kernel.dispose(&handle));
+  ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️component.rs:899: block_on(kernel.dispose(&handle));
+  ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/⚙️engine/🦀️component.rs:135: pollster::block_on(future)
+  🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs:441: let compiled = pollster::block_on(self.guest_runtime.compile(&package_ref, &bytes)).map_err(|error| error.to_string())?;
+  🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs:498: let parent_grants = pollster::block_on(self.runtime.kernel().actor_record(parent)).map(|record| record.capabilities).unwrap_or_default();
+  🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs:514: let extension_compiled = match pollster::block_on(self.guest_runtime.compile(&extension_package_ref, &extension_bytes)) {
+  🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs:532: let scoped_grants = pollster::block_on(intersect_capabilities(&parent_grants, &extension.capability_requests));
+  🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs:533: if let Err(error) = pollster::block_on(self.runtime.kernel_mut().set_capabilities(extension_actor, scoped_grants)) {
+  🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs:536: if let Err(error) = pollster::block_on(self.runtime.kernel_mut().link_extension(parent, extension_actor)) {
+  🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs:555: let removed = pollster::block_on(self.runtime.kernel_mut().deactivate(actor)).unwrap_or_else(|_| vec![actor]);
+  🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs:2110: pollster::block_on(self.shell.poll_world3d_assets());
+  🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs:2123: let bytes = fetch_map_tile_bytes_blocking(&url).or_else(|| pollster::block_on(fetch_url_bytes(&item.url)));
+  🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs:2133: if let Some(bytes) = pollster::block_on(fetch_url_bytes(&item.url)) {
+  🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs:2137: pollster::block_on(self.shell.poll_world3d_assets());
+  🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs:2652: pollster::block_on(async {
+  🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ProgramBridge/🧊️component.rs:523: ProgramBridgeBackend::Wasm { client, .. } => pollster::block_on(wasm_program_exchange::read_history(client, instance_id)),
+  🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:3299: let outcome = pollster::block_on(mint_or_restore(&ctx, &client, &env)).map_err(|error| error.to_string());
+  🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:3356: runtime.block_on(async move {
+[verify interactivity] 6 "sync-clipboard" finding(s):
+  🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️host.rs:109: * library's own types past it" convention. Native wraps `arboard::Clipboard::set_text` (silently
+  🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️host.rs:118: if let Ok(mut clipboard) = arboard::Clipboard::new() {
+  🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️host.rs:131: * `arboard::Clipboard::get_text` is itself synchronous, so a caller can read the OS clipboard and
+  🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️host.rs:137: arboard::Clipboard::new().ok()?.get_text().ok()
+  🧰️framework/🔨️modules/🖱️ui/🖥️host/📦️packages/🦀️rust/🦀️window.rs:142: inner: Option<arboard::Clipboard>,
+  🧰️framework/🔨️modules/🖱️ui/🖥️host/📦️packages/🦀️rust/🦀️window.rs:152: Self { inner: arboard::Clipboard::new().ok() }
+[verify interactivity] 36 "sync-fs" finding(s):
+  ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1018/🪆️subsets/✳️any/📚️examples/🏛️architectural/🧪️tests/🦀️test.rs:193: let facet = std::fs::read_to_string(artifact_root.join(relative)).unwrap_or_else(|error| panic!("{relative}: {error}"));
+  ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1018/🪆️subsets/✳️any/📚️examples/🏛️architectural/🧪️tests/🦀️test.rs:198: let rust = std::fs::read_to_string(artifact_root.join("📸️snapshot/🦀️component.rs")).expect("Rust snapshot schema");
+  ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/build.rs:12: for ent in std::fs::read_dir(&icons_src).unwrap_or_else(|e| panic!("read_dir {}: {e}", icons_src.display())) {
+  ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/build.rs:24: std::fs::copy(&path, &dest).unwrap_or_else(|e| panic!("copy {:?} -> {:?}: {e}", path, dest));
+  ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/build.rs:41: std::fs::write(&gen_path, gen).unwrap_or_else(|e| panic!("write {}: {e}", gen_path.display()));
+  🧰️framework/🔨️modules/🖱️ui/⌨️tui/🦀️component.rs:4315: use std::fs::File;
+  🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs:247: std::fs::read_dir(dir).ok()?.filter_map(|entry| entry.ok()).map(|entry| entry.path()).find(|path| path.extension().is_some_and(|ext| ext == "wasm"))
+  🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs:431: let bytes = std::fs::read(&wasm_path).map_err(|error| format!("{}: {error}", wasm_path.display()))?;
+  🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs:505: let extension_bytes = match std::fs::read(&extension_wasm_path) {
+  🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs:1567: let registry_bytes = match std::fs::read(&registry_path) {
+  🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs:1581: let wasm_bytes = match std::fs::read(&wasm_path) {
+  🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs:1619: let _ = std::fs::create_dir_all(parent);
+  🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs:1623: if let Err(error) = std::fs::write(&report_path, text) {
+  🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs:1827: let Ok(metadata) = std::fs::metadata(path) else {
+  🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ProgramBridge/🧊️component.rs:701: std::fs::read_dir(modules_root).map_err(|error| error.to_string())?.filter_map(|entry| entry.ok()).filter(|entry| entry.path().is_dir()).filter_map(|entry| entry.file_name().to_str().map(str::to_strin
+  🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ProgramBridge/🧊️component.rs:711: let wasm_path = std::fs::read_dir(&plugin_dir).map_err(|error| error.to_string())?.filter_map(|entry| entry.ok()).map(|entry| entry.path()).find(|path| path.extension().is_some_and(|ext| ext == "wasm"
+  🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ProgramBridge/🧊️component.rs:751: if let Ok(bytes) = std::fs::read(&descriptor_path) {
+  🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:3478: let _ = std::fs::write(&path, data.as_bytes());
+  🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:11225: let cache = std::fs::read_to_string(&path).ok().and_then(|raw| serde_json::from_str::<HashMap<String, String>>(&raw).ok()).unwrap_or_default();
+  🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:11231: let _ = std::fs::create_dir_all(parent);
+  🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:11234: let _ = std::fs::write(&self.path, json);
+  🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:11795: let _ = std::fs::create_dir_all(&dir);
+  🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:11797: let _ = std::fs::remove_file(&path);
+  🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:11810: let raw = std::fs::read_to_string(&path).expect("flush() must write the prefs file");
+  🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:11817: let _ = std::fs::remove_file(&path);
+  🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:12513: let _ = std::fs::write(path, bytes);
+  🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:12554: let bytes = std::fs::read(&path).ok()?;
+  🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:12558: std::fs::read_to_string(path).ok()
+  🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:12660: let Ok(bytes) = std::fs::read(&path) else {
+  🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:12671: if std::fs::create_dir_all(&scratch_dir).is_err() {
+  🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:12675: if std::fs::write(&input_path, &bytes).is_err() {
+  🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:12676: let _ = std::fs::remove_dir_all(&scratch_dir);
+  🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:12682: let _ = std::fs::remove_dir_all(&scratch_dir);
+  🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:12686: std::fs::read_dir(&scratch_dir).map(|entries| entries.filter_map(|entry| entry.ok().map(|entry| entry.path())).filter(|path| path.extension().and_then(|ext| ext.to_str()) == Some("jpg")).collect()).un
+  🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:12691: let Ok(jpeg_bytes) = std::fs::read(frame_path) else {
+  🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:12712: let _ = std::fs::remove_dir_all(&scratch_dir);
+[verify interactivity] 6 "sync-process" finding(s):
+  🧰️framework/🔨️modules/🖱️ui/⌨️tui/🦀️component.rs:3952: use std::process::Command;
+  🧰️framework/🔨️modules/🖱️ui/⌨️tui/🦀️component.rs:3969: use std::process::Command;
+  🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/build.rs:15: let status = std::process::Command::new("bun").args(["./📜️script.ts", "generate"]).current_dir(&manifest_dir).status()?;
+  🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs:1151: let output = std::process::Command::new("ps").args(["-o", "rss=", "-p", &pid]).output().ok()?;
+  🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:12619: std::process::Command::new("ffmpeg").arg("-version").stdout(std::process::Stdio::null()).stderr(std::process::Stdio::null()).status().is_ok_and(|status| status.success())
+  🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:12680: let extracted = std::process::Command::new("ffmpeg").args(&ffmpeg_args).status().is_ok_and(|status| status.success());
+[verify interactivity] 10 "thread-pool" finding(s):
+  🧰️framework/🔨️modules/🎒️pack/🌐️http/🦀️component.rs:189: std::thread::spawn(move || {
+  🧰️framework/🔨️modules/🎒️pack/🌐️http/🦀️component.rs:306: std::thread::spawn(move || -> Result<RangeResponse, PackError> {
+  🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🦀️component.rs:1504: let runtime = tokio::runtime::Builder::new_current_thread().enable_all().build().ok()?;
+  🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:3297: std::thread::spawn(move || {
+  🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:3355: std::thread::spawn(move || {
+  🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️asyncprobe/🖥️host-turn/🦀️main.rs:159: let handle = std::thread::spawn(move || {
+  🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️asyncprobe/🖥️host-turn/🦀️main.rs:534: let rt = tokio::runtime::Builder::new_multi_thread().enable_all().build()?;
+  🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️asyncprobe/🖥️host/🦀️main.rs:239: let ticker = std::thread::spawn(move || {
+  🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️asyncprobe/🖥️host/🦀️main.rs:377: let pusher = std::thread::spawn(move || {
+  🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust/📦️glue.rs:759: std::thread::spawn(move || {
+[verify interactivity] 1 allowlist entr(y/ies) kept for the record but structurally invisible to this scanner (e.g. test-mod-only — never counted as stale):
+  🧰️framework/🛍️products/💻️os/🖥️host/🦀️component.rs (block_on, PERMANENT (test-only))
+[verify interactivity] 3 allowlist entr(y/ies) pre-declared for future scope widening (not scanned today, not counted as stale):
+  🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/📦️bin.rs (block_on, PERMANENT)
+  🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🦀️component.rs (run_blocking, Phase 1 (P1b) — becomes job submission)
+  🧰️framework/🔨️modules/⏳️async/✨️macros/🦀️component.rs (block_on, PERMANENT (test-only))
+[verify interactivity] WARN mode — reporting only, exit 0.

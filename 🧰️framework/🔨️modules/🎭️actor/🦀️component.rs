@@ -270,10 +270,7 @@ const ACTOR_ID_PLUGIN_SHIFT: u32 = ACTOR_ID_KIND_SHIFT + ACTOR_ID_KIND_BITS;
 
 impl ActorId {
     pub async fn new(plugin_ordinal: u16, kind_tag: u8, ordinal: u32, generation: u16) -> Self {
-        let bits = ((plugin_ordinal as u64) << ACTOR_ID_PLUGIN_SHIFT)
-            | (((kind_tag as u64) & ACTOR_ID_KIND_MASK) << ACTOR_ID_KIND_SHIFT)
-            | ((ordinal as u64) << ACTOR_ID_ORDINAL_SHIFT)
-            | ((generation as u64) & ACTOR_ID_GENERATION_MASK);
+        let bits = ((plugin_ordinal as u64) << ACTOR_ID_PLUGIN_SHIFT) | (((kind_tag as u64) & ACTOR_ID_KIND_MASK) << ACTOR_ID_KIND_SHIFT) | ((ordinal as u64) << ACTOR_ID_ORDINAL_SHIFT) | ((generation as u64) & ACTOR_ID_GENERATION_MASK);
         Self(bits)
     }
 
@@ -527,16 +524,22 @@ impl WindowId {
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum Origin {
-    Ui { window: WindowId },
+    Ui {
+        window: WindowId,
+    },
     /// 🐛️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-shard-grants, Part A): struct variant, not
     /// the newtype `Actor(ActorId)` this used to be — serde's internal tagging (`#[serde(tag =
     /// "kind")]`) cannot serialize a newtype variant whose payload is not itself a map (`ActorId` is
     /// a bare `u64` tuple struct). Latent, not live (this crate has no `serde_json` dependency and
     /// the wire uses `pack_encode`/`pack_decode`), but the generated TS mirror rendered this as an
     /// impossible `{"kind":"actor"} & bigint` intersection — see `📓️luna-serde-newtype-audit.md`.
-    Actor { id: ActorId },
+    Actor {
+        id: ActorId,
+    },
     Kernel,
-    Bus { topic: String },
+    Bus {
+        topic: String,
+    },
 }
 
 impl Origin {
@@ -581,14 +584,24 @@ pub enum Payload {
     /// newtype variant ... containing a sequence", the exact defect `JobStep::Done`/`Failed` hit
     /// earlier this ticket). Latent, not live, on THIS crate's own pack wire — see [`Origin::Actor`]'s
     /// doc for the full context and `📓️luna-serde-newtype-audit.md`.
-    Event { bytes: Vec<u8> },
-    Suspend { checkpoint: bool },
-    Resume { checkpoint: Option<Vec<u8>> },
+    Event {
+        bytes: Vec<u8>,
+    },
+    Suspend {
+        checkpoint: bool,
+    },
+    Resume {
+        checkpoint: Option<Vec<u8>>,
+    },
     /// 🐛️ Same class of bug as [`Payload::Event`], payload is an integer this time (`serde_json`:
     /// "cannot serialize tagged newtype variant ... containing an integer") — struct variant, not
     /// the newtype `Cancel(u64)` this used to be.
-    Cancel { seq: u64 },
-    JobStep { job: u64 },
+    Cancel {
+        seq: u64,
+    },
+    JobStep {
+        job: u64,
+    },
 }
 
 impl Payload {
@@ -685,11 +698,7 @@ impl Envelope {
         let lane = Lane::pack_decode(bytes, pos).await?;
         let seq = pack::read_u64(bytes, pos, "Envelope::seq").await?;
         let deadline_ms = pack::read_opt_u64(bytes, pos, "Envelope::deadline_ms").await?;
-        let coalesce = if pack::read_bool(bytes, pos, "Envelope::coalesce").await? {
-            Some(CoalesceKey::pack_decode(bytes, pos).await?)
-        } else {
-            None
-        };
+        let coalesce = if pack::read_bool(bytes, pos, "Envelope::coalesce").await? { Some(CoalesceKey::pack_decode(bytes, pos).await?) } else { None };
         let cancel_of = pack::read_opt_u64(bytes, pos, "Envelope::cancel_of").await?;
         let payload = Payload::pack_decode(bytes, pos).await?;
         Ok(Self { to, from, lane, seq, deadline_ms, coalesce, cancel_of, payload })
@@ -708,7 +717,9 @@ pub enum TurnStatus {
     CheckpointReady,
     /// 🐛️ Struct variant, not the newtype `Faulted(Vec<u8>)` this used to be — same sequence-payload
     /// serde defect as [`Payload::Event`]; see that variant's doc for the full explanation.
-    Faulted { detail: Vec<u8> },
+    Faulted {
+        detail: Vec<u8>,
+    },
 }
 
 impl TurnStatus {
@@ -801,7 +812,9 @@ pub enum Backpressure {
     /// newtype payload of ANOTHER internally-tagged enum hits the same "cannot serialize tagged
     /// newtype variant" defect as [`Payload::Event`] — the payload type does not matter, only that
     /// it is not itself a map.
-    Dropped { lane: Lane },
+    Dropped {
+        lane: Lane,
+    },
     Rejected,
 }
 
@@ -979,7 +992,9 @@ pub async fn intersect_capabilities(granted: &[CapabilityGrant], requested: &[Ca
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum FailureSignal {
-    DeadlineOverrun { ratio: f32 },
+    DeadlineOverrun {
+        ratio: f32,
+    },
     FuelExhausted,
     MemoryLimit,
     MailboxOverflow,
@@ -987,8 +1002,12 @@ pub enum FailureSignal {
     /// 🐛️ Struct variant, not the newtype `Trap(String)` this used to be — `String` is a sequence
     /// of chars as far as serde's internal tagging is concerned, so it hits the exact same "cannot
     /// serialize tagged newtype variant ... containing a sequence" defect as [`Payload::Event`].
-    Trap { detail: String },
-    HeartbeatMissed { count: u32 },
+    Trap {
+        detail: String,
+    },
+    HeartbeatMissed {
+        count: u32,
+    },
     ManualReset,
 }
 
@@ -1360,11 +1379,27 @@ impl ActorRecord {
 //#endregion 🗂️ActorRecord
 
 //#region 🧩️ShardTable
-/// 🧩️ Which host mechanism backs a shard.
+/// 🧩️ Which host EXECUTION SURFACE a shard runs on — `design-runtime.md` §2's "thread, worker, or
+/// process" trio, unchanged by the P1c one-pool-worker-runtime refactor EXCEPT for what `Native`
+/// itself now means. A shard was never "a thread" as an identity here — `ShardTable` (below) only
+/// ever pinned an [`ActorId`] to a [`ShardId`], a bookkeeping integer; this crate's own purity rule
+/// means it never spawned anything. What changed in the HOST crates (`semio-framework-plugin-host`'s
+/// `ShardExecutor`, `semio-framework-os`'s `NativeKernelRuntime`) is that `Native` no longer implies
+/// "and therefore gets one dedicated OS thread" — a `Native` shard is now a logical affinity unit
+/// (its actors' `wasmtime::Store`s are pinned to it so guest instance state stays coherent) whose
+/// turns are submitted as jobs onto one process-wide `semio_framework_async::WorkerPool`, mutually
+/// exclusive PER SHARD (so affinity is enforced by a lock, not by thread identity) rather than
+/// concurrent by construction. `WebWorker`/`Process` were already real boundary crossings (a browser
+/// worker, an OS process) unaffected by this distinction — `Native` is the one variant whose meaning
+/// narrows from "a thread" to "this process, pool-scheduled."
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 pub enum ShardKind {
-    Thread,
+    /// 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (P1c): renamed from `Thread` — same process,
+    /// same address space, `wasmtime::Store` instances pinned by `ShardTable::pin`'s least-loaded
+    /// placement, but no OS thread of its own; the host schedules its turns onto a shared
+    /// `WorkerPool`. Wire tag unchanged (`0`) — this is a rename, not a new wire variant.
+    Native,
     WebWorker,
     Process,
 }
@@ -1372,7 +1407,7 @@ pub enum ShardKind {
 impl ShardKind {
     async fn tag(self) -> u8 {
         match self {
-            ShardKind::Thread => 0,
+            ShardKind::Native => 0,
             ShardKind::WebWorker => 1,
             ShardKind::Process => 2,
         }
@@ -1382,7 +1417,7 @@ impl ShardKind {
     }
     pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
         match pack::read_u8(bytes, pos, "ShardKind").await? {
-            0 => Ok(ShardKind::Thread),
+            0 => Ok(ShardKind::Native),
             1 => Ok(ShardKind::WebWorker),
             2 => Ok(ShardKind::Process),
             other => Err(pack::PackError::InvalidTag { what: "ShardKind", tag: other, offset: *pos }),
@@ -1639,7 +1674,12 @@ impl TurnGrant {
         pack::write_vec(out, &self.envelopes, Envelope::pack_encode).await;
     }
     pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
-        Ok(Self { actor: ActorId::pack_decode(bytes, pos).await?, shard: ShardId::pack_decode(bytes, pos).await?, budget: Budget::pack_decode(bytes, pos).await?, envelopes: pack::read_vec(bytes, pos, "TurnGrant::envelopes", Envelope::pack_decode).await? })
+        Ok(Self {
+            actor: ActorId::pack_decode(bytes, pos).await?,
+            shard: ShardId::pack_decode(bytes, pos).await?,
+            budget: Budget::pack_decode(bytes, pos).await?,
+            envelopes: pack::read_vec(bytes, pos, "TurnGrant::envelopes", Envelope::pack_decode).await?,
+        })
     }
 }
 
@@ -1728,12 +1768,7 @@ impl Scheduler {
 
         //#region 🔖️DeadlinePreemption
         // 🚨️ Interactive envelopes past (or nearest) their deadline short-circuit ahead of DRR order.
-        let mut overdue: Vec<(u64, ActorId)> = self
-            .actors
-            .iter()
-            .filter(|(_, e)| e.active && !e.mailbox.is_empty())
-            .filter_map(|(id, e)| e.mailbox.earliest_deadline().filter(|d| *d <= now_ms).map(|d| (d, *id)))
-            .collect();
+        let mut overdue: Vec<(u64, ActorId)> = self.actors.iter().filter(|(_, e)| e.active && !e.mailbox.is_empty()).filter_map(|(id, e)| e.mailbox.earliest_deadline().filter(|d| *d <= now_ms).map(|d| (d, *id))).collect();
         overdue.sort();
         for (_, actor_id) in overdue {
             if budget_left == 0 {
@@ -1846,7 +1881,12 @@ impl SceneSnapshot {
         pack::write_u32(out, self.node_count).await;
     }
     pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
-        Ok(Self { revision: pack::read_u64(bytes, pos, "SceneSnapshot::revision").await?, committed_ms: pack::read_u64(bytes, pos, "SceneSnapshot::committed_ms").await?, patches: pack::read_bytes(bytes, pos, "SceneSnapshot::patches").await?, node_count: pack::read_u32(bytes, pos, "SceneSnapshot::node_count").await? })
+        Ok(Self {
+            revision: pack::read_u64(bytes, pos, "SceneSnapshot::revision").await?,
+            committed_ms: pack::read_u64(bytes, pos, "SceneSnapshot::committed_ms").await?,
+            patches: pack::read_bytes(bytes, pos, "SceneSnapshot::patches").await?,
+            node_count: pack::read_u32(bytes, pos, "SceneSnapshot::node_count").await?,
+        })
     }
 }
 
@@ -1963,13 +2003,35 @@ impl std::fmt::Debug for ActorMetrics {
 
 impl PartialEq for ActorMetrics {
     fn eq(&self, other: &Self) -> bool {
-        self.turns == other.turns && self.fuel_total == other.fuel_total && self.wall_us_total == other.wall_us_total && self.wall_us_ring == other.wall_us_ring && self.memory_bytes == other.memory_bytes && self.stage == other.stage && self.shard == other.shard
+        self.turns == other.turns
+            && self.fuel_total == other.fuel_total
+            && self.wall_us_total == other.wall_us_total
+            && self.wall_us_ring == other.wall_us_ring
+            && self.memory_bytes == other.memory_bytes
+            && self.stage == other.stage
+            && self.shard == other.shard
     }
 }
 
 impl Default for ActorMetrics {
     fn default() -> Self {
-        Self { turns: 0, fuel_total: 0, wall_us_total: 0, wall_us_ring: vec![0; WALL_US_RING_CAPACITY], wall_us_ring_len: 0, wall_us_ring_pos: 0, memory_bytes: 0, mailbox_len: 0, mailbox_lag_ms: 0, coalesced: 0, dropped: 0, traps: 0, restarts: 0, stage: FailureStage::Healthy, shard: ShardId(0) }
+        Self {
+            turns: 0,
+            fuel_total: 0,
+            wall_us_total: 0,
+            wall_us_ring: vec![0; WALL_US_RING_CAPACITY],
+            wall_us_ring_len: 0,
+            wall_us_ring_pos: 0,
+            memory_bytes: 0,
+            mailbox_len: 0,
+            mailbox_lag_ms: 0,
+            coalesced: 0,
+            dropped: 0,
+            traps: 0,
+            restarts: 0,
+            stage: FailureStage::Healthy,
+            shard: ShardId(0),
+        }
     }
 }
 
@@ -2123,7 +2185,13 @@ impl ActorMetricsSample {
         self.metrics.pack_encode(out).await;
     }
     pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
-        Ok(Self { id: ActorId::pack_decode(bytes, pos).await?, package: PackageId::pack_decode(bytes, pos).await?, lane: Lane::pack_decode(bytes, pos).await?, status: ActorStatus::pack_decode(bytes, pos).await?, metrics: ActorMetrics::pack_decode(bytes, pos).await? })
+        Ok(Self {
+            id: ActorId::pack_decode(bytes, pos).await?,
+            package: PackageId::pack_decode(bytes, pos).await?,
+            lane: Lane::pack_decode(bytes, pos).await?,
+            status: ActorStatus::pack_decode(bytes, pos).await?,
+            metrics: ActorMetrics::pack_decode(bytes, pos).await?,
+        })
     }
 }
 
@@ -2531,7 +2599,18 @@ impl Kernel {
         let meta = self.actors.get(&actor)?;
         let shard = self.shards.shard_of(actor).await.unwrap_or(ShardId(0));
         let mailbox = Mailbox::new(meta.budget.mailbox_len).await;
-        Some(ActorRecord { id: actor, kind: meta.kind.clone(), package: meta.package.clone(), shard, capabilities: meta.capabilities.clone(), budget: meta.budget, mailbox, status: meta.status.clone(), failure: meta.failure.clone(), metrics: meta.metrics.clone() })
+        Some(ActorRecord {
+            id: actor,
+            kind: meta.kind.clone(),
+            package: meta.package.clone(),
+            shard,
+            capabilities: meta.capabilities.clone(),
+            budget: meta.budget,
+            mailbox,
+            status: meta.status.clone(),
+            failure: meta.failure.clone(),
+            metrics: meta.metrics.clone(),
+        })
     }
 
     pub async fn actor_status(&self, actor: ActorId) -> Option<&ActorStatus> {
@@ -2562,10 +2641,7 @@ impl Kernel {
                 entry.0 += 1;
             }
         }
-        per_shard
-            .into_iter()
-            .map(|(shard, (active, total))| ShardMetricsSample { shard, metrics: ShardMetrics { actors: total, busy_ratio: if total > 0 { active as f32 / total as f32 } else { 0.0 }, heartbeat_age_ms: 0 } })
-            .collect()
+        per_shard.into_iter().map(|(shard, (active, total))| ShardMetricsSample { shard, metrics: ShardMetrics { actors: total, busy_ratio: if total > 0 { active as f32 / total as f32 } else { 0.0 }, heartbeat_age_ms: 0 } }).collect()
     }
 
     /// 📈️ Assembles the full `os.runtime.metrics` payload — [`Kernel::metrics`] plus every actor's and
@@ -2588,7 +2664,18 @@ impl Kernel {
     /// both from the host cascade so the two concerns (placement/capability vs. cascade topology)
     /// stay independently testable.
     #[allow(clippy::too_many_arguments)]
-    pub async fn activate_pinned(&mut self, package: PackageId, plugin_ordinal: u16, kind: ActorKind, lane: Lane, window: Option<WindowId>, _event: ActivationEvent, shard: ShardId, parent: Option<ActorId>, requested_capabilities: Vec<CapabilityGrant>) -> ActorId {
+    pub async fn activate_pinned(
+        &mut self,
+        package: PackageId,
+        plugin_ordinal: u16,
+        kind: ActorKind,
+        lane: Lane,
+        window: Option<WindowId>,
+        _event: ActivationEvent,
+        shard: ShardId,
+        parent: Option<ActorId>,
+        requested_capabilities: Vec<CapabilityGrant>,
+    ) -> ActorId {
         let ordinal = self.next_ordinal.entry(package.clone()).or_insert(0);
         let id = ActorId::new(plugin_ordinal, kind.tag().await, *ordinal, 0).await;
         *ordinal += 1;
@@ -2806,11 +2893,19 @@ mod tests {
         round_trip!(pack_round_trip_shard_id, ShardId, ShardId(3));
         round_trip!(pack_round_trip_shard_kind, ShardKind, ShardKind::WebWorker);
         round_trip!(pack_round_trip_decision, Decision, Decision { run: vec![TurnGrant { actor: ActorId::new(1, 0, 0, 0).await, shard: ShardId(0), budget: lane_defaults::budget_for(Lane::Background).await, envelopes: vec![] }], wake_at: Some(10) });
-        round_trip!(pack_round_trip_turn_grant, TurnGrant, TurnGrant { actor: ActorId::new(2, 1, 3, 0).await, shard: ShardId(1), budget: lane_defaults::budget_for(Lane::Maintenance).await, envelopes: vec![env(ActorId::new(2, 1, 3, 0).await, Lane::Maintenance, 1).await] });
+        round_trip!(
+            pack_round_trip_turn_grant,
+            TurnGrant,
+            TurnGrant { actor: ActorId::new(2, 1, 3, 0).await, shard: ShardId(1), budget: lane_defaults::budget_for(Lane::Maintenance).await, envelopes: vec![env(ActorId::new(2, 1, 3, 0).await, Lane::Maintenance, 1).await] }
+        );
         round_trip!(pack_round_trip_scene_snapshot, SceneSnapshot, SceneSnapshot { revision: 3, committed_ms: 12, patches: vec![9, 9], node_count: 40 });
         round_trip!(pack_round_trip_shard_metrics, ShardMetrics, ShardMetrics { actors: 3, busy_ratio: 0.5, heartbeat_age_ms: 12 });
         round_trip!(pack_round_trip_kernel_metrics, KernelMetrics, KernelMetrics { actors: 3, shards: 4, packages: 2 });
-        round_trip!(pack_round_trip_actor_metrics_sample, ActorMetricsSample, ActorMetricsSample { id: ActorId::new(1, 0, 2, 0).await, package: PackageId("s.cad".into()), lane: Lane::UserVisible, status: ActorStatus::Active, metrics: ActorMetrics::default() });
+        round_trip!(
+            pack_round_trip_actor_metrics_sample,
+            ActorMetricsSample,
+            ActorMetricsSample { id: ActorId::new(1, 0, 2, 0).await, package: PackageId("s.cad".into()), lane: Lane::UserVisible, status: ActorStatus::Active, metrics: ActorMetrics::default() }
+        );
         round_trip!(pack_round_trip_shard_metrics_sample, ShardMetricsSample, ShardMetricsSample { shard: ShardId(2), metrics: ShardMetrics { actors: 5, busy_ratio: 0.4, heartbeat_age_ms: 8 } });
         round_trip!(
             pack_round_trip_runtime_metrics_snapshot,
@@ -2839,7 +2934,7 @@ mod tests {
 
         #[semio_framework_async_macros::async_test]
         async fn pack_round_trip_actor_record() {
-            let mut kernel = Kernel::new(ShardKind::Thread, 4, 1, 4).await;
+            let mut kernel = Kernel::new(ShardKind::Native, 4, 1, 4).await;
             let id = kernel.activate(PackageId("s.cad".into()), 1, ActorKind::PluginApp { plugin: PackageId("s.cad".into()), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, None, ActivationEvent::Manual).await;
             let record = kernel.actor_record(id).await.unwrap();
             let mut bytes = Vec::new();
@@ -2857,7 +2952,7 @@ mod tests {
         /// mere validity: a "pin returns a shard in range" test passes when every answer is 0.
         #[semio_framework_async_macros::async_test]
         async fn pin_spreads_actors_of_one_plugin_across_the_pool() {
-            let mut table = ShardTable::new(ShardKind::Thread, 8, 0).await;
+            let mut table = ShardTable::new(ShardKind::Native, 8, 0).await;
             let mut counts: std::collections::BTreeMap<u16, usize> = std::collections::BTreeMap::new();
             for ordinal in 0..100u32 {
                 *counts.entry(table.pin(ActorId::new(7, 0, ordinal, 0).await).await.0).or_default() += 1;
@@ -2871,7 +2966,7 @@ mod tests {
         /// and skew the balance.
         #[semio_framework_async_macros::async_test]
         async fn pin_is_idempotent_for_the_same_actor() {
-            let mut table = ShardTable::new(ShardKind::Thread, 8, 0).await;
+            let mut table = ShardTable::new(ShardKind::Native, 8, 0).await;
             let actor = ActorId::new(3, 0, 11, 0).await;
             assert_eq!(table.pin(actor).await, table.pin(actor).await);
         }
@@ -2880,7 +2975,7 @@ mod tests {
         /// exactly what a round-robin counter would do and why placement is least-loaded.
         #[semio_framework_async_macros::async_test]
         async fn pin_refills_the_gap_left_by_unpin() {
-            let mut table = ShardTable::new(ShardKind::Thread, 4, 0).await;
+            let mut table = ShardTable::new(ShardKind::Native, 4, 0).await;
             let mut actors: Vec<ActorId> = Vec::new();
             for ordinal in 0..8u32 {
                 actors.push(ActorId::new(1, 0, ordinal, 0).await);
@@ -2900,7 +2995,7 @@ mod tests {
         /// own), no thread/bench needed.
         #[semio_framework_async_macros::async_test]
         async fn interactive_actor_avoids_a_shard_saturated_by_cpu_bound_actors() {
-            let mut kernel = Kernel::new(ShardKind::Thread, 3, 0, 64).await;
+            let mut kernel = Kernel::new(ShardKind::Native, 3, 0, 64).await;
             let background_package = PackageId("cpu-hog".into());
             // 🔢️ 6 Background actors round-robin 2-per-shard across 3 shards under plain least-loaded
             // `pin` (proven deterministic by `pin_spreads_actors_of_one_plugin_across_the_pool`'s own
@@ -2935,7 +3030,7 @@ mod tests {
 
         #[semio_framework_async_macros::async_test]
         async fn pack_round_trip_shard_table() {
-            let mut table = ShardTable::new(ShardKind::Thread, 4, 1).await;
+            let mut table = ShardTable::new(ShardKind::Native, 4, 1).await;
             let actor = ActorId::new(1, 0, 0, 0).await;
             table.pin(actor).await;
             table.request_exclusive(ActorId::new(2, 0, 0, 0).await).await;
@@ -3154,7 +3249,7 @@ mod tests {
 
         #[semio_framework_async_macros::async_test]
         async fn failure_ladder_trap_then_quarantine_is_package_wide() {
-            let mut kernel = Kernel::new(ShardKind::Thread, 4, 1, 4).await;
+            let mut kernel = Kernel::new(ShardKind::Native, 4, 1, 4).await;
             let package = PackageId("s.flaky".into());
             let a = kernel.activate(package.clone(), 1, ActorKind::PluginApp { plugin: package.clone(), app_id: "a".into(), instance_id: 0 }, Lane::Background, None, ActivationEvent::Manual).await;
             let b = kernel.activate(package.clone(), 1, ActorKind::PluginApp { plugin: package, app_id: "b".into(), instance_id: 1 }, Lane::Background, None, ActivationEvent::Manual).await;
@@ -3285,7 +3380,7 @@ mod tests {
         //#region 🔖️KernelFacade
         #[semio_framework_async_macros::async_test]
         async fn kernel_activate_submit_tick_complete_round_trip() {
-            let mut kernel = Kernel::new(ShardKind::Thread, 4, 1, 4).await;
+            let mut kernel = Kernel::new(ShardKind::Native, 4, 1, 4).await;
             let window = WindowId(1);
             let actor = kernel.activate(PackageId("s.cad".into()), 1, ActorKind::PluginApp { plugin: PackageId("s.cad".into()), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, Some(window), ActivationEvent::WindowOpen { window }).await;
             let bp = kernel.submit(&env(actor, Lane::Interactive, 1).await).await;
@@ -3300,7 +3395,7 @@ mod tests {
 
         #[semio_framework_async_macros::async_test]
         async fn kernel_suspend_resume_round_trip() {
-            let mut kernel = Kernel::new(ShardKind::Thread, 4, 1, 4).await;
+            let mut kernel = Kernel::new(ShardKind::Native, 4, 1, 4).await;
             let actor = kernel.activate(PackageId("s.cad".into()), 1, ActorKind::Extension { plugin: PackageId("s.cad".into()), extension_id: "e1".into() }, Lane::Background, None, ActivationEvent::Manual).await;
             kernel.suspend(actor, Some(vec![1, 2, 3])).await.unwrap();
             assert_eq!(kernel.actor_status(actor).await, Some(&ActorStatus::Suspended { checkpoint: Some(vec![1, 2, 3]) }));
@@ -3310,7 +3405,7 @@ mod tests {
 
         #[semio_framework_async_macros::async_test]
         async fn kernel_request_exclusive_then_release() {
-            let mut kernel = Kernel::new(ShardKind::Thread, 4, 1, 4).await;
+            let mut kernel = Kernel::new(ShardKind::Native, 4, 1, 4).await;
             let actor = kernel.activate(PackageId("s.cad".into()), 1, ActorKind::Job { owner: ActorId::new(0, 0, 0, 0).await, job_id: 1 }, Lane::Background, None, ActivationEvent::Manual).await;
             let shard = kernel.request_exclusive(actor).await.unwrap();
             assert!(shard.0 >= 3, "exclusive shards must come from the reserved tail of the pool");
@@ -3319,7 +3414,7 @@ mod tests {
 
         #[semio_framework_async_macros::async_test]
         async fn kernel_metrics_counts_actors_shards_packages() {
-            let mut kernel = Kernel::new(ShardKind::Thread, 4, 0, 4).await;
+            let mut kernel = Kernel::new(ShardKind::Native, 4, 0, 4).await;
             kernel.activate(PackageId("s.a".into()), 1, ActorKind::Extension { plugin: PackageId("s.a".into()), extension_id: "e".into() }, Lane::Background, None, ActivationEvent::Manual).await;
             kernel.activate(PackageId("s.b".into()), 2, ActorKind::Extension { plugin: PackageId("s.b".into()), extension_id: "e".into() }, Lane::Background, None, ActivationEvent::Manual).await;
             let metrics = kernel.metrics().await;
@@ -3335,7 +3430,7 @@ mod tests {
         /// — the property `MessageEndpoint::Extension` traffic depends on to never cross a transport.
         #[semio_framework_async_macros::async_test]
         async fn activate_pinned_places_extension_on_parents_shard() {
-            let mut kernel = Kernel::new(ShardKind::Thread, 4, 0, 4).await;
+            let mut kernel = Kernel::new(ShardKind::Native, 4, 0, 4).await;
             let plugin = PackageId("s.cad".into());
             let parent = kernel.activate(plugin.clone(), 1, ActorKind::PluginApp { plugin: plugin.clone(), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, None, ActivationEvent::Manual).await;
             let parent_shard = kernel.shard_of(parent).await.expect("parent must be pinned by activate");
@@ -3350,7 +3445,7 @@ mod tests {
         /// parent itself, leaves-first, with zero orphans left in `kernel.metrics().actors`.
         #[semio_framework_async_macros::async_test]
         async fn deactivate_parent_cascades_leaves_first_with_zero_orphans() {
-            let mut kernel = Kernel::new(ShardKind::Thread, 4, 0, 4).await;
+            let mut kernel = Kernel::new(ShardKind::Native, 4, 0, 4).await;
             let plugin = PackageId("s.cad".into());
             let parent = kernel.activate(plugin.clone(), 1, ActorKind::PluginApp { plugin: plugin.clone(), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, None, ActivationEvent::Manual).await;
             let shard = kernel.shard_of(parent).await.unwrap();
@@ -3375,7 +3470,7 @@ mod tests {
         /// — "a parent kill takes its extensions down" (design doc M6's own acceptance wording).
         #[semio_framework_async_macros::async_test]
         async fn kill_parent_takes_extensions_down() {
-            let mut kernel = Kernel::new(ShardKind::Thread, 4, 0, 4).await;
+            let mut kernel = Kernel::new(ShardKind::Native, 4, 0, 4).await;
             let plugin = PackageId("s.flow".into());
             let parent = kernel.activate(plugin.clone(), 1, ActorKind::PluginApp { plugin: plugin.clone(), app_id: "flow".into(), instance_id: 0 }, Lane::Interactive, None, ActivationEvent::Manual).await;
             let shard = kernel.shard_of(parent).await.unwrap();
@@ -3396,7 +3491,7 @@ mod tests {
         /// which this test deliberately does not reproduce for the parent/extension pair).
         #[semio_framework_async_macros::async_test]
         async fn trapping_extension_never_faults_the_parent() {
-            let mut kernel = Kernel::new(ShardKind::Thread, 4, 0, 4).await;
+            let mut kernel = Kernel::new(ShardKind::Native, 4, 0, 4).await;
             let plugin = PackageId("s.cad".into());
             let parent = kernel.activate(plugin.clone(), 1, ActorKind::PluginApp { plugin: plugin.clone(), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, None, ActivationEvent::Manual).await;
             kernel.complete(parent, &ok_turn().await, 0).await.unwrap();
@@ -3427,7 +3522,7 @@ mod tests {
         /// `actor_record(extension).capabilities`, i.e. a broker denial, never a `KernelError`.
         #[semio_framework_async_macros::async_test]
         async fn extension_capability_grant_is_the_intersection_not_the_request() {
-            let mut kernel = Kernel::new(ShardKind::Thread, 2, 0, 4).await;
+            let mut kernel = Kernel::new(ShardKind::Native, 2, 0, 4).await;
             let plugin = PackageId("s.cad".into());
             let parent = kernel.activate(plugin.clone(), 1, ActorKind::PluginApp { plugin: plugin.clone(), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, None, ActivationEvent::Manual).await;
             kernel.set_capabilities(parent, vec![CapabilityGrant { capability: "fs.read".into(), scope: None }, CapabilityGrant { capability: "net.fetch".into(), scope: None }]).await.unwrap();
@@ -3446,7 +3541,7 @@ mod tests {
         /// the root), resume cascades parent-first (the symmetric restore direction).
         #[semio_framework_async_macros::async_test]
         async fn suspend_cascade_leaves_first_resume_cascade_parent_first() {
-            let mut kernel = Kernel::new(ShardKind::Thread, 4, 0, 4).await;
+            let mut kernel = Kernel::new(ShardKind::Native, 4, 0, 4).await;
             let plugin = PackageId("s.cad".into());
             let parent = kernel.activate(plugin.clone(), 1, ActorKind::PluginApp { plugin: plugin.clone(), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, None, ActivationEvent::Manual).await;
             let shard = kernel.shard_of(parent).await.unwrap();
@@ -3471,7 +3566,7 @@ mod tests {
         /// package, lane, status, turns, shard — match what the kernel actually did, not a fake.
         #[semio_framework_async_macros::async_test]
         async fn runtime_metrics_snapshot_reflects_real_kernel_activity() {
-            let mut kernel = Kernel::new(ShardKind::Thread, 2, 0, 8).await;
+            let mut kernel = Kernel::new(ShardKind::Native, 2, 0, 8).await;
             let cad = kernel.activate(PackageId("s.cad".into()), 1, ActorKind::PluginApp { plugin: PackageId("s.cad".into()), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, None, ActivationEvent::Manual).await;
             let stdio = kernel.activate(PackageId("s.stdio".into()), 2, ActorKind::Extension { plugin: PackageId("s.stdio".into()), extension_id: "e".into() }, Lane::Background, None, ActivationEvent::Manual).await;
 
@@ -3527,8 +3622,8 @@ mod tests {
     #[cfg(feature = "typegen")]
     #[semio_framework_async_macros::async_test]
     async fn exports_typescript_bindings() {
-        use ts_rs::TS;
         use crate::*;
+        use ts_rs::TS;
         PackageId::export().unwrap();
         PackageHash::export().unwrap();
         ActorId::export().unwrap();

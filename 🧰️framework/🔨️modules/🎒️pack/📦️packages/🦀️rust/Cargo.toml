@@ -23,6 +23,10 @@ ureq = ["dep:ureq"]
 
 [dependencies]
 semio-framework-replication = { workspace = true }
+# 🔌️ Phase 1 (`26/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR`): `UreqRangeTransport`'s blocking HTTP
+# call dispatches onto the process-wide `WorkerPool` (`Lane::Io`) instead of a per-request
+# `std::thread::spawn`. Workspace-internal, not a new third-party dependency.
+semio-framework-async = { workspace = true }
 blake3 = "1"
 futures-lite = "2"
 serde = { version = "1.0.219", features = ["derive"] }

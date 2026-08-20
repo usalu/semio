@@ -11,7 +11,7 @@ use crate::tui::text::truncate_to;
 use crate::tui::theme::{Role, Surface, Theme};
 use crate::tui::widget::{LogScroll, LogState};
 
-pub(crate) async fn log_on_key(log: &mut LogState, ev: &KeyEvent) {
+pub(crate) fn log_on_key(log: &mut LogState, ev: &KeyEvent) {
     let len = log.lines().len();
     match ev.key {
         Key::PageUp => {
@@ -33,7 +33,7 @@ pub(crate) async fn log_on_key(log: &mut LogState, ev: &KeyEvent) {
     }
 }
 
-pub(crate) async fn paint_log(log: &LogState, theme: &Theme, rect: Rect, buf: &mut CellBuffer) {
+pub(crate) fn paint_log(log: &LogState, theme: &Theme, rect: Rect, buf: &mut CellBuffer) {
     let bg = theme.surface(Surface::Window);
     let fg = theme.role(Role::Foreground);
     buf.fill_rect(rect, Cell::blank(fg, bg));

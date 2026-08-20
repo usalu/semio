@@ -31,6 +31,12 @@ use std::time::Duration;
 const INSTANTIATE_BUDGET: Budget = Budget { fuel: 200_000_000, deadline_ms: 500, max_effects: 32, max_patch_bytes: 1 << 16, max_frames: 8 };
 
 fn main() {
+    // 🎚️ P1f: this process hosts exactly ONE `ShardLoop`, pumped directly on THIS thread (below) —
+    // never submitted to `semio_framework_plugin_host::plugin_host_worker_pool()`. That pool's only
+    // tenants here are the epoch ticker and `StdioTransport`'s heartbeat sender (two sub-millisecond
+    // periodic jobs), so it needs exactly one worker, not `available_parallelism()-1` — set BEFORE
+    // `WasmtimeRuntime::new` below, the first call that touches the pool (a `OnceLock`, read once).
+    std::env::set_var("SEMIO_PLUGIN_HOST_WORKER_COUNT", "1");
     let args: Vec<String> = std::env::args().collect();
     let [_, wasm_path, package_id, actor_id_arg] = args.as_slice() else {
         eprintln!("[semio-shard] usage: semio-shard <component.wasm> <package-id> <actor-id>");

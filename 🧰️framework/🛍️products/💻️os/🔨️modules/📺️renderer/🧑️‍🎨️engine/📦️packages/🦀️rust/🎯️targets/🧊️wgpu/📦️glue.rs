@@ -113,6 +113,34 @@ use winit::event_loop::EventLoop;
 use winit::window::Fullscreen;
 use winit::window::Window;
 
+//#region 🧵️RendererWorkerPool
+/// 🧵️ P1e (INTERACTIVE-JOB-RUNTIME-REFACTOR, one-pool-worker-runtime): the ONE process-wide
+/// [`semio_framework_async::WorkerPool`] this renderer crate itself owns — real dependency
+/// injection into every consumer that needs one below (`shell::ShellState::new`'s
+/// `TokioHostRuntime::with_pool`, `kernel_runtime::KernelThreadState::new`'s `ParallelRuntime::new`),
+/// never a second pool minted per-consumer. Per P1a/P1b's own reports this renderer was the
+/// explicitly-named "next place to inject a real, externally-owned `WorkerPool`" rather than falling
+/// through to `semio-framework-os-services`'s own private `global_worker_pool()` default (that
+/// singleton is a SEPARATE pool, scoped to `os-services`' own HTTP/storage/timer work; it cannot be
+/// reused here — its accessor is crate-private by design). `ProcessKind::InteractiveNative` (this
+/// crate IS the interactive UI host) keeps one core free for the UI/winit thread — the same
+/// reservation `TokioHostRuntime`'s directory-client work and `ParallelRuntime`'s shard-executor
+/// submissions now share, so neither can starve the other under the pool's own admission control.
+/// Lazily built on first use (native-only: nothing on wasm32 calls this), never rebuilt.
+#[cfg(not(target_arch = "wasm32"))]
+static RENDERER_WORKER_POOL: std::sync::OnceLock<semio_framework_async::WorkerPool> = std::sync::OnceLock::new();
+
+#[cfg(not(target_arch = "wasm32"))]
+pub(crate) fn renderer_worker_pool() -> semio_framework_async::WorkerPool {
+    RENDERER_WORKER_POOL
+        .get_or_init(|| {
+            let cores = std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get);
+            semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, cores))
+        })
+        .clone()
+}
+//#endregion 🧵️RendererWorkerPool
+
 //#region 🎠️KernelRuntime
 /// 🎭️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (packet H3-wgpu-native; upgraded by terra-kernel-loop):
 /// `📓️design-runtime.md` §1's "wgpu native" host — `Kernel` runs on a dedicated kernel thread; the
@@ -156,14 +184,17 @@ pub(crate) mod kernel_runtime {
     /// how long `run_turn`'s tick loop waits for a granted turn's `ShardOutcome` before giving up.
     const RUN_TURN_OUTCOME_TIMEOUT: Duration = Duration::from_secs(5);
 
-    /// 🧵️ terra-kernel-loop, item 3 of the packet brief: K sized from `semio_framework_async::
-    /// thread_plan(cores).shards` rather than a fresh ad-hoc formula — "the global thread budget
-    /// exists so no component sizes itself per-CPU." `available_parallelism()` failing (rare; a
-    /// sandboxed/exotic host) falls back to `4` cores' worth of shards rather than panicking the
-    /// kernel thread before it can even start.
+    /// 🧵️ P1e (INTERACTIVE-JOB-RUNTIME-REFACTOR, one-pool-worker-runtime): sized from
+    /// `semio_framework_async::worker_count_for` — the SAME formula [`crate::renderer_worker_pool`]
+    /// itself sizes its one process-wide `WorkerPool` from — rather than a fresh ad-hoc formula,
+    /// keeping "no component sizes itself per-CPU" true even though a shard count is minted before
+    /// the pool object itself is touched here (`ShardExecutor` count, not thread count — shards are a
+    /// pure scheduling/affinity unit post-P1c, never a thread per shard). `available_parallelism()`
+    /// failing (rare; a sandboxed/exotic host) falls back to `4` cores' worth of shards rather than
+    /// panicking the kernel thread before it can even start.
     fn native_shard_count() -> u16 {
         let cores = std::thread::available_parallelism().map(|n| n.get()).unwrap_or(4);
-        semio_framework_async::thread_plan(cores).shards as u16
+        semio_framework_async::worker_count_for(semio_framework_async::ProcessKind::InteractiveNative, cores) as u16
     }
 
     //#region 🔖️ExtensionIndex
@@ -388,9 +419,12 @@ pub(crate) mod kernel_runtime {
     struct KernelThreadState {
         guest_runtime: Arc<GuestRuntimes>,
         /// 🎠️ terra-kernel-loop: the real multi-shard engine — replaces the single physical
-        /// `ShardLoop`/`Kernel::new(.., 1, 0, ..)` this host used to run. `Kernel::new(Thread, K, 2,
+        /// `ShardLoop`/`Kernel::new(.., 1, 0, ..)` this host used to run. `Kernel::new(Native, K, 2,
         /// 64)` (`exclusive_reserve: 2` — item 3 of the packet brief — makes `request_exclusive`
         /// real; no caller in this file exercises it yet, but the reserve pool now genuinely exists).
+        /// P1e (INTERACTIVE-JOB-RUNTIME-REFACTOR, one-pool-worker-runtime): every shard now runs as a
+        /// pool-scheduled job on `crate::renderer_worker_pool()` — no `ShardExecutor`/forwarder OS
+        /// threads — see `🎠️runtime.rs`'s own module doc.
         runtime: crate::parallel_runtime::ParallelRuntime,
         /// ⏱️ Monotonic milliseconds this host's own `Kernel::tick` calls are stamped with — this
         /// crate's purity-respecting clock source (`Kernel` itself takes no clock, per `🎭️actor`'s
@@ -418,7 +452,10 @@ pub(crate) mod kernel_runtime {
     impl KernelThreadState {
         fn new() -> Self {
             let guest_runtime: Arc<GuestRuntimes> = Arc::new(GuestRuntimes::Wasmtime(WasmtimeRuntime::new(SharedEngineConfig::default()).expect("wasmtime engine builds")));
-            let runtime = crate::parallel_runtime::ParallelRuntime::new(guest_runtime.clone(), native_shard_count(), 2, 64);
+            // 🧵️ P1e: the injected process-wide pool (`crate::renderer_worker_pool`), never a pool this
+            // type mints for itself — see `ParallelRuntime::new`'s own doc.
+            let pool = Arc::new(crate::renderer_worker_pool());
+            let runtime = pollster::block_on(crate::parallel_runtime::ParallelRuntime::new(pool, guest_runtime.clone(), native_shard_count(), 2, 64));
             Self { guest_runtime, runtime, now_ms: 0, plugin_ordinals: HashMap::new(), instances: HashMap::new(), next_instance_id: 1, retained: HashMap::new(), pending_rejections: HashMap::new() }
         }
 
@@ -442,7 +479,7 @@ pub(crate) mod kernel_runtime {
             let instance_id = self.next_instance_id;
             self.next_instance_id += 1;
             let plugin_ordinal = self.plugin_ordinal(&plugin_id);
-            let actor = self.runtime.activate(package_id.clone(), plugin_ordinal, ActorKind::PluginApp { plugin: package_id, app_id: app_id.clone(), instance_id }, Lane::Interactive, None, ActivationEvent::Manual, &compiled, &[] as &[BrokerCapabilityGrant], &TURN_BUDGET)?;
+            let actor = pollster::block_on(self.runtime.activate(package_id.clone(), plugin_ordinal, ActorKind::PluginApp { plugin: package_id, app_id: app_id.clone(), instance_id }, Lane::Interactive, None, ActivationEvent::Manual, &compiled, &[] as &[BrokerCapabilityGrant], &TURN_BUDGET))?;
             self.instances.insert(instance_id, actor);
             // 🐣️ `InstanceOpen` is the first event a fresh instance must receive (`📓️design-abi.md`
             // §2) — `actor`/`config`/`assets`/`capabilities` are placeholders until a real capability
@@ -527,7 +564,7 @@ pub(crate) mod kernel_runtime {
                 // `intersect_capabilities` call still records the correctly-scoped grant kernel-side
                 // (`set_capabilities` below) so the intersection mechanism is exercised end-to-end and
                 // ready the moment a broker starts populating `parent_grants` for real.
-                match self.runtime.activate(extension.package.clone(), extension_ordinal, extension_kind, Lane::Background, None, ActivationEvent::Manual, &extension_compiled, &[] as &[BrokerCapabilityGrant], &TURN_BUDGET) {
+                match pollster::block_on(self.runtime.activate(extension.package.clone(), extension_ordinal, extension_kind, Lane::Background, None, ActivationEvent::Manual, &extension_compiled, &[] as &[BrokerCapabilityGrant], &TURN_BUDGET)) {
                     Ok(extension_actor) => {
                         let scoped_grants = pollster::block_on(intersect_capabilities(&parent_grants, &extension.capability_requests));
                         if let Err(error) = pollster::block_on(self.runtime.kernel_mut().set_capabilities(extension_actor, scoped_grants)) {
@@ -554,7 +591,7 @@ pub(crate) mod kernel_runtime {
                 // the pre-existing single-actor behaviour this method had before this packet.
                 let removed = pollster::block_on(self.runtime.kernel_mut().deactivate(actor)).unwrap_or_else(|_| vec![actor]);
                 for id in removed {
-                    self.runtime.unregister(id);
+                    pollster::block_on(self.runtime.unregister(id));
                 }
             }
             self.retained.retain(|(inst, _), _| *inst != instance);
@@ -604,7 +641,7 @@ pub(crate) mod kernel_runtime {
                 }
             }
             for envelope in &envelopes {
-                if !matches!(self.runtime.submit(envelope), Backpressure::Accept) {
+                if !matches!(pollster::block_on(self.runtime.submit(envelope)), Backpressure::Accept) {
                     crate::log_debug(&format!("kernel: run_turn submit for actor {} was not Accept-ed (mailbox pressure)", actor.0));
                 }
             }
@@ -612,7 +649,7 @@ pub(crate) mod kernel_runtime {
             let mut fault: Option<String> = None;
             loop {
                 self.now_ms += 1;
-                let decision = self.runtime.tick_and_dispatch(self.now_ms, |_actor| crate::actor_budget_from_turn_budget(TURN_BUDGET, Lane::Interactive));
+                let decision = pollster::block_on(self.runtime.tick_and_dispatch(self.now_ms, |_actor| crate::actor_budget_from_turn_budget(TURN_BUDGET, Lane::Interactive)));
                 if decision.run.is_empty() {
                     break;
                 }
@@ -623,7 +660,7 @@ pub(crate) mod kernel_runtime {
                 for outcome in &outcomes {
                     match outcome {
                         ShardOutcome::Turn { actor: reported, result } => {
-                            let _ = self.runtime.complete(ActorId(*reported), result, 0, 0, self.now_ms);
+                            let _ = pollster::block_on(self.runtime.complete(ActorId(*reported), result, 0, 0, self.now_ms));
                             if *reported == actor.0 {
                                 turn_result = Some(result.clone());
                             }
@@ -637,7 +674,7 @@ pub(crate) mod kernel_runtime {
                         // caller already treats a fault as `TurnStatus::Faulted` for retry purposes.
                         ShardOutcome::Fault { actor: reported, message } => {
                             let faulted = TurnResult { ui_patches: Vec::new(), effects: Vec::new(), next_wake: None, status: semio_framework::kernel::TurnStatus::Faulted(message.clone().into_bytes()), fuel_used: 0 };
-                            let _ = self.runtime.complete(ActorId(*reported), &faulted, 0, 0, self.now_ms);
+                            let _ = pollster::block_on(self.runtime.complete(ActorId(*reported), &faulted, 0, 0, self.now_ms));
                             if *reported == actor.0 {
                                 fault = Some(message.clone());
                             }
@@ -949,7 +986,17 @@ pub mod scale_bench {
 
     impl Env {
         fn new(runtime: Arc<GuestRuntimes>, shard_count: u16) -> Self {
-            let runtime = super::parallel_runtime::ParallelRuntime::new(runtime, shard_count.max(1), 0, 64);
+            // 🧵️ P1e: this bench is a standalone, one-shot headless invocation (`semio-wgpu-native
+            // --scale`), never sharing a process with the interactive winit host (`crate::
+            // renderer_worker_pool`'s `InteractiveNative` singleton) — so it owns its OWN
+            // `ProcessKind::HeadlessBatch` pool, the same shape `NativeKernelRuntime` (`🖥️host/
+            // 🎠️activation.rs`, P1c) uses for its own equally standalone, one-shot CLI callers. This is
+            // NOT the anti-pattern P1e's own brief forbids (a component sizing its own pool while
+            // sharing a process with others that also do) — there is exactly one pool for this
+            // process's whole lifetime, sized once, here.
+            let cores = std::thread::available_parallelism().map(|n| n.get()).unwrap_or(4);
+            let pool = Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, cores)));
+            let runtime = pollster::block_on(super::parallel_runtime::ParallelRuntime::new(pool, runtime, shard_count.max(1), 0, 64));
             Self { runtime, budgets: HashMap::new(), seq: 0, ordinals: HashMap::new(), now_ms: 0, pending: Vec::new() }
         }
 
@@ -980,7 +1027,7 @@ pub mod scale_bench {
             let package_id = record.parent_id.clone().unwrap_or_else(|| record.id.clone());
             let ordinal = self.ordinal(&package_id);
             let budget = turn_budget_of(record);
-            let actor = self.runtime.activate(PackageId(package_id), ordinal, kind, lane, None, ActorActivationTrigger::Manual, compiled, &[], &budget)?;
+            let actor = pollster::block_on(self.runtime.activate(PackageId(package_id), ordinal, kind, lane, None, ActorActivationTrigger::Manual, compiled, &[], &budget))?;
             self.budgets.insert(actor.0, budget);
             Ok(actor)
         }
@@ -1023,7 +1070,7 @@ pub mod scale_bench {
         fn send_payload_lane(&mut self, actor: ActorId, payload: Payload, lane: Lane) {
             self.seq += 1;
             let envelope = Envelope { to: actor, from: Origin::Kernel, lane, seq: self.seq, deadline_ms: None, coalesce: None, cancel_of: None, payload };
-            let _ = self.runtime.submit(&envelope);
+            let _ = pollster::block_on(self.runtime.submit(&envelope));
         }
 
         /// ⏱️ terra-kernel-loop: `Kernel::tick`-drives every actor with a non-empty mailbox to
@@ -1050,7 +1097,7 @@ pub mod scale_bench {
                 // call, and a closure capturing `&self.budgets` directly would conflict with that.
                 let budgets = self.budgets.clone();
                 let fallback = TurnBudget { fuel: BENCH_FUEL, deadline_ms: 50, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 };
-                let decision = self.runtime.tick_and_dispatch(self.now_ms, |actor| crate::actor_budget_from_turn_budget(budgets.get(&actor.0).copied().unwrap_or(fallback), Lane::Background));
+                let decision = pollster::block_on(self.runtime.tick_and_dispatch(self.now_ms, |actor| crate::actor_budget_from_turn_budget(budgets.get(&actor.0).copied().unwrap_or(fallback), Lane::Background)));
                 if decision.run.is_empty() {
                     break;
                 }
@@ -1063,7 +1110,7 @@ pub mod scale_bench {
                 for outcome in &outcomes {
                     match outcome {
                         ShardOutcome::Turn { actor, result } => {
-                            let _ = self.runtime.complete(ActorId(*actor), result, 0, 0, self.now_ms);
+                            let _ = pollster::block_on(self.runtime.complete(ActorId(*actor), result, 0, 0, self.now_ms));
                         }
                         // 🎠️ terra-kernel-loop: same reasoning as `kernel_runtime::run_turn`'s own
                         // `ShardOutcome::Fault` arm — a trap must reach `Kernel::complete` too, or the
@@ -1071,7 +1118,7 @@ pub mod scale_bench {
                         // deliberately exercise.
                         ShardOutcome::Fault { actor, message } => {
                             let faulted = TurnResult { ui_patches: Vec::new(), effects: Vec::new(), next_wake: None, status: semio_framework::kernel::TurnStatus::Faulted(message.clone().into_bytes()), fuel_used: 0 };
-                            let _ = self.runtime.complete(ActorId(*actor), &faulted, 0, 0, self.now_ms);
+                            let _ = pollster::block_on(self.runtime.complete(ActorId(*actor), &faulted, 0, 0, self.now_ms));
                         }
                         _ => {}
                     }
@@ -1101,7 +1148,7 @@ pub mod scale_bench {
                 self.now_ms += 1;
                 let budgets = self.budgets.clone();
                 let fallback = TurnBudget { fuel: BENCH_FUEL, deadline_ms: 50, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 };
-                let decision = self.runtime.tick_and_dispatch(self.now_ms, |actor| crate::actor_budget_from_turn_budget(budgets.get(&actor.0).copied().unwrap_or(fallback), Lane::Background));
+                let decision = pollster::block_on(self.runtime.tick_and_dispatch(self.now_ms, |actor| crate::actor_budget_from_turn_budget(budgets.get(&actor.0).copied().unwrap_or(fallback), Lane::Background)));
                 if decision.run.is_empty() {
                     break;
                 }
@@ -1115,12 +1162,12 @@ pub mod scale_bench {
                     for outcome in &outcomes {
                         let reporting_actor = match outcome {
                             ShardOutcome::Turn { actor, result } => {
-                                let _ = self.runtime.complete(ActorId(*actor), result, 0, 0, self.now_ms);
+                                let _ = pollster::block_on(self.runtime.complete(ActorId(*actor), result, 0, 0, self.now_ms));
                                 Some(*actor)
                             }
                             ShardOutcome::Fault { actor, message } => {
                                 let faulted = TurnResult { ui_patches: Vec::new(), effects: Vec::new(), next_wake: None, status: semio_framework::kernel::TurnStatus::Faulted(message.clone().into_bytes()), fuel_used: 0 };
-                                let _ = self.runtime.complete(ActorId(*actor), &faulted, 0, 0, self.now_ms);
+                                let _ = pollster::block_on(self.runtime.complete(ActorId(*actor), &faulted, 0, 0, self.now_ms));
                                 Some(*actor)
                             }
                             _ => None,
@@ -1141,7 +1188,7 @@ pub mod scale_bench {
         }
 
         fn unregister(&mut self, actor: ActorId) {
-            self.runtime.unregister(actor);
+            pollster::block_on(self.runtime.unregister(actor));
         }
     }
     //#endregion 🔖️Env

@@ -33,12 +33,16 @@
 //! Backends split two ways: genuinely-async drivers (`db_storage_postgres`'s `sqlx`,
 //! `db_storage_neo4j`'s `neo4rs`) simply `.await` their already-async bodies; genuinely-blocking
 //! backends (this crate's own `FsStorage`, plus the sibling `db_storage_sqlite`) cross the
-//! sync/async boundary via `semio_framework_async::HostAsyncRuntime::run_blocking` and this
-//! crate's own dependency-free [`run_blocking_op`] bridge — never a private `tokio::runtime`
-//! (this crate names no `tokio` at all; see the repo's "`tokio` only in `🛎️services`" rule).
-//! `MemoryStorage` (no real I/O) simply resolves immediately. `HostAsyncRuntime`'s own impls live
-//! ABOVE this crate (`TokioHostRuntime` in `🛎️services`), so callers that hold one thread it through
-//! as a generic `R: HostAsyncRuntime` parameter rather than another `DbBackend` enum arm.
+//! sync/async boundary via this crate's own dependency-free [`run_blocking_op`] bridge, which
+//! submits the blocking body to the ONE process-wide `semio_framework_async::WorkerPool` on
+//! `Lane::Io` — never a private `tokio::runtime` (this crate names no `tokio` at all; see the
+//! repo's "`tokio` only in `🛎️services`" rule) and never `HostAsyncRuntime::run_blocking` (removed
+//! from that trait — Phase 1 of `26/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR`; callers now submit
+//! directly to a `WorkerPool`). `MemoryStorage` (no real I/O) simply resolves immediately. A
+//! `FsStorage`/`SqliteStorage` opened with no `WorkerPool` at all (`pool: None`, e.g. `db_cli`'s
+//! single-shot binary or `db_engine::Database::open_at`'s frozen synchronous entry point) runs its
+//! blocking body inline instead — there is nothing to protect from blocking with no second task in
+//! flight.
 //!
 //! 🧊️ `FsStorage` (this crate's zero-touch default, behind the default `fs` feature) is native-only
 //! (`std::fs`) and `#[cfg(not(target_arch = "wasm32"))]`-gated, mirroring `pack`'s own `pack_io`
@@ -52,7 +56,13 @@ use pack::{ByteRange, ContentHash};
 use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
-use semio_framework_async::{HostAsyncRuntime, OperationContext, ScopeHandle, TraceId};
+use semio_framework_async::{Lane, WorkerPool};
+
+/// @emoji 📊️ This crate's one blocking-bridge queue depth signal — every [`run_blocking_op`]
+/// submission increments it, every completion decrements it, so the Phase 1 exit gate can observe
+/// the Io lane's queue never growing unbounded. One process-wide counter (not per-backend): the
+/// bridge itself is the shared resource being bounded, regardless of which `DbBackend` arm called it.
+static BLOCKING_QUEUE: semio_framework_trace::QueueCounter = semio_framework_trace::QueueCounter::new();
 
 //#region 🔖️Limits
 /// @emoji 🛡️ Ceiling on any single blob this crate reads into memory in one call (one WAL read
@@ -120,33 +130,35 @@ impl<T> Future for OneshotReceiver<T> {
     }
 }
 
-/// @emoji 🧱️ Dispatches `work` onto `runtime`'s blocking thread pool (via
-/// [`HostAsyncRuntime::run_blocking`], scoped to `scope`) and resolves once `work` completes —
+/// @emoji 🧱️ Dispatches `work` onto `pool`'s `Lane::Io` and resolves once `work` completes —
 /// `FsStorage`/the sibling `db_storage_sqlite::SqliteStorage`'s ONLY way to run genuinely-blocking
-/// I/O (`std::fs`, bundled `rusqlite`) without parking the calling async task's own thread. `ctx`
-/// is a synthetic, storage-internal `OperationContext`: this trait family's methods carry no
-/// actor/trace identity of their own (that context lives one layer up, at whoever `.await`s this
-/// future), so `actor`/`generation`/`trace` are always the zero value here — only `cancel`
-/// (inherited from `scope`) is real.
-pub(crate) async fn run_blocking_op<T, F, R>(runtime: &R, scope: &ScopeHandle, work: F) -> T
+/// I/O (`std::fs`, bundled `rusqlite`) without parking the calling async task's own thread.
+/// `pool: None` (no shared `WorkerPool` threaded through, e.g. `db_cli`/`db_engine::Database::open_at`'s
+/// frozen synchronous entry point) runs `work` inline instead — there is nothing to protect from
+/// blocking with no second task in flight, matching the old `InlineRuntime::run_blocking`'s
+/// behavior. [`BLOCKING_QUEUE`] tracks the pooled case's in-flight count for the Phase 1 exit gate;
+/// the inline case never queues so it is not counted.
+pub(crate) async fn run_blocking_op<T, F>(pool: Option<&WorkerPool>, work: F) -> T
 where
     T: Send + 'static,
     F: FnOnce() -> T + Send + 'static,
-    R: HostAsyncRuntime,
 {
-    let (tx, rx) = oneshot::<T>();
-    let ctx = OperationContext { actor: 0, generation: 0, trace: TraceId(0), lane: 0, deadline_ms: None, cancel: scope.cancel.clone(), capability: None };
-    runtime
-        .run_blocking(
-            scope,
-            ctx,
-            Box::new(move || {
-                let result = work();
-                tx.send(result);
-            }),
-        )
-        .await;
-    rx.await
+    match pool {
+        Some(pool) => {
+            let (tx, rx) = oneshot::<T>();
+            BLOCKING_QUEUE.enqueued(0);
+            pool.submit(
+                Lane::Io,
+                Box::new(move || {
+                    let result = work();
+                    BLOCKING_QUEUE.dequeued(0);
+                    tx.send(result);
+                }),
+            );
+            rx.await
+        }
+        None => work(),
+    }
 }
 
 /// @emoji ✅️ Test-only sync/async bridge. 🚫️async: E5 executor bridge — poll-once: every future
@@ -161,7 +173,7 @@ where
 async fn poll_once<T>(fut: impl Future<Output = T>) -> T {
     let mut fut = std::pin::pin!(fut);
     let waker = std::task::Waker::noop();
-    let mut cx = std::task::Context::from_waker(&waker);
+    let mut cx = std::task::Context::from_waker(waker);
     match fut.as_mut().poll(&mut cx) {
         std::task::Poll::Ready(value) => value,
         std::task::Poll::Pending => panic!("db_storage test helper expected an already-ready future"),
@@ -370,29 +382,31 @@ pub trait LeaseStorage: Send + Sync {
 
 //#region 🔖️DbBackend
 /// @emoji 🧰️ The umbrella storage substrate handle `db_engine`/the `db` facade hold as
-/// `Arc<DbBackend<R>>` (selected at `Database::open`, never compile-time-only per the contract).
+/// `Arc<DbBackend>` (selected at `Database::open`, never compile-time-only per the contract).
 /// Replaces the old `Arc<dyn DbStorage>` seam per ruling **O1** (drop dyn dispatch): every
 /// former `&dyn WalStorage`/etc. accessor becomes a concrete facet-ref enum
-/// ([`WalRef`]/[`SnapshotRef`]/[`PayloadRef`]/[`CatalogRef`]/[`IndexRef`]/[`LeaseRef`]) instead, so
-/// `R`'s `Send`-ness is derived STRUCTURALLY at every spawn site (ruling **R3**) — never via a
-/// `+ Send` bound on a trait method. `R` is generic rather than another enum arm because its
-/// concrete impls (`TokioHostRuntime`, …) live in crates ABOVE this one (`🛎️services`).
-pub enum DbBackend<R: HostAsyncRuntime> {
+/// ([`WalRef`]/[`SnapshotRef`]/[`PayloadRef`]/[`CatalogRef`]/[`IndexRef`]/[`LeaseRef`]) instead —
+/// `Send`-ness is derived STRUCTURALLY at every spawn site (ruling **R3**) — never via a `+ Send`
+/// bound on a trait method. No generic `R: HostAsyncRuntime` parameter (Phase 1 of
+/// `26/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR` deleted it): `Fs`/`Sqlite`/`Fault` never used `R`
+/// for anything but the removed `run_blocking` bridge, now [`FsStorage`]/`SqliteStorage`'s own
+/// `Option<Arc<WorkerPool>>` field.
+pub enum DbBackend {
     Memory(MemoryStorage),
     #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
-    Fs(FsStorage<R>),
+    Fs(FsStorage),
     #[cfg(feature = "sqlite")]
-    Sqlite(crate::db_storage_sqlite::SqliteStorage<R>),
+    Sqlite(crate::db_storage_sqlite::SqliteStorage),
     #[cfg(feature = "postgres")]
     Postgres(crate::db_storage_postgres::PostgresStorage),
     #[cfg(feature = "neo4j")]
     Neo4j(crate::db_storage_neo4j::Neo4jStorage),
-    Fault(Box<crate::db_testkit::FaultStorage<R>>),
+    Fault(Box<crate::db_testkit::FaultStorage>),
 }
 
-impl<R: HostAsyncRuntime> DbBackend<R> {
+impl DbBackend {
     /// @emoji 🔀️ This backend's [`WalRef`] facet — replaces the old `&dyn WalStorage`.
-    pub async fn wal(&self) -> WalRef<'_, R> {
+    pub async fn wal(&self) -> WalRef<'_> {
         match self {
             Self::Memory(s) => WalRef::Memory(s),
             #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
@@ -408,7 +422,7 @@ impl<R: HostAsyncRuntime> DbBackend<R> {
     }
 
     /// @emoji 🔀️ This backend's [`SnapshotRef`] facet — replaces the old `&dyn SnapshotStorage`.
-    pub async fn snapshot(&self) -> SnapshotRef<'_, R> {
+    pub async fn snapshot(&self) -> SnapshotRef<'_> {
         match self {
             Self::Memory(s) => SnapshotRef::Memory(s),
             #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
@@ -424,7 +438,7 @@ impl<R: HostAsyncRuntime> DbBackend<R> {
     }
 
     /// @emoji 🔀️ This backend's [`PayloadRef`] facet — replaces the old `&dyn PayloadStorage`.
-    pub async fn payload(&self) -> PayloadRef<'_, R> {
+    pub async fn payload(&self) -> PayloadRef<'_> {
         match self {
             Self::Memory(s) => PayloadRef::Memory(s),
             #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
@@ -440,7 +454,7 @@ impl<R: HostAsyncRuntime> DbBackend<R> {
     }
 
     /// @emoji 🔀️ This backend's [`CatalogRef`] facet — replaces the old `&dyn CatalogStorage`.
-    pub async fn catalog(&self) -> CatalogRef<'_, R> {
+    pub async fn catalog(&self) -> CatalogRef<'_> {
         match self {
             Self::Memory(s) => CatalogRef::Memory(s),
             #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
@@ -456,7 +470,7 @@ impl<R: HostAsyncRuntime> DbBackend<R> {
     }
 
     /// @emoji 🔀️ This backend's [`IndexRef`] facet — replaces the old `&dyn IndexStorage`.
-    pub async fn index(&self) -> IndexRef<'_, R> {
+    pub async fn index(&self) -> IndexRef<'_> {
         match self {
             Self::Memory(s) => IndexRef::Memory(s),
             #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
@@ -472,7 +486,7 @@ impl<R: HostAsyncRuntime> DbBackend<R> {
     }
 
     /// @emoji 🔀️ This backend's [`LeaseRef`] facet — replaces the old `&dyn LeaseStorage`.
-    pub async fn lease(&self) -> LeaseRef<'_, R> {
+    pub async fn lease(&self) -> LeaseRef<'_> {
         match self {
             Self::Memory(s) => LeaseRef::Memory(s),
             #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
@@ -499,7 +513,7 @@ impl<R: HostAsyncRuntime> DbBackend<R> {
             Self::Postgres(s) => s.capabilities().await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.capabilities().await,
-            // 🔀️ `FaultStorage::capabilities` calls back through `self.inner: DbBackend<R>`
+            // 🔀️ `FaultStorage::capabilities` calls back through `self.inner: DbBackend`
             // (`🧪️testkit`), so this arm is mutually recursive with this very fn — `Box::pin`
             // breaks the otherwise-infinitely-sized future (E0733).
             Self::Fault(s) => Box::pin(s.capabilities()).await,
@@ -511,20 +525,20 @@ impl<R: HostAsyncRuntime> DbBackend<R> {
 //#region 🔖️WalRef
 /// @emoji 🔀️ [`DbBackend::wal`]'s return shape — the enum that replaces
 /// `&dyn WalStorage` per ruling **O1**.
-pub enum WalRef<'a, R: HostAsyncRuntime> {
+pub enum WalRef<'a> {
     Memory(&'a MemoryStorage),
     #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
-    Fs(&'a FsStorage<R>),
+    Fs(&'a FsStorage),
     #[cfg(feature = "sqlite")]
-    Sqlite(&'a crate::db_storage_sqlite::SqliteStorage<R>),
+    Sqlite(&'a crate::db_storage_sqlite::SqliteStorage),
     #[cfg(feature = "postgres")]
     Postgres(&'a crate::db_storage_postgres::PostgresStorage),
     #[cfg(feature = "neo4j")]
     Neo4j(&'a crate::db_storage_neo4j::Neo4jStorage),
-    Fault(&'a crate::db_testkit::FaultStorage<R>),
+    Fault(&'a crate::db_testkit::FaultStorage),
 }
 
-impl<'a, R: HostAsyncRuntime> WalStorage for WalRef<'a, R> {
+impl<'a> WalStorage for WalRef<'a> {
     async fn create_segment(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
         match self {
             Self::Memory(s) => s.create_segment(document, index).await,
@@ -665,20 +679,20 @@ impl<'a, R: HostAsyncRuntime> WalStorage for WalRef<'a, R> {
 //#region 🔖️SnapshotRef
 /// @emoji 🔀️ [`DbBackend::snapshot`]'s return shape — the enum that replaces
 /// `&dyn SnapshotStorage` per ruling **O1**.
-pub enum SnapshotRef<'a, R: HostAsyncRuntime> {
+pub enum SnapshotRef<'a> {
     Memory(&'a MemoryStorage),
     #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
-    Fs(&'a FsStorage<R>),
+    Fs(&'a FsStorage),
     #[cfg(feature = "sqlite")]
-    Sqlite(&'a crate::db_storage_sqlite::SqliteStorage<R>),
+    Sqlite(&'a crate::db_storage_sqlite::SqliteStorage),
     #[cfg(feature = "postgres")]
     Postgres(&'a crate::db_storage_postgres::PostgresStorage),
     #[cfg(feature = "neo4j")]
     Neo4j(&'a crate::db_storage_neo4j::Neo4jStorage),
-    Fault(&'a crate::db_testkit::FaultStorage<R>),
+    Fault(&'a crate::db_testkit::FaultStorage),
 }
 
-impl<'a, R: HostAsyncRuntime> SnapshotStorage for SnapshotRef<'a, R> {
+impl<'a> SnapshotStorage for SnapshotRef<'a> {
     async fn write_generation(&self, document: &ArtifactId, generation: u64, bytes: &[u8]) -> Result<(), DbError> {
         match self {
             Self::Memory(s) => s.write_generation(document, generation, bytes).await,
@@ -759,20 +773,20 @@ impl<'a, R: HostAsyncRuntime> SnapshotStorage for SnapshotRef<'a, R> {
 //#region 🔖️PayloadRef
 /// @emoji 🔀️ [`DbBackend::payload`]'s return shape — the enum that replaces
 /// `&dyn PayloadStorage` per ruling **O1**.
-pub enum PayloadRef<'a, R: HostAsyncRuntime> {
+pub enum PayloadRef<'a> {
     Memory(&'a MemoryStorage),
     #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
-    Fs(&'a FsStorage<R>),
+    Fs(&'a FsStorage),
     #[cfg(feature = "sqlite")]
-    Sqlite(&'a crate::db_storage_sqlite::SqliteStorage<R>),
+    Sqlite(&'a crate::db_storage_sqlite::SqliteStorage),
     #[cfg(feature = "postgres")]
     Postgres(&'a crate::db_storage_postgres::PostgresStorage),
     #[cfg(feature = "neo4j")]
     Neo4j(&'a crate::db_storage_neo4j::Neo4jStorage),
-    Fault(&'a crate::db_testkit::FaultStorage<R>),
+    Fault(&'a crate::db_testkit::FaultStorage),
 }
 
-impl<'a, R: HostAsyncRuntime> PayloadStorage for PayloadRef<'a, R> {
+impl<'a> PayloadStorage for PayloadRef<'a> {
     async fn put(&self, bytes: &[u8]) -> Result<ContentHash, DbError> {
         match self {
             Self::Memory(s) => s.put(bytes).await,
@@ -853,20 +867,20 @@ impl<'a, R: HostAsyncRuntime> PayloadStorage for PayloadRef<'a, R> {
 //#region 🔖️CatalogRef
 /// @emoji 🔀️ [`DbBackend::catalog`]'s return shape — the enum that replaces
 /// `&dyn CatalogStorage` per ruling **O1**.
-pub enum CatalogRef<'a, R: HostAsyncRuntime> {
+pub enum CatalogRef<'a> {
     Memory(&'a MemoryStorage),
     #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
-    Fs(&'a FsStorage<R>),
+    Fs(&'a FsStorage),
     #[cfg(feature = "sqlite")]
-    Sqlite(&'a crate::db_storage_sqlite::SqliteStorage<R>),
+    Sqlite(&'a crate::db_storage_sqlite::SqliteStorage),
     #[cfg(feature = "postgres")]
     Postgres(&'a crate::db_storage_postgres::PostgresStorage),
     #[cfg(feature = "neo4j")]
     Neo4j(&'a crate::db_storage_neo4j::Neo4jStorage),
-    Fault(&'a crate::db_testkit::FaultStorage<R>),
+    Fault(&'a crate::db_testkit::FaultStorage),
 }
 
-impl<'a, R: HostAsyncRuntime> CatalogStorage for CatalogRef<'a, R> {
+impl<'a> CatalogStorage for CatalogRef<'a> {
     async fn read_root(&self) -> Result<Option<(Vec<u8>, EpochFence)>, DbError> {
         match self {
             Self::Memory(s) => s.read_root().await,
@@ -878,7 +892,7 @@ impl<'a, R: HostAsyncRuntime> CatalogStorage for CatalogRef<'a, R> {
             Self::Postgres(s) => s.read_root().await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.read_root().await,
-            // 🔀️ `FaultStorage::read_root` calls back through `self.inner: DbBackend<R>`, so this
+            // 🔀️ `FaultStorage::read_root` calls back through `self.inner: DbBackend`, so this
             // arm is mutually recursive with this very fn — `Box::pin` breaks the otherwise-
             // infinitely-sized future (E0733), same as `DbBackend::capabilities`'s `Fault` arm.
             Self::Fault(s) => Box::pin(s.read_root()).await,
@@ -905,20 +919,20 @@ impl<'a, R: HostAsyncRuntime> CatalogStorage for CatalogRef<'a, R> {
 //#region 🔖️IndexRef
 /// @emoji 🔀️ [`DbBackend::index`]'s return shape — the enum that replaces
 /// `&dyn IndexStorage` per ruling **O1**.
-pub enum IndexRef<'a, R: HostAsyncRuntime> {
+pub enum IndexRef<'a> {
     Memory(&'a MemoryStorage),
     #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
-    Fs(&'a FsStorage<R>),
+    Fs(&'a FsStorage),
     #[cfg(feature = "sqlite")]
-    Sqlite(&'a crate::db_storage_sqlite::SqliteStorage<R>),
+    Sqlite(&'a crate::db_storage_sqlite::SqliteStorage),
     #[cfg(feature = "postgres")]
     Postgres(&'a crate::db_storage_postgres::PostgresStorage),
     #[cfg(feature = "neo4j")]
     Neo4j(&'a crate::db_storage_neo4j::Neo4jStorage),
-    Fault(&'a crate::db_testkit::FaultStorage<R>),
+    Fault(&'a crate::db_testkit::FaultStorage),
 }
 
-impl<'a, R: HostAsyncRuntime> IndexStorage for IndexRef<'a, R> {
+impl<'a> IndexStorage for IndexRef<'a> {
     async fn write_run(&self, document: &ArtifactId, run_id: u64, bytes: &[u8]) -> Result<(), DbError> {
         match self {
             Self::Memory(s) => s.write_run(document, run_id, bytes).await,
@@ -984,20 +998,20 @@ impl<'a, R: HostAsyncRuntime> IndexStorage for IndexRef<'a, R> {
 //#region 🔖️LeaseRef
 /// @emoji 🔀️ [`DbBackend::lease`]'s return shape — the enum that replaces
 /// `&dyn LeaseStorage` per ruling **O1**.
-pub enum LeaseRef<'a, R: HostAsyncRuntime> {
+pub enum LeaseRef<'a> {
     Memory(&'a MemoryStorage),
     #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
-    Fs(&'a FsStorage<R>),
+    Fs(&'a FsStorage),
     #[cfg(feature = "sqlite")]
-    Sqlite(&'a crate::db_storage_sqlite::SqliteStorage<R>),
+    Sqlite(&'a crate::db_storage_sqlite::SqliteStorage),
     #[cfg(feature = "postgres")]
     Postgres(&'a crate::db_storage_postgres::PostgresStorage),
     #[cfg(feature = "neo4j")]
     Neo4j(&'a crate::db_storage_neo4j::Neo4jStorage),
-    Fault(&'a crate::db_testkit::FaultStorage<R>),
+    Fault(&'a crate::db_testkit::FaultStorage),
 }
 
-impl<'a, R: HostAsyncRuntime> LeaseStorage for LeaseRef<'a, R> {
+impl<'a> LeaseStorage for LeaseRef<'a> {
     async fn acquire(&self, resource: &str, holder: &str, ttl_ms: u64, now_ms: u64) -> Result<EpochFence, DbError> {
         match self {
             Self::Memory(s) => s.acquire(resource, holder, ttl_ms, now_ms).await,
@@ -1352,7 +1366,7 @@ mod fs_storage {
     use super::{run_blocking_op, ByteRange, ContentHash, DbError, ArtifactId, DurabilityClass, EpochFence, LeaseInfo, MAX_READ_BYTES};
     use super::{CatalogStorage, IndexStorage, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalStorage};
     use super::check_len;
-    use semio_framework_async::{HostAsyncRuntime, ScopeHandle};
+    use semio_framework_async::WorkerPool;
     use std::io::{Read, Seek, SeekFrom, Write};
     use std::path::{Path, PathBuf};
     use std::sync::{Arc, Mutex};
@@ -1513,100 +1527,49 @@ mod fs_storage {
     /// @emoji 📁️ The zero-touch default `DbStorage` backend — see module doc for the on-disk
     /// layout. `catalog_lock`/`lease_lock` serialize this-process's compare-and-swap operations;
     /// see `CatalogStorage`/`LeaseStorage` impls below for why a bare read-verify-write over
-    /// `write_atomic` isn't itself enough across OS processes (documented extension seam).
-    /// `runtime`/`scope` are what every trait method dispatches its blocking body through (see
-    /// module doc); both are `Clone`d into each method's `'static` blocking closure since
-    /// `HostAsyncRuntime::run_blocking` requires one.
-    pub struct FsStorage<R: HostAsyncRuntime> {
+    /// `write_atomic` isn't itself enough across OS processes (documented extension seam). `pool`
+    /// is what every trait method dispatches its blocking body through (see module doc); `Clone`d
+    /// (an `Option<Arc<..>>`, cheap either way) into each method's `'static` blocking closure.
+    pub struct FsStorage {
         root: PathBuf,
         catalog_lock: Arc<Mutex<()>>,
         lease_lock: Arc<Mutex<()>>,
-        runtime: Arc<R>,
-        scope: ScopeHandle,
+        pool: Option<Arc<WorkerPool>>,
     }
 
-    impl<R: HostAsyncRuntime> FsStorage<R> {
+    impl FsStorage {
         /// @emoji 🚀️ Opens (creating if absent) a `FsStorage` rooted at `root`, dispatching every
-        /// subsequent trait call's blocking body through `runtime`'s `run_blocking`, scoped to
-        /// `scope`. The initial `create_dir_all` here is a one-time, small, synchronous mkdir at
-        /// construction time — not part of any storage trait method's hot path, so (unlike every
-        /// trait method below) it does not go through `run_blocking_op`.
-        pub async fn open(runtime: Arc<R>, scope: ScopeHandle, root: &Path) -> Result<Self, DbError> {
+        /// subsequent trait call's blocking body through `run_blocking_op` onto `pool`'s
+        /// `Lane::Io` (or inline, if `pool` is `None` — see module doc). The initial
+        /// `create_dir_all` here is a one-time, small, synchronous mkdir at construction time —
+        /// not part of any storage trait method's hot path, so (unlike every trait method below)
+        /// it does not go through `run_blocking_op`.
+        pub async fn open(pool: Option<Arc<WorkerPool>>, root: &Path) -> Result<Self, DbError> {
             std::fs::create_dir_all(root).map_err(io_err)?;
-            Ok(Self { root: root.to_path_buf(), catalog_lock: Arc::new(Mutex::new(())), lease_lock: Arc::new(Mutex::new(())), runtime, scope })
+            Ok(Self { root: root.to_path_buf(), catalog_lock: Arc::new(Mutex::new(())), lease_lock: Arc::new(Mutex::new(())), pool })
         }
 
         /// @emoji 🎚️ Always durable, `fsync`-capable, CAS-capable — the on-disk default.
         pub async fn capabilities(&self) -> StorageCapabilities {
             StorageCapabilities { durable: true, max_durability: DurabilityClass::Fsync, supports_fsync: true, supports_cas: true }
         }
-    }
 
-    /// @emoji 🌉️ The one `HostAsyncRuntime` for a caller that has no runtime of its own to thread
-    /// in: a single-threaded, strictly-sequential process (`db_cli`'s one-subcommand-then-exit
-    /// binary) or a frozen synchronous entry point (`db_engine::Database::open_at`). `run_blocking`
-    /// runs `work` inline on the calling thread rather than spawning a worker — with no second task
-    /// in flight there is nothing to protect from blocking, so every method here resolves the first
-    /// time its caller polls it.
-    ///
-    /// 🎯️ Deliberately lives here, beside the `FsStorage` that requires it, rather than being
-    /// re-derived per caller: `db_cli` and `db_engine` both need exactly this and nothing more, and
-    /// a second copy would be the same bridge maintained twice. A caller that owns a real runtime
-    /// (`🛎️services`' `tokio`-backed one) passes it to [`FsStorage::open`] instead and never touches
-    /// this — this crate still names no `tokio`.
-    pub struct InlineRuntime;
-
-    impl HostAsyncRuntime for InlineRuntime {
-        async fn open_scope(&self, owner: semio_framework_async::ScopeOwner, parent: Option<&ScopeHandle>) -> ScopeHandle {
-            let cancel = match parent {
-                Some(parent) => parent.cancel.child().await,
-                None => semio_framework_async::CancelToken::root().await,
-            };
-            ScopeHandle { id: semio_framework_async::ScopeId(0), owner, cancel }
-        }
-
-        async fn spawn_scoped(&self, _scope: &ScopeHandle, _ctx: semio_framework_async::OperationContext, fut: semio_framework_async::HostFuture<()>) {
-            // 🎯️ Already running on an async context by definition (this method is itself
-            // `async fn`) — a "no concurrency" runtime spawns by simply awaiting inline, so this
-            // replaces what used to be a `db_actor::block_on(fut)` bridge (R4: every non-sanctioned
-            // `block_on` becomes a real `.await`).
-            fut.await;
-        }
-
-        async fn run_blocking(&self, _scope: &ScopeHandle, _ctx: semio_framework_async::OperationContext, work: Box<dyn FnOnce() + Send>) {
-            work();
-        }
-
-        async fn sleep_until(&self, _deadline_ms: u64) {}
-
-        async fn cancel_scope(&self, _owner: &semio_framework_async::ScopeOwner, _grace_ms: u64) -> semio_framework_async::ScopeDrainReport {
-            semio_framework_async::ScopeDrainReport::default()
-        }
-
-        async fn now_ms(&self) -> u64 {
-            std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |since| since.as_millis() as u64)
+        /// @emoji 🚀️ [`FsStorage::open`] with no `WorkerPool` (`pool: None`, i.e. every trait
+        /// method's blocking body runs inline) — the whole bridge in one call, for callers with no
+        /// shared pool of their own to pass (`db_cli`'s one-subcommand-then-exit binary,
+        /// `db_engine::Database::open_at`'s frozen synchronous entry point).
+        pub async fn open_inline(root: &Path) -> Result<Self, DbError> {
+            FsStorage::open(None, root).await
         }
     }
 
-    impl FsStorage<InlineRuntime> {
-        /// @emoji 🚀️ [`FsStorage::open`] with an [`InlineRuntime`] and a fresh scope owned by
-        /// `owner` already threaded through — the whole async bridge in one call, for the two
-        /// callers that have no runtime of their own to pass.
-        pub async fn open_inline(owner: &'static str, root: &Path) -> Result<Self, DbError> {
-            let runtime: Arc<InlineRuntime> = Arc::new(InlineRuntime);
-            let scope = runtime.open_scope(semio_framework_async::ScopeOwner::Service(owner), None).await;
-            FsStorage::open(runtime, scope, root).await
-        }
-    }
-
-    impl<R: HostAsyncRuntime> WalStorage for FsStorage<R> {
+    impl WalStorage for FsStorage {
         async fn create_segment(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
             let root = self.root.clone();
             let document = document.clone();
-            let runtime = self.runtime.clone();
-            let scope = self.scope.clone();
+            let pool = self.pool.clone();
             {
-                run_blocking_op(&*runtime, &scope, move || {
+                run_blocking_op(pool.as_deref(), move || {
                     let dir = wal_dir(&root, &document)?;
                     std::fs::create_dir_all(&dir).map_err(io_err)?;
                     let path = segment_path(&dir, index);
@@ -1624,10 +1587,9 @@ mod fs_storage {
             let root = self.root.clone();
             let document = document.clone();
             let bytes = bytes.to_vec();
-            let runtime = self.runtime.clone();
-            let scope = self.scope.clone();
+            let pool = self.pool.clone();
             {
-                run_blocking_op(&*runtime, &scope, move || {
+                run_blocking_op(pool.as_deref(), move || {
                     let dir = wal_dir(&root, &document)?;
                     if sealed_marker_path(&dir, index).exists() {
                         return Err(DbError::InvalidArgument(format!("cannot append to sealed wal segment {index}")));
@@ -1649,10 +1611,9 @@ mod fs_storage {
             }
             let root = self.root.clone();
             let document = document.clone();
-            let runtime = self.runtime.clone();
-            let scope = self.scope.clone();
+            let pool = self.pool.clone();
             {
-                run_blocking_op(&*runtime, &scope, move || {
+                run_blocking_op(pool.as_deref(), move || {
                     let dir = wal_dir(&root, &document)?;
                     let path = segment_path(&dir, index);
                     let file = std::fs::OpenOptions::new().write(true).open(&path).map_err(|err| open_err(err, || format!("wal segment {index} for {document} not found")))?;
@@ -1665,10 +1626,9 @@ mod fs_storage {
         async fn seal(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
             let root = self.root.clone();
             let document = document.clone();
-            let runtime = self.runtime.clone();
-            let scope = self.scope.clone();
+            let pool = self.pool.clone();
             {
-                run_blocking_op(&*runtime, &scope, move || {
+                run_blocking_op(pool.as_deref(), move || {
                     let dir = wal_dir(&root, &document)?;
                     let path = segment_path(&dir, index);
                     if !path.exists() {
@@ -1687,10 +1647,9 @@ mod fs_storage {
             }
             let root = self.root.clone();
             let document = document.clone();
-            let runtime = self.runtime.clone();
-            let scope = self.scope.clone();
+            let pool = self.pool.clone();
             {
-                run_blocking_op(&*runtime, &scope, move || {
+                run_blocking_op(pool.as_deref(), move || {
                     let dir = wal_dir(&root, &document)?;
                     let path = segment_path(&dir, index);
                     let mut file = std::fs::File::open(&path).map_err(|err| open_err(err, || format!("wal segment {index} for {document} not found")))?;
@@ -1714,10 +1673,9 @@ mod fs_storage {
         async fn segment_len(&self, document: &ArtifactId, index: u64) -> Result<u64, DbError> {
             let root = self.root.clone();
             let document = document.clone();
-            let runtime = self.runtime.clone();
-            let scope = self.scope.clone();
+            let pool = self.pool.clone();
             {
-                run_blocking_op(&*runtime, &scope, move || {
+                run_blocking_op(pool.as_deref(), move || {
                     let dir = wal_dir(&root, &document)?;
                     let path = segment_path(&dir, index);
                     std::fs::metadata(&path).map(|meta| meta.len()).map_err(|err| open_err(err, || format!("wal segment {index} for {document} not found")))
@@ -1729,18 +1687,16 @@ mod fs_storage {
         async fn list_segments(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
             let root = self.root.clone();
             let document = document.clone();
-            let runtime = self.runtime.clone();
-            let scope = self.scope.clone();
-            { run_blocking_op(&*runtime, &scope, move || list_indexed_files(&wal_dir(&root, &document)?, "segment-", ".bin")).await }
+            let pool = self.pool.clone();
+            { run_blocking_op(pool.as_deref(), move || list_indexed_files(&wal_dir(&root, &document)?, "segment-", ".bin")).await }
         }
 
         async fn truncate_tail(&self, document: &ArtifactId, index: u64, new_len: u64) -> Result<(), DbError> {
             let root = self.root.clone();
             let document = document.clone();
-            let runtime = self.runtime.clone();
-            let scope = self.scope.clone();
+            let pool = self.pool.clone();
             {
-                run_blocking_op(&*runtime, &scope, move || {
+                run_blocking_op(pool.as_deref(), move || {
                     let dir = wal_dir(&root, &document)?;
                     if sealed_marker_path(&dir, index).exists() {
                         return Err(DbError::InvalidArgument(format!("cannot truncate sealed wal segment {index}")));
@@ -1760,10 +1716,9 @@ mod fs_storage {
         async fn delete_segment(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
             let root = self.root.clone();
             let document = document.clone();
-            let runtime = self.runtime.clone();
-            let scope = self.scope.clone();
+            let pool = self.pool.clone();
             {
-                run_blocking_op(&*runtime, &scope, move || {
+                run_blocking_op(pool.as_deref(), move || {
                     let dir = wal_dir(&root, &document)?;
                     let path = segment_path(&dir, index);
                     if path.exists() {
@@ -1780,15 +1735,14 @@ mod fs_storage {
         }
     }
 
-    impl<R: HostAsyncRuntime> SnapshotStorage for FsStorage<R> {
+    impl SnapshotStorage for FsStorage {
         async fn write_generation(&self, document: &ArtifactId, generation: u64, bytes: &[u8]) -> Result<(), DbError> {
             let root = self.root.clone();
             let document = document.clone();
             let bytes = bytes.to_vec();
-            let runtime = self.runtime.clone();
-            let scope = self.scope.clone();
+            let pool = self.pool.clone();
             {
-                run_blocking_op(&*runtime, &scope, move || {
+                run_blocking_op(pool.as_deref(), move || {
                     let dir = snapshot_dir(&root, &document)?;
                     std::fs::create_dir_all(&dir).map_err(io_err)?;
                     pack::write_atomic(&generation_path(&dir, generation), &bytes)?;
@@ -1801,10 +1755,9 @@ mod fs_storage {
         async fn read_generation(&self, document: &ArtifactId, generation: u64) -> Result<Vec<u8>, DbError> {
             let root = self.root.clone();
             let document = document.clone();
-            let runtime = self.runtime.clone();
-            let scope = self.scope.clone();
+            let pool = self.pool.clone();
             {
-                run_blocking_op(&*runtime, &scope, move || {
+                run_blocking_op(pool.as_deref(), move || {
                     let dir = snapshot_dir(&root, &document)?;
                     let path = generation_path(&dir, generation);
                     let meta = std::fs::metadata(&path).map_err(|err| open_err(err, || format!("snapshot generation {generation} for {document} not found")))?;
@@ -1818,26 +1771,23 @@ mod fs_storage {
         async fn latest_generation(&self, document: &ArtifactId) -> Result<Option<u64>, DbError> {
             let root = self.root.clone();
             let document = document.clone();
-            let runtime = self.runtime.clone();
-            let scope = self.scope.clone();
-            { run_blocking_op(&*runtime, &scope, move || Ok(list_indexed_files(&snapshot_dir(&root, &document)?, "gen-", ".pack")?.into_iter().max())).await }
+            let pool = self.pool.clone();
+            { run_blocking_op(pool.as_deref(), move || Ok(list_indexed_files(&snapshot_dir(&root, &document)?, "gen-", ".pack")?.into_iter().max())).await }
         }
 
         async fn list_generations(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
             let root = self.root.clone();
             let document = document.clone();
-            let runtime = self.runtime.clone();
-            let scope = self.scope.clone();
-            { run_blocking_op(&*runtime, &scope, move || list_indexed_files(&snapshot_dir(&root, &document)?, "gen-", ".pack")).await }
+            let pool = self.pool.clone();
+            { run_blocking_op(pool.as_deref(), move || list_indexed_files(&snapshot_dir(&root, &document)?, "gen-", ".pack")).await }
         }
 
         async fn delete_generation(&self, document: &ArtifactId, generation: u64) -> Result<(), DbError> {
             let root = self.root.clone();
             let document = document.clone();
-            let runtime = self.runtime.clone();
-            let scope = self.scope.clone();
+            let pool = self.pool.clone();
             {
-                run_blocking_op(&*runtime, &scope, move || {
+                run_blocking_op(pool.as_deref(), move || {
                     let dir = snapshot_dir(&root, &document)?;
                     let path = generation_path(&dir, generation);
                     if path.exists() {
@@ -1850,17 +1800,16 @@ mod fs_storage {
         }
     }
 
-    impl<R: HostAsyncRuntime> PayloadStorage for FsStorage<R> {
+    impl PayloadStorage for FsStorage {
         async fn put(&self, bytes: &[u8]) -> Result<ContentHash, DbError> {
             if let Err(err) = check_len(bytes.len() as u64, MAX_READ_BYTES, "payload_storage::put") {
                 return { Err(err) };
             }
             let root = self.root.clone();
             let bytes = bytes.to_vec();
-            let runtime = self.runtime.clone();
-            let scope = self.scope.clone();
+            let pool = self.pool.clone();
             {
-                run_blocking_op(&*runtime, &scope, move || {
+                run_blocking_op(pool.as_deref(), move || {
                     let hash = ContentHash(*blake3::hash(&bytes).as_bytes());
                     let path = payload_path(&root, &hash);
                     if !path.exists() {
@@ -1878,10 +1827,9 @@ mod fs_storage {
         async fn get(&self, hash: &ContentHash) -> Result<Vec<u8>, DbError> {
             let root = self.root.clone();
             let hash = *hash;
-            let runtime = self.runtime.clone();
-            let scope = self.scope.clone();
+            let pool = self.pool.clone();
             {
-                run_blocking_op(&*runtime, &scope, move || {
+                run_blocking_op(pool.as_deref(), move || {
                     let path = payload_path(&root, &hash);
                     let meta = std::fs::metadata(&path).map_err(|err| open_err(err, || format!("payload {hash} not found")))?;
                     check_len(meta.len(), MAX_READ_BYTES, "payload_storage::get")?;
@@ -1894,18 +1842,16 @@ mod fs_storage {
         async fn contains(&self, hash: &ContentHash) -> Result<bool, DbError> {
             let root = self.root.clone();
             let hash = *hash;
-            let runtime = self.runtime.clone();
-            let scope = self.scope.clone();
-            { run_blocking_op(&*runtime, &scope, move || Ok(payload_path(&root, &hash).exists())).await }
+            let pool = self.pool.clone();
+            { run_blocking_op(pool.as_deref(), move || Ok(payload_path(&root, &hash).exists())).await }
         }
 
         async fn delete(&self, hash: &ContentHash) -> Result<(), DbError> {
             let root = self.root.clone();
             let hash = *hash;
-            let runtime = self.runtime.clone();
-            let scope = self.scope.clone();
+            let pool = self.pool.clone();
             {
-                run_blocking_op(&*runtime, &scope, move || {
+                run_blocking_op(pool.as_deref(), move || {
                     let path = payload_path(&root, &hash);
                     if path.exists() {
                         std::fs::remove_file(&path).map_err(io_err)?;
@@ -1919,10 +1865,9 @@ mod fs_storage {
         async fn len(&self, hash: &ContentHash) -> Result<u64, DbError> {
             let root = self.root.clone();
             let hash = *hash;
-            let runtime = self.runtime.clone();
-            let scope = self.scope.clone();
+            let pool = self.pool.clone();
             {
-                run_blocking_op(&*runtime, &scope, move || {
+                run_blocking_op(pool.as_deref(), move || {
                     let path = payload_path(&root, &hash);
                     std::fs::metadata(&path).map(|meta| meta.len()).map_err(|err| open_err(err, || format!("payload {hash} not found")))
                 })
@@ -1931,12 +1876,11 @@ mod fs_storage {
         }
     }
 
-    impl<R: HostAsyncRuntime> CatalogStorage for FsStorage<R> {
+    impl CatalogStorage for FsStorage {
         async fn read_root(&self) -> Result<Option<(Vec<u8>, EpochFence)>, DbError> {
             let root = self.root.clone();
-            let runtime = self.runtime.clone();
-            let scope = self.scope.clone();
-            { run_blocking_op(&*runtime, &scope, move || read_root_sync(&root)).await }
+            let pool = self.pool.clone();
+            { run_blocking_op(pool.as_deref(), move || read_root_sync(&root)).await }
         }
 
         async fn cas_root(&self, expected: EpochFence, new_bytes: &[u8]) -> Result<EpochFence, DbError> {
@@ -1946,10 +1890,9 @@ mod fs_storage {
             let root = self.root.clone();
             let new_bytes = new_bytes.to_vec();
             let catalog_lock = self.catalog_lock.clone();
-            let runtime = self.runtime.clone();
-            let scope = self.scope.clone();
+            let pool = self.pool.clone();
             {
-                run_blocking_op(&*runtime, &scope, move || {
+                run_blocking_op(pool.as_deref(), move || {
                     // 🎯️ In-process serialization only: two OS processes racing on the same `root` could
                     // both pass this `expected.check` before either renames its `write_atomic` temp file
                     // into place. Genuinely cross-process fencing needs an OS file lock (`flock`) or a
@@ -1993,15 +1936,14 @@ mod fs_storage {
         Ok(Some((bytes[8..].to_vec(), EpochFence { epoch: u64::from_le_bytes(epoch_bytes) })))
     }
 
-    impl<R: HostAsyncRuntime> IndexStorage for FsStorage<R> {
+    impl IndexStorage for FsStorage {
         async fn write_run(&self, document: &ArtifactId, run_id: u64, bytes: &[u8]) -> Result<(), DbError> {
             let root = self.root.clone();
             let document = document.clone();
             let bytes = bytes.to_vec();
-            let runtime = self.runtime.clone();
-            let scope = self.scope.clone();
+            let pool = self.pool.clone();
             {
-                run_blocking_op(&*runtime, &scope, move || {
+                run_blocking_op(pool.as_deref(), move || {
                     let dir = index_dir(&root, &document)?;
                     std::fs::create_dir_all(&dir).map_err(io_err)?;
                     pack::write_atomic(&run_path(&dir, run_id), &bytes)?;
@@ -2014,10 +1956,9 @@ mod fs_storage {
         async fn read_run(&self, document: &ArtifactId, run_id: u64) -> Result<Vec<u8>, DbError> {
             let root = self.root.clone();
             let document = document.clone();
-            let runtime = self.runtime.clone();
-            let scope = self.scope.clone();
+            let pool = self.pool.clone();
             {
-                run_blocking_op(&*runtime, &scope, move || {
+                run_blocking_op(pool.as_deref(), move || {
                     let dir = index_dir(&root, &document)?;
                     let path = run_path(&dir, run_id);
                     let meta = std::fs::metadata(&path).map_err(|err| open_err(err, || format!("index run {run_id} for {document} not found")))?;
@@ -2031,18 +1972,16 @@ mod fs_storage {
         async fn list_runs(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
             let root = self.root.clone();
             let document = document.clone();
-            let runtime = self.runtime.clone();
-            let scope = self.scope.clone();
-            { run_blocking_op(&*runtime, &scope, move || list_indexed_files(&index_dir(&root, &document)?, "run-", ".bin")).await }
+            let pool = self.pool.clone();
+            { run_blocking_op(pool.as_deref(), move || list_indexed_files(&index_dir(&root, &document)?, "run-", ".bin")).await }
         }
 
         async fn delete_run(&self, document: &ArtifactId, run_id: u64) -> Result<(), DbError> {
             let root = self.root.clone();
             let document = document.clone();
-            let runtime = self.runtime.clone();
-            let scope = self.scope.clone();
+            let pool = self.pool.clone();
             {
-                run_blocking_op(&*runtime, &scope, move || {
+                run_blocking_op(pool.as_deref(), move || {
                     let dir = index_dir(&root, &document)?;
                     let path = run_path(&dir, run_id);
                     if path.exists() {
@@ -2055,16 +1994,15 @@ mod fs_storage {
         }
     }
 
-    impl<R: HostAsyncRuntime> LeaseStorage for FsStorage<R> {
+    impl LeaseStorage for FsStorage {
         async fn acquire(&self, resource: &str, holder: &str, ttl_ms: u64, now_ms: u64) -> Result<EpochFence, DbError> {
             let root = self.root.clone();
             let resource = resource.to_string();
             let holder = holder.to_string();
             let lease_lock = self.lease_lock.clone();
-            let runtime = self.runtime.clone();
-            let scope = self.scope.clone();
+            let pool = self.pool.clone();
             {
-                run_blocking_op(&*runtime, &scope, move || {
+                run_blocking_op(pool.as_deref(), move || {
                     let path = lease_path(&root, &resource)?;
                     let _guard = lease_lock.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
                     let fence = match read_lease_file(&path)? {
@@ -2089,10 +2027,9 @@ mod fs_storage {
             let resource = resource.to_string();
             let holder = holder.to_string();
             let lease_lock = self.lease_lock.clone();
-            let runtime = self.runtime.clone();
-            let scope = self.scope.clone();
+            let pool = self.pool.clone();
             {
-                run_blocking_op(&*runtime, &scope, move || {
+                run_blocking_op(pool.as_deref(), move || {
                     let path = lease_path(&root, &resource)?;
                     let _guard = lease_lock.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
                     let (current_fence, expires_at_ms, current_holder) = read_lease_file(&path)?.ok_or_else(|| DbError::NotFound(format!("lease for {resource} not found")))?;
@@ -2115,10 +2052,9 @@ mod fs_storage {
             let resource = resource.to_string();
             let holder = holder.to_string();
             let lease_lock = self.lease_lock.clone();
-            let runtime = self.runtime.clone();
-            let scope = self.scope.clone();
+            let pool = self.pool.clone();
             {
-                run_blocking_op(&*runtime, &scope, move || {
+                run_blocking_op(pool.as_deref(), move || {
                     let path = lease_path(&root, &resource)?;
                     let _guard = lease_lock.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
                     let (current_fence, _, current_holder) = read_lease_file(&path)?.ok_or_else(|| DbError::NotFound(format!("lease for {resource} not found")))?;
@@ -2139,10 +2075,9 @@ mod fs_storage {
             let root = self.root.clone();
             let resource = resource.to_string();
             let lease_lock = self.lease_lock.clone();
-            let runtime = self.runtime.clone();
-            let scope = self.scope.clone();
+            let pool = self.pool.clone();
             {
-                run_blocking_op(&*runtime, &scope, move || {
+                run_blocking_op(pool.as_deref(), move || {
                     let path = lease_path(&root, &resource)?;
                     let _guard = lease_lock.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
                     match read_lease_file(&path)? {
@@ -2158,7 +2093,7 @@ mod fs_storage {
 }
 
 #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
-pub use fs_storage::{FsStorage, InlineRuntime};
+pub use fs_storage::FsStorage;
 //#endregion 🔖️Fs
 
 //#region 🧪️Tests
@@ -2382,7 +2317,7 @@ mod tests {
     //#region 🔖️DbBackend
     #[semio_framework_async_macros::async_test]
     async fn memory_storage_db_backend_accessors_and_capabilities() {
-        let storage: DbBackend<InlineRuntime> = DbBackend::Memory(MemoryStorage::new().await);
+        let storage: DbBackend = DbBackend::Memory(MemoryStorage::new().await);
         let document: ArtifactId = "doc-umbrella".into();
         block_on_ready(poll_once(storage.wal()).await.create_segment(&document, 0)).await.unwrap();
         block_on_ready(poll_once(storage.catalog()).await.cas_root(EpochFence::INITIAL, b"root")).await.unwrap();
@@ -2396,7 +2331,7 @@ mod tests {
     #[cfg(feature = "fs")]
     #[semio_framework_async_macros::async_test]
     async fn fs_storage_db_backend_accessors_and_capabilities() {
-        let storage: DbBackend<semio_framework_async::testkit::ManualRuntime> = DbBackend::Fs(fs_scratch("umbrella").await);
+        let storage: DbBackend = DbBackend::Fs(fs_scratch("umbrella").await);
         let document: ArtifactId = "doc-umbrella".into();
         block_on_ready(poll_once(storage.index()).await.write_run(&document, 0, b"run")).await.unwrap();
         assert_eq!(block_on_ready(poll_once(storage.index()).await.read_run(&document, 0)).await.unwrap(), b"run");
@@ -2414,18 +2349,15 @@ mod tests {
 
     /// @emoji 🎲️ A fresh `FsStorage` rooted at a unique scratch directory under
     /// `std::env::temp_dir()` — no external `tempfile` crate dependency, mirroring `pack_io`'s own
-    /// test helper convention. Runs on a fresh `semio_framework_async::testkit::ManualRuntime`
-    /// (see that type's doc: its `run_blocking` executes synchronously), so every `DbFuture` this
-    /// storage hands back resolves on its very first poll — [`block_on_ready`] above never
-    /// actually parks.
+    /// test helper convention. Opened with `pool: None` (every blocking body runs inline), so every
+    /// `DbFuture` this storage hands back resolves on its very first poll — [`block_on_ready`]
+    /// above never actually parks.
     #[cfg(feature = "fs")]
-    async fn fs_scratch(name: &str) -> FsStorage<semio_framework_async::testkit::ManualRuntime> {
+    async fn fs_scratch(name: &str) -> FsStorage {
         let pid = std::process::id();
         let counter = SCRATCH_COUNTER.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         let dir = std::env::temp_dir().join(format!("db_storage_test_{name}_{pid}_{counter}"));
-        let runtime = Arc::new(semio_framework_async::testkit::ManualRuntime::new(0).await);
-        let scope = poll_once(runtime.open_scope(semio_framework_async::ScopeOwner::Service("db_storage_test"), None)).await;
-        poll_once(FsStorage::open(runtime, scope, &dir)).await.unwrap()
+        poll_once(FsStorage::open(None, &dir)).await.unwrap()
     }
 
     #[cfg(feature = "fs")]
@@ -2450,16 +2382,12 @@ mod tests {
         let dir = std::env::temp_dir().join(format!("db_storage_test_reopen_{pid}_{counter}"));
 
         {
-            let runtime = Arc::new(semio_framework_async::testkit::ManualRuntime::new(0).await);
-            let scope = poll_once(runtime.open_scope(semio_framework_async::ScopeOwner::Service("db_storage_test"), None)).await;
-            let storage = poll_once(FsStorage::open(runtime, scope, &dir)).await.unwrap();
+            let storage = poll_once(FsStorage::open(None, &dir)).await.unwrap();
             let document: ArtifactId = "doc-reopen".into();
             block_on_ready(storage.write_generation(&document, 0, b"persisted across reopen")).await.unwrap();
         }
         {
-            let runtime = Arc::new(semio_framework_async::testkit::ManualRuntime::new(0).await);
-            let scope = poll_once(runtime.open_scope(semio_framework_async::ScopeOwner::Service("db_storage_test"), None)).await;
-            let storage = poll_once(FsStorage::open(runtime, scope, &dir)).await.unwrap();
+            let storage = poll_once(FsStorage::open(None, &dir)).await.unwrap();
             let document: ArtifactId = "doc-reopen".into();
             assert_eq!(block_on_ready(storage.read_generation(&document, 0)).await.unwrap(), b"persisted across reopen");
         }

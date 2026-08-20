@@ -1,0 +1,13 @@
+{
+  "title": "Phase 1 One Pool Worker Runtime",
+  "emoji": "🧵️",
+  "status": "open",
+  "description": "Phase 1 of the Interactive Job Runtime Refactor (master ticket 26/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR).\n\nReplace all role-specific thread allocation with ONE process-wide worker pool executing logical lanes.\n\nTargets:\n- cpu_worker_count = max(1, N-1) for interactive native processes (UI thread reserved); N for headless batch. On wasm32 the pool degrades to a cooperative host-driven scheduler.\n- Kernel, actor shards, compute, I/O and timers all become logical lanes on the single substrate. No nested or subsystem-owned CPU pools anywhere.\n- Checked permit ledger in release builds: over-allocation returns an error and never wraps. Replaces ThreadBudget, whose checkout currently wraps silently in release (debug_assert only).\n- Worker admission control: background lanes may not occupy all workers while a UI is live; at least one slot stays available to interactive and preview work when there are 2+ workers.\n- run_blocking removed from the interactive host runtime trait; block_on restricted to approved process and test entry points.\n- Structured scopes, cancellation and ChannelPolicy retained, with channel capacities extended to cover both item counts and bytes.\n\nPhase 0 census established the real scope: 28 thread-creation sites; 15 deterministic threads on a 10-core native session plus unbounded ad-hoc threads. Five sites need genuine restructuring rather than a call-site swap: ShardExecutor (5 ms poll loop), shard outcome forwarders (250 ms poll loop), per-actor DB threads, the store-sync actor (per-document thread plus an embedded tokio runtime), and the epoch ticker (1 ms poll loop).\n\nExit gate: a thread census shows exactly the UI thread plus pool workers; no subsystem can create a CPU pool; permit over-allocation errors in release; the interactivity audit's thread-pool findings drop to the sanctioned runtime module only.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2573"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪0e3a2a33acc346fca0d777a4d3931ab4"
+  ]
+}

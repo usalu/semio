@@ -24,10 +24,6 @@ use std::collections::{HashMap, HashSet, VecDeque};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Mutex;
 use crate::*;
-// callers hold a `dyn Emit` object or call through `db_core`'s own trait path) — gate the import
-// accordingly rather than leaving an always-unused warning on non-test builds.
-#[cfg(test)]
-use Emit as _;
 
 //#region 🔖️Util
 /// @emoji 🔓️ Locks `mutex`, recovering the inner value even if a prior holder panicked while
@@ -993,7 +989,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn unwired_otel_exporter_reports_unimplemented_rather_than_panicking() {
         let span = CompletedSpan { id: SpanId(0), name: "s", parent: None, document: None, start_ms: 0, end_ms: 1, duration_ms: 1 };
-        let err = UnwiredOtelExporter.export(&span).unwrap_err();
+        let err = UnwiredOtelExporter.export(&span).await.unwrap_err();
         assert!(matches!(err, DbError::Unimplemented(_)));
     }
     //#endregion 🔖️Otel

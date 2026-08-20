@@ -591,7 +591,7 @@ plumbing (`update_world_orbit_view_gizmo_hover`, which owns `&mut World3dState`)
 `orbit_view_gizmo_tips`/`orbit_view_gizmo_hit_test` here. */
 pub mod gizmo {
     use crate::wgpu::widgets::WidgetContext;
-    use crate::wgpu::{Camera3d, Rect, Rgba, Vec3};
+    use crate::wgpu::{Camera3d, Rect, Rgba, Vec3, Vec3Math};
 
     /// 🧭️ Permanent X/Y/Z paints — primary / secondary / tertiary (semio tokens), not muted chrome.
     pub fn spatial_axis_rgba(axis: u8, alpha: f32) -> Rgba {
@@ -628,53 +628,53 @@ pub mod gizmo {
         let origin_x = viewport.x + viewport.w - margin_x;
         let origin_y = viewport.y + viewport.h - margin_y;
         let axis_len = (viewport.w.min(viewport.h) * 0.04).clamp(14.0, 24.0);
-        let forward = camera.position.sub(camera.target);
-        let forward_len = forward.length();
+        let forward = camera.position.sub_m(camera.target);
+        let forward_len = forward.length_m();
         if forward_len < 1e-5 {
             return Vec::new();
         }
-        let forward = forward.scale(1.0 / forward_len);
-        let right = forward.cross(camera.up);
-        let right_len = right.length();
+        let forward = forward.scale_m(1.0 / forward_len);
+        let right = forward.cross_m(camera.up);
+        let right_len = right.length_m();
         if right_len < 1e-5 {
             return Vec::new();
         }
-        let right = right.scale(1.0 / right_len);
-        let up = right.cross(forward).normalize();
+        let right = right.scale_m(1.0 / right_len);
+        let up = right.cross_m(forward).normalize_m();
         let neutral = Rgba::new(0.62, 0.62, 0.66, 0.9);
         let axes = [
-            (Vec3::new(1.0, 0.0, 0.0), spatial_axis_rgba(0, 1.0), true),
-            (Vec3::new(-1.0, 0.0, 0.0), spatial_axis_rgba(0, 0.75), false),
-            (Vec3::new(0.0, 1.0, 0.0), spatial_axis_rgba(1, 1.0), true),
-            (Vec3::new(0.0, -1.0, 0.0), spatial_axis_rgba(1, 0.75), false),
-            (Vec3::new(0.0, 0.0, 1.0), spatial_axis_rgba(2, 1.0), true),
-            (Vec3::new(0.0, 0.0, -1.0), spatial_axis_rgba(2, 0.75), false),
+            (Vec3 { x: 1.0, y: 0.0, z: 0.0 }, spatial_axis_rgba(0, 1.0), true),
+            (Vec3 { x: -1.0, y: 0.0, z: 0.0 }, spatial_axis_rgba(0, 0.75), false),
+            (Vec3 { x: 0.0, y: 1.0, z: 0.0 }, spatial_axis_rgba(1, 1.0), true),
+            (Vec3 { x: 0.0, y: -1.0, z: 0.0 }, spatial_axis_rgba(1, 0.75), false),
+            (Vec3 { x: 0.0, y: 0.0, z: 1.0 }, spatial_axis_rgba(2, 1.0), true),
+            (Vec3 { x: 0.0, y: 0.0, z: -1.0 }, spatial_axis_rgba(2, 0.75), false),
         ];
         let corners = [
-            (Vec3::new(0.72, 0.72, 0.72), true),
-            (Vec3::new(-0.72, 0.72, 0.72), true),
-            (Vec3::new(0.72, -0.72, 0.72), true),
-            (Vec3::new(-0.72, -0.72, 0.72), true),
-            (Vec3::new(0.72, 0.72, -0.72), false),
-            (Vec3::new(-0.72, 0.72, -0.72), false),
-            (Vec3::new(0.72, -0.72, -0.72), false),
-            (Vec3::new(-0.72, -0.72, -0.72), false),
+            (Vec3 { x: 0.72, y: 0.72, z: 0.72 }, true),
+            (Vec3 { x: -0.72, y: 0.72, z: 0.72 }, true),
+            (Vec3 { x: 0.72, y: -0.72, z: 0.72 }, true),
+            (Vec3 { x: -0.72, y: -0.72, z: 0.72 }, true),
+            (Vec3 { x: 0.72, y: 0.72, z: -0.72 }, false),
+            (Vec3 { x: -0.72, y: 0.72, z: -0.72 }, false),
+            (Vec3 { x: 0.72, y: -0.72, z: -0.72 }, false),
+            (Vec3 { x: -0.72, y: -0.72, z: -0.72 }, false),
         ];
         let mut tips: Vec<OrbitViewGizmoTip> = axes
             .into_iter()
             .map(|(axis, color, prominent)| {
-                let sx = axis.dot(right);
-                let sy = -axis.dot(up);
-                let depth = axis.dot(forward);
+                let sx = axis.dot_m(right);
+                let sy = -axis.dot_m(up);
+                let depth = axis.dot_m(forward);
                 let tip_x = origin_x + sx * axis_len;
                 let tip_y = origin_y + sy * axis_len;
                 let pick_radius = if prominent { 10.0 } else { 7.0 };
                 OrbitViewGizmoTip { screen_x: tip_x, screen_y: tip_y, depth, pick_radius, color, is_corner: false, prominent }
             })
             .chain(corners.into_iter().map(|(axis, prominent)| {
-                let sx = axis.dot(right);
-                let sy = -axis.dot(up);
-                let depth = axis.dot(forward);
+                let sx = axis.dot_m(right);
+                let sy = -axis.dot_m(up);
+                let depth = axis.dot_m(forward);
                 let tip_x = origin_x + sx * axis_len;
                 let tip_y = origin_y + sy * axis_len;
                 let pick_radius = if prominent { 10.0 } else { 7.0 };

@@ -1,0 +1,13 @@
+{
+  "title": "Interactive Job Runtime Refactor",
+  "emoji": "⚡️",
+  "status": "open",
+  "description": "Master ticket for the interactivity-first refactor of the whole repo (excluding ./compose).\n\nCoordinated by Claude Opus 5 (high effort) in the main chat; work packets executed by Sonnet 5 agent fleets; read-only reconnaissance by Haiku 4.5 fleets. (The ticket `llm` vocabulary predates these model ids, so it is left unset rather than recorded incorrectly.)\n\nGoverning rule: No interactive operation is a function call that runs until the operation is finished. Every interactive operation is a persistent state machine whose individual step is bounded, cancellable, observable, and preview-producing.\n\nTargets:\n- One process-wide worker scheduler (cpu_worker_count = max(1, N-1)); UI thread reserved and enqueue-only; no nested/subsystem CPU pools.\n- 8 ms hard ceiling for any UI callback or worker step (normal steps 0.5-2 ms). Logical operations may last seconds but must yield and publish intermediate state continuously.\n- Universal resumable job protocol (InteractiveJob::step -\u003e StepOutcome) with operation ids, generations, checkpoints, cancellation, preview overlays, and progress-as-data streams.\n- Every complex simulation (Puzzle fill, WFC, FEM, Energy) becomes composable resumable jobs previewing results in realtime (candidates/collisions, tested slots/propagation, mesh/assembly/residual/displacement, warmup/timestep/zone).\n- Determinism under parallelism: same snapshot + inputs + seed =\u003e identical result at any worker count.\n- Zero external dependencies across runtime AND build/test/tooling. Owned WASM interpreter replaces wasmtime+wit-bindgen. Owned event-log store replaces rusqlite/sqlx/neo4rs.\n\nExecuted in 11 phases (0-10), each with its own child ticket, dispatched as parallel agent fleets. This master ticket holds the plan, inventories, and the gate dashboard.\n\nBaseline commit: 95b8688ee2f62f4056b6403c282bf0c76172c37c. Host: 10 logical cores.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2571"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪0bcd5249be0f4abf9392f40619a0dcd7"
+  ]
+}

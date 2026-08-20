@@ -1,0 +1,1889 @@
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:6:
+ //! `crate::shell::...` call site elsewhere in the crate keeps resolving with zero other changes.
+ //! 🖥️ OS shell chrome — navbar, footer, floating panels, overlays, and studio mode.
+ 
+-use crate::dock::{
+-    compute_dock_drop_zone, drop_zone_indicator_rect, parse_path, push_window_silhouette_border, DockDragKind, DockDragPayload, DockDragState, DockDropZone, DockRenderContext, DockState,
+-    WindowSilhouette,
+-};
++use crate::dock::{compute_dock_drop_zone, drop_zone_indicator_rect, parse_path, push_window_silhouette_border, DockDragKind, DockDragPayload, DockDragState, DockDropZone, DockRenderContext, DockState, WindowSilhouette};
+ use crate::engine_canvas::theme_is_dark;
+ use crate::interpreter::{framework_widget_context, render_ui_node, resolve_ui_image, validate_window_body_surface};
+ use crate::program_bridge::{is_space_mode, resolve_playground_app_id, resolve_plugin_host_config, PluginHostConfig, ProgramBridgeEntry};
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:21:
+ use serde::{Deserialize, Serialize};
+ use std::collections::{BTreeMap, HashMap};
+ #[cfg(not(target_arch = "wasm32"))]
+-use store_sync::PresencePeer;
+-#[cfg(not(target_arch = "wasm32"))]
+ use store_sync::sync::{ArtifactActorConfig, ArtifactActorMsg, ArtifactEvent, ArtifactHost, ArtifactSyncStatus, PersistenceBinding, RemoteState};
++#[cfg(not(target_arch = "wasm32"))]
++use store_sync::PresencePeer;
+ // 📇️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §C0/§C3/§C6 (lane 2-D) —
+ // lane 1-D's Rust directory client + native identity mint/restore helper, consumed as-is (never
+ // re-declared: `semio_framework_os_kernel::os_directory` is the single source of truth both this
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:51:
+ #[cfg(not(target_arch = "wasm32"))]
+ use semio_framework_os_services::{ComputePool, TokioHostRuntime};
+ use ui_wgpu::wgpu::{
+-    chrome_item_bg, chrome_item_text, draw_text, push_chrome_group_border, DragAxis, DrawList, FontAtlas, HitKind, HitTarget, IconAtlas, InputState, Level, PointerModifiers, Rect, Rgba, Theme, TreeDragState, TreeDropPosition,
+-    WidgetInteractionMaps, WindowStackCorner,
++    chrome_item_bg, chrome_item_text, draw_text, push_chrome_group_border, DragAxis, DrawList, FontAtlas, HitKind, HitTarget, IconAtlas, InputState, Level, PointerModifiers, Rect, Rgba, Theme, TreeDragState, TreeDropPosition, WidgetInteractionMaps,
++    WindowStackCorner,
+ };
+ use ui_wgpu::wgpu::{
+-    ActionDescriptor, Label, Locale, LocalizedLabel, Terminology, UiButtonNode, UiNode, UiPresence, UiSelectItem, UiSelectNode, UiStackNode, UiTextNode, UtilityCategory, UtilityNode, WindowEngagement, WindowEngagementControl,
+-    WindowEngagementInput, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_HISTORY_ID, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
++    ActionDescriptor, Label, Locale, LocalizedLabel, Terminology, UiButtonNode, UiNode, UiPresence, UiSelectItem, UiSelectNode, UiStackNode, UiTextNode, UtilityCategory, UtilityNode, WindowEngagement, WindowEngagementControl, WindowEngagementInput,
++    WindowMeasure, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_HISTORY_ID, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
+ };
+ #[cfg(target_arch = "wasm32")]
+ use wasm_bindgen::JsCast;
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:272:
+         "os.directory.set-visibility" => Some(DirectoryCommand::SetVisibility { space_id: str_field("spaceId"), visibility: visibility(&str_field_or("visibility", "private")) }),
+         "os.directory.upsert-member" => Some(DirectoryCommand::UpsertMember { space_id: str_field("spaceId"), email: str_field("email"), role: role(&str_field_or("role", "spectator")) }),
+         "os.directory.remove-member" => Some(DirectoryCommand::RemoveMember { space_id: str_field("spaceId"), user_id: str_field("userId") }),
+-        "os.directory.share-link" => Some(DirectoryCommand::CreateInvite {
+-            space_id: str_field("spaceId"),
+-            role: role(&str_field_or("role", "spectator")),
+-            ttl_secs: args.and_then(|value| value.get("ttlSecs")).and_then(|value| value.as_u64()).unwrap_or(3600),
+-        }),
++        "os.directory.share-link" => {
++            Some(DirectoryCommand::CreateInvite { space_id: str_field("spaceId"), role: role(&str_field_or("role", "spectator")), ttl_secs: args.and_then(|value| value.get("ttlSecs")).and_then(|value| value.as_u64()).unwrap_or(3600) })
++        }
+         _ => None,
+     }
+ }
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:1330:
+         // `open_directory_stream` already uses for its background reconnect loop — see that field's
+         // own doc.
+         #[cfg(not(target_arch = "wasm32"))]
+-        let (directory_runtime, directory_scope, directory_compute, directory_transport, directory_cancel): (std::sync::Arc<TokioHostRuntime>, ScopeHandle, std::sync::Arc<ComputePool>, NativeDirectoryTransport<TokioHostRuntime>, CancelToken) = {
++        let (directory_runtime, directory_scope, directory_compute, directory_transport, directory_cancel): (
++            std::sync::Arc<TokioHostRuntime>,
++            ScopeHandle,
++            std::sync::Arc<ComputePool>,
++            NativeDirectoryTransport<TokioHostRuntime>,
++            CancelToken,
++        ) = {
+             const DIRECTORY_COMPUTE_CAPACITY: u32 = 4;
+             let runtime = std::sync::Arc::new(TokioHostRuntime::with_pool(crate::renderer_worker_pool()));
+             let scope = runtime.block_on(runtime.open_scope(ScopeOwner::Service("directory_client"), None));
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:1686:
+             plugin_id: &'a str,
+             topic_contribution: &'a semio_framework::TopicContribution,
+         }
+-        let entries: Vec<ProgramContributionEntry<'_>> = plugins
+-            .iter()
+-            .flat_map(|program| program.manifest.topic_contributions.iter().map(|topic_contribution| ProgramContributionEntry { plugin_id: program.plugin_id.as_str(), topic_contribution }))
+-            .collect();
++        let entries: Vec<ProgramContributionEntry<'_>> =
++            plugins.iter().flat_map(|program| program.manifest.topic_contributions.iter().map(|topic_contribution| ProgramContributionEntry { plugin_id: program.plugin_id.as_str(), topic_contribution })).collect();
+         serde_json::to_string(&entries).unwrap_or_else(|_| "[]".into())
+     }
+ 
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:1993:
+     /// `🧭️PanelAnchorModel` above). The four edge-middle anchors are always empty — nothing assigns there yet.
+     pub fn panel_anchor_snapshot(&self, anchor: PanelAnchor) -> PanelAnchorSnapshot {
+         match anchor {
+-            PanelAnchor::TopLeft => PanelAnchorSnapshot {
+-                visible: self.left_panel_open && self.active_left_kind == LeftPanelKind::Workbench,
+-                size: self.left_panel_width,
+-                active_tab: (self.active_left_kind == LeftPanelKind::Workbench).then(|| "workbench".to_string()),
+-            },
++            PanelAnchor::TopLeft => {
++                PanelAnchorSnapshot { visible: self.left_panel_open && self.active_left_kind == LeftPanelKind::Workbench, size: self.left_panel_width, active_tab: (self.active_left_kind == LeftPanelKind::Workbench).then(|| "workbench".to_string()) }
++            }
+             PanelAnchor::BottomLeft => {
+                 PanelAnchorSnapshot { visible: self.left_panel_open && self.active_left_kind == LeftPanelKind::Display, size: self.left_panel_width, active_tab: (self.active_left_kind == LeftPanelKind::Display).then(|| "display".to_string()) }
+             }
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:2004:
+-            PanelAnchor::TopRight => PanelAnchorSnapshot {
+-                visible: self.right_panel_open && self.active_right_kind == RightPanelKind::Details,
+-                size: self.right_panel_width,
+-                active_tab: (self.active_right_kind == RightPanelKind::Details).then(|| "details".to_string()),
+-            },
++            PanelAnchor::TopRight => {
++                PanelAnchorSnapshot { visible: self.right_panel_open && self.active_right_kind == RightPanelKind::Details, size: self.right_panel_width, active_tab: (self.active_right_kind == RightPanelKind::Details).then(|| "details".to_string()) }
++            }
+             PanelAnchor::BottomRight => PanelAnchorSnapshot {
+                 visible: self.right_panel_open && self.active_right_kind == RightPanelKind::Settings,
+                 size: self.right_panel_width,
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:2482:
+         let instance_id = channel.instance_id;
+         let plugin_id = channel.plugin_id.clone();
+         let connected_at_ms = channel.connected_at_ms;
+-        let presence_pack = self
+-            .plugins
+-            .iter()
+-            .find(|plugin| plugin.plugin_id == plugin_id)
+-            .and_then(|plugin| plugin.ephemeral_snapshot(instance_id).ok())
+-            .map(|(presence, _, _)| presence);
++        let presence_pack = self.plugins.iter().find(|plugin| plugin.plugin_id == plugin_id).and_then(|plugin| plugin.ephemeral_snapshot(instance_id).ok()).map(|(presence, _, _)| presence);
+         let label = self.session.as_ref().map(|session| session.app.id.clone());
+         let peer = PresencePeer {
+             actor: self.current_shell_actor(instance_id),
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:2855:
+     fn default_bindings_for_current_session(&self) -> (Vec<PersistenceBinding>, Option<String>) {
+         let space_id = self.open_space_id.clone();
+         let data_dir = self.identity_env.as_ref().and_then(|env| env.data_dir.as_deref());
+-        let surface = self
+-            .session
+-            .as_ref()
+-            .filter(|_| self.identity.is_some() && space_id.is_some())
+-            .map(|session| semio_framework::manifest::surface_app_id(&session.app.dialect, session.app.role));
++        let surface = self.session.as_ref().filter(|_| self.identity.is_some() && space_id.is_some()).map(|session| semio_framework::manifest::surface_app_id(&session.app.dialect, session.app.role));
+         let bindings = default_persistence_bindings(self.identity.as_ref(), space_id.as_deref(), data_dir, surface.as_deref());
+         (bindings, surface)
+     }
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:3016:
+         };
+         let program = self.plugins.iter().find(|p| p.manifest.apps.iter().any(|app| app.controller_id == action.controller_id)).or_else(|| self.plugins.iter().find(|p| p.plugin_id == session.plugin_id)).ok_or("action program missing")?;
+         let requested_window_id = action.args.as_ref().and_then(|args| args.get("windowId")).and_then(DslValue::as_str);
+-        let window_instance_id = requested_window_id
+-            .map(str::to_string)
+-            .or_else(|| session.view_state.window_id.clone())
+-            .or_else(|| self.active_window_id.clone())
+-            .unwrap_or_else(|| session.app.window_kinds.first().id.clone());
++        let window_instance_id = requested_window_id.map(str::to_string).or_else(|| session.view_state.window_id.clone()).or_else(|| self.active_window_id.clone()).unwrap_or_else(|| session.app.window_kinds.first().id.clone());
+         let window_kind_id = session
+             .view_state
+             .window_instances
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:3030:
+             .or_else(|| session.app.window_kinds.iter().find(|kind| kind.id == window_instance_id).map(|kind| kind.id.clone()))
+             .ok_or_else(|| format!("action window instance {window_instance_id} has no declared kind"))?;
+         let mode_id = session.view_state.active_mode_id.clone().unwrap_or_else(|| session.app.default_mode_id.clone());
+-        let arguments = action
+-            .args
+-            .as_ref()
+-            .map(dsl_value_as_json)
+-            .and_then(|value| value.as_object().cloned())
+-            .unwrap_or_default()
+-            .into_iter()
+-            .collect();
++        let arguments = action.args.as_ref().map(dsl_value_as_json).and_then(|value| value.as_object().cloned()).unwrap_or_default().into_iter().collect();
+         let invocation = semio_framework::manifest::ActionInvocation {
+-            address: semio_framework::manifest::ActionAddress {
+-                plugin_id: session.plugin_id.clone(),
+-                app_id: session.app.id.clone(),
+-                mode_id,
+-                window_kind_id,
+-                window_instance_id,
+-                action_id: action.action.clone(),
+-            },
++            address: semio_framework::manifest::ActionAddress { plugin_id: session.plugin_id.clone(), app_id: session.app.id.clone(), mode_id, window_kind_id, window_instance_id, action_id: action.action.clone() },
+             arguments,
+         };
+         let action_json = serde_json::to_string(&invocation).map_err(|err| err.to_string())?;
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:3130:
+             return Ok(());
+         };
+         let owner_plugin_id = match &invocation.address.owner {
+-            semio_framework::manifest::CommandOwnerAddress::Plugin { plugin_id }
+-            | semio_framework::manifest::CommandOwnerAddress::App { plugin_id, .. }
+-            | semio_framework::manifest::CommandOwnerAddress::Mode { plugin_id, .. } => plugin_id,
++            semio_framework::manifest::CommandOwnerAddress::Plugin { plugin_id } | semio_framework::manifest::CommandOwnerAddress::App { plugin_id, .. } | semio_framework::manifest::CommandOwnerAddress::Mode { plugin_id, .. } => plugin_id,
+             semio_framework::manifest::CommandOwnerAddress::Os => unreachable!(),
+         };
+         if owner_plugin_id != &session.plugin_id {
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:3932:
+                     let active = windows.iter().find(|wid| self.active_window_id.as_deref() == Some(wid.as_str())).or_else(|| windows.first()).cloned().unwrap_or_default();
+                     if !active.is_empty() {
+                         let tab_index = self.dock.tab_index(&path, &active).unwrap_or(0);
+-                        let ghost_label =
+-                            self.session.as_ref().and_then(|s| s.app.window_kinds.iter().find(|k| k.id == active).map(|k| k.label.resolve(self.active_terminology(), self.active_locale()).to_string())).unwrap_or_else(|| active.clone());
++                        let ghost_label = self.session.as_ref().and_then(|s| s.app.window_kinds.iter().find(|k| k.id == active).map(|k| k.label.resolve(self.active_terminology(), self.active_locale()).to_string())).unwrap_or_else(|| active.clone());
+                         self.begin_pending_dock_drag(DockDragPayload { kind: DockDragKind::Stack, window_id: active, source_path: path, tab_index, ghost_label }, x, y);
+                         return Ok(());
+                     }
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:5340:
+             }
+         }
+         let idle = input.focused_id.is_none() && self.overlay_state == OverlayState::None && self.sync_card_kind.is_none() && self.dock_drag.is_none();
+-        let fullscreen_chord = matches!(action, ui_wgpu::wgpu::KeyAction::Function(11))
+-            || matches!(&action, ui_wgpu::wgpu::KeyAction::Char(key) if key.eq_ignore_ascii_case("f") && modifiers.ctrl && modifiers.meta);
++        let fullscreen_chord = matches!(action, ui_wgpu::wgpu::KeyAction::Function(11)) || matches!(&action, ui_wgpu::wgpu::KeyAction::Char(key) if key.eq_ignore_ascii_case("f") && modifiers.ctrl && modifiers.meta);
+         if idle && fullscreen_chord {
+             self.dispatch_command(semio_framework::manifest::CommandInvocation {
+                 address: semio_framework::manifest::CommandAddress { owner: semio_framework::manifest::CommandOwnerAddress::Os, command_id: "os.toggleFullscreen".into() },
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:5352:
+         }
+         if idle && !is_reserved_shell_chord(&action, modifiers) {
+             let platform = command_host_platform();
+-            let command = self.resolved_commands().into_iter().rev().find(|entry| {
+-                entry.definition.in_palette
+-                    && entry.definition.keybindings.iter().any(|binding| binding.platform.is_none_or(|declared| declared == platform) && key_event_matches_chord(&action, modifiers, &binding.chord))
+-            });
++            let command = self
++                .resolved_commands()
++                .into_iter()
++                .rev()
++                .find(|entry| entry.definition.in_palette && entry.definition.keybindings.iter().any(|binding| binding.platform.is_none_or(|declared| declared == platform) && key_event_matches_chord(&action, modifiers, &binding.chord)));
+             if let Some(entry) = command {
+                 if entry.definition.args.is_empty() {
+                     self.dispatch_command(semio_framework::manifest::CommandInvocation { address: entry.address, arguments: BTreeMap::new() }).await?;
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:5953:
+ /// through `framework.checkin`'s `open` action rather than dispatching a fixed-message checkpoint
+ /// straight away.
+ #[cfg(not(target_arch = "wasm32"))]
+-fn render_sync_status_and_checkin(draw: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, status: Option<&ArtifactSyncStatus>, session: Option<&ActiveSession>, uncommitted_count: u32, mut x: f32, btn_y: f32, btn_h: f32) -> f32 {
++fn render_sync_status_and_checkin(
++    draw: &mut DrawList,
++    atlas: &mut FontAtlas,
++    icons: &IconAtlas,
++    input: &mut InputState<ActionDescriptor>,
++    theme: &Theme,
++    status: Option<&ArtifactSyncStatus>,
++    session: Option<&ActiveSession>,
++    uncommitted_count: u32,
++    mut x: f32,
++    btn_y: f32,
++    btn_h: f32,
++) -> f32 {
+     let pill_label = ShellState::sync_pill_text(status);
+     let pill = ChromeGroupItem { control_id: "s-sync-status", icon_id: None, label: Some(pill_label.as_str()), active: false, disabled: false, kind: HitKind::Button };
+     let pill_w = measure_chrome_group_item(atlas, theme, &pill);
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:6166:
+ }
+ 
+ /// 🪟️ Resolves an action only from its addressed window kind owner.
+-pub(crate) fn window_action_definition<'a>(
+-    app: &'a AppDefinition,
+-    window_kind_id: &str,
+-    action_id: &str,
+-) -> Option<&'a semio_framework::ActionDefinition> {
++pub(crate) fn window_action_definition<'a>(app: &'a AppDefinition, window_kind_id: &str, action_id: &str) -> Option<&'a semio_framework::ActionDefinition> {
+     app.window_kinds.iter().find(|kind| kind.id == window_kind_id)?.actions.iter().find(|action| action.id == action_id)
+ }
+ 
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:6281:
+     }
+     #[cfg(target_arch = "wasm32")]
+     {
+-        let platform = web_sys::window()
+-            .and_then(|window| js_sys::Reflect::get(window.as_ref(), &"navigator".into()).ok())
+-            .and_then(|navigator| js_sys::Reflect::get(&navigator, &"platform".into()).ok())
+-            .and_then(|value| value.as_string())
+-            .unwrap_or_default();
++        let platform =
++            web_sys::window().and_then(|window| js_sys::Reflect::get(window.as_ref(), &"navigator".into()).ok()).and_then(|navigator| js_sys::Reflect::get(&navigator, &"platform".into()).ok()).and_then(|value| value.as_string()).unwrap_or_default();
+         if platform.to_ascii_lowercase().contains("mac") {
+             semio_framework::manifest::Platform::MacOs
+         } else if platform.to_ascii_lowercase().contains("win") {
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:6565:
+     /// `UiTheme` list, no desktop/tablet layout flag) — inventing that storage is out of this region's
+     /// scope (`shell::ShellTypes` owns `ShellState`'s fields and is off-limits this wave).
+     pub(crate) fn build_os_commands(&self) -> Vec<semio_framework::CommandDefinition> {
+-        use semio_framework::{ActionArgDef, ActionArgOption, ActionKind, CommandDefinition, PlatformKeybinding};
+         use semio_framework::manifest::Platform;
+-        let terminology_options: Vec<ActionArgOption> =
+-            self.active_terminologies().into_iter().map(|id| ActionArgOption { label: if id == "native" { LocalizedLabel::data("Native") } else { LocalizedLabel::data(id.clone()) }, value: id }).collect();
++        use semio_framework::{ActionArgDef, ActionArgOption, ActionKind, CommandDefinition, PlatformKeybinding};
++        let terminology_options: Vec<ActionArgOption> = self.active_terminologies().into_iter().map(|id| ActionArgOption { label: if id == "native" { LocalizedLabel::data("Native") } else { LocalizedLabel::data(id.clone()) }, value: id }).collect();
+         vec![
+             CommandDefinition::new_catalog("os.toggleFullscreen", LocalizedLabel::native("Toggle Full Screen", "Vollbild umschalten"), "window", ActionKind::Shell)
+                 .with_keybinding(PlatformKeybinding::for_platform("f11", Platform::Windows))
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:6596:
+                 vec![ActionArgOption { value: "en".into(), label: LocalizedLabel::data("English") }, ActionArgOption { value: "de".into(), label: LocalizedLabel::data("Deutsch") }],
+             )
+             .required()]),
+-            CommandDefinition::new_catalog("os.setTerminology", LocalizedLabel::data("Set Terminology"), "language", ActionKind::Shell)
+-                .with_args([ActionArgDef::select("value", LocalizedLabel::data("Terminology"), terminology_options).required()]),
++            CommandDefinition::new_catalog("os.setTerminology", LocalizedLabel::data("Set Terminology"), "language", ActionKind::Shell).with_args([ActionArgDef::select("value", LocalizedLabel::data("Terminology"), terminology_options).required()]),
+             CommandDefinition::new_catalog("os.setThemeId", LocalizedLabel::data("Set Theme"), "appearance", ActionKind::Shell).with_args([ActionArgDef::select(
+                 "value",
+                 LocalizedLabel::data("Theme"),
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:6661:
+                 if let semio_framework::ActionArgControl::Select { options } = &arg.control() {
+                     for option in options {
+                         let is_os = matches!(address.owner, semio_framework::manifest::CommandOwnerAddress::Os);
+-                        let invocation = semio_framework::manifest::CommandInvocation {
+-                            address: address.clone(),
+-                            arguments: BTreeMap::from([(arg.id.clone(), Value::String(option.value.clone()))]),
+-                        };
++                        let invocation = semio_framework::manifest::CommandInvocation { address: address.clone(), arguments: BTreeMap::from([(arg.id.clone(), Value::String(option.value.clone()))]) };
+                         items.push(SearchPaletteItem {
+                             id: format!("command.{}.{}", command_address_stable_key(&address), option.value),
+                             label: format!("{}: {}", definition.label.resolve(self.active_terminology(), self.active_locale()), option.label.resolve(self.active_terminology(), self.active_locale())),
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:6671:
+                             group: group.clone(),
+                             dispatch_action: None,
+-                            action: Some(if is_os {
+-                                format!("os-command:{}:{}", definition.id, option.value)
+-                            } else {
+-                                format!("command:{}", serde_json::to_string(&invocation).expect("command invocation serializes"))
+-                            }),
++                            action: Some(if is_os { format!("os-command:{}:{}", definition.id, option.value) } else { format!("command:{}", serde_json::to_string(&invocation).expect("command invocation serializes")) }),
+                             category: Some(category.clone()),
+                         });
+                     }
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:6730:
+         match command_id {
+             "os.resetThemeId" => shell_chrome_string("settings.theme.reset", self.locale_id == "de").to_string(),
+             "os.deleteThemeId" => shell_chrome_string("settings.theme.delete", self.locale_id == "de").to_string(),
+-            _ => {
+-                self.build_os_commands().into_iter().find(|definition| definition.id == command_id).map(|definition| definition.label.resolve(self.active_terminology(), self.active_locale()).to_string()).unwrap_or_else(|| command_id.to_string())
+-            }
++            _ => self.build_os_commands().into_iter().find(|definition| definition.id == command_id).map(|definition| definition.label.resolve(self.active_terminology(), self.active_locale()).to_string()).unwrap_or_else(|| command_id.to_string()),
+         }
+     }
+ 
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:6952:
+ /// 🎛️ Merges os-built-in, Plugin-scope, App-scope, and active-Mode-scope commands into one list — the
+ /// wgpu mirror of `os-shell.tsx`'s `resolveCommands`. A `Mode`-scope command only resolves when
+ /// `active_mode_id`'s `ModeDefinition.commands` references it, exactly like the React source.
+-pub(crate) fn resolve_commands(
+-    os_commands: Vec<semio_framework::CommandDefinition>,
+-    plugin_manifest: Option<&semio_framework::PluginManifest>,
+-    plugin_id: &str,
+-    app: &AppDefinition,
+-    active_mode_id: &str,
+-) -> Vec<ResolvedCommand> {
++pub(crate) fn resolve_commands(os_commands: Vec<semio_framework::CommandDefinition>, plugin_manifest: Option<&semio_framework::PluginManifest>, plugin_id: &str, app: &AppDefinition, active_mode_id: &str) -> Vec<ResolvedCommand> {
+     let mut resolved: Vec<ResolvedCommand> = os_commands.into_iter().map(|definition| ResolvedCommand::new(definition, semio_framework::manifest::CommandOwnerAddress::Os)).collect();
+     if let Some(manifest) = plugin_manifest {
+-        resolved.extend(manifest.commands.iter().cloned().map(|definition| {
+-            ResolvedCommand::new(definition, semio_framework::manifest::CommandOwnerAddress::Plugin { plugin_id: plugin_id.to_string() })
+-        }));
++        resolved.extend(manifest.commands.iter().cloned().map(|definition| ResolvedCommand::new(definition, semio_framework::manifest::CommandOwnerAddress::Plugin { plugin_id: plugin_id.to_string() })));
+     }
+-    resolved.extend(app.commands.iter().cloned().map(|definition| {
+-        ResolvedCommand::new(
+-            definition,
+-            semio_framework::manifest::CommandOwnerAddress::App { plugin_id: plugin_id.to_string(), app_id: app.id.clone() },
+-        )
+-    }));
++    resolved.extend(app.commands.iter().cloned().map(|definition| ResolvedCommand::new(definition, semio_framework::manifest::CommandOwnerAddress::App { plugin_id: plugin_id.to_string(), app_id: app.id.clone() })));
+     if let Some(mode) = app.modes.iter().find(|mode| mode.id == active_mode_id) {
+-        resolved.extend(mode.commands.iter().cloned().map(|definition| {
+-            ResolvedCommand::new(
+-                definition,
+-                semio_framework::manifest::CommandOwnerAddress::Mode {
+-                    plugin_id: plugin_id.to_string(),
+-                    app_id: app.id.clone(),
+-                    mode_id: mode.id.clone(),
+-                },
+-            )
+-        }));
++        resolved.extend(mode.commands.iter().cloned().map(|definition| ResolvedCommand::new(definition, semio_framework::manifest::CommandOwnerAddress::Mode { plugin_id: plugin_id.to_string(), app_id: app.id.clone(), mode_id: mode.id.clone() })));
+     }
+     resolved
+ }
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:7060:
+ #[cfg(test)]
+ mod command_registry_tests {
+     use super::*;
+-    use semio_framework::{ActionArgControl, ActionKind, AppDefinition, AppRole, ArtifactDialect, CommandDefinition, CommandOwnerAddress, ModeDefinition, Modes, PanelGroup, PanelTabDefinition, PanelTabKind, PluginManifest, WindowKindDefinition, WindowKinds};
++    use semio_framework::{
++        ActionArgControl, ActionKind, AppDefinition, AppRole, ArtifactDialect, CommandDefinition, CommandOwnerAddress, ModeDefinition, Modes, PanelGroup, PanelTabDefinition, PanelTabKind, PluginManifest, WindowKindDefinition, WindowKinds,
++    };
+ 
+     fn test_app(commands: Vec<CommandDefinition>, mode_commands: Vec<CommandDefinition>) -> AppDefinition {
+         AppDefinition {
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:7159:
+             commands: vec![CommandDefinition::new_catalog("doThing", LocalizedLabel::data("Do Thing"), "plugin", ActionKind::Shell)],
+             artifact_kinds: vec![],
+             dependencies: vec![],
+-            contributions: vec![] };
++            contributions: vec![],
++        };
+         let resolved = resolve_commands(os_commands, Some(&plugin_manifest), "plugin", &app, "default");
+         let sources: Vec<(&str, CommandOwnerAddress)> = resolved.iter().map(|entry| (entry.definition.id.as_str(), entry.address.owner.clone())).collect();
+-        assert_eq!(sources, vec![
+-            ("os.setLocale", CommandOwnerAddress::Os),
+-            ("doThing", CommandOwnerAddress::Plugin { plugin_id: "plugin".into() }),
+-            ("export", CommandOwnerAddress::App { plugin_id: "plugin".into(), app_id: "test-app".into() }),
+-            ("focus", CommandOwnerAddress::Mode { plugin_id: "plugin".into(), app_id: "test-app".into(), mode_id: "default".into() }),
+-        ]);
++        assert_eq!(
++            sources,
++            vec![
++                ("os.setLocale", CommandOwnerAddress::Os),
++                ("doThing", CommandOwnerAddress::Plugin { plugin_id: "plugin".into() }),
++                ("export", CommandOwnerAddress::App { plugin_id: "plugin".into(), app_id: "test-app".into() }),
++                ("focus", CommandOwnerAddress::Mode { plugin_id: "plugin".into(), app_id: "test-app".into(), mode_id: "default".into() }),
++            ]
++        );
+     }
+ 
+     #[test]
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:7174:
+     fn identical_local_command_ids_have_collision_free_owner_keys() {
+         let local_id = "refresh";
+-        let app = test_app(
+-            vec![CommandDefinition::new_catalog(local_id, LocalizedLabel::data("Refresh App"), "app", ActionKind::View)],
+-            vec![CommandDefinition::new_catalog(local_id, LocalizedLabel::data("Refresh Mode"), "mode", ActionKind::View)],
+-        );
++        let app = test_app(vec![CommandDefinition::new_catalog(local_id, LocalizedLabel::data("Refresh App"), "app", ActionKind::View)], vec![CommandDefinition::new_catalog(local_id, LocalizedLabel::data("Refresh Mode"), "mode", ActionKind::View)]);
+         let plugin_manifest = PluginManifest {
+             plugin_id: "plugin".into(),
+             label: "Plugin".into(),
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:7190:
+             dependencies: vec![],
+             contributions: vec![],
+         };
+-        let resolved = resolve_commands(
+-            vec![CommandDefinition::new_catalog(local_id, LocalizedLabel::data("Refresh Shell"), "general", ActionKind::Shell)],
+-            Some(&plugin_manifest),
+-            "plugin",
+-            &app,
+-            "default",
+-        );
++        let resolved = resolve_commands(vec![CommandDefinition::new_catalog(local_id, LocalizedLabel::data("Refresh Shell"), "general", ActionKind::Shell)], Some(&plugin_manifest), "plugin", &app, "default");
+         let keys: Vec<String> = resolved.iter().map(|entry| command_address_stable_key(&entry.address)).collect();
+         assert_eq!(keys, vec!["os:refresh", "plugin:plugin:refresh", "app:plugin:test-app:refresh", "mode:plugin:test-app:default:refresh"]);
+     }
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:8634:
+             let last_sample_ms = runtime.recorder_last_camera_wall_ms.get(&window_id).copied().unwrap_or(f64::NEG_INFINITY);
+             let changed = runtime.recorder_last_camera_pose.get(&window_id).map(|prev| !tutorial_camera_pose_close(prev, &pose, CAMERA_MOVE_EPSILON)).unwrap_or(true);
+             if changed && now_wall_ms - last_sample_ms >= CAMERA_SAMPLE_MIN_INTERVAL_MS {
+-                runtime.definition.tracks.camera.push(semio_framework::TutorialCameraKeyframe {
+-                    at: runtime.playhead_ms.max(0.0) as u64,
+-                    window_id: window_id.clone(),
+-                    camera: pose.clone(),
+-                    easing: semio_framework::TutorialEasing::EaseInOut,
+-                });
++                runtime.definition.tracks.camera.push(semio_framework::TutorialCameraKeyframe { at: runtime.playhead_ms.max(0.0) as u64, window_id: window_id.clone(), camera: pose.clone(), easing: semio_framework::TutorialEasing::EaseInOut });
+                 runtime.recorder_last_camera_wall_ms.insert(window_id.clone(), now_wall_ms);
+                 runtime.recorder_last_camera_pose.insert(window_id, pose);
+             }
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:9000:
+                     body_key: Some(String::new()),
+                     children: Vec::new(),
+                 },
+-                PanelTabDefinition {
+-                    kind: semio_framework::PanelTabKind::DisplayLayout,
+-                    label: LocalizedLabel::data(shell_chrome_string("display.tab.layout", is_de)),
+-                    group: PanelGroup::Display,
+-                    body_key: Some(String::new()),
+-                    children: Vec::new(),
+-                },
++                PanelTabDefinition { kind: semio_framework::PanelTabKind::DisplayLayout, label: LocalizedLabel::data(shell_chrome_string("display.tab.layout", is_de)), group: PanelGroup::Display, body_key: Some(String::new()), children: Vec::new() },
+             ],
+             LeftPanelKind::Workbench => {
+                 let mut tabs: Vec<PanelTabDefinition> = session.app.panel_tabs.iter().filter(|tab| group_side(tab.group) == "left").cloned().collect();
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:9716:
+             let input_y = card_y + 36.0;
+             let input_h = theme.control_height;
+             overlay.push_solid([card_x + theme.padding_standard, input_y, card_w - theme.padding_standard * 2.0, input_h], theme.input_bg);
+-            chrome_text(
+-                overlay,
+-                atlas,
+-                input,
+-                theme,
+-                if draft.is_empty() { "check-in" } else { draft.as_str() },
+-                card_x + theme.padding_standard + 8.0,
+-                input_y + (input_h + theme.font_size_small) * 0.5 - 1.0,
+-                theme.font_size_small,
+-                theme.text,
+-            );
++            chrome_text(overlay, atlas, input, theme, if draft.is_empty() { "check-in" } else { draft.as_str() }, card_x + theme.padding_standard + 8.0, input_y + (input_h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, theme.text);
+             let commit_rect = Rect::new(card_x + theme.padding_standard, card_y + card_h - theme.control_height - theme.padding_standard, 72.0, theme.control_height);
+             overlay.push_solid([commit_rect.x, commit_rect.y, commit_rect.w, commit_rect.h], theme.accent);
+             chrome_text(overlay, atlas, input, theme, "Commit", commit_rect.x + 12.0, commit_rect.y + (commit_rect.h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, theme.active_foreground);
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:9741:
+             let cancel_rect = Rect::new(commit_rect.x + commit_rect.w + theme.gap_standard, commit_rect.y, 72.0, theme.control_height);
+             overlay.push_solid([cancel_rect.x, cancel_rect.y, cancel_rect.w, cancel_rect.h], theme.button);
+             chrome_text(overlay, atlas, input, theme, "Cancel", cancel_rect.x + 12.0, cancel_rect.y + (cancel_rect.h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, theme.text);
+-            input.register_hit(HitTarget { rect: cancel_rect, event: Some(ActionDescriptor { controller_id: "framework.checkin".into(), action: "cancel".into(), args: None }), control_id: Some("s-checkin-cancel".into()), kind: HitKind::Button, drag_axis: None, drag_data: None });
++            input.register_hit(HitTarget {
++                rect: cancel_rect,
++                event: Some(ActionDescriptor { controller_id: "framework.checkin".into(), action: "cancel".into(), args: None }),
++                control_id: Some("s-checkin-cancel".into()),
++                kind: HitKind::Button,
++                drag_axis: None,
++                drag_data: None,
++            });
+         }
+         if let Some(menu) = &self.context_menu {
+             self.render_context_menu(overlay, atlas, icons, input, theme, menu, width, height);
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:9783:
+         let content_w = text_w + padding * 2.0;
+         let content_h = text_h + padding * 2.0;
+         let scratch_tree = ui_wgpu::wgpu::UiTree::new();
+-        let (x, y) = ui_wgpu::wgpu::resolve_overlay_placement(&scratch_tree, ui_wgpu::wgpu::OverlayAnchor::Point { x: hover.anchor_x, y: hover.anchor_y }, (content_w, content_h), (width, height), ui_wgpu::wgpu::OverlayKind::Tooltip.default_placement());
++        let (x, y) =
++            ui_wgpu::wgpu::resolve_overlay_placement(&scratch_tree, ui_wgpu::wgpu::OverlayAnchor::Point { x: hover.anchor_x, y: hover.anchor_y }, (content_w, content_h), (width, height), ui_wgpu::wgpu::OverlayKind::Tooltip.default_placement());
+         overlay.push_glass([x, y, content_w, content_h], theme.border_radius, theme.glass(Level::Menu));
+         chrome_text(overlay, atlas, input, theme, &text, x + padding, y + (content_h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, theme.text);
+     }
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:9870:
+                 self.session.as_ref().map(|session| session.app.window_kinds.iter().filter(|kind| semio_framework::element_id_segment(&kind.id) == segment).map(|kind| kind.id.clone()).collect()).unwrap_or_default();
+             let matches_window = |window_id: &str| {
+                 semio_framework::element_id_segment(window_id) == segment
+-                    || kind_segments
+-                        .iter()
+-                        .any(|kind_id| window_id == kind_id || window_id.starts_with(&format!("{kind_id}-")) || semio_framework::element_id_segment(window_id).starts_with(&semio_framework::element_id_segment(kind_id)))
++                    || kind_segments.iter().any(|kind_id| window_id == kind_id || window_id.starts_with(&format!("{kind_id}-")) || semio_framework::element_id_segment(window_id).starts_with(&semio_framework::element_id_segment(kind_id)))
+             };
+             let silhouette_rects: Vec<Rect> = self.window_silhouettes.iter().filter(|(window_id, _)| matches_window(window_id)).map(|(_, silhouette)| silhouette.bounds).collect();
+             if !silhouette_rects.is_empty() {
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:9895:
+             .iter()
+             .filter(|(window_id, _)| {
+                 semio_framework::element_id_segment(window_id) == segment
+-                    || kind_segments
+-                        .iter()
+-                        .any(|kind_id| *window_id == kind_id || window_id.starts_with(&format!("{kind_id}-")) || semio_framework::element_id_segment(window_id).starts_with(&semio_framework::element_id_segment(kind_id)))
++                    || kind_segments.iter().any(|kind_id| *window_id == kind_id || window_id.starts_with(&format!("{kind_id}-")) || semio_framework::element_id_segment(window_id).starts_with(&semio_framework::element_id_segment(kind_id)))
+             })
+             .map(|(_, silhouette)| silhouette.clone())
+             .collect()
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:11122:
+         }
+         overlay.pop_scissor();
+     }
+-
+ }
+ 
+ // #region 💾️🎨️🌐️ UiPrefsThemesI18n
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:11378:
+ fn load_chrome_prefs() -> ChromePrefsState {
+     let ui_layout = if prefs_get(UI_CHROME_LAYOUT_STORAGE_KEY).as_deref() == Some("tablet") { "tablet".to_string() } else { "desktop".to_string() };
+     let theme_id = prefs_get(UI_CHROME_THEME_ID_STORAGE_KEY).unwrap_or_else(|| "semio".to_string());
+-    let custom_themes =
+-        prefs_get(UI_CUSTOM_THEMES_STORAGE_KEY).and_then(|raw| serde_json::from_str::<HashMap<String, Value>>(&raw).ok()).map(|map| map.into_iter().map(|(id, value)| (id, value.to_string())).collect()).unwrap_or_default();
++    let custom_themes = prefs_get(UI_CUSTOM_THEMES_STORAGE_KEY).and_then(|raw| serde_json::from_str::<HashMap<String, Value>>(&raw).ok()).map(|map| map.into_iter().map(|(id, value)| (id, value.to_string())).collect()).unwrap_or_default();
+     let worker_count = prefs_get(UI_COMPUTE_WORKER_COUNT_STORAGE_KEY).and_then(|raw| raw.parse::<u32>().ok()).filter(|count| *count >= 1).unwrap_or_else(default_compute_worker_count);
+     ChromePrefsState {
+         ui_layout,
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:11804:
+         let path = dir.join("ui-prefs.json");
+         let _ = std::fs::remove_file(&path);
+         let mut store = FilePrefsStore { path: path.clone(), cache: HashMap::new() };
+-        store.set(OS_SHELL_CONFIG_STORAGE_KEY, &serde_json::json!({
+-            "version": 1,
+-            "preferences": {},
+-            "namedLayouts": { "draw": [{ "id": "wide" }] },
+-            "dockLayouts": { "apps": {} },
+-            "dockUi": { "apps": {} },
+-            "windowPanes": { "apps": {} }
+-        }).to_string());
++        store.set(
++            OS_SHELL_CONFIG_STORAGE_KEY,
++            &serde_json::json!({
++                "version": 1,
++                "preferences": {},
++                "namedLayouts": { "draw": [{ "id": "wide" }] },
++                "dockLayouts": { "apps": {} },
++                "dockUi": { "apps": {} },
++                "windowPanes": { "apps": {} }
++            })
++            .to_string(),
++        );
+         assert_eq!(prefs_get_from(&store, UI_CHROME_APPEARANCE_STORAGE_KEY), None);
+         prefs_set_in(&mut store, UI_CHROME_APPEARANCE_STORAGE_KEY, "dark");
+         assert_eq!(prefs_get_from(&store, UI_CHROME_APPEARANCE_STORAGE_KEY), Some("dark".to_string()));
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:12401:
+     #[test]
+     fn utility_subtree_has_active_path_false_when_nothing_pressed() {
+         let action = ActionDescriptor { controller_id: "test".into(), action: "noOperation".into(), args: None };
+-        let nodes = vec![ui_wgpu::wgpu::utility_toggle("a", "circle".into(), "A", false, action.clone()), ui_wgpu::wgpu::utility_collection("group", "circle".into(), "Group", vec![ui_wgpu::wgpu::utility_toggle("b", "circle".into(), "B", false, action)])];
++        let nodes =
++            vec![ui_wgpu::wgpu::utility_toggle("a", "circle".into(), "A", false, action.clone()), ui_wgpu::wgpu::utility_collection("group", "circle".into(), "Group", vec![ui_wgpu::wgpu::utility_toggle("b", "circle".into(), "B", false, action)])];
+         assert!(!utility_subtree_has_active_path(&nodes));
+     }
+ 
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:12451:
+ 
+     #[test]
+     fn engagement_completion_suffix_picks_first_matching_possible_in_order() {
+-        let possibles = vec![ui_wgpu::wgpu::WindowEngagementPossible { id: "boat".into(), label: "Boat".into(), detail: None, action: None }, ui_wgpu::wgpu::WindowEngagementPossible { id: "box".into(), label: "Box".into(), detail: None, action: None }];
++        let possibles =
++            vec![ui_wgpu::wgpu::WindowEngagementPossible { id: "boat".into(), label: "Boat".into(), detail: None, action: None }, ui_wgpu::wgpu::WindowEngagementPossible { id: "box".into(), label: "Box".into(), detail: None, action: None }];
+         assert_eq!(engagement_completion_suffix("Bo", Some(&possibles)), "at");
+     }
+ 
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Dock/🧊️component.rs:9:
+ use semio_framework::AppDefinition;
+ use std::collections::HashMap;
+ use ui_wgpu::wgpu::{
+-    chrome_item_text, draw_text, even_window_layout, ActionDescriptor, DragAxis, DrawList, FontAtlas, HitKind, HitTarget, IconAtlas, InputState, Level, Rect, Rgba, Theme, WindowLayout, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode, WindowStackCorner,
++    chrome_item_text, draw_text, even_window_layout, ActionDescriptor, DragAxis, DrawList, FontAtlas, HitKind, HitTarget, IconAtlas, InputState, Level, Rect, Rgba, Theme, WindowLayout, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode,
++    WindowLayoutWindowNode, WindowStackCorner,
+ };
+ 
+ pub type DockPath = Vec<usize>;
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Dock/🧊️component.rs:59:
+ }
+ 
+ fn tabs_by_corner(windows: &[DockStackTab]) -> [(WindowStackCorner, Vec<&DockStackTab>); 4] {
+-    let mut groups: [(WindowStackCorner, Vec<&DockStackTab>); 4] = [
+-        (WindowStackCorner::TopLeft, Vec::new()),
+-        (WindowStackCorner::TopRight, Vec::new()),
+-        (WindowStackCorner::BottomLeft, Vec::new()),
+-        (WindowStackCorner::BottomRight, Vec::new()),
+-    ];
++    let mut groups: [(WindowStackCorner, Vec<&DockStackTab>); 4] = [(WindowStackCorner::TopLeft, Vec::new()), (WindowStackCorner::TopRight, Vec::new()), (WindowStackCorner::BottomLeft, Vec::new()), (WindowStackCorner::BottomRight, Vec::new())];
+     for tab in windows {
+         let slot = match tab.corner {
+             WindowStackCorner::TopLeft => 0,
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Dock/🧊️component.rs:293:
+     }
+ 
+     /// 🧭️ Per-corner tab-bar hit regions (and tab widths) for dock drop targeting.
+-    pub fn stack_corner_tab_bar_rects(
+-        &self,
+-        bounds: Rect,
+-        theme: &Theme,
+-        atlas: &mut FontAtlas,
+-        window_labels: &HashMap<String, String>,
+-    ) -> Vec<(DockPath, WindowStackCorner, Rect, Vec<f32>)> {
++    pub fn stack_corner_tab_bar_rects(&self, bounds: Rect, theme: &Theme, atlas: &mut FontAtlas, window_labels: &HashMap<String, String>) -> Vec<(DockPath, WindowStackCorner, Rect, Vec<f32>)> {
+         let mut out = Vec::new();
+         if let Some(path) = &self.maximized_stack {
+             if let Some(DockNode::Stack { windows, .. }) = node_at(&self.root, path) {
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Dock/🧊️component.rs:620:
+ }
+ 
+ fn stack_from_node(stack: &WindowLayoutStackNode) -> DockNode {
+-    let windows: Vec<DockStackTab> = stack
+-        .children
+-        .iter()
+-        .map(|w| DockStackTab::at(w.window_kind_id.clone(), w.corner.unwrap_or(WindowStackCorner::TopLeft)))
+-        .collect();
+-    let active = stack
+-        .active_window_kind_id
+-        .clone()
+-        .filter(|id| windows.iter().any(|w| w.window_id == *id))
+-        .or_else(|| windows.first().map(|w| w.window_id.clone()))
+-        .unwrap_or_default();
++    let windows: Vec<DockStackTab> = stack.children.iter().map(|w| DockStackTab::at(w.window_kind_id.clone(), w.corner.unwrap_or(WindowStackCorner::TopLeft))).collect();
++    let active = stack.active_window_kind_id.clone().filter(|id| windows.iter().any(|w| w.window_id == *id)).or_else(|| windows.first().map(|w| w.window_id.clone())).unwrap_or_default();
+     DockNode::Stack { windows, active }
+ }
+ 
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Dock/🧊️component.rs:637:
+-
+ fn layout_window_node(tab: &DockStackTab) -> WindowLayoutWindowNode {
+-    WindowLayoutWindowNode {
+-        kind: "window".into(),
+-        window_kind_id: tab.window_id.clone(),
+-        title: None,
+-        instance_id: None,
+-        template_id: None,
+-        corner: Some(tab.corner),
+-    }
++    WindowLayoutWindowNode { kind: "window".into(), window_kind_id: tab.window_id.clone(), title: None, instance_id: None, template_id: None, corner: Some(tab.corner) }
+ }
+ 
+ pub fn dock_node_to_layout_root(node: &DockNode) -> WindowLayoutRoot {
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Dock/🧊️component.rs:650:
+     match node {
+-        DockNode::Stack { windows, active } => WindowLayoutRoot::Stack(WindowLayoutStackNode {
+-            kind: "stack".into(),
+-            size: None,
+-            active_window_kind_id: Some(active.clone()),
+-            children: windows.iter().map(layout_window_node).collect(),
+-        }),
++        DockNode::Stack { windows, active } => WindowLayoutRoot::Stack(WindowLayoutStackNode { kind: "stack".into(), size: None, active_window_kind_id: Some(active.clone()), children: windows.iter().map(layout_window_node).collect() }),
+         DockNode::Row(children) => WindowLayoutRoot::Axis(ui_wgpu::wgpu::WindowLayoutAxisNode { kind: "row".into(), size: None, children: children.iter().map(|(child, size)| dock_child_from_node(child, *size)).collect() }),
+         DockNode::Column(children) => WindowLayoutRoot::Axis(ui_wgpu::wgpu::WindowLayoutAxisNode { kind: "column".into(), size: None, children: children.iter().map(|(child, size)| dock_child_from_node(child, *size)).collect() }),
+     }
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Dock/🧊️component.rs:661:
+ 
+ fn dock_child_from_node(node: &DockNode, size: f32) -> WindowLayoutChild {
+     match node {
+-        DockNode::Stack { windows, active } => WindowLayoutChild::Stack(WindowLayoutStackNode {
+-            kind: "stack".into(),
+-            size: Some(size as f64),
+-            active_window_kind_id: Some(active.clone()),
+-            children: windows.iter().map(layout_window_node).collect(),
+-        }),
++        DockNode::Stack { windows, active } => WindowLayoutChild::Stack(WindowLayoutStackNode { kind: "stack".into(), size: Some(size as f64), active_window_kind_id: Some(active.clone()), children: windows.iter().map(layout_window_node).collect() }),
+         DockNode::Row(children) => WindowLayoutChild::Axis(ui_wgpu::wgpu::WindowLayoutAxisNode { kind: "row".into(), size: Some(size as f64), children: children.iter().map(|(child, child_size)| dock_child_from_node(child, *child_size)).collect() }),
+         DockNode::Column(children) => {
+             WindowLayoutChild::Axis(ui_wgpu::wgpu::WindowLayoutAxisNode { kind: "column".into(), size: Some(size as f64), children: children.iter().map(|(child, child_size)| dock_child_from_node(child, *child_size)).collect() })
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Dock/🧊️component.rs:747:
+     tab_widths.len()
+ }
+ 
+-pub fn compute_dock_drop_zone(
+-    pointer_x: f32,
+-    pointer_y: f32,
+-    tab_bars: &[(DockPath, WindowStackCorner, Rect, Vec<f32>)],
+-    bodies: &[(DockPath, Rect, String)],
+-    canvas: Rect,
+-) -> Option<DockDropZone> {
++pub fn compute_dock_drop_zone(pointer_x: f32, pointer_y: f32, tab_bars: &[(DockPath, WindowStackCorner, Rect, Vec<f32>)], bodies: &[(DockPath, Rect, String)], canvas: Rect) -> Option<DockDropZone> {
+     for (path, corner, rect, widths) in tab_bars {
+         if rect.contains(pointer_x, pointer_y) {
+             let index = compute_tab_insert_index(pointer_x, *rect, widths, 4.0);
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Dock/🧊️component.rs:784:
+ }
+ 
+ /// @emoji 🎯️ Resolves the on-canvas indicator rect for an active dock drop zone.
+-pub fn drop_zone_indicator_rect(
+-    zone: &DockDropZone,
+-    tab_bars: &[(DockPath, WindowStackCorner, Rect, Vec<f32>)],
+-    bodies: &[(DockPath, Rect, String)],
+-    canvas: Rect,
+-    gap: f32,
+-) -> Option<Rect> {
++pub fn drop_zone_indicator_rect(zone: &DockDropZone, tab_bars: &[(DockPath, WindowStackCorner, Rect, Vec<f32>)], bodies: &[(DockPath, Rect, String)], canvas: Rect, gap: f32) -> Option<Rect> {
+     match zone {
+         DockDropZone::Tab { stack_path, corner, index } => {
+             let (_, _, tab_bar, widths) = tab_bars.iter().find(|(path, bar_corner, _, _)| path == stack_path && bar_corner == corner)?;
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Dock/🧊️component.rs:851:
+     14.0 + theme.padding_standard
+ }
+ 
+-fn collect_corner_tab_bars_for_stack(
+-    path: &DockPath,
+-    windows: &[DockStackTab],
+-    bounds: Rect,
+-    theme: &Theme,
+-    atlas: &mut FontAtlas,
+-    window_labels: &HashMap<String, String>,
+-    out: &mut Vec<(DockPath, WindowStackCorner, Rect, Vec<f32>)>,
+-) {
++fn collect_corner_tab_bars_for_stack(path: &DockPath, windows: &[DockStackTab], bounds: Rect, theme: &Theme, atlas: &mut FontAtlas, window_labels: &HashMap<String, String>, out: &mut Vec<(DockPath, WindowStackCorner, Rect, Vec<f32>)>) {
+     let tab_h = theme.control_height;
+     let pad = 8.0;
+     for (corner, tabs) in tabs_by_corner(windows) {
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Dock/🧊️component.rs:882:
+     }
+ }
+ 
+-fn collect_stack_corner_tab_bars(
+-    node: &DockNode,
+-    bounds: Rect,
+-    path: &[usize],
+-    theme: &Theme,
+-    atlas: &mut FontAtlas,
+-    window_labels: &HashMap<String, String>,
+-    out: &mut Vec<(DockPath, WindowStackCorner, Rect, Vec<f32>)>,
+-) {
++fn collect_stack_corner_tab_bars(node: &DockNode, bounds: Rect, path: &[usize], theme: &Theme, atlas: &mut FontAtlas, window_labels: &HashMap<String, String>, out: &mut Vec<(DockPath, WindowStackCorner, Rect, Vec<f32>)>) {
+     match node {
+         DockNode::Row(children) => {
+             let total: f32 = children.iter().map(|(_, s)| *s).sum::<f32>().max(0.001);
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Dock/🧊️component.rs:1036:
+             if old_windows == next_windows {
+                 return old.clone();
+             }
+-            let same_membership = old_windows.len() == next_windows.len()
+-                && old_windows.iter().all(|tab| next_windows.iter().any(|next| next.window_id == tab.window_id));
+-            let active = if same_membership && old_windows.iter().any(|tab| tab.window_id == *old_active) {
+-                old_active.clone()
+-            } else {
+-                next_active.clone()
+-            };
++            let same_membership = old_windows.len() == next_windows.len() && old_windows.iter().all(|tab| next_windows.iter().any(|next| next.window_id == tab.window_id));
++            let active = if same_membership && old_windows.iter().any(|tab| tab.window_id == *old_active) { old_active.clone() } else { next_active.clone() };
+             DockNode::Stack { windows: next_windows.clone(), active }
+         }
+         (DockNode::Row(old_children), DockNode::Row(next_children)) => DockNode::Row(diff_axis_children(old_children, next_children)),
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Dock/🧊️component.rs:1118:
+ const SPLIT_VIS_PX: f32 = 6.0;
+ const SPLIT_HIT_MIN_PX: f32 = 20.0;
+ 
+-fn render_axis(
+-    state: &DockState,
+-    ctx: &mut DockRenderContext<'_>,
+-    children: &[(DockNode, f32)],
+-    bounds: Rect,
+-    path: &[usize],
+-    horizontal: bool,
+-    body_fill: bool,
+-    render_body: &mut dyn FnMut(Rect, &str),
+-    outer_split: Option<(DockPath, usize, bool)>,
+-) {
++fn render_axis(state: &DockState, ctx: &mut DockRenderContext<'_>, children: &[(DockNode, f32)], bounds: Rect, path: &[usize], horizontal: bool, body_fill: bool, render_body: &mut dyn FnMut(Rect, &str), outer_split: Option<(DockPath, usize, bool)>) {
+     let total: f32 = children.iter().map(|(_, s)| *s).sum::<f32>().max(0.001);
+     if horizontal {
+         let mut x = bounds.x;
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Dock/🧊️component.rs:1307:
+                 let action_hovered = action_rect.contains(ctx.input.pointer_x, ctx.input.pointer_y);
+                 let action_tint = chrome_item_text(theme, false, action_hovered);
+                 let _ = paint_dock_tab_icon(ctx, icon_id, action_rect.x + theme.padding_standard * 0.5, action_rect, action_tint);
+-                ctx.input.register_hit(HitTarget {
+-                    rect: action_rect,
+-                    event: None,
+-                    control_id: Some(format!("dock.tab.{}.{}.{}", path_str(path), tab.window_id, action)),
+-                    kind: HitKind::Button,
+-                    drag_axis: None,
+-                    drag_data: None,
+-                });
++                ctx.input.register_hit(HitTarget { rect: action_rect, event: None, control_id: Some(format!("dock.tab.{}.{}.{}", path_str(path), tab.window_id, action)), kind: HitKind::Button, drag_axis: None, drag_data: None });
+                 content_x += action_w;
+             }
+             let select_w = (tab.rect.w - action_w * 3.0).max(theme.padding_standard * 2.0);
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Dock/🧊️component.rs:1321:
+             let select_rect = Rect::new(tab.rect.x, tab.rect.y, select_w, tab.rect.h);
+-            ctx.input.register_hit(HitTarget {
+-                rect: select_rect,
+-                event: None,
+-                control_id: Some(format!("dock.tab.{}.{}", path_str(path), tab.window_id)),
+-                kind: HitKind::Window,
+-                drag_axis: None,
+-                drag_data: None,
+-            });
++            ctx.input.register_hit(HitTarget { rect: select_rect, event: None, control_id: Some(format!("dock.tab.{}.{}", path_str(path), tab.window_id)), kind: HitKind::Window, drag_axis: None, drag_data: None });
+         }
+         ctx.draw.end_glass_content();
+     }
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Dock/🧊️component.rs:1379:
+         let height = bounds.h.max(0.0);
+         let top_depth = top.depth.max(0.0).min(height);
+         let bottom_depth = bottom.depth.max(0.0).min((height - top_depth).max(0.0));
+-        Self {
+-            bounds,
+-            top: WindowSilhouetteEdge::new(top_depth, Self::normalize_spans(top.spans, width)),
+-            bottom: WindowSilhouetteEdge::new(bottom_depth, Self::normalize_spans(bottom.spans, width)),
+-        }
++        Self { bounds, top: WindowSilhouetteEdge::new(top_depth, Self::normalize_spans(top.spans, width)), bottom: WindowSilhouetteEdge::new(bottom_depth, Self::normalize_spans(bottom.spans, width)) }
+     }
+ 
+     /// 🪟️ Projects measured top/bottom chip spans into the normalized v1 model.
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Dock/🧊️component.rs:1395:
+     pub fn from_measured_top(bounds: Rect, tabs_w: f32, controls_w: f32, depth: f32) -> Self {
+         let tabs_right = tabs_w.max(0.0).min(bounds.w);
+         let controls_left = (bounds.w - controls_w.max(0.0)).max(tabs_right).min(bounds.w);
+-        Self::from_measured_edges(
+-            bounds,
+-            vec![WindowSilhouetteSpan::new(0.0, tabs_right), WindowSilhouetteSpan::new(controls_left, bounds.w)],
+-            Vec::new(),
+-            depth,
+-            0.0,
+-        )
++        Self::from_measured_edges(bounds, vec![WindowSilhouetteSpan::new(0.0, tabs_right), WindowSilhouetteSpan::new(controls_left, bounds.w)], Vec::new(), depth, 0.0)
+     }
+ 
+     fn normalize_spans(spans: Vec<WindowSilhouetteSpan>, width: f32) -> Vec<WindowSilhouetteSpan> {
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Dock/🧊️component.rs:1458:
+ 
+     /// 🪟️ Returns the chrome-safe center band for dock targets and auxiliary rails.
+     pub fn safe_body_rect(&self) -> Rect {
+-        Rect::new(
+-            self.bounds.x,
+-            self.bounds.y + self.top.depth,
+-            self.bounds.w,
+-            (self.bounds.h - self.top.depth - self.bottom.depth).max(0.0),
+-        )
++        Rect::new(self.bounds.x, self.bounds.y + self.top.depth, self.bounds.w, (self.bounds.h - self.top.depth - self.bottom.depth).max(0.0))
+     }
+ 
+     /// 🪟️ Returns the normalized document-layout clearances `(top, bottom)`.
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Dock/🧊️component.rs:1531:
+     bottom_spans: Vec<WindowSilhouetteSpan>,
+ }
+ 
+-fn layout_stack_cap(
+-    windows: &[DockStackTab],
+-    labels: &HashMap<String, String>,
+-    icon_ids: &HashMap<String, String>,
+-    atlas: &mut FontAtlas,
+-    theme: &Theme,
+-    bounds: Rect,
+-) -> StackCapLayout {
++fn layout_stack_cap(windows: &[DockStackTab], labels: &HashMap<String, String>, icon_ids: &HashMap<String, String>, atlas: &mut FontAtlas, theme: &Theme, bounds: Rect) -> StackCapLayout {
+     let tab_h = theme.control_height;
+     let mut groups = Vec::new();
+     let mut top_spans = Vec::new();
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Dock/🧊️component.rs:1666:
+         DockNode::Stack { windows: tabs(ids), active: active.into() }
+     }
+ 
+-
+     use crate::shell::ShellState;
+     use semio_framework::{AppDefinition, AppRole, ArtifactDialect, ModeDefinition, PanelGroup, PanelTabDefinition, PanelTabKind, WindowKindDefinition};
+     use ui_wgpu::wgpu::{create_default_layout, WindowOptions};
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Dock/🧊️component.rs:1784:
+     #[test]
+     fn window_silhouette_clip_union_excludes_cap_gap() {
+         let silhouette = WindowSilhouette::from_measured_top(Rect::new(10.0, 20.0, 300.0, 200.0), 80.0, 60.0, 32.0);
+-        assert_eq!(
+-            silhouette.content_clip_rects(),
+-            vec![Rect::new(10.0, 52.0, 300.0, 168.0), Rect::new(10.0, 20.0, 80.0, 32.0), Rect::new(250.0, 20.0, 60.0, 32.0)]
+-        );
++        assert_eq!(silhouette.content_clip_rects(), vec![Rect::new(10.0, 52.0, 300.0, 168.0), Rect::new(10.0, 20.0, 80.0, 32.0), Rect::new(250.0, 20.0, 60.0, 32.0)]);
+         assert_eq!(silhouette.content_bounds(), Rect::new(10.0, 20.0, 300.0, 200.0));
+         assert_eq!(silhouette.safe_body_rect(), Rect::new(10.0, 52.0, 300.0, 168.0));
+         assert!(!silhouette.content_clip_rects().iter().any(|rect| rect.contains(150.0, 30.0)));
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Dock/🧊️component.rs:1797:
+     fn window_silhouette_v1_matches_typescript_fixture_for_merging_bottom_and_containment() {
+         let normalized = WindowSilhouette::new(
+             Rect::new(0.0, 0.0, 200.0, 100.0),
+-            WindowSilhouetteEdge::new(
+-                24.0,
+-                vec![WindowSilhouetteSpan::new(160.0, 220.0), WindowSilhouetteSpan::new(60.25, 90.0), WindowSilhouetteSpan::new(0.0, 60.0), WindowSilhouetteSpan::new(90.25, 120.0)],
+-            ),
++            WindowSilhouetteEdge::new(24.0, vec![WindowSilhouetteSpan::new(160.0, 220.0), WindowSilhouetteSpan::new(60.25, 90.0), WindowSilhouetteSpan::new(0.0, 60.0), WindowSilhouetteSpan::new(90.25, 120.0)]),
+             WindowSilhouetteEdge::new(16.0, vec![WindowSilhouetteSpan::new(80.0, 120.0), WindowSilhouetteSpan::new(0.0, 40.0)]),
+         );
+         assert_eq!(normalized.top.spans, vec![WindowSilhouetteSpan::new(0.0, 120.0), WindowSilhouetteSpan::new(160.0, 200.0)]);
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Dock/🧊️component.rs:1809:
+             WindowSilhouetteEdge::new(24.0, vec![WindowSilhouetteSpan::new(160.0, 200.0), WindowSilhouetteSpan::new(0.0, 60.0)]),
+             WindowSilhouetteEdge::new(16.0, vec![WindowSilhouetteSpan::new(80.0, 120.0), WindowSilhouetteSpan::new(0.0, 40.0)]),
+         );
+-        assert_eq!(
+-            silhouette.glass_regions(),
+-            vec![Rect::new(0.0, 0.0, 60.0, 24.0), Rect::new(160.0, 0.0, 40.0, 24.0), Rect::new(0.0, 84.0, 40.0, 16.0), Rect::new(80.0, 84.0, 40.0, 16.0)]
+-        );
++        assert_eq!(silhouette.glass_regions(), vec![Rect::new(0.0, 0.0, 60.0, 24.0), Rect::new(160.0, 0.0, 40.0, 24.0), Rect::new(0.0, 84.0, 40.0, 16.0), Rect::new(80.0, 84.0, 40.0, 16.0)]);
+         assert_eq!(silhouette.safe_clearances(), (24.0, 16.0));
+         assert!(silhouette.contains(20.0, 12.0));
+         assert!(!silhouette.contains(140.0, 12.0));
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Dock/🧊️component.rs:1850:
+     #[test]
+     fn apply_drop_tab_moves_window_to_target_corner() {
+         let mut dock = DockState::from_app(&sample_app(&["a", "b"], None), Some("a"));
+-        dock.root = DockNode::Row(vec![
+-            (stack_tabs(&["a", "x"], "a"), 0.5),
+-            (stack_tabs(&["b"], "b"), 0.5),
+-        ]);
++        dock.root = DockNode::Row(vec![(stack_tabs(&["a", "x"], "a"), 0.5), (stack_tabs(&["b"], "b"), 0.5)]);
+         assert!(dock.remove_window("a"));
+         let payload = tab_payload("a", vec![0], 0);
+         let zone = DockDropZone::Tab { stack_path: vec![1], corner: WindowStackCorner::BottomRight, index: 0 };
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Dock/🧊️component.rs:1877:
+         let icon_ids = HashMap::new();
+         let mut ctx = DockRenderContext { draw: &mut draw, atlas: &mut atlas, icons: &icons, input: &mut input, theme: &theme, window_labels: &labels, window_icon_ids: &icon_ids };
+         dock.paint_chrome(&mut ctx, bounds, true);
+-        let fill = draw
+-            .layers
+-            .iter()
+-            .find(|layer| layer.ui_instances.iter().any(|instance| instance.rect == [bounds.x, bounds.y, bounds.w, bounds.h]))
+-            .expect("full silhouette content fill");
++        let fill = draw.layers.iter().find(|layer| layer.ui_instances.iter().any(|instance| instance.rect == [bounds.x, bounds.y, bounds.w, bounds.h])).expect("full silhouette content fill");
+         assert_eq!(fill.clip.as_ref().map(|clip| clip.scissors.len()), Some(3));
+         assert!(!fill.clip.as_ref().is_some_and(|clip| clip.scissors.iter().any(|rect| rect.x <= 300 && 300 < rect.x + rect.w && rect.y <= 30 && 30 < rect.y + rect.h)));
+     }
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Dock/🧊️component.rs:2263:
+         let actions = vec![
+             ActionDefinition::new_catalog("zeroArg", LocalizedLabel::data("Zero Arg"), ActionKind::View),
+             ActionDefinition {
+-                args: vec![ActionArgDef::text("name", LocalizedLabel::data("Name")).required(), ActionArgDef { default: Some(semio_framework::to_dsl_value(&serde_json::json!(true)).expect("toggle default")), ..ActionArgDef::toggle("flag", LocalizedLabel::data("Flag")) }],
++                args: vec![
++                    ActionArgDef::text("name", LocalizedLabel::data("Name")).required(),
++                    ActionArgDef { default: Some(semio_framework::to_dsl_value(&serde_json::json!(true)).expect("toggle default")), ..ActionArgDef::toggle("flag", LocalizedLabel::data("Flag")) },
++                ],
+                 keys: Some("mod+e".into()),
+                 ..ActionDefinition::new_catalog("withArgs", LocalizedLabel::data("With Args"), ActionKind::View)
+             },
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/EngineCanvas/🧊️component.rs:1155:
+         let hover_kind = hover.get("kind").and_then(Value::as_str);
+         let granularity = hover_kind.unwrap_or_else(|| if selection.get("routes").and_then(Value::as_array).is_some_and(|ids| !ids.is_empty()) { "route" } else { "position" });
+         let selection_key = if granularity == "route" { "routes" } else { "positions" };
+-        let selected_ids = selection
+-            .get(selection_key)
+-            .and_then(Value::as_array)
+-            .into_iter()
+-            .flatten()
+-            .filter_map(Value::as_str)
+-            .map(str::to_string)
+-            .collect::<Vec<_>>();
++        let selected_ids = selection.get(selection_key).and_then(Value::as_array).into_iter().flatten().filter_map(Value::as_str).map(str::to_string).collect::<Vec<_>>();
+         let hovered_id = hover.get("id").and_then(Value::as_str);
+         host.sync_interaction(granularity, &selected_ids, hovered_id);
+     }
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Interpreter/🧊️component.rs:9:
+ 
+ use crate::scenes::{decode_canvas_image, queue_canvas_image_upload, render_component_scene, Board2dSurface, NodeGraphSurface, TiledMapSurface};
+ use serde_json::Value;
+-use ui_wgpu::wgpu::{draw_text, render_widget, Rect, Theme, WidgetContext, WidgetInteractionMaps, WidgetNode};
+-use ui_wgpu::wgpu::{ActionDescriptor, DragPayload, NodeId, UiComponentSceneNode, UiNode};
+ #[cfg(any(target_arch = "wasm32", test))]
+ use ui_wgpu::wgpu::UiState;
++use ui_wgpu::wgpu::{draw_text, render_widget, Rect, Theme, WidgetContext, WidgetInteractionMaps, WidgetNode};
++use ui_wgpu::wgpu::{ActionDescriptor, DragPayload, NodeId, UiComponentSceneNode, UiNode};
+ 
+ pub type FrameworkWidgetContext<'a> = WidgetContext<'a, ActionDescriptor>;
+ 
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/ProgramBridge/🧊️component.rs:576:
+ async fn handle_command_js(handle: &Rc<JsValue>, instance_id: u32, command_json: &str, view_state: &ViewModel) -> Result<semio_framework::kernel::InvocationResult, String> {
+     let command = Reflect::get(handle.as_ref(), &JsValue::from_str("handleCommand")).map_err(|_| "handleCommand missing")?.dyn_into::<Function>().map_err(|_| "handleCommand is not callable")?;
+     let context_json = serde_json::json!({ "viewState": view_state, "actor": "local" }).to_string();
+-    let result = command
+-        .call3(&JsValue::NULL, &JsValue::from_f64(instance_id as f64), &JsValue::from_str(command_json), &JsValue::from_str(&context_json))
+-        .map_err(|_| "handleCommand failed")?;
+-    let resolved = if let Some(promise) = result.dyn_ref::<js_sys::Promise>() {
+-        JsFuture::from(promise.clone()).await.map_err(|_| "handleCommand promise failed")?
+-    } else {
+-        result
+-    };
++    let result = command.call3(&JsValue::NULL, &JsValue::from_f64(instance_id as f64), &JsValue::from_str(command_json), &JsValue::from_str(&context_json)).map_err(|_| "handleCommand failed")?;
++    let resolved = if let Some(promise) = result.dyn_ref::<js_sys::Promise>() { JsFuture::from(promise.clone()).await.map_err(|_| "handleCommand promise failed")? } else { result };
+     let text = resolved.as_string().ok_or_else(|| "handleCommand result not string".to_string())?;
+     serde_json::from_str::<semio_framework::kernel::InvocationResult>(&text).map_err(|error| format!("handleCommand result parse failed: {error}"))
+ }
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/ProgramBridge/🧊️component.rs:612:
+ 
+ #[cfg(target_arch = "wasm32")]
+ async fn render_with_document_js(handle: &Rc<JsValue>, instance_id: u32, body_key: &str, view_state: &ViewModel, document_dsl: Option<&str>) -> Result<UiNode, String> {
+-    let render =
+-        if document_dsl.is_some() { Reflect::get(handle.as_ref(), &JsValue::from_str("renderWithDocument")).ok().and_then(|v| v.dyn_into::<Function>().ok()).or_else(|| get_fn(handle, "render").ok()) } else { get_fn(handle, "render").ok() };
++    let render = if document_dsl.is_some() { Reflect::get(handle.as_ref(), &JsValue::from_str("renderWithDocument")).ok().and_then(|v| v.dyn_into::<Function>().ok()).or_else(|| get_fn(handle, "render").ok()) } else { get_fn(handle, "render").ok() };
+     let render = render.ok_or("render failed")?;
+     let view_json = serde_json::to_string(view_state).map_err(|err| err.to_string())?;
+     let result = if let Some(document) = document_dsl {
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Scenes/🧊️component.rs:3349:
+         let actions = handle_scene_wheel(&node, Rect::new(0.0, 0.0, 400.0, 300.0), 50.0, 50.0, -100.0, false);
+         assert!(actions.is_empty(), "wheel-zoom never dispatches inline anymore");
+         let immediate = sweep_expired_scene_camera_dispatches(crate::app_now_ms());
+-        assert!(immediate.iter().all(|action| action.args.as_ref().and_then(|args| args.get("surfaceId")).and_then(semio_framework::DslValue::as_str) != Some(surface_id)), "sweeping immediately (before the ~350ms settle window) must not yet report this surface");
++        assert!(
++            immediate.iter().all(|action| action.args.as_ref().and_then(|args| args.get("surfaceId")).and_then(semio_framework::DslValue::as_str) != Some(surface_id)),
++            "sweeping immediately (before the ~350ms settle window) must not yet report this surface"
++        );
+         let due = sweep_expired_scene_camera_dispatches(crate::app_now_ms() + 400.0);
+         let matched = due.iter().find(|action| action.args.as_ref().and_then(|args| args.get("surfaceId")).and_then(semio_framework::DslValue::as_str) == Some(surface_id)).expect("this surface's setCamera fires once its deadline has passed");
+         assert_eq!(matched.controller_id, "controller");
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Scenes/🧊️component.rs:3721:
+         .get("paragraphs")
+         .and_then(Value::as_array)
+         .map(|paragraphs| {
+-            paragraphs
+-                .iter()
+-                .map(|paragraph| paragraph.get("runs").and_then(Value::as_array).map(|runs| runs.iter().filter_map(|run| run.get("text").and_then(Value::as_str)).collect::<String>()).unwrap_or_default())
+-                .collect::<Vec<_>>()
+-                .join("\n")
++            paragraphs.iter().map(|paragraph| paragraph.get("runs").and_then(Value::as_array).map(|runs| runs.iter().filter_map(|run| run.get("text").and_then(Value::as_str)).collect::<String>()).unwrap_or_default()).collect::<Vec<_>>().join("\n")
+         })
+         .unwrap_or_default()
+ }
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:6:
+ //! `crate::shell::...` call site elsewhere in the crate keeps resolving with zero other changes.
+ //! 🖥️ OS shell chrome — navbar, footer, floating panels, overlays, and studio mode.
+ 
+-use crate::dock::{
+-    compute_dock_drop_zone, drop_zone_indicator_rect, parse_path, push_window_silhouette_border, DockDragKind, DockDragPayload, DockDragState, DockDropZone, DockRenderContext, DockState,
+-    WindowSilhouette,
+-};
++use crate::dock::{compute_dock_drop_zone, drop_zone_indicator_rect, parse_path, push_window_silhouette_border, DockDragKind, DockDragPayload, DockDragState, DockDropZone, DockRenderContext, DockState, WindowSilhouette};
+ use crate::engine_canvas::theme_is_dark;
+ use crate::interpreter::{framework_widget_context, render_ui_node, resolve_ui_image, validate_window_body_surface};
+ use crate::program_bridge::{is_space_mode, resolve_playground_app_id, resolve_plugin_host_config, PluginHostConfig, ProgramBridgeEntry};
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:21:
+ use serde::{Deserialize, Serialize};
+ use std::collections::{BTreeMap, HashMap};
+ #[cfg(not(target_arch = "wasm32"))]
+-use store_sync::PresencePeer;
+-#[cfg(not(target_arch = "wasm32"))]
+ use store_sync::sync::{ArtifactActorConfig, ArtifactActorMsg, ArtifactEvent, ArtifactHost, ArtifactSyncStatus, PersistenceBinding, RemoteState};
++#[cfg(not(target_arch = "wasm32"))]
++use store_sync::PresencePeer;
+ // 📇️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §C0/§C3/§C6 (lane 2-D) —
+ // lane 1-D's Rust directory client + native identity mint/restore helper, consumed as-is (never
+ // re-declared: `semio_framework_os_kernel::os_directory` is the single source of truth both this
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:51:
+ #[cfg(not(target_arch = "wasm32"))]
+ use semio_framework_os_services::{ComputePool, TokioHostRuntime};
+ use ui_wgpu::wgpu::{
+-    chrome_item_bg, chrome_item_text, draw_text, push_chrome_group_border, DragAxis, DrawList, FontAtlas, HitKind, HitTarget, IconAtlas, InputState, Level, PointerModifiers, Rect, Rgba, Theme, TreeDragState, TreeDropPosition,
+-    WidgetInteractionMaps, WindowStackCorner,
++    chrome_item_bg, chrome_item_text, draw_text, push_chrome_group_border, DragAxis, DrawList, FontAtlas, HitKind, HitTarget, IconAtlas, InputState, Level, PointerModifiers, Rect, Rgba, Theme, TreeDragState, TreeDropPosition, WidgetInteractionMaps,
++    WindowStackCorner,
+ };
+ use ui_wgpu::wgpu::{
+-    ActionDescriptor, Label, Locale, LocalizedLabel, Terminology, UiButtonNode, UiNode, UiPresence, UiSelectItem, UiSelectNode, UiStackNode, UiTextNode, UtilityCategory, UtilityNode, WindowEngagement, WindowEngagementControl,
+-    WindowEngagementInput, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_HISTORY_ID, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
++    ActionDescriptor, Label, Locale, LocalizedLabel, Terminology, UiButtonNode, UiNode, UiPresence, UiSelectItem, UiSelectNode, UiStackNode, UiTextNode, UtilityCategory, UtilityNode, WindowEngagement, WindowEngagementControl, WindowEngagementInput,
++    WindowMeasure, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_HISTORY_ID, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
+ };
+ #[cfg(target_arch = "wasm32")]
+ use wasm_bindgen::JsCast;
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:272:
+         "os.directory.set-visibility" => Some(DirectoryCommand::SetVisibility { space_id: str_field("spaceId"), visibility: visibility(&str_field_or("visibility", "private")) }),
+         "os.directory.upsert-member" => Some(DirectoryCommand::UpsertMember { space_id: str_field("spaceId"), email: str_field("email"), role: role(&str_field_or("role", "spectator")) }),
+         "os.directory.remove-member" => Some(DirectoryCommand::RemoveMember { space_id: str_field("spaceId"), user_id: str_field("userId") }),
+-        "os.directory.share-link" => Some(DirectoryCommand::CreateInvite {
+-            space_id: str_field("spaceId"),
+-            role: role(&str_field_or("role", "spectator")),
+-            ttl_secs: args.and_then(|value| value.get("ttlSecs")).and_then(|value| value.as_u64()).unwrap_or(3600),
+-        }),
++        "os.directory.share-link" => {
++            Some(DirectoryCommand::CreateInvite { space_id: str_field("spaceId"), role: role(&str_field_or("role", "spectator")), ttl_secs: args.and_then(|value| value.get("ttlSecs")).and_then(|value| value.as_u64()).unwrap_or(3600) })
++        }
+         _ => None,
+     }
+ }
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:1330:
+         // `open_directory_stream` already uses for its background reconnect loop — see that field's
+         // own doc.
+         #[cfg(not(target_arch = "wasm32"))]
+-        let (directory_runtime, directory_scope, directory_compute, directory_transport, directory_cancel): (std::sync::Arc<TokioHostRuntime>, ScopeHandle, std::sync::Arc<ComputePool>, NativeDirectoryTransport<TokioHostRuntime>, CancelToken) = {
++        let (directory_runtime, directory_scope, directory_compute, directory_transport, directory_cancel): (
++            std::sync::Arc<TokioHostRuntime>,
++            ScopeHandle,
++            std::sync::Arc<ComputePool>,
++            NativeDirectoryTransport<TokioHostRuntime>,
++            CancelToken,
++        ) = {
+             const DIRECTORY_COMPUTE_CAPACITY: u32 = 4;
+             let runtime = std::sync::Arc::new(TokioHostRuntime::with_pool(crate::renderer_worker_pool()));
+             let scope = runtime.block_on(runtime.open_scope(ScopeOwner::Service("directory_client"), None));
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:1686:
+             plugin_id: &'a str,
+             topic_contribution: &'a semio_framework::TopicContribution,
+         }
+-        let entries: Vec<ProgramContributionEntry<'_>> = plugins
+-            .iter()
+-            .flat_map(|program| program.manifest.topic_contributions.iter().map(|topic_contribution| ProgramContributionEntry { plugin_id: program.plugin_id.as_str(), topic_contribution }))
+-            .collect();
++        let entries: Vec<ProgramContributionEntry<'_>> =
++            plugins.iter().flat_map(|program| program.manifest.topic_contributions.iter().map(|topic_contribution| ProgramContributionEntry { plugin_id: program.plugin_id.as_str(), topic_contribution })).collect();
+         serde_json::to_string(&entries).unwrap_or_else(|_| "[]".into())
+     }
+ 
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:1993:
+     /// `🧭️PanelAnchorModel` above). The four edge-middle anchors are always empty — nothing assigns there yet.
+     pub fn panel_anchor_snapshot(&self, anchor: PanelAnchor) -> PanelAnchorSnapshot {
+         match anchor {
+-            PanelAnchor::TopLeft => PanelAnchorSnapshot {
+-                visible: self.left_panel_open && self.active_left_kind == LeftPanelKind::Workbench,
+-                size: self.left_panel_width,
+-                active_tab: (self.active_left_kind == LeftPanelKind::Workbench).then(|| "workbench".to_string()),
+-            },
++            PanelAnchor::TopLeft => {
++                PanelAnchorSnapshot { visible: self.left_panel_open && self.active_left_kind == LeftPanelKind::Workbench, size: self.left_panel_width, active_tab: (self.active_left_kind == LeftPanelKind::Workbench).then(|| "workbench".to_string()) }
++            }
+             PanelAnchor::BottomLeft => {
+                 PanelAnchorSnapshot { visible: self.left_panel_open && self.active_left_kind == LeftPanelKind::Display, size: self.left_panel_width, active_tab: (self.active_left_kind == LeftPanelKind::Display).then(|| "display".to_string()) }
+             }
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:2004:
+-            PanelAnchor::TopRight => PanelAnchorSnapshot {
+-                visible: self.right_panel_open && self.active_right_kind == RightPanelKind::Details,
+-                size: self.right_panel_width,
+-                active_tab: (self.active_right_kind == RightPanelKind::Details).then(|| "details".to_string()),
+-            },
++            PanelAnchor::TopRight => {
++                PanelAnchorSnapshot { visible: self.right_panel_open && self.active_right_kind == RightPanelKind::Details, size: self.right_panel_width, active_tab: (self.active_right_kind == RightPanelKind::Details).then(|| "details".to_string()) }
++            }
+             PanelAnchor::BottomRight => PanelAnchorSnapshot {
+                 visible: self.right_panel_open && self.active_right_kind == RightPanelKind::Settings,
+                 size: self.right_panel_width,
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:2482:
+         let instance_id = channel.instance_id;
+         let plugin_id = channel.plugin_id.clone();
+         let connected_at_ms = channel.connected_at_ms;
+-        let presence_pack = self
+-            .plugins
+-            .iter()
+-            .find(|plugin| plugin.plugin_id == plugin_id)
+-            .and_then(|plugin| plugin.ephemeral_snapshot(instance_id).ok())
+-            .map(|(presence, _, _)| presence);
++        let presence_pack = self.plugins.iter().find(|plugin| plugin.plugin_id == plugin_id).and_then(|plugin| plugin.ephemeral_snapshot(instance_id).ok()).map(|(presence, _, _)| presence);
+         let label = self.session.as_ref().map(|session| session.app.id.clone());
+         let peer = PresencePeer {
+             actor: self.current_shell_actor(instance_id),
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:2855:
+     fn default_bindings_for_current_session(&self) -> (Vec<PersistenceBinding>, Option<String>) {
+         let space_id = self.open_space_id.clone();
+         let data_dir = self.identity_env.as_ref().and_then(|env| env.data_dir.as_deref());
+-        let surface = self
+-            .session
+-            .as_ref()
+-            .filter(|_| self.identity.is_some() && space_id.is_some())
+-            .map(|session| semio_framework::manifest::surface_app_id(&session.app.dialect, session.app.role));
++        let surface = self.session.as_ref().filter(|_| self.identity.is_some() && space_id.is_some()).map(|session| semio_framework::manifest::surface_app_id(&session.app.dialect, session.app.role));
+         let bindings = default_persistence_bindings(self.identity.as_ref(), space_id.as_deref(), data_dir, surface.as_deref());
+         (bindings, surface)
+     }
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:3016:
+         };
+         let program = self.plugins.iter().find(|p| p.manifest.apps.iter().any(|app| app.controller_id == action.controller_id)).or_else(|| self.plugins.iter().find(|p| p.plugin_id == session.plugin_id)).ok_or("action program missing")?;
+         let requested_window_id = action.args.as_ref().and_then(|args| args.get("windowId")).and_then(DslValue::as_str);
+-        let window_instance_id = requested_window_id
+-            .map(str::to_string)
+-            .or_else(|| session.view_state.window_id.clone())
+-            .or_else(|| self.active_window_id.clone())
+-            .unwrap_or_else(|| session.app.window_kinds.first().id.clone());
++        let window_instance_id = requested_window_id.map(str::to_string).or_else(|| session.view_state.window_id.clone()).or_else(|| self.active_window_id.clone()).unwrap_or_else(|| session.app.window_kinds.first().id.clone());
+         let window_kind_id = session
+             .view_state
+             .window_instances
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:3030:
+             .or_else(|| session.app.window_kinds.iter().find(|kind| kind.id == window_instance_id).map(|kind| kind.id.clone()))
+             .ok_or_else(|| format!("action window instance {window_instance_id} has no declared kind"))?;
+         let mode_id = session.view_state.active_mode_id.clone().unwrap_or_else(|| session.app.default_mode_id.clone());
+-        let arguments = action
+-            .args
+-            .as_ref()
+-            .map(dsl_value_as_json)
+-            .and_then(|value| value.as_object().cloned())
+-            .unwrap_or_default()
+-            .into_iter()
+-            .collect();
++        let arguments = action.args.as_ref().map(dsl_value_as_json).and_then(|value| value.as_object().cloned()).unwrap_or_default().into_iter().collect();
+         let invocation = semio_framework::manifest::ActionInvocation {
+-            address: semio_framework::manifest::ActionAddress {
+-                plugin_id: session.plugin_id.clone(),
+-                app_id: session.app.id.clone(),
+-                mode_id,
+-                window_kind_id,
+-                window_instance_id,
+-                action_id: action.action.clone(),
+-            },
++            address: semio_framework::manifest::ActionAddress { plugin_id: session.plugin_id.clone(), app_id: session.app.id.clone(), mode_id, window_kind_id, window_instance_id, action_id: action.action.clone() },
+             arguments,
+         };
+         let action_json = serde_json::to_string(&invocation).map_err(|err| err.to_string())?;
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:3130:
+             return Ok(());
+         };
+         let owner_plugin_id = match &invocation.address.owner {
+-            semio_framework::manifest::CommandOwnerAddress::Plugin { plugin_id }
+-            | semio_framework::manifest::CommandOwnerAddress::App { plugin_id, .. }
+-            | semio_framework::manifest::CommandOwnerAddress::Mode { plugin_id, .. } => plugin_id,
++            semio_framework::manifest::CommandOwnerAddress::Plugin { plugin_id } | semio_framework::manifest::CommandOwnerAddress::App { plugin_id, .. } | semio_framework::manifest::CommandOwnerAddress::Mode { plugin_id, .. } => plugin_id,
+             semio_framework::manifest::CommandOwnerAddress::Os => unreachable!(),
+         };
+         if owner_plugin_id != &session.plugin_id {
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:3932:
+                     let active = windows.iter().find(|wid| self.active_window_id.as_deref() == Some(wid.as_str())).or_else(|| windows.first()).cloned().unwrap_or_default();
+                     if !active.is_empty() {
+                         let tab_index = self.dock.tab_index(&path, &active).unwrap_or(0);
+-                        let ghost_label =
+-                            self.session.as_ref().and_then(|s| s.app.window_kinds.iter().find(|k| k.id == active).map(|k| k.label.resolve(self.active_terminology(), self.active_locale()).to_string())).unwrap_or_else(|| active.clone());
++                        let ghost_label = self.session.as_ref().and_then(|s| s.app.window_kinds.iter().find(|k| k.id == active).map(|k| k.label.resolve(self.active_terminology(), self.active_locale()).to_string())).unwrap_or_else(|| active.clone());
+                         self.begin_pending_dock_drag(DockDragPayload { kind: DockDragKind::Stack, window_id: active, source_path: path, tab_index, ghost_label }, x, y);
+                         return Ok(());
+                     }
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:5340:
+             }
+         }
+         let idle = input.focused_id.is_none() && self.overlay_state == OverlayState::None && self.sync_card_kind.is_none() && self.dock_drag.is_none();
+-        let fullscreen_chord = matches!(action, ui_wgpu::wgpu::KeyAction::Function(11))
+-            || matches!(&action, ui_wgpu::wgpu::KeyAction::Char(key) if key.eq_ignore_ascii_case("f") && modifiers.ctrl && modifiers.meta);
++        let fullscreen_chord = matches!(action, ui_wgpu::wgpu::KeyAction::Function(11)) || matches!(&action, ui_wgpu::wgpu::KeyAction::Char(key) if key.eq_ignore_ascii_case("f") && modifiers.ctrl && modifiers.meta);
+         if idle && fullscreen_chord {
+             self.dispatch_command(semio_framework::manifest::CommandInvocation {
+                 address: semio_framework::manifest::CommandAddress { owner: semio_framework::manifest::CommandOwnerAddress::Os, command_id: "os.toggleFullscreen".into() },
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:5352:
+         }
+         if idle && !is_reserved_shell_chord(&action, modifiers) {
+             let platform = command_host_platform();
+-            let command = self.resolved_commands().into_iter().rev().find(|entry| {
+-                entry.definition.in_palette
+-                    && entry.definition.keybindings.iter().any(|binding| binding.platform.is_none_or(|declared| declared == platform) && key_event_matches_chord(&action, modifiers, &binding.chord))
+-            });
++            let command = self
++                .resolved_commands()
++                .into_iter()
++                .rev()
++                .find(|entry| entry.definition.in_palette && entry.definition.keybindings.iter().any(|binding| binding.platform.is_none_or(|declared| declared == platform) && key_event_matches_chord(&action, modifiers, &binding.chord)));
+             if let Some(entry) = command {
+                 if entry.definition.args.is_empty() {
+                     self.dispatch_command(semio_framework::manifest::CommandInvocation { address: entry.address, arguments: BTreeMap::new() }).await?;
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:5953:
+ /// through `framework.checkin`'s `open` action rather than dispatching a fixed-message checkpoint
+ /// straight away.
+ #[cfg(not(target_arch = "wasm32"))]
+-fn render_sync_status_and_checkin(draw: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, status: Option<&ArtifactSyncStatus>, session: Option<&ActiveSession>, uncommitted_count: u32, mut x: f32, btn_y: f32, btn_h: f32) -> f32 {
++fn render_sync_status_and_checkin(
++    draw: &mut DrawList,
++    atlas: &mut FontAtlas,
++    icons: &IconAtlas,
++    input: &mut InputState<ActionDescriptor>,
++    theme: &Theme,
++    status: Option<&ArtifactSyncStatus>,
++    session: Option<&ActiveSession>,
++    uncommitted_count: u32,
++    mut x: f32,
++    btn_y: f32,
++    btn_h: f32,
++) -> f32 {
+     let pill_label = ShellState::sync_pill_text(status);
+     let pill = ChromeGroupItem { control_id: "s-sync-status", icon_id: None, label: Some(pill_label.as_str()), active: false, disabled: false, kind: HitKind::Button };
+     let pill_w = measure_chrome_group_item(atlas, theme, &pill);
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:6166:
+ }
+ 
+ /// 🪟️ Resolves an action only from its addressed window kind owner.
+-pub(crate) fn window_action_definition<'a>(
+-    app: &'a AppDefinition,
+-    window_kind_id: &str,
+-    action_id: &str,
+-) -> Option<&'a semio_framework::ActionDefinition> {
++pub(crate) fn window_action_definition<'a>(app: &'a AppDefinition, window_kind_id: &str, action_id: &str) -> Option<&'a semio_framework::ActionDefinition> {
+     app.window_kinds.iter().find(|kind| kind.id == window_kind_id)?.actions.iter().find(|action| action.id == action_id)
+ }
+ 
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:6281:
+     }
+     #[cfg(target_arch = "wasm32")]
+     {
+-        let platform = web_sys::window()
+-            .and_then(|window| js_sys::Reflect::get(window.as_ref(), &"navigator".into()).ok())
+-            .and_then(|navigator| js_sys::Reflect::get(&navigator, &"platform".into()).ok())
+-            .and_then(|value| value.as_string())
+-            .unwrap_or_default();
++        let platform =
++            web_sys::window().and_then(|window| js_sys::Reflect::get(window.as_ref(), &"navigator".into()).ok()).and_then(|navigator| js_sys::Reflect::get(&navigator, &"platform".into()).ok()).and_then(|value| value.as_string()).unwrap_or_default();
+         if platform.to_ascii_lowercase().contains("mac") {
+             semio_framework::manifest::Platform::MacOs
+         } else if platform.to_ascii_lowercase().contains("win") {
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:6565:
+     /// `UiTheme` list, no desktop/tablet layout flag) — inventing that storage is out of this region's
+     /// scope (`shell::ShellTypes` owns `ShellState`'s fields and is off-limits this wave).
+     pub(crate) fn build_os_commands(&self) -> Vec<semio_framework::CommandDefinition> {
+-        use semio_framework::{ActionArgDef, ActionArgOption, ActionKind, CommandDefinition, PlatformKeybinding};
+         use semio_framework::manifest::Platform;
+-        let terminology_options: Vec<ActionArgOption> =
+-            self.active_terminologies().into_iter().map(|id| ActionArgOption { label: if id == "native" { LocalizedLabel::data("Native") } else { LocalizedLabel::data(id.clone()) }, value: id }).collect();
++        use semio_framework::{ActionArgDef, ActionArgOption, ActionKind, CommandDefinition, PlatformKeybinding};
++        let terminology_options: Vec<ActionArgOption> = self.active_terminologies().into_iter().map(|id| ActionArgOption { label: if id == "native" { LocalizedLabel::data("Native") } else { LocalizedLabel::data(id.clone()) }, value: id }).collect();
+         vec![
+             CommandDefinition::new_catalog("os.toggleFullscreen", LocalizedLabel::native("Toggle Full Screen", "Vollbild umschalten"), "window", ActionKind::Shell)
+                 .with_keybinding(PlatformKeybinding::for_platform("f11", Platform::Windows))
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:6596:
+                 vec![ActionArgOption { value: "en".into(), label: LocalizedLabel::data("English") }, ActionArgOption { value: "de".into(), label: LocalizedLabel::data("Deutsch") }],
+             )
+             .required()]),
+-            CommandDefinition::new_catalog("os.setTerminology", LocalizedLabel::data("Set Terminology"), "language", ActionKind::Shell)
+-                .with_args([ActionArgDef::select("value", LocalizedLabel::data("Terminology"), terminology_options).required()]),
++            CommandDefinition::new_catalog("os.setTerminology", LocalizedLabel::data("Set Terminology"), "language", ActionKind::Shell).with_args([ActionArgDef::select("value", LocalizedLabel::data("Terminology"), terminology_options).required()]),
+             CommandDefinition::new_catalog("os.setThemeId", LocalizedLabel::data("Set Theme"), "appearance", ActionKind::Shell).with_args([ActionArgDef::select(
+                 "value",
+                 LocalizedLabel::data("Theme"),
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:6661:
+                 if let semio_framework::ActionArgControl::Select { options } = &arg.control() {
+                     for option in options {
+                         let is_os = matches!(address.owner, semio_framework::manifest::CommandOwnerAddress::Os);
+-                        let invocation = semio_framework::manifest::CommandInvocation {
+-                            address: address.clone(),
+-                            arguments: BTreeMap::from([(arg.id.clone(), Value::String(option.value.clone()))]),
+-                        };
++                        let invocation = semio_framework::manifest::CommandInvocation { address: address.clone(), arguments: BTreeMap::from([(arg.id.clone(), Value::String(option.value.clone()))]) };
+                         items.push(SearchPaletteItem {
+                             id: format!("command.{}.{}", command_address_stable_key(&address), option.value),
+                             label: format!("{}: {}", definition.label.resolve(self.active_terminology(), self.active_locale()), option.label.resolve(self.active_terminology(), self.active_locale())),
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:6671:
+                             group: group.clone(),
+                             dispatch_action: None,
+-                            action: Some(if is_os {
+-                                format!("os-command:{}:{}", definition.id, option.value)
+-                            } else {
+-                                format!("command:{}", serde_json::to_string(&invocation).expect("command invocation serializes"))
+-                            }),
++                            action: Some(if is_os { format!("os-command:{}:{}", definition.id, option.value) } else { format!("command:{}", serde_json::to_string(&invocation).expect("command invocation serializes")) }),
+                             category: Some(category.clone()),
+                         });
+                     }
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:6730:
+         match command_id {
+             "os.resetThemeId" => shell_chrome_string("settings.theme.reset", self.locale_id == "de").to_string(),
+             "os.deleteThemeId" => shell_chrome_string("settings.theme.delete", self.locale_id == "de").to_string(),
+-            _ => {
+-                self.build_os_commands().into_iter().find(|definition| definition.id == command_id).map(|definition| definition.label.resolve(self.active_terminology(), self.active_locale()).to_string()).unwrap_or_else(|| command_id.to_string())
+-            }
++            _ => self.build_os_commands().into_iter().find(|definition| definition.id == command_id).map(|definition| definition.label.resolve(self.active_terminology(), self.active_locale()).to_string()).unwrap_or_else(|| command_id.to_string()),
+         }
+     }
+ 
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:6952:
+ /// 🎛️ Merges os-built-in, Plugin-scope, App-scope, and active-Mode-scope commands into one list — the
+ /// wgpu mirror of `os-shell.tsx`'s `resolveCommands`. A `Mode`-scope command only resolves when
+ /// `active_mode_id`'s `ModeDefinition.commands` references it, exactly like the React source.
+-pub(crate) fn resolve_commands(
+-    os_commands: Vec<semio_framework::CommandDefinition>,
+-    plugin_manifest: Option<&semio_framework::PluginManifest>,
+-    plugin_id: &str,
+-    app: &AppDefinition,
+-    active_mode_id: &str,
+-) -> Vec<ResolvedCommand> {
++pub(crate) fn resolve_commands(os_commands: Vec<semio_framework::CommandDefinition>, plugin_manifest: Option<&semio_framework::PluginManifest>, plugin_id: &str, app: &AppDefinition, active_mode_id: &str) -> Vec<ResolvedCommand> {
+     let mut resolved: Vec<ResolvedCommand> = os_commands.into_iter().map(|definition| ResolvedCommand::new(definition, semio_framework::manifest::CommandOwnerAddress::Os)).collect();
+     if let Some(manifest) = plugin_manifest {
+-        resolved.extend(manifest.commands.iter().cloned().map(|definition| {
+-            ResolvedCommand::new(definition, semio_framework::manifest::CommandOwnerAddress::Plugin { plugin_id: plugin_id.to_string() })
+-        }));
++        resolved.extend(manifest.commands.iter().cloned().map(|definition| ResolvedCommand::new(definition, semio_framework::manifest::CommandOwnerAddress::Plugin { plugin_id: plugin_id.to_string() })));
+     }
+-    resolved.extend(app.commands.iter().cloned().map(|definition| {
+-        ResolvedCommand::new(
+-            definition,
+-            semio_framework::manifest::CommandOwnerAddress::App { plugin_id: plugin_id.to_string(), app_id: app.id.clone() },
+-        )
+-    }));
++    resolved.extend(app.commands.iter().cloned().map(|definition| ResolvedCommand::new(definition, semio_framework::manifest::CommandOwnerAddress::App { plugin_id: plugin_id.to_string(), app_id: app.id.clone() })));
+     if let Some(mode) = app.modes.iter().find(|mode| mode.id == active_mode_id) {
+-        resolved.extend(mode.commands.iter().cloned().map(|definition| {
+-            ResolvedCommand::new(
+-                definition,
+-                semio_framework::manifest::CommandOwnerAddress::Mode {
+-                    plugin_id: plugin_id.to_string(),
+-                    app_id: app.id.clone(),
+-                    mode_id: mode.id.clone(),
+-                },
+-            )
+-        }));
++        resolved.extend(mode.commands.iter().cloned().map(|definition| ResolvedCommand::new(definition, semio_framework::manifest::CommandOwnerAddress::Mode { plugin_id: plugin_id.to_string(), app_id: app.id.clone(), mode_id: mode.id.clone() })));
+     }
+     resolved
+ }
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:7060:
+ #[cfg(test)]
+ mod command_registry_tests {
+     use super::*;
+-    use semio_framework::{ActionArgControl, ActionKind, AppDefinition, AppRole, ArtifactDialect, CommandDefinition, CommandOwnerAddress, ModeDefinition, Modes, PanelGroup, PanelTabDefinition, PanelTabKind, PluginManifest, WindowKindDefinition, WindowKinds};
++    use semio_framework::{
++        ActionArgControl, ActionKind, AppDefinition, AppRole, ArtifactDialect, CommandDefinition, CommandOwnerAddress, ModeDefinition, Modes, PanelGroup, PanelTabDefinition, PanelTabKind, PluginManifest, WindowKindDefinition, WindowKinds,
++    };
+ 
+     fn test_app(commands: Vec<CommandDefinition>, mode_commands: Vec<CommandDefinition>) -> AppDefinition {
+         AppDefinition {
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:7159:
+             commands: vec![CommandDefinition::new_catalog("doThing", LocalizedLabel::data("Do Thing"), "plugin", ActionKind::Shell)],
+             artifact_kinds: vec![],
+             dependencies: vec![],
+-            contributions: vec![] };
++            contributions: vec![],
++        };
+         let resolved = resolve_commands(os_commands, Some(&plugin_manifest), "plugin", &app, "default");
+         let sources: Vec<(&str, CommandOwnerAddress)> = resolved.iter().map(|entry| (entry.definition.id.as_str(), entry.address.owner.clone())).collect();
+-        assert_eq!(sources, vec![
+-            ("os.setLocale", CommandOwnerAddress::Os),
+-            ("doThing", CommandOwnerAddress::Plugin { plugin_id: "plugin".into() }),
+-            ("export", CommandOwnerAddress::App { plugin_id: "plugin".into(), app_id: "test-app".into() }),
+-            ("focus", CommandOwnerAddress::Mode { plugin_id: "plugin".into(), app_id: "test-app".into(), mode_id: "default".into() }),
+-        ]);
++        assert_eq!(
++            sources,
++            vec![
++                ("os.setLocale", CommandOwnerAddress::Os),
++                ("doThing", CommandOwnerAddress::Plugin { plugin_id: "plugin".into() }),
++                ("export", CommandOwnerAddress::App { plugin_id: "plugin".into(), app_id: "test-app".into() }),
++                ("focus", CommandOwnerAddress::Mode { plugin_id: "plugin".into(), app_id: "test-app".into(), mode_id: "default".into() }),
++            ]
++        );
+     }
+ 
+     #[test]
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:7174:
+     fn identical_local_command_ids_have_collision_free_owner_keys() {
+         let local_id = "refresh";
+-        let app = test_app(
+-            vec![CommandDefinition::new_catalog(local_id, LocalizedLabel::data("Refresh App"), "app", ActionKind::View)],
+-            vec![CommandDefinition::new_catalog(local_id, LocalizedLabel::data("Refresh Mode"), "mode", ActionKind::View)],
+-        );
++        let app = test_app(vec![CommandDefinition::new_catalog(local_id, LocalizedLabel::data("Refresh App"), "app", ActionKind::View)], vec![CommandDefinition::new_catalog(local_id, LocalizedLabel::data("Refresh Mode"), "mode", ActionKind::View)]);
+         let plugin_manifest = PluginManifest {
+             plugin_id: "plugin".into(),
+             label: "Plugin".into(),
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:7190:
+             dependencies: vec![],
+             contributions: vec![],
+         };
+-        let resolved = resolve_commands(
+-            vec![CommandDefinition::new_catalog(local_id, LocalizedLabel::data("Refresh Shell"), "general", ActionKind::Shell)],
+-            Some(&plugin_manifest),
+-            "plugin",
+-            &app,
+-            "default",
+-        );
++        let resolved = resolve_commands(vec![CommandDefinition::new_catalog(local_id, LocalizedLabel::data("Refresh Shell"), "general", ActionKind::Shell)], Some(&plugin_manifest), "plugin", &app, "default");
+         let keys: Vec<String> = resolved.iter().map(|entry| command_address_stable_key(&entry.address)).collect();
+         assert_eq!(keys, vec!["os:refresh", "plugin:plugin:refresh", "app:plugin:test-app:refresh", "mode:plugin:test-app:default:refresh"]);
+     }
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:8634:
+             let last_sample_ms = runtime.recorder_last_camera_wall_ms.get(&window_id).copied().unwrap_or(f64::NEG_INFINITY);
+             let changed = runtime.recorder_last_camera_pose.get(&window_id).map(|prev| !tutorial_camera_pose_close(prev, &pose, CAMERA_MOVE_EPSILON)).unwrap_or(true);
+             if changed && now_wall_ms - last_sample_ms >= CAMERA_SAMPLE_MIN_INTERVAL_MS {
+-                runtime.definition.tracks.camera.push(semio_framework::TutorialCameraKeyframe {
+-                    at: runtime.playhead_ms.max(0.0) as u64,
+-                    window_id: window_id.clone(),
+-                    camera: pose.clone(),
+-                    easing: semio_framework::TutorialEasing::EaseInOut,
+-                });
++                runtime.definition.tracks.camera.push(semio_framework::TutorialCameraKeyframe { at: runtime.playhead_ms.max(0.0) as u64, window_id: window_id.clone(), camera: pose.clone(), easing: semio_framework::TutorialEasing::EaseInOut });
+                 runtime.recorder_last_camera_wall_ms.insert(window_id.clone(), now_wall_ms);
+                 runtime.recorder_last_camera_pose.insert(window_id, pose);
+             }
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:9000:
+                     body_key: Some(String::new()),
+                     children: Vec::new(),
+                 },
+-                PanelTabDefinition {
+-                    kind: semio_framework::PanelTabKind::DisplayLayout,
+-                    label: LocalizedLabel::data(shell_chrome_string("display.tab.layout", is_de)),
+-                    group: PanelGroup::Display,
+-                    body_key: Some(String::new()),
+-                    children: Vec::new(),
+-                },
++                PanelTabDefinition { kind: semio_framework::PanelTabKind::DisplayLayout, label: LocalizedLabel::data(shell_chrome_string("display.tab.layout", is_de)), group: PanelGroup::Display, body_key: Some(String::new()), children: Vec::new() },
+             ],
+             LeftPanelKind::Workbench => {
+                 let mut tabs: Vec<PanelTabDefinition> = session.app.panel_tabs.iter().filter(|tab| group_side(tab.group) == "left").cloned().collect();
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:9716:
+             let input_y = card_y + 36.0;
+             let input_h = theme.control_height;
+             overlay.push_solid([card_x + theme.padding_standard, input_y, card_w - theme.padding_standard * 2.0, input_h], theme.input_bg);
+-            chrome_text(
+-                overlay,
+-                atlas,
+-                input,
+-                theme,
+-                if draft.is_empty() { "check-in" } else { draft.as_str() },
+-                card_x + theme.padding_standard + 8.0,
+-                input_y + (input_h + theme.font_size_small) * 0.5 - 1.0,
+-                theme.font_size_small,
+-                theme.text,
+-            );
++            chrome_text(overlay, atlas, input, theme, if draft.is_empty() { "check-in" } else { draft.as_str() }, card_x + theme.padding_standard + 8.0, input_y + (input_h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, theme.text);
+             let commit_rect = Rect::new(card_x + theme.padding_standard, card_y + card_h - theme.control_height - theme.padding_standard, 72.0, theme.control_height);
+             overlay.push_solid([commit_rect.x, commit_rect.y, commit_rect.w, commit_rect.h], theme.accent);
+             chrome_text(overlay, atlas, input, theme, "Commit", commit_rect.x + 12.0, commit_rect.y + (commit_rect.h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, theme.active_foreground);
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:9741:
+             let cancel_rect = Rect::new(commit_rect.x + commit_rect.w + theme.gap_standard, commit_rect.y, 72.0, theme.control_height);
+             overlay.push_solid([cancel_rect.x, cancel_rect.y, cancel_rect.w, cancel_rect.h], theme.button);
+             chrome_text(overlay, atlas, input, theme, "Cancel", cancel_rect.x + 12.0, cancel_rect.y + (cancel_rect.h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, theme.text);
+-            input.register_hit(HitTarget { rect: cancel_rect, event: Some(ActionDescriptor { controller_id: "framework.checkin".into(), action: "cancel".into(), args: None }), control_id: Some("s-checkin-cancel".into()), kind: HitKind::Button, drag_axis: None, drag_data: None });
++            input.register_hit(HitTarget {
++                rect: cancel_rect,
++                event: Some(ActionDescriptor { controller_id: "framework.checkin".into(), action: "cancel".into(), args: None }),
++                control_id: Some("s-checkin-cancel".into()),
++                kind: HitKind::Button,
++                drag_axis: None,
++                drag_data: None,
++            });
+         }
+         if let Some(menu) = &self.context_menu {
+             self.render_context_menu(overlay, atlas, icons, input, theme, menu, width, height);
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:9783:
+         let content_w = text_w + padding * 2.0;
+         let content_h = text_h + padding * 2.0;
+         let scratch_tree = ui_wgpu::wgpu::UiTree::new();
+-        let (x, y) = ui_wgpu::wgpu::resolve_overlay_placement(&scratch_tree, ui_wgpu::wgpu::OverlayAnchor::Point { x: hover.anchor_x, y: hover.anchor_y }, (content_w, content_h), (width, height), ui_wgpu::wgpu::OverlayKind::Tooltip.default_placement());
++        let (x, y) =
++            ui_wgpu::wgpu::resolve_overlay_placement(&scratch_tree, ui_wgpu::wgpu::OverlayAnchor::Point { x: hover.anchor_x, y: hover.anchor_y }, (content_w, content_h), (width, height), ui_wgpu::wgpu::OverlayKind::Tooltip.default_placement());
+         overlay.push_glass([x, y, content_w, content_h], theme.border_radius, theme.glass(Level::Menu));
+         chrome_text(overlay, atlas, input, theme, &text, x + padding, y + (content_h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, theme.text);
+     }
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:9870:
+                 self.session.as_ref().map(|session| session.app.window_kinds.iter().filter(|kind| semio_framework::element_id_segment(&kind.id) == segment).map(|kind| kind.id.clone()).collect()).unwrap_or_default();
+             let matches_window = |window_id: &str| {
+                 semio_framework::element_id_segment(window_id) == segment
+-                    || kind_segments
+-                        .iter()
+-                        .any(|kind_id| window_id == kind_id || window_id.starts_with(&format!("{kind_id}-")) || semio_framework::element_id_segment(window_id).starts_with(&semio_framework::element_id_segment(kind_id)))
++                    || kind_segments.iter().any(|kind_id| window_id == kind_id || window_id.starts_with(&format!("{kind_id}-")) || semio_framework::element_id_segment(window_id).starts_with(&semio_framework::element_id_segment(kind_id)))
+             };
+             let silhouette_rects: Vec<Rect> = self.window_silhouettes.iter().filter(|(window_id, _)| matches_window(window_id)).map(|(_, silhouette)| silhouette.bounds).collect();
+             if !silhouette_rects.is_empty() {
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:9895:
+             .iter()
+             .filter(|(window_id, _)| {
+                 semio_framework::element_id_segment(window_id) == segment
+-                    || kind_segments
+-                        .iter()
+-                        .any(|kind_id| *window_id == kind_id || window_id.starts_with(&format!("{kind_id}-")) || semio_framework::element_id_segment(window_id).starts_with(&semio_framework::element_id_segment(kind_id)))
++                    || kind_segments.iter().any(|kind_id| *window_id == kind_id || window_id.starts_with(&format!("{kind_id}-")) || semio_framework::element_id_segment(window_id).starts_with(&semio_framework::element_id_segment(kind_id)))
+             })
+             .map(|(_, silhouette)| silhouette.clone())
+             .collect()
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:11122:
+         }
+         overlay.pop_scissor();
+     }
+-
+ }
+ 
+ // #region 💾️🎨️🌐️ UiPrefsThemesI18n
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:11378:
+ fn load_chrome_prefs() -> ChromePrefsState {
+     let ui_layout = if prefs_get(UI_CHROME_LAYOUT_STORAGE_KEY).as_deref() == Some("tablet") { "tablet".to_string() } else { "desktop".to_string() };
+     let theme_id = prefs_get(UI_CHROME_THEME_ID_STORAGE_KEY).unwrap_or_else(|| "semio".to_string());
+-    let custom_themes =
+-        prefs_get(UI_CUSTOM_THEMES_STORAGE_KEY).and_then(|raw| serde_json::from_str::<HashMap<String, Value>>(&raw).ok()).map(|map| map.into_iter().map(|(id, value)| (id, value.to_string())).collect()).unwrap_or_default();
++    let custom_themes = prefs_get(UI_CUSTOM_THEMES_STORAGE_KEY).and_then(|raw| serde_json::from_str::<HashMap<String, Value>>(&raw).ok()).map(|map| map.into_iter().map(|(id, value)| (id, value.to_string())).collect()).unwrap_or_default();
+     let worker_count = prefs_get(UI_COMPUTE_WORKER_COUNT_STORAGE_KEY).and_then(|raw| raw.parse::<u32>().ok()).filter(|count| *count >= 1).unwrap_or_else(default_compute_worker_count);
+     ChromePrefsState {
+         ui_layout,
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:11804:
+         let path = dir.join("ui-prefs.json");
+         let _ = std::fs::remove_file(&path);
+         let mut store = FilePrefsStore { path: path.clone(), cache: HashMap::new() };
+-        store.set(OS_SHELL_CONFIG_STORAGE_KEY, &serde_json::json!({
+-            "version": 1,
+-            "preferences": {},
+-            "namedLayouts": { "draw": [{ "id": "wide" }] },
+-            "dockLayouts": { "apps": {} },
+-            "dockUi": { "apps": {} },
+-            "windowPanes": { "apps": {} }
+-        }).to_string());
++        store.set(
++            OS_SHELL_CONFIG_STORAGE_KEY,
++            &serde_json::json!({
++                "version": 1,
++                "preferences": {},
++                "namedLayouts": { "draw": [{ "id": "wide" }] },
++                "dockLayouts": { "apps": {} },
++                "dockUi": { "apps": {} },
++                "windowPanes": { "apps": {} }
++            })
++            .to_string(),
++        );
+         assert_eq!(prefs_get_from(&store, UI_CHROME_APPEARANCE_STORAGE_KEY), None);
+         prefs_set_in(&mut store, UI_CHROME_APPEARANCE_STORAGE_KEY, "dark");
+         assert_eq!(prefs_get_from(&store, UI_CHROME_APPEARANCE_STORAGE_KEY), Some("dark".to_string()));
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:12401:
+     #[test]
+     fn utility_subtree_has_active_path_false_when_nothing_pressed() {
+         let action = ActionDescriptor { controller_id: "test".into(), action: "noOperation".into(), args: None };
+-        let nodes = vec![ui_wgpu::wgpu::utility_toggle("a", "circle".into(), "A", false, action.clone()), ui_wgpu::wgpu::utility_collection("group", "circle".into(), "Group", vec![ui_wgpu::wgpu::utility_toggle("b", "circle".into(), "B", false, action)])];
++        let nodes =
++            vec![ui_wgpu::wgpu::utility_toggle("a", "circle".into(), "A", false, action.clone()), ui_wgpu::wgpu::utility_collection("group", "circle".into(), "Group", vec![ui_wgpu::wgpu::utility_toggle("b", "circle".into(), "B", false, action)])];
+         assert!(!utility_subtree_has_active_path(&nodes));
+     }
+ 
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:12451:
+ 
+     #[test]
+     fn engagement_completion_suffix_picks_first_matching_possible_in_order() {
+-        let possibles = vec![ui_wgpu::wgpu::WindowEngagementPossible { id: "boat".into(), label: "Boat".into(), detail: None, action: None }, ui_wgpu::wgpu::WindowEngagementPossible { id: "box".into(), label: "Box".into(), detail: None, action: None }];
++        let possibles =
++            vec![ui_wgpu::wgpu::WindowEngagementPossible { id: "boat".into(), label: "Boat".into(), detail: None, action: None }, ui_wgpu::wgpu::WindowEngagementPossible { id: "box".into(), label: "Box".into(), detail: None, action: None }];
+         assert_eq!(engagement_completion_suffix("Bo", Some(&possibles)), "at");
+     }
+ 
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs:7:
+ //!   component and the `WindowLayoutNode` tree helpers in `#region ShellHelpers`.
+ //! - `interpreter`/widget rendering ~ React's `UiNode` component tree rendering.
+ 
+-extern crate semio_framework_os_kernel as store_sync;
+-extern crate semio_framework_os_kernel as dsl_core;
+-extern crate semio_framework_os_kernel as store;
+-extern crate semio_framework_os_kernel as dsl;
+-extern crate semio_framework_os_kernel as protocol;
+ extern crate framework_surface_node_graph as framework_surface_tiled_map;
+ extern crate infinite_canvas as infinite_world;
++extern crate semio_framework_os_kernel as dsl;
++extern crate semio_framework_os_kernel as dsl_core;
++extern crate semio_framework_os_kernel as protocol;
++extern crate semio_framework_os_kernel as store;
++extern crate semio_framework_os_kernel as store_sync;
+ #[macro_export]
+ macro_rules! action_args_json {
+     ($($tt:tt)*) => {
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs:249:
+                     continue;
+                 }
+                 let Some(parent) = entry.extends else { continue };
+-                let record = ExtensionRecord {
+-                    extension_id: entry.plugin_id.clone(),
+-                    package: PackageId(entry.plugin_id),
+-                    capability_requests: entry.capabilities.into_iter().map(|capability| CapabilityGrant { capability, scope: None }).collect(),
+-                };
++                let record = ExtensionRecord { extension_id: entry.plugin_id.clone(), package: PackageId(entry.plugin_id), capability_requests: entry.capabilities.into_iter().map(|capability| CapabilityGrant { capability, scope: None }).collect() };
+                 by_parent.entry(parent).or_default().push(record);
+             }
+             Self { by_parent }
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs:281:
+ 
+     //#region 🔖️Requests/Outcomes
+     pub(crate) enum KernelRequest {
+-        CreateApp { wasm_path: PathBuf, plugin_id: String, app_id: String },
+-        DestroyApp { instance: u32 },
++        CreateApp {
++            wasm_path: PathBuf,
++            plugin_id: String,
++            app_id: String,
++        },
++        DestroyApp {
++            instance: u32,
++        },
+         /// 📡️ `events` is normally one `Event::AppCommandEvent` (the `exchange` collapse,
+         /// `📓️design-abi.md` §2/§4) but callers that need `surface-visible` (rendering) or other raw
+         /// kernel events pass those directly — a single turn may carry several.
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs:289:
+-        Exchange { instance: u32, events: Vec<Event> },
++        Exchange {
++            instance: u32,
++            events: Vec<Event>,
++        },
+     }
+ 
+     pub(crate) struct ExchangeOutcome {
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs:476:
+             let instance_id = self.next_instance_id;
+             self.next_instance_id += 1;
+             let plugin_ordinal = self.plugin_ordinal(&plugin_id);
+-            let actor = pollster::block_on(self.runtime.activate(package_id.clone(), plugin_ordinal, ActorKind::PluginApp { plugin: package_id, app_id: app_id.clone(), instance_id }, Lane::Interactive, None, ActivationEvent::Manual, &compiled, &[] as &[BrokerCapabilityGrant], &TURN_BUDGET))?;
++            let actor = pollster::block_on(self.runtime.activate(
++                package_id.clone(),
++                plugin_ordinal,
++                ActorKind::PluginApp { plugin: package_id, app_id: app_id.clone(), instance_id },
++                Lane::Interactive,
++                None,
++                ActivationEvent::Manual,
++                &compiled,
++                &[] as &[BrokerCapabilityGrant],
++                &TURN_BUDGET,
++            ))?;
+             self.instances.insert(instance_id, actor);
+             // 🐣️ `InstanceOpen` is the first event a fresh instance must receive (`📓️design-abi.md`
+             // §2) — `actor`/`config`/`assets`/`capabilities` are placeholders until a real capability
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs:631:
+         fn run_turn(&mut self, actor: ActorId, instance: u32, events: Vec<Event>) -> Result<ExchangeOutcome, String> {
+             let mut envelopes = Vec::with_capacity(events.len().max(1));
+             if events.is_empty() {
+-                envelopes.push(Envelope { to: actor, from: Origin::Kernel, lane: Lane::Interactive, seq: next_seq(), deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::Event { bytes: serde_json::to_vec(&Event::Wake).map_err(|error| error.to_string())? } });
++                envelopes.push(Envelope {
++                    to: actor,
++                    from: Origin::Kernel,
++                    lane: Lane::Interactive,
++                    seq: next_seq(),
++                    deadline_ms: None,
++                    coalesce: None,
++                    cancel_of: None,
++                    payload: Payload::Event { bytes: serde_json::to_vec(&Event::Wake).map_err(|error| error.to_string())? },
++                });
+             } else {
+                 for event in &events {
+-                    envelopes.push(Envelope { to: actor, from: Origin::Kernel, lane: Lane::Interactive, seq: next_seq(), deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::Event { bytes: serde_json::to_vec(event).map_err(|error| error.to_string())? } });
++                    envelopes.push(Envelope {
++                        to: actor,
++                        from: Origin::Kernel,
++                        lane: Lane::Interactive,
++                        seq: next_seq(),
++                        deadline_ms: None,
++                        coalesce: None,
++                        cancel_of: None,
++                        payload: Payload::Event { bytes: serde_json::to_vec(event).map_err(|error| error.to_string())? },
++                    });
+                 }
+             }
+             for envelope in &envelopes {
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs:843:
+ /// `semio-wgpu-native --scale/--scale-wasm/--shards/--report`.
+ #[cfg(not(target_arch = "wasm32"))]
+ pub mod scale_bench {
+-    use semio_framework::kernel::{
+-        AppInstanceId, Budget as TurnBudget, CapabilityChange, CapabilityId, Effect, Event, PluginInstanceId, QuotaSchema, TurnResult,
+-    };
++    use semio_framework::kernel::{AppInstanceId, Budget as TurnBudget, CapabilityChange, CapabilityId, Effect, Event, PluginInstanceId, QuotaSchema, TurnResult};
+     use semio_framework_actor::{ActivationEvent as ActorActivationTrigger, ActorId, ActorKind, Envelope, Kernel, Lane, Origin, PackageHash, PackageId, Payload};
+     use semio_framework_plugin_host::shard::ShardOutcome;
+     use semio_framework_plugin_host::{CompiledHandle, GuestRuntime, GuestRuntimes, PackageRef, SharedEngineConfig, WasmtimeRuntime};
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs:912:
+     /// live", budget 3 is actor count, shard count and per-shard ceiling. A trap from an
+     /// `idle`/`cpu`/`ui`/`io`/`stateful` actor IS a real failure and still counts.
+     fn unexpected_faults(outcomes: &[ShardOutcome], actors: &[ActorId], records: &[&RegistryRecord]) -> Vec<String> {
+-        let by_design: std::collections::HashSet<u64> =
+-            actors.iter().zip(records.iter()).filter(|(_, record)| matches!(profile_of(record), "hang" | "crash")).map(|(actor, _)| actor.0).collect();
++        let by_design: std::collections::HashSet<u64> = actors.iter().zip(records.iter()).filter(|(_, record)| matches!(profile_of(record), "hang" | "crash")).map(|(actor, _)| actor.0).collect();
+         outcomes
+             .iter()
+             .filter_map(|outcome| match outcome {
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs:1310:
+             return (fail, skipped(5, "interactive p95 command->patch <= 16ms web / <= 8ms native, 40 cpu actors saturating background", "budget 4's full-scale activation failed before this could run"));
+         }
+         let outcomes = env.drain();
+-        let by_design: std::collections::HashSet<u64> =
+-            activated.iter().zip(records.iter()).filter(|(_, record)| matches!(profile_of(record), "hang" | "crash")).map(|((actor, _), _)| actor.0).collect();
++        let by_design: std::collections::HashSet<u64> = activated.iter().zip(records.iter()).filter(|(_, record)| matches!(profile_of(record), "hang" | "crash")).map(|((actor, _), _)| actor.0).collect();
+         let faults = outcomes.iter().filter(|o| matches!(o, ShardOutcome::Fault { actor, .. } if !by_design.contains(actor))).count();
+         let rss = process_rss_bytes();
+         let active = env.kernel().metrics().actors;
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs:1319:
+         let row4 = row(
+             4,
+             "memory <= K x 512MiB + 256MiB headroom (native RSS <= 1.5GiB)",
+-            if rss.is_none() { "skipped" } else if pass4 { "pass" } else { "fail" },
++            if rss.is_none() {
++                "skipped"
++            } else if pass4 {
++                "pass"
++            } else {
++                "fail"
++            },
+             json!({ "rssBytes": rss, "activatedCount": activated.len(), "activeActors": active, "faultCount": faults }),
+             json!({ "maxBytes": memory_budget_bytes }),
+             if rss.is_none() { "`ps -o rss=` did not return a value on this host" } else { "RSS sampled once via `ps -o rss= -p <pid>` immediately after all 2550 records were instantiated and given their InstanceOpen turn" },
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs:1330:
+         let interactive_actor = activated.iter().find(|(_, profile)| profile == "idle").map(|(actor, _)| *actor);
+         let row5 = match interactive_actor {
+             None => skipped(5, "interactive p95 command->patch <= 16ms web / <= 8ms native, 40 cpu actors saturating background", "no idle-profile record to use as the interactive target"),
+-            Some(_interactive_actor) if cpu_actors.len() < 40 => skipped(5, "interactive p95 command->patch <= 16ms web / <= 8ms native, 40 cpu actors saturating background", &format!("only {} cpu-profile actors in registry, need 40", cpu_actors.len())),
++            Some(_interactive_actor) if cpu_actors.len() < 40 => {
++                skipped(5, "interactive p95 command->patch <= 16ms web / <= 8ms native, 40 cpu actors saturating background", &format!("only {} cpu-profile actors in registry, need 40", cpu_actors.len()))
++            }
+             Some(interactive_actor) => {
+                 const ROUNDS: usize = 30;
+                 const NATIVE_BUDGET_MS: f64 = 8.0;
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs:1450:
+                 ShardOutcome::Fault { actor, message } if *actor == hang_actor.0 => Some(message.clone()),
+                 _ => None,
+             });
+-            let killed = message.as_deref().map(|m| { let lower = m.to_ascii_lowercase(); lower.contains("deadline") || lower.contains("fuel") || lower.contains("cannot enter") }).unwrap_or(false);
++            let killed = message
++                .as_deref()
++                .map(|m| {
++                    let lower = m.to_ascii_lowercase();
++                    lower.contains("deadline") || lower.contains("fuel") || lower.contains("cannot enter")
++                })
++                .unwrap_or(false);
+             (killed, message)
+         };
+         env.unregister(hang_actor);
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️kernel_seam.rs:181:
+     use ui_contract::{ActionId, SurfaceId, Trigger, UiNodeId, UiRevision};
+ 
+     fn fake_intent(surface: &str) -> UiIntent {
+-        UiIntent {
+-            surface: SurfaceId(surface.to_string()),
+-            revision: UiRevision(1),
+-            node: UiNodeId(1),
+-            node_key: "root".to_string(),
+-            trigger: Trigger::Activate,
+-            action: ActionId::default(),
+-            args: None,
+-            input: None,
+-        }
++        UiIntent { surface: SurfaceId(surface.to_string()), revision: UiRevision(1), node: UiNodeId(1), node_key: "root".to_string(), trigger: Trigger::Activate, action: ActionId::default(), args: None, input: None }
+     }
+ 
+     fn echo_exchange(intent: UiIntent) -> Pin<Box<dyn Future<Output = KernelOutcome>>> {
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️winit_app.rs:103:
+             // any call exceeding `semio_framework_trace::INTERACTIVE_STEP_CEILING_US` (8ms) is
+             // recorded as a `ContractViolation`, which is exactly the instrumentation Phase 3's exit
+             // gate reads, without changing what runs where.
+-            let _watchdog = semio_framework_trace::Watchdog::start(
+-                "os_renderer_frame",
+-                render_frame_operation_id(),
+-                semio_framework_trace::Generation(self.frame_generation),
+-                semio_framework_trace::InteractiveStage::UiPresent,
+-            );
++            let _watchdog = semio_framework_trace::Watchdog::start("os_renderer_frame", render_frame_operation_id(), semio_framework_trace::Generation(self.frame_generation), semio_framework_trace::InteractiveStage::UiPresent);
+             self.frame_generation = self.frame_generation.wrapping_add(1);
+             app.frame();
+             app.last_cursor.map(|(cursor, _)| cursor)
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️winit_app.rs:251:
+ /// return value is simply left unused at the one call site below, cheaper than editing
+ /// `boot_runtime`'s own signature for a single caller.
+ pub enum HostUserEvent {
+-    RuntimeReady { runtime: Rc<RefCell<AppRuntime>> },
++    RuntimeReady {
++        runtime: Rc<RefCell<AppRuntime>>,
++    },
+     /// 🔔️ Payload-free — arriving at all is the signal. Sent by [`ProxyWaker`] (native only) so a
+     /// `kernel_runtime::TASK_POOL` future completing on the kernel thread wakes this event loop out
+     /// of `WaitUntil`/`Wait`; `user_event` below does nothing but let `about_to_wait` run again,
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️winit_app.rs:103:
+             // any call exceeding `semio_framework_trace::INTERACTIVE_STEP_CEILING_US` (8ms) is
+             // recorded as a `ContractViolation`, which is exactly the instrumentation Phase 3's exit
+             // gate reads, without changing what runs where.
+-            let _watchdog = semio_framework_trace::Watchdog::start(
+-                "os_renderer_frame",
+-                render_frame_operation_id(),
+-                semio_framework_trace::Generation(self.frame_generation),
+-                semio_framework_trace::InteractiveStage::UiPresent,
+-            );
++            let _watchdog = semio_framework_trace::Watchdog::start("os_renderer_frame", render_frame_operation_id(), semio_framework_trace::Generation(self.frame_generation), semio_framework_trace::InteractiveStage::UiPresent);
+             self.frame_generation = self.frame_generation.wrapping_add(1);
+             app.frame();
+             app.last_cursor.map(|(cursor, _)| cursor)
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️winit_app.rs:251:
+ /// return value is simply left unused at the one call site below, cheaper than editing
+ /// `boot_runtime`'s own signature for a single caller.
+ pub enum HostUserEvent {
+-    RuntimeReady { runtime: Rc<RefCell<AppRuntime>> },
++    RuntimeReady {
++        runtime: Rc<RefCell<AppRuntime>>,
++    },
+     /// 🔔️ Payload-free — arriving at all is the signal. Sent by [`ProxyWaker`] (native only) so a
+     /// `kernel_runtime::TASK_POOL` future completing on the kernel thread wakes this event loop out
+     /// of `WaitUntil`/`Wait`; `user_event` below does nothing but let `about_to_wait` run again,

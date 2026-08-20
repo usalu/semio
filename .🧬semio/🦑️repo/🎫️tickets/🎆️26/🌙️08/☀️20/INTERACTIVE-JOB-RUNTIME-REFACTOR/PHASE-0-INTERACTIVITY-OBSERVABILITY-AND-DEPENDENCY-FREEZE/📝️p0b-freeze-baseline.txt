@@ -1,0 +1,6 @@
+=== bun ./📜️script.ts verify dependencies write-baseline ===
+[verify dependencies] wrote 🔒️dependencies.json: 238 third-party dependenc(y/ies) at commit 95b8688ee2f62f4056b6403c282bf0c76172c37c.
+
+=== bun ./📜️script.ts verify dependencies (check against the baseline just written) ===
+[verify dependencies] baseline: 238 third-party dependenc(y/ies) (commit 95b8688ee2f62f4056b6403c282bf0c76172c37c); current: 238.
+[verify dependencies] clean — no new third-party dependencies.

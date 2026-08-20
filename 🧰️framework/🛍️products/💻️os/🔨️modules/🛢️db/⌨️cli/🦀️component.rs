@@ -140,15 +140,14 @@ async fn usage(message: &str) -> i32 {
 
 //#region 🔖️AsyncBridge
 /// @emoji 🚀️ `db::storage::FsStorage::open_inline` under this binary's own service name — every
-/// `FsStorage` call site in this file goes through here. The runtime itself is
-/// `db_storage::InlineRuntime`, which lives beside the `FsStorage` that needs it rather than being
-/// re-implemented here: this binary is single-shot and strictly sequential (one subcommand, one
-/// process, exits), which is exactly what that runtime is for.
+/// `FsStorage` call site in this file goes through here. Opened with `pool: None` (every blocking
+/// body runs inline): this binary is single-shot and strictly sequential (one subcommand, one
+/// process, exits), so there is no second task to protect from blocking.
 // 🚫️async: E5 executor bridge — `db_cli` is a single-shot, strictly-sequential process (R4
 // clause 1: a binary entry point IS its own executor), so every `FsStorage` call in this file
 // stays plain sync and crosses the boundary here, once, via `db_actor::block_on`.
-fn open_fs_storage(root: &Path) -> Result<db::storage::FsStorage<db::storage::InlineRuntime>, db::db_ids::DbError> {
-    db::actor::block_on(db::storage::FsStorage::open_inline("db_cli", root))
+fn open_fs_storage(root: &Path) -> Result<db::storage::FsStorage, db::db_ids::DbError> {
+    db::actor::block_on(db::storage::FsStorage::open_inline(root))
 }
 //#endregion 🔖️AsyncBridge
 
@@ -445,7 +444,7 @@ async fn cmd_snapshot_inspect(rest: &[String]) -> i32 {
 //#region 🔖️Verify
 /// 🔬️ The shared per-document check `verify` runs: a full WAL replay (rejects a torn tail) plus,
 /// if a snapshot exists, a full-level `SnapshotManager::verify` of its latest generation.
-async fn verify_document(storage: &db::storage::FsStorage<db::storage::InlineRuntime>, document: &db::db_ids::ArtifactId) -> Result<String, db::DbError> {
+async fn verify_document(storage: &db::storage::FsStorage, document: &db::db_ids::ArtifactId) -> Result<String, db::DbError> {
     let records = db::actor::block_on(db::wal::replay_document(storage, document))?;
     let manager = db::snapshot::SnapshotManager::new(storage).await;
     match db::actor::block_on(manager.load_latest(document))? {

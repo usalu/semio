@@ -29,16 +29,10 @@ pub fn expand_async_test(attr: TokenStream, item: TokenStream) -> syn::Result<To
     }
     let input: ItemFn = syn::parse2(item)?;
     if input.sig.asyncness.is_none() {
-        return Err(syn::Error::new_spanned(
-            &input.sig.fn_token,
-            "#[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness",
-        ));
+        return Err(syn::Error::new_spanned(input.sig.fn_token, "#[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness"));
     }
     if !input.sig.generics.params.is_empty() {
-        return Err(syn::Error::new_spanned(
-            &input.sig.generics,
-            "#[async_test] does not support generic test functions — the compiler's test harness always calls a test fn with zero type arguments",
-        ));
+        return Err(syn::Error::new_spanned(&input.sig.generics, "#[async_test] does not support generic test functions — the compiler's test harness always calls a test fn with zero type arguments"));
     }
     if !input.sig.inputs.is_empty() {
         return Err(syn::Error::new_spanned(&input.sig.inputs, "#[async_test] functions must take no arguments, same as a plain #[test] fn"));

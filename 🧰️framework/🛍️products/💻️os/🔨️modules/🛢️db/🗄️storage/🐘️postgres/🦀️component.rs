@@ -153,14 +153,14 @@ fn map_create_error(err: sqlx::Error, what: impl FnOnce() -> String) -> DbError 
 /// trait boundary but `BIGINT` (`i64`) in Postgres — this is the one narrowing conversion point,
 /// erroring rather than silently wrapping on the (astronomically unlikely) values above
 /// `i64::MAX`.
-async fn to_i64(value: u64) -> Result<i64, DbError> {
+fn to_i64(value: u64) -> Result<i64, DbError> {
     i64::try_from(value).map_err(|_| DbError::InvalidArgument(format!("value {value} exceeds i64::MAX")))
 }
 
 /// @emoji ✂️ Validates a `WalStorage::read` range against the segment's actual current length
 /// (already fetched via `octet_length`, so this never touches the segment bytes themselves) and
 /// converts to the 1-indexed `(offset, len)` pair Postgres's `substring(bytea, int, int)` expects.
-async fn validate_read_range(current_len: u64, range: ByteRange) -> Result<(i64, i64), DbError> {
+fn validate_read_range(current_len: u64, range: ByteRange) -> Result<(i64, i64), DbError> {
     let end = range.offset.checked_add(range.len).ok_or_else(|| DbError::InvalidArgument("read range overflows u64".to_string()))?;
     if end > current_len {
         return Err(DbError::InvalidArgument(format!("read range {}..{end} out of bounds (len {current_len})", range.offset)));
@@ -170,7 +170,7 @@ async fn validate_read_range(current_len: u64, range: ByteRange) -> Result<(i64,
 
 /// @emoji ✂️ Validates a `WalStorage::truncate_tail` request against the segment's sealed flag and
 /// current length, matching `db_storage::{MemoryStorage, FsStorage}`'s identical checks.
-async fn validate_truncate(sealed: bool, current_len: u64, new_len: u64) -> Result<(), DbError> {
+fn validate_truncate(sealed: bool, current_len: u64, new_len: u64) -> Result<(), DbError> {
     if sealed {
         return Err(DbError::InvalidArgument("cannot truncate sealed wal segment".to_string()));
     }
@@ -429,7 +429,7 @@ struct ExistingLease {
 /// @emoji 🤝️ Pure decision for `LeaseStorage::acquire` — identical state machine to
 /// `db_storage::{MemoryStorage, FsStorage}::acquire`: re-acquire by the same still-live holder keeps
 /// the fence, a genuine hand-off (absent or expired) bumps it, a live foreign holder conflicts.
-async fn lease_acquire_decision(existing: Option<&ExistingLease>, holder: &str, now_ms: u64) -> Result<EpochFence, DbError> {
+fn lease_acquire_decision(existing: Option<&ExistingLease>, holder: &str, now_ms: u64) -> Result<EpochFence, DbError> {
     match existing {
         Some(info) if now_ms < info.expires_at_ms => {
             if info.holder != holder {
@@ -444,7 +444,7 @@ async fn lease_acquire_decision(existing: Option<&ExistingLease>, holder: &str, 
 
 /// @emoji ♻️ Pure decision for `LeaseStorage::renew` — errors precisely as documented on the trait:
 /// `NotFound` absent, `Unavailable` expired, `Unauthorized` wrong holder, `Fenced` wrong epoch.
-async fn lease_renew_check(existing: Option<&ExistingLease>, holder: &str, fence: EpochFence, now_ms: u64) -> Result<(), DbError> {
+fn lease_renew_check(existing: Option<&ExistingLease>, holder: &str, fence: EpochFence, now_ms: u64) -> Result<(), DbError> {
     let info = existing.ok_or_else(|| DbError::NotFound("lease not found".to_string()))?;
     if now_ms >= info.expires_at_ms {
         return Err(DbError::Unavailable("lease already expired".to_string()));
@@ -457,7 +457,7 @@ async fn lease_renew_check(existing: Option<&ExistingLease>, holder: &str, fence
 
 /// @emoji 🕊️ Pure decision for `LeaseStorage::release` — same holder/fence checks as `renew`, minus
 /// the expiry check (a holder may release its own already-expired-but-not-yet-reclaimed lease).
-async fn lease_release_check(existing: Option<&ExistingLease>, holder: &str, fence: EpochFence) -> Result<(), DbError> {
+fn lease_release_check(existing: Option<&ExistingLease>, holder: &str, fence: EpochFence) -> Result<(), DbError> {
     let info = existing.ok_or_else(|| DbError::NotFound("lease not found".to_string()))?;
     if info.holder != holder {
         return Err(DbError::Unauthorized(format!("lease is not held by {holder}")));
@@ -534,7 +534,7 @@ impl LeaseStorage for PostgresStorage {
 //#region 🔖️DbBackend
 /// @emoji 🎚️ `PostgresStorage`'s fixed capability set — extracted to a free fn so the unit tests
 /// below can assert on it without opening a real connection.
-async fn postgres_capabilities() -> StorageCapabilities {
+fn postgres_capabilities() -> StorageCapabilities {
     StorageCapabilities { durable: true, max_durability: DurabilityClass::Fsync, supports_fsync: true, supports_cas: true }
 }
 

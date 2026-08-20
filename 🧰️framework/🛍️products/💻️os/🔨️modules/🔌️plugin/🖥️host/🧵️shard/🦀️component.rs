@@ -1,33 +1,39 @@
-//! 🧵️ `ShardLoop` — `design-runtime.md` §2/§"ShardTransport": the loop a thread shard runs
-//! in-process. Owns a set of live [`super::GuestInstance`]s, pulls [`ShardFrame`]s off a
+//! 🧵️ `ShardLoop` — `design-runtime.md` §2/§"ShardTransport": the logic one shard runs, IN-PROCESS.
+//! Owns a set of live [`super::GuestInstance`]s, pulls [`ShardFrame`]s off a
 //! [`semio_framework_actor::ShardTransport`], groups their envelopes per actor, drives
 //! [`super::GuestRuntime::execute_turn`]/[`super::GuestRuntime::step_job`], and sends the resulting
 //! [`semio_framework::kernel::TurnResult`]/[`super::JobStep`] back over the SAME transport as bytes.
 //!
-//! Written so the identical type can later be driven over stdio by a helper process (packet P1,
-//! `ProcessTransport`) — the only thing that changes between "thread shard" and "process shard" is
-//! which [`ShardTransports`] variant `ShardLoop::new` receives; `pump`'s own body never branches on
-//! which one it got (only the closed-set enum's own delegation impl does — O1/R1's dyn replacement,
-//! packet host-dedyn). `ProcessTransport` itself is out of this packet's scope (`📌️important.md`'s
-//! sequencing: "`semio-shard` `[[bin]]` runs over stdio" is P1, not B1b) — this is the seam, not the
-//! process.
+//! MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (P1c, one-pool-worker-runtime): a `ShardLoop` no longer
+//! implies a dedicated OS thread — [`executor::ShardExecutor`] drives one behind a plain [`Mutex`],
+//! scheduled as jobs onto the shared, process-wide `semio_framework_async::WorkerPool` (see that
+//! module's own doc for the single-flight scheduling protocol). `pump`/`pump_primed`'s own contract
+//! is UNCHANGED by that move: "drain and execute everything currently buffered in one call" is
+//! exactly what one `WorkerPool` job burst wants, whether it used to be one iteration of a dedicated
+//! thread's park/pump loop or is now one pool-scheduled job. Written so the identical type can also
+//! be driven over stdio by a helper PROCESS (`ProcessTransport`) or a browser Worker — the only thing
+//! that changes across "in-process pool-scheduled", "child process", "web worker" is which
+//! [`ShardTransports`] variant `ShardLoop::new` receives; `pump`'s own body never branches on which
+//! one it got (only the closed-set enum's own delegation impl does — O1/R1's dyn replacement, packet
+//! host-dedyn).
 //!
 //! terra-shard-grants: the wire carries [`ShardFrame`], not raw [`Envelope`] bytes — the kernel's
 //! DRR-computed, throttle-scaled per-turn budget now travels WITH the envelopes it grants
 //! ([`ShardFrame::Grant`]) instead of `pump` re-deriving one from local constants.
 
-// 🏃️ terra-shard-grants: `ShardExecutor` — one `ShardLoop` per dedicated OS thread. Declared here
-// (not in `🖥️host/🦀️component.rs`, a file this packet only touches for narrow Part A fallout) —
-// `#[path]` on a submodule resolves relative to THIS file's own directory, so this reaches
-// `🧵️shard/🏃️executor.rs` without any edit to the crate-root module tree.
+// 🏃️ `ShardExecutor` — one `ShardLoop` per shard, scheduled onto the shared `WorkerPool` (P1c; no
+// dedicated OS thread since). Declared here (not in `🖥️host/🦀️component.rs`, a file this packet's
+// boundary excludes) — `#[path]` on a submodule resolves relative to THIS file's own directory, so
+// this reaches `🧵️shard/🏃️executor.rs` without any edit to the crate-root module tree.
 #[path = "🏃️executor.rs"]
 pub mod executor;
 
+use super::{GuestInstance, GuestRuntime, GuestRuntimes, JobBudget, JobStep, PluginHostError, TurnFault};
 #[cfg(test)]
 use super::{GuestInstanceState, MockGuestRuntime, PackageHash, PackageId, PackageRef};
-use super::{GuestInstance, GuestRuntime, GuestRuntimes, JobBudget, JobStep, PluginHostError, TurnFault};
 use semio_framework::kernel::{Budget, Effect, Event, JobPlacement, RequestOutcome, TurnResult};
 use semio_framework_actor::{ActorId, Envelope, Payload, ShardTransport};
+use semio_framework_trace::{Generation, InteractiveStage, OperationId, Watchdog};
 use std::collections::{BTreeSet, HashMap, VecDeque};
 use std::sync::Arc;
 #[cfg(test)]
@@ -171,20 +177,37 @@ pub async fn to_actor_turn_result(result: &TurnResult, wall_us: u64, memory_byte
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum ShardOutcome {
-    Turn { actor: u64, result: TurnResult },
-    Job { actor: u64, job: u64, step: JobStep },
-    Fault { actor: u64, message: String },
+    Turn {
+        actor: u64,
+        result: TurnResult,
+    },
+    Job {
+        actor: u64,
+        job: u64,
+        step: JobStep,
+    },
+    Fault {
+        actor: u64,
+        message: String,
+    },
     /// 📸️ `Payload::Suspend`'s outcome — `state` is [`super::GuestRuntime::checkpoint`]'s bytes
     /// (empty when `Suspend{checkpoint: false}` asked for no snapshot). A caller on the kernel side
     /// feeds `state` into `Kernel::suspend(actor, Some(state))` (K1's own gap this closes).
-    Checkpoint { actor: u64, state: Vec<u8> },
+    Checkpoint {
+        actor: u64,
+        state: Vec<u8>,
+    },
     /// ▶️ `Payload::Resume`'s success outcome, sent after [`super::GuestRuntime::restore`] (when the
     /// envelope carried checkpoint bytes) or immediately (when it did not — nothing to restore).
-    Resumed { actor: u64 },
+    Resumed {
+        actor: u64,
+    },
     /// 🛑️ `Payload::Cancel`'s outcome: every one of the actor's `running_jobs` was cancelled via
     /// [`super::GuestRuntime::cancel_job`] and its [`super::GuestInstance`] was unregistered
     /// (dropped) — see `ShardLoop::pump`'s dispatch arm for the semantics this variant confirms.
-    Cancelled { actor: u64 },
+    Cancelled {
+        actor: u64,
+    },
 }
 
 /// 🧵️ design-runtime.md §2. One `ShardLoop` per shard (an OS thread today, a `[[bin]]` process in
@@ -405,11 +428,17 @@ impl ShardLoop {
         for (actor_id, job) in to_step {
             // 🔀️ Same E0502 reason as the turn-execution loop above — computed before `get_mut`.
             let job_budget = job_budget_from_grant(self.granted_budget(actor_id).await);
+            let watchdog_stage = interactive_stage_for(self.actor_lane(actor_id).await);
             let Some(instance) = self.instances.get_mut(&actor_id) else {
                 self.send_outcome(&ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: actor {actor_id} is not registered on this shard") }).await?;
                 continue;
             };
-            let outcome = match self.runtime.step_job(instance, job, job_budget.await).await {
+            // 🐕️ P1c: same watchdog treatment as `Self::execute_turn_for` — see that call site's doc.
+            let job_outcome = {
+                let _watchdog = Watchdog::start("plugin-host.shard.step_job", OperationId(actor_id), Generation(job), watchdog_stage);
+                self.runtime.step_job(instance, job, job_budget.await).await
+            };
+            let outcome = match job_outcome {
                 Ok(step) => {
                     match &step {
                         JobStep::Running { .. } => {}
@@ -461,20 +490,34 @@ impl ShardLoop {
     /// can call the identical body.
     async fn execute_turn_for(&mut self, actor_id: u64, events_by_actor: &mut HashMap<u64, Vec<Event>>, driven: &mut usize) -> Result<(), PluginHostError> {
         let Some(events) = events_by_actor.remove(&actor_id) else { return Ok(()) };
-        // 🔀️ Computed BEFORE `get_mut` below — `self.granted_budget(actor_id)` needs `&self` (the
-        // whole struct), which conflicts with the `&mut self.instances` borrow `instance` holds for
-        // the rest of this call (E0502).
+        // 🔀️ Computed BEFORE `get_mut` below — `self.granted_budget(actor_id)`/`self.actor_lane(..)`
+        // need `&self` (the whole struct), which conflicts with the `&mut self.instances` borrow
+        // `instance` holds for the rest of this call (E0502).
         let turn_budget = turn_budget_from_grant(self.granted_budget(actor_id).await);
+        let watchdog_stage = interactive_stage_for(self.actor_lane(actor_id).await);
         let Some(instance) = self.instances.get_mut(&actor_id) else {
             self.send_outcome(&ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: actor {actor_id} is not registered on this shard") }).await?;
             return Ok(());
         };
         // 👶️ host-dedyn: `GuestRuntime::execute_turn` is plain AFIT now (double-future collapsed)
-        // — `.await`ed directly. `ShardLoop`'s thread root (`🏃️executor.rs`'s `ShardExecutor::
-        // spawn`, `👶️child/🦀️main.rs`'s `main`) is the `block_on` boundary that turns the plain OS
-        // thread into an executor; every impl `ShardLoop` is ever handed resolves on its first poll
+        // — `.await`ed directly. `ShardLoop` is driven by a `WorkerPool` job now (P1c) rather than a
+        // dedicated OS thread — that job's own `block_on` (`🏃️executor.rs`'s `ShardExecutor::run`) is
+        // the executor boundary; every impl `ShardLoop` is ever handed resolves on its first poll
         // (see `GuestRuntime`'s own doc comment), so this never actually parks.
-        let outcome = match self.runtime.execute_turn(instance, &events, turn_budget.await).await {
+        //
+        // 🐕️ P1c: `Watchdog` wraps ONLY the guest call itself (not the effect-admission bookkeeping
+        // below) — `semio_framework_trace::INTERACTIVE_STEP_CEILING_US` is 8ms; every lane's own
+        // `lane_defaults::budget_for` grants MORE than that to UserVisible (16ms)/Background
+        // (50ms)/Maintenance (200ms) turns BY DESIGN (the epoch-interruption ceiling, not a soft
+        // target), so those lanes are EXPECTED to record a violation on a turn that spends its full
+        // grant — see `📓️p1c-actor-shards.md`'s "turn paths exceeding 8ms" section. This packet only
+        // wires the recording; making a single guest call internally resumable within 8ms slices is
+        // Phase 2's job-protocol work, not this one's.
+        let turn_outcome = {
+            let _watchdog = Watchdog::start("plugin-host.shard.execute_turn", OperationId(actor_id), Generation(0), watchdog_stage);
+            self.runtime.execute_turn(instance, &events, turn_budget.await).await
+        };
+        let outcome = match turn_outcome {
             Ok(result) => {
                 // 🔀️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (J1, placement routing added K1): the
                 // generic `Effect::SpawnJob`/`Effect::CancelJob` admission this packet closes — see
@@ -658,6 +701,19 @@ impl ShardLoop {
 
 async fn turn_fault_message(fault: &TurnFault) -> String {
     fault.to_string()
+}
+
+/// 🐕️ P1c: maps an actor's [`semio_framework_actor::Lane`] onto the [`InteractiveStage`] family
+/// [`Watchdog::start`] reports overruns under. `Interactive`/`UserVisible` map onto their own
+/// dedicated stages (this crate has no separate "UI event" vs "UI present" distinction — a shard's
+/// interactive turn IS the step); `Background`/`Maintenance` share `BackgroundStep` since neither has
+/// a tighter soft target than the other in `semio_framework_trace`'s own vocabulary.
+fn interactive_stage_for(lane: semio_framework_actor::Lane) -> InteractiveStage {
+    match lane {
+        semio_framework_actor::Lane::Interactive => InteractiveStage::InteractiveStep,
+        semio_framework_actor::Lane::UserVisible => InteractiveStage::UserVisibleSimStep,
+        semio_framework_actor::Lane::Background | semio_framework_actor::Lane::Maintenance => InteractiveStage::BackgroundStep,
+    }
 }
 
 /// 🧯️ Encodes a host-side `TurnFault` (a `start-job` admission failure, or a `step_job` runtime
@@ -1276,16 +1332,7 @@ mod tests {
     );
     shard_frame_round_trip!(
         shard_frame_round_trip_envelope_passthrough,
-        ShardFrame::Envelope(Envelope {
-            to: ActorId(13),
-            from: semio_framework_actor::Origin::Kernel,
-            lane: semio_framework_actor::Lane::Background,
-            seq: 2,
-            deadline_ms: None,
-            coalesce: None,
-            cancel_of: None,
-            payload: Payload::Cancel { seq: 4 },
-        })
+        ShardFrame::Envelope(Envelope { to: ActorId(13), from: semio_framework_actor::Origin::Kernel, lane: semio_framework_actor::Lane::Background, seq: 2, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::Cancel { seq: 4 } })
     );
 
     /// 🎯️ A `Grant` with ZERO bundled envelopes must still record its budget — proven separately
@@ -1336,7 +1383,16 @@ mod tests {
 
         let mut first_budget = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Interactive).await;
         first_budget.fuel = 111_111;
-        let envelope = Envelope { to: actor, from: semio_framework_actor::Origin::Kernel, lane: semio_framework_actor::Lane::Interactive, seq: 1, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::Event { bytes: serde_json::to_vec(&Event::Wake).unwrap() } };
+        let envelope = Envelope {
+            to: actor,
+            from: semio_framework_actor::Origin::Kernel,
+            lane: semio_framework_actor::Lane::Interactive,
+            seq: 1,
+            deadline_ms: None,
+            coalesce: None,
+            cancel_of: None,
+            payload: Payload::Event { bytes: serde_json::to_vec(&Event::Wake).unwrap() },
+        };
         let mut bytes = Vec::new();
         ShardFrame::Grant { actor, budget: first_budget, envelopes: vec![envelope] }.pack_encode(&mut bytes).await;
         probe.push_inbound(bytes).await;
@@ -1345,7 +1401,16 @@ mod tests {
 
         let mut second_budget = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Background).await;
         second_budget.fuel = 222_222;
-        let envelope2 = Envelope { to: actor, from: semio_framework_actor::Origin::Kernel, lane: semio_framework_actor::Lane::Interactive, seq: 2, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::Event { bytes: serde_json::to_vec(&Event::Wake).unwrap() } };
+        let envelope2 = Envelope {
+            to: actor,
+            from: semio_framework_actor::Origin::Kernel,
+            lane: semio_framework_actor::Lane::Interactive,
+            seq: 2,
+            deadline_ms: None,
+            coalesce: None,
+            cancel_of: None,
+            payload: Payload::Event { bytes: serde_json::to_vec(&Event::Wake).unwrap() },
+        };
         let mut bytes2 = Vec::new();
         ShardFrame::Grant { actor, budget: second_budget, envelopes: vec![envelope2] }.pack_encode(&mut bytes2).await;
         probe.push_inbound(bytes2).await;
@@ -1497,7 +1562,16 @@ mod tests {
             let instance = mock.instantiate(&compiled, actor, &[], &Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).await.expect("mock instantiate");
             shard.register(actor, instance).await;
             mock.script_turn(actor, MockGuestRuntime::idle_turn().await).await;
-            let envelope = Envelope { to: actor, from: semio_framework_actor::Origin::Kernel, lane: semio_framework_actor::Lane::Background, seq: 1, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::Event { bytes: serde_json::to_vec(&Event::InstanceClose).expect("encode") } };
+            let envelope = Envelope {
+                to: actor,
+                from: semio_framework_actor::Origin::Kernel,
+                lane: semio_framework_actor::Lane::Background,
+                seq: 1,
+                deadline_ms: None,
+                coalesce: None,
+                cancel_of: None,
+                payload: Payload::Event { bytes: serde_json::to_vec(&Event::InstanceClose).expect("encode") },
+            };
             let mut bytes = Vec::new();
             ShardFrame::Grant { actor, budget: background_budget, envelopes: vec![envelope] }.pack_encode(&mut bytes).await;
             probe.push_inbound(bytes).await;
@@ -1511,7 +1585,16 @@ mod tests {
         interactive_turn.fuel_used = 4242;
         mock.script_turn(interactive_actor, interactive_turn).await;
         let interactive_budget = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Interactive).await;
-        let interactive_envelope = Envelope { to: interactive_actor, from: semio_framework_actor::Origin::Kernel, lane: semio_framework_actor::Lane::Interactive, seq: 1, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::Event { bytes: serde_json::to_vec(&Event::InstanceClose).expect("encode") } };
+        let interactive_envelope = Envelope {
+            to: interactive_actor,
+            from: semio_framework_actor::Origin::Kernel,
+            lane: semio_framework_actor::Lane::Interactive,
+            seq: 1,
+            deadline_ms: None,
+            coalesce: None,
+            cancel_of: None,
+            payload: Payload::Event { bytes: serde_json::to_vec(&Event::InstanceClose).expect("encode") },
+        };
         let mut interactive_bytes = Vec::new();
         ShardFrame::Grant { actor: interactive_actor, budget: interactive_budget, envelopes: vec![interactive_envelope] }.pack_encode(&mut interactive_bytes).await;
         probe.push_inbound(interactive_bytes).await;

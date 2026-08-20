@@ -4,7 +4,7 @@
 use crate::wgpu::shaders::{BLUR_DOWNSAMPLE_SHADER, GLASS_SHADER, SCENE_BLIT_SHADER, UI_SHADER, VECTOR_SHADER, WORLD3D_LINES_SHADER, WORLD3D_SHADER};
 use crate::wgpu::theme::{GlassStyle, Rgba, Theme};
 use bytemuck::{Pod, Zeroable};
-use super::kernel_3d_scene::ScenePass3d;
+use super::kernel_3d_scene::{Mat4Math, ScenePass3d};
 use wgpu::util::DeviceExt;
 
 pub const KIND_SOLID: f32 = 3.0;
@@ -1743,7 +1743,7 @@ impl UiPipelines {
                 let instance_offset = all_instances.len() as u32;
                 let instance_count = draw_call.instances.len() as u32;
                 for instance in &draw_call.instances {
-                    all_instances.push(World3dGpuInstance::from_instance(instance.model.to_cols_array(), instance.color, instance.selected, instance.hovered));
+                    all_instances.push(World3dGpuInstance::from_instance(instance.model.to_cols_array_m(), instance.color, instance.selected, instance.hovered));
                 }
                 pass_draws.push(WorldDrawRange { mesh_key: draw_call.mesh_key.clone(), mesh_version: draw_call.mesh_version, instance_offset, instance_count });
             }
@@ -1755,7 +1755,7 @@ impl UiPipelines {
                 let instance_offset = all_instances.len() as u32;
                 let instance_count = draw_call.instances.len() as u32;
                 for instance in &draw_call.instances {
-                    all_instances.push(World3dGpuInstance::from_instance(instance.model.to_cols_array(), instance.color, instance.selected, instance.hovered));
+                    all_instances.push(World3dGpuInstance::from_instance(instance.model.to_cols_array_m(), instance.color, instance.selected, instance.hovered));
                 }
                 translucent_draws.push(WorldDrawRange { mesh_key: draw_call.mesh_key.clone(), mesh_version: draw_call.mesh_version, instance_offset, instance_count });
             }

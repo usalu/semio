@@ -11,7 +11,7 @@ use crate::tui::text::truncate_to;
 use crate::tui::theme::{Role, Surface, Theme};
 use crate::tui::widget::{TableAlign, TableColumn, TableState, WidgetSignal};
 
-pub(crate) async fn table_on_key(t: &mut TableState, ev: &KeyEvent) -> Option<WidgetSignal> {
+pub(crate) fn table_on_key(t: &mut TableState, ev: &KeyEvent) -> Option<WidgetSignal> {
     let visible = t.visible_indices();
     if visible.is_empty() {
         return None;
@@ -59,7 +59,7 @@ pub(crate) async fn table_on_key(t: &mut TableState, ev: &KeyEvent) -> Option<Wi
 
 /// 📐️ Resolves each column's width: fixed columns keep their `width`, `width == 0` columns
 /// split whatever space remains evenly.
-async fn table_column_widths(columns: &[TableColumn], total_width: u16) -> Vec<u16> {
+fn table_column_widths(columns: &[TableColumn], total_width: u16) -> Vec<u16> {
     let fixed_total: u16 = columns.iter().filter(|c| c.width > 0).map(|c| c.width).sum();
     let gaps = columns.len().saturating_sub(1) as u16;
     let flex_count = columns.iter().filter(|c| c.width == 0).count() as u16;
@@ -68,7 +68,7 @@ async fn table_column_widths(columns: &[TableColumn], total_width: u16) -> Vec<u
     columns.iter().map(|c| if c.width > 0 { c.width } else { flex_width }).collect()
 }
 
-pub(crate) async fn paint_table_cell(buf: &mut CellBuffer, x: u16, y: u16, width: u16, text: &str, fg: [u8; 3], bg: [u8; 3], attrs: u8, align: TableAlign, clip: Rect) {
+pub(crate) fn paint_table_cell(buf: &mut CellBuffer, x: u16, y: u16, width: u16, text: &str, fg: [u8; 3], bg: [u8; 3], attrs: u8, align: TableAlign, clip: Rect) {
     let (t, tw) = truncate_to(text, width);
     let cell_x = match align {
         TableAlign::Left => x,
@@ -79,7 +79,7 @@ pub(crate) async fn paint_table_cell(buf: &mut CellBuffer, x: u16, y: u16, width
 
 /// 🖌️ Header (muted, bold) + hairline underline, then hairline-separated body rows; tree rows
 /// indent by level and carry a `▾️`/`▸️` expand marker — no vertical rules, no striping.
-pub(crate) async fn paint_table(t: &TableState, theme: &Theme, rect: Rect, buf: &mut CellBuffer, focused: bool) {
+pub(crate) fn paint_table(t: &TableState, theme: &Theme, rect: Rect, buf: &mut CellBuffer, focused: bool) {
     if rect.width == 0 || rect.height == 0 || t.columns.is_empty() {
         return;
     }

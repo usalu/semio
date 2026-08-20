@@ -199,7 +199,7 @@ pub enum ReplicationOutcome {
 /// follower-WAL-consumption primitive), or copying the raw snapshot bytes for the `Snapshot` case
 /// (this crate's snapshot-replication primitive; see `ReplicationOutcome::SnapshotTransferred`'s
 /// doc for why that case stops short of full materialization).
-pub async fn replicate_document<R: semio_framework_async::HostAsyncRuntime>(leader: &db_storage::DbBackend<R>, follower: &db_storage::DbBackend<R>, document: ArtifactId, policy: db_wal::GroupCommitPolicy, now_ms: u64) -> Result<ReplicationOutcome, DbError> {
+pub async fn replicate_document(leader: &db_storage::DbBackend, follower: &db_storage::DbBackend, document: ArtifactId, policy: db_wal::GroupCommitPolicy, now_ms: u64) -> Result<ReplicationOutcome, DbError> {
     let follower_state = db_sync::replay_sync_state(&follower.wal().await, document.clone()).await?;
     let leader_state = db_sync::replay_sync_state(&leader.wal().await, document.clone()).await?;
     if follower_state.frontier.head_seq >= leader_state.frontier.head_seq {
@@ -534,8 +534,8 @@ mod tests {
         let follower = db_storage::MemoryStorage::new().await;
         let document: ArtifactId = "doc-1".into();
         seed_leader_wal(&leader, &document, 4).await;
-        let leader: db_storage::DbBackend<db_storage::InlineRuntime> = db_storage::DbBackend::Memory(leader);
-        let follower: db_storage::DbBackend<db_storage::InlineRuntime> = db_storage::DbBackend::Memory(follower);
+        let leader: db_storage::DbBackend = db_storage::DbBackend::Memory(leader);
+        let follower: db_storage::DbBackend = db_storage::DbBackend::Memory(follower);
 
         let outcome = db_actor::block_on(replicate_document(&leader, &follower, document.clone(), db_wal::GroupCommitPolicy::default(), 0)).unwrap();
         match outcome {
@@ -558,8 +558,8 @@ mod tests {
         let follower = db_storage::MemoryStorage::new().await;
         let document: ArtifactId = "doc-1".into();
         seed_leader_wal(&leader, &document, 2).await;
-        let leader: db_storage::DbBackend<db_storage::InlineRuntime> = db_storage::DbBackend::Memory(leader);
-        let follower: db_storage::DbBackend<db_storage::InlineRuntime> = db_storage::DbBackend::Memory(follower);
+        let leader: db_storage::DbBackend = db_storage::DbBackend::Memory(leader);
+        let follower: db_storage::DbBackend = db_storage::DbBackend::Memory(follower);
 
         let first = db_actor::block_on(replicate_document(&leader, &follower, document.clone(), db_wal::GroupCommitPolicy::default(), 0)).unwrap();
         assert!(matches!(first, ReplicationOutcome::TailApplied { count: 2, .. }));
@@ -581,8 +581,8 @@ mod tests {
             db_actor::block_on(wal.submit(&leader, &[db_wal::WalRecord::SnapshotPub { generation: 9, frontier: floor_frontier }], DurabilityClass::Fsync, 1_000)).unwrap();
         }
         db_actor::block_on(db_storage::SnapshotStorage::write_generation(&leader, &document, 9, b"snapshot-bytes")).unwrap();
-        let leader: db_storage::DbBackend<db_storage::InlineRuntime> = db_storage::DbBackend::Memory(leader);
-        let follower: db_storage::DbBackend<db_storage::InlineRuntime> = db_storage::DbBackend::Memory(follower);
+        let leader: db_storage::DbBackend = db_storage::DbBackend::Memory(leader);
+        let follower: db_storage::DbBackend = db_storage::DbBackend::Memory(follower);
 
         let outcome = db_actor::block_on(replicate_document(&leader, &follower, document.clone(), db_wal::GroupCommitPolicy::default(), 0)).unwrap();
         match outcome {
@@ -592,7 +592,7 @@ mod tests {
             }
             other => panic!("expected SnapshotTransferred, got {other:?}"),
         }
-        // 🪡 `DbBackend<R>` itself carries no blanket `SnapshotStorage` impl (only its variant
+        // 🪡 `DbBackend` itself carries no blanket `SnapshotStorage` impl (only its variant
         // payloads do — `MemoryStorage`, `FsStorage<R>`, …), so the read must go through the
         // matched-out `Memory` payload, not the enum wrapper `replicate_document` above took by reference.
         let db_storage::DbBackend::Memory(ref follower_storage) = follower else { panic!("expected a Memory backend") };

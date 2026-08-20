@@ -35,11 +35,13 @@ use semio_framework_actor::ActorId as RuntimeActorId;
 // name them in order to construct one, exactly the way `GuestRuntime`/`GuestInstance`/`Budget`
 // already reach it through this crate's own public API.
 pub use semio_framework_actor::{PackageHash, PackageId};
+use semio_framework_async::{Lane, ProcessKind, WorkerPool, WorkerPoolConfig};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 #[cfg(test)]
 use std::collections::VecDeque;
 use std::path::{Path, PathBuf};
-use std::sync::{Arc, Mutex};
+use std::sync::atomic::AtomicBool;
+use std::sync::{Arc, Mutex, OnceLock};
 use wasmtime::component::{Component, Linker, ResourceTable};
 use wasmtime::{Config, Engine, InstanceAllocationStrategy, PoolingAllocationConfig, ResourceLimiter, Store};
 use wasmtime_wasi::{WasiCtx, WasiCtxBuilder, WasiCtxView, WasiView};
@@ -178,40 +180,141 @@ pub async fn build_shared_engine(cfg: SharedEngineConfig) -> Result<(Engine, boo
     Ok((engine, false))
 }
 
-/// ⏱️ Ticks `engine.increment_epoch()` every 1 ms on a dedicated thread (§2), so
-/// `Store::set_epoch_deadline(budget.wall_ms)` is actually enforced — wasmtime's epoch counter never
-/// advances on its own. One ticker per shared `Engine`; `Drop` stops and joins the thread.
-pub struct EpochTicker {
-    stop: Arc<std::sync::atomic::AtomicBool>,
-    handle: Option<std::thread::JoinHandle<()>>,
+//#region 🧵️PluginHostWorkerPool
+/// 🧵️ This crate's OWN process-wide `WorkerPool` singleton (P1f) — same idiom as
+/// `semio-framework-os-services`'s `global_worker_pool`/`🌎️hub`'s `hub_worker_pool`: the repo has
+/// not yet converged on threading ONE pool handle through every crate that needs one (P1a/P1c/P1d's
+/// own reports name this as a later-phase unification, not a P1 requirement), so each crate that
+/// needs pool-scheduled background work owns a lazily-constructed singleton of its own rather than
+/// spinning up a fresh, unaccounted `WorkerPool` (and its own `worker_count` OS threads) per call
+/// site. `ProcessKind::InteractiveNative` — this crate is loaded by both interactive hosts (the
+/// renderer) and headless ones (`🏃️run`, the MCP gateway, the `semio-shard` child binary), and
+/// `InteractiveNative`'s only cost for a headless caller is reserving one core it was never going to
+/// saturate anyway, the same tradeoff `global_worker_pool` already accepted.
+///
+/// 🎚️ Sizing normally reads `std::thread::available_parallelism()`, but `SEMIO_PLUGIN_HOST_WORKER_COUNT`
+/// (read ONCE, at first construction) overrides it — `👶️child/🦀️main.rs` sets it to `1` before this
+/// pool is ever touched: an out-of-process shard's own `ShardLoop::pump` runs directly on that
+/// process's main thread (never submitted to this pool), so the ONLY work this pool ever carries
+/// there is the epoch ticker + heartbeat sender (below) — sizing it to `available_parallelism()-1`
+/// (potentially many cores) would spin up that many OS threads per shard CHILD PROCESS for two
+/// sub-millisecond periodic jobs, multiplying total host thread count by however many shard processes
+/// are running. No other caller (the renderer, `🏃️run`, the MCP gateway) sets this variable, so they
+/// keep the full-parallelism default.
+static PLUGIN_HOST_WORKER_POOL: OnceLock<WorkerPool> = OnceLock::new();
+
+pub(crate) fn plugin_host_worker_pool() -> WorkerPool {
+    PLUGIN_HOST_WORKER_POOL
+        .get_or_init(|| {
+            let cores = std::env::var("SEMIO_PLUGIN_HOST_WORKER_COUNT")
+                .ok()
+                .and_then(|value| value.parse::<usize>().ok())
+                .filter(|count| *count > 0)
+                .unwrap_or_else(|| std::thread::available_parallelism().map_or(1, std::num::NonZero::get));
+            WorkerPool::new(WorkerPoolConfig::new(ProcessKind::InteractiveNative, cores))
+        })
+        .clone()
+}
+//#endregion 🧵️PluginHostWorkerPool
+
+//#region ⏲️PeriodicPoolTimer
+/// ⏲️ P1f: the shared shape behind every "tick forever on `Lane::Timer`" mechanism this crate needs
+/// (the epoch ticker below; `process_transport::StdioTransport`'s heartbeat sender) — `WorkerPool::
+/// submit`, `block_on`-driving ONE `sleep_until` wait, then RESUBMITTING a fresh job for the next
+/// tick instead of looping forever inside the same job closure.
+///
+/// This is DELIBERATELY NOT `semio-framework-os-services`' `TimerWheel::spawn_driver`/`HttpPool::
+/// spawn_refill_driver` shape (a `loop { sleep_until; tick() }` body inside ONE `block_on` call) —
+/// that shape permanently pins its `WorkerPool` worker for the driver's entire lifetime (its own
+/// `🚨️ HONEST GAP` doc says so), which is an accepted, BOUNDED cost for THOSE two mechanisms because
+/// each is a true process-wide singleton (exactly one `TimerWheel`/`HttpPool` ever exists). Neither
+/// [`EpochTicker`] nor the heartbeat sender is a singleton: `WasmtimeRuntime::new` runs once per
+/// test/caller, so many `EpochTicker`s can be alive concurrently on the SAME shared
+/// [`plugin_host_worker_pool`] (every `#[semio_framework_async_macros::async_test]` in this crate
+/// that builds a `WasmtimeRuntime` does). Looping-forever-in-one-job would mean the Nth concurrent
+/// ticker, once N exceeds the pool's `worker_count`, sits queued FOREVER behind tickers that never
+/// release their worker — silent epoch-interruption failure, not merely slower ticks. Resubmitting a
+/// fresh, short-lived job per tick means a job ALWAYS returns (releasing its worker) after one wait,
+/// so extra concurrent tickers degrade tick cadence under contention instead of starving outright.
+struct PeriodicPoolTimer {
+    stop: Arc<AtomicBool>,
 }
 
-impl EpochTicker {
-    // 🚫️async: R9 — spawns a real OS thread but the SPAWN CALL ITSELF returns immediately (zero
-    // `.await`s in this fn's own body; the thread body, not this fn, runs the loop), and both call
-    // sites already use it synchronously.
-    pub fn start(engine: &Engine) -> Self {
-        let stop = Arc::new(std::sync::atomic::AtomicBool::new(false));
-        let stop_thread = Arc::clone(&stop);
-        let engine = engine.clone();
-        let handle = std::thread::Builder::new()
-            .name("semio-epoch-ticker".to_string())
-            .spawn(move || {
-                while !stop_thread.load(std::sync::atomic::Ordering::Relaxed) {
-                    std::thread::sleep(std::time::Duration::from_millis(1));
-                    engine.increment_epoch();
+impl PeriodicPoolTimer {
+    /// ▶️ Submits the first tick job on `lane`. `tick` must be quick and non-blocking (it runs ON
+    /// the pool worker, between the wait that preceded it and the resubmission that follows) — the
+    /// epoch/heartbeat bodies below are a single atomic increment or a short, already-buffered write.
+    // 🚫️async: E1-adjacent — no suspension point of its own (only SUBMITS the job; never drives it
+    // here). See R9.
+    fn start(pool: &WorkerPool, lane: Lane, interval_ms: u64, tick: impl FnMut() -> bool + Send + 'static) -> Self {
+        let stop = Arc::new(AtomicBool::new(false));
+        Self::schedule(pool, lane, interval_ms, Arc::new(Mutex::new(tick)), Arc::clone(&stop));
+        Self { stop }
+    }
+
+    /// 🔁️ One job = one wait, one `tick()`, one resubmission — never a job that outlives its own
+    /// single tick. `tick`/`stop` are `Arc`-shared across every resubmission of the SAME logical
+    /// timer, not recreated per tick.
+    fn schedule(pool: &WorkerPool, lane: Lane, interval_ms: u64, tick: Arc<Mutex<dyn FnMut() -> bool + Send>>, stop: Arc<AtomicBool>) {
+        let driver_pool = pool.clone();
+        pool.submit(
+            lane,
+            Box::new(move || {
+                if stop.load(std::sync::atomic::Ordering::Relaxed) {
+                    return;
                 }
-            })
-            .expect("spawn epoch ticker thread");
-        Self { stop, handle: Some(handle) }
+                let deadline_ms = driver_pool.now_ms() + interval_ms;
+                semio_framework_async::block_on(driver_pool.timer().sleep_until(deadline_ms));
+                if stop.load(std::sync::atomic::Ordering::Relaxed) {
+                    return;
+                }
+                let should_continue = (tick.lock().unwrap_or_else(std::sync::PoisonError::into_inner))();
+                if should_continue {
+                    Self::schedule(&driver_pool, lane, interval_ms, tick, stop);
+                }
+            }),
+        );
     }
 }
 
-impl Drop for EpochTicker {
+impl Drop for PeriodicPoolTimer {
+    /// 🛑️ Requests the NEXT scheduled tick job to stop rather than resubmit (bounded by
+    /// `interval_ms` — the currently in-flight job, if any, is already parked inside its own
+    /// `sleep_until`). No `WorkerPool` job-join primitive exists to wait on synchronously (unlike the
+    /// old dedicated thread's `JoinHandle::join`), so this is fire-and-forget.
     fn drop(&mut self) {
         self.stop.store(true, std::sync::atomic::Ordering::Relaxed);
-        if let Some(handle) = self.handle.take() {
-            let _ = handle.join();
+    }
+}
+//#endregion ⏲️PeriodicPoolTimer
+
+/// ⏱️ Ticks `engine.increment_epoch()` every 1 ms on the shared `WorkerPool`'s `Lane::Timer` (P1f;
+/// was a dedicated `"semio-epoch-ticker"` OS thread — see `📓️p1c-actor-shards.md` §3 and
+/// `📓️p1f-epoch-transport.md` for the replacement mechanism and what a later, repo-owned WASM
+/// interpreter's fuel metering must take over from it). One ticker per shared `Engine`; `Drop`
+/// requests the pool job to stop (see [`PeriodicPoolTimer::drop`] — not a synchronous join).
+pub struct EpochTicker {
+    _driver: PeriodicPoolTimer,
+}
+
+/// ⏱️ Matches wasmtime's own epoch granularity assumption (`Store::set_epoch_deadline` counts whole
+/// epochs, and every `Budget.deadline_ms` in this codebase is set 1:1 against milliseconds) — see
+/// `build_shared_engine`'s `config.epoch_interruption(true)`.
+const EPOCH_TICK_INTERVAL_MS: u64 = 1;
+
+impl EpochTicker {
+    /// ▶️ `pool` is normally [`plugin_host_worker_pool`] — a caller-supplied pool is accepted (not
+    /// just the singleton) so a test can use its own small, deterministic `WorkerPool` instead of
+    /// this crate's shared one, matching `semio-framework-os-services`' own `test_pool` convention.
+    // 🚫️async: R9 — submitting the job is a synchronous, non-suspending call (`WorkerPool::submit`
+    // never awaits); both call sites already use this synchronously.
+    pub fn start(engine: &Engine, pool: &WorkerPool) -> Self {
+        let engine = engine.clone();
+        EpochTicker {
+            _driver: PeriodicPoolTimer::start(pool, Lane::Timer, EPOCH_TICK_INTERVAL_MS, move || {
+                engine.increment_epoch();
+                true
+            }),
         }
     }
 }
@@ -336,9 +439,24 @@ mod shared_wasmtime_engine_tests {
         let mut store = Store::new(&engine, ());
         store.set_epoch_deadline(1);
         store.set_fuel(1_000).expect("consume_fuel is enabled on the shared engine");
-        let ticker = EpochTicker::start(&engine);
+        // 🧵️ P1f: `EpochTicker` now drives off a `WorkerPool` `Lane::Timer` job, not a dedicated OS
+        // thread — a small, deterministic own-pool (never the crate-wide singleton) so this test
+        // stays isolated, matching `semio-framework-os-services`' own `test_pool` convention.
+        let pool = WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, 2));
+        let ticker = EpochTicker::start(&engine, &pool);
         std::thread::sleep(std::time::Duration::from_millis(10));
         drop(ticker);
+        // 🚨️ HONEST GAP (P1f, found by this test): deliberately NO `pool.shutdown()` here, same
+        // reasoning `semio-framework-os-services`' `spawn_driver`/`spawn_refill_driver` document —
+        // but for a SHARPER reason than "the job never returns": `WorkerPool::shutdown()` sets
+        // `shutdown` and returns as soon as every OTHER worker observes it, WITHOUT guaranteeing one
+        // more `TimerWheel::fire_due` call happens first. A worker parked inside `sleep_until` (this
+        // ticker's last, not-yet-fired tick, freshly resubmitted right before `drop`) is woken ONLY
+        // by another worker's `fire_due` — if every other worker exits on `shutdown` before calling
+        // it again, that parked worker is never woken and `shutdown()`'s own `.join()` on it hangs
+        // forever. Reproduced directly: this test deadlocked here before this comment/fix landed.
+        // `semio-framework-async` (P1a's boundary, not this packet's) owns the real fix — flagged in
+        // `📓️p1f-epoch-transport.md` for that crate, not patched here.
     }
 
     #[semio_framework_async_macros::async_test]
@@ -1109,7 +1227,7 @@ pub struct WasmtimeRuntime {
 impl WasmtimeRuntime {
     pub async fn new(cfg: SharedEngineConfig) -> Result<Self, PluginHostError> {
         let (engine, pooling_active) = build_shared_engine(cfg).await?;
-        let epoch_ticker = EpochTicker::start(&engine);
+        let epoch_ticker = EpochTicker::start(&engine, &plugin_host_worker_pool());
         let mut linker = Linker::new(&engine);
         // 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (B1 world-collapse): `Actor::add_to_linker`
         // defines BOTH of the collapsed world's imports in one call (`pure` + `host-async`) —
@@ -2036,7 +2154,7 @@ mod runtime_metrics_publisher_tests {
     /// trips and carries the heartbeat overlay this file is responsible for.
     #[semio_framework_async_macros::async_test]
     async fn maybe_sample_gates_at_2hz_and_overlays_heartbeat_age_from_the_host() {
-        let mut kernel = Kernel::new(ShardKind::Thread, 1, 0, 4).await;
+        let mut kernel = Kernel::new(ShardKind::Native, 1, 0, 4).await;
         let actor = kernel.activate(PackageId("s.cad".into()), 1, ActorKind::PluginApp { plugin: PackageId("s.cad".into()), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, None, ActivationEvent::Manual).await;
         kernel.submit(&env(actor, Lane::Interactive, 1).await).await;
         kernel.tick(0).await;
@@ -2118,7 +2236,7 @@ mod runtime_metrics_publisher_tests {
         assert_eq!(registry.record_count as usize, registry.records.len(), "recordCount header must match the actual records array length");
         assert_eq!(registry.record_count, 2550, "the documented 50 plugins x (1 + 50 extensions) fixture shape");
 
-        let mut kernel = Kernel::new(ShardKind::Thread, 8, 0, 256).await;
+        let mut kernel = Kernel::new(ShardKind::Native, 8, 0, 256).await;
         let mut actor_ids = HashMap::new();
         let mut crash_profile_actor = None;
 

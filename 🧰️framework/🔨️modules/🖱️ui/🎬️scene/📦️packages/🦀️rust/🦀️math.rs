@@ -20,7 +20,7 @@ pub use semio_framework_geometry::{Mat4, Vec3};
 // region ports the exact same formulas (verified against `📐️geometry`'s own algebra tests) as plain
 // sync functions/methods on the same public `{x,y,z}`/`{cols}` fields, suffixed `_m` so call sites
 // never collide with `Vec3`/`Mat4`'s inherent async names.
-trait Vec3Math: Sized {
+pub trait Vec3Math: Sized {
     fn add_m(self, other: Self) -> Self;
     fn sub_m(self, other: Self) -> Self;
     fn scale_m(self, s: f32) -> Self;
@@ -69,13 +69,26 @@ fn vec3_from_array_m(v: [f32; 3]) -> Vec3 {
     Vec3 { x: v[0], y: v[1], z: v[2] }
 }
 
-trait Mat4Math: Sized {
+pub trait Mat4Math: Sized {
     fn mul_m(self, other: Self) -> Self;
     fn transform_point_m(self, p: Vec3) -> Vec3;
     fn inverse_m(self) -> Self;
+    fn to_cols_array_m(self) -> [f32; 16];
 }
 
 impl Mat4Math for Mat4 {
+    // 🚫️async: E6 sync mirror of `semio_framework_geometry::Mat4::to_cols_array` (that crate's
+    // own `pub async fn`, out of packet scope per this file's header) — identical column-major
+    // flatten, verified against its `mat4_to_cols_array_matches_column_major_layout` test.
+    fn to_cols_array_m(self) -> [f32; 16] {
+        let mut out = [0.0; 16];
+        for col in 0..4 {
+            for row in 0..4 {
+                out[col * 4 + row] = self.cols[col][row];
+            }
+        }
+        out
+    }
     fn mul_m(self, other: Self) -> Self {
         let mut out = mat4_identity_m();
         for col in 0..4 {

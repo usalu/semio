@@ -14,7 +14,7 @@ use crate::tui::theme::{Role, Surface, Theme};
 
 /// 🪟 Paints one 2-row corner tab. Top tabs bend their short wall down into the body hairline;
 /// bottom tabs bend upward. `bend` is false for non-innermost tabs in a multi-tab corner group.
-async fn paint_corner_tab(
+fn paint_corner_tab(
     buf: &mut CellBuffer,
     y: u16,
     tab: &WindowTab,
@@ -59,7 +59,7 @@ async fn paint_corner_tab(
     }
 }
 
-async fn paint_group(
+fn paint_group(
     buf: &mut CellBuffer,
     rect: Rect,
     layout: &WindowChipLayout,
@@ -90,7 +90,7 @@ async fn paint_group(
 
 /// 🖌️ Paints a window whose stack tabs are recessed into up to four corners, each with inline
 /// action glyphs. Body hairlines connect between the chip groups on the top and bottom edges.
-pub(crate) async fn paint_window(w: &WindowState, theme: &Theme, rect: Rect, buf: &mut CellBuffer) {
+pub(crate) fn paint_window(w: &WindowState, theme: &Theme, rect: Rect, buf: &mut CellBuffer) {
     if rect.width < 2 || rect.height < 2 {
         return;
     }

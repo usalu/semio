@@ -46,6 +46,7 @@ use crate::*;
 use crate::db_ids::{DbError, ArtifactId, ActorId};
 use db_storage::CatalogStorage as _;
 use db_storage::PayloadStorage as _;
+use semio_framework_async::{Lane, WorkerPool};
 
 
 //#region 🔖️Reexports
@@ -172,7 +173,7 @@ pub struct HistoryView {
 /// groups `WAL_COMMAND` records by the `WAL_FRONTIER` record that closes their transaction, exactly
 /// mirroring `db_artifact::ArtifactEngine::submit`'s own commit shape (one frontier record per
 /// committed batch, preceded by that batch's command records).
-async fn replay_history<R: semio_framework_async::HostAsyncRuntime>(storage: &db_storage::DbBackend<R>, core_document: &ArtifactId, protocol_document: &protocol::ArtifactId) -> Result<HistoryView, DbError> {
+async fn replay_history(storage: &db_storage::DbBackend, core_document: &ArtifactId, protocol_document: &protocol::ArtifactId) -> Result<HistoryView, DbError> {
     let records = db_actor::block_on(async { db_wal::replay_document(&storage.wal().await, core_document).await })?;
     let mut entries = Vec::new();
     let mut pending_operation_ids: Vec<protocol::MutationId> = Vec::new();
@@ -705,7 +706,7 @@ pub struct DbHealth {
 // `open_with_authz`, plus `🌎️hub` and every other external caller, none of which ever names this
 // type parameter) compiles unchanged. Replaces `Arc<dyn Emit>`.
 pub struct Database<A: db_artifact::AuthzHook + 'static = db_artifact::AllowAll, E: Emit + 'static = db_observe::StructuredSink<db_observe::MemorySink>> {
-    storage: Arc<db_storage::DbBackend<db_storage::InlineRuntime>>,
+    storage: Arc<db_storage::DbBackend>,
     config: DbConfig,
     capabilities: DbCapabilities,
     authz: Arc<A>,
@@ -717,6 +718,13 @@ pub struct Database<A: db_artifact::AuthzHook + 'static = db_artifact::AllowAll,
     health: Arc<db_observe::HealthRegistry>,
     catalog: Mutex<CatalogState>,
     open_artifacts: Mutex<HashMap<String, Arc<db_artifact::ArtifactAuthority>>>,
+    /// @emoji 🧵️ `None` until a caller opts in via [`Database::with_pool`] — every `ArtifactHandle`
+    /// this `Database` hands out inherits it, so `ArtifactHandle::submit`'s bridge can dispatch onto
+    /// `Lane::Io` instead of spawning a dedicated thread per submit (see that method's doc). `None`
+    /// stays fully correct (submit resolves inline instead), just without the backgrounding — the
+    /// right default for `open_at`'s frozen single-shot, strictly-sequential callers (`db_cli`),
+    /// wrong for a live concurrent app, which should call `with_pool` right after `open`/`open_at`.
+    pool: Option<Arc<WorkerPool>>,
 }
 
 // 🚫️async: E5 executor bridge — every `Database` method below is plain sync and drives its async
@@ -727,21 +735,22 @@ pub struct Database<A: db_artifact::AuthzHook + 'static = db_artifact::AllowAll,
 // accessor call is `.await`ed inside the SAME `block_on`, never a bare synchronous call.
 impl Database<db_artifact::AllowAll> {
     /// @emoji 🚀️ The frozen entry point: opens (or initializes, if `storage` is fresh) a `Database`
-    /// over an arbitrary `Arc<db_storage::DbBackend<db_storage::InlineRuntime>>` backend, wired with the default `AllowAll` authz and
+    /// over an arbitrary `Arc<db_storage::DbBackend>` backend, wired with the default `AllowAll` authz and
     /// (behind the default-on `vcs` feature) a real `VcsVersionGraph`.
-    pub async fn open(config: DbConfig, storage: Arc<db_storage::DbBackend<db_storage::InlineRuntime>>) -> Result<Database<db_artifact::AllowAll>, DbError> {
+    pub async fn open(config: DbConfig, storage: Arc<db_storage::DbBackend>) -> Result<Database<db_artifact::AllowAll>, DbError> {
         Database::open_with(config, storage, Arc::new(db_artifact::AllowAll), default_emit().await).await
     }
 
     /// @emoji 🚀️ The frozen zero-touch entry point: `FsStorage` rooted at `root`, defaults for
     /// `profile`. Synchronous by contract (every existing caller — `db_cli`, `🌎️hub`'s `fs` storage
-    /// backend, this crate's own tests — calls it as a plain fn, never `.await`s it), so it takes
-    /// `db_storage`'s own [`db_storage::InlineRuntime`] rather than threading a caller-supplied
-    /// `HostAsyncRuntime` through this frozen signature. A caller that owns a real runtime builds
-    /// its `FsStorage` with `FsStorage::open` and goes through `Database::open` instead.
+    /// backend, this crate's own tests — calls it as a plain fn, never `.await`s it), so it opens
+    /// `FsStorage` with `pool: None` (every blocking body runs inline) rather than threading a
+    /// caller-supplied `WorkerPool` through this frozen signature. A caller that owns a real pool
+    /// builds its `FsStorage` with `FsStorage::open(Some(pool), ..)` and goes through
+    /// `Database::open` instead.
     pub async fn open_at(root: &std::path::Path, profile: Profile) -> Result<Database<db_artifact::AllowAll>, DbError> {
-        let fs = db_actor::block_on(db_storage::FsStorage::open_inline("db_engine", root))?;
-        let storage: Arc<db_storage::DbBackend<db_storage::InlineRuntime>> = Arc::new(db_storage::DbBackend::Fs(fs));
+        let fs = db_actor::block_on(db_storage::FsStorage::open_inline(root))?;
+        let storage: Arc<db_storage::DbBackend> = Arc::new(db_storage::DbBackend::Fs(fs));
         Database::open(DbConfig::for_profile(profile), storage).await
     }
 
@@ -751,7 +760,7 @@ impl Database<db_artifact::AllowAll> {
     // `Database`'s default) so the returned `Database<AllowAll, E>` carries the caller's concrete
     // sink type — this fn has zero callers anywhere in the repo today (public, documented extension
     // seam per `open_with_emit`'s own doc; matches `open_with_authz`'s identical shape below).
-    pub async fn open_with_emit<E: Emit + 'static>(config: DbConfig, storage: Arc<db_storage::DbBackend<db_storage::InlineRuntime>>, emit: Arc<E>) -> Result<Database<db_artifact::AllowAll, E>, DbError> {
+    pub async fn open_with_emit<E: Emit + 'static>(config: DbConfig, storage: Arc<db_storage::DbBackend>, emit: Arc<E>) -> Result<Database<db_artifact::AllowAll, E>, DbError> {
         Database::open_with(config, storage, Arc::new(db_artifact::AllowAll), emit).await
     }
 }
@@ -759,7 +768,7 @@ impl Database<db_artifact::AllowAll> {
 impl<A: db_artifact::AuthzHook + 'static> Database<A> {
     /// @emoji 🚀️ Like `open`, but with a caller-supplied `AuthzHook` (e.g. `SecurityAuthzHook`)
     /// instead of the default `AllowAll`.
-    pub async fn open_with_authz(config: DbConfig, storage: Arc<db_storage::DbBackend<db_storage::InlineRuntime>>, authz: Arc<A>) -> Result<Database<A>, DbError> {
+    pub async fn open_with_authz(config: DbConfig, storage: Arc<db_storage::DbBackend>, authz: Arc<A>) -> Result<Database<A>, DbError> {
         Database::open_with(config, storage, authz, default_emit().await).await
     }
 }
@@ -772,7 +781,7 @@ impl<A: db_artifact::AuthzHook + 'static> Database<A> {
 // `default_emit()`'s concrete return type regardless of which `impl` block `open_with` itself lives
 // in, so the split is transparent to every call site.
 impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
-    async fn open_with(config: DbConfig, storage: Arc<db_storage::DbBackend<db_storage::InlineRuntime>>, authz: Arc<A>, emit: Arc<E>) -> Result<Database<A, E>, DbError> {
+    async fn open_with(config: DbConfig, storage: Arc<db_storage::DbBackend>, authz: Arc<A>, emit: Arc<E>) -> Result<Database<A, E>, DbError> {
         let storage_capabilities = db_actor::block_on(storage.capabilities());
         let capabilities = DbCapabilities {
             // 🧩️ Extension seam: real, honest today — see module doc on why preview/live-query
@@ -805,7 +814,17 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
 
         emit.emit(EmitEvent::new("db_engine.database_opened").field("documents", EmitField::U64(entries.len() as u64))).await;
 
-        Ok(Database { storage, config, capabilities, authz, version_graph, emit, health, catalog: Mutex::new(CatalogState { epoch, entries }), open_artifacts: Mutex::new(HashMap::new()) })
+        Ok(Database { storage, config, capabilities, authz, version_graph, emit, health, catalog: Mutex::new(CatalogState { epoch, entries }), open_artifacts: Mutex::new(HashMap::new()), pool: None })
+    }
+
+    /// @emoji 🧵️ Opts this `Database` (and every `ArtifactHandle` it hands out from here on) into
+    /// dispatching `ArtifactHandle::submit`'s blocking bridge onto `pool`'s `Lane::Io` instead of
+    /// resolving inline — see the `pool` field's doc. A live concurrent app (hub, the renderer
+    /// shell, an mcp workspace host) should call this immediately after `open`/`open_at`; `db_cli`
+    /// and this crate's own single-shot tests correctly leave it unset.
+    pub fn with_pool(mut self, pool: Arc<WorkerPool>) -> Self {
+        self.pool = Some(pool);
+        self
     }
 
     /// @emoji ⚙️ Builds one `ArtifactEngineConfig`. Sets the 4 fields this crate has ALWAYS
@@ -856,7 +875,7 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
     async fn register_handle(&self, document: protocol::ArtifactId, authority: Arc<db_artifact::ArtifactAuthority>) -> ArtifactHandle {
         let core_document = to_core_document_id(&document).await;
         self.open_artifacts.lock().expect("db_engine: open_artifacts mutex poisoned").insert(document.0.clone(), authority.clone());
-        ArtifactHandle { authority, storage: self.storage.clone(), document, core_document }
+        ArtifactHandle { authority, storage: self.storage.clone(), document, core_document, pool: self.pool.clone() }
     }
 
     /// @emoji 🌱️ The frozen `create_document`: mints a brand-new document, durably records it in the
@@ -885,7 +904,7 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
     /// WAL.
     pub async fn document(&self, id: &protocol::ArtifactId) -> Result<ArtifactHandle, DbError> {
         if let Some(authority) = self.open_artifacts.lock().expect("db_engine: open_artifacts mutex poisoned").get(&id.0) {
-            return Ok(ArtifactHandle { authority: authority.clone(), storage: self.storage.clone(), document: id.clone(), core_document: to_core_document_id(id).await });
+            return Ok(ArtifactHandle { authority: authority.clone(), storage: self.storage.clone(), document: id.clone(), core_document: to_core_document_id(id).await, pool: self.pool.clone() });
         }
         let known = self.catalog.lock().expect("db_engine: catalog mutex poisoned").entries.iter().any(|entry| &entry.document == id);
         if !known {
@@ -939,7 +958,7 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
     /// session driving `db_sync::handle_frontier_advertise` directly). Additive: not part of the
     /// contract-frozen `Database` API surface listed in `contract.md`'s "Stable API" block, so it
     /// carries no compatibility promise beyond this crate's own semver.
-    pub async fn storage(&self) -> Arc<db_storage::DbBackend<db_storage::InlineRuntime>> {
+    pub async fn storage(&self) -> Arc<db_storage::DbBackend> {
         self.storage.clone()
     }
 
@@ -982,9 +1001,10 @@ pub type SubmitFuture = db_actor::ReplyReceiver<Result<CommandReceipt, DbError>>
 #[derive(Clone)]
 pub struct ArtifactHandle {
     authority: Arc<db_artifact::ArtifactAuthority>,
-    storage: Arc<db_storage::DbBackend<db_storage::InlineRuntime>>,
+    storage: Arc<db_storage::DbBackend>,
     document: protocol::ArtifactId,
     core_document: ArtifactId,
+    pool: Option<Arc<WorkerPool>>,
 }
 
 impl ArtifactHandle {
@@ -992,10 +1012,13 @@ impl ArtifactHandle {
     /// `ArtifactAuthority` mailbox. Returns immediately with a `SubmitFuture` rather than blocking
     /// the calling thread — see module doc's `//🎯️ Design choice` on `SubmitFuture`: since
     /// `ArtifactAuthority`'s only public submit entry point is the blocking `submit_blocking`, this
-    /// bridges it to a real (not immediately-ready) `Future` by running the blocking call on a
-    /// dedicated bridge thread and resolving a `db_actor` oneshot from it — the same
-    /// `spawn_blocking`-over-a-channel pattern `tokio`/`pack_async` both use for the identical
-    /// blocking-API-under-an-async-facade problem.
+    /// bridges it to a real (not immediately-ready) `Future`. Phase 1
+    /// (`26/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR`) replaced the old bridge — a brand-new
+    /// `"db-engine-submit-bridge"` OS thread spawned on EVERY single `submit()` call, the worst
+    /// per-call (not just per-document) offender the Phase 0 thread census found — with a
+    /// `WorkerPool::submit(Lane::Io, ..)` job when `self.pool` is set (see `Database::with_pool`),
+    /// falling back to resolving inline when it isn't (matching `open_at`'s single-shot contract —
+    /// see the `pool` field's doc on `Database`).
     // 🔀️ Sync (was `async fn ... -> SubmitFuture`): `SubmitFuture` is itself a `Future`
     // (`ReplyReceiver`), so an async wrapper here made every call site double-future
     // (`.await` once for `submit` to resolve, again to resolve `SubmitFuture`) — the same
@@ -1006,16 +1029,17 @@ impl ArtifactHandle {
         let authority = self.authority.clone();
         let document = self.document.clone();
         let submitted_at_ms = db_actor::block_on(now_ms());
-        std::thread::Builder::new()
-            .name("db-engine-submit-bridge".to_string())
-            .spawn(move || {
-                // 🚫️async: E5 executor bridge — this dedicated thread IS the executor (R4 clause 2/4:
-                // "dedicated-thread actor bridges where the thread IS the executor"), so `.await` is
-                // both illegal here (no runtime on a raw `std::thread`) and unnecessary.
-                let result = db_actor::block_on(authority.submit_blocking(batch, options, submitted_at_ms)).map(|receipt| to_engine_receipt(receipt, document));
-                reply_tx.send(result);
-            })
-            .expect("db_engine: failed to spawn submit bridge thread");
+        let job = move || {
+            // 🚫️async: E5 executor bridge — whichever thread runs this job (a `WorkerPool` worker,
+            // or the calling thread itself when `pool` is `None`) IS the executor for this one
+            // blocking call (R4 clause 2/4), so `.await` is both illegal here and unnecessary.
+            let result = db_actor::block_on(authority.submit_blocking(batch, options, submitted_at_ms)).map(|receipt| to_engine_receipt(receipt, document));
+            reply_tx.send(result);
+        };
+        match &self.pool {
+            Some(pool) => pool.submit(Lane::Io, Box::new(job)),
+            None => job(),
+        }
         reply_rx
     }
 
@@ -1310,10 +1334,10 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn checkpoint_document_errs_unimplemented_without_the_vcs_feature() {
         let root = tempdir("no-vcs-checkpoint").await;
-        let database = Database::open_at(&root, Profile::Test).unwrap();
+        let database = Database::open_at(&root, Profile::Test).await.unwrap();
         let document = protocol::ArtifactId("doc-1".to_string());
-        database.create_document(ArtifactSpec::new(document.clone())).unwrap();
-        assert!(matches!(database.checkpoint_document(&document, "msg".to_string(), &[]), Err(DbError::Unimplemented(_))));
+        database.create_document(ArtifactSpec::new(document.clone())).await.unwrap();
+        assert!(matches!(database.checkpoint_document(&document, "msg".to_string(), &[]).await, Err(DbError::Unimplemented(_))));
     }
     //#endregion 🔖️VersionGraph
 

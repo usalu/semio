@@ -47,7 +47,7 @@ use semio_framework_os_kernel::os_directory::{
 #[cfg(not(target_arch = "wasm32"))]
 use semio_framework_actor::{ActorId as DirectoryActorId, PackageId as DirectoryPackageId};
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_async::{thread_plan, CancelToken, HostAsyncRuntime, OperationContext, ScopeHandle, ScopeOwner, ThreadBudget, TraceId};
+use semio_framework_async::{CancelToken, HostAsyncRuntime, OperationContext, ScopeHandle, ScopeOwner, TraceId};
 #[cfg(not(target_arch = "wasm32"))]
 use semio_framework_os_services::{ComputePool, TokioHostRuntime};
 use ui_wgpu::wgpu::{
@@ -1315,19 +1315,27 @@ impl ShellState {
         // the ONE `TokioHostRuntime`/`ComputePool`/`NativeDirectoryTransport` this shell's directory
         // client and directory-stream task share — minted ONCE here, never per-call, replacing the
         // private `tokio::runtime::Builder::new_current_thread()` `open_directory_stream` used to
-        // build itself. Sized from its own small `thread_plan` rather than reusing
-        // `kernel_runtime::native_shard_count`'s plan (that one sizes the WASM-guest kernel's shard
-        // pool — a different, unrelated concern from this HTTP client's blocking-call budget; see
-        // this packet's own lease-request note on why a second, small plan is used here).
+        // build itself.
+        //
+        // 🧵️ P1e (INTERACTIVE-JOB-RUNTIME-REFACTOR, one-pool-worker-runtime): this shell no longer
+        // sizes or owns its own thread pool — `TokioHostRuntime::new()`'s own `thread_plan`/
+        // `ThreadBudget` construction path was DELETED by P1a with no replacement. Instead this
+        // injects `crate::renderer_worker_pool()`, the ONE process-wide `WorkerPool` this whole
+        // renderer crate shares (also used by `📦️glue.rs::kernel_runtime`'s `ParallelRuntime` for
+        // shard-turn scheduling — see that fn's own doc for why it cannot instead reuse
+        // `semio-framework-os-services`'s own private `global_worker_pool()` singleton). `open_scope`/
+        // `ComputePool::new`/`with_new_http_pool` are all genuinely `async fn` in the post-P1a/P1b
+        // API (previously missing `.await` entirely at this call site, a latent bug); bridged via
+        // `TokioHostRuntime::block_on`, the SAME `directory_runtime.block_on` bridge this shell's own
+        // `open_directory_stream` already uses for its background reconnect loop — see that field's
+        // own doc.
         #[cfg(not(target_arch = "wasm32"))]
         let (directory_runtime, directory_scope, directory_compute, directory_transport, directory_cancel): (std::sync::Arc<TokioHostRuntime>, ScopeHandle, std::sync::Arc<ComputePool>, NativeDirectoryTransport<TokioHostRuntime>, CancelToken) = {
-            let cores = std::thread::available_parallelism().map(|n| n.get()).unwrap_or(4);
-            let plan = thread_plan(cores);
-            let budget = ThreadBudget::from_plan(plan);
-            let runtime = std::sync::Arc::new(TokioHostRuntime::new(plan, &budget).expect("directory TokioHostRuntime builds"));
-            let scope = runtime.open_scope(ScopeOwner::Service("directory_client"), None);
-            let compute = std::sync::Arc::new(ComputePool::new(plan.compute));
-            let transport = NativeDirectoryTransport::with_new_http_pool(runtime.clone(), scope.clone(), compute.clone(), 10_000_000, 8, DirectoryPackageId("os.directory-client".to_string()), DirectoryActorId(0));
+            const DIRECTORY_COMPUTE_CAPACITY: u32 = 4;
+            let runtime = std::sync::Arc::new(TokioHostRuntime::with_pool(crate::renderer_worker_pool()));
+            let scope = runtime.block_on(runtime.open_scope(ScopeOwner::Service("directory_client"), None));
+            let compute = std::sync::Arc::new(runtime.block_on(ComputePool::new(DIRECTORY_COMPUTE_CAPACITY)));
+            let transport = runtime.block_on(NativeDirectoryTransport::with_new_http_pool(runtime.clone(), scope.clone(), compute.clone(), 10_000_000, 8, DirectoryPackageId("os.directory-client".to_string()), DirectoryActorId(0)));
             (runtime, scope, compute, transport, CancelToken::root())
         };
         let mut state = Self {

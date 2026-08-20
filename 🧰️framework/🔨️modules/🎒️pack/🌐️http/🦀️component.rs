@@ -270,22 +270,84 @@ mod ureq_transport {
     //! behind the `ureq` feature so wasm/browser builds of the facade stay lean.
     use super::{RangeRequest, RangeResponse, RangeTransport};
     use crate::PackError;
+    use semio_framework_async::{Lane, WorkerPool};
     use std::io::Read;
+    use std::sync::Arc;
+
+    //#region 🔖️OneshotBridge
+    /// @emoji 🌉️ Shared state behind [`OneshotSender`]/[`OneshotReceiver`] — mirrors
+    /// `db_storage`'s identically-shaped, independently hand-rolled bridge (this crate names no
+    /// `tokio`/`futures` executor of its own either, see module doc's "no concrete HTTP client
+    /// type" rule extended to "no concrete executor type").
+    struct OneshotState<T> {
+        value: Option<T>,
+        waker: Option<std::task::Waker>,
+    }
+
+    struct OneshotSender<T>(Arc<std::sync::Mutex<OneshotState<T>>>);
+    struct OneshotReceiver<T>(Arc<std::sync::Mutex<OneshotState<T>>>);
+
+    fn oneshot<T>() -> (OneshotSender<T>, OneshotReceiver<T>) {
+        let state = Arc::new(std::sync::Mutex::new(OneshotState { value: None, waker: None }));
+        (OneshotSender(state.clone()), OneshotReceiver(state))
+    }
+
+    impl<T> OneshotSender<T> {
+        fn send(self, value: T) {
+            let mut state = self.0.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            state.value = Some(value);
+            if let Some(waker) = state.waker.take() {
+                waker.wake();
+            }
+        }
+    }
+
+    impl<T> std::future::Future for OneshotReceiver<T> {
+        type Output = T;
+        fn poll(self: std::pin::Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<T> {
+            let mut state = self.0.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            match state.value.take() {
+                Some(value) => std::task::Poll::Ready(value),
+                None => {
+                    state.waker = Some(cx.waker().clone());
+                    std::task::Poll::Pending
+                }
+            }
+        }
+    }
+    //#endregion 🔖️OneshotBridge
 
     /// @emoji 🐎️ A `RangeTransport` backed by `ureq`, issuing a single blocking HTTP `Range`
-    /// request per `fetch_range` call on a dedicated thread (so the `async fn` never blocks the
-    /// caller's executor).
+    /// request per `fetch_range` call. `pool: Some(..)` (see [`UreqRangeTransport::with_pool`])
+    /// dispatches that call onto the process-wide `WorkerPool`'s `Lane::Io` — Phase 1
+    /// (`26/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR`) replaced the old per-request
+    /// `std::thread::spawn(..).join()` (an unbounded, budget-blind thread PLUS a synchronous block
+    /// on it that defeated the whole point of an `async fn` signature) with this: `Lane::Io` work
+    /// still runs off the calling task's own thread, but through the SAME governed, sized-to-cores
+    /// substrate every other blocking call in the process now uses, and the caller genuinely
+    /// `.await`s rather than blocking. `pool: None` (the zero-touch [`UreqRangeTransport::new`])
+    /// runs the call inline instead — correct for a caller with no shared pool to offer (mirrors
+    /// `db_storage::run_blocking_op`'s identical `pool: None` fallback), just without
+    /// backgrounding.
     pub struct UreqRangeTransport {
         agent: ureq::Agent,
+        pool: Option<Arc<WorkerPool>>,
     }
 
     impl UreqRangeTransport {
-        /// @emoji 🆕️ A transport using `ureq`'s default agent configuration.
+        /// @emoji 🆕️ A transport using `ureq`'s default agent configuration, with no shared
+        /// `WorkerPool` (every `fetch_range` call resolves inline — see the struct's doc).
         // 🚫️async: no suspension point — `ureq::Agent::new()` itself is a plain sync
         // constructor; also called from `Default::default` below, an E1 impl of the
         // externally-declared `Default` trait whose fixed sync signature cannot `.await`.
         pub fn new() -> Self {
-            Self { agent: ureq::Agent::new() }
+            Self { agent: ureq::Agent::new(), pool: None }
+        }
+
+        /// @emoji 🧵️ Like [`UreqRangeTransport::new`], but every `fetch_range` call dispatches
+        /// onto `pool`'s `Lane::Io` instead of resolving inline.
+        pub fn with_pool(pool: Arc<WorkerPool>) -> Self {
+            Self { agent: ureq::Agent::new(), pool: Some(pool) }
         }
     }
 
@@ -303,7 +365,7 @@ mod ureq_transport {
             let end_inclusive = request.range.offset + request.range.len.saturating_sub(1);
             let range_header = format!("bytes={}-{}", request.range.offset, end_inclusive);
 
-            std::thread::spawn(move || -> Result<RangeResponse, PackError> {
+            let work = move || -> Result<RangeResponse, PackError> {
                 let mut call = agent.get(&request.url).set("Range", &range_header);
                 if let Some(etag) = &request.if_range_etag {
                     call = call.set("If-Range", etag);
@@ -315,9 +377,16 @@ mod ureq_transport {
                 let mut bytes = Vec::new();
                 response.into_reader().read_to_end(&mut bytes).map_err(|error| PackError::Io(error.to_string()))?;
                 Ok(RangeResponse { bytes, etag, total_len, range_satisfied })
-            })
-            .join()
-            .map_err(|_| PackError::Io("ureq worker thread panicked".to_string()))?
+            };
+
+            match &self.pool {
+                Some(pool) => {
+                    let (tx, rx) = oneshot();
+                    pool.submit(Lane::Io, Box::new(move || tx.send(work())));
+                    rx.await
+                }
+                None => work(),
+            }
         }
     }
 }

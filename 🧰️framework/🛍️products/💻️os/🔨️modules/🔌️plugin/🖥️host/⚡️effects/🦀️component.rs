@@ -225,6 +225,10 @@ impl EnvelopeInjector for RecordingEnvelopeInjector {
 /// `EnvelopeCompletionSink::complete`'s own doc. Generous: this is a safety bound against a
 /// misbehaving/runaway service, not a steady-state throttle.
 pub const COMPLETION_MAILBOX_CAP: u32 = 512;
+/// 🚰️ Byte-side twin of [`COMPLETION_MAILBOX_CAP`] — `ChannelPolicy::LosslessBounded` now bounds
+/// BOTH items and bytes (Phase 1, P1a); same "generous safety bound, not a steady-state throttle"
+/// rationale, sized well above any real completion payload.
+pub const COMPLETION_MAILBOX_MAX_BYTES: u64 = 1_000_000;
 
 async fn completion_topic(actor: u64) -> Topic {
     Topic(format!("__effect_completions__:{actor}"))
@@ -278,7 +282,7 @@ impl<I: EnvelopeInjector> EnvelopeCompletionSink<I> {
     async fn ensure_subscribed(&self, actor: u64) {
         let mut subscribed = self.subscribed.lock().expect("EnvelopeCompletionSink subscribed mutex poisoned");
         if subscribed.insert(actor) {
-            self.events.subscribe(completion_topic(actor).await, semio_framework_actor::ActorId(actor), ChannelPolicy::LosslessBounded { cap: COMPLETION_MAILBOX_CAP }).await;
+            self.events.subscribe(completion_topic(actor).await, semio_framework_actor::ActorId(actor), ChannelPolicy::LosslessBounded { max_items: COMPLETION_MAILBOX_CAP, max_bytes: COMPLETION_MAILBOX_MAX_BYTES }).await;
         }
     }
 
@@ -766,7 +770,7 @@ impl<I: EnvelopeInjector + 'static, R: HostAsyncRuntime + 'static> AsyncEffectEx
                     report.dispatched += 1;
                 }
                 Effect::Subscribe { topic } => {
-                    self.services.events.subscribe(Topic(topic.clone()), addressed_actor_id(dispatch.actor, self.actors.generation_of(dispatch.actor).await.unwrap_or(0)).await, ChannelPolicy::LatestWins).await;
+                    self.services.events.subscribe(Topic(topic.clone()), addressed_actor_id(dispatch.actor, self.actors.generation_of(dispatch.actor).await.unwrap_or(0)).await, ChannelPolicy::LatestWins { max_bytes: 1_000_000 }).await;
                     report.dispatched += 1;
                 }
                 Effect::Unsubscribe { topic } => {
@@ -1366,7 +1370,7 @@ mod tests {
         let registry = BackboneRegistry::new(events.clone(), Arc::new(AllowAllCapabilities)).await;
         let topic = Topic("backbone.delta.studio-42".to_string());
         let actor = semio_framework_actor::ActorId(1);
-        events.subscribe(topic.clone(), actor, ChannelPolicy::Coalesced { key: "studio-42".to_string() }).await;
+        events.subscribe(topic.clone(), actor, ChannelPolicy::Coalesced { key: "studio-42".to_string(), max_items: 100, max_bytes: 1_000_000 }).await;
         registry.fanout_delta("studio-42", b"delta-1".to_vec()).await;
         registry.fanout_delta("studio-42", b"delta-2".to_vec()).await;
         let drained = events.drain(&topic, actor).await;

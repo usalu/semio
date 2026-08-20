@@ -3,7 +3,7 @@ name = "semio-framework-async"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.88"
-description = "Pure async-runtime interface layer: OperationContext/CancelToken/Scope/ChannelPolicy vocabulary, ThreadPlan/ThreadBudget sizing arithmetic, and the HostAsyncRuntime trait that hides tokio from every other framework crate — zero tokio, zero std::thread, zero I/O, zero clock (callers pass now_ms) in this crate; the tokio-backed implementation lives in a sibling crate (design ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME, packet R2)."
+description = "Async-runtime interface layer AND the process-wide CPU substrate: OperationContext/CancelToken/Scope/ChannelPolicy vocabulary, the HostAsyncRuntime trait, and (Phase 1 packet P1a, INTERACTIVE-JOB-RUNTIME-REFACTOR) WorkerPool — the one process-wide work-stealing thread pool every subsystem schedules onto, replacing ThreadPlan/ThreadBudget and per-role OS threads. The future-polling executor itself (tokio today) still lives in a sibling crate (design ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME, packet R2/P1b)."
 
 [package.metadata.semio]
 role = "framework"
@@ -24,10 +24,15 @@ typegen = ["dep:ts-rs"]
 # (packets R2/R4) to unit-test against without linking tokio. Always available under `cfg(test)`
 # for this crate's own test suite regardless of this feature.
 testkit = []
+# 🚪️ Gates `block_on` to approved process entry points (a CLI `main`) and test/testkit consumers —
+# always available under `cfg(test)` for this crate's own suite regardless of this feature, same
+# shape as `testkit`. See `block_on`'s doc for why interactive-reachable code must never enable this.
+entrypoint = []
 
 [dependencies]
 serde = { version = "1.0.228", features = ["derive"] }
 ts-rs = { version = "10", optional = true }
+semio-framework-trace = { workspace = true }
 
 [dev-dependencies]
 semio-framework-async-macros = { path = "../../✨️macros/📦️packages/🦀️rust" }

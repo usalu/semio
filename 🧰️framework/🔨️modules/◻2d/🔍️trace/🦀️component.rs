@@ -3,7 +3,7 @@
 use crate::engine::{DrawingError, PathSegment, Vec2};
 use std::collections::HashMap;
 
-async fn pixel_on(mask: &[u8], width: u32, x: i32, y: i32, threshold: u8) -> bool {
+fn pixel_on(mask: &[u8], width: u32, x: i32, y: i32, threshold: u8) -> bool {
     if x < 0 || y < 0 {
         return false;
     }
@@ -16,8 +16,8 @@ async fn pixel_on(mask: &[u8], width: u32, x: i32, y: i32, threshold: u8) -> boo
     mask.get(idx).copied().unwrap_or(0) >= threshold
 }
 
-async fn marching_squares_contours(mask: &[u8], width: u32, height: u32, threshold: u8) -> Vec<Vec<Vec2>> {
-    async fn direction(start: [i32; 2], end: [i32; 2]) -> i32 {
+fn marching_squares_contours(mask: &[u8], width: u32, height: u32, threshold: u8) -> Vec<Vec<Vec2>> {
+    fn direction(start: [i32; 2], end: [i32; 2]) -> i32 {
         match [end[0] - start[0], end[1] - start[1]] {
             [1, 0] => 0,
             [0, 1] => 1,
@@ -90,7 +90,7 @@ async fn marching_squares_contours(mask: &[u8], width: u32, height: u32, thresho
     contours
 }
 
-async fn perpendicular_distance(point: Vec2, line_start: Vec2, line_end: Vec2) -> f64 {
+fn perpendicular_distance(point: Vec2, line_start: Vec2, line_end: Vec2) -> f64 {
     let dx = line_end[0] - line_start[0];
     let dy = line_end[1] - line_start[1];
     if dx.abs() < f64::EPSILON && dy.abs() < f64::EPSILON {
@@ -105,7 +105,7 @@ async fn perpendicular_distance(point: Vec2, line_start: Vec2, line_end: Vec2) -
     (ox * ox + oy * oy).sqrt()
 }
 
-async fn douglas_peucker(points: &[Vec2], epsilon: f64) -> Vec<Vec2> {
+fn douglas_peucker(points: &[Vec2], epsilon: f64) -> Vec<Vec2> {
     if points.len() < 3 || epsilon <= 0.0 {
         return points.to_vec();
     }
@@ -131,7 +131,7 @@ async fn douglas_peucker(points: &[Vec2], epsilon: f64) -> Vec<Vec2> {
     }
 }
 
-async fn contour_to_segments(points: &[Vec2]) -> Vec<PathSegment> {
+fn contour_to_segments(points: &[Vec2]) -> Vec<PathSegment> {
     if points.is_empty() {
         return Vec::new();
     }
@@ -145,7 +145,7 @@ async fn contour_to_segments(points: &[Vec2]) -> Vec<PathSegment> {
     segments
 }
 
-pub async fn trace_bitmap_paths(width: u32, height: u32, mask_or_luma: &[u8], threshold: f64, simplify_epsilon: f64) -> Result<Vec<PathSegment>, DrawingError> {
+pub fn trace_bitmap_paths(width: u32, height: u32, mask_or_luma: &[u8], threshold: f64, simplify_epsilon: f64) -> Result<Vec<PathSegment>, DrawingError> {
     if width == 0 || height == 0 {
         return Err(DrawingError::InvalidInput("trace bitmap needs non-zero dimensions".into()));
     }
@@ -175,7 +175,7 @@ mod tests {
     use super::*;
 
     #[test]
-    async fn traces_filled_square() {
+    fn traces_filled_square() {
         let width = 8_u32;
         let height = 8_u32;
         let mut mask = vec![0_u8; (width * height) as usize];
@@ -190,7 +190,7 @@ mod tests {
     }
 
     #[test]
-    async fn traces_disjoint_regions_with_move_per_contour() {
+    fn traces_disjoint_regions_with_move_per_contour() {
         let width = 10_u32;
         let height = 10_u32;
         let mut mask = vec![0_u8; (width * height) as usize];
@@ -210,39 +210,39 @@ mod tests {
     }
 
     #[test]
-    async fn traces_corner_touching_regions_as_separate_contours() {
+    fn traces_corner_touching_regions_as_separate_contours() {
         let mask = [255_u8, 0, 0, 255];
         let segments = trace_bitmap_paths(2, 2, &mask, 0.5, 0.0).expect("trace");
         assert_eq!(segments.iter().filter(|segment| matches!(segment, PathSegment::Move { .. })).count(), 2);
     }
 
     #[test]
-    async fn trace_bitmap_errors_on_zero_dimensions() {
+    fn trace_bitmap_errors_on_zero_dimensions() {
         let err = trace_bitmap_paths(0, 5, &[], 0.5, 0.5).unwrap_err();
         assert!(matches!(err, DrawingError::InvalidInput(_)));
     }
 
     #[test]
-    async fn trace_bitmap_errors_on_short_buffer() {
+    fn trace_bitmap_errors_on_short_buffer() {
         let err = trace_bitmap_paths(4, 4, &[0_u8; 2], 0.5, 0.5).unwrap_err();
         assert!(matches!(err, DrawingError::InvalidInput(message) if message.contains("expects")));
     }
 
     #[test]
-    async fn trace_bitmap_errors_when_no_pixels_above_threshold() {
+    fn trace_bitmap_errors_when_no_pixels_above_threshold() {
         let mask = vec![0_u8; 16];
         let err = trace_bitmap_paths(4, 4, &mask, 0.5, 0.5).unwrap_err();
         assert!(matches!(err, DrawingError::Operation(message) if message.contains("no contours")));
     }
 
     #[test]
-    async fn douglas_peucker_returns_points_unchanged_when_epsilon_is_non_positive() {
+    fn douglas_peucker_returns_points_unchanged_when_epsilon_is_non_positive() {
         let points: Vec<Vec2> = vec![[0.0, 0.0], [1.0, 5.0], [2.0, 0.0]];
         assert_eq!(douglas_peucker(&points, 0.0), points);
     }
 
     #[test]
-    async fn perpendicular_distance_handles_degenerate_zero_length_line() {
+    fn perpendicular_distance_handles_degenerate_zero_length_line() {
         let dist = perpendicular_distance([3.0, 4.0], [0.0, 0.0], [0.0, 0.0]);
         assert!((dist - 5.0).abs() < 1e-9);
     }

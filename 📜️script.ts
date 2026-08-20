@@ -827,6 +827,14 @@ export class VerifyScript extends Script {
       this.runRustWarnings(segments.slice(1));
       return;
     }
+    if (segments[0] === "interactivity") {
+      this.runInteractivityAudit();
+      return;
+    }
+    if (segments[0] === "dependencies") {
+      this.runDependencyFreeze(segments.slice(1));
+      return;
+    }
     await this.runGate();
     if (segments[0] === "gate") return;
     runCmd("bun", ["nx", "run-many", "-t", "test", "--all", "--exclude", "workspace"], { cwd: this.root, ...orchestratorBudgetOpts() });
@@ -885,6 +893,78 @@ export class VerifyScript extends Script {
       runCmd("cargo", ["clippy", "-p", pkg, ...scope.scopeArgs, ...scope.targetArgs, "--", "-D", "warnings"], { cwd: this.root, budgetMs: buildBudgetMs() });
     }
     console.log(`[verify rust-warnings] ${target ?? "native"} clean.`);
+  }
+
+  /**
+   * ⏱️ `verify interactivity` — the Phase 0 forbidden-call audit (ticket
+   * `26/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR`). Scans [[INTERACTIVITY_AUDIT_UI_ROOTS]] for
+   * `block_on`/`run_blocking`/sync-fs/sync-net/sync-clipboard/sync-process/sync-db, and the whole
+   * repo (minus `compose/` and [[INTERACTIVITY_AUDIT_RUNTIME_SANCTIONED_ROOTS]]) for
+   * `std::thread::spawn`/rayon pool construction/`tokio::runtime::Builder`. WARN in Phase 0 (report,
+   * exit 0); flip [[INTERACTIVITY_AUDIT_SEVERITY]] to `"deny"` at Phase 3 packet P3c.
+   */
+  private runInteractivityAudit(): void {
+    const report = interactivityAuditRun(this.root);
+    console.log(`[verify interactivity] severity=${INTERACTIVITY_AUDIT_SEVERITY} scope: ${INTERACTIVITY_AUDIT_UI_ROOTS.length} UI root(s), ${INTERACTIVITY_AUDIT_RUNTIME_SANCTIONED_ROOTS.length} runtime-sanctioned root(s) exempt from the thread-pool rule.`);
+    console.log(`[verify interactivity] ${report.findings.length} finding(s) total:`);
+    for (const category of Object.keys(report.byCategory).sort()) console.log(`  ${category}: ${report.byCategory[category]}`);
+    if (report.blockingBridgeUnlisted.length > 0) {
+      console.log(`[verify interactivity] ${report.blockingBridgeUnlisted.length} block_on/run_blocking finding(s) NOT covered by the allowlist:`);
+      for (const f of report.blockingBridgeUnlisted) console.log(`  ${f.file}:${f.line}: ${f.text}`);
+    }
+    for (const category of Object.keys(report.byCategory).sort()) {
+      if (category === "blocking-bridge") continue; // already printed above (allowlist-reconciled).
+      const inCategory = report.findings.filter((f) => f.category === category);
+      console.log(`[verify interactivity] ${inCategory.length} "${category}" finding(s):`);
+      for (const f of inCategory) console.log(`  ${f.file}:${f.line}: ${f.text}`);
+    }
+    if (report.staleAllowlistEntries.length > 0) {
+      console.log(`[verify interactivity] ${report.staleAllowlistEntries.length} allowlist entr(y/ies) no longer match any finding (stale — shrink the list):`);
+      for (const e of report.staleAllowlistEntries) console.log(`  ${e.file} (${e.pattern}, ${e.phase})`);
+    }
+    if (report.expectedNeverToMatchEntries.length > 0) {
+      console.log(`[verify interactivity] ${report.expectedNeverToMatchEntries.length} allowlist entr(y/ies) kept for the record but structurally invisible to this scanner (e.g. test-mod-only — never counted as stale):`);
+      for (const e of report.expectedNeverToMatchEntries) console.log(`  ${e.file} (${e.pattern}, ${e.phase})`);
+    }
+    if (report.preDeclaredOutOfScope.length > 0) {
+      console.log(`[verify interactivity] ${report.preDeclaredOutOfScope.length} allowlist entr(y/ies) pre-declared for future scope widening (not scanned today, not counted as stale):`);
+      for (const e of report.preDeclaredOutOfScope) console.log(`  ${e.file} (${e.pattern}, ${e.phase})`);
+    }
+    const otherCategoryFindings = report.findings.filter((f) => f.category !== "blocking-bridge").length;
+    if (INTERACTIVITY_AUDIT_SEVERITY === "warn") {
+      console.log("[verify interactivity] WARN mode — reporting only, exit 0.");
+      return;
+    }
+    const failures = report.blockingBridgeUnlisted.length + report.staleAllowlistEntries.length + otherCategoryFindings;
+    if (failures > 0) throw new Error(`[verify interactivity] DENY mode — ${failures} failure(s) (unlisted block_on/run_blocking, stale allowlist entries, or any sync-fs/net/clipboard/process/db/thread-pool finding).`);
+    console.log("[verify interactivity] DENY mode — clean.");
+  }
+
+  /**
+   * 🔒️ `verify dependencies [write-baseline]` — the Phase 0 dependency freeze. With no argument,
+   * compares the current third-party dependency inventory (Rust `Cargo.toml` + JS `package.json`,
+   * `compose/` excluded) against the committed `🔒️dependencies.json` baseline and fails on any NEW
+   * dependency; removals always pass (ratchet). `write-baseline` (re)generates the baseline from the
+   * current tree — the mechanism for deliberately approving a new dependency.
+   */
+  private runDependencyFreeze(args: string[]): void {
+    if (args[0] === "write-baseline") {
+      const baseline = dependencyFreezeWriteBaseline(this.root);
+      console.log(`[verify dependencies] wrote ${DEPENDENCY_BASELINE_REL_PATH}: ${baseline.entries.length} third-party dependenc(y/ies) at commit ${baseline.commit}.`);
+      return;
+    }
+    const result = dependencyFreezeCheck(this.root);
+    console.log(`[verify dependencies] baseline: ${result.baseline.entries.length} third-party dependenc(y/ies) (commit ${result.baseline.commit || "none — run write-baseline first"}); current: ${result.current.length}.`);
+    if (result.removedDeps.length > 0) {
+      console.log(`[verify dependencies] ${result.removedDeps.length} dependenc(y/ies) removed since baseline (always passes — ratchet only tightens):`);
+      for (const d of result.removedDeps) console.log(`  ${d.ecosystem}:${d.name}`);
+    }
+    if (result.newDeps.length > 0) {
+      console.error(`[verify dependencies] ${result.newDeps.length} NEW dependenc(y/ies) not in ${DEPENDENCY_BASELINE_REL_PATH}:`);
+      for (const d of result.newDeps) console.error(`  ${d.ecosystem}:${d.name}@${d.version} (kinds: ${d.kinds.join(",")}; used by: ${d.users.slice(0, 3).join(", ")}${d.users.length > 3 ? `, +${d.users.length - 3} more` : ""})`);
+      throw new Error(`[verify dependencies] ${result.newDeps.length} new third-party dependenc(y/ies) — approve deliberately with 'bun ./📜️script.ts verify dependencies write-baseline', or remove the dependency.`);
+    }
+    console.log("[verify dependencies] clean — no new third-party dependencies.");
   }
 
   private async runGate(): Promise<void> {
@@ -1208,6 +1288,445 @@ export class VerifyScript extends Script {
   }
 }
 //#endregion 🔖️VerifyScript
+
+//#region 🔖️InteractivityAudit
+/**
+ * ⏱️ "UI-reachable" Rust module roots for the forbidden-call audit (ticket
+ * `26/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR`, Phase 0). Single source of truth — widen this list
+ * as later phases push more of the repo onto the worker/job substrate (P3c flips
+ * [[INTERACTIVITY_AUDIT_SEVERITY]] to `"deny"` once this scope covers everything that must never
+ * block the UI thread). Repo-relative, trailing `/`.
+ */
+const INTERACTIVITY_AUDIT_UI_ROOTS = ["🧰️framework/🔨️modules/🖱️ui/", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/", "🧰️framework/🛍️products/💻️os/🖥️host/", "✏️s/🔌️plugins/"] as const;
+
+/**
+ * ⏱️ The "single sanctioned runtime module" the thread/pool-construction rule (category
+ * `thread-pool`) is scoped OUTSIDE of — this is a repo-wide check (minus `compose/`), unlike the
+ * `blocking-bridge`/`sync-*` categories which are scoped to [[INTERACTIVITY_AUDIT_UI_ROOTS]] only.
+ * Two roots: the async primitives crate (`ThreadPlan`/`block_on`/`ManualRuntime`) and the os
+ * services crate, whose `TokioHostRuntime` is the one place that actually calls
+ * `tokio::runtime::Builder` today. Both are replaced by the single global `WorkerPool` in Phase 1
+ * (packets P1a/P1b) — this allowlist-by-prefix shrinks to nothing then.
+ */
+const INTERACTIVITY_AUDIT_RUNTIME_SANCTIONED_ROOTS = ["🧰️framework/🔨️modules/⏳️async/", "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/"] as const;
+
+/**
+ * 🚦️ Severity for `verify interactivity`: `"warn"` reports and always exits 0 (Phase 0 — this
+ * ticket); `"deny"` exits non-zero on any un-allowlisted finding or stale allowlist entry (flips at
+ * Phase 3 packet P3c, "forbidden-call audit turns from warn to deny" per the master plan). ONE LINE
+ * to flip.
+ */
+const INTERACTIVITY_AUDIT_SEVERITY: "warn" | "deny" = "warn";
+
+type InteractivityAuditCategory = "blocking-bridge" | "sync-fs" | "sync-net" | "sync-clipboard" | "sync-process" | "sync-db" | "thread-pool";
+
+type InteractivityAuditPatternDef = { category: InteractivityAuditCategory; re: RegExp; label: string; scope: "ui" | "runtime-repo-wide" };
+
+/** ⏱️ Every forbidden call pattern, its category, and which scope rule scans it (`"ui"` → [[INTERACTIVITY_AUDIT_UI_ROOTS]] only; `"runtime-repo-wide"` → whole repo minus `compose/` minus [[INTERACTIVITY_AUDIT_RUNTIME_SANCTIONED_ROOTS]]). */
+const INTERACTIVITY_AUDIT_PATTERNS: readonly InteractivityAuditPatternDef[] = [
+  { category: "blocking-bridge", re: /\bblock_on\s*\(/, label: "block_on(", scope: "ui" },
+  { category: "blocking-bridge", re: /\brun_blocking\s*\(/, label: "run_blocking(", scope: "ui" },
+  { category: "sync-fs", re: /\bstd::fs::/, label: "std::fs::", scope: "ui" },
+  { category: "sync-net", re: /\bstd::net::/, label: "std::net::", scope: "ui" },
+  { category: "sync-net", re: /\breqwest::blocking\b/, label: "reqwest::blocking", scope: "ui" },
+  { category: "sync-clipboard", re: /\barboard::/, label: "arboard::", scope: "ui" },
+  { category: "sync-process", re: /\bstd::process::Command\b/, label: "std::process::Command", scope: "ui" },
+  { category: "sync-db", re: /\brusqlite::/, label: "rusqlite::", scope: "ui" },
+  { category: "sync-db", re: /\bsqlx::/, label: "sqlx::", scope: "ui" },
+  { category: "thread-pool", re: /\bstd::thread::spawn\s*\(/, label: "std::thread::spawn(", scope: "runtime-repo-wide" },
+  { category: "thread-pool", re: /\brayon::ThreadPoolBuilder\b/, label: "rayon::ThreadPoolBuilder", scope: "runtime-repo-wide" },
+  { category: "thread-pool", re: /\btokio::runtime::Builder\b/, label: "tokio::runtime::Builder", scope: "runtime-repo-wide" },
+];
+
+/**
+ * ⏱️ One allow-listed `block_on`/`run_blocking` call site — must carry a reason and the phase that
+ * removes/reconciles it, so the list only ever shrinks. `inScope: false` marks a site pre-declared
+ * for when [[INTERACTIVITY_AUDIT_UI_ROOTS]] widens (not yet reachable by today's scan — never
+ * counted as stale). `expectedNeverToMatch: true` marks a site the scanner structurally cannot see
+ * even when in scope (e.g. sits inside a `#[cfg(test)] mod` the test-mod exclusion already skips) —
+ * kept for the record without being reported as stale.
+ */
+type InteractivityAllowlistEntry = { file: string; lineHint: number; pattern: "block_on" | "run_blocking"; reason: string; phase: string; inScope: boolean; expectedNeverToMatch?: boolean };
+
+/**
+ * ⏱️ Known `block_on`/`run_blocking` call sites as of the Phase 0 audit (baseline commit
+ * `95b8688ee2`). Verified against the repo, not copied blind from the master ticket — 3 of the 5
+ * entries below carry a correction (see each `reason`). CI fails once `verify interactivity` flips
+ * to `"deny"` if an entry here stops matching any real finding (stale) — see `runInteractivityAudit`.
+ */
+const INTERACTIVITY_AUDIT_ALLOWLIST: readonly InteractivityAllowlistEntry[] = [
+  {
+    file: "🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/📦️bin.rs",
+    lineHint: 255,
+    pattern: "block_on",
+    reason: "CLI root — approved process entry point (semio_framework_async::block_on(run_async(args))).",
+    phase: "PERMANENT",
+    inScope: false, // 🏃️run/ is not under any INTERACTIVITY_AUDIT_UI_ROOTS prefix today; pre-declared for when scope widens.
+  },
+  {
+    file: "🧰️framework/🛍️products/💻️os/🖥️host/🎠️activation.rs",
+    lineHint: 114,
+    pattern: "block_on",
+    reason: "Shard forwarder poll loop (semio_framework_async::block_on(forward_side.recv_deadline(FORWARD_POLL))) — deleted in Phase 1 (P1c) with the forwarder threads themselves.",
+    phase: "Phase 1 (P1c) — removed",
+    inScope: true, // 🖥️host/ IS a UI-reachable root.
+  },
+  {
+    file: "🧰️framework/🛍️products/💻️os/🖥️host/🦀️component.rs",
+    lineHint: 1985,
+    pattern: "block_on",
+    reason: "CORRECTED: verified test-only, not production. All block_on calls at this anchor (1956-2055) sit inside `#[cfg(test)] mod tests` under `pub mod host` — a local hygienic block_on helper the R4-clause-5 test-entry-point precedent already sanctions. The audit's test-mod exclusion filters these out on its own; this entry is kept for the record the master ticket asked for, not because the scanner would otherwise flag it.",
+    phase: "PERMANENT (test-only)",
+    inScope: true,
+    expectedNeverToMatch: true,
+  },
+  {
+    file: "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🦀️component.rs",
+    lineHint: 605,
+    pattern: "run_blocking",
+    reason: "CORRECTED PATH: the master ticket's anchor (…/🛎️services/📦️packages/🦀️rust/🦀️component.rs) does not exist; the real file is …/🛎️services/🦀️component.rs (no 📦️packages/🦀️rust segment). `ComputeScheduler::run_blocking` (line 605, `pub async fn run_blocking<T,R>`) and its production call sites become job submissions in Phase 1 (P1b).",
+    phase: "Phase 1 (P1b) — becomes job submission",
+    inScope: false, // 🛎️services/ is not a UI-reachable root today (it IS a INTERACTIVITY_AUDIT_RUNTIME_SANCTIONED_ROOTS entry for the separate thread-pool category).
+  },
+  {
+    file: "🧰️framework/🔨️modules/⏳️async/✨️macros/🦀️component.rs",
+    lineHint: 58,
+    pattern: "block_on",
+    reason: "CORRECTED PATH: the master ticket's anchor (…/✨️macros/📦️packages/🦀️rust/🦀️component.rs) does not exist; the real file is …/✨️macros/🦀️component.rs (no 📦️packages/🦀️rust segment — 📦️glue.rs lives under that nested path instead). #[async_test] expansion generates a hygienically-named `__semio_async_test_block_on` helper via syn/quote! — the emitted identifier never appears as literal `block_on(` source text in THIS file or in any file that uses the attribute, so no static scan (this one included) can see it. Test-only, PERMANENT — kept for the record.",
+    phase: "PERMANENT (test-only)",
+    inScope: false, // ⏳️async/ is not a UI-reachable root; also structurally invisible to any text-based scanner.
+  },
+];
+
+type InteractivityFinding = { category: InteractivityAuditCategory; file: string; line: number; text: string };
+
+/** ⏱️True when `relPath` sits under one of [[INTERACTIVITY_AUDIT_UI_ROOTS]]. */
+function interactivityIsUiReachable(relPath: string): boolean {
+  return INTERACTIVITY_AUDIT_UI_ROOTS.some((root) => relPath.startsWith(root));
+}
+
+/** ⏱️True when `relPath` sits under one of [[INTERACTIVITY_AUDIT_RUNTIME_SANCTIONED_ROOTS]]. */
+function interactivityIsRuntimeSanctioned(relPath: string): boolean {
+  return INTERACTIVITY_AUDIT_RUNTIME_SANCTIONED_ROOTS.some((root) => relPath.startsWith(root));
+}
+
+/** ⏱️Scans one file's lines for `patterns`, skipping `#[cfg(test)] mod … { … }` bodies — matches this repo's own R4 precedent that a test module is a sanctioned executor/blocking entry point, and keeps the audit signal free of unit-test noise unrelated to the UI-thread interactivity goal. */
+function interactivityScanFile(repoRoot: string, relPath: string, patterns: readonly InteractivityAuditPatternDef[]): InteractivityFinding[] {
+  const content = policyReadFileSafe(repoRoot, relPath);
+  if (!content) return [];
+  const findings: InteractivityFinding[] = [];
+  const lines = content.split(/\r?\n/);
+  const testSpans = policyTestModSpans(lines);
+  lines.forEach((raw, i) => {
+    const lineNo = i + 1;
+    if (policyLineInTestMod(testSpans, lineNo)) return;
+    const codeOnly = policyMaskLiterals(raw).replace(/\/\/.*$/, "");
+    for (const pattern of patterns) {
+      if (pattern.re.test(codeOnly)) findings.push({ category: pattern.category, file: relPath, line: lineNo, text: raw.trim().slice(0, 200) });
+    }
+  });
+  return findings;
+}
+
+/** ⏱️Full forbidden-call scan: `blocking-bridge`/`sync-*` categories over [[INTERACTIVITY_AUDIT_UI_ROOTS]]; `thread-pool` repo-wide (minus `compose/` and [[INTERACTIVITY_AUDIT_RUNTIME_SANCTIONED_ROOTS]]). */
+function interactivityAuditScan(repoRoot: string): InteractivityFinding[] {
+  const allRustFiles = policyAllRustFiles(repoRoot).filter((p) => !p.startsWith("compose/"));
+  const uiPatterns = INTERACTIVITY_AUDIT_PATTERNS.filter((p) => p.scope === "ui");
+  const runtimePatterns = INTERACTIVITY_AUDIT_PATTERNS.filter((p) => p.scope === "runtime-repo-wide");
+  const findings: InteractivityFinding[] = [];
+  for (const relPath of allRustFiles) {
+    if (interactivityIsUiReachable(relPath)) findings.push(...interactivityScanFile(repoRoot, relPath, uiPatterns));
+    if (!interactivityIsRuntimeSanctioned(relPath)) findings.push(...interactivityScanFile(repoRoot, relPath, runtimePatterns));
+  }
+  return findings;
+}
+
+type InteractivityAuditReport = {
+  findings: InteractivityFinding[];
+  byCategory: Record<string, number>;
+  blockingBridgeUnlisted: InteractivityFinding[];
+  staleAllowlistEntries: InteractivityAllowlistEntry[];
+  expectedNeverToMatchEntries: InteractivityAllowlistEntry[];
+  preDeclaredOutOfScope: InteractivityAllowlistEntry[];
+};
+
+/** ⏱️Runs the scan and reconciles findings against [[INTERACTIVITY_AUDIT_ALLOWLIST]]. */
+function interactivityAuditRun(repoRoot: string): InteractivityAuditReport {
+  const findings = interactivityAuditScan(repoRoot);
+  const byCategory: Record<string, number> = {};
+  for (const f of findings) byCategory[f.category] = (byCategory[f.category] ?? 0) + 1;
+
+  const blockingBridgeFindings = findings.filter((f) => f.category === "blocking-bridge");
+  const inScopeAllowlist = INTERACTIVITY_AUDIT_ALLOWLIST.filter((e) => e.inScope && !e.expectedNeverToMatch);
+  const expectedNeverToMatchEntries = INTERACTIVITY_AUDIT_ALLOWLIST.filter((e) => e.inScope && e.expectedNeverToMatch);
+  const preDeclaredOutOfScope = INTERACTIVITY_AUDIT_ALLOWLIST.filter((e) => !e.inScope);
+
+  const blockingBridgeUnlisted = blockingBridgeFindings.filter((f) => !inScopeAllowlist.some((e) => e.file === f.file && f.text.includes(e.pattern)));
+  const staleAllowlistEntries = inScopeAllowlist.filter((e) => !blockingBridgeFindings.some((f) => f.file === e.file && f.text.includes(e.pattern)));
+
+  return { findings, byCategory, blockingBridgeUnlisted, staleAllowlistEntries, expectedNeverToMatchEntries, preDeclaredOutOfScope };
+}
+//#endregion 🔖️InteractivityAudit
+
+//#region 🔖️DependencyFreeze
+/** 🔒️Ecosystems the dependency freeze tracks. */
+type DependencyEcosystem = "rust" | "js";
+/** 🔒️Which build/run phase a dependency is pulled in for — a dependency can serve more than one, so this is a set per baseline entry. */
+type DependencyKind = "runtime" | "build" | "test" | "tooling";
+
+/** 🔒️One third-party dependency's baseline record — the unit the freeze ratchet compares by `${ecosystem}:${name}` identity (version excluded from identity so routine patch bumps don't trip the gate; recorded for information only). */
+type DependencyBaselineEntry = { ecosystem: DependencyEcosystem; name: string; version: string; kinds: DependencyKind[]; users: string[] };
+
+/** 🔒️The committed freeze baseline file's shape — `🔒️dependencies.json` at the repo root. */
+type DependencyBaseline = { generatedAt: string; commit: string; entries: DependencyBaselineEntry[] };
+
+/** 🔒️Repo-relative path of the committed dependency-freeze baseline. Root-level, alongside `📋️project.json`/`📜️script.ts`/`🧪️vitest.config.ts` — no existing convention for a repo-wide *hand-ratcheted* generated inventory exists yet (the `🤖️generated/` folders next to owning modules are build-regenerated and gitignored — see `.gitignore` — the opposite of what a freeze baseline needs). */
+const DEPENDENCY_BASELINE_REL_PATH = "🔒️dependencies.json";
+
+/** 🔒️Rust crate name prefixes/exact names treated as first-party even without a `path =` key (defensive fallback — `path =` is the primary signal). */
+function dependencyIsInternalRustName(name: string): boolean {
+  return name.startsWith("semio-") || name.startsWith("semio_") || name === "ports" || /^db(?:_[a-z0-9]+)*$/.test(name);
+}
+
+type DependencyRustEntry = { name: string; version: string; kind: DependencyKind; internal: boolean };
+
+/** 🔒️Parses `[workspace.dependencies]` from the root `Cargo.toml` into a name → {path?, version?} map, used to resolve `name.workspace = true` / `name = { workspace = true }` references in member manifests. */
+function dependencyParseWorkspaceDeps(repoRoot: string): Map<string, { path?: string; version?: string }> {
+  const map = new Map<string, { path?: string; version?: string }>();
+  const content = policyReadFileSafe(repoRoot, "Cargo.toml");
+  const lines = content.split(/\r?\n/);
+  let inSection = false;
+  for (let i = 0; i < lines.length; i += 1) {
+    const trimmed = lines[i]!.trim();
+    if (!trimmed || trimmed.startsWith("#")) continue;
+    const sectionMatch = trimmed.match(/^\[([^\]]+)\]$/);
+    if (sectionMatch) {
+      inSection = sectionMatch[1] === "workspace.dependencies";
+      continue;
+    }
+    if (!inSection) continue;
+    const kv = trimmed.match(/^["']?([A-Za-z0-9_-]+)["']?\s*=\s*(.*)$/);
+    if (!kv) continue;
+    const name = kv[1]!;
+    let full = kv[2]!;
+    if (full.trim().startsWith("{")) {
+      let depth = (full.match(/\{/g) ?? []).length - (full.match(/\}/g) ?? []).length;
+      let j = i;
+      while (depth > 0 && j + 1 < lines.length) {
+        j += 1;
+        full += ` ${lines[j]}`;
+        depth += (lines[j]!.match(/\{/g) ?? []).length - (lines[j]!.match(/\}/g) ?? []).length;
+      }
+      i = j;
+    }
+    const pathMatch = full.match(/\bpath\s*=\s*"([^"]+)"/);
+    const versionMatch = full.match(/(?:^|[{,]\s*)version\s*=\s*"([^"]+)"/) ?? full.match(/^"([^"]+)"/);
+    map.set(name, { path: pathMatch?.[1], version: versionMatch?.[1] });
+  }
+  return map;
+}
+
+const DEPENDENCY_CARGO_SECTION_RE = /(?:^|\.)(dependencies|dev-dependencies|build-dependencies)$/;
+
+/** 🔒️Parses every `[dependencies]`/`[dev-dependencies]`/`[build-dependencies]` table (including `[target.'cfg(...)'.…]` variants) in one `Cargo.toml`, resolving `workspace = true` refs against `workspaceDeps`. */
+function dependencyParseCargoToml(repoRoot: string, relPath: string, workspaceDeps: Map<string, { path?: string; version?: string }>): DependencyRustEntry[] {
+  const content = policyReadFileSafe(repoRoot, relPath);
+  if (!content) return [];
+  const lines = content.split(/\r?\n/);
+  const results: DependencyRustEntry[] = [];
+  type CargoDepSection = "dependencies" | "dev-dependencies" | "build-dependencies";
+  let currentSection: CargoDepSection | null = null;
+  const kindFor = (section: string): DependencyKind => (section === "dev-dependencies" ? "test" : section === "build-dependencies" ? "build" : "runtime");
+
+  for (let i = 0; i < lines.length; i += 1) {
+    const trimmed = lines[i]!.trim();
+    if (!trimmed || trimmed.startsWith("#")) continue;
+    const sectionMatch = trimmed.match(/^\[([^\]]+)\]$/);
+    if (sectionMatch) {
+      const depMatch = sectionMatch[1]!.match(DEPENDENCY_CARGO_SECTION_RE)?.[1] as CargoDepSection | undefined;
+      currentSection = depMatch ?? null;
+      continue;
+    }
+    if (!currentSection) continue;
+
+    // `name.workspace = true` dotted shorthand — must be checked before the generic key=value parse below (its "name" would otherwise swallow the ".workspace" suffix).
+    const dottedWorkspace = trimmed.match(/^["']?([A-Za-z0-9_-]+)["']?\.workspace\s*=\s*true\s*$/);
+    if (dottedWorkspace) {
+      const name = dottedWorkspace[1]!;
+      const ws = workspaceDeps.get(name);
+      results.push({ name, version: ws?.version ?? "*", kind: kindFor(currentSection), internal: Boolean(ws?.path) || dependencyIsInternalRustName(name) });
+      continue;
+    }
+
+    const kv = trimmed.match(/^["']?([A-Za-z0-9_-]+)["']?\s*=\s*(.*)$/);
+    if (!kv) continue;
+    const name = kv[1]!;
+    let full = kv[2]!;
+    if (full.trim().startsWith("{")) {
+      let depth = (full.match(/\{/g) ?? []).length - (full.match(/\}/g) ?? []).length;
+      let j = i;
+      while (depth > 0 && j + 1 < lines.length) {
+        j += 1;
+        full += ` ${lines[j]}`;
+        depth += (lines[j]!.match(/\{/g) ?? []).length - (lines[j]!.match(/\}/g) ?? []).length;
+      }
+      i = j;
+    }
+    const hasPath = /\bpath\s*=\s*"/.test(full);
+    const isWorkspaceRef = /\bworkspace\s*=\s*true/.test(full);
+    let version = (full.match(/(?:^|[{,]\s*)version\s*=\s*"([^"]+)"/) ?? full.match(/^"([^"]+)"/))?.[1] ?? "*";
+    let internal = hasPath || dependencyIsInternalRustName(name);
+    if (isWorkspaceRef) {
+      const ws = workspaceDeps.get(name);
+      if (ws?.path) internal = true;
+      if (ws?.version) version = ws.version;
+    }
+    results.push({ name, version, kind: kindFor(currentSection), internal });
+  }
+  return results;
+}
+
+type DependencyJsEntry = { name: string; version: string; kind: DependencyKind; internal: boolean };
+
+/** 🔒️Every internal (workspace-owned) JS package name — the `"name"` field of every non-compose, non-node_modules `package.json`. Used to classify a dependency as first-party even when it isn't `@semio-tech/…`-scoped or `workspace:`-versioned. */
+function dependencyInternalJsPackageNames(repoRoot: string, manifests: readonly string[]): Set<string> {
+  const names = new Set<string>();
+  for (const relPath of manifests) {
+    try {
+      const pkg = JSON.parse(policyReadFileSafe(repoRoot, relPath)) as { name?: string };
+      if (pkg.name) names.add(pkg.name);
+    } catch {
+      /* ignore unparsable manifest */
+    }
+  }
+  return names;
+}
+
+/** 🔒️Parses one `package.json`'s `dependencies`/`devDependencies`/`peerDependencies`/`optionalDependencies`. */
+function dependencyParsePackageJson(repoRoot: string, relPath: string, internalNames: ReadonlySet<string>): DependencyJsEntry[] {
+  let pkg: Record<string, unknown>;
+  try {
+    pkg = JSON.parse(policyReadFileSafe(repoRoot, relPath)) as Record<string, unknown>;
+  } catch {
+    return [];
+  }
+  const results: DependencyJsEntry[] = [];
+  const sections: { key: string; kind: DependencyKind }[] = [
+    { key: "dependencies", kind: "runtime" },
+    { key: "peerDependencies", kind: "runtime" },
+    { key: "optionalDependencies", kind: "runtime" },
+    { key: "devDependencies", kind: "tooling" },
+  ];
+  for (const { key, kind } of sections) {
+    const table = pkg[key];
+    if (!table || typeof table !== "object") continue;
+    for (const [name, versionRaw] of Object.entries(table as Record<string, string>)) {
+      const version = String(versionRaw);
+      const internal = internalNames.has(name) || name.startsWith("@semio-tech/") || version.startsWith("workspace:") || version.startsWith("file:") || version.startsWith("link:");
+      results.push({ name, version, kind, internal });
+    }
+  }
+  return results;
+}
+
+/** 🔒️Repo-wide `package.json` file paths (repo-relative), skipping `POLICY_SKIP_DIRS` and `compose/` — same discovery shape as `policyDiscoverCargoTomlFiles`. */
+function dependencyDiscoverPackageJsonFiles(repoRoot: string): string[] {
+  const found: string[] = [];
+  const walk = (relDir: string): void => {
+    const abs = join(repoRoot, relDir);
+    let entries: ReturnType<typeof readdirSync>;
+    try {
+      entries = readdirSync(abs, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const ent of entries) {
+      const childRel = relDir ? `${relDir}/${ent.name}` : ent.name;
+      if (ent.isDirectory()) {
+        if (POLICY_SKIP_DIRS.has(ent.name) || ent.name === "compose") continue;
+        walk(childRel);
+        continue;
+      }
+      if (ent.name === "package.json") found.push(childRel);
+    }
+  };
+  walk("");
+  return found.sort();
+}
+
+/** 🔒️Merges every third-party (non-internal) dependency across the whole workspace (Rust + JS, `compose/` excluded) into one baseline-entry list, keyed by `${ecosystem}:${name}`. */
+function dependencyFreezeCurrentThirdParty(repoRoot: string): DependencyBaselineEntry[] {
+  const byKey = new Map<string, DependencyBaselineEntry>();
+  const record = (ecosystem: DependencyEcosystem, name: string, version: string, kind: DependencyKind, user: string): void => {
+    const key = `${ecosystem}:${name}`;
+    const existing = byKey.get(key);
+    if (existing) {
+      if (!existing.kinds.includes(kind)) existing.kinds.push(kind);
+      if (!existing.users.includes(user)) existing.users.push(user);
+      return;
+    }
+    byKey.set(key, { ecosystem, name, version, kinds: [kind], users: [user] });
+  };
+
+  const cargoManifests = policyDiscoverCargoTomlFiles(repoRoot).filter((p) => !p.startsWith("compose/"));
+  const workspaceDeps = dependencyParseWorkspaceDeps(repoRoot);
+  for (const manifest of cargoManifests) {
+    for (const dep of dependencyParseCargoToml(repoRoot, manifest, workspaceDeps)) {
+      if (dep.internal) continue;
+      record("rust", dep.name, dep.version, dep.kind, manifest);
+    }
+  }
+
+  const jsManifests = dependencyDiscoverPackageJsonFiles(repoRoot);
+  const internalJsNames = dependencyInternalJsPackageNames(repoRoot, jsManifests);
+  for (const manifest of jsManifests) {
+    for (const dep of dependencyParsePackageJson(repoRoot, manifest, internalJsNames)) {
+      if (dep.internal) continue;
+      record("js", dep.name, dep.version, dep.kind, manifest);
+    }
+  }
+
+  for (const entry of byKey.values()) {
+    entry.kinds.sort();
+    entry.users.sort();
+  }
+  return [...byKey.values()].sort((a, b) => (a.ecosystem === b.ecosystem ? a.name.localeCompare(b.name) : a.ecosystem.localeCompare(b.ecosystem)));
+}
+
+/** 🔒️Reads the committed baseline, or `null` if it doesn't exist yet (first run — `verify dependencies write-baseline` creates it). */
+function dependencyFreezeLoadBaseline(repoRoot: string): DependencyBaseline | null {
+  const content = policyReadFileSafe(repoRoot, DEPENDENCY_BASELINE_REL_PATH);
+  if (!content) return null;
+  try {
+    return JSON.parse(content) as DependencyBaseline;
+  } catch {
+    return null;
+  }
+}
+
+/** 🔒️Writes the current third-party dependency inventory as the new committed baseline (repo root, `🔒️dependencies.json`). */
+function dependencyFreezeWriteBaseline(repoRoot: string): DependencyBaseline {
+  const probe = runProbe("git", ["rev-parse", "HEAD"], { cwd: repoRoot });
+  const commit = probe.status === 0 ? probe.stdout.trim() : "unknown";
+  const baseline: DependencyBaseline = { generatedAt: new Date().toISOString(), commit, entries: dependencyFreezeCurrentThirdParty(repoRoot) };
+  writeFileSync(join(repoRoot, DEPENDENCY_BASELINE_REL_PATH), `${JSON.stringify(baseline, null, 2)}\n`, "utf8");
+  return baseline;
+}
+
+type DependencyFreezeCheckResult = { baseline: DependencyBaseline; current: DependencyBaselineEntry[]; newDeps: DependencyBaselineEntry[]; removedDeps: DependencyBaselineEntry[] };
+
+/** 🔒️Compares the current third-party inventory against the committed baseline. Only NEW dependencies (present now, absent from baseline) are a failure — removals always pass, so the check only ever ratchets tighter. */
+function dependencyFreezeCheck(repoRoot: string): DependencyFreezeCheckResult {
+  const baseline = dependencyFreezeLoadBaseline(repoRoot);
+  const current = dependencyFreezeCurrentThirdParty(repoRoot);
+  if (!baseline) return { baseline: { generatedAt: "", commit: "", entries: [] }, current, newDeps: current, removedDeps: [] };
+  const baselineKeys = new Set(baseline.entries.map((e) => `${e.ecosystem}:${e.name}`));
+  const currentKeys = new Set(current.map((e) => `${e.ecosystem}:${e.name}`));
+  const newDeps = current.filter((e) => !baselineKeys.has(`${e.ecosystem}:${e.name}`));
+  const removedDeps = baseline.entries.filter((e) => !currentKeys.has(`${e.ecosystem}:${e.name}`));
+  return { baseline, current, newDeps, removedDeps };
+}
+//#endregion 🔖️DependencyFreeze
 
 //#region 🔖️FormatScript
 export class FormatScript extends Script {

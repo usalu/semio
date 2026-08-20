@@ -34,8 +34,17 @@ semio-framework-actor = { workspace = true }
 # vocabulary is domain-neutral, zero tokio) and dispatches onto `HttpPool`/`StorageScheduler`/
 # `TimerWheel`/`ComputePool`/`EventRouter` (packet R2's tokio-backed services) — same dependency
 # shape `semio-framework-os-services` itself already establishes.
-semio-framework-async = { workspace = true }
+# 🧵️ P1c (one-pool-worker-runtime): `"entrypoint"` is required (not merely `cfg(test)`) because
+# `🧵️shard/🏃️executor.rs`'s `ShardExecutor::run` calls `semio_framework_async::block_on` from a
+# PRODUCTION `WorkerPool` job closure (a plain OS thread, no async executor already polling it) —
+# the same shape `ComputePool`/`TokioHostRuntime` bridges use, per `semio-framework-async`'s own
+# `block_on` gate doc.
+semio-framework-async = { workspace = true, features = ["entrypoint"] }
 semio-framework-os-services = { workspace = true }
+# 🐕️ P1c (one-pool-worker-runtime): `ShardLoop::execute_turn_for`/its job-step counterpart wrap each
+# guest call in a `semio_framework_trace::Watchdog` so an over-8ms turn is recorded as a contract
+# violation instead of silently absorbed — see `📓️p1c-actor-shards.md`.
+semio-framework-trace = { workspace = true }
 # ⏳️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-runtime-rewrite): `⏳️runtime.rs`'s
 # `AsyncActorTask` is one `tokio::spawn`ed task per actor, coordinated with its caller over
 # `tokio::sync::{mpsc,oneshot}` — the ONLY tokio surface this crate needs. `["sync", "rt"]` only:

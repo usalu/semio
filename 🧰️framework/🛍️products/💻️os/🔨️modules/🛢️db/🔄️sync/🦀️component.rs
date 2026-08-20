@@ -291,8 +291,8 @@ pub async fn build_welcome(state: &ArtifactSyncState, plan: &BootstrapPlan, sess
 /// `RuntimeFrontierSummary`, `None` for a totally fresh replica — see module doc for why this
 /// crate reads `Hello.frontier` rather than decoding `Hello.resume_token`), and lowers it to a
 /// `WelcomeResponse`.
-pub async fn handle_hello<R: semio_framework_async::HostAsyncRuntime>(
-    storage: &db_storage::DbBackend<R>,
+pub async fn handle_hello(
+    storage: &db_storage::DbBackend,
     document: ArtifactId,
     hello_frontier: Option<&protocol::RuntimeFrontierSummary>,
     session_id: String,
@@ -589,7 +589,7 @@ mod tests {
         let storage = MemoryStorage::new().await;
         let document: ArtifactId = "doc-1".into();
         seed_wal(&storage, &document, 3).await;
-        let storage: db_storage::DbBackend<db_storage::InlineRuntime> = db_storage::DbBackend::Memory(storage);
+        let storage: db_storage::DbBackend = db_storage::DbBackend::Memory(storage);
 
         let response = db_actor::block_on(handle_hello(&storage, document, None, "session-1".to_string(), &protocol::ActorId("semio_hub".to_string()), 64 * 1024)).unwrap();
         let protocol::ServerFrame::Welcome { bootstrap, server_frontier, resume_token, .. } = &response.welcome else {
@@ -612,7 +612,7 @@ mod tests {
         seed_wal(&storage, &document, 2).await;
         let state = db_actor::block_on(replay_sync_state(&storage, document.clone())).unwrap();
         let hello_frontier = state_frontier_summary(&state).await;
-        let storage: db_storage::DbBackend<db_storage::InlineRuntime> = db_storage::DbBackend::Memory(storage);
+        let storage: db_storage::DbBackend = db_storage::DbBackend::Memory(storage);
 
         let response = db_actor::block_on(handle_hello(&storage, document, Some(&hello_frontier), "session-2".to_string(), &protocol::ActorId("semio_hub".to_string()), 64 * 1024)).unwrap();
         let protocol::ServerFrame::Welcome { bootstrap, .. } = &response.welcome else {
@@ -631,7 +631,7 @@ mod tests {
         publish_snapshot_marker(&storage, &document, 9, floor_frontier).await;
         let big_snapshot = vec![7u8; 10];
         db_actor::block_on(db_storage::SnapshotStorage::write_generation(&storage, &document, 9, &big_snapshot)).unwrap();
-        let storage: db_storage::DbBackend<db_storage::InlineRuntime> = db_storage::DbBackend::Memory(storage);
+        let storage: db_storage::DbBackend = db_storage::DbBackend::Memory(storage);
 
         let stale_hello_frontier = protocol::RuntimeFrontierSummary { document_id: protocol::ArtifactId(document.0.clone()), head_edit_ordinal: 0, head_edit_id: String::new(), last_commit_seq: 0, chain_hash: [0u8; 32] };
         let response = db_actor::block_on(handle_hello(&storage, document, Some(&stale_hello_frontier), "session-3".to_string(), &protocol::ActorId("semio_hub".to_string()), 4)).unwrap();
@@ -650,7 +650,7 @@ mod tests {
         let storage = MemoryStorage::new().await;
         let document: ArtifactId = "doc-1".into();
         seed_wal(&storage, &document, 1).await;
-        let storage: db_storage::DbBackend<db_storage::InlineRuntime> = db_storage::DbBackend::Memory(storage);
+        let storage: db_storage::DbBackend = db_storage::DbBackend::Memory(storage);
         assert!(matches!(db_actor::block_on(handle_hello(&storage, document, None, "s".to_string(), &protocol::ActorId("semio_hub".to_string()), 0)), Err(DbError::InvalidArgument(_))));
     }
 

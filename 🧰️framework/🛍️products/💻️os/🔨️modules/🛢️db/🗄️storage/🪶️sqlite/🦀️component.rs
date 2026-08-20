@@ -19,11 +19,11 @@
 //!
 //! ⏳️ **Async-first (design ticket `26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME`, packet W6)**:
 //! `rusqlite` is a genuinely BLOCKING C client (unlike `sqlx`/`neo4rs`) — every `db_storage`
-//! sub-trait method here is a plain `async fn` whose body dispatches through
-//! `semio_framework_async::HostAsyncRuntime::run_blocking` (via `db_storage`'s own
-//! `run_blocking_op` bridge) rather than ever running the SQLite call on the calling async task's
-//! own thread. This crate names no `tokio`/executor of its own — mirrors `db_storage::FsStorage`'s
-//! identical crossing.
+//! sub-trait method here is a plain `async fn` whose body dispatches through `db_storage`'s own
+//! `run_blocking_op` bridge, which submits onto the process-wide `semio_framework_async::WorkerPool`
+//! (`Lane::Io`) rather than ever running the SQLite call on the calling async task's own thread.
+//! This crate names no `tokio`/executor of its own — mirrors `db_storage::FsStorage`'s identical
+//! crossing.
 //!
 //! 🔒️ Durability choice: the connection is opened with `PRAGMA synchronous = FULL` (in `WAL`
 //! journal mode, this fsyncs the WAL file on every commit — see SQLite's own docs on
@@ -50,7 +50,7 @@ mod sqlite_storage {
     use crate::db_storage::{run_blocking_op, CatalogStorage, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalStorage};
     use pack::{ByteRange, ContentHash};
     use rusqlite::{params, Connection, OptionalExtension, TransactionBehavior};
-    use semio_framework_async::{HostAsyncRuntime, ScopeHandle};
+    use semio_framework_async::WorkerPool;
     use std::sync::{Arc, Mutex};
 
     //#region 🔖️Schema
@@ -125,7 +125,8 @@ CREATE TABLE IF NOT EXISTS lease (
     /// indices (segment/generation/run ids, epochs, millisecond timestamps) are validated to fit
     /// before being cast, rather than silently reinterpreting an out-of-range value's bit pattern
     /// as negative.
-    async fn to_sql_i64(value: u64, what: &'static str) -> Result<i64, DbError> {
+    // 🚫️async: E1 pure accessor, every caller is a sync `run_blocking_op` closure — see R9
+    fn to_sql_i64(value: u64, what: &'static str) -> Result<i64, DbError> {
         i64::try_from(value).map_err(|_| DbError::LimitExceeded(what))
     }
     //#endregion 🔖️Errors
@@ -137,45 +138,46 @@ CREATE TABLE IF NOT EXISTS lease (
     /// — `rusqlite` is synchronous, and every method here is a short, bounded query/transaction,
     /// so holding the mutex for a call's duration never becomes a real bottleneck at this crate's
     /// scope.
-    pub struct SqliteStorage<R: HostAsyncRuntime> {
+    pub struct SqliteStorage {
         conn: Arc<Mutex<Connection>>,
-        runtime: Arc<R>,
-        scope: ScopeHandle,
+        pool: Option<Arc<WorkerPool>>,
     }
 
     /// @emoji 🩹️ Recovers the connection mutex from a poisoned lock instead of panicking — a
     /// single panicking caller must not turn every subsequent storage call into a cascading
     /// panic (mirrors `db_storage::MemoryStorage`'s own `lock` helper).
-    async fn lock(conn: &Mutex<Connection>) -> std::sync::MutexGuard<'_, Connection> {
+    // 🚫️async: E1 pure accessor, every caller is a sync `run_blocking_op` closure — see R9
+    fn lock(conn: &Mutex<Connection>) -> std::sync::MutexGuard<'_, Connection> {
         conn.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
     }
 
-    impl<R: HostAsyncRuntime> SqliteStorage<R> {
+    impl SqliteStorage {
         /// @emoji 🚀️ Opens (creating the file and its parent directories if absent) a
         /// `SqliteStorage` at `path` and bootstraps the schema. Safe to call repeatedly against
         /// the same path (schema DDL is `IF NOT EXISTS`, data is untouched). Dispatches every
-        /// subsequent trait call's blocking body through `runtime`'s `run_blocking`, scoped to
-        /// `scope` — this constructor itself stays synchronous (a one-time, small open+DDL, not
-        /// part of any `DbStorage` trait method's hot path), mirroring `FsStorage::open`.
-        pub async fn open(runtime: Arc<R>, scope: ScopeHandle, path: &std::path::Path) -> Result<Self, DbError> {
+        /// subsequent trait call's blocking body through `run_blocking_op` onto `pool`'s
+        /// `Lane::Io` (or inline, if `pool` is `None`) — this constructor itself stays synchronous
+        /// (a one-time, small open+DDL, not part of any `DbStorage` trait method's hot path),
+        /// mirroring `FsStorage::open`.
+        pub async fn open(pool: Option<Arc<WorkerPool>>, path: &std::path::Path) -> Result<Self, DbError> {
             if let Some(parent) = path.parent() {
                 if !parent.as_os_str().is_empty() {
                     std::fs::create_dir_all(parent).map_err(|err| DbError::Io(err.to_string()))?;
                 }
             }
             let conn = Connection::open(path).map_err(sqlite_err)?;
-            Self::init(conn, runtime, scope)
+            Self::init(conn, pool).await
         }
 
         /// @emoji 🧪️ Opens a private, in-memory `SqliteStorage` — never durable across process
         /// exit; exists for fast unit tests that don't care about on-disk persistence (the
         /// crash/reopen laws are exercised against a real file in `//#region 🧪️Tests` instead).
-        pub async fn open_in_memory(runtime: Arc<R>, scope: ScopeHandle) -> Result<Self, DbError> {
+        pub async fn open_in_memory(pool: Option<Arc<WorkerPool>>) -> Result<Self, DbError> {
             let conn = Connection::open_in_memory().map_err(sqlite_err)?;
-            Self::init(conn, runtime, scope)
+            Self::init(conn, pool).await
         }
 
-        async fn init(conn: Connection, runtime: Arc<R>, scope: ScopeHandle) -> Result<Self, DbError> {
+        async fn init(conn: Connection, pool: Option<Arc<WorkerPool>>) -> Result<Self, DbError> {
             // 🎯️ `journal_mode = WAL` is a no-op (silently stays `memory`) on an in-memory
             // connection — SQLite doesn't error on the pragma either way, so `open_in_memory`
             // shares this path.
@@ -183,20 +185,19 @@ CREATE TABLE IF NOT EXISTS lease (
             conn.pragma_update(None, "synchronous", "FULL").map_err(sqlite_err)?;
             conn.pragma_update(None, "foreign_keys", "OFF").map_err(sqlite_err)?;
             conn.execute_batch(SCHEMA).map_err(sqlite_err)?;
-            Ok(Self { conn: Arc::new(Mutex::new(conn)), runtime, scope })
+            Ok(Self { conn: Arc::new(Mutex::new(conn)), pool })
         }
     }
     //#endregion 🔖️Connection
 
     //#region 🔖️WalStorage
-    impl<R: HostAsyncRuntime> WalStorage for SqliteStorage<R> {
+    impl WalStorage for SqliteStorage {
         async fn create_segment(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
             let conn = self.conn.clone();
             let document = document.clone();
-            let runtime = self.runtime.clone();
-            let scope = self.scope.clone();
+            let pool = self.pool.clone();
             {
-                run_blocking_op(&*runtime, &scope, move || {
+                run_blocking_op(pool.as_deref(), move || {
                     let index = to_sql_i64(index, "wal_storage::create_segment index")?;
                     let conn = lock(&conn);
                     let exists: bool = conn.query_row("SELECT EXISTS(SELECT 1 FROM wal_segment WHERE document = ?1 AND segment_index = ?2)", params![document.0, index], |row| row.get(0)).map_err(sqlite_err)?;
@@ -217,10 +218,9 @@ CREATE TABLE IF NOT EXISTS lease (
             let conn = self.conn.clone();
             let document = document.clone();
             let bytes = bytes.to_vec();
-            let runtime = self.runtime.clone();
-            let scope = self.scope.clone();
+            let pool = self.pool.clone();
             {
-                run_blocking_op(&*runtime, &scope, move || {
+                run_blocking_op(pool.as_deref(), move || {
                     let sql_index = to_sql_i64(index, "wal_storage::append index")?;
                     let conn = lock(&conn);
                     let sealed: i64 = conn
@@ -253,10 +253,9 @@ CREATE TABLE IF NOT EXISTS lease (
         async fn seal(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
             let conn = self.conn.clone();
             let document = document.clone();
-            let runtime = self.runtime.clone();
-            let scope = self.scope.clone();
+            let pool = self.pool.clone();
             {
-                run_blocking_op(&*runtime, &scope, move || {
+                run_blocking_op(pool.as_deref(), move || {
                     let sql_index = to_sql_i64(index, "wal_storage::seal index")?;
                     let conn = lock(&conn);
                     // 🎯️ `changes()` counts rows matched by the WHERE clause regardless of whether
@@ -279,10 +278,9 @@ CREATE TABLE IF NOT EXISTS lease (
             }
             let conn = self.conn.clone();
             let document = document.clone();
-            let runtime = self.runtime.clone();
-            let scope = self.scope.clone();
+            let pool = self.pool.clone();
             {
-                run_blocking_op(&*runtime, &scope, move || {
+                run_blocking_op(pool.as_deref(), move || {
                     let sql_index = to_sql_i64(index, "wal_storage::read index")?;
                     let conn = lock(&conn);
                     let bytes: Vec<u8> = conn
@@ -304,10 +302,9 @@ CREATE TABLE IF NOT EXISTS lease (
         async fn segment_len(&self, document: &ArtifactId, index: u64) -> Result<u64, DbError> {
             let conn = self.conn.clone();
             let document = document.clone();
-            let runtime = self.runtime.clone();
-            let scope = self.scope.clone();
+            let pool = self.pool.clone();
             {
-                run_blocking_op(&*runtime, &scope, move || {
+                run_blocking_op(pool.as_deref(), move || {
                     let sql_index = to_sql_i64(index, "wal_storage::segment_len index")?;
                     let conn = lock(&conn);
                     let len: i64 = conn
@@ -324,10 +321,9 @@ CREATE TABLE IF NOT EXISTS lease (
         async fn list_segments(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
             let conn = self.conn.clone();
             let document = document.clone();
-            let runtime = self.runtime.clone();
-            let scope = self.scope.clone();
+            let pool = self.pool.clone();
             {
-                run_blocking_op(&*runtime, &scope, move || {
+                run_blocking_op(pool.as_deref(), move || {
                     let conn = lock(&conn);
                     let mut stmt = conn.prepare("SELECT segment_index FROM wal_segment WHERE document = ?1 ORDER BY segment_index ASC").map_err(sqlite_err)?;
                     let rows = stmt.query_map(params![document.0], |row| row.get::<_, i64>(0)).map_err(sqlite_err)?;
@@ -344,10 +340,9 @@ CREATE TABLE IF NOT EXISTS lease (
         async fn truncate_tail(&self, document: &ArtifactId, index: u64, new_len: u64) -> Result<(), DbError> {
             let conn = self.conn.clone();
             let document = document.clone();
-            let runtime = self.runtime.clone();
-            let scope = self.scope.clone();
+            let pool = self.pool.clone();
             {
-                run_blocking_op(&*runtime, &scope, move || {
+                run_blocking_op(pool.as_deref(), move || {
                     let sql_index = to_sql_i64(index, "wal_storage::truncate_tail index")?;
                     let conn = lock(&conn);
                     let (sealed, current_len): (i64, i64) = conn
@@ -372,10 +367,9 @@ CREATE TABLE IF NOT EXISTS lease (
         async fn delete_segment(&self, document: &ArtifactId, index: u64) -> Result<(), DbError> {
             let conn = self.conn.clone();
             let document = document.clone();
-            let runtime = self.runtime.clone();
-            let scope = self.scope.clone();
+            let pool = self.pool.clone();
             {
-                run_blocking_op(&*runtime, &scope, move || {
+                run_blocking_op(pool.as_deref(), move || {
                     let sql_index = to_sql_i64(index, "wal_storage::delete_segment index")?;
                     let conn = lock(&conn);
                     conn.execute("DELETE FROM wal_segment WHERE document = ?1 AND segment_index = ?2", params![document.0, sql_index]).map_err(sqlite_err)?;
@@ -388,7 +382,7 @@ CREATE TABLE IF NOT EXISTS lease (
     //#endregion 🔖️WalStorage
 
     //#region 🔖️SnapshotStorage
-    impl<R: HostAsyncRuntime> SnapshotStorage for SqliteStorage<R> {
+    impl SnapshotStorage for SqliteStorage {
         async fn write_generation(&self, document: &ArtifactId, generation: u64, bytes: &[u8]) -> Result<(), DbError> {
             if let Err(err) = check_len(bytes.len() as u64, MAX_BLOB_BYTES, "snapshot_storage::write_generation") {
                 return { Err(err) };
@@ -396,10 +390,9 @@ CREATE TABLE IF NOT EXISTS lease (
             let conn = self.conn.clone();
             let document = document.clone();
             let bytes = bytes.to_vec();
-            let runtime = self.runtime.clone();
-            let scope = self.scope.clone();
+            let pool = self.pool.clone();
             {
-                run_blocking_op(&*runtime, &scope, move || {
+                run_blocking_op(pool.as_deref(), move || {
                     let sql_generation = to_sql_i64(generation, "snapshot_storage::write_generation generation")?;
                     let conn = lock(&conn);
                     conn.execute(
@@ -417,10 +410,9 @@ CREATE TABLE IF NOT EXISTS lease (
         async fn read_generation(&self, document: &ArtifactId, generation: u64) -> Result<Vec<u8>, DbError> {
             let conn = self.conn.clone();
             let document = document.clone();
-            let runtime = self.runtime.clone();
-            let scope = self.scope.clone();
+            let pool = self.pool.clone();
             {
-                run_blocking_op(&*runtime, &scope, move || {
+                run_blocking_op(pool.as_deref(), move || {
                     let sql_generation = to_sql_i64(generation, "snapshot_storage::read_generation generation")?;
                     let conn = lock(&conn);
                     conn.query_row("SELECT bytes FROM snapshot_generation WHERE document = ?1 AND generation = ?2", params![document.0, sql_generation], |row| row.get(0))
@@ -435,10 +427,9 @@ CREATE TABLE IF NOT EXISTS lease (
         async fn latest_generation(&self, document: &ArtifactId) -> Result<Option<u64>, DbError> {
             let conn = self.conn.clone();
             let document = document.clone();
-            let runtime = self.runtime.clone();
-            let scope = self.scope.clone();
+            let pool = self.pool.clone();
             {
-                run_blocking_op(&*runtime, &scope, move || {
+                run_blocking_op(pool.as_deref(), move || {
                     let conn = lock(&conn);
                     let max: Option<i64> = conn.query_row("SELECT MAX(generation) FROM snapshot_generation WHERE document = ?1", params![document.0], |row| row.get(0)).map_err(sqlite_err)?;
                     Ok(max.map(|value| value as u64))
@@ -450,10 +441,9 @@ CREATE TABLE IF NOT EXISTS lease (
         async fn list_generations(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
             let conn = self.conn.clone();
             let document = document.clone();
-            let runtime = self.runtime.clone();
-            let scope = self.scope.clone();
+            let pool = self.pool.clone();
             {
-                run_blocking_op(&*runtime, &scope, move || {
+                run_blocking_op(pool.as_deref(), move || {
                     let conn = lock(&conn);
                     let mut stmt = conn.prepare("SELECT generation FROM snapshot_generation WHERE document = ?1 ORDER BY generation ASC").map_err(sqlite_err)?;
                     let rows = stmt.query_map(params![document.0], |row| row.get::<_, i64>(0)).map_err(sqlite_err)?;
@@ -470,10 +460,9 @@ CREATE TABLE IF NOT EXISTS lease (
         async fn delete_generation(&self, document: &ArtifactId, generation: u64) -> Result<(), DbError> {
             let conn = self.conn.clone();
             let document = document.clone();
-            let runtime = self.runtime.clone();
-            let scope = self.scope.clone();
+            let pool = self.pool.clone();
             {
-                run_blocking_op(&*runtime, &scope, move || {
+                run_blocking_op(pool.as_deref(), move || {
                     let sql_generation = to_sql_i64(generation, "snapshot_storage::delete_generation generation")?;
                     let conn = lock(&conn);
                     conn.execute("DELETE FROM snapshot_generation WHERE document = ?1 AND generation = ?2", params![document.0, sql_generation]).map_err(sqlite_err)?;
@@ -486,17 +475,16 @@ CREATE TABLE IF NOT EXISTS lease (
     //#endregion 🔖️SnapshotStorage
 
     //#region 🔖️PayloadStorage
-    impl<R: HostAsyncRuntime> PayloadStorage for SqliteStorage<R> {
+    impl PayloadStorage for SqliteStorage {
         async fn put(&self, bytes: &[u8]) -> Result<ContentHash, DbError> {
             if let Err(err) = check_len(bytes.len() as u64, MAX_BLOB_BYTES, "payload_storage::put") {
                 return { Err(err) };
             }
             let conn = self.conn.clone();
             let bytes = bytes.to_vec();
-            let runtime = self.runtime.clone();
-            let scope = self.scope.clone();
+            let pool = self.pool.clone();
             {
-                run_blocking_op(&*runtime, &scope, move || {
+                run_blocking_op(pool.as_deref(), move || {
                     let hash = ContentHash(*blake3::hash(&bytes).as_bytes());
                     let conn = lock(&conn);
                     conn.execute("INSERT INTO payload (hash, bytes, len) VALUES (?1, ?2, ?3) ON CONFLICT(hash) DO NOTHING", params![hash.to_string(), bytes, bytes.len() as i64]).map_err(sqlite_err)?;
@@ -509,10 +497,9 @@ CREATE TABLE IF NOT EXISTS lease (
         async fn get(&self, hash: &ContentHash) -> Result<Vec<u8>, DbError> {
             let conn = self.conn.clone();
             let hash = *hash;
-            let runtime = self.runtime.clone();
-            let scope = self.scope.clone();
+            let pool = self.pool.clone();
             {
-                run_blocking_op(&*runtime, &scope, move || {
+                run_blocking_op(pool.as_deref(), move || {
                     let conn = lock(&conn);
                     conn.query_row("SELECT bytes FROM payload WHERE hash = ?1", params![hash.to_string()], |row| row.get(0)).optional().map_err(sqlite_err)?.ok_or_else(|| DbError::NotFound(format!("payload {hash} not found")))
                 })
@@ -523,10 +510,9 @@ CREATE TABLE IF NOT EXISTS lease (
         async fn contains(&self, hash: &ContentHash) -> Result<bool, DbError> {
             let conn = self.conn.clone();
             let hash = *hash;
-            let runtime = self.runtime.clone();
-            let scope = self.scope.clone();
+            let pool = self.pool.clone();
             {
-                run_blocking_op(&*runtime, &scope, move || {
+                run_blocking_op(pool.as_deref(), move || {
                     let conn = lock(&conn);
                     conn.query_row("SELECT EXISTS(SELECT 1 FROM payload WHERE hash = ?1)", params![hash.to_string()], |row| row.get(0)).map_err(sqlite_err)
                 })
@@ -537,10 +523,9 @@ CREATE TABLE IF NOT EXISTS lease (
         async fn delete(&self, hash: &ContentHash) -> Result<(), DbError> {
             let conn = self.conn.clone();
             let hash = *hash;
-            let runtime = self.runtime.clone();
-            let scope = self.scope.clone();
+            let pool = self.pool.clone();
             {
-                run_blocking_op(&*runtime, &scope, move || {
+                run_blocking_op(pool.as_deref(), move || {
                     let conn = lock(&conn);
                     conn.execute("DELETE FROM payload WHERE hash = ?1", params![hash.to_string()]).map_err(sqlite_err)?;
                     Ok(())
@@ -552,10 +537,9 @@ CREATE TABLE IF NOT EXISTS lease (
         async fn len(&self, hash: &ContentHash) -> Result<u64, DbError> {
             let conn = self.conn.clone();
             let hash = *hash;
-            let runtime = self.runtime.clone();
-            let scope = self.scope.clone();
+            let pool = self.pool.clone();
             {
-                run_blocking_op(&*runtime, &scope, move || {
+                run_blocking_op(pool.as_deref(), move || {
                     let conn = lock(&conn);
                     let len: i64 = conn.query_row("SELECT len FROM payload WHERE hash = ?1", params![hash.to_string()], |row| row.get(0)).optional().map_err(sqlite_err)?.ok_or_else(|| DbError::NotFound(format!("payload {hash} not found")))?;
                     Ok(len as u64)
@@ -567,13 +551,12 @@ CREATE TABLE IF NOT EXISTS lease (
     //#endregion 🔖️PayloadStorage
 
     //#region 🔖️CatalogStorage
-    impl<R: HostAsyncRuntime> CatalogStorage for SqliteStorage<R> {
+    impl CatalogStorage for SqliteStorage {
         async fn read_root(&self) -> Result<Option<(Vec<u8>, EpochFence)>, DbError> {
             let conn = self.conn.clone();
-            let runtime = self.runtime.clone();
-            let scope = self.scope.clone();
+            let pool = self.pool.clone();
             {
-                run_blocking_op(&*runtime, &scope, move || {
+                run_blocking_op(pool.as_deref(), move || {
                     let conn = lock(&conn);
                     let row: Option<(Vec<u8>, i64)> = conn.query_row("SELECT bytes, epoch FROM catalog_root WHERE id = 0", [], |row| Ok((row.get(0)?, row.get(1)?))).optional().map_err(sqlite_err)?;
                     Ok(row.map(|(bytes, epoch)| (bytes, EpochFence { epoch: epoch as u64 })))
@@ -588,10 +571,9 @@ CREATE TABLE IF NOT EXISTS lease (
             }
             let conn = self.conn.clone();
             let new_bytes = new_bytes.to_vec();
-            let runtime = self.runtime.clone();
-            let scope = self.scope.clone();
+            let pool = self.pool.clone();
             {
-                run_blocking_op(&*runtime, &scope, move || {
+                run_blocking_op(pool.as_deref(), move || {
                     let mut conn = lock(&conn);
                     // 🎯️ `IMMEDIATE` acquires SQLite's write lock before the read, so a concurrent writer
                     // (another thread OR another OS process against the same file) can't slip a write in
@@ -618,7 +600,7 @@ CREATE TABLE IF NOT EXISTS lease (
     //#endregion 🔖️CatalogStorage
 
     //#region 🔖️IndexStorage
-    impl<R: HostAsyncRuntime> IndexStorage for SqliteStorage<R> {
+    impl IndexStorage for SqliteStorage {
         async fn write_run(&self, document: &ArtifactId, run_id: u64, bytes: &[u8]) -> Result<(), DbError> {
             if let Err(err) = check_len(bytes.len() as u64, MAX_BLOB_BYTES, "index_storage::write_run") {
                 return { Err(err) };
@@ -626,10 +608,9 @@ CREATE TABLE IF NOT EXISTS lease (
             let conn = self.conn.clone();
             let document = document.clone();
             let bytes = bytes.to_vec();
-            let runtime = self.runtime.clone();
-            let scope = self.scope.clone();
+            let pool = self.pool.clone();
             {
-                run_blocking_op(&*runtime, &scope, move || {
+                run_blocking_op(pool.as_deref(), move || {
                     let sql_run_id = to_sql_i64(run_id, "index_storage::write_run run_id")?;
                     let conn = lock(&conn);
                     conn.execute(
@@ -647,10 +628,9 @@ CREATE TABLE IF NOT EXISTS lease (
         async fn read_run(&self, document: &ArtifactId, run_id: u64) -> Result<Vec<u8>, DbError> {
             let conn = self.conn.clone();
             let document = document.clone();
-            let runtime = self.runtime.clone();
-            let scope = self.scope.clone();
+            let pool = self.pool.clone();
             {
-                run_blocking_op(&*runtime, &scope, move || {
+                run_blocking_op(pool.as_deref(), move || {
                     let sql_run_id = to_sql_i64(run_id, "index_storage::read_run run_id")?;
                     let conn = lock(&conn);
                     conn.query_row("SELECT bytes FROM index_run WHERE document = ?1 AND run_id = ?2", params![document.0, sql_run_id], |row| row.get(0))
@@ -665,10 +645,9 @@ CREATE TABLE IF NOT EXISTS lease (
         async fn list_runs(&self, document: &ArtifactId) -> Result<Vec<u64>, DbError> {
             let conn = self.conn.clone();
             let document = document.clone();
-            let runtime = self.runtime.clone();
-            let scope = self.scope.clone();
+            let pool = self.pool.clone();
             {
-                run_blocking_op(&*runtime, &scope, move || {
+                run_blocking_op(pool.as_deref(), move || {
                     let conn = lock(&conn);
                     let mut stmt = conn.prepare("SELECT run_id FROM index_run WHERE document = ?1 ORDER BY run_id ASC").map_err(sqlite_err)?;
                     let rows = stmt.query_map(params![document.0], |row| row.get::<_, i64>(0)).map_err(sqlite_err)?;
@@ -685,10 +664,9 @@ CREATE TABLE IF NOT EXISTS lease (
         async fn delete_run(&self, document: &ArtifactId, run_id: u64) -> Result<(), DbError> {
             let conn = self.conn.clone();
             let document = document.clone();
-            let runtime = self.runtime.clone();
-            let scope = self.scope.clone();
+            let pool = self.pool.clone();
             {
-                run_blocking_op(&*runtime, &scope, move || {
+                run_blocking_op(pool.as_deref(), move || {
                     let sql_run_id = to_sql_i64(run_id, "index_storage::delete_run run_id")?;
                     let conn = lock(&conn);
                     conn.execute("DELETE FROM index_run WHERE document = ?1 AND run_id = ?2", params![document.0, sql_run_id]).map_err(sqlite_err)?;
@@ -701,15 +679,14 @@ CREATE TABLE IF NOT EXISTS lease (
     //#endregion 🔖️IndexStorage
 
     //#region 🔖️LeaseStorage
-    impl<R: HostAsyncRuntime> LeaseStorage for SqliteStorage<R> {
+    impl LeaseStorage for SqliteStorage {
         async fn acquire(&self, resource: &str, holder: &str, ttl_ms: u64, now_ms: u64) -> Result<EpochFence, DbError> {
             let conn = self.conn.clone();
             let resource = resource.to_string();
             let holder = holder.to_string();
-            let runtime = self.runtime.clone();
-            let scope = self.scope.clone();
+            let pool = self.pool.clone();
             {
-                run_blocking_op(&*runtime, &scope, move || {
+                run_blocking_op(pool.as_deref(), move || {
                     let mut conn = lock(&conn);
                     let tx = conn.transaction_with_behavior(TransactionBehavior::Immediate).map_err(sqlite_err)?;
                     let existing: Option<(String, i64, i64)> = tx.query_row("SELECT holder, epoch, expires_at_ms FROM lease WHERE resource = ?1", params![resource], |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?))).optional().map_err(sqlite_err)?;
@@ -742,10 +719,9 @@ CREATE TABLE IF NOT EXISTS lease (
             let conn = self.conn.clone();
             let resource = resource.to_string();
             let holder = holder.to_string();
-            let runtime = self.runtime.clone();
-            let scope = self.scope.clone();
+            let pool = self.pool.clone();
             {
-                run_blocking_op(&*runtime, &scope, move || {
+                run_blocking_op(pool.as_deref(), move || {
                     let mut conn = lock(&conn);
                     let tx = conn.transaction_with_behavior(TransactionBehavior::Immediate).map_err(sqlite_err)?;
                     let (existing_holder, epoch, expires_at_ms): (String, i64, i64) = tx
@@ -773,10 +749,9 @@ CREATE TABLE IF NOT EXISTS lease (
             let conn = self.conn.clone();
             let resource = resource.to_string();
             let holder = holder.to_string();
-            let runtime = self.runtime.clone();
-            let scope = self.scope.clone();
+            let pool = self.pool.clone();
             {
-                run_blocking_op(&*runtime, &scope, move || {
+                run_blocking_op(pool.as_deref(), move || {
                     let mut conn = lock(&conn);
                     let tx = conn.transaction_with_behavior(TransactionBehavior::Immediate).map_err(sqlite_err)?;
                     let (existing_holder, epoch): (String, i64) = tx
@@ -799,10 +774,9 @@ CREATE TABLE IF NOT EXISTS lease (
         async fn current(&self, resource: &str, now_ms: u64) -> Result<Option<LeaseInfo>, DbError> {
             let conn = self.conn.clone();
             let resource = resource.to_string();
-            let runtime = self.runtime.clone();
-            let scope = self.scope.clone();
+            let pool = self.pool.clone();
             {
-                run_blocking_op(&*runtime, &scope, move || {
+                run_blocking_op(pool.as_deref(), move || {
                     let conn = lock(&conn);
                     let existing: Option<(String, i64, i64)> = conn.query_row("SELECT holder, epoch, expires_at_ms FROM lease WHERE resource = ?1", params![resource], |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?))).optional().map_err(sqlite_err)?;
                     Ok(existing.and_then(
@@ -822,7 +796,7 @@ CREATE TABLE IF NOT EXISTS lease (
     //#endregion 🔖️LeaseStorage
 
     //#region 🔖️DbBackend
-    impl<R: HostAsyncRuntime> SqliteStorage<R> {
+    impl SqliteStorage {
         /// @emoji 🎚️ Always durable, `fsync`-capable, CAS-capable — `synchronous = FULL` mode.
         pub async fn capabilities(&self) -> StorageCapabilities {
             StorageCapabilities { durable: true, max_durability: DurabilityClass::Fsync, supports_fsync: true, supports_cas: true }
@@ -843,7 +817,7 @@ CREATE TABLE IF NOT EXISTS lease (
         async fn poll_once<T>(fut: impl Future<Output = T>) -> T {
             let mut fut = std::pin::pin!(fut);
             let waker = std::task::Waker::noop();
-            let mut cx = std::task::Context::from_waker(&waker);
+            let mut cx = std::task::Context::from_waker(waker);
             match fut.as_mut().poll(&mut cx) {
                 std::task::Poll::Ready(value) => value,
                 std::task::Poll::Pending => panic!("db_storage_sqlite test helper expected an already-ready future"),
@@ -851,13 +825,7 @@ CREATE TABLE IF NOT EXISTS lease (
         }
 
         async fn block_on_ready<T>(fut: impl Future<Output = Result<T, DbError>>) -> Result<T, DbError> {
-            poll_once(fut)
-        }
-
-        async fn test_runtime_and_scope() -> (Arc<semio_framework_async::testkit::ManualRuntime>, ScopeHandle) {
-            let runtime = Arc::new(semio_framework_async::testkit::ManualRuntime::new(0));
-            let scope = poll_once(runtime.open_scope(semio_framework_async::ScopeOwner::Service("db_storage_sqlite_test"), None));
-            (runtime, scope)
+            poll_once(fut).await
         }
 
         static SCRATCH_COUNTER: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
@@ -866,190 +834,191 @@ CREATE TABLE IF NOT EXISTS lease (
         /// `std::env::temp_dir()` — a REAL on-disk `.sqlite3` file (not `:memory:`), so tests
         /// that reopen it exercise genuine persistence, mirroring `db_storage::FsStorage`'s own
         /// scratch helper convention (no external `tempfile` crate dependency).
-        async fn sqlite_scratch_path(name: &str) -> std::path::PathBuf {
+        fn sqlite_scratch_path(name: &str) -> std::path::PathBuf {
             let pid = std::process::id();
             let counter = SCRATCH_COUNTER.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
             std::env::temp_dir().join(format!("db_storage_sqlite_test_{name}_{pid}_{counter}.sqlite3"))
         }
 
-        async fn sqlite_scratch(name: &str) -> SqliteStorage<semio_framework_async::testkit::ManualRuntime> {
-            let (runtime, scope) = test_runtime_and_scope();
-            poll_once(SqliteStorage::open(runtime, scope, &sqlite_scratch_path(name))).unwrap()
+        /// @emoji 🎲️ Opened with `pool: None` (every blocking body runs inline), so every
+        /// `DbFuture` this storage hands back resolves on its very first poll — [`poll_once`]
+        /// above never actually parks.
+        async fn sqlite_scratch(name: &str) -> SqliteStorage {
+            poll_once(SqliteStorage::open(None, &sqlite_scratch_path(name))).await.unwrap()
         }
 
         //#region 🔖️WalStorage
         #[semio_framework_async_macros::async_test]
         async fn wal_storage_append_seal_truncate_and_bounds_laws() {
-            let storage = sqlite_scratch("wal_laws");
+            let storage = sqlite_scratch("wal_laws").await;
             let document: ArtifactId = "doc-wal".into();
 
-            block_on_ready(storage.create_segment(&document, 0)).unwrap();
-            assert!(matches!(block_on_ready(storage.create_segment(&document, 0)), Err(DbError::AlreadyExists(_))));
+            block_on_ready(storage.create_segment(&document, 0)).await.unwrap();
+            assert!(matches!(block_on_ready(storage.create_segment(&document, 0)).await, Err(DbError::AlreadyExists(_))));
 
-            let len_after_first = block_on_ready(storage.append(&document, 0, b"hello ")).unwrap();
+            let len_after_first = block_on_ready(storage.append(&document, 0, b"hello ")).await.unwrap();
             assert_eq!(len_after_first, 6);
-            let len_after_second = block_on_ready(storage.append(&document, 0, b"world")).unwrap();
+            let len_after_second = block_on_ready(storage.append(&document, 0, b"world")).await.unwrap();
             assert_eq!(len_after_second, 11);
-            assert_eq!(block_on_ready(storage.segment_len(&document, 0)).unwrap(), 11);
+            assert_eq!(block_on_ready(storage.segment_len(&document, 0)).await.unwrap(), 11);
 
-            let read_back = block_on_ready(storage.read(&document, 0, ByteRange { offset: 6, len: 5 })).unwrap();
+            let read_back = block_on_ready(storage.read(&document, 0, ByteRange { offset: 6, len: 5 })).await.unwrap();
             assert_eq!(read_back, b"world");
-            assert!(matches!(block_on_ready(storage.read(&document, 0, ByteRange { offset: 6, len: 100 })), Err(DbError::InvalidArgument(_))));
+            assert!(matches!(block_on_ready(storage.read(&document, 0, ByteRange { offset: 6, len: 100 })).await, Err(DbError::InvalidArgument(_))));
 
-            block_on_ready(storage.sync(&document, 0, DurabilityClass::Fsync)).unwrap();
+            block_on_ready(storage.sync(&document, 0, DurabilityClass::Fsync)).await.unwrap();
 
-            block_on_ready(storage.truncate_tail(&document, 0, 6)).unwrap();
-            assert_eq!(block_on_ready(storage.segment_len(&document, 0)).unwrap(), 6);
-            assert_eq!(block_on_ready(storage.read(&document, 0, ByteRange { offset: 0, len: 6 })).unwrap(), b"hello ");
+            block_on_ready(storage.truncate_tail(&document, 0, 6)).await.unwrap();
+            assert_eq!(block_on_ready(storage.segment_len(&document, 0)).await.unwrap(), 6);
+            assert_eq!(block_on_ready(storage.read(&document, 0, ByteRange { offset: 0, len: 6 })).await.unwrap(), b"hello ");
 
-            block_on_ready(storage.create_segment(&document, 1)).unwrap();
-            assert_eq!(block_on_ready(storage.list_segments(&document)).unwrap(), vec![0, 1]);
+            block_on_ready(storage.create_segment(&document, 1)).await.unwrap();
+            assert_eq!(block_on_ready(storage.list_segments(&document)).await.unwrap(), vec![0, 1]);
 
-            block_on_ready(storage.seal(&document, 0)).unwrap();
-            block_on_ready(storage.seal(&document, 0)).unwrap(); // idempotent
-            assert!(matches!(block_on_ready(storage.append(&document, 0, b"!")), Err(DbError::InvalidArgument(_))));
-            assert!(matches!(block_on_ready(storage.truncate_tail(&document, 0, 0)), Err(DbError::InvalidArgument(_))));
+            block_on_ready(storage.seal(&document, 0)).await.unwrap();
+            block_on_ready(storage.seal(&document, 0)).await.unwrap(); // idempotent
+            assert!(matches!(block_on_ready(storage.append(&document, 0, b"!")).await, Err(DbError::InvalidArgument(_))));
+            assert!(matches!(block_on_ready(storage.truncate_tail(&document, 0, 0)).await, Err(DbError::InvalidArgument(_))));
 
-            block_on_ready(storage.delete_segment(&document, 1)).unwrap();
-            assert_eq!(block_on_ready(storage.list_segments(&document)).unwrap(), vec![0]);
+            block_on_ready(storage.delete_segment(&document, 1)).await.unwrap();
+            assert_eq!(block_on_ready(storage.list_segments(&document)).await.unwrap(), vec![0]);
 
-            assert!(matches!(block_on_ready(storage.append(&document, 99, b"x")), Err(DbError::NotFound(_))));
+            assert!(matches!(block_on_ready(storage.append(&document, 99, b"x")).await, Err(DbError::NotFound(_))));
         }
         //#endregion 🔖️WalStorage
 
         //#region 🔖️SnapshotStorage
         #[semio_framework_async_macros::async_test]
         async fn snapshot_storage_generations_overwrite_and_delete_laws() {
-            let storage = sqlite_scratch("snapshot_laws");
+            let storage = sqlite_scratch("snapshot_laws").await;
             let document: ArtifactId = "doc-snap".into();
-            assert_eq!(block_on_ready(storage.latest_generation(&document)).unwrap(), None);
+            assert_eq!(block_on_ready(storage.latest_generation(&document)).await.unwrap(), None);
 
-            block_on_ready(storage.write_generation(&document, 0, b"gen-zero-bytes")).unwrap();
-            block_on_ready(storage.write_generation(&document, 1, b"gen-one-bytes")).unwrap();
-            assert_eq!(block_on_ready(storage.list_generations(&document)).unwrap(), vec![0, 1]);
-            assert_eq!(block_on_ready(storage.latest_generation(&document)).unwrap(), Some(1));
-            assert_eq!(block_on_ready(storage.read_generation(&document, 0)).unwrap(), b"gen-zero-bytes");
+            block_on_ready(storage.write_generation(&document, 0, b"gen-zero-bytes")).await.unwrap();
+            block_on_ready(storage.write_generation(&document, 1, b"gen-one-bytes")).await.unwrap();
+            assert_eq!(block_on_ready(storage.list_generations(&document)).await.unwrap(), vec![0, 1]);
+            assert_eq!(block_on_ready(storage.latest_generation(&document)).await.unwrap(), Some(1));
+            assert_eq!(block_on_ready(storage.read_generation(&document, 0)).await.unwrap(), b"gen-zero-bytes");
 
-            block_on_ready(storage.write_generation(&document, 0, b"gen-zero-overwritten")).unwrap();
-            assert_eq!(block_on_ready(storage.read_generation(&document, 0)).unwrap(), b"gen-zero-overwritten");
+            block_on_ready(storage.write_generation(&document, 0, b"gen-zero-overwritten")).await.unwrap();
+            assert_eq!(block_on_ready(storage.read_generation(&document, 0)).await.unwrap(), b"gen-zero-overwritten");
 
-            block_on_ready(storage.delete_generation(&document, 0)).unwrap();
-            assert!(matches!(block_on_ready(storage.read_generation(&document, 0)), Err(DbError::NotFound(_))));
-            assert_eq!(block_on_ready(storage.list_generations(&document)).unwrap(), vec![1]);
+            block_on_ready(storage.delete_generation(&document, 0)).await.unwrap();
+            assert!(matches!(block_on_ready(storage.read_generation(&document, 0)).await, Err(DbError::NotFound(_))));
+            assert_eq!(block_on_ready(storage.list_generations(&document)).await.unwrap(), vec![1]);
         }
         //#endregion 🔖️SnapshotStorage
 
         //#region 🔖️PayloadStorage
         #[semio_framework_async_macros::async_test]
         async fn payload_storage_is_content_addressed_and_idempotent() {
-            let storage = sqlite_scratch("payload_laws");
+            let storage = sqlite_scratch("payload_laws").await;
             let bytes = b"a payload blob that gets content-addressed";
-            let hash_a = block_on_ready(storage.put(bytes)).unwrap();
-            let hash_b = block_on_ready(storage.put(bytes)).unwrap();
+            let hash_a = block_on_ready(storage.put(bytes)).await.unwrap();
+            let hash_b = block_on_ready(storage.put(bytes)).await.unwrap();
             assert_eq!(hash_a, hash_b, "put is idempotent under content equality");
             assert_eq!(hash_a, ContentHash(*blake3::hash(bytes).as_bytes()));
 
-            assert!(block_on_ready(storage.contains(&hash_a)).unwrap());
-            assert_eq!(block_on_ready(storage.get(&hash_a)).unwrap(), bytes);
-            assert_eq!(block_on_ready(storage.len(&hash_a)).unwrap(), bytes.len() as u64);
+            assert!(block_on_ready(storage.contains(&hash_a)).await.unwrap());
+            assert_eq!(block_on_ready(storage.get(&hash_a)).await.unwrap(), bytes);
+            assert_eq!(block_on_ready(storage.len(&hash_a)).await.unwrap(), bytes.len() as u64);
 
             let other_hash = ContentHash([0xAB; 32]);
-            assert!(!block_on_ready(storage.contains(&other_hash)).unwrap());
-            assert!(matches!(block_on_ready(storage.get(&other_hash)), Err(DbError::NotFound(_))));
+            assert!(!block_on_ready(storage.contains(&other_hash)).await.unwrap());
+            assert!(matches!(block_on_ready(storage.get(&other_hash)).await, Err(DbError::NotFound(_))));
 
-            block_on_ready(storage.delete(&hash_a)).unwrap();
-            assert!(!block_on_ready(storage.contains(&hash_a)).unwrap());
-            assert!(matches!(block_on_ready(storage.get(&hash_a)), Err(DbError::NotFound(_))));
+            block_on_ready(storage.delete(&hash_a)).await.unwrap();
+            assert!(!block_on_ready(storage.contains(&hash_a)).await.unwrap());
+            assert!(matches!(block_on_ready(storage.get(&hash_a)).await, Err(DbError::NotFound(_))));
         }
         //#endregion 🔖️PayloadStorage
 
         //#region 🔖️CatalogStorage
         #[semio_framework_async_macros::async_test]
         async fn catalog_storage_cas_root_fences_stale_writers() {
-            let storage = sqlite_scratch("catalog_laws");
-            assert_eq!(block_on_ready(storage.read_root()).unwrap(), None);
+            let storage = sqlite_scratch("catalog_laws").await;
+            assert_eq!(block_on_ready(storage.read_root()).await.unwrap(), None);
 
-            let epoch_1 = block_on_ready(storage.cas_root(EpochFence::INITIAL, b"root-v1")).unwrap();
+            let epoch_1 = block_on_ready(storage.cas_root(EpochFence::INITIAL, b"root-v1")).await.unwrap();
             assert_eq!(epoch_1, EpochFence::INITIAL.next());
-            let (bytes, fence) = block_on_ready(storage.read_root()).unwrap().unwrap();
+            let (bytes, fence) = block_on_ready(storage.read_root()).await.unwrap().unwrap();
             assert_eq!(bytes, b"root-v1");
             assert_eq!(fence, epoch_1);
 
             // A stale `expected` (still `INITIAL`, but the root already moved to `epoch_1`) is fenced.
-            assert!(matches!(block_on_ready(storage.cas_root(EpochFence::INITIAL, b"root-stale")), Err(DbError::Fenced { .. })));
+            assert!(matches!(block_on_ready(storage.cas_root(EpochFence::INITIAL, b"root-stale")).await, Err(DbError::Fenced { .. })));
 
-            let epoch_2 = block_on_ready(storage.cas_root(epoch_1, b"root-v2")).unwrap();
+            let epoch_2 = block_on_ready(storage.cas_root(epoch_1, b"root-v2")).await.unwrap();
             assert_eq!(epoch_2, epoch_1.next());
-            assert_eq!(block_on_ready(storage.read_root()).unwrap().unwrap().0, b"root-v2");
+            assert_eq!(block_on_ready(storage.read_root()).await.unwrap().unwrap().0, b"root-v2");
         }
         //#endregion 🔖️CatalogStorage
 
         //#region 🔖️IndexStorage
         #[semio_framework_async_macros::async_test]
         async fn index_storage_runs_list_read_and_delete_laws() {
-            let storage = sqlite_scratch("index_laws");
+            let storage = sqlite_scratch("index_laws").await;
             let document: ArtifactId = "doc-index".into();
-            block_on_ready(storage.write_run(&document, 0, b"run-zero")).unwrap();
-            block_on_ready(storage.write_run(&document, 1, b"run-one")).unwrap();
-            assert_eq!(block_on_ready(storage.list_runs(&document)).unwrap(), vec![0, 1]);
-            assert_eq!(block_on_ready(storage.read_run(&document, 1)).unwrap(), b"run-one");
+            block_on_ready(storage.write_run(&document, 0, b"run-zero")).await.unwrap();
+            block_on_ready(storage.write_run(&document, 1, b"run-one")).await.unwrap();
+            assert_eq!(block_on_ready(storage.list_runs(&document)).await.unwrap(), vec![0, 1]);
+            assert_eq!(block_on_ready(storage.read_run(&document, 1)).await.unwrap(), b"run-one");
 
-            block_on_ready(storage.delete_run(&document, 0)).unwrap();
-            assert_eq!(block_on_ready(storage.list_runs(&document)).unwrap(), vec![1]);
-            assert!(matches!(block_on_ready(storage.read_run(&document, 0)), Err(DbError::NotFound(_))));
+            block_on_ready(storage.delete_run(&document, 0)).await.unwrap();
+            assert_eq!(block_on_ready(storage.list_runs(&document)).await.unwrap(), vec![1]);
+            assert!(matches!(block_on_ready(storage.read_run(&document, 0)).await, Err(DbError::NotFound(_))));
         }
         //#endregion 🔖️IndexStorage
 
         //#region 🔖️LeaseStorage
         #[semio_framework_async_macros::async_test]
         async fn lease_storage_acquire_renew_fence_and_handoff_laws() {
-            let storage = sqlite_scratch("lease_laws");
-            let fence_1 = block_on_ready(storage.acquire("shard-1", "node-a", 1_000, 0)).unwrap();
+            let storage = sqlite_scratch("lease_laws").await;
+            let fence_1 = block_on_ready(storage.acquire("shard-1", "node-a", 1_000, 0)).await.unwrap();
             assert_eq!(fence_1, EpochFence::INITIAL);
 
             // Re-acquiring the same, unexpired lease by the same holder is idempotent (same fence).
-            let fence_reacquire = block_on_ready(storage.acquire("shard-1", "node-a", 1_000, 100)).unwrap();
+            let fence_reacquire = block_on_ready(storage.acquire("shard-1", "node-a", 1_000, 100)).await.unwrap();
             assert_eq!(fence_reacquire, fence_1);
 
             // A different holder cannot acquire an unexpired lease.
-            assert!(matches!(block_on_ready(storage.acquire("shard-1", "node-b", 1_000, 100)), Err(DbError::Conflict(_))));
+            assert!(matches!(block_on_ready(storage.acquire("shard-1", "node-b", 1_000, 100)).await, Err(DbError::Conflict(_))));
 
-            block_on_ready(storage.renew("shard-1", "node-a", fence_1, 1_000, 500)).unwrap();
-            assert!(matches!(block_on_ready(storage.renew("shard-1", "node-a", fence_1.next(), 1_000, 500)), Err(DbError::Fenced { .. })));
-            assert!(matches!(block_on_ready(storage.renew("shard-1", "node-b", fence_1, 1_000, 500)), Err(DbError::Unauthorized(_))));
+            block_on_ready(storage.renew("shard-1", "node-a", fence_1, 1_000, 500)).await.unwrap();
+            assert!(matches!(block_on_ready(storage.renew("shard-1", "node-a", fence_1.next(), 1_000, 500)).await, Err(DbError::Fenced { .. })));
+            assert!(matches!(block_on_ready(storage.renew("shard-1", "node-b", fence_1, 1_000, 500)).await, Err(DbError::Unauthorized(_))));
 
-            let current = block_on_ready(storage.current("shard-1", 600)).unwrap().unwrap();
+            let current = block_on_ready(storage.current("shard-1", 600)).await.unwrap().unwrap();
             assert_eq!(current.holder, "node-a");
             assert_eq!(current.fence, fence_1);
 
             // After expiry (renewed at 500 for 1_000ms => expires at 1_500), a different holder can
             // take over, bumping the fence — the fencing law a stale former holder is later rejected by.
-            assert_eq!(block_on_ready(storage.current("shard-1", 2_000)).unwrap(), None);
-            let fence_2 = block_on_ready(storage.acquire("shard-1", "node-b", 1_000, 2_000)).unwrap();
+            assert_eq!(block_on_ready(storage.current("shard-1", 2_000)).await.unwrap(), None);
+            let fence_2 = block_on_ready(storage.acquire("shard-1", "node-b", 1_000, 2_000)).await.unwrap();
             assert_eq!(fence_2, fence_1.next());
 
             // The old holder's stale fence is now rejected.
-            assert!(matches!(block_on_ready(storage.renew("shard-1", "node-a", fence_1, 1_000, 2_100)), Err(DbError::Unauthorized(_))));
+            assert!(matches!(block_on_ready(storage.renew("shard-1", "node-a", fence_1, 1_000, 2_100)).await, Err(DbError::Unauthorized(_))));
 
-            block_on_ready(storage.release("shard-1", "node-b", fence_2)).unwrap();
-            assert_eq!(block_on_ready(storage.current("shard-1", 2_100)).unwrap(), None);
-            assert!(matches!(block_on_ready(storage.release("shard-1", "node-b", fence_2)), Err(DbError::NotFound(_))));
+            block_on_ready(storage.release("shard-1", "node-b", fence_2)).await.unwrap();
+            assert_eq!(block_on_ready(storage.current("shard-1", 2_100)).await.unwrap(), None);
+            assert!(matches!(block_on_ready(storage.release("shard-1", "node-b", fence_2)).await, Err(DbError::NotFound(_))));
         }
         //#endregion 🔖️LeaseStorage
 
         //#region 🔖️DbBackend
         #[semio_framework_async_macros::async_test]
         async fn db_backend_accessors_and_capabilities() {
-            let (runtime, scope) = test_runtime_and_scope();
-            let storage: crate::db_storage::DbBackend<semio_framework_async::testkit::ManualRuntime> =
-                crate::db_storage::DbBackend::Sqlite(poll_once(SqliteStorage::open(runtime, scope, &sqlite_scratch_path("umbrella"))).unwrap());
+            let storage: crate::db_storage::DbBackend =
+                crate::db_storage::DbBackend::Sqlite(poll_once(SqliteStorage::open(None, &sqlite_scratch_path("umbrella"))).await.unwrap());
             let document: ArtifactId = "doc-umbrella".into();
-            block_on_ready(poll_once(storage.wal()).create_segment(&document, 0)).unwrap();
-            block_on_ready(poll_once(storage.catalog()).cas_root(EpochFence::INITIAL, b"root")).unwrap();
-            block_on_ready(poll_once(storage.index()).write_run(&document, 0, b"run")).unwrap();
-            assert_eq!(block_on_ready(poll_once(storage.index()).read_run(&document, 0)).unwrap(), b"run");
+            block_on_ready(poll_once(storage.wal()).await.create_segment(&document, 0)).await.unwrap();
+            block_on_ready(poll_once(storage.catalog()).await.cas_root(EpochFence::INITIAL, b"root")).await.unwrap();
+            block_on_ready(poll_once(storage.index()).await.write_run(&document, 0, b"run")).await.unwrap();
+            assert_eq!(block_on_ready(poll_once(storage.index()).await.read_run(&document, 0)).await.unwrap(), b"run");
 
-            let capabilities = poll_once(storage.capabilities());
+            let capabilities = poll_once(storage.capabilities()).await;
             assert!(capabilities.durable);
             assert_eq!(capabilities.max_durability, DurabilityClass::Fsync);
             assert!(capabilities.supports_fsync);
@@ -1062,29 +1031,26 @@ CREATE TABLE IF NOT EXISTS lease (
         async fn write_survives_reopen_across_instances_against_a_real_file() {
             let path = sqlite_scratch_path("reopen");
             {
-                let (runtime, scope) = test_runtime_and_scope();
-                let storage = poll_once(SqliteStorage::open(runtime, scope, &path)).unwrap();
+                let storage = poll_once(SqliteStorage::open(None, &path)).await.unwrap();
                 let document: ArtifactId = "doc-reopen".into();
-                block_on_ready(storage.write_generation(&document, 0, b"persisted across reopen")).unwrap();
-                block_on_ready(storage.put(b"payload persisted across reopen")).unwrap();
+                block_on_ready(storage.write_generation(&document, 0, b"persisted across reopen")).await.unwrap();
+                block_on_ready(storage.put(b"payload persisted across reopen")).await.unwrap();
             }
             {
-                let (runtime, scope) = test_runtime_and_scope();
-                let storage = poll_once(SqliteStorage::open(runtime, scope, &path)).unwrap();
+                let storage = poll_once(SqliteStorage::open(None, &path)).await.unwrap();
                 let document: ArtifactId = "doc-reopen".into();
-                assert_eq!(block_on_ready(storage.read_generation(&document, 0)).unwrap(), b"persisted across reopen");
+                assert_eq!(block_on_ready(storage.read_generation(&document, 0)).await.unwrap(), b"persisted across reopen");
                 let hash = ContentHash(*blake3::hash(b"payload persisted across reopen").as_bytes());
-                assert_eq!(block_on_ready(storage.get(&hash)).unwrap(), b"payload persisted across reopen");
+                assert_eq!(block_on_ready(storage.get(&hash)).await.unwrap(), b"payload persisted across reopen");
             }
         }
 
         #[semio_framework_async_macros::async_test]
         async fn in_memory_storage_works_without_a_file() {
-            let (runtime, scope) = test_runtime_and_scope();
-            let storage = poll_once(SqliteStorage::open_in_memory(runtime, scope)).unwrap();
+            let storage = poll_once(SqliteStorage::open_in_memory(None)).await.unwrap();
             let document: ArtifactId = "doc-mem".into();
-            block_on_ready(storage.create_segment(&document, 0)).unwrap();
-            assert_eq!(block_on_ready(storage.append(&document, 0, b"in memory")).unwrap(), 9);
+            block_on_ready(storage.create_segment(&document, 0)).await.unwrap();
+            assert_eq!(block_on_ready(storage.append(&document, 0, b"in memory")).await.unwrap(), 9);
         }
         //#endregion 🔖️Connection
     }

@@ -1,0 +1,1831 @@
+[
+  {
+    "file": "✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🌰️kernel/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🔋️energy",
+    "name": "advance_timestep",
+    "line": 214,
+    "pub": true,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 307,
+    "loopKeywords": [
+      "for",
+      "map()"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Energy"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🧩️puzzle",
+    "name": "apply_puzzle3d_inspector_patch",
+    "line": 732,
+    "pub": true,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 194,
+    "loopKeywords": [
+      "map()",
+      "for"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Puzzle"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🧩️puzzle",
+    "name": "create_puzzle3d_app",
+    "line": 2541,
+    "pub": true,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 192,
+    "loopKeywords": [],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Puzzle"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🌬️air_system/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🔋️energy",
+    "name": "simulate_air_system",
+    "line": 60,
+    "pub": true,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 163,
+    "loopKeywords": [],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Energy"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🧩️puzzle",
+    "name": "puzzle3d_snapshot_mutations",
+    "line": 108,
+    "pub": true,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 155,
+    "loopKeywords": [
+      "for"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Puzzle"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🎛flatten/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🧩️puzzle",
+    "name": "flatten_objects_with_assignment",
+    "line": 336,
+    "pub": true,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 144,
+    "loopKeywords": [
+      "map()",
+      "for",
+      "while"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Puzzle"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🌡️zone_hvac/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🔋️energy",
+    "name": "simulate",
+    "line": 55,
+    "pub": true,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 141,
+    "loopKeywords": [],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Energy"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🔋️model/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🔋️energy",
+    "name": "validate",
+    "line": 581,
+    "pub": true,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 123,
+    "loopKeywords": [
+      "map()",
+      "for"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Energy"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🧩️puzzle",
+    "name": "puzzle5d_snapshot_mutations",
+    "line": 94,
+    "pub": true,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 122,
+    "loopKeywords": [
+      "for"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Puzzle"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🧩️puzzle",
+    "name": "puzzle2d_snapshot_mutations",
+    "line": 96,
+    "pub": true,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 118,
+    "loopKeywords": [
+      "for"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Puzzle"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🌀️procedural",
+    "name": "create_procedural3d_app",
+    "line": 411,
+    "pub": true,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 113,
+    "loopKeywords": [],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Procedural"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🔗️linking/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🧩️puzzle",
+    "name": "board_host_link_drag_snap_micro_zoom_rectangle_compatible_handles",
+    "line": 82,
+    "pub": false,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 112,
+    "loopKeywords": [],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Puzzle"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📄️artifact/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🧩️puzzle",
+    "name": "sections",
+    "line": 70,
+    "pub": true,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 111,
+    "loopKeywords": [
+      "map()"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Puzzle"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🧩️puzzle",
+    "name": "create_puzzle5d_app",
+    "line": 1942,
+    "pub": true,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 108,
+    "loopKeywords": [],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Puzzle"
+  },
+  {
+    "file": "✏️s/🔨️modules/🏗️fem/⚙️engine/🏗️model/🦀️component.rs",
+    "area": "s/modules",
+    "plugin": null,
+    "name": "solve_linear_static",
+    "line": 416,
+    "pub": true,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 101,
+    "loopKeywords": [
+      "for",
+      "map()"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "FEM"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🧩️puzzle",
+    "name": "fill_step_one",
+    "line": 486,
+    "pub": false,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 101,
+    "loopKeywords": [
+      "for"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Puzzle"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🌀️procedural",
+    "name": "compose",
+    "line": 35,
+    "pub": false,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 97,
+    "loopKeywords": [
+      "for"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Procedural"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🌀️procedural",
+    "name": "command_from_action",
+    "line": 193,
+    "pub": false,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 97,
+    "loopKeywords": [
+      "map()"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Procedural"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🧩️puzzle",
+    "name": "compose",
+    "line": 33,
+    "pub": false,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 97,
+    "loopKeywords": [
+      "for"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Puzzle"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🧩️puzzle",
+    "name": "handle_action_impl",
+    "line": 2101,
+    "pub": false,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 93,
+    "loopKeywords": [
+      "map()"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Puzzle"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🌀️procedural",
+    "name": "create_procedural2d_app",
+    "line": 351,
+    "pub": true,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 92,
+    "loopKeywords": [],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Procedural"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🧪️sim/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🔋️energy",
+    "name": "run",
+    "line": 23,
+    "pub": true,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 92,
+    "loopKeywords": [
+      "for",
+      "map()"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Energy"
+  },
+  {
+    "file": "✏️s/🔨️modules/🏗️fem/⚙️engine/📏️elements2d/🦀️component.rs",
+    "area": "s/modules",
+    "plugin": null,
+    "name": "dkt_b_matrix",
+    "line": 731,
+    "pub": true,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 91,
+    "loopKeywords": [
+      "for"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "FEM"
+  },
+  {
+    "file": "✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🦀️component.rs",
+    "area": "s/modules",
+    "plugin": null,
+    "name": "solve_multi_case",
+    "line": 442,
+    "pub": true,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 90,
+    "loopKeywords": [
+      "for",
+      "map()"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "FEM"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🧩️puzzle",
+    "name": "merge_engine_fixture",
+    "line": 661,
+    "pub": true,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 90,
+    "loopKeywords": [
+      "map()"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Puzzle"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🌀️procedural",
+    "name": "apply_collection",
+    "line": 54,
+    "pub": false,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 86,
+    "loopKeywords": [
+      "for"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Procedural"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🎚️options/🖌️brush/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🧩️puzzle",
+    "name": "measure",
+    "line": 48,
+    "pub": true,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 86,
+    "loopKeywords": [
+      "map()"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Puzzle"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🧩️puzzle",
+    "name": "resolve_puzzle3d_attractions",
+    "line": 1305,
+    "pub": true,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 85,
+    "loopKeywords": [
+      "map()",
+      "for",
+      "while"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Puzzle"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🧩️puzzle",
+    "name": "fastened_layout_snapshot",
+    "line": 146,
+    "pub": true,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 85,
+    "loopKeywords": [
+      "map()",
+      "for",
+      "while"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Puzzle"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🎚️options/🖌️brush/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🧩️puzzle",
+    "name": "measure",
+    "line": 82,
+    "pub": true,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 84,
+    "loopKeywords": [
+      "map()"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Puzzle"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🧩️puzzle",
+    "name": "import_media",
+    "line": 1746,
+    "pub": false,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 83,
+    "loopKeywords": [
+      "map()"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Puzzle"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🖌️brush/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🧩️puzzle",
+    "name": "board_host_brush_door_tambour_left_excludes_capital_with_metabolism_compat_rules",
+    "line": 560,
+    "pub": false,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 83,
+    "loopKeywords": [
+      "map()"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Puzzle"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🧩️puzzle",
+    "name": "create_puzzle2d_app",
+    "line": 1132,
+    "pub": true,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 82,
+    "loopKeywords": [],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Puzzle"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🌀️procedural",
+    "name": "plugin",
+    "line": 7,
+    "pub": true,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 81,
+    "loopKeywords": [],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Procedural"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎲️board-host/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🧩️puzzle",
+    "name": "link_test_scene_no_edge",
+    "line": 128,
+    "pub": true,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 81,
+    "loopKeywords": [],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Puzzle"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🌀️procedural",
+    "name": "compose",
+    "line": 33,
+    "pub": false,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 79,
+    "loopKeywords": [
+      "for"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Procedural"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🧩️puzzle",
+    "name": "compose",
+    "line": 31,
+    "pub": false,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 79,
+    "loopKeywords": [
+      "for"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Puzzle"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎲️apply-board-events/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🧩️puzzle",
+    "name": "apply_board_events_from_json",
+    "line": 68,
+    "pub": true,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 79,
+    "loopKeywords": [
+      "for"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Puzzle"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🌀️coils/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🔋️energy",
+    "name": "cooling_coil_output_w",
+    "line": 105,
+    "pub": true,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 77,
+    "loopKeywords": [
+      "for"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Energy"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🔄️prop-ac4/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🌀️procedural",
+    "name": "sequential_and_batch_seed_application_agree",
+    "line": 275,
+    "pub": false,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 76,
+    "loopKeywords": [
+      "for"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Procedural"
+  },
+  {
+    "file": "✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🦀️component.rs",
+    "area": "s/modules",
+    "plugin": null,
+    "name": "dense_symmetric_eigen_jacobi",
+    "line": 384,
+    "pub": false,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 74,
+    "loopKeywords": [
+      "for",
+      "map()"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "FEM"
+  },
+  {
+    "file": "✏️s/🔨️modules/🏗️fem/⚙️engine/🧊️3d/🕸️meshing/🦀️component.rs",
+    "area": "s/modules",
+    "plugin": null,
+    "name": "resolve_geometry",
+    "line": 43,
+    "pub": true,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 72,
+    "loopKeywords": [
+      "map()",
+      "for"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "FEM"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🔄️prop-ac4/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🌀️procedural",
+    "name": "ac3_and_ac4_reach_identical_fixed_points_on_random_instances",
+    "line": 363,
+    "pub": false,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 72,
+    "loopKeywords": [
+      "for"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Procedural"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🚫️nogood/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🌀️procedural",
+    "name": "on_decision",
+    "line": 190,
+    "pub": true,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 71,
+    "loopKeywords": [
+      "for"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Procedural"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🧩️puzzle",
+    "name": "compose",
+    "line": 30,
+    "pub": false,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 70,
+    "loopKeywords": [
+      "for"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Puzzle"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🎛flat-position/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🧩️puzzle",
+    "name": "diagram_centers_with_grip_t",
+    "line": 122,
+    "pub": false,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 68,
+    "loopKeywords": [
+      "map()",
+      "for",
+      "while"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Puzzle"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🧩️puzzle",
+    "name": "apply_board_events_from_json",
+    "line": 1416,
+    "pub": true,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 68,
+    "loopKeywords": [
+      "for",
+      "map()"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Puzzle"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🧩️puzzle",
+    "name": "duplicate_selection_in_fixture",
+    "line": 349,
+    "pub": true,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 68,
+    "loopKeywords": [
+      "map()",
+      "for"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Puzzle"
+  },
+  {
+    "file": "✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🦀️component.rs",
+    "area": "s/modules",
+    "plugin": null,
+    "name": "subspace_iteration",
+    "line": 554,
+    "pub": true,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 67,
+    "loopKeywords": [
+      "for",
+      "map()"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "FEM"
+  },
+  {
+    "file": "✏️s/🔨️modules/🏗️fem/⚙️engine/◻2d/🕸️meshing/🦀️component.rs",
+    "area": "s/modules",
+    "plugin": null,
+    "name": "build_nodes_and_elements",
+    "line": 45,
+    "pub": true,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 66,
+    "loopKeywords": [
+      "map()",
+      "for"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "FEM"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🧩️puzzle",
+    "name": "puzzle2d_context_menu_items",
+    "line": 795,
+    "pub": false,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 66,
+    "loopKeywords": [
+      "map()",
+      "for"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Puzzle"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🔍️search/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🌀️procedural",
+    "name": "solve_inner",
+    "line": 492,
+    "pub": false,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 63,
+    "loopKeywords": [
+      "loop",
+      "map()"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Procedural"
+  },
+  {
+    "file": "✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🦀️component.rs",
+    "area": "s/modules",
+    "plugin": null,
+    "name": "buckling",
+    "line": 596,
+    "pub": true,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 62,
+    "loopKeywords": [
+      "for",
+      "map()",
+      "fold()"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "FEM"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🧱️solver-grid-3d/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🌀️procedural",
+    "name": "graph_vs_grid3d_strict_equivalence_face6_open",
+    "line": 214,
+    "pub": false,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 62,
+    "loopKeywords": [
+      "map()",
+      "for"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Procedural"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🧩️puzzle",
+    "name": "apply_identified_delta",
+    "line": 20,
+    "pub": false,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 61,
+    "loopKeywords": [
+      "for"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Puzzle"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔄️world-relocate/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🧩️puzzle",
+    "name": "world_relocate",
+    "line": 16,
+    "pub": true,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 61,
+    "loopKeywords": [
+      "map()",
+      "for"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Puzzle"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🧩️puzzle",
+    "name": "apply_identified_delta",
+    "line": 18,
+    "pub": false,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 61,
+    "loopKeywords": [
+      "for"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Puzzle"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📝️text/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🧩️puzzle",
+    "name": "apply_identified_delta",
+    "line": 72,
+    "pub": false,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 61,
+    "loopKeywords": [
+      "for"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Puzzle"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🔋️energy",
+    "name": "compose",
+    "line": 29,
+    "pub": false,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 61,
+    "loopKeywords": [
+      "for"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Energy"
+  },
+  {
+    "file": "✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/🦀️component.rs",
+    "area": "s/modules",
+    "plugin": null,
+    "name": "triangulate",
+    "line": 90,
+    "pub": true,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 60,
+    "loopKeywords": [
+      "for"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "FEM"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️main/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🧩️puzzle",
+    "name": "world_interaction_json",
+    "line": 313,
+    "pub": true,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 60,
+    "loopKeywords": [
+      "map()"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Puzzle"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✏️patch-fastener/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🧩️puzzle",
+    "name": "patch_fastener",
+    "line": 22,
+    "pub": true,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 59,
+    "loopKeywords": [
+      "map()",
+      "for"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Puzzle"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🔳️solver-grid-2d/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🌀️procedural",
+    "name": "graph_vs_grid2d_strict_equivalence_von_neumann_open",
+    "line": 248,
+    "pub": false,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 58,
+    "loopKeywords": [
+      "map()",
+      "for"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Procedural"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🧩️puzzle",
+    "name": "brush_collision_free_until",
+    "line": 270,
+    "pub": false,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 58,
+    "loopKeywords": [
+      "for"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Puzzle"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️main/🪛️utilities/🖌️brush/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🧩️puzzle",
+    "name": "options",
+    "line": 21,
+    "pub": true,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 58,
+    "loopKeywords": [
+      "map()"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Puzzle"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🔍️search/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🌀️procedural",
+    "name": "drive",
+    "line": 259,
+    "pub": false,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 57,
+    "loopKeywords": [
+      "loop"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Procedural"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🌰️kernel/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🔋️energy",
+    "name": "simulate_secondary",
+    "line": 522,
+    "pub": false,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 57,
+    "loopKeywords": [
+      "for",
+      "map()"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Energy"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🧩️puzzle",
+    "name": "apply_board_brush_place",
+    "line": 1359,
+    "pub": true,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 56,
+    "loopKeywords": [
+      "map()"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Puzzle"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎲️apply-board-events/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🧩️puzzle",
+    "name": "puzzle2d_board_events_scope",
+    "line": 12,
+    "pub": false,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 56,
+    "loopKeywords": [
+      "map()",
+      "for"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Puzzle"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🌀️procedural",
+    "name": "command_from_action",
+    "line": 154,
+    "pub": false,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 55,
+    "loopKeywords": [
+      "map()"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Procedural"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🌀️procedural",
+    "name": "preview_payload_from_eval_with_session",
+    "line": 804,
+    "pub": true,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 54,
+    "loopKeywords": [
+      "for"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Procedural"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✏️patch-part/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🧩️puzzle",
+    "name": "patch_part",
+    "line": 22,
+    "pub": true,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 54,
+    "loopKeywords": [
+      "map()",
+      "for"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Puzzle"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📐️layout/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🧩️puzzle",
+    "name": "hierarchical_tree_pins_locked_root_coordinates",
+    "line": 634,
+    "pub": false,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 54,
+    "loopKeywords": [
+      "for"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Puzzle"
+  },
+  {
+    "file": "✏️s/🔨️modules/🏗️fem/⚙️engine/📏️elements2d/🦀️component.rs",
+    "area": "s/modules",
+    "plugin": null,
+    "name": "plate_dkt_simply_supported_square_center_deflection_right_order_of_magnitude",
+    "line": 1564,
+    "pub": false,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 52,
+    "loopKeywords": [
+      "for",
+      "map()"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "FEM"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🔍️search/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🌀️procedural",
+    "name": "drive_all",
+    "line": 337,
+    "pub": false,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 52,
+    "loopKeywords": [
+      "loop",
+      "map()"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Procedural"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🧩️puzzle",
+    "name": "every_dispatched_action_bridges_to_a_command",
+    "line": 2416,
+    "pub": false,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 52,
+    "loopKeywords": [
+      "for"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Puzzle"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🧠️precompute/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🔋️energy",
+    "name": "build",
+    "line": 77,
+    "pub": true,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 52,
+    "loopKeywords": [
+      "for",
+      "map()"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Energy"
+  },
+  {
+    "file": "✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🦀️component.rs",
+    "area": "s/modules",
+    "plugin": null,
+    "name": "assemble_system",
+    "line": 225,
+    "pub": false,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 51,
+    "loopKeywords": [
+      "for",
+      "map()"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "FEM"
+  },
+  {
+    "file": "✏️s/🔨️modules/🏗️fem/⚙️engine/🧊️elements3d/🦀️component.rs",
+    "area": "s/modules",
+    "plugin": null,
+    "name": "hex8_meshed_cantilever_deflection_is_right_order_of_magnitude",
+    "line": 1348,
+    "pub": false,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 51,
+    "loopKeywords": [
+      "for",
+      "map()"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "FEM"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✏️patch-grip/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🧩️puzzle",
+    "name": "patch_grip",
+    "line": 22,
+    "pub": true,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 51,
+    "loopKeywords": [
+      "map()",
+      "for"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Puzzle"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🕸️hvac_topo/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🔋️energy",
+    "name": "validate_topology",
+    "line": 171,
+    "pub": true,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 51,
+    "loopKeywords": [
+      "for",
+      "map()"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Energy"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🌳️structure/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🔋️energy",
+    "name": "render",
+    "line": 26,
+    "pub": true,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 51,
+    "loopKeywords": [
+      "map()"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Energy"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌳️structure/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🔋️energy",
+    "name": "render",
+    "line": 27,
+    "pub": true,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 51,
+    "loopKeywords": [
+      "map()"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Energy"
+  },
+  {
+    "file": "✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🦀️component.rs",
+    "area": "s/modules",
+    "plugin": null,
+    "name": "build_rcm_permutation",
+    "line": 153,
+    "pub": false,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 50,
+    "loopKeywords": [
+      "map()",
+      "for",
+      "while"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "FEM"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🧩️puzzle",
+    "name": "kit_in_import_media_upserts_part_and_grip_kinds_into_kind_catalogs",
+    "line": 2601,
+    "pub": false,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 50,
+    "loopKeywords": [
+      "for",
+      "map()"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Puzzle"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📐️layout/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🧩️puzzle",
+    "name": "force_graph_barnes_hut_many_bodies_yields_finite_coordinates",
+    "line": 223,
+    "pub": false,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 50,
+    "loopKeywords": [
+      "for",
+      "map()",
+      "fold()"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Puzzle"
+  },
+  {
+    "file": "✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🦀️component.rs",
+    "area": "s/modules",
+    "plugin": null,
+    "name": "pcg",
+    "line": 329,
+    "pub": true,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 49,
+    "loopKeywords": [
+      "for"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "FEM"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🔍️search/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🌀️procedural",
+    "name": "backtrack_and_repair",
+    "line": 146,
+    "pub": false,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 49,
+    "loopKeywords": [
+      "loop"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Procedural"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/⛏️extract/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🌀️procedural",
+    "name": "extract_2d",
+    "line": 119,
+    "pub": true,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 49,
+    "loopKeywords": [
+      "for",
+      "map()"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Procedural"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🔢️constraints-card/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🌀️procedural",
+    "name": "initialize",
+    "line": 62,
+    "pub": false,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 49,
+    "loopKeywords": [
+      "map()",
+      "for"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Procedural"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🧩️puzzle",
+    "name": "apply_puzzle3d_selection_flag",
+    "line": 644,
+    "pub": true,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 49,
+    "loopKeywords": [
+      "map()",
+      "for"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Puzzle"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🌀️procedural",
+    "name": "apply_unordered_collection",
+    "line": 146,
+    "pub": false,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 48,
+    "loopKeywords": [
+      "for"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Procedural"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🔮️oracle/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🌀️procedural",
+    "name": "search",
+    "line": 58,
+    "pub": false,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 48,
+    "loopKeywords": [
+      "map()",
+      "for"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Procedural"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🔦️beam/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🌀️procedural",
+    "name": "beam_search",
+    "line": 94,
+    "pub": true,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 48,
+    "loopKeywords": [
+      "for",
+      "map()"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Procedural"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🧩️puzzle",
+    "name": "fill_build_tick_only_plans_available_slider_range",
+    "line": 3690,
+    "pub": false,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 48,
+    "loopKeywords": [
+      "map()"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Puzzle"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🔍️search/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🌀️procedural",
+    "name": "initialize",
+    "line": 416,
+    "pub": false,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 47,
+    "loopKeywords": [
+      "for"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Procedural"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📐️layout/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🧩️puzzle",
+    "name": "hierarchical_tree_stacks_by_depth",
+    "line": 585,
+    "pub": false,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 47,
+    "loopKeywords": [
+      "for"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Puzzle"
+  },
+  {
+    "file": "✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🦀️component.rs",
+    "area": "s/modules",
+    "plugin": null,
+    "name": "add_scaled_element_result",
+    "line": 350,
+    "pub": false,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 46,
+    "loopKeywords": [
+      "map()"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "FEM"
+  },
+  {
+    "file": "✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/🦀️component.rs",
+    "area": "s/modules",
+    "plugin": null,
+    "name": "split_to_tets_shared_faces_are_parity_consistent",
+    "line": 670,
+    "pub": false,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 46,
+    "loopKeywords": [
+      "for"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "FEM"
+  },
+  {
+    "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🔁️prop-ac3/🦀️component.rs",
+    "area": "plugins",
+    "plugin": "🌀️procedural",
+    "name": "run_to_fixed_point",
+    "line": 23,
+    "pub": true,
+    "hasBody": true,
+    "classification": "C",
+    "bodyLineCount": 46,
+    "loopKeywords": [
+      "while",
+      "for"
+    ],
+    "ownAwaitCount": 0,
+    "awaitCalleeNames": [],
+    "dReason": null,
+    "_bucket": "Procedural"
+  }
+]

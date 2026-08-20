@@ -53,33 +53,33 @@ use pack::{ByteRange, ContentHash};
 const MAX_READ_BYTES: u64 = 1024 * 1024 * 1024;
 
 /// @emoji ✍️ Encodes a byte blob for storage in a Neo4j string property.
-async fn encode_bytes(bytes: &[u8]) -> String {
+fn encode_bytes(bytes: &[u8]) -> String {
     BASE64.encode(bytes)
 }
 
 /// @emoji 📖️ Inverse of `encode_bytes`. Never panics on malformed input — a corrupt/hand-edited
 /// property surfaces as `DbError::Corrupt` rather than a driver panic.
-async fn decode_bytes(encoded: &str) -> Result<Vec<u8>, DbError> {
+fn decode_bytes(encoded: &str) -> Result<Vec<u8>, DbError> {
     BASE64.decode(encoded).map_err(|err| DbError::Corrupt(format!("invalid base64 property: {err}")))
 }
 
 /// @emoji 🔢️ Neo4j's `Integer` bolt type is a signed 64-bit value; the family's identity/sequence
 /// numbers are `u64`. Converts with an explicit range check rather than a silent wrapping `as i64`.
-async fn u64_to_i64(value: u64, what: &'static str) -> Result<i64, DbError> {
+fn u64_to_i64(value: u64, what: &'static str) -> Result<i64, DbError> {
     i64::try_from(value).map_err(|_| DbError::InvalidArgument(format!("{what} exceeds neo4j's signed 64-bit integer range: {value}")))
 }
 
 /// @emoji 🔢️ Inverse of `u64_to_i64` for values read back from a Neo4j `Integer` property. A
 /// negative value here means the property was corrupted (hand-edited or written by a bug) since
 /// every writer path exclusively writes non-negative values.
-async fn i64_to_u64(value: i64, what: &'static str) -> Result<u64, DbError> {
+fn i64_to_u64(value: i64, what: &'static str) -> Result<u64, DbError> {
     u64::try_from(value).map_err(|_| DbError::Corrupt(format!("{what} decoded as a negative neo4j integer: {value}")))
 }
 
 /// @emoji ✂️ Slices `bytes[range.offset..range.offset+range.len]`, bounds-checked against
 /// `bytes`'s actual length — the shared implementation `WalStorage::read` validates against,
 /// mirroring `MemoryStorage`/`FsStorage`'s identical bounds-checking law.
-async fn slice_range(bytes: &[u8], range: ByteRange) -> Result<Vec<u8>, DbError> {
+fn slice_range(bytes: &[u8], range: ByteRange) -> Result<Vec<u8>, DbError> {
     let end = range.offset.checked_add(range.len).ok_or_else(|| DbError::InvalidArgument("read range overflows u64".to_string()))?;
     if end > bytes.len() as u64 {
         return Err(DbError::InvalidArgument(format!("read range {}..{end} out of bounds (len {})", range.offset, bytes.len())));
@@ -92,7 +92,7 @@ async fn slice_range(bytes: &[u8], range: ByteRange) -> Result<Vec<u8>, DbError>
 /// @emoji ➕️ The pure decision behind `WalStorage::append`: reject a sealed segment, otherwise
 /// concatenate. Factored out of the Cypher-driving method so the actual law is unit-testable
 /// without a live Neo4j connection.
-async fn apply_append(current: &[u8], sealed: bool, extra: &[u8]) -> Result<Vec<u8>, DbError> {
+fn apply_append(current: &[u8], sealed: bool, extra: &[u8]) -> Result<Vec<u8>, DbError> {
     if sealed {
         return Err(DbError::InvalidArgument("cannot append to sealed wal segment".to_string()));
     }
@@ -104,7 +104,7 @@ async fn apply_append(current: &[u8], sealed: bool, extra: &[u8]) -> Result<Vec<
 
 /// @emoji ✂️ The pure decision behind `WalStorage::truncate_tail`: reject a sealed segment or a
 /// `new_len` past the current length, otherwise truncate.
-async fn apply_truncate(current: &[u8], sealed: bool, new_len: u64) -> Result<Vec<u8>, DbError> {
+fn apply_truncate(current: &[u8], sealed: bool, new_len: u64) -> Result<Vec<u8>, DbError> {
     if sealed {
         return Err(DbError::InvalidArgument("cannot truncate sealed wal segment".to_string()));
     }
@@ -121,7 +121,7 @@ type LeaseRow = (EpochFence, u64, String);
 
 /// @emoji 🤝️ The pure decision behind `LeaseStorage::acquire` — see `MemoryStorage::acquire`'s
 /// identical law in `db_storage`, factored out here for unit testing without a live connection.
-async fn decide_acquire_fence(resource: &str, existing: Option<LeaseRow>, holder: &str, now_ms: u64) -> Result<EpochFence, DbError> {
+fn decide_acquire_fence(resource: &str, existing: Option<LeaseRow>, holder: &str, now_ms: u64) -> Result<EpochFence, DbError> {
     match existing {
         Some((fence, expires_at_ms, existing_holder)) if now_ms < expires_at_ms => {
             if existing_holder != holder {
@@ -135,7 +135,7 @@ async fn decide_acquire_fence(resource: &str, existing: Option<LeaseRow>, holder
 }
 
 /// @emoji ♻️ The pure decision behind `LeaseStorage::renew`.
-async fn validate_renew(resource: &str, existing: Option<LeaseRow>, holder: &str, fence: EpochFence, now_ms: u64) -> Result<(), DbError> {
+fn validate_renew(resource: &str, existing: Option<LeaseRow>, holder: &str, fence: EpochFence, now_ms: u64) -> Result<(), DbError> {
     let (current_fence, expires_at_ms, current_holder) = existing.ok_or_else(|| DbError::NotFound(format!("lease for {resource} not found")))?;
     if now_ms >= expires_at_ms {
         return Err(DbError::Unavailable(format!("lease for {resource} already expired")));
@@ -147,7 +147,7 @@ async fn validate_renew(resource: &str, existing: Option<LeaseRow>, holder: &str
 }
 
 /// @emoji 🕊️ The pure decision behind `LeaseStorage::release`.
-async fn validate_release(resource: &str, existing: Option<LeaseRow>, holder: &str, fence: EpochFence) -> Result<(), DbError> {
+fn validate_release(resource: &str, existing: Option<LeaseRow>, holder: &str, fence: EpochFence) -> Result<(), DbError> {
     let (current_fence, _, current_holder) = existing.ok_or_else(|| DbError::NotFound(format!("lease for {resource} not found")))?;
     if current_holder != holder {
         return Err(DbError::Unauthorized(format!("lease for {resource} is not held by {holder}")));

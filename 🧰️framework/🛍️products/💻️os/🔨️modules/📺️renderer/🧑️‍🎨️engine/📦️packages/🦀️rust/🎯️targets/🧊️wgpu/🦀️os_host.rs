@@ -113,6 +113,11 @@ pub struct OsHost {
     pub wheel_zoom_settle: HashMap<String, f64>,
     /// 🕒️ World3D camera-settle tokens, keyed by surface id — `deadlines::arm`/`sweep_expired`.
     pub camera_settle: HashMap<String, f64>,
+    /// ⏱️ P1e (INTERACTIVE-JOB-RUNTIME-REFACTOR, one-pool-worker-runtime): monotonically incremented
+    /// once per `redraw()` call — the `Generation` `winit_app.rs` stamps its
+    /// `semio_framework_trace::Watchdog` with, so two consecutive frame-callback overruns are
+    /// distinguishable events in `Watchdog::violations()`, not one indistinguishable repeat.
+    pub frame_generation: u64,
 }
 
 impl OsHost {
@@ -127,6 +132,7 @@ impl OsHost {
             hot_swap: HotSwapPoll::new(),
             wheel_zoom_settle: HashMap::new(),
             camera_settle: HashMap::new(),
+            frame_generation: 0,
         }
     }
 

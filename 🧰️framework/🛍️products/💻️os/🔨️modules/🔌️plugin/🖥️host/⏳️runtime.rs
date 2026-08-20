@@ -137,7 +137,7 @@ pub struct AsyncEngineHandle {
 impl AsyncEngineHandle {
     pub async fn new(cfg: SharedEngineConfig) -> Result<Self, PluginHostError> {
         let (engine, _pooling_active) = build_async_engine(cfg).await?;
-        let epoch_ticker = crate::EpochTicker::start(&engine);
+        let epoch_ticker = crate::EpochTicker::start(&engine, &crate::plugin_host_worker_pool());
         let mut linker = Linker::new(&engine);
         wasmtime_wasi::p2::add_to_linker_async(&mut linker).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
         // 🧬️ B1 world-collapse already landed `pub(crate) mod actor_bindings` — no lease needed

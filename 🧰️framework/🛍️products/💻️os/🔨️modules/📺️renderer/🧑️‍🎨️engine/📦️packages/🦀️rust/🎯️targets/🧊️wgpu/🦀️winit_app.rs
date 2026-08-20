@@ -33,6 +33,14 @@ use winit::event::WindowEvent;
 use winit::event_loop::{ActiveEventLoop, EventLoopProxy};
 use winit::window::{Window, WindowAttributes, WindowId};
 
+/// ⏱️ P1e: this process has exactly one renderer frame callback (`OsHost::redraw`, below) — one
+/// `OperationId` allocated once, lazily, on first frame, rather than a fresh one per call (an
+/// `OperationId` names a logical operation across its `Generation`s, not one single call).
+fn render_frame_operation_id() -> semio_framework_trace::OperationId {
+    static ID: std::sync::OnceLock<semio_framework_trace::OperationId> = std::sync::OnceLock::new();
+    *ID.get_or_init(semio_framework_trace::allocate_operation_id)
+}
+
 //#region 🔖️WindowDelegate for OsHost
 
 impl WindowDelegate for OsHost {
@@ -85,6 +93,23 @@ impl WindowDelegate for OsHost {
     fn redraw(&mut self, _reason: InvalidationReason) -> RedrawOutcome {
         let now = self.clock.now_seconds();
         let last_cursor = if let Ok(mut app) = self.runtime.try_borrow_mut() {
+            // ⏱️ P1e (INTERACTIVE-JOB-RUNTIME-REFACTOR, one-pool-worker-runtime): `AppRuntime::frame()`
+            // is this crate's whole renderer frame callback today — input processing, chrome
+            // layout/tessellation AND the GPU `render_frame` submission, still one undivided call on
+            // this thread (native winit thread or the wasm main thread; `frame()` is called from
+            // nowhere else — see `📦️glue.rs`'s own audit). Splitting that apart onto workers (frame
+            // BUILDING off this thread, this thread only submitting an already-prepared packet) is
+            // Phase 3/5's job, explicitly NOT this packet's. This wrap only makes an overrun VISIBLE —
+            // any call exceeding `semio_framework_trace::INTERACTIVE_STEP_CEILING_US` (8ms) is
+            // recorded as a `ContractViolation`, which is exactly the instrumentation Phase 3's exit
+            // gate reads, without changing what runs where.
+            let _watchdog = semio_framework_trace::Watchdog::start(
+                "os_renderer_frame",
+                render_frame_operation_id(),
+                semio_framework_trace::Generation(self.frame_generation),
+                semio_framework_trace::InteractiveStage::UiPresent,
+            );
+            self.frame_generation = self.frame_generation.wrapping_add(1);
             app.frame();
             app.last_cursor.map(|(cursor, _)| cursor)
         } else {

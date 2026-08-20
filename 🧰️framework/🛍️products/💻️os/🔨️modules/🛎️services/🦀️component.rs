@@ -34,13 +34,43 @@
 use std::cmp::Reverse;
 use std::collections::{BTreeMap, BinaryHeap, HashMap, VecDeque};
 use std::future::Future;
-use std::pin::Pin;
 use std::sync::atomic::{AtomicBool, AtomicU32, AtomicU64, Ordering};
-use std::sync::{Arc, Mutex};
-use std::time::Duration;
+use std::sync::{Arc, Mutex, OnceLock};
 
 use semio_framework_actor::{ActorId, PackageId};
-use semio_framework_async::{CancelState, CancelToken, ChannelPolicy, HostAsyncRuntime, HostFuture, OperationContext, ScopeDrainReport, ScopeHandle, ScopeId, ScopeOwner, ThreadBudget, ThreadPlan, ThreadRole};
+use semio_framework_async::{block_on, CancelState, CancelToken, ChannelPolicy, HostAsyncRuntime, HostFuture, Lane, OperationContext, ProcessKind, ScopeDrainReport, ScopeHandle, ScopeId, ScopeOwner, WorkerPool, WorkerPoolConfig};
+
+//#region 🧵️GlobalWorkerPool
+/// 🧵️ The ONE process-wide [`WorkerPool`] every tokio-free service in this crate schedules real CPU/
+/// blocking work onto — [`TokioHostRuntime::new`]'s default, [`ComputePool::new`], [`HttpPool`]'s
+/// refill driver, [`StorageScheduler`]'s dispatch and [`TimerWheel`]'s driver ALL resolve the SAME
+/// pool through this fn, lazily built on first use and never rebuilt. `ComputePool::new`/
+/// `HttpPool::new`/`StorageScheduler::new`/`TimerWheel::new` cannot accept an injected pool: their
+/// signatures are frozen by call sites outside this packet's `path_scope` (`🔌️plugin/🖥️host`,
+/// `📇️directory/🔌️client` — neither edited here; see the packet report's `## honest gaps`), so a
+/// shared lazy static is what keeps "one process-wide pool" true anyway. [`TokioHostRuntime::new`]
+/// (a constructor this packet fully owns) resolves the SAME singleton for consistency — a caller that
+/// wants a genuinely INDEPENDENT pool (a CLI entry point, a test wanting deterministic sizing) uses
+/// [`TokioHostRuntime::with_pool`]/constructs its own [`WorkerPool`] directly instead.
+///
+/// `ProcessKind::InteractiveNative` is the honest default for THIS product (`os-services` backs the
+/// interactive OS host, never a headless batch tool); `cores.max(4)` intentionally oversubscribes a
+/// small/constrained machine (a 1–2 core CI runner or devcontainer) because the work THIS crate
+/// dispatches is overwhelmingly I/O-and-blocking-bound (HTTP fetches, file storage, timer callbacks)
+/// rather than pure CPU compute — a handful of extra worker threads beyond the physical core count
+/// avoids pathological single-worker starvation there without meaningfully hurting real compute
+/// throughput on a developer/production machine that already has more cores than 4.
+static GLOBAL_WORKER_POOL: OnceLock<WorkerPool> = OnceLock::new();
+
+fn global_worker_pool() -> WorkerPool {
+    GLOBAL_WORKER_POOL
+        .get_or_init(|| {
+            let cores = std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get).max(4);
+            WorkerPool::new(WorkerPoolConfig::new(ProcessKind::InteractiveNative, cores))
+        })
+        .clone()
+}
+//#endregion 🧵️GlobalWorkerPool
 
 //#region 🚂️TokioHostRuntime
 /// 🌳️ What a scope's spawned task decided about itself before running its real body — used only to
@@ -50,11 +80,17 @@ enum TaskOutcome {
     CancelledEarly,
 }
 
-/// 🌳️ One scope's identity/lineage/cancellation plus the `JoinSet` tracking every task
-/// [`ScopeTable::spawn_scoped`]/`run_blocking` put into it.
+/// 🌳️ One scope's identity/lineage/cancellation plus the outcome receivers tracking every task
+/// [`ScopeTable::spawn_scoped`] put onto the shared [`WorkerPool`] — replaces the pre-Phase-1
+/// `tokio::task::JoinSet` one-for-one: a [`tokio::sync::oneshot::Receiver`] per spawned task,
+/// completed by that task's own [`WorkerPool`] job once [`block_on`] drives it to completion. Like
+/// the `JoinSet` it replaces, entries are only ever reclaimed by [`ScopeTable::cancel_scope`]
+/// draining the whole scope — a long-lived scope that spawns many short tasks and is never cancelled
+/// accumulates dead receivers exactly as the old `JoinSet` accumulated dead `AbortHandle`s until
+/// `join_next` was called; not a new limitation.
 struct ScopeRecord {
     cancel: CancelToken,
-    tasks: tokio::task::JoinSet<TaskOutcome>,
+    tasks: Vec<tokio::sync::oneshot::Receiver<TaskOutcome>>,
 }
 
 /// 🐢️ Poll interval a newly-submitted unit of work waits on while its scope is `Park`ed before
@@ -62,33 +98,38 @@ struct ScopeRecord {
 /// event wake.
 const PARK_POLL_INTERVAL_MS: u64 = 20;
 
+/// 🐢️ Poll interval [`ScopeTable::cancel_scope`] re-checks its still-pending task receivers on while
+/// draining a scope, bounded by the caller's own `grace_ms` — see that method's doc.
+const CANCEL_DRAIN_POLL_MS: u64 = 5;
+
 /// ⏳️ Waits until `cancel`'s effective state is no longer `Park`, returning `true` if it settled on
 /// `Live` (the caller should run its real work) or `false` if it settled on `Cancelled` (the caller
 /// should skip its real work entirely — this is how "new work is held while parked, and refused once
 /// cancelled" is implemented). Polls on [`PARK_POLL_INTERVAL_MS`] rather than waking on an event
 /// because `CancelToken` (frozen for this packet, from `semio-framework-async`) exposes only a
-/// point-in-time `state()` read, no unpark notification.
-async fn await_live_or_cancelled(cancel: &CancelToken) -> bool {
+/// point-in-time `state()` read, no unpark notification. Sleeps through `pool`'s own [`TimerWheel`]
+/// (`semio_framework_async::WorkerPool::timer`) rather than `tokio::time::sleep` — this crate no
+/// longer builds a `tokio::runtime::Runtime`, so no tokio timer driver exists to service that call.
+async fn await_live_or_cancelled(pool: &WorkerPool, cancel: &CancelToken) -> bool {
     loop {
         match cancel.state().await {
             CancelState::Live => return true,
             CancelState::Cancelled => return false,
-            CancelState::Park => tokio::time::sleep(Duration::from_millis(PARK_POLL_INTERVAL_MS)).await,
+            CancelState::Park => pool.timer().sleep_until(pool.now_ms() + PARK_POLL_INTERVAL_MS).await,
         }
     }
 }
 
-/// 🌳️ Root scope per package, child scope per actor, one `JoinSet` per scope — see the crate doc.
-/// Every [`TokioHostRuntime`] scope method delegates here. Deliberately NOT `pub`: this is
-/// `TokioHostRuntime`'s own bookkeeping, which is what lets `tokio::runtime::Handle` live in its
-/// constructor without that type ever reaching this crate's public API surface. Wraps its state in
-/// an `Arc` so [`TokioHostRuntime::cancel_scope`] can clone [`ScopeTable`] and `.await` the drain
-/// without borrowing `&self` across the async body.
+/// 🌳️ Root scope per package, child scope per actor, one outcome-receiver list per scope — see the
+/// crate doc. Every [`TokioHostRuntime`] scope method delegates here. Deliberately NOT `pub`: this is
+/// `TokioHostRuntime`'s own bookkeeping. Wraps its state in an `Arc` so
+/// [`TokioHostRuntime::cancel_scope`] can clone [`ScopeTable`] and `.await` the drain without
+/// borrowing `&self` across the async body.
 #[derive(Clone)]
 struct ScopeTable(Arc<ScopeTableInner>);
 
 struct ScopeTableInner {
-    handle: tokio::runtime::Handle,
+    pool: WorkerPool,
     next_id: AtomicU64,
     records: Mutex<HashMap<ScopeId, ScopeRecord>>,
     owner_index: Mutex<HashMap<ScopeOwner, ScopeId>>,
@@ -96,12 +137,10 @@ struct ScopeTableInner {
 }
 
 impl ScopeTable {
-    // 🚫️async: E1-adjacent pure constructor whose ONLY consumer, `TokioHostRuntime::new`, is forced
-    // synchronous by `📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs` (registrar-only, not
-    // this packet's to edit) — see R9. No suspension point exists (`Arc::new`/`AtomicU64::new`/
-    // `Mutex::new` are in-memory only).
-    fn new(handle: tokio::runtime::Handle) -> ScopeTable {
-        ScopeTable(Arc::new(ScopeTableInner { handle, next_id: AtomicU64::new(1), records: Mutex::new(HashMap::new()), owner_index: Mutex::new(HashMap::new()), children: Mutex::new(HashMap::new()) }))
+    // 🚫️async: E1-adjacent pure constructor — no suspension point exists (`Arc::new`/
+    // `AtomicU64::new`/`Mutex::new`/`WorkerPool::clone` are in-memory only). See R9.
+    fn new(pool: WorkerPool) -> ScopeTable {
+        ScopeTable(Arc::new(ScopeTableInner { pool, next_id: AtomicU64::new(1), records: Mutex::new(HashMap::new()), owner_index: Mutex::new(HashMap::new()), children: Mutex::new(HashMap::new()) }))
     }
 
     /// 🔍️ Assumes at most one OPEN scope per `ScopeOwner` at a time (one root scope per package,
@@ -116,7 +155,7 @@ impl ScopeTable {
             None => CancelToken::root().await,
         };
         let parent_id = parent.map(|handle| handle.id);
-        self.0.records.lock().expect("ScopeTable records mutex poisoned").insert(id, ScopeRecord { cancel: cancel.clone(), tasks: tokio::task::JoinSet::new() });
+        self.0.records.lock().expect("ScopeTable records mutex poisoned").insert(id, ScopeRecord { cancel: cancel.clone(), tasks: Vec::new() });
         self.0.owner_index.lock().expect("ScopeTable owner_index mutex poisoned").insert(owner.clone(), id);
         if let Some(parent_id) = parent_id {
             self.0.children.lock().expect("ScopeTable children mutex poisoned").entry(parent_id).or_default().push(id);
@@ -124,41 +163,43 @@ impl ScopeTable {
         ScopeHandle { id, owner, cancel }
     }
 
-    // 🚫️async: E1-adjacent — no suspension point of its own (builds `wrapped` but only SPAWNS it,
-    // via a `std::sync::MutexGuard`-protected `spawn_on` push; never drives it here). Consumed
-    // above by `TokioHostRuntime::spawn_scoped`, already `async fn` to match the trait, which calls
-    // this plainly — an `async fn` here would add a second, pointless suspension layer. See R9.
+    /// ▶️ Submits `fut` as ONE [`WorkerPool`] job on the [`Lane`] `ctx.lane` maps to
+    /// ([`Lane::from_context_lane`]) — [`block_on`] (this crate's `entrypoint`-feature import of
+    /// `semio_framework_async::block_on`) turns that single worker into the future-polling executor
+    /// for `fut`'s ENTIRE lifetime, per the async crate's own module doc ("polling Futures to
+    /// completion remains the future-polling executor's job... built ON TOP of this pool"). A task
+    /// that never resolves (an infinite loop) occupies its worker for the process's whole lifetime —
+    /// an accepted, documented P1b limitation (see the packet report's `## honest gaps`); a properly
+    /// cooperative multi-task-per-thread executor is Phase 9's job, once tokio itself leaves this
+    /// crate entirely.
+    // 🚫️async: E1-adjacent — no suspension point of its own (only SUBMITS the job; never drives it
+    // here). Consumed by `TokioHostRuntime::spawn_scoped`, already `async fn` to match the trait,
+    // which calls this plainly — an `async fn` here would add a second, pointless suspension layer.
+    // See R9.
     fn spawn_scoped(&self, scope: &ScopeHandle, ctx: &OperationContext, fut: HostFuture<()>) {
         let cancel = ctx.cancel.clone();
-        let wrapped = async move {
-            if await_live_or_cancelled(&cancel).await {
-                fut.await;
-                TaskOutcome::Finished
-            } else {
-                TaskOutcome::CancelledEarly
-            }
-        };
+        let lane = Lane::from_context_lane(ctx.lane);
+        let (result_tx, result_rx) = tokio::sync::oneshot::channel::<TaskOutcome>();
         let mut records = self.0.records.lock().expect("ScopeTable records mutex poisoned");
-        if let Some(record) = records.get_mut(&scope.id) {
-            record.tasks.spawn_on(wrapped, &self.0.handle);
-        }
-    }
-
-    // 🚫️async: E1-adjacent — see `spawn_scoped`'s tag above (R9); same shape.
-    fn run_blocking(&self, scope: &ScopeHandle, ctx: &OperationContext, work: Box<dyn FnOnce() + Send>) {
-        let cancel = ctx.cancel.clone();
-        let wrapped = async move {
-            if await_live_or_cancelled(&cancel).await {
-                let _ = tokio::task::spawn_blocking(work).await;
-                TaskOutcome::Finished
-            } else {
-                TaskOutcome::CancelledEarly
-            }
-        };
-        let mut records = self.0.records.lock().expect("ScopeTable records mutex poisoned");
-        if let Some(record) = records.get_mut(&scope.id) {
-            record.tasks.spawn_on(wrapped, &self.0.handle);
-        }
+        let Some(record) = records.get_mut(&scope.id) else { return };
+        record.tasks.push(result_rx);
+        drop(records);
+        let pool = self.0.pool.clone();
+        let wait_pool = pool.clone();
+        pool.submit(
+            lane,
+            Box::new(move || {
+                let outcome = block_on(async move {
+                    if await_live_or_cancelled(&wait_pool, &cancel).await {
+                        fut.await;
+                        TaskOutcome::Finished
+                    } else {
+                        TaskOutcome::CancelledEarly
+                    }
+                });
+                let _ = result_tx.send(outcome);
+            }),
+        );
     }
 
     async fn collect_descendants(&self, root: ScopeId) -> Vec<ScopeId> {
@@ -179,12 +220,14 @@ impl ScopeTable {
     /// 🛑️ Cancels `owner`'s scope and every descendant [`collect_descendants`](ScopeTable::collect_descendants)
     /// can reach, flipping each recorded descendant's OWN token too — defensive, since the
     /// transitive fold in `CancelToken::child` already covers scopes opened with a live parent
-    /// link, this just keeps the bookkeeping honest either way. Drains each scope's `JoinSet`
-    /// within `grace_ms`; whatever is still in the set once the grace period elapses is honestly
-    /// counted `leaked` (never silently folded into `finished`) and THEN force-aborted, so a task
-    /// that ignored cancellation does not become a real resource leak in the host process — a
-    /// blocking OS thread already underway cannot be preempted, but the tracking task wrapping it
-    /// is stopped here.
+    /// link, this just keeps the bookkeeping honest either way. Drains each scope's outcome
+    /// receivers within `grace_ms` by polling [`tokio::sync::oneshot::Receiver::try_recv`] (a
+    /// non-blocking, runtime-context-free call) on a [`CANCEL_DRAIN_POLL_MS`] tick — whatever is
+    /// still pending once the grace period elapses is honestly counted `leaked` (never silently
+    /// folded into `finished`); a blocking OS thread already underway cannot be preempted, so unlike
+    /// the old `JoinSet::abort_all` there is nothing further to force-stop here — the [`WorkerPool`]
+    /// worker running it keeps running it to completion regardless, exactly the same honest
+    /// limitation [`ComputeError::DeadlineExceeded`] documents.
     async fn cancel_scope(self, owner: ScopeOwner, grace_ms: u64) -> ScopeDrainReport {
         let root_id = match self.0.owner_index.lock().expect("ScopeTable owner_index mutex poisoned").get(&owner).copied() {
             Some(id) => id,
@@ -198,101 +241,88 @@ impl ScopeTable {
         for cancel in &cancels {
             cancel.cancel().await;
         }
-        let grace = Duration::from_millis(grace_ms);
+        let deadline = self.0.pool.now_ms() + grace_ms;
         let mut report = ScopeDrainReport::default();
         for id in &scope_ids {
-            let mut tasks = {
+            let tasks = {
                 let mut records = self.0.records.lock().expect("ScopeTable records mutex poisoned");
                 match records.get_mut(id) {
-                    Some(record) => std::mem::replace(&mut record.tasks, tokio::task::JoinSet::new()),
+                    Some(record) => std::mem::take(&mut record.tasks),
                     None => continue,
                 }
             };
-            let deadline = tokio::time::Instant::now() + grace;
+            let mut pending = tasks;
             loop {
-                if tasks.is_empty() {
+                let mut still_pending = Vec::new();
+                for mut receiver in pending {
+                    match receiver.try_recv() {
+                        Ok(TaskOutcome::Finished) => report.finished += 1,
+                        Ok(TaskOutcome::CancelledEarly) => report.cancelled += 1,
+                        Err(tokio::sync::oneshot::error::TryRecvError::Closed) => report.cancelled += 1,
+                        Err(tokio::sync::oneshot::error::TryRecvError::Empty) => still_pending.push(receiver),
+                    }
+                }
+                pending = still_pending;
+                if pending.is_empty() || self.0.pool.now_ms() >= deadline {
                     break;
                 }
-                let remaining = deadline.saturating_duration_since(tokio::time::Instant::now());
-                match tokio::time::timeout(remaining, tasks.join_next()).await {
-                    Ok(Some(Ok(TaskOutcome::Finished))) => report.finished += 1,
-                    Ok(Some(Ok(TaskOutcome::CancelledEarly))) => report.cancelled += 1,
-                    Ok(Some(Err(_join_error))) => report.cancelled += 1,
-                    Ok(None) => break,
-                    Err(_timed_out) => break,
-                }
+                let wake_at = (self.0.pool.now_ms() + CANCEL_DRAIN_POLL_MS).min(deadline);
+                self.0.pool.timer().sleep_until(wake_at).await;
             }
-            report.leaked += tasks.len() as u32;
-            tasks.abort_all();
+            report.leaked += pending.len() as u32;
         }
         report
     }
 }
 
-/// 🚂️ The ONE `tokio::runtime::Runtime` this crate builds. `worker_threads` is sized from
-/// `plan.io_workers`, `max_blocking_threads` from `plan.compute` — this is what turns tokio's
-/// default of up to 512 blocking threads into the bounded budget the design calls for. Threads are
-/// checked out from the shared [`ThreadBudget`] at construction; this type never calls
-/// `std::thread::available_parallelism` or sizes itself from a core count — the whole point of
-/// [`ThreadPlan`] is that exactly one place in the process reads that number.
+/// 🚂️ The one [`HostAsyncRuntime`] implementation this crate ships. Owns NO thread pool of its own
+/// any more: `pool` is the shared, process-wide [`WorkerPool`] (see [`global_worker_pool`]'s doc for
+/// why a lazy static, not full dependency injection, is this packet's honest compromise) — every
+/// `HostAsyncRuntime` method below and every [`ScopeTable`] task delegates its real work to it.
 pub struct TokioHostRuntime {
-    runtime: tokio::runtime::Runtime,
     scopes: ScopeTable,
-    epoch: tokio::time::Instant,
+    pool: WorkerPool,
 }
-
-/// 🚫️ [`TokioHostRuntime::new`]'s only failure mode: the underlying builder rejected the plan.
-#[derive(Debug)]
-pub struct RuntimeBuildError(String);
-
-impl std::fmt::Display for RuntimeBuildError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "TokioHostRuntime failed to build: {}", self.0)
-    }
-}
-impl std::error::Error for RuntimeBuildError {}
 
 impl TokioHostRuntime {
-    /// 🚂️ Builds the one host runtime from `plan`, checking out `plan.io_workers` and
-    /// `plan.compute` threads from `budget` — the caller owns `budget` and must pass the SAME
-    /// `ThreadPlan` used to size every other role in the process. Reads no clock and no core count
-    /// of its own: `epoch` below is read directly, with no `block_on`/runtime entry required —
-    /// `tokio::time::Instant::now()` falls back to the real OS clock whenever no runtime-owned mock
-    /// clock is in scope (only `#[tokio::test(start_paused = true)]`-style paused clocks need an
-    /// entered context, and this crate's tests never use one), so this and every later
-    /// `now_ms`/`sleep_until` call are anchored to the same real clock regardless.
-    /// [`resolve_ready`]-driven: `ThreadBudget::checkout` is `async fn` with zero I/O (atomic
-    /// bookkeeping only, confirmed by reading its body), and `new`'s own signature is fixed
-    /// synchronous by `📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs` — a registrar-only
-    /// file this packet cannot edit — calling it un-awaited.
-    pub fn new(plan: ThreadPlan, budget: &ThreadBudget) -> Result<TokioHostRuntime, RuntimeBuildError> {
-        resolve_ready(budget.checkout(ThreadRole::IoWorker, plan.io_workers));
-        resolve_ready(budget.checkout(ThreadRole::Compute, plan.compute));
-        let runtime = tokio::runtime::Builder::new_multi_thread()
-            .worker_threads(plan.io_workers.max(1) as usize)
-            .max_blocking_threads(plan.compute.max(1) as usize)
-            .thread_name("semio-os-services")
-            .enable_all()
-            .build()
-            .map_err(|error| RuntimeBuildError(error.to_string()))?;
-        let handle = runtime.handle().clone();
-        let epoch = tokio::time::Instant::now();
-        Ok(TokioHostRuntime { runtime, scopes: ScopeTable::new(handle), epoch })
+    /// 🚂️ Builds a host runtime backed by [`global_worker_pool`] — the crate-wide default every
+    /// frozen-signature constructor here ([`ComputePool::new`], [`HttpPool::new`],
+    /// [`StorageScheduler::new`], [`TimerWheel::new`]) also resolves, so a `TokioHostRuntime` built
+    /// this way shares its real OS threads with them. Infallible: unlike the deleted
+    /// `tokio::runtime::Builder::build()` path, constructing a [`ScopeTable`] over an already-live
+    /// [`WorkerPool`] cannot fail.
+    pub fn new() -> TokioHostRuntime {
+        Self::with_pool(global_worker_pool())
     }
 
-    /// 🧵️ Drives `f` to completion on this runtime — the entry point a process bootstrap uses for
-    /// its own top-level async setup before handing scopes to services. This crate's designated
+    /// 🚂️ Builds a host runtime over a CALLER-OWNED [`WorkerPool`] — the real dependency-injection
+    /// path for a process entry point that wants its own independently-sized pool (a `HeadlessBatch`
+    /// CLI, or a test wanting deterministic sizing rather than [`global_worker_pool`]'s
+    /// oversubscribed default) instead of the crate-wide singleton [`TokioHostRuntime::new`] resolves.
+    pub fn with_pool(pool: WorkerPool) -> TokioHostRuntime {
+        TokioHostRuntime { scopes: ScopeTable::new(pool.clone()), pool }
+    }
+
+    /// 🧵️ Drives `f` to completion on the calling thread — the entry point a process bootstrap uses
+    /// for its own top-level async setup before handing scopes to services. This crate's designated
     /// executor entry point (R4 sanctions `semio-framework-os-services` by name); every `#[test]`
-    /// in this file that drives real suspending work (`sleep_until` racing real time, `cancel_scope`
-    /// draining a `JoinSet`) goes through THIS bridge, per R4 Clause 5.
+    /// in this file that drives real suspending work goes through THIS bridge, per R4 Clause 5.
+    /// Delegates to `semio_framework_async::block_on` (this crate's `entrypoint`-feature import) —
+    /// the SAME bridge every [`ScopeTable`]-submitted [`WorkerPool`] job uses internally, just called
+    /// here on whatever thread the caller is already on rather than inside a pool job.
     ///
     /// 🚫️async: E5 executor bridge — the thread-becomes-executor boundary; an `async fn` can only be
     /// driven by something already polling it, so this cannot itself be `async` without begging the
     /// question (same reasoning as `semio-framework-async`'s own `block_on`, this crate's sibling
-    /// bridge one layer down). See [`resolve_ready`] below for why this crate carries a SECOND E5
-    /// exception rather than the one R2 normally allows — that doc explains the forced boundary.
+    /// bridge one layer down).
     pub fn block_on<F: Future>(&self, f: F) -> F::Output {
-        self.runtime.block_on(f)
+        block_on(f)
+    }
+}
+
+impl Default for TokioHostRuntime {
+    fn default() -> TokioHostRuntime {
+        TokioHostRuntime::new()
     }
 }
 
@@ -305,13 +335,8 @@ impl HostAsyncRuntime for TokioHostRuntime {
         self.scopes.spawn_scoped(scope, &ctx, fut);
     }
 
-    async fn run_blocking(&self, scope: &ScopeHandle, ctx: OperationContext, work: Box<dyn FnOnce() + Send>) {
-        self.scopes.run_blocking(scope, &ctx, work);
-    }
-
     async fn sleep_until(&self, deadline_ms: u64) {
-        let target = self.epoch + Duration::from_millis(deadline_ms);
-        tokio::time::sleep_until(target).await;
+        self.pool.timer().sleep_until(deadline_ms).await;
     }
 
     async fn cancel_scope(&self, owner: &ScopeOwner, grace_ms: u64) -> ScopeDrainReport {
@@ -319,7 +344,7 @@ impl HostAsyncRuntime for TokioHostRuntime {
     }
 
     async fn now_ms(&self) -> u64 {
-        (tokio::time::Instant::now() - self.epoch).as_millis() as u64
+        self.pool.now_ms()
     }
 }
 
@@ -490,9 +515,9 @@ impl WheelCore {
 const TIMER_DRIVER_IDLE_POLL_MS: u64 = 250;
 
 /// ⏲️ The ONE host timer wheel for every plugin's timers — see the crate doc. Owns a [`WheelCore`]
-/// behind a `Mutex` plus the thin tokio-backed driver task ([`TimerWheel::spawn_driver`]) that wakes
-/// it and posts firings to a [`CompletionSink`]. Plugins arm/disarm through here; they must never
-/// spin up a timer of their own.
+/// behind a `Mutex` plus the driver loop ([`TimerWheel::spawn_driver`]) that wakes it and posts
+/// firings to a [`CompletionSink`]. Plugins arm/disarm through here; they must never spin up a timer
+/// of their own.
 pub struct TimerWheel {
     core: Arc<Mutex<WheelCore>>,
     wake: Arc<tokio::sync::Notify>,
@@ -518,42 +543,52 @@ impl TimerWheel {
         self.core.lock().expect("TimerWheel core mutex poisoned").armed_count(plugin)
     }
 
-    /// ▶️ Spawns the driver loop into `scope` on `runtime`: sleeps until the wheel's next expiry (or
-    /// wakes early on [`TimerWheel::arm`]), pops everything due, and hands each firing to `sink` —
-    /// the ONLY re-entry path, per [`CompletionSink`]'s own doc. `runtime` is `Arc`-owned because
-    /// the loop is a detached, indefinitely-recurring task; `ctx` identifies the DRIVER task itself
-    /// (its own cancellation/lane), independent of the per-firing `actor`/`generation`/`lane` each
-    /// [`TimerFired`] already carries.
-    pub async fn spawn_driver<R: HostAsyncRuntime + 'static>(&self, runtime: &Arc<R>, scope: &ScopeHandle, ctx: OperationContext, sink: Arc<dyn CompletionSink>) {
+    /// ▶️ Submits the driver loop as ONE dedicated job on `pool`'s [`Lane::Timer`] lane: sleeps
+    /// until the wheel's next expiry (or wakes early on [`TimerWheel::arm`], via `wake`), pops
+    /// everything due, and hands each firing to `sink` — the ONLY re-entry path, per
+    /// [`CompletionSink`]'s own doc. [`Lane::Timer`] is deliberately EXEMPT from [`WorkerPool`]'s
+    /// interactive-reserve admission control (see the async crate's `is_low_priority` doc), so this
+    /// driver is never starved by a saturated interactive workload.
+    ///
+    /// 🚨️ HONEST GAP (P1b, tracked for a Phase 9 follow-up): [`block_on`] drives this loop's `async
+    /// move` body FOREVER on whatever [`WorkerPool`] worker picks up the job — an infinite task
+    /// occupies its worker for the process's entire lifetime, exactly the tradeoff
+    /// [`ScopeTable::spawn_scoped`]'s doc already accepts for any never-resolving scoped task. On a
+    /// pool forced down to `worker_count == 1` (a single-core host), calling this AND
+    /// [`HttpPool::spawn_refill_driver`] together would starve the pool completely — do not call both
+    /// against a single-worker pool until Phase 9 replaces `block_on`-per-job with a real cooperative
+    /// multi-task executor.
+    // 🚫️async: E1-adjacent — no suspension point of its own (only SUBMITS the job; never drives it
+    // here). See R9.
+    pub fn spawn_driver(&self, pool: &WorkerPool, sink: Arc<dyn CompletionSink>) {
         let core = self.core.clone();
         let wake = self.wake.clone();
-        let runtime_for_loop = runtime.clone();
-        let fut: HostFuture<()> = Box::pin(async move {
-            loop {
-                let now_ms = runtime_for_loop.now_ms().await;
-                let next = core.lock().expect("TimerWheel core mutex poisoned").next_expiry_ms();
-                // 🌉️ R15: `sleep_until` is RPITIT with an explicit `Send` bound at the trait, so
-                // its future is provably `Send` even for a generic `R` — no `BoxedHostAsyncRuntime`
-                // detour needed any more. Still boxed locally (NOT `HostFuture<()>`, which demands
-                // `'static`) purely to unify the three match arms' otherwise-distinct anonymous
-                // future types ahead of `tokio::select!`.
-                let sleep_fut: Pin<Box<dyn Future<Output = ()> + Send + '_>> = match next {
-                    Some(expiry) if expiry > now_ms => Box::pin(runtime_for_loop.sleep_until(expiry)),
-                    Some(_) => Box::pin(std::future::ready(())),
-                    None => Box::pin(runtime_for_loop.sleep_until(now_ms + TIMER_DRIVER_IDLE_POLL_MS)),
-                };
-                tokio::select! {
-                    _ = sleep_fut => {}
-                    _ = wake.notified() => {}
-                }
-                let now_ms = runtime_for_loop.now_ms().await;
-                let fired = core.lock().expect("TimerWheel core mutex poisoned").pop_expired(now_ms);
-                for timer in fired {
-                    sink.complete(timer.actor, timer.generation, timer.id.0.to_le_bytes().to_vec(), timer.lane);
-                }
-            }
-        });
-        runtime.spawn_scoped(scope, ctx, fut).await;
+        let driver_pool = pool.clone();
+        pool.submit(
+            Lane::Timer,
+            Box::new(move || {
+                let pool = driver_pool;
+                block_on(async move {
+                    loop {
+                        let now_ms = pool.now_ms();
+                        let fired = core.lock().expect("TimerWheel core mutex poisoned").pop_expired(now_ms);
+                        for timer in fired {
+                            sink.complete(timer.actor, timer.generation, timer.id.0.to_le_bytes().to_vec(), timer.lane);
+                        }
+                        let next = core.lock().expect("TimerWheel core mutex poisoned").next_expiry_ms();
+                        let sleep_deadline = match next {
+                            Some(expiry) if expiry > now_ms => expiry,
+                            Some(_) => now_ms,
+                            None => now_ms + TIMER_DRIVER_IDLE_POLL_MS,
+                        };
+                        tokio::select! {
+                            _ = pool.timer().sleep_until(sleep_deadline) => {}
+                            _ = wake.notified() => {}
+                        }
+                    }
+                });
+            }),
+        );
     }
 }
 //#endregion ⏲️TimerWheel
@@ -582,27 +617,35 @@ impl std::fmt::Display for ComputeError {
 }
 impl std::error::Error for ComputeError {}
 
-/// 🧮️ Bounds every blocking-CPU host operation to `plan.compute` — tokio's own default
-/// `max_blocking_threads` of 512 is precisely the unbounded-per-CPU failure this type exists to
-/// prevent. A semaphore sized to the plan gates logical admission on top of
-/// [`TokioHostRuntime::new`]'s OWN `max_blocking_threads` bound, and is also what lets
-/// `ctx.deadline_ms` be enforced honestly (a bounded semaphore has somewhere to race a timeout
-/// against; an unbounded `spawn_blocking` call does not).
+/// 🧮️ Bounds every blocking-CPU host operation this pool admits to `capacity`, independent of
+/// [`WorkerPool`]'s own (larger, process-wide) `worker_count` — the real dispatch substrate is now
+/// [`global_worker_pool`] (this type's constructor is frozen by external call sites this packet's
+/// boundary does not own — see that fn's doc — so it cannot accept an injected pool), but a
+/// [`tokio::sync::Semaphore`] sized to `capacity` still gates LOGICAL admission on top of it, and is
+/// also what lets `ctx.deadline_ms` be enforced honestly (a bounded semaphore has somewhere to race a
+/// timeout against; submitting straight to the pool with no local admission gate would not).
 pub struct ComputePool {
     admission: Arc<tokio::sync::Semaphore>,
+    pool: WorkerPool,
 }
 
 impl ComputePool {
     pub async fn new(capacity: u32) -> ComputePool {
-        ComputePool { admission: Arc::new(tokio::sync::Semaphore::new(capacity.max(1) as usize)) }
+        ComputePool { admission: Arc::new(tokio::sync::Semaphore::new(capacity.max(1) as usize)), pool: global_worker_pool() }
     }
 
-    /// 🧮️ Runs `work` off-executor via [`HostAsyncRuntime::run_blocking`], admitted only once a
-    /// permit is free, racing BOTH the admission wait and the result wait against
-    /// `runtime.sleep_until(deadline)` whenever `ctx.deadline_ms` is set — either race losing
-    /// returns [`ComputeError::DeadlineExceeded`] rather than letting a caller wait past its own
-    /// stated deadline.
-    pub async fn run_blocking<T: Send + 'static, R: HostAsyncRuntime>(&self, runtime: &R, scope: &ScopeHandle, ctx: OperationContext, work: impl FnOnce() -> T + Send + 'static) -> Result<T, ComputeError> {
+    /// 🧮️ Runs `work` on [`global_worker_pool`] (the `Lane` `ctx.lane` maps to via
+    /// [`Lane::from_context_lane`] — the caller's own interactivity requirement decides), admitted
+    /// only once a [`ComputePool`]-local permit is free, racing BOTH the admission wait and the
+    /// result wait against `runtime.sleep_until(deadline)` whenever `ctx.deadline_ms` is set — either
+    /// race losing returns [`ComputeError::DeadlineExceeded`] rather than letting a caller wait past
+    /// its own stated deadline. `runtime` is used ONLY for that deadline race (`sleep_until`) — the
+    /// removed `HostAsyncRuntime::run_blocking` is gone, this crate's [`WorkerPool`] submission
+    /// replaces it directly, so `work` never runs on — and never blocks — an async task's own worker;
+    /// the caller `.await`s a plain result channel instead. `_scope` is kept only for call-site
+    /// compatibility with `🔌️plugin/🖥️host`/`📇️directory/🔌️client` (outside this packet's boundary,
+    /// not edited here) — [`WorkerPool`] dispatch has no scope concept to hand it to.
+    pub async fn run_blocking<T: Send + 'static, R: HostAsyncRuntime>(&self, runtime: &R, _scope: &ScopeHandle, ctx: OperationContext, work: impl FnOnce() -> T + Send + 'static) -> Result<T, ComputeError> {
         let admission = self.admission.clone();
         let permit = match ctx.deadline_ms {
             Some(deadline_ms) => {
@@ -614,16 +657,15 @@ impl ComputePool {
             None => admission.acquire_owned().await.map_err(|_| ComputeError::WorkerLost)?,
         };
         let (result_tx, result_rx) = tokio::sync::oneshot::channel::<T>();
-        let ctx_for_run = ctx.clone();
-        runtime.run_blocking(
-            scope,
-            ctx_for_run,
+        let lane = Lane::from_context_lane(ctx.lane);
+        self.pool.submit(
+            lane,
             Box::new(move || {
                 let _permit = permit;
                 let result = work();
                 let _ = result_tx.send(result);
             }),
-        ).await;
+        );
         match ctx.deadline_ms {
             Some(deadline_ms) => {
                 tokio::select! {
@@ -718,8 +760,13 @@ pub trait HttpBody: Send {
 // `async fn` wrapping THAT would be the literal double-future shape R1 bans, on top of breaking
 // `Arc<dyn AsyncHttpTransport>`'s object safety (E0038). `asyncify-universal.py` doesn't yet
 // recognise this class — see the `HttpTransport` tag above for the coordinator note.
+/// 🌐️ [`AsyncHttpTransport::start`]'s result — factored into its own alias to keep that trait
+/// method's signature under clippy's `type_complexity` threshold; not otherwise meaningful on its
+/// own.
+type StartedTransport = Result<(HttpResponseHead, Box<dyn HttpBody>), HttpPoolError>;
+
 pub trait AsyncHttpTransport: Send + Sync {
-    fn start(&self, ctx: &OperationContext, request: HttpRequest) -> HostFuture<Result<(HttpResponseHead, Box<dyn HttpBody>), HttpPoolError>>;
+    fn start(&self, ctx: &OperationContext, request: HttpRequest) -> HostFuture<StartedTransport>;
 }
 
 /// 🌐️ Blocking HTTP transport [`BlockingHttpTransport`] drives through [`ComputePool`] — the same
@@ -801,7 +848,7 @@ impl BlockingHttpTransport {
 
 impl AsyncHttpTransport for BlockingHttpTransport {
     // 🚫️async: E6 dyn-compat — see the trait declaration's tag.
-    fn start(&self, ctx: &OperationContext, request: HttpRequest) -> HostFuture<Result<(HttpResponseHead, Box<dyn HttpBody>), HttpPoolError>> {
+    fn start(&self, ctx: &OperationContext, request: HttpRequest) -> HostFuture<StartedTransport> {
         let transport = self.transport.clone();
         let compute = self.compute.clone();
         let runtime = self.runtime.clone();
@@ -855,7 +902,11 @@ impl TokenBucket {
 }
 
 /// 🐌️ How often [`HttpPool::spawn_refill_driver`] tops every tracked package's bucket back toward
-/// its `network_bytes_per_min` cap — one real tick per minute, not a doc-only promise.
+/// its `network_bytes_per_min` cap — the PRODUCTION `interval_ms` argument that fn's real caller (a
+/// process bootstrap, out of this packet's boundary — see the packet report's `## honest gaps`)
+/// passes; this crate's own tests pass a short interval instead, so nothing in THIS crate reads this
+/// const today.
+#[allow(dead_code)]
 const HTTP_BUCKET_REFILL_INTERVAL_MS: u64 = 60_000;
 
 /// 🔓️ Releases one outstanding-request slot for `actor`, shared between [`HttpPool::fetch`]'s
@@ -921,31 +972,36 @@ impl HttpPool {
     /// 🔍️ `package`'s remaining bytes this minute — untracked packages read as a full bucket
     /// (nothing has been charged against them yet).
     pub async fn remaining_package_budget(&self, package: &PackageId) -> u64 {
-        self.buckets.lock().expect("HttpPool buckets mutex poisoned").get(package).map(|bucket| bucket.remaining_bytes).unwrap_or(self.bytes_per_minute_cap)
+        self.buckets.lock().expect("HttpPool buckets mutex poisoned").get(package).map_or(self.bytes_per_minute_cap, |bucket| bucket.remaining_bytes)
     }
 
-    /// ▶️ Spawns the refill driver into `scope` on `runtime`: sleeps [`HTTP_BUCKET_REFILL_INTERVAL_MS`],
-    /// then tops EVERY currently-tracked package's bucket back toward its cap, forever — the loop
-    /// this crate's own doc comment used to admit did not exist now actually runs. `ctx` identifies
-    /// the DRIVER task itself, same convention as [`TimerWheel::spawn_driver`].
-    pub async fn spawn_refill_driver<R: HostAsyncRuntime + 'static>(&self, runtime: &Arc<R>, scope: &ScopeHandle, ctx: OperationContext) {
+    /// ▶️ Submits the refill driver as ONE dedicated job on `pool`'s [`Lane::Maintenance`] lane:
+    /// sleeps `interval_ms` (production callers pass [`HTTP_BUCKET_REFILL_INTERVAL_MS`]; a test
+    /// injects a short interval instead of waiting on a real 60-second tick), then tops EVERY
+    /// currently-tracked package's bucket back toward its cap, forever. Same
+    /// [`block_on`]-drives-the-loop-forever shape as [`TimerWheel::spawn_driver`] — see that method's
+    /// `🚨️ HONEST GAP` doc, which applies here too.
+    // 🚫️async: E1-adjacent — no suspension point of its own (only SUBMITS the job). See R9.
+    pub fn spawn_refill_driver(&self, pool: &WorkerPool, interval_ms: u64) {
         let buckets = self.buckets.clone();
         let cap = self.bytes_per_minute_cap;
-        let runtime_for_loop = runtime.clone();
-        let fut: HostFuture<()> = Box::pin(async move {
-            loop {
-                // 🌉️ R15: `now_ms`/`sleep_until` are RPITIT with an explicit `Send` bound at the
-                // trait, so their futures are provably `Send` even for a generic `R` — awaited
-                // directly, no `BoxedHostAsyncRuntime` detour needed any more.
-                let now_ms = runtime_for_loop.now_ms().await;
-                runtime_for_loop.sleep_until(now_ms + HTTP_BUCKET_REFILL_INTERVAL_MS).await;
-                let mut buckets = buckets.lock().expect("HttpPool buckets mutex poisoned");
-                for bucket in buckets.values_mut() {
-                    bucket.refill(cap);
-                }
-            }
-        });
-        runtime.spawn_scoped(scope, ctx, fut).await;
+        let driver_pool = pool.clone();
+        pool.submit(
+            Lane::Maintenance,
+            Box::new(move || {
+                let pool = driver_pool;
+                block_on(async move {
+                    loop {
+                        let now_ms = pool.now_ms();
+                        pool.timer().sleep_until(now_ms + interval_ms).await;
+                        let mut buckets = buckets.lock().expect("HttpPool buckets mutex poisoned");
+                        for bucket in buckets.values_mut() {
+                            bucket.refill(cap);
+                        }
+                    }
+                });
+            }),
+        );
     }
 
     /// 🌊️ Starts `request` and returns as soon as the head is known, plus a [`HttpPoolBody`] the
@@ -1124,6 +1180,7 @@ struct StorageJob {
 struct StorageState<R: HostAsyncRuntime> {
     runtime: Arc<R>,
     scope: ScopeHandle,
+    pool: WorkerPool,
     queues: Mutex<BTreeMap<u8, VecDeque<StorageJob>>>,
     in_flight: AtomicU32,
     max_in_flight: u32,
@@ -1133,25 +1190,21 @@ struct StorageState<R: HostAsyncRuntime> {
 
 /// 🚫️async: E5 executor bridge — polls `fut` exactly ONCE with a no-op waker (same construction
 /// `semio-framework-async::testkit::ManualRuntime::drive` already uses) and panics if it is not
-/// `Poll::Ready` on that first poll. This is deliberately NOT a general-purpose bridge: it is correct
-/// ONLY for a future documented to never suspend — every `HostAsyncRuntime::run_blocking` impl in
-/// this program dispatches its work (onto a `JoinSet`/thread, or runs it inline) and returns without
-/// ever yielding, both for [`TokioHostRuntime`] (delegates to [`ScopeTable::run_blocking`], a bare
-/// `spawn_on` push) and for `ManualRuntime` (runs `work()` inline). `storage_try_dispatch` is the
-/// ONLY caller.
+/// `Poll::Ready` on that first poll. Correct ONLY for a future documented to never suspend;
+/// `storage_try_dispatch`'s ONLY use of it is `scope.cancel.is_cancelled()`, whose body is a plain
+/// atomic load with no real `.await` point (confirmed by reading `CancelToken::state`'s body) — the
+/// SAME justification `WheelCore`'s own `🚫️async: E1-adjacent` tags give for wrapping trivially-sync
+/// logic in an `async fn` signature.
 ///
 /// WHY THIS CRATE CARRIES A SECOND E5 EXCEPTION, past R2's normal "at most one per crate": R2's
 /// bound is a discipline against proliferating ad-hoc bridges, not a literal ceiling that survives
-/// every cross-crate constraint. `StorageScheduler<R>` stays generic over `R: HostAsyncRuntime`
-/// because `🔌️plugin/🖥️host`'s `AsyncServices<R>` (outside this packet's `path_scope`) is generic
-/// over the SAME `R` and holds `Arc<StorageScheduler<R>>` — so [`TokioHostRuntime::block_on`] (tied
-/// to a concrete `tokio::runtime::Runtime`) cannot serve here. And `StorageScheduler::submit`'s
-/// signature is fixed SYNCHRONOUS by a caller this packet cannot edit either:
-/// `🔌️plugin/🖥️host/⏳️imports.rs`'s `storage_read`/`storage_write` call it un-awaited, inside an
-/// already-`async fn`, then immediately `.await` the returned [`StorageTicket`] — `submit` becoming
-/// `async fn` would desync that call site with no way for this packet to fix it. Two independently
-/// forced boundaries (generic `R`, synchronous `submit`) leave no path to `block_on`'s mechanism;
-/// `resolve_ready` is the smallest correct bridge for the one case that actually needs it.
+/// every cross-crate constraint. `StorageScheduler::submit`'s signature is fixed SYNCHRONOUS by a
+/// caller this packet cannot edit: `🔌️plugin/🖥️host/⏳️imports.rs`'s `storage_read`/`storage_write`
+/// call it un-awaited, inside an already-`async fn`, then immediately `.await` the returned
+/// [`StorageTicket`] separately — `submit` becoming `async fn` would desync that call site with no
+/// way for this packet to fix it, so `storage_try_dispatch` (which `submit` calls synchronously) has
+/// no path to [`TokioHostRuntime::block_on`]'s mechanism either; `resolve_ready` is the smallest
+/// correct bridge for the one non-async-callable check it still needs.
 // 🚫️async: E5 executor bridge — see the doc comment directly above (kept short here, within the
 // codemod's 6-line lookback, since the full rationale needed more room than that).
 fn resolve_ready<F: Future>(fut: F) -> F::Output {
@@ -1161,23 +1214,25 @@ fn resolve_ready<F: Future>(fut: F) -> F::Output {
     match fut.as_mut().poll(&mut cx) {
         std::task::Poll::Ready(value) => value,
         std::task::Poll::Pending => unreachable!(
-            "resolve_ready: HostAsyncRuntime::run_blocking is documented to dispatch without \
-             suspending — a Pending here means an impl violated that contract"
+            "resolve_ready: storage_try_dispatch only ever polls a future documented to never \
+             suspend — a Pending here means that contract was violated"
         ),
     }
 }
 
 /// ▶️ Reentrant dispatch step: while a slot is free, pops the head of the HIGHEST-priority
 /// non-empty lane (`BTreeMap` iterates ascending, and lower `ctx.lane` is higher priority — the same
-/// convention `OperationContext.lane` documents) and runs it through [`HostAsyncRuntime::run_blocking`].
-/// No separate background polling task exists: [`StorageScheduler::submit`] and every job's own
-/// completion both call this again, so a freed slot or a newly queued job always gets a chance to
-/// dispatch without a dedicated loop.
+/// convention `OperationContext.lane` documents) and submits it onto `state.pool` (this crate's ONE
+/// process-wide [`WorkerPool`], via [`Lane::from_context_lane`]) — replacing the deleted
+/// `HostAsyncRuntime::run_blocking` bridge P1a removed. No separate background polling task exists:
+/// [`StorageScheduler::submit`] and every job's own completion both call this again, so a freed slot
+/// or a newly queued job always gets a chance to dispatch without a dedicated loop. Honors
+/// `state.scope`'s cancellation the same way the pre-Phase-1 `ScopeTable::run_blocking` wrapper did —
+/// a job popped after its scope was cancelled is skipped (never runs `work`, reports
+/// [`StorageError::Closed`]) rather than silently executing anyway.
 // 🚫️async: E1-adjacent — forced sync by `StorageScheduler::submit` (see `resolve_ready`'s tag
-// above for the full cross-crate reasoning: `submit` is called un-awaited, inside an already-`async
-// fn`, from `🔌️plugin/🖥️host/⏳️imports.rs`, which this packet cannot edit). Recurses into itself
-// from within the `resolve_ready`-driven `run_blocking` closure below — still synchronous, since
-// that closure runs to completion before `resolve_ready` returns.
+// above for the full cross-crate reasoning). Recurses into itself from within the pool job closure
+// below — still synchronous, since that closure runs to completion on its own worker.
 fn storage_try_dispatch<R: HostAsyncRuntime + 'static>(state: &Arc<StorageState<R>>) {
     loop {
         if state.in_flight.load(Ordering::SeqCst) >= state.max_in_flight {
@@ -1195,23 +1250,24 @@ fn storage_try_dispatch<R: HostAsyncRuntime + 'static>(state: &Arc<StorageState<
             popped
         };
         let Some(job) = job else { break };
-        if job.cancelled.load(Ordering::SeqCst) {
+        let scope_cancelled = resolve_ready(state.scope.cancel.is_cancelled());
+        if job.cancelled.load(Ordering::SeqCst) || scope_cancelled {
             let mut usage = state.per_plugin_bytes.lock().expect("StorageScheduler per_plugin_bytes mutex poisoned");
             if let Some(current) = usage.get_mut(&job.plugin) {
                 *current = current.saturating_sub(job.bytes);
             }
             drop(usage);
-            let _ = job.result_tx.send(Err(StorageError::DeadlineExceeded));
+            let error = if scope_cancelled { StorageError::Closed } else { StorageError::DeadlineExceeded };
+            let _ = job.result_tx.send(Err(error));
             continue;
         }
         state.in_flight.fetch_add(1, Ordering::SeqCst);
         let recurse_state = state.clone();
         let plugin = job.plugin.clone();
         let bytes = job.bytes;
-        let ctx = job.ctx.clone();
-        resolve_ready(state.runtime.run_blocking(
-            &state.scope,
-            ctx,
+        let lane = Lane::from_context_lane(job.ctx.lane);
+        state.pool.submit(
+            lane,
             Box::new(move || {
                 let result = match (job.work)() {
                     Ok(bytes) => Ok(bytes),
@@ -1227,7 +1283,7 @@ fn storage_try_dispatch<R: HostAsyncRuntime + 'static>(state: &Arc<StorageState<
                 recurse_state.in_flight.fetch_sub(1, Ordering::SeqCst);
                 storage_try_dispatch(&recurse_state);
             }),
-        ));
+        );
     }
 }
 
@@ -1243,7 +1299,7 @@ pub struct StorageScheduler<R: HostAsyncRuntime>(Arc<StorageState<R>>);
 
 impl<R: HostAsyncRuntime + 'static> StorageScheduler<R> {
     pub async fn new(runtime: Arc<R>, scope: ScopeHandle, max_in_flight: u32, byte_quota_per_plugin: u64) -> StorageScheduler<R> {
-        StorageScheduler(Arc::new(StorageState { runtime, scope, queues: Mutex::new(BTreeMap::new()), in_flight: AtomicU32::new(0), max_in_flight: max_in_flight.max(1), per_plugin_bytes: Mutex::new(HashMap::new()), byte_quota_per_plugin }))
+        StorageScheduler(Arc::new(StorageState { runtime, scope, pool: global_worker_pool(), queues: Mutex::new(BTreeMap::new()), in_flight: AtomicU32::new(0), max_in_flight: max_in_flight.max(1), per_plugin_bytes: Mutex::new(HashMap::new()), byte_quota_per_plugin }))
     }
 
     /// 💾️ Enqueues `work`, reserving `bytes` against `plugin`'s budget up front. Returns a
@@ -1338,10 +1394,10 @@ impl Mailbox {
     // `WheelCore` above.
     fn new(policy: &ChannelPolicy) -> Mailbox {
         match policy {
-            ChannelPolicy::LatestWins => Mailbox::LatestWins(None),
-            ChannelPolicy::Coalesced { .. } => Mailbox::Coalesced { pending: HashMap::new(), order: VecDeque::new() },
-            ChannelPolicy::LosslessBounded { cap } => Mailbox::LosslessBounded { cap: *cap, pending: VecDeque::new() },
-            ChannelPolicy::ByteCredit { bytes } => Mailbox::ByteCredit { remaining: *bytes },
+            ChannelPolicy::LatestWins { max_bytes: _ } => Mailbox::LatestWins(None),
+            ChannelPolicy::Coalesced { key: _, max_items: _, max_bytes: _ } => Mailbox::Coalesced { pending: HashMap::new(), order: VecDeque::new() },
+            ChannelPolicy::LosslessBounded { max_items, max_bytes: _ } => Mailbox::LosslessBounded { cap: *max_items, pending: VecDeque::new() },
+            ChannelPolicy::ByteCredit { max_items: _, max_bytes } => Mailbox::ByteCredit { remaining: *max_bytes },
         }
     }
 
@@ -1545,31 +1601,49 @@ impl CompletionSink for MockCompletionSink {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio_framework_async::{testkit::ManualRuntime, thread_plan, TraceId};
+    use semio_framework_async::TraceId;
+    use std::pin::Pin;
     use std::sync::atomic::AtomicBool;
+    use std::time::Duration;
 
     async fn test_ctx(actor: u64, cancel: CancelToken) -> OperationContext {
         OperationContext { actor, generation: 0, trace: TraceId(actor), lane: 0, deadline_ms: None, cancel, capability: None }
     }
 
+    /// 🧵️ A small, deterministically-sized [`WorkerPool`] for a test that wants its OWN pool rather
+    /// than [`global_worker_pool`]'s process-wide singleton (which every test-binary-wide
+    /// [`ComputePool`]/[`HttpPool`]/[`StorageScheduler`]/[`TimerWheel`] construction resolves,
+    /// because their constructors are frozen — see that fn's doc). `HeadlessBatch` so `workers` is
+    /// exactly what it says (no `-1` interactive-core reservation eating into a small test size).
+    fn test_pool(workers: usize) -> WorkerPool {
+        WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, workers))
+    }
+
+    /// 🐢️ Sleeps `ms` against `runtime`'s own clock (`runtime.now_ms()` + `runtime.sleep_until`) —
+    /// this crate no longer builds a `tokio::runtime::Runtime`, so `tokio::time::sleep` is gone; every
+    /// test that used to reach for it now reaches for this instead.
+    async fn sleep_ms<R: HostAsyncRuntime>(runtime: &R, ms: u64) {
+        let now = runtime.now_ms().await;
+        runtime.sleep_until(now + ms).await;
+    }
+
     //#region 🚂️TokioHostRuntimeTests
-    #[semio_framework_async_macros::async_test]
-    async fn tokio_host_runtime_checks_out_io_and_compute_threads_from_the_budget() {
-        let plan = thread_plan(8).await;
-        let budget = ThreadBudget::from_plan(plan).await;
-        let _runtime = TokioHostRuntime::new(plan, &budget).expect("runtime should build");
-        assert_eq!(budget.remaining(ThreadRole::IoWorker).await, 0);
-        assert_eq!(budget.remaining(ThreadRole::Compute).await, 0);
-        assert_eq!(budget.remaining(ThreadRole::Shard).await, plan.shards, "TokioHostRuntime must not touch roles it does not own");
+    /// 🚂️ `TokioHostRuntime::with_pool` must not resize or replace the [`WorkerPool`] it is handed —
+    /// the whole point of Phase 1 packet P1b is that this type owns no thread pool of its own any
+    /// more.
+    #[test]
+    fn tokio_host_runtime_with_pool_never_resizes_the_injected_pool() {
+        let pool = test_pool(3);
+        let _runtime = TokioHostRuntime::with_pool(pool.clone());
+        assert_eq!(pool.worker_count(), 3, "TokioHostRuntime must not resize the pool it was handed");
+        pool.shutdown();
     }
 
     #[semio_framework_async_macros::async_test]
     async fn tokio_host_runtime_now_ms_advances_monotonically() {
-        let plan = thread_plan(4).await;
-        let budget = ThreadBudget::from_plan(plan).await;
-        let runtime = TokioHostRuntime::new(plan, &budget).expect("runtime should build");
+        let runtime = TokioHostRuntime::with_pool(test_pool(2));
         let first = runtime.now_ms().await;
-        runtime.block_on(async { tokio::time::sleep(Duration::from_millis(5)).await });
+        sleep_ms(&runtime, 5).await;
         assert!(runtime.now_ms().await >= first, "now_ms must never go backward");
     }
     //#endregion 🚂️TokioHostRuntimeTests
@@ -1577,14 +1651,10 @@ mod tests {
     //#region 🌳️ScopeTableTests
     #[semio_framework_async_macros::async_test]
     async fn cancel_scope_cancels_child_scopes_transitively() {
-        let plan = thread_plan(4).await;
-        let budget = ThreadBudget::from_plan(plan).await;
-        let runtime = TokioHostRuntime::new(plan, &budget).expect("runtime should build");
+        let runtime = TokioHostRuntime::with_pool(test_pool(4));
         let package = runtime.open_scope(ScopeOwner::Package("pkg-a".to_string()), None).await;
         let actor = runtime.open_scope(ScopeOwner::Actor(1), Some(&package)).await;
-        runtime.block_on(async {
-            let _ = runtime.cancel_scope(&package.owner, 50).await;
-        });
+        let _ = runtime.cancel_scope(&package.owner, 50).await;
         assert!(actor.cancel.is_cancelled().await, "child scope must observe the package scope's cancellation");
     }
 
@@ -1594,42 +1664,36 @@ mod tests {
     /// first.
     #[semio_framework_async_macros::async_test]
     async fn cancel_scope_reports_leaked_task_that_ignores_cancellation_not_finished() {
-        let plan = thread_plan(4).await;
-        let budget = ThreadBudget::from_plan(plan).await;
-        let runtime = TokioHostRuntime::new(plan, &budget).expect("runtime should build");
+        let runtime = TokioHostRuntime::with_pool(test_pool(4));
         let scope = runtime.open_scope(ScopeOwner::Actor(2), None).await;
-        let ctx = test_ctx(2, scope.cancel.clone());
-        runtime.spawn_scoped(
-            &scope,
-            ctx.await,
-            Box::pin(async move {
-                loop {
-                    tokio::time::sleep(Duration::from_secs(3600)).await;
-                }
-            }),
-        ).await;
-        let report = runtime.block_on(async {
-            tokio::time::sleep(Duration::from_millis(20)).await;
-            runtime.cancel_scope(&scope.owner, 60).await
-        });
+        let ctx = test_ctx(2, scope.cancel.clone()).await;
+        runtime
+            .spawn_scoped(
+                &scope,
+                ctx,
+                Box::pin(async move {
+                    loop {
+                        std::thread::sleep(Duration::from_secs(3600));
+                    }
+                }),
+            )
+            .await;
+        sleep_ms(&runtime, 20).await;
+        let report = runtime.cancel_scope(&scope.owner, 60).await;
         assert_eq!(report.leaked, 1, "a task that ignores cancellation must be reported leaked, never finished");
         assert_eq!(report.finished, 0);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn cancel_scope_counts_a_cooperative_task_as_finished() {
-        let plan = thread_plan(4).await;
-        let budget = ThreadBudget::from_plan(plan).await;
-        let runtime = TokioHostRuntime::new(plan, &budget).expect("runtime should build");
+        let runtime = TokioHostRuntime::with_pool(test_pool(4));
         let scope = runtime.open_scope(ScopeOwner::Actor(3), None).await;
-        let ctx = test_ctx(3, scope.cancel.clone());
+        let ctx = test_ctx(3, scope.cancel.clone()).await;
         let ran = Arc::new(AtomicBool::new(false));
         let ran_clone = ran.clone();
-        runtime.spawn_scoped(&scope, ctx.await, Box::pin(async move { ran_clone.store(true, Ordering::SeqCst) })).await;
-        let report = runtime.block_on(async {
-            tokio::time::sleep(Duration::from_millis(20)).await;
-            runtime.cancel_scope(&scope.owner, 60).await
-        });
+        runtime.spawn_scoped(&scope, ctx, Box::pin(async move { ran_clone.store(true, Ordering::SeqCst) })).await;
+        sleep_ms(&runtime, 20).await;
+        let report = runtime.cancel_scope(&scope.owner, 60).await;
         assert!(ran.load(Ordering::SeqCst));
         assert_eq!(report.finished, 1);
         assert_eq!(report.leaked, 0);
@@ -1637,19 +1701,17 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn park_holds_new_work_until_unparked() {
-        let plan = thread_plan(4).await;
-        let budget = ThreadBudget::from_plan(plan).await;
-        let runtime = TokioHostRuntime::new(plan, &budget).expect("runtime should build");
+        let runtime = TokioHostRuntime::with_pool(test_pool(4));
         let scope = runtime.open_scope(ScopeOwner::Service("park-test"), None).await;
         scope.cancel.park().await;
         let ran = Arc::new(AtomicBool::new(false));
         let ran_clone = ran.clone();
-        let ctx = test_ctx(0, scope.cancel.clone());
-        runtime.spawn_scoped(&scope, ctx.await, Box::pin(async move { ran_clone.store(true, Ordering::SeqCst) })).await;
-        runtime.block_on(async { tokio::time::sleep(Duration::from_millis(2 * PARK_POLL_INTERVAL_MS)).await });
+        let ctx = test_ctx(0, scope.cancel.clone()).await;
+        runtime.spawn_scoped(&scope, ctx, Box::pin(async move { ran_clone.store(true, Ordering::SeqCst) })).await;
+        sleep_ms(&runtime, 2 * PARK_POLL_INTERVAL_MS).await;
         assert!(!ran.load(Ordering::SeqCst), "parked scope must hold new work rather than running it");
         scope.cancel.unpark().await;
-        runtime.block_on(async { tokio::time::sleep(Duration::from_millis(4 * PARK_POLL_INTERVAL_MS)).await });
+        sleep_ms(&runtime, 4 * PARK_POLL_INTERVAL_MS).await;
         assert!(ran.load(Ordering::SeqCst), "unparked scope must eventually run the held work");
     }
     //#endregion 🌳️ScopeTableTests
@@ -1657,75 +1719,86 @@ mod tests {
     //#region 🧮️ComputePoolTests
     #[semio_framework_async_macros::async_test]
     async fn run_blocking_never_exceeds_the_compute_bound_under_a_burst() {
-        let plan = ThreadPlan { kernel: 1, shards: 2, io_workers: 1, compute: 3, epoch_ticker: 1 };
-        let budget = ThreadBudget::from_plan(plan).await;
-        let runtime = TokioHostRuntime::new(plan, &budget).expect("runtime should build");
-        let pool = ComputePool::new(plan.compute).await;
+        const COMPUTE_CAPACITY: u32 = 3;
+        let runtime = TokioHostRuntime::with_pool(test_pool(2));
+        let pool = ComputePool::new(COMPUTE_CAPACITY).await;
         let scope = runtime.open_scope(ScopeOwner::Service("compute-burst"), None).await;
         let current = Arc::new(AtomicU32::new(0));
         let observed_max = Arc::new(AtomicU32::new(0));
-        runtime.block_on(async {
-            let mut handles = Vec::new();
-            for i in 0..12u32 {
-                let pool = &pool;
-                let runtime = &runtime;
-                let scope = &scope;
-                let current = current.clone();
-                let observed_max = observed_max.clone();
-                let ctx = test_ctx(i as u64, scope.cancel.clone()).await;
-                handles.push(async move {
-                    pool.run_blocking(runtime, scope, ctx, move || {
-                        let now = current.fetch_add(1, Ordering::SeqCst) + 1;
-                        observed_max.fetch_max(now, Ordering::SeqCst);
-                        std::thread::sleep(Duration::from_millis(25));
-                        current.fetch_sub(1, Ordering::SeqCst);
-                    })
-                    .await
-                    .expect("run_blocking without a deadline must not fail");
-                });
-            }
-            futures_join_all(handles).await;
-        });
-        assert!(observed_max.load(Ordering::SeqCst) <= plan.compute, "observed concurrency {} exceeded the compute bound {}", observed_max.load(Ordering::SeqCst), plan.compute);
+        let mut handles = Vec::new();
+        for i in 0..12u32 {
+            let pool = &pool;
+            let runtime = &runtime;
+            let scope = &scope;
+            let current = current.clone();
+            let observed_max = observed_max.clone();
+            let ctx = test_ctx(i as u64, scope.cancel.clone()).await;
+            handles.push(async move {
+                pool.run_blocking(runtime, scope, ctx, move || {
+                    let now = current.fetch_add(1, Ordering::SeqCst) + 1;
+                    observed_max.fetch_max(now, Ordering::SeqCst);
+                    std::thread::sleep(Duration::from_millis(25));
+                    current.fetch_sub(1, Ordering::SeqCst);
+                })
+                .await
+                .expect("run_blocking without a deadline must not fail");
+            });
+        }
+        futures_join_all(handles).await;
+        assert!(observed_max.load(Ordering::SeqCst) <= COMPUTE_CAPACITY, "observed concurrency {} exceeded the compute bound {}", observed_max.load(Ordering::SeqCst), COMPUTE_CAPACITY);
         assert!(observed_max.load(Ordering::SeqCst) >= 2, "burst should have produced measurable overlap; observed {}", observed_max.load(Ordering::SeqCst));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn run_blocking_deadline_actually_fires_and_the_late_result_is_not_awaited() {
-        let plan = thread_plan(8).await;
-        let budget = ThreadBudget::from_plan(plan).await;
-        let runtime = TokioHostRuntime::new(plan, &budget).expect("runtime should build");
-        let pool = ComputePool::new(plan.compute).await;
+        let runtime = TokioHostRuntime::with_pool(test_pool(4));
+        let pool = ComputePool::new(4).await;
         let scope = runtime.open_scope(ScopeOwner::Service("compute-deadline"), None).await;
         let (unblock_tx, unblock_rx) = std::sync::mpsc::channel::<()>();
-        let outcome = runtime.block_on(async {
-            let now = runtime.now_ms().await;
-            let mut ctx = test_ctx(0, scope.cancel.clone()).await;
-            ctx.deadline_ms = Some(now + 40);
-            pool.run_blocking(&runtime, &scope, ctx, move || {
+        let now = runtime.now_ms().await;
+        let mut ctx = test_ctx(0, scope.cancel.clone()).await;
+        ctx.deadline_ms = Some(now + 40);
+        let outcome = pool
+            .run_blocking(&runtime, &scope, ctx, move || {
                 unblock_rx.recv().expect("test should unblock this thread");
                 7
             })
-            .await
-        });
+            .await;
         assert_eq!(outcome, Err(ComputeError::DeadlineExceeded), "a deadline shorter than the blocking work must lose the race");
         let _ = unblock_tx.send(());
     }
 
+    /// 🌀️ A self-contained cooperative yield with no tokio `rt`-feature dependency (this crate no
+    /// longer enables `rt`/`rt-multi-thread`, so `tokio::task::yield_now` is unavailable) — wakes
+    /// itself immediately, giving whatever executor is driving this future one chance to poll a
+    /// sibling before resuming.
+    struct Yield(bool);
+    impl Future for Yield {
+        type Output = ();
+        fn poll(mut self: Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<()> {
+            if self.0 {
+                std::task::Poll::Ready(())
+            } else {
+                self.0 = true;
+                cx.waker().wake_by_ref();
+                std::task::Poll::Pending
+            }
+        }
+    }
+
     /// 🧵️ Minimal `join_all` so this crate's tests do not pull in the `futures` crate for one call
     /// site — polls every future in a simple round-robin until all are ready.
-    async fn futures_join_all<F: std::future::Future<Output = ()>>(futures: Vec<F>) {
-        use std::pin::Pin;
+    async fn futures_join_all<F: Future<Output = ()>>(futures: Vec<F>) {
         let mut pending: Vec<Pin<Box<F>>> = futures.into_iter().map(Box::pin).collect();
         while !pending.is_empty() {
             let mut still_pending = Vec::new();
             for mut fut in pending {
-                if std::future::Future::poll(fut.as_mut(), &mut std::task::Context::from_waker(std::task::Waker::noop())) == std::task::Poll::Pending {
+                if Future::poll(fut.as_mut(), &mut std::task::Context::from_waker(std::task::Waker::noop())) == std::task::Poll::Pending {
                     still_pending.push(fut);
                 }
             }
             pending = still_pending;
-            tokio::task::yield_now().await;
+            Yield(false).await;
         }
     }
     //#endregion 🧮️ComputePoolTests
@@ -1799,38 +1872,50 @@ mod tests {
     //#endregion ⏲️WheelCoreTests
 
     //#region ⏲️TimerWheelDriverTests
+    /// ⏱️ Polls `sink.recorded()` on a short real-time tick until it is non-empty or `timeout`
+    /// elapses — replaces `ManualRuntime`'s deterministic-clock `drive()`/`set_now_ms()` idiom, which
+    /// [`TimerWheel::spawn_driver`] can no longer use (it drives real [`WorkerPool`] worker threads
+    /// on the real wall clock now, not an injected one).
+    async fn wait_for_completions(sink: &MockCompletionSink, timeout: Duration) -> Vec<CompletionRecord> {
+        let start = std::time::Instant::now();
+        loop {
+            let recorded = sink.recorded().await;
+            if !recorded.is_empty() || start.elapsed() >= timeout {
+                return recorded;
+            }
+            std::thread::sleep(Duration::from_millis(5));
+        }
+    }
+
     #[semio_framework_async_macros::async_test]
     async fn timer_wheel_driver_posts_a_fired_timer_through_the_completion_sink() {
-        let manual = ManualRuntime::new(0).await;
-        let runtime = Arc::new(manual.clone());
-        let scope = runtime.open_scope(ScopeOwner::Service("timer-driver-test"), None).await;
+        let pool = test_pool(2);
         let wheel = TimerWheel::new(10).await;
         let sink = Arc::new(MockCompletionSink::new().await);
-        let ctx = test_ctx(0, scope.cancel.clone()).await;
-        wheel.spawn_driver(&runtime, &scope, ctx, sink.clone()).await;
-        wheel.arm(PackageId("plugin-a".to_string()), 42, 3, 1, 100, None).await.expect("arm should succeed");
-        manual.drive().await;
-        assert!(sink.recorded().await.is_empty(), "must not fire before the injected clock reaches the deadline");
-        manual.set_now_ms(100).await;
-        manual.drive().await;
-        let recorded = sink.recorded().await;
+        wheel.spawn_driver(&pool, sink.clone());
+        let now = pool.now_ms();
+        wheel.arm(PackageId("plugin-a".to_string()), 42, 3, 1, now + 30, None).await.expect("arm should succeed");
+        assert!(sink.recorded().await.is_empty(), "must not fire before its deadline");
+        let recorded = wait_for_completions(&sink, Duration::from_secs(5)).await;
         assert_eq!(recorded.len(), 1, "the driver must post exactly one completion for the fired timer");
         assert_eq!(recorded[0].actor, 42);
         assert_eq!(recorded[0].generation, 3);
         assert_eq!(recorded[0].lane, 1);
+        // 🚨️ Deliberately no `pool.shutdown()` here: `spawn_driver`'s job never returns (see its
+        // `🚨️ HONEST GAP` doc), so `shutdown()` would join a thread that never exits and hang this
+        // test forever. `pool`/its one permanently-blocked worker thread are leaked until the test
+        // process itself exits — a bounded, test-only cost, not a production one.
     }
     //#endregion ⏲️TimerWheelDriverTests
 
     //#region 💾️StorageSchedulerTests
-    /// 💾️ `ManualRuntime::run_blocking` runs its closure synchronously, in-line, so nothing can
-    /// ever be genuinely QUEUED behind it — a real `TokioHostRuntime` is required here to make the
-    /// priority ordering observable at all: one job occupies the single in-flight slot on its own
-    /// blocking thread while the two real submissions below queue behind it.
+    /// 💾️ `ManualRuntime`'s dispatch would run synchronously, in-line, so nothing can ever be
+    /// genuinely QUEUED behind it — a real `TokioHostRuntime` is required here to make the priority
+    /// ordering observable at all: one job occupies the single in-flight slot on its own worker
+    /// while the two real submissions below queue behind it.
     #[semio_framework_async_macros::async_test]
     async fn storage_scheduler_dispatches_highest_priority_lane_first_despite_submit_order() {
-        let plan = thread_plan(4).await;
-        let budget = ThreadBudget::from_plan(plan).await;
-        let runtime = Arc::new(TokioHostRuntime::new(plan, &budget).expect("runtime should build"));
+        let runtime = Arc::new(TokioHostRuntime::with_pool(test_pool(4)));
         let scope = runtime.open_scope(ScopeOwner::Service("storage-priority-test"), None).await;
         let scheduler = StorageScheduler::new(runtime.clone(), scope.clone(), 1, 1_000_000).await;
         let order = Arc::new(Mutex::new(Vec::<&'static str>::new()));
@@ -1876,9 +1961,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn storage_scheduler_never_exceeds_max_in_flight() {
-        let plan = thread_plan(4).await;
-        let budget = ThreadBudget::from_plan(plan).await;
-        let runtime = Arc::new(TokioHostRuntime::new(plan, &budget).expect("runtime should build"));
+        let runtime = Arc::new(TokioHostRuntime::with_pool(test_pool(4)));
         let scope = runtime.open_scope(ScopeOwner::Service("storage-cap-test"), None).await;
         let scheduler = StorageScheduler::new(runtime.clone(), scope.clone(), 2, 1_000_000).await;
         let mut tickets = Vec::new();
@@ -1901,7 +1984,7 @@ mod tests {
                     if scheduler_ref.in_flight().await > 2 {
                         cap_violated_ref.store(true, Ordering::SeqCst);
                     }
-                    tokio::task::yield_now().await;
+                    Yield(false).await;
                 }
             };
             let drain = async {
@@ -1923,9 +2006,7 @@ mod tests {
     /// `ManualRuntime`'s synchronous, immediately-releasing execution.
     #[semio_framework_async_macros::async_test]
     async fn storage_scheduler_rejects_over_budget_submit_with_a_typed_error_and_untouched_usage() {
-        let plan = thread_plan(4).await;
-        let budget = ThreadBudget::from_plan(plan).await;
-        let runtime = Arc::new(TokioHostRuntime::new(plan, &budget).expect("runtime should build"));
+        let runtime = Arc::new(TokioHostRuntime::with_pool(test_pool(4)));
         let scope = runtime.open_scope(ScopeOwner::Service("storage-budget-test"), None).await;
         let scheduler = StorageScheduler::new(runtime.clone(), scope.clone(), 4, 100).await;
         let ctx = test_ctx(0, scope.cancel).await;
@@ -1957,9 +2038,7 @@ mod tests {
     /// closure's own thread, which may still be unwinding when this task's waker fires.
     #[semio_framework_async_macros::async_test]
     async fn storage_scheduler_races_a_queued_job_against_its_deadline_and_frees_its_reservation_when_lost() {
-        let plan = thread_plan(4).await;
-        let budget = ThreadBudget::from_plan(plan).await;
-        let runtime = Arc::new(TokioHostRuntime::new(plan, &budget).expect("runtime should build"));
+        let runtime = Arc::new(TokioHostRuntime::with_pool(test_pool(4)));
         let scope = runtime.open_scope(ScopeOwner::Service("storage-deadline-test"), None).await;
         let scheduler = StorageScheduler::new(runtime.clone(), scope.clone(), 1, 50).await;
 
@@ -1992,7 +2071,7 @@ mod tests {
         let _ = occupy_tx.send(());
         runtime.block_on(async {
             let _ = occupy_ticket.await_result().await;
-            tokio::time::sleep(Duration::from_millis(50)).await;
+            sleep_ms(runtime.as_ref(), 50).await;
         });
         let verify_ticket = scheduler.submit(&test_ctx(0, scope.cancel).await, plugin.clone(), 45, || Ok(Vec::new()));
         let verify_ticket = verify_ticket.expect("the deadline-lost job's 42-byte reservation must have been released, leaving room for 45 more under the 50-byte quota");
@@ -2008,7 +2087,7 @@ mod tests {
         let router = EventRouter::new();
         let topic = Topic("scene.updates".to_string());
         let actor = ActorId(1);
-        router.subscribe(topic.clone(), actor, ChannelPolicy::LatestWins).await;
+        router.subscribe(topic.clone(), actor, ChannelPolicy::LatestWins { max_bytes: 1_000_000 }).await;
         let first = router.publish(&topic, None, b"v1").await;
         let second = router.publish(&topic, None, b"v2").await;
         assert_eq!(first, vec![(actor, PublishOutcome::Delivered)]);
@@ -2021,7 +2100,7 @@ mod tests {
         let router = EventRouter::new();
         let topic = Topic("jobs.updates".to_string());
         let actor = ActorId(2);
-        router.subscribe(topic.clone(), actor, ChannelPolicy::LosslessBounded { cap: 2 }).await;
+        router.subscribe(topic.clone(), actor, ChannelPolicy::LosslessBounded { max_items: 2, max_bytes: 1_000_000 }).await;
         assert_eq!(router.publish(&topic, None, b"a").await, vec![(actor, PublishOutcome::Delivered)]);
         assert_eq!(router.publish(&topic, None, b"b").await, vec![(actor, PublishOutcome::Delivered)]);
         assert_eq!(router.publish(&topic, None, b"c").await, vec![(actor, PublishOutcome::RejectedFull { cap: 2 })], "must reject rather than grow past cap");
@@ -2033,7 +2112,7 @@ mod tests {
         let router = EventRouter::new();
         let topic = Topic("cursor.updates".to_string());
         let actor = ActorId(3);
-        router.subscribe(topic.clone(), actor, ChannelPolicy::Coalesced { key: "cursor".to_string() }).await;
+        router.subscribe(topic.clone(), actor, ChannelPolicy::Coalesced { key: "cursor".to_string(), max_items: 100, max_bytes: 1_000_000 }).await;
         router.publish(&topic, Some("peer-1"), b"pos-1").await;
         let outcome = router.publish(&topic, Some("peer-1"), b"pos-2").await;
         router.publish(&topic, Some("peer-2"), b"pos-a").await;
@@ -2049,7 +2128,7 @@ mod tests {
         let router = EventRouter::new();
         let topic = Topic("stream.frames".to_string());
         let actor = ActorId(4);
-        router.subscribe(topic.clone(), actor, ChannelPolicy::ByteCredit { bytes: 4 }).await;
+        router.subscribe(topic.clone(), actor, ChannelPolicy::ByteCredit { max_items: 100, max_bytes: 4 }).await;
         assert_eq!(router.publish(&topic, None, &[0u8; 3]).await, vec![(actor, PublishOutcome::Delivered)]);
         assert_eq!(router.publish(&topic, None, &[0u8; 3]).await, vec![(actor, PublishOutcome::RejectedInsufficientCredit)], "must reject once the remaining credit is insufficient");
     }
@@ -2059,7 +2138,7 @@ mod tests {
         let router = EventRouter::new();
         let topic = Topic("scene.updates".to_string());
         let actor = ActorId(5);
-        router.subscribe(topic.clone(), actor, ChannelPolicy::LatestWins).await;
+        router.subscribe(topic.clone(), actor, ChannelPolicy::LatestWins { max_bytes: 1_000_000 }).await;
         router.unsubscribe(&topic, actor).await;
         assert_eq!(router.publish(&topic, None, b"x").await, Vec::new(), "no subscribers left means no outcomes at all");
         assert_eq!(router.send_message(&topic, actor, b"x".to_vec()).await, PublishOutcome::NoSuchSubscriber);
@@ -2091,45 +2170,45 @@ mod tests {
         }
     }
 
-    /// 🌐️ Runs a first request in the background, blocked on `unblock_rx` so it stays genuinely
-    /// outstanding, then waits 40ms (well past the background task's own startup) before issuing a
-    /// second request that must be rejected while the first still holds the actor's one slot.
+    /// 🌐️ Runs a first request on a background OS thread (this crate no longer builds a tokio
+    /// `Runtime`, so `tokio::spawn` is gone — a plain `std::thread::spawn` driving its own
+    /// `runtime.block_on` call is the direct replacement), blocked on `unblock_rx` so it stays
+    /// genuinely outstanding, then waits 40ms (well past the background thread's own startup) before
+    /// issuing a second request that must be rejected while the first still holds the actor's one
+    /// slot.
     #[semio_framework_async_macros::async_test]
     async fn http_pool_rejects_past_the_per_actor_outstanding_cap() {
-        let plan = thread_plan(4).await;
-        let budget = ThreadBudget::from_plan(plan).await;
-        let runtime = Arc::new(TokioHostRuntime::new(plan, &budget).expect("runtime should build"));
+        let runtime = Arc::new(TokioHostRuntime::with_pool(test_pool(4)));
         let scope = runtime.open_scope(ScopeOwner::Service("http-test"), None).await;
         let (unblock_tx, unblock_rx) = std::sync::mpsc::channel::<()>();
-        let compute = Arc::new(ComputePool::new(plan.compute).await);
+        let compute = Arc::new(ComputePool::new(4).await);
         let pool = Arc::new(HttpPool::new(Arc::new(BlockingTransport(Mutex::new(unblock_rx))), compute, 1_000_000, 1).await);
         let actor = ActorId(9);
 
-        runtime.block_on(async {
-            let pool_bg = pool.clone();
-            let runtime_bg = runtime.clone();
-            let scope_bg = scope.clone();
-            let ctx_bg = test_ctx(0, scope.cancel.clone()).await;
-            let request_bg = sample_request().await;
-            let handle = tokio::spawn(async move { pool_bg.request(runtime_bg.as_ref(), &scope_bg, ctx_bg, PackageId("pkg".to_string()), actor, request_bg).await });
-            tokio::time::sleep(Duration::from_millis(40)).await;
-            let ctx2 = test_ctx(0, scope.cancel.clone()).await;
-            let second = pool.request(runtime.as_ref(), &scope, ctx2, PackageId("pkg".to_string()), actor, sample_request().await).await;
-            assert_eq!(second, Err(HttpPoolError::OutstandingCapReached { actor, limit: 1 }));
-            let _ = unblock_tx.send(());
-            let first_result = handle.await.expect("background request task must not panic");
-            assert!(first_result.is_ok(), "the first request must still complete once unblocked");
+        let pool_bg = pool.clone();
+        let runtime_bg = runtime.clone();
+        let scope_bg = scope.clone();
+        let ctx_bg = test_ctx(0, scope.cancel.clone()).await;
+        let request_bg = sample_request().await;
+        let handle = std::thread::spawn(move || {
+            let fut = pool_bg.request(runtime_bg.as_ref(), &scope_bg, ctx_bg, PackageId("pkg".to_string()), actor, request_bg);
+            runtime_bg.block_on(fut)
         });
+        sleep_ms(runtime.as_ref(), 40).await;
+        let ctx2 = test_ctx(0, scope.cancel.clone()).await;
+        let second = pool.request(runtime.as_ref(), &scope, ctx2, PackageId("pkg".to_string()), actor, sample_request().await).await;
+        assert_eq!(second, Err(HttpPoolError::OutstandingCapReached { actor, limit: 1 }));
+        let _ = unblock_tx.send(());
+        let first_result = handle.join().expect("background request thread must not panic");
+        assert!(first_result.is_ok(), "the first request must still complete once unblocked");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn http_pool_rejects_when_byte_budget_exhausted_and_transport_is_never_called() {
-        let plan = thread_plan(4).await;
-        let budget = ThreadBudget::from_plan(plan).await;
-        let runtime = TokioHostRuntime::new(plan, &budget).expect("runtime should build");
+        let runtime = TokioHostRuntime::with_pool(test_pool(4));
         let scope = runtime.open_scope(ScopeOwner::Service("http-budget-test"), None).await;
         let calls = Arc::new(Mutex::new(0));
-        let compute = Arc::new(ComputePool::new(plan.compute).await);
+        let compute = Arc::new(ComputePool::new(4).await);
         let pool = HttpPool::new(Arc::new(RecordingTransport { calls: calls.clone() }), compute, 4, 4).await;
         let actor = ActorId(10);
         let package = PackageId("pkg".to_string());
@@ -2143,13 +2222,14 @@ mod tests {
 
     /// ♻️ Directly seeds a package's bucket down to a known remainder (module-private field access
     /// from this `tests` submodule — no new production API needed for it), then proves
-    /// `spawn_refill_driver`'s task actually RUNS on a tick: no refill before the interval elapses,
-    /// a full top-up once the injected clock reaches it.
+    /// `spawn_refill_driver`'s job actually RUNS on a tick: no refill before the interval elapses, a
+    /// full top-up once it does. Injects a SHORT `interval_ms` (real wall-clock milliseconds, not
+    /// [`HTTP_BUCKET_REFILL_INTERVAL_MS`]'s real 60 seconds — `spawn_refill_driver` now drives real
+    /// [`WorkerPool`] worker threads on the real clock, no injected `ManualRuntime` clock any more).
     #[semio_framework_async_macros::async_test]
     async fn http_pool_refill_driver_actually_refills_a_consumed_bucket_on_its_tick() {
-        let manual = ManualRuntime::new(0).await;
-        let runtime = Arc::new(manual.clone());
-        let scope = runtime.open_scope(ScopeOwner::Service("http-refill-test"), None).await;
+        const REFILL_INTERVAL_MS: u64 = 40;
+        let pool_workers = test_pool(2);
         let compute = Arc::new(ComputePool::new(2).await);
         let pool = HttpPool::new(Arc::new(UnwiredHttpTransport), compute, 100, 4).await;
         let package = PackageId("pkg-refill".to_string());
@@ -2159,13 +2239,16 @@ mod tests {
         }
         assert_eq!(pool.remaining_package_budget(&package).await, 30);
 
-        let ctx = test_ctx(0, scope.cancel.clone()).await;
-        pool.spawn_refill_driver(&runtime, &scope, ctx).await;
-        manual.drive().await;
+        pool.spawn_refill_driver(&pool_workers, REFILL_INTERVAL_MS);
         assert_eq!(pool.remaining_package_budget(&package).await, 30, "must not refill before the tick interval elapses");
-        manual.set_now_ms(HTTP_BUCKET_REFILL_INTERVAL_MS).await;
-        manual.drive().await;
-        assert_eq!(pool.remaining_package_budget(&package).await, 100, "the refill driver must actually run its loop and top the bucket back up on its own tick");
+        let start = std::time::Instant::now();
+        loop {
+            if pool.remaining_package_budget(&package).await == 100 {
+                break;
+            }
+            assert!(start.elapsed() < Duration::from_secs(5), "the refill driver must actually run its loop and top the bucket back up on its own tick");
+            std::thread::sleep(Duration::from_millis(5));
+        }
     }
 
     /// 🌐️ A test-only `AsyncHttpTransport`/`HttpBody` over a REAL local TCP socket — the harness the
@@ -2223,7 +2306,7 @@ mod tests {
     }
     impl AsyncHttpTransport for LocalSocketTransport {
         // 🚫️async: E6 dyn-compat — see the trait declaration's tag.
-        fn start(&self, ctx: &OperationContext, _request: HttpRequest) -> HostFuture<Result<(HttpResponseHead, Box<dyn HttpBody>), HttpPoolError>> {
+        fn start(&self, ctx: &OperationContext, _request: HttpRequest) -> HostFuture<StartedTransport> {
             let addr = self.addr;
             let compute = self.compute.clone();
             let runtime = self.runtime.clone();
@@ -2275,11 +2358,9 @@ mod tests {
     /// an upfront estimate, not the whole body's length in one shot.
     #[semio_framework_async_macros::async_test]
     async fn http_pool_fetch_charges_real_bytes_per_chunk_over_a_local_tcp_listener() {
-        let plan = thread_plan(4).await;
-        let budget = ThreadBudget::from_plan(plan).await;
-        let runtime = Arc::new(TokioHostRuntime::new(plan, &budget).expect("runtime should build"));
+        let runtime = Arc::new(TokioHostRuntime::with_pool(test_pool(4)));
         let scope = runtime.open_scope(ScopeOwner::Service("http-stream-test"), None).await;
-        let compute = Arc::new(ComputePool::new(plan.compute).await);
+        let compute = Arc::new(ComputePool::new(4).await);
         let chunks = vec![vec![1u8; 10], vec![2u8; 15], vec![3u8; 7]];
         let addr = spawn_chunk_server(chunks.clone()).await;
         let dropped = Arc::new(AtomicBool::new(false));
@@ -2312,11 +2393,9 @@ mod tests {
     /// rather than being rejected.
     #[semio_framework_async_macros::async_test]
     async fn http_pool_dropping_a_body_mid_stream_frees_the_outstanding_slot_and_drops_the_connection() {
-        let plan = thread_plan(4).await;
-        let budget = ThreadBudget::from_plan(plan).await;
-        let runtime = Arc::new(TokioHostRuntime::new(plan, &budget).expect("runtime should build"));
+        let runtime = Arc::new(TokioHostRuntime::with_pool(test_pool(4)));
         let scope = runtime.open_scope(ScopeOwner::Service("http-cancel-test"), None).await;
-        let compute = Arc::new(ComputePool::new(plan.compute).await);
+        let compute = Arc::new(ComputePool::new(4).await);
         let chunks: Vec<Vec<u8>> = (0..20).map(|_| vec![9u8; 8]).collect();
         let addr = spawn_chunk_server(chunks).await;
         let dropped = Arc::new(AtomicBool::new(false));

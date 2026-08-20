@@ -3,7 +3,7 @@ name = "semio-framework-os-services"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.88"
-description = "Where tokio lives, and nowhere else. Host-side async services built ON TOP of semio-framework-async's HostAsyncRuntime: the tokio-backed runtime impl (TokioHostRuntime), scope table, a single host timer wheel, a bounded blocking-compute pool, an HTTP connection pool, a storage scheduler and an indexed event router. tokio is confined to this crate — its public API names only semio-framework-async types and this crate's own types, never a tokio type, exactly as wasmtime is confined behind GuestRuntime in the plugin-host crate (design ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME, packet R2)."
+description = "Where tokio lives, and nowhere else. Host-side async services built ON TOP of semio-framework-async's HostAsyncRuntime/WorkerPool: the runtime impl (TokioHostRuntime, re-hosted onto the shared process-wide WorkerPool by INTERACTIVE-JOB-RUNTIME-REFACTOR Phase 1 packet P1b), scope table, a single host timer wheel, a bounded blocking-compute pool, an HTTP connection pool, a storage scheduler and an indexed event router. tokio is confined to this crate (sync/macros only — no owned thread pool) — its public API names only semio-framework-async types and this crate's own types, never a tokio type, exactly as wasmtime is confined behind GuestRuntime in the plugin-host crate (design ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME, packet R2)."
 
 [package.metadata.semio]
 role = "product"
@@ -17,7 +17,13 @@ name = "semio_framework_os_services"
 path = "📦️glue.rs"
 
 [dependencies]
-semio-framework-async = { workspace = true }
+# 🧵️ INTERACTIVE-JOB-RUNTIME-REFACTOR Phase 1 packet P1b: `entrypoint` unlocks
+# `semio_framework_async::block_on` — the future-polling bridge every `WorkerPool` job submitted by
+# `ScopeTable::spawn_scoped`/`TimerWheel::spawn_driver`/`HttpPool::spawn_refill_driver` uses to turn
+# its own worker into that task's executor (see `🦀️component.rs`'s module doc), and
+# `TokioHostRuntime::block_on`'s own inherent bridge delegates to directly. Workspace-internal
+# feature flag on an already-present dependency, not a new third-party dependency.
+semio-framework-async = { workspace = true, features = ["entrypoint"] }
 # 🎭️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (coordinator correction on packet R2): `PackageId`
 # (per-plugin quota identity) and `ActorId` (per-actor identity) are consumed from here rather than
 # reinvented locally — this crate is `os-services`, not domain-neutral, so unlike
@@ -25,22 +31,31 @@ semio-framework-async = { workspace = true }
 # actor crate already owns. Pure crate (no tokio, no threads, builds for wasm32-unknown-unknown), so
 # this costs no platform coupling; `🔌️plugin/🖥️host` already depends on it the same way.
 semio-framework-actor = { workspace = true }
-# 🎫️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (packet R2, terra-http-streaming): `macros` is needed
-# by PRODUCTION code (`TimerWheel::spawn_driver`'s and `ComputePool::run_blocking`'s own
-# pre-existing `tokio::select!`, plus `StorageTicket::await_result`'s new deadline race) — it was
-# previously declared only under `[dev-dependencies]` below, which happened to unify into every
-# `cargo test`/`--all-targets` build (masking that a lib-only build never had it). Enabling an
-# already-used feature on an already-present dependency, not a new external dependency.
-tokio = { workspace = true, features = ["rt-multi-thread", "sync", "time", "macros"] }
+# 🧵️ INTERACTIVE-JOB-RUNTIME-REFACTOR Phase 1 packet P1b: this crate no longer builds a
+# `tokio::runtime::Runtime` of any flavor — `semio_framework_async::WorkerPool` (via
+# `global_worker_pool`) is now the ONE owner of real OS threads a `TokioHostRuntime` and every
+# service built on it schedules onto (see `🦀️component.rs`'s module doc's tokio-containment note).
+# The remaining tokio surface is `sync` (a pure, runtime-context-free `oneshot`/`Semaphore`/`Notify`
+# — none of the three need an entered `Runtime` to function) and `macros` (the `select!` macro, also
+# runtime-context-free — it is plain manual polling, not a scheduler). `rt`/`rt-multi-thread`/`time`
+# are gone: their old callers (`tokio::runtime::Builder`, `tokio::task::JoinSet`,
+# `tokio::time::sleep`/`sleep_until`/`timeout`) are replaced by `WorkerPool`/its `TimerWheel`
+# throughout.
+tokio = { workspace = true, features = ["sync", "macros"] }
 
 [dev-dependencies]
-# 🧪️ `testkit` (unions with the plain dependency above for test builds only) brings in
-# `semio-framework-async::testkit::ManualRuntime`, this crate's own `#[cfg(test)]` double for
-# exercising `StorageScheduler`/`EventRouter`/`TimerWheel` against the trait without real tokio.
-semio-framework-async = { workspace = true, features = ["testkit"] }
-tokio = { workspace = true, features = ["rt-multi-thread", "sync", "time", "test-util", "macros"] }
-# 🧵️ gate-services (universal-async residue sweep): `ThreadBudget::from_plan`/`checkout`/`remaining`
-# and every `HostAsyncRuntime` method this file's tests exercise are now `async fn` — every test
-# needs a real async-test harness. Path dependency, same pattern `🎭️actor`'s Cargo.toml already uses
-# for this macro crate.
+# 🧵️ INTERACTIVE-JOB-RUNTIME-REFACTOR Phase 1 packet P1b: `testkit` (and `ManualRuntime`, the
+# deterministic-clock `HostAsyncRuntime` test double it gates) is DROPPED here — every test that used
+# to drive `ManualRuntime`'s injected clock now drives a real `semio_framework_async::WorkerPool` on
+# the real wall clock instead (`TimerWheel::spawn_driver`/`HttpPool::spawn_refill_driver` no longer
+# accept a generic `R: HostAsyncRuntime` at all — see `🦀️component.rs`), so nothing in this crate's
+# own suite constructs a `ManualRuntime` any more. `entrypoint` is already unified in from the main
+# dependency above (`cargo test` merges regular and dev-dependency features for one crate into a
+# single compilation), listed again here only so this crate's OWN test suite's need for `block_on` is
+# self-documenting from this line alone.
+semio-framework-async = { workspace = true, features = ["entrypoint"] }
+tokio = { workspace = true, features = ["sync", "macros"] }
+# 🧵️ gate-services (universal-async residue sweep): every `HostAsyncRuntime` method this file's
+# tests exercise is `async fn` — every test needs a real async-test harness. Path dependency, same
+# pattern `🎭️actor`'s Cargo.toml already uses for this macro crate.
 semio-framework-async-macros = { path = "../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

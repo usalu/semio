@@ -24,10 +24,23 @@ use std::process::{Child, ChildStdin, Command, Stdio};
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 use std::thread::{self, JoinHandle};
+#[cfg(test)]
 use std::time::Duration;
 
+/// 🚪️ P1f: the ONE reason a dedicated `thread::Builder` survives in this module at all — a real,
+/// blocking `std::io::Read` off a child's stdout/the process's own stdin, with no non-blocking
+/// alternative reachable without a new dependency (this crate deliberately owns no async-I/O crate;
+/// `tokio`'s own "process"/"io-util" features are out — see this crate's `Cargo.toml` note that
+/// `tokio` here is `["sync", "rt"]` ONLY, no runtime, no I/O). Bounded (exactly one per
+/// `ProcessTransport`/`StdioTransport` instance — i.e. one per child process, never per-message,
+/// never unbounded) and registered with `semio_framework_trace`'s thread-role API so a thread census
+/// sees it as a counted, justified I/O boundary rather than an invisible extra thread. See
+/// `📓️p1f-epoch-transport.md`'s "process-transport threads" section for the full accounting.
+const IO_BOUNDARY_PARENT_READER: &str = "process-shard-reader";
+const IO_BOUNDARY_CHILD_READER: &str = "shard-stdin-reader";
+
 async fn now_ms() -> u64 {
-    std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|duration| duration.as_millis() as u64).unwrap_or(0)
+    std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |duration| duration.as_millis() as u64)
 }
 
 //#region 📦️Framing
@@ -116,26 +129,30 @@ impl ProcessTransport {
             let alive = alive.clone();
             thread::Builder::new()
                 .name("semio-process-shard-reader".to_string())
-                .spawn(move || loop {
-                    // 🚫️async: dedicated reader thread IS its own executor (R4 clause 2/4 — same
-                    // shape as the db postgres/neo4j bridge threads and `ShardExecutor::spawn`'s
-                    // thread root); `read_frame` never actually suspends (blocking std I/O, zero
-                    // internal `.await`s), so `block_on` here is a trivial, non-parking bridge.
-                    match semio_framework_async::block_on(framing::read_frame(&mut stdout)) {
-                        Ok(Some(framing::Frame::Data(bytes))) => {
-                            heartbeat_ms.store(semio_framework_async::block_on(now_ms()), Ordering::SeqCst);
-                            inbound.lock().expect("process-shard inbound lock").push_back(bytes);
-                        }
-                        Ok(Some(framing::Frame::Heartbeat)) => {
-                            heartbeat_ms.store(semio_framework_async::block_on(now_ms()), Ordering::SeqCst);
-                        }
-                        Ok(None) | Err(_) => {
-                            // 💀️ Clean EOF or a read error both mean the same thing here: the
-                            // child's write half is gone (exited, or `kill -9`'d out from under
-                            // it) — the ONE definitive "the process is dead" signal, faster than
-                            // waiting out a heartbeat timeout.
-                            alive.store(false, Ordering::SeqCst);
-                            break;
+                .spawn(move || {
+                    semio_framework_trace::register_io_boundary_thread(IO_BOUNDARY_PARENT_READER);
+                    loop {
+                        // 🚫️async: dedicated reader thread IS its own executor (R4 clause 2/4 —
+                        // same shape as the db postgres/neo4j bridge threads and
+                        // `ShardExecutor::spawn`'s thread root); `read_frame` never actually
+                        // suspends (blocking std I/O, zero internal `.await`s), so `block_on` here
+                        // is a trivial, non-parking bridge.
+                        match semio_framework_async::block_on(framing::read_frame(&mut stdout)) {
+                            Ok(Some(framing::Frame::Data(bytes))) => {
+                                heartbeat_ms.store(semio_framework_async::block_on(now_ms()), Ordering::SeqCst);
+                                inbound.lock().expect("process-shard inbound lock").push_back(bytes);
+                            }
+                            Ok(Some(framing::Frame::Heartbeat)) => {
+                                heartbeat_ms.store(semio_framework_async::block_on(now_ms()), Ordering::SeqCst);
+                            }
+                            Ok(None) | Err(_) => {
+                                // 💀️ Clean EOF or a read error both mean the same thing here: the
+                                // child's write half is gone (exited, or `kill -9`'d out from
+                                // under it) — the ONE definitive "the process is dead" signal,
+                                // faster than waiting out a heartbeat timeout.
+                                alive.store(false, Ordering::SeqCst);
+                                break;
+                            }
                         }
                     }
                 })
@@ -219,7 +236,12 @@ pub struct StdioTransport {
     inbound: Arc<Mutex<VecDeque<Vec<u8>>>>,
     alive: Arc<AtomicBool>,
     _reader: JoinHandle<()>,
-    _heartbeat: JoinHandle<()>,
+    // 🧵️ P1f: the heartbeat sender is a periodic sleep+write, not a blocking I/O read — it moved
+    // onto the shared `WorkerPool`'s `Lane::Timer` ([`super::PeriodicPoolTimer`], the same mechanism
+    // `EpochTicker` uses) instead of owning a dedicated `JoinHandle<()>`. `_reader` (above) stays a
+    // real OS thread: a genuinely blocking stdin read has no non-blocking alternative here — see
+    // this file's own [`IO_BOUNDARY_CHILD_READER`] doc.
+    _heartbeat: super::PeriodicPoolTimer,
 }
 
 impl StdioTransport {
@@ -234,6 +256,7 @@ impl StdioTransport {
             thread::Builder::new()
                 .name("semio-shard-stdin-reader".to_string())
                 .spawn(move || {
+                    semio_framework_trace::register_io_boundary_thread(IO_BOUNDARY_CHILD_READER);
                     let mut stdin = io::stdin();
                     loop {
                         // 🚫️async: dedicated reader thread IS its own executor — see the parent-side
@@ -251,25 +274,22 @@ impl StdioTransport {
                 .expect("spawn stdio-shard stdin reader thread")
         };
 
+        // 🧵️ P1f: a periodic sleep+write, not a blocking pipe read — driven off the shared
+        // `WorkerPool`'s `Lane::Timer` ([`super::PeriodicPoolTimer`], the same mechanism
+        // `EpochTicker` uses) instead of a dedicated `"semio-shard-heartbeat"` OS thread.
+        // `super::plugin_host_worker_pool()` is already constructed in this process by the time
+        // `StdioTransport::new` runs — `👶️child/🦀️main.rs`'s `main` builds a `WasmtimeRuntime` (which
+        // starts its own `EpochTicker` on this same singleton) before it ever opens the transport.
         let heartbeat = {
             let alive = alive.clone();
             let stdout = stdout.clone();
-            thread::Builder::new()
-                .name("semio-shard-heartbeat".to_string())
-                .spawn(move || {
-                    while alive.load(Ordering::SeqCst) {
-                        thread::sleep(Duration::from_millis(heartbeat_interval_ms));
-                        if !alive.load(Ordering::SeqCst) {
-                            break;
-                        }
-                        let Ok(mut guard) = stdout.lock() else { break };
-                        // 🚫️async: dedicated heartbeat thread IS its own executor — same pattern.
-                        if semio_framework_async::block_on(framing::write_frame(&mut *guard, framing::TAG_HEARTBEAT, &[])).is_err() {
-                            break;
-                        }
-                    }
-                })
-                .expect("spawn stdio-shard heartbeat thread")
+            super::PeriodicPoolTimer::start(&super::plugin_host_worker_pool(), super::Lane::Timer, heartbeat_interval_ms, move || {
+                if !alive.load(Ordering::SeqCst) {
+                    return false;
+                }
+                let Ok(mut guard) = stdout.lock() else { return false };
+                semio_framework_async::block_on(framing::write_frame(&mut *guard, framing::TAG_HEARTBEAT, &[])).is_ok()
+            })
         };
 
         Self { stdout, inbound, alive, _reader: reader, _heartbeat: heartbeat }

@@ -490,6 +490,28 @@
         "forwardAllArgs": true
       }
     },
+    "verify-interactivity": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts verify interactivity"
+      }
+    },
+    "verify-dependencies-freeze": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts verify dependencies"
+      }
+    },
+    "verify-dependencies-freeze-write-baseline": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify dependencies write-baseline"
+      }
+    },
     "build": {
       "executor": "nx:run-commands",
       "dependsOn": [],

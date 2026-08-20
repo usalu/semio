@@ -33,16 +33,20 @@ neo4j = ["dep:neo4rs", "dep:base64"]
 [dependencies]
 semio-framework-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 semio-framework-replication = { workspace = true }
-# 🔌️ `db_storage`'s `DbFuture`-returning trait family crosses the sync/async boundary through
-# `HostAsyncRuntime` — `FsStorage`/`db_storage_sqlite::SqliteStorage` dispatch their genuinely
-# blocking bodies via its `run_blocking`, and this crate names no concrete executor (no `tokio`,
-# no `futures`) anywhere: that stays confined to `🛎️services` per the repo's rule. See
-# `db_storage`'s module doc ("Async-first").
+# 🔌️ `db_storage`'s `DbFuture`-returning trait family crosses the sync/async boundary through its
+# own `run_blocking_op`, which submits onto `semio-framework-async`'s process-wide `WorkerPool` —
+# `FsStorage`/`db_storage_sqlite::SqliteStorage` dispatch their genuinely blocking bodies there, and
+# this crate names no concrete executor (no `tokio`, no `futures`) anywhere: that stays confined to
+# `🛎️services` per the repo's rule. See `db_storage`'s module doc ("Async-first").
 # 🔀️ O1 (drop dyn dispatch, dedyn-fw-os-misc): `#[dyn_enum]`/`dyn_enum_close!` — `VersionGraph`'s
 # two implementors (`NullVersionGraph`, `VcsVersionGraph`) close over a real enum instead of
 # `Arc<dyn VersionGraph>`. Same dependency shape `🔌️plugin`'s own Cargo.toml already uses.
 semio-framework-dispatch-macros = { path = "../../../../../../🔨️modules/🔀️dispatch/📦️packages/🦀️rust", package = "semio-framework-dispatch-macros" }
 semio-framework-async = { workspace = true }
+# 🔌️ Phase 1 (`26/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR`): `db_storage`'s blocking bridge submits
+# to the process-wide `WorkerPool` on `Lane::Io` and reports its queue depth through this crate's
+# `QueueCounter` for the Phase 1 exit gate. Workspace-internal, not a new third-party dependency.
+semio-framework-trace = { workspace = true }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 thiserror = "2.0.12"

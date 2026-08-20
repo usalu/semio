@@ -961,8 +961,8 @@ mod kernel {
 
     #[cfg(test)]
     mod tests {
-        use super::*;
         use super::super::inspect::NullInspector;
+        use super::*;
         use crate::{ActionId, BitSet, EventId, GuardId, NodeId};
 
         //#region 🔖️ToggleMachine
@@ -1378,9 +1378,9 @@ mod persist {
 
     #[cfg(test)]
     mod tests {
-        use super::*;
         use super::super::kernel::{init, macrostep};
         use super::super::testing::support::{unit_toggle_definition, UnitToggleContext, UnitToggleEvent, UnitToggleMachine};
+        use super::*;
 
         #[semio_framework_async_macros::async_test]
         async fn persist_then_restore_round_trips_active_state() {
@@ -1395,7 +1395,7 @@ mod persist {
             assert_eq!(persisted.fingerprint, UnitToggleMachine::definition().fingerprint);
             assert!(persisted.states.iter().any(|s| s == "on"));
 
-            let restored = restore::<UnitToggleMachine, NoMigrations>(&persisted, UnitToggleContext::default(), &[]).expect("restore should succeed");
+            let restored = restore::<UnitToggleMachine, NoMigrations>(&persisted, UnitToggleContext::default(), &[]).await.expect("restore should succeed");
             assert!(restored.matches("on"));
         }
 
@@ -1405,7 +1405,7 @@ mod persist {
             let snapshot = init::<UnitToggleMachine>((), &mut sink);
             let mut persisted = persist(&snapshot);
             persisted.fingerprint = 9999;
-            let result = restore::<UnitToggleMachine, NoMigrations>(&persisted, UnitToggleContext::default(), &[]);
+            let result = restore::<UnitToggleMachine, NoMigrations>(&persisted, UnitToggleContext::default(), &[]).await;
             assert!(matches!(result, Err(RestoreError::FingerprintMismatch)));
         }
 
@@ -1428,7 +1428,7 @@ mod persist {
             persisted.fingerprint = 9999;
             let migration = BumpFingerprint;
             let migrations: &[&BumpFingerprint] = &[&migration];
-            let restored = restore::<UnitToggleMachine>(&persisted, UnitToggleContext::default(), migrations).expect("migration should bridge fingerprint");
+            let restored = restore::<UnitToggleMachine, BumpFingerprint>(&persisted, UnitToggleContext::default(), migrations).await.expect("migration should bridge fingerprint");
             assert!(restored.matches("off"));
         }
     }
@@ -1612,9 +1612,9 @@ mod runtime {
 
     #[cfg(test)]
     mod tests {
-        use super::*;
         use super::super::host::TestHost;
         use super::super::testing::support::{UnitToggleContext, UnitToggleEvent, UnitToggleMachine};
+        use super::*;
 
         #[semio_framework_async_macros::async_test]
         async fn actor_system_drains_sent_events_through_one_macrostep_each() {
@@ -1852,8 +1852,8 @@ mod testing {
 
     #[cfg(test)]
     mod tests {
-        use super::*;
         use super::super::testing::support::{UnitToggleEvent, UnitToggleMachine};
+        use super::*;
 
         #[semio_framework_async_macros::async_test]
         async fn explore_reaches_both_toggle_states() {
@@ -2407,7 +2407,7 @@ mod checkout_integration {
 
         let persisted = super::persist(&snapshot);
         assert_eq!(persisted.fingerprint, checkout::Checkout::definition().fingerprint);
-        let restored = crate::restore::<checkout::Checkout, crate::NoMigrations>(&persisted, snapshot.context.clone(), &[]).expect("restore should succeed");
+        let restored = crate::restore::<checkout::Checkout, crate::NoMigrations>(&persisted, snapshot.context.clone(), &[]).await.expect("restore should succeed");
         assert!(restored.matches("processing"));
     }
 

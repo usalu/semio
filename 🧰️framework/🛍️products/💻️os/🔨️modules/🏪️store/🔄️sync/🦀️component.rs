@@ -683,15 +683,18 @@ struct OpenDocument {
     cmd_tx: mpsc::UnboundedSender<ArtifactActorMsg>,
     events: broadcast::Sender<ArtifactEvent>,
     presence: PresenceHeartbeatProducer,
-    #[cfg(not(target_arch = "wasm32"))]
-    join: Option<std::thread::JoinHandle<()>>,
 }
 
 /// @emoji 🏛️ Registry of open per-document actors. One `ArtifactHost` per host process (wgpu native,
-/// tests, or the browser wgpu build) owns every open document's actor + event fan-out.
+/// tests, or the browser wgpu build) owns every open document's actor + event fan-out. On native,
+/// `supervisor` is the ONE OS thread every open document's actor runs on (see
+/// `native_actor::spawn_actor`'s doc) — cloning `ArtifactHost` shares it, so the whole registry
+/// costs one thread total, not one per document.
 #[derive(Clone, Default)]
 pub struct ArtifactHost {
     inner: std::sync::Arc<std::sync::Mutex<std::collections::HashMap<String, OpenDocument>>>,
+    #[cfg(not(target_arch = "wasm32"))]
+    supervisor: native_actor::SupervisorHandle,
 }
 
 impl ArtifactHost {
@@ -708,16 +711,10 @@ impl ArtifactHost {
         let (cmd_tx, cmd_rx) = mpsc::unbounded_channel();
         let (event_tx, _event_rx) = broadcast::channel(256);
         #[cfg(not(target_arch = "wasm32"))]
-        let join = spawn_actor(config, remote, cmd_rx, event_tx.clone()).await;
+        spawn_actor(&self.supervisor, config, remote, cmd_rx, event_tx.clone()).await;
         #[cfg(target_arch = "wasm32")]
         spawn_actor(config, remote, cmd_rx, event_tx.clone()).await;
-        let entry = OpenDocument {
-            cmd_tx: cmd_tx.clone(),
-            events: event_tx,
-            presence: PresenceHeartbeatProducer::default(),
-            #[cfg(not(target_arch = "wasm32"))]
-            join,
-        };
+        let entry = OpenDocument { cmd_tx: cmd_tx.clone(), events: event_tx, presence: PresenceHeartbeatProducer::default() };
         self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(document_id, entry);
         ArtifactChannels { cmd_tx, channel_backbone }
     }
@@ -752,18 +749,21 @@ impl ArtifactHost {
         document.cmd_tx.send(ArtifactActorMsg::PresenceHeartbeat { peer }).is_ok()
     }
 
-    /// @emoji ✂️ Stops a document's actor (flushing pending outbound operations first) and, on native, joins
-    /// its thread.
-    // 🚫️async: E1 pure lock/remove + sync channel send + blocking `JoinHandle::join` — no real
-    // suspension point — consumed by `impl Drop` (sync-only external trait); see R9.
+    /// @emoji ✂️ Stops a document's actor: sends `Detach` (the actor's own `run()` loop breaks out
+    /// and flushes pending outbound operations on that message, see `handle_cmd`) and returns
+    /// immediately — never blocks the caller waiting for the actor's task to actually finish. This
+    /// is a deliberate change from the old dedicated-OS-thread design (which `close()` used to
+    /// `JoinHandle::join()`, blocking synchronously): a cooperative tokio task keeps running to
+    /// completion on the shared runtime after its `JoinHandle` is dropped (dropping a `JoinHandle`
+    /// does not cancel the task, only `.abort()` does), so the flush still happens, just without
+    /// making `close()` — called from `impl Drop`, where blocking on a runtime task is doubly
+    /// dangerous — a blocking call.
+    // 🚫️async: E1 pure lock/remove + sync channel send, no real suspension point — consumed by
+    // `impl Drop` (sync-only external trait); see R9.
     pub fn close(&self, document_id: &str) {
         let document = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).remove(document_id);
         if let Some(document) = document {
             let _ = document.cmd_tx.send(ArtifactActorMsg::Detach);
-            #[cfg(not(target_arch = "wasm32"))]
-            if let Some(join) = document.join {
-                let _ = join.join();
-            }
         }
     }
 
@@ -782,6 +782,13 @@ impl Drop for ArtifactHost {
         }
         for document_id in self.open_artifacts() {
             self.close(&document_id);
+        }
+        // 🎯️ Dropping the supervisor's sender (rather than joining its thread) is the same
+        // never-block-the-caller discipline as `close()`: the supervisor's `rx.recv()` sees the
+        // channel close, its `LocalSet` loop ends, and the OS thread exits on its own.
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            *self.supervisor.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = None;
         }
     }
 }
@@ -1499,19 +1506,59 @@ mod native_actor {
         }
     }
 
-    /// @emoji 🚀️ Spawns a dedicated OS thread running a current-thread tokio runtime that drives the actor.
-    pub(super) async fn spawn_actor(config: ArtifactActorConfig, remote: ChannelBackboneRemote, cmd_rx: mpsc::UnboundedReceiver<ArtifactActorMsg>, events: broadcast::Sender<ArtifactEvent>) -> Option<std::thread::JoinHandle<()>> {
-        let runtime = tokio::runtime::Builder::new_current_thread().enable_all().build().ok()?;
-        std::thread::Builder::new()
-            .name(format!("sync-actor-{}", config.document_id))
-            .spawn(move || {
-                // 🚫️async: E5 executor bridge — this OS thread IS the runtime, block_on drives it
-                runtime.block_on(async move {
-                    let actor = ArtifactActor::new(config, remote, cmd_rx, events).await;
-                    actor.run().await;
-                });
-            })
-            .ok()
+    /// @emoji 📨️ The `Send`-safe construction inputs for one document's actor — carried across the
+    /// channel into the supervisor thread (see [`spawn_actor`]'s doc), which is the only place
+    /// `ArtifactActor::new`/`run` (both genuinely `!Send`) actually execute.
+    pub(super) struct SpawnRequest {
+        config: ArtifactActorConfig,
+        remote: ChannelBackboneRemote,
+        cmd_rx: mpsc::UnboundedReceiver<ArtifactActorMsg>,
+        events: broadcast::Sender<ArtifactEvent>,
+    }
+
+    /// @emoji 🧵️ `ArtifactHost`'s handle to its (lazily-started) supervisor thread's request queue —
+    /// `None` until the first document is opened.
+    pub(super) type SupervisorHandle = std::sync::Arc<std::sync::Mutex<Option<mpsc::UnboundedSender<SpawnRequest>>>>;
+
+    /// @emoji 🚀️ Hands `config`'s document off to `supervisor`'s ONE OS thread, lazily starting that
+    /// thread on the first call. Phase 1 (`26/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR`) replaced the
+    /// old design — a dedicated OS thread PLUS an embedded single-thread `tokio::runtime` PER
+    /// document — with this: one shared supervisor thread per `ArtifactHost`, running a
+    /// `tokio::task::LocalSet` that every open document's actor is `spawn_local`-ed onto, driven by
+    /// `Handle::block_on` against the CALLER's ambient runtime (captured once, before the thread is
+    /// spawned) rather than a second, redundant reactor. This is not a style choice: a plain
+    /// `tokio::spawn` requires `Send`, and `ArtifactActor::run`'s future is genuinely `!Send` (it
+    /// calls through `os_vcs`/`os_dsl`/bundled `rusqlite`, none of which are `Send`-safe) — a
+    /// `LocalSet` is the one primitive that runs `!Send` futures on a tokio runtime at all, and it
+    /// requires a single pinned thread to do it. The result: an `ArtifactHost`'s OS thread cost is
+    /// now O(1) (one supervisor thread, however many documents are open on it) instead of the old
+    /// O(open documents) — the actual "unbounded ad-hoc threads" defect the Phase 0 census flagged
+    /// for this site. A stalled hub connection on one document (the "short connection shortage"
+    /// case) only holds up that one `spawn_local` task's own `tokio::select!` iteration; the
+    /// supervisor thread itself, and every other document's task on it, keep running.
+    pub(super) async fn spawn_actor(supervisor: &SupervisorHandle, config: ArtifactActorConfig, remote: ChannelBackboneRemote, cmd_rx: mpsc::UnboundedReceiver<ArtifactActorMsg>, events: broadcast::Sender<ArtifactEvent>) {
+        let mut guard = supervisor.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if guard.is_none() {
+            let (tx, mut rx) = mpsc::unbounded_channel::<SpawnRequest>();
+            let handle = tokio::runtime::Handle::current();
+            let spawned = std::thread::Builder::new().name("sync-actor-supervisor".to_string()).spawn(move || {
+                let local = tokio::task::LocalSet::new();
+                handle.block_on(local.run_until(async move {
+                    while let Some(request) = rx.recv().await {
+                        tokio::task::spawn_local(async move {
+                            let actor = ArtifactActor::new(request.config, request.remote, request.cmd_rx, request.events).await;
+                            actor.run().await;
+                        });
+                    }
+                }));
+            });
+            if spawned.is_ok() {
+                *guard = Some(tx);
+            }
+        }
+        if let Some(tx) = guard.as_ref() {
+            let _ = tx.send(SpawnRequest { config, remote, cmd_rx, events });
+        }
     }
 }
 
@@ -2685,16 +2732,7 @@ mod tests {
         let host = ArtifactHost::new().await;
         let (cmd_tx, mut cmd_rx) = mpsc::unbounded_channel();
         let (events, _) = broadcast::channel(1);
-        host.inner.lock().unwrap().insert(
-            "doc".into(),
-            OpenDocument {
-                cmd_tx,
-                events,
-                presence: PresenceHeartbeatProducer::default(),
-                #[cfg(not(target_arch = "wasm32"))]
-                join: None,
-            },
-        );
+        host.inner.lock().unwrap().insert("doc".into(), OpenDocument { cmd_tx, events, presence: PresenceHeartbeatProducer::default() });
 
         let first = sample_presence_peer_with_interaction().await;
         assert!(host.presence_heartbeat("doc", 500, first.clone()).await);

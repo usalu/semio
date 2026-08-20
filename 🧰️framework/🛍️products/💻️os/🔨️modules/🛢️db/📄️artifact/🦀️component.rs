@@ -493,10 +493,10 @@ impl Default for ArtifactEngineConfig<AllowAll, NullVersionGraph> {
 /// thread. Deliberately NOT `Send` (see `ArtifactAuthority`'s doc for why: `DocumentState` embeds
 /// `db_state::PMap`, which is `Rc`-based) — usable directly, single-threaded, wherever a mailbox
 /// isn't needed (e.g. this crate's own tests).
-pub struct ArtifactEngine<R: semio_framework_async::HostAsyncRuntime, A: AuthzHook + 'static = AllowAll, V: VersionGraph + 'static = NullVersionGraph> {
+pub struct ArtifactEngine<A: AuthzHook + 'static = AllowAll, V: VersionGraph + 'static = NullVersionGraph> {
     document: ArtifactId,
     protocol_document: protocol::ArtifactId,
-    storage: Arc<db_storage::DbBackend<R>>,
+    storage: Arc<db_storage::DbBackend>,
     wal: db_wal::ArtifactWal,
     state: DocumentState,
     vcs_head: Option<String>,
@@ -515,13 +515,13 @@ pub struct ArtifactEngine<R: semio_framework_async::HostAsyncRuntime, A: AuthzHo
 
 const MAX_RECENT_TOUCHES: usize = 256;
 
-impl<R: semio_framework_async::HostAsyncRuntime, A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<R, A, V> {
+impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
     /// @emoji 🌱️ Creates a brand-new document: a genesis WAL (segment 0) and an empty state.
     /// Errors `AlreadyExists` if `document` already has WAL segments in `storage`.
     // 🚫️async: E5 executor bridge — `ArtifactEngine`'s methods run only on `ArtifactAuthority`'s
     // own dedicated actor thread (R4 clause 2/4: the thread IS the executor for this bridge), so
     // they stay plain sync fns and drive their async storage calls via `db_actor::block_on`.
-    pub fn create(document: protocol::ArtifactId, storage: Arc<db_storage::DbBackend<R>>, config: ArtifactEngineConfig<A, V>, now_ms: u64) -> Result<ArtifactEngine<R, A, V>, DbError> {
+    pub fn create(document: protocol::ArtifactId, storage: Arc<db_storage::DbBackend>, config: ArtifactEngineConfig<A, V>, now_ms: u64) -> Result<ArtifactEngine<A, V>, DbError> {
         let core_id = db_actor::block_on(to_core_document_id(&document));
         let wal = db_actor::block_on(async { db_wal::ArtifactWal::create(&storage.wal().await, core_id.clone(), db_wal::GroupCommitPolicy::default(), now_ms).await })?;
         Ok(db_actor::block_on(ArtifactEngine::assemble(document, core_id, storage, wal, None, config)))
@@ -534,7 +534,7 @@ impl<R: semio_framework_async::HostAsyncRuntime, A: AuthzHook + 'static, V: Vers
     /// AFTER the snapshot's own `head_seq` (a full-from-genesis replay when there is no snapshot
     /// yet).
     // 🚫️async: E5 executor bridge — see `create`'s doc; same actor-thread bridge.
-    pub fn open(document: protocol::ArtifactId, storage: &Arc<db_storage::DbBackend<R>>, config: ArtifactEngineConfig<A, V>, now_ms: u64) -> Result<(ArtifactEngine<R, A, V>, MaterializeReport), DbError> {
+    pub fn open(document: protocol::ArtifactId, storage: &Arc<db_storage::DbBackend>, config: ArtifactEngineConfig<A, V>, now_ms: u64) -> Result<(ArtifactEngine<A, V>, MaterializeReport), DbError> {
         let core_id = db_actor::block_on(to_core_document_id(&document));
         let mut report = MaterializeReport::default();
 
@@ -605,7 +605,7 @@ impl<R: semio_framework_async::HostAsyncRuntime, A: AuthzHook + 'static, V: Vers
         Ok((engine, report))
     }
 
-    async fn assemble(protocol_document: protocol::ArtifactId, core_id: ArtifactId, storage: Arc<db_storage::DbBackend<R>>, wal: db_wal::ArtifactWal, vcs_head: Option<String>, config: ArtifactEngineConfig<A, V>) -> ArtifactEngine<R, A, V> {
+    async fn assemble(protocol_document: protocol::ArtifactId, core_id: ArtifactId, storage: Arc<db_storage::DbBackend>, wal: db_wal::ArtifactWal, vcs_head: Option<String>, config: ArtifactEngineConfig<A, V>) -> ArtifactEngine<A, V> {
         let preview_budgets = db_preview::PreviewBudgets { default_ttl_ms: config.preview_ttl_ms, max_ttl_ms: config.preview_ttl_ms, ..db_preview::PreviewBudgets::default() };
         ArtifactEngine {
             document: core_id.clone(),
@@ -1178,7 +1178,7 @@ impl ArtifactAuthority {
     /// @emoji 🚀️ Spawns the actor thread, builds the engine there via `build`, and blocks until
     /// that construction succeeds or fails — a caller never holds a `ArtifactAuthority` whose
     /// engine failed to open.
-    pub async fn spawn<R: semio_framework_async::HostAsyncRuntime + 'static, A: AuthzHook + 'static, V: VersionGraph + 'static>(build: impl FnOnce() -> Result<ArtifactEngine<R, A, V>, DbError> + Send + 'static, capacities: MailboxCapacities) -> Result<ArtifactAuthority, DbError> {
+    pub async fn spawn<A: AuthzHook + 'static, V: VersionGraph + 'static>(build: impl FnOnce() -> Result<ArtifactEngine<A, V>, DbError> + Send + 'static, capacities: MailboxCapacities) -> Result<ArtifactAuthority, DbError> {
         let (address, receiver) = db_actor::mailbox::<ArtifactMessage>(capacities);
         let (ready_tx, ready_rx) = db_actor::oneshot::<Result<(), DbError>>();
         let handle = std::thread::Builder::new()
@@ -1256,7 +1256,7 @@ mod tests {
     use super::*;
     use std::sync::Arc as StdArc;
 
-    async fn storage() -> StdArc<db_storage::DbBackend<db_storage::InlineRuntime>> {
+    async fn storage() -> StdArc<db_storage::DbBackend> {
         StdArc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new().await))
     }
 
@@ -1634,7 +1634,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn document_authority_spawn_propagates_a_build_failure_synchronously() {
-        let result = ArtifactAuthority::spawn(|| -> Result<ArtifactEngine<db_storage::InlineRuntime, AllowAll, NullVersionGraph>, DbError> { Err(DbError::InvalidArgument("boom".to_string())) }, MailboxCapacities::uniform(4));
+        let result = ArtifactAuthority::spawn(|| -> Result<ArtifactEngine<AllowAll, NullVersionGraph>, DbError> { Err(DbError::InvalidArgument("boom".to_string())) }, MailboxCapacities::uniform(4));
         assert!(matches!(result.await, Err(DbError::InvalidArgument(_))));
     }
     //#endregion 🔖️Actor

@@ -74,33 +74,31 @@ impl PropertyValue {
 // directly through `DslValue` (mirroring the engine's own `serde_json::Value` bridge) is both
 // correct and the natural fit for an untyped recursive value type, and it needs no attributes on
 // the Array/Object variants: recursion is carried by `DslValue` itself, not by field-level nesting.
-async fn property_value_to_dsl_value(value: &PropertyValue) -> dsl_core::DslValue {
+fn property_value_to_dsl_value(value: &PropertyValue) -> dsl_core::DslValue {
     match value {
         PropertyValue::Null => dsl_core::DslValue::Null,
         PropertyValue::Bool(b) => dsl_core::DslValue::Bool(*b),
         PropertyValue::Number(n) => dsl_core::DslValue::Number(*n),
         PropertyValue::String(s) => dsl_core::DslValue::String(s.clone()),
         PropertyValue::Array(items) => {
-            // 🔀️ Rewritten from `.map(property_value_to_dsl_value).collect()` — the closure was
-            // sync and this fn is self-recursive through Array/Object, so it also needs Box::pin
-            // (R10 residue shapes #1 and #3).
+            // 🔀️ Plain sync recursion — no suspension point, so no `Box::pin` is needed.
             let mut out = Vec::with_capacity(items.len());
             for item in items {
-                out.push(Box::pin(property_value_to_dsl_value(item)).await);
+                out.push(property_value_to_dsl_value(item));
             }
             dsl_core::DslValue::Array(out)
         }
         PropertyValue::Object(map) => {
             let mut out = Vec::with_capacity(map.len());
             for (k, v) in map {
-                out.push((k.clone(), Box::pin(property_value_to_dsl_value(v)).await));
+                out.push((k.clone(), property_value_to_dsl_value(v)));
             }
             dsl_core::DslValue::Object(out)
         }
     }
 }
 
-async fn dsl_value_to_property_value(value: &dsl_core::DslValue) -> PropertyValue {
+fn dsl_value_to_property_value(value: &dsl_core::DslValue) -> PropertyValue {
     match value {
         dsl_core::DslValue::Null => PropertyValue::Null,
         dsl_core::DslValue::Bool(b) => PropertyValue::Bool(*b),
@@ -110,14 +108,14 @@ async fn dsl_value_to_property_value(value: &dsl_core::DslValue) -> PropertyValu
             // 🔀️ Same rewrite as `property_value_to_dsl_value` above, mirrored.
             let mut out = Vec::with_capacity(items.len());
             for item in items {
-                out.push(Box::pin(dsl_value_to_property_value(item)).await);
+                out.push(dsl_value_to_property_value(item));
             }
             PropertyValue::Array(out)
         }
         dsl_core::DslValue::Object(entries) => {
             let mut out = std::collections::BTreeMap::new();
             for (k, v) in entries {
-                out.insert(k.clone(), Box::pin(dsl_value_to_property_value(v)).await);
+                out.insert(k.clone(), dsl_value_to_property_value(v));
             }
             PropertyValue::Object(out)
         }
@@ -125,20 +123,20 @@ async fn dsl_value_to_property_value(value: &dsl_core::DslValue) -> PropertyValu
 }
 
 impl dsl_core::DslField for PropertyValue {
-    // 🚫️async: E1 impl of externally-declared trait `dsl_core::DslField` — `shape()` is E4-tagged
-    // sync in the trait itself (fn-pointer transitivity through `Shape::Record`/`Table`), see
-    // `🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🦀️component.rs`.
+    // 🚫️async: E1 impl of externally-declared trait `dsl_core::DslField` — every method is
+    // E4-tagged sync in the trait itself (fn-pointer transitivity through `Shape::Record`/`Table`),
+    // see `🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🦀️component.rs`.
     fn shape() -> dsl_core::Shape {
         dsl_core::Shape::Value
     }
 
-    async fn to_value(&self) -> dsl_core::FieldValue {
-        dsl_core::FieldValue::Value(property_value_to_dsl_value(self).await)
+    fn to_value(&self) -> dsl_core::FieldValue {
+        dsl_core::FieldValue::Value(property_value_to_dsl_value(self))
     }
 
-    async fn from_value(value: &dsl_core::FieldValue) -> Result<Self, String> {
+    fn from_value(value: &dsl_core::FieldValue) -> Result<Self, String> {
         match value {
-            dsl_core::FieldValue::Value(dsl_value) => Ok(dsl_value_to_property_value(dsl_value).await),
+            dsl_core::FieldValue::Value(dsl_value) => Ok(dsl_value_to_property_value(dsl_value)),
             other => Err(format!("expected Value, found {other:?}")),
         }
     }
@@ -665,8 +663,8 @@ mod tests {
             root.insert("items".to_string(), array_of_objects);
             let value = PropertyValue::Object(root);
 
-            let field_value = <PropertyValue as ::dsl_core::DslField>::to_value(&value).await;
-            let round_tripped = <PropertyValue as ::dsl_core::DslField>::from_value(&field_value).await.expect("round trip must succeed");
+            let field_value = <PropertyValue as ::dsl_core::DslField>::to_value(&value);
+            let round_tripped = <PropertyValue as ::dsl_core::DslField>::from_value(&field_value).expect("round trip must succeed");
             assert_eq!(round_tripped, value, "PropertyValue dsl_core::DslField round trip diverged for a nested Object/Array/Object value");
         });
     }

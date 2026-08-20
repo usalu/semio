@@ -434,12 +434,11 @@ pub mod wire {
 
     // #region 🔖️WireLiteral
     async fn render_wire_line(value: &dsl_core::WireValue) -> String {
-        // 🚨️ both calls here were dropped-future no-ops: `Writer::new()` was never awaited (so
-        // `writer` was a future, not a `Writer`) and `print_shape` — a `()`-returning call whose
-        // whole job is to mutate `writer` — was dropped entirely, meaning it silently never ran.
-        let mut writer = dsl_core::Writer::new().await;
-        dsl_core::print_shape(&dsl_core::FieldValue::Wire(value.clone()), &dsl_core::Shape::Wire, &mut writer).await;
-        writer.render(dsl_core::JoinMode::Inline).await
+        // 🚨️ `dsl_core::Writer::new`/`print_shape`/`Writer::render` are all sync in `dsl_core` —
+        // none of them suspend, so no `.await` belongs on any of them.
+        let mut writer = dsl_core::Writer::new();
+        dsl_core::print_shape(&dsl_core::FieldValue::Wire(value.clone()), &dsl_core::Shape::Wire, &mut writer);
+        writer.render(dsl_core::JoinMode::Inline)
     }
 
     /// 📝️ Render wire-literal text from neutral node/edge rows, one unified `dsl_core::Wire`
@@ -478,7 +477,7 @@ pub mod wire {
             if line.is_empty() {
                 continue;
             }
-            let value = dsl_core::parse_wire_text(line).await?;
+            let value = dsl_core::parse_wire_text(line)?;
             match value.edge {
                 None => nodes.push(WireNode { id: value.from.id, kind: value.from.kind.unwrap_or_else(|| "node".to_string()), port: value.from.port, properties: properties_from_dsl_value(&value.properties).await }),
                 Some((directed, to)) => {
@@ -944,7 +943,7 @@ async fn push_dsl_core_segment(segment: &str, base_offset: usize, forgiving: boo
     if segment.is_empty() {
         return Ok(());
     }
-    let raw = dsl_core::os_dsl::lex(segment, &dsl_core::os_dsl::Limits::default(), forgiving).await.map_err(GraphDslError::Lex)?;
+    let raw = dsl_core::os_dsl::lex(segment, &dsl_core::os_dsl::Limits::default(), forgiving).map_err(GraphDslError::Lex)?;
     for token in raw {
         if token.kind.is_trivia() || token.kind == dsl_core::os_dsl::TokenKind::Eof {
             continue;
@@ -1054,7 +1053,7 @@ async fn lex_spanned(input: &str, forgiving: bool) -> Result<Vec<SpannedToken>, 
                 return Err(GraphDslError::UnterminatedString);
             }
             i += 1;
-            let text = dsl_core::os_dsl::unescape_text(&raw, forgiving).await.unwrap_or(raw);
+            let text = dsl_core::os_dsl::unescape_text(&raw, forgiving).unwrap_or(raw);
             push_spanned(&mut tokens, Token::StringLit(text), start, i).await;
             seg_start = i;
             continue;

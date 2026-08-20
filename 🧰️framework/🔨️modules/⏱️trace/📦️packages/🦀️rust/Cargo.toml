@@ -1,0 +1,17 @@
+[package]
+name = "semio-framework-trace"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Zero-dependency interactivity tracing/observability primitives: StepTimer/CallbackTimer RAII latency guards, a hard interactive-step ceiling with per-family soft targets, a Watchdog that reports contract violations on overrun, a percentile sample ring per labelled site, cheap process-wide UI/worker thread-role identity, lock-free active-worker/permit/queue counters, and a bounded operation-trace event ring with preview/cancellation latency queries. Pure std, no I/O, no wasm_bindgen — every later INTERACTIVE-JOB-RUNTIME-REFACTOR phase depends on this to answer 'did this stay interactive' (design ticket 26/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR, packet P0a)."
+
+[package.metadata.semio]
+role = "framework"
+id = "trace"
+
+[lints]
+workspace = true
+
+[lib]
+name = "semio_framework_trace"
+path = "📦️glue.rs"
