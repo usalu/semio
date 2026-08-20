@@ -329,11 +329,12 @@ impl MetalBackend {
     /// needed on either side — see `🦀️msl.rs`'s header.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn run_blur_chain(&self, command_buffer: &CommandBuffer) {
-        for mip in 1..crate::scene_target::SCENE_MIP_LEVELS {
+        let levels = crate::scene_target::supported_mip_levels(self.scene_target.width(), self.scene_target.height());
+        for mip in 1..levels {
             let src_mip = mip - 1;
             if let Some(blit_encoder) = command_buffer.blitCommandEncoder() {
                 let extent = objc2_metal::MTLSize { width: (self.scene_target.width() >> src_mip).max(1) as usize, height: (self.scene_target.height() >> src_mip).max(1) as usize, depth: 1 };
-                // 🔓️ SAFETY: `src_mip`/`extent` are always within `SCENE_MIP_LEVELS`/the texture's own
+                // 🔓️ SAFETY: `src_mip`/`extent` are always within the texture's real level count/its own
                 // dimensions by construction (the loop bound and the `>>` shift above); both textures
                 // are the same size and mip count (`SceneTarget::ensure` keeps them in lockstep), and
                 // both are kept alive for the whole call by `self.scene_target`.

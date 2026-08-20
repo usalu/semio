@@ -27,7 +27,7 @@ pub mod checkpoint;
 // a plain native build never reaches the WIT-boundary translation code, so unlike `RefCell` these
 // two must be gated identically to `wit_bridge` itself or they warn as unused on native.
 #[cfg(all(any(feature = "component-guest", feature = "component-extension-guest"), target_arch = "wasm32", target_env = "p2"))]
-use semio_framework::kernel::{Effect, Event, MessageEndpoint, PatchOp, RequestOutcome, TurnStatus, UiPatch};
+use semio_framework::kernel::{Effect, Event, MessageEndpoint, RequestOutcome, TurnStatus, UiPatch, UiPatchOp};
 use std::cell::RefCell;
 // 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME: `HashMap`/`VecDeque` back `TASK_RECORDS`/
 // `TASK_KEYS`/`TASK_RESUMES`/`INSTANCE_QUOTAS` below, which are deliberately UNGATED (native
@@ -399,6 +399,20 @@ pub fn poll(events: Vec<crate::component::component::exports::semio::framework::
             Event::AppCommandEvent { instance, command, .. } => {
                 app_commands.entry(instance.0.parse::<u32>().unwrap_or(0)).or_default().push(command);
             }
+            // 🎬️ `sdk-flip` (26/08/20): decodes the pack-encoded `ui_contract::UiIntent` and marks
+            // its surface dirty so the next render observes whatever effect it had. Real intent
+            // DISPATCH — routing to a per-plugin `ui_runtime::HandleIntent` impl, the job
+            // `UiRuntime::route_intents` does inside the full runtime — is fleet-domain work this
+            // packet's `OWNS` does not cover (see `📓️terra-sdk-flip-report.md`'s decisions section);
+            // decode-and-mark-dirty is the honest interim, not a silent drop of the wire payload.
+            Event::UiIntent { instance, intent } => {
+                let numeric_instance = instance.0.parse::<u32>().unwrap_or(0);
+                if let Ok(intent_value) = semio_framework::io::resolve_ready(store::pack_rt::decode_wire_value(&intent)) {
+                    if let Ok(intent) = dsl::from_dsl_value::<ui_contract::UiIntent>(intent_value) {
+                        dirty_render.push((numeric_instance, intent.surface.0));
+                    }
+                }
+            }
             Event::SurfaceVisible { surface } => {
                 if let Some(instance) = parse_surface_instance(&surface) {
                     dirty_render.push((instance, surface));
@@ -483,10 +497,12 @@ pub fn poll(events: Vec<crate::component::component::exports::semio::framework::
     }
 
     for (instance, surface) in dirty_render {
-        // 🚫️async: E5 executor bridge (× 2) — `plugin_render`/`PatchTracker::diff` stay genuinely
-        // `async fn`; see `poll`'s `plugin_exchange` call above for the same safety argument.
-        if let Ok(body) = semio_framework::io::resolve_ready(crate::plugin_runtime::plugin_render(instance, "window", "{}")) {
-            if let Some(patch) = PATCHES.with(|patches| patches.diff(&surface, body)) {
+        // 🚫️async: E5 executor bridge — `plugin_render` stays genuinely `async fn`; see `poll`'s
+        // `plugin_exchange` call above for the same safety argument. `PatchTracker::diff` (`sdk-flip`,
+        // 26/08/20) is plain sync — R9: a keyed tree diff is a pure computation with nothing of its
+        // own to await, matching every other `SurfaceReconciler` method it wraps.
+        if let Ok(tree) = semio_framework::io::resolve_ready(crate::plugin_runtime::plugin_render(instance, "window", "{}")) {
+            if let Some(patch) = PATCHES.with(|patches| patches.diff(&surface, &tree)) {
                 // Collected into `ui_patches` below via a second pass so `effects` above stays the
                 // single accumulation point for the non-UI half of the turn.
                 PENDING_PATCHES.with(|pending| pending.borrow_mut().push(patch));
@@ -542,10 +558,17 @@ fn route_app_frame(instance: u32, frame_bytes: &[u8], effects: &mut Vec<Effect>)
         return;
     };
     match frame {
-        protocol::AppFrame::UiPatch { surface, kind, revision, base_revision, ops, .. } => {
+        // 🎯️ `sdk-flip` (26/08/20): `protocol::AppFrame::UiPatch` still carries the PRE-flip shape
+        // (`kind: String`, `ops` pack-encoding the old `kernel::PatchOp`) — its crate, `📡️spr/**`, is
+        // FORBIDDEN to this packet, so the frame struct itself is untouched. `kind` is bound but
+        // dropped (the new `UiPatch` has no such field); `ops` decodes into `UiPatchOp` on the
+        // OPTIMISTIC assumption the sender re-encodes with the new op set too — genuinely stale
+        // until whichever packet updates `📡️spr/🧵️channel` re-frames this variant to match (flagged
+        // in `📓️terra-wit-flip-report.md`'s consumer inventory; not fixed here, out of `OWNS`).
+        protocol::AppFrame::UiPatch { surface, kind: _, revision, base_revision, ops, .. } => {
             let Ok(ops_value) = semio_framework::io::resolve_ready(store::pack_rt::decode_wire_value(&ops)) else { return };
-            let Ok(ops) = dsl::from_dsl_value::<Vec<PatchOp>>(ops_value) else { return };
-            PENDING_PATCHES.with(|pending| pending.borrow_mut().push(UiPatch { surface, kind, revision, base_revision, ops }));
+            let Ok(ops) = dsl::from_dsl_value::<Vec<UiPatchOp>>(ops_value) else { return };
+            PENDING_PATCHES.with(|pending| pending.borrow_mut().push(UiPatch { surface: surface.into(), base_revision: ui_contract::UiRevision(base_revision), revision: ui_contract::UiRevision(revision), ops }));
         }
         protocol::AppFrame::UiSnapshotEnd { .. } => {}
         other => {
@@ -646,6 +669,9 @@ fn wit_event_to_kernel(event: crate::component::component::exports::semio::frame
         W::CapabilityChanged(_) => Event::SuspendRequest,
         W::QuotaChanged(_) => Event::SuspendRequest,
         W::AppCommand(payload) => Event::AppCommandEvent { instance: semio_framework::kernel::PluginInstanceId(payload.instance.to_string()), seq: payload.seq, command: payload.command },
+        // 🎬️ `wit-flip` (26/08/20): UI intents no longer masquerade as `app-command` — see kernel
+        // `Event::UiIntent`'s own doc.
+        W::UiIntent(payload) => Event::UiIntent { instance: semio_framework::kernel::PluginInstanceId(payload.instance.to_string()), intent: payload.intent },
         W::SurfaceVisible(payload) => Event::SurfaceVisible { surface: format!("{}:{}", payload.surface.instance, "window") },
         W::SurfaceHidden(payload) => Event::SurfaceHidden { surface: format!("{}:{}", payload.surface.instance, "window") },
         W::SurfaceResized(payload) => Event::SurfaceResized { surface: format!("{}:{}", payload.surface.instance, "window"), width: payload.width, height: payload.height },
@@ -696,11 +722,21 @@ fn wit_endpoint_to_kernel(endpoint: wit_types::MessageEndpoint) -> MessageEndpoi
 /// 🔀️ kernel `TurnResult` → WIT `turn-result`. `budget` is currently unused beyond documenting
 /// the seam — `max-effects`/`max-patch-bytes` capping is real, mechanical follow-up work (design-
 /// abi.md §4's "capped by `max-effects`, overflow carries over") not yet wired into this wave.
+///
+/// 🎯️ `sdk-flip` (26/08/20): `presence` is unconditionally empty. `component.wit`'s
+/// `reactor::turn-result` grew a `presence: list<presence-update>` field in `wit-flip`, but the Rust
+/// `kernel::TurnResult` SSOT this function reads from was NOT given a matching field (that packet's
+/// own report flags the gap: "whoever wires `reactor::poll`'s real marshaling needs this field added
+/// first"). Real presence needs the full `ui_runtime::UiRuntime`/`PresenceHub` embedded per actor —
+/// this packet embeds `PatchTracker`'s `SurfaceReconciler` only (see that file's header doc for why),
+/// so there is no presence source yet either. Both gaps close together in whatever packet adds
+/// per-plugin `Present`/`HandleIntent` impls and can therefore justify the heavier `UiRuntime`.
 fn kernel_turn_result_to_wit(result: semio_framework::kernel::TurnResult, _budget: crate::component::component::exports::semio::framework::reactor::Budget) -> crate::component::component::exports::semio::framework::reactor::TurnResult {
     use crate::component::component::exports::semio::framework::reactor as wit;
     wit::TurnResult {
         ui_patches: result.ui_patches.into_iter().map(kernel_ui_patch_to_wit).collect(),
         effects: result.effects.into_iter().map(kernel_effect_to_wit).collect(),
+        presence: Vec::new(),
         next_wake: result.next_wake,
         status: match result.status {
             TurnStatus::Idle => wit::TurnStatus::Idle,
@@ -714,33 +750,53 @@ fn kernel_turn_result_to_wit(result: semio_framework::kernel::TurnResult, _budge
 
 fn kernel_ui_patch_to_wit(patch: UiPatch) -> crate::component::component::exports::semio::framework::reactor::UiPatch {
     use crate::component::component::exports::semio::framework::reactor as wit;
-    let instance: u32 = patch.surface.split(':').next().and_then(|s| s.parse().ok()).unwrap_or(0);
+    let instance: u32 = patch.surface.0.split(':').next().and_then(|s| s.parse().ok()).unwrap_or(0);
     wit::UiPatch {
         surface: wit_ui::SurfaceRef { instance, surface: 0 },
-        kind: patch.kind,
-        revision: patch.revision,
-        base_revision: patch.base_revision,
+        revision: patch.revision.0,
+        base_revision: patch.base_revision.0,
         ops: patch.ops.into_iter().map(kernel_patch_op_to_wit).collect(),
     }
 }
 
-fn kernel_patch_op_to_wit(op: PatchOp) -> wit_ui::PatchOp {
-    // 🚫️async: E5 executor bridge — see `kernel_effect_to_wit`'s own `pack` helper's doc above.
-    let encode_node = |node: &ui_wgpu::wgpu::UiNode| semio_framework::io::resolve_ready(store::pack_rt::encode_wire_value(&dsl::to_dsl_value(node).unwrap_or(dsl::DslValue::Null)));
-    match op {
-        PatchOp::Replace { path, node } => wit_ui::PatchOp::Replace(wit_ui::PatchReplace { path: path_to_indices(&path), node: encode_node(&node) }),
-        PatchOp::InsertChild { path, index, node } => wit_ui::PatchOp::InsertChild(wit_ui::PatchInsertChild { path: path_to_indices(&path), index, node: encode_node(&node) }),
-        PatchOp::RemoveChild { path, index } => wit_ui::PatchOp::RemoveChild(wit_ui::PatchRemoveChild { path: path_to_indices(&path), index }),
-        PatchOp::SetProps { path, props } => wit_ui::PatchOp::SetProps(wit_ui::PatchSetProps { path: path_to_indices(&path), props }),
-    }
+/// 🩹️ Packs any `Serialize` payload the same way `kernel_effect_to_wit`'s own `pack` helper does —
+/// shared here rather than duplicated because every `patch-op` variant but `Remove`/`SetRoot` carries
+/// exactly one `pack`-encoded field.
+// 🚫️async: E5 executor bridge — `store::pack_rt::encode_wire_value` is genuinely `async fn` (out of
+// this packet's `path_scope`, `🏪️store/**`); safe to resolve synchronously here for the same "world
+// actor has no host-async import" reason as this file's other WIT-boundary bridges.
+fn pack_patch_field<T: serde::Serialize>(value: &T) -> Vec<u8> {
+    semio_framework::io::resolve_ready(store::pack_rt::encode_wire_value(&dsl::to_dsl_value(value).unwrap_or(dsl::DslValue::Null)))
 }
 
-/// 🩹️ `kernel::PatchOp.path` is a `String` (A3's landed shape); `ui.wit`'s `path: list<u32>` is a
-/// node-identity index path. This wave's `📸️patches` only ever emits the ROOT path (`""`, full-
-/// body replace — see that module's scope note), so this always yields an empty list; a real
-/// index-path encoding is follow-up work alongside the real (non-full-body) differ.
-fn path_to_indices(_path: &str) -> Vec<u32> {
-    Vec::new()
+/// 🩹️ Wire payload for `patch-set-activity`'s `activity: pack` field. `component.wit`'s
+/// `patch-set-activity` (`wit-flip`, 26/08/20) carries only `activity: pack`, with no sibling
+/// `disabled: bool`, while the contract crate's own `UiPatchOp::SetActivity` carries `disabled` as a
+/// peer field (`🧬️contract/🦀️document.rs:148`) — a real WIT/contract mismatch, flagged rather than
+/// silently resolved by `📓️terra-wit-flip-report.md`'s decisions section, and resolved HERE (the
+/// first packet to actually encode this op) by folding `disabled` into the packed payload instead of
+/// dropping it. A future packet editing `component.wit` may add a `disabled: bool` field there
+/// instead, at which point this wrapper — and its symmetric decode on the host side — goes away.
+#[derive(serde::Serialize)]
+struct ActivityPatchPayload<'a> {
+    activity: &'a ui_contract::Activity,
+    disabled: bool,
+}
+
+fn kernel_patch_op_to_wit(op: UiPatchOp) -> wit_ui::PatchOp {
+    match op {
+        UiPatchOp::Upsert(record) => wit_ui::PatchOp::Upsert(wit_ui::PatchUpsert { node: pack_patch_field(&record) }),
+        UiPatchOp::SetComponent { id, component } => wit_ui::PatchOp::SetComponent(wit_ui::PatchSetComponent { node: id.0, component: pack_patch_field(&component) }),
+        UiPatchOp::SetLayout { id, layout } => wit_ui::PatchOp::SetLayout(wit_ui::PatchSetLayout { node: id.0, layout: pack_patch_field(&layout) }),
+        UiPatchOp::SetActivity { id, activity, disabled } => wit_ui::PatchOp::SetActivity(wit_ui::PatchSetActivity { node: id.0, activity: pack_patch_field(&ActivityPatchPayload { activity: &activity, disabled }) }),
+        UiPatchOp::SetChildren { id, children } => wit_ui::PatchOp::SetChildren(wit_ui::PatchSetChildren { node: id.0, children: children.into_iter().map(|child| child.0).collect() }),
+        UiPatchOp::SetStyle { id, style } => wit_ui::PatchOp::SetStyle(wit_ui::PatchSetStyle { node: id.0, style: pack_patch_field(&style) }),
+        UiPatchOp::SetAccessibility { id, accessibility } => wit_ui::PatchOp::SetAccessibility(wit_ui::PatchSetAccessibility { node: id.0, accessibility: pack_patch_field(&accessibility) }),
+        UiPatchOp::SetBindings { id, bindings } => wit_ui::PatchOp::SetBindings(wit_ui::PatchSetBindings { node: id.0, bindings: pack_patch_field(&bindings) }),
+        UiPatchOp::SetMenu { id, menu } => wit_ui::PatchOp::SetMenu(wit_ui::PatchSetMenu { node: id.0, menu: pack_patch_field(&menu) }),
+        UiPatchOp::Remove { id } => wit_ui::PatchOp::Remove(id.0),
+        UiPatchOp::SetRoot { id } => wit_ui::PatchOp::SetRoot(id.0),
+    }
 }
 
 /// 🔀️ kernel `Effect` → WIT `effect`. Field-for-field per `📓️design-abi.md` §2's table; complex

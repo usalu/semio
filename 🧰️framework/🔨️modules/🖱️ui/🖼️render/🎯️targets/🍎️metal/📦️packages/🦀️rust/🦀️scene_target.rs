@@ -89,6 +89,17 @@ impl SceneTarget {
 }
 
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+/// 🌫️ How many mip levels these dimensions can actually carry. Metal rejects a descriptor asking for
+/// more levels than `floor(log2(max(w, h))) + 1` — a hard validation abort, not a soft clamp — so a
+/// window enough during a resize (or a 1×1 surface) would take the process down. The blur chain
+/// therefore asks for as many levels as it wants *or* as many as exist, whichever is fewer.
+// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+pub fn supported_mip_levels(width: u32, height: u32) -> u32 {
+    let largest = width.max(height).max(1);
+    let available = 32 - largest.leading_zeros();
+    available.min(SCENE_MIP_LEVELS).max(1)
+}
+
 fn allocate(device: &Device, format: MTLPixelFormat, width: u32, height: u32, label: &str) -> Retained<MetalTexture> {
     let descriptor = MTLTextureDescriptor::new();
     descriptor.setPixelFormat(format);
@@ -97,7 +108,7 @@ fn allocate(device: &Device, format: MTLPixelFormat, width: u32, height: u32, la
     unsafe {
         descriptor.setWidth(width as _);
         descriptor.setHeight(height as _);
-        descriptor.setMipmapLevelCount(SCENE_MIP_LEVELS as _);
+        descriptor.setMipmapLevelCount(supported_mip_levels(width, height) as _);
     }
     descriptor.setUsage(MTLTextureUsage::RenderTarget | MTLTextureUsage::ShaderRead);
     let texture = device.newTextureWithDescriptor(&descriptor).unwrap_or_else(|| panic!("metal backend: failed to allocate {label} ({width}x{height})"));

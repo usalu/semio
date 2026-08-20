@@ -29,6 +29,7 @@ default = ["plugin-root"]
 plugin-root = []
 
 [dependencies]
+semio-framework-ui-contract = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
 async-trait = "0.1.88"
 base64 = "0.22"
 blake3 = "1"

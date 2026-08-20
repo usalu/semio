@@ -110,10 +110,11 @@ import type {
 // #region 🧬️GeneratedUiContract
 /** 🧬️ The semantic UI contract (`🖱️ui/🧬️contract/📦️packages/🦀️rust/📦️glue.rs`) — flat,
  * id-keyed replacement for the hand-written `UiNode` recursive-union mirror this file used to
- * carry, generated via ts-rs (`bun nx run @semio-tech/ui-contract-rs:generate`). Three names
- * collide with an unrelated existing export (artifact-editor `SurfaceKind`, OS-shell
- * `WindowLayout`/`WindowStackCorner`) and are re-exported `Ui`-prefixed instead of shadowing
- * them; everything else keeps its Rust name verbatim. */
+ * carry, generated via ts-rs (`bun nx run @semio-tech/ui-contract-rs:generate`). Five names
+ * collide with an unrelated existing export from a different module aggregated into this same
+ * barrel (artifact-editor `SurfaceKind`; OS-shell `WindowLayout`/`WindowStackCorner`; the state
+ * machine module's own `ActionId`/`Trigger`) and are re-exported `Ui`-prefixed instead of
+ * shadowing them; everything else keeps its Rust name verbatim. */
 import type {
   Liveness as GeneratedLiveness,
   AccessibilitySpec as GeneratedAccessibilitySpec,
@@ -198,8 +199,8 @@ import type {
 
 export type Liveness = GeneratedLiveness;
 export type AccessibilitySpec = GeneratedAccessibilitySpec;
-export type ActionId = GeneratedActionId;
-export type Trigger = GeneratedTrigger;
+export type UiActionId = GeneratedActionId;
+export type UiTrigger = GeneratedTrigger;
 export type ActionBinding = GeneratedActionBinding;
 export type MenuRef = GeneratedMenuRef;
 export type UiIntent = GeneratedUiIntent;

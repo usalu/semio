@@ -33,9 +33,15 @@ semio-framework-os-kernel = { path = "../../../../../📦️packages/🦀️rust
 # Rust target's own runtime shim, so satisfying `pure` alone fails instantiation on every genuinely
 # built plugin. `wasmtime-wasi` is therefore required, not optional — the earlier note here reasoned
 # from the WIT world and was disproved the first time a real component was instantiated.
-wasmtime = { version = "47.0.3", features = ["cranelift", "component-model"] }
+# 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (B1 world-collapse): `component-model-async` —
+# `describe()` is `async func` and `world actor` imports `host-async`, so `Config::
+# wasm_component_model_async`, `Store::run_concurrent` and `Accessor` are all required here.
+wasmtime = { version = "47.0.3", features = ["cranelift", "component-model", "component-model-async"] }
 wasmtime-wasi = "47.0.3"
 sha2 = "0.10"
+# ⏳️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (B1 world-collapse): `block_on` for `📦️main.rs`, the
+# process entry point — R4 allow-list clause 1 (binary / `main` executor entry points).
+semio-framework-async = { workspace = true }
 serde_json = "1.0.140"
 
 [dev-dependencies]

@@ -37,7 +37,7 @@
 use crate::hlsl::{BLUR_DOWNSAMPLE_SHADER_HLSL, GLASS_SHADER_HLSL, SCENE_BLIT_SHADER_HLSL, UI_SHADER_HLSL, VECTOR_SHADER_HLSL, WORLD3D_LINES_SHADER_HLSL, WORLD3D_MESH_SHADER_HLSL};
 use crate::types::{World3dGpuInstance, World3dGpuVertex, WorldLineGpuVertex};
 use std::ffi::CString;
-use windows::core::{Interface, PCSTR};
+use windows::core::PCSTR;
 use windows::Win32::Graphics::Direct3D::Fxc::D3DCompile;
 use windows::Win32::Graphics::Direct3D::ID3DBlob;
 use windows::Win32::Graphics::Direct3D12::*;
@@ -193,7 +193,7 @@ impl SamplerHeap {
         let stride = unsafe { device.GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER) } as usize;
         let start = unsafe { heap.GetCPUDescriptorHandleForHeapStart() };
 
-        let no_mip = D3D12_SAMPLER_DESC { Filter: D3D12_FILTER_MIN_MAG_MIP_LINEAR, AddressU: D3D12_TEXTURE_ADDRESS_MODE_CLAMP, AddressV: D3D12_TEXTURE_ADDRESS_MODE_CLAMP, AddressW: D3D12_TEXTURE_ADDRESS_MODE_CLAMP, MipLODBias: 0.0, MaxAnisotropy: 1, ComparisonFunc: D3D12_COMPARISON_FUNC_NONE, BorderColor: [0.0; 4], MinLOD: 0.0, MaxLOD: 0.0 };
+        let no_mip = D3D12_SAMPLER_DESC { Filter: D3D12_FILTER_MIN_MAG_MIP_LINEAR, AddressU: D3D12_TEXTURE_ADDRESS_MODE_CLAMP, AddressV: D3D12_TEXTURE_ADDRESS_MODE_CLAMP, AddressW: D3D12_TEXTURE_ADDRESS_MODE_CLAMP, MipLODBias: 0.0, MaxAnisotropy: 1, ComparisonFunc: D3D12_COMPARISON_FUNC_NEVER, BorderColor: [0.0; 4], MinLOD: 0.0, MaxLOD: 0.0 };
         let with_mip = D3D12_SAMPLER_DESC { MaxLOD: f32::MAX, ..no_mip };
 
         for (index, sampler) in [&no_mip, &no_mip, &with_mip, &with_mip].into_iter().enumerate() {

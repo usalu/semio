@@ -153,7 +153,7 @@ fn world3d_mesh_vertex_descriptor() -> Retained<MTLVertexDescriptor> {
         normal_attr.setOffset(12);
         normal_attr.setBufferIndex(0);
 
-        let offsets = [0u64, 16, 32, 48, 64, 80];
+        let offsets = [0usize, 16, 32, 48, 64, 80];
         for (slot, offset) in (3..=8).zip(offsets) {
             let attr = attributes.objectAtIndexedSubscript(slot);
             attr.setFormat(MTLVertexFormat::Float4);

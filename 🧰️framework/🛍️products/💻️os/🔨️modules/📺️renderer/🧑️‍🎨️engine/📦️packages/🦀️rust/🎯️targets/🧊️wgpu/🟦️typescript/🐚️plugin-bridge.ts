@@ -14,9 +14,9 @@
  * changing it.
  *
  * Reuse decisions (see `📓️terra-wgpu-web-shard-report.md` for the full write-up):
- * - `ActivationRegistry`/`Effect`/`InvocationResponse`/`PluginManifest`/`SemioFaultError` come from
- *   `@semio-tech/framework` (already a dependency — that package's `🟦️glue.ts` re-exports the whole
- *   kernel + manifest modules).
+ * - `ActivationRegistry`/`Effect`/`InvocationResponse`/`PluginManifest`/`SemioFaultError`/`TurnOutcome`/
+ *   `createTurnOutcomeBroadcast` come from `@semio-tech/framework` (already a dependency — that
+ *   package's `🟦️glue.ts` re-exports the whole kernel + manifest modules).
  * - `AppChannelClient` + the pack/fault codec come from `@semio-tech/framework-os` (NEW dependency
  *   added to this package's `package.json` — a pure sync/protocol package, no React in its import
  *   graph, the same package `PluginRuntime` itself depends on for this exact class).
@@ -36,6 +36,14 @@
  *   not a pointer-move loop), so `submitTurn` below is a plain per-actor promise chain instead — enough
  *   to satisfy the shard worker's "never two turns in flight for one actor" rule without importing
  *   `TurnScheduler` for a guarantee this target doesn't need yet.
+ * - `PluginWasmHandle.enqueue`/`.outcomes` (fire-and-forget + multicast reply stream) is
+ *   `AppChannelClient`'s ONLY accepted handle shape as of channel v12/H1-react — its constructor takes
+ *   `AppChannelHandle = Pick<PluginWasmHandle, "enqueue" | "outcomes">`, not the older synchronous
+ *   request/response `exchange(instanceId, frames) -> Promise<frames>` this file was first ported
+ *   against (that method no longer exists on `PluginWasmHandle` at all — `📌️important.md`'s "Replace,
+ *   never wrap" list). `channelHandle` below builds exactly that `enqueue`/`outcomes` pair on top of
+ *   `submitTurn`, one {@link createTurnOutcomeBroadcast} per `loadPluginModule` call, matching
+ *   `PluginRuntime`'s own `handle`/`turnOutcomes` construction in its `loadPluginModule` line for line.
  *
  * Honest gap: `render` has no wire counterpart any more (channel v12 retired the per-verb
  * `render`/`renderWithDocument` command) — it is rebuilt here on top of a raw `"surface-visible"` turn
@@ -51,11 +59,13 @@
 import {
   ActivationRegistry,
   type ActivationReason,
+  createTurnOutcomeBroadcast,
   type Effect,
   type InvocationResponse,
   type PluginManifest,
   type PluginWasmHandle as KernelPluginWasmHandle,
   SemioFaultError,
+  type TurnOutcome,
 } from "@semio-tech/framework";
 import { AppChannelClient, decodeFaultFromWire, decodePackValue, encodePackValue, faultDisplayMessage } from "@semio-tech/framework-os";
 import { ShardClient, type ShardEventEnvelope } from "../../../../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧵️shard-client.ts";
@@ -238,19 +248,28 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
     return client;
   };
 
-  // 📡️ The raw `exchange`-shaped primitive `AppChannelClient` frames every `AppCommand`/`AppFrame`
-  // through — one `"app-command"` shard event per batched frame, demuxing the resulting turn's
-  // `Effect::SendMessage{Shell}` replies back into frames and stashing everything else as this
-  // instance's leftover effects (`performInvocation` drains them). Mirrors `PluginRuntime`'s own
-  // `KernelPluginWasmHandle.exchange` exactly.
-  const exchangeHandle: Pick<KernelPluginWasmHandle, "exchange"> = {
-    exchange: async (instanceId, frames) => {
+  /** 📤️📥️ Backs `channelHandle.enqueue`/`.outcomes` below — one broadcast per `loadPluginModule` call,
+   * matching the handle's own lifetime: every instance this call's `createApp` ever opens shares it,
+   * and each instance's `AppChannelClient` filters to its own `instanceId` (`pumpOutcomes`'s own doc in
+   * `💻️os/🟦️component.ts`). Mirrors `PluginRuntime`'s own `turnOutcomes`/`loadPluginModule` exactly. */
+  const turnOutcomes = createTurnOutcomeBroadcast<TurnOutcome>();
+
+  /** 🔀️ Frames every `AppCommand`/`AppFrame` `AppChannelClient` sends through — one `"app-command"`
+   * shard event per batched frame, demuxing the resulting turn's `Effect::SendMessage{Shell}` replies
+   * back into frames and stashing everything else as this instance's leftover effects
+   * (`performInvocation` drains them) — pushed onto {@link turnOutcomes} instead of returned, since
+   * `PluginWasmHandle.enqueue` is fire-and-forget (channel v12/H1-react retired the old synchronous
+   * `exchange(instanceId, frames) -> Promise<frames>` RPC shape this file was first ported against). A
+   * turn-submission failure becomes an `error`-shaped outcome rather than an uncaught rejection, since
+   * nothing here awaits this function's own promise. Mirrors `PluginRuntime`'s own `runQueuedTurn`. */
+  const runQueuedTurn = async (instanceId: number, events: readonly Uint8Array[]): Promise<void> => {
+    try {
       const actorId = requireActorId(instanceId);
-      const events: ShardEventEnvelope[] = frames.map((frame) => {
+      const shardEvents: ShardEventEnvelope[] = events.map((frame) => {
         eventSeq += 1;
         return { kind: "app-command", payload: { instance: instanceId, seq: eventSeq, command: Array.from(frame) } };
       });
-      const result = await submitTurn(actorId, events);
+      const result = await submitTurn(actorId, shardEvents);
       const outFrames: Uint8Array[] = [];
       const leftover: WireVariant[] = [];
       for (const effect of result.effects) {
@@ -260,8 +279,17 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
       }
       pendingTurnEffects.set(instanceId, leftover);
       if (result.uiPatches.length > 0) applyRetainedWindowPatches(actorId, result.uiPatches);
-      return outFrames;
+      turnOutcomes.push({ instanceId, frames: outFrames });
+    } catch (error) {
+      turnOutcomes.push({ instanceId, error });
+    }
+  };
+
+  const channelHandle: Pick<KernelPluginWasmHandle, "enqueue" | "outcomes"> = {
+    enqueue: (instanceId, events) => {
+      void runQueuedTurn(instanceId, events);
     },
+    outcomes: turnOutcomes.stream,
   };
 
   return {
@@ -275,12 +303,16 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
       await registry.activate(pluginId, actorId, "manual" satisfies ActivationReason);
       eventSeq += 1;
       await submitTurn(actorId, [{ kind: "instance-open", payload: { instance: instanceId, appId, actor: "local", config: [], assets: [], capabilities: [], quotas: Array.from(encodePackValue({})) } }]);
-      channelByInstance.set(instanceId, new AppChannelClient(exchangeHandle, instanceId, appId, "local"));
+      channelByInstance.set(instanceId, new AppChannelClient(channelHandle, instanceId, appId, "local"));
       return instanceId;
     },
     destroyApp: async (instanceId) => {
       const actorId = actorIdByInstance.get(instanceId);
       if (!actorId) return;
+      // 🔌️ Ends this instance's channel's own outcome subscription BEFORE dropping it — otherwise it
+      // leaks a live subscriber against `turnOutcomes` for the rest of this `loadPluginModule` call's
+      // lifetime (`AppChannelClient.dispose`'s own doc; mirrors `PluginRuntime`'s `adaptPluginHandle`).
+      channelByInstance.get(instanceId)?.dispose();
       actorIdByInstance.delete(instanceId);
       channelByInstance.delete(instanceId);
       retainedWindowByActor.delete(actorId);
@@ -292,12 +324,14 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
     render: (instanceId) => performRender(requireActorId(instanceId), instanceId),
     contextMenu: (instanceId, request) => requireChannel(instanceId).contextMenu(request),
     dispose: () => {
+      for (const instanceId of channelByInstance.keys()) channelByInstance.get(instanceId)?.dispose();
       for (const actorId of actorIdByInstance.values()) {
         retainedWindowByActor.delete(actorId);
         shardClient.dispose(actorId);
       }
       actorIdByInstance.clear();
       channelByInstance.clear();
+      turnOutcomes.complete();
     },
   };
 }

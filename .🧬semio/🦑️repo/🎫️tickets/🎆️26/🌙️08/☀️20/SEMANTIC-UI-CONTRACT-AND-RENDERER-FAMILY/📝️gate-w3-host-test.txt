@@ -1,0 +1,196 @@
+   Compiling semio-framework-ui-backend-metal v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🖼️render/🎯️targets/🍎️metal/📦️packages/🦀️rust)
+warning: unnecessary qualification
+  --> 🧰️framework/🔨️modules/🖱️ui/🖼️render/🎯️targets/🍎️metal/📦️packages/🦀️rust/🦀️pipelines.rs:52:35
+   |
+52 |         instance_layout.setStride(std::mem::size_of::<QuadInstance>() as _);
+   |                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+   |
+52 -         instance_layout.setStride(std::mem::size_of::<QuadInstance>() as _);
+52 +         instance_layout.setStride(size_of::<QuadInstance>() as _);
+   |
+
+warning: unnecessary qualification
+  --> 🧰️framework/🔨️modules/🖱️ui/🖼️render/🎯️targets/🍎️metal/📦️packages/🦀️rust/🦀️pipelines.rs:87:26
+   |
+87 |         layout.setStride(std::mem::size_of::<VectorVertex>() as _);
+   |                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+87 -         layout.setStride(std::mem::size_of::<VectorVertex>() as _);
+87 +         layout.setStride(size_of::<VectorVertex>() as _);
+   |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🔨️modules/🖱️ui/🖼️render/🎯️targets/🍎️metal/📦️packages/🦀️rust/🦀️pipelines.rs:111:35
+    |
+111 |         instance_layout.setStride(std::mem::size_of::<GlassInstance>() as _);
+    |                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+111 -         instance_layout.setStride(std::mem::size_of::<GlassInstance>() as _);
+111 +         instance_layout.setStride(size_of::<GlassInstance>() as _);
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🔨️modules/🖱️ui/🖼️render/🎯️targets/🍎️metal/📦️packages/🦀️rust/🦀️pipelines.rs:141:33
+    |
+141 |         vertex_layout.setStride(std::mem::size_of::<World3dGpuVertex>() as _);
+    |                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+141 -         vertex_layout.setStride(std::mem::size_of::<World3dGpuVertex>() as _);
+141 +         vertex_layout.setStride(size_of::<World3dGpuVertex>() as _);
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🔨️modules/🖱️ui/🖼️render/🎯️targets/🍎️metal/📦️packages/🦀️rust/🦀️pipelines.rs:144:35
+    |
+144 |         instance_layout.setStride(std::mem::size_of::<World3dGpuInstance>() as _);
+    |                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+144 -         instance_layout.setStride(std::mem::size_of::<World3dGpuInstance>() as _);
+144 +         instance_layout.setStride(size_of::<World3dGpuInstance>() as _);
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🔨️modules/🖱️ui/🖼️render/🎯️targets/🍎️metal/📦️packages/🦀️rust/🦀️pipelines.rs:174:26
+    |
+174 |         layout.setStride(std::mem::size_of::<WorldLineGpuVertex>() as _);
+    |                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+174 -         layout.setStride(std::mem::size_of::<WorldLineGpuVertex>() as _);
+174 +         layout.setStride(size_of::<WorldLineGpuVertex>() as _);
+    |
+
+warning: unnecessary qualification
+  --> 🧰️framework/🔨️modules/🖱️ui/🖼️render/🎯️targets/🍎️metal/📦️packages/🦀️rust/🦀️world3d.rs:82:107
+   |
+82 | ...t WorldGlobalsGpu).cast::<u8>(), destination, std::mem::size_of::<WorldGlobalsGpu>());
+   |                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+82 -                 std::ptr::copy_nonoverlapping((slot as *const WorldGlobalsGpu).cast::<u8>(), destination, std::mem::size_of::<WorldGlobalsGpu>());
+82 +                 std::ptr::copy_nonoverlapping((slot as *const WorldGlobalsGpu).cast::<u8>(), destination, size_of::<WorldGlobalsGpu>());
+   |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🔨️modules/🖱️ui/🖼️render/🎯️targets/🍎️metal/📦️packages/🦀️rust/🦀️world3d.rs:135:27
+    |
+135 |     let instance_stride = std::mem::size_of::<World3dGpuInstance>();
+    |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+135 -     let instance_stride = std::mem::size_of::<World3dGpuInstance>();
+135 +     let instance_stride = size_of::<World3dGpuInstance>();
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🔨️modules/🖱️ui/🖼️render/🎯️targets/🍎️metal/📦️packages/🦀️rust/🦀️world3d.rs:136:23
+    |
+136 |     let line_stride = std::mem::size_of::<WorldLineGpuVertex>();
+    |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+136 -     let line_stride = std::mem::size_of::<WorldLineGpuVertex>();
+136 +     let line_stride = size_of::<WorldLineGpuVertex>();
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🔨️modules/🖱️ui/🖼️render/🎯️targets/🍎️metal/📦️packages/🦀️rust/🦀️backend.rs:475:23
+    |
+475 |     let quad_stride = std::mem::size_of::<ui_render::QuadInstance>();
+    |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+475 -     let quad_stride = std::mem::size_of::<ui_render::QuadInstance>();
+475 +     let quad_stride = size_of::<ui_render::QuadInstance>();
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🔨️modules/🖱️ui/🖼️render/🎯️targets/🍎️metal/📦️packages/🦀️rust/🦀️backend.rs:476:25
+    |
+476 |     let vector_stride = std::mem::size_of::<ui_render::VectorVertex>();
+    |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+476 -     let vector_stride = std::mem::size_of::<ui_render::VectorVertex>();
+476 +     let vector_stride = size_of::<ui_render::VectorVertex>();
+    |
+
+warning: field `surface_format` is never read
+  --> 🧰️framework/🔨️modules/🖱️ui/🖼️render/🎯️targets/🍎️metal/📦️packages/🦀️rust/🦀️backend.rs:89:5
+   |
+83 | pub struct MetalBackend {
+   |            ------------ field in this struct
+...
+89 |     surface_format: MTLPixelFormat,
+   |     ^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `format` is never used
+  --> 🧰️framework/🔨️modules/🖱️ui/🖼️render/🎯️targets/🍎️metal/📦️packages/🦀️rust/🦀️scene_target.rs:86:12
+   |
+40 | impl SceneTarget {
+   | ---------------- method in this implementation
+...
+86 |     pub fn format(&self) -> MTLPixelFormat {
+   |            ^^^^^^
+
+   Compiling semio-framework-ui-host v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🖥️host/📦️packages/🦀️rust)
+warning: `semio-framework-ui-backend-metal` (lib) generated 13 warnings (run `cargo fix --lib -p semio-framework-ui-backend-metal` to apply 11 suggestions)
+    Finished `test` profile [unoptimized] target(s) in 1.31s
+     Running unittests 📦️glue.rs (target/debug/deps/semio_framework_ui_host-b259efb073deaf96)
+
+running 27 tests
+test event::tests::buttons_outside_the_closed_set_map_to_none ... ok
+test event::tests::ime_disabled_maps_to_cancel ... ok
+test event::tests::native_and_web_agree_on_the_same_physical_key ... ok
+test event::tests::native_and_web_button_mappings_agree_where_both_define_a_button ... ok
+test event::tests::named_keys_map_to_their_dom_key_string ... ok
+test event::tests::a_mouse_and_a_touch_on_the_same_device_stay_distinct ... ok
+test event::tests::ime_preedit_with_no_cursor_range_falls_back_to_text_end ... ok
+test event::tests::native_line_delta_scales_by_line_height ... ok
+test event::tests::native_modifiers_map_every_flag ... ok
+test event::tests::native_pixel_delta_passes_through ... ok
+test event::tests::physical_vs_logical_key_mapping_stays_distinct_across_layouts ... ok
+test event::tests::two_simultaneous_touches_on_the_same_device_stay_distinct ... ok
+test event::tests::unidentified_physical_key_degrades_cleanly ... ok
+test event::tests::web_line_mode_scales_by_line_height ... ok
+test event::tests::web_modifiers_are_a_plain_copy ... ok
+test event::tests::web_page_mode_scales_by_viewport ... ok
+test event::tests::web_pixel_mode_passes_through ... ok
+test event::tests::web_pointer_ids_are_used_verbatim_and_stay_distinct ... ok
+test window::tests::a_clean_window_never_requests_a_redraw ... ok
+test window::tests::a_dirty_window_requests_exactly_one_redraw ... ok
+test window::tests::a_due_deadline_requests_exactly_one_redraw ... ok
+test window::tests::a_pending_deadline_waits_until_a_specific_instant ... ok
+test window::tests::a_zero_scale_factor_parks_instead_of_dividing_by_zero ... ok
+test window::tests::cursor_css_names_match_the_standard_css_keywords ... ok
+test window::tests::every_cursor_request_maps_to_a_distinct_icon ... ok
+test window::tests::no_deadline_waits_indefinitely ... ok
+test window::tests::scale_factor_change_produces_the_right_logical_metrics ... ok
+
+test result: ok. 27 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests semio_framework_ui_host
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

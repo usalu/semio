@@ -14,7 +14,7 @@
 //! always the glyph atlas, index 1 is always the icon atlas, and raster textures take indices `2..`
 //! from a free list. This heap never binds to a draw call directly (D3D12 draws read from a *shader-
 //! visible* heap); instead `🦀️frame_buffers.rs::FrameDescriptors` `CopyDescriptorsSimple`s the pair a
-/// given batch needs into a fresh per-frame slot before that batch's draw — see that file's header for
+//! given batch needs into a fresh per-frame slot before that batch's draw — see that file's header for
 //! why a fresh slot per draw (not an in-place overwrite of a shared slot) is the correctness-critical
 //! part of this design. `heap` doubles in `NumDescriptors` (never shrinks) exactly like Metal's/wgpu's
 //! `GrowBuffer` growth policy, just applied to a descriptor count instead of a byte count; growing
@@ -221,6 +221,15 @@ pub struct GpuResources {
     upload_list: ID3D12GraphicsCommandList,
     upload_fence: ID3D12Fence,
     upload_fence_value: u64,
+    /// ⚠️ Staging buffers `record_texture_upload` creates, kept alive until `execute_and_wait`
+    /// confirms the GPU has finished the copy that reads them. **Load-bearing, not bookkeeping**: a
+    /// D3D12 command list only *records* work — a resource referenced by a not-yet-executed
+    /// `CopyTextureRegion` must stay alive until the GPU actually runs it (D3D12 does not do this for
+    /// you the way some higher-level APIs do), so a staging buffer dropped immediately after
+    /// `record_texture_upload` returns (before `apply`'s `Close`/`ExecuteCommandLists`/fence-wait ever
+    /// run) would `Release` the underlying COM object — and free the memory — while a GPU command
+    /// still names it. Cleared only after `execute_and_wait` confirms completion.
+    pending_staging: Vec<ID3D12Resource>,
 }
 
 impl GpuResources {
@@ -251,7 +260,7 @@ impl GpuResources {
         table.write(device, GLYPH_SLOT, glyph_dummy, DXGI_FORMAT_R8_UNORM);
         table.write(device, ICON_SLOT, icon_dummy, DXGI_FORMAT_R8G8B8A8_UNORM);
 
-        Self { table, raster_slot: HashMap::new(), meshes: HashMap::new(), known_textures: HashSet::new(), known_meshes: HashSet::new(), known_atlases: HashSet::new(), upload_allocator, upload_list, upload_fence, upload_fence_value: 0 }
+        Self { table, raster_slot: HashMap::new(), meshes: HashMap::new(), known_textures: HashSet::new(), known_meshes: HashSet::new(), known_atlases: HashSet::new(), upload_allocator, upload_list, upload_fence, upload_fence_value: 0, pending_staging: Vec::new() }
     }
 
     /// 🔚️ Closes and (via `apply`'s own queue-execute-wait cycle) never-executed construction-time
@@ -265,6 +274,9 @@ impl GpuResources {
         self.reopen_upload_list();
     }
 
+    /// ⏱️ Executes and blocks until the GPU confirms completion, then drops every staging buffer
+    /// `record_texture_upload` accumulated into `pending_staging` — only now is it sound to release
+    /// them (see that field's doc comment).
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn execute_and_wait(&mut self, queue: &ID3D12CommandQueue) {
         let list: ID3D12CommandList = self.upload_list.cast().expect("ID3D12GraphicsCommandList always casts to its ID3D12CommandList base");
@@ -273,6 +285,7 @@ impl GpuResources {
         self.upload_fence_value += 1;
         unsafe { queue.Signal(&self.upload_fence, self.upload_fence_value) }.expect("d3d12 backend: failed to signal the upload fence");
         wait_for_fence_value(&self.upload_fence, self.upload_fence_value);
+        self.pending_staging.clear();
     }
 
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
@@ -422,17 +435,22 @@ impl GpuResources {
                 Anonymous: D3D12_TEXTURE_COPY_LOCATION_0 { PlacedFootprint: D3D12_PLACED_SUBRESOURCE_FOOTPRINT { Offset: 0, Footprint: D3D12_SUBRESOURCE_FOOTPRINT { Format: format, Width: width, Height: height, Depth: 1, RowPitch: row_pitch } } },
             };
             let dst_location = D3D12_TEXTURE_COPY_LOCATION { pResource: std::mem::ManuallyDrop::new(Some(unsafe { std::mem::transmute_copy(&texture) })), Type: D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX, Anonymous: D3D12_TEXTURE_COPY_LOCATION_0 { SubresourceIndex: 0 } };
-            // 🔓️ SAFETY: `src_location`/`dst_location` borrow `staging`/`texture` (both alive for this
-            // whole function) via the same transmute-copy-without-`AddRef` technique
-            // `crate::types::transition_barrier` documents — sound because both locations are consumed
-            // synchronously by `CopyTextureRegion` and then dropped as plain stack values (never
-            // `ManuallyDrop::into_inner`'d), so their `Drop` never runs and never mismatches the
-            // missing `AddRef`. `staging`'s row-padded bytes match `Footprint` exactly by construction
-            // above (`row_pitch`/`width`/`height` all derive from the same values).
+            // 🔓️ SAFETY: `src_location`/`dst_location` borrow `staging`/`texture` via the same
+            // transmute-copy-without-`AddRef` technique `crate::types::transition_barrier` documents —
+            // sound because both *locations* are consumed synchronously by `CopyTextureRegion` and then
+            // dropped as plain stack values (never `ManuallyDrop::into_inner`'d), so their `Drop` never
+            // runs and never mismatches the missing `AddRef`. This says nothing about `staging`/
+            // `texture` *themselves* staying alive long enough for the GPU to actually execute the
+            // command that references them — that is a separate, load-bearing requirement `self.
+            // pending_staging.push(staging)` below satisfies (see that field's doc comment); `texture`
+            // is kept alive by its caller (`upload_atlas`/`upload_texture` hand it to `ResidentSrvTable::
+            // write`, which stores it). `staging`'s row-padded bytes match `Footprint` exactly by
+            // construction above (`row_pitch`/`width`/`height` all derive from the same values).
             unsafe {
                 self.upload_list.CopyTextureRegion(&dst_location, 0, 0, 0, &src_location, None);
                 self.upload_list.ResourceBarrier(&[transition_barrier(&texture, 0, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE)]);
             }
+            self.pending_staging.push(staging);
         } else {
             unsafe { self.upload_list.ResourceBarrier(&[transition_barrier(&texture, 0, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE)]) };
         }

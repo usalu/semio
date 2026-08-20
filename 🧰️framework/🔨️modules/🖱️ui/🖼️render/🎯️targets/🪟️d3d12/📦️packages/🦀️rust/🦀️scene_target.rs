@@ -59,13 +59,15 @@ impl SceneTarget {
 
     /// 🔁️ Recreates both textures (and their RTV/SRV descriptors) only when the requested size
     /// actually changed — mirrors `SceneColorTarget::ensure`'s/Metal's `SceneTarget::ensure`'s early
-    /// return.
+    /// return. Returns whether a recreation happened, so `D3d12Backend` knows whether to reset its own
+    /// per-mip resource-state tracking (a fresh texture is always born in `RENDER_TARGET`; an unchanged
+    /// one keeps whatever state the last frame left it in).
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    pub fn ensure(&mut self, device: &Device, width: u32, height: u32) {
+    pub fn ensure(&mut self, device: &Device, width: u32, height: u32) -> bool {
         let width = width.max(1);
         let height = height.max(1);
         if self.width == width && self.height == height {
-            return;
+            return false;
         }
         self.texture = allocate(device, self.format, width, height, "scene_color");
         self.blur_scratch = allocate(device, self.format, width, height, "scene_blur_scratch");
@@ -73,6 +75,7 @@ impl SceneTarget {
         self.srv_heap = build_srv_heap(device, &self.texture, &self.blur_scratch, self.format);
         self.width = width;
         self.height = height;
+        true
     }
 
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md

@@ -6692,6 +6692,7 @@ dependencies = [
  "semio-framework-mesh-engine",
  "semio-framework-os-kernel",
  "semio-framework-ui",
+ "semio-framework-ui-contract",
  "serde",
  "serde_json",
  "thiserror 2.0.18",
@@ -6803,6 +6804,7 @@ dependencies = [
  "semio-framework-geometry",
  "semio-framework-os-kernel",
  "semio-framework-os-kernel-neural-engine",
+ "semio-framework-ui-contract",
  "serde",
  "serde_json",
  "thiserror 2.0.18",
@@ -7169,6 +7171,8 @@ dependencies = [
  "semio-framework-os-kernel",
  "semio-framework-schema",
  "semio-framework-ui",
+ "semio-framework-ui-contract",
+ "semio-framework-ui-runtime",
  "serde",
  "serde_json",
  "thiserror 2.0.18",
@@ -7180,6 +7184,7 @@ name = "semio-framework-plugin-describe"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
+ "semio-framework-async",
  "semio-framework-async-macros",
  "semio-framework-os-kernel",
  "serde_json",
@@ -7203,6 +7208,7 @@ dependencies = [
  "serde",
  "serde_json",
  "thiserror 2.0.18",
+ "tokio",
  "wasmtime",
  "wasmtime-wasi",
  "wit-parser 0.252.0",
@@ -7323,6 +7329,7 @@ dependencies = [
 name = "semio-framework-ui-backend-d3d12"
 version = "0.1.0"
 dependencies = [
+ "bytemuck",
  "raw-window-handle",
  "semio-framework-ui-render",
  "windows 0.62.2",
@@ -7348,6 +7355,7 @@ version = "0.1.0"
 dependencies = [
  "ash",
  "ash-window",
+ "bytemuck",
  "raw-window-handle",
  "semio-framework-ui-render",
 ]
@@ -8406,6 +8414,7 @@ dependencies = [
  "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-framework-schema",
+ "semio-framework-ui-contract",
  "serde",
  "serde_json",
  "thiserror 2.0.18",

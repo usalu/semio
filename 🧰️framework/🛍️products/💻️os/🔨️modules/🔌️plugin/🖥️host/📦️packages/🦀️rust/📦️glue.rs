@@ -12,8 +12,8 @@ extern crate semio_framework_os_kernel as protocol;
 mod component;
 pub use component::*;
 
-/// 🧪️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (async-worlds): the `world actor`/`world actor-async`
-/// contract-parity test — mounted here rather than inside `🦀️component.rs` (other packets are live
+/// 🧪️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (B1 world-collapse): the one world's contract-parity
+/// test (effect ↔ host-async import parity, plus the collapsed shape itself) — mounted here rather than inside `🦀️component.rs` (other packets are live
 /// in that file). `#[cfg(test)]`-gated so `wit-parser` (this crate's `[dev-dependencies]` pin) never
 /// enters a non-test build.
 #[cfg(test)]

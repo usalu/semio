@@ -10,7 +10,7 @@
 //! its `blocks`/`description` JSON-encoded into params, sequential `FlowEdge`s witnessing step
 //! order) — see `🔖️ContentBridge` below.
 
-use semio_framework_plugin::{ArtifactKindSpec, Dialect, EditorApp, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
+use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocRun, SemioDocumentSnapshot, STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::{
@@ -312,21 +312,23 @@ pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, 
     Ok(definition)
 }
 
-pub async fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
-    semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
-        .schema(crate::artifacts::playbook::schema::playbook_artifact_schema_descriptor())
-        .inferences([crate::artifacts::playbook::standards::v1::subsets::any::schema::inferences::playbook_artifact_inference_descriptor()])
-        .composers(crate::artifacts::playbook::standards::v1::subsets::any::io::io_registry::entries())
-        .languages(pilot_languages())
-        .document_codec::<EditorApp<crate::editor::playbook::PlaybookPlayApp>>()
-        .try_build()
+/// 🌳️ This artifact's declaration tree root (ticket `26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-
+/// RUNTIME`, `terra-descriptors` packet, following the `terra-fleet-trinity-recipe` recipe) —
+/// replaces the old `declaration()` (`ArtifactDeclaration::builder(...).schema(...).inferences(...)
+/// .composers(...).languages(...).document_codec(...)` chain, deleted outright, no dual channel) as
+/// the ONLY registration channel for schema/io/viewer/editor rows. `definition()` (old
+/// `ArtifactDefinition`/capability rows, above) is kept per debt D1.
+pub async fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration {
+    use semio_framework_plugin::app::declarations::ArtifactDeclaration;
+    use store::os_io::ArtifactKindId;
+    ArtifactDeclaration { kind: ArtifactKindId::parse("s.playbook.playbook").expect("canonical playbook kind"), localization: &[], standards: vec![crate::artifacts::playbook::standards::v1::standard()] }
 }
 
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
 /// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`. Private:
 /// `declaration()` above is its only caller (moved here with it from `⚙️engine`, ticket
 /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE reloc-g7 — kept unexported, not widened).
-async fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+pub async fn pilot_languages() -> &'static [dsl::LanguageSpec] {
     static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
         .get_or_init(|| {

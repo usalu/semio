@@ -29,10 +29,17 @@
 //! into an in-flight turn's own `Store`). A poll-world job that awaited a host effect would park on
 //! a `RequestFuture` whose resolution only ever happens inside `poll`'s `Event::Completed` routing
 //! — which that relay loop never calls again for this job — so the loop would spin on `Running`
-//! forever. `world actor-async`'s `runner::run` has no such gap (the host interleaves completions
-//! into the same long-lived call), which is exactly why this accessor is scoped to that world's
-//! guest feature. Poll-world jobs therefore receive every input they need up front, in `input`/
+//! forever. Poll-world jobs therefore receive every input they need up front, in `input`/
 //! `restored`, and drive it through `JobCtx::tick()` alone.
+//!
+//! 🧬️ B1 world-collapse OPEN QUESTION (raised, deliberately NOT resolved here — see
+//! `📓️terra-world-collapse-report.md`): the gate's stated justification was "the OTHER world's
+//! `runner::run` has no such gap", and that world no longer exists. The gap itself is unchanged —
+//! it is a property of `run_job_to_completion`'s relay loop, not of the WIT — so the gate is still
+//! CORRECT today. But a job stepped through the collapsed world's `async` `step-job` export CAN now
+//! suspend on a `host-async` import, so whether the gate may be relaxed depends on whether the
+//! host's relay re-pumps in a way that lets a parked host-await resolve. That needs measuring, not
+//! assuming; it is a latent behaviour question, invisible to the compiler either way.
 //!
 //! ## Stall guard
 //! If `step_job` returns `Running` with no progress bytes AND the caller passed the SAME

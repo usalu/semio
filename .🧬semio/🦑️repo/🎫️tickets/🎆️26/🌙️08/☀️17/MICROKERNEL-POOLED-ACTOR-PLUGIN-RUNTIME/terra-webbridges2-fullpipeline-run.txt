@@ -1,0 +1,40 @@
+[DEBUG] vendored preview2-shim OK
+
+  Transpiled JS Component Files:
+
+ - /Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/terra-webbridges2-fullpipeline-out/scalefixture2/interfaces/semio-framework-capabilities.d.ts  0.63 KiB
+ - /Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/terra-webbridges2-fullpipeline-out/scalefixture2/interfaces/semio-framework-checkpoint.d.ts    0.24 KiB
+ - /Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/terra-webbridges2-fullpipeline-out/scalefixture2/interfaces/semio-framework-describe.d.ts       0.1 KiB
+ - /Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/terra-webbridges2-fullpipeline-out/scalefixture2/interfaces/semio-framework-effects.d.ts       11.2 KiB
+ - /Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/terra-webbridges2-fullpipeline-out/scalefixture2/interfaces/semio-framework-events.d.ts        5.36 KiB
+ - /Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/terra-webbridges2-fullpipeline-out/scalefixture2/interfaces/semio-framework-jobs.d.ts          0.69 KiB
+ - /Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/terra-webbridges2-fullpipeline-out/scalefixture2/interfaces/semio-framework-pure.d.ts          0.08 KiB
+ - /Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/terra-webbridges2-fullpipeline-out/scalefixture2/interfaces/semio-framework-reactor.d.ts       1.04 KiB
+ - /Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/terra-webbridges2-fullpipeline-out/scalefixture2/interfaces/semio-framework-types.d.ts         0.84 KiB
+ - /Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/terra-webbridges2-fullpipeline-out/scalefixture2/interfaces/semio-framework-ui.d.ts            1.18 KiB
+ - /Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/terra-webbridges2-fullpipeline-out/scalefixture2/interfaces/wasi-cli-environment.d.ts          0.11 KiB
+ - /Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/terra-webbridges2-fullpipeline-out/scalefixture2/interfaces/wasi-cli-exit.d.ts                 0.17 KiB
+ - /Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/terra-webbridges2-fullpipeline-out/scalefixture2/interfaces/wasi-cli-stderr.d.ts               0.16 KiB
+ - /Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/terra-webbridges2-fullpipeline-out/scalefixture2/interfaces/wasi-cli-stdin.d.ts                0.15 KiB
+ - /Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/terra-webbridges2-fullpipeline-out/scalefixture2/interfaces/wasi-cli-stdout.d.ts               0.16 KiB
+ - /Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/terra-webbridges2-fullpipeline-out/scalefixture2/interfaces/wasi-cli-terminal-input.d.ts       0.17 KiB
+ - /Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/terra-webbridges2-fullpipeline-out/scalefixture2/interfaces/wasi-cli-terminal-output.d.ts      0.17 KiB
+ - /Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/terra-webbridges2-fullpipeline-out/scalefixture2/interfaces/wasi-cli-terminal-stderr.d.ts       0.2 KiB
+ - /Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/terra-webbridges2-fullpipeline-out/scalefixture2/interfaces/wasi-cli-terminal-stdin.d.ts        0.2 KiB
+ - /Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/terra-webbridges2-fullpipeline-out/scalefixture2/interfaces/wasi-cli-terminal-stdout.d.ts       0.2 KiB
+ - /Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/terra-webbridges2-fullpipeline-out/scalefixture2/interfaces/wasi-clocks-monotonic-clock.d.ts   0.21 KiB
+ - /Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/terra-webbridges2-fullpipeline-out/scalefixture2/interfaces/wasi-io-error.d.ts                 0.15 KiB
+ - /Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/terra-webbridges2-fullpipeline-out/scalefixture2/interfaces/wasi-io-poll.d.ts                  0.23 KiB
+ - /Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/terra-webbridges2-fullpipeline-out/scalefixture2/interfaces/wasi-io-streams.d.ts               0.73 KiB
+ - /Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/terra-webbridges2-fullpipeline-out/scalefixture2/interfaces/wasi-random-insecure-seed.d.ts     0.11 KiB
+ - /Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/terra-webbridges2-fullpipeline-out/scalefixture2/scalefixture2.core.wasm                        240 KiB
+ - /Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/terra-webbridges2-fullpipeline-out/scalefixture2/scalefixture2.d.ts                            2.92 KiB
+ - /Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/terra-webbridges2-fullpipeline-out/scalefixture2/scalefixture2.js                               346 KiB
+
+[DEBUG] transpilePluginComponent (REAL function, REAL --map flags) OK
+[DEBUG] wrote real generated 🟨️host-shim.js + bridge.js next to real transpiled output
+[DEBUG] confirmed: no bare preview2-shim specifiers remain in transpiled output
+[DEBUG] confirmed: real transpiled output exports reactor/jobs/checkpoint/describe exactly as pluginComponentBridgeSource assumes
+[DEBUG] 🟨️host-shim.js parses as valid JS
+[DEBUG] bridge.js parses as valid JS
+ALL CHECKS PASS

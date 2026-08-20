@@ -20,6 +20,7 @@ default = []
 backend-testing = ["ui_render/backend-testing"]
 
 [dependencies]
+bytemuck = { version = "1.24.0", features = ["derive"] }
 ui_render = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-ui-render" }
 
 [target.'cfg(target_os = "linux")'.dependencies]

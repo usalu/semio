@@ -54,8 +54,14 @@ pub mod guest {
 
     pub struct FixtureGuest;
 
+    // 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (B1 world-collapse): every `Guest` method mirrors
+    // the WIT's `async func` — `world actor`'s seven exports all went async together when it gained
+    // its `host-async` import (a sync export is uncallable on the async-configured host Store, S7).
+    // None of these bodies actually suspends: this fixture is pure in-memory profile bookkeeping and
+    // calls no `host-async` import at all, which is deliberate — the bench measures the RUNTIME, so
+    // the guest must not add work of its own.
     impl ReactorGuest for FixtureGuest {
-        fn poll(events: Vec<WitEvent>, budget: WitBudget) -> Result<WitTurnResult, PluginError> {
+        async fn poll(events: Vec<WitEvent>, budget: WitBudget) -> Result<WitTurnResult, PluginError> {
             for event in events {
                 match event {
                     WitEvent::InstanceOpen(open) => profile::on_instance_open(&open.config),
@@ -119,35 +125,35 @@ pub mod guest {
     }
 
     impl JobsGuest for FixtureGuest {
-        fn start_job(job: u64, kind: String, input: Vec<u8>) -> Result<(), PluginError> {
+        async fn start_job(job: u64, kind: String, input: Vec<u8>) -> Result<(), PluginError> {
             profile::jobs::start_job(job, &kind, input);
             Ok(())
         }
 
-        fn step_job(job: u64, _budget: JobBudget) -> Result<JobStep, PluginError> {
+        async fn step_job(job: u64, _budget: JobBudget) -> Result<JobStep, PluginError> {
             Ok(match profile::jobs::step_job(job) {
                 profile::jobs::JobOutcome::Done(bytes) => JobStep::Done(bytes),
                 profile::jobs::JobOutcome::Failed(bytes) => JobStep::Failed(bytes),
             })
         }
 
-        fn cancel_job(job: u64) {
+        async fn cancel_job(job: u64) {
             profile::jobs::cancel_job(job);
         }
     }
 
     impl CheckpointGuest for FixtureGuest {
-        fn checkpoint() -> Result<Vec<u8>, PluginError> {
+        async fn checkpoint() -> Result<Vec<u8>, PluginError> {
             profile::checkpoint().map_err(|message| PluginError::Fault(message.into_bytes()))
         }
 
-        fn restore(state: Vec<u8>) -> Result<(), PluginError> {
+        async fn restore(state: Vec<u8>) -> Result<(), PluginError> {
             profile::restore(&state).map_err(|message| PluginError::Fault(message.into_bytes()))
         }
     }
 
     impl DescribeGuest for FixtureGuest {
-        fn describe() -> Vec<u8> {
+        async fn describe() -> Vec<u8> {
             // 🚧️ Placeholder — a real packed `PackageDescriptor` is packet E1-describe's job. F1
             // only proves `reactor`/`jobs`/`checkpoint`/`describe` are wired and the crate builds
             // for `wasm32-wasip2`; nothing in this ticket's V1 bench reads this actor's `describe()`

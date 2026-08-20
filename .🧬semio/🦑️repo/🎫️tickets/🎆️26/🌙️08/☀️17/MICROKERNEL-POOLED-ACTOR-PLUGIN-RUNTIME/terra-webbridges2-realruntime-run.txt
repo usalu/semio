@@ -1,0 +1,4 @@
+[DEBUG] bridge.js imported OK, createActorApi = function
+[DEBUG] createActorApi() resolved OK, api keys = cancelJob,checkpoint,describe,poll,rejectEffect,resolveEffect,restore,startJob,stepJob
+[DEBUG] api.describe() resolved OK, byteLength = 0 isUint8Array = true
+ALL RUNTIME CHECKS PASS

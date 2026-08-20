@@ -219,3 +219,130 @@ Not modified: the 48 stale bridge artifacts (explicitly out of scope — needs a
 the `🔌️jcoprobe` fixture (read-only, copied into a scratch dir for the browser verification, never
 written to); `.claude/launch.json` (registrar-only, not touched — the verification server was run
 directly and opened in the Browser pane via `preview_start`'s `url` form instead).
+
+---
+
+## 🔁 Re-run (2026-08-20, post-world-collapse): re-verified, ZERO code changes needed, and one prior "unproven" gap closed with a real production-namespace component
+
+Invoked again as `terra-web-bridges` after `world-collapse` landed. **`git status` on the owned path
+was empty before I touched anything** — the change above was already committed
+(`🌐plugin-web-materialize.ts`, `git log` shows it at commit `5e7b8046be`) — so this session is a
+re-verification against the now-landed collapsed world, not a re-implementation. All four TASK items
+were re-checked against the CURRENT `component.wit`, not re-derived from the report above:
+
+1. **Transpile flags + `--map` pair** — unchanged, still correct: `component.wit`'s `world actor` still
+   declares exactly `import pure; import host-async; export reactor; export jobs; export checkpoint;
+   export describe;`, matching what `transpilePluginComponent`/`transpilePluginComponentAsync` already
+   emit.
+2. **`hostShimSource()`'s `host-async` surface** — re-diffed line-by-line against `component.wit`'s
+   `interface host-async` (:957-1023): all 24 `async func` imports present with matching kebab→camel
+   names (`storage-read`→`storageRead` … `spawn-job`→`spawnJob`), plus `emit`/`emit-patch` as plain
+   (non-async) fire-and-forget doors. **Interface names did NOT change to `jobs-async`/
+   `checkpoint-async`** — the jco-spike report's item 5 contingency (flagged as a possible future
+   follow-up) never materialized; `reactor`/`jobs`/`checkpoint`/`describe` are still the real names.
+3. **Bridge regeneration (48 stale artifacts)** — see below: still genuinely blocked on a real fleet
+   build, confirmed freshly, but with much stronger evidence than before that the generator itself is
+   ready the moment that build exists.
+4. **`vite.config.ts` `_shard` entry** — still present (`pluginModuleDirNames` line 69), landed by a
+   sibling packet (`wgpu-web-shard`, not this one) between the two sessions. Confirmed by direct read,
+   not assumed from the earlier audit.
+
+### The stale-bridge count, verified fresh (not copied from `luna-web-state.md`)
+
+```
+$ find …/🧑️‍💻️dev/{🔌️plugin-modules,🔌️extension-modules} -iname 🟨️host-shim.js | wc -l   → 83
+$ find …/🧑️‍💻️dev/{🔌️plugin-modules,🔌️extension-modules} -iname 🟨️plugin-worker.js | wc -l → 70
+$ find …/🧑️‍💻️dev/{🔌️plugin-modules,🔌️extension-modules} -iname 🟨️shard-worker.js | wc -l  → 1  (only the shared _shard/ copy)
+$ find …/🧑️‍💻️dev/{🔌️plugin-modules,🔌️extension-modules} -iname '*.d.ts' | xargs grep -l '^export function exchange' | wc -l → 80
+```
+(83, not luna's 109 — some plugin dirs were evidently pruned between the two audits; not chased
+further, out of this packet's path_scope.) Read one sample in full
+(`🧑️‍💻️dev/🔌️plugin-modules/mathematical/🟨️plugin-worker.js`, 72 lines, pasted into
+`terra-webbridges2-real-transpile-run.txt`'s sibling note below): it is the OLD `pluginWorkerSource`
+output — `createPluginApi`/`api.exchange(instanceId, frames)`/`manifest`/`createApp`, one-Worker-
+per-plugin — genuinely pre-H2, not merely pre-async-worlds. `runSerialized` itself was NOT found by
+string search in either the `🟨️host-shim.js` or `🟨️plugin-worker.js` files (luna's audit named it;
+possibly swept already, or named a related-but-differently-spelled pattern) — reporting what grep
+actually found rather than repeating the unverified string. The `exchange` banned symbol (rule
+"Replace, never wrap") is confirmed still live in 80 `.d.ts` files.
+
+### Why regeneration is still blocked, confirmed by search rather than assumption
+
+`find`'d every `wasm32-wasip2` output directory under the session scratchpad (`target-wasm/`,
+`target-host/`, `target-wu/` and every `🎯️target-*` this ticket has used) for
+`semio_s_plugin_*.wasm` — **zero matches**. No fleet plugin/extension has been built to a wasip2
+component anywhere in this environment yet (`stdio-finish`/fleet-wasm packets are still ahead of that
+point per `status.md`). This packet's TASK explicitly authorizes reporting this rather than faking
+output, and explicitly does not ask a TypeScript-scoped packet to run a 63-crate fleet build itself
+(build-lock contention, R6/`important.md` "Only ONE packet at a time may hold a cargo build" —
+correctly owned by the fleet packets, not this one).
+
+### New evidence: the FIRST real proof against a production-namespace, genuinely-collapsed-world component
+
+The prior report's honest gaps list included two items now closed:
+
+> "the 4-interface (`reactor`/`jobs`/`checkpoint`/`describe`) export destructure shape for a real
+> `world actor` component (the wasm32-wasip2 fleet does not currently compile)"
+
+`world-collapse`'s own verification build left a real artifact behind in the shared scratchpad —
+`target-wasm/wasm32-wasip2/release/semio_framework_os_scale_fixture.wasm` (286,339 bytes, matching
+`status.md`'s "sol's rebuild is 286 KB" note) — a genuine wasip2 component built from the **actual**
+`component.wit`, `semio:framework/*` namespace, the real collapsed `world actor`. Not the jcoprobe
+fixture (different WIT namespace, single export interface): this is the real SDK's own compiled
+output, just not from a fleet plugin specifically. Used it (read-only) to drive the REAL generator
+functions end to end, via a small scratch harness (`terra-webbridges2-full-pipeline-check.ts`,
+`terra-webbridges2-real-runtime-check.mjs`, both saved in this ticket folder, never touching the
+owned source file):
+
+1. **Called the real `transpilePluginComponent`** (not a raw `bunx jco transpile` shell-out) against
+   this wasm, with the real `ensurePreview2ShimVendorAt` + `--map` flags — exit clean
+   (`terra-webbridges2-fullpipeline-run.txt`).
+2. **Confirmed the real transpiled output's top-level export line**:
+   ```
+   export { checkpoint100 as checkpoint, describe100 as describe, jobs100 as jobs, reactor100 as reactor, … }
+   ```
+   — exactly the four names `pluginComponentBridgeSource`'s destructure assumes, **now proven against
+   a production-namespace component**, not extrapolated from jcoprobe's single-interface case.
+3. **Confirmed every WIT function in the emitted `.d.ts` returns a `Promise`** (`poll`, `startJob`,
+   `stepJob`, `cancelJob`, `checkpoint`, `restore`, `describe` — all async-lifted) and that `pure`'s
+   `nowMs` stays plain sync, matching `hostShimSource`'s implementation exactly.
+4. **Actually imported and CALLED the real generated `bridge.js` + `🟨️host-shim.js`** in bun (JSPI-
+   native, confirmed by the jco spike): `createActorApi("terra-webbridges2-test-actor")` resolved,
+   returned exactly the 9 keys `🟨️shard-worker.js`'s `loadActor`/`deliverEffectResult` expect
+   (`poll, startJob, stepJob, cancelJob, checkpoint, restore, describe, resolveEffect, rejectEffect`),
+   and `api.describe()` resolved to a real `Uint8Array` (0 bytes — this fixture's own `describe()`
+   payload is empty, expected for a scale-fixture with no real plugin content; the mechanism, not the
+   payload, is what's under test) — full transcript in `terra-webbridges2-realruntime-run.txt`.
+5. **`host-async` remains unexercised** by this specific artifact: `grep "from './host-shim.js'"` on
+   the transpiled JS shows only `import { nowMs } from './host-shim.js'` — this fixture never calls
+   any `host-async` effect, so jco/the Rust linker dead-code-eliminated the whole interface, exactly
+   as `important.md`'s CURRENT VERIFIED STATE predicted ("a guest that never calls host-async does not
+   import it"). The 24-function surface + `result<T, pack>` throw-on-`Err` convention are still only
+   exercised via the jcoprobe hand-simulation from the prior session, not against this real component.
+   Closing that fully needs a real plugin that actually calls e.g. `storage-read`/`http-fetch`.
+
+**Net effect**: every part of the generator reachable without a real fleet plugin build is now proven
+against a real, production-WIT, world-collapsed component — not merely re-read and judged unchanged.
+The only remaining gap is the one the TASK anticipated and pre-authorized reporting rather than
+faking: the 48 (now 83+70 counted precisely) stale on-disk bridge artifacts need an actual fleet wasm
+build, owned by other in-flight packets, and none exists in this environment yet.
+
+### TypeScript suites re-run for real (fresh exit codes, not copied from the first session)
+
+- `bun nx run @semio-tech/framework-os-dev:test --reporter=verbose` → **27 passed / 27 total** (exit
+  0), full transcript matches the prior session's names exactly, byte-identical pass count — this is
+  the closest existing coverage to `plugin-web-materialize.ts` (no dedicated `vitest.config.ts` exists
+  for that package; confirmed still true, `ls` of its directory shows only the one `.ts` file).
+- `bunx tsc --noEmit --strict` scoped to `🌐plugin-web-materialize.ts` → exactly **one** diagnostic,
+  the same pre-existing repo-wide `TS5097` (`allowImportingTsExtensions`) artifact the prior session
+  found — **zero** diagnostics attributable to this file's own content.
+
+### Files touched this re-run
+
+Zero changes to the owned source file (`🌐plugin-web-materialize.ts`) — nothing needed correcting.
+Ticket-folder-only scratch, all `.ts`/`.mjs`/`.txt`, none `.log`:
+`terra-webbridges2-full-pipeline-check.ts`, `terra-webbridges2-real-runtime-check.mjs`,
+`terra-webbridges2-real-transpile-run.txt`, `terra-webbridges2-fullpipeline-run.txt`,
+`terra-webbridges2-realruntime-run.txt`, and the scratch transpile output directories
+`terra-webbridges2-real-transpile-out/`, `terra-webbridges2-fullpipeline-out/` (generated JS/wasm,
+kept as evidence, never referenced by any production code path).

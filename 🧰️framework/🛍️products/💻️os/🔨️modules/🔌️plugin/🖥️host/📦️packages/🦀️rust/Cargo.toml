@@ -36,6 +36,15 @@ semio-framework-actor = { workspace = true }
 # shape `semio-framework-os-services` itself already establishes.
 semio-framework-async = { workspace = true }
 semio-framework-os-services = { workspace = true }
+# ⏳️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-runtime-rewrite): `⏳️runtime.rs`'s
+# `AsyncActorTask` is one `tokio::spawn`ed task per actor, coordinated with its caller over
+# `tokio::sync::{mpsc,oneshot}` — the ONLY tokio surface this crate needs. `["sync", "rt"]` only:
+# tokio itself stays OWNED by `semio-framework-os-services` (the ticket's binding tokio-routing
+# rule) — this crate must never construct a `tokio::Runtime`; `tokio::spawn`/`JoinHandle` run
+# against whatever `Handle` is current when a caller enters it, injected from outside, never built
+# here. `rt-multi-thread` is deliberately NOT enabled — building a scheduler is exactly what this
+# crate is forbidden to do.
+tokio = { workspace = true, features = ["sync", "rt"] }
 # 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (B1 world-collapse): `component-model-async` is
 # declared EXPLICITLY rather than left to feature unification through `wasmtime-wasi` —
 # `Config::wasm_component_model_async`, `Store::run_concurrent`, `Accessor`, `StreamReader` and the
@@ -54,7 +63,7 @@ blake3 = "1"
 [dev-dependencies]
 semio-framework-async-macros = { path = "../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 # 🧪️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (async-worlds): `🧪️schema-parity/🦀️component.rs`
-# parses `🧬️schema/📜️component.wit` directly to keep `world actor`/`world actor-async` from
+# parses `🧬️schema/📜️component.wit` directly to keep `effects.effect` and `host-async` from
 # drifting. Pinned to the exact version `wasmtime = "47.0.3"` already pulls transitively (see
 # `Cargo.lock`'s `wasmtime -> wit-parser 0.252.0` edge) so this adds no second copy to the graph.
 wit-parser = "=0.252.0"

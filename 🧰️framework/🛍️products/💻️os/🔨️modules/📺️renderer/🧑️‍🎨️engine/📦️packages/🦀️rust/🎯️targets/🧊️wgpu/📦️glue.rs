@@ -50,6 +50,26 @@ pub mod shell;
 #[path = "../../../../🧱️elements/IconRenderHost/🧊️component.rs"]
 pub mod icon_atlas;
 
+//#region 🔖️OsHostDecomposition
+// 🏠️ ticket 26/08/20/SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY (packet os-host): the seam that ends
+// this crate owning the actor kernel and ends its continuous redraw. `deadlines`/`kernel_seam` are
+// leaves (no dependency on `os_host`/`winit_app`); `os_host` composes `AppRuntime` with them;
+// `winit_app` is the new `ApplicationHandler` — see that file's own module docstring for why it
+// hand-rolls the event loop instead of using `ui_host::window::NativeHost<D>` directly. Mounted here,
+// away from the peer program's `parallel_runtime` mount just below, per this ticket's own OWNS list.
+#[path = "🦀️deadlines.rs"]
+mod deadlines;
+
+#[path = "🦀️kernel_seam.rs"]
+mod kernel_seam;
+
+#[path = "🦀️os_host.rs"]
+mod os_host;
+
+#[path = "🦀️winit_app.rs"]
+mod winit_app;
+//#endregion 🔖️OsHostDecomposition
+
 // 🎠️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-kernel-loop): the real multi-shard `Kernel`
 // loop — `ParallelRuntime` — used by both `kernel_runtime` (below) and `scale_bench`. Native-only,
 // same reason `kernel_runtime`/`scale_bench` themselves are: real OS threads (`ShardExecutor`s +
@@ -76,20 +96,22 @@ use std::sync::Arc;
 #[cfg(target_arch = "wasm32")]
 use ui_wgpu::wgpu::apply_canvas_cursor;
 use ui_wgpu::wgpu::ActionDescriptor;
-use ui_wgpu::wgpu::{
-    apply_window_cursor, dispatch_window_event, fetch_font_bytes, resolve_semio_cursor, schedule_frame, CursorDragState, DrawList, FontAtlas, GpuContext, IconAtlas, InputState, KeyAction, PointerCallbacks, PointerModifiers, SemioCursor, Theme,
-    WindowInputState,
-};
+// 🏚️ `dispatch_window_event`/`WindowInputState`/`schedule_frame` no longer imported here — they were
+// `SemioApp`/`start_frame_loop`-only (both deleted, packet os-host); `winit_app.rs` normalizes input
+// itself via `ui_host::event` instead. See the `OsHostDecomposition — SemioApp deletion` region above.
+use ui_wgpu::wgpu::{apply_window_cursor, fetch_font_bytes, resolve_semio_cursor, CursorDragState, DrawList, FontAtlas, GpuContext, IconAtlas, InputState, KeyAction, PointerCallbacks, PointerModifiers, SemioCursor, Theme};
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen_futures::spawn_local;
-use winit::application::ApplicationHandler;
-use winit::event::WindowEvent;
-use winit::event_loop::{ActiveEventLoop, EventLoop, EventLoopProxy};
+// 🏚️ `ApplicationHandler`/`WindowEvent`/`ActiveEventLoop`/`EventLoopProxy`/`WindowAttributes`/
+// `WindowId` no longer imported here — all `SemioApp`-only (deleted, packet os-host); `winit_app.rs`
+// imports each of these itself. `EventLoop`/`Window` stay: `run_native`/`semio_wgpu_mount` still
+// construct the event loop and `AppRuntime` still names `Window` throughout.
+use winit::event_loop::EventLoop;
 #[cfg(not(target_arch = "wasm32"))]
 use winit::window::Fullscreen;
-use winit::window::{Window, WindowAttributes, WindowId};
+use winit::window::Window;
 
 //#region 🎠️KernelRuntime
 /// 🎭️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (packet H3-wgpu-native; upgraded by terra-kernel-loop):
@@ -536,23 +558,34 @@ pub(crate) mod kernel_runtime {
     // themselves while polling — each queued future re-acquires its OWN borrow only for the
     // instant it needs it (the existing `if let Ok(mut app) = runtime.try_borrow_mut() { ...await
     // inside here... }` pattern every `PointerCallbacks` closure already used before this packet).
-    // `Waker::noop()` is correct here specifically BECAUSE the loop is continuous `Poll`, not
-    // `Wait` — see `📓️terra-H3-wgpu-native-report.md`'s honest-limits section for the scope note
-    // that a real cross-thread `EventLoopProxy` wake (needed for a future switch to
-    // `ControlFlow::Wait`) is not implemented, and for why `pump_sync_events`/hot-reload `boot`
-    // (called FROM WITHIN an already-active `frame()` borrow) could not be converted the same way
-    // without a larger `ShellState` ownership refactor.
+    // `Waker::noop()` WAS correct here exactly because the loop used to be continuous `Poll` — that
+    // honest gap this comment used to flag ("a real cross-thread `EventLoopProxy` wake... is not
+    // implemented") is exactly what `📓️terra-os-host-report.md` (ticket
+    // 26/08/20/SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY, packet os-host) closes below: now that
+    // `winit_app.rs` sets `ControlFlow::WaitUntil`/`Wait` instead, a `KernelFuture` awaiting a kernel
+    // round trip needs a REAL wake for its completion to be noticed promptly rather than only on the
+    // next unrelated event/deadline — see `install_waker`/`REAL_WAKER` immediately below, and
+    // `kernel_seam.rs`'s own module docstring for the full "waker correctness" writeup.
     thread_local! {
         static TASK_POOL: std::cell::RefCell<Vec<Pin<Box<dyn Future<Output = ()>>>>> = const { std::cell::RefCell::new(Vec::new()) };
+        static REAL_WAKER: std::cell::RefCell<Option<Waker>> = const { std::cell::RefCell::new(None) };
     }
 
     pub(crate) fn spawn_task(future: impl Future<Output = ()> + 'static) {
         TASK_POOL.with(|pool| pool.borrow_mut().push(Box::pin(future)));
     }
 
+    /// 🔔️ `winit_app.rs` installs a real `Waker` (built from `ui_host::WakeProxy`, `Send + Sync`, so
+    /// it can be called from off the winit thread — see `kernel_seam.rs`) once, at boot, after the
+    /// event loop exists. Before that first install, `poll_tasks` falls back to `Waker::noop()`,
+    /// harmless for the same reason it always was: nothing is waiting on a `WaitUntil` yet this early.
+    pub(crate) fn install_waker(waker: Waker) {
+        REAL_WAKER.with(|cell| *cell.borrow_mut() = Some(waker));
+    }
+
     pub(crate) fn poll_tasks() {
-        let waker = Waker::noop();
-        let mut cx = Context::from_waker(waker);
+        let waker: Waker = REAL_WAKER.with(|cell| cell.borrow().clone()).unwrap_or_else(|| Waker::noop().clone());
+        let mut cx = Context::from_waker(&waker);
         TASK_POOL.with(|pool| {
             let mut pool = pool.borrow_mut();
             pool.retain_mut(|task| task.as_mut().poll(&mut cx).is_pending());
@@ -2268,163 +2301,21 @@ impl AppRuntime {
     }
 }
 
-fn start_frame_loop(window: Arc<Window>, runtime: Rc<RefCell<AppRuntime>>) {
-    let next = runtime.clone();
-    let window_next = window.clone();
-    schedule_frame(&window, move || {
-        if let Ok(mut app) = next.try_borrow_mut() {
-            app.frame();
-        }
-        start_frame_loop(window_next.clone(), next.clone());
-    });
-}
-
-enum HostUserEvent {
-    RuntimeReady { runtime: Rc<RefCell<AppRuntime>>, callbacks: PointerCallbacks },
-}
-
-struct SemioApp {
-    proxy: EventLoopProxy<HostUserEvent>,
-    plugin_filter: String,
-    #[cfg(target_arch = "wasm32")]
-    plugins: Option<wasm_bindgen::JsValue>,
-    #[cfg(target_arch = "wasm32")]
-    canvas: Option<web_sys::HtmlCanvasElement>,
-    #[cfg(not(target_arch = "wasm32"))]
-    plugin_modules_root: std::path::PathBuf,
-    window: Option<Arc<Window>>,
-    runtime: Option<Rc<RefCell<AppRuntime>>>,
-    callbacks: Option<PointerCallbacks>,
-    window_input: WindowInputState,
-}
-
-impl SemioApp {
-    fn new(
-        proxy: EventLoopProxy<HostUserEvent>,
-        plugin_filter: String,
-        #[cfg(target_arch = "wasm32")] plugins: Option<wasm_bindgen::JsValue>,
-        #[cfg(target_arch = "wasm32")] canvas: Option<web_sys::HtmlCanvasElement>,
-        #[cfg(not(target_arch = "wasm32"))] plugin_modules_root: std::path::PathBuf,
-    ) -> Self {
-        Self {
-            proxy,
-            plugin_filter,
-            #[cfg(target_arch = "wasm32")]
-            plugins,
-            #[cfg(target_arch = "wasm32")]
-            canvas,
-            #[cfg(not(target_arch = "wasm32"))]
-            plugin_modules_root,
-            window: None,
-            runtime: None,
-            callbacks: None,
-            window_input: WindowInputState::default(),
-        }
-    }
-}
-
-impl ApplicationHandler<HostUserEvent> for SemioApp {
-    fn resumed(&mut self, event_loop: &ActiveEventLoop) {
-        if self.window.is_some() {
-            return;
-        }
-        let mut attributes = WindowAttributes::default().with_title("Semio");
-        #[cfg(target_arch = "wasm32")]
-        {
-            use winit::platform::web::WindowAttributesExtWebSys;
-            if let Some(canvas) = self.canvas.clone() {
-                let dpr = web_sys::window().map(|window| window.device_pixel_ratio() as f32).unwrap_or(1.0);
-                let css_width = canvas.client_width().max(1) as f32;
-                let css_height = canvas.client_height().max(1) as f32;
-                let _ = canvas.style().set_property("width", "100%");
-                let _ = canvas.style().set_property("height", "100vh");
-                attributes = attributes.with_inner_size(winit::dpi::LogicalSize::new(css_width, css_height)).with_canvas(Some(canvas)).with_append(true);
-                let _ = dpr;
-            }
-        }
-        #[cfg(not(target_arch = "wasm32"))]
-        {
-            attributes = attributes.with_inner_size(winit::dpi::LogicalSize::new(1280.0, 800.0));
-        }
-        let window = Arc::new(event_loop.create_window(attributes).expect("create window"));
-        self.window = Some(window.clone());
-        let proxy = self.proxy.clone();
-        let plugin_filter = self.plugin_filter.clone();
-        #[cfg(target_arch = "wasm32")]
-        let plugins = self.plugins.clone();
-        #[cfg(not(target_arch = "wasm32"))]
-        let plugin_modules_root = self.plugin_modules_root.clone();
-        spawn_app_task(async move {
-            let result = boot_runtime(
-                window,
-                plugin_filter,
-                #[cfg(target_arch = "wasm32")]
-                plugins,
-                #[cfg(not(target_arch = "wasm32"))]
-                plugin_modules_root,
-            )
-            .await;
-            match result {
-                Ok((runtime, callbacks)) => {
-                    let _ = proxy.send_event(HostUserEvent::RuntimeReady { runtime, callbacks });
-                }
-                Err(error) => log_debug(&format!("boot_runtime failed: {error}")),
-            }
-        });
-    }
-
-    fn user_event(&mut self, event_loop: &ActiveEventLoop, event: HostUserEvent) {
-        let HostUserEvent::RuntimeReady { runtime, callbacks } = event;
-        if let Some(window) = self.window.clone() {
-            start_frame_loop(window, runtime.clone());
-        }
-        self.runtime = Some(runtime);
-        self.callbacks = Some(callbacks);
-        event_loop.set_control_flow(winit::event_loop::ControlFlow::Poll);
-    }
-
-    fn window_event(&mut self, event_loop: &ActiveEventLoop, _id: WindowId, event: WindowEvent) {
-        let Some(window) = self.window.clone() else {
-            return;
-        };
-        match &event {
-            WindowEvent::CloseRequested => event_loop.exit(),
-            WindowEvent::Resized(size) => {
-                if let Some(runtime) = self.runtime.as_ref() {
-                    if let Ok(mut app) = runtime.try_borrow_mut() {
-                        let dpr = window.scale_factor() as f32;
-                        app.resize(size.width as f32 / dpr, size.height as f32 / dpr, dpr);
-                    }
-                }
-            }
-            WindowEvent::RedrawRequested => {
-                if let Some(runtime) = self.runtime.as_ref() {
-                    if let Ok(mut app) = runtime.try_borrow_mut() {
-                        app.frame();
-                    }
-                }
-                window.request_redraw();
-            }
-            _ => {
-                if let Some(callbacks) = self.callbacks.as_ref() {
-                    dispatch_window_event(&window, &event, &mut self.window_input, callbacks);
-                }
-            }
-        }
-    }
-
-    fn about_to_wait(&mut self, _event_loop: &ActiveEventLoop) {
-        // 🎠️ H3-wgpu-native — drains every `spawn_app_task` future queued since the last iteration
-        // (boot, and every pointer/keyboard/wheel/context-menu-driven plugin dispatch): none of them
-        // run to completion inline anymore, they resume here once their kernel-thread round-trip
-        // lands. `ControlFlow::Poll` means this runs continuously, so nothing needs an explicit wake.
-        #[cfg(not(target_arch = "wasm32"))]
-        kernel_runtime::poll_tasks();
-        if let Some(window) = self.window.as_ref() {
-            window.request_redraw();
-        }
-    }
-}
+//#region 🔖️OsHostDecomposition — SemioApp deletion
+// 🏚️ DELETED by ticket 26/08/20/SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY (packet os-host):
+// `start_frame_loop` (used to live here, ~line 2291 pre-edit — the recursive `schedule_frame`
+// rAF/timer chain that called `app.frame()` and immediately rescheduled itself, unconditionally,
+// forever), `enum HostUserEvent` and `struct SemioApp` + its `ApplicationHandler` impl (`resumed`
+// set `ControlFlow::Poll` at boot — ~line 2383 pre-edit; `window_event`'s `RedrawRequested` arm
+// called `window.request_redraw()` unconditionally right after building a frame — ~line 2406
+// pre-edit; `about_to_wait` called `kernel_runtime::poll_tasks()` then ALSO unconditionally
+// `window.request_redraw()` every single iteration — ~line 2416-2424 pre-edit). Replaced by
+// `winit_app::{HostUserEvent, WinitApp}` — same two-phase boot handshake, but steady-state control
+// flow is `WaitUntil(next deadline)`/`Wait`, redraw only fires `if let Some(reason) =
+// scheduler.should_render(now)`, and `poll_tasks()` now runs once per real wake instead of every
+// tick of an infinite `Poll` loop. See `📓️terra-os-host-report.md`'s redraw audit for the full
+// before/after per site.
+//#endregion 🔖️OsHostDecomposition — SemioApp deletion
 
 async fn boot_runtime(
     window: Arc<Window>,
@@ -2560,9 +2451,9 @@ async fn boot_runtime(
 
 #[cfg(not(target_arch = "wasm32"))]
 pub fn run_native(plugin_filter: &str, plugin_modules_root: std::path::PathBuf) {
-    let event_loop = EventLoop::<HostUserEvent>::with_user_event().build().expect("event loop");
+    let event_loop = EventLoop::<winit_app::HostUserEvent>::with_user_event().build().expect("event loop");
     let proxy = event_loop.create_proxy();
-    let mut app = SemioApp::new(proxy, plugin_filter.to_string(), plugin_modules_root);
+    let mut app = winit_app::WinitApp::new(proxy, plugin_filter.to_string(), plugin_modules_root);
     let _ = event_loop.run_app(&mut app);
 }
 
@@ -2632,16 +2523,15 @@ pub fn run_smoke(plugin_filter: &str, plugin_modules_root: std::path::PathBuf) -
 /// the same DOM id. The caller (`bootFrameworkOsWgpu` in `📦️index.ts`) now owns creating and placing
 /// the canvas, so N independent mounts can coexist on one page.
 ///
-/// Known gap (not yet done — see the plan's Wave 6 D11 notes): this does not yet return a disposable
-/// handle. `start_frame_loop`/`schedule_frame` (this crate's `ui_wgpu` dependency) reschedule themselves
-/// via a fire-and-forget `requestAnimationFrame` closure with no captured cancellation id, independent of
-/// the winit event loop's own control flow — so `ActiveEventLoop::exit()` alone (the pattern already used
-/// for `WindowEvent::CloseRequested` below) would NOT stop rendering; the recursive rAF chain would keep
-/// calling `app.frame()` forever. A real `semioWgpuUnmount` needs a shared disposal flag threaded through
-/// `AppRuntime`/`start_frame_loop` that the frame closure checks before each reschedule, verified against
-/// an actual browser run — deferred rather than shipped unverified, since this crate does not currently
-/// build clean (a concurrent, unrelated `dsl`/`store` import break) and Rust/closure-lifetime bugs here
-/// can't be caught by anything short of a successful compile + a real mount/unmount browser check.
+/// Known gap (not yet done — see the plan's Wave 6 D11 notes), **narrowed but not closed** by ticket
+/// 26/08/20/SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY (packet os-host): the independent, uncancellable
+/// `start_frame_loop`/`schedule_frame` recursive `requestAnimationFrame` chain this comment used to
+/// describe is DELETED — every redraw now goes through `winit`'s own event loop
+/// (`event_loop.spawn_app(app)` below → `winit_app::WinitApp`), and `WindowEvent::CloseRequested`
+/// already calls `ActiveEventLoop::exit()`. Whether `exit()` alone now fully tears down a wasm mount
+/// (winit's own wasm backend's post-`exit()` behaviour) is UNVERIFIED — this crate still does not
+/// build clean (U4, `📓️terra-os-host-report.md`), so a real `semioWgpuUnmount` handle remains
+/// deferred, but the mechanism it would need to cancel no longer exists in its old shape.
 /// The dozen-plus `thread_local!` globals further up this file (`UI_ENGINE`, `ENGINE_SURFACES`,
 /// `SCENE_STATE`, tooltip/dialog/tour chrome state, clipboard mocks, prefs, image-fetch caches, …) are
 /// also still page-global, not per-mount — two simultaneous wgpu mounts each render on their own
@@ -2650,9 +2540,9 @@ pub fn run_smoke(plugin_filter: &str, plugin_modules_root: std::path::PathBuf) -
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen(js_name = semioWgpuMount)]
 pub fn semio_wgpu_mount(canvas: web_sys::HtmlCanvasElement, plugins: JsValue, plugin_filter: String) -> Result<(), JsValue> {
-    let event_loop = EventLoop::<HostUserEvent>::with_user_event().build().map_err(|err| JsValue::from_str(&format!("event loop: {err:?}")))?;
+    let event_loop = EventLoop::<winit_app::HostUserEvent>::with_user_event().build().map_err(|err| JsValue::from_str(&format!("event loop: {err:?}")))?;
     let proxy = event_loop.create_proxy();
-    let app = SemioApp::new(proxy, plugin_filter, Some(plugins), Some(canvas));
+    let app = winit_app::WinitApp::new(proxy, plugin_filter, Some(plugins), Some(canvas));
     use winit::platform::web::EventLoopExtWebSys;
     event_loop.spawn_app(app);
     Ok(())

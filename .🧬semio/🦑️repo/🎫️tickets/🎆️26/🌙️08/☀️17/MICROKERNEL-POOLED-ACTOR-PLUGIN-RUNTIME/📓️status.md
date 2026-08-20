@@ -6575,3 +6575,104 @@ Two instructions worth recording as policy:
    claiming success is the one unacceptable outcome, because every downstream packet builds on this ABI.
 2. **No whole-file rewriting scripts**, citing today's 16,000-line incident by name, with the `wc -l`
    guard prescribed if scripting is unavoidable.
+
+
+## 🏁 WORLD-COLLAPSE LANDED — the ABI is one async world (2026-08-20, sol)
+
+The plan's §B1 is done. Verified by sol against the live schema, not the report:
+
+```wit
+world actor { import pure; import host-async; export reactor; export jobs; export checkpoint; export describe; }
+```
+`interface runner` and `world actor-async` are **gone** (12 interfaces, **1 world**). All seven exports
+are `async func` — reactor 1, jobs 3, checkpoint 2, describe 1. `pure` correctly stays 0 async / 3 sync,
+and the superseded `job-budget`/`job-step` hoist was not applied.
+
+### Independently re-verified by sol, every gate, target named (R14)
+
+| check | result |
+|---|---|
+| `cargo test -p semio-framework-os-kernel --lib` | **779 passed / 0 failed** |
+| `cargo test -p semio-framework-os-kernel-db --lib` | **424 passed / 0 failed** |
+| `cargo test -p semio-framework-plugin-host --lib` | **125 passed / 0 failed / 1 ignored** (+3 net new parity tests) |
+| `plugin --lib` · `--all-features` | EXIT 0 · EXIT 0 |
+| `plugin-host --lib` | EXIT 0 |
+| `plugin-describe --all-targets` | EXIT 0 (was red before this packet) |
+| `plugin` wasip2 `component-guest` · `component-extension-guest` · `--all-features` | EXIT 0 · EXIT 0 · EXIT 0 |
+| `os-kernel` wasm32-unknown-unknown | EXIT 0 |
+| **total tests** | **1,328 passing** |
+
+### 🔬 Proof at the ARTIFACT level, re-derived by sol from a fresh build
+The packet claimed the emitted component is genuinely async-lifted. sol did not take that on the
+transcript: rebuilt `semio-framework-os-scale-fixture` for `wasm32-wasip2 --release --features
+component-guest` (EXIT 0) and read the export names straight out of the binary:
+
+```
+[async-lift]semio:framework/reactor@1.0.0#poll
+[async-lift]semio:framework/jobs@1.0.0#start-job · step-job · cancel-job
+[async-lift]semio:framework/checkpoint@1.0.0#checkpoint · restore
+[async-lift]semio:framework/describe@1.0.0#describe
+[callback][async-lift] × 16   builtins: task-cancel · task-return · waitable-set-poll
+```
+All seven exports async-lifted, with the component-model-async builtins present. **This is the
+difference between "the types line up" and "the ABI is async", and it is now evidence rather than
+inference.** (sol's rebuild is 286 KB vs the packet's reported 829 KB — different build profile/feature
+set, not a discrepancy in kind.)
+
+### Findings that materially de-risk what's next
+* **A guest that never CALLS `host-async` does not IMPORT it** — the linker strips it. So the collapse
+  does not force every existing component onto a wider import surface, which substantially de-risks the
+  fleet rebuild.
+* The prep report's **#1 ranked risk (`additional_derives: [Clone]`) cost nothing** — the packet ran the
+  prep's own prescribed grep FIRST and found every nearby `.clone()` was on the kernel-side value being
+  moved in. Zero call sites changed. Ranking a risk and then cheaply falsifying it is the pattern that
+  should be copied.
+* All 6 guest `resolve_ready` E5 bridges **deleted** — the trait is genuinely async now, so the bridges
+  that existed to fake it are gone. `ensure_plugin_initialized()` still genuinely runs.
+* `emit`/`emit-patch` are fully functional (sinks drained into the same `turn-result`); the 24 awaitable
+  imports return a typed `host-async.poll-backed` fault — correct for a poll-shaped turn, not a stub.
+* The instrument was verified against a known positive before the census was trusted: it rendered the
+  **short** `` `Future` `` form, so R12's ORIGINAL long-form pattern would have produced a false zero.
+  R12-amended earned its keep here.
+
+### Bounded residue, explicitly reported rather than swept
+1. `⏳️runtime.rs` remains unmounted, now carrying a `⛔️ SUPERSEDED` header naming the three concrete
+   changes it needs — **budget it as a rewrite, not a rename**.
+2. `⚛️reactor`'s ~24 `resolve_ready` bridges are still sound, but their written justification
+   ("`world actor` imports no `host-async`") is now FALSE. Flagged, not swept.
+3. Open design question recorded in `💼️jobs`' own doc: `JobCtx::host()`'s gate is still correct but its
+   rationale died with `actor-async`; relaxing it **needs measuring, not assuming**.
+
+
+## 🚀 WORKFORCE WAVE — 14-agent workflow dispatched for end-to-end (2026-08-20, sol)
+
+Dev restated the mission and asked for a workforce of as many parallel agents as make sense.
+Dispatched as one orchestrated workflow (run `wf_12681159-b78`), tiered exactly as mandated:
+**Haiku 4.5 for read-only exploration, Sonnet 5 for execution, Opus coordinating in main chat.**
+
+The DAG is shaped by **R19** (never put an editing packet inside a live packet's dependency graph),
+which is the constraint that actually determines how much parallelism is available:
+
+| phase | agents | why this shape |
+|---|---|---|
+| **Recon** | 4 × luna (haiku, read-only, parallel) | fleet-wasm readiness · descriptor ground truth · block_on reclassification · web/TS audit. No builds — the build lock is contended. |
+| **Foundation** | 1 × terra, **ALONE** | `📡️replication` ByteReader/ByteWriter R9. It is a dependency of nearly everything, so it CANNOT share a phase. |
+| **Build-out** | 5 × terra (parallel) | stdio-finish (Rust) ∥ web-bridges, wgpu-web, exchange-removal (**TypeScript — no Rust build-lock contention, genuinely free parallelism**) ∥ runtime-rewrite (isolated because `⏳️runtime.rs` is unmounted). |
+| **Fleet** | 3 × terra (parallel) | fleet wasm components · descriptors to 33/33 · SDK test suite. All after stdio, since 32 plugins depend on it. |
+| **Verify** | 1 × terra | full ladder, triple-target gate, workspace check, dropped-future census, adoption census, banned symbols. |
+
+**Where the parallelism actually comes from:** the TypeScript packets. Rust work serializes hard on
+the dependency graph and the build lock, but web bridges / wgpu-web / exchange-removal touch no Rust
+and can run flat out alongside stdio. That is the difference between a real fan-out and five agents
+queued behind one cargo lock.
+
+Every brief carries the full standing-rules block (R1-R20, the E-classes, target-named acceptance,
+the `insert-await.py` audit requirement, the no-whole-file-scripts rule citing today's 16,000-line
+incident) and the **1,328-test regression baseline** as a hard gate.
+
+Two instructions given to every packet, because both were learned the hard way today:
+* **"A false green is the worst possible outcome"** — an honest partial with precise residue is a good
+  result; overstating is not.
+* **The `terra-replication-r9` packet carries sol's own prior failure in that exact file** (the earlier
+  DictReader/prev_frame attempt that broke on a ~220-site-deep chain and had to be reverted) plus an
+  EXPLICIT revert criterion: a clean revert with a written reason is a SUCCESS for that packet.

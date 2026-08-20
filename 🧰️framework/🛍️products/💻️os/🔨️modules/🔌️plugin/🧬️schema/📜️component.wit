@@ -655,6 +655,15 @@ interface events {
     command: pack,
   }
 
+  /// 🎬️ A user action against a UI node — pack-encoded `contract-action::UiIntent`. `wit-flip`
+  /// (26/08/20): UI intents get their own event instead of masquerading as `app-command-event`,
+  /// which is what lets the host tell a genuine UI interaction from a channel command without
+  /// decoding the payload.
+  record ui-intent-event {
+    instance: instance-id,
+    intent: pack,
+  }
+
   record surface-visible-event {
     surface: surface-ref,
   }
@@ -746,6 +755,7 @@ interface events {
     capability-changed(capability-changed-event),
     quota-changed(quota-changed-event),
     app-command(app-command-event),
+    ui-intent(ui-intent-event),
     surface-visible(surface-visible-event),
     surface-hidden(surface-hidden-event),
     surface-resized(surface-resized-event),
@@ -762,10 +772,12 @@ interface events {
   }
 }
 
-/// 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (A2, design-abi.md §1 + §2 channel v12). Revisioned
-/// UI patches: `⚛️reactor/🩹️patches` diffs by node identity path, falling back to a full-body
-/// `replace` at the root path when the diff exceeds ~60% of the body or the host reports a
-/// `base-revision` mismatch via `event.patch-rejected`.
+/// 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (A2, design-abi.md §1 + §2 channel v12) → `wit-flip`
+/// (26/08/20): revisioned UI patches, now addressed by **node id** rather than tree path —
+/// `⚛️reactor/🩹️patches` diffs against the flat `contract-doc::UiSnapshotState` node table and
+/// falls back to a whole-tree `upsert` of the root node when the diff exceeds ~60% of the body or
+/// the host reports a `base-revision` mismatch via `event.patch-rejected`. `ui-patch` no longer
+/// carries `kind: string` — node-id addressing makes a patch self-describing without it.
 ///
 /// ⚠️ Deviation from the design table's literal `resource surface`: same reasoning as
 /// `capabilities.wit`'s `capability-token` — `pure` and `host-async` are `world actor`'s only
@@ -784,34 +796,73 @@ interface ui {
 
   resource surface;
 
-  record patch-replace {
-    path: list<u32>,
+  /// 🔢️ A node's identity within one surface — `contract-doc::UiNodeId`, monotonic per surface,
+  /// never reused, so a stale reference to a removed node is always distinguishable from a fresh
+  /// node at the same tree position.
+  type node-id = u64;
+
+  /// 🌱️ Inserts a whole node, or replaces the node already living at `node.id` — pack-encoded
+  /// `contract-doc::UiNodeRecord`. The one patch-op that carries a full node rather than a delta.
+  record patch-upsert {
     node: pack,
   }
-  record patch-insert-child {
-    path: list<u32>,
-    index: u32,
-    node: pack,
+  /// 🎛️ pack-encoded `contract::Component`.
+  record patch-set-component {
+    node: node-id,
+    component: pack,
   }
-  record patch-remove-child {
-    path: list<u32>,
-    index: u32,
+  /// 📐️ pack-encoded `contract::LayoutSpec`.
+  record patch-set-layout {
+    node: node-id,
+    layout: pack,
   }
-  record patch-set-props {
-    path: list<u32>,
-    props: pack,
+  /// 🎞️ pack-encoded `contract::Activity`.
+  record patch-set-activity {
+    node: node-id,
+    activity: pack,
+  }
+  record patch-set-children {
+    node: node-id,
+    children: list<node-id>,
+  }
+  /// 🎨️ pack-encoded `contract::StyleSpec`.
+  record patch-set-style {
+    node: node-id,
+    style: pack,
+  }
+  /// ♿️ pack-encoded `contract::AccessibilitySpec`.
+  record patch-set-accessibility {
+    node: node-id,
+    accessibility: pack,
+  }
+  /// 🔗️ pack-encoded `list<contract::ActionBinding>`.
+  record patch-set-bindings {
+    node: node-id,
+    bindings: pack,
+  }
+  /// 📋️ pack-encoded `option<contract::MenuRef>`.
+  record patch-set-menu {
+    node: node-id,
+    menu: pack,
   }
 
   variant patch-op {
-    replace(patch-replace),
-    insert-child(patch-insert-child),
-    remove-child(patch-remove-child),
-    set-props(patch-set-props),
+    upsert(patch-upsert),
+    set-component(patch-set-component),
+    set-layout(patch-set-layout),
+    set-activity(patch-set-activity),
+    set-children(patch-set-children),
+    set-style(patch-set-style),
+    set-accessibility(patch-set-accessibility),
+    set-bindings(patch-set-bindings),
+    set-menu(patch-set-menu),
+    /// 🗑️ Removes the node and its whole orphaned subtree.
+    remove(node-id),
+    set-root(node-id),
   }
 
   record ui-patch {
     surface: surface-ref,
-    kind: string,
     revision: revision,
     base-revision: revision,
     ops: list<patch-op>,
@@ -846,7 +897,7 @@ interface pure {
 /// deleted `runner::run`'s `stream<event>`) — it stays one call in, one `turn-result` out, it just
 /// runs on an async-capable Store like every other export in this world.
 interface reactor {
-  use types.{plugin-error};
+  use types.{plugin-error, pack};
   use effects.{effect};
   use events.{event};
   use ui.{ui-patch};
@@ -864,9 +915,16 @@ interface reactor {
     checkpoint-ready,
     faulted(list<u8>),
   }
+  /// 👥️ One collaborator's presence, as of this turn — `wit-flip` (26/08/20): pack-encoded
+  /// `📡️replication/📡️wire::PresencePeer`, reusing that crate's own `encode-presence-peer` wire
+  /// format rather than re-declaring the peer/cursor/selection shape a second time in WIT.
+  record presence-update {
+    peer: pack,
+  }
   record turn-result {
     ui-patches: list<ui-patch>,
     effects: list<effect>,
+    presence: list<presence-update>,
     next-wake: option<u64>,
     status: turn-status,
     fuel-used: u64,

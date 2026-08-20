@@ -811,6 +811,12 @@ pub enum Event {
     /// unchanged.
     AppCommandEvent { instance: PluginInstanceId, seq: u64, command: Vec<u8> },
 
+    /// 🎬️ `wit-flip` (26/08/20) — a user action against a UI node, `pack`-encoded
+    /// `semio_framework_ui_contract::UiIntent`. Split out of `AppCommandEvent` so the host can
+    /// tell a genuine UI interaction from a channel command without decoding the payload —
+    /// `component.wit`'s `events::ui-intent-event`.
+    UiIntent { instance: PluginInstanceId, intent: Vec<u8> },
+
     SurfaceVisible { surface: String },
     SurfaceHidden { surface: String },
     SurfaceResized { surface: String, width: u32, height: u32 },
@@ -857,30 +863,14 @@ pub enum ActivationEvent {
 //#endregion 🔖️ActivationEvent
 
 //#region 🔖️UiPatch
-/// 🩹️ One revisioned UI patch batch for a surface — channel v12's `ui-patch` frame
-/// (`📓️design-abi.md` §2 "`exchange` collapse"). `base_revision` lets the guest detect a stale
-/// diff and fall back to a full body instead of the host reconciling a diff it can't trust.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct UiPatch {
-    pub surface: String,
-    pub kind: String,
-    pub revision: u64,
-    pub base_revision: u64,
-    pub ops: Vec<PatchOp>,
-}
-
-/// 🩹️ `📓️design-abi.md` §2's `PatchOp::{Replace, InsertChild, RemoveChild, SetProps}`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", rename_all_fields = "camelCase")]
-pub enum PatchOp {
-    Replace { path: String, node: UiNode },
-    InsertChild { path: String, index: u32, node: UiNode },
-    RemoveChild { path: String, index: u32 },
-    /// 🎛️ `props` is `store::pack_rt::encode_wire_value` bytes, not a `UiNode` — a props-only
-    /// patch never touches the node's children.
-    SetProps { path: String, props: Vec<u8> },
-}
+/// 🩹️ `wit-flip` (26/08/20): re-exported from `semio-framework-ui-contract`, the language-neutral
+/// contract crate's own `UiPatch`/`UiPatchOp` (`🦀️document.rs`) — this file no longer declares its
+/// own copy, so there is exactly one definition to keep in sync with `component.wit`'s
+/// `ui-patch`/`patch-op` (node-id addressed, not path addressed) rather than two that could drift.
+/// Requires a `semio-framework-ui-contract` dependency on every crate that `#[path]`-mounts this
+/// file — see this packet's report for the exact registrar-request lines (this crate is not on the
+/// registrar-only list for `Cargo.toml`, so the dependency itself is not added here).
+pub use semio_framework_ui_contract::{UiPatch, UiPatchOp};
 //#endregion 🔖️UiPatch
 
 //#region 🔖️Budget

@@ -269,3 +269,93 @@ churns most (hover-driven style, focus-driven accessibility). Add the four missi
 4. `BuiltNode` (contract) and `ComponentTree` (runtime) duplicate a shape. Deliberate — the
    dependency runs contract → runtime and must not reverse — but revisit now that the reconciler
    shows what the conversion actually costs.
+
+---
+
+## 2026-08-20 — W3: all four graphics backends + the platform layer. 300 tests.
+
+Five more crates scaffolded and registered by sol (no executor touched the root manifest):
+`semio-framework-ui-backend-{webgpu,metal,d3d12,vulkan}` under
+`🖱️ui/🖼️render/🎯️targets/<backend>/📦️packages/🦀️rust`, and `semio-framework-ui-host` at
+`🖱️ui/🖥️host/📦️packages/🦀️rust`. Backends sit *beside* the core package rather than nested inside it,
+because a crate nested under another crate's package dir needs an `exclude` and the repo's own
+convention (the OS renderer) puts targets beside a non-package directory.
+
+W0's open question is closed: `🔨️modules/🖥️platform` is an app-shell/panel/action-bus model mounted
+into `semio-framework`, **not** a windowing abstraction — so `ui-host` is genuinely new, no conflict.
+
+### Packets: `contract-patch-ops` · `dispatch-tree-seam` · `backend-metal` · `backend-webgpu` · `ui-host` · `backend-d3d12` · `backend-vulkan` · `conformance-corpus` · `manifest-typegen`
+
+| crate | tests |
+| --- | --- |
+| `semio-framework-ui-contract` | **80** (+ 1 typegen export test) |
+| `semio-framework-ui-runtime` | **62** |
+| `semio-framework-ui-render` | **125** |
+| `semio-framework-ui-backend-metal` | **6, against a real Metal device** |
+| `semio-framework-ui-host` | **27** |
+| **total** | **300** |
+
+### The compile matrix — every backend on its own target, zero errors
+
+| target | result |
+| --- | --- |
+| `backend-webgpu` on `wasm32-unknown-unknown` | 0 errors |
+| `backend-metal` on macOS native | 0 errors |
+| `backend-d3d12` on `x86_64-pc-windows-msvc` | 0 errors |
+| `backend-vulkan` on `x86_64-unknown-linux-gnu` | 0 errors |
+| `ui-host` on macOS native | 0 errors |
+
+The browser-only guard is **structural, not advisory**: `cargo check -p semio-framework-ui-backend-webgpu`
+on native fails with its own `compile_error!`, and the Vulkan/D3D12 crates do the same off their
+platforms. wgpu cannot leak into a native build even by accident.
+
+### Defects found at the gate — three were real bugs a live device or a real test caught
+
+1. **Mouse and touch collided on `PointerId(0)`.** Native ids were `slot << 32` for a mouse and
+   `(slot << 32) ^ finger_id` for a touch, so finger id 0 on a device produced *exactly* that device's
+   mouse id — two contacts silently becoming one. Repartitioned as `[kind tag: 2][slot: 30][finger:
+   32]`. `ui-host`'s own test caught this, which is precisely the property I had flagged to that
+   packet as the one most easily lost.
+2. **The Metal blur chain aborted the process on small surfaces.** It asked for 5 mip levels
+   unconditionally; Metal *hard-asserts* when a descriptor requests more levels than
+   `floor(log2(max(w,h)))+1`, so a 1×1 surface — or an ordinary window mid-resize — took the process
+   down with SIGABRT. Found because the Metal tests run against a real GPU on this machine. Fixed at
+   both ends: allocation clamps to `supported_mip_levels`, and the blur loop iterates the real count.
+3. **`PointerButton` was defined twice** (dispatch and surface) and glob-exported — latent until first
+   use. `dispatch.rs` owns input; `surface.rs` now re-exports, so a surface sees the same button
+   identity generic dispatch resolved rather than a structurally-identical twin that can drift.
+
+Plus mechanical fixes: a cfg-gated field missing from its own initializer (webgpu), `NSUInteger` is
+`usize` not `u64` (metal), a stray `///` inside a `//!` header block cascading into 16 errors (d3d12),
+and `bytemuck` missing from three manifests (registrar).
+
+### Engineering judgement worth recording from the packets
+
+- **`backend-d3d12` caught a use-after-free in its own review**: an early draft dropped texture-upload
+  staging buffers before the GPU had executed the copy — D3D12 does not keep referenced resources
+  alive for you. Fixed with a `pending_staging` list cleared only after the fence confirms completion.
+- **`backend-webgpu` caught a units bug not present in the original**: it had fed logical-pixel
+  `RenderPacket::viewport` into physical-pixel screen math.
+- **`backend-vulkan` refused to fabricate SPIR-V.** With no shader compiler available and `Cargo.toml`
+  registrar-only, it stopped at milestone 1 (+ real resource upload and unit-tested descriptor/vertex
+  translation) and `read_back` returns `Timeout` rather than inventing pixels. That is the right call
+  and the honest one; the naga build-dependency it asked for is the unblock.
+- **`conformance-corpus`, unable to run cargo, cross-checked its 62 fixtures against an independently
+  written Python reimplementation of `validate_core`/`apply_patch`** — and that cross-check caught
+  three real fixture bugs before they shipped.
+
+### Corpus and TypeScript
+
+62 conformance cases / 146 JSON files under `🧬️contract/📚️examples/🧪️conformance/`, covering every
+`Component` variant, every `UiPatchOp`, composites, layout, accessibility, and 10 rejection cases —
+with a coverage assertion so adding a contract variant without a fixture fails loudly. A `conformance`
+command is registered on the crate.
+
+The hand-written TypeScript `UiNode` mirror is **deleted**; `🛂️manifest/🤖️generated/🟦️ui-contract.ts`
+is now produced by ts-rs from the Rust source, wired into the existing generate flow with a `check`
+that byte-compares for staleness. Five types were renamed `Ui`-prefixed to resolve real barrel-wide
+collisions found by an actual `tsc` run (`SurfaceKind`, `WindowLayout`, `WindowStackCorner`,
+`ActionId`, `Trigger`).
+
+**Breakage inventory for the next wave: 62 genuine TypeScript errors across 16 files** — React
+renderer, plugin window-kits, platform/kernel barrels. That inventory is the React wave's work list.

@@ -1,0 +1,152 @@
+warning: unnecessary qualification
+    --> 🧰️framework/🔨️modules/🖱️ui/🖼️render/📦️packages/🦀️rust/🦀️scene.rs:1101:20
+     |
+1101 |         assert_eq!(std::mem::size_of::<QuadInstance>(), 64);
+     |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+1101 -         assert_eq!(std::mem::size_of::<QuadInstance>(), 64);
+1101 +         assert_eq!(size_of::<QuadInstance>(), 64);
+     |
+
+warning: `semio-framework-ui-render` (lib test) generated 1 warning (run `cargo fix --lib -p semio-framework-ui-render --tests` to apply 1 suggestion)
+    Finished `test` profile [unoptimized] target(s) in 0.24s
+     Running unittests 📦️glue.rs (target/debug/deps/semio_framework_ui_render-8d7f42c92109cc13)
+
+running 125 tests
+test backend::tests::null_backend_satisfies_the_graphics_backend_trait ... ok
+test dispatch::tests::a_bare_layout_container_without_bindings_stays_a_hit_test_pass_through ... ok
+test dispatch::tests::bubble_stops_when_a_handler_returns_true ... ok
+test dispatch::tests::capture_routes_move_and_up_to_the_captured_node_regardless_of_pointer_position ... ok
+test dispatch::tests::a_press_outside_an_open_overlay_trigger_closes_it_and_swallows_the_press ... ok
+test dispatch::tests::a_node_with_multiple_typed_bindings_only_fires_the_one_matching_the_interaction ... ok
+test dispatch::tests::clicking_a_button_emits_its_action_descriptor_as_a_ui_intent ... ok
+test dispatch::tests::clicking_an_activatable_layout_container_fires_its_activate_action ... ok
+test dispatch::tests::clicking_an_overlay_trigger_opens_its_popup_and_clicking_again_closes_it ... ok
+test dispatch::tests::a_drop_targets_accept_predicate_can_reject_the_active_payload ... ok
+test backend::tests::forced_device_loss_reports_lost_status_and_recover_returns_dead_generations ... ok
+test dispatch::tests::closing_an_overlay_clears_focus_that_was_inside_it ... ok
+test backend::tests::resize_to_zero_and_back_restores_a_working_surface ... ok
+test backend::tests::zero_size_surface_is_skipped_not_errored ... ok
+test backend::tests::apply_resources_before_render_succeeds_and_an_unapplied_id_errors_cleanly ... ok
+test dispatch::tests::drag_session_cancels_when_released_over_no_accepting_drop_target ... ok
+test dispatch::tests::copy_over_a_selection_emits_a_clipboard_intent_without_mutating_the_buffer ... ok
+test dispatch::tests::drag_session_promotes_after_threshold_and_commits_on_an_accepting_drop_target ... ok
+test dispatch::tests::escape_closes_only_the_topmost_of_two_open_overlays ... ok
+test dispatch::tests::focus_next_and_prev_cycle_only_through_focusable_nodes ... ok
+test dispatch::tests::focusing_an_input_seeds_edit_state_from_its_value_and_blur_clears_it ... ok
+test dispatch::tests::hit_test_finds_the_topmost_of_two_non_overlapping_siblings ... ok
+test dispatch::tests::hit_test_respects_clips_children_pruning ... ok
+test dispatch::tests::hit_test_skips_hit_transparent_node_but_still_matches_its_children ... ok
+test dispatch::tests::hovering_a_leaf_marks_its_whole_ancestor_chain_hovered_and_clearing_hover_clears_it_all ... ok
+test dispatch::tests::overlay_open_and_close_flips_the_open_overlays_list ... ok
+test dispatch::tests::picking_a_descendant_row_fires_its_action_and_closes_the_popup ... ok
+test dispatch::tests::pointer_down_inside_a_dismissable_overlay_does_not_close_it ... ok
+test dispatch::tests::pointer_down_outside_a_dismissable_overlay_closes_it_and_swallows_the_press ... ok
+test dispatch::tests::ime_commit_inserts_the_composed_text_and_clears_composition ... ok
+test dispatch::tests::character_insertion_replaces_the_selection ... ok
+test dispatch::tests::releasing_off_the_captured_button_does_not_fire_its_action ... ok
+test dispatch::tests::arrow_keys_move_the_caret_and_backspace_deletes_the_previous_char ... ok
+test dispatch::tests::scroll_routes_to_the_nearest_scrollable_ancestor_and_clamps_at_zero ... ok
+test dispatch::tests::scroll_thumb_capture_drags_the_scrollable_offset_along_its_registered_axis ... ok
+test dispatch::tests::pressing_a_drag_source_then_moving_past_threshold_promotes_it_to_a_drag_session ... ok
+test dispatch::tests::stale_captured_activate_is_rejected_rather_than_misapplied ... ok
+test dispatch::tests::tab_focus_is_trapped_inside_an_open_dialog_overlay ... ok
+test element::tests::different_keys_under_the_same_parent_produce_different_ids ... ok
+test element::tests::equal_parent_and_key_produce_the_same_element_id ... ok
+test element::tests::explicit_key_survives_a_sibling_reorder ... ok
+test element::tests::frame_arena_take_and_put_back_round_trip ... ok
+test element::tests::retained_state_survives_a_rebuild_and_is_released_when_the_id_disappears ... ok
+test element::tests::same_key_under_different_parents_produces_different_ids ... ok
+test frame::tests::a_fresh_frame_engine_has_no_presented_snapshot ... ok
+test frame::tests::animation_frame_interval_is_positive_and_sub_frame_sized ... ok
+test frame::tests::frame_generation_next_is_strictly_increasing ... ok
+test layout::tests::snap_logical_rounds_taffy_remainder_noise ... ok
+test layout::tests::a_ready_measurement_does_not_mark_pending ... ok
+test layout::tests::a_pending_measurement_yields_the_placeholder_size_and_is_recorded ... ok
+test layout::tests::a_fixed_size_leaf_resolves_to_exactly_that_size ... ok
+test resource::tests::device_loss_re_marks_requested_without_changing_identity ... ok
+test resource::tests::evicted_slot_is_reused_by_the_next_allocation ... ok
+test resource::tests::eviction_bumps_generation_so_the_old_id_never_resolves_again ... ok
+test resource::tests::interning_the_same_key_twice_returns_the_same_id_and_queues_one_upload ... ok
+test resource::tests::mesh_content_hash_changes_with_indices ... ok
+test resource::tests::resident_texture_is_not_re_queued ... ok
+test resource::tests::unchanged_mesh_content_resolves_to_the_same_id_with_no_new_op ... ok
+test scene::tests::clip_region_preserves_disjoint_cutouts_and_intersects_scissor ... ok
+test resource::tests::changed_mesh_content_allocates_a_new_id_and_queues_an_upload ... ok
+test layout::tests::a_vertical_stack_places_its_second_child_below_the_first ... ok
+test scene::tests::content_hash_differs_when_an_instance_byte_changes ... ok
+test scene::tests::content_hash_is_stable_across_runs_for_identical_input ... ok
+test scene::tests::finish_emits_one_glass_batch_per_glass_region_with_a_content_hash_dependent_instance ... ok
+test scene::tests::finish_drops_layers_left_empty_by_a_push_pop_pair_that_drew_nothing ... ok
+test scene::tests::finish_rejects_non_finite_geometry ... ok
+test scene::tests::finish_merges_layers_that_return_to_an_identical_clip_state ... ok
+test scene::tests::finish_rejects_unbalanced_scissor_stack ... ok
+test scene::tests::glass_content_layers_tagged_with_foreground_of ... ok
+test scene::tests::glass_foreground_inherits_active_silhouette_clip ... ok
+test scene::tests::glass_scissor_inherits_foreground_tag ... ok
+test scene::tests::push_scissor_splits_layers ... ok
+test scene::tests::quad_instance_byte_layout_matches_the_wgpu_targets_ui_instance ... ok
+test scene::tests::pixel_snapping_is_deterministic_across_common_dprs ... ok
+test scene::tests::finish_computes_a_mask_range_for_a_silhouette_clipped_batch ... ok
+test scene::tests::scene_builder_nests_and_restores_clip_regions ... ok
+test scene::tests::scene_pass_records_layer_watermarks ... ok
+test scene::tests::scissor_covers_fractional_rect_edges_without_pixel_seams ... ok
+test scene::tests::scissor_intersects_child ... ok
+test scene::tests::stencil_policies_are_distinct ... ok
+test schedule::tests::invalidation_reason_bitor_combines_flags ... ok
+test schedule::tests::next_deadline_reports_the_soonest_pending_one ... ok
+test schedule::tests::a_deadline_fires_once_at_its_due_time ... ok
+test schedule::tests::n_invalidations_coalesce_into_one_frame ... ok
+test schedule::tests::an_invalidation_makes_the_next_should_render_call_return_it ... ok
+test schedule::tests::a_hidden_window_does_not_render_but_still_tracks_deadlines ... ok
+test schedule::tests::should_render_returns_none_for_a_clean_window ... ok
+test shader_contract::tests::vertex_attribute_offsets_fit_declared_stride ... ok
+test surface::tests::a_snapshot_revision_that_has_not_changed_does_not_mark_the_surface_dirty ... ok
+test surface::tests::an_animating_surfaces_next_deadline_reaches_the_scheduler_while_a_still_one_yields_none ... ok
+test surface::tests::an_unregistered_kind_produces_a_visible_placeholder_plus_an_error_rather_than_silence ... ok
+test surface::tests::clip_id_root_is_a_distinct_stable_value ... ok
+test surface::tests::dispatch_pointer_moved_reaches_the_surface_only_when_inside_bounds_and_in_local_coordinates ... ok
+test surface::tests::handle_input_through_any_surface_erases_and_boxes_the_concrete_intent_type ... ok
+test surface::tests::registering_a_kind_makes_create_resolve_it_without_an_error ... ok
+test surface::tests::render_placed_surface_scissors_by_bounds_preserves_call_order_for_z_and_passes_clip_through ... ok
+test surface::tests::route_pointer_event_applies_the_inverse_transform_after_the_bounds_offset ... ok
+test surface::tests::route_pointer_event_returns_none_outside_bounds_and_local_coordinates_inside ... ok
+test surface::tests::surface_resource_needs_is_empty_reports_correctly ... ok
+test surface::tests::transform2d_apply_point_translates ... ok
+test surface::tests::transform2d_identity_inverts_to_itself ... ok
+test tessellate::tests::dashed_line_segments_emit_dashes_along_segment ... ok
+test tessellate::tests::ear_clip_below_three_points_is_empty ... ok
+test element::tests::any_element_paint_before_request_layout_panics - should panic ... ok
+test tessellate::tests::empty_silhouette_clip_writes_no_visible_stencil_region ... ok
+test tessellate::tests::silhouette_mask_reset_is_bounded_to_previous_and_current_unions ... ok
+test tessellate::tests::snap_rect_snaps_both_edges_independently ... ok
+test tessellate::tests::snap_to_device_pixels_is_deterministic_across_common_dprs ... ok
+test tessellate::tests::thick_line_positions_are_symmetric_about_the_segment ... ok
+test tessellate::tests::triangle_fan_covers_every_interior_triangle ... ok
+test tessellate::tests::ear_clip_produces_triangles ... ok
+test frame::tests::build_frame_populates_parent_links_overlay_flags_and_listeners_on_the_real_tree ... ok
+test frame::tests::a_layout_container_with_no_bindings_passes_the_hit_through_to_what_is_under_it ... ok
+test frame::tests::an_overlay_registered_last_is_hit_before_the_content_beneath_it_through_the_real_pipeline ... ok
+test frame::tests::a_click_three_levels_deep_bubbles_to_the_root_through_the_built_tree ... ok
+test text::tests::utf8_utf16_index_conversion_round_trips_across_a_non_bmp_emoji ... ok
+test text::tests::measuring_ascii_run_is_stable_and_matches_shaped_advance ... ok
+test text::tests::measuring_the_same_string_twice_serves_the_second_call_from_the_shape_cache ... ok
+test text::tests::cursor_movement_never_lands_inside_the_emoji_grapheme_cluster ... ok
+test text::tests::selection_geometry_covers_the_requested_range_with_at_least_one_rect ... ok
+test text::tests::measuring_with_an_unloaded_custom_font_yields_pending_with_a_placeholder ... ok
+test text::tests::wrapping_breaks_at_max_width_and_never_mid_char ... ok
+test text::tests::atlas_insertion_queues_exactly_one_upload_and_a_repeat_glyph_queues_none ... ok
+test shader_contract::tests::all_canonical_shaders_parse_and_validate ... ok
+test shader_contract::tests::pipeline_entry_points_exist_in_shader ... ok
+
+test result: ok. 125 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+   Doc-tests semio_framework_ui_render
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

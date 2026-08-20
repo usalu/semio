@@ -543,7 +543,7 @@ async fn wit_effect_to_kernel(effect: wit_effects::Effect) -> Result<semio_frame
 
 //#region 🌿️pure::Host
 /// 🌿️ Byte-for-byte the same behaviour as `actor_bindings`'s own `pure::Host for ActorHostState` —
-/// `world actor-async` imports `pure` unchanged from `world actor`.
+/// there is one world now and it imports `pure` unchanged.
 impl host_async_bindings::semio::framework::pure::Host for AsyncActorHostState {
     // 🚫️async: E1 — see `actor_bindings::…::pure::Host`'s own tag above; identical WIT contract.
     fn log(&mut self, level: String, message: String) {

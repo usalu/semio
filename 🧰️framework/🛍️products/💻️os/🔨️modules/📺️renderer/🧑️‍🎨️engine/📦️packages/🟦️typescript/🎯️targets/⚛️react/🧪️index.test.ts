@@ -18,8 +18,14 @@ import {
   type ToolDefinition,
   type WindowMeasure,
   type UtilityNode,
-  type UiNode,
+  type Component,
+  type UiNodeRecord,
+  type UiSnapshot,
+  type ActionBinding,
+  type LayoutSpec,
   createMemoryStoragePort,
+  createTurnOutcomeBroadcast,
+  type TurnOutcome,
 } from "@semio-tech/framework";
 import {
   ENTWERFEN_MIT_BESTAND_AGGREGATOR_BRAND,
@@ -139,6 +145,10 @@ import {
   adaptPluginHandle,
   fetchDescriptorManifest,
   applyUiPatchToRetained,
+  UiDocumentStore,
+  type UiInterpreterContext,
+  UiPresenceOverlayContext,
+  type UiPresenceOverlayEntry,
   serializePerActor,
   applyUiRefreshResponseToCache,
   resolveAppBreadcrumb,
@@ -275,6 +285,75 @@ if (!Element.prototype.scrollIntoView) Element.prototype.scrollIntoView = () => 
 //#endregion 🔌️jsdom polyfills
 
 const noopAction = () => {};
+
+//#region 🧪️Contract test fixtures
+// 🧬️ MIGRATION (react-tests packet, ticket 26/08/20): helpers for building `UiSnapshot` fixtures
+// directly against the semantic contract, mirroring `UiDocumentStore`'s/`Interpreter`'s own inline
+// test `leaf`/`snapshot` helpers so fixture shape stays one convention across the package, not a
+// second drifting copy.
+type ContractNodeSpec = {
+  readonly key: string;
+  readonly component: Component;
+  readonly layout?: LayoutSpec;
+  readonly disabled?: boolean;
+  readonly bindings?: readonly ActionBinding[];
+  readonly children?: readonly ContractNodeSpec[];
+};
+
+const CONTRACT_LEAF_LAYOUT: LayoutSpec = { kind: "leaf", width: "hug", height: "hug" };
+
+function buildContractSnapshot(root: ContractNodeSpec): UiSnapshot {
+  const nodes: UiNodeRecord[] = [];
+  let nextId = 0;
+  const walk = (spec: ContractNodeSpec): number => {
+    const id = nextId;
+    nextId += 1;
+    const children = (spec.children ?? []).map(walk);
+    nodes.push({
+      id,
+      key: spec.key,
+      component: spec.component,
+      layout: spec.layout ?? CONTRACT_LEAF_LAYOUT,
+      style: {},
+      activity: "idle",
+      disabled: spec.disabled ?? false,
+      transition: null,
+      accessibility: {},
+      bindings: spec.bindings ?? [],
+      menu: null,
+      children,
+    });
+    return id;
+  };
+  const rootId = walk(root);
+  return { surface: "test", revision: 0, root: rootId, nodes, layoutEpoch: 0 } as UiSnapshot;
+}
+
+/** 🌳️ Renders `root` (and its nested `children`) through the real `UiDocumentStore`/`interpretUiNode`
+ * production path — never a hand-rolled shadow renderer — optionally under a `UiPresenceOverlayContext`
+ * so hover/selection-driven markup (never a document field, per the contract) can be exercised too.
+ *
+ * 🪲️ PRODUCTION BUG (reported, not fixed — forbidden file): `UiDocumentStore`'s `useUiNode` calls
+ * `useSyncExternalStore(subscribe, getSnapshot)` with only two arguments — no `getServerSnapshot` —
+ * which React's SSR path (`renderToStaticMarkup`/`renderToString`) throws on ("Missing
+ * getServerSnapshot, which is required for server-rendered content"). Every pre-migration test in
+ * this describe block used `renderToStaticMarkup` (the old Interpreter had no store/hook to trip
+ * this on); this helper uses client-side `render()` instead, which does not hit the SSR path — a
+ * test-only workaround, not a fix for the underlying gap. See `UiDocumentStore/🟦️component.tsx`'s
+ * `useUiNode`/`useUiDocumentRoot`/`useUiDocumentRevision`.
+ */
+function renderContractTree(root: ContractNodeSpec, presenceByKey?: Readonly<Record<string, UiPresenceOverlayEntry>>): string {
+  const store = new UiDocumentStore("test");
+  store.loadSnapshot(buildContractSnapshot(root));
+  const context: UiInterpreterContext = { store, onAction: noopAction, onIntent: () => {} };
+  const tree = interpretUiNode(store, context);
+  const element = presenceByKey ? createElement(UiPresenceOverlayContext.Provider, { value: { byKey: new Map(Object.entries(presenceByKey)) } }, tree) : (tree as ReactElement);
+  const { container } = render(element);
+  const markup = container.innerHTML;
+  cleanup();
+  return markup;
+}
+//#endregion 🧪️Contract test fixtures
 
 describe("framework sync utilities", () => {
   it("builds three sync backbone toggles", async () => {
@@ -1066,29 +1145,56 @@ describe("batched ui refresh request/response (puzzle 2d perf round 3)", () => {
 
 describe("framework plugin runtime", () => {
   // 🔌️ HEADLESS-APP-ENGINE-BINARY-COMMAND-PROTOCOL-FOUNDATIONS: the WIT ABI flipped from 14
-  // per-verb `{json: string}` calls to 5 binary functions (`manifest`/`createApp`/`destroyApp`/
-  // `exchange`/`migrate-document`) framing `protocol_channel::AppCommand`/`AppFrame` bytes. These
-  // fakes speak that new ABI directly (`exchange` decodes/encodes real frames via the os-core
-  // codecs) instead of the old flat `semio_plugin_*` wasm-bindgen JSON exports, which no longer
-  // exist anywhere in the ABI (`loadPluginModuleUncached`'s doc comment).
+  // per-verb `{json: string}` calls to `manifest`/`createApp`/`destroyApp` plus `protocol_channel::
+  // AppCommand`/`AppFrame` bytes carried over the turn ABI, instead of the old flat `semio_plugin_*`
+  // wasm-bindgen JSON exports, which no longer exist anywhere in the ABI
+  // (`loadPluginModuleUncached`'s doc comment).
   // 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (H1-react, absorbing A4-channel's lease against this
   // file): channel v12 retired `AppCommand::RefreshUi`/`SectionProbe` and `AppFrame::UiSection` —
   // window-body refresh is no longer a request/response round trip at all, it is a
   // `Event::SurfaceVisible` submission read back through `TurnResult.uiPatches` via the
   // `ActivationRegistry`/`ShardClient` pair `loadPluginModule` owns (`🧱️elements/PluginRuntime/🟦️component.tsx`'s
   // `🔖️ActorAdapter` region). `adaptPluginHandle` alone (what this test constructs, via a bare
-  // `exchange`-only fake — no actor, no ShardClient) genuinely has no wire path left to ask for a
+  // fake with no actor and no ShardClient) genuinely has no wire path left to ask for a
   // section body over, so its own `refreshUi` is an honest empty result — asserted here rather than
   // deleted, since "no wire path here anymore" is itself real, worth-pinning behavior.
-  it("adaptPluginHandle's own refreshUi is an honest empty result — window-body refresh now lives in loadPluginModule's ActivationRegistry/ShardClient turn loop, which a bare exchange-only handle has no access to", async () => {
+  //
+  // 🎫️ ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (`exchange-removal`): the raw
+  // `KernelPluginWasmHandle`'s old synchronous `exchange(instanceId, frames) -> Promise<frames>`
+  // per-call RPC is gone (`📌️important.md`'s "Replace, never wrap" list) — split into fire-and-forget
+  // `enqueue(instanceId, events): void` plus the handle-wide `outcomes: AsyncIterable<TurnOutcome>`
+  // broadcast `AppChannelClient` correlates FIFO against (`🎠️kernel/🟦️component.ts`'s
+  // `PluginWasmHandle` header doc). This helper re-creates `exchange`'s old request/reply shape on
+  // top of the two new primitives, purely for these fakes' own convenience — production code never
+  // has a synchronous responder like this to call.
+  function exchangeStyleChannel(
+    respond: (instanceId: number, frames: Uint8Array[]) => Uint8Array[] | Promise<Uint8Array[]>,
+  ): { readonly enqueue: (instanceId: number, events: readonly Uint8Array[]) => void; readonly outcomes: AsyncIterable<TurnOutcome> } {
+    const broadcast = createTurnOutcomeBroadcast<TurnOutcome>();
+    return {
+      enqueue: (instanceId, events) => {
+        void (async () => {
+          try {
+            const frames = await respond(instanceId, [...events]);
+            broadcast.push({ instanceId, frames });
+          } catch (error) {
+            broadcast.push({ instanceId, error });
+          }
+        })();
+      },
+      outcomes: broadcast.stream,
+    };
+  }
+
+  it("adaptPluginHandle's own refreshUi is an honest empty result — window-body refresh now lives in loadPluginModule's ActivationRegistry/ShardClient turn loop, which a bare no-command handle has no access to", async () => {
     const { encodePackValue } = await import("@semio-tech/framework-os");
     const fakeHandle = {
       manifest: async () => encodePackValue({ pluginId: "mock-refresh", label: "Mock Refresh", version: "0", apps: [], programs: [], examples: [] }),
       createApp: async () => 7,
       destroyApp: async () => {},
-      exchange: async () => {
-        throw new Error("adaptPluginHandle.refreshUi must not call exchange() — there is no AppCommand for it anymore");
-      },
+      ...exchangeStyleChannel(() => {
+        throw new Error("adaptPluginHandle.refreshUi must not call enqueue() — there is no AppCommand for it anymore");
+      }),
       dispose: () => {},
     };
     const handle = await adaptPluginHandle("mock-refresh", { handle: fakeHandle, release: () => {} } as unknown as Parameters<typeof adaptPluginHandle>[1]);
@@ -1127,30 +1233,50 @@ describe("framework plugin runtime", () => {
   // coverage of "apply a `UiPatch` to a retained tree, honour `baseRevision`" that does not depend on
   // the unverified jco wasm boundary this file's `🔖️ActorAdapter` doc flags.
   describe("applyUiPatchToRetained", () => {
-    const node = (value: string) => ({ type: "text", value }) as unknown as UiNode;
+    // 🧬️ MIGRATION (react-tests packet): `PatchOp::Replace`'s payload is a whole `UiSnapshot` (root
+    // pointer + flat node table), not a single recursive `UiNode` (deleted) — see
+    // `PluginRuntime/🟦️component.tsx`'s own `🔖️RetainedUiPatch` doc. `RetainedSurface` is a
+    // `UiDocumentState`, so a successful result's `surface.nodes` is a `ReadonlyMap`, not a bare node.
+    const leaf = (id: number, value: string): UiNodeRecord => ({
+      id,
+      key: `leaf-${id}`,
+      component: { type: "text", value, emphasize: null, dataAttributes: null },
+      layout: { kind: "leaf", width: "hug", height: "hug" },
+      style: {},
+      activity: "idle",
+      disabled: false,
+      transition: null,
+      accessibility: {},
+      bindings: [],
+      menu: null,
+      children: [],
+    });
+    const snapshot = (revision: number, value: string): UiSnapshot => ({ surface: "s", revision, root: 0, nodes: [leaf(0, value)], layoutEpoch: 0 }) as UiSnapshot;
 
     it("a root Replace on a fresh surface (no previous body) is applied", () => {
-      const result = applyUiPatchToRetained(null, { revision: 1, baseRevision: 0, ops: [{ kind: "Replace", path: [], node: node("a") }] });
+      const result = applyUiPatchToRetained(null, { revision: 1, baseRevision: 0, ops: [{ kind: "Replace", path: [], snapshot: snapshot(1, "a") }] });
       expect(result.desynced).toBe(false);
-      expect(result.surface).toEqual({ revision: 1, node: node("a") });
+      expect(result.surface?.revision).toBe(1);
+      expect(result.surface?.nodes.get(0)?.component).toEqual({ type: "text", value: "a", emphasize: null, dataAttributes: null });
     });
 
     it("a root Replace with a matching baseRevision advances the retained body", () => {
-      const previous = { revision: 1, node: node("a") };
-      const result = applyUiPatchToRetained(previous, { revision: 2, baseRevision: 1, ops: [{ kind: "Replace", path: [], node: node("b") }] });
+      const { surface: previous } = applyUiPatchToRetained(null, { revision: 1, baseRevision: 0, ops: [{ kind: "Replace", path: [], snapshot: snapshot(1, "a") }] });
+      const result = applyUiPatchToRetained(previous, { revision: 2, baseRevision: 1, ops: [{ kind: "Replace", path: [], snapshot: snapshot(2, "b") }] });
       expect(result.desynced).toBe(false);
-      expect(result.surface).toEqual({ revision: 2, node: node("b") });
+      expect(result.surface?.revision).toBe(2);
+      expect(result.surface?.nodes.get(0)?.component).toEqual({ type: "text", value: "b", emphasize: null, dataAttributes: null });
     });
 
     it("a non-root op (no incremental walker yet) is an honest desync — the previous body is kept", () => {
-      const previous = { revision: 1, node: node("a") };
+      const { surface: previous } = applyUiPatchToRetained(null, { revision: 1, baseRevision: 0, ops: [{ kind: "Replace", path: [], snapshot: snapshot(1, "a") }] });
       const result = applyUiPatchToRetained(previous, { revision: 2, baseRevision: 1, ops: [{ kind: "SetProps", path: [0], props: {} }] });
       expect(result.desynced).toBe(true);
       expect(result.surface).toBe(previous);
     });
 
     it("an ops-less patch with a stale baseRevision is a desync — nothing to reconcile against", () => {
-      const previous = { revision: 5, node: node("a") };
+      const { surface: previous } = applyUiPatchToRetained(null, { revision: 5, baseRevision: 0, ops: [{ kind: "Replace", path: [], snapshot: snapshot(5, "a") }] });
       const result = applyUiPatchToRetained(previous, { revision: 6, baseRevision: 1, ops: [] });
       expect(result.desynced).toBe(true);
       expect(result.surface).toBe(previous);
@@ -1177,7 +1303,7 @@ describe("framework plugin runtime", () => {
     expect(parseInvocationResponse(JSON.stringify({ output: null }))).toEqual({ output: null, mutations: [], inverseGroup: { invocationId: "", mutations: [], inverseMutations: [] } });
   });
 
-  // 🧬️ H1-react — `withSerializedPluginWasmHandle` (which queued concurrent `exchange()` calls
+  // 🧬️ H1-react — `withSerializedPluginWasmHandle` (which queued concurrent per-call requests
   // transparently against the old synchronous wasm handle) is deleted alongside `PluginWorkerClient`
   // (`🎠️kernel/🟦️component.ts`'s own doc comment names it). The reason it existed still applies:
   // `🟨️shard-worker.js` REJECTS (does not queue) a second in-flight `turn` for the same actor
@@ -1232,25 +1358,25 @@ describe("framework plugin runtime", () => {
 
   // 🧬️ H1-react — `AppFrame::Effects`/`Events` no longer exist (channel v12, A4-channel). Effects
   // now travel as real `kernel::Effect` values directly on `TurnResult.effects`
-  // (`⚛️reactor/🦀️component.rs`'s `poll`), demuxed by `loadPluginModule`'s `exchange()` into
-  // `pendingTurnEffects`/drained by `performInvocation` — a mechanism a bare `exchange`-only fake (no
+  // (`⚛️reactor/🦀️component.rs`'s `poll`), demuxed by `loadPluginModule`'s turn loop into
+  // `pendingTurnEffects`/drained by `performInvocation` — a mechanism a bare command-only fake (no
   // ShardClient turn ever runs) has nothing to populate, so `requestedEffects` is honestly `[]` here.
   // `output`/`uiScope`/`historyPatch` still arrive on the SAME `AppFrame::Invocation` frame, unchanged
   // by the flip — real wire coverage, kept.
-  it("adaptPluginHandle.handleAction round-trips an action's output/uiScope/historyPatch from AppFrame::Invocation; requestedEffects is honestly empty for a bare exchange-only handle", async () => {
+  it("adaptPluginHandle.handleAction round-trips an action's output/uiScope/historyPatch from AppFrame::Invocation; requestedEffects is honestly empty for a bare command-only handle", async () => {
     const { encodeAppFrame, decodeAppCommand, encodePackValue, decodePackValue } = await import("@semio-tech/framework-os");
     const fakeHandle = {
       manifest: async () => encodePackValue({ pluginId: "mock-action", label: "Mock Action", version: "0", apps: [], programs: [], examples: [] }),
       createApp: async () => 3,
       destroyApp: async () => {},
-      exchange: async (_instanceId: number, frames: Uint8Array[]) => {
+      ...exchangeStyleChannel((_instanceId, frames) => {
         const [command] = frames.map(decodeAppCommand);
         if (!command || typeof command !== "object" || !("Command" in command)) throw new Error("expected a Command");
         const invocation = decodePackValue(new Uint8Array(command.Command.command));
         return [
           encodeAppFrame({ Invocation: { in_reply_to: command.Command.seq, output: Array.from(encodePackValue({ echo: invocation })), diagnostics: Array.from(encodePackValue([])), ui_scope: Array.from(encodePackValue({ kind: "partial", windowBodies: ["graph"], utilities: false })), history_patch: Array.from(encodePackValue({ cursor: 1, upserts: [] })), messages: [] } }),
         ];
-      },
+      }),
       dispose: () => {},
     };
     const handle = await adaptPluginHandle("mock-action", { handle: fakeHandle, release: () => {} } as unknown as Parameters<typeof adaptPluginHandle>[1]);
@@ -1270,7 +1396,7 @@ describe("framework plugin runtime", () => {
       manifest: async () => encodePackValue({ pluginId: "mock-merge", label: "Mock Merge", version: "0", apps: [], programs: [], examples: [] }),
       createApp: async () => 9,
       destroyApp: async () => {},
-      exchange: async (_instanceId: number, frames: Uint8Array[]) => {
+      ...exchangeStyleChannel((_instanceId, frames) => {
         const [command] = frames.map(decodeAppCommand);
         sentCommands.push(command);
         if (command && typeof command === "object" && "setMergePolicy" in command) return [];
@@ -1285,7 +1411,7 @@ describe("framework plugin runtime", () => {
           return [encodeAppFrame({ Conflicts: { in_reply_to: command.readConflicts.seq, conflicts: Array.from(encodePackValue([])) } })];
         }
         throw new Error(`unexpected command ${JSON.stringify(command)}`);
-      },
+      }),
       dispose: () => {},
     };
     const handle = await adaptPluginHandle("mock-merge", { handle: fakeHandle, release: () => {} } as unknown as Parameters<typeof adaptPluginHandle>[1]);
@@ -1322,7 +1448,7 @@ describe("framework plugin runtime", () => {
       manifest: async () => encodePackValue({ pluginId: "mock-remote-merge", label: "Mock Remote Merge", version: "0", apps: [], programs: [], examples: [] }),
       createApp: async () => 11,
       destroyApp: async () => {},
-      exchange: async (_instanceId: number, frames: Uint8Array[]) => {
+      ...exchangeStyleChannel((_instanceId, frames) => {
         const [command] = frames.map(decodeAppCommand);
         if (!command || typeof command !== "object" || !("ApplyEnvelopes" in command)) throw new Error(`unexpected command ${JSON.stringify(command)}`);
         const seq = command.ApplyEnvelopes.seq;
@@ -1333,7 +1459,7 @@ describe("framework plugin runtime", () => {
           encodeAppFrame({ MergeReport: { in_reply_to: seq, report: Array.from(encodePackValue({ policy: "Normal", accepted: false, insertionIndex: 0, replayed: [], worst: "error", conflict: remoteConflict.id })) } }),
           encodeAppFrame({ Conflicts: { in_reply_to: seq, conflicts: Array.from(encodePackValue([remoteConflict])) } }),
         ];
-      },
+      }),
       dispose: () => {},
     };
     const handle = await adaptPluginHandle("mock-remote-merge", { handle: fakeHandle, release: () => {} } as unknown as Parameters<typeof adaptPluginHandle>[1]);
@@ -1415,7 +1541,7 @@ describe("framework renderer types", () => {
   });
 
   it("accepts component scene nodes", () => {
-    const node: UiNode = {
+    const node = {
       type: "componentScene",
       surfaceId: "draw.play.composite",
       controllerId: "draw-play",
@@ -1431,7 +1557,7 @@ describe("framework renderer types", () => {
   });
 
   it("accepts graph-timeline component scene nodes", () => {
-    const node: UiNode = {
+    const node = {
       type: "componentScene",
       surfaceId: "vcs.play.history",
       controllerId: "vcs-play",
@@ -1458,7 +1584,12 @@ describe("framework external slots", () => {
       manifest: async () => encodePackValue({ pluginId: "forms-module-procedural", label: "Module", version: "0", apps: [], programs: [], examples: [] }),
       createApp: async () => 7,
       destroyApp: async () => {},
-      exchange: async () => [],
+      // 🎫️ `exchange-removal`: this handle is only ever placed in `ExternalSlotResolverContext.plugins`
+      // (typed `ReadonlyMap<string, PluginWasmHandle>`, `🎠️kernel/🟦️component.ts`) — `resolveExternalSlots`
+      // degrades to "unavailable" before ever touching `enqueue`/`outcomes` (see this test's own header
+      // doc), so these two only need to satisfy the shape, never actually fire.
+      enqueue: () => {},
+      outcomes: createTurnOutcomeBroadcast<TurnOutcome>().stream,
       dispose: () => {},
     };
     const resolved = await resolveExternalSlots(
@@ -1479,28 +1610,19 @@ describe("framework external slots", () => {
   });
 
   it("renders external slot fallback text when unresolved", () => {
-    const markup = renderToStaticMarkup(
-      interpretUiNode(
-        {
-          type: "externalSlot",
-          pluginId: "missing-module",
-          appId: "missing-module",
-          bodyKey: "preview",
-          paramsJson: "{}",
-        },
-        { onAction: noopAction },
-      ),
-    );
+    // 🧬️ MIGRATION: `Component::Extension` (the old `ExternalSlot`) collapses `pluginId`/`appId`/
+    // `bodyKey` into one opaque `extension` address string — see `ExtensionProps`'s own doc.
+    const markup = renderContractTree({ key: "missing-module", component: { type: "extension", extension: "missing-module", props: {} } });
     expect(markup).toContain("Extension unavailable: missing-module");
   });
 });
 
 describe("declarative forms parity", () => {
   it("renders declarative text with appearance-aware foreground", () => {
-    const markup = renderToStaticMarkup(interpretUiNode({ type: "text", value: "Hello flow" }, { onAction: noopAction }));
+    const markup = renderContractTree({ key: "text", component: { type: "text", value: "Hello flow", emphasize: null, dataAttributes: null } });
     expect(markup).toContain("text-foreground");
     expect(markup).toContain("Hello flow");
-    const emphasized = renderToStaticMarkup(interpretUiNode({ type: "text", value: "Emphasized", emphasize: true }, { onAction: noopAction }));
+    const emphasized = renderContractTree({ key: "text", component: { type: "text", value: "Emphasized", emphasize: true, dataAttributes: null } });
     expect(emphasized).toContain("text-foreground");
     expect(emphasized).toContain("font-semibold");
   });
@@ -1524,26 +1646,13 @@ describe("declarative forms parity", () => {
   });
 
   it("renders field description, required marker and inline error", () => {
-    const markup = renderToStaticMarkup(
-      interpretUiNode(
-        {
-          type: "field",
-          id: "forms-try.name",
-          label: "Name",
-          description: "Your full name",
-          required: true,
-          error: "Name is required",
-          child: {
-            type: "input",
-            id: "forms-try.name.input",
-            inputKind: "text",
-            value: "",
-            onChange: { controllerId: "forms-play", action: "setTryValue" },
-          },
-        },
-        { onAction: noopAction },
-      ),
-    );
+    // 🧬️ MIGRATION: the old `field`/`input` `UiNode` pair collapses into one `Component::Container`
+    // (`role: "field"`) whose single child IS the input — `ContainerProps`'s own doc.
+    const markup = renderContractTree({
+      key: "forms-try.name",
+      component: { type: "container", role: "field", label: "Name", description: "Your full name", required: true, error: "Name is required", defaultOpen: null, dropOverlay: null },
+      children: [{ key: "forms-try.name.input", component: { type: "input", kind: "text", value: "", placeholder: null, commit: null, min: null, max: null, step: null, accept: null } }],
+    });
     expect(markup).toContain("Your full name");
     expect(markup).toContain("Name is required");
     expect(markup).toContain("*");
@@ -1551,39 +1660,12 @@ describe("declarative forms parity", () => {
   });
 
   it("renders slider unit readout", () => {
-    const markup = renderToStaticMarkup(
-      interpretUiNode(
-        {
-          type: "slider",
-          id: "forms-try.volume.slider",
-          value: 60,
-          min: 0,
-          max: 100,
-          step: 5,
-          unit: "%",
-          onChange: { controllerId: "forms-play", action: "setTryValue" },
-        },
-        { onAction: noopAction },
-      ),
-    );
+    const markup = renderContractTree({ key: "forms-try.volume.slider", component: { type: "slider", value: 60, min: 0, max: 100, step: 5, unit: "%" } });
     expect(markup).toContain("60 %");
   });
 
   it("renders numberStepper as a single-border Stepper control, not hand-rolled double-bordered buttons", () => {
-    const markup = renderToStaticMarkup(
-      interpretUiNode(
-        {
-          type: "numberStepper",
-          id: "forms-try.height.stepper",
-          value: 3,
-          step: 1,
-          uniform: true,
-          onAbsolute: { controllerId: "forms-play", action: "setTryValueAbsolute" },
-          onDelta: { controllerId: "forms-play", action: "setTryValueDelta" },
-        },
-        { onAction: noopAction },
-      ),
-    );
+    const markup = renderContractTree({ key: "forms-try.height.stepper", component: { type: "numberStepper", value: 3, step: 1, uniform: true } });
     expect(markup).toContain('data-slot="stepper-group"');
     expect(markup).toContain('data-slot="stepper-minus"');
     expect(markup).toContain('data-slot="stepper-plus"');
@@ -1591,191 +1673,117 @@ describe("declarative forms parity", () => {
   });
 
   it("shows the mixed-values placeholder on a non-uniform numberStepper", () => {
-    const markup = renderToStaticMarkup(
-      interpretUiNode(
-        {
-          type: "numberStepper",
-          id: "forms-try.height.stepper",
-          value: 0,
-          step: 1,
-          uniform: false,
-          onAbsolute: { controllerId: "forms-play", action: "setTryValueAbsolute" },
-          onDelta: { controllerId: "forms-play", action: "setTryValueDelta" },
-        },
-        { onAction: noopAction },
-      ),
-    );
+    const markup = renderContractTree({ key: "forms-try.height.stepper", component: { type: "numberStepper", value: 0, step: 1, uniform: false } });
     expect(markup).toContain('data-mixed="true"');
   });
 
   it("renders a group node as a labeled section nesting its child controls (Origin > X/Y/Z steppers)", () => {
-    const markup = renderToStaticMarkup(
-      interpretUiNode(
+    // 🧬️ MIGRATION: `group`/`field` both collapse into `Component::Container` (`role: "group"` /
+    // `role: "field"`) — the old `child: Box<UiNode>` singular is simply `children[0]` on the record.
+    const markup = renderContractTree({
+      key: "puzzle3d-play-inspector.object.origin",
+      component: { type: "container", role: "group", label: "Origin", description: null, required: null, error: null, defaultOpen: true, dropOverlay: null },
+      children: [
         {
-          type: "group",
-          id: "puzzle3d-play-inspector.object.origin",
-          label: "Origin",
-          defaultOpen: true,
-          children: [
-            {
-              type: "field",
-              id: "puzzle3d-play-inspector.object.origin.x",
-              label: "X",
-              child: { type: "numberStepper", id: "puzzle3d-play-inspector.object.origin.x", value: 1, step: 0.1, uniform: true, onAbsolute: { controllerId: "puzzle3d-play", action: "patchInspector" }, onDelta: { controllerId: "puzzle3d-play", action: "patchInspector" } },
-            },
-            {
-              type: "field",
-              id: "puzzle3d-play-inspector.object.origin.y",
-              label: "Y",
-              child: { type: "numberStepper", id: "puzzle3d-play-inspector.object.origin.y", value: 2, step: 0.1, uniform: true, onAbsolute: { controllerId: "puzzle3d-play", action: "patchInspector" }, onDelta: { controllerId: "puzzle3d-play", action: "patchInspector" } },
-            },
-          ],
+          key: "puzzle3d-play-inspector.object.origin.x",
+          component: { type: "container", role: "field", label: "X", description: null, required: null, error: null, defaultOpen: null, dropOverlay: null },
+          children: [{ key: "puzzle3d-play-inspector.object.origin.x.stepper", component: { type: "numberStepper", value: 1, step: 0.1, uniform: true } }],
         },
-        { onAction: noopAction },
-      ),
-    );
+        {
+          key: "puzzle3d-play-inspector.object.origin.y",
+          component: { type: "container", role: "field", label: "Y", description: null, required: null, error: null, defaultOpen: null, dropOverlay: null },
+          children: [{ key: "puzzle3d-play-inspector.object.origin.y.stepper", component: { type: "numberStepper", value: 2, step: 0.1, uniform: true } }],
+        },
+      ],
+    });
     expect(markup).toContain(">Origin</h2>");
     expect(markup).toContain(">X</label>");
     expect(markup).toContain(">Y</label>");
     expect(markup).toContain('data-slot="stepper-group"');
   });
 
-  it("tokenizes stack node gap/padding instead of hardcoded rem inline styles, and keeps separators off raw border-border", () => {
-    const markup = renderToStaticMarkup(
-      interpretUiNode(
-        {
-          type: "stack",
-          direction: "vertical",
-          id: "forms-blueprint.section.q1",
-          gap: "tight",
-          children: [{ type: "text", value: "text · q1" }, { type: "separator" }],
-        },
-        { onAction: noopAction },
-      ),
-    );
-    expect(markup).toContain("gap-single");
-    expect(markup).not.toContain("style=");
+  // 🧬️ MIGRATION: `LayoutSpec`'s stack `gap`/`padding` are now a closed `SpaceToken` enum resolved to
+  // inline CSS via `spaceTokenRem` (Interpreter's own `layoutSpecStyle`/`LayoutAndStyle` region) —
+  // the new architecture's real replacement for "never a hardcoded raw rem" is a renderer-neutral
+  // token resolved to CSS at read time, not the pre-migration Tailwind-gap-class scheme this test
+  // used to assert (`not.toContain("style=")` is no longer true BY DESIGN, not a regression — see
+  // `react-renderer` packet's own decisions doc). Rewritten to assert the token resolves through that
+  // closed scale (never an arbitrary raw number), while separators still avoid the raw
+  // `border-border` utility class.
+  it("resolves stack gap/padding through the closed SpaceToken scale as inline CSS, and keeps separators off raw border-border", () => {
+    const markup = renderContractTree({
+      key: "forms-blueprint.section.q1",
+      component: { type: "container", role: "plain", label: null, description: null, required: null, error: null, defaultOpen: null, dropOverlay: null },
+      layout: { kind: "stack", axis: "vertical", gap: "xs", padding: { all: "none" }, align: "start", justify: "start", grow: false, wrap: false },
+      children: [
+        { key: "text", component: { type: "text", value: "text · q1", emphasize: null, dataAttributes: null } },
+        { key: "sep", component: { type: "separator" } },
+      ],
+    });
+    expect(markup).toMatch(/gap:\s*0\.2rem/);
     expect(markup).not.toContain("border-border");
   });
 
   it("passes number bounds and file accept to inputs", () => {
-    const numberMarkup = renderToStaticMarkup(
-      interpretUiNode(
-        {
-          type: "input",
-          id: "forms-try.age.input",
-          inputKind: "number",
-          value: "28",
-          min: 13,
-          max: 120,
-          step: 1,
-          onChange: { controllerId: "forms-play", action: "setTryValue" },
-        },
-        { onAction: noopAction },
-      ),
-    );
+    const numberMarkup = renderContractTree({ key: "forms-try.age.input", component: { type: "input", kind: "number", value: "28", placeholder: null, commit: null, min: 13, max: 120, step: 1, accept: null } });
     expect(numberMarkup).toContain('min="13"');
     expect(numberMarkup).toContain('max="120"');
-    const fileMarkup = renderToStaticMarkup(
-      interpretUiNode(
-        {
-          type: "input",
-          id: "forms-try.resume.input",
-          inputKind: "file",
-          value: "",
-          accept: ".pdf,.doc",
-          onChange: { controllerId: "forms-play", action: "setTryValue" },
-        },
-        { onAction: noopAction },
-      ),
-    );
+    const fileMarkup = renderContractTree({ key: "forms-try.resume.input", component: { type: "input", kind: "file", value: "", placeholder: null, commit: null, min: null, max: null, step: null, accept: ".pdf,.doc" } });
     expect(fileMarkup).toContain('accept=".pdf,.doc"');
   });
 
   it("disables gated wizard buttons", () => {
-    const markup = renderToStaticMarkup(
-      interpretUiNode(
-        {
-          type: "button",
-          id: "forms-try.next",
-          iconId: "chevron-right",
-          label: "Next",
-          disabled: true,
-          action: { controllerId: "forms-play", action: "nextStep" },
-        },
-        { onAction: noopAction },
-      ),
-    );
+    // 🧬️ MIGRATION: `disabled` moved off the component (`ButtonProps` no longer carries it) onto the
+    // record itself (`record.disabled` — `ButtonView`'s own `disabled={record.disabled}`); `action`
+    // moved to the record's `bindings`, keyed by `Trigger::Activate`.
+    const markup = renderContractTree({
+      key: "forms-try.next",
+      component: { type: "button", icon: "chevron-right", label: "Next" },
+      disabled: true,
+      bindings: [{ trigger: "activate", action: { scope: "forms-play", name: "nextStep", version: 1 }, args: null, capability: null }],
+    });
     expect(markup).toContain("disabled");
   });
 
   it("renders selectable builder cards with selection ring", () => {
-    const markup = renderToStaticMarkup(
-      interpretUiNode(
-        {
-          type: "stack",
-          direction: "vertical",
-          id: "forms-blueprint.card.q1",
-          selected: true,
-          activate: { controllerId: "forms-play", action: "setSelection" },
-          children: [{ type: "text", value: "text · q1" }],
-        },
-        { onAction: noopAction },
-      ),
+    // 🧬️ MIGRATION: `selected` is no longer a document field — presence (hover/selection) is a
+    // separate `UiPresenceOverlayContext` channel keyed by `UiNodeRecord.key`, fed from
+    // `PresenceUpdate` wire messages, never part of the retained document (`PresenceOverlay`
+    // region's own doc: "presence changes at input frequency and must not touch a document
+    // revision"). `data-ui-path` (a tree-position string) is gone too — the record's own stable
+    // `data-ui-node-id` is the only per-node DOM handle now.
+    const markup = renderContractTree(
+      {
+        key: "forms-blueprint.card.q1",
+        component: { type: "container", role: "plain", label: null, description: null, required: null, error: null, defaultOpen: null, dropOverlay: null },
+        bindings: [{ trigger: "activate", action: { scope: "forms-play", name: "setSelection", version: 1 }, args: null, capability: null }],
+        children: [{ key: "text", component: { type: "text", value: "text · q1", emphasize: null, dataAttributes: null } }],
+      },
+      { "forms-blueprint.card.q1": { selected: true } },
     );
-    expect(markup).toContain('data-ui-path="stack[0]#forms-blueprint.card.q1"');
+    expect(markup).toContain('data-ui-node-id="0"');
     expect(markup).toContain('role="button"');
     expect(markup).toContain("ring-primary");
   });
 
   it("renders image nodes from url sources", () => {
-    const markup = renderToStaticMarkup(
-      interpretUiNode(
-        {
-          type: "image",
-          id: "forms-try.avatar.image",
-          src: "https://example.com/avatar.png",
-          alt: "Avatar",
-        },
-        { onAction: noopAction },
-      ),
-    );
+    const markup = renderContractTree({ key: "forms-try.avatar.image", component: { type: "image", src: "https://example.com/avatar.png", alt: "Avatar" } });
     expect(markup).toContain('src="https://example.com/avatar.png"');
     expect(markup).toContain('alt="Avatar"');
   });
 
-  it("dispatches the tree drop action with payload, target and position", async () => {
-    const { declarativeTreeDragController } = await import("./📦️index.tsx");
-    const dispatched: unknown[] = [];
-    const controller = declarativeTreeDragController(
-      {
-        type: "tree",
-        sections: [{ id: "steps", items: [{ id: "forms-play-document.step.s1", label: "Inputs" }] }],
-        dropAction: { controllerId: "forms-play", action: "dropQuestionKind" },
-      },
-      (action) => {
-        dispatched.push(action);
-      },
-    );
-    controller?.handleDrop?.({
-      target: { id: "forms-play-document.step.s1", label: "Inputs" },
-      targetKind: "item",
-      data: {
-        "application/vnd.code.tree.item": '["x"]',
-        "application/x-semio-forms-question-kind": '{"kind":"slider"}',
-      },
-      sourceItems: [],
-      section: { id: "steps", label: "Steps", items: [] },
-      dropPosition: "after",
-    });
-    expect(dispatched).toEqual([
-      {
-        controllerId: "forms-play",
-        action: "dropQuestionKind",
-        args: { kind: "slider", targetId: "forms-play-document.step.s1", dropPosition: "after" },
-      },
-    ]);
-  });
+  // 🪦️ MIGRATION, deleted (not rewritten): `declarativeTreeDragController` — a standalone pure
+  // function taking a whole tree `UiNode` + a dispatch callback and returning a
+  // `TreeDragAndDropController` — was deliberately not ported forward (react-renderer packet's own
+  // decisions doc; the barrel's in-file migration comment says so too). Drag/drop for a `tree`
+  // component is now wired INSIDE `Interpreter`'s own `TreeView` (built from the record's own `drop`
+  // `ActionBinding`, dispatched through `dispatchTrigger`/`emitIntent`), not a separately-importable
+  // factory this file's OWNS can call in isolation — there is no equivalent unit boundary left.
+  // See this packet's report for a production-bug flag this deletion surfaced: `TreeView`'s current
+  // `handleDrop` (`Interpreter/🟦️component.tsx`) calls `dispatchTrigger(context, record, "drop")`
+  // with NO input payload at all, discarding the drop event's target/payload/position entirely —
+  // this test's old assertion (`args: { kind, targetId, dropPosition }`) has no successor to assert
+  // against today.
 });
 
 describe("framework renderer hosts", () => {
@@ -2635,7 +2643,7 @@ describe("framework renderer hosts", () => {
   });
 
   it("accepts extended world 3d scene fields", () => {
-    const node: UiNode = {
+    const node = {
       type: "componentScene",
       surfaceId: "puzzle.3d.play.viewport",
       controllerId: "puzzle3d-play",
@@ -3119,36 +3127,35 @@ describe("framework renderer hosts", () => {
     expect(markup).toContain("semio-paint-2d-empty");
   });
 
-  it("interprets virtual file system component scenes", () => {
-    const markup = renderToStaticMarkup(
-      interpretUiNode(
-        {
-          type: "componentScene",
-          surfaceId: "s.play.media-vfs",
-          controllerId: "s-play",
-          componentKind: "virtualFileSystem",
-          virtualFileSystem: {
-            schemaJson: JSON.stringify({
-              fileNodeKinds: {
-                instance: { id: "instance", name: "Instance", descriptors: [] },
-              },
-              descriptorKinds: {},
-              descriptorColumnIds: [],
-            }),
-            rowsJson: JSON.stringify([
-              {
-                id: "row-1",
-                fileNodeKindId: "instance",
-                name: "Draw",
-                path: "/draw",
-                level: 0,
-              },
-            ]),
-          },
-        },
-        { onAction: noopAction },
-      ) as ReactElement,
-    );
+  it("interprets virtual file system component scenes", async () => {
+    // 🧬️ MIGRATION: `Component::Surface`'s single `SurfaceProps.doc` (a pack-encoded opaque payload)
+    // replaces the old `componentScene`/`virtualFileSystem` field pair — `surfacePropsToComponentSceneNode`
+    // (Interpreter/🟦️component.tsx) decodes `doc.bytes` back into the exact scene sub-field shape
+    // `VirtualFileSystemHost` (unowned, unchanged) already reads.
+    const { encodePackValue } = await import("@semio-tech/framework-os");
+    const doc = {
+      schemaJson: JSON.stringify({
+        fileNodeKinds: { instance: { id: "instance", name: "Instance", descriptors: [] } },
+        descriptorKinds: {},
+        descriptorColumnIds: [],
+      }),
+      rowsJson: JSON.stringify([{ id: "row-1", fileNodeKindId: "instance", name: "Draw", path: "/draw", level: 0 }]),
+    };
+    const markup = renderContractTree({
+      key: "s.play.media-vfs",
+      component: {
+        type: "surface",
+        surfaceId: "s.play.media-vfs",
+        controllerId: "s-play",
+        kind: "virtualFileSystem",
+        paneId: null,
+        bindingId: null,
+        docSchema: "virtualFileSystem@1",
+        doc: { bytes: Array.from(encodePackValue(doc)) },
+        domainId: null,
+        domainGranularityId: null,
+      },
+    });
     expect(markup).toContain("Draw");
   });
 });

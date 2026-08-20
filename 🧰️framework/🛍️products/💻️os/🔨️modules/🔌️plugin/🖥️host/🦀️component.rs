@@ -12,12 +12,17 @@ pub mod process_transport;
 // module's own doc.
 #[path = "⚡️effects/🦀️component.rs"]
 pub mod effects;
-// ⏳️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-async-imports): the `world actor-async`
-// `interface host-async` import layer — 24 `async func` imports the guest can actually await, plus
+// ⏳️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-async-imports → B1 world-collapse): `world
+// actor`'s `interface host-async` import layer — 24 `async func` imports the guest can actually await, plus
 // the `emit`/`emit-patch` one-way doors. Reuses `effects::AsyncServices`/`RouterEffectHandler`
 // (above) as the real backends it awaits directly — see that module's own doc for the routing rule.
 #[path = "⏳️imports.rs"]
 pub mod imports;
+// 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-runtime-rewrite): `WasmtimeAsyncRuntime` — one
+// pooled `tokio::spawn`ed task per actor, driving `imports.rs`'s host-async import layer against a
+// real `Store<AsyncActorHostState>` under `component-model-async`. See that module's own doc.
+#[path = "⏳️runtime.rs"]
+pub mod runtime;
 
 use semio_framework::{
     kernel::{ArtifactHandle, BrokerCapabilityGrant, Budget, CapabilityId, CapabilityRequest, Effect, Event, JobPlacement, MessageEndpoint, RequestId, RequestOutcome, TurnResult, TurnStatus, WindowHandle, WindowKindId},
@@ -1660,6 +1665,7 @@ async fn kernel_event_to_wit(event: &Event, instance_id: u32) -> wit_events::Eve
         Event::CapabilityChanged { change } => wit_events::Event::CapabilityChanged(wit_events::CapabilityChangedEvent { instance: instance_id, change: kernel_capability_change_to_wit(change).await }),
         Event::QuotaChanged { quotas } => wit_events::Event::QuotaChanged(wit_events::QuotaChangedEvent { instance: instance_id, quotas: encode_json(quotas).await }),
         Event::AppCommandEvent { instance, seq, command } => wit_events::Event::AppCommand(wit_events::AppCommandEvent { instance: instance.0.parse().unwrap_or(instance_id), seq: *seq, command: command.clone() }),
+        Event::UiIntent { instance, intent } => wit_events::Event::UiIntent(wit_events::UiIntentEvent { instance: instance.0.parse().unwrap_or(instance_id), intent: intent.clone() }),
         Event::SurfaceVisible { surface } => wit_events::Event::SurfaceVisible(wit_events::SurfaceVisibleEvent { surface: wit_surface_ref(instance_id, surface).await }),
         Event::SurfaceHidden { surface } => wit_events::Event::SurfaceHidden(wit_events::SurfaceHiddenEvent { surface: wit_surface_ref(instance_id, surface).await }),
         Event::SurfaceResized { surface, width, height } => wit_events::Event::SurfaceResized(wit_events::SurfaceResizedEvent { surface: wit_surface_ref(instance_id, surface).await, width: *width, height: *height }),

@@ -3,10 +3,11 @@
 use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
 use semio_framework_plugin::{ExecutionMode, Plugin};
 
-/// 🔌️ Builds the plugin surface for host registration. `.artifact(…)` (ticket
-/// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) replaces the old umbrella
-/// `.setup(puzzle2d::engine::register)` escape hatch — one declaration per artifact (puzzle2d,
-/// puzzle3d, puzzle5d), each built by its own artifact engine.
+/// 🔌️ Builds the plugin surface for host registration. `.declare_artifact(…)` (ticket
+/// `26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME`, `terra-descriptors` packet, following the
+/// `terra-fleet-trinity-recipe` recipe) replaces the old `.artifact(declaration())`/`.editor()`/
+/// `.viewer()` triad — one registration channel per artifact (puzzle2d, puzzle3d, puzzle5d), each
+/// built by its own artifact engine.
 ///
 /// **W1d update.** The app-schema half of the old `.setup()` callback is GONE:
 /// `register_app_schemas()` was never actually a distinct `ArtifactDeclaration` coverage gap — it
@@ -38,20 +39,14 @@ pub async fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyEr
     Plugin::builder("puzzle")
         .label("Puzzle")
         .version("0.1.0")
-        .artifact(crate::artifacts::puzzle2d::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
-        .artifact(crate::artifacts::puzzle3d::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
-        .artifact(crate::artifacts::puzzle5d::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)
-        .editor::<crate::editor::puzzle2d::Puzzle2dPlayApp>(crate::editor::puzzle2d::create_puzzle2d_app())
+        .declare_artifact(crate::artifacts::puzzle2d::artifact())
+        .declare_artifact(crate::artifacts::puzzle3d::artifact())
+        .declare_artifact(crate::artifacts::puzzle5d::artifact())
         .editor_mutation_roster::<crate::editor::puzzle2d::Puzzle2dPlayApp>()
-        .viewer::<crate::viewer::puzzle2d::Puzzle2dViewer>(crate::viewer::puzzle2d::create_puzzle2d_viewer())
         .viewer_mutation_roster::<crate::viewer::puzzle2d::Puzzle2dViewer>()
-        .editor::<crate::editor::puzzle3d::Puzzle3dPlayApp>(crate::editor::puzzle3d::create_puzzle3d_app())
         .editor_mutation_roster::<crate::editor::puzzle3d::Puzzle3dPlayApp>()
-        .viewer::<crate::viewer::puzzle3d::Puzzle3dViewer>(crate::viewer::puzzle3d::create_puzzle3d_viewer())
         .viewer_mutation_roster::<crate::viewer::puzzle3d::Puzzle3dViewer>()
-        .editor::<crate::editor::puzzle5d::Puzzle5dPlayApp>(crate::editor::puzzle5d::create_puzzle5d_app())
         .editor_mutation_roster::<crate::editor::puzzle5d::Puzzle5dPlayApp>()
-        .viewer::<crate::viewer::puzzle5d::Puzzle5dViewer>(crate::viewer::puzzle5d::create_puzzle5d_viewer())
         .viewer_mutation_roster::<crate::viewer::puzzle5d::Puzzle5dViewer>()
         // 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME M5 — `.activation(…)`/`.execution(…)`/
         // `.requests(…)` (`📓️design-abi.md` §3/§6), same shape M0/M1 already landed for

@@ -1,0 +1,1012 @@
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+   Compiling bytemuck v1.25.0
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1188:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1215:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1234:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1249:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1258:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1268:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1292:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1302:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1315:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1325:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1338:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1351:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1413:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1424:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1527:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1569:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1644:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1654:12: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1308:16: warning: unexpected `cfg` condition value: `typegen`
+🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1344:16: warning: unexpected `cfg` condition value: `typegen`
+warning: `semio-framework-replication` (lib) generated 20 warnings
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13096:6: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13097:48: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13097:103: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13098:64: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13099:9: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13101:55: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13101:107: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13102:21: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13103:55: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:39:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:40:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:285:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🗣️dsl/🦀️component.rs:290:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:92:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:96:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:107:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/💡️inference/🦀️component.rs:110:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:2403:9: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:2418:9: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:2421:9: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:29:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:501:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:502:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:513:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:514:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:515:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:522:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:541:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:542:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:720:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:721:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:722:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:732:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:733:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:734:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:1215:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:80:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:95:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:98:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:99:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:208:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:212:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:214:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:217:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:223:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:235:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:236:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:237:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:238:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:508:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:680:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:681:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/🎮️command/🦀️component.rs:682:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🌿️vcs/🦀️component.rs:284:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/🌿️vcs/🦀️component.rs:285:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+warning: `semio-framework-os-kernel` (lib) generated 55 warnings (run `cargo fix --lib -p semio-framework-os-kernel` to apply 9 suggestions)
+   Compiling rust_decimal v1.42.0
+   Compiling naga v27.0.3
+   Compiling regex v1.12.3
+   Compiling typst-macros v0.14.2
+   Compiling thiserror v2.0.18
+   Compiling qcms v0.3.0
+   Compiling az v1.3.0
+   Compiling cfg-if v1.0.4
+   Compiling bit-vec v0.8.0
+   Compiling unicode-width v0.2.2
+   Compiling typst-assets v0.14.2
+   Compiling typed-arena v2.0.2
+   Compiling font-types v0.11.3
+   Compiling rustybuzz v0.20.1
+   Compiling tiny-skia-path v0.11.4
+   Compiling image v0.25.10
+   Compiling font-types v0.10.1
+   Compiling font-types v0.9.0
+   Compiling wgpu-types v27.0.1
+   Compiling glidesort v0.1.2
+   Compiling codespan-reporting v0.12.0
+   Compiling read-fonts v0.37.0
+   Compiling bit-set v0.8.0
+   Compiling read-fonts v0.35.0
+   Compiling read-fonts v0.29.3
+   Compiling wgpu v27.0.1
+   Compiling half v2.7.1
+   Compiling usvg v0.45.1
+   Compiling hayro-font v0.3.0
+   Compiling moxcms v0.7.11
+   Compiling hashbrown v0.16.1
+   Compiling once_cell v1.21.4
+   Compiling skrifa v0.40.0
+   Compiling rustc-hash v1.1.0
+   Compiling arrayvec v0.7.6
+   Compiling hexf-parse v0.2.1
+   Compiling skrifa v0.31.3
+   Compiling skrifa v0.37.0
+   Compiling fontique v0.5.0
+   Compiling euclid v0.22.14
+   Compiling heapless v0.8.0
+   Compiling svg_fmt v0.4.5
+   Compiling typst-library v0.14.2
+   Compiling icu_segmenter_data v1.5.1
+   Compiling semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
+   Compiling hash32 v0.3.1
+   Compiling peniko v0.6.1
+   Compiling serde_derive_internals v0.29.1
+   Compiling swash v0.2.9
+   Compiling schemars v0.8.22
+   Compiling outref v0.5.2
+   Compiling uuid v1.23.4
+   Compiling guillotiere v0.6.2
+   Compiling hayro-interpret v0.4.0
+   Compiling vsimd v0.8.0
+   Compiling schemars_derive v0.8.22
+   Compiling referencing v0.29.1
+   Compiling vello_shaders v0.7.0
+   Compiling fraction v0.15.4
+   Compiling fancy-regex v0.14.0
+   Compiling vello_encoding v0.7.0
+   Compiling parley v0.5.0
+   Compiling uuid-simd v0.8.0
+   Compiling email_address v0.2.9
+   Compiling i_float v1.6.0
+   Compiling semio-framework-dispatch-macros v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust)
+🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust/../../🦀️component.rs:379:21: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust/../../🦀️component.rs:394:21: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+warning: `semio-framework-dispatch-macros` (lib) generated 2 warnings
+   Compiling dyn-clone v1.0.20
+   Compiling semio-framework-schema v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust)
+   Compiling semio-framework-graph v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust)
+   Compiling xmlparser v0.13.6
+   Compiling bytecount v0.6.9
+   Compiling hayro-svg v0.2.0
+   Compiling hayro v0.4.0
+   Compiling num-cmp v0.1.0
+   Compiling i_shape v1.6.0
+   Compiling icu_segmenter v1.5.0
+   Compiling rstar v0.12.2
+   Compiling icu_provider_adapters v1.5.0
+   Compiling jsonschema v0.29.1
+   Compiling svgtypes v0.16.1
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️arena.rs:88:22: error[E0599]: no method named `is_some` found for opaque type `impl Future<Output = std::option::Option<&T>>` in the current scope: method not found in `impl Future<Output = std::option::Option<&T>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️tree.rs:168:9: error[E0308]: mismatched types: expected `Option<&Node>`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️tree.rs:172:9: error[E0308]: mismatched types: expected `Option<&mut Node>`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️tree.rs:176:9: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️tree.rs:186:59: error[E0599]: no method named `and_then` found for opaque type `impl Future<Output = std::option::Option<&wgpu::tree::Node>>` in the current scope: method not found in `impl Future<Output = std::option::Option<&wgpu::tree::Node>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️tree.rs:188:28: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️tree.rs:192:57: error[E0308]: mismatched types: expected `NodeId`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️tree.rs:192:24: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️tree.rs:195:24: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️tree.rs:204:38: error[E0308]: mismatched types: expected `NodeId`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️tree.rs:208:9: error[E0308]: mismatched types: expected `NodeId`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️tree.rs:214:13: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️tree.rs:216:55: error[E0599]: `impl Future<Output = impl std::iter::Iterator<Item = arena::NodeId> + '_>` is not an iterator: `impl Future<Output = impl std::iter::Iterator<Item = arena::NodeId> + '_>` is not an iterator
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️tree.rs:222:24: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️tree.rs:228:28: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️tree.rs:236:24: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️tree.rs:242:28: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️tree.rs:260:12: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️tree.rs:264:13: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️tree.rs:268:13: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️tree.rs:272:17: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️tree.rs:283:43: error[E0599]: no method named `and_then` found for opaque type `impl Future<Output = std::option::Option<&wgpu::tree::Node>>` in the current scope: method not found in `impl Future<Output = std::option::Option<&wgpu::tree::Node>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️tree.rs:286:44: error[E0599]: no method named `and_then` found for opaque type `impl Future<Output = std::option::Option<&wgpu::tree::Node>>` in the current scope: method not found in `impl Future<Output = std::option::Option<&wgpu::tree::Node>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️reconcile.rs:76:9: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️reconcile.rs:77:34: error[E0308]: mismatched types: expected `u32`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️reconcile.rs:93:66: error[E0271]: type mismatch resolving `<UiNode as ToOwned>::Owned == impl Future<Output = UiNode>`: expected future, found `UiNode`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️reconcile.rs:94:76: error[E0271]: type mismatch resolving `<UiNode as ToOwned>::Owned == impl Future<Output = UiNode>`: expected future, found `UiNode`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️reconcile.rs:97:76: error[E0599]: no method named `visible` found for opaque type `impl Future<Output = &component::layout::UiPresence>` in the current scope: method not found in `impl Future<Output = &component::layout::UiPresence>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️reconcile.rs:107:130: error[E0308]: mismatched types: expected `ActionDescriptor`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️reconcile.rs:137:83: error[E0277]: a value of type `Vec<ui::UiNode>` cannot be built from an iterator over elements of type `impl Future<Output = ui::UiNode>`: value of type `Vec<ui::UiNode>` cannot be built from `std::iter::Iterator<Item=impl Future<Output = ui::UiNode>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️reconcile.rs:156:23: error[E0308]: mismatched types: expected `UiNode`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️reconcile.rs:159:31: error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = ui::UiTreeActionPlacement>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️reconcile.rs:162:23: error[E0308]: mismatched types: expected `UiNode`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️reconcile.rs:165:23: error[E0277]: `ui::UiNode` is not a future: `ui::UiNode` is not a future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️reconcile.rs:176:124: error[E0308]: mismatched types: expected `Label`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️reconcile.rs:199:28: error[E0599]: no method named `visible` found for opaque type `impl Future<Output = &component::layout::UiPresence>` in the current scope: method not found in `impl Future<Output = &component::layout::UiPresence>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️reconcile.rs:199:57: error[E0599]: no method named `visible` found for opaque type `impl Future<Output = &component::layout::UiPresence>` in the current scope: method not found in `impl Future<Output = &component::layout::UiPresence>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️reconcile.rs:219:49: error[E0599]: `impl Future<Output = std::option::Option<&wgpu::tree::Node>>` is not an iterator: `impl Future<Output = std::option::Option<&wgpu::tree::Node>>` is not an iterator
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️reconcile.rs:226:38: error[E0308]: mismatched types: expected `NodeKey`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️reconcile.rs:228:42: error[E0308]: mismatched types: expected `NodeKey`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️reconcile.rs:228:21: error[E0308]: `match` arms have incompatible types: expected `()`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️reconcile.rs:233:42: error[E0308]: mismatched types: expected `Node`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️reconcile.rs:234:25: error[E0308]: mismatched types: expected `NodeId`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️reconcile.rs:235:26: error[E0308]: mismatched types: expected `NodeId`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️reconcile.rs:236:33: error[E0308]: mismatched types: expected `NodeId`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️reconcile.rs:241:13: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️reconcile.rs:242:13: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️reconcile.rs:243:13: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️reconcile.rs:244:13: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️reconcile.rs:241:27: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️reconcile.rs:242:27: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️reconcile.rs:246:16: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️reconcile.rs:264:20: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️reconcile.rs:273:68: error[E0599]: `impl Future<Output = impl std::iter::Iterator<Item = arena::NodeId> + '_>` is not an iterator: `impl Future<Output = impl std::iter::Iterator<Item = arena::NodeId> + '_>` is not an iterator
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️reconcile.rs:277:20: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️reconcile.rs:282:88: error[E0599]: no method named `len` found for opaque type `impl Future<Output = Vec<Cow<'_, ui::UiNode>>>` in the current scope: method not found in `impl Future<Output = Vec<Cow<'_, ui::UiNode>>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️reconcile.rs:283:89: error[E0599]: no method named `len` found for opaque type `impl Future<Output = Vec<Cow<'_, ui::UiNode>>>` in the current scope: method not found in `impl Future<Output = Vec<Cow<'_, ui::UiNode>>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️reconcile.rs:284:51: error[E0599]: no method named `iter` found for opaque type `impl Future<Output = Vec<Cow<'_, ui::UiNode>>>` in the current scope: method not found in `impl Future<Output = Vec<Cow<'_, ui::UiNode>>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️reconcile.rs:286:56: error[E0308]: mismatched types: expected `&NodeKey`, found `&impl Future<Output = NodeKey>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️reconcile.rs:287:58: error[E0308]: mismatched types: expected `&NodeKey`, found `&impl Future<Output = NodeKey>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️reconcile.rs:288:38: error[E0308]: mismatched types: expected `NodeKey`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️reconcile.rs:294:102: error[E0599]: no method named `into_owned` found for enum `ui::UiNode` in the current scope
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️reconcile.rs:294:72: error[E0308]: mismatched types: expected `NodeKey`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️reconcile.rs:294:62: error[E0308]: mismatched types: expected `Node`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️reconcile.rs:295:37: error[E0308]: mismatched types: expected `NodeId`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️reconcile.rs:296:45: error[E0308]: mismatched types: expected `NodeId`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️reconcile.rs:297:21: error[E0308]: `match` arms have incompatible types: expected `NodeId`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️chrome.rs:51:12: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️chrome.rs:58:93: error[E0609]: no field `0` on type `impl Future<Output = (f32, f32)>`: unknown field
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️chrome.rs:87:5: error[E0308]: mismatched types: expected `Rgba`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️chrome.rs:91:5: error[E0308]: mismatched types: expected `Rgba`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️cursor.rs:42:16: error[E0308]: mismatched types: expected `SemioCursor`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️cursor.rs:59:59: error[E0271]: expected `axis_cursor` to return `SemioCursor`, but it returns `impl Future<Output = SemioCursor>`: expected `SemioCursor`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️cursor.rs:90:71: error[E0271]: expected `axis_cursor` to return `SemioCursor`, but it returns `impl Future<Output = SemioCursor>`: expected `SemioCursor`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️cursor.rs:92:74: error[E0271]: expected `axis_cursor` to return `SemioCursor`, but it returns `impl Future<Output = SemioCursor>`: expected `SemioCursor`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️cursor.rs:93:49: error[E0271]: expected `axis_cursor` to return `SemioCursor`, but it returns `impl Future<Output = SemioCursor>`: expected `SemioCursor`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️cursor.rs:128:9: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️cursor.rs:185:56: error[E0308]: mismatched types: expected `&str`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:152:13: error[E0308]: mismatched types: expected `Extent3d`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:261:33: error[E0609]: no field `w` on type `&impl Future<Output = ScissorRect>`: field not available in `impl Future`, but it is available in its `Output`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:261:47: error[E0609]: no field `h` on type `&impl Future<Output = ScissorRect>`: field not available in `impl Future`, but it is available in its `Output`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:262:14: error[E0277]: a value of type `Vec<ScissorRect>` cannot be built from an iterator over elements of type `impl Future<Output = ScissorRect>`: value of type `Vec<ScissorRect>` cannot be built from `std::iter::Iterator<Item=impl Future<Output = ScissorRect>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:271:33: error[E0609]: no field `w` on type `&impl Future<Output = ScissorRect>`: field not available in `impl Future`, but it is available in its `Output`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:271:47: error[E0609]: no field `h` on type `&impl Future<Output = ScissorRect>`: field not available in `impl Future`, but it is available in its `Output`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:272:14: error[E0277]: a value of type `Vec<ScissorRect>` cannot be built from an iterator over elements of type `impl Future<Output = ScissorRect>`: value of type `Vec<ScissorRect>` cannot be built from `std::iter::Iterator<Item=impl Future<Output = ScissorRect>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:281:60: error[E0599]: no method named `intersect` found for opaque type `impl Future<Output = ScissorRect>` in the current scope: method not found in `impl Future<Output = ScissorRect>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:282:33: error[E0609]: no field `w` on type `&impl Future<Output = ScissorRect>`: field not available in `impl Future`, but it is available in its `Output`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:282:47: error[E0609]: no field `h` on type `&impl Future<Output = ScissorRect>`: field not available in `impl Future`, but it is available in its `Output`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:283:14: error[E0277]: a value of type `Vec<ScissorRect>` cannot be built from an iterator over elements of type `impl Future<Output = ScissorRect>`: value of type `Vec<ScissorRect>` cannot be built from `std::iter::Iterator<Item=impl Future<Output = ScissorRect>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:348:40: error[E0308]: mismatched types: expected `&ScissorRect`, found `&impl Future<Output = ScissorRect>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:348:23: error[E0308]: mismatched types: expected future, found a different future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:350:33: error[E0308]: mismatched types: expected `ScissorRect`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:351:52: error[E0308]: mismatched types: expected `ScissorRect`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:364:37: error[E0308]: mismatched types: expected `&ClipRegion`, found `&impl Future<Output = ClipRegion>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:364:20: error[E0308]: mismatched types: expected future, found a different future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:366:35: error[E0599]: no method named `clone` found for opaque type `impl Future<Output = ClipRegion>` in the current scope: method not found in `impl Future<Output = ClipRegion>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:367:94: error[E0308]: mismatched types: expected `ClipRegion`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:388:29: error[E0609]: no field `ui_instances` on type `impl Future<Output = &mut DrawLayer>`: unknown field
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:392:29: error[E0609]: no field `ui_instances` on type `impl Future<Output = &mut DrawLayer>`: unknown field
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:397:29: error[E0609]: no field `ui_instances` on type `impl Future<Output = &mut DrawLayer>`: unknown field
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:402:29: error[E0609]: no field `ui_instances` on type `impl Future<Output = &mut DrawLayer>`: unknown field
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:407:29: error[E0609]: no field `ui_instances` on type `impl Future<Output = &mut DrawLayer>`: unknown field
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:412:29: error[E0609]: no field `ui_instances` on type `impl Future<Output = &mut DrawLayer>`: unknown field
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:436:29: error[E0609]: no field `ui_instances` on type `impl Future<Output = &mut DrawLayer>`: unknown field
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:440:29: error[E0609]: no field `overlay_ui_instances` on type `impl Future<Output = &mut DrawLayer>`: unknown field
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:444:29: error[E0609]: no field `overlay_ui_instances` on type `impl Future<Output = &mut DrawLayer>`: unknown field
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:448:29: error[E0609]: no field `ui_instances` on type `impl Future<Output = &mut DrawLayer>`: unknown field
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:452:29: error[E0609]: no field `raster_instances` on type `impl Future<Output = &mut DrawLayer>`: unknown field
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:463:15: error[E0609]: no field `vector_vertices` on type `impl Future<Output = &mut DrawLayer>`: unknown field
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:481:15: error[E0609]: no field `overlay_vector_vertices` on type `impl Future<Output = &mut DrawLayer>`: unknown field
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:498:19: error[E0609]: no field `vector_vertices` on type `impl Future<Output = &mut DrawLayer>`: unknown field
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:499:19: error[E0609]: no field `vector_vertices` on type `impl Future<Output = &mut DrawLayer>`: unknown field
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:500:19: error[E0609]: no field `vector_vertices` on type `impl Future<Output = &mut DrawLayer>`: unknown field
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:511:19: error[E0609]: no field `overlay_vector_vertices` on type `impl Future<Output = &mut DrawLayer>`: unknown field
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:512:19: error[E0609]: no field `overlay_vector_vertices` on type `impl Future<Output = &mut DrawLayer>`: unknown field
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:513:19: error[E0609]: no field `overlay_vector_vertices` on type `impl Future<Output = &mut DrawLayer>`: unknown field
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:519:37: error[E0277]: `impl Future<Output = Vec<(f32, f32, f32, f32)>>` is not an iterator: `impl Future<Output = Vec<(f32, f32, f32, f32)>>` is not an iterator
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:526:37: error[E0277]: `impl Future<Output = Vec<(f32, f32, f32, f32)>>` is not an iterator: `impl Future<Output = Vec<(f32, f32, f32, f32)>>` is not an iterator
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:612:56: error[E0308]: mismatched types: expected `Rgba`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:614:48: error[E0308]: mismatched types: expected `Rgba`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:618:105: error[E0308]: mismatched types: expected `Rgba`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:622:83: error[E0308]: mismatched types: expected `Rgba`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:632:51: error[E0308]: mismatched types: expected `Rgba`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:634:43: error[E0308]: mismatched types: expected `Rgba`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:636:79: error[E0308]: mismatched types: expected `Rgba`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:637:75: error[E0308]: mismatched types: expected `Rgba`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:638:75: error[E0308]: mismatched types: expected `Rgba`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:639:79: error[E0308]: mismatched types: expected `Rgba`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:669:20: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:700:22: error[E0369]: binary operation `<` cannot be applied to type `impl Future<Output = f32>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:700:34: error[E0369]: binary operation `<` cannot be applied to type `impl Future<Output = f32>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:700:46: error[E0369]: binary operation `<` cannot be applied to type `impl Future<Output = f32>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:701:22: error[E0369]: binary operation `>` cannot be applied to type `impl Future<Output = f32>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:701:34: error[E0369]: binary operation `>` cannot be applied to type `impl Future<Output = f32>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:701:46: error[E0369]: binary operation `>` cannot be applied to type `impl Future<Output = f32>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:777:18: error[E0308]: mismatched types: expected `&str`, found `&impl Future<Output = String>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:777:9: error[E0308]: mismatched types: expected `Option<&GpuMeshBuffers>`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:1112:97: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:1114:12: error[E0600]: cannot apply unary operator `!` to type `impl Future<Output = bool>`: cannot apply unary operator `!`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:1134:12: error[E0600]: cannot apply unary operator `!` to type `impl Future<Output = bool>`: cannot apply unary operator `!`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:1159:64: error[E0599]: `impl Future<Output = Vec<ScissorRect>>` is not an iterator: `impl Future<Output = Vec<ScissorRect>>` is not an iterator
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:1163:30: error[E0609]: no field `w` on type `impl Future<Output = ScissorRect>`: field not available in `impl Future`, but it is available in its `Output`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:1163:45: error[E0609]: no field `h` on type `impl Future<Output = ScissorRect>`: field not available in `impl Future`, but it is available in its `Output`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:1163:64: error[E0308]: mismatched types: expected `ScissorRect`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:1201:31: error[E0308]: mismatched types: expected `Option<ScissorRect>`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:1210:81: error[E0599]: `impl Future<Output = Vec<std::option::Option<ScissorRect>>>` is not an iterator: `impl Future<Output = Vec<std::option::Option<ScissorRect>>>` is not an iterator
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:1212:68: error[E0308]: mismatched types: expected `Option<ScissorRect>`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:1212:9: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:1217:6: error[E0308]: mismatched types: expected `Vec<UiInstance>`, found `Vec<impl Future<Output = UiInstance>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:1217:17: error[E0308]: mismatched types: expected `Option<ScissorRect>`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:1226:13: error[E0308]: mismatched types: expected future, found `(_, _)`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:1275:22: error[E0308]: mismatched types: expected `StencilState`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:1282:22: error[E0308]: mismatched types: expected `StencilState`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:1363:26: error[E0308]: mismatched types: expected `StencilState`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:1487:22: error[E0308]: mismatched types: expected `StencilState`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:1494:22: error[E0308]: mismatched types: expected `StencilState`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:1688:13: error[E0308]: mismatched types: expected `WorldGlobalsRing`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:1735:16: error[E0600]: cannot apply unary operator `!` to type `impl Future<Output = bool>`: cannot apply unary operator `!`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:1746:74: error[E0308]: mismatched types: expected `[f32; 16]`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:1758:74: error[E0308]: mismatched types: expected `[f32; 16]`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:1779:20: error[E0308]: mismatched types: expected `Vec<World3dGpuInstance>`, found `Vec<impl Future<Output = ...>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:1786:13: error[E0308]: mismatched types: expected future, found `(_, _, _, _)`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:1823:63: error[E0308]: mismatched types: expected `ScissorRect`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:1832:71: error[E0308]: mismatched types: expected `u32`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:1839:79: error[E0308]: mismatched types: expected `u32`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:1848:75: error[E0308]: mismatched types: expected `u32`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:1861:41: error[E0308]: mismatched types: expected `&str`, found `&impl Future<Output = String>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:1861:13: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:1914:80: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:1920:17: error[E0308]: mismatched types: expected future, found `(_, _)`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:1926:13: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:1938:25: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:1943:25: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:2096:152: error[E0308]: `if` and `else` have incompatible types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:2102:13: error[E0308]: mismatched types: expected future, found `(_, _, _)`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:2103:13: error[E0308]: mismatched types: expected future, found `(_, _)`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:2105:62: error[E0308]: `if` and `else` have incompatible types: expected `Option<_>`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:2106:67: error[E0308]: `if` and `else` have incompatible types: expected `Option<_>`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:2112:23: error[E0308]: mismatched types: expected `&TextureView`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:2117:39: error[E0308]: mismatched types: expected `Option<...>`, found `Option<impl Future<Output = ...>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:2121:79: error[E0599]: no method named `as_ref` found for opaque type `impl Future<Output = std::option::Option<BufferSlice<'_>>>` in the current scope: method not found in `impl Future<Output = std::option::Option<BufferSlice<'_>>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:2121:14: error[E0308]: arguments to this method are incorrect
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:2123:43: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:2126:83: error[E0308]: mismatched types: expected `&TextureView`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:2127:43: error[E0308]: mismatched types: expected `Option<...>`, found `Option<impl Future<Output = ...>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:2133:13: error[E0308]: mismatched types: expected future, found `(_, _, _)`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:2135:17: error[E0308]: mismatched types: expected future, found `(_, _)`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:2137:78: error[E0308]: `if` and `else` have incompatible types: expected `Option<_>`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:2138:83: error[E0308]: `if` and `else` have incompatible types: expected `Option<_>`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:2141:83: error[E0308]: mismatched types: expected `&TextureView`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:2142:43: error[E0308]: mismatched types: expected `Option<...>`, found `Option<impl Future<Output = ...>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:2146:107: error[E0599]: no method named `as_ref` found for opaque type `impl Future<Output = std::option::Option<BufferSlice<'_>>>` in the current scope: method not found in `impl Future<Output = std::option::Option<BufferSlice<'_>>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:2152:65: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:2171:12: error[E0600]: cannot apply unary operator `!` to type `impl Future<Output = bool>`: cannot apply unary operator `!`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:2174:154: error[E0308]: `if` and `else` have incompatible types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:2180:13: error[E0308]: mismatched types: expected future, found `(_, _, _)`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:2184:13: error[E0308]: mismatched types: expected future, found `(_, _)`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:2186:62: error[E0308]: `if` and `else` have incompatible types: expected `Option<_>`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:2187:67: error[E0308]: `if` and `else` have incompatible types: expected `Option<_>`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:2193:39: error[E0308]: mismatched types: expected `Option<...>`, found `Option<impl Future<Output = ...>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:2197:79: error[E0599]: no method named `as_ref` found for opaque type `impl Future<Output = std::option::Option<BufferSlice<'_>>>` in the current scope: method not found in `impl Future<Output = std::option::Option<BufferSlice<'_>>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:2197:14: error[E0308]: arguments to this method are incorrect
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:2199:43: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:2203:43: error[E0308]: mismatched types: expected `Option<...>`, found `Option<impl Future<Output = ...>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:2209:13: error[E0308]: mismatched types: expected future, found `(_, _, _)`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:2211:17: error[E0308]: mismatched types: expected future, found `(_, _)`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:2213:78: error[E0308]: `if` and `else` have incompatible types: expected `Option<_>`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:2215:59: error[E0308]: `if` and `else` have incompatible types: expected `Option<_>`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:2219:43: error[E0308]: mismatched types: expected `Option<...>`, found `Option<impl Future<Output = ...>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:2223:107: error[E0599]: no method named `as_ref` found for opaque type `impl Future<Output = std::option::Option<BufferSlice<'_>>>` in the current scope: method not found in `impl Future<Output = std::option::Option<BufferSlice<'_>>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:2257:43: error[E0308]: mismatched types: expected `Option<...>`, found `Option<impl Future<Output = ...>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:2297:101: error[E0308]: mismatched types: expected `&TextureView`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:2298:97: error[E0308]: mismatched types: expected `&Sampler`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:2308:27: error[E0308]: mismatched types: expected `&TextureView`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:2329:104: error[E0308]: mismatched types: expected `&TextureView`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:2329:204: error[E0308]: mismatched types: expected `&Sampler`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:2370:13: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:2376:104: error[E0308]: mismatched types: expected `&TextureView`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:2376:204: error[E0308]: mismatched types: expected `&Sampler`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:2399:13: error[E0308]: mismatched types: expected future, found `(_, _, _)`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:2400:13: error[E0308]: mismatched types: expected future, found `(_, _)`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:2402:62: error[E0308]: `if` and `else` have incompatible types: expected `Option<_>`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:2403:67: error[E0308]: `if` and `else` have incompatible types: expected `Option<_>`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:2407:56: error[E0599]: no method named `as_ref` found for opaque type `impl Future<Output = std::option::Option<BufferSlice<'_>>>` in the current scope: method not found in `impl Future<Output = std::option::Option<BufferSlice<'_>>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️gpu.rs:96:21: error[E0308]: mismatched types: expected `TextureFormat`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️gpu.rs:162:27: error[E0308]: arguments to this method are incorrect
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️gpu.rs:194:27: error[E0308]: arguments to this method are incorrect
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️input.rs:164:53: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️input.rs:170:45: error[E0599]: no method named `and_then` found for opaque type `impl Future<Output = std::option::Option<&HitTarget<E>>>` in the current scope: method not found in `impl Future<Output = std::option::Option<&HitTarget<E>>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️layout.rs:35:23: error[E0609]: no field `y` on type `impl Future<Output = wgpu::geometry::Rect>`: field not available in `impl Future`, but it is available in its `Output`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️layout.rs:37:28: error[E0609]: no field `h` on type `impl Future<Output = wgpu::geometry::Rect>`: field not available in `impl Future`, but it is available in its `Output`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️layout.rs:41:36: error[E0609]: no field `x` on type `impl Future<Output = wgpu::geometry::Rect>`: field not available in `impl Future`, but it is available in its `Output`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️layout.rs:41:48: error[E0609]: no field `w` on type `impl Future<Output = wgpu::geometry::Rect>`: field not available in `impl Future`, but it is available in its `Output`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️layout.rs:51:23: error[E0609]: no field `x` on type `impl Future<Output = wgpu::geometry::Rect>`: field not available in `impl Future`, but it is available in its `Output`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️layout.rs:53:28: error[E0609]: no field `w` on type `impl Future<Output = wgpu::geometry::Rect>`: field not available in `impl Future`, but it is available in its `Output`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️layout.rs:57:39: error[E0609]: no field `y` on type `impl Future<Output = wgpu::geometry::Rect>`: field not available in `impl Future`, but it is available in its `Output`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️layout.rs:57:51: error[E0609]: no field `h` on type `impl Future<Output = wgpu::geometry::Rect>`: field not available in `impl Future`, but it is available in its `Output`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️flex.rs:50:43: error[E0308]: mismatched types: expected `(f32, f32)`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️flex.rs:97:38: error[E0277]: the trait bound `impl Future<Output = f32>: Copy` is not satisfied: the trait `Copy` is not implemented for `impl Future<Output = f32>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️flex.rs:97:38: error[E0277]: the trait bound `f32: From<impl Future<Output = f32>>` is not satisfied: the trait `From<impl Future<Output = f32>>` is not implemented for `f32`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️flex.rs:97:59: error[E0277]: the trait bound `impl Future<Output = f32>: Copy` is not satisfied: the trait `Copy` is not implemented for `impl Future<Output = f32>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️flex.rs:97:59: error[E0277]: the trait bound `f32: From<impl Future<Output = f32>>` is not satisfied: the trait `From<impl Future<Output = f32>>` is not implemented for `f32`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️flex.rs:98:41: error[E0277]: the trait bound `impl Future<Output = f32>: Copy` is not satisfied: the trait `Copy` is not implemented for `impl Future<Output = f32>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️flex.rs:98:41: error[E0277]: the trait bound `f32: From<impl Future<Output = f32>>` is not satisfied: the trait `From<impl Future<Output = f32>>` is not implemented for `f32`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️flex.rs:98:65: error[E0277]: the trait bound `impl Future<Output = f32>: Copy` is not satisfied: the trait `Copy` is not implemented for `impl Future<Output = f32>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️flex.rs:98:65: error[E0277]: the trait bound `f32: From<impl Future<Output = f32>>` is not satisfied: the trait `From<impl Future<Output = f32>>` is not implemented for `f32`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️flex.rs:98:87: error[E0277]: the trait bound `impl Future<Output = f32>: Copy` is not satisfied: the trait `Copy` is not implemented for `impl Future<Output = f32>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️flex.rs:98:87: error[E0277]: the trait bound `f32: From<impl Future<Output = f32>>` is not satisfied: the trait `From<impl Future<Output = f32>>` is not implemented for `f32`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️flex.rs:98:112: error[E0277]: the trait bound `impl Future<Output = f32>: Copy` is not satisfied: the trait `Copy` is not implemented for `impl Future<Output = f32>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️flex.rs:98:112: error[E0277]: the trait bound `f32: From<impl Future<Output = f32>>` is not satisfied: the trait `From<impl Future<Output = f32>>` is not implemented for `f32`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️flex.rs:110:40: error[E0277]: cannot add `impl Future<Output = f32>` to `f32`: no implementation for `f32 + impl Future<Output = f32>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️flex.rs:166:13: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️flex.rs:175:47: error[E0308]: mismatched types: expected `NodeId`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️flex.rs:177:38: error[E0308]: mismatched types: expected `NodeId`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️flex.rs:187:25: error[E0308]: mismatched types: expected future, found `(_, _)`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️flex.rs:180:56: error[E0308]: mismatched types: expected `NodeId`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️flex.rs:201:79: error[E0600]: cannot apply unary operator `!` to type `impl Future<Output = bool>`: cannot apply unary operator `!`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️flex.rs:216:34: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = std::option::Option<&wgpu::tree::Node>>` in the current scope: method not found in `impl Future<Output = std::option::Option<&wgpu::tree::Node>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️flex.rs:221:55: error[E0599]: `impl Future<Output = impl std::iter::Iterator<Item = arena::NodeId> + '_>` is not an iterator: `impl Future<Output = impl std::iter::Iterator<Item = arena::NodeId> + '_>` is not an iterator
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️flex.rs:228:56: error[E0308]: mismatched types: expected `Style`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️flex.rs:233:28: error[E0308]: arguments to this method are incorrect
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️flex.rs:246:57: error[E0308]: mismatched types: expected `&mut Style`, found `&mut impl Future<Output = Style>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️flex.rs:247:53: error[E0308]: mismatched types: expected `&mut Style`, found `&mut impl Future<Output = Style>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️flex.rs:247:33: error[E0308]: `match` arms have incompatible types: expected future, found a different future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️flex.rs:248:57: error[E0308]: mismatched types: expected `&mut Style`, found `&mut impl Future<Output = Style>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️flex.rs:252:19: error[E0609]: no field `flex_grow` on type `impl Future<Output = taffy::Style>`: field not available in `impl Future`, but it is available in its `Output`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️flex.rs:254:9: error[E0308]: mismatched types: expected `Style`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️flex.rs:265:54: error[E0599]: `impl Future<Output = std::option::Option<&wgpu::tree::Node>>` is not an iterator: `impl Future<Output = std::option::Option<&wgpu::tree::Node>>` is not an iterator
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️flex.rs:269:24: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️flex.rs:282:56: error[E0599]: no method named `and_then` found for opaque type `impl Future<Output = std::option::Option<&wgpu::tree::Node>>` in the current scope: method not found in `impl Future<Output = std::option::Option<&wgpu::tree::Node>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️flex.rs:282:144: error[E0599]: the method `clone` exists for tuple `(std::string::String, impl Future<Output = std::option::Option<u32>>)`, but its trait bounds were not satisfied: method cannot be called due to unsatisfied trait bounds
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️flex.rs:285:32: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️flex.rs:292:55: error[E0599]: `impl Future<Output = impl std::iter::Iterator<Item = arena::NodeId> + '_>` is not an iterator: `impl Future<Output = impl std::iter::Iterator<Item = arena::NodeId> + '_>` is not an iterator
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️text.rs:243:22: error[E0308]: mismatched types: expected `FontContext`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️text.rs:285:81: error[E0599]: no method named `or_else` found for opaque type `impl Future<Output = std::option::Option<FamilyId>>` in the current scope: method not found in `impl Future<Output = std::option::Option<FamilyId>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️text.rs:286:89: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = std::option::Option<FamilyId>>` in the current scope: method not found in `impl Future<Output = std::option::Option<FamilyId>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️text.rs:287:92: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = std::option::Option<FamilyId>>` in the current scope: method not found in `impl Future<Output = std::option::Option<FamilyId>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️text.rs:290:20: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️text.rs:329:23: error[E0308]: mismatched types: expected `FontAtlas`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️text.rs:331:12: error[E0308]: mismatched types: expected `FontAtlas`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️text.rs:346:38: error[E0308]: mismatched types: expected `&(char, u32)`, found `&(char, impl Future<Output = u32>)`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️text.rs:347:34: error[E0308]: mismatched types: expected `(char, u32)`, found `(char, impl Future<Output = u32>)`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️text.rs:349:25: error[E0308]: mismatched types: expected `&(char, u32)`, found `&(char, impl Future<Output = u32>)`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️text.rs:356:34: error[E0308]: `match` arms have incompatible types: expected future, found a different future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️text.rs:409:13: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️text.rs:410:20: error[E0308]: mismatched types: expected `RasterizedGlyph`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️text.rs:412:16: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️text.rs:484:28: error[E0609]: no field `advance` on type `impl Future<Output = &GlyphEntry>`: unknown field
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️text.rs:485:47: error[E0609]: no field `height` on type `impl Future<Output = &GlyphEntry>`: unknown field
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️text.rs:485:69: error[E0609]: no field `bearing_y` on type `impl Future<Output = &GlyphEntry>`: unknown field
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️text.rs:495:17: error[E0308]: mismatched types: expected future, found `(_, _)`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️text.rs:508:75: error[E0609]: no field `0` on type `impl Future<Output = (f32, f32)>`: unknown field
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:63:12: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:66:51: error[E0599]: `impl Future<Output = impl std::iter::Iterator<Item = arena::NodeId> + '_>` is not an iterator: `impl Future<Output = impl std::iter::Iterator<Item = arena::NodeId> + '_>` is not an iterator
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:96:27: error[E0599]: no method named `find` found for opaque type `impl Future<Output = impl std::iter::Iterator<Item = arena::NodeId> + '_>` in the current scope: method not found in `impl Future<Output = impl std::iter::Iterator<Item = arena::NodeId> + '_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:96:58: error[E0599]: `impl Future<Output = std::option::Option<&wgpu::tree::Node>>` is not an iterator: `impl Future<Output = std::option::Option<&wgpu::tree::Node>>` is not an iterator
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:100:76: error[E0599]: no method named `and_then` found for opaque type `impl Future<Output = std::option::Option<&wgpu::tree::Node>>` in the current scope: method not found in `impl Future<Output = std::option::Option<&wgpu::tree::Node>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:108:57: error[E0599]: no method named `and_then` found for opaque type `impl Future<Output = std::option::Option<&wgpu::tree::Node>>` in the current scope: method not found in `impl Future<Output = std::option::Option<&wgpu::tree::Node>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:113:16: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:118:22: error[E0599]: no method named `is_some_and` found for opaque type `impl Future<Output = std::option::Option<&wgpu::tree::Node>>` in the current scope: method not found in `impl Future<Output = std::option::Option<&wgpu::tree::Node>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:122:51: error[E0599]: `impl Future<Output = impl std::iter::Iterator<Item = arena::NodeId> + '_>` is not an iterator: `impl Future<Output = impl std::iter::Iterator<Item = arena::NodeId> + '_>` is not an iterator
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:141:13: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:143:16: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:144:34: error[E0609]: no field `x` on type `impl Future<Output = wgpu::geometry::Rect>`: field not available in `impl Future`, but it is available in its `Output`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:145:34: error[E0609]: no field `y` on type `impl Future<Output = wgpu::geometry::Rect>`: field not available in `impl Future`, but it is available in its `Output`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:146:38: error[E0609]: no field `w` on type `impl Future<Output = wgpu::geometry::Rect>`: field not available in `impl Future`, but it is available in its `Output`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:147:39: error[E0609]: no field `h` on type `impl Future<Output = wgpu::geometry::Rect>`: field not available in `impl Future`, but it is available in its `Output`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:157:46: error[E0599]: no method named `and_then` found for opaque type `impl Future<Output = std::option::Option<&wgpu::tree::Node>>` in the current scope: method not found in `impl Future<Output = std::option::Option<&wgpu::tree::Node>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:163:36: error[E0599]: no method named `map_or` found for opaque type `impl Future<Output = std::option::Option<&wgpu::tree::Node>>` in the current scope: method not found in `impl Future<Output = std::option::Option<&wgpu::tree::Node>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:166:13: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:172:16: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:190:8: error[E0600]: cannot apply unary operator `!` to type `impl Future<Output = bool>`: cannot apply unary operator `!`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:193:9: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:201:27: error[E0277]: cannot add-assign `impl Future<Output = f32>` to `f32`: no implementation for `f32 += impl Future<Output = f32>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:205:12: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:234:30: error[E0308]: `match` arms have incompatible types: expected future, found a different future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:258:9: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:281:31: error[E0308]: mismatched types: expected `&UiStackNode`, found `UiStackNode`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:284:42: error[E0308]: mismatched types: expected `&UiTextNode`, found `UiTextNode`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:284:31: error[E0308]: `match` arms have incompatible types: expected `()`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:286:48: error[E0308]: mismatched types: expected `&UiButtonNode`, found `UiButtonNode`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:287:45: error[E0308]: mismatched types: expected `&UiInputNode`, found `UiInputNode`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:288:48: error[E0308]: mismatched types: expected `&UiSelectNode`, found `UiSelectNode`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:289:48: error[E0308]: mismatched types: expected `&UiToggleNode`, found `UiToggleNode`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:290:49: error[E0308]: mismatched types: expected `&UiKeyValueNode`, found `UiKeyValueNode`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:291:48: error[E0308]: mismatched types: expected `&UiSliderNode`, found `UiSliderNode`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:292:64: error[E0308]: mismatched types: expected `&UiNumberStepperNode`, found `UiNumberStepperNode`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:293:42: error[E0308]: mismatched types: expected `&UiRingNode`, found `UiRingNode`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:294:57: error[E0308]: mismatched types: expected `&UiIconSelectNode`, found `UiIconSelectNode`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:296:25: error[E0308]: mismatched types: expected `&UiFieldNode`, found `UiFieldNode`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:300:27: error[E0308]: mismatched types: expected `&UiSectionNode`, found `UiSectionNode`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:304:25: error[E0308]: mismatched types: expected `&UiGroupNode`, found `UiGroupNode`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:307:54: error[E0308]: mismatched types: expected `&UiTreeNode`, found `UiTreeNode`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:313:29: error[E0308]: mismatched types: expected `&UiImageNode`, found `UiImageNode`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:318:39: error[E0308]: mismatched types: expected `&UiComponentSceneNode`, found `UiComponentSceneNode`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:321:59: error[E0308]: mismatched types: expected `&UiExternalSlotNode`, found `UiExternalSlotNode`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:366:17: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:378:51: error[E0599]: `impl Future<Output = impl std::iter::Iterator<Item = arena::NodeId> + '_>` is not an iterator: `impl Future<Output = impl std::iter::Iterator<Item = arena::NodeId> + '_>` is not an iterator
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:388:34: error[E0308]: mismatched types: expected `&str`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:515:13: error[E0308]: mismatched types: expected future, found `(_, _)`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:390:32: error[E0599]: no method named `iter` found for opaque type `impl Future<Output = Vec<std::string::String>>` in the current scope: method not found in `impl Future<Output = Vec<std::string::String>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:408:32: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:413:32: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:415:18: error[E0308]: mismatched types: expected `Rgba`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:419:90: error[E0308]: `if` and `else` have incompatible types: expected future, found `&str`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:421:36: error[E0599]: no method named `is_some` found for opaque type `impl Future<Output = std::option::Option<[f32; 4]>>` in the current scope: method not found in `impl Future<Output = std::option::Option<[f32; 4]>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:422:110: error[E0308]: mismatched types: expected `Rgba`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:426:144: error[E0308]: mismatched types: expected `Rgba`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:426:31: error[E0308]: mismatched types: expected `&str`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:449:21: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:453:33: error[E0599]: no method named `then_some` found for opaque type `impl Future<Output = bool>` in the current scope: method not found in `impl Future<Output = bool>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:454:13: error[E0308]: mismatched types: expected future, found `(_, _)`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:456:17: error[E0308]: mismatched types: expected future, found `(_, _)`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:457:17: error[E0308]: mismatched types: expected future, found `(_, _)`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:467:13: error[E0308]: mismatched types: expected future, found `(_, _)`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:473:125: error[E0308]: mismatched types: expected future, found `&str`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:473:70: error[E0308]: mismatched types: expected `&str`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:493:17: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:494:21: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:496:143: error[E0308]: mismatched types: expected future, found `&str`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:497:31: error[E0308]: mismatched types: expected `&str`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:504:81: error[E0599]: `impl Future<Output = impl std::iter::Iterator<Item = arena::NodeId> + '_>` is not an iterator: `impl Future<Output = impl std::iter::Iterator<Item = arena::NodeId> + '_>` is not an iterator
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:511:49: error[E0609]: no field `x` on type `impl Future<Output = wgpu::geometry::Rect>`: field not available in `impl Future`, but it is available in its `Output`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:511:72: error[E0609]: no field `y` on type `impl Future<Output = wgpu::geometry::Rect>`: field not available in `impl Future`, but it is available in its `Output`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:511:84: error[E0609]: no field `w` on type `impl Future<Output = wgpu::geometry::Rect>`: field not available in `impl Future`, but it is available in its `Output`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:511:96: error[E0609]: no field `h` on type `impl Future<Output = wgpu::geometry::Rect>`: field not available in `impl Future`, but it is available in its `Output`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:512:118: error[E0599]: no method named `is_some_and` found for opaque type `impl Future<Output = std::option::Option<&wgpu::tree::Node>>` in the current scope: method not found in `impl Future<Output = std::option::Option<&wgpu::tree::Node>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:516:35: error[E0308]: mismatched types: expected `&str`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:526:38: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:527:21: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:528:54: error[E0308]: mismatched types: expected `Rgba`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:531:49: error[E0599]: no method named `is_some` found for opaque type `impl Future<Output = std::option::Option<[f32; 4]>>` in the current scope: method not found in `impl Future<Output = std::option::Option<[f32; 4]>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:532:148: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:532:122: error[E0308]: mismatched types: expected `Rgba`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:537:167: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:537:9: error[E0308]: arguments to this function are incorrect
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:542:70: error[E0308]: mismatched types: expected `&str`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:542:115: error[E0609]: no field `0` on type `impl Future<Output = (f32, f32)>`: unknown field
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:547:35: error[E0308]: mismatched types: expected `&str`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:567:13: error[E0308]: mismatched types: expected future, found `(_, _)`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:587:23: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:588:27: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:636:21: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:637:83: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:637:54: error[E0308]: mismatched types: expected `Rgba`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:639:43: error[E0308]: mismatched types: expected `Option<_>`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:658:31: error[E0308]: mismatched types: expected `&str`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:661:47: error[E0308]: mismatched types: expected `&str`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:661:13: error[E0308]: mismatched types: expected future, found `(_, _)`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:685:31: error[E0308]: mismatched types: expected `&str`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:697:31: error[E0308]: mismatched types: expected `&str`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:714:39: error[E0308]: mismatched types: expected `&str`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:718:17: error[E0308]: mismatched types: expected `f32`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:736:8: error[E0600]: cannot apply unary operator `!` to type `impl Future<Output = bool>`: cannot apply unary operator `!`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:751:30: error[E0308]: `match` arms have incompatible types: expected future, found a different future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:777:31: error[E0308]: mismatched types: expected `&str`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:779:47: error[E0308]: mismatched types: expected `&str`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:779:13: error[E0308]: mismatched types: expected future, found `(_, _)`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:785:35: error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = ui::UiTreeActionPlacement>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:804:22: error[E0277]: `f32` is not a future: `f32` is not a future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:841:39: error[E0308]: `match` arms have incompatible types: expected future, found a different future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️paint.rs:861:39: error[E0308]: mismatched types: expected `&str`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:115:5: error[E0308]: mismatched types: expected `Option<NodeId>`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:119:16: error[E0277]: the `?` operator can only be applied to values that implement `Try`: the `?` operator cannot be applied to type `impl Future<Output = std::option::Option<&wgpu::tree::Node>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:123:58: error[E0600]: cannot apply unary operator `!` to type `impl Future<Output = bool>`: cannot apply unary operator `!`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:128:18: error[E0277]: `impl Future<Output = impl std::iter::Iterator<Item = arena::NodeId> + '_>` is not an iterator: `impl Future<Output = impl std::iter::Iterator<Item = arena::NodeId> + '_>` is not an iterator
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:130:13: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:135:16: error[E0277]: `std::option::Option<_>` is not a future: `std::option::Option<_>` is not a future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:145:8: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:145:70: error[E0600]: cannot apply unary operator `!` to type `impl Future<Output = bool>`: cannot apply unary operator `!`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:163:64: error[E0600]: cannot apply unary operator `!` to type `impl Future<Output = bool>`: cannot apply unary operator `!`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:176:38: error[E0277]: the `?` operator can only be applied to values that implement `Try`: the `?` operator cannot be applied to type `impl Future<Output = std::option::Option<&wgpu::tree::Node>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:177:24: error[E0277]: the `?` operator can only be applied to values that implement `Try`: the `?` operator cannot be applied to type `impl Future<Output = std::option::Option<&wgpu::tree::Node>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:179:30: error[E0277]: the `?` operator can only be applied to values that implement `Try`: the `?` operator cannot be applied to type `impl Future<Output = std::option::Option<&wgpu::tree::Node>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:181:63: error[E0308]: mismatched types: expected `&str`, found `String`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:181:20: error[E0308]: mismatched types: expected `Option<&UiTreeItemNode>`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:189:40: error[E0308]: mismatched types: expected `Option<_>`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:198:20: error[E0277]: `std::option::Option<_>` is not a future: `std::option::Option<_>` is not a future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:213:9: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:220:9: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:216:25: error[E0277]: `({float}, {float})` is not a future: `({float}, {float})` is not a future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:214:17: error[E0277]: `({float}, {float})` is not a future: `({float}, {float})` is not a future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:226:16: error[E0277]: the `?` operator can only be applied to values that implement `Try`: the `?` operator cannot be applied to type `impl Future<Output = std::option::Option<&wgpu::tree::Node>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:227:9: error[E0308]: mismatched types: expected future, found `(_, _)`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:239:62: error[E0599]: no method named `and_then` found for opaque type `impl Future<Output = std::option::Option<&wgpu::tree::Node>>` in the current scope: method not found in `impl Future<Output = std::option::Option<&wgpu::tree::Node>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:241:17: error[E0308]: `match` arms have incompatible types: expected future, found `({float}, {float})`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:243:5: error[E0308]: mismatched types: expected `Option<NodeId>`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:289:12: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:290:12: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:294:18: error[E0277]: `impl Future<Output = impl std::iter::Iterator<Item = arena::NodeId> + '_>` is not an iterator: `impl Future<Output = impl std::iter::Iterator<Item = arena::NodeId> + '_>` is not an iterator
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:322:20: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:329:20: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:389:32: error[E0599]: no method named `and_then` found for opaque type `impl Future<Output = std::option::Option<&wgpu::tree::Node>>` in the current scope: method not found in `impl Future<Output = std::option::Option<&wgpu::tree::Node>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:547:60: error[E0599]: no method named `unwrap_or` found for opaque type `impl Future<Output = std::option::Option<wgpu::geometry::Rect>>` in the current scope: method not found in `impl Future<Output = std::option::Option<wgpu::geometry::Rect>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:625:26: error[E0599]: no method named `is_some_and` found for opaque type `impl Future<Output = std::option::Option<&wgpu::tree::Node>>` in the current scope: method not found in `impl Future<Output = std::option::Option<&wgpu::tree::Node>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:673:9: error[E0308]: mismatched types: expected future, found `(_, _)`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:761:20: error[E0308]: mismatched types: expected `FocusState`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:765:23: error[E0308]: mismatched types: expected `OverlayStack`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:777:21: error[E0308]: `match` arms have incompatible types: expected `Option<NodeId>`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:801:24: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:809:24: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:825:16: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:830:73: error[E0308]: mismatched types: expected `OverlayPlacement`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:830:108: error[E0308]: mismatched types: expected `DismissPolicy`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:835:13: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:836:13: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:835:30: error[E0308]: mismatched types: expected `Vec<UiCommand>`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:842:13: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:843:13: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:842:30: error[E0308]: mismatched types: expected `Vec<UiCommand>`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:849:9: error[E0308]: mismatched types: expected `Option<&OpenOverlay>`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:860:49: error[E0599]: no method named `is_some_and` found for opaque type `impl Future<Output = std::option::Option<&wgpu::tree::Node>>` in the current scope: method not found in `impl Future<Output = std::option::Option<&wgpu::tree::Node>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:862:13: error[E0308]: mismatched types: expected `Vec<UiCommand>`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:865:20: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:878:16: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:887:16: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:899:19: error[E0277]: the `?` operator can only be applied to values that implement `Try`: the `?` operator cannot be applied to type `impl Future<Output = std::option::Option<&OpenOverlay>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:904:55: error[E0599]: no method named `is_some` found for opaque type `impl Future<Output = std::option::Option<arena::NodeId>>` in the current scope: method not found in `impl Future<Output = std::option::Option<arena::NodeId>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:907:14: error[E0308]: mismatched types: expected `Vec<UiCommand>`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:914:13: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:920:64: error[E0599]: no method named `is_some_and` found for opaque type `impl Future<Output = std::option::Option<wgpu::geometry::Rect>>` in the current scope: method not found in `impl Future<Output = std::option::Option<wgpu::geometry::Rect>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:922:64: error[E0599]: no method named `is_some_and` found for opaque type `impl Future<Output = std::option::Option<wgpu::geometry::Rect>>` in the current scope: method not found in `impl Future<Output = std::option::Option<wgpu::geometry::Rect>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:928:9: error[E0308]: mismatched types: expected `Vec<UiCommand>`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:972:49: error[E0599]: no method named `and_then` found for opaque type `impl Future<Output = std::option::Option<arena::NodeId>>` in the current scope: method not found in `impl Future<Output = std::option::Option<arena::NodeId>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:983:31: error[E0599]: no method named `is_some_and` found for opaque type `impl Future<Output = std::option::Option<&wgpu::tree::Node>>` in the current scope: method not found in `impl Future<Output = std::option::Option<&wgpu::tree::Node>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:1008:13: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:1009:13: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:1010:16: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:1020:13: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:1032:13: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:1040:13: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:1061:13: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:1066:111: error[E0609]: no field `0` on type `impl Future<Output = (usize, usize)>`: unknown field
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:1072:111: error[E0609]: no field `1` on type `impl Future<Output = (usize, usize)>`: unknown field
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:1091:25: error[E0308]: mismatched types: expected future, found `(_, _)`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:1104:25: error[E0308]: mismatched types: expected future, found `(_, _)`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:1115:25: error[E0308]: mismatched types: expected future, found `(_, _)`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:1122:25: error[E0308]: mismatched types: expected future, found `(_, _)`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:1166:43: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:1167:41: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:1168:60: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:1168:85: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:1181:75: error[E0308]: `match` arms have incompatible types: expected future, found a different future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:1185:24: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:1186:28: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:1190:57: error[E0308]: mismatched types: expected `Option<NodeId>`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:1194:24: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:1199:57: error[E0308]: mismatched types: expected `Option<NodeId>`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:1200:24: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:1201:28: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:1205:60: error[E0599]: `impl Future<Output = std::option::Option<&wgpu::tree::Node>>` is not an iterator: `impl Future<Output = std::option::Option<&wgpu::tree::Node>>` is not an iterator
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:1209:32: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:1214:55: error[E0599]: no method named `is_some_and` found for opaque type `impl Future<Output = std::option::Option<&wgpu::tree::Node>>` in the current scope: method not found in `impl Future<Output = std::option::Option<&wgpu::tree::Node>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:1223:32: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:1235:24: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:1238:36: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:1242:61: error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = std::option::Option<arena::NodeId>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:1251:70: error[E0599]: no method named `is_some_and` found for opaque type `impl Future<Output = std::option::Option<&wgpu::tree::Node>>` in the current scope: method not found in `impl Future<Output = std::option::Option<&wgpu::tree::Node>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:1255:70: error[E0599]: no method named `and_then` found for opaque type `impl Future<Output = std::option::Option<&wgpu::tree::Node>>` in the current scope: method not found in `impl Future<Output = std::option::Option<&wgpu::tree::Node>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:1263:99: error[E0599]: no method named `is_some_and` found for opaque type `impl Future<Output = std::option::Option<&OpenOverlay>>` in the current scope: method not found in `impl Future<Output = std::option::Option<&OpenOverlay>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:1273:36: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:1290:24: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:1291:28: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:1295:57: error[E0308]: mismatched types: expected `Option<NodeId>`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:1301:73: error[E0599]: no method named `unwrap_or` found for opaque type `impl Future<Output = std::option::Option<arena::NodeId>>` in the current scope: method not found in `impl Future<Output = std::option::Option<arena::NodeId>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:1317:24: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:1318:28: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:1334:20: error[E0277]: the `?` operator can only be applied to values that implement `Try`: the `?` operator cannot be applied to type `impl Future<Output = std::option::Option<&wgpu::tree::Node>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️events.rs:1340:26: error[E0277]: the `?` operator can only be applied to values that implement `Try`: the `?` operator cannot be applied to type `impl Future<Output = std::option::Option<&wgpu::tree::Node>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️scene_slots.rs:80:9: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️scene_slots.rs:85:107: error[E0308]: mismatched types: expected `&UiComponentSceneNode`, found `UiComponentSceneNode`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️scene_slots.rs:86:98: error[E0308]: mismatched types: expected `&UiImageNode`, found `UiImageNode`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️scene_slots.rs:89:18: error[E0277]: `impl Future<Output = impl std::iter::Iterator<Item = arena::NodeId> + '_>` is not an iterator: `impl Future<Output = impl std::iter::Iterator<Item = arena::NodeId> + '_>` is not an iterator
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️shell.rs:62:22: error[E0308]: mismatched types: expected `UiTree`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️shell.rs:121:28: error[E0599]: no method named `insert_child` found for opaque type `impl Future<Output = wgpu::tree::UiTree>` in the current scope: method not found in `impl Future<Output = wgpu::tree::UiTree>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️shell.rs:121:108: error[E0308]: mismatched types: expected `UiNode`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️shell.rs:122:14: error[E0599]: no method named `mark_dirty` found for opaque type `impl Future<Output = wgpu::tree::UiTree>` in the current scope: method not found in `impl Future<Output = wgpu::tree::UiTree>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️shell.rs:124:20: error[E0308]: mismatched types: expected `&mut UiTree`, found `&mut impl Future<Output = UiTree>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️shell.rs:125:21: error[E0308]: mismatched types: expected `UiTree`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️shell.rs:167:32: error[E0308]: mismatched types: expected `Option<NodeId>`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️shell.rs:171:43: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️shell.rs:173:97: error[E0599]: `impl Future<Output = std::option::Option<&wgpu::tree::Node>>` is not an iterator: `impl Future<Output = std::option::Option<&wgpu::tree::Node>>` is not an iterator
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️shell.rs:209:43: error[E0308]: `match` arms have incompatible types: expected future, found a different future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️shell.rs:216:46: error[E0308]: mismatched types: expected `Node`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️shell.rs:217:21: error[E0308]: mismatched types: expected `NodeId`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️shell.rs:220:65: error[E0308]: mismatched types: expected `NodeId`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️shell.rs:221:67: error[E0308]: mismatched types: expected `NodeId`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️shell.rs:219:9: error[E0308]: mismatched types: expected `()`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️shell.rs:230:46: error[E0308]: mismatched types: expected `Node`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️shell.rs:231:39: error[E0308]: mismatched types: expected `NodeId`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️shell.rs:231:12: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️shell.rs:234:21: error[E0308]: mismatched types: expected `NodeId`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️shell.rs:236:28: error[E0308]: mismatched types: expected `NodeId`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️shell.rs:253:47: error[E0277]: `impl Future<Output = &'static str>` doesn't implement `std::fmt::Display`: `impl Future<Output = &'static str>` cannot be formatted with the default formatter
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️shell.rs:256:39: error[E0271]: expected `is_read_only` to return `bool`, but it returns `impl Future<Output = bool>`: expected `bool`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️shell.rs:260:16: error[E0308]: mismatched types: expected `Label`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️shell.rs:266:46: error[E0308]: mismatched types: expected `Node`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️shell.rs:267:21: error[E0308]: mismatched types: expected `NodeId`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:41:22: error[E0308]: mismatched types: expected `UiTree`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:41:45: error[E0308]: mismatched types: expected `LayoutEngine`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:41:74: error[E0308]: mismatched types: expected `EventRouter`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:47:40: error[E0308]: mismatched types: expected `Option<_>`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:71:48: error[E0308]: mismatched types: expected `Shell`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:79:69: error[E0308]: mismatched types: expected `UiWindow`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:85:36: error[E0609]: no field `viewport` on type `impl Future<Output = &mut UiWindow>`: unknown field
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:91:36: error[E0609]: no field `tree` on type `impl Future<Output = &mut UiWindow>`: unknown field
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:119:35: error[E0271]: expected `is_dirty` to return `bool`, but it returns `impl Future<Output = bool>`: expected `bool`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:156:44: error[E0599]: no method named `is_some_and` found for opaque type `impl Future<Output = std::option::Option<&wgpu::tree::Node>>` in the current scope: method not found in `impl Future<Output = std::option::Option<&wgpu::tree::Node>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:184:47: error[E0599]: no method named `iter` found for opaque type `impl Future<Output = Vec<UiCommand>>` in the current scope: method not found in `impl Future<Output = Vec<UiCommand>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:185:9: error[E0308]: mismatched types: expected `Vec<UiCommand>`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:191:9: error[E0308]: mismatched types: expected `Vec<ShellEvent>`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:244:58: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/☑️Select/🧊️component.rs:41:90: error[E0599]: no method named `and_then` found for opaque type `impl Future<Output = std::option::Option<&HitTarget<E>>>` in the current scope: method not found in `impl Future<Output = std::option::Option<&HitTarget<E>>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/🔘️Button/🧊️component.rs:21:79: error[E0308]: mismatched types: expected `Rgba`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/🔘️Button/🧊️component.rs:25:36: error[E0599]: no method named `is_some` found for opaque type `impl Future<Output = std::option::Option<[f32; 4]>>` in the current scope: method not found in `impl Future<Output = std::option::Option<[f32; 4]>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/🔘️Button/🧊️component.rs:26:110: error[E0308]: mismatched types: expected `Rgba`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/🔘️Button/🧊️component.rs:30:123: error[E0308]: mismatched types: expected `Rgba`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/✏️Input/🧊️component.rs:30:39: error[E0277]: cannot add `impl Future<Output = f32>` to `f32`: no implementation for `f32 + impl Future<Output = f32>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/🎚️Toggle/🧊️component.rs:20:79: error[E0308]: mismatched types: expected `Rgba`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/🎚️Toggle/🧊️component.rs:23:44: error[E0599]: no method named `is_some` found for opaque type `impl Future<Output = std::option::Option<[f32; 4]>>` in the current scope: method not found in `impl Future<Output = std::option::Option<[f32; 4]>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/🎚️Toggle/🧊️component.rs:24:121: error[E0308]: mismatched types: expected `Rgba`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/🎚️Toggle/🧊️component.rs:29:129: error[E0308]: mismatched types: expected `Rgba`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/🔑️KeyValue/🧊️component.rs:17:117: error[E0631]: type mismatch in function arguments: expected due to this, found signature defined here
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/🎚️Slider/🧊️component.rs:38:58: error[E0599]: the method `clamp` exists for opaque type `impl Future<Output = f64>`, but its trait bounds were not satisfied: method cannot be called on `impl Future<Output = f64>` due to unsatisfied trait bounds
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/🔣️IconSelector/🧊️component.rs:18:79: error[E0308]: mismatched types: expected `Rgba`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/🔣️IconSelector/🧊️component.rs:21:33: error[E0599]: no method named `is_some` found for opaque type `impl Future<Output = std::option::Option<[f32; 4]>>` in the current scope: method not found in `impl Future<Output = std::option::Option<[f32; 4]>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/🪵️Tree/🧊️component.rs:31:5: error[E0308]: mismatched types: expected `f32`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/🪵️Tree/🧊️component.rs:40:70: error[E0609]: no field `0` on type `impl Future<Output = (f32, f32)>`: unknown field
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/🪵️Tree/🧊️component.rs:45:35: error[E0308]: mismatched types: expected `f32`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/🪵️Tree/🧊️component.rs:56:42: error[E0369]: cannot add `f32` to `impl Future<Output = f32>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/🪵️Tree/🧊️component.rs:56:136: error[E0609]: no field `0` on type `impl Future<Output = (f32, f32)>`: unknown field
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/🪵️Tree/🧊️component.rs:58:69: error[E0609]: no field `0` on type `impl Future<Output = (f32, f32)>`: unknown field
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/🪵️Tree/🧊️component.rs:63:67: error[E0609]: no field `0` on type `impl Future<Output = (f32, f32)>`: unknown field
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/🪵️Tree/🧊️component.rs:81:5: error[E0308]: mismatched types: expected `f32`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/🪵️Tree/🧊️component.rs:92:24: error[E0277]: cannot add-assign `impl Future<Output = f32>` to `f32`: no implementation for `f32 += impl Future<Output = f32>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/🪵️Tree/🧊️component.rs:109:20: error[E0277]: cannot add-assign `impl Future<Output = f32>` to `f32`: no implementation for `f32 += impl Future<Output = f32>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/🪵️Tree/🧊️component.rs:123:56: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/🪵️Tree/🧊️component.rs:125:12: error[E0600]: cannot apply unary operator `!` to type `impl Future<Output = bool>`: cannot apply unary operator `!`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/🪵️Tree/🧊️component.rs:127:19: error[E0277]: cannot add-assign `impl Future<Output = f32>` to `f32`: no implementation for `f32 += impl Future<Output = f32>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/🪵️Tree/🧊️component.rs:145:54: error[E0308]: mismatched types: expected `Option<_>`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/🪵️Tree/🧊️component.rs:164:42: error[E0308]: mismatched types: expected `f32`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/🪵️Tree/🧊️component.rs:165:35: error[E0277]: cannot add `impl Future<Output = f32>` to `f32`: no implementation for `f32 + impl Future<Output = f32>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/🪵️Tree/🧊️component.rs:165:60: error[E0277]: cannot subtract `impl Future<Output = f32>` from `f32`: no implementation for `f32 - impl Future<Output = f32>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/🪵️Tree/🧊️component.rs:171:26: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/🪵️Tree/🧊️component.rs:192:12: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/🪵️Tree/🧊️component.rs:193:54: error[E0308]: mismatched types: expected `Option<_>`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/🪵️Tree/🧊️component.rs:201:45: error[E0277]: cannot add `impl Future<Output = f32>` to `f32`: no implementation for `f32 + impl Future<Output = f32>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/🪵️Tree/🧊️component.rs:208:123: error[E0369]: cannot add `f32` to `impl Future<Output = f32>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/🪵️Tree/🧊️component.rs:212:54: error[E0308]: mismatched types: expected `Option<_>`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/🪵️Tree/🧊️component.rs:248:8: error[E0600]: cannot apply unary operator `!` to type `impl Future<Output = bool>`: cannot apply unary operator `!`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/🪵️Tree/🧊️component.rs:253:20: error[E0277]: cannot add-assign `impl Future<Output = f32>` to `f32`: no implementation for `f32 += impl Future<Output = f32>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:202:72: error[E0369]: cannot multiply `impl Future<Output = f32>` by `{float}`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:207:21: error[E0277]: `(_, _)` is not a future: `(_, _)` is not a future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:212:36: error[E0277]: cannot add-assign `impl Future<Output = f32>` to `f32`: no implementation for `f32 += impl Future<Output = f32>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:218:36: error[E0277]: cannot add-assign `impl Future<Output = f32>` to `f32`: no implementation for `f32 += impl Future<Output = f32>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:230:17: error[E0308]: mismatched types: expected future, found `(_, _)`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:232:34: error[E0599]: no method named `len` found for opaque type `impl Future<Output = Vec<std::string::String>>` in the current scope: method not found in `impl Future<Output = Vec<std::string::String>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:239:102: error[E0609]: no field `0` on type `impl Future<Output = (f32, f32)>`: unknown field
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:246:17: error[E0308]: mismatched types: expected future, found `(_, _)`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:247:70: error[E0609]: no field `0` on type `impl Future<Output = (f32, f32)>`: unknown field
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:247:82: error[E0277]: cannot add `impl Future<Output = f32>` to `f32`: no implementation for `f32 + impl Future<Output = f32>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:256:21: error[E0277]: `(_, _)` is not a future: `(_, _)` is not a future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:262:47: error[E0308]: mismatched types: expected `f32`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:262:100: error[E0308]: mismatched types: expected `f32`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:272:102: error[E0609]: no field `0` on type `impl Future<Output = (f32, f32)>`: unknown field
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:288:25: error[E0308]: mismatched types: expected future, found `(_, _)`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:296:39: error[E0308]: arguments to this function are incorrect
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:296:94: error[E0308]: arguments to this function are incorrect
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:296:94: error[E0308]: `if` and `else` have incompatible types: expected future, found a different future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:325:45: error[E0308]: `match` arms have incompatible types: expected `()`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:342:71: error[E0277]: cannot add `impl Future<Output = f32>` to `f32`: no implementation for `f32 + impl Future<Output = f32>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:342:107: error[E0277]: cannot subtract `impl Future<Output = f32>` from `f32`: no implementation for `f32 - impl Future<Output = f32>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:354:34: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:361:16: error[E0600]: cannot apply unary operator `!` to type `impl Future<Output = bool>`: cannot apply unary operator `!`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:364:25: error[E0308]: mismatched types: expected future, found `(_, _)`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:377:64: error[E0599]: the method `max` exists for opaque type `impl Future<Output = f32>`, but its trait bounds were not satisfied: method cannot be called on `impl Future<Output = f32>` due to unsatisfied trait bounds
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:401:46: error[E0308]: `match` arms have incompatible types: expected `()`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:457:50: error[E0308]: mismatched types: expected `Option<_>`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:497:9: error[E0308]: mismatched types: expected future, found `(_, _)`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:504:32: error[E0599]: no method named `iter` found for opaque type `impl Future<Output = Vec<std::string::String>>` in the current scope: method not found in `impl Future<Output = Vec<std::string::String>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:507:11: error[E0599]: no method named `len` found for opaque type `impl Future<Output = Vec<std::string::String>>` in the current scope: method not found in `impl Future<Output = Vec<std::string::String>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:538:24: error[E0609]: no field `width` on type `impl Future<Output = &GlyphEntry>`: unknown field
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:539:24: error[E0609]: no field `height` on type `impl Future<Output = &GlyphEntry>`: unknown field
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:540:35: error[E0609]: no field `bearing_x` on type `impl Future<Output = &GlyphEntry>`: unknown field
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:541:33: error[E0609]: no field `bearing_y` on type `impl Future<Output = &GlyphEntry>`: unknown field
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:542:30: error[E0609]: no field `atlas_x` on type `impl Future<Output = &GlyphEntry>`: unknown field
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:542:62: error[E0609]: no field `atlas_y` on type `impl Future<Output = &GlyphEntry>`: unknown field
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:542:95: error[E0609]: no field `atlas_x` on type `impl Future<Output = &GlyphEntry>`: unknown field
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:542:111: error[E0609]: no field `width` on type `impl Future<Output = &GlyphEntry>`: unknown field
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:542:143: error[E0609]: no field `atlas_y` on type `impl Future<Output = &GlyphEntry>`: unknown field
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:542:159: error[E0609]: no field `height` on type `impl Future<Output = &GlyphEntry>`: unknown field
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:544:27: error[E0609]: no field `advance` on type `impl Future<Output = &GlyphEntry>`: unknown field
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:554:24: error[E0609]: no field `width` on type `impl Future<Output = &GlyphEntry>`: unknown field
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:555:24: error[E0609]: no field `height` on type `impl Future<Output = &GlyphEntry>`: unknown field
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:556:35: error[E0609]: no field `bearing_x` on type `impl Future<Output = &GlyphEntry>`: unknown field
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:557:33: error[E0609]: no field `bearing_y` on type `impl Future<Output = &GlyphEntry>`: unknown field
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:558:30: error[E0609]: no field `atlas_x` on type `impl Future<Output = &GlyphEntry>`: unknown field
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:558:62: error[E0609]: no field `atlas_y` on type `impl Future<Output = &GlyphEntry>`: unknown field
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:558:95: error[E0609]: no field `atlas_x` on type `impl Future<Output = &GlyphEntry>`: unknown field
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:558:111: error[E0609]: no field `width` on type `impl Future<Output = &GlyphEntry>`: unknown field
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:558:143: error[E0609]: no field `atlas_y` on type `impl Future<Output = &GlyphEntry>`: unknown field
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:558:159: error[E0609]: no field `height` on type `impl Future<Output = &GlyphEntry>`: unknown field
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:560:27: error[E0609]: no field `advance` on type `impl Future<Output = &GlyphEntry>`: unknown field
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:570:24: error[E0609]: no field `width` on type `impl Future<Output = &GlyphEntry>`: unknown field
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:571:24: error[E0609]: no field `height` on type `impl Future<Output = &GlyphEntry>`: unknown field
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:572:35: error[E0609]: no field `bearing_x` on type `impl Future<Output = &GlyphEntry>`: unknown field
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:573:33: error[E0609]: no field `bearing_y` on type `impl Future<Output = &GlyphEntry>`: unknown field
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:574:30: error[E0609]: no field `atlas_x` on type `impl Future<Output = &GlyphEntry>`: unknown field
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:574:62: error[E0609]: no field `atlas_y` on type `impl Future<Output = &GlyphEntry>`: unknown field
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:574:95: error[E0609]: no field `atlas_x` on type `impl Future<Output = &GlyphEntry>`: unknown field
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:574:111: error[E0609]: no field `width` on type `impl Future<Output = &GlyphEntry>`: unknown field
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:574:143: error[E0609]: no field `atlas_y` on type `impl Future<Output = &GlyphEntry>`: unknown field
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:574:159: error[E0609]: no field `height` on type `impl Future<Output = &GlyphEntry>`: unknown field
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:576:27: error[E0609]: no field `advance` on type `impl Future<Output = &GlyphEntry>`: unknown field
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:627:13: error[E0308]: mismatched types: expected future, found `(_, _)`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:632:35: error[E0599]: no method named `length` found for opaque type `impl Future<Output = Vec3>` in the current scope: method not found in `impl Future<Output = Vec3>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:636:31: error[E0599]: no method named `scale` found for opaque type `impl Future<Output = Vec3>` in the current scope: method not found in `impl Future<Output = Vec3>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:666:31: error[E0599]: no method named `dot` found for opaque type `impl Future<Output = Vec3>` in the current scope: method not found in `impl Future<Output = Vec3>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:667:32: error[E0599]: no method named `dot` found for opaque type `impl Future<Output = Vec3>` in the current scope: method not found in `impl Future<Output = Vec3>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:668:34: error[E0599]: no method named `dot` found for opaque type `impl Future<Output = Vec3>` in the current scope: method not found in `impl Future<Output = Vec3>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:672:91: error[E0308]: mismatched types: expected `Rgba`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:675:31: error[E0599]: no method named `dot` found for opaque type `impl Future<Output = Vec3>` in the current scope: method not found in `impl Future<Output = Vec3>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:676:32: error[E0599]: no method named `dot` found for opaque type `impl Future<Output = Vec3>` in the current scope: method not found in `impl Future<Output = Vec3>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:677:34: error[E0599]: no method named `dot` found for opaque type `impl Future<Output = Vec3>` in the current scope: method not found in `impl Future<Output = Vec3>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:705:13: error[E0308]: mismatched types: expected future, found `(_, _)`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:709:51: error[E0599]: no method named `iter` found for opaque type `impl Future<Output = Vec<OrbitViewGizmoTip>>` in the current scope: method not found in `impl Future<Output = Vec<OrbitViewGizmoTip>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️widgets.rs:713:28: error[E0608]: cannot index into a value of type `impl Future<Output = Vec<OrbitViewGizmoTip>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:24:68: error[E0599]: no method named `mul` found for opaque type `impl Future<Output = Mat4>` in the current scope: method not found in `impl Future<Output = Mat4>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:32:24: error[E0599]: no method named `mul` found for opaque type `impl Future<Output = Mat4>` in the current scope: method not found in `impl Future<Output = Mat4>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:58:31: error[E0599]: no method named `length` found for opaque type `impl Future<Output = Vec3>` in the current scope: method not found in `impl Future<Output = Vec3>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:59:61: error[E0609]: no field `y` on type `impl Future<Output = Vec3>`: field not available in `impl Future`, but it is available in its `Output`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:59:76: error[E0609]: no field `x` on type `impl Future<Output = Vec3>`: field not available in `impl Future`, but it is available in its `Output`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:59:95: error[E0609]: no field `z` on type `impl Future<Output = Vec3>`: field not available in `impl Future`, but it is available in its `Output`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:65:20: error[E0308]: mismatched types: expected `Vec3`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:65:55: error[E0308]: mismatched types: expected `Vec3`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:75:28: error[E0609]: no field `position` on type `impl Future<Output = Camera3d>`: field not available in `impl Future`, but it is available in its `Output`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:75:48: error[E0609]: no field `target` on type `impl Future<Output = Camera3d>`: field not available in `impl Future`, but it is available in its `Output`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:75:69: error[E0609]: no field `up` on type `impl Future<Output = Camera3d>`: field not available in `impl Future`, but it is available in its `Output`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:76:37: error[E0609]: no field `position` on type `impl Future<Output = Camera3d>`: field not available in `impl Future`, but it is available in its `Output`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:76:57: error[E0609]: no field `target` on type `impl Future<Output = Camera3d>`: field not available in `impl Future`, but it is available in its `Output`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:78:65: error[E0599]: no method named `add` found for opaque type `impl Future<Output = Vec3>` in the current scope: method not found in `impl Future<Output = Vec3>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:138:27: error[E0308]: mismatched types: expected `Vec3`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:138:55: error[E0599]: no method named `mul` found for opaque type `impl Future<Output = Mat4>` in the current scope: method not found in `impl Future<Output = Mat4>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:138:148: error[E0308]: mismatched types: expected `Vec3`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:211:29: error[E0599]: no method named `length` found for opaque type `impl Future<Output = Vec3>` in the current scope: method not found in `impl Future<Output = Vec3>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:213:59: error[E0599]: no method named `scale` found for opaque type `impl Future<Output = Vec3>` in the current scope: method not found in `impl Future<Output = Vec3>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:224:43: error[E0308]: mismatched types: expected `Vec3`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:224:69: error[E0599]: no method named `to_array` found for opaque type `impl Future<Output = Vec3>` in the current scope: method not found in `impl Future<Output = Vec3>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:236:29: error[E0308]: mismatched types: expected `Vec3`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:236:39: error[E0369]: cannot add `f32` to `impl Future<Output = f32>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:277:9: error[E0308]: mismatched types: expected future, found `(_, _)`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:278:5: error[E0277]: the `?` operator can only be applied to values that implement `Try`: the `?` operator cannot be applied to type `impl Future<Output = std::option::Option<f32>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:281:48: error[E0308]: mismatched types: expected `Vec3`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:282:48: error[E0308]: mismatched types: expected `Vec3`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:283:48: error[E0308]: mismatched types: expected `Vec3`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:284:26: error[E0308]: arguments to this function are incorrect
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:284:16: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:301:9: error[E0308]: mismatched types: expected future, found `(_, _)`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:302:5: error[E0277]: the `?` operator can only be applied to values that implement `Try`: the `?` operator cannot be applied to type `impl Future<Output = std::option::Option<f32>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:305:48: error[E0308]: mismatched types: expected `Vec3`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:306:48: error[E0308]: mismatched types: expected `Vec3`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:307:48: error[E0308]: mismatched types: expected `Vec3`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:308:34: error[E0308]: arguments to this function are incorrect
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:308:16: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:310:40: error[E0308]: mismatched types: expected `Vec3`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:311:31: error[E0599]: no method named `sub` found for opaque type `impl Future<Output = Vec3>` in the current scope: method not found in `impl Future<Output = Vec3>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:312:31: error[E0599]: no method named `sub` found for opaque type `impl Future<Output = Vec3>` in the current scope: method not found in `impl Future<Output = Vec3>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:317:93: error[E0308]: mismatched types: expected `Vec3`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:327:23: error[E0308]: mismatched types: expected `Vec3`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:328:21: error[E0599]: no method named `dot` found for opaque type `impl Future<Output = Vec3>` in the current scope: method not found in `impl Future<Output = Vec3>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:334:19: error[E0599]: no method named `dot` found for opaque type `impl Future<Output = Vec3>` in the current scope: method not found in `impl Future<Output = Vec3>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:338:15: error[E0599]: no method named `cross` found for opaque type `impl Future<Output = Vec3>` in the current scope: method not found in `impl Future<Output = Vec3>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:339:15: error[E0277]: cannot multiply `{float}` by `impl Future<Output = f32>`: no implementation for `{float} * impl Future<Output = f32>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:343:23: error[E0599]: no method named `dot` found for opaque type `impl Future<Output = Vec3>` in the current scope: method not found in `impl Future<Output = Vec3>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:387:5: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:403:11: error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = f32>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:403:21: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:406:11: error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = f32>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:406:21: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:409:11: error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = f32>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:409:21: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:412:11: error[E0369]: binary operation `==` cannot be applied to type `impl Future<Output = f32>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:412:21: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:415:9: error[E0369]: binary operation `>` cannot be applied to type `impl Future<Output = f32>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:415:23: error[E0369]: binary operation `>` cannot be applied to type `impl Future<Output = f32>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:415:37: error[E0369]: binary operation `>` cannot be applied to type `impl Future<Output = f32>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:415:51: error[E0369]: binary operation `>` cannot be applied to type `impl Future<Output = f32>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:428:29: error[E0599]: no method named `len` found for opaque type `impl Future<Output = [[f32; 2]; 4]>` in the current scope: method not found in `impl Future<Output = [[f32; 2]; 4]>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:429:25: error[E0608]: cannot index into a value of type `impl Future<Output = [[f32; 2]; 4]>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:430:48: error[E0599]: no method named `len` found for opaque type `impl Future<Output = [[f32; 2]; 4]>` in the current scope: method not found in `impl Future<Output = [[f32; 2]; 4]>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:430:25: error[E0608]: cannot index into a value of type `impl Future<Output = [[f32; 2]; 4]>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:431:12: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:439:8: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:439:40: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:444:12: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:453:42: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:455:9: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:461:12: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:461:74: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:465:46: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:467:13: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:470:9: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:470:71: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:476:38: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:481:16: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:487:35: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:537:68: error[E0308]: mismatched types: expected `Vec3`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:538:69: error[E0308]: mismatched types: expected `Vec3`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:538:29: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:542:95: error[E0308]: mismatched types: expected `Option<[f32; 4]>`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:543:28: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:551:70: error[E0308]: mismatched types: expected `Vec3`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:552:70: error[E0308]: mismatched types: expected `Vec3`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:553:90: error[E0308]: mismatched types: expected `Vec3`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:553:140: error[E0308]: mismatched types: expected `Vec3`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:553:30: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:553:46: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:556:101: error[E0308]: mismatched types: expected `Option<[f32; 4]>`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:556:28: error[E0600]: cannot apply unary operator `!` to type `impl Future<Output = bool>`: cannot apply unary operator `!`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:568:72: error[E0308]: mismatched types: expected `Vec3`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:569:76: error[E0308]: mismatched types: expected `Vec3`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:569:36: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:577:92: error[E0308]: mismatched types: expected `Option<[f32; 4]>`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:577:28: error[E0600]: cannot apply unary operator `!` to type `impl Future<Output = bool>`: cannot apply unary operator `!`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:585:25: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:588:24: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:600:5: error[E0308]: mismatched types: expected `Vec3`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:606:23: error[E0308]: mismatched types: expected `Vec3`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:607:21: error[E0599]: no method named `dot` found for opaque type `impl Future<Output = Vec3>` in the current scope: method not found in `impl Future<Output = Vec3>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:613:19: error[E0599]: no method named `dot` found for opaque type `impl Future<Output = Vec3>` in the current scope: method not found in `impl Future<Output = Vec3>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:617:15: error[E0599]: no method named `cross` found for opaque type `impl Future<Output = Vec3>` in the current scope: method not found in `impl Future<Output = Vec3>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:618:15: error[E0277]: cannot multiply `{float}` by `impl Future<Output = f32>`: no implementation for `{float} * impl Future<Output = f32>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:622:23: error[E0599]: no method named `dot` found for opaque type `impl Future<Output = Vec3>` in the current scope: method not found in `impl Future<Output = Vec3>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:632:13: error[E0609]: no field `z` on type `impl Future<Output = Vec3>`: field not available in `impl Future`, but it is available in its `Output`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:632:29: error[E0609]: no field `z` on type `impl Future<Output = Vec3>`: field not available in `impl Future`, but it is available in its `Output`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:635:17: error[E0609]: no field `x` on type `impl Future<Output = Vec3>`: field not available in `impl Future`, but it is available in its `Output`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:635:54: error[E0609]: no field `y` on type `impl Future<Output = Vec3>`: field not available in `impl Future`, but it is available in its `Output`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:665:55: error[E0369]: binary operation `>` cannot be applied to type `impl Future<Output = f32>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:668:59: error[E0369]: binary operation `<` cannot be applied to type `impl Future<Output = f32>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:695:43: error[E0308]: mismatched types: expected `Vec3`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:696:56: error[E0308]: mismatched types: expected `Vec3`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:696:16: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:709:13: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:719:33: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:737:64: error[E0308]: mismatched types: expected `Vec3`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:738:68: error[E0308]: mismatched types: expected `Vec3`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:738:28: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:740:80: error[E0308]: mismatched types: expected `Option<[f32; 4]>`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:740:28: error[E0600]: cannot apply unary operator `!` to type `impl Future<Output = bool>`: cannot apply unary operator `!`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:751:17: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:754:16: error[E0600]: cannot apply unary operator `!` to type `impl Future<Output = bool>`: cannot apply unary operator `!`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:762:64: error[E0308]: mismatched types: expected `Vec3`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:763:68: error[E0308]: mismatched types: expected `Vec3`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:763:28: error[E0308]: mismatched types: expected future, found `Option<_>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:771:76: error[E0308]: mismatched types: expected `Option<[f32; 4]>`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:771:20: error[E0308]: mismatched types: expected `bool`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:787:5: error[E0308]: mismatched types: expected `Vec3`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:795:32: error[E0599]: no method named `normalize` found for opaque type `impl Future<Output = Vec3>` in the current scope: method not found in `impl Future<Output = Vec3>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:800:14: error[E0599]: no method named `abs` found for opaque type `impl Future<Output = f32>` in the current scope: method not found in `impl Future<Output = f32>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:803:30: error[E0308]: mismatched types: expected `Vec3`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:803:55: error[E0369]: cannot divide `impl Future<Output = f32>` by `impl Future<Output = f32>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:807:21: error[E0308]: mismatched types: expected `Vec3`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:807:10: error[E0308]: mismatched types: expected `Vec3`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:812:27: error[E0308]: mismatched types: expected `Vec3`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:813:14: error[E0599]: no method named `length` found for opaque type `impl Future<Output = Vec3>` in the current scope: method not found in `impl Future<Output = Vec3>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:814:22: error[E0599]: no method named `cross` found for opaque type `impl Future<Output = Vec3>` in the current scope: method not found in `impl Future<Output = Vec3>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:816:13: error[E0609]: no field `z` on type `impl Future<Output = Vec3>`: field not available in `impl Future`, but it is available in its `Output`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:817:34: error[E0599]: no method named `cross` found for opaque type `impl Future<Output = Vec3>` in the current scope: method not found in `impl Future<Output = Vec3>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:819:34: error[E0599]: no method named `cross` found for opaque type `impl Future<Output = Vec3>` in the current scope: method not found in `impl Future<Output = Vec3>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:825:51: error[E0308]: mismatched types: expected `Vec3`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:825:15: error[E0277]: the `?` operator can only be applied to values that implement `Try`: the `?` operator cannot be applied to type `impl Future<Output = std::option::Option<Vec3>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:831:21: error[E0599]: no method named `dot` found for opaque type `impl Future<Output = Vec3>` in the current scope: method not found in `impl Future<Output = Vec3>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:835:27: error[E0599]: no method named `dot` found for opaque type `impl Future<Output = Vec3>` in the current scope: method not found in `impl Future<Output = Vec3>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:837:28: error[E0599]: no method named `scale` found for opaque type `impl Future<Output = Vec3>` in the current scope: method not found in `impl Future<Output = Vec3>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:838:24: error[E0308]: mismatched types: expected `Vec3`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:839:25: error[E0308]: mismatched types: expected `Vec3`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:840:15: error[E0599]: no method named `dot` found for opaque type `impl Future<Output = Vec3>` in the current scope: method not found in `impl Future<Output = Vec3>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:841:29: error[E0369]: cannot multiply `impl Future<Output = f32>` by `impl Future<Output = f32>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:842:28: error[E0689]: can't call method `abs` on ambiguous numeric type `{float}`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:842:64: error[E0369]: cannot multiply `impl Future<Output = f32>` by `impl Future<Output = f32>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:876:23: error[E0599]: no method named `add` found for opaque type `impl Future<Output = Vec3>` in the current scope: method not found in `impl Future<Output = Vec3>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:876:32: error[E0599]: no method named `cross` found for opaque type `impl Future<Output = Vec3>` in the current scope: method not found in `impl Future<Output = Vec3>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:876:67: error[E0599]: no method named `scale` found for opaque type `impl Future<Output = Vec3>` in the current scope: method not found in `impl Future<Output = Vec3>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:876:78: error[E0599]: no method named `dot` found for opaque type `impl Future<Output = Vec3>` in the current scope: method not found in `impl Future<Output = Vec3>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:881:40: error[E0599]: no method named `scale` found for opaque type `impl Future<Output = Vec3>` in the current scope: method not found in `impl Future<Output = Vec3>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:881:52: error[E0308]: mismatched types: expected `Vec3`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:882:28: error[E0599]: no method named `normalize` found for opaque type `impl Future<Output = Vec3>` in the current scope: method not found in `impl Future<Output = Vec3>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:883:30: error[E0599]: no method named `normalize` found for opaque type `impl Future<Output = Vec3>` in the current scope: method not found in `impl Future<Output = Vec3>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:885:13: error[E0599]: no method named `dot` found for opaque type `impl Future<Output = Vec3>` in the current scope: method not found in `impl Future<Output = Vec3>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:936:18: error[E0277]: the `?` operator can only be applied to values that implement `Try`: the `?` operator cannot be applied to type `impl Future<Output = std::option::Option<f64>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:948:9: error[E0529]: expected an array or slice, found `impl Future<Output = [f64; 4]>`: pattern cannot match with input type `impl Future<Output = [f64; 4]>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:964:15: error[E0599]: no method named `is_empty` found for opaque type `impl Future<Output = Vec<(f64, f32)>>` in the current scope: method not found in `impl Future<Output = Vec<(f64, f32)>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:967:12: error[E0599]: no method named `iter` found for opaque type `impl Future<Output = Vec<(f64, f32)>>` in the current scope: method not found in `impl Future<Output = Vec<(f64, f32)>>`
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:972:12: error[E0599]: `impl Future<Output = Vec<(f64, f32)>>` is not an iterator: `impl Future<Output = Vec<(f64, f32)>>` is not an iterator
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:976:5: error[E0308]: mismatched types: expected `Vec3`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:980:5: error[E0308]: mismatched types: expected `Vec3`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:123:9: error[E0308]: mismatched types: expected `Mesh3d`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:18:26: error[E0308]: mismatched types: expected `Vec3`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🎬️scene/🦀️component.rs:18:77: error[E0308]: mismatched types: expected `Vec3`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️engine.rs:202:9: error[E0308]: mismatched types: expected `Ui`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️shell.rs:187:9: error[E0308]: mismatched types: expected `Shell`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:351:116: error[E0308]: mismatched types: expected `Option<usize>`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:357:109: error[E0308]: mismatched types: expected `Option<usize>`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:367:116: error[E0308]: mismatched types: expected `Option<usize>`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:372:137: error[E0308]: mismatched types: expected `Option<usize>`, found future
+🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs:432:137: error[E0308]: mismatched types: expected `Option<usize>`, found future
+error: could not compile `semio-framework-ui` (lib) due to 846 previous errors
+warning: build failed, waiting for other jobs to finish...

@@ -2,7 +2,7 @@
 /** @emoji 🎨️ `@semio-tech/framework-renderer-react` — trusted React renderer for declarative Rust program UI trees. */
 // #endregion 🧱️Header
 
-export type { ActionDescriptor, UiComponentSceneNode, UiNode } from "@semio-tech/framework";
+export type { ActionDescriptor, UiComponentSceneNode } from "@semio-tech/framework";
 
 import { aProjectOfLuhUdkFooterItem, fundedByZukunftBauFooterItem } from "../../../../../../../../../../♻️mit-bestand/🧺️demonstrator/⚛️footer.tsx";
 import { ENTWERFEN_MIT_BESTAND_BRAND_IDS } from "../../../../../../../../../../♻️mit-bestand/🧺️demonstrator/🟦️brand.ts";
@@ -321,12 +321,6 @@ import {
   type ActionDescriptor,
   type ComponentKind,
   type ComponentSceneHostProps,
-  type UiControlNode,
-  type UiNode,
-  type UiStackNode,
-  type UiTreeItemNode,
-  type UiTreeNode,
-  type UiTreeSectionNode,
   type InvocationResponse,
   type Effect,
   FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID,
@@ -425,26 +419,8 @@ import {
   type UtilityCategory,
   type UtilityLeaf,
   type UtilityNode,
-  type UiButtonNode,
   type UiComponentSceneNode,
   type UiExternalSlotNode,
-  type UiFieldNode,
-  type UiIconSelectNode,
-  type UiImageNode,
-  type UiInputNode,
-  type UiInspectorFieldGroup,
-  type UiKeyValueEntry,
-  type UiKeyValueNode,
-  type UiNumberStepperNode,
-  type UiRingNode,
-  type UiSectionNode,
-  type UiSelectItem,
-  type UiSelectNode,
-  type UiSeparatorNode,
-  type UiSliderNode,
-  type UiTextNode,
-  type UiToggleNode,
-  type UiTreeItemAction,
   type GraphTimelineScene,
   type VirtualFileSystemScene,
   type WindowEngagement,
@@ -489,8 +465,6 @@ import {
   type Fault,
   resolveUiPresence,
   uiPresenceShowsSkeleton,
-  pendingWindowUiNode,
-  pendingPanelUiNode,
   windowMeasureChromeStatus,
 } from "@semio-tech/framework";
 import { createRoot } from "react-dom/client";
@@ -594,6 +568,13 @@ import {
 import { clearColorResolveCache, resolveColorHex, semanticVar, themeColorVar, tokenVar, syncSessionCanvasTheme, resolveSemanticColorHex, currentStylingAppearanceName, STYLING_BOARD_PALETTES, STYLING_METRICS, STYLING_STROKES } from "@semio-tech/ui-styling";
 
 //#region 🔖️UiInterpreter
+// 🧭️ MIGRATION (semantic UI contract, ticket 26/08/20): `renderUiControl`/`uiTreeNodeToTreePanelConfig`/
+// `declarativeTreeDragController`/`declarativeSurfaceStatus` are gone — they existed only for the old
+// `UiControlNode`/`UiTreeNode` union, which no longer exists (every control is its own `Component`
+// variant now; tree row/section conversion is internal to `Interpreter`'s `TreeView`; a node's status
+// is just `UiNodeRecord.activity`). `UiNodeView`/`UiPresenceOverlay*` are new: `UiNodeView` is the
+// atomic per-node subscribing render unit, `UiPresenceOverlay*` is the hover/selection channel that
+// deliberately does NOT live on the document store (see `Interpreter`'s own header doc).
 import {
   type UiInterpreterContext,
   usePluginSurfaceActions,
@@ -601,16 +582,17 @@ import {
   openSurfaceContextMenu,
   surfaceContextMenuTitleKey,
   type SurfaceContextMenuResult,
-  renderUiControl,
-  uiTreeNodeToTreePanelConfig,
-  declarativeTreeDragController,
   interpretUiNode,
   InterpretedUiNode,
+  UiNodeView,
   wireLabel,
-  declarativeSurfaceStatus,
   parseSceneJsonField,
   PluginSurfaceActionsContext,
   ShellContextMenuFallbackContext,
+  UiPresenceOverlayContext,
+  usePresenceOverlayEntry,
+  type UiPresenceOverlayEntry,
+  type UiPresenceOverlayValue,
 } from "../../../../🧱️elements/Interpreter/🟦️component.tsx";
 export {
   type UiInterpreterContext,
@@ -619,17 +601,19 @@ export {
   openSurfaceContextMenu,
   surfaceContextMenuTitleKey,
   type SurfaceContextMenuResult,
-  renderUiControl,
-  uiTreeNodeToTreePanelConfig,
-  declarativeTreeDragController,
   interpretUiNode,
   InterpretedUiNode,
+  UiNodeView,
   wireLabel,
-  declarativeSurfaceStatus,
   parseSceneJsonField,
   PluginSurfaceActionsContext,
   ShellContextMenuFallbackContext,
+  UiPresenceOverlayContext,
+  usePresenceOverlayEntry,
+  type UiPresenceOverlayEntry,
+  type UiPresenceOverlayValue,
 };
+export { UiDocumentStore, emitIntent, useUiNode, useUiDocumentRoot, useUiDocumentRevision, type UiDocumentState } from "../../../../🧱️elements/UiDocumentStore/🟦️component.tsx";
 //#endregion 🔖️UiInterpreter
 
 //#region 🔖️OsShell

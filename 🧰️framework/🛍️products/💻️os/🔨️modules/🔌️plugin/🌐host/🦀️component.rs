@@ -94,9 +94,17 @@ async fn direct_unavailable_fault(op: &str) -> Fault {
 /// `pack`/`Vec<u8>` wire shape per call site, not a different encoding: both are the literal same
 /// bytes, only the surrounding record type differs between `world actor`'s generated module and
 /// this file's own `direct` module.
+// 🚫️async: E5 executor bridge — R9, and byte-for-byte the same decision the sibling
+// `⚛️reactor/🦀️component.rs` already made for its own identical `pack` helper. `pack` is consumed
+// from sync `Option::map` closures in half a dozen `*-params` constructors below (R10 residue shape
+// 1, where `.await` is illegal), and `store::pack_rt::encode_wire_value` is pure in-memory wire
+// encoding with zero suspension points of its own — so it is Ready on its first poll and the bridge
+// is sound. NOTE the justification is the CALLEE's purity, not "world actor imports no host-async"
+// (which B1 world-collapse made false); the sibling module's wording is now stale, the bridges
+// themselves are not.
 #[cfg(feature = "component-guest-async")]
-async fn pack<T: serde::Serialize>(value: &T) -> Vec<u8> {
-    store::pack_rt::encode_wire_value(&dsl::to_dsl_value(value).unwrap_or(DslValue::Null)).await
+fn pack<T: serde::Serialize>(value: &T) -> Vec<u8> {
+    semio_framework::io::resolve_ready(store::pack_rt::encode_wire_value(&dsl::to_dsl_value(value).unwrap_or(DslValue::Null)))
 }
 
 /// 🔀️ `kernel::JobPlacement` → the Direct world's `job-placement` enum — only ever called from
@@ -106,7 +114,7 @@ async fn pack<T: serde::Serialize>(value: &T) -> Vec<u8> {
 /// one can just gate on the same full arch check `direct` itself does; no native-fallback shape
 /// needed since nothing off-target ever calls it.
 #[cfg(all(feature = "component-guest-async", target_arch = "wasm32", target_env = "p2"))]
-async fn kernel_placement_to_direct_wit(placement: JobPlacement) -> direct::effects::JobPlacement {
+fn kernel_placement_to_direct_wit(placement: JobPlacement) -> direct::effects::JobPlacement {
     use direct::effects::JobPlacement as W;
     match placement {
         JobPlacement::Inline => W::Inline,
@@ -265,7 +273,10 @@ impl Host {
             HostBackend::Direct => {
                 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
                 {
-                    direct::host_async::blob_read(hash).await.map(BodyReader::direct).map_err(|bytes| dsl::decode_fault_bytes(&bytes))
+                    match direct::host_async::blob_read(hash).await {
+                        Ok(stream) => Ok(BodyReader::direct(stream).await),
+                        Err(bytes) => Err(dsl::decode_fault_bytes(&bytes)),
+                    }
                 }
                 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
                 {
@@ -325,7 +336,7 @@ impl Host {
                 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
                 {
                     let response = direct::host_async::http_fetch(direct::effects::HttpParams { method, url, headers, body, streaming: true }).await.map_err(|bytes| dsl::decode_fault_bytes(&bytes))?;
-                    Ok(HttpFetchResponse { status: response.status, headers: response.headers, body: BodyReader::direct(response.body) })
+                    Ok(HttpFetchResponse { status: response.status, headers: response.headers, body: BodyReader::direct(response.body).await })
                 }
                 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
                 {
@@ -607,7 +618,7 @@ impl Host {
             HostBackend::Direct => {
                 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
                 {
-                    let job = next_direct_job_id();
+                    let job = next_direct_job_id().await;
                     direct::host_async::spawn_job(job, kind, input, kernel_placement_to_direct_wit(placement)).await.map_err(|bytes| dsl::decode_fault_bytes(&bytes))
                 }
                 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
@@ -930,7 +941,7 @@ async fn next_direct_job_id() -> u64 {
 /// handle to read a quota from; recorded as an honest gap, not silently unlimited.
 #[cfg(all(feature = "component-guest-async", target_arch = "wasm32", target_env = "p2"))]
 async fn collect_direct_body(body: wit_bindgen::StreamReader<u8>) -> Result<Vec<u8>, Fault> {
-    BodyReader::direct(body).collect(usize::MAX).await
+    BodyReader::direct(body).await.collect(usize::MAX).await
 }
 
 /// 🔀️ kernel `Effect` → the Direct world's WIT `effect`, for `Host::emit`'s Direct arm. Mirrors
@@ -943,7 +954,7 @@ async fn collect_direct_body(body: wit_bindgen::StreamReader<u8>) -> Result<Vec<
 /// without a matching conversion arm here), not a WIT/schema gap — hence `unreachable!`, not a
 /// silent default.
 #[cfg(all(feature = "component-guest-async", target_arch = "wasm32", target_env = "p2"))]
-async fn kernel_effect_to_direct_wit(effect: Effect) -> direct::effects::Effect {
+fn kernel_effect_to_direct_wit(effect: Effect) -> direct::effects::Effect {
     use direct::effects as wit_effects;
     match effect {
         Effect::SendMessage { target, payload } => wit_effects::Effect::SendMessage(wit_effects::SendMessageEffect { target: kernel_endpoint_to_direct_wit(target), payload }),
@@ -974,7 +985,7 @@ async fn kernel_effect_to_direct_wit(effect: Effect) -> direct::effects::Effect 
 }
 
 #[cfg(all(feature = "component-guest-async", target_arch = "wasm32", target_env = "p2"))]
-async fn kernel_endpoint_to_direct_wit(endpoint: semio_framework::kernel::MessageEndpoint) -> direct::types::MessageEndpoint {
+fn kernel_endpoint_to_direct_wit(endpoint: semio_framework::kernel::MessageEndpoint) -> direct::types::MessageEndpoint {
     use direct::types::MessageEndpoint as W;
     use semio_framework::kernel::MessageEndpoint as K;
     match endpoint {
@@ -987,7 +998,7 @@ async fn kernel_endpoint_to_direct_wit(endpoint: semio_framework::kernel::Messag
 }
 
 #[cfg(all(feature = "component-guest-async", target_arch = "wasm32", target_env = "p2"))]
-async fn kernel_outcome_to_direct_wit_respond(result: RequestOutcome) -> direct::effects::RespondResult {
+fn kernel_outcome_to_direct_wit_respond(result: RequestOutcome) -> direct::effects::RespondResult {
     match result {
         RequestOutcome::Ok(bytes) => direct::effects::RespondResult::Ok(bytes),
         RequestOutcome::Err(bytes) => direct::effects::RespondResult::Fault(bytes),

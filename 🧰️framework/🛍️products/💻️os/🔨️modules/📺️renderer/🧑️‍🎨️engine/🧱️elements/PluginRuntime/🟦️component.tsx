@@ -55,7 +55,8 @@ import {
   encodePackValue,
   faultDisplayMessage,
 } from "@semio-tech/framework-os";
-import { type UiNode } from "@semio-tech/framework";
+import { type UiNodeRecord, type UiSnapshot } from "@semio-tech/framework";
+import { type UiDocumentState, uiDocumentStateFromSnapshot } from "../UiDocumentStore/🟦️component.tsx";
 import {
   ActivationRegistry,
   type ActivationReason,
@@ -316,10 +317,20 @@ function shellFrameBytes(effect: WireVariant, instanceId: number): Uint8Array | 
 /** 🩹️ `kernel::PatchOp`, TS twin restricted to what `⚛️reactor/🩹️patches/🦀️component.rs`'s
  * `PatchTracker` actually emits this wave (its own doc: "full-body only — every dirty surface emits
  * one `PatchOp::Replace` at the root path"). `path` is `list<u32>` at the WIT boundary (an empty
- * array for the root). */
+ * array for the root).
+ *
+ * MIGRATION (semantic UI contract, ticket 26/08/20): the old recursive `UiNode` this file's `node`
+ * payload used to carry no longer exists — `🛂️manifest/🟦️component.ts`'s hand-written mirror was
+ * deleted in favor of `semio-framework-ui-contract`'s flat, id-keyed `UiSnapshot`/`UiNodeRecord`
+ * (`UiDocumentStore`'s header doc). A "whole-body replace" is now a whole `UiSnapshot` (root pointer +
+ * flat node table), not a single recursive node; an "insert one child" is a single `UiNodeRecord` row.
+ * The kernel/actor WIT boundary this file bridges has not flipped onto the new wire tags yet (owned by
+ * the MICROKERNEL program's `sdk-flip`/`wit-flip` packets, forbidden here) — this is therefore a
+ * type-level migration only, matching this whole boundary's own doc ("UNVERIFIED against a real
+ * compiled artifact... no plugin has migrated onto `world actor` yet"). */
 type PatchOp =
-  | { readonly kind: "Replace"; readonly path: readonly number[]; readonly node: UiNode }
-  | { readonly kind: "InsertChild"; readonly path: readonly number[]; readonly index: number; readonly node: UiNode }
+  | { readonly kind: "Replace"; readonly path: readonly number[]; readonly snapshot: UiSnapshot }
+  | { readonly kind: "InsertChild"; readonly path: readonly number[]; readonly index: number; readonly record: UiNodeRecord }
   | { readonly kind: "RemoveChild"; readonly path: readonly number[]; readonly index: number }
   | { readonly kind: "SetProps"; readonly path: readonly number[]; readonly props: unknown };
 
@@ -330,10 +341,10 @@ function decodeWirePatchOps(ops: readonly WireVariant[]): readonly PatchOp[] {
     const path = Array.isArray(val.path) ? (val.path as number[]) : [];
     switch (op.tag) {
       case "replace":
-        decoded.push({ kind: "Replace", path, node: decodePackValue(coerceWireBytes(val.node)) as UiNode });
+        decoded.push({ kind: "Replace", path, snapshot: decodePackValue(coerceWireBytes(val.snapshot)) as UiSnapshot });
         break;
       case "insert-child":
-        decoded.push({ kind: "InsertChild", path, index: Number(val.index ?? 0), node: decodePackValue(coerceWireBytes(val.node)) as UiNode });
+        decoded.push({ kind: "InsertChild", path, index: Number(val.index ?? 0), record: decodePackValue(coerceWireBytes(val.record)) as UiNodeRecord });
         break;
       case "remove-child":
         decoded.push({ kind: "RemoveChild", path, index: Number(val.index ?? 0) });
@@ -348,7 +359,12 @@ function decodeWirePatchOps(ops: readonly WireVariant[]): readonly PatchOp[] {
   return decoded;
 }
 
-export type RetainedSurface = { readonly revision: number; readonly node: UiNode };
+/** 🗄️ The retained per-actor document — a `UiDocumentStore`-shaped state, not the store class itself
+ * (this file has no per-node React subscribers to serve; it only needs the flat table to hash/forward
+ * to `refreshUi` callers). Reuses `UiDocumentStore`'s own `uiDocumentStateFromSnapshot` so this file
+ * and the React tree apply the identical algorithm to the identical wire shape — never a second,
+ * drifting reimplementation. */
+export type RetainedSurface = UiDocumentState;
 
 /**
  * @emoji 🖼️ H1-react (design-runtime.md §1 `SceneStore` / packet brief item 2) — reconciles one
@@ -360,18 +376,25 @@ export type RetainedSurface = { readonly revision: number; readonly node: UiNode
  * partial walk applied, mirroring `📦️glue.rs`'s native `KernelThreadState.retained` exactly (H3).
  */
 export function applyUiPatchToRetained(previous: RetainedSurface | null, patch: { readonly revision: number; readonly baseRevision: number; readonly ops: readonly PatchOp[] }): { readonly surface: RetainedSurface | null; readonly desynced: boolean } {
-  let node: UiNode | null = previous?.node ?? null;
+  let state: UiDocumentState | null = previous ?? null;
   let sawFullReplace = false;
   for (const op of patch.ops) {
     if (op.kind === "Replace" && op.path.length === 0) {
-      node = op.node;
+      state = uiDocumentStateFromSnapshot(op.snapshot);
       sawFullReplace = true;
     } else {
       return { surface: previous, desynced: true };
     }
   }
   if (!sawFullReplace && previous && patch.baseRevision !== previous.revision) return { surface: previous, desynced: true };
-  return { surface: node !== null ? { revision: patch.revision, node } : previous, desynced: false };
+  return { surface: state !== null ? { ...state, revision: patch.revision } : previous, desynced: false };
+}
+
+/** 🔁️ Rebuilds a plain `UiSnapshot` (nodes flattened back to an array) from a retained
+ * `UiDocumentState` — needed only where a `Map` must cross a `JSON.stringify`/hash boundary; the
+ * store's own consumers read `.nodes` directly and never need this round trip. */
+function retainedSurfaceToSnapshot(surface: RetainedSurface): UiSnapshot {
+  return { surface: surface.surface, revision: surface.revision, root: surface.root ?? 0, nodes: [...surface.nodes.values()], layoutEpoch: 0 };
 }
 //#endregion 🔖️RetainedUiPatch
 
@@ -740,8 +763,9 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
     if (result.uiPatches.length > 0) applyRetainedWindowPatches(actorId, result.uiPatches);
     const retained = retainedWindowByActor.get(actorId);
     if (!retained) return {};
-    const hash = fnv1aHex(new TextEncoder().encode(JSON.stringify(retained.node))) + ":" + String(retained.revision);
-    const windows = windowTargets.map((target) => ({ key: target.key, hash, value: retained.node }));
+    const retainedSnapshot = retainedSurfaceToSnapshot(retained);
+    const hash = fnv1aHex(new TextEncoder().encode(JSON.stringify(retainedSnapshot))) + ":" + String(retained.revision);
+    const windows = windowTargets.map((target) => ({ key: target.key, hash, value: retainedSnapshot }));
     return { windows };
   };
 

@@ -271,20 +271,22 @@ pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, 
     Ok(definition)
 }
 
-pub async fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
-    semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
-        .schema(crate::artifacts::fem3d::schema::fem3d_artifact_schema_descriptor())
-        .inferences([crate::artifacts::fem3d::standards::v1::subsets::any::schema::inferences::fem3d_artifact_inference_descriptor()])
-        .composers(crate::artifacts::fem3d::standards::v1::subsets::any::io::io_registry::entries())
-        .languages(pilot_languages())
-        .document_codec::<semio_framework_plugin::EditorApp<crate::editor::fem3d::Fem3dPlayApp>>()
-        .try_build()
+/// 🌳️ This artifact's declaration tree root (ticket `26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-
+/// RUNTIME`, `terra-descriptors` packet, following the `terra-fleet-trinity-recipe` recipe) —
+/// replaces the old `declaration()` (`ArtifactDeclaration::builder(...).schema(...).inferences(...)
+/// .composers(...).languages(...).document_codec(...)` chain, deleted outright, no dual channel) as
+/// the ONLY registration channel for schema/io/viewer/editor rows. `definition()` (old
+/// `ArtifactDefinition`/capability rows, above) is kept per debt D1.
+pub async fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration {
+    use semio_framework_plugin::app::declarations::ArtifactDeclaration;
+    use store::os_io::ArtifactKindId;
+    ArtifactDeclaration { kind: ArtifactKindId::parse("s.fem.fem3d").expect("canonical fem3d kind"), localization: &[], standards: vec![crate::artifacts::fem3d::standards::v1::standard()] }
 }
 
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
 /// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`, mirroring
 /// `🗒️note`'s own `pilot_languages()` convention.
-async fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+pub async fn pilot_languages() -> &'static [dsl::LanguageSpec] {
     static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
         .get_or_init(|| {

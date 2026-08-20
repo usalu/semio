@@ -27,5 +27,17 @@ export default defineConfig({
     name: "@semio-tech/framework-renderer-react",
     environment: "jsdom",
     coverage: { include: ["index.tsx"] },
+    // 🧪️ In-source (`import.meta.vitest`) suites in the `🧑️‍🎨️engine/🧱️elements/` co-location dirs —
+    // NOT under this package's own `root`, so the default `include` glob never finds them (confirmed:
+    // a bare `vitest run` here previously collected only `🧪️index.test.ts`, silently never running
+    // these files' `#region 🧪️Tests` blocks). `include` is deliberately left at its default so
+    // `🧪️index.test.ts` keeps being discovered too — unlike `@semio-tech/framework-os`'s vitest config,
+    // these are additive, not a replacement, so listing them in both `include` and `includeSource`
+    // would NOT double-count (that hazard is specific to listing the SAME file in both keys).
+    includeSource: [
+      resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/UiDocumentStore/🟦️component.tsx"),
+      resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🟦️component.tsx"),
+      resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/PluginRuntime/🟦️component.tsx"),
+    ],
   },
 });

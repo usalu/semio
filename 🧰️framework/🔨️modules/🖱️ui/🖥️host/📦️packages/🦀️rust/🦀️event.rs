@@ -42,6 +42,14 @@ pub struct PointerRegistry {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
+/// 🏷️ Native pointer ids are `[tag: 2 bits][device slot: 30 bits][finger id: 32 bits]`. The tag is
+/// what keeps a device's mouse and its fingers in disjoint id spaces — without it, finger id 0 lands
+/// on exactly the same value as that device's mouse, and the two contacts silently become one.
+const MOUSE_TAG: u64 = 0b01 << 62;
+const TOUCH_TAG: u64 = 0b10 << 62;
+/// 🎚️ Finger ids occupy the low 32 bits; wider platform ids fold in rather than overrun the slot.
+const FINGER_MASK: u64 = u32::MAX as u64;
+
 impl PointerRegistry {
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn new() -> Self {
@@ -59,19 +67,20 @@ impl PointerRegistry {
         slot
     }
 
-    /// 🖱️ A native platform exposes exactly one logical mouse pointer per device — no finger id to
-    /// fold in, so the device's own slot is the whole identity.
+    /// 🖱️ A native platform exposes exactly one logical mouse pointer per device, so the device's own
+    /// slot plus the mouse tag is the whole identity.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn pointer_id_for_mouse(&mut self, device: winit::event::DeviceId) -> PointerId {
-        PointerId((self.slot(device) as u64) << 32)
+        PointerId(MOUSE_TAG | ((self.slot(device) as u64) << 32))
     }
 
-    /// 👆️ A device slot in the high bits, the OS-assigned finger id in the low bits — two fingers on
-    /// the *same* device (including two `DeviceId::dummy()` values in a test, which compare equal)
-    /// still resolve to distinct ids because their finger ids differ.
+    /// 👆️ The touch tag, a device slot in the middle bits, and the OS-assigned finger id in the low
+    /// bits. Two fingers on the *same* device still differ by finger id, and a finger can never
+    /// collide with that device's mouse because the tags differ — a real defect this replaced, where
+    /// finger id 0 XORed into a slot produced exactly the mouse's id.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn pointer_id_for_touch(&mut self, touch: &winit::event::Touch) -> PointerId {
-        PointerId(((self.slot(touch.device_id) as u64) << 32) ^ touch.id)
+        PointerId(TOUCH_TAG | ((self.slot(touch.device_id) as u64) << 32) | (touch.id & FINGER_MASK))
     }
 }
 

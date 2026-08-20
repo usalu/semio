@@ -37,10 +37,18 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v1 {
+                #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+
                 #[path = "."]
                 pub mod subsets {
                     #[path = "."]
                     pub mod any {
+                        #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+
                         #[path = "."]
                         pub mod schema {
                             #[path = "../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️component.rs"]
@@ -554,10 +562,18 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v1 {
+                #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+
                 #[path = "."]
                 pub mod subsets {
                     #[path = "."]
                     pub mod any {
+                        #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+
                         #[path = "."]
                         pub mod schema {
                             #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️component.rs"]
@@ -1071,10 +1087,18 @@ pub mod artifacts {
         pub mod standards {
             #[path = "."]
             pub mod v1 {
+                #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🦀️component.rs"]
+                mod component;
+                pub use component::*;
+
                 #[path = "."]
                 pub mod subsets {
                     #[path = "."]
                     pub mod any {
+                        #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+
                         #[path = "."]
                         pub mod schema {
                             #[path = "../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️component.rs"]

@@ -6,10 +6,28 @@
 //! clipping decisions of its own; all of that already happened in `Scene::finish`, which is precisely
 //! what lets four independently hand-written backends agree pixel-for-pixel.
 //!
-//! ⚠️ SCAFFOLD — owned by packet `backend-d3d12`. Replace this placeholder wholesale.
+//! See `🦀️backend.rs`'s header for which milestones this crate reaches and
+//! `📓️terra-backend-d3d12-report.md` (ticket `26/08/20/SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY`) for
+//! the authoritative status, decisions, and registrar-requests.
 
 #[cfg(not(target_os = "windows"))]
 compile_error!("semio-framework-ui-backend-d3d12 builds only on Windows.");
 
-//#region 🔖️Backend
-//#endregion 🔖️Backend
+#[path = "🦀️types.rs"]
+mod types;
+#[path = "🦀️hlsl.rs"]
+mod hlsl;
+#[path = "🦀️pipelines.rs"]
+mod pipelines;
+#[path = "🦀️resources.rs"]
+mod resources;
+#[path = "🦀️scene_target.rs"]
+mod scene_target;
+#[path = "🦀️frame_buffers.rs"]
+mod frame_buffers;
+#[path = "🦀️world3d.rs"]
+mod world3d;
+#[path = "🦀️backend.rs"]
+mod backend;
+
+pub use backend::D3d12Backend;

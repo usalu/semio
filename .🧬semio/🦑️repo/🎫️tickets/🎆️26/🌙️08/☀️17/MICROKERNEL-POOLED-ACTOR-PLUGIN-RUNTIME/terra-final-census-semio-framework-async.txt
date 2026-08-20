@@ -1,0 +1,2 @@
+    Checking semio-framework-async v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust)
+    Finished `dev` profile [unoptimized] target(s) in 0.35s

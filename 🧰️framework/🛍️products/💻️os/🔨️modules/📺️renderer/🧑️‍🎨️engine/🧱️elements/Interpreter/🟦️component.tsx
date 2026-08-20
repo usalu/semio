@@ -1,13 +1,19 @@
+/// <reference types="vitest/importMeta" />
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/Interpreter/component.tsx
-/** @emoji 🌳️ `Interpreter` — turns declarative `UiNode` trees emitted by the wasm-hosted Rust engine
- * into `@semio-tech/ui-react` components; {@link InterpretedUiNode} is the sole entry point
- * plugin/window/panel code calls into. Also owns the `ComponentSceneHost` registry (which lazily
- * mounts `canvas-2d`/`world-3d`/etc. surface hosts) and the shared per-surface context-menu flow. */
+/** @emoji 🌳️ `Interpreter` — turns the semantic UI contract (`semio-framework-ui-contract`'s
+ * `UiNodeRecord`/`Component`/`LayoutSpec`/`StyleSpec`/`AccessibilitySpec`) retained by a
+ * `UiDocumentStore` into `@semio-tech/ui-react` components. `InterpretedUiNode` is the entry point;
+ * `UiNodeView` is the atomic per-node unit — each one subscribes to exactly its own record via
+ * `useUiNode`, so a `SetComponent` on one node re-renders exactly that node's component, never its
+ * ancestors or siblings (the whole payoff of the flat id-keyed table, see `UiDocumentStore`'s header
+ * doc). Also owns the `ComponentSceneHost` registry (lazily mounts `canvas-2d`/`world-3d`/etc. surface
+ * hosts behind `Component::Surface`) and the shared per-surface context-menu flow — both unchanged
+ * from the pre-migration renderer, since neither depends on the old `UiNode` shape. */
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { createContext, memo, useCallback, useContext, useMemo, useState, type ComponentType, type ReactElement, type ReactNode } from "react";
+import { createContext, memo, Profiler, useContext, useMemo, useState, type ComponentType, type CSSProperties, type ReactElement, type ReactNode } from "react";
 import {
   Button,
   ContextMenuController,
@@ -30,13 +36,10 @@ import {
   VirtualFileSystem,
   borderElementClass,
   borderNormalTopClass,
-  catalogueTreeDragController,
   classifyIconSelectorMode,
   cn,
   elementSkeleton,
-  loadingBorderClass,
   loadingBorderElementClass,
-  renderControlIcon,
   useLabel,
   waitingBorderElementClass,
   type ContextMenuItem,
@@ -45,28 +48,55 @@ import {
   type TreeDataItem,
   type TreeDataSection,
   type TreeDragAndDropController,
-  type TreePanelConfig,
   type UiLabel,
-  type UiStatus,
   type UiTranslationKey,
 } from "@semio-tech/ui-react";
+import { uiSpacingRem } from "@semio-tech/ui-styling";
 import {
-  resolveUiPresence,
-  uiPresenceShowsSkeleton,
   type ActionDescriptor,
   type ComponentKind,
   type ComponentSceneHostProps,
   type ContextMenuItemSpec,
   type PluginContextMenuRequest,
-  type UiControlNode,
-  type UiNode,
-  type UiPresence,
-  type UiStackNode,
-  type UiTreeItemNode,
-  type UiTreeNode,
-  type UiTreeSectionNode,
+  type UiComponentSceneNode,
+  type UiMenuRef,
 } from "@semio-tech/framework";
-import { decodeScenePackField } from "@semio-tech/framework-os";
+import {
+  DEFAULT_UI_DOCUMENT_LIMITS,
+  UiDocumentStore,
+  emitIntent,
+  useUiDocumentRevision,
+  useUiDocumentRoot,
+  useUiNode,
+  type UiDocumentState,
+} from "../UiDocumentStore/🟦️component.tsx";
+import {
+  type AbsoluteLayout,
+  type AccessibilitySpec,
+  type Component,
+  type EdgeSpace,
+  type GridLayout,
+  type GridTrack,
+  type LayoutSpec,
+  type LeafLayout,
+  type OverlayLayout,
+  type ScrollLayout,
+  type Sizing,
+  type SpaceToken,
+  type StackLayout,
+  type StyleSpec,
+  type PatchRejection,
+  type SurfaceProps,
+  type UiDocumentLimits,
+  type UiIntent,
+  type UiNodeId,
+  type UiNodeRecord,
+  type UiPatch,
+  type UiSnapshot,
+  type UiTrigger,
+  type UiValue,
+} from "@semio-tech/framework";
+import { decodePackValue, decodeScenePackField } from "@semio-tech/framework-os";
 import { shellLabel } from "../ShellHelpers/🟦️component.tsx";
 import { useMapContextMenuSpecs } from "../ShellHost/🟦️component.tsx";
 import { ShellFaultBoundary } from "../Shell/🟦️component.tsx";
@@ -88,6 +118,33 @@ import { Canvas2dHost } from "../Canvas2dHost/🟦️component.tsx";
 // #endregion 🔌️Adapters
 
 //#region 🔖️UiInterpreter
+//#region PresenceOverlay
+/** 👥️ This session's own hover/selection/preview state on one node, keyed by `UiNodeRecord.key` (NOT
+ * `UiNodeId` — presence must land on the right element across a reconciliation that reassigns ids but
+ * keeps keys stable, mirroring `crate::PresenceUpdate`'s own doc). Populated from `PresenceUpdate`
+ * wire messages by whoever owns the transport (host-side, outside this element); never derived from
+ * or written into the `UiDocumentStore` — presence changes at input frequency and must never touch a
+ * document revision. */
+export type UiPresenceOverlayEntry = {
+  readonly hovered?: boolean;
+  readonly selected?: boolean;
+  readonly previewed?: boolean;
+};
+
+export type UiPresenceOverlayValue = {
+  readonly byKey: ReadonlyMap<string, UiPresenceOverlayEntry>;
+};
+
+const EMPTY_PRESENCE_OVERLAY: UiPresenceOverlayValue = { byKey: new Map() };
+
+export const UiPresenceOverlayContext = createContext<UiPresenceOverlayValue>(EMPTY_PRESENCE_OVERLAY);
+
+export function usePresenceOverlayEntry(key: string): UiPresenceOverlayEntry {
+  const overlay = useContext(UiPresenceOverlayContext);
+  return overlay.byKey.get(key) ?? {};
+}
+//#endregion PresenceOverlay
+
 //#region ComponentSceneHostRegistry
 /** 🧭️ Resolve scene hosts at render time — these modules form a cycle with Interpreter
  * (`World3dHost` imports `openSurfaceContextMenu` from here), so a module-init
@@ -129,75 +186,117 @@ function resolveComponentSceneHost(kind: ComponentKind): ComponentType<Component
 }
 //#endregion ComponentSceneHostRegistry
 
-/** @emoji 🗣️ Resolves a chrome translation key outside hook context (plain node-builder functions run there) — an alias of {@link shellLabel} scoped to this region. */
 function interpLabel(key: UiTranslationKey): UiLabel {
   return shellLabel(key);
 }
 
 /** @emoji 🕳️ Sanctioned wire-boundary mint point (see ui-react's `UiLabel` docstring): brands an
- * already plugin/manifest-resolved string as {@link UiLabel} at the point it crosses from the wire
- * representation (`ContextMenuItemSpec`/manifest strings, still plain `string`) into a ui-kit prop
- * that requires a real translation-key lookup or explicit runtime data. This is the one place in this
- * file allowed to do that minting — everywhere else must go through {@link useLabel} or `uiDataLabel`.
- * @emoji 🐢️ Also referenced (unqualified) from other still-barrel-resident `UiNode`-adjacent code
- * (window-kind title resolution, manifest label resolution) — exported so those keep resolving. */
+ * already plugin/manifest-resolved string as {@link UiLabel}. */
 export function wireLabel(value: string): UiLabel {
   return value as UiLabel;
 }
 
-function renderComponentSceneHost(
-  node: Extract<UiNode, { type: "componentScene" }>,
-  onAction: (action: ActionDescriptor) => void,
-  requestContextMenu?: UiInterpreterContext["requestContextMenu"],
-): ReactNode {
-  if (node.componentKind === "virtualFileSystem") {
+//#region SurfaceBridge
+/** 🗺️ `SurfaceKind` wire tag → the `UiComponentSceneNode` optional field the matching host reads —
+ * verbatim the same 15-entry convention `ComponentKind`/`resolveComponentSceneHost` already use,
+ * duplicated here only because the bridge needs the FIELD NAME, not the dispatch target. */
+const SURFACE_KIND_SCENE_FIELD: Record<string, string> = {
+  "canvas-2d": "canvas2d",
+  "world-3d": "world3d",
+  "node-graph": "nodeGraph",
+  "text-editor": "textEditor",
+  table: "table",
+  "paint-2d": "paint2d",
+  virtualFileSystem: "virtualFileSystem",
+  "tiled-map": "tiledMap",
+  "board-2d": "board2d",
+  "icon-render": "iconRender",
+  "ink-canvas": "inkCanvas",
+  "graph-timeline": "graphTimeline",
+  "block-list": "blockList",
+  "diff-view": "diffView",
+  "event-feed": "eventFeed",
+};
+
+function menuRefFromContract(menu: UiNodeRecord["menu"]): UiMenuRef | undefined {
+  if (!menu) return undefined;
+  const args = menu.args && typeof menu.args === "object" && !Array.isArray(menu.args) ? (menu.args as Record<string, unknown>) : undefined;
+  return { id: menu.id, args };
+}
+
+/** 🌉️ Bridges `Component::Surface`'s `SurfaceProps` (one opaque pack-encoded `doc.bytes` payload,
+ * keyed by `docSchema`) onto the OLD `UiComponentSceneNode` the 14 scene-host elements (Canvas2dHost,
+ * World3dHost, ...) still expect — those elements are outside this packet's OWNS and are unchanged,
+ * so this Interpreter decodes the new contract's opaque payload into the exact per-kind scene field
+ * shape those hosts already know how to read, rather than duplicating 14 host components. The
+ * contract never parses `doc.bytes` itself (see `🦀️surface.rs`'s own doc); this is the one place that
+ * decodes it, and only to hand it straight through unmodified. */
+function surfacePropsToComponentSceneNode(record: UiNodeRecord, props: SurfaceProps): UiComponentSceneNode {
+  // 🧭️ `SurfaceDoc.bytes` is `Vec<u8>` — ts-rs renders it as a plain `number[]`, not a `Uint8Array` or
+  // the old `"pk:"`-prefixed string `decodeScenePackField` (used by `parseSceneJsonField` below for
+  // still-string-shaped scene sub-fields) expects. Raw bytes decode straight through `decodePackValue`.
+  const decoded = props.doc.bytes.length > 0 ? (decodePackValue(new Uint8Array(props.doc.bytes)) as Record<string, unknown>) : undefined;
+  const sceneField = SURFACE_KIND_SCENE_FIELD[props.kind];
+  const node: Record<string, unknown> = {
+    type: "componentScene",
+    surfaceId: props.surfaceId,
+    controllerId: props.controllerId,
+    componentKind: props.kind,
+    paneId: props.paneId,
+    bindingId: props.bindingId,
+    menu: menuRefFromContract(record.menu),
+  };
+  if (sceneField && decoded !== undefined) node[sceneField] = decoded;
+  return node as unknown as UiComponentSceneNode;
+}
+
+function renderComponentSceneHost(record: UiNodeRecord, props: SurfaceProps, onAction: (action: ActionDescriptor) => void, requestContextMenu?: UiInterpreterContext["requestContextMenu"]): ReactNode {
+  const node = surfacePropsToComponentSceneNode(record, props);
+  if (props.kind === "virtualFileSystem") {
     return (
       <ShellFaultBoundary boundaryId="surface-virtualFileSystem" fallbackLabel={shellLabel("ui.common.renderError")}>
         <VirtualFileSystemHost node={node} onAction={onAction} requestContextMenu={requestContextMenu} />
       </ShellFaultBoundary>
     );
   }
-  const Host = resolveComponentSceneHost(node.componentKind as ComponentKind);
+  const Host = resolveComponentSceneHost(props.kind as ComponentKind);
   if (!Host) {
-    console.log("[DEBUG] resolveComponentSceneHost miss", node.componentKind);
+    console.log("[DEBUG] resolveComponentSceneHost miss", props.kind);
     return (
       <p className="text-muted-foreground text-xs">
-        {interpLabel("ui.common.unknownComponent")}: {node.componentKind}
+        {interpLabel("ui.common.unknownComponent")}: {props.kind}
       </p>
     );
   }
   return (
-    <ShellFaultBoundary boundaryId={`surface-${node.componentKind}`} fallbackLabel={shellLabel("ui.common.renderError")}>
+    <ShellFaultBoundary boundaryId={`surface-${props.kind}`} fallbackLabel={shellLabel("ui.common.renderError")}>
       <Host node={node} onAction={onAction} requestContextMenu={requestContextMenu} />
     </ShellFaultBoundary>
   );
 }
+//#endregion SurfaceBridge
 
 //#region UiInterpreterContext
 export type UiInterpreterContext = {
+  readonly store: UiDocumentStore;
+  /** 🌉️ Legacy ActionDescriptor channel — the seam this Interpreter still speaks to the 14 unowned
+   * scene-host elements through (see `🌉️SurfaceBridge`). Semantic components (button/input/select/…)
+   * never use this; they go through `emitIntent`/`UiIntent` instead. */
   readonly onAction: (action: ActionDescriptor) => void;
+  /** 🎬️ Semantic dispatch — fires a `UiIntent` built from the node's own `ActionBinding`s. */
+  readonly onIntent: (intent: UiIntent) => void;
   readonly requestContextMenu?: (request: PluginContextMenuRequest) => Promise<readonly ContextMenuItemSpec[]>;
 };
 //#endregion UiInterpreterContext
 
-/** @emoji 🐢️ Also referenced (unqualified) from the still-barrel-resident window/panel-chrome mount
- * code (its `.Provider` wraps each rendered window) — exported so that outside reference keeps
- * resolving after this extraction. */
 export const PluginSurfaceActionsContext = createContext<UiInterpreterContext["requestContextMenu"]>(undefined);
 
-/** @emoji 🖱️ On-demand context menu from the active document app instance. */
 export function usePluginSurfaceActions(): UiInterpreterContext["requestContextMenu"] {
   return useContext(PluginSurfaceActionsContext);
 }
 
-/** @emoji 🐢️ Also referenced (unqualified) from the still-barrel-resident window/panel-chrome mount
- * code (its `.Provider` wraps each rendered window) — exported so that outside reference keeps
- * resolving after this extraction. */
 export const ShellContextMenuFallbackContext = createContext<(() => ContextMenuItem[]) | undefined>(undefined);
 
-/** @emoji 🖱️ Shell-level fallback menu builder (the active window's declared actions plus the command
- * palette, see `buildShellContextMenuItems`) — surfaces read this via {@link openSurfaceContextMenu} so
- * a right-click over a scene with no plugin-declared menu still shows *something* instead of nothing. */
 export function useShellContextMenuFallback(): (() => ContextMenuItem[]) | undefined {
   return useContext(ShellContextMenuFallbackContext);
 }
@@ -206,6 +305,23 @@ export type SurfaceContextMenuResult = {
   readonly items: ContextMenuItem[];
   readonly titleKey: UiTranslationKey;
 };
+
+const contextMenuSurfaceTitleKeys = {
+  blockList: "ui.surfaceContextMenu.step",
+  board2d: "ui.surfaceContextMenu.board",
+  canvas2d: "ui.surfaceContextMenu.canvas",
+  diffView: "ui.surfaceContextMenu.diff",
+  eventFeed: "ui.surfaceContextMenu.event",
+  graphTimeline: "ui.surfaceContextMenu.history",
+  inkCanvas: "ui.surfaceContextMenu.ink",
+  nodeGraph: "ui.surfaceContextMenu.flow",
+  paint2d: "ui.surfaceContextMenu.paint",
+  table: "ui.surfaceContextMenu.row",
+  textEditor: "ui.surfaceContextMenu.editor",
+  tiledMap: "ui.surfaceContextMenu.map",
+  virtualFileSystem: "ui.surfaceContextMenu.file",
+  world3d: "ui.surfaceContextMenu.scene",
+} as const satisfies Record<string, UiTranslationKey>;
 
 const contextMenuTargetTitleKeys = {
   architecture: "ui.surfaceContextMenu.architecture",
@@ -230,25 +346,6 @@ const contextMenuTargetTitleKeys = {
   vortex: "ui.surfaceContextMenu.vortex",
 } as const satisfies Record<string, UiTranslationKey>;
 
-const contextMenuSurfaceTitleKeys = {
-  blockList: "ui.surfaceContextMenu.step",
-  board2d: "ui.surfaceContextMenu.board",
-  canvas2d: "ui.surfaceContextMenu.canvas",
-  diffView: "ui.surfaceContextMenu.diff",
-  eventFeed: "ui.surfaceContextMenu.event",
-  graphTimeline: "ui.surfaceContextMenu.history",
-  inkCanvas: "ui.surfaceContextMenu.ink",
-  nodeGraph: "ui.surfaceContextMenu.flow",
-  paint2d: "ui.surfaceContextMenu.paint",
-  table: "ui.surfaceContextMenu.row",
-  textEditor: "ui.surfaceContextMenu.editor",
-  tiledMap: "ui.surfaceContextMenu.map",
-  virtualFileSystem: "ui.surfaceContextMenu.file",
-  world3d: "ui.surfaceContextMenu.scene",
-} as const satisfies Record<string, UiTranslationKey>;
-
-/** @emoji 🏷️ Picks the most-specific translated menu title: the first freshly hit-tested domain,
- * then the clicked surface, then the workspace fallback. */
 export function surfaceContextMenuTitleKey(request: PluginContextMenuRequest): UiTranslationKey {
   const hitDomain = request.surface?.hits?.[0]?.domain;
   if (hitDomain && hitDomain in contextMenuTargetTitleKeys) return contextMenuTargetTitleKeys[hitDomain as keyof typeof contextMenuTargetTitleKeys];
@@ -257,11 +354,6 @@ export function surfaceContextMenuTitleKey(request: PluginContextMenuRequest): U
   return "ui.surfaceContextMenu.workspace";
 }
 
-/** @emoji 🖱️ Shared per-surface context-menu open flow — requests specs from the plugin at `request`,
- * maps them to UI items with the surface's own `mapSpecs` (its `useMapContextMenuSpecs`-bound mapper),
- * and falls back to the shell menu ({@link useShellContextMenuFallback}) when the plugin answers empty
- * or there's no `requestContextMenu` wired at all. Every `onContextMenu` surface (world3d, node-graph
- * ×3, text-editor, tiled-map, board2d) routes through this instead of hand-rolling the fallback. */
 export async function openSurfaceContextMenu(
   requestContextMenu: ((request: PluginContextMenuRequest) => Promise<readonly ContextMenuItemSpec[]>) | undefined,
   request: PluginContextMenuRequest,
@@ -275,333 +367,7 @@ export async function openSurfaceContextMenu(
   };
 }
 
-//#region ActionDispatch
-function dispatchUiAction(onAction: UiInterpreterContext["onAction"], descriptor: ActionDescriptor, patch: Record<string, unknown>): void {
-  onAction({
-    ...descriptor,
-    args: { ...(typeof descriptor.args === "object" && descriptor.args != null ? descriptor.args : {}), ...patch },
-  });
-}
-
-function resolveDeclarativeControlIcon(iconId: IconName, size: number | "tiny" | "small" | "base" | "large" = "small"): ReactNode {
-  return <Icon icon={iconId} size={size} />;
-}
-//#endregion ActionDispatch
-
-//#region RenderUiControl
-/** @emoji 🎛️ Renders a declarative control node with ui-react primitives. `path` is this control's own full
- * structural path when it's rendered as a top-level {@link UiNode}; omitted (and so no `data-ui-path` is
- * attached) when this is called for a {@link UiTreeItemNode}'s inline `control`, which isn't part of the
- * top-level `UiNode`-tree recursion the wgpu↔React path grammar covers. */
-export function renderUiControl(control: UiControlNode, onAction: UiInterpreterContext["onAction"], path?: string): ReactElement {
-  switch (control.type) {
-    case "input": {
-      const commitOnBlur = control.commit === "blur";
-      const commitValue = (raw: string) => {
-        const value = control.inputKind === "number" ? Number(raw) : raw;
-        dispatchUiAction(onAction, control.onChange, { value });
-      };
-      if (control.inputKind === "longText") {
-        return (
-          <Textarea
-            id={control.id}
-            data-ui-path={path}
-            className="min-h-[4.5rem] w-full min-w-0"
-            value={control.value}
-            placeholder={control.placeholder}
-            onChange={commitOnBlur ? undefined : (event) => commitValue(event.target.value)}
-            onBlur={commitOnBlur ? (event) => commitValue(event.target.value) : undefined}
-          />
-        );
-      }
-      const inputType = control.inputKind === "number" ? "number" : control.inputKind === "date" ? "date" : control.inputKind === "color" ? "color" : control.inputKind === "file" ? "file" : "text";
-      return (
-        <Input
-          id={control.id}
-          data-ui-path={path}
-          type={inputType}
-          className="h-medium w-full min-w-0"
-          value={control.inputKind === "file" ? undefined : control.value}
-          placeholder={control.placeholder}
-          min={control.min}
-          max={control.max}
-          step={control.step}
-          accept={control.inputKind === "file" ? control.accept : undefined}
-          onChange={
-            commitOnBlur
-              ? undefined
-              : (event) => {
-                  if (control.inputKind === "file") {
-                    commitValue(event.target.files?.[0]?.name ?? "");
-                    return;
-                  }
-                  commitValue(event.target.value);
-                }
-          }
-          onBlur={
-            commitOnBlur
-              ? (event) => {
-                  if (control.inputKind === "file") {
-                    commitValue(event.target.files?.[0]?.name ?? "");
-                    return;
-                  }
-                  commitValue(event.target.value);
-                }
-              : undefined
-          }
-        />
-      );
-    }
-    case "select":
-      return (
-        <Select value={control.value || undefined} onValueChange={(value) => dispatchUiAction(onAction, control.onChange, { value })}>
-          <SelectTrigger id={control.id} data-ui-path={path} className="h-medium w-full min-w-0" size="sm">
-            <SelectValue placeholder={control.placeholder ?? interpLabel("ui.common.select")} />
-          </SelectTrigger>
-          <SelectContent>
-            {control.items.map((item, index) => (
-              <SelectItem key={`${control.id}:${index}:${item.value}`} value={item.value}>
-                {item.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      );
-    case "toggle":
-      // 🧭️ `Toggle` (`framework/ui/js/react/index.tsx`) has a closed prop type with no passthrough/`data-*`
-      // forwarding — `path` best-effort only, via a parent stack/section/group's wrapper (see
-      // `UI_NODE_TYPES_NEEDING_WRAPPER_PATH_FALLBACK`).
-      return <Toggle id={control.id} pressed={control.pressed} text={control.text} icon={resolveDeclarativeControlIcon(control.iconId as IconName)} onPressedChange={(pressed) => dispatchUiAction(onAction, control.onChange, { pressed })} />;
-    case "keyValue":
-      return (
-        <dl className="grid grid-cols-[auto_1fr] gap-x-single gap-y-single text-xs" data-ui-path={path}>
-          {control.entries.map((entry) => (
-            <div key={entry.label} className="contents">
-              <dt className="text-muted-foreground">{entry.label}</dt>
-              <dd className="tabular-nums">{entry.value}</dd>
-            </div>
-          ))}
-        </dl>
-      );
-    case "slider": {
-      const slider = (
-        <Slider
-          id={control.id}
-          data-ui-path={path}
-          className="w-full min-w-0"
-          max={control.max}
-          min={control.min}
-          step={control.step}
-          value={[control.value]}
-          onValueChange={(values) => dispatchUiAction(onAction, control.onChange, { value: values[0] ?? control.value })}
-        />
-      );
-      if (!control.unit) return slider;
-      return (
-        <div className="flex min-w-0 w-full items-center gap-single">
-          {slider}
-          <span className="text-muted-foreground shrink-0 text-xs tabular-nums">
-            {control.value} {control.unit}
-          </span>
-        </div>
-      );
-    }
-    case "numberStepper":
-      // 🧭️ `Stepper` has a closed prop type with no passthrough/`data-*` forwarding — `path` best-effort
-      // only, via a parent stack/section/group's wrapper.
-      return (
-        <Stepper
-          id={control.id}
-          step={control.step}
-          value={control.uniform ? control.value : undefined}
-          mixed={!control.uniform}
-          onChange={(value) => dispatchUiAction(onAction, control.onAbsolute, { value })}
-          onDelta={(delta) => dispatchUiAction(onAction, control.onDelta, { delta })}
-        />
-      );
-    case "ring": {
-      const presence = resolveUiPresence(control.presence);
-      return <Ring id={control.id} onOrbChange={(_orbId, _oldT, newT) => dispatchUiAction(onAction, control.onChange, { t: newT })} orbs={[{ disabled: presence.state === "disabled", id: control.orbId, selected: true, t: control.t }]} />;
-    }
-    case "iconSelect":
-      // 🧭️ `IconSelector` has a closed prop type with no passthrough/`data-*` forwarding — `path`
-      // best-effort only, via a parent stack/section/group's wrapper.
-      return (
-        <IconSelector
-          classifyIconSelectorMode={control.classifierKind === "puzzle2d" ? classifyIconSelectorMode : undefined}
-          id={control.id}
-          onChange={(next) => dispatchUiAction(onAction, control.onChange, { value: next })}
-          uniform={control.uniform}
-          value={control.value}
-        />
-      );
-    case "button": {
-      const presence = resolveUiPresence(control.presence);
-      return (
-        <Button
-          id={control.id}
-          data-ui-path={path}
-          text={control.label}
-          icon={resolveDeclarativeControlIcon(control.iconId as IconName)}
-          disabled={presence.state === "disabled"}
-          onClick={() => onAction(control.action)}
-          className={presence.status === "loading" ? loadingBorderElementClass : presence.status === "waiting" ? waitingBorderElementClass : undefined}
-          aria-busy={presence.status === "loading" || presence.status === "waiting" || undefined}
-        />
-      );
-    }
-  }
-}
-//#endregion RenderUiControl
-
-/** @emoji 🐢️ Also referenced (unqualified) from the still-barrel-resident window/panel-chrome mount
- * code (window/panel status derivation) — exported so that outside reference keeps resolving after
- * this extraction. */
-export function declarativeSurfaceStatus(node: UiNode | undefined): UiStatus {
-  if (!node) return "loading";
-  if (uiPresenceShowsSkeleton(declarativeNodePresence(node))) return resolveUiPresence(declarativeNodePresence(node)).status;
-  return "idle";
-}
-
-//#region UiTreePanel
-function uiTreeItemsToTreeData(items: readonly UiTreeItemNode[], onAction: UiInterpreterContext["onAction"]): TreeDataItem[] {
-  return items.map((item) => {
-    const presence = resolveUiPresence(item.presence);
-    return {
-      id: item.id,
-      label: item.label,
-      description: item.description,
-      icon: item.iconId ? renderControlIcon(item.iconId, 12) : undefined,
-      control: item.control ? renderUiControl(item.control, onAction) : undefined,
-      defaultOpen: item.defaultOpen,
-      isSelected: presence.selected,
-      loading: presence.status === "loading",
-      waiting: presence.status === "waiting",
-      isHidden: item.dimmed,
-      draggable: item.draggable,
-      dragData: item.dragData,
-      items: item.items?.length ? uiTreeItemsToTreeData(item.items, onAction) : undefined,
-      onClick: item.action ? () => dispatchUiAction(onAction, item.action!, {}) : undefined,
-      onPointerEnter: item.hoverAction ? () => dispatchUiAction(onAction, item.hoverAction!, {}) : undefined,
-      onPointerLeave: item.unhoverAction ? () => dispatchUiAction(onAction, item.unhoverAction!, {}) : undefined,
-      actions: item.actions?.map((action) => ({
-        kind: "button" as const,
-        icon: renderControlIcon(action.iconId, 12),
-        title: action.label,
-        placement: action.placement ?? "row",
-        onClick: () => dispatchUiAction(onAction, action.action, {}),
-      })),
-    };
-  });
-}
-
-/** @emoji 🌲️ Maps a declarative {@link UiTreeNode} to a {@link TreePanelConfig}. */
-export function uiTreeNodeToTreePanelConfig(treeNode: UiTreeNode, onAction: UiInterpreterContext["onAction"]): TreePanelConfig {
-  const sections: TreeDataSection[] = treeNode.sections.map((section: UiTreeSectionNode) => {
-    const sectionPresence = resolveUiPresence(section.presence);
-    return {
-      id: section.id,
-      label: section.label ?? "",
-      defaultOpen: section.defaultOpen,
-      loading: sectionPresence.status === "loading",
-      waiting: sectionPresence.status === "waiting",
-      items: uiTreeItemsToTreeData(section.items, onAction),
-    };
-  });
-  return {
-    sections,
-    selectedIds: treeNode.selectedIds as string[] | undefined,
-    highlightedIds: treeNode.highlightedIds,
-    onSelectionChange: treeNode.selectionChange ? (selectedIds) => dispatchUiAction(onAction, treeNode.selectionChange!, { ids: selectedIds }) : undefined,
-    // 🌲️ Match Settings/Theme: section drag handles only when the tree declares drop/reorder intent.
-    sortableSections: Boolean(treeNode.dropAction) && sections.length > 1,
-  };
-}
-
-function treeDragPayloadMime(treeNode: UiTreeNode): string | undefined {
-  for (const section of treeNode.sections) {
-    const visit = (items: readonly UiTreeItemNode[]): string | undefined => {
-      for (const item of items) {
-        const mime = item.dragData ? Object.keys(item.dragData)[0] : undefined;
-        if (mime) return mime;
-        const nested = item.items?.length ? visit(item.items) : undefined;
-        if (nested) return nested;
-      }
-      return undefined;
-    };
-    const mime = visit(section.items);
-    if (mime) return mime;
-  }
-  return undefined;
-}
-
-/** @emoji 🖱️ Builds the drag/drop controller for a declarative tree — palette source when items carry drag payloads, drop dispatch when the tree declares a drop action. */
-export function declarativeTreeDragController(treeNode: UiTreeNode, onAction: UiInterpreterContext["onAction"]): TreeDragAndDropController | undefined {
-  const mime = treeDragPayloadMime(treeNode);
-  const source = mime ? catalogueTreeDragController(mime) : undefined;
-  const dropAction = treeNode.dropAction;
-  if (!dropAction) return source;
-  return {
-    ...(source ?? {}),
-    handleDrop: ({ data, target, dropPosition }) => {
-      const encoded = Object.entries(data).find(([kind, value]) => kind.startsWith("application/x-semio-") && value.trim())?.[1];
-      if (!encoded) return;
-      let payload: Record<string, unknown>;
-      try {
-        payload = JSON.parse(encoded) as Record<string, unknown>;
-      } catch {
-        return;
-      }
-      dispatchUiAction(onAction, dropAction, { ...payload, targetId: target.id, dropPosition: dropPosition ?? "inside" });
-    },
-  };
-}
-
-function DeclarativeTreePanel({ treeNode, onAction }: { readonly treeNode: UiTreeNode; readonly onAction: UiInterpreterContext["onAction"] }) {
-  const sectionConfig = useMemo(() => {
-    const sections: TreeDataSection[] = treeNode.sections.map((section: UiTreeSectionNode) => {
-      const sectionPresence = resolveUiPresence(section.presence);
-      return {
-        id: section.id,
-        label: section.label ?? "",
-        defaultOpen: section.defaultOpen,
-        loading: sectionPresence.status === "loading",
-        waiting: sectionPresence.status === "waiting",
-        items: uiTreeItemsToTreeData(section.items, onAction),
-      };
-    });
-    return { sections, sortableSections: Boolean(treeNode.dropAction) && sections.length > 1 };
-  }, [onAction, treeNode.dropAction, treeNode.sections]);
-  const config = useMemo(
-    (): TreePanelConfig => ({
-      ...sectionConfig,
-      selectedIds: treeNode.selectedIds as string[] | undefined,
-      highlightedIds: treeNode.highlightedIds,
-      onSelectionChange: treeNode.selectionChange ? (selectedIds) => dispatchUiAction(onAction, treeNode.selectionChange!, { ids: selectedIds }) : undefined,
-    }),
-    [sectionConfig, treeNode.highlightedIds, treeNode.selectedIds, treeNode.selectionChange, onAction],
-  );
-  const dragController = useMemo(() => declarativeTreeDragController(treeNode, onAction), [onAction, treeNode.dropAction, treeNode.sections]);
-  return (
-    <Tree
-      className="min-h-0 min-w-0 flex-1 overflow-auto"
-      sections={config.sections}
-      selectionMode={config.selectedIds?.length ? "multiple" : "single"}
-      showLines
-      selectedIds={config.selectedIds}
-      highlightedIds={config.highlightedIds}
-      onSelectionChange={config.onSelectionChange}
-      dragAndDropController={dragController}
-      sortableSections={config.sortableSections ?? config.sections.length > 1}
-      onSectionsReorder={config.onSectionsReorder}
-    />
-  );
-}
-//#endregion UiTreePanel
-
 //#region VirtualFileSystemHost
-/** @emoji 🐢️ Also referenced (unqualified) from other still-barrel-resident scene-field parsers
- * (table/text-editor/tiled-map/history/palette/event-feed hosts) — exported so those keep resolving. */
 export function parseSceneJsonField<T>(encoded: string): T {
   if (encoded.startsWith("pk:")) return decodeScenePackField(encoded) as T;
   return JSON.parse(encoded) as T;
@@ -613,12 +379,9 @@ function VirtualFileSystemHost({ node, onAction, requestContextMenu }: Component
   const emptySceneLabel = useLabel("ui.host.emptyScene");
   const [contextMenu, setContextMenu] = useState<(SurfaceContextMenuResult & { readonly x: number; readonly y: number }) | null>(null);
   const contextMenuTitleLabel = useLabel(contextMenu?.titleKey ?? "ui.surfaceContextMenu.file");
-  const dispatch = useCallback(
-    (action: string, args?: Record<string, unknown>) => {
-      onAction({ controllerId: node.controllerId, action, args: { surfaceId: node.surfaceId, ...args } });
-    },
-    [node.controllerId, node.surfaceId, onAction],
-  );
+  const dispatch = (action: string, args?: Record<string, unknown>): void => {
+    onAction({ controllerId: node.controllerId, action, args: { surfaceId: node.surfaceId, ...args } });
+  };
   const mapContextMenu = useMapContextMenuSpecs(dispatch);
   const shellContextMenuFallback = useShellContextMenuFallback();
   if (!scene) return <div className="semio-vfs-empty">{emptySceneLabel}</div>;
@@ -627,351 +390,791 @@ function VirtualFileSystemHost({ node, onAction, requestContextMenu }: Component
   const selectedRowIds = scene.selectedRowIdsJson ? parseSceneJsonField<string[]>(scene.selectedRowIdsJson) : undefined;
   return (
     <>
-    <VirtualFileSystem
-      className="min-h-0 flex-1"
-      schema={schema}
-      rows={rows}
-      selectedRowIds={selectedRowIds}
-      emptyMessage={scene.emptyMessage !== undefined ? wireLabel(scene.emptyMessage) : undefined}
-      dragDrop={scene.dragDropEnabled ? { enabled: true } : undefined}
-      onSelectionChange={(ids) =>
-        onAction({
-          controllerId: node.controllerId,
-          action: "selectRows",
-          args: { surfaceId: node.surfaceId, ids },
-        })
-      }
-      onRowContextMenu={(row, index, event) => {
-        if (!requestContextMenu) return;
-        event.preventDefault();
-        event.stopPropagation();
-        const rowId = String(row.id ?? index);
-        void (async () => {
-          const menu = await openSurfaceContextMenu(
-            requestContextMenu,
-            {
-              menu: { id: "virtualFileSystem" },
-              surface: {
-                surfaceId: node.surfaceId,
-                kind: "virtualFileSystem",
-                hits: [{ domain: "row", id: rowId }],
-                selection: selectedRowIds && selectedRowIds.length > 0 ? [{ domain: "row", ids: selectedRowIds }] : [],
+      <VirtualFileSystem
+        className="min-h-0 flex-1"
+        schema={schema}
+        rows={rows}
+        selectedRowIds={selectedRowIds}
+        emptyMessage={scene.emptyMessage !== undefined ? wireLabel(scene.emptyMessage) : undefined}
+        dragDrop={scene.dragDropEnabled ? { enabled: true } : undefined}
+        onSelectionChange={(ids) => onAction({ controllerId: node.controllerId, action: "selectRows", args: { surfaceId: node.surfaceId, ids } })}
+        onRowContextMenu={(row, index, event) => {
+          if (!requestContextMenu) return;
+          event.preventDefault();
+          event.stopPropagation();
+          const rowId = String(row.id ?? index);
+          void (async () => {
+            const menu = await openSurfaceContextMenu(
+              requestContextMenu,
+              {
+                menu: { id: "virtualFileSystem" },
+                surface: { surfaceId: node.surfaceId, kind: "virtualFileSystem", hits: [{ domain: "row", id: rowId }], selection: selectedRowIds && selectedRowIds.length > 0 ? [{ domain: "row", ids: selectedRowIds }] : [] },
+                windowInstanceId: windowInstanceId ?? undefined,
+                point: { x: event.clientX, y: event.clientY },
               },
-              windowInstanceId: windowInstanceId ?? undefined,
-              point: { x: event.clientX, y: event.clientY },
-            },
-            mapContextMenu,
-            shellContextMenuFallback,
-          );
-          setContextMenu({ x: event.clientX, y: event.clientY, ...menu });
-        })();
-      }}
-      onRowDoubleClick={(row) => {
-        const uri = row.navigateUri;
-        if (!uri) return;
-        if (uri.startsWith("os://instance/")) {
-          onAction({
-            controllerId: node.controllerId,
-            action: "openInstance",
-            args: { surfaceId: node.surfaceId, instanceId: uri.slice("os://instance/".length) },
-          });
-          return;
-        }
-        if (uri.startsWith("os://export/")) {
-          const [, , , instanceId, , format] = uri.split("/");
-          if (instanceId && format) {
-            onAction({
-              controllerId: node.controllerId,
-              action: "exportMedia",
-              args: { surfaceId: node.surfaceId, instanceId, format },
-            });
-          }
-          return;
-        }
-        if (uri.startsWith("os://import/")) {
-          const [, , , instanceId, resourceKind, format] = uri.split("/");
-          if (instanceId && format) {
-            onAction({
-              controllerId: node.controllerId,
-              action: "importMedia",
-              args: { surfaceId: node.surfaceId, instanceId, resourceKind, format },
-            });
-          }
-          return;
-        }
-        if (uri.startsWith("/spaces/")) {
-          const spaceId = uri.split("/")[2];
-          if (spaceId) {
-            onAction({
-              controllerId: node.controllerId,
-              action: "navigateVirtualFileSystemNode",
-              args: { surfaceId: node.surfaceId, spaceId },
-            });
-          }
-          return;
-        }
-        if (uri.startsWith("studio:")) {
-          onAction({
-            controllerId: node.controllerId,
-            action: "navigateVirtualFileSystemNode",
-            args: { surfaceId: node.surfaceId, spaceId: uri.slice("studio:".length) },
-          });
-        }
-      }}
-    />
-    <ContextMenuController
-      title={contextMenuTitleLabel}
-      open={contextMenu != null}
-      position={contextMenu ?? { x: 0, y: 0 }}
-      items={contextMenu?.items ?? []}
-      onOpenChange={(open) => {
-        if (!open) setContextMenu(null);
-      }}
-    />
+              mapContextMenu,
+              shellContextMenuFallback,
+            );
+            setContextMenu({ x: event.clientX, y: event.clientY, ...menu });
+          })();
+        }}
+      />
+      <ContextMenuController title={contextMenuTitleLabel} open={contextMenu != null} position={contextMenu ?? { x: 0, y: 0 }} items={contextMenu?.items ?? []} onOpenChange={(open) => { if (!open) setContextMenu(null); }} />
     </>
   );
 }
 //#endregion VirtualFileSystemHost
 
-//#region InterpretUiNode
-function uiNodeKey(node: UiNode, index: number): string {
-  if ("id" in node && typeof node.id === "string" && node.id) return node.id;
-  return `${node.type}:${index}`;
+//#region LayoutAndStyle
+const SPACE_TOKEN_MULTIPLIER: Record<SpaceToken, number> = { none: 0, xs: 1, sm: 2, md: 4, lg: 6, xl: 8, xxl: 12 };
+
+/** 📐️ Resolves a closed `SpaceToken` against the theme's own `--ui-spacing` ramp
+ * (`@semio-tech/ui-styling`'s `uiSpacingRem`) — never a raw pixel value shipped over the wire. The
+ * per-token multiplier is the one place this renderer decides "how big is `md`"; it can be retuned
+ * without touching the contract, which only ever carries the token name. */
+function spaceTokenRem(token: SpaceToken): string {
+  return uiSpacingRem(SPACE_TOKEN_MULTIPLIER[token]);
 }
 
-/** @emoji 🧭️ Computes a {@link UiNode}'s own structural-path segment — `type[index]`, or `type[index]#id`
- * when the node carries a non-empty string `id` — per the wgpu↔React `data-ui-path` join grammar. */
-function uiNodePathSegment(node: UiNode, index: number): string {
-  const id = "id" in node && typeof node.id === "string" && node.id ? node.id : undefined;
-  return id ? `${node.type}[${index}]#${id}` : `${node.type}[${index}]`;
+function edgeSpaceToPadding(edge: EdgeSpace): string {
+  if ("all" in edge) return spaceTokenRem(edge.all);
+  if ("vertical" in edge) return `${spaceTokenRem(edge.vertical)} ${spaceTokenRem(edge.horizontal)}`;
+  return `${spaceTokenRem(edge.top)} ${spaceTokenRem(edge.right)} ${spaceTokenRem(edge.bottom)} ${spaceTokenRem(edge.left)}`;
 }
 
-/** @emoji 🧭️ Extends a parent's full structural path with a child's own segment. */
-function uiChildPath(parentPath: string, node: UiNode, index: number): string {
-  return `${parentPath}/${uiNodePathSegment(node, index)}`;
+function sizingToCss(sizing: Sizing): string | undefined {
+  if (sizing === "hug") return undefined;
+  if (sizing === "fill") return "100%";
+  if (typeof sizing === "object" && "fixed" in sizing) return spaceTokenRem(sizing.fixed);
+  return undefined;
 }
 
-/** @emoji 🧭️ `UiNode` kinds whose `@semio-tech/ui-react` component doesn't forward passthrough/`data-*`
- * props to its own root DOM element (verified against each component's prop type in `framework/ui/js/react/index.tsx`),
- * so `data-ui-path` for these falls back onto the nearest existing per-child wrapper `<div>` — present only
- * when the node is a child of a `stack`/`section`/`group` — instead of the node's own rendered element. */
-const UI_NODE_TYPES_NEEDING_WRAPPER_PATH_FALLBACK = new Set<UiNode["type"]>(["field", "section", "group", "toggle", "numberStepper", "ring", "iconSelect", "tree", "componentScene"]);
+const ALIGN_CSS: Record<string, string> = { start: "flex-start", center: "center", end: "flex-end", stretch: "stretch", baseline: "baseline" };
+const JUSTIFY_CSS: Record<string, string> = { start: "flex-start", center: "center", end: "flex-end", spaceBetween: "space-between", spaceAround: "space-around", spaceEvenly: "space-evenly" };
 
-/** @emoji 🫳️ Stateful host for a {@link UiStackNode} — the plain stack layout/click/drop wiring plus local drag-over tracking so `dropOverlay` can show a full-bleed hint while a drag hovers, ahead of `dropAction` firing on release. */
-function UiStackHost({ node, context, path }: { readonly node: UiStackNode; readonly context: UiInterpreterContext; readonly path: string }) {
-  const [dragOver, setDragOver] = useState(false);
-  const activate = node.activate;
-  const dropAction = node.dropAction;
-  const dropOverlay = node.dropOverlay;
-  const stackPresence = resolveUiPresence(node.presence);
-  return (
-    <div
-      className={cn(
-        "relative flex min-h-0 min-w-0 flex-1",
-        node.direction === "horizontal" ? "flex-row" : "flex-col",
-        node.gap === "none" ? "gap-0" : node.gap === "tight" ? "gap-single" : node.gap === "relaxed" ? "gap-small" : "gap-double",
-        node.padding === "none" ? "p-0" : "p-double",
-        `semio-ui-stack semio-ui-stack--${node.direction}`,
-        activate && cn(borderElementClass, "border cursor-pointer rounded-md"),
-        stackPresence.selected && "ring-primary border-primary ring-1",
-      )}
-      data-ui-path={path}
-      role={activate ? "button" : undefined}
-      onClick={
-        activate
-          ? (event) => {
-              event.stopPropagation();
-              dispatchUiAction(context.onAction, activate, {});
-            }
-          : undefined
-      }
-      onDragOver={
-        dropAction
-          ? (event) => {
-              event.preventDefault();
-              event.dataTransfer.dropEffect = "copy";
-              if (dropOverlay && !dragOver) setDragOver(true);
-            }
-          : undefined
-      }
-      onDragLeave={
-        dropAction && dropOverlay
-          ? (event) => {
-              event.preventDefault();
-              setDragOver(false);
-            }
-          : undefined
-      }
-      onDrop={
-        dropAction
-          ? (event) => {
-              event.preventDefault();
-              event.stopPropagation();
-              setDragOver(false);
-              const encoded = [...event.dataTransfer.types].filter((kind) => kind.startsWith("application/x-semio-")).map((kind) => event.dataTransfer.getData(kind))[0];
-              if (!encoded?.trim()) return;
-              try {
-                dispatchUiAction(context.onAction, dropAction, JSON.parse(encoded) as Record<string, unknown>);
-              } catch {
-                return;
-              }
-            }
-          : undefined
-      }
-    >
-      {node.children.map((child, index) => {
-        const childPath = uiChildPath(path, child, index);
-        return (
-          <div key={uiNodeKey(child, index)} className="flex-auto" data-ui-path={UI_NODE_TYPES_NEEDING_WRAPPER_PATH_FALLBACK.has(child.type) ? childPath : undefined}>
-            {interpretUiNode(child, context, childPath)}
-          </div>
-        );
-      })}
-      {dropOverlay && dragOver ? (
-        <div
-          className="border-primary pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center gap-single rounded-md border-2 border-dashed p-double text-center"
-          style={{ background: "color-mix(in oklab, var(--panel) 92%, transparent)" }}
-        >
-          <p className="text-sm font-semibold">{dropOverlay.title}</p>
-          <p className="text-muted-foreground text-xs">{dropOverlay.hint}</p>
-        </div>
-      ) : null}
-    </div>
-  );
+function gridTrackToCss(track: GridTrack): string {
+  if (track === "auto") return "auto";
+  if (track === "minContent") return "min-content";
+  if (track === "maxContent") return "max-content";
+  if (typeof track === "object" && "fraction" in track) return `${track.fraction}fr`;
+  if (typeof track === "object" && "fixed" in track) return spaceTokenRem(track.fixed);
+  return "auto";
 }
 
-function declarativeNodePresence(node: UiNode): UiPresence | undefined {
-  return "presence" in node ? node.presence : undefined;
-}
-
-function interpretUiNodeBusyShell(node: UiNode, path: string): ReactNode | null {
-  if (!uiPresenceShowsSkeleton(declarativeNodePresence(node))) return null;
-  const status = resolveUiPresence(declarativeNodePresence(node)).status;
-  return (
-    <div data-ui-path={path} data-ui-status={status} className={cn("p-single w-full min-w-0", status === "waiting" ? waitingBorderElementClass : loadingBorderElementClass)} role="status" aria-busy="true">
-      {elementSkeleton(node.type as ElementSkeletonKind)}
-    </div>
-  );
-}
-
-/** @emoji 🌳️ Interprets a declarative {@link UiNode} tree into ui-react components. `path` is this node's
- * own full structural path (see {@link uiNodePathSegment}); defaults to a root segment at index 0 so
- * existing/test call sites that omit it still behave as the root of a window/panel body. */
-export function interpretUiNode(node: UiNode, context: UiInterpreterContext, path: string = uiNodePathSegment(node, 0)): ReactNode {
-  const busyShell = interpretUiNodeBusyShell(node, path);
-  if (busyShell) return busyShell;
-  switch (node.type) {
-    case "stack":
-      return <UiStackHost node={node} context={context} path={path} />;
-    case "text":
-      return (
-        <p className={cn("text-foreground", node.emphasize ? "font-semibold" : "text-sm")} data-ui-path={path}>
-          {node.value}
-        </p>
-      );
-    case "button": {
-      const presence = resolveUiPresence(node.presence);
-      return (
-        <Button
-          id={node.id}
-          data-ui-path={path}
-          text={node.label}
-          icon={resolveDeclarativeControlIcon(node.iconId as IconName)}
-          disabled={presence.state === "disabled"}
-          className={presence.status === "loading" ? loadingBorderElementClass : presence.status === "waiting" ? waitingBorderElementClass : undefined}
-          aria-busy={presence.status === "loading" || presence.status === "waiting" || undefined}
-          onClick={() => context.onAction(node.action)}
-        />
-      );
+/** 🧬️ Resolves one `LayoutSpec` variant into inline flex/grid/overflow CSS — the renderer-neutral
+ * vocabulary's React reading. Every metric traces back to a closed enum; nothing here is a value that
+ * came off the wire directly. */
+function layoutSpecStyle(layout: LayoutSpec): CSSProperties {
+  switch (layout.kind) {
+    case "leaf": {
+      const l = layout as LeafLayout & { kind: "leaf" };
+      return { width: sizingToCss(l.width), height: sizingToCss(l.height), minWidth: 0, minHeight: 0 };
     }
-    case "separator":
-      return <hr className={cn("border-0", borderNormalTopClass)} data-ui-path={path} />;
-    case "image":
-      return <img id={node.id} src={node.src} alt={node.alt ?? ""} className="max-h-64 max-w-full rounded-md object-contain" data-ui-path={path} />;
-    case "input":
-      return renderUiControl(node, context.onAction, path);
-    case "select":
-      return renderUiControl(node, context.onAction, path);
-    case "toggle":
-      return renderUiControl(node, context.onAction, path);
-    case "keyValue":
-      return renderUiControl(node, context.onAction, path);
-    case "slider":
-      return renderUiControl(node, context.onAction, path);
-    case "numberStepper":
-      return renderUiControl(node, context.onAction, path);
-    case "ring":
-      return renderUiControl(node, context.onAction, path);
-    case "iconSelect":
-      return renderUiControl(node, context.onAction, path);
-    case "field":
-      // 🧭️ `Field` (`framework/ui/js/react/index.tsx`) has a closed prop type with no passthrough/`data-*` forwarding
-      // and index.tsx renders no wrapper `<div>` of its own here, so `field`'s own `data-ui-path` has no
-      // attachable element at this call site — best-effort only, via a parent stack/section/group's wrapper.
-      return (
-        <Field id={node.id} label={node.label} description={node.description} required={node.required} error={node.error}>
-          {interpretUiNode(node.child, context, uiChildPath(path, node.child, 0))}
-        </Field>
-      );
-    case "section":
-      // 🧭️ Same best-effort caveat as `field`: `Section` only forwards `id`/`className`, not `data-*`.
-      return (
-        <Section id={node.id} title={wireLabel(node.label)}>
-          {node.children.map((child, index) => {
-            const childPath = uiChildPath(path, child, index);
-            return (
-              <div key={uiNodeKey(child, index)} data-ui-path={UI_NODE_TYPES_NEEDING_WRAPPER_PATH_FALLBACK.has(child.type) ? childPath : undefined}>
-                {interpretUiNode(child, context, childPath)}
-              </div>
-            );
-          })}
-        </Section>
-      );
-    case "group":
-      // 🧭️ `group` renders through the same `Section` component/caveat as `section` above.
-      return (
-        <Section id={node.id} title={wireLabel(node.label)}>
-          {node.children.map((child, index) => {
-            const childPath = uiChildPath(path, child, index);
-            return (
-              <div key={uiNodeKey(child, index)} data-ui-path={UI_NODE_TYPES_NEEDING_WRAPPER_PATH_FALLBACK.has(child.type) ? childPath : undefined}>
-                {interpretUiNode(child, context, childPath)}
-              </div>
-            );
-          })}
-        </Section>
-      );
-    case "tree":
-      // 🧭️ `Tree` (`framework/ui/js/react/index.tsx`) doesn't forward passthrough/`data-*` props to its root either
-      // — best-effort only, via a parent stack/section/group's wrapper.
-      return <DeclarativeTreePanel treeNode={node} onAction={context.onAction} />;
-    case "componentScene":
-      // 🧭️ Dispatches into one of 14 scene host components (or
-      // `VirtualFileSystemHost`) — no DOM element of index.tsx's own to attach to — best-effort only, via a
-      // parent stack/section/group's wrapper.
-      return renderComponentSceneHost(node, context.onAction, context.requestContextMenu);
-    case "externalSlot":
-      return (
-        <ShellFaultBoundary boundaryId={`extension-${node.pluginId}`} fallbackLabel={shellLabel("ui.common.renderError")}>
-          <p className="text-muted-foreground text-xs" data-ui-path={path}>
-            Extension unavailable: {node.pluginId}
-          </p>
-        </ShellFaultBoundary>
-      );
+    case "stack": {
+      const l = layout as StackLayout & { kind: "stack" };
+      return {
+        display: "flex",
+        flexDirection: l.axis === "horizontal" ? "row" : "column",
+        gap: spaceTokenRem(l.gap),
+        padding: edgeSpaceToPadding(l.padding),
+        alignItems: ALIGN_CSS[l.align],
+        justifyContent: JUSTIFY_CSS[l.justify],
+        flex: l.grow ? "1 1 auto" : undefined,
+        flexWrap: l.wrap ? "wrap" : "nowrap",
+        minWidth: 0,
+        minHeight: 0,
+      };
+    }
+    case "grid": {
+      const l = layout as GridLayout & { kind: "grid" };
+      return {
+        display: "grid",
+        gridTemplateColumns: l.columns.map(gridTrackToCss).join(" ") || undefined,
+        gridTemplateRows: l.rows.map(gridTrackToCss).join(" ") || undefined,
+        columnGap: spaceTokenRem(l.columnGap),
+        rowGap: spaceTokenRem(l.rowGap),
+        padding: edgeSpaceToPadding(l.padding),
+        alignItems: ALIGN_CSS[l.align],
+        justifyContent: JUSTIFY_CSS[l.justify],
+        minWidth: 0,
+        minHeight: 0,
+      };
+    }
+    case "overlay": {
+      const l = layout as OverlayLayout & { kind: "overlay" };
+      return { position: "absolute", inset: edgeSpaceToPadding(l.inset) };
+    }
+    case "scroll": {
+      const l = layout as ScrollLayout & { kind: "scroll" };
+      const axes = l.axes;
+      return {
+        overflowX: axes === "horizontal" || axes === "both" ? "auto" : "hidden",
+        overflowY: axes === "vertical" || axes === "both" ? "auto" : "hidden",
+        padding: edgeSpaceToPadding(l.padding),
+        width: sizingToCss(l.sizing),
+        minWidth: 0,
+        minHeight: 0,
+      };
+    }
+    case "absolute": {
+      const l = layout as AbsoluteLayout & { kind: "absolute" };
+      return { position: "absolute", width: sizingToCss(l.sizingWidth), height: sizingToCss(l.sizingHeight) };
+    }
+    default:
+      return { minWidth: 0, minHeight: 0 };
   }
 }
 
+/** 🎨️ `StyleSpec` is token-only — never a raw color/pixel. This renderer's first-pass reading exposes
+ * every token as a `data-*` attribute rather than guessing a color mapping tokens.json does not yet
+ * define a ramp for (flagged by this contract's own upstream packet reports); a theme stylesheet
+ * targets `[data-tone="danger"]` etc. Swapping this for direct CSS-variable resolution later is a
+ * pure addition, not a wire change. */
+function styleSpecDataAttributes(style: StyleSpec): Record<string, string> {
+  return {
+    "data-variant": style.variant ?? "solid",
+    "data-size": style.size ?? "md",
+    "data-density": style.density ?? "standard",
+    "data-tone": style.tone ?? "neutral",
+    "data-emphasis": style.emphasis ?? "regular",
+  };
+}
+//#endregion LayoutAndStyle
+
+//#region Accessibility
+/** ♿️ `AccessibilitySpec` → real ARIA props, plus an optional rendered visually-hidden description
+ * span (its id feeds `aria-describedby`) — no `role` here, the semantic role comes from `Component`
+ * itself (a `Component::Button` is a button on every renderer; see `🦀️accessibility.rs`'s own doc). */
+function accessibilityAriaProps(spec: AccessibilitySpec, idBase: string): { readonly props: Record<string, unknown>; readonly describedBy?: ReactNode } {
+  const describedById = spec.description ? `${idBase}-desc` : undefined;
+  const props: Record<string, unknown> = {
+    "aria-label": spec.label ?? undefined,
+    "aria-describedby": describedById,
+    "aria-live": spec.live && spec.live !== "off" ? spec.live : undefined,
+    "aria-keyshortcuts": spec.shortcut ?? undefined,
+    "aria-hidden": spec.hidden ? true : undefined,
+  };
+  const describedBy = describedById ? (
+    <span id={describedById} className="sr-only">
+      {spec.description}
+    </span>
+  ) : undefined;
+  return { props, describedBy };
+}
+//#endregion Accessibility
+
+//#region ActionDispatch
+function resolveControlIconNode(iconId: string, size: number | "tiny" | "small" | "base" | "large" = "small"): ReactElement {
+  return <Icon icon={iconId as IconName} size={size} />;
+}
+
+function dispatchTrigger(context: UiInterpreterContext, record: UiNodeRecord, trigger: UiTrigger, input?: UiValue): void {
+  const intent = emitIntent(context.store, record, trigger, input);
+  if (intent) context.onIntent(intent);
+}
+
+/** 🧬️ Widens a primitive into the untagged `UiValue` union — every `Change`/`Delta` trigger's own
+ * payload is always one of these three JS-native shapes, never a nested list/map, at this call site. */
+function toUiValue(value: string | number | boolean): UiValue {
+  return value as UiValue;
+}
+//#endregion ActionDispatch
+
+//#region ComponentRenderers
+function activityBorderClass(record: UiNodeRecord): string | undefined {
+  if (record.activity === "loading") return loadingBorderElementClass;
+  if (record.activity === "waiting") return waitingBorderElementClass;
+  return undefined;
+}
+
+function ContainerView({ store, record, context }: { readonly store: UiDocumentStore; readonly record: UiNodeRecord; readonly context: UiInterpreterContext }) {
+  const component = record.component as Extract<Component, { type: "container" }>;
+  const { props: aria, describedBy } = accessibilityAriaProps(record.accessibility, `node-${record.id}`);
+  const presence = usePresenceOverlayEntry(record.key);
+  const style: CSSProperties = { ...layoutSpecStyle(record.layout), position: record.layout.kind === "overlay" ? "relative" : undefined };
+  const dataAttrs = styleSpecDataAttributes(record.style);
+  const children = (record.children ?? []).map((childId) => <UiNodeView key={childId} store={store} id={childId} context={context} />);
+  const role = component.role === "form" ? "form" : component.role === "toolbar" ? "toolbar" : undefined;
+  const activateBinding = (record.bindings ?? []).find((binding) => binding.trigger === "activate");
+
+  if (component.role === "section" || component.role === "group") {
+    return (
+      <Section title={component.label ? wireLabel(component.label) : undefined} className={cn(presence.selected && "ring-primary ring-1")}>
+        {describedBy}
+        {children}
+      </Section>
+    );
+  }
+  if (component.role === "field") {
+    return (
+      <Field label={component.label ? wireLabel(component.label) : ""} description={component.description} required={component.required} error={component.error}>
+        {describedBy}
+        {children}
+      </Field>
+    );
+  }
+  return (
+    <div
+      style={style}
+      {...dataAttrs}
+      {...aria}
+      role={activateBinding ? "button" : role}
+      data-ui-node-id={record.id}
+      data-activity={record.activity}
+      className={cn(activityBorderClass(record), activateBinding && cn(borderElementClass, "border cursor-pointer rounded-md"), presence.selected && "ring-primary ring-1", presence.hovered && "outline-primary/50 outline-1")}
+      aria-busy={record.activity === "loading" || record.activity === "waiting" || undefined}
+      onClick={activateBinding ? (event) => { event.stopPropagation(); dispatchTrigger(context, record, "activate"); } : undefined}
+    >
+      {describedBy}
+      {children}
+    </div>
+  );
+}
+
+function TextView({ record }: { readonly record: UiNodeRecord }) {
+  const component = record.component as Extract<Component, { type: "text" }>;
+  const { props: aria, describedBy } = accessibilityAriaProps(record.accessibility, `node-${record.id}`);
+  return (
+    <p className={cn("text-foreground", component.emphasize ? "font-semibold" : "text-sm")} data-ui-node-id={record.id} {...aria}>
+      {describedBy}
+      {component.value}
+    </p>
+  );
+}
+
+function ButtonView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiInterpreterContext }) {
+  const component = record.component as Extract<Component, { type: "button" }>;
+  return (
+    <Button
+      id={`node-${record.id}`}
+      data-ui-node-id={record.id}
+      text={component.label}
+      icon={resolveControlIconNode(component.icon)}
+      disabled={record.disabled}
+      aria-label={record.accessibility.label ?? undefined}
+      className={activityBorderClass(record)}
+      aria-busy={record.activity === "loading" || record.activity === "waiting" || undefined}
+      onClick={() => dispatchTrigger(context, record, "activate")}
+    />
+  );
+}
+
+function InputView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiInterpreterContext }) {
+  const component = record.component as Extract<Component, { type: "input" }>;
+  const commitOnBlur = component.commit === "blur";
+  const commitValue = (raw: string) => {
+    const value: UiValue = component.kind === "number" ? toUiValue(Number(raw)) : toUiValue(raw);
+    dispatchTrigger(context, record, commitOnBlur ? "commit" : "change", value);
+  };
+  if (component.kind === "longText") {
+    return (
+      <Textarea
+        id={`node-${record.id}`}
+        data-ui-node-id={record.id}
+        className="min-h-[4.5rem] w-full min-w-0"
+        value={component.value}
+        placeholder={component.placeholder}
+        onChange={commitOnBlur ? undefined : (event) => commitValue(event.target.value)}
+        onBlur={commitOnBlur ? (event) => commitValue(event.target.value) : undefined}
+      />
+    );
+  }
+  const inputType = component.kind === "number" ? "number" : component.kind === "date" ? "date" : component.kind === "color" ? "color" : component.kind === "file" ? "file" : "text";
+  return (
+    <Input
+      id={`node-${record.id}`}
+      data-ui-node-id={record.id}
+      type={inputType}
+      className="h-medium w-full min-w-0"
+      value={component.kind === "file" ? undefined : component.value}
+      placeholder={component.placeholder}
+      min={component.min}
+      max={component.max}
+      step={component.step}
+      accept={component.kind === "file" ? component.accept : undefined}
+      onChange={commitOnBlur ? undefined : (event) => commitValue(component.kind === "file" ? (event.target.files?.[0]?.name ?? "") : event.target.value)}
+      onBlur={commitOnBlur ? (event) => commitValue(component.kind === "file" ? (event.target.files?.[0]?.name ?? "") : event.target.value) : undefined}
+    />
+  );
+}
+
+function SelectView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiInterpreterContext }) {
+  const component = record.component as Extract<Component, { type: "select" }>;
+  return (
+    <Select id={`node-${record.id}-select`} value={component.value || undefined} onValueChange={(value) => dispatchTrigger(context, record, "change", toUiValue(value))}>
+      <SelectTrigger id={`node-${record.id}`} data-ui-node-id={record.id} className="h-medium w-full min-w-0" size="sm">
+        <SelectValue placeholder={component.placeholder ?? interpLabel("ui.common.select")} />
+      </SelectTrigger>
+      <SelectContent>
+        {component.items.map((item, index) => (
+          <SelectItem key={`${record.id}:${index}:${item.value}`} value={item.value}>
+            {item.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
+
+function ToggleView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiInterpreterContext }) {
+  const component = record.component as Extract<Component, { type: "toggle" }>;
+  return <Toggle id={`node-${record.id}`} pressed={component.on} text={component.text} icon={resolveControlIconNode(component.icon)} onPressedChange={(pressed) => dispatchTrigger(context, record, "change", toUiValue(pressed))} />;
+}
+
+function KeyValueListView({ record }: { readonly record: UiNodeRecord }) {
+  const component = record.component as Extract<Component, { type: "keyValueList" }>;
+  return (
+    <dl className="grid grid-cols-[auto_1fr] gap-x-single gap-y-single text-xs" data-ui-node-id={record.id}>
+      {component.entries.map((entry, index) => (
+        <div key={`${entry.label}:${index}`} className="contents">
+          <dt className="text-muted-foreground">{entry.label}</dt>
+          <dd className="tabular-nums">{entry.value}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
+function SliderView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiInterpreterContext }) {
+  const component = record.component as Extract<Component, { type: "slider" }>;
+  const slider = (
+    <Slider
+      id={`node-${record.id}`}
+      data-ui-node-id={record.id}
+      className="w-full min-w-0"
+      max={component.max}
+      min={component.min}
+      step={component.step}
+      value={[component.value]}
+      onValueChange={(values) => dispatchTrigger(context, record, "change", toUiValue(values[0] ?? component.value))}
+    />
+  );
+  if (!component.unit) return slider;
+  return (
+    <div className="flex min-w-0 w-full items-center gap-single">
+      {slider}
+      <span className="text-muted-foreground shrink-0 text-xs tabular-nums">
+        {component.value} {component.unit}
+      </span>
+    </div>
+  );
+}
+
+function NumberStepperView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiInterpreterContext }) {
+  const component = record.component as Extract<Component, { type: "numberStepper" }>;
+  return (
+    <Stepper
+      id={`node-${record.id}`}
+      step={component.step}
+      value={component.uniform ? component.value : undefined}
+      mixed={!component.uniform}
+      onChange={(value) => dispatchTrigger(context, record, "change", toUiValue(value))}
+      onDelta={(delta) => dispatchTrigger(context, record, "delta", toUiValue(delta))}
+    />
+  );
+}
+
+function RingView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiInterpreterContext }) {
+  const component = record.component as Extract<Component, { type: "ring" }>;
+  return <Ring id={`node-${record.id}`} onOrbChange={(_orbId, _oldT, newT) => dispatchTrigger(context, record, "change", toUiValue(newT))} orbs={[{ disabled: record.disabled, id: component.orbId, selected: true, t: component.t }]} />;
+}
+
+function IconSelectView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiInterpreterContext }) {
+  const component = record.component as Extract<Component, { type: "iconSelect" }>;
+  return (
+    <IconSelector
+      classifyIconSelectorMode={component.classifierKind === "puzzle2d" ? classifyIconSelectorMode : undefined}
+      id={`node-${record.id}`}
+      onChange={(next) => dispatchTrigger(context, record, "change", toUiValue(next))}
+      uniform={component.uniform}
+      value={component.value}
+    />
+  );
+}
+
+//#region Tree
+type TreeWalkNode = { readonly record: UiNodeRecord; readonly props: Extract<Component, { type: "treeItem" }> };
+
+function collectTreeItems(state: UiDocumentState, ids: readonly UiNodeId[]): readonly TreeWalkNode[] {
+  const out: TreeWalkNode[] = [];
+  for (const id of ids) {
+    const record = state.nodes.get(id);
+    if (!record || record.component.type !== "treeItem") continue;
+    out.push({ record, props: record.component });
+  }
+  return out;
+}
+
+function treeItemToTreeData(state: UiDocumentState, node: TreeWalkNode, context: UiInterpreterContext, overlay: UiPresenceOverlayValue): TreeDataItem {
+  const { record, props } = node;
+  const presence = overlay.byKey.get(record.key) ?? {};
+  const activateBinding = (record.bindings ?? []).find((b) => b.trigger === "activate");
+  const hoverBinding = (record.bindings ?? []).find((b) => b.trigger === "hoverPreview");
+  const childItems = collectTreeItems(state, record.children ?? []);
+  return {
+    id: String(record.id),
+    label: props.label,
+    description: props.description,
+    icon: props.icon ? resolveControlIconNode(props.icon, 12) : undefined,
+    defaultOpen: props.defaultOpen,
+    isSelected: presence.selected ?? false,
+    loading: record.activity === "loading",
+    waiting: record.activity === "waiting",
+    isHidden: props.dimmed,
+    draggable: props.draggable,
+    dragData: props.dragData,
+    items: childItems.length > 0 ? childItems.map((child) => treeItemToTreeData(state, child, context, overlay)) : undefined,
+    onClick: activateBinding ? () => dispatchTrigger(context, record, "activate") : undefined,
+    onPointerEnter: hoverBinding ? () => dispatchTrigger(context, record, "hoverPreview") : undefined,
+    actions: props.rowActions.length > 0 ? props.rowActions.map((action) => ({ kind: "button" as const, icon: resolveControlIconNode(action.icon, 12), title: action.label, placement: action.placement ?? "row", onClick: () => context.onIntent(context.store.buildIntent(record, action.action)) })) : undefined,
+  };
+}
+
+function TreeView({ store, record, context }: { readonly store: UiDocumentStore; readonly record: UiNodeRecord; readonly context: UiInterpreterContext }) {
+  const revision = useUiDocumentRevision(store);
+  const overlay = useContext(UiPresenceOverlayContext);
+  const sections = useMemo((): TreeDataSection[] => {
+    void revision;
+    const state = store.getState();
+    const sectionRecords = (record.children ?? []).map((id) => state.nodes.get(id)).filter((r): r is UiNodeRecord => !!r && r.component.type === "treeSection");
+    return sectionRecords.map((sectionRecord) => {
+      const sectionProps = sectionRecord.component as Extract<Component, { type: "treeSection" }>;
+      const items = collectTreeItems(state, sectionRecord.children ?? []);
+      return {
+        id: String(sectionRecord.id),
+        label: sectionProps.label ?? "",
+        defaultOpen: sectionProps.defaultOpen,
+        loading: sectionRecord.activity === "loading",
+        waiting: sectionRecord.activity === "waiting",
+        items: items.map((item) => treeItemToTreeData(state, item, context, overlay)),
+      };
+    });
+  }, [store, record, revision, context, overlay]);
+  const dragController: TreeDragAndDropController | undefined = useMemo(() => {
+    const dropBinding = (record.bindings ?? []).find((b) => b.trigger === "drop");
+    if (!dropBinding) return undefined;
+    return { handleDrop: () => dispatchTrigger(context, record, "drop") };
+  }, [record, context]);
+  return (
+    <Tree className="min-h-0 min-w-0 flex-1 overflow-auto" sections={sections} selectionMode="single" showLines dragAndDropController={dragController} sortableSections={sections.length > 1} />
+  );
+}
+//#endregion Tree
+
+function ImageView({ record }: { readonly record: UiNodeRecord }) {
+  const component = record.component as Extract<Component, { type: "image" }>;
+  return <img id={`node-${record.id}`} src={component.src} alt={component.alt ?? ""} className="max-h-64 max-w-full rounded-md object-contain" data-ui-node-id={record.id} />;
+}
+
+function SurfaceView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiInterpreterContext }) {
+  const component = record.component as Extract<Component, { type: "surface" }>;
+  return <>{renderComponentSceneHost(record, component, context.onAction, context.requestContextMenu)}</>;
+}
+
+function ExtensionView({ record }: { readonly record: UiNodeRecord }) {
+  const component = record.component as Extract<Component, { type: "extension" }>;
+  return (
+    <ShellFaultBoundary boundaryId={`extension-${component.extension}`} fallbackLabel={shellLabel("ui.common.renderError")}>
+      <p className="text-muted-foreground text-xs" data-ui-node-id={record.id}>
+        Extension unavailable: {component.extension}
+      </p>
+    </ShellFaultBoundary>
+  );
+}
+
+/** 🚧️ An unregistered/unknown `Component::type` — never renders nothing (a silent blank is the
+ * failure mode that makes a missing renderer look like a broken document, per the packet brief). */
+function UnknownComponentView({ record }: { readonly record: UiNodeRecord }) {
+  const kind = (record.component as { readonly type: string }).type;
+  console.error(`[DEBUG] Interpreter: unknown component type ${JSON.stringify(kind)} on node ${record.id} ("${record.key}")`);
+  return (
+    <div role="alert" className="border-destructive text-destructive rounded-md border border-dashed p-single text-xs" data-ui-node-id={record.id} data-unknown-component={kind}>
+      Unrecognized component: {kind}
+    </div>
+  );
+}
+//#endregion ComponentRenderers
+
+function interpretUiNodeBusyShell(record: UiNodeRecord): ReactNode | null {
+  if (record.activity !== "loading" && record.activity !== "waiting") return null;
+  return (
+    <div data-ui-node-id={record.id} data-ui-status={record.activity} className={cn("p-single w-full min-w-0", record.activity === "waiting" ? waitingBorderElementClass : loadingBorderElementClass)} role="status" aria-busy="true">
+      {elementSkeleton(record.component.type as ElementSkeletonKind)}
+    </div>
+  );
+}
+
+/** 🌳️ Renders one record's component, recursing into children via {@link UiNodeView} — never reads a
+ * child's own record directly, only its id, so a child's change never re-renders this switch. */
+function renderComponent(store: UiDocumentStore, record: UiNodeRecord, context: UiInterpreterContext): ReactNode {
+  const busyShell = interpretUiNodeBusyShell(record);
+  if (busyShell) return busyShell;
+  switch (record.component.type) {
+    case "container":
+      return <ContainerView store={store} record={record} context={context} />;
+    case "text":
+      return <TextView record={record} />;
+    case "button":
+      return <ButtonView record={record} context={context} />;
+    case "separator":
+      return <hr className={cn("border-0", borderNormalTopClass)} data-ui-node-id={record.id} />;
+    case "input":
+      return <InputView record={record} context={context} />;
+    case "select":
+      return <SelectView record={record} context={context} />;
+    case "toggle":
+      return <ToggleView record={record} context={context} />;
+    case "keyValueList":
+      return <KeyValueListView record={record} />;
+    case "slider":
+      return <SliderView record={record} context={context} />;
+    case "numberStepper":
+      return <NumberStepperView record={record} context={context} />;
+    case "ring":
+      return <RingView record={record} context={context} />;
+    case "iconSelect":
+      return <IconSelectView record={record} context={context} />;
+    case "tree":
+      return <TreeView store={store} record={record} context={context} />;
+    case "treeSection":
+    case "treeItem":
+      // 🌲️ Reached only when a section/item is rendered OUTSIDE a `tree` parent (malformed document) —
+      // `TreeView` walks these directly, never through `UiNodeView`, in the well-formed case.
+      return <ContainerView store={store} record={record} context={context} />;
+    case "image":
+      return <ImageView record={record} />;
+    case "surface":
+      return <SurfaceView record={record} context={context} />;
+    case "extension":
+      return <ExtensionView record={record} />;
+    default:
+      return <UnknownComponentView record={record} />;
+  }
+}
+
+/** 🌳️ The atomic per-node subscribing unit — reads exactly `id`'s own record via `useUiNode`, so it
+ * re-renders when (and only when) THAT record changes. */
+export function UiNodeView({ store, id, context }: { readonly store: UiDocumentStore; readonly id: UiNodeId; readonly context: UiInterpreterContext }): ReactElement | null {
+  const record = useUiNode(store, id);
+  if (!record) return null;
+  return <>{renderComponent(store, record, context)}</>;
+}
+
+/** 🌳️ Entry point — resolves `store`'s current root and renders it. */
+export function interpretUiNode(store: UiDocumentStore, context: UiInterpreterContext): ReactNode {
+  const root = store.getState().root;
+  if (root === null) return null;
+  return <UiNodeView store={store} id={root} context={context} />;
+}
+
 /**
- * @emoji 🐢️ `React.memo`'d entry point into `interpretUiNode` — bails on re-interpreting (and
- * reconciling) an entire window/panel subtree when both `node` and `onAction` keep the same object
- * identity as last render. Only pays off when callers pass a stable `onAction` (see `os-shell.tsx`'s
- * `onActionStable`) and a `node` whose identity is preserved across no-operation refreshes (see
- * `os-shell.tsx`'s `preserveJsonIdentity`/`mergeRecordPreservingIdentity`) — without both, `node`/
- * `onAction` are fresh every render and this degenerates to the unmemoized call.
+ * @emoji 🐢️ `React.memo`'d entry point — `store` is a stable per-surface identity, so only the root id
+ * changing (a `SetRoot`/full `loadSnapshot`) causes this to re-subscribe; ordinary node mutations are
+ * handled entirely by `UiNodeView`'s own per-id subscription several levels down, never by
+ * re-rendering from here.
  */
-export const InterpretedUiNode = memo(function InterpretedUiNode({ node, onAction }: { readonly node: UiNode; readonly onAction: UiInterpreterContext["onAction"] }): ReactNode {
-  const requestContextMenu = usePluginSurfaceActions();
-  return interpretUiNode(node, { onAction, requestContextMenu });
+export const InterpretedUiNode = memo(function InterpretedUiNode({ store, onAction, onIntent, requestContextMenu }: { readonly store: UiDocumentStore } & Pick<UiInterpreterContext, "onAction" | "onIntent" | "requestContextMenu">): ReactNode {
+  const root = useUiDocumentRoot(store);
+  if (root === null) return null;
+  return <UiNodeView store={store} id={root} context={{ store, onAction, onIntent, requestContextMenu }} />;
 });
-//#endregion InterpretUiNode
 //#endregion 🔖️UiInterpreter
+
+//#region 🧪️Tests
+if (import.meta.vitest) {
+  const { describe, expect, it, vi } = import.meta.vitest;
+
+  function leaf(id: number, key: string, component: Component, children: readonly number[] = []): UiNodeRecord {
+    return { id, key, component, layout: { kind: "leaf", width: "hug", height: "hug" }, style: {}, activity: "idle", accessibility: {}, children: [...children] };
+  }
+
+  function snapshot(root: number, nodes: readonly UiNodeRecord[]): UiSnapshot {
+    return { surface: "s", revision: 0, root, nodes: [...nodes], layoutEpoch: 0 };
+  }
+
+  const noopContext: UiInterpreterContext = { store: new UiDocumentStore("noop"), onAction: () => {}, onIntent: () => {} };
+
+  describe("unknown component placeholder", () => {
+    it("renders a visible placeholder and never nothing for an unregistered component type", async () => {
+      const { render, cleanup } = await import("@testing-library/react");
+      const store = new UiDocumentStore("s");
+      store.loadSnapshot(snapshot(0, [leaf(0, "root", { type: "future-widget" } as unknown as Component)]));
+      const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      const { container } = render(<UiNodeView store={store} id={0} context={{ ...noopContext, store }} />);
+      expect(container.querySelector("[data-unknown-component]")).not.toBeNull();
+      expect(container.textContent).toMatch(/Unrecognized component/);
+      expect(errorSpy).toHaveBeenCalled();
+      errorSpy.mockRestore();
+      cleanup();
+    });
+  });
+
+  describe("per-node render granularity (React level)", () => {
+    it("re-renders only the component whose own record changed", async () => {
+      const { act, render, cleanup } = await import("@testing-library/react");
+      const store = new UiDocumentStore("s");
+      // 🧭️ `root` owns `a`/`b` as real document children (required — every node must be reachable
+      // from the root or `validateUiDocumentCore` rejects the whole document as `danglingRoot`), but
+      // this test deliberately mounts `a`/`b` as two INDEPENDENT top-level `UiNodeView` trees rather
+      // than rendering `root` and letting `ContainerView` recurse into them — mounting `root` too
+      // would nest `a`/`b` a second time inside it, and `root`'s own `Profiler` would then correctly
+      // fire on any descendant commit, which is not what this test measures.
+      store.loadSnapshot(
+        snapshot(0, [
+          leaf(0, "root", { type: "container" }, [1, 2]),
+          leaf(1, "a", { type: "text", value: "A" }),
+          leaf(2, "b", { type: "text", value: "B" }),
+        ]),
+      );
+
+      const aRenders = vi.fn();
+      const bRenders = vi.fn();
+      const context: UiInterpreterContext = { ...noopContext, store };
+      const { unmount } = render(
+        <>
+          <Profiler id="a" onRender={aRenders}>
+            <UiNodeView store={store} id={1} context={context} />
+          </Profiler>
+          <Profiler id="b" onRender={bRenders}>
+            <UiNodeView store={store} id={2} context={context} />
+          </Profiler>
+        </>,
+      );
+      aRenders.mockClear();
+      bRenders.mockClear();
+
+      act(() => {
+        const result = store.applyPatch({ surface: "s", baseRevision: 0, revision: 1, ops: [{ type: "setComponent", id: 1, component: { type: "text", value: "A changed" } }] });
+        expect(result.ok).toBe(true);
+      });
+
+      expect(aRenders).toHaveBeenCalledTimes(1);
+      expect(bRenders).toHaveBeenCalledTimes(0);
+      unmount();
+      cleanup();
+    });
+  });
+
+  //#region CorpusConformance
+  /** 🧪️ Consumes the shared conformance corpus (`🧬️contract/📚️examples/🧪️conformance/`, 62 cases) —
+   * the load-bearing proof that this React store agrees with the Rust `apply_patch`/`validate_snapshot`
+   * the GPU renderer also builds on. For each accept case: loads the snapshot (+ patch, if present)
+   * into a real `UiDocumentStore` and asserts the retained tree shape, every node's accessibility
+   * fields, and the full set of reachable `ActionId`s (formatted `scope.name@version`, matching
+   * `ActionId::Display`) against the fixture's `.expect.json`. For each reject case: asserts
+   * `applyPatch` rejects with the exact named `PatchRejection` AND that the store's state is left
+   * reference-identical (not just value-equal) to before, mirroring `UiDocumentStore`'s own guarantee. */
+  describe("conformance corpus", async () => {
+    // 🧭️ Dynamic imports (never static) — this file ships to the browser in production, and
+    // `node:fs`/`node:path`/`node:url` must never enter that bundle. `import.meta.vitest` dead-code
+    // elimination strips this whole block (dynamic imports included) from non-test builds.
+    const { readFileSync, readdirSync } = await import("node:fs");
+    const { dirname, join } = await import("node:path");
+    const { fileURLToPath } = await import("node:url");
+
+    const here = dirname(fileURLToPath(import.meta.url));
+    const corpusRoot = join(here, "../../../../../../../🔨️modules/🖱️ui/🧬️contract/📚️examples/🧪️conformance");
+
+    type CorpusExpectation = {
+      readonly case: string;
+      readonly kind: string;
+      readonly outcome: "accept" | "reject";
+      readonly limits: UiDocumentLimits | null;
+      readonly tree?: { readonly root: number; readonly nodeCount: number; readonly shape: readonly { readonly id: number; readonly key: string; readonly type: string; readonly children: readonly number[] }[] };
+      readonly accessibility?: readonly { readonly id: number; readonly label: string | null; readonly description: string | null; readonly live: string; readonly shortcut: string | null; readonly hidden: boolean }[];
+      readonly actionIds?: readonly string[];
+      readonly baseRevision?: number;
+      readonly patchRejection?: PatchRejection;
+    };
+
+    type CorpusCase = { readonly group: string; readonly name: string; readonly expect: CorpusExpectation; readonly snapshot: UiSnapshot; readonly patch: UiPatch | null };
+
+    function loadCorpus(): readonly CorpusCase[] {
+      const cases: CorpusCase[] = [];
+      for (const group of readdirSync(corpusRoot)) {
+        const groupDir = join(corpusRoot, group);
+        for (const file of readdirSync(groupDir)) {
+          if (!file.endsWith(".expect.json")) continue;
+          const name = file.slice(0, -".expect.json".length);
+          const expectation = JSON.parse(readFileSync(join(groupDir, file), "utf8")) as CorpusExpectation;
+          const snap = JSON.parse(readFileSync(join(groupDir, `${name}.snapshot.json`), "utf8")) as UiSnapshot;
+          const patchPath = join(groupDir, `${name}.patch.json`);
+          let patch: UiPatch | null = null;
+          try {
+            patch = JSON.parse(readFileSync(patchPath, "utf8")) as UiPatch;
+          } catch {
+            patch = null;
+          }
+          cases.push({ group, name, expect: expectation, snapshot: snap, patch });
+        }
+      }
+      return cases;
+    }
+
+    function allActionIds(state: ReturnType<UiDocumentStore["getState"]>): string[] {
+      const ids = new Set<string>();
+      for (const record of state.nodes.values()) {
+        for (const binding of record.bindings ?? []) ids.add(`${binding.action.scope}.${binding.action.name}@${binding.action.version}`);
+      }
+      return [...ids].sort();
+    }
+
+    const cases = loadCorpus();
+    it("loads all 62 corpus fixtures", () => {
+      expect(cases.length).toBe(62);
+    });
+
+    for (const testCase of cases) {
+      it(`${testCase.group}/${testCase.name} — ${testCase.expect.outcome}`, () => {
+        const limits = testCase.expect.limits ?? DEFAULT_UI_DOCUMENT_LIMITS;
+        const store = new UiDocumentStore(testCase.snapshot.surface, limits);
+        store.loadSnapshot(testCase.snapshot);
+
+        if (!testCase.patch) {
+          expect(testCase.expect.outcome).toBe("accept");
+        } else if (testCase.expect.outcome === "reject") {
+          const before = store.getState();
+          const result = store.applyPatch(testCase.patch);
+          expect(result.ok).toBe(false);
+          if (!result.ok) expect(result.rejection).toEqual(testCase.expect.patchRejection);
+          expect(store.getState()).toBe(before);
+          return;
+        } else {
+          const applied = store.applyPatch(testCase.patch);
+          expect(applied.ok).toBe(true);
+        }
+
+        const state = store.getState();
+        if (testCase.expect.tree) {
+          expect(state.root).toBe(testCase.expect.tree.root);
+          expect(state.nodes.size).toBe(testCase.expect.tree.nodeCount);
+          for (const expected of testCase.expect.tree.shape) {
+            const record = state.nodes.get(expected.id);
+            expect(record, `node ${expected.id} should exist`).toBeDefined();
+            expect(record!.key).toBe(expected.key);
+            expect(record!.component.type).toBe(expected.type);
+            expect([...(record!.children ?? [])]).toEqual(expected.children);
+          }
+        }
+        if (testCase.expect.accessibility) {
+          for (const expected of testCase.expect.accessibility) {
+            const record = state.nodes.get(expected.id)!;
+            const { props: aria } = accessibilityAriaProps(record.accessibility, `node-${record.id}`);
+            expect(record.accessibility.label ?? null).toBe(expected.label);
+            expect(record.accessibility.description ?? null).toBe(expected.description);
+            expect(record.accessibility.live ?? "off").toBe(expected.live);
+            expect(record.accessibility.shortcut ?? null).toBe(expected.shortcut);
+            expect(record.accessibility.hidden ?? false).toBe(expected.hidden);
+            if (expected.label) expect(aria["aria-label"]).toBe(expected.label);
+            if (expected.hidden) expect(aria["aria-hidden"]).toBe(true);
+          }
+        }
+        if (testCase.expect.actionIds) {
+          expect(allActionIds(state)).toEqual([...testCase.expect.actionIds].sort());
+        }
+      });
+    }
+  });
+  //#endregion CorpusConformance
+}
+//#endregion 🧪️Tests
