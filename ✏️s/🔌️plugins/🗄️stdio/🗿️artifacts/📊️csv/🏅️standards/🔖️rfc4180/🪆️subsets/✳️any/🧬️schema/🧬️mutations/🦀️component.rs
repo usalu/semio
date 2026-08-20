@@ -61,12 +61,12 @@ pub enum CsvMutation {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn apply_csv_mutation(snapshot: &mut CsvSnapshot, mutation: &CsvMutation) -> protocol::MutationOutcome<CsvDiff> {
     let outcome = <CsvMutation as Mutation<CsvSnapshot>>::diff(mutation, snapshot);
-    match MutationDiff::apply(outcome.diff(), snapshot) {
+    match MutationDiff::apply(outcome.await.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.await.messages().to_vec()),
     }
 }
 //#endregion 🔖️Apply
@@ -367,7 +367,7 @@ mod tests {
         ];
         for m in variants {
             let diff = m.diff(&base);
-            let expected = diff.diff().apply(&base).unwrap();
+            let expected = diff.await.diff().apply(&base).unwrap();
 
             let mut via_apply = base.clone();
             let returned_diff = apply_csv_mutation(&mut via_apply, &m);
@@ -401,8 +401,8 @@ mod tests {
 
             // 🔁️ diff-level round trip
             let d = m.diff(&base);
-            let mid = d.diff().apply(&base).unwrap();
-            let back = d.diff().inverse(&base).apply(&mid).unwrap();
+            let mid = d.await.diff().apply(&base).unwrap();
+            let back = d.await.diff().inverse(&base).apply(&mid).unwrap();
             assert_eq!(back, base, "diff-level inverse round trip failed for {m:?}");
         }
     }
@@ -415,58 +415,58 @@ mod tests {
 
         // 🧩 Insert(2) + Remove(0): the two-op sequence base → mid → after.
         let d1 = CsvMutation::InsertRecord { index: 2, record: record(&[("ins", false)]) }.diff(&base);
-        let mid = d1.diff().apply(&base).unwrap();
+        let mid = d1.await.diff().apply(&base).unwrap();
         let d2 = CsvMutation::RemoveRecord { index: 0 }.diff(&mid);
-        let after = d2.diff().apply(&mid).unwrap();
-        let mut composed = d1.diff().clone();
-        composed.absorb(d2.diff().clone());
+        let after = d2.await.diff().apply(&mid).unwrap();
+        let mut composed = d1.await.diff().clone();
+        composed.absorb(d2.await.diff().clone());
         assert_eq!(composed.apply(&base).unwrap(), after, "Insert+Remove-before absorb mismatch");
 
         // 🧩 Insert(2,f) + Insert(2,g): both must survive (fixes the old op-slot LWW bug).
         let d1 = CsvMutation::InsertRecord { index: 2, record: record(&[("f", false)]) }.diff(&base);
-        let mid = d1.diff().apply(&base).unwrap();
+        let mid = d1.await.diff().apply(&base).unwrap();
         let d2 = CsvMutation::InsertRecord { index: 2, record: record(&[("g", false)]) }.diff(&mid);
-        let after = d2.diff().apply(&mid).unwrap();
-        let mut composed = d1.diff().clone();
-        composed.absorb(d2.diff().clone());
+        let after = d2.await.diff().apply(&mid).unwrap();
+        let mut composed = d1.await.diff().clone();
+        composed.absorb(d2.await.diff().clone());
         assert_eq!(composed.apply(&base).unwrap(), after, "Insert+Insert-same-index absorb mismatch");
         assert_eq!(after.records.len(), base.records.len() + 2, "both inserts must survive");
 
         // 🧩 Add + SetField: patch into the added payload.
         let d1 = CsvMutation::InsertRecord { index: 1, record: record(&[("orig", false)]) }.diff(&base);
-        let mid = d1.diff().apply(&base).unwrap();
+        let mid = d1.await.diff().apply(&base).unwrap();
         let d2 = CsvMutation::SetField { record_index: 1, field_index: 0, value: "patched".into(), quoted: true }.diff(&mid);
-        let after = d2.diff().apply(&mid).unwrap();
-        let mut composed = d1.diff().clone();
-        composed.absorb(d2.diff().clone());
+        let after = d2.await.diff().apply(&mid).unwrap();
+        let mut composed = d1.await.diff().clone();
+        composed.absorb(d2.await.diff().clone());
         assert_eq!(composed.apply(&base).unwrap(), after, "Add+SetField absorb mismatch");
         assert_eq!(after.records[1].fields[0].value, "patched");
 
         // 🧩 Modify + Remove: modifying then removing the same record collapses to a removal.
         let d1 = CsvMutation::SetField { record_index: 1, field_index: 0, value: "will-vanish".into(), quoted: false }.diff(&base);
-        let mid = d1.diff().apply(&base).unwrap();
+        let mid = d1.await.diff().apply(&base).unwrap();
         let d2 = CsvMutation::RemoveRecord { index: 1 }.diff(&mid);
-        let after = d2.diff().apply(&mid).unwrap();
-        let mut composed = d1.diff().clone();
-        composed.absorb(d2.diff().clone());
+        let after = d2.await.diff().apply(&mid).unwrap();
+        let mut composed = d1.await.diff().clone();
+        composed.absorb(d2.await.diff().clone());
         assert_eq!(composed.apply(&base).unwrap(), after, "Modify+Remove absorb mismatch");
 
         // 🧩 Associativity over a triple.
         let base = base_snapshot();
         let d1 = CsvMutation::InsertRecord { index: 0, record: record(&[("a", false)]) }.diff(&base);
-        let s1 = d1.diff().apply(&base).unwrap();
+        let s1 = d1.await.diff().apply(&base).unwrap();
         let d2 = CsvMutation::SetField { record_index: 0, field_index: 0, value: "a2".into(), quoted: true }.diff(&s1);
-        let s2 = d2.diff().apply(&s1).unwrap();
+        let s2 = d2.await.diff().apply(&s1).unwrap();
         let d3 = CsvMutation::RemoveRecord { index: 2 }.diff(&s2);
-        let s3 = d3.diff().apply(&s2).unwrap();
+        let s3 = d3.await.diff().apply(&s2).unwrap();
 
-        let mut left = d1.diff().clone();
-        left.absorb(d2.diff().clone());
-        left.absorb(d3.diff().clone());
+        let mut left = d1.await.diff().clone();
+        left.absorb(d2.await.diff().clone());
+        left.absorb(d3.await.diff().clone());
 
-        let mut d23 = d2.diff().clone();
-        d23.absorb(d3.diff().clone());
-        let mut right = d1.diff().clone();
+        let mut d23 = d2.await.diff().clone();
+        d23.absorb(d3.await.diff().clone());
+        let mut right = d1.await.diff().clone();
         right.absorb(d23);
 
         assert_eq!(left.apply(&base).unwrap(), s3);
@@ -506,8 +506,8 @@ mod tests {
         assert_eq!(d_ba.apply(&b).unwrap(), a, "between(b,a).apply(b) == a");
 
         // 🔍 Hand-written per-field assertion: every field of `CsvDiff` is populated.
-        assert!(d_ab.has_header.is_some(), "has_header must be populated");
-        let records = d_ab.records.as_ref().expect("records diff must be populated");
+        assert!(d_ab.await.has_header.is_some(), "has_header must be populated");
+        let records = d_ab.await.records.as_ref().expect("records diff must be populated");
         assert!(!records.removed.is_empty(), "removed must be non-empty (record 0 dropped)");
         assert!(!records.modified.is_empty(), "modified must be non-empty (record 1 changed in every field)");
         assert!(!records.added.is_empty(), "added must be non-empty (brand-new record)");
@@ -542,12 +542,12 @@ mod tests {
         ];
         for m in mutations {
             let printed = m.print_op();
-            assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
-            let parsed = CsvMutation::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
+            assert!(!printed.await.contains('\n'), "print_op must be one line, got {printed:?}");
+            let parsed = CsvMutation::parse_op(&printed).await.unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
             assert_eq!(parsed, m, "print_op/parse_op round-trip mismatch for {m:?} (printed {printed:?})");
 
-            let encoded = m.encode_op().unwrap_or_else(|e| panic!("encode_op({m:?}) failed: {e}"));
-            let decoded = CsvMutation::decode_op(&encoded).unwrap_or_else(|e| panic!("decode_op failed: {e}"));
+            let encoded = m.encode_op().await.unwrap_or_else(|e| panic!("encode_op({m:?}) failed: {e}"));
+            let decoded = CsvMutation::decode_op(&encoded).await.unwrap_or_else(|e| panic!("decode_op failed: {e}"));
             assert_eq!(decoded, m, "encode_op/decode_op round-trip mismatch for {m:?}");
         }
     }

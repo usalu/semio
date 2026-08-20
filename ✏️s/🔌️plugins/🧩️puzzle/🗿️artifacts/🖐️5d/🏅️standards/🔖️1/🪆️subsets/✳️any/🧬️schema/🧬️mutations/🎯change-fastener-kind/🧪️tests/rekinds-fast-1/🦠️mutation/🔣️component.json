@@ -1,0 +1,5 @@
+{
+  "mutation": "changeFastenerKind",
+  "id": "fast-1",
+  "newFastenerKind": "fastener-kind-b"
+}

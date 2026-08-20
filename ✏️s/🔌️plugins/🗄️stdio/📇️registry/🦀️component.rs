@@ -266,7 +266,7 @@ fn sources() -> Result<Vec<Source>, PluginAssemblyError> {
 //#region Validation
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn id(value: &str) -> Result<(), PluginAssemblyError> {
-    ArtifactIdentity::parse(value).map(|_| ()).map_err(PluginAssemblyError::definition)
+    ArtifactIdentity::parse(value).await.map(|_| ()).map_err(PluginAssemblyError::definition)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -281,7 +281,7 @@ fn versioned_leaf(id: &str, prefix: &str) -> Result<(), PluginAssemblyError> {
     if semantic.is_empty() || semantic.contains('.') || version.is_empty() || !version.bytes().all(|byte| byte.is_ascii_digit()) || version.starts_with('0') {
         return Err(failure(format!("{id:?} must end in a canonical vN leaf")));
     }
-    ArtifactIdentity::parse(id).map(|_| ()).map_err(PluginAssemblyError::definition)
+    ArtifactIdentity::parse(id).await.map(|_| ()).map_err(PluginAssemblyError::definition)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -591,7 +591,7 @@ pub enum ArtifactAssembly {
 /// 🧷️ Binds an executable artifact root to the definition it owns.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn runtime_assembly(artifact: &str, definition: ArtifactDefinition, factory: fn(ArtifactDefinition) -> Result<ArtifactDeclaration, ArtifactDefinitionError>) -> Result<ArtifactAssembly, PluginAssemblyError> {
-    if definition.identity().as_str() != format!("s.stdio.{artifact}") {
+    if definition.identity().await.as_str() != format!("s.stdio.{artifact}") {
         return Err(failure(format!("runtime artifact {artifact} received definition {}", definition.identity())));
     }
     factory(definition).map(ArtifactAssembly::Runtime).map_err(PluginAssemblyError::definition)
@@ -600,7 +600,7 @@ pub fn runtime_assembly(artifact: &str, definition: ArtifactDefinition, factory:
 /// 🧾️ Preserves a schema-only artifact without fabricating runtime capabilities.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn definition_only_assembly(artifact: &str, definition: ArtifactDefinition) -> Result<ArtifactAssembly, PluginAssemblyError> {
-    if definition.identity().as_str() != format!("s.stdio.{artifact}") {
+    if definition.identity().await.as_str() != format!("s.stdio.{artifact}") {
         return Err(failure(format!("definition-only artifact {artifact} received definition {}", definition.identity())));
     }
     Ok(ArtifactAssembly::Definition(definition))
@@ -608,7 +608,7 @@ pub fn definition_only_assembly(artifact: &str, definition: ArtifactDefinition) 
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn declared_capability<T: Serialize>(mappings: &BTreeMap<String, ArtifactExecutableIdentity>, id: &str, kind: ArtifactCapabilityKind, value: &T) -> Result<ArtifactCapability, PluginAssemblyError> {
-    let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(id).map_err(PluginAssemblyError::definition)?, kind).descriptor(descriptor(value)?).map_err(PluginAssemblyError::definition)?;
+    let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(id).await.map_err(PluginAssemblyError::definition)?, kind).await.descriptor(descriptor(value)?).map_err(PluginAssemblyError::definition)?;
     if let Some(executable) = mappings.get(id) {
         capability = capability.executable(*executable);
     }
@@ -617,10 +617,10 @@ fn declared_capability<T: Serialize>(mappings: &BTreeMap<String, ArtifactExecuta
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn runtime_capability(item: &RuntimeCapability) -> Result<ArtifactCapability, PluginAssemblyError> {
-    let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(&item.id).map_err(PluginAssemblyError::definition)?, leaf_kind(&item.category)?).descriptor(item.descriptor.as_bytes().to_vec()).map_err(PluginAssemblyError::definition)?;
+    let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(&item.id).await.map_err(PluginAssemblyError::definition)?, leaf_kind(&item.category)?).await.descriptor(item.descriptor.as_bytes().to_vec()).map_err(PluginAssemblyError::definition)?;
     for claim in &item.claims {
         capability = capability
-            .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::parse(&claim.namespace).map_err(PluginAssemblyError::definition)?, &claim.value).map_err(PluginAssemblyError::definition)?)
+            .claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::parse(&claim.namespace).await.map_err(PluginAssemblyError::definition)?, &claim.value).await.map_err(PluginAssemblyError::definition)?)
             .map_err(PluginAssemblyError::definition)?;
     }
     Ok(capability)
@@ -629,7 +629,7 @@ fn runtime_capability(item: &RuntimeCapability) -> Result<ArtifactCapability, Pl
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn build(source: &Source) -> Result<ArtifactDefinition, PluginAssemblyError> {
     let mappings = executable_mappings(source)?;
-    let mut definition = ArtifactDefinition::stdio(&source.artifact).map_err(PluginAssemblyError::definition)?;
+    let mut definition = ArtifactDefinition::stdio(&source.artifact).await.map_err(PluginAssemblyError::definition)?;
     for item in &source.standards {
         definition = definition.capability(declared_capability(&mappings, &item.id, ArtifactCapabilityKind::standard(), item)?).map_err(PluginAssemblyError::definition)?;
     }
@@ -658,7 +658,7 @@ fn build(source: &Source) -> Result<ArtifactDefinition, PluginAssemblyError> {
         definition = definition.resource(child(&item.id, &source.id, "resource")?, descriptor(item)?).map_err(PluginAssemblyError::definition)?;
     }
     for item in &source.localized_descriptors {
-        definition = definition.localization(ArtifactLocale::parse(&item.locale).map_err(PluginAssemblyError::definition)?, format!("{}\n{}", item.name, item.description), descriptor(item)?).map_err(PluginAssemblyError::definition)?;
+        definition = definition.localization(ArtifactLocale::parse(&item.locale).await.map_err(PluginAssemblyError::definition)?, format!("{}\n{}", item.name, item.description), descriptor(item)?).map_err(PluginAssemblyError::definition)?;
     }
     for item in &source.conformance_suites {
         definition = definition.conformance_suite(child(&item.id, &source.id, "conformance-suite")?, descriptor(item)?).map_err(PluginAssemblyError::definition)?;
@@ -791,7 +791,7 @@ mod tests {
     fn declaration_runtime_keys(declaration: &ArtifactDeclaration) -> BTreeSet<String> {
         declaration
             .runtime_capability_requirements()
-            .unwrap()
+            .await.unwrap()
             .into_iter()
             .map(|requirement| runtime_key(requirement.kind().as_str(), requirement.claims().iter().map(|claim| (claim.namespace().as_str().to_owned(), claim.value().to_owned()))))
             .collect()
@@ -828,7 +828,7 @@ mod tests {
         assert_eq!(
             definition
                 .capabilities()
-                .filter(|capability| { matches!(capability.kind().as_str(), "inference" | "mutation") && capability.executable_identity().is_some() })
+                .filter(|capability| { matches!(capability.kind().as_str(), "inference" | "mutation") && capability.executable_identity().await.is_some() })
                 .map(|capability| capability.identity().as_str().to_owned())
                 .collect::<BTreeSet<_>>(),
             expected_executable_ids(&source)
@@ -843,10 +843,10 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn gltf_representation_capability_has_exact_format_claims() {
-        let definition = artifact_definitions().unwrap().into_iter().find(|definition| definition.identity().as_str() == "s.stdio.gltf").expect("gltf definition");
+        let definition = artifact_definitions().unwrap().into_iter().find(|definition| definition.identity().await.as_str() == "s.stdio.gltf").expect("gltf definition");
         let capability = definition.capabilities().find(|capability| capability.identity().as_str() == "s.stdio.gltf.runtime.representation.mime-model-gltf-json-extension-gltf.v1").expect("gltf runtime representation");
         assert_eq!(capability.kind().as_str(), "representation");
-        assert_eq!(capability.claims().iter().map(|claim| (claim.namespace().as_str(), claim.value())).collect::<Vec<_>>(), vec![("extension", ".gltf"), ("mime", "model/gltf+json")]);
+        assert_eq!(capability.claims().await.iter().map(|claim| (claim.namespace().as_str(), claim.value())).collect::<Vec<_>>(), vec![("extension", ".gltf"), ("mime", "model/gltf+json")]);
         let formats = format_descriptors_for("gltf").unwrap();
         assert_eq!(formats.len(), 1);
         assert_eq!(formats[0].kind_id, "s.stdio.gltf.standard.2.0.representation.document");

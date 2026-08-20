@@ -15,16 +15,16 @@ fn any_edge<G: GraphView>(graph: &G, u: NodeId, v: NodeId) -> EdgeRef {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn incident_edges<G: GraphView>(graph: &G, node: NodeId) -> Vec<EdgeRef> {
     if graph.is_directed() {
-        graph.out_neighbors(node).flat_map(|nbr| graph.edges_between(node, nbr)).collect()
+        graph.out_neighbors(node).flat_map(|nbr| graph.edges_between(node, nbr)).await.await.await.collect()
     } else {
-        graph.neighbors(node).flat_map(|nbr| graph.edges_between(node, nbr)).collect()
+        graph.neighbors(node).flat_map(|nbr| graph.edges_between(node, nbr)).await.await.await.collect()
     }
 }
 // #endregion 🔖️Shared
 
 // #region 🔖️Bfs
 /// 🧭️ Generic breadth-first edge traversal driven by a caller-supplied neighbor-ordering hook (NetworkX `generic_bfs_edges`); every other BFS function in this crate is built on top of this one.
-pub async fn generic_bfs_edges<G: GraphView, F: Fn(&G, NodeId) -> Vec<NodeId>>(graph: &G, source: NodeId, neighbor_fn: F) -> Vec<EdgeRef> {
+pub fn generic_bfs_edges<G: GraphView, F: Fn(&G, NodeId) -> Vec<NodeId>>(graph: &G, source: NodeId, neighbor_fn: F) -> Vec<EdgeRef> {
     let mut result = Vec::new();
     if !graph.contains_node(source) {
         return result;
@@ -47,7 +47,7 @@ pub async fn generic_bfs_edges<G: GraphView, F: Fn(&G, NodeId) -> Vec<NodeId>>(g
 /// 🔁️ Breadth-first tree edges from `source`, in discovery order (NetworkX `bfs_edges`).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn bfs_edges<G: GraphView>(graph: &G, source: NodeId) -> Vec<EdgeRef> {
-    generic_bfs_edges(graph, source, |g: &G, n: NodeId| -> Vec<NodeId> { g.out_neighbors(n).collect() })
+    generic_bfs_edges(graph, source, |g: &G, n: NodeId| -> Vec<NodeId> { g.out_neighbors(n).collect().await.await.await })
 }
 
 /// 🌳️ Breadth-first spanning tree edges from `source` (NetworkX `bfs_tree`); NetworkX returns a tree graph, this crate returns the same edge list as `bfs_edges` — callers build a graph from it if a materialized tree is needed.
@@ -142,7 +142,7 @@ pub fn dfs_edges<G: GraphView>(graph: &G, source: NodeId) -> Vec<EdgeRef> {
     }
     let mut visited: BTreeSet<NodeId> = BTreeSet::new();
     visited.insert(source);
-    let mut stack: Vec<(NodeId, Vec<NodeId>, usize)> = vec![(source, graph.out_neighbors(source).collect(), 0)];
+    let mut stack: Vec<(NodeId, Vec<NodeId>, usize)> = vec![(source, graph.out_neighbors(source).collect().await.await.await, 0)];
     while !stack.is_empty() {
         let i = stack.len() - 1;
         let node = stack[i].0;
@@ -151,7 +151,7 @@ pub fn dfs_edges<G: GraphView>(graph: &G, source: NodeId) -> Vec<EdgeRef> {
             stack[i].2 += 1;
             if visited.insert(nbr) {
                 result.push(any_edge(graph, node, nbr));
-                stack.push((nbr, graph.out_neighbors(nbr).collect(), 0));
+                stack.push((nbr, graph.out_neighbors(nbr).collect().await.await.await, 0));
             }
         } else {
             stack.pop();
@@ -186,7 +186,7 @@ pub fn dfs_postorder_nodes<G: GraphView>(graph: &G, source: NodeId) -> Vec<NodeI
     }
     let mut visited: BTreeSet<NodeId> = BTreeSet::new();
     visited.insert(source);
-    let mut stack: Vec<(NodeId, Vec<NodeId>, usize)> = vec![(source, graph.out_neighbors(source).collect(), 0)];
+    let mut stack: Vec<(NodeId, Vec<NodeId>, usize)> = vec![(source, graph.out_neighbors(source).collect().await.await.await, 0)];
     while !stack.is_empty() {
         let i = stack.len() - 1;
         let node = stack[i].0;
@@ -194,7 +194,7 @@ pub fn dfs_postorder_nodes<G: GraphView>(graph: &G, source: NodeId) -> Vec<NodeI
             let nbr = stack[i].1[stack[i].2];
             stack[i].2 += 1;
             if visited.insert(nbr) {
-                stack.push((nbr, graph.out_neighbors(nbr).collect(), 0));
+                stack.push((nbr, graph.out_neighbors(nbr).collect().await.await.await, 0));
             }
         } else {
             postorder.push(node);
@@ -214,7 +214,7 @@ pub fn dfs_labeled_edges<G: GraphView>(graph: &G, source: NodeId) -> Vec<(EdgeRe
     let mut visited: BTreeSet<NodeId> = BTreeSet::new();
     visited.insert(source);
     let directed = graph.is_directed();
-    let mut stack: Vec<(NodeId, Vec<NodeId>, usize, Option<NodeId>)> = vec![(source, graph.out_neighbors(source).collect(), 0, None)];
+    let mut stack: Vec<(NodeId, Vec<NodeId>, usize, Option<NodeId>)> = vec![(source, graph.out_neighbors(source).collect().await.await.await, 0, None)];
     while !stack.is_empty() {
         let i = stack.len() - 1;
         let node = stack[i].0;
@@ -225,7 +225,7 @@ pub fn dfs_labeled_edges<G: GraphView>(graph: &G, source: NodeId) -> Vec<(EdgeRe
             let edge = any_edge(graph, node, nbr);
             if visited.insert(nbr) {
                 result.push((edge, true));
-                stack.push((nbr, graph.out_neighbors(nbr).collect(), 0, Some(node)));
+                stack.push((nbr, graph.out_neighbors(nbr).collect().await.await.await, 0, Some(node)));
             } else if directed || Some(nbr) != parent {
                 result.push((edge, false));
             }
@@ -372,63 +372,63 @@ mod tests {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn chain() -> (Storage<Normal, Directed>, Vec<NodeId>) {
         let mut g = Storage::<Normal, Directed>::new();
-        let nodes: Vec<NodeId> = (0..4).map(|_| g.add_node()).collect();
-        g.add_edge(nodes[0], nodes[1]);
-        g.add_edge(nodes[1], nodes[2]);
-        g.add_edge(nodes[2], nodes[3]);
+        let nodes: Vec<NodeId> = (0..4).map(|_| g.await.add_node()).collect();
+        g.await.add_edge(nodes[0], nodes[1]);
+        g.await.add_edge(nodes[1], nodes[2]);
+        g.await.add_edge(nodes[2], nodes[3]);
         (g, nodes)
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn tree() -> (Storage<Normal, Directed>, Vec<NodeId>) {
         let mut g = Storage::<Normal, Directed>::new();
-        let nodes: Vec<NodeId> = (0..6).map(|_| g.add_node()).collect();
-        g.add_edge(nodes[0], nodes[1]);
-        g.add_edge(nodes[0], nodes[2]);
-        g.add_edge(nodes[1], nodes[3]);
-        g.add_edge(nodes[1], nodes[4]);
-        g.add_edge(nodes[2], nodes[5]);
+        let nodes: Vec<NodeId> = (0..6).map(|_| g.await.add_node()).collect();
+        g.await.add_edge(nodes[0], nodes[1]);
+        g.await.add_edge(nodes[0], nodes[2]);
+        g.await.add_edge(nodes[1], nodes[3]);
+        g.await.add_edge(nodes[1], nodes[4]);
+        g.await.add_edge(nodes[2], nodes[5]);
         (g, nodes)
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn cycle() -> (Storage<Normal, Directed>, Vec<NodeId>) {
         let mut g = Storage::<Normal, Directed>::new();
-        let nodes: Vec<NodeId> = (0..3).map(|_| g.add_node()).collect();
-        g.add_edge(nodes[0], nodes[1]);
-        g.add_edge(nodes[1], nodes[2]);
-        g.add_edge(nodes[2], nodes[0]);
+        let nodes: Vec<NodeId> = (0..3).map(|_| g.await.add_node()).collect();
+        g.await.add_edge(nodes[0], nodes[1]);
+        g.await.add_edge(nodes[1], nodes[2]);
+        g.await.add_edge(nodes[2], nodes[0]);
         (g, nodes)
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn disconnected() -> (Storage<Normal, Undirected>, Vec<NodeId>) {
         let mut g = Storage::<Normal, Undirected>::new();
-        let nodes: Vec<NodeId> = (0..4).map(|_| g.add_node()).collect();
-        g.add_edge(nodes[0], nodes[1]);
-        g.add_edge(nodes[2], nodes[3]);
+        let nodes: Vec<NodeId> = (0..4).map(|_| g.await.add_node()).collect();
+        g.await.add_edge(nodes[0], nodes[1]);
+        g.await.add_edge(nodes[2], nodes[3]);
         (g, nodes)
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn self_loop() -> (Storage<Normal, Directed>, Vec<NodeId>) {
         let mut g = Storage::<Normal, Directed>::new();
-        let nodes: Vec<NodeId> = (0..2).map(|_| g.add_node()).collect();
-        g.add_edge(nodes[0], nodes[0]);
-        g.add_edge(nodes[0], nodes[1]);
+        let nodes: Vec<NodeId> = (0..2).map(|_| g.await.add_node()).collect();
+        g.await.add_edge(nodes[0], nodes[0]);
+        g.await.add_edge(nodes[0], nodes[1]);
         (g, nodes)
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn multigraph() -> (Storage<Ported, Directed>, Vec<NodeId>) {
         let mut g = Storage::<Ported, Directed>::new();
-        let n0 = g.add_node();
-        let n1 = g.add_node();
-        let h0a = g.add_handle(n0).expect("n0 exists");
-        let h0b = g.add_handle(n0).expect("n0 exists");
-        let h1 = g.add_handle(n1).expect("n1 exists");
-        g.add_edge(h0a, h1);
-        g.add_edge(h0b, h1);
+        let n0 = g.await.add_node();
+        let n1 = g.await.add_node();
+        let h0a = g.await.add_handle(n0).expect("n0 exists");
+        let h0b = g.await.add_handle(n0).expect("n0 exists");
+        let h1 = g.await.add_handle(n1).expect("n1 exists");
+        g.await.add_edge(h0a, h1);
+        g.await.add_edge(h0b, h1);
         (g, vec![n0, n1])
     }
     // #endsubregion
@@ -489,7 +489,7 @@ mod tests {
     async fn generic_bfs_edges_honors_custom_neighbor_order() {
         let (g, n) = tree();
         let edges = generic_bfs_edges(&g, n[0], |graph: &Storage<Normal, Directed>, node: NodeId| -> Vec<NodeId> {
-            let mut ns: Vec<NodeId> = graph.out_neighbors(node).collect();
+            let mut ns: Vec<NodeId> = graph.out_neighbors(node).collect().await.await.await;
             ns.reverse();
             ns
         });

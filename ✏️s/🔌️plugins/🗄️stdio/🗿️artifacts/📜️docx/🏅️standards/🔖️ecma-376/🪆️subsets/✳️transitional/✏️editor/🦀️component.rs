@@ -126,7 +126,7 @@ impl ArtifactEditor for DocxTransitionalEditor {
     async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))).await,
+            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }
@@ -136,7 +136,7 @@ impl ArtifactEditor for DocxTransitionalEditor {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn create_docx_transitional_editor() -> semio_framework_plugin::AppDefinition {
     Editor::builder(DOCX_TRANSITIONAL_EDITOR_DIALECT)
-        .document(["semio", "stdio", "docx"])
+        .await.document(["semio", "stdio", "docx"])
         .icon_id("file-text")
         .mode_def(edit::definition())
         .default_mode_id(edit::DOCX_TRANSITIONAL_EDIT_MODE_ID)
@@ -192,7 +192,7 @@ mod tests {
     async fn op_text_roundtrip() {
         let command = DocxTransitionalEditorCommand::SetPage { index: 2, text: "a\nmulti line value".into() };
         let printed = <DocxTransitionalEditorCommand as protocol::OpText>::print_op(&command);
-        let parsed = <DocxTransitionalEditorCommand as protocol::OpText>::parse_op(&printed).expect("parse ok");
+        let parsed = <DocxTransitionalEditorCommand as protocol::OpText>::parse_op(&printed).await.expect("parse ok");
         assert_eq!(parsed, command);
     }
 }

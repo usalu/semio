@@ -1,0 +1,12 @@
+{
+  "mutation": "replaceFastenerGeometry",
+  "id": "fast-1",
+  "newGap": 5.0,
+  "newShift": 6.0,
+  "newRise": 7.0,
+  "newRotation": 8.0,
+  "newTurn": 9.0,
+  "newTilt": 10.0,
+  "newX": 11.0,
+  "newY": 12.0
+}

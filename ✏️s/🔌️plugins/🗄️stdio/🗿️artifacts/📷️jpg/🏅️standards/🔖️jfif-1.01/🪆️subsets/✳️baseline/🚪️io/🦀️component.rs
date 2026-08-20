@@ -120,7 +120,7 @@ pub mod derived_composition {
             // 🌱 Route through the ✳️any composer first to get a real, engine-decoded snapshot (with
             // frame/sof_marker/huffman-table-count populated) the way `JpgBaselineComposerComposition::compose`
             // itself would internally.
-            let composed = JpgBaselineComposerComposition::compose(&sources).expect("real baseline JPEG must compose and stamp baseline");
+            let composed = JpgBaselineComposerComposition::compose(&sources).await.expect("real baseline JPEG must compose and stamp baseline");
             assert!(composed.diagnostics.iter().all(|d| d.severity != Severity::Error), "no hard diagnostics expected: {:?}", composed.diagnostics);
             assert!(composed.snapshot.frame.is_some());
             assert_eq!(composed.snapshot.sof_marker, crate::artifacts::jpg::standards::v_jfif_1_01::subsets::baseline::schema::SOF0);
@@ -133,8 +133,8 @@ pub mod derived_composition {
             let bytes = crate::artifacts::jpg::standards::v_jfif_1_01::engine::encode_jpg(&snap).expect("encode");
             let decoded = crate::artifacts::jpg::standards::v_jfif_1_01::engine::decode_jpg(&bytes).expect("decode");
             let packed = <JpgSnapshot as store::ArtifactPack>::encode_pack(&decoded);
-            let diagnostics = JpgBaselineValidator::validate(&IoPayload::Binary(packed));
-            assert!(diagnostics.iter().all(|d| d.severity != Severity::Error), "wire recheck must never report a hard violation for a real baseline encode: {diagnostics:?}");
+            let diagnostics = JpgBaselineValidator::validate(&IoPayload::Binary(packed.await));
+            assert!(diagnostics.await.iter().all(|d| d.severity != Severity::Error), "wire recheck must never report a hard violation for a real baseline encode: {diagnostics:?}");
         }
     }
 }

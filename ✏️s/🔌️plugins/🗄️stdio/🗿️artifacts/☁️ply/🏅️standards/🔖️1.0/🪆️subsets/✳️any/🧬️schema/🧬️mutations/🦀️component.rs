@@ -75,12 +75,12 @@ pub enum PlyMutation {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn apply_ply_mutation(snapshot: &mut PlySnapshot, mutation: &PlyMutation) -> protocol::MutationOutcome<PlyDiff> {
     let outcome = <PlyMutation as Mutation<PlySnapshot>>::diff(mutation, snapshot);
-    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
+    match protocol::MutationDiff::apply(outcome.await.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.await.messages().to_vec()),
     }
 }
 //#endregion 🔖️Apply
@@ -113,7 +113,7 @@ impl Mutation<PlySnapshot> for PlyMutation {
             PlyMutation::InsertRow { element_name, index, row } => diff_insert_row(element_name, *index, row.clone()),
             PlyMutation::RemoveRow { element_name, index } => diff_remove_row(element_name, *index),
             PlyMutation::SetRowProperty { element_name, row_index, property_name, value } => diff_set_row_property(element_name, *row_index, property_name, value.clone()),
-        })
+        }).await
     }
 
     /// ↩️ Handcrafted per-variant undo, key/index-aware (resolves against `base` so e.g. a
@@ -404,12 +404,12 @@ mod codec_tests {
     async fn op_text_binary_roundtrip_law() {
         for mutation in demo_mutation_cases() {
             let printed = mutation.print_op();
-            assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
-            let parsed = PlyMutation::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
+            assert!(!printed.await.contains('\n'), "print_op must be one line, got {printed:?}");
+            let parsed = PlyMutation::parse_op(&printed).await.unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
             assert_eq!(parsed, mutation, "print_op/parse_op round-trip mismatch for {mutation:?} (printed {printed:?})");
 
-            let encoded = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op({mutation:?}) failed: {e}"));
-            let decoded = PlyMutation::decode_op(&encoded).unwrap_or_else(|e| panic!("decode_op failed: {e}"));
+            let encoded = mutation.encode_op().await.unwrap_or_else(|e| panic!("encode_op({mutation:?}) failed: {e}"));
+            let decoded = PlyMutation::decode_op(&encoded).await.unwrap_or_else(|e| panic!("decode_op failed: {e}"));
             assert_eq!(decoded, mutation, "encode_op/decode_op round-trip mismatch for {mutation:?}");
         }
     }

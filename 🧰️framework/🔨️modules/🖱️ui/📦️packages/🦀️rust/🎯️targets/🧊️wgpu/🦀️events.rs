@@ -1353,6 +1353,7 @@ mod tests {
     use crate::wgpu::component::ui::{UiButtonNode, UiComponentSceneNode, UiInputNode, UiPresence, UiSelectItem, UiSelectNode, UiSeparatorNode, UiStackNode, UiTextNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode};
     use crate::wgpu::tree::{Node, NodeKey, WidgetSpec};
     use crate::wgpu::IconName;
+    use crate::wgpu::Label;
 
     fn action() -> ActionDescriptor {
         ActionDescriptor { controller_id: "ctrl".into(), action: "go".into(), args: None }
@@ -1362,7 +1363,7 @@ mod tests {
         UiNode::Select(UiSelectNode {
             id: id.into(),
             value: value.into(),
-            items: vec![UiSelectItem { value: "a".into(), label: "A".into() }, UiSelectItem { value: "b".into(), label: "B".into() }],
+            items: vec![UiSelectItem { value: "a".into(), label: Label::data("A") }, UiSelectItem { value: "b".into(), label: Label::data("B") }],
             placeholder: None,
             on_change: action(),
             presence: UiPresence::default(),
@@ -1413,7 +1414,7 @@ mod tests {
     }
 
     fn text_ui(value: &str) -> UiNode {
-        UiNode::Text(UiTextNode { value: value.into(), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None })
+        UiNode::Text(UiTextNode { value: Label::data(value), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None })
     }
 
     fn separator_ui() -> UiNode {
@@ -1421,7 +1422,7 @@ mod tests {
     }
 
     fn button_ui(id: &str) -> UiNode {
-        UiNode::Button(UiButtonNode { id: Some(id.into()), icon_id: IconName::CircleDot, label: id.into(), action: action(), style: None, presence: UiPresence::default(), menu: None })
+        UiNode::Button(UiButtonNode { id: Some(id.into()), icon_id: IconName::CircleDot, label: Label::data(id), action: action(), style: None, presence: UiPresence::default(), menu: None })
     }
 
     fn leaf(tree: &mut UiTree, parent: Option<NodeId>, ordinal: u32, node: UiNode, rect: (f32, f32, f32, f32)) -> NodeId {
@@ -1990,7 +1991,7 @@ mod tests {
     /// (`interactionHover`), wired at a layer above this retained-mode event router.
     #[test]
     fn hovering_a_tree_row_no_longer_fires_a_per_item_action() {
-        let item = UiTreeItemNode::base("row1", "Row One");
+        let item = UiTreeItemNode::base("row1", Label::data("Row One"));
         let section = UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item] };
 
         let mut tree = UiTree::new();
@@ -2008,7 +2009,7 @@ mod tests {
 
     #[test]
     fn pressing_a_draggable_tree_row_then_moving_past_threshold_promotes_it_to_a_drag_session() {
-        let mut item = UiTreeItemNode::base("row1", "Row One");
+        let mut item = UiTreeItemNode::base("row1", Label::data("Row One"));
         item.draggable = Some(true);
         let payload = DragPayload::from([("application/x-semio-tree-section-reorder".to_string(), "{}".to_string())]);
         item.drag_data = Some(payload.clone());

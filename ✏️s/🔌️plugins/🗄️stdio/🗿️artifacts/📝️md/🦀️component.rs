@@ -71,7 +71,7 @@ pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Resul
 pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     let formats = crate::registry::format_descriptors_for("md")?;
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
-        .schema(crate::artifacts::md::schema::md_artifact_schema_descriptor())
+        .await.schema(crate::artifacts::md::schema::md_artifact_schema_descriptor())
         .formats(formats)
         .inferences([crate::artifacts::md::standards::v_commonmark::subsets::any::schema::inferences::md_artifact_inference_descriptor()])
         .composers(crate::artifacts::md::standards::v_commonmark::subsets::any::io::io_registry::entries())

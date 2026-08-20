@@ -135,13 +135,13 @@ fn validate_triangles_diff(base_len: usize, diff: &StlTrianglesDiff) -> Mutation
     let mut removed = BTreeSet::new();
     for &index in &diff.removed {
         if index >= base_len || !removed.insert(index) {
-            return Err(MutationApplyError::new("invalid-remove-index", "triangle removal target must exist exactly once").at(["triangles", &index.to_string()]));
+            return Err(MutationApplyError::new("invalid-remove-index", "triangle removal target must exist exactly once").await.at(["triangles", &index.to_string()]));
         }
     }
     let mut modified = BTreeSet::new();
     for entry in &diff.modified {
         if entry.index >= base_len || removed.contains(&entry.index) || !modified.insert(entry.index) {
-            return Err(MutationApplyError::new("invalid-modify-index", "triangle modification target must exist exactly once and remain present").at(["triangles", &entry.index.to_string()]));
+            return Err(MutationApplyError::new("invalid-modify-index", "triangle modification target must exist exactly once and remain present").await.at(["triangles", &entry.index.to_string()]));
         }
     }
     let mut length = base_len - removed.len();
@@ -150,7 +150,7 @@ fn validate_triangles_diff(base_len: usize, diff: &StlTrianglesDiff) -> Mutation
     let mut previous = None;
     for index in additions {
         if index > length || previous == Some(index) {
-            return Err(MutationApplyError::new("invalid-add-index", "triangle addition target must be unique and within the evolving sequence").at(["triangles", &index.to_string()]));
+            return Err(MutationApplyError::new("invalid-add-index", "triangle addition target must be unique and within the evolving sequence").await.at(["triangles", &index.to_string()]));
         }
         previous = Some(index);
         length += 1;
@@ -500,8 +500,8 @@ pub(crate) fn write_str_bin(out: &mut Vec<u8>, s: &str) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn read_str_bin(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
-    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-    String::from_utf8(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec()).map_err(|e| e.to_string())
+    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+    String::from_utf8(reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec()).map_err(|e| e.to_string())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn write_f64_bin(out: &mut Vec<u8>, v: f64) {
@@ -509,7 +509,7 @@ pub(crate) fn write_f64_bin(out: &mut Vec<u8>, v: f64) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn read_f64_bin(reader: &mut store::ByteReader<'_>) -> Result<f64, String> {
-    reader.read_f64_le().map_err(|e| e.to_string())
+    reader.read_f64_le().await.map_err(|e| e.to_string())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn write_option_bin<T>(out: &mut Vec<u8>, opt: &Option<T>, enc: impl FnOnce(&T, &mut Vec<u8>)) {
@@ -523,7 +523,7 @@ pub(crate) fn write_option_bin<T>(out: &mut Vec<u8>, opt: &Option<T>, enc: impl 
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn read_option_bin<T>(reader: &mut store::ByteReader<'_>, dec: impl FnOnce(&mut store::ByteReader<'_>) -> Result<T, String>) -> Result<Option<T>, String> {
-    match reader.read_u8().map_err(|e| e.to_string())? {
+    match reader.read_u8().await.map_err(|e| e.to_string())? {
         0 => Ok(None),
         1 => Ok(Some(dec(reader)?)),
         other => Err(format!("option binary: unknown tag {other}")),
@@ -712,22 +712,22 @@ pub(crate) fn enc_triangles_diff_bin(d: &StlTrianglesDiff, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_triangles_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<StlTrianglesDiff, String> {
-    let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let removed_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(removed_count as usize);
     for _ in 0..removed_count {
-        removed.push(reader.read_varint_u64().map_err(|e| e.to_string())? as usize);
+        removed.push(reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize);
     }
-    let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let modified_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut modified = Vec::with_capacity(modified_count as usize);
     for _ in 0..modified_count {
-        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+        let index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
         let diff = dec_triangle_diff_bin(reader)?;
         modified.push(StlTriangleModified { index, diff });
     }
-    let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let added_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut added = Vec::with_capacity(added_count as usize);
     for _ in 0..added_count {
-        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+        let index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
         let triangle = dec_triangle_bin(reader)?;
         added.push(StlTriangleAdded { index, triangle });
     }

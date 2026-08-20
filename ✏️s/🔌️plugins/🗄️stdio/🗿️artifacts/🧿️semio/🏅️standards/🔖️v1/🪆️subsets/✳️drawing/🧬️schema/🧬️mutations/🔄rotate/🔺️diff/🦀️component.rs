@@ -21,7 +21,7 @@ pub fn diff(payload: &Rotate, base: &SemioDrawingSnapshot) -> protocol::Mutation
     }
     if let DrawNode::Group { transform, .. } = node {
         if transform.rotation == r {
-            return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Node in layer #{} already has that rotation.", payload.at.layer));
+            return protocol::MutationOutcome::empty().await.warn("mutation.no-op", format!("Node in layer #{} already has that rotation.", payload.at.layer));
         }
     }
     protocol::MutationOutcome::new(diff_rotate_node(base, &payload.at, r))

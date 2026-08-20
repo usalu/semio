@@ -42,7 +42,7 @@ pub mod derived_composition {
                 }
             }
             IoPayload::Text(text) => <ZipSnapshot as store::ArtifactDsl>::parse_dsl(text)
-                .ok()
+                .await.ok()
                 .and_then(|snapshot| semio_framework_plugin::resolve_ready(crate::artifacts::zip::standards::v2_0::subsets::any::io::encode_zip(&snapshot)).ok()),
         }
     }
@@ -145,7 +145,7 @@ pub mod derived_composition {
             local.extend_from_slice(&0u16.to_le_bytes());
             local.extend_from_slice(&0u16.to_le_bytes());
             local.extend_from_slice(&0u16.to_le_bytes());
-            local.extend_from_slice(&crc.to_le_bytes());
+            local.extend_from_slice(&crc.await.to_le_bytes());
             local.extend_from_slice(&(data.len() as u32).to_le_bytes());
             local.extend_from_slice(&(data.len() as u32).to_le_bytes());
             local.extend_from_slice(&(name.len() as u16).to_le_bytes());
@@ -162,7 +162,7 @@ pub mod derived_composition {
             cen.extend_from_slice(&0u16.to_le_bytes());
             cen.extend_from_slice(&0u16.to_le_bytes());
             cen.extend_from_slice(&0u16.to_le_bytes());
-            cen.extend_from_slice(&crc.to_le_bytes());
+            cen.extend_from_slice(&crc.await.to_le_bytes());
             cen.extend_from_slice(&(data.len() as u32).to_le_bytes());
             cen.extend_from_slice(&(data.len() as u32).to_le_bytes());
             cen.extend_from_slice(&(name.len() as u16).to_le_bytes());
@@ -194,10 +194,10 @@ pub mod derived_composition {
 
         #[semio_framework_async_macros::async_test]
         async fn clean_snapshot_composes_and_stamps_iso21320() {
-            let snapshot = ZipIso21320Builder::new().with_stored_entry("a.txt", b"hello".to_vec()).build().unwrap();
+            let snapshot = ZipIso21320Builder::new().with_stored_entry("a.txt", b"hello".to_vec()).build().await.unwrap();
             let bytes = <ZipSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
-            let composed = ZipIso21320ComposerComposition::compose(&sources).expect("clean archive must compose to iso21320");
+            let composed = ZipIso21320ComposerComposition::compose(&sources).await.expect("clean archive must compose to iso21320");
             assert!(composed.diagnostics.iter().all(|d| d.severity != Severity::Error), "no hard diagnostics expected: {:?}", composed.diagnostics);
         }
 
@@ -205,8 +205,8 @@ pub mod derived_composition {
         async fn encrypted_wire_archive_composes_to_clean_logical_output() {
             let raw = raw_zip_with_flags(FLAG_ENCRYPTED, 20);
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&raw) }];
-            let composed = ZipIso21320ComposerComposition::compose(&sources).expect("decode+canonicalize must clear forbidden wire bits");
-            let rematerialized = crate::artifacts::zip::standards::v2_0::subsets::any::io::encode_zip(&composed.snapshot).expect("encode canonical logical archive");
+            let composed = ZipIso21320ComposerComposition::compose(&sources).await.expect("decode+canonicalize must clear forbidden wire bits");
+            let rematerialized = crate::artifacts::zip::standards::v2_0::subsets::any::io::encode_zip(&composed.snapshot).await.expect("encode canonical logical archive");
             assert!(check_iso21320_wire_conformance(&rematerialized).iter().all(|d| d.code.0 != CODE_ENCRYPTED));
         }
 
@@ -214,7 +214,7 @@ pub mod derived_composition {
         async fn subset_validator_flags_real_violations_without_normalizing() {
             let raw = raw_zip_with_flags(FLAG_ENCRYPTED, 20);
             let diagnostics = ZipIso21320Validator::validate(&IoPayload::Binary(raw));
-            assert!(diagnostics.iter().any(|d| d.code.0 == CODE_ENCRYPTED && d.severity == Severity::Error), "got {diagnostics:?}");
+            assert!(diagnostics.await.iter().any(|d| d.code.0 == CODE_ENCRYPTED && d.severity == Severity::Error), "got {diagnostics:?}");
         }
     }
 }

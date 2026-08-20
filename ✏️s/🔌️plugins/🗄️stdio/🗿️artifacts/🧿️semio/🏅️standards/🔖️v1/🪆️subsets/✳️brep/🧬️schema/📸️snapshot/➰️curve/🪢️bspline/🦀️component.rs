@@ -392,10 +392,10 @@ mod tests {
             // Bernstein-basis polynomial with the same control values — an independent oracle.
             let mut rng = semio_framework_geometry::random::Rng::from_seed(41);
             for _ in 0..200 {
-                let degree = 1 + rng.next_range(0, 5) as usize;
+                let degree = 1 + rng.await.next_range(0, 5) as usize;
                 let n_cp = degree + 1;
                 let kv = KnotVector::clamped_uniform(n_cp, degree);
-                let values: Vec<f64> = (0..n_cp).map(|_| rng.next_f64() * 10.0 - 5.0).collect();
+                let values: Vec<f64> = (0..n_cp).map(|_| rng.await.next_f64() * 10.0 - 5.0).collect();
                 let bernstein = crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::polynomial::Bernstein::new(values.clone());
                 for i in 0..=20 {
                     let u = i as f64 / 20.0;
@@ -410,12 +410,12 @@ mod tests {
         async fn knot_insertion_is_geometrically_a_no_op_on_random_curves() {
             let mut rng = semio_framework_geometry::random::Rng::from_seed(43);
             for _ in 0..100 {
-                let degree = 1 + rng.next_range(0, 4) as usize;
-                let n_cp = degree + 2 + rng.next_range(0, 4) as usize;
+                let degree = 1 + rng.await.next_range(0, 4) as usize;
+                let n_cp = degree + 2 + rng.await.next_range(0, 4) as usize;
                 let kv = KnotVector::clamped_uniform(n_cp, degree);
-                let values: Vec<f64> = (0..n_cp).map(|_| rng.next_f64() * 10.0 - 5.0).collect();
+                let values: Vec<f64> = (0..n_cp).map(|_| rng.await.next_f64() * 10.0 - 5.0).collect();
                 let (lo, hi) = kv.domain();
-                let u = lo + (hi - lo) * rng.next_f64();
+                let u = lo + (hi - lo) * rng.await.next_f64();
                 if kv.multiplicity(u) > degree {
                     continue;
                 }

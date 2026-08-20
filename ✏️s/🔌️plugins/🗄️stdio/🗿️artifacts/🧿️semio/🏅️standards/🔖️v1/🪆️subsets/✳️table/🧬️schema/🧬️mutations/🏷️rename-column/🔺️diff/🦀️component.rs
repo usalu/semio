@@ -15,7 +15,7 @@ pub fn diff(payload: &RenameColumn, base: &SemioTableSnapshot) -> protocol::Muta
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Column \"{}\" does not exist.", payload.name), [payload.name.clone()]);
     }
     if payload.name == payload.new_name {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Column \"{}\" is already named \"{}\".", payload.name, payload.new_name));
+        return protocol::MutationOutcome::empty().await.warn("mutation.no-op", format!("Column \"{}\" is already named \"{}\".", payload.name, payload.new_name));
     }
     if base.columns.iter().any(|c| c.name == payload.new_name) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A column named \"{}\" already exists.", payload.new_name), [payload.new_name.clone()]);

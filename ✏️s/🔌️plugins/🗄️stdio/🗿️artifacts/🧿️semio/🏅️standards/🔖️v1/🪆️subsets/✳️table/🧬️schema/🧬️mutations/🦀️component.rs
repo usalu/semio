@@ -74,7 +74,7 @@ mod tests {
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn round_trip(base: &SemioTableSnapshot, operation: &SemioTableMutation) -> SemioTableSnapshot {
-        let forward = operation.diff(base).diff().apply(base).expect("apply must succeed for a well-formed fixture");
+        let forward = operation.diff(base).await.diff().apply(base).expect("apply must succeed for a well-formed fixture");
         let backwards = operation.inverse(base);
         let mut restored = forward.clone();
         // 🔧️ Each inverse's diff must be computed against the CURRENT (`restored`) state, not the
@@ -120,7 +120,7 @@ mod tests {
         }
 
         let undo = delete.inverse(&base);
-        assert_eq!(undo.len(), 1 + base.rows.len(), "expected one CreateColumn plus one EditCell per row");
+        assert_eq!(undo.await.len(), 1 + base.rows.len(), "expected one CreateColumn plus one EditCell per row");
         assert!(matches!(&undo[0], SemioTableMutation::CreateColumn(_)));
         for m in &undo[1..] {
             assert!(matches!(m, SemioTableMutation::EditCell(_)));
@@ -131,8 +131,8 @@ mod tests {
     async fn delete_column_of_an_absent_name_has_an_empty_inverse() {
         let base = fixture();
         let delete = SemioTableMutation::DeleteColumn(delete_column::mutation::DeleteColumn { name: "missing".into() });
-        assert!(delete.inverse(&base).is_empty());
-        assert_eq!(delete.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base, "an absent-name delete is a no-op");
+        assert!(delete.inverse(&base).await.is_empty());
+        assert_eq!(delete.diff(&base).await.diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base, "an absent-name delete is a no-op");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -182,8 +182,8 @@ mod tests {
     async fn remove_row_of_an_out_of_range_index_has_an_empty_inverse() {
         let base = fixture();
         let remove = SemioTableMutation::RemoveRow(remove_row::mutation::RemoveRow { index: 99 });
-        assert!(remove.inverse(&base).is_empty(), "removing an absent index has nothing to undo");
-        assert_eq!(remove.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base, "an out-of-range remove is a no-op");
+        assert!(remove.inverse(&base).await.is_empty(), "removing an absent index has nothing to undo");
+        assert_eq!(remove.diff(&base).await.diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base, "an out-of-range remove is a no-op");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -204,12 +204,12 @@ mod tests {
         assert_eq!(after.columns, base.columns, "edit-cell must not touch columns");
 
         let missing = SemioTableMutation::EditCell(edit_cell::mutation::EditCell { row_index: 99, column_name: "score".into(), new_value: SemioValue::Null });
-        assert!(missing.inverse(&base).is_empty(), "editing an absent row has nothing to undo");
+        assert!(missing.inverse(&base).await.is_empty(), "editing an absent row has nothing to undo");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn semantic_kinds_cover_every_variant() {
-        assert_eq!(SemioTableMutation::kinds().len(), 8);
+        assert_eq!(SemioTableMutation::kinds().await.len(), 8);
         let mutation = SemioTableMutation::RemoveRow(remove_row::mutation::RemoveRow { index: 2 });
         assert_eq!(mutation.semantics().kind, "remove-row");
         assert_eq!(mutation.semantics().record, "RemovedRow");

@@ -79,7 +79,7 @@ pub enum SemioVideoMutation {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn apply_semio_video_mutation(snapshot: &mut SemioVideoSnapshot, mutation: &SemioVideoMutation) -> protocol::MutationOutcome<SemioVideoDiff> {
     let outcome = Mutation::diff(mutation, snapshot);
-    outcome.apply_to(snapshot)
+    outcome.await.apply_to(snapshot)
 }
 //#endregion 🔖️Apply
 
@@ -381,7 +381,7 @@ mod tests {
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn apply_valid(diff: &SemioVideoDiff, base: &SemioVideoSnapshot) -> SemioVideoSnapshot {
-        MutationDiff::apply(diff, base).expect("valid Semio video diff fixture")
+        MutationDiff::apply(diff, base).await.expect("valid Semio video diff fixture")
     }
 
     #[semio_framework_async_macros::async_test]
@@ -389,7 +389,7 @@ mod tests {
         for mutation in sample_mutations() {
             let base = fixture();
             let diff_direct = Mutation::diff(&mutation, &base);
-            let applied_via_diff = apply_valid(diff_direct.diff(), &base);
+            let applied_via_diff = apply_valid(diff_direct.await.diff().await, &base);
 
             let mut via_apply = base.clone();
             let diff_from_apply = apply_semio_video_mutation(&mut via_apply, &mutation);
@@ -414,8 +414,8 @@ mod tests {
             assert_eq!(round_tripped, base, "inverse_law (mutation-level) failed for {mutation:?}");
 
             let diff = Mutation::diff(&mutation, &base);
-            let next = apply_valid(diff.diff(), &base);
-            let inverse_diff = DiffAlgebra::inverse(diff.diff(), &base);
+            let next = apply_valid(diff.await.diff().await, &base);
+            let inverse_diff = DiffAlgebra::inverse(&diff.await.diff().await, &base);
             let restored = apply_valid(&inverse_diff, &next);
             assert_eq!(restored, base, "inverse_law (diff-level) failed for {mutation:?}");
         }
@@ -444,9 +444,9 @@ mod tests {
             let base = fixture();
             let f = SemioVideoStream { kind: SemioVideoStreamKind::Subtitle, codec: "f".into(), width: 0, height: 0, rate: SemioRational { num: 1, den: 1 }, samples: Vec::new() };
             let d1 = Mutation::diff(&SemioVideoMutation::InsertStream { index: 2, stream: f.clone() }, &base);
-            let mid = apply_valid(d1.diff(), &base);
+            let mid = apply_valid(d1.await.diff().await, &base);
             let d2 = Mutation::diff(&SemioVideoMutation::RemoveStream { index: 0 }, &mid);
-            let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
+            let absorbed = assert_absorb_matches_sequential(&base, d1.await.diff(), d2.await.diff());
             let triple = streams_diff(&absorbed);
             assert_eq!(triple.removed, vec![0]);
             assert_eq!(triple.added.len(), 1);
@@ -460,9 +460,9 @@ mod tests {
             let f = SemioVideoStream { kind: SemioVideoStreamKind::Subtitle, codec: "f".into(), width: 0, height: 0, rate: SemioRational { num: 1, den: 1 }, samples: Vec::new() };
             let g = SemioVideoStream { kind: SemioVideoStreamKind::Subtitle, codec: "g".into(), width: 0, height: 0, rate: SemioRational { num: 1, den: 1 }, samples: Vec::new() };
             let d1 = Mutation::diff(&SemioVideoMutation::InsertStream { index: 2, stream: f.clone() }, &base);
-            let mid = apply_valid(d1.diff(), &base);
+            let mid = apply_valid(d1.await.diff().await, &base);
             let d2 = Mutation::diff(&SemioVideoMutation::InsertStream { index: 2, stream: g.clone() }, &mid);
-            let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
+            let absorbed = assert_absorb_matches_sequential(&base, d1.await.diff(), d2.await.diff());
             let triple = streams_diff(&absorbed);
             assert_eq!(triple.added.len(), 2, "both inserts must survive absorb, not LWW-clobber");
             assert!(triple.added.iter().any(|a| a.item == f));
@@ -474,9 +474,9 @@ mod tests {
             let base = fixture();
             let f = SemioVideoStream { kind: SemioVideoStreamKind::Subtitle, codec: "f".into(), width: 0, height: 0, rate: SemioRational { num: 1, den: 1 }, samples: Vec::new() };
             let d1 = Mutation::diff(&SemioVideoMutation::InsertStream { index: 1, stream: f.clone() }, &base);
-            let mid = apply_valid(d1.diff(), &base);
+            let mid = apply_valid(d1.await.diff().await, &base);
             let d2 = Mutation::diff(&SemioVideoMutation::SetStreamMeta { index: 1, kind: SemioVideoStreamKind::Audio, codec: "patched".into(), width: 1, height: 1, rate: SemioRational { num: 2, den: 1 } }, &mid);
-            let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
+            let absorbed = assert_absorb_matches_sequential(&base, d1.await.diff(), d2.await.diff());
             let triple = streams_diff(&absorbed);
             assert!(triple.modified.is_empty(), "patch-into-added must not surface as a separate modified entry");
             assert_eq!(triple.added.len(), 1);
@@ -488,9 +488,9 @@ mod tests {
         {
             let base = fixture();
             let d1 = Mutation::diff(&SemioVideoMutation::SetStreamMeta { index: 1, kind: SemioVideoStreamKind::Video, codec: "patched".into(), width: 1, height: 1, rate: SemioRational { num: 2, den: 1 } }, &base);
-            let mid = apply_valid(d1.diff(), &base);
+            let mid = apply_valid(d1.await.diff().await, &base);
             let d2 = Mutation::diff(&SemioVideoMutation::RemoveStream { index: 1 }, &mid);
-            let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
+            let absorbed = assert_absorb_matches_sequential(&base, d1.await.diff(), d2.await.diff());
             let triple = streams_diff(&absorbed);
             assert!(triple.modified.is_empty(), "modify of a since-removed item must not survive absorb");
             assert_eq!(triple.removed, vec![1]);
@@ -502,19 +502,19 @@ mod tests {
             let f = SemioVideoStream { kind: SemioVideoStreamKind::Subtitle, codec: "f".into(), width: 0, height: 0, rate: SemioRational { num: 1, den: 1 }, samples: Vec::new() };
             let g = SemioVideoStream { kind: SemioVideoStreamKind::Subtitle, codec: "g".into(), width: 0, height: 0, rate: SemioRational { num: 1, den: 1 }, samples: Vec::new() };
             let d1 = Mutation::diff(&SemioVideoMutation::InsertStream { index: 2, stream: f }, &base);
-            let mid1 = apply_valid(d1.diff(), &base);
+            let mid1 = apply_valid(d1.await.diff().await, &base);
             let d2 = Mutation::diff(&SemioVideoMutation::InsertStream { index: 2, stream: g }, &mid1);
-            let mid2 = apply_valid(d2.diff(), &mid1);
+            let mid2 = apply_valid(d2.await.diff().await, &mid1);
             let d3 = Mutation::diff(&SemioVideoMutation::RemoveStream { index: 0 }, &mid2);
-            let sequential = apply_valid(d3.diff(), &mid2);
+            let sequential = apply_valid(d3.await.diff().await, &mid2);
 
-            let mut left = d1.diff().clone();
-            MutationDiff::absorb(&mut left, d2.diff().clone());
-            MutationDiff::absorb(&mut left, d3.diff().clone());
+            let mut left = d1.await.diff().clone();
+            MutationDiff::absorb(&mut left, d2.await.diff().clone());
+            MutationDiff::absorb(&mut left, d3.await.diff().clone());
 
-            let mut d2_then_d3 = d2.diff().clone();
-            MutationDiff::absorb(&mut d2_then_d3, d3.diff().clone());
-            let mut right = d1.diff().clone();
+            let mut d2_then_d3 = d2.await.diff().clone();
+            MutationDiff::absorb(&mut d2_then_d3, d3.await.diff().clone());
+            let mut right = d1.await.diff().clone();
             MutationDiff::absorb(&mut right, d2_then_d3);
 
             assert_eq!(apply_valid(&left, &base), sequential, "absorb associativity (left) failed");
@@ -549,7 +549,7 @@ mod tests {
     async fn codec_retention_law() {
         let snap = fixture();
         let bytes = store::ArtifactPack::encode_pack(&snap);
-        let decoded = <SemioVideoSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+        let decoded = <SemioVideoSnapshot as store::ArtifactPack>::decode_pack(&bytes).await.expect("decode");
         assert_eq!(decoded, snap);
     }
     //#endregion 🔖️CodecRetentionLaw
@@ -572,7 +572,7 @@ mod tests {
         // a -> b: streams.removed (dropped subtitle stream) + streams.modified[0] (every scalar
         // field changed, incl. the SemioVideoStreamKind enum) whose OWN nested samples diff shows
         // removed + modified simultaneously.
-        let streams_diff_ab = diff_ab.streams.as_ref().expect("streams diff present");
+        let streams_diff_ab = diff_ab.await.streams.as_ref().expect("streams diff present");
         assert!(!streams_diff_ab.removed.is_empty(), "streams: removed not exercised");
         assert_eq!(streams_diff_ab.modified.len(), 1);
         let stream_mod = &streams_diff_ab.modified[0].diff;
@@ -589,7 +589,7 @@ mod tests {
 
         // b -> a: the OTHER direction's top-level `added` (the very same dropped subtitle stream)
         // plus that same stream's nested `samples.added`.
-        let streams_diff_ba = diff_ba.streams.as_ref().expect("streams diff (b->a) present");
+        let streams_diff_ba = diff_ba.await.streams.as_ref().expect("streams diff (b->a) present");
         assert!(!streams_diff_ba.added.is_empty(), "streams (b->a): added not exercised");
         let stream_mod_ba = &streams_diff_ba.modified[0].diff;
         let samples_diff_ba = stream_mod_ba.samples.as_ref().expect("samples diff (b->a) present");
@@ -618,12 +618,12 @@ mod tests {
         ];
         for mutation in mutations {
             let printed = mutation.print_op();
-            assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
-            let parsed = SemioVideoMutation::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
+            assert!(!printed.await.contains('\n'), "print_op must be one line, got {printed:?}");
+            let parsed = SemioVideoMutation::parse_op(&printed).await.unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
             assert_eq!(parsed, mutation, "print_op/parse_op round-trip mismatch for {mutation:?} (printed {printed:?})");
 
-            let encoded = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op({mutation:?}) failed: {e}"));
-            let decoded = SemioVideoMutation::decode_op(&encoded).unwrap_or_else(|e| panic!("decode_op failed: {e}"));
+            let encoded = mutation.encode_op().await.unwrap_or_else(|e| panic!("encode_op({mutation:?}) failed: {e}"));
+            let decoded = SemioVideoMutation::decode_op(&encoded).await.unwrap_or_else(|e| panic!("decode_op failed: {e}"));
             assert_eq!(decoded, mutation, "encode_op/decode_op round-trip mismatch for {mutation:?}");
         }
     }

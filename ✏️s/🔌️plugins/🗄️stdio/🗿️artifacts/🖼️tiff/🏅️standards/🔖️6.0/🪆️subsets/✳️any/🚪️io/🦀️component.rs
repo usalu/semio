@@ -235,7 +235,7 @@ async fn tag_u32(ifd: &TiffIfd, tag: u16) -> Option<u32> {
 /// 📦 PackBits (TIFF compression scheme 32773, TIFF6 §9): signed control byte `n` — `n >= 0`
 /// copies the next `n+1` literal bytes; `n < 0` (and `n != -128`) repeats the next byte
 /// `1-n` times; `n == -128` is a no-op.
-async fn packbits_decode(data: &[u8], expected_len: usize) -> Result<Vec<u8>, String> {
+fn packbits_decode(data: &[u8], expected_len: usize) -> Result<Vec<u8>, String> {
     let mut out = Vec::with_capacity(expected_len);
     let mut i = 0usize;
     while i < data.len() && out.len() < expected_len {
@@ -339,7 +339,7 @@ async fn decode_pixels_from_ifd(data: &[u8], ifd: &TiffIfd) -> Result<Vec<u8>, S
         let decoded: Vec<u8> = if compression == 32773 {
             let byte_count = *strip_byte_counts.get(i).ok_or("tiff: missing StripByteCounts entry")? as usize;
             let compressed = data.get(start..start + byte_count).ok_or("tiff: strip data truncated")?;
-            packbits_decode(compressed, strip_len).await?
+            packbits_decode(compressed, strip_len)?
         } else {
             data.get(start..start + strip_len).ok_or("tiff: strip data truncated")?.to_vec()
         };
@@ -434,21 +434,21 @@ async fn value_bytes(values: &TiffValues, bo: TiffByteOrder) -> Vec<u8> {
             out.extend_from_slice(s.as_bytes());
             out.push(0);
         }
-        TiffValues::Short(v) => v.iter().for_each(|&x| write_u16(&mut out, x, bo)),
-        TiffValues::Long(v) => v.iter().for_each(|&x| write_u32(&mut out, x, bo)),
+        TiffValues::Short(v) => v.iter().for_each(|&x| { write_u16(&mut out, x, bo); }),
+        TiffValues::Long(v) => v.iter().for_each(|&x| { write_u32(&mut out, x, bo); }),
         TiffValues::Rational(v) => v.iter().for_each(|&(n, d)| {
             write_u32(&mut out, n, bo);
             write_u32(&mut out, d, bo);
         }),
         TiffValues::SByte(v) => out.extend(v.iter().map(|&x| x as u8)),
-        TiffValues::SShort(v) => v.iter().for_each(|&x| write_u16(&mut out, x as u16, bo)),
-        TiffValues::SLong(v) => v.iter().for_each(|&x| write_u32(&mut out, x as u32, bo)),
+        TiffValues::SShort(v) => v.iter().for_each(|&x| { write_u16(&mut out, x as u16, bo); }),
+        TiffValues::SLong(v) => v.iter().for_each(|&x| { write_u32(&mut out, x as u32, bo); }),
         TiffValues::SRational(v) => v.iter().for_each(|&(n, d)| {
             write_u32(&mut out, n as u32, bo);
             write_u32(&mut out, d as u32, bo);
         }),
-        TiffValues::Float(v) => v.iter().for_each(|&x| write_u32(&mut out, x.to_bits(), bo)),
-        TiffValues::Double(v) => v.iter().for_each(|&x| write_u64(&mut out, x.to_bits(), bo)),
+        TiffValues::Float(v) => v.iter().for_each(|&x| { write_u32(&mut out, x.to_bits(), bo); }),
+        TiffValues::Double(v) => v.iter().for_each(|&x| { write_u64(&mut out, x.to_bits(), bo); }),
     }
     out
 }
@@ -575,7 +575,7 @@ mod tests {
         out
     }
 
-    async fn ifd0_snapshot(width: u32, height: u32) -> TiffIfd {
+    fn ifd0_snapshot(width: u32, height: u32) -> TiffIfd {
         TiffIfd { entries: vec![TiffTag { tag: TAG_IMAGE_WIDTH, kind: TiffFieldType::Long, values: TiffValues::Long(vec![width]) }, TiffTag { tag: TAG_IMAGE_LENGTH, kind: TiffFieldType::Long, values: TiffValues::Long(vec![height]) }] }
     }
 
@@ -586,8 +586,8 @@ mod tests {
         let (w, h) = (9u32, 5u32);
         let rgba = gradient_checkerboard_rgba(w, h);
         let snap = TiffSnapshot { schema: STDIO_TIFF_DOCUMENT_SCHEMA.into(), byte_order: TiffByteOrder::LittleEndian, ifds: vec![ifd0_snapshot(w, h)], pixels: rgba.clone() };
-        let encoded = encode_tiff(&snap).expect("encode");
-        let decoded = decode_tiff(&encoded).expect("decode");
+        let encoded = encode_tiff(&snap).await.expect("encode");
+        let decoded = decode_tiff(&encoded).await.expect("decode");
         assert_eq!(decoded.width(), Some(w));
         assert_eq!(decoded.height(), Some(h));
         assert_eq!(decoded.pixels, rgba, "decoded pixels must exactly match the original");
@@ -601,8 +601,8 @@ mod tests {
         let (w, h) = (9u32, 5u32);
         let rgba = gradient_checkerboard_rgba(w, h);
         let snap = TiffSnapshot { schema: STDIO_TIFF_DOCUMENT_SCHEMA.into(), byte_order: TiffByteOrder::LittleEndian, ifds: vec![ifd0_snapshot(w, h)], pixels: rgba.clone() };
-        let encoded = encode_tiff_packbits(&snap).expect("encode packbits");
-        let decoded = decode_tiff(&encoded).expect("decode packbits");
+        let encoded = encode_tiff_packbits(&snap).await.expect("encode packbits");
+        let decoded = decode_tiff(&encoded).await.expect("decode packbits");
         assert_eq!(decoded.width(), Some(w));
         assert_eq!(decoded.height(), Some(h));
         assert_eq!(decoded.pixels, rgba, "packbits round trip must exactly match the original");
@@ -615,10 +615,10 @@ mod tests {
         let (w, h) = (20u32, 10u32);
         let rgba: Vec<u8> = (0..w * h).flat_map(|_| [128u8, 128, 128, 255]).collect();
         let snap = TiffSnapshot { schema: STDIO_TIFF_DOCUMENT_SCHEMA.into(), byte_order: TiffByteOrder::LittleEndian, ifds: vec![ifd0_snapshot(w, h)], pixels: rgba.clone() };
-        let uncompressed = encode_tiff(&snap).expect("encode uncompressed");
-        let encoded = encode_tiff_packbits(&snap).expect("encode packbits");
+        let uncompressed = encode_tiff(&snap).await.expect("encode uncompressed");
+        let encoded = encode_tiff_packbits(&snap).await.expect("encode packbits");
         assert!(encoded.len() < uncompressed.len(), "packbits must shrink a byte-repetitive strip below the uncompressed encoding ({} !< {})", encoded.len(), uncompressed.len());
-        let decoded = decode_tiff(&encoded).expect("decode packbits");
+        let decoded = decode_tiff(&encoded).await.expect("decode packbits");
         assert_eq!(decoded.pixels, rgba);
     }
 
@@ -641,9 +641,9 @@ mod tests {
         let (w, h) = (2u32, 1u32);
         let rgba = vec![10u8, 20, 30, 255, 40, 50, 60, 255];
         let snap = TiffSnapshot { schema: STDIO_TIFF_DOCUMENT_SCHEMA.into(), byte_order: TiffByteOrder::BigEndian, ifds: vec![ifd0_snapshot(w, h)], pixels: rgba.clone() };
-        let encoded = encode_tiff(&snap).expect("encode big-endian");
+        let encoded = encode_tiff(&snap).await.expect("encode big-endian");
         assert_eq!(&encoded[0..2], b"MM", "encode must honor byte_order, not always little-endian");
-        let decoded = decode_tiff(&encoded).expect("decode big-endian tiff");
+        let decoded = decode_tiff(&encoded).await.expect("decode big-endian tiff");
         assert_eq!(decoded.byte_order, TiffByteOrder::BigEndian);
         assert_eq!(decoded.width(), Some(w));
         assert_eq!(decoded.height(), Some(h));
@@ -660,8 +660,8 @@ mod tests {
         let mut ifd = ifd0_snapshot(w, h);
         ifd.entries.push(TiffTag { tag: 315, kind: TiffFieldType::Ascii, values: TiffValues::Ascii("A Real Artist".into()) });
         let snap = TiffSnapshot { schema: STDIO_TIFF_DOCUMENT_SCHEMA.into(), byte_order: TiffByteOrder::LittleEndian, ifds: vec![ifd], pixels: rgba };
-        let encoded = encode_tiff(&snap).expect("encode");
-        let decoded = decode_tiff(&encoded).expect("decode");
+        let encoded = encode_tiff(&snap).await.expect("encode");
+        let decoded = decode_tiff(&encoded).await.expect("decode");
         let artist = decoded.tag(315).expect("Artist tag must survive round trip");
         assert_eq!(artist.values, TiffValues::Ascii("A Real Artist".into()));
     }
@@ -674,14 +674,14 @@ mod tests {
         let mut ifd = ifd0_snapshot(w, h);
         ifd.entries.push(TiffTag { tag: 296, kind: TiffFieldType::Short, values: TiffValues::Short(vec![2]) }); // ResolutionUnit
         let snap = TiffSnapshot { schema: STDIO_TIFF_DOCUMENT_SCHEMA.into(), byte_order: TiffByteOrder::LittleEndian, ifds: vec![ifd], pixels: rgba };
-        let encoded = encode_tiff(&snap).expect("encode");
-        let decoded = decode_tiff(&encoded).expect("decode");
+        let encoded = encode_tiff(&snap).await.expect("encode");
+        let decoded = decode_tiff(&encoded).await.expect("decode");
         assert_eq!(decoded.tag(296).expect("ResolutionUnit must survive").values, TiffValues::Short(vec![2]));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn sniff_rejects_non_tiff_bytes() {
-        let err = decode_tiff(b"not a tiff at all").unwrap_err();
+        let err = decode_tiff(b"not a tiff at all").await.unwrap_err();
         assert!(err.contains("byte-order"));
     }
 
@@ -711,11 +711,11 @@ mod tests {
             write_u32(&mut out, t.values.count(), TiffByteOrder::LittleEndian);
             let vb = value_bytes(&t.values, TiffByteOrder::LittleEndian);
             let mut field = [0u8; 4];
-            field[..vb.len().min(4)].copy_from_slice(&vb[..vb.len().min(4)]);
+            field[..vb.await.len().min(4)].copy_from_slice(&vb[..vb.await.len().min(4)]);
             out.extend_from_slice(&field);
         }
         write_u32(&mut out, 0, TiffByteOrder::LittleEndian);
-        let err = decode_tiff(&out).unwrap_err();
+        let err = decode_tiff(&out).await.unwrap_err();
         assert!(err.contains("unsupported compression"), "unexpected error: {err}");
     }
 
@@ -807,14 +807,14 @@ mod tests {
 
             let op_spec = dsl::parse_protocol(mutations::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
             for mutation in mutations::demo_mutation_cases() {
-                let bytes = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op failed for {mutation:?}: {e:?}"));
+                let bytes = mutation.encode_op().await.unwrap_or_else(|e| panic!("encode_op failed for {mutation:?}: {e:?}"));
                 let trace = dsl::walk_protocol(&op_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(op) failed for {mutation:?} @{}: {}", e.offset, e.message));
                 assert_eq!(trace.consumed, bytes.len(), "op walk did not consume every byte for {mutation:?}");
             }
 
             let diff_spec = dsl::parse_protocol(diff::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse diff protocol");
             for d in diff::demo_diff_cases() {
-                let bytes = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed for {d:?}: {e:?}"));
+                let bytes = d.encode_diff().await.unwrap_or_else(|e| panic!("encode_diff failed for {d:?}: {e:?}"));
                 let trace = dsl::walk_protocol(&diff_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(diff) failed for {d:?} @{}: {}", e.offset, e.message));
                 assert_eq!(trace.consumed, bytes.len(), "diff walk did not consume every byte for {d:?}");
             }
@@ -831,15 +831,15 @@ mod tests {
 
             let demo = demo_tiff_snapshot();
 
-            let parsed = <TiffSnapshot as store::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
+            let parsed = <TiffSnapshot as store::ArtifactDsl>::parse_dsl(FIXTURE_DSL).await.expect("parse shipped .dsl.semio fixture");
             assert_eq!(parsed, demo, "shipped .dsl.semio fixture does not parse back to demo_tiff_snapshot()");
             assert_eq!(store::ArtifactDsl::print_dsl(&demo), FIXTURE_DSL, "print_dsl(demo_tiff_snapshot()) drifted from the shipped .dsl.semio fixture");
 
-            let decoded = <TiffSnapshot as store::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode shipped .pack.semio fixture");
+            let decoded = <TiffSnapshot as store::ArtifactPack>::decode_pack(FIXTURE_PACK).await.expect("decode shipped .pack.semio fixture");
             assert_eq!(decoded, demo, "shipped .pack.semio fixture does not decode back to demo_tiff_snapshot()");
             assert_eq!(store::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_tiff_snapshot()) drifted from the shipped .pack.semio fixture");
 
-            let native = encode_tiff(&demo).expect("encode native tiff");
+            let native = encode_tiff(&demo).await.expect("encode native tiff");
             assert_eq!(native.as_slice(), include_bytes!("../📚️examples/🎬️demo/🖼️assets/🖼️example.tiff"), "encode_tiff(demo) drifted from 🖼️example.tiff");
         }
 
@@ -847,7 +847,7 @@ mod tests {
         #[ignore]
         async fn zzz_write_native_tiff_fixture() {
             let demo = demo_tiff_snapshot();
-            let native = encode_tiff(&demo).expect("encode");
+            let native = encode_tiff(&demo).await.expect("encode");
             let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🖼️example.tiff");
             std::fs::write(path, native).expect("write 🖼️example.tiff");
         }

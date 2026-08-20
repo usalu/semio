@@ -1648,11 +1648,11 @@ struct PptxDiffRecord {
 impl protocol::DiffCodec for PptxDiff {
     async fn print_diff(&self) -> String {
         let record = PptxDiffRecord { value: dsl::to_dsl_value(self).expect("serializable logical pptx diff") };
-        dsl::print(&record.__dsl_to_record(), &PptxDiffRecord::__dsl_spec(), dsl::JoinMode::Inline).await
+        dsl::print(&record.__dsl_to_record(), &PptxDiffRecord::__dsl_spec(), dsl::JoinMode::Inline)
     }
     async fn parse_diff(line: &str) -> Result<Self, store::TextError> {
-        let record = dsl::parse(line, &PptxDiffRecord::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits { max_bytes: 64 * 1024 * 1024, ..dsl::Limits::default() }, mode: dsl::SourceMode::Inline }).await?;
-        let model = PptxDiffRecord::__dsl_from_record(&record).await?;
+        let record = dsl::parse(line, &PptxDiffRecord::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits { max_bytes: 64 * 1024 * 1024, ..dsl::Limits::default() }, mode: dsl::SourceMode::Inline })?;
+        let model = PptxDiffRecord::__dsl_from_record(&record)?;
         dsl::from_dsl_value(model.value).map_err(|error| store::TextError::new(error, dsl::TextSpan::at(1, 1)))
     }
     async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
@@ -1780,15 +1780,15 @@ mod handcrafted_diff_codec_tests {
 
         let c = elem_snapshot(vec![]);
 
-        let cases = vec![PptxDiff::default(), PptxDiff::between(&a, &b), PptxDiff::between(&b, &a), PptxDiff::between(&a, &c), PptxDiff::between(&c, &a)];
+        let cases = vec![PptxDiff::default(), PptxDiff::between(&a, &b).await, PptxDiff::between(&b, &a).await, PptxDiff::between(&a, &c).await, PptxDiff::between(&c, &a)];
         for d in cases {
             let printed = d.print_diff();
             assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
-            let parsed = PptxDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
+            let parsed = PptxDiff::parse_diff(&printed).await.unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
             assert_eq!(parsed, d, "print_diff/parse_diff round-trip mismatch (printed {printed:?})");
 
             let encoded = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
-            let decoded = PptxDiff::decode_diff(&encoded).unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
+            let decoded = PptxDiff::decode_diff(&encoded).await.unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
             assert_eq!(decoded, d, "encode_diff/decode_diff round-trip mismatch");
         }
     }
@@ -1799,13 +1799,13 @@ mod handcrafted_diff_codec_tests {
         let mut sourced = base.clone();
         sourced.xml_parts = vec![PptxXmlPart { path: "docProps/core.xml".into(), content_type: "application/vnd.openxmlformats-package.core-properties+xml".into(), document: crate::artifacts::xml::schema::snapshot::XmlDocument::default() }];
         let diff = PptxDiff::between(&base, &sourced);
-        assert_eq!(diff.xml_parts, Some(sourced.xml_parts.clone()));
+        assert_eq!(diff.await.xml_parts, Some(sourced.xml_parts.clone()));
         assert_eq!(diff.apply(&base).unwrap(), sourced);
 
         let printed = diff.print_diff();
-        assert_eq!(PptxDiff::parse_diff(&printed).expect("parse logical XML parts diff"), diff);
+        assert_eq!(PptxDiff::parse_diff(&printed).await.expect("parse logical XML parts diff"), diff.await);
         let encoded = diff.encode_diff().expect("encode logical XML parts diff");
-        assert_eq!(PptxDiff::decode_diff(&encoded).expect("decode logical XML parts diff"), diff);
+        assert_eq!(PptxDiff::decode_diff(&encoded).await.expect("decode logical XML parts diff"), diff.await);
 
         let inverse = diff.inverse(&base);
         assert_eq!(inverse.apply(&sourced).unwrap(), base);
@@ -1828,7 +1828,7 @@ mod result_apply_tests {
         let diff =
             PptxDiff { presentation: Some(PptxPresentationDiff { slides: Some(PptxSlidesDiff { modified: vec![IndexModified { index: 0, diff: PptxSlideDiff::default() }], ..Default::default() }), ..Default::default() }), ..Default::default() };
         let result = diff.apply(&base);
-        assert_eq!(result.unwrap_err().code, "mutation.apply.missing-target");
+        assert_eq!(result.await.unwrap_err().code, "mutation.apply.missing-target");
         assert_eq!(base, PptxSnapshot::default());
     }
 }

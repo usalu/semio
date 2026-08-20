@@ -274,9 +274,9 @@ mod tests {
         let merged = absorb_splices(&d1, &d2);
 
         let base = BinarySnapshot { bytes: vec![1, 2, 3, 4], ..Default::default() };
-        let mid = BinaryDiff { splices: d1.clone() }.apply(&base).unwrap();
-        let after = BinaryDiff { splices: d2.clone() }.apply(&mid).unwrap();
-        assert_eq!(BinaryDiff { splices: merged }.apply(&base).unwrap(), after);
+        let mid = BinaryDiff { splices: d1.clone() }.apply(&base).await.unwrap();
+        let after = BinaryDiff { splices: d2.clone() }.apply(&mid).await.unwrap();
+        assert_eq!(BinaryDiff { splices: merged }.apply(&base).await.unwrap(), after);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -286,9 +286,9 @@ mod tests {
         let merged = absorb_splices(&d1, &d2);
 
         let base = BinarySnapshot { bytes: vec![1, 2, 3, 4], ..Default::default() };
-        let mid = BinaryDiff { splices: d1.clone() }.apply(&base).unwrap();
-        let after = BinaryDiff { splices: d2.clone() }.apply(&mid).unwrap();
-        assert_eq!(BinaryDiff { splices: merged }.apply(&base).unwrap(), after);
+        let mid = BinaryDiff { splices: d1.clone() }.apply(&base).await.unwrap();
+        let after = BinaryDiff { splices: d2.clone() }.apply(&mid).await.unwrap();
+        assert_eq!(BinaryDiff { splices: merged }.apply(&base).await.unwrap(), after);
         assert!(after.bytes.windows(2).any(|w| w == [0xBB, 0xAA]) || after.bytes.contains(&0xAA) && after.bytes.contains(&0xBB));
     }
 
@@ -299,9 +299,9 @@ mod tests {
         let merged = absorb_splices(&d1, &d2);
 
         let base = BinarySnapshot { bytes: vec![1, 2, 3], ..Default::default() };
-        let mid = BinaryDiff { splices: d1.clone() }.apply(&base).unwrap();
-        let after = BinaryDiff { splices: d2.clone() }.apply(&mid).unwrap();
-        assert_eq!(BinaryDiff { splices: merged }.apply(&base).unwrap(), after);
+        let mid = BinaryDiff { splices: d1.clone() }.apply(&base).await.unwrap();
+        let after = BinaryDiff { splices: d2.clone() }.apply(&mid).await.unwrap();
+        assert_eq!(BinaryDiff { splices: merged }.apply(&base).await.unwrap(), after);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -320,13 +320,13 @@ mod tests {
         let mut right = d1.clone();
         right.absorb(mid);
 
-        assert_eq!(left.apply(&base).unwrap(), right.apply(&base).unwrap());
+        assert_eq!(left.apply(&base).await.unwrap(), right.apply(&base).await.unwrap());
         let sequential = {
-            let s1 = d1.apply(&base).unwrap();
-            let s2 = d2.apply(&s1).unwrap();
-            d3.apply(&s2).unwrap()
+            let s1 = d1.apply(&base).await.unwrap();
+            let s2 = d2.apply(&s1).await.unwrap();
+            d3.apply(&s2).await.unwrap()
         };
-        assert_eq!(left.apply(&base).unwrap(), sequential);
+        assert_eq!(left.apply(&base).await.unwrap(), sequential);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -342,7 +342,7 @@ mod tests {
     async fn inverse_diff_level_roundtrip() {
         let base = BinarySnapshot { bytes: vec![1, 2, 3, 4], ..Default::default() };
         let d = BinaryDiff { splices: vec![ByteSplice { offset: 1, remove_len: 2, insert: vec![9, 9, 9] }] };
-        let next = d.apply(&base).unwrap();
+        let next = d.apply(&base).await.unwrap();
         let inv = d.inverse(&base);
         assert_eq!(inv.apply(&next).unwrap(), base);
     }
@@ -351,7 +351,7 @@ mod tests {
     async fn apply_rejects_invalid_splice_without_mutating_base() {
         let base = BinarySnapshot { bytes: vec![1, 2, 3], ..Default::default() };
         let diff = BinaryDiff { splices: vec![ByteSplice { offset: 2, remove_len: 2, insert: vec![9] }] };
-        assert!(diff.apply(&base).is_err());
+        assert!(diff.apply(&base).await.is_err());
         assert_eq!(base.bytes, vec![1, 2, 3]);
     }
 
@@ -361,12 +361,12 @@ mod tests {
         use protocol::DiffCodec;
         for d in demo_diff_cases() {
             let printed = d.print_diff();
-            assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
-            let parsed = BinaryDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
+            assert!(!printed.await.contains('\n'), "print_diff must be one line, got {printed:?}");
+            let parsed = BinaryDiff::parse_diff(&printed).await.unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
             assert_eq!(parsed, d, "print_diff/parse_diff round-trip mismatch for {d:?} (printed {printed:?})");
 
-            let encoded = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff({d:?}) failed: {e}"));
-            let decoded = BinaryDiff::decode_diff(&encoded).unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
+            let encoded = d.encode_diff().await.unwrap_or_else(|e| panic!("encode_diff({d:?}) failed: {e}"));
+            let decoded = BinaryDiff::decode_diff(&encoded).await.unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
             assert_eq!(decoded, d, "encode_diff/decode_diff round-trip mismatch for {d:?}");
         }
     }

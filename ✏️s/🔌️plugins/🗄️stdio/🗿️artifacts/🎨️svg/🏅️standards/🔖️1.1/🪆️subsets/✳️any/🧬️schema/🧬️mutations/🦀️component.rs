@@ -272,7 +272,7 @@ async fn dec_transform_op(s: &str) -> Result<TransformOp, String> {
         other => Err(format!("transform op: unknown tag {other:?}")),
     }
 }
-async fn enc_transform_list(list: &[TransformOp]) -> String {
+fn enc_transform_list(list: &[TransformOp]) -> String {
     format!("[{}]", list.iter().map(enc_transform_op).collect::<Vec<_>>().join(","))
 }
 async fn dec_transform_list(s: &str) -> Result<Vec<TransformOp>, String> {
@@ -644,7 +644,7 @@ impl OpBinary for SvgMutation {
 /// `op_text_binary_roundtrip_law` below AND by `⚙️engine/🦀️component.rs`'s
 /// `ops_grammar_conformance_law`/`protocol_walk_law` conformance tests.
 #[cfg(test)]
-pub(crate) async fn demo_mutation_cases() -> Vec<SvgMutation> {
+pub(crate) fn demo_mutation_cases() -> Vec<SvgMutation> {
     use crate::artifacts::xml::schema::snapshot::XmlAttr;
 
     let base = SvgSnapshot::import_utf8(r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><rect x="0" y="0" width="5" height="5"/></svg>"#.as_bytes()).unwrap();
@@ -726,7 +726,7 @@ mod tests {
         let base = fixture();
         let mutation = SvgMutation::SetAttribute { path: vec![0], name: "width".into(), value: Some("99".into()) };
         let diff = Mutation::diff(&mutation, &base);
-        let after = <SvgDiff as MutationDiff<SvgSnapshot>>::apply(diff.diff(), &base).expect("diff must apply to base");
+        let after = <SvgDiff as MutationDiff<SvgSnapshot>>::apply(diff.await.diff(), &base).await.expect("diff must apply to base");
         assert_eq!(element_attr(node_at(&after.doc, &[0]).unwrap(), "width"), Some("99"));
 
         let inverses = Mutation::inverse(&mutation, &base);
@@ -734,7 +734,7 @@ mod tests {
         for inv in &inverses {
             apply_svg_mutation(&mut restored, inv);
         }
-        assert_eq!(write_svg_xml(&restored.doc), write_svg_xml(&base.doc));
+        assert_eq!(write_svg_xml(&restored.doc), write_svg_xml(&base.await.doc));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -747,7 +747,7 @@ mod tests {
         for inv in Mutation::inverse(&vb, &base) {
             apply_svg_mutation(&mut after, &inv);
         }
-        assert_eq!(write_svg_xml(&after.doc), write_svg_xml(&base.doc));
+        assert_eq!(write_svg_xml(&after.doc), write_svg_xml(&base.await.doc));
 
         let tf = SvgMutation::SetTransform { path: vec![0], transform: Some(vec![TransformOp::Translate { x: 2.0, y: None }]) };
         let mut after2 = base.clone();
@@ -756,7 +756,7 @@ mod tests {
         for inv in Mutation::inverse(&tf, &base) {
             apply_svg_mutation(&mut after2, &inv);
         }
-        assert_eq!(write_svg_xml(&after2.doc), write_svg_xml(&base.doc));
+        assert_eq!(write_svg_xml(&after2.doc), write_svg_xml(&base.await.doc));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -772,7 +772,7 @@ mod tests {
         for inv in Mutation::inverse(&remove, &base) {
             apply_svg_mutation(&mut after, &inv);
         }
-        assert_eq!(write_svg_xml(&after.doc), write_svg_xml(&base.doc));
+        assert_eq!(write_svg_xml(&after.doc), write_svg_xml(&base.await.doc));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -788,7 +788,7 @@ mod tests {
         for inv in Mutation::inverse(&mutation, &base) {
             apply_svg_mutation(&mut after, &inv);
         }
-        assert_eq!(write_svg_xml(&after.doc), write_svg_xml(&base.doc));
+        assert_eq!(write_svg_xml(&after.doc), write_svg_xml(&base.await.doc));
     }
 
     //#region 🔖️Fixtures
@@ -820,7 +820,7 @@ mod tests {
         }
     }
 
-    async fn sweep_b() -> SvgSnapshot {
+    fn sweep_b() -> SvgSnapshot {
         let snapshot = SvgSnapshot {
             schema: crate::artifacts::svg::STDIO_SVG_DOCUMENT_SCHEMA.into(),
             doc: XmlDocument {
@@ -856,7 +856,7 @@ mod tests {
     /// which tracks the true original index via `inverse_attrs_diff`), never at the
     /// mutation-replay level, which is exercised here on the LAST attribute specifically so the
     /// append-on-restore behavior coincides with the original position.
-    async fn sample_mutations() -> Vec<SvgMutation> {
+    fn sample_mutations() -> Vec<SvgMutation> {
         vec![
             SvgMutation::NoMutation,
             SvgMutation::SetSnapshot { snapshot: sweep_b() },
@@ -879,7 +879,7 @@ mod tests {
         for mutation in sample_mutations() {
             let base = fixture();
             let diff_direct = Mutation::diff(&mutation, &base);
-            let applied_via_diff = MutationDiff::apply(diff_direct.diff(), &base).unwrap();
+            let applied_via_diff = MutationDiff::apply(&diff_direct.await.diff().await, &base).unwrap();
 
             let mut via_apply = base.clone();
             let diff_from_apply = apply_svg_mutation(&mut via_apply, &mutation);
@@ -904,8 +904,8 @@ mod tests {
             assert_eq!(round_tripped, base, "inverse_law (mutation-level) failed for {mutation:?}");
 
             let diff = Mutation::diff(&mutation, &base);
-            let next = MutationDiff::apply(diff.diff(), &base).unwrap();
-            let inverse_diff = DiffAlgebra::inverse(diff.diff(), &base);
+            let next = MutationDiff::apply(&diff.await.diff().await, &base).unwrap();
+            let inverse_diff = DiffAlgebra::inverse(&diff.await.diff().await, &base);
             let restored = MutationDiff::apply(&inverse_diff, &next).unwrap();
             assert_eq!(restored, base, "inverse_law (diff-level) failed for {mutation:?}");
         }
@@ -920,10 +920,10 @@ mod tests {
         let base = fixture();
         let mutation = SvgMutation::SetAttribute { path: vec![0], name: "width".into(), value: None };
         let diff = Mutation::diff(&mutation, &base);
-        let next = MutationDiff::apply(diff.diff(), &base).unwrap();
+        let next = MutationDiff::apply(&diff.await.diff().await, &base).unwrap();
         assert_eq!(element_attr(node_at(&next.doc, &[0]).unwrap(), "width"), None);
 
-        let inverse_diff = DiffAlgebra::inverse(diff.diff(), &base);
+        let inverse_diff = DiffAlgebra::inverse(&diff.await.diff().await, &base);
         let restored = MutationDiff::apply(&inverse_diff, &next).unwrap();
         assert_eq!(restored, base, "diff-level inverse must restore the exact original attribute order");
     }
@@ -947,10 +947,10 @@ mod tests {
     }
 
     async fn assert_absorb_matches_sequential(base: &SvgSnapshot, d1: &SvgDiff, d2: &SvgDiff) -> SvgDiff {
-        let sequential = MutationDiff::apply(d2, &MutationDiff::apply(d1, base).unwrap()).unwrap();
+        let sequential = MutationDiff::apply(d2, &MutationDiff::apply(d1, base).await.unwrap()).await.unwrap();
         let mut absorbed = d1.clone();
         MutationDiff::absorb(&mut absorbed, d2.clone());
-        assert_eq!(MutationDiff::apply(&absorbed, base).unwrap(), sequential, "absorb_law: apply(absorb(d1,d2), base) != sequential");
+        assert_eq!(MutationDiff::apply(&absorbed, base).await.unwrap(), sequential, "absorb_law: apply(absorb(d1,d2), base) != sequential");
         absorbed
     }
 
@@ -967,9 +967,9 @@ mod tests {
         {
             let base = two_child_root("a", "b");
             let d1 = Mutation::diff(&SvgMutation::InsertElement { parent: vec![], index: 2, node: XmlNode::Element { name: "f".into(), attrs: Vec::new(), children: Vec::new() } }, &base);
-            let mid = MutationDiff::apply(d1.diff(), &base).unwrap();
+            let mid = MutationDiff::apply(&d1.await.diff().await, &base).unwrap();
             let d2 = Mutation::diff(&SvgMutation::RemoveElement { parent: vec![], index: 0 }, &mid);
-            let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
+            let absorbed = assert_absorb_matches_sequential(&base, d1.await.diff(), d2.await.diff());
             let triple = root_children_diff(&absorbed);
             assert_eq!(triple.removed, vec![0]);
             assert_eq!(triple.added.len(), 1);
@@ -982,9 +982,9 @@ mod tests {
         {
             let base = two_child_root("a", "b");
             let d1 = Mutation::diff(&SvgMutation::InsertElement { parent: vec![], index: 2, node: XmlNode::Element { name: "f".into(), attrs: Vec::new(), children: Vec::new() } }, &base);
-            let mid = MutationDiff::apply(d1.diff(), &base).unwrap();
+            let mid = MutationDiff::apply(&d1.await.diff().await, &base).unwrap();
             let d2 = Mutation::diff(&SvgMutation::InsertElement { parent: vec![], index: 2, node: XmlNode::Element { name: "g".into(), attrs: Vec::new(), children: Vec::new() } }, &mid);
-            let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
+            let absorbed = assert_absorb_matches_sequential(&base, d1.await.diff(), d2.await.diff());
             let triple = root_children_diff(&absorbed);
             assert_eq!(triple.added.len(), 2, "both inserts must survive absorb, not LWW-clobber");
             let names: Vec<&str> = triple
@@ -1003,9 +1003,9 @@ mod tests {
         {
             let base = two_child_root("a", "b");
             let d1 = Mutation::diff(&SvgMutation::InsertElement { parent: vec![], index: 1, node: XmlNode::Element { name: "f".into(), attrs: Vec::new(), children: Vec::new() } }, &base);
-            let mid = MutationDiff::apply(d1.diff(), &base).unwrap();
+            let mid = MutationDiff::apply(&d1.await.diff().await, &base).unwrap();
             let d2 = Mutation::diff(&SvgMutation::SetAttribute { path: vec![1], name: "k".into(), value: Some("v".into()) }, &mid);
-            let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
+            let absorbed = assert_absorb_matches_sequential(&base, d1.await.diff(), d2.await.diff());
             let triple = root_children_diff(&absorbed);
             assert!(triple.modified.is_empty(), "patch-into-added must not surface as a separate modified entry");
             assert_eq!(triple.added.len(), 1);
@@ -1017,9 +1017,9 @@ mod tests {
         {
             let base = two_child_root("a", "b");
             let d1 = Mutation::diff(&SvgMutation::SetAttribute { path: vec![1], name: "k".into(), value: Some("v".into()) }, &base);
-            let mid = MutationDiff::apply(d1.diff(), &base).unwrap();
+            let mid = MutationDiff::apply(&d1.await.diff().await, &base).unwrap();
             let d2 = Mutation::diff(&SvgMutation::RemoveElement { parent: vec![], index: 1 }, &mid);
-            let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
+            let absorbed = assert_absorb_matches_sequential(&base, d1.await.diff(), d2.await.diff());
             let triple = root_children_diff(&absorbed);
             assert!(triple.modified.is_empty(), "modify of a since-removed item must not survive absorb");
             assert_eq!(triple.removed, vec![1]);
@@ -1029,19 +1029,19 @@ mod tests {
         {
             let base = two_child_root("a", "b");
             let d1 = Mutation::diff(&SvgMutation::InsertElement { parent: vec![], index: 2, node: XmlNode::Element { name: "f".into(), attrs: Vec::new(), children: Vec::new() } }, &base);
-            let mid1 = MutationDiff::apply(d1.diff(), &base).unwrap();
+            let mid1 = MutationDiff::apply(&d1.await.diff().await, &base).unwrap();
             let d2 = Mutation::diff(&SvgMutation::InsertElement { parent: vec![], index: 2, node: XmlNode::Element { name: "g".into(), attrs: Vec::new(), children: Vec::new() } }, &mid1);
-            let mid2 = MutationDiff::apply(d2.diff(), &mid1).unwrap();
+            let mid2 = MutationDiff::apply(&d2.await.diff().await, &mid1).unwrap();
             let d3 = Mutation::diff(&SvgMutation::RemoveElement { parent: vec![], index: 0 }, &mid2);
-            let sequential = MutationDiff::apply(d3.diff(), &mid2).unwrap();
+            let sequential = MutationDiff::apply(&d3.await.diff().await, &mid2).unwrap();
 
-            let mut left = d1.diff().clone();
-            MutationDiff::absorb(&mut left, d2.diff().clone());
-            MutationDiff::absorb(&mut left, d3.diff().clone());
+            let mut left = d1.await.diff().clone();
+            MutationDiff::absorb(&mut left, d2.await.diff().clone());
+            MutationDiff::absorb(&mut left, d3.await.diff().clone());
 
-            let mut d2_then_d3 = d2.diff().clone();
-            MutationDiff::absorb(&mut d2_then_d3, d3.diff().clone());
-            let mut right = d1.diff().clone();
+            let mut d2_then_d3 = d2.await.diff().clone();
+            MutationDiff::absorb(&mut d2_then_d3, d3.await.diff().clone());
+            let mut right = d1.await.diff().clone();
             MutationDiff::absorb(&mut right, d2_then_d3);
 
             assert_eq!(MutationDiff::apply(&left, &base).unwrap(), sequential, "absorb associativity (left) failed");
@@ -1084,7 +1084,7 @@ mod tests {
         let snap = SvgSnapshot::import_utf8(text.as_bytes()).expect("import fixture");
         assert_eq!(snap.doc, doc);
         let bytes = store::ArtifactPack::encode_pack(&snap);
-        let decoded = <SvgSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+        let decoded = <SvgSnapshot as store::ArtifactPack>::decode_pack(&bytes).await.expect("decode");
         assert_eq!(decoded, snap);
     }
     //#endregion 🔖️CodecRetentionLaw
@@ -1106,12 +1106,12 @@ mod tests {
 
         // Hand-written per-field assertion: every top-level SvgDiff field is populated, and both
         // tri-state scalars exercise `Some(None)`.
-        assert_eq!(diff_ab.declaration, Some(None));
-        assert_eq!(diff_ab.doctype, Some(None));
-        assert!(diff_ab.prolog.is_some());
-        assert!(diff_ab.root.is_some());
+        assert_eq!(diff_ab.await.declaration, Some(None));
+        assert_eq!(diff_ab.await.doctype, Some(None));
+        assert!(diff_ab.await.prolog.is_some());
+        assert!(diff_ab.await.root.is_some());
 
-        let SvgNodeDiffT::Element(root_diff) = diff_ab.root.as_ref().unwrap() else { panic!("expected element diff") };
+        let SvgNodeDiffT::Element(root_diff) = diff_ab.await.root.as_ref().unwrap() else { panic!("expected element diff") };
         assert!(root_diff.name.is_some());
         let attrs_diff = root_diff.attributes.as_ref().expect("attrs diff present");
         assert!(!attrs_diff.removed.is_empty(), "attrs: removed not exercised");
@@ -1140,12 +1140,12 @@ mod tests {
     async fn op_text_binary_roundtrip_law() {
         for mutation in demo_mutation_cases() {
             let printed = mutation.print_op();
-            assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
-            let parsed = SvgMutation::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
+            assert!(!printed.await.contains('\n'), "print_op must be one line, got {printed:?}");
+            let parsed = SvgMutation::parse_op(&printed).await.unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
             assert_eq!(parsed, mutation, "print_op/parse_op round-trip mismatch for {mutation:?} (printed {printed:?})");
 
-            let encoded = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op({mutation:?}) failed: {e}"));
-            let decoded = SvgMutation::decode_op(&encoded).unwrap_or_else(|e| panic!("decode_op failed: {e}"));
+            let encoded = mutation.encode_op().await.unwrap_or_else(|e| panic!("encode_op({mutation:?}) failed: {e}"));
+            let decoded = SvgMutation::decode_op(&encoded).await.unwrap_or_else(|e| panic!("decode_op failed: {e}"));
             assert_eq!(decoded, mutation, "encode_op/decode_op round-trip mismatch for {mutation:?}");
         }
     }
@@ -1158,12 +1158,12 @@ mod tests {
         assert_eq!(imported.export_utf8().expect("direct export"), original);
 
         let packed = store::ArtifactPack::encode_pack(&imported);
-        let unpacked = <SvgSnapshot as store::ArtifactPack>::decode_pack(&packed).expect("pack decode");
+        let unpacked = <SvgSnapshot as store::ArtifactPack>::decode_pack(&packed).await.expect("pack decode");
         assert_eq!(unpacked, imported);
         assert_eq!(unpacked.export_utf8().expect("pack export"), original);
 
         let printed = store::ArtifactDsl::print_dsl(&imported);
-        let parsed = <SvgSnapshot as store::ArtifactDsl>::parse_dsl(&printed).expect("dsl parse");
+        let parsed = <SvgSnapshot as store::ArtifactDsl>::parse_dsl(&printed).await.expect("dsl parse");
         assert_eq!(parsed, imported);
         assert_eq!(parsed.export_utf8().expect("dsl export"), original);
 
@@ -1189,18 +1189,18 @@ mod tests {
 
         let mutation = SvgMutation::SetAttribute { path: vec![], name: "data-semio-roundtrip".into(), value: Some("changed".into()) };
         let d1 = Mutation::diff(&mutation, &imported);
-        let changed = MutationDiff::apply(d1.diff(), &imported).unwrap();
+        let changed = MutationDiff::apply(&d1.await.diff().await, &imported).unwrap();
         let changed_bytes = changed.export_utf8().expect("changed export");
         assert_ne!(changed_bytes, original);
         crate::artifacts::svg::schema::snapshot::parse_svg_xml(std::str::from_utf8(&changed_bytes).expect("changed UTF-8")).expect("changed SVG parses");
 
-        let inverse_mutation = Mutation::inverse(&mutation, &imported).into_iter().next().expect("inverse mutation");
+        let inverse_mutation = Mutation::inverse(&mutation, &imported).into_iter().await.await.await.next().expect("inverse mutation");
         let d2 = Mutation::diff(&inverse_mutation, &changed);
         let restored = MutationDiff::apply(d2.diff(), &changed).unwrap();
         assert_eq!(restored, imported);
         assert_eq!(restored.export_utf8().expect("inverse export"), original);
 
-        let mut absorbed = d1.diff().clone();
+        let mut absorbed = d1.await.diff().clone();
         MutationDiff::absorb(&mut absorbed, d2.diff().clone());
         let absorbed_result = MutationDiff::apply(&absorbed, &imported).unwrap();
         assert_eq!(absorbed_result, imported);
@@ -1211,26 +1211,26 @@ mod tests {
     async fn exact_native_logical_state_survives_diff_and_set_snapshot_codecs() {
         let original = exact_fixture_bytes();
         let imported = exact_fixture();
-        assert!(imported.doc.prolog.iter().any(|node| matches!(node, XmlNode::Comment { .. })));
-        let projection = imported.semantic_projection();
-        assert_eq!(projection, imported);
+        assert!(imported.await.doc.prolog.iter().any(|node| matches!(node, XmlNode::Comment { .. })));
+        let projection = imported.await.semantic_projection();
+        assert_eq!(projection, imported.await);
 
         let diff = <SvgDiff as DiffAlgebra<SvgSnapshot>>::between(&projection, &imported);
-        let text_diff = SvgDiff::parse_diff(&diff.print_diff()).expect("diff text decode");
-        let binary_diff = SvgDiff::decode_diff(&diff.encode_diff().expect("diff binary encode")).expect("diff binary decode");
-        assert_eq!(text_diff, diff);
-        assert_eq!(binary_diff, diff);
-        let restored_projection = MutationDiff::apply(&binary_diff, &projection).unwrap();
-        assert_eq!(restored_projection, imported);
+        let text_diff = SvgDiff::parse_diff(&diff.print_diff()).await.expect("diff text decode");
+        let binary_diff = SvgDiff::decode_diff(&diff.encode_diff().expect("diff binary encode")).await.expect("diff binary decode");
+        assert_eq!(text_diff, diff.await);
+        assert_eq!(binary_diff, diff.await);
+        let restored_projection = MutationDiff::apply(&binary_diff, &projection).await.unwrap();
+        assert_eq!(restored_projection, imported.await);
         assert_eq!(restored_projection.export_utf8().expect("diff export"), original);
 
         let mutation = SvgMutation::SetSnapshot { snapshot: imported.clone() };
-        let text_op = SvgMutation::parse_op(&mutation.print_op()).expect("op text decode");
-        let binary_op = SvgMutation::decode_op(&mutation.encode_op().expect("op binary encode")).expect("op binary decode");
+        let text_op = SvgMutation::parse_op(&mutation.print_op()).await.expect("op text decode");
+        let binary_op = SvgMutation::decode_op(&mutation.encode_op().await.expect("op binary encode")).await.expect("op binary decode");
         assert_eq!(text_op, mutation);
         assert_eq!(binary_op, mutation);
         let set_snapshot_outcome = Mutation::diff(&binary_op, &projection);
-        let applied = MutationDiff::apply(set_snapshot_outcome.diff(), &projection).unwrap();
+        let applied = MutationDiff::apply(&set_snapshot_outcome.await.diff().await, &projection).unwrap();
         assert_eq!(applied, imported);
         assert_eq!(applied.export_utf8().expect("set snapshot export"), original);
     }

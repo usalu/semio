@@ -146,7 +146,7 @@ fn wrap_at_path(path: &[SemioValuePathSegment], leaf: SemioValueDiff) -> SemioVa
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn apply_semio_value_mutation(snapshot: &mut SemioValueSnapshot, mutation: &SemioValueMutation) -> protocol::MutationOutcome<SemioValueTreeDiff> {
     let outcome = <SemioValueMutation as Mutation<SemioValueSnapshot>>::diff(mutation, snapshot);
-    outcome.apply_to(snapshot)
+    outcome.await.apply_to(snapshot)
 }
 //#endregion 🔖️Apply
 
@@ -399,13 +399,13 @@ fn enc_semio_path_bin(path: &[SemioValuePathSegment], out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_semio_path_bin(reader: &mut store::ByteReader<'_>) -> Result<SemioValuePath, String> {
-    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut path = Vec::with_capacity(count as usize);
     for _ in 0..count {
-        let tag = reader.read_u8().map_err(|e| e.to_string())?;
+        let tag = reader.read_u8().await.map_err(|e| e.to_string())?;
         match tag {
             0 => path.push(SemioValuePathSegment::Key { key: read_str_lp(reader)? }),
-            1 => path.push(SemioValuePathSegment::Index { index: reader.read_varint_u64().map_err(|e| e.to_string())? as usize }),
+            1 => path.push(SemioValuePathSegment::Index { index: reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize }),
             other => return Err(format!("semio value path binary: unknown segment tag {other}")),
         }
     }
@@ -429,7 +429,7 @@ fn enc_semio_value_snapshot_bin(s: &SemioValueSnapshot, out: &mut Vec<u8>) {
 fn dec_semio_value_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<SemioValueSnapshot, String> {
     let schema = read_str_lp(reader)?;
     let root = dec_semio_value_bin(reader)?;
-    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut nodes = Vec::with_capacity(count as usize);
     for _ in 0..count {
         nodes.push(dec_semio_value_node_bin(reader)?);
@@ -647,7 +647,7 @@ mod tests {
         let returned = apply_semio_value_mutation(&mut via_apply, &mutation);
         let expected_diff = mutation.diff(base);
         assert_eq!(returned, expected_diff, "apply_semio_value_mutation must return mutation.diff(base)");
-        let via_diff_apply = expected_diff.diff().apply(base).expect("apply must succeed for a well-formed fixture");
+        let via_diff_apply = expected_diff.await.diff().apply(base).expect("apply must succeed for a well-formed fixture");
         assert_eq!(via_apply, via_diff_apply, "m.diff(base).diff().apply(base) must equal apply_semio_value_mutation's result");
         (via_apply, returned)
     }
@@ -730,8 +730,8 @@ mod tests {
         let base = snap(mapv(vec![("a", intv("1"))]), vec![]);
         let mutation = SemioValueMutation::SetMapEntry { path: vec![], key: "a".into(), value: intv("2") };
         let diff = mutation.diff(&base);
-        let mid = diff.diff().apply(&base).expect("apply must succeed for a well-formed fixture");
-        let inv = diff.diff().inverse(&base);
+        let mid = diff.await.diff().apply(&base).expect("apply must succeed for a well-formed fixture");
+        let inv = diff.await.diff().inverse(&base);
         assert_eq!(inv.apply(&mid).expect("apply must succeed for a well-formed fixture"), base);
     }
     //#endregion inverse_law
@@ -746,12 +746,12 @@ mod tests {
 
         for m in demo_mutation_cases() {
             let printed = m.print_op();
-            assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
-            let parsed = <SemioValueMutation as OpText>::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
+            assert!(!printed.await.contains('\n'), "print_op must be one line, got {printed:?}");
+            let parsed = <SemioValueMutation as OpText>::parse_op(&printed).await.unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
             assert_eq!(parsed, m, "print_op/parse_op round-trip mismatch (printed {printed:?})");
 
-            let encoded = m.encode_op().unwrap_or_else(|e| panic!("encode_op failed: {e}"));
-            let decoded = <SemioValueMutation as OpBinary>::decode_op(&encoded).unwrap_or_else(|e| panic!("decode_op failed: {e}"));
+            let encoded = m.encode_op().await.unwrap_or_else(|e| panic!("encode_op failed: {e}"));
+            let decoded = <SemioValueMutation as OpBinary>::decode_op(&encoded).await.unwrap_or_else(|e| panic!("decode_op failed: {e}"));
             assert_eq!(decoded, m, "encode_op/decode_op round-trip mismatch");
         }
     }

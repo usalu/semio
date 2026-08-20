@@ -350,10 +350,10 @@ mod tests {
     async fn codec_round_trip() {
         let snap = empty_md_snapshot();
         let text = store::ArtifactDsl::print_dsl(&snap);
-        let parsed = <MdSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
+        let parsed = <MdSnapshot as store::ArtifactDsl>::parse_dsl(&text).await.expect("parse");
         assert_eq!(parsed.schema, snap.schema);
         let bytes = store::ArtifactPack::encode_pack(&snap);
-        let decoded = <MdSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+        let decoded = <MdSnapshot as store::ArtifactPack>::decode_pack(&bytes).await.expect("decode");
         assert_eq!(decoded, snap);
     }
 
@@ -361,10 +361,10 @@ mod tests {
     async fn demo_snapshot_round_trip() {
         let snap = demo_md_snapshot();
         let text = store::ArtifactDsl::print_dsl(&snap);
-        let parsed = <MdSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
+        let parsed = <MdSnapshot as store::ArtifactDsl>::parse_dsl(&text).await.expect("parse");
         assert_eq!(parsed.blocks, snap.blocks);
         let bytes = store::ArtifactPack::encode_pack(&snap);
-        let decoded = <MdSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+        let decoded = <MdSnapshot as store::ArtifactPack>::decode_pack(&bytes).await.expect("decode");
         assert_eq!(decoded.blocks, snap.blocks);
     }
 
@@ -450,14 +450,14 @@ mod tests {
 
             let op_spec = dsl::parse_protocol(mutations::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
             for mutation in mutations::demo_mutation_cases() {
-                let bytes = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op failed for {mutation:?}: {e:?}"));
+                let bytes = mutation.encode_op().await.unwrap_or_else(|e| panic!("encode_op failed for {mutation:?}: {e:?}"));
                 let trace = dsl::walk_protocol(&op_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(op) failed for {mutation:?} @{}: {}", e.offset, e.message));
                 assert_eq!(trace.consumed, bytes.len(), "op walk did not consume every byte for {mutation:?}");
             }
 
             let diff_spec = dsl::parse_protocol(diff::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse diff protocol");
             for d in diff::demo_diff_cases() {
-                let bytes = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed for {d:?}: {e:?}"));
+                let bytes = d.encode_diff().await.unwrap_or_else(|e| panic!("encode_diff failed for {d:?}: {e:?}"));
                 let trace = dsl::walk_protocol(&diff_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(diff) failed for {d:?} @{}: {}", e.offset, e.message));
                 assert_eq!(trace.consumed, bytes.len(), "diff walk did not consume every byte for {d:?}");
             }
@@ -474,11 +474,11 @@ mod tests {
 
             let demo = demo_md_snapshot();
 
-            let parsed = <MdSnapshot as store::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
+            let parsed = <MdSnapshot as store::ArtifactDsl>::parse_dsl(FIXTURE_DSL).await.expect("parse shipped .dsl.semio fixture");
             assert_eq!(parsed, demo, "shipped .dsl.semio fixture does not parse back to demo_md_snapshot()");
             assert_eq!(store::ArtifactDsl::print_dsl(&demo), FIXTURE_DSL, "print_dsl(demo_md_snapshot()) drifted from the shipped .dsl.semio fixture");
 
-            let decoded = <MdSnapshot as store::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode shipped .pack.semio fixture");
+            let decoded = <MdSnapshot as store::ArtifactPack>::decode_pack(FIXTURE_PACK).await.expect("decode shipped .pack.semio fixture");
             assert_eq!(decoded, demo, "shipped .pack.semio fixture does not decode back to demo_md_snapshot()");
             assert_eq!(store::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_md_snapshot()) drifted from the shipped .pack.semio fixture");
         }
@@ -717,7 +717,7 @@ mod tests {
         for mutation in sample_mutations() {
             let base = sample_snapshot();
             let diff_direct = Mutation::diff(&mutation, &base);
-            let applied_via_diff = MutationDiff::apply(diff_direct.diff(), &base).unwrap();
+            let applied_via_diff = MutationDiff::apply(&diff_direct.await.diff().await, &base).unwrap();
 
             let mut via_apply = base.clone();
             let diff_from_apply = crate::artifacts::md::schema::mutations::apply_md_mutation(&mut via_apply, &mutation);
@@ -742,8 +742,8 @@ mod tests {
             assert_eq!(round_tripped, base, "inverse_law (mutation-level) failed for {mutation:?}");
 
             let diff = Mutation::diff(&mutation, &base);
-            let next = MutationDiff::apply(diff.diff(), &base).unwrap();
-            let inverse_diff = DiffAlgebra::inverse(diff.diff(), &base);
+            let next = MutationDiff::apply(&diff.await.diff().await, &base).unwrap();
+            let inverse_diff = DiffAlgebra::inverse(&diff.await.diff().await, &base);
             let restored = MutationDiff::apply(&inverse_diff, &next).unwrap();
             assert_eq!(restored, base, "inverse_law (diff-level) failed for {mutation:?}");
         }
@@ -758,10 +758,10 @@ mod tests {
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn assert_absorb_matches_sequential(base: &MdSnapshot, d1: &MdDiff, d2: &MdDiff) -> MdDiff {
-        let sequential = MutationDiff::apply(d2, &MutationDiff::apply(d1, base).unwrap()).unwrap();
+        let sequential = MutationDiff::apply(d2, &MutationDiff::apply(d1, base).await.unwrap()).await.unwrap();
         let mut absorbed = d1.clone();
         MutationDiff::absorb(&mut absorbed, d2.clone());
-        assert_eq!(MutationDiff::apply(&absorbed, base).unwrap(), sequential, "absorb_law: apply(absorb(d1,d2), base) != sequential");
+        assert_eq!(MutationDiff::apply(&absorbed, base).await.unwrap(), sequential, "absorb_law: apply(absorb(d1,d2), base) != sequential");
         absorbed
     }
 
@@ -776,9 +776,9 @@ mod tests {
         {
             let base = two_para_root("a", "b");
             let d1 = Mutation::diff(&MdMutation::InsertBlock { path: vec![], index: 2, block: MdBlock::ThematicBreak }, &base);
-            let mid = MutationDiff::apply(d1.diff(), &base).unwrap();
+            let mid = MutationDiff::apply(&d1.await.diff().await, &base).unwrap();
             let d2 = Mutation::diff(&MdMutation::RemoveBlock { path: vec![], index: 0 }, &mid);
-            let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
+            let absorbed = assert_absorb_matches_sequential(&base, d1.await.diff(), d2.await.diff());
             let triple = root_blocks_diff(&absorbed);
             assert_eq!(triple.removed, vec![0]);
             assert_eq!(triple.added.len(), 1);
@@ -790,9 +790,9 @@ mod tests {
         {
             let base = two_para_root("a", "b");
             let d1 = Mutation::diff(&MdMutation::InsertBlock { path: vec![], index: 2, block: MdBlock::ThematicBreak }, &base);
-            let mid = MutationDiff::apply(d1.diff(), &base).unwrap();
+            let mid = MutationDiff::apply(&d1.await.diff().await, &base).unwrap();
             let d2 = Mutation::diff(&MdMutation::InsertBlock { path: vec![], index: 2, block: MdBlock::HtmlBlock { raw: "<hr/>".into() } }, &mid);
-            let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
+            let absorbed = assert_absorb_matches_sequential(&base, d1.await.diff(), d2.await.diff());
             let triple = root_blocks_diff(&absorbed);
             assert_eq!(triple.added.len(), 2, "both inserts must survive absorb, not LWW-clobber");
         }
@@ -801,9 +801,9 @@ mod tests {
         {
             let base = two_para_root("a", "b");
             let d1 = Mutation::diff(&MdMutation::InsertBlock { path: vec![], index: 1, block: MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "f".into() }] } }, &base);
-            let mid = MutationDiff::apply(d1.diff(), &base).unwrap();
+            let mid = MutationDiff::apply(&d1.await.diff().await, &base).unwrap();
             let d2 = Mutation::diff(&MdMutation::SetInlines { path: vec![], index: 1, inlines: vec![MdInline::Text { text: "v".into() }] }, &mid);
-            let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
+            let absorbed = assert_absorb_matches_sequential(&base, d1.await.diff(), d2.await.diff());
             let triple = root_blocks_diff(&absorbed);
             assert!(triple.modified.is_empty(), "patch-into-added must not surface as a separate modified entry");
             assert_eq!(triple.added.len(), 1);
@@ -817,9 +817,9 @@ mod tests {
         {
             let base = two_para_root("a", "b");
             let d1 = Mutation::diff(&MdMutation::SetInlines { path: vec![], index: 1, inlines: vec![MdInline::Text { text: "v".into() }] }, &base);
-            let mid = MutationDiff::apply(d1.diff(), &base).unwrap();
+            let mid = MutationDiff::apply(&d1.await.diff().await, &base).unwrap();
             let d2 = Mutation::diff(&MdMutation::RemoveBlock { path: vec![], index: 1 }, &mid);
-            let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
+            let absorbed = assert_absorb_matches_sequential(&base, d1.await.diff(), d2.await.diff());
             let triple = root_blocks_diff(&absorbed);
             assert!(triple.modified.is_empty(), "modify of a since-removed item must not survive absorb");
             assert_eq!(triple.removed, vec![1]);
@@ -829,19 +829,19 @@ mod tests {
         {
             let base = two_para_root("a", "b");
             let d1 = Mutation::diff(&MdMutation::InsertBlock { path: vec![], index: 2, block: MdBlock::ThematicBreak }, &base);
-            let mid1 = MutationDiff::apply(d1.diff(), &base).unwrap();
+            let mid1 = MutationDiff::apply(&d1.await.diff().await, &base).unwrap();
             let d2 = Mutation::diff(&MdMutation::InsertBlock { path: vec![], index: 2, block: MdBlock::HtmlBlock { raw: "<hr/>".into() } }, &mid1);
-            let mid2 = MutationDiff::apply(d2.diff(), &mid1).unwrap();
+            let mid2 = MutationDiff::apply(&d2.await.diff().await, &mid1).unwrap();
             let d3 = Mutation::diff(&MdMutation::RemoveBlock { path: vec![], index: 0 }, &mid2);
-            let sequential = MutationDiff::apply(d3.diff(), &mid2).unwrap();
+            let sequential = MutationDiff::apply(&d3.await.diff().await, &mid2).unwrap();
 
-            let mut left = d1.diff().clone();
-            MutationDiff::absorb(&mut left, d2.diff().clone());
-            MutationDiff::absorb(&mut left, d3.diff().clone());
+            let mut left = d1.await.diff().clone();
+            MutationDiff::absorb(&mut left, d2.await.diff().clone());
+            MutationDiff::absorb(&mut left, d3.await.diff().clone());
 
-            let mut d2_then_d3 = d2.diff().clone();
-            MutationDiff::absorb(&mut d2_then_d3, d3.diff().clone());
-            let mut right = d1.diff().clone();
+            let mut d2_then_d3 = d2.await.diff().clone();
+            MutationDiff::absorb(&mut d2_then_d3, d3.await.diff().clone());
+            let mut right = d1.await.diff().clone();
             MutationDiff::absorb(&mut right, d2_then_d3);
 
             assert_eq!(MutationDiff::apply(&left, &base).unwrap(), sequential, "absorb associativity (left) failed");
@@ -856,9 +856,9 @@ mod tests {
             };
             let path = [MdPathStep::BlockQuote { index: 0 }];
             let d1 = Mutation::diff(&MdMutation::InsertBlock { path: path.to_vec(), index: 2, block: MdBlock::ThematicBreak }, &base);
-            let mid = MutationDiff::apply(d1.diff(), &base).unwrap();
+            let mid = MutationDiff::apply(&d1.await.diff().await, &base).unwrap();
             let d2 = Mutation::diff(&MdMutation::RemoveBlock { path: path.to_vec(), index: 0 }, &mid);
-            let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
+            let absorbed = assert_absorb_matches_sequential(&base, d1.await.diff(), d2.await.diff());
             let MdBlockDiff::BlockQuote { blocks: Some(inner) } = &absorbed.blocks.as_ref().unwrap().modified[0].diff else {
                 panic!("expected nested block-quote diff");
             };
@@ -906,7 +906,7 @@ mod tests {
 
         let snap = MdSnapshot { schema: STDIO_MD_DOCUMENT_SCHEMA.into(), blocks };
         let bytes = store::ArtifactPack::encode_pack(&snap);
-        let decoded = <MdSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+        let decoded = <MdSnapshot as store::ArtifactPack>::decode_pack(&bytes).await.expect("decode");
         assert_eq!(decoded, snap);
     }
     //#endregion 🔖️CodecRetentionLaw
@@ -928,7 +928,7 @@ mod tests {
         // Direction a->b: top-level `removed` (a's trailing paragraph, beyond b's length) +
         // `modified` (the shared-prefix `List` in every one of its own fields, AND the shared
         // `CodeBlock`) are exercised.
-        let blocks_ab = diff_ab.blocks.as_ref().expect("blocks diff present (a->b)");
+        let blocks_ab = diff_ab.await.blocks.as_ref().expect("blocks diff present (a->b)");
         assert!(!blocks_ab.removed.is_empty(), "top-level: removed not exercised (a->b)");
         assert_eq!(blocks_ab.modified.len(), 2, "expected the List AND the CodeBlock entries modified");
         let list_entry = blocks_ab.modified.iter().find(|m| matches!(m.diff, MdBlockDiff::List { .. })).expect("a List-shaped modified entry must be present");
@@ -946,7 +946,7 @@ mod tests {
         assert!(literal.is_some(), "CodeBlock.literal not exercised");
 
         // Direction b->a: top-level `added` (a's trailing paragraph reappearing) is exercised.
-        let blocks_ba = diff_ba.blocks.as_ref().expect("blocks diff present (b->a)");
+        let blocks_ba = diff_ba.await.blocks.as_ref().expect("blocks diff present (b->a)");
         assert!(!blocks_ba.added.is_empty(), "top-level: added not exercised (b->a)");
 
         // Sanity: nested list-item content diff and top-level block-kind Replace both exist as

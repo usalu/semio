@@ -441,21 +441,21 @@ mod tests {
     fn to_widget_node(node: &UiNode) -> WidgetNode<ActionDescriptor> {
         match node {
             UiNode::Stack(stack) => WidgetNode::Stack { direction: stack.direction.clone(), gap: stack.gap.clone(), padding: stack.padding.clone(), children: stack.children.iter().map(to_widget_node).collect() },
-            UiNode::Text(text) => WidgetNode::Text { value: text.value.clone(), emphasize: text.emphasize.unwrap_or(false) },
+            UiNode::Text(text) => WidgetNode::Text { value: text.value.to_string(), emphasize: text.emphasize.unwrap_or(false) },
             UiNode::Separator(_) => WidgetNode::Separator,
-            UiNode::Button(button) => WidgetNode::Button { id: button.id.clone(), icon_id: Some(button.icon_id.clone()), label: button.label.clone(), event: Some(button.action.clone()) },
+            UiNode::Button(button) => WidgetNode::Button { id: button.id.clone(), icon_id: Some(button.icon_id.clone()), label: button.label.to_string(), event: Some(button.action.clone()) },
             UiNode::Input(input) => {
-                WidgetNode::Input { id: input.id.clone(), input_kind: input.input_kind.clone(), value: input.value.clone(), placeholder: input.placeholder.clone(), commit: input.commit.clone(), on_change: Some(input.on_change.clone()) }
+                WidgetNode::Input { id: input.id.clone(), input_kind: input.input_kind.clone(), value: input.value.clone(), placeholder: input.placeholder.clone().map(|l| l.to_string()), commit: input.commit.clone(), on_change: Some(input.on_change.clone()) }
             }
             UiNode::Select(select) => WidgetNode::Select {
                 id: select.id.clone(),
                 value: select.value.clone(),
-                items: select.items.iter().map(|item| SelectItem { value: item.value.clone(), label: item.label.clone() }).collect(),
-                placeholder: select.placeholder.clone(),
+                items: select.items.iter().map(|item| SelectItem { value: item.value.clone(), label: item.label.to_string() }).collect(),
+                placeholder: select.placeholder.clone().map(|l| l.to_string()),
                 on_change: Some(select.on_change.clone()),
             },
-            UiNode::Toggle(toggle) => WidgetNode::Toggle { id: toggle.id.clone(), icon_id: toggle.icon_id.clone(), pressed: toggle.presence.selected, text: toggle.text.clone(), on_change: Some(toggle.on_change.clone()) },
-            UiNode::KeyValue(kv) => WidgetNode::KeyValue { entries: kv.entries.iter().map(|entry| KeyValueEntry { label: entry.label.clone(), value: entry.value.clone() }).collect() },
+            UiNode::Toggle(toggle) => WidgetNode::Toggle { id: toggle.id.clone(), icon_id: toggle.icon_id.clone(), pressed: toggle.presence.selected, text: toggle.text.clone().map(|l| l.to_string()), on_change: Some(toggle.on_change.clone()) },
+            UiNode::KeyValue(kv) => WidgetNode::KeyValue { entries: kv.entries.iter().map(|entry| KeyValueEntry { label: entry.label.to_string(), value: entry.value.clone() }).collect() },
             UiNode::Slider(slider) => WidgetNode::Slider { id: slider.id.clone(), value: slider.value, min: slider.min, max: slider.max, step: slider.step, ready: None, disabled: false, on_change: Some(slider.on_change.clone()) },
             UiNode::NumberStepper(stepper) => {
                 WidgetNode::NumberStepper { id: stepper.id.clone(), value: stepper.value, step: stepper.step, uniform: stepper.uniform, on_absolute: Some(stepper.on_absolute.clone()), on_delta: Some(stepper.on_delta.clone()) }
@@ -463,11 +463,11 @@ mod tests {
             UiNode::Ring(ring) => WidgetNode::Ring { id: ring.id.clone(), t: ring.t, disabled: ring.presence.state == UiState::Disabled, on_change: Some(ring.on_change.clone()) },
             UiNode::IconSelect(select) => WidgetNode::IconSelect { id: select.id.clone(), value: select.value.clone(), uniform: select.uniform, classifier_kind: select.classifier_kind.clone(), on_change: Some(select.on_change.clone()) },
             UiNode::Field(field) => match ui_node_to_control(&field.child) {
-                Some(control) => WidgetNode::Field { id: field.id.clone(), label: field.label.clone(), child: control_to_widget(&control) },
-                None => WidgetNode::Section { id: field.id.clone(), label: Some(field.label.clone()), default_open: true, children: vec![to_widget_node(&field.child)] },
+                Some(control) => WidgetNode::Field { id: field.id.clone(), label: field.label.to_string(), child: control_to_widget(&control) },
+                None => WidgetNode::Section { id: field.id.clone(), label: Some(field.label.to_string()), default_open: true, children: vec![to_widget_node(&field.child)] },
             },
-            UiNode::Section(section) => WidgetNode::Section { id: section.id.clone(), label: section.label.clone(), default_open: section.default_open.unwrap_or(true), children: section.children.iter().map(to_widget_node).collect() },
-            UiNode::Group(group) => WidgetNode::Section { id: group.id.clone(), label: Some(group.label.clone()), default_open: group.default_open.unwrap_or(true), children: group.children.iter().map(to_widget_node).collect() },
+            UiNode::Section(section) => WidgetNode::Section { id: section.id.clone(), label: section.label.clone().map(|l| l.to_string()), default_open: section.default_open.unwrap_or(true), children: section.children.iter().map(to_widget_node).collect() },
+            UiNode::Group(group) => WidgetNode::Section { id: group.id.clone(), label: Some(group.label.to_string()), default_open: group.default_open.unwrap_or(true), children: group.children.iter().map(to_widget_node).collect() },
             UiNode::Tree(tree) => WidgetNode::Tree {
                 // 🧭️ Per-item `selected`/`highlighted` (see `tree_item_to_widget`) already carry the
                 // full signal from `item.presence` — the tree-level id lists are gone, not re-derived.
@@ -492,17 +492,17 @@ mod tests {
 
     fn control_to_widget(control: &UiControlNode) -> ControlNode<ActionDescriptor> {
         match control {
-            UiControlNode::Button(n) => ControlNode::Button { id: n.id.clone(), icon_id: Some(n.icon_id.clone()), label: n.label.clone(), event: Some(n.action.clone()) },
-            UiControlNode::Input(n) => ControlNode::Input { id: n.id.clone(), input_kind: n.input_kind.clone(), value: n.value.clone(), placeholder: n.placeholder.clone(), commit: n.commit.clone(), on_change: Some(n.on_change.clone()) },
+            UiControlNode::Button(n) => ControlNode::Button { id: n.id.clone(), icon_id: Some(n.icon_id.clone()), label: n.label.to_string(), event: Some(n.action.clone()) },
+            UiControlNode::Input(n) => ControlNode::Input { id: n.id.clone(), input_kind: n.input_kind.clone(), value: n.value.clone(), placeholder: n.placeholder.clone().map(|l| l.to_string()), commit: n.commit.clone(), on_change: Some(n.on_change.clone()) },
             UiControlNode::Select(n) => ControlNode::Select {
                 id: n.id.clone(),
                 value: n.value.clone(),
-                items: n.items.iter().map(|item| SelectItem { value: item.value.clone(), label: item.label.clone() }).collect(),
-                placeholder: n.placeholder.clone(),
+                items: n.items.iter().map(|item| SelectItem { value: item.value.clone(), label: item.label.to_string() }).collect(),
+                placeholder: n.placeholder.clone().map(|l| l.to_string()),
                 on_change: Some(n.on_change.clone()),
             },
-            UiControlNode::Toggle(n) => ControlNode::Toggle { id: n.id.clone(), icon_id: n.icon_id.clone(), pressed: n.presence.selected, text: n.text.clone(), on_change: Some(n.on_change.clone()) },
-            UiControlNode::KeyValue(n) => ControlNode::KeyValue { entries: n.entries.iter().map(|entry| KeyValueEntry { label: entry.label.clone(), value: entry.value.clone() }).collect() },
+            UiControlNode::Toggle(n) => ControlNode::Toggle { id: n.id.clone(), icon_id: n.icon_id.clone(), pressed: n.presence.selected, text: n.text.clone().map(|l| l.to_string()), on_change: Some(n.on_change.clone()) },
+            UiControlNode::KeyValue(n) => ControlNode::KeyValue { entries: n.entries.iter().map(|entry| KeyValueEntry { label: entry.label.to_string(), value: entry.value.clone() }).collect() },
             UiControlNode::Slider(n) => ControlNode::Slider { id: n.id.clone(), value: n.value, min: n.min, max: n.max, step: n.step, ready: None, disabled: false, on_change: Some(n.on_change.clone()) },
             UiControlNode::NumberStepper(n) => ControlNode::NumberStepper { id: n.id.clone(), value: n.value, step: n.step, uniform: n.uniform, on_absolute: Some(n.on_absolute.clone()), on_delta: Some(n.on_delta.clone()) },
             UiControlNode::Ring(n) => ControlNode::Ring { id: n.id.clone(), t: n.t, disabled: n.presence.state == UiState::Disabled, on_change: Some(n.on_change.clone()) },
@@ -515,17 +515,17 @@ mod tests {
     /// `Field`'s `child: ControlNode<E>`) embeds a full widget, not a bare control payload.
     fn control_to_widget_node(control: &UiControlNode) -> WidgetNode<ActionDescriptor> {
         match control {
-            UiControlNode::Button(n) => WidgetNode::Button { id: n.id.clone(), icon_id: Some(n.icon_id.clone()), label: n.label.clone(), event: Some(n.action.clone()) },
-            UiControlNode::Input(n) => WidgetNode::Input { id: n.id.clone(), input_kind: n.input_kind.clone(), value: n.value.clone(), placeholder: n.placeholder.clone(), commit: n.commit.clone(), on_change: Some(n.on_change.clone()) },
+            UiControlNode::Button(n) => WidgetNode::Button { id: n.id.clone(), icon_id: Some(n.icon_id.clone()), label: n.label.to_string(), event: Some(n.action.clone()) },
+            UiControlNode::Input(n) => WidgetNode::Input { id: n.id.clone(), input_kind: n.input_kind.clone(), value: n.value.clone(), placeholder: n.placeholder.clone().map(|l| l.to_string()), commit: n.commit.clone(), on_change: Some(n.on_change.clone()) },
             UiControlNode::Select(n) => WidgetNode::Select {
                 id: n.id.clone(),
                 value: n.value.clone(),
-                items: n.items.iter().map(|item| SelectItem { value: item.value.clone(), label: item.label.clone() }).collect(),
-                placeholder: n.placeholder.clone(),
+                items: n.items.iter().map(|item| SelectItem { value: item.value.clone(), label: item.label.to_string() }).collect(),
+                placeholder: n.placeholder.clone().map(|l| l.to_string()),
                 on_change: Some(n.on_change.clone()),
             },
-            UiControlNode::Toggle(n) => WidgetNode::Toggle { id: n.id.clone(), icon_id: n.icon_id.clone(), pressed: n.presence.selected, text: n.text.clone(), on_change: Some(n.on_change.clone()) },
-            UiControlNode::KeyValue(n) => WidgetNode::KeyValue { entries: n.entries.iter().map(|entry| KeyValueEntry { label: entry.label.clone(), value: entry.value.clone() }).collect() },
+            UiControlNode::Toggle(n) => WidgetNode::Toggle { id: n.id.clone(), icon_id: n.icon_id.clone(), pressed: n.presence.selected, text: n.text.clone().map(|l| l.to_string()), on_change: Some(n.on_change.clone()) },
+            UiControlNode::KeyValue(n) => WidgetNode::KeyValue { entries: n.entries.iter().map(|entry| KeyValueEntry { label: entry.label.to_string(), value: entry.value.clone() }).collect() },
             UiControlNode::Slider(n) => WidgetNode::Slider { id: n.id.clone(), value: n.value, min: n.min, max: n.max, step: n.step, ready: None, disabled: false, on_change: Some(n.on_change.clone()) },
             UiControlNode::NumberStepper(n) => WidgetNode::NumberStepper { id: n.id.clone(), value: n.value, step: n.step, uniform: n.uniform, on_absolute: Some(n.on_absolute.clone()), on_delta: Some(n.on_delta.clone()) },
             UiControlNode::Ring(n) => WidgetNode::Ring { id: n.id.clone(), t: n.t, disabled: n.presence.state == UiState::Disabled, on_change: Some(n.on_change.clone()) },
@@ -534,13 +534,13 @@ mod tests {
     }
 
     fn tree_action_to_widget(action: &UiTreeItemAction) -> TreeItemAction<ActionDescriptor> {
-        TreeItemAction { icon_id: action.icon_id.clone(), label: action.label.clone(), event: action.action.clone(), placement: action.placement() }
+        TreeItemAction { icon_id: action.icon_id.clone(), label: action.label.clone().map(|l| l.to_string()), event: action.action.clone(), placement: action.placement() }
     }
 
     fn tree_item_to_widget(item: &UiTreeItemNode) -> TreeItem<ActionDescriptor> {
         TreeItem {
             id: item.id.clone(),
-            label: item.label.clone(),
+            label: item.label.to_string(),
             description: item.description.clone(),
             icon_id: item.icon_id.clone(),
             selected: item.presence.selected,
@@ -561,7 +561,7 @@ mod tests {
     }
 
     fn tree_section_to_widget(section: &UiTreeSectionNode) -> TreeSection<ActionDescriptor> {
-        TreeSection { id: section.id.clone(), label: section.label.clone(), default_open: section.default_open.unwrap_or(true), items: section.items.iter().map(tree_item_to_widget).collect() }
+        TreeSection { id: section.id.clone(), label: section.label.clone().map(|l| l.to_string()), default_open: section.default_open.unwrap_or(true), items: section.items.iter().map(tree_item_to_widget).collect() }
     }
 
     /// 📊️ Total (ui_instances incl. overlay, vector_vertices incl. overlay, raster_instances) across
@@ -663,7 +663,7 @@ mod tests {
 
     #[test]
     fn golden_text() {
-        assert_equivalent("Text", &leaf(UiNode::Text(UiTextNode { value: "hello world".into(), emphasize: Some(true), data_attributes: None, presence: UiPresence::default(), menu: None })));
+        assert_equivalent("Text", &leaf(UiNode::Text(UiTextNode { value: Label::data("hello world"), emphasize: Some(true), data_attributes: None, presence: UiPresence::default(), menu: None })));
     }
 
     #[test]
@@ -721,7 +721,7 @@ mod tests {
         // capability `widgets::render_toggle` (the immediate-mode reference this harness compares
         // against) never had, so a selected fixture would fail this equivalence check for the wrong
         // reason. This test stays scoped to the base (unselected) toggle's fill/label parity.
-        assert_equivalent("Toggle", &leaf(UiNode::Toggle(UiToggleNode { id: "tog".into(), icon_id: IconName::CircleDot, text: Some("On".into()), on_change: action(), presence: UiPresence::default(), menu: None })));
+        assert_equivalent("Toggle", &leaf(UiNode::Toggle(UiToggleNode { id: "tog".into(), icon_id: IconName::CircleDot, text: Some(Label::data("On")), on_change: action(), presence: UiPresence::default(), menu: None })));
     }
 
     /// ✨️ `presence.selected` draws its outset accent ring universally — proven here on `Toggle`, a
@@ -730,8 +730,8 @@ mod tests {
     /// is now a shared channel every element gets for free from `presence_overlay`.
     #[test]
     fn selected_presence_draws_an_outset_ring_on_any_element() {
-        let unselected = UiNode::Toggle(UiToggleNode { id: "tog".into(), icon_id: IconName::CircleDot, text: Some("On".into()), on_change: action(), presence: UiPresence::default(), menu: None });
-        let selected = UiNode::Toggle(UiToggleNode { id: "tog".into(), icon_id: IconName::CircleDot, text: Some("On".into()), on_change: action(), presence: UiPresence::selected(true), menu: None });
+        let unselected = UiNode::Toggle(UiToggleNode { id: "tog".into(), icon_id: IconName::CircleDot, text: Some(Label::data("On")), on_change: action(), presence: UiPresence::default(), menu: None });
+        let selected = UiNode::Toggle(UiToggleNode { id: "tog".into(), icon_id: IconName::CircleDot, text: Some(Label::data("On")), on_change: action(), presence: UiPresence::selected(true), menu: None });
         let (unselected_instances, _, _) = retained_stats(&leaf(unselected));
         let (selected_instances, _, _) = retained_stats(&leaf(selected));
         assert!(selected_instances > unselected_instances, "a selected element should paint more instances than an unselected one (the outset accent ring)");
@@ -739,7 +739,7 @@ mod tests {
 
     #[test]
     fn golden_key_value() {
-        assert_equivalent("KeyValue", &leaf(UiNode::KeyValue(UiKeyValueNode { entries: vec![UiKeyValueEntry { label: Label::data("Name"), value: Label::data("Semio") }], presence: UiPresence::default(), menu: None })));
+        assert_equivalent("KeyValue", &leaf(UiNode::KeyValue(UiKeyValueNode { entries: vec![UiKeyValueEntry { label: Label::data("Name"), value: Label::data("Semio").to_string() }], presence: UiPresence::default(), menu: None })));
     }
 
     #[test]
@@ -881,7 +881,7 @@ mod tests {
     /// promise, not equivalence with anything immediate-mode.
     #[test]
     fn golden_image_known_gap() {
-        let node = UiNode::Image(UiImageNode { id: "img".into(), src: String::new(), alt: Some("alt text".into()), presence: UiPresence::default(), menu: None });
+        let node = UiNode::Image(UiImageNode { id: "img".into(), src: String::new(), alt: Some(Label::data("alt text")), presence: UiPresence::default(), menu: None });
         let (instances, _, _) = retained_stats(&node);
         assert!(instances > 0, "an empty-src Image should still paint its alt text");
     }
@@ -1023,7 +1023,7 @@ mod tests {
     fn measure_widget_stack_horizontal_sums_child_widths() {
         let mut atlas = FontAtlas::builtin();
         let theme = Theme::default();
-        let button = || WidgetNode::<ActionDescriptor>::Button { id: Some("b".into()), icon_id: None, label: Label::data("Go"), event: None };
+        let button = || WidgetNode::<ActionDescriptor>::Button { id: Some("b".into()), icon_id: None, label: Label::data("Go").to_string(), event: None };
         let node = WidgetNode::Stack { direction: "horizontal".into(), gap: Some("none".into()), padding: Some("none".into()), children: vec![button(), button()] };
         let (w, _) = measure_widget(&mut atlas, &theme, &node);
         assert!((w - theme.control_height * 2.0).abs() < 0.001, "two gap-less horizontal buttons must measure to exactly twice one control's width");
@@ -1042,8 +1042,8 @@ mod tests {
     fn measure_widget_key_value_grows_with_entry_count() {
         let mut atlas = FontAtlas::builtin();
         let theme = Theme::default();
-        let one = WidgetNode::<ActionDescriptor>::KeyValue { entries: vec![KeyValueEntry { label: Label::data("A"), value: "1".into() }] };
-        let two = WidgetNode::<ActionDescriptor>::KeyValue { entries: vec![KeyValueEntry { label: Label::data("A"), value: "1".into() }, KeyValueEntry { label: Label::data("B"), value: "2".into() }] };
+        let one = WidgetNode::<ActionDescriptor>::KeyValue { entries: vec![KeyValueEntry { label: Label::data("A").to_string(), value: "1".into() }] };
+        let two = WidgetNode::<ActionDescriptor>::KeyValue { entries: vec![KeyValueEntry { label: Label::data("A").to_string(), value: "1".into() }, KeyValueEntry { label: Label::data("B").to_string(), value: "2".into() }] };
         let (_, h1) = measure_widget(&mut atlas, &theme, &one);
         let (_, h2) = measure_widget(&mut atlas, &theme, &two);
         assert!((h2 - h1 * 2.0).abs() < 0.001, "KeyValue height must scale linearly with entry count");
@@ -1061,7 +1061,7 @@ mod tests {
     fn measure_widget_field_combines_label_and_child_height() {
         let mut atlas = FontAtlas::builtin();
         let theme = Theme::default();
-        let node = WidgetNode::<ActionDescriptor>::Field { id: "f".into(), label: Label::data("Label"), child: ControlNode::Slider { id: "s".into(), value: 0.5, min: 0.0, max: 1.0, step: 0.1, ready: None, disabled: false, on_change: None } };
+        let node = WidgetNode::<ActionDescriptor>::Field { id: "f".into(), label: Label::data("Label").to_string(), child: ControlNode::Slider { id: "s".into(), value: 0.5, min: 0.0, max: 1.0, step: 0.1, ready: None, disabled: false, on_change: None } };
         let (_, h) = measure_widget(&mut atlas, &theme, &node);
         assert!(h > theme.control_height, "a Field's total height must be its label plus its child control, so it must exceed the control's own height alone");
     }
@@ -1083,7 +1083,7 @@ mod tests {
         let theme = Theme::default();
         let item = |id: &str, dimmed: bool| TreeItem {
             id: id.into(),
-            label: Label::data(id),
+            label: Label::data(id).to_string(),
             description: None,
             icon_id: None,
             selected: false,
@@ -1158,7 +1158,7 @@ mod tests {
     #[test]
     fn render_widget_select_and_toggle_register_interaction_metas() {
         let mut h = WidgetHarness::new();
-        let select = WidgetNode::Select { id: "sel".into(), value: "a".into(), items: vec![SelectItem { value: "a".into(), label: Label::data("Alpha") }], placeholder: None, on_change: Some(action()) };
+        let select = WidgetNode::Select { id: "sel".into(), value: "a".into(), items: vec![SelectItem { value: "a".into(), label: Label::data("Alpha").to_string() }], placeholder: None, on_change: Some(action()) };
         render_widget(&select, VIEWPORT, &mut h.ctx());
         assert!(h.maps.select_metas.contains_key("sel"));
 
@@ -1205,7 +1205,7 @@ mod tests {
     #[test]
     fn render_widget_field_draws_label_and_delegates_to_control() {
         let mut h = WidgetHarness::new();
-        let node = WidgetNode::Field { id: "f".into(), label: Label::data("Name"), child: ControlNode::Input { id: "in".into(), input_kind: "text".into(), value: "x".into(), placeholder: None, commit: None, on_change: Some(action()) } };
+        let node = WidgetNode::Field { id: "f".into(), label: Label::data("Name").to_string(), child: ControlNode::Input { id: "in".into(), input_kind: "text".into(), value: "x".into(), placeholder: None, commit: None, on_change: Some(action()) } };
         render_widget(&node, VIEWPORT, &mut h.ctx());
         assert!(h.maps.input_metas.contains_key("in"), "Field must render its child control (an Input here), which registers its own interaction meta");
         let total: usize = h.draw.layers.iter().map(|l| l.ui_instances.len()).sum();
@@ -1216,12 +1216,12 @@ mod tests {
     fn render_widget_section_toggles_collapsed_state_from_default_open() {
         let child = || WidgetNode::<ActionDescriptor>::Text { value: "child text".into(), emphasize: false };
         let mut h = WidgetHarness::new();
-        let closed = WidgetNode::<ActionDescriptor>::Section { id: "sec".into(), label: Some(Label::data("Sec")), default_open: false, children: vec![child()] };
+        let closed = WidgetNode::<ActionDescriptor>::Section { id: "sec".into(), label: Some(Label::data("Sec").to_string()), default_open: false, children: vec![child()] };
         render_widget(&closed, VIEWPORT, &mut h.ctx());
         assert_eq!(h.collapsed_sections.get("section.sec"), Some(&true), "a Section with default_open: false must seed its collapsed_sections entry as collapsed");
 
         let mut h2 = WidgetHarness::new();
-        let open = WidgetNode::<ActionDescriptor>::Section { id: "sec".into(), label: Some(Label::data("Sec")), default_open: true, children: vec![child()] };
+        let open = WidgetNode::<ActionDescriptor>::Section { id: "sec".into(), label: Some(Label::data("Sec").to_string()), default_open: true, children: vec![child()] };
         render_widget(&open, VIEWPORT, &mut h2.ctx());
         assert_eq!(h2.collapsed_sections.get("section.sec"), Some(&false));
         let closed_instances: usize = h.draw.layers.iter().map(|l| l.ui_instances.len()).sum();
@@ -1234,7 +1234,7 @@ mod tests {
         let mut h = WidgetHarness::new();
         let item = TreeItem {
             id: "i1".into(),
-            label: Label::data("Item"),
+            label: Label::data("Item").to_string(),
             description: None,
             icon_id: None,
             selected: false,
@@ -1251,7 +1251,7 @@ mod tests {
             children: vec![],
         };
         let node = WidgetNode::<ActionDescriptor>::Tree {
-            sections: vec![TreeSection { id: "s".into(), label: Some(Label::data("Section")), default_open: true, items: vec![item] }],
+            sections: vec![TreeSection { id: "s".into(), label: Some(Label::data("Section").to_string()), default_open: true, items: vec![item] }],
             selected_ids: vec![],
             highlighted_ids: vec![],
             selection_change: Some(action()),
@@ -1267,7 +1267,7 @@ mod tests {
         let mut h = WidgetHarness::new();
         let item = TreeItem {
             id: "i1".into(),
-            label: Label::data("Item"),
+            label: Label::data("Item").to_string(),
             description: None,
             icon_id: None,
             selected: false,
@@ -1277,7 +1277,7 @@ mod tests {
             event: None,
             hover_event: None,
             unhover_event: None,
-            actions: vec![TreeItemAction { icon_id: IconName::CircleDot, label: Some(Label::data("Del")), event: action(), placement: UiTreeActionPlacement::Row }],
+            actions: vec![TreeItemAction { icon_id: IconName::CircleDot, label: Some(Label::data("Del").to_string()), event: action(), placement: UiTreeActionPlacement::Row }],
             draggable: false,
             drag_data: StdHashMap::new(),
             control: None,
@@ -1294,7 +1294,7 @@ mod tests {
         let mut h = WidgetHarness::new();
         let item = TreeItem {
             id: "i1".into(),
-            label: Label::data("Item"),
+            label: Label::data("Item").to_string(),
             description: None,
             icon_id: None,
             selected: false,
@@ -1304,7 +1304,7 @@ mod tests {
             event: None,
             hover_event: None,
             unhover_event: None,
-            actions: vec![TreeItemAction { icon_id: IconName::CircleDot, label: Some(Label::data("Del")), event: action(), placement: UiTreeActionPlacement::Menu }],
+            actions: vec![TreeItemAction { icon_id: IconName::CircleDot, label: Some(Label::data("Del").to_string()), event: action(), placement: UiTreeActionPlacement::Menu }],
             draggable: false,
             drag_data: StdHashMap::new(),
             control: None,
@@ -1321,7 +1321,7 @@ mod tests {
         let mut h = WidgetHarness::new();
         let item = TreeItem {
             id: "i1".into(),
-            label: Label::data("Item"),
+            label: Label::data("Item").to_string(),
             description: None,
             icon_id: None,
             selected: false,

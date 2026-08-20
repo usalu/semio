@@ -70,7 +70,7 @@ impl ArtifactViewer for SemioMeshViewer {
     async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))).await,
+            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }
@@ -80,7 +80,7 @@ impl ArtifactViewer for SemioMeshViewer {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn create_semio_mesh_viewer() -> semio_framework_plugin::AppDefinition {
     Viewer::builder(SEMIO_MESH_DIALECT)
-        .document(["stdio", "semio"])
+        .await.document(["stdio", "semio"])
         .icon_id("box")
         .mode_def(view::definition())
         .default_mode_id(view::SEMIO_MESH_VIEW_MODE_ID)

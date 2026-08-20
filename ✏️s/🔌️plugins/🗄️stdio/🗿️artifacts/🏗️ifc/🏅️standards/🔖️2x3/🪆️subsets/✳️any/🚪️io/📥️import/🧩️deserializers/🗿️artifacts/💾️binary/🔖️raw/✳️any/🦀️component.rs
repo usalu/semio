@@ -8,7 +8,7 @@ pub fn register() {}
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn deserialize(from: &BinarySnapshot) -> Result<Ifc2x3Snapshot, store::PackError> {
-    crate::artifacts::ifc::standards::v2x3::engine::decode_ifc2x3(&from.bytes).map_err(store::PackError::Schema)
+    crate::artifacts::ifc::standards::v2x3::engine::decode_ifc2x3(&from.bytes).await.map_err(store::PackError::Schema)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

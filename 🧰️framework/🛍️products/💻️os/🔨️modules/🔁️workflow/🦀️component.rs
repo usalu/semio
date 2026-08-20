@@ -2553,24 +2553,24 @@ mod tests {
             wire: MediaWireFormat::Binary { format_kind: "svg".into() },
             conversion: Some((MediaForm::Brep, MediaForm::Mesh)),
         };
-        let record = media_contract_to_record(&contract).await;
-        let round_tripped = media_contract_from_record(&record).await.expect("decode");
+        let record = media_contract_to_record(&contract);
+        let round_tripped = media_contract_from_record(&record).expect("decode");
         assert_eq!(round_tripped, contract);
 
         let placeholder = placeholder_media_contract("draw.document").await;
-        let placeholder_record = media_contract_to_record(&placeholder).await;
-        assert_eq!(media_contract_from_record(&placeholder_record).await.expect("decode placeholder"), placeholder);
+        let placeholder_record = media_contract_to_record(&placeholder);
+        assert_eq!(media_contract_from_record(&placeholder_record).expect("decode placeholder"), placeholder);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn workflow_media_port_dsl_round_trips() {
         let port = WorkflowMediaPort { id: "n1:out:out".into(), spec: media_port_spec("out", MediaPortDirection::Out, Some("kind.a")).await };
-        let record = workflow_media_port_to_record(&port).await;
-        assert_eq!(workflow_media_port_from_record(&record).await.expect("decode"), port);
+        let record = workflow_media_port_to_record(&port);
+        assert_eq!(workflow_media_port_from_record(&record).expect("decode"), port);
 
         let port_no_kind = WorkflowMediaPort { id: "n1:in:in".into(), spec: media_port_spec("in", MediaPortDirection::In, None).await };
-        let record_no_kind = workflow_media_port_to_record(&port_no_kind).await;
-        assert_eq!(workflow_media_port_from_record(&record_no_kind).await.expect("decode"), port_no_kind);
+        let record_no_kind = workflow_media_port_to_record(&port_no_kind);
+        assert_eq!(workflow_media_port_from_record(&record_no_kind).expect("decode"), port_no_kind);
     }
 
     #[semio_framework_async_macros::async_test]

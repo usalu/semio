@@ -52,12 +52,12 @@ impl Mutation<Mp3Snapshot> for Mp3Mutation {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn apply_mp3_mutation(snapshot: &mut Mp3Snapshot, mutation: &Mp3Mutation) -> protocol::MutationOutcome<Mp3Diff> {
     let outcome = <Mp3Mutation as Mutation<Mp3Snapshot>>::diff(mutation, snapshot);
-    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
+    match protocol::MutationDiff::apply(outcome.await.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.await.messages().to_vec()),
     }
 }
 //#endregion 🔖️Mutation
@@ -131,7 +131,7 @@ mod tests {
             let returned = apply_mp3_mutation(&mut via_apply, &m);
             let direct = m.diff(&base);
             assert_eq!(direct, returned, "diff mismatch for {m:?}");
-            assert_eq!(direct.diff().apply(&base).unwrap(), via_apply, "apply mismatch for {m:?}");
+            assert_eq!(direct.await.diff().apply(&base).unwrap(), via_apply, "apply mismatch for {m:?}");
         }
     }
     //#endregion mutation_diff_law
@@ -149,8 +149,8 @@ mod tests {
             assert_eq!(round, base, "mutation-level inverse failed for {m:?}");
 
             let d = m.diff(&base);
-            let applied = d.diff().apply(&base).unwrap();
-            let undone = d.diff().inverse(&base).apply(&applied).unwrap();
+            let applied = d.await.diff().apply(&base).unwrap();
+            let undone = d.await.diff().inverse(&base).apply(&applied).unwrap();
             assert_eq!(undone, base, "diff-level inverse failed for {m:?}");
         }
     }
@@ -162,12 +162,12 @@ mod tests {
         let base = base_snapshot();
         for m in variants(&base) {
             let printed = m.print_op();
-            assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
-            let parsed = Mp3Mutation::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
+            assert!(!printed.await.contains('\n'), "print_op must be one line, got {printed:?}");
+            let parsed = Mp3Mutation::parse_op(&printed).await.unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
             assert_eq!(parsed, m, "print_op/parse_op round-trip mismatch for {m:?}");
 
-            let encoded = m.encode_op().unwrap_or_else(|e| panic!("encode_op({m:?}) failed: {e}"));
-            let decoded = Mp3Mutation::decode_op(&encoded).unwrap_or_else(|e| panic!("decode_op failed: {e}"));
+            let encoded = m.encode_op().await.unwrap_or_else(|e| panic!("encode_op({m:?}) failed: {e}"));
+            let decoded = Mp3Mutation::decode_op(&encoded).await.unwrap_or_else(|e| panic!("decode_op failed: {e}"));
             assert_eq!(decoded, m, "encode_op/decode_op round-trip mismatch for {m:?}");
         }
     }

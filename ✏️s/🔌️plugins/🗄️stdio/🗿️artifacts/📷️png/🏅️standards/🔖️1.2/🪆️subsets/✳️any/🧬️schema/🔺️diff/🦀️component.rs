@@ -993,13 +993,13 @@ where
     let mut removed_set = std::collections::HashSet::new();
     for &index in removed {
         if index >= base_len || !removed_set.insert(index) {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "PNG collection removal is missing or duplicated").at(path.iter().map(String::as_str)));
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "PNG collection removal is missing or duplicated").await.at(path.iter().map(String::as_str)));
         }
     }
     let mut modified_set = std::collections::HashSet::new();
     for index in modified {
         if index >= base_len || !modified_set.insert(index) || removed_set.contains(&index) {
-            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "PNG collection modification is missing, duplicated, or removed").at(path.iter().map(String::as_str)));
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "PNG collection modification is missing, duplicated, or removed").await.at(path.iter().map(String::as_str)));
         }
     }
     let added: Vec<usize> = added.into_iter().collect();
@@ -1007,7 +1007,7 @@ where
     let mut added_set = std::collections::HashSet::new();
     for index in added {
         if index > final_len || !added_set.insert(index) {
-            return Err(MutationApplyError::new("mutation.apply.invalid-index", "PNG collection addition index is invalid or duplicated").at(path.iter().map(String::as_str)));
+            return Err(MutationApplyError::new("mutation.apply.invalid-index", "PNG collection addition index is invalid or duplicated").await.at(path.iter().map(String::as_str)));
         }
     }
     Ok(())
@@ -1863,9 +1863,9 @@ pub(crate) fn write_bin_snapshot(w: &mut dsl::ByteWriter, s: &PngSnapshot) {
     w.write_u8(if s.interlace { 1 } else { 0 });
     write_bin_option(w, &s.plte, |w, v: &Vec<PngRgb>| write_bin_vec(w, v, write_bin_rgb));
     write_bin_option(w, &s.trns, write_bin_transparency);
-    write_bin_option(w, &s.gama, |w, v: &u32| w.write_u32_le(*v));
+    write_bin_option(w, &s.gama, |w, v: &u32| { w.write_u32_le(*v); });
     write_bin_option(w, &s.chrm, write_bin_chromaticities);
-    write_bin_option(w, &s.srgb, |w, v: &PngSrgbIntent| w.write_u8(v.to_u8()));
+    write_bin_option(w, &s.srgb, |w, v: &PngSrgbIntent| { w.write_u8(v.to_u8()); });
     write_bin_option(w, &s.phys, write_bin_physical_dims);
     write_bin_option(w, &s.time, write_bin_timestamp);
     write_bin_option(w, &s.bkgd, write_bin_background);
@@ -1908,7 +1908,7 @@ pub(crate) fn read_bin_snapshot(r: &mut dsl::ByteReader<'_>) -> Result<PngSnapsh
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_plte_diff_bin(d: &PngPlteDiff) -> Vec<u8> {
     let mut w = semio_framework_plugin::resolve_ready(dsl::ByteWriter::new());
-    write_bin_vec(&mut w, &d.removed, |w, v: &usize| w.write_varint_u64(*v as u64));
+    write_bin_vec(&mut w, &d.removed, |w, v: &usize| { w.write_varint_u64(*v as u64); });
     write_bin_vec(&mut w, &d.modified, |w, m: &PngPlteEntryModified| {
         w.write_varint_u64(m.index as u64);
         write_bin_rgb(w, &m.rgb);
@@ -1939,8 +1939,8 @@ fn dec_plte_diff_bin(bytes: &[u8]) -> Result<PngPlteDiff, dsl::PackError> {
 fn write_bin_text_chunk_diff(w: &mut dsl::ByteWriter, d: &PngTextChunkDiff) {
     write_bin_option(w, &d.keyword, |w, v: &String| write_bin_str(w, v));
     write_bin_option(w, &d.value, |w, v: &String| write_bin_str(w, v));
-    write_bin_option(w, &d.compressed, |w, v: &bool| w.write_u8(if *v { 1 } else { 0 }));
-    write_bin_option(w, &d.kind, |w, v: &PngTextKind| w.write_u8(enc_text_kind_u8(*v)));
+    write_bin_option(w, &d.compressed, |w, v: &bool| { w.write_u8(if *v { 1 } else { 0 }); });
+    write_bin_option(w, &d.kind, |w, v: &PngTextKind| { w.write_u8(enc_text_kind_u8(*v)); });
     write_bin_option(w, &d.language_tag, |w, v: &String| write_bin_str(w, v));
     write_bin_option(w, &d.translated_keyword, |w, v: &String| write_bin_str(w, v));
 }
@@ -1958,7 +1958,7 @@ fn read_bin_text_chunk_diff(r: &mut dsl::ByteReader<'_>) -> Result<PngTextChunkD
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_text_chunks_diff_bin(d: &PngTextChunksDiff) -> Vec<u8> {
     let mut w = semio_framework_plugin::resolve_ready(dsl::ByteWriter::new());
-    write_bin_vec(&mut w, &d.removed, |w, v: &usize| w.write_varint_u64(*v as u64));
+    write_bin_vec(&mut w, &d.removed, |w, v: &usize| { w.write_varint_u64(*v as u64); });
     write_bin_vec(&mut w, &d.modified, |w, m: &PngTextChunkModified| {
         w.write_varint_u64(m.index as u64);
         write_bin_text_chunk_diff(w, &m.diff);
@@ -1988,7 +1988,7 @@ fn dec_text_chunks_diff_bin(bytes: &[u8]) -> Result<PngTextChunksDiff, dsl::Pack
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_chunk_order_diff_bin(d: &PngChunkOrderDiff) -> Vec<u8> {
     let mut w = semio_framework_plugin::resolve_ready(dsl::ByteWriter::new());
-    write_bin_vec(&mut w, &d.removed, |w, v: &usize| w.write_varint_u64(*v as u64));
+    write_bin_vec(&mut w, &d.removed, |w, v: &usize| { w.write_varint_u64(*v as u64); });
     write_bin_vec(&mut w, &d.modified, |w, m: &PngChunkOrderModified| {
         w.write_varint_u64(m.index as u64);
         write_bin_chunk_marker(w, &m.marker);
@@ -2018,7 +2018,7 @@ fn dec_chunk_order_diff_bin(bytes: &[u8]) -> Result<PngChunkOrderDiff, dsl::Pack
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_unknown_chunks_diff_bin(d: &PngUnknownChunksDiff) -> Vec<u8> {
     let mut w = semio_framework_plugin::resolve_ready(dsl::ByteWriter::new());
-    write_bin_vec(&mut w, &d.removed, |w, v: &usize| w.write_varint_u64(*v as u64));
+    write_bin_vec(&mut w, &d.removed, |w, v: &usize| { w.write_varint_u64(*v as u64); });
     write_bin_vec(&mut w, &d.modified, |w, m: &PngUnknownChunkModified| {
         w.write_varint_u64(m.index as u64);
         write_bin_chunk(w, &m.chunk);
@@ -2194,11 +2194,11 @@ impl protocol::DiffCodec for PngDiff {
     /// doc comment for the 2-way/3-way flag design).
     async fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let mut w = dsl::ByteWriter::new().await;
-        write_bin_option(&mut w, &self.width, |w, v| w.write_u32_le(*v));
-        write_bin_option(&mut w, &self.height, |w, v| w.write_u32_le(*v));
-        write_bin_option(&mut w, &self.bit_depth, |w, v| w.write_u8(*v));
-        write_bin_option(&mut w, &self.color_type, |w, v| w.write_u8(v.to_u8()));
-        write_bin_option(&mut w, &self.interlace, |w, v| w.write_u8(if *v { 1 } else { 0 }));
+        write_bin_option(&mut w, &self.width, |w, v| { w.write_u32_le(*v); });
+        write_bin_option(&mut w, &self.height, |w, v| { w.write_u32_le(*v); });
+        write_bin_option(&mut w, &self.bit_depth, |w, v| { w.write_u8(*v); });
+        write_bin_option(&mut w, &self.color_type, |w, v| { w.write_u8(v.to_u8()); });
+        write_bin_option(&mut w, &self.interlace, |w, v| { w.write_u8(if *v { 1 } else { 0 }); });
 
         write_bin_tri_flag(&mut w, &self.plte, |w, v| write_bin_blob(w, &enc_plte_diff_bin(v)));
         write_bin_tri_flag(&mut w, &self.trns, |w, v| {
@@ -2206,9 +2206,9 @@ impl protocol::DiffCodec for PngDiff {
             write_bin_transparency(&mut inner, v);
             write_bin_blob(w, &semio_framework_plugin::resolve_ready(inner.into_bytes()));
         });
-        write_bin_tri_flag(&mut w, &self.gama, |w, v| w.write_u32_le(*v));
+        write_bin_tri_flag(&mut w, &self.gama, |w, v| { w.write_u32_le(*v); });
         write_bin_tri_flag(&mut w, &self.chrm, |w, v| write_bin_chromaticities(w, v));
-        write_bin_tri_flag(&mut w, &self.srgb, |w, v| w.write_u8(v.to_u8()));
+        write_bin_tri_flag(&mut w, &self.srgb, |w, v| { w.write_u8(v.to_u8()); });
         write_bin_tri_flag(&mut w, &self.phys, |w, v| write_bin_physical_dims(w, v));
         write_bin_tri_flag(&mut w, &self.time, |w, v| write_bin_timestamp(w, v));
         write_bin_tri_flag(&mut w, &self.bkgd, |w, v| {
@@ -2352,12 +2352,12 @@ mod handcrafted_diff_codec_tests {
     async fn diff_codec_text_binary_roundtrip_law() {
         for d in demo_diff_cases() {
             let printed = d.print_diff();
-            assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
-            let parsed = PngDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
+            assert!(!printed.await.contains('\n'), "print_diff must be one line, got {printed:?}");
+            let parsed = PngDiff::parse_diff(&printed).await.unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
             assert_eq!(parsed, d, "print_diff/parse_diff round-trip mismatch (printed {printed:?})");
 
-            let encoded = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
-            let decoded = PngDiff::decode_diff(&encoded).unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
+            let encoded = d.encode_diff().await.unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
+            let decoded = PngDiff::decode_diff(&encoded).await.unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
             assert_eq!(decoded, d, "encode_diff/decode_diff round-trip mismatch");
         }
     }

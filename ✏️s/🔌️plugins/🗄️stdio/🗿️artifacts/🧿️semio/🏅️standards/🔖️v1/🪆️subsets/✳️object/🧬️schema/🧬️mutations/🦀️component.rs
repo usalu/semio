@@ -64,7 +64,7 @@ mod tests {
     /// (📌️important.md Trap #1: the `din4108`-derived helper got this wrong).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn round_trip(base: &SemioObjectSnapshot, operation: &SemioObjectMutation) -> SemioObjectSnapshot {
-        let forward = operation.diff(base).diff().apply(base).expect("apply must succeed for a well-formed fixture");
+        let forward = operation.diff(base).await.diff().apply(base).expect("apply must succeed for a well-formed fixture");
         let backwards = operation.inverse(base);
         let mut restored = forward.clone();
         for back in &backwards {
@@ -112,8 +112,8 @@ mod tests {
         let mut base = fixture();
         base.brep = None;
         let delete = SemioObjectMutation::DeleteBrep(delete_brep::mutation::DeleteBrep {});
-        assert!(delete.inverse(&base).is_empty(), "deleting an already-absent slot has nothing to undo");
-        assert_eq!(delete.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base, "deleting an absent slot is a no-op");
+        assert!(delete.inverse(&base).await.is_empty(), "deleting an already-absent slot has nothing to undo");
+        assert_eq!(delete.diff(&base).await.diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base, "deleting an absent slot is a no-op");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -151,7 +151,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn semantic_kinds_cover_every_variant() {
-        assert_eq!(SemioObjectMutation::kinds().len(), 9);
+        assert_eq!(SemioObjectMutation::kinds().await.len(), 9);
         let mutation = SemioObjectMutation::DeleteMesh(delete_mesh::mutation::DeleteMesh {});
         assert_eq!(mutation.semantics().kind, "delete-mesh");
         assert_eq!(mutation.semantics().record, "DeletedMesh");

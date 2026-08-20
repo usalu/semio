@@ -56,6 +56,6 @@ mod tests {
     async fn demo_source_nonempty() {
         let source = source();
         assert_eq!(source.id(), ID);
-        assert!(!source.document_json().is_empty());
+        assert!(!source.document_json().await.is_empty());
     }
 }

@@ -1550,8 +1550,8 @@ pub(crate) fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
+    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn write_str_lp(out: &mut Vec<u8>, s: &str) {
@@ -1707,7 +1707,7 @@ mod handcrafted_diff_codec_tests {
         b.slides[0].shapes = vec![SlideShape::Placeholder { frame: SlideFrame { origin: SemioPoint2 { x: 0.0, y: 0.0 }, width: 1.0, height: 1.0 }, kind: PlaceholderKind::Footer }];
 
         let diff = SemioPresentationDiff::between(&a, &b);
-        let shapes_diff = diff.slides.as_ref().unwrap().modified[0].diff.shapes.as_ref().expect("shapes diff present");
+        let shapes_diff = diff.await.slides.as_ref().unwrap().modified[0].diff.shapes.as_ref().expect("shapes diff present");
         assert_eq!(shapes_diff.modified.len(), 1);
         assert!(matches!(&shapes_diff.modified[0].diff, SlideShapeDiff::Replace { .. }), "expected Replace for a shape-kind change, got {:?}", shapes_diff.modified[0].diff);
 
@@ -1716,8 +1716,8 @@ mod handcrafted_diff_codec_tests {
         assert_eq!(MutationDiff::apply(&inv, &b).expect("apply must succeed for a well-formed fixture"), a);
 
         let printed = diff.print_diff();
-        let parsed = SemioPresentationDiff::parse_diff(&printed).expect("parse_diff");
-        assert_eq!(parsed, diff, "Replace round-trip through the hand-rolled grammar failed (printed {printed:?})");
+        let parsed = SemioPresentationDiff::parse_diff(&printed).await.expect("parse_diff");
+        assert_eq!(parsed, diff.await, "Replace round-trip through the hand-rolled grammar failed (printed {printed:?})");
     }
 
     /// 🧪️ `DiffCodec` round-trip law over the hand-rolled `SemioPresentationDiff` grammar —
@@ -1728,25 +1728,25 @@ mod handcrafted_diff_codec_tests {
     async fn diff_codec_text_binary_roundtrip_law() {
         let a = snapshot_a();
         let b = snapshot_b();
-        let cases = vec![SemioPresentationDiff::default(), SemioPresentationDiff::between(&a, &b), SemioPresentationDiff::between(&b, &a), SemioPresentationDiff::between(&a, &a)];
+        let cases = vec![SemioPresentationDiff::default(), SemioPresentationDiff::between(&a, &b).await, SemioPresentationDiff::between(&b, &a).await, SemioPresentationDiff::between(&a, &a).await];
         for d in cases {
             let printed = d.print_diff();
             assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
-            let parsed = SemioPresentationDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
+            let parsed = SemioPresentationDiff::parse_diff(&printed).await.unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
             assert_eq!(parsed, d, "print_diff/parse_diff round-trip mismatch (printed {printed:?})");
 
             let encoded = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
-            let decoded = SemioPresentationDiff::decode_diff(&encoded).unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
+            let decoded = SemioPresentationDiff::decode_diff(&encoded).await.unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
             assert_eq!(decoded, d, "encode_diff/decode_diff round-trip mismatch");
         }
 
         // Field sweep confirmation: every collection flavor + the tri-state actually exercised.
         let diff_ab = SemioPresentationDiff::between(&a, &b);
-        let masters = diff_ab.masters.as_ref().expect("masters diff present");
+        let masters = diff_ab.await.masters.as_ref().expect("masters diff present");
         assert!(!masters.removed.is_empty() && !masters.modified.is_empty() && !masters.added.is_empty(), "masters: not every flavor exercised");
-        let layouts = diff_ab.layouts.as_ref().expect("layouts diff present");
+        let layouts = diff_ab.await.layouts.as_ref().expect("layouts diff present");
         assert!(!layouts.modified.is_empty(), "layouts: master_id modify not exercised");
-        let slides = diff_ab.slides.as_ref().expect("slides diff present");
+        let slides = diff_ab.await.slides.as_ref().expect("slides diff present");
         assert!(!slides.removed.is_empty(), "slides: removed not exercised");
         assert_eq!(slides.modified.len(), 1);
         let slide_diff = &slides.modified[0].diff;

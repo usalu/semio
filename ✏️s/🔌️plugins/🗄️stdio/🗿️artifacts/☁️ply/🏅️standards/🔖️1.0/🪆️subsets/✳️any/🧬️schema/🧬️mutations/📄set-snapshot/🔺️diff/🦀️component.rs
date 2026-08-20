@@ -8,7 +8,7 @@ use crate::artifacts::ply::PlySnapshot;
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff(base: &PlySnapshot, snapshot: &PlySnapshot) -> protocol::MutationOutcome<PlyDiff> {
     if base == snapshot {
-        return protocol::MutationOutcome::new(PlyDiff::default()).warn("mutation.no-op", "set-snapshot: new snapshot is identical to the current one");
+        return protocol::MutationOutcome::new(PlyDiff::default()).await.warn("mutation.no-op", "set-snapshot: new snapshot is identical to the current one");
     }
     protocol::MutationOutcome::new(diff_set_snapshot(base, snapshot))
 }

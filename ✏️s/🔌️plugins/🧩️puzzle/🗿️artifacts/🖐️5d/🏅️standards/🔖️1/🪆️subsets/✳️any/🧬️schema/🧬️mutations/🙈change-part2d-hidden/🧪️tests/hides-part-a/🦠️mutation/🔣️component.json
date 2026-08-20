@@ -1,0 +1,5 @@
+{
+  "mutation": "changePart2dHidden",
+  "id": "part-a",
+  "newHidden": true
+}

@@ -374,7 +374,13 @@ impl ReplayGuard {
     /// rejects with `DbError::Conflict` if `mutation_id` is still tracked; otherwise records it
     /// (evicting the oldest entry first if `capacity_per_actor` would be exceeded) and returns
     /// `Ok`.
-    pub async fn check_and_record(&mut self, actor: &protocol::ActorId, mutation_id: &protocol::MutationId, physical_ms: u64) -> Result<(), DbError> {
+    // 🚫️async: E1 pure accessor, no suspension in its body — same shape as `BudgetRegistry::
+    // try_consume` above, which this crate already keeps sync — see R9. Was previously `async fn`
+    // for no real reason; `SecurityGate::admit_command`'s `if lock(&self.replay).check_and_record
+    // (..).await.is_err()` needed the `MutexGuard` alive across that `.await` to make the call at
+    // all, making the enclosing future non-`Send` (R7) — removing `async` here removes the
+    // suspension point instead of working around holding the guard across it.
+    pub fn check_and_record(&mut self, actor: &protocol::ActorId, mutation_id: &protocol::MutationId, physical_ms: u64) -> Result<(), DbError> {
         let deque = self.order.entry(actor.clone()).or_default();
         let set = self.seen.entry(actor.clone()).or_default();
 
@@ -617,7 +623,7 @@ impl<E: Emit + 'static> SecurityGate<E> {
             audit_budget_exceeded(self.emit.as_ref(), &principal.actor.0, document).await;
             return Err(DbError::LimitExceeded("dos budget exceeded"));
         }
-        if lock(&self.replay).check_and_record(envelope_actor, mutation_id, physical_ms).await.is_err() {
+        if lock(&self.replay).check_and_record(envelope_actor, mutation_id, physical_ms).is_err() {
             audit_replay_rejected(self.emit.as_ref(), envelope_actor, mutation_id, document).await;
             return Err(DbError::Conflict(format!("replayed operation '{}' by actor '{}'", mutation_id.0, envelope_actor.0)));
         }
@@ -825,8 +831,8 @@ mod tests {
         let mut guard = ReplayGuard::new(1_000, 16);
         let a = actor("alice").await;
         let o = op("op-1").await;
-        assert!(guard.check_and_record(&a, &o, 0).await.is_ok());
-        let err = guard.check_and_record(&a, &o, 500).await.unwrap_err();
+        assert!(guard.check_and_record(&a, &o, 0).is_ok());
+        let err = guard.check_and_record(&a, &o, 500).unwrap_err();
         assert!(matches!(err, DbError::Conflict(_)));
     }
 
@@ -835,27 +841,27 @@ mod tests {
         let mut guard = ReplayGuard::new(1_000, 16);
         let a = actor("alice").await;
         let o = op("op-1").await;
-        assert!(guard.check_and_record(&a, &o, 0).await.is_ok());
-        assert!(guard.check_and_record(&a, &o, 2_000).await.is_ok());
+        assert!(guard.check_and_record(&a, &o, 0).is_ok());
+        assert!(guard.check_and_record(&a, &o, 2_000).is_ok());
     }
 
     #[semio_framework_async_macros::async_test]
     async fn replay_guard_is_isolated_per_actor() {
         let mut guard = ReplayGuard::new(1_000, 16);
         let o = op("op-1").await;
-        assert!(guard.check_and_record(&actor("alice").await, &o, 0).await.is_ok());
-        assert!(guard.check_and_record(&actor("bob").await, &o, 0).await.is_ok());
+        assert!(guard.check_and_record(&actor("alice").await, &o, 0).is_ok());
+        assert!(guard.check_and_record(&actor("bob").await, &o, 0).is_ok());
     }
 
     #[semio_framework_async_macros::async_test]
     async fn replay_guard_evicts_oldest_beyond_capacity_bounding_memory() {
         let mut guard = ReplayGuard::new(1_000_000, 2);
         let a = actor("alice").await;
-        assert!(guard.check_and_record(&a, &op("op-1").await, 0).await.is_ok());
-        assert!(guard.check_and_record(&a, &op("op-2").await, 0).await.is_ok());
-        assert!(guard.check_and_record(&a, &op("op-3").await, 0).await.is_ok());
-        assert!(guard.check_and_record(&a, &op("op-1").await, 0).await.is_ok(), "op-1 should have been evicted to bound memory");
-        assert!(guard.check_and_record(&a, &op("op-3").await, 0).await.is_err(), "op-3 is still within capacity and must still be caught");
+        assert!(guard.check_and_record(&a, &op("op-1").await, 0).is_ok());
+        assert!(guard.check_and_record(&a, &op("op-2").await, 0).is_ok());
+        assert!(guard.check_and_record(&a, &op("op-3").await, 0).is_ok());
+        assert!(guard.check_and_record(&a, &op("op-1").await, 0).is_ok(), "op-1 should have been evicted to bound memory");
+        assert!(guard.check_and_record(&a, &op("op-3").await, 0).is_err(), "op-3 is still within capacity and must still be caught");
     }
     //#endregion 🔖️Replay
 

@@ -468,7 +468,7 @@ impl OpcPackage {
 /// relationship list, or a verbatim content `OpcPart` — never dropped, never fabricated.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_opc(data: &[u8]) -> Result<OpcPackage, OpcError> {
-    let zip = crate::artifacts::zip::standards::v2_0::subsets::any::io::decode_zip(data).map_err(|e| OpcError::Zip(e.to_string()))?;
+    let zip = crate::artifacts::zip::standards::v2_0::subsets::any::io::decode_zip(data).await.map_err(|e| OpcError::Zip(e.to_string()))?;
 
     let ct_entry = zip.entries.iter().find(|e| e.name == CONTENT_TYPES_PART).ok_or(OpcError::MissingContentTypes)?;
     let ct_text = String::from_utf8(ct_entry.data.clone()).map_err(|_| OpcError::MalformedContentTypes("not valid utf-8".into()))?;
@@ -578,7 +578,7 @@ pub(crate) fn encode_opc_with_path_order(pkg: &OpcPackage, order: impl FnOnce(&m
     }
 
     let snap = ZipSnapshot { schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries, comment: pkg.comment.clone() };
-    crate::artifacts::zip::standards::v2_0::subsets::any::io::encode_zip_with_entry_names(&snap, &new_paths).map_err(|e| OpcError::Zip(e.to_string()))
+    crate::artifacts::zip::standards::v2_0::subsets::any::io::encode_zip_with_entry_names(&snap, &new_paths).await.map_err(|e| OpcError::Zip(e.to_string()))
 }
 
 /// 🕵️ Structural sniff of OOXML-shaped bytes: recognizes the zip magic *and* the presence of a
@@ -652,7 +652,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn decode_rejects_missing_content_types() {
         let snap = ZipSnapshot { schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries: vec![ZipEntry { name: "word/document.xml".into(), data: b"<x/>".to_vec(), ..Default::default() }], comment: String::new() };
-        let bytes = crate::artifacts::zip::standards::v2_0::subsets::any::io::encode_zip(&snap).unwrap();
+        let bytes = crate::artifacts::zip::standards::v2_0::subsets::any::io::encode_zip(&snap).await.unwrap();
         let err = decode_opc(&bytes).expect_err("must reject a zip with no [Content_Types].xml");
         assert_eq!(err, OpcError::MissingContentTypes);
     }
@@ -669,7 +669,7 @@ mod tests {
             entries: vec![ZipEntry { name: "a.txt".into(), data: b"hi".to_vec(), ..Default::default() }],
             comment: String::new(),
         })
-        .unwrap();
+        .await.unwrap();
         assert!(!sniff_opc_bytes(&plain_zip), "a plain zip with no [Content_Types].xml must not sniff as OPC");
     }
 }

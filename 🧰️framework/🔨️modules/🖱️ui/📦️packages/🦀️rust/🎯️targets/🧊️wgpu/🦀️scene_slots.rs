@@ -97,9 +97,10 @@ mod tests {
     use crate::wgpu::component::ui::{UiComponentSceneNode, UiGroupNode, UiPresence, UiStackNode, UiTextNode};
     use crate::wgpu::flex::LayoutEngine;
     use crate::wgpu::theme::Theme;
+    use crate::wgpu::Label;
 
     fn text(value: &str) -> UiNode {
-        UiNode::Text(UiTextNode { value: value.into(), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None })
+        UiNode::Text(UiTextNode { value: Label::data(value), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None })
     }
 
     fn scene(surface_id: &str) -> UiNode {
@@ -149,7 +150,7 @@ mod tests {
     }
 
     fn group(children: Vec<UiNode>) -> UiNode {
-        UiNode::Group(UiGroupNode { id: "group".into(), label: "Group".into(), default_open: None, presence: UiPresence::default(), children, menu: None })
+        UiNode::Group(UiGroupNode { id: "group".into(), label: Label::data("Group"), default_open: None, presence: UiPresence::default(), children, menu: None })
     }
 
     fn layout(node: &UiNode) -> UiTree {

@@ -20,7 +20,7 @@ pub fn diff(payload: &Scale, base: &SemioDrawingSnapshot) -> protocol::MutationO
     }
     if let DrawNode::Group { transform, .. } = node {
         if transform.scale == s {
-            return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Node in layer #{} already has that scale.", payload.at.layer));
+            return protocol::MutationOutcome::empty().await.warn("mutation.no-op", format!("Node in layer #{} already has that scale.", payload.at.layer));
         }
     }
     protocol::MutationOutcome::new(diff_scale_node(base, &payload.at, s))

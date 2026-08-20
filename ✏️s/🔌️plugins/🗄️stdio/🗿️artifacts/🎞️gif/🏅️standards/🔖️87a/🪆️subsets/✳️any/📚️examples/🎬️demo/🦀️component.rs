@@ -34,7 +34,7 @@ mod tests {
         use crate::artifacts::gif::standards::v87a::subsets::any::schema::inferences::GifInference;
         use crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::GifSnapshot;
         use protocol::Inference;
-        let snapshot = <GifSnapshot as store::ArtifactDsl>::parse_dsl(PRIMARY_TEXT).expect("demo fixture must parse");
+        let snapshot = <GifSnapshot as store::ArtifactDsl>::parse_dsl(PRIMARY_TEXT).await.expect("demo fixture must parse");
         assert_eq!(GifInference::infer(&snapshot), GifInference::infer(&snapshot));
     }
 

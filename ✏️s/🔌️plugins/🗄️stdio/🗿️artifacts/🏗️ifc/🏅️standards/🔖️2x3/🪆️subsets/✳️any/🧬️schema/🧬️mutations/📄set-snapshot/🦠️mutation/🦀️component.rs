@@ -5,5 +5,5 @@ use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::Ifc2
 /// ▶️ Applies a set-snapshot mutation.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn apply(projection: &mut Ifc2x3Snapshot, mutation: &Ifc2x3Mutation) -> protocol::MutationOutcome<Ifc2x3Diff> {
-    apply_ifc2x3_mutation(projection, mutation)
+    apply_ifc2x3_mutation(projection, mutation).await
 }

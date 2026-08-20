@@ -343,7 +343,7 @@ mod tests {
     };
     use crate::artifacts::zip::opc::{self, OpcPackage, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
 
-    async fn sample_presentation() -> PptxPresentation {
+    fn sample_presentation() -> PptxPresentation {
         PptxPresentation {
             slides: vec![
                 PptxSlide {
@@ -621,20 +621,20 @@ mod tests {
             let first_diff = actual.iter().zip(expected).position(|(left, right)| left != right).unwrap_or(actual.len().min(expected.len()));
             let actual_names = local_member_names(&actual);
             let expected_names = local_member_names(expected);
-            let first_order_diff = actual_names.iter().zip(&expected_names).position(|(left, right)| left != right).unwrap_or(actual_names.len().min(expected_names.len()));
+            let first_order_diff = actual_names.await.iter().zip(&expected_names).await.await.await.await.position(|(left, right)| left != right).unwrap_or(actual_names.await.len().min(expected_names.await.len()));
             let actual_compressed = local_compressed_members(&actual);
             let expected_compressed = local_compressed_members(expected);
-            let first_compressed = actual_compressed.iter().zip(&expected_compressed).position(|(left, right)| left != right).unwrap_or(actual_compressed.len().min(expected_compressed.len()));
+            let first_compressed = actual_compressed.await.iter().zip(&expected_compr.awaitessed).await.await.position(|(left, right)| left != right).unwrap_or(actual_compressed.await.len().min(expected_compressed.await.len()));
             let compressed_detail = actual_compressed
-                .get(first_compressed)
-                .zip(expected_compressed.get(first_compressed))
+                .await.get(first_compressed)
+                .zip(expected_compressed.await.get(first_compressed))
                 .map(|(left, right)| {
                     let prefix = left.9.iter().zip(&right.9).position(|(actual, expected)| actual != expected).unwrap_or(left.9.len().min(right.9.len()));
                     format!(" compressed_name={} actual_version={} expected_version={} actual_flags={} expected_flags={} actual_method={} expected_method={} actual_time={} expected_time={} actual_date={} expected_date={} actual_crc={} expected_crc={} actual_uncompressed={} expected_uncompressed={} actual_extra={:?} expected_extra={:?} actual_compressed={} expected_compressed={} compressed_prefix={prefix}", left.0, left.1, right.1, left.2, right.2, left.3, right.3, left.4, right.4, left.5, right.5, left.6, right.6, left.7, right.7, left.8, right.8, left.9.len(), right.9.len())
                 })
                 .unwrap_or_default();
-            let actual_zip = crate::artifacts::zip::standards::v2_0::subsets::any::io::decode_zip(&actual).expect("decode actual mismatch");
-            let expected_zip = crate::artifacts::zip::standards::v2_0::subsets::any::io::decode_zip(expected).expect("decode expected mismatch");
+            let actual_zip = crate::artifacts::zip::standards::v2_0::subsets::any::io::decode_zip(&actual).await.expect("decode actual mismatch");
+            let expected_zip = crate::artifacts::zip::standards::v2_0::subsets::any::io::decode_zip(expected).await.expect("decode expected mismatch");
             let first_entry = actual_zip.entries.iter().zip(&expected_zip.entries).position(|(left, right)| left != right).unwrap_or(actual_zip.entries.len().min(expected_zip.entries.len()));
             let logical_mismatches = actual_zip
                 .entries
@@ -669,7 +669,7 @@ mod tests {
         }
     }
 
-    async fn first_positioned_shape(snapshot: &PptxSnapshot) -> (usize, usize, PptxTransform) {
+    fn first_positioned_shape(snapshot: &PptxSnapshot) -> (usize, usize, PptxTransform) {
         for (slide_index, slide) in snapshot.presentation.slides.iter().enumerate() {
             for (shape_index, shape) in slide.shapes.iter().enumerate() {
                 let position = match shape {
@@ -713,22 +713,22 @@ mod tests {
         assert_exact_export(&snapshot, &exact_bytes);
 
         let analysis = PptxAnalyzerAnalysis::analyze(&[AnalyzeSource::Binary(&exact_bytes)]);
-        let analyzed = analysis.parts.snapshot.expect("analyze native PPTX fixture");
+        let analyzed = analysis.await.parts.snapshot.expect("analyze native PPTX fixture");
         assert_eq!(analyzed, snapshot);
         assert_exact_export(&analyzed, &exact_bytes);
 
         let dialect = <PptxAnalyzerAnalysis as ArtifactAnalysis>::DIALECT;
-        let composition = crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::PptxComposerComposition::compose(&[ComposeSource { dialect, payload: AnalyzeSource::Binary(&exact_bytes) }]).expect("compose native PPTX fixture");
+        let composition = crate::artifacts::pptx::standards::v_ecma_376::subsets::any::io::PptxComposerComposition::compose(&[ComposeSource { dialect, payload: AnalyzeSource::Binary(&exact_bytes) }]).await.expect("compose native PPTX fixture");
         assert_eq!(composition.snapshot, snapshot);
         assert_exact_export(&composition.snapshot, &exact_bytes);
 
-        let zip = crate::artifacts::zip::standards::v2_0::subsets::any::io::decode_zip(&exact_bytes).expect("decode exact zip");
+        let zip = crate::artifacts::zip::standards::v2_0::subsets::any::io::decode_zip(&exact_bytes).await.expect("decode exact zip");
         assert_eq!(zip.entries.len(), 211);
         assert_eq!(zip.entries.iter().filter(|entry| entry.name.starts_with("ppt/slides/slide") && entry.name.ends_with(".xml")).count(), 62);
         assert_eq!(zip.entries.iter().filter(|entry| entry.name.ends_with(".rels")).count(), 78);
 
         let packed = store::ArtifactPack::encode_pack(&snapshot);
-        let unpacked = <PptxSnapshot as store::ArtifactPack>::decode_pack(&packed).expect("unpack exact fixture");
+        let unpacked = <PptxSnapshot as store::ArtifactPack>::decode_pack(&packed).await.expect("unpack exact fixture");
         assert_eq!(unpacked, snapshot);
         assert_exact_export(&unpacked, &exact_bytes);
 
@@ -738,7 +738,7 @@ mod tests {
         assert_exact_export(&from_binary, &exact_bytes);
 
         let dsl = store::ArtifactDsl::print_dsl(&snapshot);
-        let parsed = <PptxSnapshot as store::ArtifactDsl>::parse_dsl(&dsl).expect("parse exact fixture dsl");
+        let parsed = <PptxSnapshot as store::ArtifactDsl>::parse_dsl(&dsl).await.expect("parse exact fixture dsl");
         assert_eq!(parsed, snapshot);
         assert_exact_export(&parsed, &exact_bytes);
 
@@ -778,20 +778,20 @@ mod tests {
         without_xml_parts.xml_parts.clear();
         let xml_parts_diff = PptxDiff::between(&without_xml_parts, &snapshot);
         let printed_diff = xml_parts_diff.print_diff();
-        let parsed_diff = PptxDiff::parse_diff(&printed_diff).expect("parse logical XML parts diff");
-        assert_exact_export(&parsed_diff.apply(&without_xml_parts).unwrap(), &exact_bytes);
+        let parsed_diff = PptxDiff::parse_diff(&printed_diff).await.expect("parse logical XML parts diff");
+        assert_exact_export(&parsed_diff.apply(&without_xml_parts).await.unwrap(), &exact_bytes);
         let encoded_diff = xml_parts_diff.encode_diff().expect("encode logical XML parts diff");
-        let decoded_diff = PptxDiff::decode_diff(&encoded_diff).expect("decode logical XML parts diff");
-        assert_exact_export(&decoded_diff.apply(&without_xml_parts).unwrap(), &exact_bytes);
+        let decoded_diff = PptxDiff::decode_diff(&encoded_diff).await.expect("decode logical XML parts diff");
+        assert_exact_export(&decoded_diff.apply(&without_xml_parts).await.unwrap(), &exact_bytes);
 
         let set_snapshot = PptxMutation::SetSnapshot { snapshot: snapshot.clone() };
         let printed_op = set_snapshot.print_op();
-        let parsed_op = PptxMutation::parse_op(&printed_op).expect("parse exact set-snapshot");
+        let parsed_op = PptxMutation::parse_op(&printed_op).await.expect("parse exact set-snapshot");
         let mut via_text_op = without_xml_parts.clone();
         crate::artifacts::pptx::schema::mutations::apply_pptx_mutation(&mut via_text_op, &parsed_op);
         assert_exact_export(&via_text_op, &exact_bytes);
-        let encoded_op = set_snapshot.encode_op().expect("encode exact set-snapshot");
-        let decoded_op = PptxMutation::decode_op(&encoded_op).expect("decode exact set-snapshot");
+        let encoded_op = set_snapshot.encode_op().await.expect("encode exact set-snapshot");
+        let decoded_op = PptxMutation::decode_op(&encoded_op).await.expect("decode exact set-snapshot");
         let mut via_binary_op = without_xml_parts;
         crate::artifacts::pptx::schema::mutations::apply_pptx_mutation(&mut via_binary_op, &decoded_op);
         assert_exact_export(&via_binary_op, &exact_bytes);
@@ -843,7 +843,7 @@ mod tests {
 
             let demo = demo_pptx_snapshot();
             let bytes = encode_pptx(&demo).expect("encode demo pptx");
-            let zip = crate::artifacts::zip::standards::v2_0::subsets::any::io::decode_zip(&bytes).expect("decode zip");
+            let zip = crate::artifacts::zip::standards::v2_0::subsets::any::io::decode_zip(&bytes).await.expect("decode zip");
 
             let fixed_parts = ["[Content_Types].xml", "_rels/.rels", "ppt/presentation.xml"];
             let mut checked = 0;
@@ -856,7 +856,7 @@ mod tests {
                 assert!(recognizer.recognize(&text).unwrap_or(false), "grammar did not recognize real part {:?}:\n{text}", entry.name);
                 checked += 1;
             }
-            assert_eq!(checked, fixed_parts.len() + demo.presentation.slides.len(), "not every modeled part was present in the real zip entries");
+            assert_eq!(checked, fixed_parts.len() + demo.await.presentation.slides.len(), "not every modeled part was present in the real zip entries");
         }
 
         /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes real `print_op`
@@ -903,14 +903,14 @@ mod tests {
 
             let op_spec = dsl::parse_protocol(mutations::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
             for mutation in mutations::demo_mutation_cases() {
-                let bytes = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op failed for {mutation:?}: {e:?}"));
+                let bytes = mutation.encode_op().await.unwrap_or_else(|e| panic!("encode_op failed for {mutation:?}: {e:?}"));
                 let trace = dsl::walk_protocol(&op_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(op) failed for {mutation:?} @{}: {}", e.offset, e.message));
                 assert_eq!(trace.consumed, bytes.len(), "op walk did not consume every byte for {mutation:?}");
             }
 
             let diff_spec = dsl::parse_protocol(diff::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse diff protocol");
             for d in diff::demo_diff_cases() {
-                let bytes = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed for {d:?}: {e:?}"));
+                let bytes = d.encode_diff().await.unwrap_or_else(|e| panic!("encode_diff failed for {d:?}: {e:?}"));
                 let trace = dsl::walk_protocol(&diff_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(diff) failed for {d:?} @{}: {}", e.offset, e.message));
                 assert_eq!(trace.consumed, bytes.len(), "diff walk did not consume every byte for {d:?}");
             }
@@ -928,12 +928,12 @@ mod tests {
 
             let demo = demo_pptx_snapshot();
 
-            let parsed = <PptxSnapshot as store::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
-            assert_eq!(parsed, demo, "shipped .dsl.semio fixture does not parse back to demo_pptx_snapshot()");
+            let parsed = <PptxSnapshot as store::ArtifactDsl>::parse_dsl(FIXTURE_DSL).await.expect("parse shipped .dsl.semio fixture");
+            assert_eq!(parsed, demo.await, "shipped .dsl.semio fixture does not parse back to demo_pptx_snapshot()");
             assert_eq!(store::ArtifactDsl::print_dsl(&demo), FIXTURE_DSL, "print_dsl(demo_pptx_snapshot()) drifted from the shipped .dsl.semio fixture");
 
-            let decoded = <PptxSnapshot as store::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode shipped .pack.semio fixture");
-            assert_eq!(decoded, demo, "shipped .pack.semio fixture does not decode back to demo_pptx_snapshot()");
+            let decoded = <PptxSnapshot as store::ArtifactPack>::decode_pack(FIXTURE_PACK).await.expect("decode shipped .pack.semio fixture");
+            assert_eq!(decoded, demo.await, "shipped .pack.semio fixture does not decode back to demo_pptx_snapshot()");
             assert_eq!(store::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_pptx_snapshot()) drifted from the shipped .pack.semio fixture");
         }
     }

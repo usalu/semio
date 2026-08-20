@@ -1,0 +1,4 @@
+{
+  "mutation": "changeDescription",
+  "newDescription": "Description changed by fixture."
+}

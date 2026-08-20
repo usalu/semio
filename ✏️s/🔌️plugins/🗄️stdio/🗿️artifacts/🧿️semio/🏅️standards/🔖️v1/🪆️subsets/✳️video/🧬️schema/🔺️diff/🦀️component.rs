@@ -744,8 +744,8 @@ fn write_str_lp(out: &mut Vec<u8>, s: &str) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
-    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-    String::from_utf8(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec()).map_err(|e| e.to_string())
+    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+    String::from_utf8(reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec()).map_err(|e| e.to_string())
 }
 
 impl protocol::DiffCodec for SemioVideoDiff {
@@ -861,21 +861,21 @@ mod handcrafted_diff_codec_tests {
     async fn diff_codec_text_binary_roundtrip_law() {
         let a = snapshot_a();
         let b = snapshot_b();
-        let cases = vec![SemioVideoDiff::default(), SemioVideoDiff::between(&a, &b), SemioVideoDiff::between(&b, &a), SemioVideoDiff::between(&a, &a)];
+        let cases = vec![SemioVideoDiff::default(), SemioVideoDiff::between(&a, &b).await, SemioVideoDiff::between(&b, &a).await, SemioVideoDiff::between(&a, &a).await];
         for d in cases {
             let printed = d.print_diff();
             assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
-            let parsed = SemioVideoDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
+            let parsed = SemioVideoDiff::parse_diff(&printed).await.unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
             assert_eq!(parsed, d, "print_diff/parse_diff round-trip mismatch (printed {printed:?})");
 
             let encoded = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
-            let decoded = SemioVideoDiff::decode_diff(&encoded).unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
+            let decoded = SemioVideoDiff::decode_diff(&encoded).await.unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
             assert_eq!(decoded, d, "encode_diff/decode_diff round-trip mismatch");
         }
 
         // Field sweep proof: confirm every collection flavor actually got exercised above.
         let diff_ab = SemioVideoDiff::between(&a, &b);
-        let streams_diff = diff_ab.streams.as_ref().expect("streams diff present");
+        let streams_diff = diff_ab.await.streams.as_ref().expect("streams diff present");
         assert!(!streams_diff.removed.is_empty(), "streams: removed not exercised");
         assert_eq!(streams_diff.modified.len(), 1);
         let stream_mod = &streams_diff.modified[0].diff;
@@ -885,7 +885,7 @@ mod handcrafted_diff_codec_tests {
         assert!(!samples_diff.modified.is_empty(), "samples: modified not exercised");
 
         let diff_ba = SemioVideoDiff::between(&b, &a);
-        let streams_diff_ba = diff_ba.streams.as_ref().expect("streams diff (b->a) present");
+        let streams_diff_ba = diff_ba.await.streams.as_ref().expect("streams diff (b->a) present");
         assert!(!streams_diff_ba.added.is_empty(), "streams (b->a): added not exercised");
         let stream_mod_ba = &streams_diff_ba.modified[0].diff;
         let samples_diff_ba = stream_mod_ba.samples.as_ref().expect("nested samples diff (b->a) present");

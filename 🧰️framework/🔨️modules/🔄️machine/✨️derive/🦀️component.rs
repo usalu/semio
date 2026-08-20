@@ -608,13 +608,13 @@ mod codegen {
                 impl machine::StatechartEvent for #event_name {
                     const EVENT_COUNT: u16 = #event_count;
 
-                    async fn event_id(&self) -> machine::EventId {
+                    fn event_id(&self) -> machine::EventId {
                         match self {
                             #(#event_id_arms),*
                         }
                     }
 
-                    async fn event_name(id: machine::EventId) -> &'static str {
+                    fn event_name(id: machine::EventId) -> &'static str {
                         match id.0 {
                             #(#event_name_arms,)*
                             _ => "?",
@@ -634,7 +634,7 @@ mod codegen {
                     type Effect = #effect_ty;
                     type Config = machine::BitSet<#word_count>;
 
-                    async fn definition() -> &'static machine::MachineDefinition<Self> {
+                    fn definition() -> &'static machine::MachineDefinition<Self> {
                         static DEF: machine::MachineDefinition<#marker_name> = machine::MachineDefinition {
                             id: #machine_name_str,
                             nodes: &[ #(#node_defs),* ],
@@ -1138,13 +1138,13 @@ pub fn expand_statechart_event(input: &DeriveInput) -> syn::Result<proc_macro2::
         impl machine::StatechartEvent for #name {
             const EVENT_COUNT: u16 = #count;
 
-            async fn event_id(&self) -> machine::EventId {
+            fn event_id(&self) -> machine::EventId {
                 match self {
                     #(#id_arms),*
                 }
             }
 
-            async fn event_name(id: machine::EventId) -> &'static str {
+            fn event_name(id: machine::EventId) -> &'static str {
                 match id.0 {
                     #(#name_arms,)*
                     _ => "?",
@@ -1210,7 +1210,7 @@ pub fn expand_export_wasm_machine(input: proc_macro2::TokenStream) -> syn::Resul
         #[wasm_bindgen::prelude::wasm_bindgen]
         impl #class_name {
             #[wasm_bindgen::prelude::wasm_bindgen(constructor)]
-            pub async fn new(input_json: &str) -> Result<#class_name, wasm_bindgen::JsValue>
+            pub fn new(input_json: &str) -> Result<#class_name, wasm_bindgen::JsValue>
             where
                 <#machine_path as machine::Machine>::Input: for<'de> serde::Deserialize<'de>,
             {
@@ -1231,7 +1231,7 @@ pub fn expand_export_wasm_machine(input: proc_macro2::TokenStream) -> syn::Resul
             }
 
             #[wasm_bindgen::prelude::wasm_bindgen(js_name = sendJson)]
-            pub async fn send_json(&self, event_json: &str) -> Result<(), wasm_bindgen::JsValue>
+            pub fn send_json(&self, event_json: &str) -> Result<(), wasm_bindgen::JsValue>
             where
                 <#machine_path as machine::Machine>::Event: for<'de> serde::Deserialize<'de>,
                 <#machine_path as machine::Machine>::Effect: serde::Serialize,
@@ -1252,7 +1252,7 @@ pub fn expand_export_wasm_machine(input: proc_macro2::TokenStream) -> syn::Resul
             /// Fires any `after`-timers/invokes whose deadline has passed. Call this
             /// from a JS-side `setInterval`/`requestAnimationFrame` loop.
             #[wasm_bindgen::prelude::wasm_bindgen(js_name = tick)]
-            pub async fn tick(&self) {
+            pub fn tick(&self) {
                 let due = self.host.borrow_mut().due_timers();
                 for (_actor, timer) in due {
                     let mut snapshot = self.snapshot.borrow_mut();
@@ -1267,7 +1267,7 @@ pub fn expand_export_wasm_machine(input: proc_macro2::TokenStream) -> syn::Resul
             }
 
             #[wasm_bindgen::prelude::wasm_bindgen(js_name = snapshotJson)]
-            pub async fn snapshot_json(&self) -> Result<String, wasm_bindgen::JsValue>
+            pub fn snapshot_json(&self) -> Result<String, wasm_bindgen::JsValue>
             where
                 <#machine_path as machine::Machine>::Context: serde::Serialize,
             {
@@ -1279,7 +1279,7 @@ pub fn expand_export_wasm_machine(input: proc_macro2::TokenStream) -> syn::Resul
             }
 
             #[wasm_bindgen::prelude::wasm_bindgen(js_name = restoreJson)]
-            pub async fn restore_json(snapshot_json: &str) -> Result<#class_name, wasm_bindgen::JsValue>
+            pub fn restore_json(snapshot_json: &str) -> Result<#class_name, wasm_bindgen::JsValue>
             where
                 <#machine_path as machine::Machine>::Context: for<'de> serde::Deserialize<'de>,
             {
@@ -1289,7 +1289,7 @@ pub fn expand_export_wasm_machine(input: proc_macro2::TokenStream) -> syn::Resul
                     serde_json::from_value(value["persisted"].clone()).map_err(|e| wasm_bindgen::JsValue::from_str(&e.to_string()))?;
                 let context: <#machine_path as machine::Machine>::Context =
                     serde_json::from_value(value["context"].clone()).map_err(|e| wasm_bindgen::JsValue::from_str(&e.to_string()))?;
-                let snapshot = machine::restore::<#machine_path>(&persisted, context, &[])
+                let snapshot = machine::restore::<#machine_path, machine::NoMigrations>(&persisted, context, &[])
                     .map_err(|e| wasm_bindgen::JsValue::from_str(&format!("{:?}", e)))?;
                 Ok(Self {
                     snapshot: std::cell::RefCell::new(snapshot),
@@ -1300,12 +1300,12 @@ pub fn expand_export_wasm_machine(input: proc_macro2::TokenStream) -> syn::Resul
             /// Static — the manifest doesn't depend on any instance, so tooling can
             /// read it (for TypeScript generation) without constructing a machine.
             #[wasm_bindgen::prelude::wasm_bindgen(js_name = manifestJson)]
-            pub async fn manifest_json() -> String {
+            pub fn manifest_json() -> String {
                 <#machine_path as machine::Machine>::definition().manifest_json.to_string()
             }
 
             #[wasm_bindgen::prelude::wasm_bindgen(js_name = onEffect)]
-            pub async fn on_effect(&self, callback: js_sys::Function) {
+            pub fn on_effect(&self, callback: js_sys::Function) {
                 self.host.borrow_mut().set_effect_callback(callback);
             }
         }

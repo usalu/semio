@@ -349,7 +349,7 @@ mod tests {
     async fn apply_replaces_nodes_and_edges_wholesale() {
         let base = SemioGraphSnapshot { schema: STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA.into(), nodes: vec![SemioGraphNode { id: GraphNodeId::new("a"), ..Default::default() }], edges: vec![] };
         let diff = SemioGraphDiff { nodes: Some(SemioGraphNodeList { values: vec![SemioGraphNode { id: GraphNodeId::new("b"), ..Default::default() }] }), edges: None };
-        let next = diff.apply(&base).expect("apply must succeed for a well-formed fixture");
+        let next = diff.apply(&base).await.expect("apply must succeed for a well-formed fixture");
         assert_eq!(next.nodes[0].id, GraphNodeId::new("b"));
     }
 
@@ -365,12 +365,12 @@ mod tests {
     async fn diff_codec_graph_binary_roundtrip_law() {
         for d in demo_diff_cases() {
             let printed = d.print_diff();
-            assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
-            let parsed = SemioGraphDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
+            assert!(!printed.await.contains('\n'), "print_diff must be one line, got {printed:?}");
+            let parsed = SemioGraphDiff::parse_diff(&printed).await.unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
             assert_eq!(parsed, d, "print_diff/parse_diff round-trip mismatch (printed {printed:?})");
 
-            let encoded = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
-            let decoded = SemioGraphDiff::decode_diff(&encoded).unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
+            let encoded = d.encode_diff().await.unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
+            let decoded = SemioGraphDiff::decode_diff(&encoded).await.unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
             assert_eq!(decoded, d, "encode_diff/decode_diff round-trip mismatch");
         }
     }

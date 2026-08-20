@@ -35,7 +35,7 @@ impl Path {
 
 
 impl protocol::Identified<String> for Step {
-    async fn id(&self) -> &String {
+    fn id(&self) -> &String {
         &self.id
     }
 }

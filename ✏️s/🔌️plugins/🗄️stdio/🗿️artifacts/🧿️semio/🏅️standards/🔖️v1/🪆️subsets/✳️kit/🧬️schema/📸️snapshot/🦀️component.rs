@@ -347,8 +347,8 @@ fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
+    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn write_str_lp(out: &mut Vec<u8>, s: &str) {
@@ -388,7 +388,7 @@ pub(crate) fn write_child_list<S>(out: &mut Vec<u8>, list: &[store::ArtifactChil
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn read_child_list<S>(reader: &mut store::ByteReader<'_>) -> Result<Vec<store::ArtifactChild<S>>, String> {
-    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     (0..count).map(|_| read_child(reader)).collect()
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -403,7 +403,7 @@ pub(crate) fn write_child_opt<S>(out: &mut Vec<u8>, c: &Option<store::ArtifactCh
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn read_child_opt<S>(reader: &mut store::ByteReader<'_>) -> Result<Option<store::ArtifactChild<S>>, String> {
-    let presence = reader.read_u8().map_err(|e| e.to_string())?;
+    let presence = reader.read_u8().await.map_err(|e| e.to_string())?;
     if presence == 0 {
         Ok(None)
     } else {
@@ -429,13 +429,13 @@ pub(crate) fn write_pin(out: &mut Vec<u8>, p: &store::LinkPin) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn read_pin(reader: &mut store::ByteReader<'_>) -> Result<store::LinkPin, String> {
-    let tag = reader.read_u8().map_err(|e| e.to_string())?;
+    let tag = reader.read_u8().await.map_err(|e| e.to_string())?;
     match tag {
         0 => Ok(store::LinkPin::Head),
         1 => Ok(store::LinkPin::Checkpoint { id: read_str_lp(reader)? }),
         2 => {
             let hash = read_str_lp(reader)?;
-            let size = reader.read_varint_u64().map_err(|e| e.to_string())?;
+            let size = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
             let media_type = read_str_lp(reader)?;
             Ok(store::LinkPin::Snapshot { blob: store::BlobRef { hash, size, media_type } })
         }
@@ -464,7 +464,7 @@ pub(crate) fn write_link_list(out: &mut Vec<u8>, list: &[store::ArtifactLink]) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn read_link_list(reader: &mut store::ByteReader<'_>) -> Result<Vec<store::ArtifactLink>, String> {
-    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     (0..count).map(|_| read_link(reader)).collect()
 }
 
@@ -500,7 +500,7 @@ pub(crate) fn write_type_list(out: &mut Vec<u8>, list: &[SemioKitType]) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn read_type_list(reader: &mut store::ByteReader<'_>) -> Result<Vec<SemioKitType>, String> {
-    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     (0..count).map(|_| read_type(reader)).collect()
 }
 
@@ -543,9 +543,9 @@ pub(crate) fn write_design(out: &mut Vec<u8>, d: &SemioKitDesign) {
 pub(crate) fn read_design(reader: &mut store::ByteReader<'_>) -> Result<SemioKitDesign, String> {
     let id = read_str_lp(reader)?;
     let name = read_str_lp(reader)?;
-    let piece_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let piece_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let pieces = (0..piece_count).map(|_| read_piece(reader)).collect::<Result<Vec<_>, String>>()?;
-    let connection_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let connection_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let connections = (0..connection_count).map(|_| read_connection(reader)).collect::<Result<Vec<_>, String>>()?;
     Ok(SemioKitDesign { id, name, pieces, connections })
 }
@@ -558,7 +558,7 @@ pub(crate) fn write_design_list(out: &mut Vec<u8>, list: &[SemioKitDesign]) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn read_design_list(reader: &mut store::ByteReader<'_>) -> Result<Vec<SemioKitDesign>, String> {
-    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     (0..count).map(|_| read_design(reader)).collect()
 }
 
@@ -579,7 +579,7 @@ fn encode_kit_snapshot_binary(s: &SemioKitSnapshot) -> Vec<u8> {
 fn decode_kit_snapshot_binary(bytes: &[u8]) -> Result<SemioKitSnapshot, String> {
     const PACK_BINARY_FORMAT: u8 = 1;
     let mut reader = semio_framework_plugin::resolve_ready(store::ByteReader::new(bytes));
-    let format = reader.read_u8().map_err(|e| e.to_string())?;
+    let format = reader.read_u8().await.map_err(|e| e.to_string())?;
     if format != PACK_BINARY_FORMAT {
         return Err(format!("unsupported pack format {format}"));
     }
@@ -667,7 +667,7 @@ mod tests {
     async fn json_pack_round_trips() {
         let snap = SemioKitSnapshot::default();
         let bytes = <SemioKitSnapshot as store::ArtifactPack>::encode_pack(&snap);
-        let back = <SemioKitSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+        let back = <SemioKitSnapshot as store::ArtifactPack>::decode_pack(&bytes).await.expect("decode");
         assert_eq!(snap, back);
     }
 
@@ -675,7 +675,7 @@ mod tests {
     async fn dsl_text_round_trips() {
         let snap = SemioKitSnapshot::default();
         let text = <SemioKitSnapshot as store::ArtifactDsl>::print_dsl(&snap);
-        let back = <SemioKitSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
+        let back = <SemioKitSnapshot as store::ArtifactDsl>::parse_dsl(&text).await.expect("parse");
         assert_eq!(snap, back);
     }
 
@@ -683,10 +683,10 @@ mod tests {
     async fn codec_retention_law() {
         let snap = demo_kit_snapshot();
         let bytes = <SemioKitSnapshot as store::ArtifactPack>::encode_pack(&snap);
-        let back = <SemioKitSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+        let back = <SemioKitSnapshot as store::ArtifactPack>::decode_pack(&bytes).await.expect("decode");
         assert_eq!(snap, back);
         let text = <SemioKitSnapshot as store::ArtifactDsl>::print_dsl(&snap);
-        let back_text = <SemioKitSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
+        let back_text = <SemioKitSnapshot as store::ArtifactDsl>::parse_dsl(&text).await.expect("parse");
         assert_eq!(snap, back_text);
     }
 
@@ -696,8 +696,8 @@ mod tests {
     async fn parent_snapshot_stores_only_handles_never_child_content() {
         let snap = demo_kit_snapshot();
         let text = <SemioKitSnapshot as store::ArtifactDsl>::print_dsl(&snap);
-        assert!(text.contains(&enc_str("obj-01")));
-        assert!(!text.to_lowercase().contains("primitives") && !text.to_lowercase().contains("elements"), "must never embed object/model field names — only the handle");
+        assert!(text.await.contains(&enc_str("obj-01")));
+        assert!(!text.await.to_lowercase().contains("primitives") && !text.await.to_lowercase().contains("elements"), "must never embed object/model field names — only the handle");
     }
 }
 //#endregion 🔖️Tests

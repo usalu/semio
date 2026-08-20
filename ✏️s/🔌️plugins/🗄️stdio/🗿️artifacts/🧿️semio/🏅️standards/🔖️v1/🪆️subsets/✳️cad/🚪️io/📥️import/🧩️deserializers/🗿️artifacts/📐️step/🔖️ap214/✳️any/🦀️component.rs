@@ -142,7 +142,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn resolves_line_and_circle_through_the_real_entity_graph() {
-        let step = <StepSnapshot as store::ArtifactDsl>::parse_dsl(FIXTURE).expect("parse real step text");
+        let step = <StepSnapshot as store::ArtifactDsl>::parse_dsl(FIXTURE).await.expect("parse real step text");
         let cad = semio_framework_plugin::resolve_ready(SemioCadFromStep::deserialize(&step)).expect("deserialize");
         assert_eq!(cad.entities.len(), 2);
         match &cad.entities[0].entity {

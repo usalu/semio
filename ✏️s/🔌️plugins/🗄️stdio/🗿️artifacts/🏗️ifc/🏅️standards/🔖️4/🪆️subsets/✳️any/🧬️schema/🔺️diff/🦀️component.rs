@@ -517,7 +517,7 @@ pub struct IfcDiff {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn target_error(code: &'static str, message: &'static str, target: Vec<String>) -> MutationApplyError {
-    MutationApplyError::new(code, message).at(target)
+    MutationApplyError::new(code, message).await.at(target)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -804,8 +804,8 @@ pub(crate) fn write_str_bin(out: &mut Vec<u8>, s: &str) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn read_str_bin(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
-    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-    String::from_utf8(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec()).map_err(|e| e.to_string())
+    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+    String::from_utf8(reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec()).map_err(|e| e.to_string())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn write_option_bin<T>(out: &mut Vec<u8>, opt: &Option<T>, enc: impl FnOnce(&T, &mut Vec<u8>)) {
@@ -819,7 +819,7 @@ pub(crate) fn write_option_bin<T>(out: &mut Vec<u8>, opt: &Option<T>, enc: impl 
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn read_option_bin<T>(reader: &mut store::ByteReader<'_>, dec: impl FnOnce(&mut store::ByteReader<'_>) -> Result<T, String>) -> Result<Option<T>, String> {
-    match reader.read_u8().map_err(|e| e.to_string())? {
+    match reader.read_u8().await.map_err(|e| e.to_string())? {
         0 => Ok(None),
         1 => Ok(Some(dec(reader)?)),
         other => Err(format!("option binary: unknown tag {other}")),
@@ -945,15 +945,15 @@ pub(crate) fn enc_ifc_value_bin(v: &IfcValue, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_ifc_value_bin(reader: &mut store::ByteReader<'_>) -> Result<IfcValue, String> {
-    let tag = reader.read_u8().map_err(|e| e.to_string())?;
+    let tag = reader.read_u8().await.map_err(|e| e.to_string())?;
     match tag {
         0 => Ok(IfcValue::Unset),
         1 => Ok(IfcValue::Derived),
-        2 => Ok(IfcValue::Integer(reader.read_varint_i64().map_err(|e| e.to_string())?)),
-        3 => Ok(IfcValue::Real(reader.read_f64_le().map_err(|e| e.to_string())?)),
+        2 => Ok(IfcValue::Integer(reader.read_varint_i64().await.map_err(|e| e.to_string())?)),
+        3 => Ok(IfcValue::Real(reader.read_f64_le().await.map_err(|e| e.to_string())?)),
         4 => Ok(IfcValue::String(read_str_bin(reader)?)),
         5 => Ok(IfcValue::Enum(read_str_bin(reader)?)),
-        6 => Ok(IfcValue::Reference(reader.read_varint_u64().map_err(|e| e.to_string())?)),
+        6 => Ok(IfcValue::Reference(reader.read_varint_u64().await.map_err(|e| e.to_string())?)),
         7 => Ok(IfcValue::Aggregate(dec_ifc_value_list_bin(reader)?)),
         8 => {
             let name = read_str_bin(reader)?;
@@ -972,7 +972,7 @@ pub(crate) fn enc_ifc_value_list_bin(vs: &[IfcValue], out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_ifc_value_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<IfcValue>, String> {
-    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     (0..count).map(|_| dec_ifc_value_bin(reader)).collect()
 }
 //#endregion 🔖️IfcValueBinaryCodecs
@@ -1035,7 +1035,7 @@ pub(crate) fn enc_complex_list_bin(list: &[IfcComplexType], out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_complex_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<IfcComplexType>, String> {
-    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     (0..count).map(|_| dec_complex_type_bin(reader)).collect()
 }
 /// 📦️ `id | name | args | complex` — positional, mirrors [`enc_entity`]'s own field order.
@@ -1048,7 +1048,7 @@ pub(crate) fn enc_entity_bin(e: &IfcEntity, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_entity_bin(reader: &mut store::ByteReader<'_>) -> Result<IfcEntity, String> {
-    let id = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let id = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let name = read_str_bin(reader)?;
     let args = dec_ifc_value_list_bin(reader)?;
     let complex = dec_complex_list_bin(reader)?;
@@ -1063,7 +1063,7 @@ pub(crate) fn enc_entity_list_bin(list: &[IfcEntity], out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_entity_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<IfcEntity>, String> {
-    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     (0..count).map(|_| dec_entity_bin(reader)).collect()
 }
 //#endregion 🔖️EntityBinaryCodecs
@@ -1192,22 +1192,22 @@ fn enc_args_diff_bin(d: &IfcArgsDiff, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_args_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<IfcArgsDiff, String> {
-    let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let removed_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(removed_count as usize);
     for _ in 0..removed_count {
-        removed.push(reader.read_varint_u64().map_err(|e| e.to_string())? as usize);
+        removed.push(reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize);
     }
-    let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let modified_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut modified = Vec::with_capacity(modified_count as usize);
     for _ in 0..modified_count {
-        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+        let index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
         let value = dec_ifc_value_bin(reader)?;
         modified.push(IfcArgModified { index, value });
     }
-    let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let added_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut added = Vec::with_capacity(added_count as usize);
     for _ in 0..added_count {
-        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+        let index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
         let value = dec_ifc_value_bin(reader)?;
         added.push(IfcArgAdded { index, value });
     }
@@ -1247,22 +1247,22 @@ fn enc_entities_diff_bin(d: &IfcEntitiesDiff, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_entities_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<IfcEntitiesDiff, String> {
-    let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let removed_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(removed_count as usize);
     for _ in 0..removed_count {
-        removed.push(reader.read_varint_u64().map_err(|e| e.to_string())?);
+        removed.push(reader.read_varint_u64().await.map_err(|e| e.to_string())?);
     }
-    let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let modified_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut modified = Vec::with_capacity(modified_count as usize);
     for _ in 0..modified_count {
-        let id = reader.read_varint_u64().map_err(|e| e.to_string())?;
+        let id = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
         let diff = dec_entity_diff_bin(reader)?;
         modified.push(IfcEntityModified { id, diff });
     }
-    let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let added_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut added = Vec::with_capacity(added_count as usize);
     for _ in 0..added_count {
-        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+        let index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
         let entity = dec_entity_bin(reader)?;
         added.push(IfcEntityAdded { index, entity });
     }
@@ -1427,15 +1427,15 @@ mod handcrafted_diff_codec_tests {
         b.entities[0].complex = vec![];
         b.entities.push(entity(300, "IFCBUILDINGSTOREY", vec![IfcValue::Aggregate(vec![IfcValue::Integer(1), IfcValue::Integer(2)])]));
 
-        let cases = vec![IfcDiff::default(), IfcDiff::between(&a, &b), IfcDiff::between(&b, &a), IfcDiff::between(&a, &a)];
+        let cases = vec![IfcDiff::default(), IfcDiff::between(&a, &b).await, IfcDiff::between(&b, &a).await, IfcDiff::between(&a, &a).await];
         for d in cases {
             let printed = d.print_diff();
             assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
-            let parsed = IfcDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
+            let parsed = IfcDiff::parse_diff(&printed).await.unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
             assert_eq!(parsed, d, "print_diff/parse_diff round-trip mismatch (printed {printed:?})");
 
             let encoded = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
-            let decoded = IfcDiff::decode_diff(&encoded).unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
+            let decoded = IfcDiff::decode_diff(&encoded).await.unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
             assert_eq!(decoded, d, "encode_diff/decode_diff round-trip mismatch");
         }
     }

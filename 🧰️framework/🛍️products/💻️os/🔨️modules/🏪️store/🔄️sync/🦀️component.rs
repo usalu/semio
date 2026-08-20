@@ -328,11 +328,11 @@ async fn op_ids_of(edit: &crate::os_spr::HistoryEdit) -> Vec<String> {
 /// @emoji #⃣ Content hash over the concatenated pack+spr bytes, for the actor's self-write
 /// suppression check (was a hash over the JSON envelope string; same purpose, real bytes now).
 #[cfg(not(target_arch = "wasm32"))]
-async fn backbone_pack_hash(pack: &[u8], spr: &[u8]) -> String {
+fn backbone_pack_hash(pack: &[u8], spr: &[u8]) -> String {
     let mut combined = Vec::with_capacity(pack.len() + spr.len());
     combined.extend_from_slice(pack);
     combined.extend_from_slice(spr);
-    semio_framework_hash::hash_bytes(&combined).await
+    semio_framework_hash::hash_bytes(&combined)
 }
 
 /// @emoji 🆔️ Every op id across every edit in an spr byte log — the actor's dedup/known-ids set,
@@ -1030,7 +1030,7 @@ mod native_actor {
             if let Some((pack, spr)) = seeded {
                 if let Ok(op_ids) = spr_op_ids(&spr).await {
                     self.known_op_ids = op_ids;
-                    self.last_written_hash = Some(backbone_pack_hash(&pack, &spr).await);
+                    self.last_written_hash = Some(backbone_pack_hash(&pack, &spr));
                     self.current_pack = Some(pack);
                     self.current_spr = Some(spr);
                 }
@@ -1115,7 +1115,7 @@ mod native_actor {
         async fn persist_write(&mut self, pack: &[u8], spr: &[u8]) {
             let Some(folder) = self.folder.as_ref() else { return };
             if folder.write(pack, spr).await.is_ok() {
-                self.last_written_hash = Some(backbone_pack_hash(pack, spr).await);
+                self.last_written_hash = Some(backbone_pack_hash(pack, spr));
             }
         }
 
@@ -1161,7 +1161,7 @@ mod native_actor {
                 None => None,
             };
             let Some((pack, spr)) = seeded else { return };
-            let hash = backbone_pack_hash(&pack, &spr).await;
+            let hash = backbone_pack_hash(&pack, &spr);
             if self.last_written_hash.as_deref() == Some(hash.as_str()) {
                 return;
             }
@@ -2249,7 +2249,7 @@ impl FolderTextStorage {
 #[cfg(not(target_arch = "wasm32"))]
 impl crate::os_store::BlobStore for FolderSqliteStorage {
     async fn put(&self, bytes: &[u8], media_type: &str) -> Result<crate::os_store::BlobRef, vcs::VcsError> {
-        let hash = semio_framework_hash::hash_bytes(bytes).await;
+        let hash = semio_framework_hash::hash_bytes(bytes);
         let conn = self.connection().await?;
         conn.execute("INSERT OR IGNORE INTO blobs (hash, media_type, size, bytes) VALUES (?1, ?2, ?3, ?4)", rusqlite::params![hash, media_type, bytes.len() as i64, bytes]).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
         Ok(crate::os_store::BlobRef { hash, size: bytes.len() as u64, media_type: media_type.to_string() })
@@ -2297,11 +2297,11 @@ mod tests {
         async fn envelope_id() -> &'static str { Self::__DSL_ENVELOPE_ID }
         async fn parse_dsl(text: &str) -> Result<Self, crate::os_dsl::TextError> {
             let body = match semio_format::split_text_preamble(text) { Ok((_, rest)) => rest, Err(_) => text };
-            let record = crate::os_dsl::parse(body, &Self::__dsl_spec(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document }).await?;
-            Self::__dsl_from_record(&record).await
+            let record = crate::os_dsl::parse(body, &Self::__dsl_spec(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Document })?;
+            Self::__dsl_from_record(&record)
         }
         async fn print_dsl(&self) -> String {
-            let body = crate::os_dsl::print(&self.__dsl_to_record().await, &Self::__dsl_spec(), crate::os_dsl::JoinMode::Document).await;
+            let body = crate::os_dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), crate::os_dsl::JoinMode::Document);
             let envelope = semio_format::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id().await, semio_format::Component::Dsl, 1).expect("valid envelope_id");
             semio_format::wrap_text(&envelope, &body)
         }
@@ -2309,7 +2309,7 @@ mod tests {
 
     impl ArtifactPack for DemoSnapshot {
         async fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
-            let inner = pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record().await, options).await?;
+            let inner = pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options).await?;
             let envelope = semio_format::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id().await, semio_format::Component::Pack, 1).map_err(|e| PackError::Schema(e.to_string()))?;
             Ok(semio_format::wrap_binary(&envelope, &inner))
         }
@@ -2319,7 +2319,7 @@ mod tests {
                 return Err(PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as ArtifactDsl>::envelope_id().await, envelope.envelope_id())));
             }
             let (record, _report) = pack_rt::decode_document(&inner, &Self::__dsl_spec(), options).await?;
-            Self::__dsl_from_record(&record).await.map_err(|err| PackError::Schema(err.to_string()))
+            Self::__dsl_from_record(&record).map_err(|err| PackError::Schema(err.to_string()))
         }
         async fn record_spec() -> Option<crate::os_dsl::RecordSpec> { Some(Self::__dsl_spec()) }
     }
@@ -2358,23 +2358,23 @@ mod tests {
                         line,
                         &spec_fn(),
                         &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline },
-                    ).await?;
-                    return <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).await;
+                    )?;
+                    return <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record);
                 }
             }
             Err(crate::os_dsl::__rt::field_error(format!("unknown operation line '{line}'")))
         }
         async fn print_op(&self) -> String {
-            let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self).await;
+            let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
             let variants = <Self as crate::os_dsl::DslVariants>::variants();
             let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-            crate::os_dsl::print(&record, &spec_fn(), crate::os_dsl::JoinMode::Inline).await
+            crate::os_dsl::print(&record, &spec_fn(), crate::os_dsl::JoinMode::Inline)
         }
     }
 
     impl OpBinary for DemoMutation {
         async fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
-            let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self).await;
+            let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
             let variants = <Self as crate::os_dsl::DslVariants>::variants();
             let (idx, (_, spec_fn)) = variants.iter().enumerate().find(|(_, (k, _))| k == &keyword).expect("variant spec must exist");
             let body = crate::os_pack::encode_record_body(&spec_fn(), &record, &PackEncodeOptions::default()).await.map_err(|e| crate::os_spr::ProtocolError::Malformed { what: "op pack", offset: 0, detail: e.to_string() })?;
@@ -2401,7 +2401,7 @@ mod tests {
             let body = &bytes[reader.position().await..];
             let (record, _report) = crate::os_pack::decode_record_body(body, &spec, &PackDecodeOptions::default()).await.map_err(crate::os_spr::ProtocolError::from)?;
             let offset = reader.position().await as u64;
-            <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).await.map_err(|error| crate::os_spr::ProtocolError::Malformed {
+            <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| crate::os_spr::ProtocolError::Malformed {
                 what: "op record",
                 offset,
                 detail: error.to_string(),
@@ -3236,7 +3236,7 @@ mod tests {
                 match inbound {
                     FixtureInbound::ExternalEdits { ops_text } => {
                         let (pack, spr) = storage.read(&fixture.document_id).await.expect("read").expect("some");
-                        let parsed = crate::os_spr::parse_ops_text(ops_text).await.unwrap_or_else(|error| panic!("fixture {} parse_ops_text: {error}", fixture.name));
+                        let parsed = crate::os_spr::parse_ops_text(ops_text).unwrap_or_else(|error| panic!("fixture {} parse_ops_text: {error}", fixture.name));
                         let mut new_edits: Vec<crate::os_spr::HistoryEdit> = Vec::new();
                         for edit in parsed.edits {
                             let mut ops: Vec<crate::os_spr::OpPayload> = Vec::new();

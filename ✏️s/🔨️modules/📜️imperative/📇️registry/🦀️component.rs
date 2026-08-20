@@ -27,7 +27,7 @@ async fn imperative_module_fields(entry: &ProgramContributionEntry) -> Option<(S
     if topic_contribution.topic != IMPERATIVE_MODULE_TOPIC {
         return None;
     }
-    let payload = topic_contribution.decode::<ImperativeModuleTopicPayload>().ok()?;
+    let payload = topic_contribution.decode::<ImperativeModuleTopicPayload>().await.ok()?;
     Some((payload.app_id, payload.manifest_json))
 }
 //#endregion 🗂️TopicContribution
@@ -88,7 +88,7 @@ struct ContributedExtensionStub {
 }
 
 impl Operator for ContributedExtensionStub {
-    async fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let node_hash = node_hash(&self.operator_id, input);
         Err(EvalError::PendingExtension { extension_id: self.extension_id.clone(), operator_id: self.operator_id.clone(), node_hash })
     }

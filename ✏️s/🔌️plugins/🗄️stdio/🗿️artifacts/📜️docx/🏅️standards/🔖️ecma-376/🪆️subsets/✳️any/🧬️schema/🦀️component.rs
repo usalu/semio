@@ -305,7 +305,7 @@ mod tests {
     use crate::artifacts::xml::schema::snapshot::{xml_document_to_text, XmlAttr, XmlNode};
     use crate::artifacts::zip::opc::{OpcPackage, RELS_CONTENT_TYPE};
 
-    async fn sample_document() -> DocxDocument {
+    fn sample_document() -> DocxDocument {
         DocxDocument {
             body: vec![
                 DocxBlock::Paragraph(DocxParagraph {
@@ -319,7 +319,7 @@ mod tests {
         }
     }
 
-    async fn sample_document_with_table_and_styles() -> DocxDocument {
+    fn sample_document_with_table_and_styles() -> DocxDocument {
         DocxDocument {
             body: vec![
                 DocxBlock::Paragraph(DocxParagraph { style: Some("Heading1".into()), ..DocxParagraph::text("Title") }),
@@ -488,7 +488,7 @@ mod tests {
 
             let demo = demo_docx_snapshot();
             let bytes = encode_docx(&demo).expect("encode demo docx");
-            let zip = crate::artifacts::zip::standards::v2_0::subsets::any::io::decode_zip(&bytes).expect("decode zip");
+            let zip = crate::artifacts::zip::standards::v2_0::subsets::any::io::decode_zip(&bytes).await.expect("decode zip");
 
             let modeled_parts = ["[Content_Types].xml", "_rels/.rels", "word/document.xml", "word/styles.xml"];
             let mut checked = 0;
@@ -547,14 +547,14 @@ mod tests {
 
             let op_spec = dsl::parse_protocol(mutations::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
             for mutation in mutations::demo_mutation_cases() {
-                let bytes = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op failed for {mutation:?}: {e:?}"));
+                let bytes = mutation.encode_op().await.unwrap_or_else(|e| panic!("encode_op failed for {mutation:?}: {e:?}"));
                 let trace = dsl::walk_protocol(&op_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(op) failed for {mutation:?} @{}: {}", e.offset, e.message));
                 assert_eq!(trace.consumed, bytes.len(), "op walk did not consume every byte for {mutation:?}");
             }
 
             let diff_spec = dsl::parse_protocol(diff::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse diff protocol");
             for d in diff::demo_diff_cases() {
-                let bytes = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed for {d:?}: {e:?}"));
+                let bytes = d.encode_diff().await.unwrap_or_else(|e| panic!("encode_diff failed for {d:?}: {e:?}"));
                 let trace = dsl::walk_protocol(&diff_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(diff) failed for {d:?} @{}: {}", e.offset, e.message));
                 assert_eq!(trace.consumed, bytes.len(), "diff walk did not consume every byte for {d:?}");
             }
@@ -572,12 +572,12 @@ mod tests {
 
             let demo = demo_docx_snapshot();
 
-            let parsed = <DocxSnapshot as store::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
-            assert_eq!(parsed, demo, "shipped .dsl.semio fixture does not parse back to demo_docx_snapshot()");
+            let parsed = <DocxSnapshot as store::ArtifactDsl>::parse_dsl(FIXTURE_DSL).await.expect("parse shipped .dsl.semio fixture");
+            assert_eq!(parsed, demo.await, "shipped .dsl.semio fixture does not parse back to demo_docx_snapshot()");
             assert_eq!(store::ArtifactDsl::print_dsl(&demo), FIXTURE_DSL, "print_dsl(demo_docx_snapshot()) drifted from the shipped .dsl.semio fixture");
 
-            let decoded = <DocxSnapshot as store::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode shipped .pack.semio fixture");
-            assert_eq!(decoded, demo, "shipped .pack.semio fixture does not decode back to demo_docx_snapshot()");
+            let decoded = <DocxSnapshot as store::ArtifactPack>::decode_pack(FIXTURE_PACK).await.expect("decode shipped .pack.semio fixture");
+            assert_eq!(decoded, demo.await, "shipped .pack.semio fixture does not decode back to demo_docx_snapshot()");
             assert_eq!(store::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_docx_snapshot()) drifted from the shipped .pack.semio fixture");
 
             let native = encode_docx(&demo).expect("encode native docx");

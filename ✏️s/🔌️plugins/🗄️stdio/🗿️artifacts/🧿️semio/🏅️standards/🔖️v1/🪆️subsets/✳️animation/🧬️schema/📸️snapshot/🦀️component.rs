@@ -383,8 +383,8 @@ fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
+    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn write_str_lp(out: &mut Vec<u8>, s: &str) {
@@ -402,7 +402,7 @@ fn write_point3(out: &mut Vec<u8>, p: &SemioPoint3) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_point3(reader: &mut store::ByteReader<'_>) -> Result<SemioPoint3, String> {
-    Ok(SemioPoint3 { x: reader.read_f64_le().map_err(|e| e.to_string())?, y: reader.read_f64_le().map_err(|e| e.to_string())?, z: reader.read_f64_le().map_err(|e| e.to_string())? })
+    Ok(SemioPoint3 { x: reader.read_f64_le().await.map_err(|e| e.to_string())?, y: reader.read_f64_le().await.map_err(|e| e.to_string())?, z: reader.read_f64_le().await.map_err(|e| e.to_string())? })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn write_quat(out: &mut Vec<u8>, q: &SemioQuaternion) {
@@ -413,7 +413,7 @@ fn write_quat(out: &mut Vec<u8>, q: &SemioQuaternion) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_quat(reader: &mut store::ByteReader<'_>) -> Result<SemioQuaternion, String> {
-    Ok(SemioQuaternion { x: reader.read_f64_le().map_err(|e| e.to_string())?, y: reader.read_f64_le().map_err(|e| e.to_string())?, z: reader.read_f64_le().map_err(|e| e.to_string())?, w: reader.read_f64_le().map_err(|e| e.to_string())? })
+    Ok(SemioQuaternion { x: reader.read_f64_le().await.map_err(|e| e.to_string())?, y: reader.read_f64_le().await.map_err(|e| e.to_string())?, z: reader.read_f64_le().await.map_err(|e| e.to_string())?, w: reader.read_f64_le().await.map_err(|e| e.to_string())? })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn write_f64_vec(out: &mut Vec<u8>, v: &[f64]) {
@@ -424,10 +424,10 @@ fn write_f64_vec(out: &mut Vec<u8>, v: &[f64]) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_f64_vec(reader: &mut store::ByteReader<'_>) -> Result<Vec<f64>, String> {
-    let n = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let n = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut v = Vec::with_capacity(n as usize);
     for _ in 0..n {
-        v.push(reader.read_f64_le().map_err(|e| e.to_string())?);
+        v.push(reader.read_f64_le().await.map_err(|e| e.to_string())?);
     }
     Ok(v)
 }
@@ -448,7 +448,7 @@ fn write_property(out: &mut Vec<u8>, p: &AnimTargetProperty) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_property(reader: &mut store::ByteReader<'_>) -> Result<AnimTargetProperty, String> {
-    let tag = reader.read_u8().map_err(|e| e.to_string())?;
+    let tag = reader.read_u8().await.map_err(|e| e.to_string())?;
     match tag {
         0 => Ok(AnimTargetProperty::Translation),
         1 => Ok(AnimTargetProperty::Rotation),
@@ -469,7 +469,7 @@ fn write_interpolation(out: &mut Vec<u8>, i: AnimInterpolation) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_interpolation(reader: &mut store::ByteReader<'_>) -> Result<AnimInterpolation, String> {
-    let tag = reader.read_u8().map_err(|e| e.to_string())?;
+    let tag = reader.read_u8().await.map_err(|e| e.to_string())?;
     match tag {
         0 => Ok(AnimInterpolation::Linear),
         1 => Ok(AnimInterpolation::Step),
@@ -501,9 +501,9 @@ fn write_value(out: &mut Vec<u8>, v: &AnimValue) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_value(reader: &mut store::ByteReader<'_>) -> Result<AnimValue, String> {
-    let tag = reader.read_u8().map_err(|e| e.to_string())?;
+    let tag = reader.read_u8().await.map_err(|e| e.to_string())?;
     match tag {
-        0 => Ok(AnimValue::Scalar { value: reader.read_f64_le().map_err(|e| e.to_string())? }),
+        0 => Ok(AnimValue::Scalar { value: reader.read_f64_le().await.map_err(|e| e.to_string())? }),
         1 => Ok(AnimValue::Vec3 { value: read_point3(reader)? }),
         2 => Ok(AnimValue::Quat { value: read_quat(reader)? }),
         3 => Ok(AnimValue::Weights { values: read_f64_vec(reader)? }),
@@ -526,7 +526,7 @@ fn write_keyframe(out: &mut Vec<u8>, k: &AnimKeyframe) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_keyframe(reader: &mut store::ByteReader<'_>) -> Result<AnimKeyframe, String> {
-    Ok(AnimKeyframe { t: reader.read_f64_le().map_err(|e| e.to_string())?, value: read_value(reader)? })
+    Ok(AnimKeyframe { t: reader.read_f64_le().await.map_err(|e| e.to_string())?, value: read_value(reader)? })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn write_channel(out: &mut Vec<u8>, c: &AnimChannel) {
@@ -541,7 +541,7 @@ fn write_channel(out: &mut Vec<u8>, c: &AnimChannel) {
 fn read_channel(reader: &mut store::ByteReader<'_>) -> Result<AnimChannel, String> {
     let target = read_target(reader)?;
     let interpolation = read_interpolation(reader)?;
-    let n = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let n = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut keyframes = Vec::with_capacity(n as usize);
     for _ in 0..n {
         keyframes.push(read_keyframe(reader)?);
@@ -564,9 +564,9 @@ fn write_timeline(out: &mut Vec<u8>, t: &AnimTimeline) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_timeline(reader: &mut store::ByteReader<'_>) -> Result<AnimTimeline, String> {
-    let has_name = reader.read_u8().map_err(|e| e.to_string())? != 0;
+    let has_name = reader.read_u8().await.map_err(|e| e.to_string())? != 0;
     let name = if has_name { Some(read_str_lp(reader)?) } else { None };
-    let n = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let n = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut channels = Vec::with_capacity(n as usize);
     for _ in 0..n {
         channels.push(read_channel(reader)?);
@@ -590,12 +590,12 @@ fn encode_animation_snapshot_binary(s: &SemioAnimationSnapshot) -> Vec<u8> {
 fn decode_animation_snapshot_binary(bytes: &[u8]) -> Result<SemioAnimationSnapshot, String> {
     const PACK_BINARY_FORMAT: u8 = 1;
     let mut reader = semio_framework_plugin::resolve_ready(store::ByteReader::new(bytes));
-    let format = reader.read_u8().map_err(|e| e.to_string())?;
+    let format = reader.read_u8().await.map_err(|e| e.to_string())?;
     if format != PACK_BINARY_FORMAT {
         return Err(format!("unsupported pack format {format}"));
     }
     let schema = read_str_lp(&mut reader)?;
-    let n = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let n = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut timelines = Vec::with_capacity(n as usize);
     for _ in 0..n {
         timelines.push(read_timeline(&mut reader)?);
@@ -699,11 +699,11 @@ mod tests {
     async fn codec_retention_law() {
         let snap = demo_animation_snapshot();
         let bytes = <SemioAnimationSnapshot as store::ArtifactPack>::encode_pack(&snap);
-        let back = <SemioAnimationSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+        let back = <SemioAnimationSnapshot as store::ArtifactPack>::decode_pack(&bytes).await.expect("decode");
         assert_eq!(snap, back);
 
         let text = <SemioAnimationSnapshot as store::ArtifactDsl>::print_dsl(&snap);
-        let back_text = <SemioAnimationSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
+        let back_text = <SemioAnimationSnapshot as store::ArtifactDsl>::parse_dsl(&text).await.expect("parse");
         assert_eq!(snap, back_text);
     }
 
@@ -711,7 +711,7 @@ mod tests {
     async fn default_snapshot_round_trips() {
         let snap = SemioAnimationSnapshot::default();
         let bytes = <SemioAnimationSnapshot as store::ArtifactPack>::encode_pack(&snap);
-        let back = <SemioAnimationSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+        let back = <SemioAnimationSnapshot as store::ArtifactPack>::decode_pack(&bytes).await.expect("decode");
         assert_eq!(snap, back);
     }
 }

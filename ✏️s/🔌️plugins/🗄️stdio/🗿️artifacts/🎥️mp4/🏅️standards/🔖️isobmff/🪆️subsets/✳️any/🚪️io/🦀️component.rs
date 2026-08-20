@@ -589,7 +589,7 @@ async fn decode_trak(trak: &[u8], file_bytes: &[u8]) -> Result<Mp4Track, String>
 /// 🐛 The 8 bytes of `reserved`+`data_reference_index` are followed by `pre_defined(2)` +
 /// `reserved(2)` + `pre_defined[3](12)` = 16 bytes before `width`/`height` — matches
 /// `parse_visual_sample_entry`'s read-side `skip(6+2+2+2+12)`.
-async fn mp4_visual_sample_entry(codec_fourcc: &[u8; 4], width: u16, height: u16, visual: &Mp4VisualSampleEntry, extra: &[u8]) -> Vec<u8> {
+fn mp4_visual_sample_entry(codec_fourcc: &[u8; 4], width: u16, height: u16, visual: &Mp4VisualSampleEntry, extra: &[u8]) -> Vec<u8> {
     let mut payload = vec![0u8; 6];
     payload.extend_from_slice(&visual.data_reference_index.to_be_bytes());
     payload.extend_from_slice(&visual.version.to_be_bytes());
@@ -614,7 +614,7 @@ async fn mp4_visual_sample_entry(codec_fourcc: &[u8; 4], width: u16, height: u16
     write_box(codec_fourcc, &payload)
 }
 
-async fn build_codec_extensions(track: &Mp4Track) -> Vec<u8> {
+fn build_codec_extensions(track: &Mp4Track) -> Vec<u8> {
     let mut result = Vec::new();
     if let Some(color) = &track.metadata.color {
         let mut payload = [b' '; 4].to_vec();
@@ -647,7 +647,7 @@ async fn build_stbl(track: &Mp4Track, chunk_offsets: &[u32]) -> Vec<u8> {
     stsd_payload.extend_from_slice(&1u32.to_be_bytes());
     stsd_payload.extend(mp4_visual_sample_entry(&codec_fourcc, track.width as u16, track.height as u16, &track.metadata.visual, &extra));
     let stsd = write_box(b"stsd", &stsd_payload);
-    [stsd, build_stts(track), build_stss(track), build_ctts(track), build_stsc(track), build_stsz(track), build_stco(chunk_offsets)].concat()
+    [stsd, build_stts(track).await, build_stss(track), build_ctts(track).await, build_stsc(track), build_stsz(track), build_stco(chunk_offsets)].concat()
 }
 
 async fn build_stts(track: &Mp4Track) -> Vec<u8> {
@@ -680,7 +680,7 @@ async fn build_ctts(track: &Mp4Track) -> Vec<u8> {
 
 /// ✍️ One chunk per track (all samples together) — adapted from remodel's `mp4_stsc`, which
 /// makes the same single-chunk simplification for its own fixture muxer.
-async fn normalized_chunk_sample_counts(track: &Mp4Track) -> Vec<u32> {
+fn normalized_chunk_sample_counts(track: &Mp4Track) -> Vec<u32> {
     if track.chunk_sample_counts.is_empty() {
         return vec![track.samples.len() as u32];
     }
@@ -733,7 +733,7 @@ async fn build_stco(offsets: &[u32]) -> Vec<u8> {
     write_box(b"stco", &payload)
 }
 
-async fn build_stss(track: &Mp4Track) -> Vec<u8> {
+fn build_stss(track: &Mp4Track) -> Vec<u8> {
     if track.samples.iter().all(|s| s.sync) {
         return Vec::new();
     }
@@ -746,7 +746,7 @@ async fn build_stss(track: &Mp4Track) -> Vec<u8> {
     write_box(b"stss", &payload)
 }
 
-async fn build_hdlr(track: &Mp4Track) -> Vec<u8> {
+fn build_hdlr(track: &Mp4Track) -> Vec<u8> {
     let mut payload = vec![0u8; 8];
     payload.extend_from_slice(b"vide");
     payload.extend_from_slice(&[0u8; 12]);
@@ -761,7 +761,7 @@ async fn build_hdlr(track: &Mp4Track) -> Vec<u8> {
 async fn build_vmhd() -> Vec<u8> {
     write_box(b"vmhd", &[0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0])
 }
-async fn build_dinf() -> Vec<u8> {
+fn build_dinf() -> Vec<u8> {
     let url = write_box(b"url ", &[0, 0, 0, 1]);
     let mut dref_payload = vec![0u8; 4];
     dref_payload.extend_from_slice(&1u32.to_be_bytes());
@@ -805,7 +805,7 @@ async fn build_tkhd(track: &Mp4Track) -> Vec<u8> {
     write_box(b"tkhd", &payload)
 }
 
-async fn build_edts(track: &Mp4Track) -> Vec<u8> {
+fn build_edts(track: &Mp4Track) -> Vec<u8> {
     if track.metadata.edits.is_empty() {
         return Vec::new();
     }
@@ -820,12 +820,12 @@ async fn build_edts(track: &Mp4Track) -> Vec<u8> {
     write_box(b"edts", &write_box(b"elst", &payload))
 }
 
-async fn build_trak(track: &Mp4Track, chunk_offsets: &[u32]) -> Vec<u8> {
+fn build_trak(track: &Mp4Track, chunk_offsets: &[u32]) -> Vec<u8> {
     let tkhd = build_tkhd(track);
     let stbl = write_box(b"stbl", &build_stbl(track, chunk_offsets));
-    let minf = write_box(b"minf", &[build_vmhd(), build_dinf(), stbl].concat());
-    let mdia = write_box(b"mdia", &[build_mdhd(track), build_hdlr(track), minf].concat());
-    write_box(b"trak", &[tkhd, build_edts(track), mdia].concat())
+    let minf = write_box(b"minf", &[build_vmhd(), build_dinf().await, stbl].concat());
+    let mdia = write_box(b"mdia", &[build_mdhd(track), build_hdlr(track).await, minf].concat());
+    write_box(b"trak", &[tkhd, build_edts(track).await, mdia].concat())
 }
 
 async fn build_mvhd(movie: &Mp4Movie) -> Vec<u8> {
@@ -846,7 +846,7 @@ async fn build_mvhd(movie: &Mp4Movie) -> Vec<u8> {
     write_box(b"mvhd", &payload)
 }
 
-async fn build_metadata_item(fourcc: &[u8; 4], value: &str) -> Vec<u8> {
+fn build_metadata_item(fourcc: &[u8; 4], value: &str) -> Vec<u8> {
     let mut data = vec![0, 0, 0, 1, 0, 0, 0, 0];
     data.extend_from_slice(value.as_bytes());
     write_box(fourcc, &write_box(b"data", &data))
@@ -964,8 +964,8 @@ mod codec_tests {
     async fn decode_encode_decode_round_trips_synthetic_snapshot() {
         let snap = synthetic_snapshot();
         let bytes = encode_mp4(&snap);
-        let back = decode_mp4(&bytes).expect("decode");
-        assert_eq!(back, snap, "decode(encode(snapshot)) must reproduce the snapshot exactly");
+        let back = decode_mp4(&bytes).await.expect("decode");
+        assert_eq!(back, snap.await, "decode(encode(snapshot)) must reproduce the snapshot exactly");
     }
 
     //#region codec_retention_law — the REAL 43KB fixture
@@ -977,7 +977,7 @@ mod codec_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn codec_retention_law_decodes_the_real_fixture_with_expected_shape() {
-        let snap = decode_mp4(REAL_LOGO_MP4).expect("decode the real 43KB fixture");
+        let snap = decode_mp4(REAL_LOGO_MP4).await.expect("decode the real 43KB fixture");
         assert_eq!(snap.ftyp.major_brand, "isom");
         assert!(snap.ftyp.compatible_brands.iter().any(|b| b == "avc1"), "compatible_brands: {:?}", snap.ftyp.compatible_brands);
         assert_eq!(snap.tracks.len(), 1, "logo.mp4 has exactly one (video) track");
@@ -998,9 +998,9 @@ mod codec_tests {
         // snapshot — every sample's bytes/duration/cts_offset/sync flag, every track field, ftyp,
         // and every named logical field survives through a real mux/demux cycle on
         // real, non-synthetic, 1441-frame H.264 data.
-        let snap = decode_mp4(REAL_LOGO_MP4).expect("decode");
+        let snap = decode_mp4(REAL_LOGO_MP4).await.expect("decode");
         let re_encoded = encode_mp4(&snap);
-        let round_tripped = decode_mp4(&re_encoded).expect("re-decode the round-tripped bytes");
+        let round_tripped = decode_mp4(&re_encoded).await.expect("re-decode the round-tripped bytes");
         assert_eq!(round_tripped, snap, "decode(encode(decode(real_fixture))) must equal decode(real_fixture)");
 
         // 🧪️ Sample PAYLOAD bytes (the actual codec substance) are byte-exact against the ORIGINAL
@@ -1024,41 +1024,41 @@ mod codec_tests {
 
         let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../temp/bauen-mit-bestand.mp4");
         let bytes = std::fs::read(path).expect("read exact MP4 fixture");
-        let snapshot = decode_mp4(&bytes).expect("decode exact MP4 fixture");
+        let snapshot = decode_mp4(&bytes).await.expect("decode exact MP4 fixture");
         assert_eq!(encode_mp4(&snapshot), bytes);
 
         let pack = <Mp4Snapshot as store::ArtifactPack>::encode_pack(&snapshot);
-        let from_pack = <Mp4Snapshot as store::ArtifactPack>::decode_pack(&pack).expect("decode MP4 pack");
+        let from_pack = <Mp4Snapshot as store::ArtifactPack>::decode_pack(&pack).await.expect("decode MP4 pack");
         assert_eq!(encode_mp4(&from_pack), bytes);
 
         let dsl = <Mp4Snapshot as store::ArtifactDsl>::print_dsl(&snapshot);
-        let from_dsl = <Mp4Snapshot as store::ArtifactDsl>::parse_dsl(&dsl).expect("parse MP4 DSL");
+        let from_dsl = <Mp4Snapshot as store::ArtifactDsl>::parse_dsl(&dsl).await.expect("parse MP4 DSL");
         assert_eq!(encode_mp4(&from_dsl), bytes);
 
         let analysis = Mp4AnalyzerAnalysis::analyze(&[AnalyzeSource::Binary(&pack)]);
-        let analyzed = analysis.parts.snapshot.expect("MP4 analyzer snapshot");
+        let analyzed = analysis.await.parts.snapshot.expect("MP4 analyzer snapshot");
         assert_eq!(encode_mp4(&analyzed), bytes);
 
         let dialect = <Mp4AnalyzerAnalysis as ArtifactAnalysis>::DIALECT;
-        let composition = Mp4ComposerComposition::compose(&[ComposeSource { dialect, payload: AnalyzeSource::Binary(&pack) }]).expect("compose MP4 pack");
+        let composition = Mp4ComposerComposition::compose(&[ComposeSource { dialect, payload: AnalyzeSource::Binary(&pack) }]).await.expect("compose MP4 pack");
         assert_eq!(encode_mp4(&composition.snapshot), bytes);
 
         let self_diff = Mp4Diff::between(&snapshot, &snapshot);
-        let text_diff = Mp4Diff::parse_diff(&self_diff.print_diff()).expect("parse MP4 diff text");
-        assert_eq!(encode_mp4(&text_diff.apply(&snapshot).unwrap()), bytes);
-        let binary_diff = Mp4Diff::decode_diff(&self_diff.encode_diff().expect("encode MP4 diff")).expect("decode MP4 diff");
-        assert_eq!(encode_mp4(&binary_diff.apply(&snapshot).unwrap()), bytes);
+        let text_diff = Mp4Diff::parse_diff(&self_diff.print_diff()).await.expect("parse MP4 diff text");
+        assert_eq!(encode_mp4(&text_diff.apply(&snapshot).await.unwrap()), bytes);
+        let binary_diff = Mp4Diff::decode_diff(&self_diff.encode_diff().expect("encode MP4 diff")).await.expect("decode MP4 diff");
+        assert_eq!(encode_mp4(&binary_diff.apply(&snapshot).await.unwrap()), bytes);
 
         let mut no_op = snapshot.clone();
-        assert!(apply_mp4_mutation(&mut no_op, &Mp4Mutation::NoMutation).diff().is_empty());
+        assert!(apply_mp4_mutation(&mut no_op, &Mp4Mutation::NoMutation).await.diff().is_empty());
         assert_eq!(encode_mp4(&no_op), bytes);
 
         let set_snapshot = Mp4Mutation::SetSnapshot { snapshot: snapshot.clone() };
-        let text_op = Mp4Mutation::parse_op(&set_snapshot.print_op()).expect("parse MP4 operation text");
+        let text_op = Mp4Mutation::parse_op(&set_snapshot.print_op()).await.expect("parse MP4 operation text");
         let mut from_text_op = Mp4Snapshot::default();
         apply_mp4_mutation(&mut from_text_op, &text_op);
         assert_eq!(encode_mp4(&from_text_op), bytes);
-        let binary_op = Mp4Mutation::decode_op(&set_snapshot.encode_op().expect("encode MP4 operation")).expect("decode MP4 operation");
+        let binary_op = Mp4Mutation::decode_op(&set_snapshot.encode_op().await.expect("encode MP4 operation")).await.expect("decode MP4 operation");
         let mut from_binary_op = Mp4Snapshot::default();
         apply_mp4_mutation(&mut from_binary_op, &binary_op);
         assert_eq!(encode_mp4(&from_binary_op), bytes);

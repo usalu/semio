@@ -90,7 +90,7 @@ impl Mutation<Mp4Snapshot> for Mp4Mutation {
             Mp4Mutation::SetSampleSync { track_index, index, sync } => {
                 sample_diff_for(*track_index, IndexedDiff { removed: vec![], modified: vec![IndexedModified { index: *index, diff: Mp4SampleDiff { data: None, duration: None, cts_offset: None, sync: Some(*sync) } }], added: vec![] }, None).await
             }
-        })
+        }).await
     }
 
     async fn inverse(&self, base: &Mp4Snapshot) -> Vec<Self> {
@@ -142,17 +142,17 @@ impl OpText for Mp4Mutation {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits { max_bytes: 32 * 1024 * 1024, ..dsl::Limits::default() }, mode: dsl::SourceMode::Inline }).await?;
-                return <Self as dsl::DslVariants>::from_named_record(keyword, &record).await;
+                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits { max_bytes: 32 * 1024 * 1024, ..dsl::Limits::default() }, mode: dsl::SourceMode::Inline })?;
+                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
         Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
     }
     async fn print_op(&self) -> String {
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self).await;
+        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(candidate, _)| candidate == &keyword).map(|(_, spec)| *spec).expect("variant spec must exist");
-        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline).await
+        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
     }
 }
 
@@ -207,13 +207,13 @@ mod tests {
         for m in variants {
             let mut snap = base.clone();
             let diff = <Mp4Mutation as Mutation<Mp4Snapshot>>::diff(&m, &snap);
-            let expected = diff.diff().apply(&snap).unwrap();
+            let expected = diff.await.diff().apply(&snap).unwrap();
             let returned = apply_mp4_mutation(&mut snap, &m);
             assert_eq!(returned, diff, "apply_mp4_mutation must return the SAME diff as Mutation::diff for {m:?}");
             assert_eq!(snap, expected, "mutation_diff_law failed for {m:?}");
 
             let inv = <Mp4Mutation as Mutation<Mp4Snapshot>>::inverse(&m, &base);
-            assert_eq!(inv.len(), 1);
+            assert_eq!(inv.await.len(), 1);
             let mut round = snap.clone();
             apply_mp4_mutation(&mut round, &inv[0]);
             assert_eq!(round, base, "inverse_law failed for {m:?}");
@@ -223,12 +223,12 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn remove_track_then_insert_track_round_trips() {
         let mut base = base_snapshot();
-        base.tracks.push(Mp4Track { track_id: 2, timescale: 1000, codec: Mp4Codec::default(), width: 10, height: 10, metadata: Mp4TrackMetadata::default(), chunk_sample_counts: vec![0], samples: vec![] });
+        base.await.tracks.push(Mp4Track { track_id: 2, timescale: 1000, codec: Mp4Codec::default(), width: 10, height: 10, metadata: Mp4TrackMetadata::default(), chunk_sample_counts: vec![0], samples: vec![] });
         let m = Mp4Mutation::RemoveTrack { index: 0 };
         let mut snap = base.clone();
         let diff = <Mp4Mutation as Mutation<Mp4Snapshot>>::diff(&m, &snap);
         apply_mp4_mutation(&mut snap, &m);
-        assert_eq!(snap, diff.diff().apply(&base).unwrap());
+        assert_eq!(snap, diff.await.diff().apply(&base).unwrap());
         assert_eq!(snap.tracks.len(), 1);
         let inv = <Mp4Mutation as Mutation<Mp4Snapshot>>::inverse(&m, &base);
         let mut round = snap.clone();
@@ -239,7 +239,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn remove_sample_then_insert_sample_round_trips() {
         let mut base = base_snapshot();
-        base.tracks[0].samples.push(Mp4Sample { data: vec![4, 5], duration: 33, cts_offset: 0, sync: false });
+        base.await.tracks[0].samples.push(Mp4Sample { data: vec![4, 5], duration: 33, cts_offset: 0, sync: false });
         let m = Mp4Mutation::RemoveSample { track_index: 0, index: 0 };
         let mut snap = base.clone();
         apply_mp4_mutation(&mut snap, &m);
@@ -257,7 +257,7 @@ mod tests {
         next.ftyp.major_brand = "isom-mutated".into();
         let mutation = Mp4Mutation::SetSnapshot { snapshot: next.clone() };
         let diff = <Mp4Mutation as Mutation<Mp4Snapshot>>::diff(&mutation, &base);
-        assert_eq!(diff.diff().apply(&base).unwrap(), next);
+        assert_eq!(diff.await.diff().apply(&base).unwrap(), next);
         let inv = <Mp4Mutation as Mutation<Mp4Snapshot>>::inverse(&mutation, &base);
         let mut round = next.clone();
         apply_mp4_mutation(&mut round, &inv[0]);
@@ -269,15 +269,15 @@ mod tests {
     async fn op_text_binary_roundtrip_law() {
         let base = base_snapshot();
         for m in
-            [Mp4Mutation::NoMutation, Mp4Mutation::SetSnapshot { snapshot: base.clone() }, Mp4Mutation::SetFtyp { ftyp: base.ftyp.clone() }, Mp4Mutation::RemoveTrack { index: 0 }, Mp4Mutation::SetSampleSync { track_index: 0, index: 0, sync: true }]
+            [Mp4Mutation::NoMutation, Mp4Mutation::SetSnapshot { snapshot: base.clone() }, Mp4Mutation::SetFtyp { ftyp: base.await.ftyp.clone() }, Mp4Mutation::RemoveTrack { index: 0 }, Mp4Mutation::SetSampleSync { track_index: 0, index: 0, sync: true }]
         {
             let printed = m.print_op();
-            assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
-            let parsed = Mp4Mutation::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
+            assert!(!printed.await.contains('\n'), "print_op must be one line, got {printed:?}");
+            let parsed = Mp4Mutation::parse_op(&printed).await.unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
             assert_eq!(parsed, m);
 
-            let encoded = m.encode_op().unwrap_or_else(|e| panic!("encode_op({m:?}) failed: {e}"));
-            let decoded = Mp4Mutation::decode_op(&encoded).unwrap_or_else(|e| panic!("decode_op failed: {e}"));
+            let encoded = m.encode_op().await.unwrap_or_else(|e| panic!("encode_op({m:?}) failed: {e}"));
+            let decoded = Mp4Mutation::decode_op(&encoded).await.unwrap_or_else(|e| panic!("decode_op failed: {e}"));
             assert_eq!(decoded, m);
         }
     }
@@ -286,7 +286,7 @@ mod tests {
     async fn exact_fixture_no_mutation_inverse_and_set_snapshot_binary_codec_preserve_source() {
         let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../temp/bauen-mit-bestand.mp4");
         let bytes = std::fs::read(path).expect("read exact MP4 fixture");
-        let base = crate::artifacts::mp4::standards::isobmff::subsets::any::io::decode_mp4(&bytes).expect("decode exact MP4 fixture");
+        let base = crate::artifacts::mp4::standards::isobmff::subsets::any::io::decode_mp4(&bytes).await.expect("decode exact MP4 fixture");
 
         let mut unchanged = base.clone();
         apply_mp4_mutation(&mut unchanged, &Mp4Mutation::NoMutation);
@@ -300,8 +300,8 @@ mod tests {
         assert_eq!(crate::artifacts::mp4::standards::isobmff::subsets::any::io::encode_mp4(&round_trip), bytes);
 
         let set_snapshot = Mp4Mutation::SetSnapshot { snapshot: base };
-        let encoded = set_snapshot.encode_op().expect("encode exact source set-snapshot");
-        let decoded = Mp4Mutation::decode_op(&encoded).expect("decode exact source set-snapshot");
+        let encoded = set_snapshot.encode_op().await.expect("encode exact source set-snapshot");
+        let decoded = Mp4Mutation::decode_op(&encoded).await.expect("decode exact source set-snapshot");
         let Mp4Mutation::SetSnapshot { snapshot } = decoded else { panic!("expected set-snapshot") };
         assert_eq!(crate::artifacts::mp4::standards::isobmff::subsets::any::io::encode_mp4(&snapshot), bytes);
     }

@@ -56,7 +56,7 @@ async fn source_nonempty() {
 //#region (a) RealDecodeNonTrivialInvariants
 #[semio_framework_async_macros::async_test]
 async fn real_decode_has_many_pages_and_real_extracted_text() {
-    let snap = decode_pdf(FIXTURE_BYTES).expect("real 1.7 engine must decode the real fixture");
+    let snap = decode_pdf(FIXTURE_BYTES).await.expect("real 1.7 engine must decode the real fixture");
     assert_eq!(snap.declared_version, "1.5", "1.7's lenient reader must report the fixture's own declared version, not overwrite it");
     assert!(snap.pages.len() > 1, "bachelor-thesis.pdf must decode to more than one page, got {}", snap.pages.len());
     assert!(!snap.objects.is_empty(), "the full raw object graph must be retained (lossless-retention ground rule)");
@@ -83,10 +83,10 @@ async fn real_decode_has_many_pages_and_real_extracted_text() {
 /// convention): decode→writer reconstruction reaches a deterministic logical fixed point.
 #[semio_framework_async_macros::async_test]
 async fn codec_retention_law_bachelor_thesis_decode_encode_decode() {
-    let original = decode_pdf(FIXTURE_BYTES).expect("decode");
-    let rewritten_bytes = encode_pdf(&original).expect("encode");
-    assert_eq!(encode_pdf(&decode_pdf(&rewritten_bytes).expect("re-decode canonical output")).expect("re-encode canonical output"), rewritten_bytes);
-    let redecoded = decode_pdf(&rewritten_bytes).expect("re-decode");
+    let original = decode_pdf(FIXTURE_BYTES).await.expect("decode");
+    let rewritten_bytes = encode_pdf(&original).await.expect("encode");
+    assert_eq!(encode_pdf(&decode_pdf(&rewritten_bytes).await.expect("re-decode canonical output")).await.expect("re-encode canonical output"), rewritten_bytes);
+    let redecoded = decode_pdf(&rewritten_bytes).await.expect("re-decode");
     assert_eq!(redecoded.pages.len(), original.pages.len());
     for (a, b) in original.pages.iter().zip(redecoded.pages.iter()) {
         assert_eq!(a.media_box, b.media_box);
@@ -97,70 +97,70 @@ async fn codec_retention_law_bachelor_thesis_decode_encode_decode() {
 
 #[semio_framework_async_macros::async_test]
 async fn lossless_structural_flow_law_bachelor_thesis_snapshot_mutation_diff_io_and_inverse() {
-    let original = decode_pdf(FIXTURE_BYTES).expect("decode exact fixture");
+    let original = decode_pdf(FIXTURE_BYTES).await.expect("decode exact fixture");
     assert_logical_cos_retained(&original);
-    let canonical = encode_pdf(&original).expect("logical writer export");
+    let canonical = encode_pdf(&original).await.expect("logical writer export");
 
     let dsl = original.print_dsl();
-    let from_dsl = PdfSnapshot::parse_dsl(&dsl).expect("snapshot DSL roundtrip");
+    let from_dsl = PdfSnapshot::parse_dsl(&dsl).await.expect("snapshot DSL roundtrip");
     assert_eq!(from_dsl, original, "DSL must carry the complete logical snapshot model");
     assert_logical_cos_retained(&from_dsl);
-    assert_eq!(encode_pdf(&from_dsl).expect("DSL-restored logical export"), canonical);
+    assert_eq!(encode_pdf(&from_dsl).await.expect("DSL-restored logical export"), canonical);
 
     let pack = original.encode_pack();
-    let from_pack = PdfSnapshot::decode_pack(&pack).expect("snapshot unpack");
+    let from_pack = PdfSnapshot::decode_pack(&pack).await.expect("snapshot unpack");
     assert_eq!(from_pack, original, "pack must carry the complete logical snapshot model");
     assert_logical_cos_retained(&from_pack);
-    assert_eq!(encode_pdf(&from_pack).expect("pack-restored logical export"), canonical);
+    assert_eq!(encode_pdf(&from_pack).await.expect("pack-restored logical export"), canonical);
 
     let empty = PdfDiff::between(&original, &original);
     assert!(empty.is_empty());
-    assert_eq!(encode_pdf(&empty.apply(&original).unwrap()).expect("self-diff logical export"), canonical);
+    assert_eq!(encode_pdf(&empty.apply(&original).unwrap()).await.expect("self-diff logical export"), canonical);
 
     let mut no_op = original.clone();
     let no_op_diff = apply_pdf_mutation(&mut no_op, &PdfMutation::NoMutation);
     assert!(no_op_diff.diff().is_empty());
-    assert_eq!(encode_pdf(&no_op).expect("no-op mutation logical export"), canonical);
+    assert_eq!(encode_pdf(&no_op).await.expect("no-op mutation logical export"), canonical);
 
     let mutation = PdfMutation::AppendPageContent { index: 0, text: "dirty".into() };
-    let mutation_frame = mutation.encode_op().expect("encode structural mutation");
-    let restored_mutation = PdfMutation::decode_op(&mutation_frame).expect("decode structural mutation");
+    let mutation_frame = mutation.encode_op().await.expect("encode structural mutation");
+    let restored_mutation = PdfMutation::decode_op(&mutation_frame).await.expect("decode structural mutation");
     assert_eq!(restored_mutation, mutation);
     let diff = restored_mutation.diff(&original);
-    let diff_frame = diff.diff().encode_diff().expect("encode structural diff");
-    let restored_diff = PdfDiff::decode_diff(&diff_frame).expect("decode structural diff");
-    assert_eq!(&restored_diff, diff.diff());
-    let dirty = restored_diff.apply(&original).unwrap();
-    let dirty_bytes = encode_pdf(&dirty).expect("dirty snapshot must use the canonical writer");
+    let diff_frame = diff.await.diff().encode_diff().expect("encode structural diff");
+    let restored_diff = PdfDiff::decode_diff(&diff_frame).await.expect("decode structural diff");
+    assert_eq!(&restored_diff, diff.await.diff());
+    let dirty = restored_diff.apply(&original).await.unwrap();
+    let dirty_bytes = encode_pdf(&dirty).await.expect("dirty snapshot must use the canonical writer");
     assert_ne!(dirty_bytes, canonical);
-    let dirty_redecoded = decode_pdf(&dirty_bytes).expect("dirty writer output must remain valid PDF");
+    let dirty_redecoded = decode_pdf(&dirty_bytes).await.expect("dirty writer output must remain valid PDF");
     assert!(dirty_redecoded.pages[0].text.ends_with("dirty"));
 
     let inverse = restored_diff.inverse(&original);
     let inverse_frame = inverse.encode_diff().expect("encode inverse diff");
-    let restored_inverse = PdfDiff::decode_diff(&inverse_frame).expect("decode inverse diff");
-    let restored = restored_inverse.apply(&dirty).unwrap();
+    let restored_inverse = PdfDiff::decode_diff(&inverse_frame).await.expect("decode inverse diff");
+    let restored = restored_inverse.apply(&dirty).await.unwrap();
     assert_eq!(restored, original, "diff inverse must restore the complete logical model");
-    assert_eq!(encode_pdf(&restored).expect("inverse logical writer export"), canonical);
+    assert_eq!(encode_pdf(&restored).await.expect("inverse logical writer export"), canonical);
 
     let mut mutation_dirty = original.clone();
     apply_pdf_mutation(&mut mutation_dirty, &restored_mutation);
     for inverse_mutation in restored_mutation.inverse(&original) {
         let inverse_mutation_frame = inverse_mutation.encode_op().expect("encode inverse mutation");
-        let restored_inverse_mutation = PdfMutation::decode_op(&inverse_mutation_frame).expect("decode inverse mutation");
+        let restored_inverse_mutation = PdfMutation::decode_op(&inverse_mutation_frame).await.expect("decode inverse mutation");
         apply_pdf_mutation(&mut mutation_dirty, &restored_inverse_mutation);
     }
     assert_eq!(mutation_dirty, original);
-    assert_eq!(encode_pdf(&mutation_dirty).expect("mutation inverse logical export"), canonical);
+    assert_eq!(encode_pdf(&mutation_dirty).await.expect("mutation inverse logical export"), canonical);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn decode_encode_decode_is_structurally_equal_at_page_level() {
     // 📏 The logical writer deterministically materializes a fresh PDF serialization.
-    let original = decode_pdf(FIXTURE_BYTES).expect("decode");
-    let rewritten_bytes = encode_pdf(&original).expect("encode");
-    assert_eq!(encode_pdf(&decode_pdf(&rewritten_bytes).expect("canonical decode")).expect("canonical re-encode"), rewritten_bytes);
-    let redecoded = decode_pdf(&rewritten_bytes).expect("re-decode");
+    let original = decode_pdf(FIXTURE_BYTES).await.expect("decode");
+    let rewritten_bytes = encode_pdf(&original).await.expect("encode");
+    assert_eq!(encode_pdf(&decode_pdf(&rewritten_bytes).await.expect("canonical decode")).await.expect("canonical re-encode"), rewritten_bytes);
+    let redecoded = decode_pdf(&rewritten_bytes).await.expect("re-decode");
 
     assert_eq!(redecoded.pages.len(), original.pages.len());
     for (i, (a, b)) in original.pages.iter().zip(redecoded.pages.iter()).enumerate() {
@@ -181,15 +181,15 @@ async fn analyzer_to_builder_round_trip_reproduces_equivalent_pages() {
     // requirement #8), then compare the two documents' *analyzer output* (a fresh real decode of
     // the rebuilt file), not the in-memory structs -- proving the builder's typed ops are
     // actually sufficient to reconstruct what the analyzer sees, round-tripped through real bytes.
-    let original = decode_pdf(FIXTURE_BYTES).expect("decode");
+    let original = decode_pdf(FIXTURE_BYTES).await.expect("decode");
 
     let mut builder = PdfBuilder::empty();
     for page in &original.pages {
-        builder = builder.add_page(page.clone());
+        builder = builder.await.add_page(page.clone());
     }
     let rebuilt_snapshot = builder.build().expect("builder-only reconstruction must succeed");
-    let rebuilt_bytes = encode_pdf(&rebuilt_snapshot).expect("encode rebuilt snapshot");
-    let rebuilt_redecoded = decode_pdf(&rebuilt_bytes).expect("re-decode rebuilt bytes");
+    let rebuilt_bytes = encode_pdf(&rebuilt_snapshot).await.expect("encode rebuilt snapshot");
+    let rebuilt_redecoded = decode_pdf(&rebuilt_bytes).await.expect("re-decode rebuilt bytes");
 
     assert_eq!(rebuilt_redecoded.pages.len(), original.pages.len(), "builder-only reconstruction must preserve page count");
     for (i, (a, b)) in original.pages.iter().zip(rebuilt_redecoded.pages.iter()).enumerate() {
@@ -206,7 +206,7 @@ async fn analyzer_to_builder_round_trip_reproduces_equivalent_pages() {
 /// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING.
 #[semio_framework_async_macros::async_test]
 async fn inference_determinism_law() {
-    let snapshot = decode_pdf(FIXTURE_BYTES).expect("decode real fixture");
+    let snapshot = decode_pdf(FIXTURE_BYTES).await.expect("decode real fixture");
     assert_eq!(Pdf17Inference::infer(&snapshot), Pdf17Inference::infer(&snapshot));
 }
 
@@ -221,9 +221,9 @@ async fn inference_default_law() {
 /// `real_decode_has_many_pages_and_real_extracted_text` above already asserts.
 #[semio_framework_async_macros::async_test]
 async fn outline_matches_real_fixture_page_count() {
-    let snapshot = decode_pdf(FIXTURE_BYTES).expect("decode real fixture");
+    let snapshot = decode_pdf(FIXTURE_BYTES).await.expect("decode real fixture");
     let inferred = Pdf17Inference::infer(&snapshot);
-    assert_eq!(inferred.outline.page_count, 65);
-    assert_eq!(inferred.outline.title, snapshot.info.title);
+    assert_eq!(inferred.await.outline.page_count, 65);
+    assert_eq!(inferred.await.outline.title, snapshot.info.title);
 }
 //#endregion (d)(e) InferenceLaws

@@ -11507,10 +11507,10 @@ mod tests {
         let bytes = dwg_to_bytes(&DwgDrawing::default()).expect("encode empty drawing");
         let snap = crate::artifacts::dwg::schema::snapshot::decode_dwg(&bytes).expect("decode structural drawing");
         let text = store::ArtifactDsl::print_dsl(&snap);
-        let parsed = <DwgSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
+        let parsed = <DwgSnapshot as store::ArtifactDsl>::parse_dsl(&text).await.expect("parse");
         assert_eq!(parsed.version, "AC1015");
         let bytes = store::ArtifactPack::encode_pack(&snap);
-        let decoded = <DwgSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+        let decoded = <DwgSnapshot as store::ArtifactPack>::decode_pack(&bytes).await.expect("decode");
         assert_eq!(decoded, snap);
     }
 
@@ -11616,8 +11616,8 @@ mod tests {
         let bytes = dwg_to_bytes(&drawing).expect("encode");
         let decoded_drawing = dwg_from_bytes(&bytes).expect("decode");
         let decoded_mesh = dwg_drawing_to_mesh(&decoded_drawing);
-        assert_eq!(decoded_mesh.triangle_count(), mesh.triangle_count());
-        assert_eq!(decoded_mesh.vertex_count(), mesh.vertex_count());
+        assert_eq!(decoded_mesh.triangle_count(), mesh.await.triangle_count());
+        assert_eq!(decoded_mesh.vertex_count(), mesh.await.vertex_count());
     }
 
     #[semio_framework_async_macros::async_test]
@@ -11878,14 +11878,14 @@ mod tests {
 
         let dsl = store::ArtifactDsl::print_dsl(&snapshot);
         let fixture_hex: String = ARCHITECTURAL_FIXTURE.iter().map(|byte| format!("{byte:02x}")).collect();
-        assert!(!dsl.contains("physical"));
-        assert!(!dsl.contains(&fixture_hex), "DSL must serialize typed snapshot state, not a native DWG hex replay");
-        let dsl_snapshot = <DwgSnapshot as store::ArtifactDsl>::parse_dsl(&dsl).expect("DSL parse");
+        assert!(!dsl.await.contains("physical"));
+        assert!(!dsl.await.contains(&fixture_hex), "DSL must serialize typed snapshot state, not a native DWG hex replay");
+        let dsl_snapshot = <DwgSnapshot as store::ArtifactDsl>::parse_dsl(&dsl).await.expect("DSL parse");
         assert_eq!(encode_dwg(&dsl_snapshot).expect("DSL export"), ARCHITECTURAL_FIXTURE);
 
         let pack = store::ArtifactPack::encode_pack(&snapshot);
-        assert!(!pack.windows(ARCHITECTURAL_FIXTURE.len()).any(|window| window == ARCHITECTURAL_FIXTURE), "pack must serialize typed snapshot state, not embed the native DWG document",);
-        let pack_snapshot = <DwgSnapshot as store::ArtifactPack>::decode_pack(&pack).expect("pack decode");
+        assert!(!pack.await.windows(ARCHITECTURAL_FIXTURE.len()).any(|window| window == ARCHITECTURAL_FIXTURE), "pack must serialize typed snapshot state, not embed the native DWG document",);
+        let pack_snapshot = <DwgSnapshot as store::ArtifactPack>::decode_pack(&pack).await.expect("pack decode");
         assert_eq!(encode_dwg(&pack_snapshot).expect("pack export"), ARCHITECTURAL_FIXTURE);
 
         let self_diff = DwgDiff::between(&snapshot, &snapshot);
@@ -11899,9 +11899,9 @@ mod tests {
 
         let set_snapshot = DwgMutation::SetSnapshot { snapshot: snapshot.clone() };
         let set_text = set_snapshot.print_op();
-        let set_from_text = DwgMutation::parse_op(&set_text).expect("set-snapshot text decode");
-        let set_binary = set_snapshot.encode_op().expect("set-snapshot binary encode");
-        let set_from_binary = DwgMutation::decode_op(&set_binary).expect("set-snapshot binary decode");
+        let set_from_text = DwgMutation::parse_op(&set_text).await.expect("set-snapshot text decode");
+        let set_binary = set_snapshot.encode_op().await.expect("set-snapshot binary encode");
+        let set_from_binary = DwgMutation::decode_op(&set_binary).await.expect("set-snapshot binary decode");
         assert_eq!(set_from_text, set_snapshot);
         assert_eq!(set_from_binary, set_snapshot);
         let mut applied_set = DwgSnapshot::default();
@@ -11910,10 +11910,10 @@ mod tests {
 
         let persisted_diff = DwgDiff::between(&DwgSnapshot::default(), &snapshot);
         let diff_text = persisted_diff.print_diff();
-        assert_eq!(DwgDiff::parse_diff(&diff_text).expect("diff text decode"), persisted_diff);
+        assert_eq!(DwgDiff::parse_diff(&diff_text).await.expect("diff text decode"), persisted_diff.await);
         let diff_binary = persisted_diff.encode_diff().expect("diff binary encode");
-        let decoded_diff = DwgDiff::decode_diff(&diff_binary).expect("diff binary decode");
-        let from_persisted_diff = decoded_diff.apply(&DwgSnapshot::default()).expect("persisted diff must apply");
+        let decoded_diff = DwgDiff::decode_diff(&diff_binary).await.expect("diff binary decode");
+        let from_persisted_diff = decoded_diff.apply(&DwgSnapshot::default()).await.expect("persisted diff must apply");
         assert_eq!(encode_dwg(&from_persisted_diff).expect("diff export"), ARCHITECTURAL_FIXTURE);
 
         let mut absorbed = persisted_diff.clone();
@@ -12092,14 +12092,14 @@ mod tests {
 
             let op_spec = dsl::parse_protocol(mutations::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
             for mutation in mutations::demo_mutation_cases() {
-                let bytes = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op failed for {mutation:?}: {e:?}"));
+                let bytes = mutation.encode_op().await.unwrap_or_else(|e| panic!("encode_op failed for {mutation:?}: {e:?}"));
                 let trace = dsl::walk_protocol(&op_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(op) failed for {mutation:?} @{}: {}", e.offset, e.message));
                 assert_eq!(trace.consumed, bytes.len(), "op walk did not consume every byte for {mutation:?}");
             }
 
             let diff_spec = dsl::parse_protocol(diff::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse diff protocol");
             for d in diff::demo_diff_cases() {
-                let bytes = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed for {d:?}: {e:?}"));
+                let bytes = d.encode_diff().await.unwrap_or_else(|e| panic!("encode_diff failed for {d:?}: {e:?}"));
                 let trace = dsl::walk_protocol(&diff_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(diff) failed for {d:?} @{}: {}", e.offset, e.message));
                 assert_eq!(trace.consumed, bytes.len(), "diff walk did not consume every byte for {d:?}");
             }
@@ -12114,11 +12114,11 @@ mod tests {
 
             let demo = crate::artifacts::dwg::standards::v_ac1024::engine::demo_dwg_snapshot();
 
-            let parsed = <DwgSnapshot as store::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
+            let parsed = <DwgSnapshot as store::ArtifactDsl>::parse_dsl(FIXTURE_DSL).await.expect("parse shipped .dsl.semio fixture");
             assert_eq!(parsed, demo, "shipped .dsl.semio fixture does not parse back to demo_dwg_snapshot()");
             assert_eq!(store::ArtifactDsl::print_dsl(&demo), FIXTURE_DSL, "print_dsl(demo_dwg_snapshot()) drifted from the shipped .dsl.semio fixture");
 
-            let decoded = <DwgSnapshot as store::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode shipped .pack.semio fixture");
+            let decoded = <DwgSnapshot as store::ArtifactPack>::decode_pack(FIXTURE_PACK).await.expect("decode shipped .pack.semio fixture");
             assert_eq!(decoded, demo, "shipped .pack.semio fixture does not decode back to demo_dwg_snapshot()");
             assert_eq!(store::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_dwg_snapshot()) drifted from the shipped .pack.semio fixture");
         }

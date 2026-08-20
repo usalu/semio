@@ -66,12 +66,12 @@ pub enum StepMutation {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn apply_step_mutation(snapshot: &mut StepSnapshot, mutation: &StepMutation) -> protocol::MutationOutcome<StepDiff> {
     let outcome = <StepMutation as Mutation<StepSnapshot>>::diff(mutation, snapshot);
-    match MutationDiff::apply(outcome.diff(), snapshot) {
+    match MutationDiff::apply(outcome.await.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.await.messages().to_vec()),
     }
 }
 //#endregion 🔖️Apply
@@ -440,7 +440,7 @@ mod tests {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn assert_mutation_diff_law(base: &StepSnapshot, m: StepMutation) {
         let expected_diff = <StepMutation as Mutation<StepSnapshot>>::diff(&m, base);
-        let expected_state = expected_diff.diff().apply(base).expect("valid mutation diff");
+        let expected_state = expected_diff.await.diff().apply(base).expect("valid mutation diff");
         let mut actual_state = base.clone();
         let actual_diff = apply_step_mutation(&mut actual_state, &m);
         assert_eq!(actual_diff, expected_diff, "returned diff must equal m.diff(base) for {m:?}");
@@ -551,12 +551,12 @@ mod tests {
         ];
         for mutation in mutations {
             let printed = mutation.print_op();
-            assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
-            let parsed = StepMutation::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
+            assert!(!printed.await.contains('\n'), "print_op must be one line, got {printed:?}");
+            let parsed = StepMutation::parse_op(&printed).await.unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
             assert_eq!(parsed, mutation, "print_op/parse_op round-trip mismatch for {mutation:?} (printed {printed:?})");
 
-            let encoded = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op({mutation:?}) failed: {e}"));
-            let decoded = StepMutation::decode_op(&encoded).unwrap_or_else(|e| panic!("decode_op failed: {e}"));
+            let encoded = mutation.encode_op().await.unwrap_or_else(|e| panic!("encode_op({mutation:?}) failed: {e}"));
+            let decoded = StepMutation::decode_op(&encoded).await.unwrap_or_else(|e| panic!("decode_op failed: {e}"));
             assert_eq!(decoded, mutation, "encode_op/decode_op round-trip mismatch for {mutation:?}");
         }
     }

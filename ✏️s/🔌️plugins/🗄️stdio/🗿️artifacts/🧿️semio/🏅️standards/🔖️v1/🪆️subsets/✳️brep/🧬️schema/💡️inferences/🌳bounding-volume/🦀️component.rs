@@ -557,8 +557,8 @@ mod tests {
     async fn missing_solid_returns_kernel_error() {
         let body = Body::new();
         let bogus = SolidId::from_raw(9, 9);
-        assert!(matches!(build_face_bvh(&body, bogus), Err(KernelError::MissingEntity(_))));
-        assert!(matches!(build_edge_bvh(&body, bogus), Err(KernelError::MissingEntity(_))));
+        assert!(matches!(build_face_bvh(&body, bogus.await), Err(KernelError::MissingEntity(_))));
+        assert!(matches!(build_edge_bvh(&body, bogus.await), Err(KernelError::MissingEntity(_))));
     }
 }
 // #endregion 🔖️Tests

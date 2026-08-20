@@ -179,7 +179,7 @@ pub mod derived_construction {
 
         #[semio_framework_async_macros::async_test]
         async fn add_paragraph_stays_strict_conformant() {
-            let snapshot = DocxStrictBuilderConstruction::empty().add_text_paragraph("Hello, strict world!").build().expect("must build");
+            let snapshot = DocxStrictBuilderConstruction::empty().await.add_text_paragraph("Hello, strict world!").build().await.expect("must build");
             assert_eq!(snapshot.document.body.len(), 1);
             let bytes = snapshot.opc.part_bytes(MAIN_DOCUMENT_PART).unwrap();
             assert!(String::from_utf8_lossy(bytes).contains(STRICT_MAIN_NS));
@@ -187,7 +187,7 @@ pub mod derived_construction {
 
         #[semio_framework_async_macros::async_test]
         async fn hard_violation_injected_via_raw_mutate_still_fails_build() {
-            let mut snapshot = DocxStrictBuilderConstruction::empty().add_text_paragraph("clean").build().unwrap();
+            let mut snapshot = DocxStrictBuilderConstruction::empty().await.add_text_paragraph("clean").build().await.unwrap();
             snapshot.opc.set_part("word/legacyDrawing.xml", "application/xml", b"<v:shape xmlns:v=\"urn:schemas-microsoft-com:vml\"/>".to_vec());
             let (mutated, _diff) = DocxStrictBuilderConstruction::from_snapshot(DocxSnapshot::default()).mutate(DocxMutation::SetSnapshot { snapshot });
             let err = mutated.build().expect_err("VML content must fail build()");

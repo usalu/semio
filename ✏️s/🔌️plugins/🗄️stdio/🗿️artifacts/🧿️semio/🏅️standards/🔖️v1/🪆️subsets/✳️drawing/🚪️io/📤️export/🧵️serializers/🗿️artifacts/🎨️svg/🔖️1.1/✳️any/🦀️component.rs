@@ -194,7 +194,7 @@ mod tests {
         let drawing = sample_drawing();
         let svg = semio_framework_plugin::resolve_ready(SemioDrawingToSvg::serialize(&drawing)).expect("serialize");
         let text = <SvgSnapshot as store::ArtifactDsl>::print_dsl(&svg);
-        let reparsed = <SvgSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("reparse real svg text");
+        let reparsed = <SvgSnapshot as store::ArtifactDsl>::parse_dsl(&text).await.expect("reparse real svg text");
         let root = crate::artifacts::svg::schema::snapshot::svg_element_from_xml_node(reparsed.doc.root.as_ref().unwrap()).expect("typed view");
         match &root {
             SvgElement::Svg { view_box, .. } => assert_eq!(*view_box, Some(ViewBox { min_x: 0.0, min_y: 0.0, width: 100.0, height: 50.0 })),

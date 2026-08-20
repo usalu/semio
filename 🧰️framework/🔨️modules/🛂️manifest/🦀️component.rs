@@ -3526,7 +3526,7 @@ pub struct ProgramContributionEntry {
 }
 
 /// 📕️ Parses host-pushed `contributionsJson` into typed entries.
-pub async fn parse_contributions(json: &str) -> Vec<ProgramContributionEntry> {
+pub fn parse_contributions(json: &str) -> Vec<ProgramContributionEntry> {
     serde_json::from_str(json).unwrap_or_default()
 }
 
@@ -5133,10 +5133,10 @@ pub struct MediaFingerprint(pub String);
 
 impl MediaFingerprint {
     /// 🔑️ Canonical fingerprint of a `Media` value: structured payloads hash their JSON text, binary payloads reuse their existing content hash directly (no re-hashing bytes already addressed by the blob store).
-    pub async fn of(media: &Media) -> Self {
+    pub fn of(media: &Media) -> Self {
         match &media.payload {
             MediaPayload::Structured { schema, json } => {
-                MediaFingerprint(semio_framework_hash::hash_parts(&[schema.as_str(), json.as_str()]).await)
+                MediaFingerprint(semio_framework_hash::hash_parts(&[schema.as_str(), json.as_str()]))
             }
             MediaPayload::Binary { blob_hash, .. } => MediaFingerprint(blob_hash.clone()),
         }
@@ -5190,26 +5190,26 @@ mod media_vocabulary_tests {
         assert_eq!(media_types_compatible(&brep, &text).await, MediaCompat::Reject, "class mismatch always rejects");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn media_fingerprint_structured_hashes_json_binary_reuses_blob_hash() {
+    #[test]
+    fn media_fingerprint_structured_hashes_json_binary_reuses_blob_hash() {
         let structured = Media {
             media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
             payload: MediaPayload::Structured { schema: "s".into(), json: "{}".into() },
         };
-        let fingerprint = MediaFingerprint::of(&structured).await;
-        assert_eq!(fingerprint, MediaFingerprint::of(&structured).await, "fingerprint is deterministic");
+        let fingerprint = MediaFingerprint::of(&structured);
+        assert_eq!(fingerprint, MediaFingerprint::of(&structured), "fingerprint is deterministic");
 
         let mut changed = structured.clone();
         if let MediaPayload::Structured { json, .. } = &mut changed.payload {
             *json = "{\"a\":1}".into();
         }
-        assert_ne!(MediaFingerprint::of(&changed).await, fingerprint, "different json content hashes differently");
+        assert_ne!(MediaFingerprint::of(&changed), fingerprint, "different json content hashes differently");
 
         let binary = Media {
             media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh },
             payload: MediaPayload::Binary { format_kind: "glb".into(), blob_hash: "abc123".into() },
         };
-        assert_eq!(MediaFingerprint::of(&binary).await, MediaFingerprint("abc123".into()), "binary payload reuses its blob hash verbatim");
+        assert_eq!(MediaFingerprint::of(&binary), MediaFingerprint("abc123".into()), "binary payload reuses its blob hash verbatim");
     }
 
     #[semio_framework_async_macros::async_test]

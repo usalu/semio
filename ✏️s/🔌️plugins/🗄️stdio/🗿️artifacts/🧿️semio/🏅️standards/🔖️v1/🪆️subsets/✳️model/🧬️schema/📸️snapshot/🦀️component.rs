@@ -522,8 +522,8 @@ fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
+    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn write_str_lp(out: &mut Vec<u8>, s: &str) {
@@ -545,7 +545,7 @@ fn write_option_str(out: &mut Vec<u8>, opt: &Option<String>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_option_str(reader: &mut store::ByteReader<'_>) -> Result<Option<String>, String> {
-    match reader.read_u8().map_err(|e| e.to_string())? {
+    match reader.read_u8().await.map_err(|e| e.to_string())? {
         0 => Ok(None),
         1 => Ok(Some(read_str_lp(reader)?)),
         other => Err(format!("option<str>: unknown presence tag {other}")),
@@ -585,7 +585,7 @@ fn write_spatial_kind(out: &mut Vec<u8>, k: &SpatialKind) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_spatial_kind(reader: &mut store::ByteReader<'_>) -> Result<SpatialKind, String> {
-    match reader.read_u8().map_err(|e| e.to_string())? {
+    match reader.read_u8().await.map_err(|e| e.to_string())? {
         0 => Ok(SpatialKind::Site),
         1 => Ok(SpatialKind::Building),
         2 => Ok(SpatialKind::Storey),
@@ -614,7 +614,7 @@ fn write_element_class(out: &mut Vec<u8>, c: &ElementClass) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_element_class(reader: &mut store::ByteReader<'_>) -> Result<ElementClass, String> {
-    match reader.read_u8().map_err(|e| e.to_string())? {
+    match reader.read_u8().await.map_err(|e| e.to_string())? {
         0 => Ok(ElementClass::Wall),
         1 => Ok(ElementClass::Slab),
         2 => Ok(ElementClass::Column),
@@ -645,7 +645,7 @@ fn write_geometry_ref(out: &mut Vec<u8>, g: &GeometryRef) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_geometry_ref(reader: &mut store::ByteReader<'_>) -> Result<GeometryRef, String> {
-    match reader.read_u8().map_err(|e| e.to_string())? {
+    match reader.read_u8().await.map_err(|e| e.to_string())? {
         0 => Ok(GeometryRef::None),
         1 => Ok(GeometryRef::Brep { brep_id: read_str_lp(reader)? }),
         2 => Ok(GeometryRef::Mesh { mesh_id: read_str_lp(reader)? }),
@@ -672,10 +672,10 @@ fn write_pset_value(out: &mut Vec<u8>, v: &PsetValue) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_pset_value(reader: &mut store::ByteReader<'_>) -> Result<PsetValue, String> {
-    match reader.read_u8().map_err(|e| e.to_string())? {
+    match reader.read_u8().await.map_err(|e| e.to_string())? {
         0 => Ok(PsetValue::Text { value: read_str_lp(reader)? }),
-        1 => Ok(PsetValue::Number { value: reader.read_f64_le().map_err(|e| e.to_string())? }),
-        2 => Ok(PsetValue::Boolean { value: reader.read_u8().map_err(|e| e.to_string())? != 0 }),
+        1 => Ok(PsetValue::Number { value: reader.read_f64_le().await.map_err(|e| e.to_string())? }),
+        2 => Ok(PsetValue::Boolean { value: reader.read_u8().await.map_err(|e| e.to_string())? != 0 }),
         other => Err(format!("pset value: unknown tag {other}")),
     }
 }
@@ -703,7 +703,7 @@ fn write_property_set(out: &mut Vec<u8>, ps: &PropertySet) {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_property_set(reader: &mut store::ByteReader<'_>) -> Result<PropertySet, String> {
     let name = read_str_lp(reader)?;
-    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut properties = Vec::with_capacity(count as usize);
     for _ in 0..count {
         properties.push(read_property(reader)?);
@@ -748,7 +748,7 @@ fn read_element(reader: &mut store::ByteReader<'_>) -> Result<SemioModelElement,
     let placement = read_transform(reader)?;
     let geometry = read_geometry_ref(reader)?;
     let spatial_id = read_option_str(reader)?;
-    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut psets = Vec::with_capacity(count as usize);
     for _ in 0..count {
         psets.push(read_property_set(reader)?);
@@ -772,7 +772,7 @@ fn write_relation_kind(out: &mut Vec<u8>, k: &RelationKind) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_relation_kind(reader: &mut store::ByteReader<'_>) -> Result<RelationKind, String> {
-    match reader.read_u8().map_err(|e| e.to_string())? {
+    match reader.read_u8().await.map_err(|e| e.to_string())? {
         0 => Ok(RelationKind::Aggregates),
         1 => Ok(RelationKind::ContainedIn),
         2 => Ok(RelationKind::ConnectsTo),
@@ -823,22 +823,22 @@ fn encode_model_snapshot_binary(s: &SemioModelSnapshot) -> Vec<u8> {
 fn decode_model_snapshot_binary(bytes: &[u8]) -> Result<SemioModelSnapshot, String> {
     const PACK_BINARY_FORMAT: u8 = 1;
     let mut reader = semio_framework_plugin::resolve_ready(store::ByteReader::new(bytes));
-    let format = reader.read_u8().map_err(|e| e.to_string())?;
+    let format = reader.read_u8().await.map_err(|e| e.to_string())?;
     if format != PACK_BINARY_FORMAT {
         return Err(format!("unsupported pack format {format}"));
     }
     let schema = read_str_lp(&mut reader)?;
-    let spatial_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let spatial_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut spatial = Vec::with_capacity(spatial_count as usize);
     for _ in 0..spatial_count {
         spatial.push(read_spatial_node(&mut reader)?);
     }
-    let element_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let element_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut elements = Vec::with_capacity(element_count as usize);
     for _ in 0..element_count {
         elements.push(read_element(&mut reader)?);
     }
-    let relation_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let relation_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut relations = Vec::with_capacity(relation_count as usize);
     for _ in 0..relation_count {
         relations.push(read_relation(&mut reader)?);
@@ -940,7 +940,7 @@ mod tests {
     async fn json_pack_round_trips() {
         let snap = SemioModelSnapshot::default();
         let bytes = <SemioModelSnapshot as store::ArtifactPack>::encode_pack(&snap);
-        let back = <SemioModelSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+        let back = <SemioModelSnapshot as store::ArtifactPack>::decode_pack(&bytes).await.expect("decode");
         assert_eq!(snap, back);
     }
 
@@ -948,7 +948,7 @@ mod tests {
     async fn dsl_text_round_trips() {
         let snap = SemioModelSnapshot::default();
         let text = <SemioModelSnapshot as store::ArtifactDsl>::print_dsl(&snap);
-        let back = <SemioModelSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
+        let back = <SemioModelSnapshot as store::ArtifactDsl>::parse_dsl(&text).await.expect("parse");
         assert_eq!(snap, back);
     }
 
@@ -958,11 +958,11 @@ mod tests {
     async fn codec_retention_law() {
         let snap = demo_semio_model_snapshot();
         let packed = <SemioModelSnapshot as store::ArtifactPack>::encode_pack(&snap);
-        let unpacked = <SemioModelSnapshot as store::ArtifactPack>::decode_pack(&packed).expect("decode pack");
+        let unpacked = <SemioModelSnapshot as store::ArtifactPack>::decode_pack(&packed).await.expect("decode pack");
         assert_eq!(snap, unpacked);
 
         let text = <SemioModelSnapshot as store::ArtifactDsl>::print_dsl(&snap);
-        let reparsed = <SemioModelSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse dsl");
+        let reparsed = <SemioModelSnapshot as store::ArtifactDsl>::parse_dsl(&text).await.expect("parse dsl");
         assert_eq!(snap, reparsed);
     }
 }

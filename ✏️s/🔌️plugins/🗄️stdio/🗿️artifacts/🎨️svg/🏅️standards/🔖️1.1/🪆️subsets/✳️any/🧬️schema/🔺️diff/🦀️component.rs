@@ -832,8 +832,8 @@ pub(crate) fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
+    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn write_str_lp(out: &mut Vec<u8>, s: &str) {
@@ -854,7 +854,7 @@ pub(crate) fn enc_prolog_bin(prolog: &Vec<XmlNode>, out: &mut Vec<u8>) {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_prolog_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<XmlNode>, String> {
-    let count = reader.read_varint_u64().map_err(|error| error.to_string())? as usize;
+    let count = reader.read_varint_u64().await.map_err(|error| error.to_string())? as usize;
     (0..count).map(|_| dec_xml_node_bin(reader)).collect()
 }
 //#endregion 🔖️BinaryPrimitives
@@ -958,17 +958,17 @@ pub(crate) fn enc_doctype_bin(doctype: &XmlDoctype, out: &mut Vec<u8>) {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_doctype_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlDoctype, String> {
     let name = read_str_lp(reader)?;
-    let external_id = match reader.read_u8().map_err(|error| error.to_string())? {
+    let external_id = match reader.read_u8().await.map_err(|error| error.to_string())? {
         0 => None,
         1 => Some(XmlExternalId::System { system_id: read_str_lp(reader)? }),
         2 => Some(XmlExternalId::Public { public_id: read_str_lp(reader)?, system_id: read_str_lp(reader)? }),
         tag => return Err(format!("unknown XML external id tag {tag}")),
     };
-    let count = reader.read_varint_u64().map_err(|error| error.to_string())? as usize;
+    let count = reader.read_varint_u64().await.map_err(|error| error.to_string())? as usize;
     let mut declarations = Vec::with_capacity(count);
     for _ in 0..count {
-        match reader.read_u8().map_err(|error| error.to_string())? {
-            1 => declarations.push(XmlDtdDeclaration::Entity { parameter: reader.read_u8().map_err(|error| error.to_string())? != 0, name: read_str_lp(reader)?, value: read_str_lp(reader)? }),
+        match reader.read_u8().await.map_err(|error| error.to_string())? {
+            1 => declarations.push(XmlDtdDeclaration::Entity { parameter: reader.read_u8().await.map_err(|error| error.to_string())? != 0, name: read_str_lp(reader)?, value: read_str_lp(reader)? }),
             tag => return Err(format!("unknown XML DTD declaration tag {tag}")),
         }
     }
@@ -1050,8 +1050,8 @@ pub(crate) fn enc_declaration_bin(d: &XmlDeclaration, out: &mut Vec<u8>) {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_declaration_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlDeclaration, String> {
     let version = read_str_lp(reader)?;
-    let encoding = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
-    let standalone = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(reader.read_u8().map_err(|e| e.to_string())? != 0) } else { None };
+    let encoding = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
+    let standalone = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(reader.read_u8().await.map_err(|e| e.to_string())? != 0) } else { None };
     Ok(XmlDeclaration { version, encoding, standalone })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -1090,16 +1090,16 @@ pub(crate) fn enc_xml_node_bin(node: &XmlNode, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_xml_node_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlNode, String> {
-    let tag = reader.read_u8().map_err(|e| e.to_string())?;
+    let tag = reader.read_u8().await.map_err(|e| e.to_string())?;
     match tag {
         0 => {
             let name = read_str_lp(reader)?;
-            let attr_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+            let attr_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
             let mut attrs = Vec::with_capacity(attr_count as usize);
             for _ in 0..attr_count {
                 attrs.push(dec_attr_bin(reader)?);
             }
-            let child_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+            let child_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
             let mut children = Vec::with_capacity(child_count as usize);
             for _ in 0..child_count {
                 children.push(Box::pin(dec_xml_node_bin(reader))?);
@@ -1274,20 +1274,20 @@ fn enc_node_diff_bin(diff: &SvgNodeDiff, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_node_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<SvgNodeDiff, String> {
-    let tag = reader.read_u8().map_err(|e| e.to_string())?;
+    let tag = reader.read_u8().await.map_err(|e| e.to_string())?;
     match tag {
         0 => {
-            let name = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
-            let attributes = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_attrs_diff_bin(reader)?) } else { None };
-            let children = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(Box::pin(dec_children_diff_bin(reader))?) } else { None };
+            let name = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
+            let attributes = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_attrs_diff_bin(reader)?) } else { None };
+            let children = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(Box::pin(dec_children_diff_bin(reader))?) } else { None };
             Ok(SvgNodeDiff::Element(SvgElementDiff { name, attributes, children }))
         }
         1 => {
-            let text = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
+            let text = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
             Ok(SvgNodeDiff::Text { text })
         }
         2 => {
-            let node = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_xml_node_bin(reader)?) } else { None };
+            let node = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_xml_node_bin(reader)?) } else { None };
             Ok(SvgNodeDiff::Replace { node })
         }
         other => Err(format!("svg node diff binary: unknown tag {other}")),
@@ -1314,22 +1314,22 @@ fn enc_attrs_diff_bin(diff: &SvgAttributesDiff, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_attrs_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<SvgAttributesDiff, String> {
-    let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let removed_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(removed_count as usize);
     for _ in 0..removed_count {
         removed.push(read_str_lp(reader)?);
     }
-    let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let modified_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut modified = Vec::with_capacity(modified_count as usize);
     for _ in 0..modified_count {
         let name = read_str_lp(reader)?;
         let value = read_str_lp(reader)?;
         modified.push(SvgAttrModified { name, value });
     }
-    let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let added_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut added = Vec::with_capacity(added_count as usize);
     for _ in 0..added_count {
-        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+        let index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
         let name = read_str_lp(reader)?;
         let value = read_str_lp(reader)?;
         added.push(SvgAttrAdded { index, name, value });
@@ -1356,22 +1356,22 @@ fn enc_children_diff_bin(diff: &SvgChildrenDiff, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_children_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<SvgChildrenDiff, String> {
-    let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let removed_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(removed_count as usize);
     for _ in 0..removed_count {
-        removed.push(reader.read_varint_u64().map_err(|e| e.to_string())? as usize);
+        removed.push(reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize);
     }
-    let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let modified_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut modified = Vec::with_capacity(modified_count as usize);
     for _ in 0..modified_count {
-        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+        let index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
         let diff = Box::pin(dec_node_diff_bin(reader))?;
         modified.push(SvgChildModified { index, diff });
     }
-    let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let added_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut added = Vec::with_capacity(added_count as usize);
     for _ in 0..added_count {
-        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+        let index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
         let item = dec_xml_node_bin(reader)?;
         added.push(SvgChildAdded { index, item });
     }
@@ -1541,12 +1541,12 @@ mod handcrafted_diff_codec_tests {
     async fn diff_codec_text_binary_roundtrip_law() {
         for d in demo_diff_cases() {
             let printed = d.print_diff();
-            assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
-            let parsed = SvgDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
+            assert!(!printed.await.contains('\n'), "print_diff must be one line, got {printed:?}");
+            let parsed = SvgDiff::parse_diff(&printed).await.unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
             assert_eq!(parsed, d, "print_diff/parse_diff round-trip mismatch (printed {printed:?})");
 
-            let encoded = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
-            let decoded = SvgDiff::decode_diff(&encoded).unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
+            let encoded = d.encode_diff().await.unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
+            let decoded = SvgDiff::decode_diff(&encoded).await.unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
             assert_eq!(decoded, d, "encode_diff/decode_diff round-trip mismatch");
         }
     }

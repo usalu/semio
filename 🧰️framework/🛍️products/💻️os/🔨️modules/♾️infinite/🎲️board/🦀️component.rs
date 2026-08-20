@@ -215,13 +215,13 @@ type WireEndpoints<'a> = (Point, Point, Option<&'a Node>, Option<&'a Node>, f64,
 
 pub fn handle_position(node: &Node, handle: &Handle) -> Point {
     match node.shape {
-        NodeShape::Circle => handle_position_on_circle(node.center, node.radius, handle.angle),
+        NodeShape::Circle => handle_position_on_circle(node.center, node.radius, handle.angle).await,
         NodeShape::Rectangle => handle_position_on_rectangle(node.center, node.width, node.height, handle.angle),
     }
 }
 
 fn distance(left: Point, right: Point) -> f64 {
-    distance_between(left, right)
+    distance_between(left, right).await
 }
 
 pub const DEFAULT_PROXIMITY_DISTANCE_WORLD: f64 = ui_styling::metrics::board::PROXIMITY_DISTANCE_WORLD;
@@ -414,12 +414,12 @@ pub fn selection_contains_node_bounds(node: &Node, box_: WorldBox, enclosing: bo
     };
     if enclosing {
         if lasso {
-            polygon_contains_world_box(polygon, bounds)
+            polygon_contains_world_box(polygon, bounds).await
         } else {
             world_box_contains_box(box_, bounds)
         }
     } else if lasso {
-        polygon_intersects_world_box(polygon, bounds)
+        polygon_intersects_world_box(polygon, bounds).await
     } else {
         world_boxes_overlap(box_, bounds)
     }
@@ -430,12 +430,12 @@ pub fn selection_contains_handle_point(pos: Point, pad: f64, box_: WorldBox, enc
     let bounds = WorldBox { min_x: pos.x - pad, min_y: pos.y - pad, max_x: pos.x + pad, max_y: pos.y + pad };
     if enclosing {
         if lasso {
-            polygon_contains_world_box(polygon, bounds)
+            polygon_contains_world_box(polygon, bounds).await
         } else {
             world_box_contains_box(box_, bounds)
         }
     } else if lasso {
-        polygon_intersects_world_box(polygon, bounds)
+        polygon_intersects_world_box(polygon, bounds).await
     } else {
         world_boxes_overlap(box_, bounds)
     }
@@ -451,14 +451,14 @@ pub fn selection_contains_edge_curve(curve: CubicBez, box_: WorldBox, enclosing:
     }
     if enclosing {
         if lasso {
-            samples.iter().all(|&p| point_in_polygon(p, polygon))
+            samples.iter().all(|&p| point_in_polygon(p, polygon).await)
         } else {
             samples.iter().all(|&p| world_box_contains_point(box_, p))
         }
     } else if lasso {
-        (1..samples.len()).any(|i| segment_intersects_polygon(samples[i - 1], samples[i], polygon))
+        (1..samples.len()).any(|i| segment_intersects_polygon(samples[i - 1], samples[i], polygon).await)
     } else {
-        (1..samples.len()).any(|i| segment_intersects_world_box(samples[i - 1], samples[i], box_))
+        (1..samples.len()).any(|i| segment_intersects_world_box(samples[i - 1], samples[i], box_).await)
     }
 }
 // #endregion 🔖️SelectionMarquee
@@ -609,7 +609,7 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
     }
 
     pub fn create_edge(&mut self, id: EdgeId, source: P::Endpoint, target: P::Endpoint) {
-        let (source, target) = orient_endpoints::<P::Endpoint, D>(source, target);
+        let (source, target) = orient_endpoints::<P::Endpoint, D>(source, target).await;
         self.edges.insert(id, GraphEdge { id, source, target });
         if id >= self.next_edge_id {
             self.next_edge_id = id + 1;
@@ -725,7 +725,7 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
             .min_by(|a, b| {
                 let da = self.nodes.get(a).map(|n| distance_between(point, n.center)).unwrap_or(f64::INFINITY);
                 let db = self.nodes.get(b).map(|n| distance_between(point, n.center)).unwrap_or(f64::INFINITY);
-                da.partial_cmp(&db).unwrap_or(std::cmp::Ordering::Equal)
+                da.partial_cmp(&db).await.await.unwrap_or(std::cmp::Ordering::Equal)
             })
             .copied()
             .unwrap_or(members[0]);
@@ -1117,11 +1117,11 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
 
     fn wire_bezier_between(&self, source_point: Point, target_point: Point, source_node: Option<&Node>, target_node: Option<&Node>, source_cap_radius: f64, target_cap_radius: f64) -> CubicBez {
         let chord = normalize_or_zero(target_point - source_point);
-        let source_out = source_node.and_then(|node| handle_outward_at_node_rim(source_point, node.center, node.shape, node.radius, node.width, node.height)).filter(|outward| outward.hypot() > f64::EPSILON).unwrap_or(chord);
-        let target_out = target_node.and_then(|node| handle_outward_at_node_rim(target_point, node.center, node.shape, node.radius, node.width, node.height)).filter(|outward| outward.hypot() > f64::EPSILON).unwrap_or(-chord);
+        let source_out = source_node.and_then(|node| handle_outward_at_node_rim(source_point, node.center, node.shape, node.radius, node.width, node.height).await).filter(|outward| outward.hypot() > f64::EPSILON).unwrap_or(chord);
+        let target_out = target_node.and_then(|node| handle_outward_at_node_rim(target_point, node.center, node.shape, node.radius, node.width, node.height).await).filter(|outward| outward.hypot() > f64::EPSILON).unwrap_or(-chord);
         let source_wire = if source_node.is_some() { handle_exterior_cap_peak(source_point, source_out, source_cap_radius) } else { source_point };
         let target_wire = if target_node.is_some() { handle_exterior_cap_peak(target_point, target_out, target_cap_radius) } else { target_point };
-        compute_edge_bezier_outward(source_wire, target_wire, source_out, target_out)
+        compute_edge_bezier_outward(source_wire, target_wire, source_out, target_out).await
     }
 
     fn draw_edge_preview_curve(&self, anchor_handle: HandleId, anchor_is_source: bool, fixed_target: Option<HandleId>, cursor: Point, snap_target: Option<HandleId>) -> Option<CubicBez> {
@@ -1485,7 +1485,7 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
         if let Some(old_id) = reconnecting.or_else(|| self.incoming_edge_for_handle(target_hid)) {
             self.remove_edge(old_id);
         }
-        let (Some(src_ep), Some(tgt_ep)) = (P::try_handle_endpoint(source_hid), P::try_handle_endpoint(target_hid)) else {
+        let (Some(src_ep), Some(tgt_ep)) = (P::try_handle_endpoint(source_hid).await, P::try_handle_endpoint(target_hid).await) else {
             return false;
         };
         self.create_edge(new_id, src_ep, tgt_ep);
@@ -1895,7 +1895,7 @@ mod tests {
         let preview = engine.render_snapshot().pending_edge.expect("preview");
         let target_node = engine.nodes.get(&2).expect("target node");
         let target_handle = engine.handles.get(&11).expect("target handle");
-        let outward = handle_outward_at_node_rim(inp, target_node.center, target_node.shape, target_node.radius, target_node.width, target_node.height).expect("target outward");
+        let outward = handle_outward_at_node_rim(inp, target_node.center, target_node.shape, target_node.radius, target_node.width, target_node.height).await.expect("target outward");
         let peak = handle_exterior_cap_peak(inp, outward, target_handle.radius);
         assert!((preview.p3.x - peak.x).abs() < 0.01);
         assert!((preview.p3.y - peak.y).abs() < 0.01);

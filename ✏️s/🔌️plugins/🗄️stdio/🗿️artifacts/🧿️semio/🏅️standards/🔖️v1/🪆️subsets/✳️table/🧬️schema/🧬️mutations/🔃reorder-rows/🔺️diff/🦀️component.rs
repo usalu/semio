@@ -13,7 +13,7 @@ pub fn diff(payload: &ReorderRows, base: &SemioTableSnapshot) -> protocol::Mutat
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Row #{} does not exist.", payload.from), [payload.from.to_string()]);
     }
     if payload.from == payload.to {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Row #{} is already at position #{}.", payload.from, payload.to));
+        return protocol::MutationOutcome::empty().await.warn("mutation.no-op", format!("Row #{} is already at position #{}.", payload.from, payload.to));
     }
     let mut rows = base.rows.clone();
     let item = rows.remove(payload.from);

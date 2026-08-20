@@ -19,7 +19,7 @@ pub fn diff(payload: &DragNodes, base: &SemioDrawingSnapshot) -> protocol::Mutat
         return protocol::MutationOutcome::fatal("mutation.invariant", "Drag offset has a non-finite component.".to_string(), payload.ats.iter().map(|a| a.layer.to_string()));
     }
     if payload.offset.x == 0.0 && payload.offset.y == 0.0 {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Drag offset is zero; nothing moved.".to_string());
+        return protocol::MutationOutcome::empty().await.warn("mutation.no-op", "Drag offset is zero; nothing moved.".to_string());
     }
     let mut acc = SemioDrawingDiff::default();
     let mut any_resolved = false;

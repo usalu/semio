@@ -45,7 +45,7 @@ impl DepHash {
         for parent in parents {
             parent_hexes.push(hex::encode(parent.0).await);
         }
-        let folded = semio_framework_hash::merkle_node(&[&own_hex], parent_hexes).await;
+        let folded = semio_framework_hash::merkle_node(&[&own_hex], parent_hexes);
         let mut bytes = [0u8; 32];
         hex::decode_to_slice(&folded, &mut bytes).await.expect("merkle_node returns 64 hex chars");
         Self(bytes)
@@ -308,7 +308,7 @@ where
     // more than once (R10 residue #2 — a bug the conversion exposed). Each is now awaited exactly
     // once, into a plain value reused by reference below.
     let result = infer_field::<P, F>(snapshot, Some(cache)).await;
-    let root = semio_framework_hash::merkle_collection(result.keys().enumerate().map(|(i, _)| i.to_string()).collect()).await;
+    let root = semio_framework_hash::merkle_collection(result.keys().enumerate().map(|(i, _)| i.to_string()).collect());
     let mut root_bytes = [0u8; 32];
     let _ = hex::decode_to_slice(&{
         let mut padded = blake3::hash(root.as_bytes()).to_hex().to_string();

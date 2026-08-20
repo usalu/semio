@@ -206,7 +206,7 @@ fn validate_added_positions(indices: impl IntoIterator<Item = usize>, mut length
     let mut previous = None;
     for index in indices {
         if index > length || previous == Some(index) {
-            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-add-index", format!("add index {index} is out of range or duplicated")).at(target.clone()));
+            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-add-index", format!("add index {index} is out of range or duplicated")).await.at(target.clone()));
         }
         previous = Some(index);
         length += 1;
@@ -229,7 +229,7 @@ fn validate_value_diff(diff: &SemioValueDiff, base: &SemioValue, target: Vec<Str
             | (SemioValueDiff::Ref { .. }, SemioValue::Ref { .. })
     );
     if !kind_matches {
-        return Err(protocol::MutationApplyError::new("mutation.apply.value-kind-mismatch", "Semio value diff kind does not match the base value kind").at(target));
+        return Err(protocol::MutationApplyError::new("mutation.apply.value-kind-mismatch", "Semio value diff kind does not match the base value kind").await.at(target));
     }
     match (diff, base) {
         (SemioValueDiff::List { diff }, SemioValue::List { items }) => {
@@ -884,8 +884,8 @@ pub(crate) fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
+    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn write_str_lp(out: &mut Vec<u8>, s: &str) {
@@ -951,16 +951,16 @@ pub(crate) fn enc_semio_value_bin(value: &SemioValue, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_semio_value_bin(reader: &mut store::ByteReader<'_>) -> Result<SemioValue, String> {
-    let tag = reader.read_u8().map_err(|e| e.to_string())?;
+    let tag = reader.read_u8().await.map_err(|e| e.to_string())?;
     match tag {
         0 => Ok(SemioValue::Null),
-        1 => Ok(SemioValue::Bool { value: reader.read_u8().map_err(|e| e.to_string())? != 0 }),
+        1 => Ok(SemioValue::Bool { value: reader.read_u8().await.map_err(|e| e.to_string())? != 0 }),
         2 => Ok(SemioValue::Int { lexeme: read_str_lp(reader)? }),
         3 => Ok(SemioValue::Float { lexeme: read_str_lp(reader)? }),
         4 => Ok(SemioValue::Str { value: read_str_lp(reader)? }),
         5 => Ok(SemioValue::Bytes { value: read_bytes_lp(reader)? }),
         6 => {
-            let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+            let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
             let mut items = Vec::with_capacity(count as usize);
             for _ in 0..count {
                 items.push(Box::pin(dec_semio_value_bin(reader))?);
@@ -968,7 +968,7 @@ pub(crate) fn dec_semio_value_bin(reader: &mut store::ByteReader<'_>) -> Result<
             Ok(SemioValue::List { items })
         }
         7 => {
-            let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+            let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
             let mut entries = Vec::with_capacity(count as usize);
             for _ in 0..count {
                 let key = read_str_lp(reader)?;
@@ -1042,10 +1042,10 @@ pub(crate) fn enc_value_diff_bin(d: &SemioValueDiff, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_value_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<SemioValueDiff, String> {
-    let tag = reader.read_u8().map_err(|e| e.to_string())?;
+    let tag = reader.read_u8().await.map_err(|e| e.to_string())?;
     match tag {
         0 => Ok(SemioValueDiff::Replace { value: dec_semio_value_bin(reader)? }),
-        1 => Ok(SemioValueDiff::Bool { value: reader.read_u8().map_err(|e| e.to_string())? != 0 }),
+        1 => Ok(SemioValueDiff::Bool { value: reader.read_u8().await.map_err(|e| e.to_string())? != 0 }),
         2 => Ok(SemioValueDiff::Int { lexeme: read_str_lp(reader)? }),
         3 => Ok(SemioValueDiff::Float { lexeme: read_str_lp(reader)? }),
         4 => Ok(SemioValueDiff::Str { value: read_str_lp(reader)? }),
@@ -1078,22 +1078,22 @@ fn enc_indexed_diff_bin(diff: &IndexedTripleDiff<SemioValueDiff, SemioValue>, ou
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_indexed_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<IndexedTripleDiff<SemioValueDiff, SemioValue>, String> {
-    let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let removed_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(removed_count as usize);
     for _ in 0..removed_count {
-        removed.push(reader.read_varint_u64().map_err(|e| e.to_string())? as usize);
+        removed.push(reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize);
     }
-    let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let modified_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut modified = Vec::with_capacity(modified_count as usize);
     for _ in 0..modified_count {
-        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+        let index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
         let diff = Box::pin(dec_value_diff_bin(reader))?;
         modified.push(IndexModified { index, diff });
     }
-    let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let added_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut added = Vec::with_capacity(added_count as usize);
     for _ in 0..added_count {
-        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+        let index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
         let item = dec_semio_value_bin(reader)?;
         added.push(IndexAdded { index, item });
     }
@@ -1123,22 +1123,22 @@ fn enc_map_diff_bin(diff: &NamedTripleDiff<String, SemioValueDiff, NamedAdded<Se
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_map_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<NamedTripleDiff<String, SemioValueDiff, NamedAdded<SemioValueEntry>>, String> {
-    let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let removed_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(removed_count as usize);
     for _ in 0..removed_count {
         removed.push(read_str_lp(reader)?);
     }
-    let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let modified_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut modified = Vec::with_capacity(modified_count as usize);
     for _ in 0..modified_count {
         let key = read_str_lp(reader)?;
         let diff = Box::pin(dec_value_diff_bin(reader))?;
         modified.push(NamedModified { key, diff });
     }
-    let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let added_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut added = Vec::with_capacity(added_count as usize);
     for _ in 0..added_count {
-        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+        let index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
         let key = read_str_lp(reader)?;
         let value = dec_semio_value_bin(reader)?;
         added.push(NamedAdded { index, item: SemioValueEntry { key, value } });
@@ -1168,22 +1168,22 @@ fn enc_nodes_diff_bin(diff: &NamedTripleDiff<ValueId, SemioValueDiff, NamedAdded
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_nodes_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<NamedTripleDiff<ValueId, SemioValueDiff, NamedAdded<SemioValueNode>>, String> {
-    let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let removed_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(removed_count as usize);
     for _ in 0..removed_count {
         removed.push(ValueId::new(read_str_lp(reader)?));
     }
-    let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let modified_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut modified = Vec::with_capacity(modified_count as usize);
     for _ in 0..modified_count {
         let key = ValueId::new(read_str_lp(reader)?);
         let diff = dec_value_diff_bin(reader)?;
         modified.push(NamedModified { key, diff });
     }
-    let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let added_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut added = Vec::with_capacity(added_count as usize);
     for _ in 0..added_count {
-        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+        let index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
         let item = dec_semio_value_node_bin(reader)?;
         added.push(NamedAdded { index, item });
     }
@@ -1427,10 +1427,10 @@ mod tests {
         let base = snap(listv(vec![strv("a"), strv("b"), strv("c")]), vec![]);
         let d1 = list_diff(IndexedTripleDiff { added: vec![IndexAdded { index: 2, item: strv("f") }], ..Default::default() });
         let d2 = list_diff(IndexedTripleDiff { removed: vec![0], ..Default::default() });
-        let sequential = d2.apply(&d1.apply(&base).expect("apply must succeed for a well-formed fixture")).expect("apply must succeed for a well-formed fixture");
+        let sequential = d2.apply(&d1.apply(&base).await.expect("apply must succeed for a well-formed fixture")).await.expect("apply must succeed for a well-formed fixture");
         let mut combined = d1.clone();
         combined.absorb(d2.clone());
-        assert_eq!(combined.apply(&base).expect("apply must succeed for a well-formed fixture"), sequential);
+        assert_eq!(combined.apply(&base).await.expect("apply must succeed for a well-formed fixture"), sequential);
         assert_eq!(sequential.root, listv(vec![strv("b"), strv("f"), strv("c")]));
         match &combined.root {
             Some(SemioValueDiff::List { diff }) => {
@@ -1446,10 +1446,10 @@ mod tests {
         let base = snap(listv(vec![strv("a"), strv("b")]), vec![]);
         let d1 = list_diff(IndexedTripleDiff { added: vec![IndexAdded { index: 2, item: strv("f") }], ..Default::default() });
         let d2 = list_diff(IndexedTripleDiff { added: vec![IndexAdded { index: 2, item: strv("g") }], ..Default::default() });
-        let sequential = d2.apply(&d1.apply(&base).expect("apply must succeed for a well-formed fixture")).expect("apply must succeed for a well-formed fixture");
+        let sequential = d2.apply(&d1.apply(&base).await.expect("apply must succeed for a well-formed fixture")).await.expect("apply must succeed for a well-formed fixture");
         let mut combined = d1.clone();
         combined.absorb(d2.clone());
-        assert_eq!(combined.apply(&base).expect("apply must succeed for a well-formed fixture"), sequential);
+        assert_eq!(combined.apply(&base).await.expect("apply must succeed for a well-formed fixture"), sequential);
         assert_eq!(sequential.root, listv(vec![strv("a"), strv("b"), strv("g"), strv("f")]));
         match &combined.root {
             Some(SemioValueDiff::List { diff }) => assert_eq!(diff.added.len(), 2, "both inserts must survive"),
@@ -1462,10 +1462,10 @@ mod tests {
         let base = snap(listv(vec![strv("a")]), vec![]);
         let d1 = list_diff(IndexedTripleDiff { added: vec![IndexAdded { index: 1, item: strv("f") }], ..Default::default() });
         let d2 = list_diff(IndexedTripleDiff { removed: vec![1], ..Default::default() });
-        let sequential = d2.apply(&d1.apply(&base).expect("apply must succeed for a well-formed fixture")).expect("apply must succeed for a well-formed fixture");
+        let sequential = d2.apply(&d1.apply(&base).await.expect("apply must succeed for a well-formed fixture")).await.expect("apply must succeed for a well-formed fixture");
         let mut combined = d1.clone();
         combined.absorb(d2.clone());
-        assert_eq!(combined.apply(&base).expect("apply must succeed for a well-formed fixture"), sequential);
+        assert_eq!(combined.apply(&base).await.expect("apply must succeed for a well-formed fixture"), sequential);
         assert_eq!(sequential, base);
         assert!(combined.is_empty(), "cancelling insert+remove must coalesce to an empty diff");
     }
@@ -1478,10 +1478,10 @@ mod tests {
             modified: vec![IndexModified { index: 0, diff: SemioValueDiff::Map { diff: NamedTripleDiff { added: vec![NamedAdded { index: 1, item: SemioValueEntry { key: "y".into(), value: intv("2") } }], ..Default::default() } } }],
             ..Default::default()
         });
-        let sequential = d2.apply(&d1.apply(&base).expect("apply must succeed for a well-formed fixture")).expect("apply must succeed for a well-formed fixture");
+        let sequential = d2.apply(&d1.apply(&base).await.expect("apply must succeed for a well-formed fixture")).await.expect("apply must succeed for a well-formed fixture");
         let mut combined = d1.clone();
         combined.absorb(d2.clone());
-        assert_eq!(combined.apply(&base).expect("apply must succeed for a well-formed fixture"), sequential);
+        assert_eq!(combined.apply(&base).await.expect("apply must succeed for a well-formed fixture"), sequential);
         assert_eq!(sequential.root, listv(vec![mapv(vec![("x", intv("1")), ("y", intv("2"))])]));
         match &combined.root {
             Some(SemioValueDiff::List { diff }) => {
@@ -1498,10 +1498,10 @@ mod tests {
         let base = snap(listv(vec![intv("1"), intv("2")]), vec![]);
         let d1 = list_diff(IndexedTripleDiff { modified: vec![IndexModified { index: 0, diff: SemioValueDiff::Int { lexeme: "9".into() } }], ..Default::default() });
         let d2 = list_diff(IndexedTripleDiff { removed: vec![0], ..Default::default() });
-        let sequential = d2.apply(&d1.apply(&base).expect("apply must succeed for a well-formed fixture")).expect("apply must succeed for a well-formed fixture");
+        let sequential = d2.apply(&d1.apply(&base).await.expect("apply must succeed for a well-formed fixture")).await.expect("apply must succeed for a well-formed fixture");
         let mut combined = d1.clone();
         combined.absorb(d2.clone());
-        assert_eq!(combined.apply(&base).expect("apply must succeed for a well-formed fixture"), sequential);
+        assert_eq!(combined.apply(&base).await.expect("apply must succeed for a well-formed fixture"), sequential);
         assert_eq!(sequential.root, listv(vec![intv("2")]));
         match &combined.root {
             Some(SemioValueDiff::List { diff }) => {
@@ -1752,7 +1752,7 @@ mod tests {
         let (a, b) = (sweep_a(), sweep_b());
         let diff = SemioValueTreeDiff::between(&a, &b);
 
-        let map_diff = match &diff.root {
+        let map_diff = match &diff.await.root {
             Some(SemioValueDiff::Map { diff }) => diff,
             other => panic!("expected a top-level map diff, got {other:?}"),
         };
@@ -1787,7 +1787,7 @@ mod tests {
             other => panic!("expected map diff, got {other:?}"),
         }
 
-        let nodes_diff = diff.nodes.as_ref().expect("expected an nodes graph diff");
+        let nodes_diff = diff.await.nodes.as_ref().expect("expected an nodes graph diff");
         assert_eq!(nodes_diff.removed, vec![ValueId::new("n2")]);
         assert_eq!(nodes_diff.added.len(), 1);
         assert_eq!(nodes_diff.added[0].item.id, ValueId::new("n4"));
@@ -1806,12 +1806,12 @@ mod tests {
 
         for d in demo_diff_cases() {
             let printed = d.print_diff();
-            assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
-            let parsed = SemioValueTreeDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
+            assert!(!printed.await.contains('\n'), "print_diff must be one line, got {printed:?}");
+            let parsed = SemioValueTreeDiff::parse_diff(&printed).await.unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
             assert_eq!(parsed, d, "print_diff/parse_diff round-trip mismatch (printed {printed:?})");
 
-            let encoded = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
-            let decoded = SemioValueTreeDiff::decode_diff(&encoded).unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
+            let encoded = d.encode_diff().await.unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
+            let decoded = SemioValueTreeDiff::decode_diff(&encoded).await.unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
             assert_eq!(decoded, d, "encode_diff/decode_diff round-trip mismatch");
         }
     }

@@ -555,7 +555,7 @@ mod tests {
         let curve = body.curves3.insert(Curve3::Circle { frame, radius: 1.0 });
         let v = make_vertex(&mut body, Pnt3::new(1.0, 0.0, 0.0), Tol::DEFAULT, &mut rec);
         let edge = make_edge(&mut body, curve, (0.0, std::f64::consts::TAU), v, v, Tol::DEFAULT, &mut rec);
-        let loop_id = make_loop(&mut body, FaceId::from_raw(0, 0), &[(edge, true)]);
+        let loop_id = make_loop(&mut body, FaceId::from_raw(0, 0).await, &[(edge, true)]);
         let coedges_before = body.loop_coedges(loop_id);
         assert_eq!(coedges_before.len(), 1);
         let single = coedges_before[0];
@@ -605,7 +605,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn split_rejects_missing_face() {
         let mut body = Body::new();
-        let err = split_planar_face_by_line(&mut body, FaceId::from_raw(0, 0), Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(1.0, 0.0, 0.0)).unwrap_err();
+        let err = split_planar_face_by_line(&mut body, FaceId::from_raw(0, 0).await, Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(1.0, 0.0, 0.0)).unwrap_err();
         assert!(matches!(err, KernelError::MissingEntity(_)));
     }
 

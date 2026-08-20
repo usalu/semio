@@ -1,0 +1,8 @@
+{
+  "mutation": "connectKindCompatibility",
+  "source": "grip-kind-b",
+  "target": "grip-kind-c",
+  "bidirectional": false,
+  "important": true,
+  "specificity": "grip"
+}

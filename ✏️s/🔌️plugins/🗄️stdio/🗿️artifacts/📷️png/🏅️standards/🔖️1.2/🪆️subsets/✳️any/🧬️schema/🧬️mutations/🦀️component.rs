@@ -134,7 +134,7 @@ impl Mutation<PngSnapshot> for PngMutation {
             PngMutation::SetPixels { pixels } => diff::diff_set_pixels(base, pixels.clone()),
             PngMutation::InsertUnknownChunk { index, chunk } => diff::diff_insert_unknown_chunk(base, *index, chunk.clone()),
             PngMutation::RemoveUnknownChunk { index } => diff::diff_remove_unknown_chunk(base, *index),
-        })
+        }).await
     }
 
     /// ↩️ Handcrafted, index-aware mutation-level inverses. Out-of-range targets invert to
@@ -342,7 +342,7 @@ impl OpBinary for PngMutation {
             }
             PngMutation::SetGamma { gama } => {
                 w.write_u8(5).await;
-                diff::write_bin_option(&mut w, gama, |w, v: &u32| w.write_u32_le(*v));
+                diff::write_bin_option(&mut w, gama, |w, v: &u32| { w.write_u32_le(*v); });
             }
             PngMutation::SetChromaticities { chrm } => {
                 w.write_u8(6).await;
@@ -350,7 +350,7 @@ impl OpBinary for PngMutation {
             }
             PngMutation::SetSrgbIntent { srgb } => {
                 w.write_u8(7).await;
-                diff::write_bin_option(&mut w, srgb, |w, v: &PngSrgbIntent| w.write_u8(v.to_u8()));
+                diff::write_bin_option(&mut w, srgb, |w, v: &PngSrgbIntent| { w.write_u8(v.to_u8()); });
             }
             PngMutation::SetPhysicalDims { phys } => {
                 w.write_u8(8).await;
@@ -451,12 +451,12 @@ impl OpBinary for PngMutation {
 /// calls it too (single source of truth, per CLAUDE.md — moved out of `mod tests` verbatim,
 /// only the `pub(crate)`/`#[cfg(test)]` visibility changed).
 #[cfg(test)]
-async fn demo_text_chunk(keyword: &str, value: &str) -> PngTextChunk {
+fn demo_text_chunk(keyword: &str, value: &str) -> PngTextChunk {
     PngTextChunk { keyword: keyword.into(), value: value.into(), compressed: false, kind: crate::artifacts::png::schema::snapshot::PngTextKind::Text, language_tag: String::new(), translated_keyword: String::new() }
 }
 
 #[cfg(test)]
-pub(crate) async fn demo_base_snapshot() -> PngSnapshot {
+pub(crate) fn demo_base_snapshot() -> PngSnapshot {
     use crate::artifacts::png::schema::snapshot::PngChunkMarker;
     PngSnapshot {
         schema: "stdio.png".into(),
@@ -485,7 +485,7 @@ pub(crate) async fn demo_base_snapshot() -> PngSnapshot {
 /// `op_text_binary_roundtrip_law` (this file) AND `ops_grammar_conformance_law`/
 /// `protocol_walk_law` (`⚙️engine/🦀️component.rs`) all exercise.
 #[cfg(test)]
-pub(crate) async fn demo_mutation_cases() -> Vec<PngMutation> {
+pub(crate) fn demo_mutation_cases() -> Vec<PngMutation> {
     let base = demo_base_snapshot();
     vec![
         PngMutation::NoMutation,
@@ -508,7 +508,7 @@ pub(crate) async fn demo_mutation_cases() -> Vec<PngMutation> {
         PngMutation::InsertTextChunk { index: 1, chunk: demo_text_chunk("Comment", "hi") },
         PngMutation::RemoveTextChunk { index: 0 },
         PngMutation::SetTextChunk { index: 0, chunk: demo_text_chunk("Title", "updated") },
-        PngMutation::SetPixels { pixels: vec![9u8; base.pixels.len()] },
+        PngMutation::SetPixels { pixels: vec![9u8; base.await.pixels.len()] },
         PngMutation::InsertUnknownChunk { index: 1, chunk: PngChunk { kind: *b"zTXt", data: vec![4, 5] } },
         PngMutation::RemoveUnknownChunk { index: 0 },
         // Out-of-range targets: graceful no-ops, still law-compliant.
@@ -530,7 +530,7 @@ mod tests {
     /// single source of truth, per CLAUDE.md) — kept as short LOCAL names since both are used
     /// pervasively for ad hoc per-test values below (`absorb_law` etc.), not just the mutation
     /// case list.
-    async fn text_chunk(keyword: &str, value: &str) -> PngTextChunk {
+    fn text_chunk(keyword: &str, value: &str) -> PngTextChunk {
         demo_text_chunk(keyword, value)
     }
 
@@ -546,7 +546,7 @@ mod tests {
     /// "removed-in-forward / added-in-backward" item as the tail at position 1 — the recipe's
     /// own documented workaround for the structural "same-length between() can show removed
     /// XOR added, never both from one call" trap (see `f1-closer-report.md` §4.4).
-    async fn sweep_a() -> PngSnapshot {
+    fn sweep_a() -> PngSnapshot {
         PngSnapshot {
             schema: "stdio.png".into(),
             width: 10,
@@ -569,7 +569,7 @@ mod tests {
         }
     }
 
-    async fn sweep_b() -> PngSnapshot {
+    fn sweep_b() -> PngSnapshot {
         PngSnapshot {
             schema: "stdio.png".into(),
             width: 11,
@@ -599,14 +599,14 @@ mod tests {
         let mut applied_snapshot = base.clone();
         let returned_diff = apply_png_mutation(&mut applied_snapshot, &mutation);
         assert_eq!(returned_diff, expected_diff, "apply_png_mutation must return mutation.diff(base) for {mutation:?}");
-        assert_eq!(expected_diff.diff().apply(base).expect("diff must apply to base"), applied_snapshot, "diff.diff().apply(base) must equal the imperative mutation result for {mutation:?}");
+        assert_eq!(expected_diff.await.diff().apply(base).expect("diff must apply to base"), applied_snapshot, "diff.diff().apply(base) must equal the imperative mutation result for {mutation:?}");
     }
 
     /// 🔁️ Thin alias of the module-level `demo_mutation_cases()` (P2-P2 — single source of
     /// truth) — kept as a local name taking the SAME `&PngSnapshot` signature every call site
     /// below already uses; `demo_mutation_cases()` builds its own (structurally identical)
     /// base internally, so the passed-in `base` is intentionally unused here.
-    async fn all_variants(base: &PngSnapshot) -> Vec<PngMutation> {
+    fn all_variants(base: &PngSnapshot) -> Vec<PngMutation> {
         let _ = base;
         demo_mutation_cases()
     }
@@ -635,8 +635,8 @@ mod tests {
 
             // Diff-level round trip.
             let d = m.diff(&base);
-            let mutated = d.diff().apply(&base).expect("diff must apply to base");
-            let inv_d = d.diff().inverse(&base);
+            let mutated = d.await.diff().apply(&base).expect("diff must apply to base");
+            let inv_d = d.await.diff().inverse(&base);
             assert_eq!(inv_d.apply(&mutated).expect("inverse diff must apply to mutated"), base, "diff-level inverse must restore base for {m:?}");
         }
     }
@@ -645,12 +645,12 @@ mod tests {
     //#region 🔖️absorb_law
     async fn assert_absorb_law(base: &PngSnapshot, m1: PngMutation, m2: PngMutation) {
         let d1 = m1.diff(base);
-        let mid = d1.diff().apply(base).expect("d1 must apply to base");
+        let mid = d1.await.diff().apply(base).expect("d1 must apply to base");
         let d2 = m2.diff(&mid);
-        let sequential = d2.diff().apply(&mid).expect("d2 must apply to mid");
+        let sequential = d2.await.diff().apply(&mid).expect("d2 must apply to mid");
 
-        let mut merged = d1.diff().clone();
-        merged.absorb(d2.diff().clone());
+        let mut merged = d1.await.diff().clone();
+        merged.absorb(d2.await.diff().clone());
         assert_eq!(merged.apply(base).expect("merged diff must apply to base"), sequential, "absorb(d1,d2).apply(base) must equal sequential application for {m1:?} + {m2:?}");
     }
 
@@ -688,21 +688,21 @@ mod tests {
     async fn absorb_law_associativity() {
         let base = base_snapshot();
         let d1 = PngMutation::InsertTextChunk { index: 0, chunk: text_chunk("A", "a") }.diff(&base);
-        let s1 = d1.diff().apply(&base).expect("d1 must apply to base");
+        let s1 = d1.await.diff().apply(&base).expect("d1 must apply to base");
         let d2 = PngMutation::SetTextChunk { index: 0, chunk: text_chunk("A", "a2") }.diff(&s1);
-        let s2 = d2.diff().apply(&s1).expect("d2 must apply to s1");
+        let s2 = d2.await.diff().apply(&s1).expect("d2 must apply to s1");
         let d3 = PngMutation::RemoveTextChunk { index: 1 }.diff(&s2);
-        let s3 = d3.diff().apply(&s2).expect("d3 must apply to s2");
+        let s3 = d3.await.diff().apply(&s2).expect("d3 must apply to s2");
 
         // (d1∘d2)∘d3
-        let mut left = d1.diff().clone();
-        left.absorb(d2.diff().clone());
-        left.absorb(d3.diff().clone());
+        let mut left = d1.await.diff().clone();
+        left.absorb(d2.await.diff().clone());
+        left.absorb(d3.await.diff().clone());
 
         // d1∘(d2∘d3)
-        let mut d23 = d2.diff().clone();
-        d23.absorb(d3.diff().clone());
-        let mut right = d1.diff().clone();
+        let mut d23 = d2.await.diff().clone();
+        d23.absorb(d3.await.diff().clone());
+        let mut right = d1.await.diff().clone();
         right.absorb(d23);
 
         assert_eq!(left.apply(&base).expect("left must apply to base"), s3);
@@ -716,9 +716,9 @@ mod tests {
     async fn between_roundtrip_law() {
         let a = base_snapshot();
         let mut b = base_snapshot();
-        b.width = 8;
-        b.text_chunks.push(text_chunk("Extra", "v"));
-        b.pixels = vec![5u8; a.pixels.len()];
+        b.await.width = 8;
+        b.await.text_chunks.push(text_chunk("Extra", "v"));
+        b.await.pixels = vec![5u8; a.await.pixels.len()];
 
         let d = PngDiff::between(&a, &b);
         assert_eq!(d.apply(&a).expect("d must apply to a"), b, "between(a,b).apply(a) must equal b");
@@ -762,42 +762,42 @@ mod tests {
         assert!(PngDiff::between(&a, &a).is_empty(), "between(a,a) must be empty");
 
         // IHDR scalars.
-        assert!(forward.width.is_some());
-        assert!(forward.height.is_some());
-        assert!(forward.bit_depth.is_some());
-        assert!(forward.color_type.is_some());
-        assert!(forward.interlace.is_some());
+        assert!(forward.await.width.is_some());
+        assert!(forward.await.height.is_some());
+        assert!(forward.await.bit_depth.is_some());
+        assert!(forward.await.color_type.is_some());
+        assert!(forward.await.interlace.is_some());
 
         // Tri-state clears (forward: Some -> None).
-        assert_eq!(forward.trns, Some(None), "trns tri-state clear must show Some(None)");
-        assert_eq!(forward.gama, Some(None), "gama tri-state clear must show Some(None)");
-        assert_eq!(forward.chrm, Some(None), "chrm tri-state clear must show Some(None)");
-        assert_eq!(forward.phys, Some(None), "phys tri-state clear must show Some(None)");
-        assert_eq!(forward.time, Some(None), "time tri-state clear must show Some(None)");
-        assert_eq!(forward.bkgd, Some(None), "bkgd tri-state clear must show Some(None)");
-        assert!(matches!(forward.srgb, Some(Some(_))), "srgb value-only change must stay Some(Some(_))");
+        assert_eq!(forward.await.trns, Some(None), "trns tri-state clear must show Some(None)");
+        assert_eq!(forward.await.gama, Some(None), "gama tri-state clear must show Some(None)");
+        assert_eq!(forward.await.chrm, Some(None), "chrm tri-state clear must show Some(None)");
+        assert_eq!(forward.await.phys, Some(None), "phys tri-state clear must show Some(None)");
+        assert_eq!(forward.await.time, Some(None), "time tri-state clear must show Some(None)");
+        assert_eq!(forward.await.bkgd, Some(None), "bkgd tri-state clear must show Some(None)");
+        assert!(matches!(forward.await.srgb, Some(Some(_))), "srgb value-only change must stay Some(Some(_))");
 
         // Tri-state recreates (backward: None -> Some) — the same six fields, other direction.
-        assert!(matches!(backward.trns, Some(Some(_))));
-        assert!(matches!(backward.gama, Some(Some(_))));
-        assert!(matches!(backward.chrm, Some(Some(_))));
-        assert!(matches!(backward.phys, Some(Some(_))));
-        assert!(matches!(backward.time, Some(Some(_))));
-        assert!(matches!(backward.bkgd, Some(Some(_))));
+        assert!(matches!(backward.await.trns, Some(Some(_))));
+        assert!(matches!(backward.await.gama, Some(Some(_))));
+        assert!(matches!(backward.await.chrm, Some(Some(_))));
+        assert!(matches!(backward.await.phys, Some(Some(_))));
+        assert!(matches!(backward.await.time, Some(Some(_))));
+        assert!(matches!(backward.await.bkgd, Some(Some(_))));
 
         // plte: forward shows modified+removed, backward shows modified+added (the
         // recipe's split-across-both-directions workaround for the removed-XOR-added trap).
-        let plte_fwd = forward.plte.as_ref().expect("plte diff present").as_ref().expect("plte still present");
+        let plte_fwd = forward.await.plte.as_ref().expect("plte diff present").as_ref().expect("plte still present");
         assert_eq!(plte_fwd.removed, vec![1]);
         assert_eq!(plte_fwd.modified.len(), 1);
         assert!(plte_fwd.added.is_empty());
-        let plte_bwd = backward.plte.as_ref().expect("plte diff present").as_ref().expect("plte still present");
+        let plte_bwd = backward.await.plte.as_ref().expect("plte diff present").as_ref().expect("plte still present");
         assert!(plte_bwd.removed.is_empty());
         assert_eq!(plte_bwd.modified.len(), 1);
         assert_eq!(plte_bwd.added.len(), 1);
 
         // text_chunks: same split; every field of the modified entry's diff populated.
-        let tc_fwd = forward.text_chunks.as_ref().expect("text_chunks diff present");
+        let tc_fwd = forward.await.text_chunks.as_ref().expect("text_chunks diff present");
         assert_eq!(tc_fwd.removed, vec![1]);
         assert_eq!(tc_fwd.modified.len(), 1);
         assert!(tc_fwd.added.is_empty());
@@ -808,30 +808,30 @@ mod tests {
         assert!(md.kind.is_some(), "kind must be diffed");
         assert!(md.language_tag.is_some(), "language_tag must be diffed");
         assert!(md.translated_keyword.is_some(), "translated_keyword must be diffed");
-        let tc_bwd = backward.text_chunks.as_ref().expect("text_chunks diff present");
+        let tc_bwd = backward.await.text_chunks.as_ref().expect("text_chunks diff present");
         assert!(tc_bwd.removed.is_empty());
         assert_eq!(tc_bwd.modified.len(), 1);
         assert_eq!(tc_bwd.added.len(), 1);
 
         // pixels.
-        assert!(forward.pixels.is_some(), "pixels must be diffed");
+        assert!(forward.await.pixels.is_some(), "pixels must be diffed");
 
         // chunk_order: same split.
-        let co_fwd = forward.chunk_order.as_ref().expect("chunk_order diff present");
+        let co_fwd = forward.await.chunk_order.as_ref().expect("chunk_order diff present");
         assert_eq!(co_fwd.removed, vec![1]);
         assert_eq!(co_fwd.modified.len(), 1);
         assert!(co_fwd.added.is_empty());
-        let co_bwd = backward.chunk_order.as_ref().expect("chunk_order diff present");
+        let co_bwd = backward.await.chunk_order.as_ref().expect("chunk_order diff present");
         assert!(co_bwd.removed.is_empty());
         assert_eq!(co_bwd.modified.len(), 1);
         assert_eq!(co_bwd.added.len(), 1);
 
         // unknown_chunks: same split.
-        let uc_fwd = forward.unknown_chunks.as_ref().expect("unknown_chunks diff present");
+        let uc_fwd = forward.await.unknown_chunks.as_ref().expect("unknown_chunks diff present");
         assert_eq!(uc_fwd.removed, vec![1]);
         assert_eq!(uc_fwd.modified.len(), 1);
         assert!(uc_fwd.added.is_empty());
-        let uc_bwd = backward.unknown_chunks.as_ref().expect("unknown_chunks diff present");
+        let uc_bwd = backward.await.unknown_chunks.as_ref().expect("unknown_chunks diff present");
         assert!(uc_bwd.removed.is_empty());
         assert_eq!(uc_bwd.modified.len(), 1);
         assert_eq!(uc_bwd.added.len(), 1);
@@ -864,12 +864,12 @@ mod tests {
         mutations.push(PngMutation::SetSnapshot { snapshot: sweep_b() });
         for mutation in mutations {
             let printed = mutation.print_op();
-            assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
-            let parsed = PngMutation::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
+            assert!(!printed.await.contains('\n'), "print_op must be one line, got {printed:?}");
+            let parsed = PngMutation::parse_op(&printed).await.unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
             assert_eq!(parsed, mutation, "print_op/parse_op round-trip mismatch for {mutation:?} (printed {printed:?})");
 
-            let encoded = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op({mutation:?}) failed: {e}"));
-            let decoded = PngMutation::decode_op(&encoded).unwrap_or_else(|e| panic!("decode_op failed: {e}"));
+            let encoded = mutation.encode_op().await.unwrap_or_else(|e| panic!("encode_op({mutation:?}) failed: {e}"));
+            let decoded = PngMutation::decode_op(&encoded).await.unwrap_or_else(|e| panic!("decode_op failed: {e}"));
             assert_eq!(decoded, mutation, "encode_op/decode_op round-trip mismatch for {mutation:?}");
         }
     }

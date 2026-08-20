@@ -61,7 +61,7 @@ pub enum SemioAudioMutation {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn apply_semio_audio_mutation(snapshot: &mut SemioAudioSnapshot, mutation: &SemioAudioMutation) -> protocol::MutationOutcome<SemioAudioDiff> {
     let outcome = <SemioAudioMutation as Mutation<SemioAudioSnapshot>>::diff(mutation, snapshot);
-    outcome.apply_to(snapshot)
+    outcome.await.apply_to(snapshot)
 }
 //#endregion 🔖️Apply
 
@@ -301,12 +301,12 @@ mod tests {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn round_trips(base: &SemioAudioSnapshot, mutation: SemioAudioMutation) {
         let diff = mutation.diff(base);
-        let mutated = <SemioAudioDiff as protocol::MutationDiff<SemioAudioSnapshot>>::apply(diff.diff(), base).expect("apply must succeed for a well-formed fixture");
+        let mutated = <SemioAudioDiff as protocol::MutationDiff<SemioAudioSnapshot>>::apply(diff.await.diff(), base).await.expect("apply must succeed for a well-formed fixture");
         let inverses = mutation.inverse(base);
         let mut restored = mutated.clone();
         for inv in &inverses {
             let inv_diff = inv.diff(&restored);
-            restored = <SemioAudioDiff as protocol::MutationDiff<SemioAudioSnapshot>>::apply(inv_diff.diff(), &restored).expect("apply must succeed for a well-formed fixture");
+            restored = <SemioAudioDiff as protocol::MutationDiff<SemioAudioSnapshot>>::apply(inv_diff.diff(), &restored).await.expect("apply must succeed for a well-formed fixture");
         }
         assert_eq!(&restored, base, "apply(inverse(m), apply(m, base)) must recover base for {mutation:?}");
     }
@@ -337,7 +337,7 @@ mod tests {
             let returned_diff = apply_semio_audio_mutation(&mut snap, &mutation);
             let expected_diff = mutation.diff(&base);
             assert_eq!(returned_diff, expected_diff, "returned diff must equal mutation.diff(base) for {mutation:?}");
-            assert_eq!(snap, <SemioAudioDiff as protocol::MutationDiff<SemioAudioSnapshot>>::apply(expected_diff.diff(), &base).expect("apply must succeed for a well-formed fixture"), "apply_semio_audio_mutation must match diff.diff().apply(base) for {mutation:?}");
+            assert_eq!(snap, <SemioAudioDiff as protocol::MutationDiff<SemioAudioSnapshot>>::apply(expected_diff.await.diff().await, &base).await.expect("apply must succeed for a well-formed fixture"), "apply_semio_audio_mutation must match diff.diff().apply(base) for {mutation:?}");
         }
     }
 
@@ -365,12 +365,12 @@ mod tests {
         let base = base_snapshot();
         for mutation in all_variants(&base) {
             let printed = mutation.print_op();
-            assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
-            let parsed = SemioAudioMutation::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
+            assert!(!printed.await.contains('\n'), "print_op must be one line, got {printed:?}");
+            let parsed = SemioAudioMutation::parse_op(&printed).await.unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
             assert_eq!(parsed, mutation, "print_op/parse_op round-trip mismatch for {mutation:?} (printed {printed:?})");
 
-            let encoded = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op({mutation:?}) failed: {e}"));
-            let decoded = SemioAudioMutation::decode_op(&encoded).unwrap_or_else(|e| panic!("decode_op failed: {e}"));
+            let encoded = mutation.encode_op().await.unwrap_or_else(|e| panic!("encode_op({mutation:?}) failed: {e}"));
+            let decoded = SemioAudioMutation::decode_op(&encoded).await.unwrap_or_else(|e| panic!("decode_op failed: {e}"));
             assert_eq!(decoded, mutation, "encode_op/decode_op round-trip mismatch for {mutation:?}");
         }
     }

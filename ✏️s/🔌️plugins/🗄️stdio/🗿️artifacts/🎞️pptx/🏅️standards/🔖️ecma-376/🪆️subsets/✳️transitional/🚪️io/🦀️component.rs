@@ -125,7 +125,7 @@ pub mod derived_composition {
         async fn conforming_transitional_package_composes_and_stamps_transitional() {
             let hex = transitional_package_hex();
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Text(&hex) }];
-            let composed = PptxTransitionalComposerComposition::compose(&sources).expect("clean Transitional document must compose to transitional");
+            let composed = PptxTransitionalComposerComposition::compose(&sources).await.expect("clean Transitional document must compose to transitional");
             assert!(composed.diagnostics.iter().all(|d| d.severity != Severity::Error), "no hard diagnostics expected: {:?}", composed.diagnostics);
         }
 
@@ -147,7 +147,7 @@ pub mod derived_composition {
             let bytes = opc::encode_opc(&opc).expect("encode hand-built Strict OPC package");
             let hex = hex_encode(&bytes);
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Text(&hex) }];
-            let err = PptxTransitionalComposerComposition::compose(&sources).expect_err("a Strict document must not stamp transitional");
+            let err = PptxTransitionalComposerComposition::compose(&sources).await.expect_err("a Strict document must not stamp transitional");
             assert!(err.diagnostics.iter().any(|d| d.severity == Severity::Error), "got {:?}", err.diagnostics);
         }
 
@@ -155,7 +155,7 @@ pub mod derived_composition {
         async fn subset_validator_recheck_flags_clean_document_as_clean() {
             let hex = transitional_package_hex();
             let diagnostics = PptxTransitionalValidator::validate(&IoPayload::Text(hex));
-            assert!(diagnostics.iter().all(|d| d.severity != Severity::Error), "wire recheck must never report a hard violation for a clean Transitional document: {diagnostics:?}");
+            assert!(diagnostics.await.iter().all(|d| d.severity != Severity::Error), "wire recheck must never report a hard violation for a clean Transitional document: {diagnostics:?}");
         }
     }
 }

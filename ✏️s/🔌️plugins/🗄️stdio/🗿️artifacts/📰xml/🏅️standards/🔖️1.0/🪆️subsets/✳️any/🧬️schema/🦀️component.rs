@@ -281,10 +281,10 @@ mod tests {
     async fn codec_round_trip() {
         let snap = empty_xml_snapshot();
         let text = store::ArtifactDsl::print_dsl(&snap);
-        let parsed = <XmlSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
+        let parsed = <XmlSnapshot as store::ArtifactDsl>::parse_dsl(&text).await.expect("parse");
         assert_eq!(parsed.schema, snap.schema);
         let bytes = store::ArtifactPack::encode_pack(&snap);
-        let decoded = <XmlSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+        let decoded = <XmlSnapshot as store::ArtifactPack>::decode_pack(&bytes).await.expect("decode");
         assert_eq!(decoded, snap);
     }
 
@@ -383,7 +383,7 @@ mod tests {
         for mutation in sample_mutations() {
             let base = sample_snapshot();
             let diff_direct = Mutation::diff(&mutation, &base);
-            let applied_via_diff = MutationDiff::apply(diff_direct.diff(), &base).unwrap();
+            let applied_via_diff = MutationDiff::apply(&diff_direct.await.diff().await, &base).unwrap();
 
             let mut via_apply = base.clone();
             let diff_from_apply = crate::artifacts::xml::schema::mutations::apply_xml_mutation(&mut via_apply, &mutation);
@@ -410,8 +410,8 @@ mod tests {
 
             // Diff-level round-trip.
             let diff = Mutation::diff(&mutation, &base);
-            let next = MutationDiff::apply(diff.diff(), &base).unwrap();
-            let inverse_diff = DiffAlgebra::inverse(diff.diff(), &base);
+            let next = MutationDiff::apply(&diff.await.diff().await, &base).unwrap();
+            let inverse_diff = DiffAlgebra::inverse(&diff.await.diff().await, &base);
             let restored = MutationDiff::apply(&inverse_diff, &next).unwrap();
             assert_eq!(restored, base, "inverse_law (diff-level) failed for {mutation:?}");
         }
@@ -438,10 +438,10 @@ mod tests {
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn assert_absorb_matches_sequential(base: &XmlSnapshot, d1: &XmlDiff, d2: &XmlDiff) -> XmlDiff {
-        let sequential = MutationDiff::apply(d2, &MutationDiff::apply(d1, base).unwrap()).unwrap();
+        let sequential = MutationDiff::apply(d2, &MutationDiff::apply(d1, base).await.unwrap()).await.unwrap();
         let mut absorbed = d1.clone();
         MutationDiff::absorb(&mut absorbed, d2.clone());
-        assert_eq!(MutationDiff::apply(&absorbed, base).unwrap(), sequential, "absorb_law: apply(absorb(d1,d2), base) != sequential");
+        assert_eq!(MutationDiff::apply(&absorbed, base).await.unwrap(), sequential, "absorb_law: apply(absorb(d1,d2), base) != sequential");
         absorbed
     }
 
@@ -459,9 +459,9 @@ mod tests {
         {
             let base = two_child_root("a", "b");
             let d1 = Mutation::diff(&XmlMutation::InsertElement { path: XmlNodePath::root(), index: 2, node: XmlNode::Element { name: "f".into(), attrs: Vec::new(), children: Vec::new() } }, &base);
-            let mid = MutationDiff::apply(d1.diff(), &base).unwrap();
+            let mid = MutationDiff::apply(&d1.await.diff().await, &base).unwrap();
             let d2 = Mutation::diff(&XmlMutation::RemoveElement { path: XmlNodePath::root(), index: 0 }, &mid);
-            let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
+            let absorbed = assert_absorb_matches_sequential(&base, d1.await.diff(), d2.await.diff());
             let triple = root_children_diff(&absorbed);
             assert_eq!(triple.removed, vec![0]);
             assert_eq!(triple.added.len(), 1);
@@ -474,9 +474,9 @@ mod tests {
         {
             let base = two_child_root("a", "b");
             let d1 = Mutation::diff(&XmlMutation::InsertElement { path: XmlNodePath::root(), index: 2, node: XmlNode::Element { name: "f".into(), attrs: Vec::new(), children: Vec::new() } }, &base);
-            let mid = MutationDiff::apply(d1.diff(), &base).unwrap();
+            let mid = MutationDiff::apply(&d1.await.diff().await, &base).unwrap();
             let d2 = Mutation::diff(&XmlMutation::InsertElement { path: XmlNodePath::root(), index: 2, node: XmlNode::Element { name: "g".into(), attrs: Vec::new(), children: Vec::new() } }, &mid);
-            let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
+            let absorbed = assert_absorb_matches_sequential(&base, d1.await.diff(), d2.await.diff());
             let triple = root_children_diff(&absorbed);
             assert_eq!(triple.added.len(), 2, "both inserts must survive absorb, not LWW-clobber");
             let names: Vec<&str> = triple
@@ -495,9 +495,9 @@ mod tests {
         {
             let base = two_child_root("a", "b");
             let d1 = Mutation::diff(&XmlMutation::InsertElement { path: XmlNodePath::root(), index: 1, node: XmlNode::Element { name: "f".into(), attrs: Vec::new(), children: Vec::new() } }, &base);
-            let mid = MutationDiff::apply(d1.diff(), &base).unwrap();
+            let mid = MutationDiff::apply(&d1.await.diff().await, &base).unwrap();
             let d2 = Mutation::diff(&XmlMutation::SetAttribute { path: XmlNodePath(vec![1]), name: "k".into(), value: Some("v".into()) }, &mid);
-            let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
+            let absorbed = assert_absorb_matches_sequential(&base, d1.await.diff(), d2.await.diff());
             let triple = root_children_diff(&absorbed);
             assert!(triple.modified.is_empty(), "patch-into-added must not surface as a separate modified entry");
             assert_eq!(triple.added.len(), 1);
@@ -509,9 +509,9 @@ mod tests {
         {
             let base = two_child_root("a", "b");
             let d1 = Mutation::diff(&XmlMutation::SetAttribute { path: XmlNodePath(vec![1]), name: "k".into(), value: Some("v".into()) }, &base);
-            let mid = MutationDiff::apply(d1.diff(), &base).unwrap();
+            let mid = MutationDiff::apply(&d1.await.diff().await, &base).unwrap();
             let d2 = Mutation::diff(&XmlMutation::RemoveElement { path: XmlNodePath::root(), index: 1 }, &mid);
-            let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
+            let absorbed = assert_absorb_matches_sequential(&base, d1.await.diff(), d2.await.diff());
             let triple = root_children_diff(&absorbed);
             assert!(triple.modified.is_empty(), "modify of a since-removed item must not survive absorb");
             assert_eq!(triple.removed, vec![1]);
@@ -521,19 +521,19 @@ mod tests {
         {
             let base = two_child_root("a", "b");
             let d1 = Mutation::diff(&XmlMutation::InsertElement { path: XmlNodePath::root(), index: 2, node: XmlNode::Element { name: "f".into(), attrs: Vec::new(), children: Vec::new() } }, &base);
-            let mid1 = MutationDiff::apply(d1.diff(), &base).unwrap();
+            let mid1 = MutationDiff::apply(&d1.await.diff().await, &base).unwrap();
             let d2 = Mutation::diff(&XmlMutation::InsertElement { path: XmlNodePath::root(), index: 2, node: XmlNode::Element { name: "g".into(), attrs: Vec::new(), children: Vec::new() } }, &mid1);
-            let mid2 = MutationDiff::apply(d2.diff(), &mid1).unwrap();
+            let mid2 = MutationDiff::apply(&d2.await.diff().await, &mid1).unwrap();
             let d3 = Mutation::diff(&XmlMutation::RemoveElement { path: XmlNodePath::root(), index: 0 }, &mid2);
-            let sequential = MutationDiff::apply(d3.diff(), &mid2).unwrap();
+            let sequential = MutationDiff::apply(&d3.await.diff().await, &mid2).unwrap();
 
-            let mut left = d1.diff().clone();
-            MutationDiff::absorb(&mut left, d2.diff().clone());
-            MutationDiff::absorb(&mut left, d3.diff().clone());
+            let mut left = d1.await.diff().clone();
+            MutationDiff::absorb(&mut left, d2.await.diff().clone());
+            MutationDiff::absorb(&mut left, d3.await.diff().clone());
 
-            let mut d2_then_d3 = d2.diff().clone();
-            MutationDiff::absorb(&mut d2_then_d3, d3.diff().clone());
-            let mut right = d1.diff().clone();
+            let mut d2_then_d3 = d2.await.diff().clone();
+            MutationDiff::absorb(&mut d2_then_d3, d3.await.diff().clone());
+            let mut right = d1.await.diff().clone();
             MutationDiff::absorb(&mut right, d2_then_d3);
 
             assert_eq!(MutationDiff::apply(&left, &base).unwrap(), sequential, "absorb associativity (left) failed");
@@ -579,7 +579,7 @@ mod tests {
 
         let snap = XmlSnapshot { schema: STDIO_XML_DOCUMENT_SCHEMA.into(), doc };
         let bytes = store::ArtifactPack::encode_pack(&snap);
-        let decoded = <XmlSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+        let decoded = <XmlSnapshot as store::ArtifactPack>::decode_pack(&bytes).await.expect("decode");
         assert_eq!(decoded, snap);
     }
     //#endregion 🔖️CodecRetentionLaw
@@ -601,11 +601,11 @@ mod tests {
 
         // Hand-written per-field assertion: every top-level XmlDiff field is populated, and both
         // tri-state scalars exercise `Some(None)`.
-        assert_eq!(diff_ab.declaration, Some(None));
-        assert_eq!(diff_ab.doctype, Some(None));
-        assert!(diff_ab.root.is_some());
+        assert_eq!(diff_ab.await.declaration, Some(None));
+        assert_eq!(diff_ab.await.doctype, Some(None));
+        assert!(diff_ab.await.root.is_some());
 
-        let XmlNodeDiff::Element(root_diff) = diff_ab.root.as_ref().unwrap() else { panic!("expected element diff") };
+        let XmlNodeDiff::Element(root_diff) = diff_ab.await.root.as_ref().unwrap() else { panic!("expected element diff") };
         assert!(root_diff.name.is_some());
         let attrs_diff = root_diff.attributes.as_ref().expect("attrs diff present");
         assert!(!attrs_diff.removed.is_empty(), "attrs: removed not exercised");
@@ -706,14 +706,14 @@ mod tests {
 
             let op_spec = dsl::parse_protocol(mutations::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
             for mutation in mutations::demo_mutation_cases() {
-                let bytes = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op failed for {mutation:?}: {e:?}"));
+                let bytes = mutation.encode_op().await.unwrap_or_else(|e| panic!("encode_op failed for {mutation:?}: {e:?}"));
                 let trace = dsl::walk_protocol(&op_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(op) failed for {mutation:?} @{}: {}", e.offset, e.message));
                 assert_eq!(trace.consumed, bytes.len(), "op walk did not consume every byte for {mutation:?}");
             }
 
             let diff_spec = dsl::parse_protocol(diff::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse diff protocol");
             for d in diff::demo_diff_cases() {
-                let bytes = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed for {d:?}: {e:?}"));
+                let bytes = d.encode_diff().await.unwrap_or_else(|e| panic!("encode_diff failed for {d:?}: {e:?}"));
                 let trace = dsl::walk_protocol(&diff_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(diff) failed for {d:?} @{}: {}", e.offset, e.message));
                 assert_eq!(trace.consumed, bytes.len(), "diff walk did not consume every byte for {d:?}");
             }
@@ -730,11 +730,11 @@ mod tests {
 
             let demo = demo_xml_snapshot();
 
-            let parsed = <XmlSnapshot as store::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
+            let parsed = <XmlSnapshot as store::ArtifactDsl>::parse_dsl(FIXTURE_DSL).await.expect("parse shipped .dsl.semio fixture");
             assert_eq!(parsed, demo, "shipped .dsl.semio fixture does not parse back to demo_xml_snapshot()");
             assert_eq!(store::ArtifactDsl::print_dsl(&demo), FIXTURE_DSL, "print_dsl(demo_xml_snapshot()) drifted from the shipped .dsl.semio fixture");
 
-            let decoded = <XmlSnapshot as store::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode shipped .pack.semio fixture");
+            let decoded = <XmlSnapshot as store::ArtifactPack>::decode_pack(FIXTURE_PACK).await.expect("decode shipped .pack.semio fixture");
             assert_eq!(decoded, demo, "shipped .pack.semio fixture does not decode back to demo_xml_snapshot()");
             assert_eq!(store::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_xml_snapshot()) drifted from the shipped .pack.semio fixture");
         }

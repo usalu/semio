@@ -89,7 +89,7 @@ pub enum SemioCadMutation {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn apply_semio_cad_mutation(snapshot: &mut SemioCadSnapshot, mutation: &SemioCadMutation) -> protocol::MutationOutcome<SemioCadDiff> {
     let outcome = <SemioCadMutation as Mutation<SemioCadSnapshot>>::diff(mutation, snapshot);
-    outcome.apply_to(snapshot)
+    outcome.await.apply_to(snapshot)
 }
 //#endregion 🔖️Apply
 
@@ -115,7 +115,7 @@ impl Mutation<SemioCadSnapshot> for SemioCadMutation {
             SemioCadMutation::RemoveBlockEntity { block_name, handle } => wrap_block_diff(block_name, CadBlockDiff { base_point: None, entities: Some(NamedTripleDiff { removed: vec![handle.clone()], modified: Vec::new(), added: Vec::new() }) }),
             SemioCadMutation::SetBlockEntityLayer { block_name, handle, layer } => wrap_block_entity_diff(block_name, handle, CadEntityRecordDiff { layer: Some(layer.clone()), entity: None }),
             SemioCadMutation::SetBlockEntityGeometry { block_name, handle, entity } => wrap_block_entity_diff(block_name, handle, CadEntityRecordDiff { layer: None, entity: Some(entity.clone()) }),
-        })
+        }).await
     }
 
     async fn inverse(&self, base: &SemioCadSnapshot) -> Vec<Self> {
@@ -420,7 +420,7 @@ mod tests {
             let returned = apply_semio_cad_mutation(&mut snap, &m);
             let expected_diff = m.diff(&base);
             assert_eq!(returned, expected_diff, "returned diff mismatch for {m:?}");
-            assert_eq!(snap, protocol::MutationDiff::apply(expected_diff.diff(), &base).expect("apply must succeed for a well-formed fixture"), "apply mismatch for {m:?}");
+            assert_eq!(snap, protocol::MutationDiff::apply(&expected_diff.await.diff().await, &base).expect("apply must succeed for a well-formed fixture"), "apply mismatch for {m:?}");
         }
     }
     //#endregion
@@ -442,8 +442,8 @@ mod tests {
             }
 
             let d = m.diff(&base);
-            let after = protocol::MutationDiff::apply(d.diff(), &base).expect("apply must succeed for a well-formed fixture");
-            let d_inv = d.diff().inverse(&base);
+            let after = protocol::MutationDiff::apply(&d.await.diff().await, &base).expect("apply must succeed for a well-formed fixture");
+            let d_inv = d.await.diff().inverse(&base);
             assert_eq!(protocol::MutationDiff::apply(&d_inv, &after).expect("apply must succeed for a well-formed fixture"), base, "diff-level inverse mismatch for {m:?}");
         }
     }
@@ -457,12 +457,12 @@ mod tests {
     async fn op_text_binary_roundtrip_law() {
         for m in demo_mutation_cases() {
             let printed = m.print_op();
-            assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
-            let parsed = SemioCadMutation::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
+            assert!(!printed.await.contains('\n'), "print_op must be one line, got {printed:?}");
+            let parsed = SemioCadMutation::parse_op(&printed).await.unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
             assert_eq!(parsed, m, "print_op/parse_op round-trip mismatch for {m:?} (printed {printed:?})");
 
-            let encoded = m.encode_op().unwrap_or_else(|e| panic!("encode_op({m:?}) failed: {e}"));
-            let decoded = SemioCadMutation::decode_op(&encoded).unwrap_or_else(|e| panic!("decode_op failed: {e}"));
+            let encoded = m.encode_op().await.unwrap_or_else(|e| panic!("encode_op({m:?}) failed: {e}"));
+            let decoded = SemioCadMutation::decode_op(&encoded).await.unwrap_or_else(|e| panic!("decode_op failed: {e}"));
             assert_eq!(decoded, m, "encode_op/decode_op round-trip mismatch for {m:?}");
         }
     }

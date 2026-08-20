@@ -29,7 +29,7 @@ pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Resul
 pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use store::os_io::ArtifactKindId;
-    ArtifactDeclaration { kind: ArtifactKindId::parse("s.stdio.txt").expect("canonical stdio.txt kind"), localization: &[], standards: vec![crate::artifacts::txt::standards::v_utf_8::standard()] }
+    ArtifactDeclaration { kind: ArtifactKindId::parse("s.stdio.txt").await.expect("canonical stdio.txt kind"), localization: &[], standards: vec![crate::artifacts::txt::standards::v_utf_8::standard()] }
 }
 //#endregion 🔖️ArtifactDeclaration
 

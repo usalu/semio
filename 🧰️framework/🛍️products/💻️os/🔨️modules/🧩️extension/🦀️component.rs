@@ -253,8 +253,8 @@ pub async fn verify(bytes: &[u8]) -> Result<ExtensionPackageManifest, ExtensionP
 }
 
 /// 🔓️ Blake3 content hash of the full `.sxt` bytes (same primitive as `BlobStore::put` dedup).
-pub async fn content_hash(bytes: &[u8]) -> String {
-    semio_framework_hash::hash_bytes(bytes).await
+pub fn content_hash(bytes: &[u8]) -> String {
+    semio_framework_hash::hash_bytes(bytes)
 }
 //#endregion 🔖️Api
 
@@ -342,14 +342,14 @@ mod tests {
 
         let again = pack(&unpacked.manifest, &unpacked.component_wasm, &unpacked.assets.iter().map(|(k, v)| (k.clone(), v.clone())).collect::<Vec<_>>()).await.expect("repack");
         assert_eq!(packed, again);
-        assert_eq!(content_hash(&packed).await, content_hash(&again).await);
+        assert_eq!(content_hash(&packed), content_hash(&again));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn content_hash_is_stable_blake3() {
         let packed = pack(&sample_manifest().await, b"component-bytes", &[]).await.expect("pack");
-        assert_eq!(content_hash(&packed).await, semio_framework_hash::hash_bytes(&packed).await);
-        assert_ne!(content_hash(&packed).await, content_hash(b"other").await);
+        assert_eq!(content_hash(&packed), semio_framework_hash::hash_bytes(&packed));
+        assert_ne!(content_hash(&packed), content_hash(b"other"));
     }
 
     #[semio_framework_async_macros::async_test]

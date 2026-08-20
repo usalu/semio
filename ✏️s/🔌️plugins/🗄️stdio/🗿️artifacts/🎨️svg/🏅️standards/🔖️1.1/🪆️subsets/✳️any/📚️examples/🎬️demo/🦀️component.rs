@@ -31,7 +31,7 @@ mod tests {
         use crate::artifacts::svg::standards::v1_1::subsets::any::schema::inferences::SvgInference;
         use crate::artifacts::svg::SvgSnapshot;
         use protocol::Inference;
-        let snapshot = <SvgSnapshot as store::ArtifactDsl>::parse_dsl(PRIMARY_TEXT).expect("demo fixture must parse");
+        let snapshot = <SvgSnapshot as store::ArtifactDsl>::parse_dsl(PRIMARY_TEXT).await.expect("demo fixture must parse");
         assert_eq!(SvgInference::infer(&snapshot), SvgInference::infer(&snapshot));
     }
 

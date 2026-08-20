@@ -293,9 +293,10 @@ impl UiTree {
 mod tests {
     use super::*;
     use crate::wgpu::component::ui::{UiNode, UiPresence, UiTextNode};
+    use crate::wgpu::Label;
 
     fn text(value: &str) -> UiNode {
-        UiNode::Text(UiTextNode { value: value.into(), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None })
+        UiNode::Text(UiTextNode { value: Label::data(value), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None })
     }
 
     fn leaf(discriminant: u32, ordinal: u32, value: &str) -> Node {

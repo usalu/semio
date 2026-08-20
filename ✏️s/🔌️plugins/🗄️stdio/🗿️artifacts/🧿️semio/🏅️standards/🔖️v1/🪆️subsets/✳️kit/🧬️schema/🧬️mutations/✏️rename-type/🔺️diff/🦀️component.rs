@@ -15,7 +15,7 @@ pub fn diff(payload: &RenameType, base: &SemioKitSnapshot) -> protocol::Mutation
         );
     };
     if existing.name == payload.new_name {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Type \"{}\" is already named \"{}\".", payload.id, payload.new_name));
+        return protocol::MutationOutcome::empty().await.warn("mutation.no-op", format!("Type \"{}\" is already named \"{}\".", payload.id, payload.new_name));
     }
     let mut types = base.types.clone();
     if let Some(t) = types.iter_mut().find(|t| t.id == payload.id) {

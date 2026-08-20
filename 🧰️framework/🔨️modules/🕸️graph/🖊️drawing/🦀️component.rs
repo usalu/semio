@@ -357,7 +357,7 @@ pub mod routing {
     }
 
     /// 🧭️ East-zero polar angle for a circle handle that meets the ray from `center` toward `toward` on the rim.
-    pub async fn circle_handle_angle_toward(center: Point, toward: Point) -> f64 {
+    pub fn circle_handle_angle_toward(center: Point, toward: Point) -> f64 {
         let d = toward - center;
         f64::atan2(d.y, d.x)
     }

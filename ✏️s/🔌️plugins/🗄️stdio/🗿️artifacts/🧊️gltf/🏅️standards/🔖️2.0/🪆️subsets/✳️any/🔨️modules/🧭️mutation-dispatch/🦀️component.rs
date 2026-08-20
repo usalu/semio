@@ -347,10 +347,10 @@ mod tests {
         let before = base();
         let forward = GltfMutation::new(DESCRIPTOR.command_id, DESCRIPTOR.version, payload()).expect("registered mutation");
         let outcome = forward.diff(&before);
-        assert!(outcome.messages().is_empty());
-        let after = outcome.diff().try_apply(&before).expect("planned forward diff");
-        let inverse = forward.inverse(&before).pop().expect("inverse mutation");
-        let restored = inverse.diff(&after).diff().try_apply(&after).expect("planned inverse diff");
+        assert!(outcome.await.messages().await.is_empty());
+        let after = outcome.await.diff().await.try_apply(&before).expect("planned forward diff");
+        let inverse = forward.inverse(&before).await.pop().expect("inverse mutation");
+        let restored = inverse.diff(&after).await.diff().await.try_apply(&after).expect("planned inverse diff");
         assert_eq!(restored, before);
     }
 }

@@ -1388,8 +1388,8 @@ pub(crate) fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
+    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn write_str_lp(out: &mut Vec<u8>, s: &str) {
@@ -1415,7 +1415,7 @@ pub(crate) fn enc_target_mode_bin(m: &OpcTargetMode, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_target_mode_bin(reader: &mut store::ByteReader<'_>) -> Result<OpcTargetMode, String> {
-    match reader.read_u8().map_err(|e| e.to_string())? {
+    match reader.read_u8().await.map_err(|e| e.to_string())? {
         0 => Ok(OpcTargetMode::Internal),
         1 => Ok(OpcTargetMode::External),
         other => Err(format!("target mode binary: bad value {other}")),
@@ -1476,7 +1476,7 @@ pub(crate) fn enc_owner_rels_bin(e: &(String, Vec<OpcRelationship>), out: &mut V
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_owner_rels_bin(reader: &mut store::ByteReader<'_>) -> Result<(String, Vec<OpcRelationship>), String> {
     let owner = read_str_lp(reader)?;
-    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut list = Vec::with_capacity(count as usize);
     for _ in 0..count {
         list.push(dec_rel_bin(reader)?);
@@ -1519,18 +1519,18 @@ pub(crate) fn enc_cell_value_bin(v: &XlsxCellValue, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_cell_value_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxCellValue, String> {
-    match reader.read_u8().map_err(|e| e.to_string())? {
+    match reader.read_u8().await.map_err(|e| e.to_string())? {
         0 => {
-            let bytes = reader.read_bytes(8).map_err(|e| e.to_string())?;
+            let bytes = reader.read_bytes(8).await.map_err(|e| e.to_string())?;
             let arr: [u8; 8] = bytes.try_into().map_err(|_| "cell value binary: short f64".to_string())?;
             Ok(XlsxCellValue::Number(f64::from_le_bytes(arr)))
         }
-        1 => Ok(XlsxCellValue::SharedString(reader.read_varint_u64().map_err(|e| e.to_string())? as usize)),
+        1 => Ok(XlsxCellValue::SharedString(reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize)),
         2 => Ok(XlsxCellValue::InlineString(read_str_lp(reader)?)),
-        3 => Ok(XlsxCellValue::Boolean(reader.read_u8().map_err(|e| e.to_string())? != 0)),
+        3 => Ok(XlsxCellValue::Boolean(reader.read_u8().await.map_err(|e| e.to_string())? != 0)),
         4 => {
             let expr = read_str_lp(reader)?;
-            let cached = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(Box::new(Box::pin(dec_cell_value_bin(reader))?)) } else { None };
+            let cached = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(Box::new(Box::pin(dec_cell_value_bin(reader))?)) } else { None };
             Ok(XlsxCellValue::Formula { expr, cached })
         }
         5 => Ok(XlsxCellValue::Empty),
@@ -1546,8 +1546,8 @@ pub(crate) fn enc_cell_bin(c: &XlsxCell, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_cell_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxCell, String> {
-    let row = reader.read_varint_u64().map_err(|e| e.to_string())? as u32;
-    let col = reader.read_varint_u64().map_err(|e| e.to_string())? as u32;
+    let row = reader.read_varint_u64().await.map_err(|e| e.to_string())? as u32;
+    let col = reader.read_varint_u64().await.map_err(|e| e.to_string())? as u32;
     let value = dec_cell_value_bin(reader)?;
     Ok(XlsxCell { row, col, value })
 }
@@ -1563,7 +1563,7 @@ pub(crate) fn enc_sheet_bin(s: &XlsxSheet, out: &mut Vec<u8>) {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_sheet_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxSheet, String> {
     let name = read_str_lp(reader)?;
-    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut cells = Vec::with_capacity(count as usize);
     for _ in 0..count {
         cells.push(dec_cell_bin(reader)?);
@@ -1601,19 +1601,19 @@ fn dec_named_triple_bin<K, D, T>(
     dec_d: impl Fn(&mut store::ByteReader<'_>) -> Result<D, String>,
     dec_t: impl Fn(&mut store::ByteReader<'_>) -> Result<T, String>,
 ) -> Result<NamedTripleDiff<K, D, T>, String> {
-    let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let removed_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(removed_count as usize);
     for _ in 0..removed_count {
         removed.push(dec_k(reader)?);
     }
-    let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let modified_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut modified = Vec::with_capacity(modified_count as usize);
     for _ in 0..modified_count {
         let key = dec_k(reader)?;
         let diff = dec_d(reader)?;
         modified.push(NamedModified { key, diff });
     }
-    let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let added_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut added = Vec::with_capacity(added_count as usize);
     for _ in 0..added_count {
         added.push(dec_t(reader)?);
@@ -1630,8 +1630,8 @@ fn enc_cell_key_bin(k: &(u32, u32), out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_cell_key_bin(reader: &mut store::ByteReader<'_>) -> Result<(u32, u32), String> {
-    let row = reader.read_varint_u64().map_err(|e| e.to_string())? as u32;
-    let col = reader.read_varint_u64().map_err(|e| e.to_string())? as u32;
+    let row = reader.read_varint_u64().await.map_err(|e| e.to_string())? as u32;
+    let col = reader.read_varint_u64().await.map_err(|e| e.to_string())? as u32;
     Ok((row, col))
 }
 
@@ -1644,7 +1644,7 @@ fn enc_cell_diff_bin(d: &XlsxCellDiff, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_cell_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxCellDiff, String> {
-    let value = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_cell_value_bin(reader)?) } else { None };
+    let value = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_cell_value_bin(reader)?) } else { None };
     Ok(XlsxCellDiff { value })
 }
 
@@ -1666,7 +1666,7 @@ fn enc_sheet_diff_bin(d: &XlsxSheetDiff, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_sheet_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxSheetDiff, String> {
-    let cells = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_cells_diff_bin(reader)?) } else { None };
+    let cells = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_cells_diff_bin(reader)?) } else { None };
     Ok(XlsxSheetDiff { cells })
 }
 
@@ -1686,14 +1686,14 @@ fn enc_shared_string_item_bin(item: &(usize, String), out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_shared_string_item_bin(reader: &mut store::ByteReader<'_>) -> Result<(usize, String), String> {
-    let idx = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+    let idx = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
     let value = read_str_lp(reader)?;
     Ok((idx, value))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_shared_strings_diff_bin(d: &XlsxSharedStringsDiff, out: &mut Vec<u8>) {
-    enc_named_triple_bin(d, |k, out| store::pack_rt::write_varint_u64(out, *k as u64), |v: &String, out| write_str_lp(out, v), enc_shared_string_item_bin, out)
+    enc_named_triple_bin(d, |k, out| { store::pack_rt::write_varint_u64(out, *k as u64); }, |v: &String, out| write_str_lp(out, v), enc_shared_string_item_bin, out)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_shared_strings_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxSharedStringsDiff, String> {
@@ -1713,8 +1713,8 @@ pub(crate) fn enc_workbook_diff_bin(d: &XlsxWorkbookDiff, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_workbook_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxWorkbookDiff, String> {
-    let sheets = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_sheets_diff_bin(reader)?) } else { None };
-    let shared_strings = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_shared_strings_diff_bin(reader)?) } else { None };
+    let sheets = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_sheets_diff_bin(reader)?) } else { None };
+    let shared_strings = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_shared_strings_diff_bin(reader)?) } else { None };
     Ok(XlsxWorkbookDiff { sheets, shared_strings })
 }
 
@@ -1740,8 +1740,8 @@ fn enc_content_types_diff_bin(d: &XlsxOpcContentTypesDiff, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_content_types_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxOpcContentTypesDiff, String> {
-    let defaults = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_ct_entries_diff_bin(reader)?) } else { None };
-    let overrides = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_ct_entries_diff_bin(reader)?) } else { None };
+    let defaults = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_ct_entries_diff_bin(reader)?) } else { None };
+    let overrides = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_ct_entries_diff_bin(reader)?) } else { None };
     Ok(XlsxOpcContentTypesDiff { defaults, overrides })
 }
 
@@ -1758,8 +1758,8 @@ fn enc_opc_part_diff_bin(d: &XlsxOpcPartDiff, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_opc_part_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxOpcPartDiff, String> {
-    let content_type = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
-    let bytes = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_bytes_lp(reader)?) } else { None };
+    let content_type = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
+    let bytes = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(read_bytes_lp(reader)?) } else { None };
     Ok(XlsxOpcPartDiff { content_type, bytes })
 }
 
@@ -1789,9 +1789,9 @@ fn enc_rel_diff_bin(d: &XlsxOpcRelDiff, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_rel_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxOpcRelDiff, String> {
-    let rel_type = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
-    let target = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
-    let target_mode = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_target_mode_bin(reader)?) } else { None };
+    let rel_type = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
+    let target = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
+    let target_mode = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_target_mode_bin(reader)?) } else { None };
     Ok(XlsxOpcRelDiff { rel_type, target, target_mode })
 }
 
@@ -1830,9 +1830,9 @@ pub(crate) fn enc_opc_diff_bin(d: &XlsxOpcDiff, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_opc_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxOpcDiff, String> {
-    let content_types = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_content_types_diff_bin(reader)?) } else { None };
-    let parts = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_parts_diff_bin(reader)?) } else { None };
-    let relationships = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_relationships_diff_bin(reader)?) } else { None };
+    let content_types = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_content_types_diff_bin(reader)?) } else { None };
+    let parts = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_parts_diff_bin(reader)?) } else { None };
+    let relationships = if reader.read_u8().await.map_err(|e| e.to_string())? != 0 { Some(dec_relationships_diff_bin(reader)?) } else { None };
     Ok(XlsxOpcDiff { content_types, parts, relationships })
 }
 //#endregion 🔖️DiffValueBinaryCodecs
@@ -1989,19 +1989,19 @@ mod handcrafted_diff_codec_tests {
 
         let cases = vec![
             XlsxDiff::default(),
-            <XlsxDiff as DiffAlgebra<XlsxSnapshot>>::between(&a, &b),
-            <XlsxDiff as DiffAlgebra<XlsxSnapshot>>::between(&b, &a),
-            <XlsxDiff as DiffAlgebra<XlsxSnapshot>>::between(&a, &empty),
+            <XlsxDiff as DiffAlgebra<XlsxSnapshot>>::between(&a, &b).await,
+            <XlsxDiff as DiffAlgebra<XlsxSnapshot>>::between(&b, &a).await,
+            <XlsxDiff as DiffAlgebra<XlsxSnapshot>>::between(&a, &empty).await,
             <XlsxDiff as DiffAlgebra<XlsxSnapshot>>::between(&empty, &a),
         ];
         for d in cases {
             let printed = d.print_diff();
             assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
-            let parsed = XlsxDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
+            let parsed = XlsxDiff::parse_diff(&printed).await.unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
             assert_eq!(parsed, d, "print_diff/parse_diff round-trip mismatch (printed {printed:?})");
 
             let encoded = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
-            let decoded = XlsxDiff::decode_diff(&encoded).unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
+            let decoded = XlsxDiff::decode_diff(&encoded).await.unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
             assert_eq!(decoded, d, "encode_diff/decode_diff round-trip mismatch");
         }
     }
@@ -2018,7 +2018,7 @@ mod result_apply_tests {
         let diff =
             XlsxDiff { workbook: Some(XlsxWorkbookDiff { sheets: Some(XlsxSheetsDiff { modified: vec![NamedModified { key: "missing".into(), diff: XlsxSheetDiff::default() }], ..Default::default() }), ..Default::default() }), ..Default::default() };
         let result = diff.apply(&base);
-        assert_eq!(result.unwrap_err().code, "mutation.apply.missing-target");
+        assert_eq!(result.await.unwrap_err().code, "mutation.apply.missing-target");
         assert_eq!(base, XlsxSnapshot::default());
     }
 }

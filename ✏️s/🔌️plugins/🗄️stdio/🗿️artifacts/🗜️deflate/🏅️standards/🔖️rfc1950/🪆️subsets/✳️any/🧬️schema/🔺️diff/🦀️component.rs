@@ -448,21 +448,21 @@ mod tests {
         let b = sweep_b();
 
         let ab = DeflateDiff::between(&a, &b);
-        assert!(ab.compression_method.is_some());
-        assert!(ab.window_bits.is_some());
-        assert!(ab.compression_level_hint.is_some());
-        assert!(ab.dict_id.is_some());
-        assert_eq!(ab.dict_id, Some(Some(0xDEAD_BEEF)));
-        assert!(ab.payload.is_some());
+        assert!(ab.await.compression_method.is_some());
+        assert!(ab.await.window_bits.is_some());
+        assert!(ab.await.compression_level_hint.is_some());
+        assert!(ab.await.dict_id.is_some());
+        assert_eq!(ab.await.dict_id, Some(Some(0xDEAD_BEEF)));
+        assert!(ab.await.payload.is_some());
         assert_eq!(ab.apply(&a).unwrap(), b);
 
         let ba = DeflateDiff::between(&b, &a);
-        assert!(ba.compression_method.is_some());
-        assert!(ba.window_bits.is_some());
-        assert!(ba.compression_level_hint.is_some());
-        assert!(ba.dict_id.is_some());
-        assert_eq!(ba.dict_id, Some(None)); // 🪆️ tri-state Some(None): dictionary cleared
-        assert!(ba.payload.is_some());
+        assert!(ba.await.compression_method.is_some());
+        assert!(ba.await.window_bits.is_some());
+        assert!(ba.await.compression_level_hint.is_some());
+        assert!(ba.await.dict_id.is_some());
+        assert_eq!(ba.await.dict_id, Some(None)); // 🪆️ tri-state Some(None): dictionary cleared
+        assert!(ba.await.payload.is_some());
         assert_eq!(ba.apply(&b).unwrap(), a);
 
         assert!(DeflateDiff::between(&a, &a).is_empty());
@@ -486,7 +486,7 @@ mod tests {
             let returned = apply_deflate_mutation(&mut via_apply, &m);
             let direct = m.diff(&base);
             assert_eq!(direct, returned, "diff mismatch for {m:?}");
-            assert_eq!(direct.diff().apply(&base).unwrap(), via_apply, "apply mismatch for {m:?}");
+            assert_eq!(direct.await.diff().apply(&base).unwrap(), via_apply, "apply mismatch for {m:?}");
         }
     }
     //#endregion mutation_diff_law
@@ -513,8 +513,8 @@ mod tests {
 
             // 🔁️ diff-level: d.diff().inverse(base).apply(&d.diff().apply(base)) == base.
             let d = m.diff(&base);
-            let applied = d.diff().apply(&base).unwrap();
-            let undone = d.diff().inverse(&base).apply(&applied).unwrap();
+            let applied = d.await.diff().apply(&base).unwrap();
+            let undone = d.await.diff().inverse(&base).apply(&applied).unwrap();
             assert_eq!(undone, base, "diff-level inverse failed for {m:?}");
         }
     }
@@ -533,8 +533,8 @@ mod tests {
         let d2 = diff_set_payload(b"absorbed-payload".to_vec());
         let mut absorbed = d1.clone();
         absorbed.absorb(d2.clone());
-        let sequential = d2.apply(&d1.apply(&base).unwrap()).unwrap();
-        assert_eq!(absorbed.apply(&base).unwrap(), sequential);
+        let sequential = d2.apply(&d1.apply(&base).await.unwrap()).await.unwrap();
+        assert_eq!(absorbed.apply(&base).await.unwrap(), sequential);
         assert_eq!(absorbed.compression_method, Some(8));
         assert_eq!(absorbed.payload, Some(b"absorbed-payload".to_vec()));
 
@@ -544,7 +544,7 @@ mod tests {
         let mut lww = d3.clone();
         lww.absorb(d4.clone());
         assert_eq!(lww.payload, Some(b"second".to_vec()));
-        assert_eq!(lww.apply(&base).unwrap(), d4.apply(&d3.apply(&base).unwrap()).unwrap());
+        assert_eq!(lww.apply(&base).await.unwrap(), d4.apply(&d3.apply(&base).await.unwrap()).await.unwrap());
 
         // Associativity over a triple: absorb(absorb(d1,d2),d3) == absorb(d1,absorb(d2,d3)).
         let da = diff_set_compression_params(9, 6, DeflateLevelHint::Maximum);
@@ -561,7 +561,7 @@ mod tests {
         right.absorb(right_tail);
 
         assert_eq!(left, right);
-        assert_eq!(left.apply(&base).unwrap(), dc.apply(&db.apply(&da.apply(&base).unwrap()).unwrap()).unwrap());
+        assert_eq!(left.apply(&base).await.unwrap(), dc.apply(&db.apply(&da.apply(&base).await.unwrap()).await.unwrap()).await.unwrap());
     }
     //#endregion absorb_law
 
@@ -575,7 +575,7 @@ mod tests {
 
         // 🌱 Real fixture: decode a genuine zlib stream, then round-trip against a variant that
         // changes every field from it.
-        let fixture = decode_deflate_snapshot(REAL_FIXTURE_ZLIB).expect("decode real fixture");
+        let fixture = decode_deflate_snapshot(REAL_FIXTURE_ZLIB).await.expect("decode real fixture");
         let mut other = fixture.clone();
         other.compression_level_hint = DeflateLevelHint::Maximum;
         other.dict_id = Some(99);
@@ -593,7 +593,7 @@ mod tests {
         // Huffman-strategy mismatch to normalize away).
         let snap = sweep_a();
         let bytes = encode_deflate_snapshot(&snap);
-        let decoded = decode_deflate_snapshot(&bytes).expect("decode self-encoded stream");
+        let decoded = decode_deflate_snapshot(&bytes).await.expect("decode self-encoded stream");
         assert_eq!(decoded, snap);
         let bytes2 = encode_deflate_snapshot(&decoded);
         assert_eq!(bytes, bytes2);
@@ -606,9 +606,9 @@ mod tests {
     /// decompressed PAYLOAD across a decode -> re-encode -> re-decode cycle.
     #[semio_framework_async_macros::async_test]
     async fn codec_retention_law_real_fixture_normal_form() {
-        let decoded = decode_deflate_snapshot(REAL_FIXTURE_ZLIB).expect("decode real fixture");
+        let decoded = decode_deflate_snapshot(REAL_FIXTURE_ZLIB).await.expect("decode real fixture");
         let re_encoded = encode_deflate_snapshot(&decoded);
-        let re_decoded = decode_deflate_snapshot(&re_encoded).expect("decode re-encoded stream");
+        let re_decoded = decode_deflate_snapshot(&re_encoded).await.expect("decode re-encoded stream");
         assert_eq!(re_decoded.compression_method, decoded.compression_method);
         assert_eq!(re_decoded.window_bits, decoded.window_bits);
         assert_eq!(re_decoded.compression_level_hint, decoded.compression_level_hint);
@@ -627,15 +627,15 @@ mod tests {
         let b = sweep_b();
         // 🪆️ `a.dict_id` is `None`, `b.dict_id` is `Some(_)` -- `between(a,b)` exercises the
         // Some(Some(_)) arm, `between(b,a)` exercises the Some(None) arm.
-        let cases = vec![DeflateDiff::default(), DeflateDiff::between(&a, &b), DeflateDiff::between(&b, &a), diff_set_preset_dictionary(None), diff_set_payload(Vec::new())];
+        let cases = vec![DeflateDiff::default(), DeflateDiff::between(&a, &b).await, DeflateDiff::between(&b, &a).await, diff_set_preset_dictionary(None), diff_set_payload(Vec::new())];
         for d in cases {
             let printed = d.print_diff();
-            assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
-            let parsed = DeflateDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
+            assert!(!printed.await.contains('\n'), "print_diff must be one line, got {printed:?}");
+            let parsed = DeflateDiff::parse_diff(&printed).await.unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
             assert_eq!(parsed, d, "print_diff/parse_diff round-trip mismatch (printed {printed:?})");
 
-            let encoded = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
-            let decoded = DeflateDiff::decode_diff(&encoded).unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
+            let encoded = d.encode_diff().await.unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
+            let decoded = DeflateDiff::decode_diff(&encoded).await.unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
             assert_eq!(decoded, d, "encode_diff/decode_diff round-trip mismatch");
         }
     }

@@ -88,15 +88,15 @@ pub mod derived_composition {
         async fn compose_always_carries_the_schema_gap_diagnostic() {
             let bytes = <PdfSnapshot as store::ArtifactPack>::encode_pack(&PdfSnapshot::default());
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
-            let composed = PdfAComposerComposition::compose(&sources).expect("pass-through compose never fails on conformance grounds");
+            let composed = PdfAComposerComposition::compose(&sources).await.expect("pass-through compose never fails on conformance grounds");
             assert!(composed.diagnostics.iter().any(|d| d.code.0 == CODE_SCHEMA_GAP), "got {:?}", composed.diagnostics);
         }
 
         #[semio_framework_async_macros::async_test]
         async fn subset_validator_reports_the_schema_gap_diagnostic() {
             let bytes = <PdfSnapshot as store::ArtifactPack>::encode_pack(&PdfSnapshot::default());
-            let diagnostics = PdfAValidator::validate(&IoPayload::Binary(bytes));
-            assert!(diagnostics.iter().any(|d| d.code.0 == CODE_SCHEMA_GAP), "got {diagnostics:?}");
+            let diagnostics = PdfAValidator::validate(&IoPayload::Binary(bytes.await));
+            assert!(diagnostics.await.iter().any(|d| d.code.0 == CODE_SCHEMA_GAP), "got {diagnostics:?}");
         }
     }
 }

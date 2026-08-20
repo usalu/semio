@@ -279,11 +279,11 @@ mod tests {
         let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() });
         let base = valid_snapshot();
         let _ = store::infer_field::<SemioBrepSnapshot, BrepValidationReport>(&base, Some(&mut cache));
-        let before = cache.stats();
+        let before = cache.await.stats();
         let _ = store::infer_field::<SemioBrepSnapshot, BrepValidationReport>(&base, Some(&mut cache));
-        let after = cache.stats();
-        assert_eq!(after.misses, before.misses, "an unchanged snapshot must produce zero new misses");
-        assert_eq!(after.hits - before.hits, 1);
+        let after = cache.await.stats();
+        assert_eq!(after.await.misses, before.await.misses, "an unchanged snapshot must produce zero new misses");
+        assert_eq!(after.await.hits - before.await.hits, 1);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -293,10 +293,10 @@ mod tests {
         let _ = store::infer_field::<SemioBrepSnapshot, BrepValidationReport>(&base, Some(&mut cache));
         let mut changed = base.clone();
         changed.vertices[0].point = SemioPoint3 { x: 9.0, y: 9.0, z: 9.0 };
-        let before = cache.stats();
+        let before = cache.await.stats();
         let _ = store::infer_field::<SemioBrepSnapshot, BrepValidationReport>(&changed, Some(&mut cache));
-        let after = cache.stats();
-        assert_eq!(after.misses - before.misses, 1, "a real change to a covered collection must miss");
+        let after = cache.await.stats();
+        assert_eq!(after.await.misses - before.await.misses, 1, "a real change to a covered collection must miss");
     }
     //#endregion 🧪️IncrementalityLaw
 

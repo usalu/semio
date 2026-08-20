@@ -76,7 +76,7 @@ mod tests {
     /// (📌️important.md Trap #1).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn round_trip(base: &SemioKitSnapshot, operation: &SemioKitMutation) -> SemioKitSnapshot {
-        let forward = operation.diff(base).diff().apply(base).expect("apply must succeed for a well-formed fixture");
+        let forward = operation.diff(base).await.diff().apply(base).expect("apply must succeed for a well-formed fixture");
         let backwards = operation.inverse(base);
         let mut restored = forward.clone();
         for back in &backwards {
@@ -125,8 +125,8 @@ mod tests {
     async fn delete_object_of_an_absent_id_has_an_empty_inverse() {
         let base = fixture();
         let delete = SemioKitMutation::DeleteObject(delete_object::mutation::DeleteObject { child_id: "does-not-exist".into() });
-        assert!(delete.inverse(&base).is_empty());
-        assert_eq!(delete.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base);
+        assert!(delete.inverse(&base).await.is_empty());
+        assert_eq!(delete.diff(&base).await.diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -169,8 +169,8 @@ mod tests {
     async fn unbind_representation_of_an_out_of_range_index_has_an_empty_inverse() {
         let base = fixture();
         let unbind = SemioKitMutation::UnbindRepresentation(unbind_representation::mutation::UnbindRepresentation { index: 99 });
-        assert!(unbind.inverse(&base).is_empty());
-        assert_eq!(unbind.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base);
+        assert!(unbind.inverse(&base).await.is_empty());
+        assert_eq!(unbind.diff(&base).await.diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -217,7 +217,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn semantic_kinds_cover_every_variant() {
-        assert_eq!(SemioKitMutation::kinds().len(), 15);
+        assert_eq!(SemioKitMutation::kinds().await.len(), 15);
         let mutation = SemioKitMutation::UnbindRepresentation(unbind_representation::mutation::UnbindRepresentation { index: 1 });
         assert_eq!(mutation.semantics().kind, "unbind-representation");
         assert_eq!(mutation.semantics().record, "UnboundRepresentation");

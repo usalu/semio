@@ -432,7 +432,7 @@ fn write_text_chunk(out: &mut Vec<u8>, tc: &PngTextChunk) {
             data.extend_from_slice(tc.keyword.as_bytes());
             data.push(0);
             data.push(0); // compression method 0 = zlib/deflate
-            let compressed = crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(tc.value.as_bytes()).unwrap_or_default();
+            let compressed = crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(tc.value.as_bytes()).await.unwrap_or_default();
             data.extend_from_slice(&compressed);
             write_chunk(out, b"zTXt", &data);
         }
@@ -447,7 +447,7 @@ fn write_text_chunk(out: &mut Vec<u8>, tc: &PngTextChunk) {
             data.extend_from_slice(tc.translated_keyword.as_bytes());
             data.push(0);
             if tc.compressed {
-                let compressed = crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(tc.value.as_bytes()).unwrap_or_default();
+                let compressed = crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(tc.value.as_bytes()).await.unwrap_or_default();
                 data.extend_from_slice(&compressed);
             } else {
                 data.extend_from_slice(tc.value.as_bytes());
@@ -938,7 +938,7 @@ mod codec_tests {
             idat.extend_from_slice(&filtered);
             prev = Some(row.to_vec());
         }
-        let compressed = crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(&idat).unwrap();
+        let compressed = crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(&idat).await.unwrap();
         let mut out = Vec::new();
         out.extend_from_slice(&PNG_SIGNATURE);
         let mut ihdr = Vec::with_capacity(13);
@@ -1035,7 +1035,7 @@ mod codec_tests {
         let (ft, filtered) = choose_filter(&raw, None, bpp);
         let mut idat_raw = vec![ft];
         idat_raw.extend_from_slice(&filtered);
-        let compressed = crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(&idat_raw).unwrap();
+        let compressed = crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(&idat_raw).await.unwrap();
 
         let mut out = Vec::new();
         out.extend_from_slice(&PNG_SIGNATURE);
@@ -1117,7 +1117,7 @@ mod codec_tests {
     async fn ztxt_and_itxt_round_trip() {
         // zTXt: keyword\0 + compression-method(0) + zlib(value)
         let mut ztxt = b"Comment\0\0".to_vec();
-        ztxt.extend_from_slice(&crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(b"compressed value").unwrap());
+        ztxt.extend_from_slice(&crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(b"compressed value").await.unwrap());
         // iTXt (compressed): keyword\0 + flag(1) + method(0) + lang\0 + translated\0 + zlib(value)
         let mut itxt = b"Title\0".to_vec();
         itxt.push(1);
@@ -1125,13 +1125,13 @@ mod codec_tests {
         itxt.extend_from_slice(b"en\0");
         itxt.extend_from_slice("Titre".as_bytes());
         itxt.push(0);
-        itxt.extend_from_slice(&crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_compress("valeur".as_bytes()).unwrap());
+        itxt.extend_from_slice(&crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_compress("valeur".as_bytes()).await.unwrap());
 
         let raw = vec![0u8, 0, 0, 255];
         let (ft, filtered) = choose_filter(&raw, None, 4);
         let mut idat_raw = vec![ft];
         idat_raw.extend_from_slice(&filtered);
-        let compressed = crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(&idat_raw).unwrap();
+        let compressed = crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(&idat_raw).await.unwrap();
 
         let mut out = Vec::new();
         out.extend_from_slice(&PNG_SIGNATURE);
@@ -1189,7 +1189,7 @@ mod codec_tests {
                 prev = Some(row);
             }
         }
-        let compressed = crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(&idat).unwrap();
+        let compressed = crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(&idat).await.unwrap();
         let mut out = Vec::new();
         out.extend_from_slice(&PNG_SIGNATURE);
         let mut ihdr = Vec::with_capacity(13);

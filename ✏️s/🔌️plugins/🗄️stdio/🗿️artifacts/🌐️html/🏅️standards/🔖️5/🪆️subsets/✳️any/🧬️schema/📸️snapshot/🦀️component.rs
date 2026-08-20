@@ -860,7 +860,7 @@ mod tests {
         assert_eq!(re_encoded, FIXTURE, "fixture must round-trip byte-for-byte");
 
         let bytes = store::ArtifactPack::encode_pack(&snap);
-        let decoded = <HtmlSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+        let decoded = <HtmlSnapshot as store::ArtifactPack>::decode_pack(&bytes).await.expect("decode");
         assert_eq!(decoded, snap);
     }
     //#endregion 🔖️CodecRetentionLaw
@@ -869,10 +869,10 @@ mod tests {
     async fn snapshot_dsl_and_pack_round_trip() {
         let snap = parse_html_document(FIXTURE).expect("fixture parses");
         let text = store::ArtifactDsl::print_dsl(&snap);
-        let parsed = <HtmlSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
+        let parsed = <HtmlSnapshot as store::ArtifactDsl>::parse_dsl(&text).await.expect("parse");
         assert_eq!(parsed, snap);
         let bytes = store::ArtifactPack::encode_pack(&snap);
-        let decoded = <HtmlSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+        let decoded = <HtmlSnapshot as store::ArtifactPack>::decode_pack(&bytes).await.expect("decode");
         assert_eq!(decoded, snap);
     }
 }

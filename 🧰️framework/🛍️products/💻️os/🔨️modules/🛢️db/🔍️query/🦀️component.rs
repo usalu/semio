@@ -466,7 +466,7 @@ impl Query {
         self
     }
 
-    pub async fn filter(mut self, predicate: Predicate) -> Query {
+    pub fn filter(mut self, predicate: Predicate) -> Query {
         self.filter = Some(predicate);
         self
     }
@@ -1270,7 +1270,7 @@ mod tests {
             let state_bytes = ProjectionState::encode(&rows).await;
 
             let source = projection_query_source(&state_bytes).await.expect("decodes");
-            let query = Query::new().await.filter(Predicate::Gte(Path::field("age"), Value::Int(30))).await;
+            let query = Query::new().await.filter(Predicate::Gte(Path::field("age"), Value::Int(30)));
             let result = db_actor::block_on(execute(&query, &source, None::<&db_query::NoFullTextLookup>, &QueryLimits::default())).expect("query succeeds");
             assert_eq!(result.rows.len(), 1);
             assert_eq!(Path::field("name").get(&result.rows[0].1), Some(&Value::Text("alice".to_string())));
@@ -1290,7 +1290,7 @@ mod tests {
         #[semio_framework_async_macros::async_test]
         async fn full_scan_filters_sorts_and_paginates() {
             let source = sample_source().await;
-            let query = Query::new().await.filter(Predicate::Gte(Path::field("age"), Value::Int(25))).await.sort(vec![SortKey::descending(Path::field("age"))]).await.limit(2).await;
+            let query = Query::new().await.filter(Predicate::Gte(Path::field("age"), Value::Int(25))).sort(vec![SortKey::descending(Path::field("age"))]).await.limit(2).await;
             let result = db_actor::block_on(execute(&query, &source, None::<&db_query::NoFullTextLookup>, &QueryLimits::default())).expect("query succeeds");
             assert_eq!(result.diagnostics.plan, QueryPlanKind::FullScan);
             assert_eq!(result.diagnostics.rows_matched, 3);
@@ -1342,7 +1342,7 @@ mod tests {
         #[semio_framework_async_macros::async_test]
         async fn full_text_pushdown_without_a_lookup_is_an_error() {
             let source = sample_source().await;
-            let query = Query::new().await.filter(Predicate::FullText(Path::empty(), "alice".to_string())).await;
+            let query = Query::new().await.filter(Predicate::FullText(Path::empty(), "alice".to_string()));
             let error = db_actor::block_on(execute(&query, &source, None::<&db_query::NoFullTextLookup>, &QueryLimits::default())).unwrap_err();
             assert!(matches!(error, DbError::InvalidArgument(_)));
         }
@@ -1356,13 +1356,13 @@ mod tests {
 
         #[semio_framework_async_macros::async_test]
         async fn plan_recognizes_bare_and_conjoined_full_text_predicates() {
-            let bare = Query::new().await.filter(Predicate::FullText(Path::empty(), "x".to_string())).await;
+            let bare = Query::new().await.filter(Predicate::FullText(Path::empty(), "x".to_string()));
             assert_eq!(plan(&bare), QueryPlan::FullTextPushdown { term: "x".to_string() });
 
-            let conjoined = Query::new().await.filter(Predicate::And(vec![Predicate::Eq(Path::field("age"), Value::Int(1)), Predicate::FullText(Path::empty(), "y".to_string())])).await;
+            let conjoined = Query::new().await.filter(Predicate::And(vec![Predicate::Eq(Path::field("age"), Value::Int(1)), Predicate::FullText(Path::empty(), "y".to_string())]));
             assert_eq!(plan(&conjoined), QueryPlan::FullTextPushdown { term: "y".to_string() });
 
-            let disjoined = Query::new().await.filter(Predicate::Or(vec![Predicate::FullText(Path::empty(), "z".to_string())])).await;
+            let disjoined = Query::new().await.filter(Predicate::Or(vec![Predicate::FullText(Path::empty(), "z".to_string())]));
             assert_eq!(plan(&disjoined), QueryPlan::FullScan);
         }
 
@@ -1372,7 +1372,7 @@ mod tests {
         #[semio_framework_async_macros::async_test]
         async fn pushdown_matches_full_scan_when_the_index_is_exhaustive() {
             let source = sample_source().await;
-            let query = Query::new().await.filter(Predicate::FullText(Path::empty(), "admin".to_string())).await;
+            let query = Query::new().await.filter(Predicate::FullText(Path::empty(), "admin".to_string()));
 
             let full_scan_result = db_actor::block_on(execute(&query, &source, None::<&db_query::NoFullTextLookup>, &QueryLimits::default()));
             assert!(matches!(full_scan_result, Err(DbError::InvalidArgument(_))));
@@ -1583,7 +1583,7 @@ mod tests {
         async fn max_scan_rows_is_enforced_even_when_nothing_matches() {
             let source = sample_source().await;
             let limits = QueryLimits { max_scan_rows: 1, ..QueryLimits::default() };
-            let query = Query::new().await.filter(Predicate::Eq(Path::field("age"), Value::Int(999))).await;
+            let query = Query::new().await.filter(Predicate::Eq(Path::field("age"), Value::Int(999)));
             let error = db_actor::block_on(execute(&query, &source, None::<&db_query::NoFullTextLookup>, &limits)).unwrap_err();
             assert!(matches!(error, DbError::LimitExceeded(_)));
         }

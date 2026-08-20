@@ -145,11 +145,11 @@ pub mod derived_construction {
             snap.slides.push(Slide { id: "s1".into(), layout_id: Some("l1".into()), shapes: Vec::new(), notes: Vec::new() });
 
             let text = <SemioPresentationSnapshot as store::ArtifactDsl>::print_dsl(&snap);
-            let from_text = SemioPresentationBuilderConstruction::from_text(&text).unwrap().build().unwrap();
+            let from_text = SemioPresentationBuilderConstruction::from_text(&text).await.unwrap().build().await.unwrap();
             assert_eq!(from_text, snap);
 
             let bytes = <SemioPresentationSnapshot as store::ArtifactPack>::encode_pack(&snap);
-            let from_binary = SemioPresentationBuilderConstruction::from_binary(&bytes).unwrap().build().unwrap();
+            let from_binary = SemioPresentationBuilderConstruction::from_binary(&bytes).await.unwrap().build().await.unwrap();
             assert_eq!(from_binary, snap);
         }
 
@@ -259,19 +259,19 @@ pub mod derived_analysis {
             let snap = sample();
             let bytes = <SemioPresentationSnapshot as store::ArtifactPack>::encode_pack(&snap);
             let analysis = SemioPresentationAnalyzerAnalysis::analyze(&[AnalyzeSource::Binary(&bytes)]);
-            assert_eq!(analysis.confidence, IoConfidence::High);
-            assert_eq!(analysis.parts.snapshot, Some(snap.clone()));
+            assert_eq!(analysis.await.confidence, IoConfidence::High);
+            assert_eq!(analysis.await.parts.snapshot, Some(snap.clone()));
 
             let text = <SemioPresentationSnapshot as store::ArtifactDsl>::print_dsl(&snap);
             let analysis2 = SemioPresentationAnalyzerAnalysis::analyze(&[AnalyzeSource::Text(&text)]);
-            assert_eq!(analysis2.parts.snapshot, Some(snap));
+            assert_eq!(analysis2.await.parts.snapshot, Some(snap));
         }
 
         #[semio_framework_async_macros::async_test]
         async fn analyze_flags_low_confidence_on_undecodable_source() {
             let analysis = SemioPresentationAnalyzerAnalysis::analyze(&[AnalyzeSource::Binary(b"garbage")]);
-            assert_eq!(analysis.confidence, IoConfidence::Low);
-            assert!(!analysis.diagnostics.is_empty());
+            assert_eq!(analysis.await.confidence, IoConfidence::Low);
+            assert!(!analysis.await.diagnostics.is_empty());
         }
     }
     //#endregion 🧪️Tests

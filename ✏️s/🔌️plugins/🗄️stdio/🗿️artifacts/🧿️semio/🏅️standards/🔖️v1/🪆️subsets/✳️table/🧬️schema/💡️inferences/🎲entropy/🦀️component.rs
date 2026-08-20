@@ -134,7 +134,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn a_fair_binary_column_has_one_bit_of_entropy() {
         let values = store::infer_field::<SemioTableSnapshot, ColumnEntropy>(&two_column_snapshot(), None);
-        let e = values.get("coin").expect("coin entropy present");
+        let e = values.await.get("coin").expect("coin entropy present");
         assert_eq!(e.count, 4);
         assert_eq!(e.distinct, 2);
         assert!((e.bits - 1.0).abs() < 1e-9, "fair coin must be exactly 1 bit, got {}", e.bits);
@@ -143,7 +143,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn a_constant_column_has_zero_entropy() {
         let values = store::infer_field::<SemioTableSnapshot, ColumnEntropy>(&two_column_snapshot(), None);
-        let e = values.get("always_a").expect("always_a entropy present");
+        let e = values.await.get("always_a").expect("always_a entropy present");
         assert_eq!(e.distinct, 1);
         assert!(e.bits.abs() < 1e-9, "single-symbol column must have zero entropy, got {}", e.bits);
     }
@@ -151,13 +151,13 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn every_declared_column_appears_regardless_of_kind() {
         let values = store::infer_field::<SemioTableSnapshot, ColumnEntropy>(&two_column_snapshot(), None);
-        assert_eq!(values.len(), 2, "entropy is defined over any symbol alphabet, unlike moments' numeric-only gate");
+        assert_eq!(values.await.len(), 2, "entropy is defined over any symbol alphabet, unlike moments' numeric-only gate");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn an_all_empty_snapshot_yields_an_empty_plan() {
         let values = store::infer_field::<SemioTableSnapshot, ColumnEntropy>(&SemioTableSnapshot::default(), None);
-        assert!(values.is_empty());
+        assert!(values.await.is_empty());
     }
     //#endregion 🧪️Honesty
 
@@ -178,11 +178,11 @@ mod tests {
         let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() });
         let base = two_column_snapshot();
         let _ = store::infer_field::<SemioTableSnapshot, ColumnEntropy>(&base, Some(&mut cache));
-        let before = cache.stats();
+        let before = cache.await.stats();
         let _ = store::infer_field::<SemioTableSnapshot, ColumnEntropy>(&base, Some(&mut cache));
-        let after = cache.stats();
-        assert_eq!(after.misses, before.misses, "an unchanged snapshot must produce zero new misses");
-        assert_eq!(after.hits - before.hits, 2, "both columns must be cache hits");
+        let after = cache.await.stats();
+        assert_eq!(after.await.misses, before.await.misses, "an unchanged snapshot must produce zero new misses");
+        assert_eq!(after.await.hits - before.await.hits, 2, "both columns must be cache hits");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -193,12 +193,12 @@ mod tests {
 
         let mut changed = base.clone();
         changed.rows[0].cells[0] = SemioValue::Str { value: "edge".into() };
-        let before = cache.stats();
+        let before = cache.await.stats();
         let values = store::infer_field::<SemioTableSnapshot, ColumnEntropy>(&changed, Some(&mut cache));
-        let after = cache.stats();
+        let after = cache.await.stats();
 
-        assert_eq!(after.misses - before.misses, 1, "only coin's own entry may miss when its own cells change");
-        assert_eq!(values.get("always_a").map(|e| e.distinct), Some(1), "always_a's entropy must be untouched");
+        assert_eq!(after.await.misses - before.await.misses, 1, "only coin's own entry may miss when its own cells change");
+        assert_eq!(values.await.get("always_a").map(|e| e.distinct), Some(1), "always_a's entropy must be untouched");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -214,11 +214,11 @@ mod tests {
 
         let mut changed = base.clone();
         changed.rows[0].cells[1] = SemioValue::Str { value: "z".into() };
-        let before = cache.stats();
+        let before = cache.await.stats();
         let values = store::infer_field::<SemioTableSnapshot, ColumnEntropy>(&changed, Some(&mut cache));
-        let after = cache.stats();
-        assert_eq!(after.misses - before.misses, 1, "only always_a's own entry may miss when its own cells change");
-        assert_eq!(values.get("coin").map(|e| e.distinct), Some(2), "coin's entropy must be untouched by an edit to always_a");
+        let after = cache.await.stats();
+        assert_eq!(after.await.misses - before.await.misses, 1, "only always_a's own entry may miss when its own cells change");
+        assert_eq!(values.await.get("coin").map(|e| e.distinct), Some(2), "coin's entropy must be untouched by an edit to always_a");
     }
     //#endregion 🧪️IncrementalityLaw
 }

@@ -91,10 +91,10 @@ mod tests {
     async fn codec_round_trip() {
         let snap = empty_svg_snapshot();
         let text = store::ArtifactDsl::print_dsl(&snap);
-        let parsed = <SvgSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
+        let parsed = <SvgSnapshot as store::ArtifactDsl>::parse_dsl(&text).await.expect("parse");
         assert_eq!(parsed.schema, snap.schema);
         let bytes = store::ArtifactPack::encode_pack(&snap);
-        let decoded = <SvgSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+        let decoded = <SvgSnapshot as store::ArtifactPack>::decode_pack(&bytes).await.expect("decode");
         assert_eq!(decoded, snap);
     }
 
@@ -104,14 +104,14 @@ mod tests {
         let original = exact_fixture_bytes();
         let text = std::str::from_utf8(&original).expect("fixture UTF-8");
         let text_analysis = <crate::artifacts::svg::standards::v1_1::subsets::any::schema::SvgAnalyzerAnalysis as ArtifactAnalysis>::analyze(&[AnalyzeSource::Text(text)]);
-        assert!(text_analysis.diagnostics.is_empty(), "text diagnostics: {:?}", text_analysis.diagnostics);
-        let text_snapshot = text_analysis.parts.snapshot.expect("text snapshot");
+        assert!(text_analysis.await.diagnostics.is_empty(), "text diagnostics: {:?}", text_analysis.await.diagnostics);
+        let text_snapshot = text_analysis.await.parts.snapshot.expect("text snapshot");
         assert_eq!(text_snapshot.export_utf8().expect("text analyzer export"), original);
 
         let pack = store::ArtifactPack::encode_pack(&text_snapshot);
         let pack_analysis = <crate::artifacts::svg::standards::v1_1::subsets::any::schema::SvgAnalyzerAnalysis as ArtifactAnalysis>::analyze(&[AnalyzeSource::Binary(&pack)]);
-        assert!(pack_analysis.diagnostics.is_empty(), "pack diagnostics: {:?}", pack_analysis.diagnostics);
-        assert_eq!(pack_analysis.parts.snapshot.expect("pack snapshot").export_utf8().expect("pack analyzer export"), original);
+        assert!(pack_analysis.await.diagnostics.is_empty(), "pack diagnostics: {:?}", pack_analysis.await.diagnostics);
+        assert_eq!(pack_analysis.await.parts.snapshot.expect("pack snapshot").export_utf8().expect("pack analyzer export"), original);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -119,12 +119,12 @@ mod tests {
         let original = exact_fixture_bytes();
         let text = std::str::from_utf8(&original).expect("fixture UTF-8");
         let text_sources = [ComposeSource { dialect: SVG_DIALECT, payload: AnalyzeSource::Text(text) }];
-        let text_composition = SvgComposerComposition::compose(&text_sources).expect("compose raw SVG text");
+        let text_composition = SvgComposerComposition::compose(&text_sources).await.expect("compose raw SVG text");
         assert_eq!(text_composition.snapshot.export_utf8().expect("text composition export"), original);
 
         let pack = store::ArtifactPack::encode_pack(&text_composition.snapshot);
         let pack_sources = [ComposeSource { dialect: SVG_DIALECT, payload: AnalyzeSource::Binary(&pack) }];
-        let pack_composition = SvgComposerComposition::compose(&pack_sources).expect("compose SVG pack");
+        let pack_composition = SvgComposerComposition::compose(&pack_sources).await.expect("compose SVG pack");
         assert_eq!(pack_composition.snapshot.export_utf8().expect("pack composition export"), original);
     }
     //#endregion 🔖️LosslessNativeRouting
@@ -211,14 +211,14 @@ mod tests {
 
             let op_spec = dsl::parse_protocol(mutations::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
             for mutation in mutations::demo_mutation_cases() {
-                let bytes = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op failed for {mutation:?}: {e:?}"));
+                let bytes = mutation.encode_op().await.unwrap_or_else(|e| panic!("encode_op failed for {mutation:?}: {e:?}"));
                 let trace = dsl::walk_protocol(&op_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(op) failed for {mutation:?} @{}: {}", e.offset, e.message));
                 assert_eq!(trace.consumed, bytes.len(), "op walk did not consume every byte for {mutation:?}");
             }
 
             let diff_spec = dsl::parse_protocol(diff::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse diff protocol");
             for d in diff::demo_diff_cases() {
-                let bytes = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed for {d:?}: {e:?}"));
+                let bytes = d.encode_diff().await.unwrap_or_else(|e| panic!("encode_diff failed for {d:?}: {e:?}"));
                 let trace = dsl::walk_protocol(&diff_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(diff) failed for {d:?} @{}: {}", e.offset, e.message));
                 assert_eq!(trace.consumed, bytes.len(), "diff walk did not consume every byte for {d:?}");
             }
@@ -235,11 +235,11 @@ mod tests {
 
             let demo = demo_svg_snapshot();
 
-            let parsed = <SvgSnapshot as store::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
+            let parsed = <SvgSnapshot as store::ArtifactDsl>::parse_dsl(FIXTURE_DSL).await.expect("parse shipped .dsl.semio fixture");
             assert_eq!(parsed, demo, "shipped .dsl.semio fixture does not parse back to demo_svg_snapshot()");
             assert_eq!(store::ArtifactDsl::print_dsl(&demo), FIXTURE_DSL, "print_dsl(demo_svg_snapshot()) drifted from the shipped .dsl.semio fixture");
 
-            let decoded = <SvgSnapshot as store::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode shipped .pack.semio fixture");
+            let decoded = <SvgSnapshot as store::ArtifactPack>::decode_pack(FIXTURE_PACK).await.expect("decode shipped .pack.semio fixture");
             assert_eq!(decoded, demo, "shipped .pack.semio fixture does not decode back to demo_svg_snapshot()");
             assert_eq!(store::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_svg_snapshot()) drifted from the shipped .pack.semio fixture");
         }

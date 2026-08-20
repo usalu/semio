@@ -62,7 +62,7 @@ impl ArtifactViewer for TsvViewer {
     async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))).await,
+            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }
@@ -72,7 +72,7 @@ impl ArtifactViewer for TsvViewer {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn create_tsv_viewer() -> semio_framework_plugin::AppDefinition {
     Viewer::builder(TSV_VIEWER_DIALECT)
-        .document(["semio", "stdio", "tsv"])
+        .await.document(["semio", "stdio", "tsv"])
         .icon_id("table-2")
         .mode_def(view::definition())
         .default_mode_id(view::TSV_VIEW_MODE_ID)

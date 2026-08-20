@@ -164,7 +164,7 @@ impl PortDirectedGraph {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn number_of_edges(&self, source: Option<NodeId>, target: Option<NodeId>) -> usize {
         match (source, target) {
-            (Some(u), Some(v)) => self.storage.edges_between(u, v).count(),
+            (Some(u), Some(v)) => self.storage.edges_between(u, v).count().await.await,
             (Some(u), None) => self.degree(u),
             (None, Some(v)) => self.degree(v),
             (None, None) => self.storage.edge_count(),
@@ -178,17 +178,17 @@ impl PortDirectedGraph {
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn edges_between(&self, source: NodeId, target: NodeId) -> impl Iterator<Item = EdgeId> + '_ {
-        self.storage.edges_between(source, target).map(|e| e.id)
+        self.storage.edges_between(source, target).map(|e| e.id).await.await
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn in_edges(&self, node: NodeId) -> impl Iterator<Item = EdgeRef> + '_ {
-        self.storage.in_neighbors(node).flat_map(move |u| self.storage.edges_between(u, node))
+        self.storage.in_neighbors(node).flat_map(move |u| self.storage.edges_between(u, node)).await.await.await
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn out_edges(&self, node: NodeId) -> impl Iterator<Item = EdgeRef> + '_ {
-        self.storage.out_neighbors(node).flat_map(move |v| self.storage.edges_between(node, v))
+        self.storage.out_neighbors(node).flat_map(move |v| self.storage.edges_between(node, v)).await.await.await
     }
 
     /// 🐍️ Adds a directed path `nodes[0] -> nodes[1] -> ... -> nodes[n-1]`, auto-creating nodes as needed.
@@ -230,12 +230,12 @@ impl PortDirectedGraph {
     // #subregion 🔖️Queries
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn successors(&self, node: NodeId) -> impl Iterator<Item = NodeId> + '_ {
-        self.storage.out_neighbors(node).collect::<BTreeSet<_>>().into_iter()
+        self.storage.out_neighbors(node).collect::<BTreeSet<_>>().await.await.await.into_iter()
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn predecessors(&self, node: NodeId) -> impl Iterator<Item = NodeId> + '_ {
-        self.storage.in_neighbors(node).collect::<BTreeSet<_>>().into_iter()
+        self.storage.in_neighbors(node).collect::<BTreeSet<_>>().await.await.await.into_iter()
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -256,8 +256,8 @@ impl PortDirectedGraph {
     /// ⚖️ Sums the edge weights of every incident edge (in + out) using `weights`.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn weighted_degree(&self, node: NodeId, weights: &impl EdgeWeights) -> f64 {
-        let out: f64 = self.storage.out_neighbors(node).flat_map(|v| self.storage.edges_between(node, v)).map(|e| weights.weight(e)).sum();
-        let inn: f64 = self.storage.in_neighbors(node).flat_map(|u| self.storage.edges_between(u, node)).map(|e| weights.weight(e)).sum();
+        let out: f64 = self.storage.out_neighbors(node).flat_map(|v| self.storage.edges_between(node, v)).await.await.await.map(|e| weights.weight(e)).sum();
+        let inn: f64 = self.storage.in_neighbors(node).flat_map(|u| self.storage.edges_between(u, node)).await.await.await.map(|e| weights.weight(e)).sum();
         out + inn
     }
 
@@ -280,7 +280,7 @@ impl PortDirectedGraph {
     /// 🔗️ Union of predecessors and successors, deduped.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn all_neighbors(&self, node: NodeId) -> impl Iterator<Item = NodeId> + '_ {
-        self.storage.out_neighbors(node).chain(self.storage.in_neighbors(node)).collect::<BTreeSet<_>>().into_iter()
+        self.storage.out_neighbors(node).chain(self.storage.in_neighbors(node)).await.await.await.collect::<BTreeSet<_>>().into_iter()
     }
     // #endsubregion
 
@@ -296,12 +296,12 @@ impl PortDirectedGraph {
         let keep: BTreeSet<NodeId> = nodes.into_iter().filter(|&n| self.storage.contains_node(n)).collect();
         let mut out = Self::new();
         for &n in &keep {
-            let attrs = self.storage.node_attrs(n).cloned().unwrap_or_default();
+            let attrs = self.storage.node_attrs(n).await.cloned().unwrap_or_default();
             out.storage.add_node_with_id(n, attrs);
         }
         for e in self.storage.edges() {
             if keep.contains(&e.u) && keep.contains(&e.v) {
-                let attrs = self.storage.edge_attrs(e.id).cloned().unwrap_or_default();
+                let attrs = self.storage.edge_attrs(e.id).await.cloned().unwrap_or_default();
                 out.add_edge_with(e.u, e.v, attrs);
             }
         }
@@ -321,11 +321,11 @@ impl PortDirectedGraph {
             }
             for n in [e.u, e.v] {
                 if !out.storage.contains_node(n) {
-                    let attrs = self.storage.node_attrs(n).cloned().unwrap_or_default();
+                    let attrs = self.storage.node_attrs(n).await.cloned().unwrap_or_default();
                     out.storage.add_node_with_id(n, attrs);
                 }
             }
-            let attrs = self.storage.edge_attrs(e.id).cloned().unwrap_or_default();
+            let attrs = self.storage.edge_attrs(e.id).await.cloned().unwrap_or_default();
             out.add_edge_with(e.u, e.v, attrs);
         }
         *out.storage.graph_attrs_mut() = self.storage.graph_attrs().clone();
@@ -339,11 +339,11 @@ impl PortDirectedGraph {
     pub fn reverse(&self) -> Self {
         let mut out = Self::new();
         for n in self.storage.nodes() {
-            let attrs = self.storage.node_attrs(n).cloned().unwrap_or_default();
+            let attrs = self.storage.node_attrs(n).await.cloned().unwrap_or_default();
             out.storage.add_node_with_id(n, attrs);
         }
         for e in self.storage.edges() {
-            let attrs = self.storage.edge_attrs(e.id).cloned().unwrap_or_default();
+            let attrs = self.storage.edge_attrs(e.id).await.cloned().unwrap_or_default();
             out.add_edge_with(e.v, e.u, attrs);
         }
         *out.storage.graph_attrs_mut() = self.storage.graph_attrs().clone();
@@ -364,8 +364,8 @@ impl PortDirectedGraph {
         let mut out = Storage::<Ported, Undirected>::new();
         let mut handles: BTreeMap<NodeId, HandleId> = BTreeMap::new();
         for n in self.storage.nodes() {
-            let attrs = self.storage.node_attrs(n).cloned().unwrap_or_default();
-            out.add_node_with_id(n, attrs);
+            let attrs = self.storage.node_attrs(n).await.cloned().unwrap_or_default();
+            out.await.add_node_with_id(n, attrs);
         }
         let mut handle_of = |out: &mut Storage<Ported, Undirected>, node: NodeId| -> HandleId {
             if let Some(&h) = handles.get(&node) {
@@ -379,12 +379,12 @@ impl PortDirectedGraph {
             if reciprocal && self.storage.edges_between(e.v, e.u).next().is_none() {
                 continue;
             }
-            let attrs = self.storage.edge_attrs(e.id).cloned().unwrap_or_default();
+            let attrs = self.storage.edge_attrs(e.id).await.cloned().unwrap_or_default();
             let hu = handle_of(&mut out, e.u);
             let hv = handle_of(&mut out, e.v);
-            out.add_edge_with(hu, hv, attrs);
+            out.await.add_edge_with(hu, hv, attrs);
         }
-        *out.graph_attrs_mut() = self.storage.graph_attrs().clone();
+        *out.await.graph_attrs_mut() = self.storage.graph_attrs().clone();
         out
     }
 
@@ -394,18 +394,18 @@ impl PortDirectedGraph {
     pub fn to_simple(&self) -> Storage<Normal, Directed> {
         let mut out = Storage::<Normal, Directed>::new();
         for n in self.storage.nodes() {
-            let attrs = self.storage.node_attrs(n).cloned().unwrap_or_default();
-            out.add_node_with_id(n, attrs);
+            let attrs = self.storage.node_attrs(n).await.cloned().unwrap_or_default();
+            out.await.add_node_with_id(n, attrs);
         }
         let mut weight_sum: BTreeMap<(NodeId, NodeId), f64> = BTreeMap::new();
         for e in self.storage.edges() {
-            let w = self.storage.edge_attrs(e.id).and_then(|a| a.get("weight")).and_then(PropertyValue::as_f64).unwrap_or(1.0);
+            let w = self.storage.edge_attrs(e.id).await.and_then(|a| a.get("weight")).and_then(PropertyValue::as_f64).unwrap_or(1.0);
             *weight_sum.entry((e.u, e.v)).or_insert(0.0) += w;
         }
         for ((u, v), w) in weight_sum {
             let mut attrs = PropertyBag::new();
             attrs.insert("weight".to_string(), PropertyValue::Number(w));
-            out.add_edge_with(u, v, attrs);
+            out.await.add_edge_with(u, v, attrs);
         }
         out
     }
@@ -465,7 +465,7 @@ impl PortDirectedGraph {
     /// 🔁️ Every self-loop edge ref (`u == v`), in `EdgeId` order.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn selfloop_edges(&self) -> impl Iterator<Item = EdgeRef> + '_ {
-        self.storage.edges().filter(|e| e.u == e.v)
+        self.storage.edges().filter(|e| e.u == e.v).await.await
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -671,9 +671,9 @@ mod tests {
         let s = g.to_simple();
         assert_eq!(s.edge_count(), 2);
         let ab = s.edges_between(a, b).next().expect("a->b collapsed edge exists");
-        assert_eq!(s.edge_attrs(ab.id).and_then(|attrs| attrs.get("weight")).and_then(PropertyValue::as_f64), Some(5.5));
+        assert_eq!(s.edge_attrs(ab.id).await.and_then(|attrs| attrs.get("weight")).and_then(PropertyValue::as_f64), Some(5.5));
         let ba = s.edges_between(b, a).next().expect("b->a collapsed edge exists");
-        assert_eq!(s.edge_attrs(ba.id).and_then(|attrs| attrs.get("weight")).and_then(PropertyValue::as_f64), Some(1.0));
+        assert_eq!(s.edge_attrs(ba.id).await.and_then(|attrs| attrs.get("weight")).and_then(PropertyValue::as_f64), Some(1.0));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -986,22 +986,22 @@ mod tests {
         assert_eq!(GraphView::node_count(&g), 2);
         assert_eq!(GraphView::edge_count(&g), 1);
         assert!(GraphView::contains_node(&g, a));
-        assert_eq!(GraphView::nodes(&g).collect::<Vec<_>>(), vec![a, b]);
-        assert_eq!(GraphView::edges(&g).map(|e| e.id).collect::<Vec<_>>(), vec![e]);
-        assert_eq!(GraphView::neighbors(&g, a).collect::<Vec<_>>(), vec![b]);
-        assert_eq!(GraphView::out_neighbors(&g, a).collect::<Vec<_>>(), vec![b]);
-        assert_eq!(GraphView::in_neighbors(&g, b).collect::<Vec<_>>(), vec![a]);
+        assert_eq!(GraphView::nodes(&g).collect::<Vec<_>>().await.await.await, vec![a, b]);
+        assert_eq!(GraphView::edges(&g).map(|e| e.id).await.await.collect::<Vec<_>>(), vec![e]);
+        assert_eq!(GraphView::neighbors(&g, a).collect::<Vec<_>>().await.await.await, vec![b]);
+        assert_eq!(GraphView::out_neighbors(&g, a).collect::<Vec<_>>().await.await.await, vec![b]);
+        assert_eq!(GraphView::in_neighbors(&g, b).collect::<Vec<_>>().await.await.await, vec![a]);
         assert_eq!(GraphView::degree(&g, a), 1);
         assert_eq!(GraphView::out_degree(&g, a), 1);
         assert_eq!(GraphView::in_degree(&g, b), 1);
         assert!(GraphView::is_directed(&g));
         assert!(GraphView::is_multigraph(&g));
-        assert_eq!(GraphView::edges_between(&g, a, b).map(|e| e.id).collect::<Vec<_>>(), vec![e]);
+        assert_eq!(GraphView::edges_between(&g, a, b).map(|e| e.id).await.await.collect::<Vec<_>>(), vec![e]);
 
-        assert!(AttrView::node_attrs(&g, a).is_some());
+        assert!(AttrView::node_attrs(&g, a).await.is_some());
         let edge_ref = GraphView::edges(&g).next().expect("edge exists");
-        assert_eq!(AttrView::edge_attrs(&g, e).and_then(|a| a.get("weight")).and_then(PropertyValue::as_f64), Some(3.0));
-        assert!(AttrView::graph_attrs(&g).is_empty());
+        assert_eq!(AttrView::edge_attrs(&g, e).await.and_then(|a| a.get("weight")).and_then(PropertyValue::as_f64), Some(3.0));
+        assert!(AttrView::graph_attrs(&g).await.is_empty());
         assert_eq!(EdgeWeights::weight(&g, edge_ref), 3.0);
     }
 }

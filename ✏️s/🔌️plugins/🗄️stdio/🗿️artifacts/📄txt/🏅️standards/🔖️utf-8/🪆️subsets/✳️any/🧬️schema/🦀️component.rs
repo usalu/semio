@@ -253,7 +253,7 @@ pub fn empty_txt_snapshot() -> TxtSnapshot {
 /// same pattern as `note::semio_example_snapshot`/`csv::demo_csv_snapshot`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn demo_txt_snapshot() -> TxtSnapshot {
-    <TxtSnapshot as store::ArtifactDsl>::parse_dsl(crate::artifacts::txt::examples::demo::PRIMARY_TEXT).unwrap_or_else(|_| empty_txt_snapshot())
+    <TxtSnapshot as store::ArtifactDsl>::parse_dsl(crate::artifacts::txt::examples::demo::PRIMARY_TEXT).await.unwrap_or_else(|_| empty_txt_snapshot())
 }
 //#endregion 🔖️DocumentHelpers
 
@@ -286,10 +286,10 @@ mod tests {
     async fn codec_round_trip() {
         let snap = empty_txt_snapshot();
         let text = store::ArtifactDsl::print_dsl(&snap);
-        let parsed = <TxtSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
+        let parsed = <TxtSnapshot as store::ArtifactDsl>::parse_dsl(&text).await.expect("parse");
         assert_eq!(parsed.schema, snap.schema);
         let bytes = store::ArtifactPack::encode_pack(&snap);
-        let decoded = <TxtSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+        let decoded = <TxtSnapshot as store::ArtifactPack>::decode_pack(&bytes).await.expect("decode");
         assert_eq!(decoded, snap);
     }
 
@@ -299,10 +299,10 @@ mod tests {
         let snap = TxtSnapshot::from_body(&body);
         assert_eq!(snap.to_body(), body);
         let dsl_text = store::ArtifactDsl::print_dsl(&snap);
-        let parsed = <TxtSnapshot as store::ArtifactDsl>::parse_dsl(&dsl_text).expect("parse");
+        let parsed = <TxtSnapshot as store::ArtifactDsl>::parse_dsl(&dsl_text).await.expect("parse");
         assert_eq!(parsed.to_body(), body);
         let bytes = store::ArtifactPack::encode_pack(&snap);
-        let decoded = <TxtSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+        let decoded = <TxtSnapshot as store::ArtifactPack>::decode_pack(&bytes).await.expect("decode");
         assert_eq!(decoded.to_body(), body);
     }
 
@@ -319,13 +319,13 @@ mod tests {
             let snap = TxtSnapshot::from_body(body);
             assert_eq!(snap.to_body(), body, "to_body/from_body mismatch for {body:?}");
             let bytes = store::ArtifactPack::encode_pack(&snap);
-            let decoded = <TxtSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+            let decoded = <TxtSnapshot as store::ArtifactPack>::decode_pack(&bytes).await.expect("decode");
             assert_eq!(decoded, snap, "pack round-trip mismatch for {body:?}");
         }
         for body in ["a\nb\nc\n", "a\r\nb\r\nc", "just one line, no newline"] {
             let snap = TxtSnapshot::from_body(body);
             let dsl_text = store::ArtifactDsl::print_dsl(&snap);
-            let parsed = <TxtSnapshot as store::ArtifactDsl>::parse_dsl(&dsl_text).expect("parse");
+            let parsed = <TxtSnapshot as store::ArtifactDsl>::parse_dsl(&dsl_text).await.expect("parse");
             assert_eq!(parsed, snap, "dsl round-trip mismatch for {body:?}");
         }
     }
@@ -376,14 +376,14 @@ mod tests {
         let ba = TxtDiff::between(&b, &a);
         assert_eq!(ba.apply(&b).unwrap(), a, "between(b,a).apply(b) must equal a");
 
-        assert!(ab.trailing_newline.is_some(), "trailing_newline must be Some in a sweep diff");
-        assert!(ab.line_ending.is_some(), "line_ending must be Some in a sweep diff");
+        assert!(ab.await.trailing_newline.is_some(), "trailing_newline must be Some in a sweep diff");
+        assert!(ab.await.line_ending.is_some(), "line_ending must be Some in a sweep diff");
 
-        let ab_lines = ab.lines.as_ref().expect("lines diff must be Some in a sweep diff");
+        let ab_lines = ab.await.lines.as_ref().expect("lines diff must be Some in a sweep diff");
         assert!(!ab_lines.modified.is_empty(), "a->b sweep must exercise a modified line");
         assert!(!ab_lines.added.is_empty(), "a->b sweep must exercise an added line (b is longer)");
 
-        let ba_lines = ba.lines.as_ref().expect("reverse lines diff must be Some in a sweep diff");
+        let ba_lines = ba.await.lines.as_ref().expect("reverse lines diff must be Some in a sweep diff");
         assert!(!ba_lines.modified.is_empty(), "b->a sweep must exercise a modified line");
         assert!(!ba_lines.removed.is_empty(), "b->a sweep must exercise a removed line (a is shorter)");
 
@@ -430,7 +430,7 @@ mod tests {
 
         // Spr (mutations binary facet) — a real, non-trivial mutation.
         let mutation = TxtMutation::InsertLine { index: 1, text: "x".into() };
-        let op_bytes = <TxtMutation as protocol::OpBinary>::encode_op(&mutation).expect("encode_op");
+        let op_bytes = <TxtMutation as protocol::OpBinary>::encode_op(&mutation).await.expect("encode_op");
         let spr_protocol = dsl::parse_protocol(crate::artifacts::txt::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
         let trace = dsl::walk_protocol(&spr_protocol, &op_bytes).expect("walk mutations protocol");
         assert_eq!(trace.consumed, op_bytes.len(), "mutations protocol must consume the whole op frame");
@@ -438,7 +438,7 @@ mod tests {
         // Diff binary facet.
         let mut before = snap.clone();
         let diff = crate::artifacts::txt::schema::mutations::apply_txt_mutation(&mut before, &mutation);
-        let diff_bytes = <TxtDiff as protocol::DiffCodec>::encode_diff(diff.diff()).expect("encode_diff");
+        let diff_bytes = <TxtDiff as protocol::DiffCodec>::encode_diff(diff.diff().await).await.expect("encode_diff");
         let diff_protocol = dsl::parse_protocol(crate::artifacts::txt::schema::diff::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse diff protocol");
         let trace = dsl::walk_protocol(&diff_protocol, &diff_bytes).expect("walk diff protocol");
         assert_eq!(trace.consumed, diff_bytes.len(), "diff protocol must consume the whole diff frame (32-byte header + opaque .spk tail)");
@@ -450,15 +450,15 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn fixture_honesty_law() {
         let demo = demo_txt_snapshot();
-        assert_eq!(<TxtSnapshot as store::ArtifactDsl>::parse_dsl(crate::artifacts::txt::examples::demo::PRIMARY_TEXT).unwrap(), demo);
+        assert_eq!(<TxtSnapshot as store::ArtifactDsl>::parse_dsl(crate::artifacts::txt::examples::demo::PRIMARY_TEXT).await.unwrap(), demo);
         assert_eq!(<TxtSnapshot as store::ArtifactDsl>::print_dsl(&demo), crate::artifacts::txt::examples::demo::PRIMARY_TEXT);
 
-        assert_eq!(<TxtSnapshot as store::ArtifactPack>::decode_pack(crate::artifacts::txt::examples::demo::PACK_BYTES).unwrap(), demo);
+        assert_eq!(<TxtSnapshot as store::ArtifactPack>::decode_pack(crate::artifacts::txt::examples::demo::PACK_BYTES).await.unwrap(), demo);
         assert_eq!(<TxtSnapshot as store::ArtifactPack>::encode_pack(&demo), crate::artifacts::txt::examples::demo::PACK_BYTES.to_vec());
 
         let mutation = TxtMutation::InsertLine { index: 1, text: "x".into() };
-        assert_eq!(<TxtMutation as protocol::OpBinary>::encode_op(&mutation).unwrap(), crate::artifacts::txt::examples::demo::SPR_BYTES.to_vec());
-        assert_eq!(<TxtMutation as protocol::OpBinary>::decode_op(crate::artifacts::txt::examples::demo::SPR_BYTES).unwrap(), mutation);
+        assert_eq!(<TxtMutation as protocol::OpBinary>::encode_op(&mutation).await.unwrap(), crate::artifacts::txt::examples::demo::SPR_BYTES.to_vec());
+        assert_eq!(<TxtMutation as protocol::OpBinary>::decode_op(crate::artifacts::txt::examples::demo::SPR_BYTES).await.unwrap(), mutation);
     }
 
     /// 🧪️ P2-P3: every committed grammar/protocol file for this standard genuinely parses under

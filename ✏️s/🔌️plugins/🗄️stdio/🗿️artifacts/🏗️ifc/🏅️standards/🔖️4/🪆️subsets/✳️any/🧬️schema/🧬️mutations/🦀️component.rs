@@ -120,7 +120,7 @@ impl Mutation<IfcSnapshot> for IfcMutation {
             IfcMutation::SetEntityArg { id, index, value } => diff::diff_set_entity_arg(*id, *index, value.clone()),
             IfcMutation::InsertEntityArg { id, index, value } => diff::diff_insert_entity_arg(*id, *index, value.clone()),
             IfcMutation::RemoveEntityArg { id, index } => diff::diff_remove_entity_arg(*id, *index),
-        })
+        }).await
     }
 
     /// ↩️ Handcrafted, key-aware mutation-level inverses. Entity/arg-targeted variants look the
@@ -431,14 +431,14 @@ mod tests {
     async fn missing_entity_target_is_rejected_before_mutation() {
         let base = IfcSnapshot::default();
         let diff = IfcDiff { entities: Some(IfcEntitiesDiff { removed: vec![1], ..Default::default() }), ..Default::default() };
-        let error = diff.apply(&base).expect_err("missing entity target must be rejected");
+        let error = diff.apply(&base).await.expect_err("missing entity target must be rejected");
         assert_eq!(error.code, "invalid-remove-target");
         assert_eq!(error.target, vec!["entities", "1"]);
         assert_eq!(base, IfcSnapshot::default());
     }
 
     //#region Fixtures
-    async fn entity(id: u64, name: &str, args: Vec<IfcValue>) -> IfcEntity {
+    fn entity(id: u64, name: &str, args: Vec<IfcValue>) -> IfcEntity {
         IfcEntity { id, name: name.into(), args, complex: vec![] }
     }
 
@@ -461,7 +461,7 @@ mod tests {
         let mut applied_snapshot = base.clone();
         let returned_diff = apply_ifc_mutation(&mut applied_snapshot, &mutation);
         assert_eq!(returned_diff, expected_diff, "apply_ifc_mutation must return mutation.diff(base) for {mutation:?}");
-        assert_eq!(expected_diff.diff().apply(base).expect("valid mutation diff"), applied_snapshot, "diff.diff().apply(base) must equal the imperative mutation result for {mutation:?}");
+        assert_eq!(expected_diff.await.diff().apply(base).expect("valid mutation diff"), applied_snapshot, "diff.diff().apply(base) must equal the imperative mutation result for {mutation:?}");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -506,8 +506,8 @@ mod tests {
             assert_eq!(snap, base, "mutation-level inverse must restore base for {m:?}");
 
             let d = m.diff(&base);
-            let mutated = d.diff().apply(&base).expect("valid forward diff");
-            let inv_d = d.diff().inverse(&base);
+            let mutated = d.await.diff().apply(&base).expect("valid forward diff");
+            let inv_d = d.await.diff().inverse(&base);
             assert_eq!(inv_d.apply(&mutated).expect("valid inverse diff"), base, "diff-level inverse must restore base for {m:?}");
         }
     }
@@ -516,12 +516,12 @@ mod tests {
     //#region 🔖️absorb_law
     async fn assert_absorb_law(base: &IfcSnapshot, m1: IfcMutation, m2: IfcMutation) {
         let d1 = m1.diff(base);
-        let mid = d1.diff().apply(base).expect("valid first diff");
+        let mid = d1.await.diff().apply(base).expect("valid first diff");
         let d2 = m2.diff(&mid);
-        let sequential = d2.diff().apply(&mid).expect("valid second diff");
+        let sequential = d2.await.diff().apply(&mid).expect("valid second diff");
 
-        let mut merged = d1.diff().clone();
-        merged.absorb(d2.diff().clone());
+        let mut merged = d1.await.diff().clone();
+        merged.absorb(d2.await.diff().clone());
         assert_eq!(merged.apply(base).expect("valid absorbed diff"), sequential, "absorb(d1,d2).apply(base) must equal sequential application for {m1:?} + {m2:?}");
     }
 
@@ -556,22 +556,22 @@ mod tests {
     async fn absorb_law_associativity() {
         let base = base_snapshot();
         let d1 = IfcMutation::SetFileDescription { values: vec![IfcValue::String("one".into())] }.diff(&base);
-        let mid1 = d1.diff().apply(&base).expect("valid first diff");
+        let mid1 = d1.await.diff().apply(&base).expect("valid first diff");
         let d2 = IfcMutation::InsertEntity { index: 0, entity: entity(100, "IFCSITE", vec![]) }.diff(&mid1);
-        let mid2 = d2.diff().apply(&mid1).expect("valid second diff");
+        let mid2 = d2.await.diff().apply(&mid1).expect("valid second diff");
         let d3 = IfcMutation::SetEntityName { id: 100, name: "IFCBUILDING".into() }.diff(&mid2);
 
-        let mut left = d1.diff().clone();
-        left.absorb(d2.diff().clone());
-        left.absorb(d3.diff().clone());
+        let mut left = d1.await.diff().clone();
+        left.absorb(d2.await.diff().clone());
+        left.absorb(d3.await.diff().clone());
 
-        let mut d23 = d2.diff().clone();
-        d23.absorb(d3.diff().clone());
-        let mut right = d1.diff().clone();
+        let mut d23 = d2.await.diff().clone();
+        d23.absorb(d3.await.diff().clone());
+        let mut right = d1.await.diff().clone();
         right.absorb(d23);
 
         assert_eq!(left.apply(&base).expect("valid left diff"), right.apply(&base).expect("valid right diff"), "absorb must associate");
-        assert_eq!(left.apply(&base).expect("valid associated diff"), d3.diff().apply(&mid2).expect("valid third diff"), "associated absorb must match full sequential application");
+        assert_eq!(left.apply(&base).expect("valid associated diff"), d3.await.diff().apply(&mid2).expect("valid third diff"), "associated absorb must match full sequential application");
     }
     //#endregion 🔖️absorb_law
 
@@ -580,10 +580,10 @@ mod tests {
     async fn between_roundtrip_law() {
         let a = base_snapshot();
         let mut b = base_snapshot();
-        b.header.file_name = vec![IfcValue::String("changed.ifc".into())];
-        b.entities.remove(0); // remove IFCPROJECT (id 1)
-        b.entities[0].name = "IFCOWNERHISTORY2".into(); // modify id 2 (now index 0)
-        b.entities.push(entity(200, "IFCBUILDINGSTOREY", vec![IfcValue::Real(3.0)])); // add id 200
+        b.await.header.file_name = vec![IfcValue::String("changed.ifc".into())];
+        b.await.entities.remove(0); // remove IFCPROJECT (id 1)
+        b.await.entities[0].name = "IFCOWNERHISTORY2".into(); // modify id 2 (now index 0)
+        b.await.entities.push(entity(200, "IFCBUILDINGSTOREY", vec![IfcValue::Real(3.0)])); // add id 200
 
         let d = IfcDiff::between(&a, &b);
         assert_eq!(d.apply(&a).expect("valid forward diff"), b, "between(a,b).apply(a) must equal b");
@@ -603,9 +603,9 @@ mod tests {
             // fall back to a synthetic document so this law still exercises decode->encode->decode.
             Err(_) => store::ArtifactDsl::print_dsl(&base_snapshot()),
         };
-        let decoded = <IfcSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse fixture");
+        let decoded = <IfcSnapshot as store::ArtifactDsl>::parse_dsl(&text).await.expect("parse fixture");
         let reencoded = store::ArtifactDsl::print_dsl(&decoded);
-        let redecoded = <IfcSnapshot as store::ArtifactDsl>::parse_dsl(&reencoded).expect("re-decode fixture");
+        let redecoded = <IfcSnapshot as store::ArtifactDsl>::parse_dsl(&reencoded).await.expect("re-decode fixture");
         assert_eq!(decoded.header, redecoded.header);
         assert_eq!(decoded.entities, redecoded.entities);
     }
@@ -661,11 +661,11 @@ mod tests {
         assert_eq!(backward.apply(&b).expect("valid backward diff"), a, "between(b,a).apply(b) must equal a");
         assert!(IfcDiff::between(&a, &a).is_empty(), "between(a,a) must be empty");
 
-        assert!(forward.file_description.is_some(), "file_description must be diffed");
-        assert!(forward.file_name.is_some(), "file_name must be diffed");
-        assert!(forward.file_schema.is_some(), "file_schema must be diffed");
+        assert!(forward.await.file_description.is_some(), "file_description must be diffed");
+        assert!(forward.await.file_name.is_some(), "file_name must be diffed");
+        assert!(forward.await.file_schema.is_some(), "file_schema must be diffed");
 
-        let ed: &IfcEntitiesDiff = forward.entities.as_ref().expect("entities diff must be present");
+        let ed: &IfcEntitiesDiff = forward.await.entities.as_ref().expect("entities diff must be present");
         assert_eq!(ed.removed, vec![1u64], "the removed entity (id 1) must be tracked");
         assert_eq!(ed.added.len(), 1, "exactly one entity must be added");
         assert_eq!(ed.added[0].entity.id, 300);
@@ -678,7 +678,7 @@ mod tests {
         assert!(!ad.modified.is_empty(), "an arg must be modified (index 0)");
         assert!(!ad.removed.is_empty(), "an arg must be removed (a is longer)");
 
-        let backward_ed = backward.entities.as_ref().expect("entities diff must be present");
+        let backward_ed = backward.await.entities.as_ref().expect("entities diff must be present");
         assert!(!backward_ed.added.is_empty(), "reverse direction must exercise an added entity (id 1 comes back)");
         let back_md = &backward_ed.modified[0].diff;
         let back_ad = back_md.args.as_ref().expect("args diff must be present");
@@ -692,10 +692,10 @@ mod tests {
         let mut snap = base.clone();
         let outcome = apply_ifc_mutation(&mut snap, &IfcMutation::SetEntityName { id: 404, name: "X".into() });
         assert_eq!(snap, base);
-        assert_eq!(outcome.messages()[0].target, vec!["entities", "404"]);
+        assert_eq!(outcome.await.messages()[0].target, vec!["entities", "404"]);
         let outcome = apply_ifc_mutation(&mut snap, &IfcMutation::RemoveEntityArg { id: 404, index: 0 });
         assert_eq!(snap, base);
-        assert_eq!(outcome.messages()[0].target, vec!["entities", "404"]);
+        assert_eq!(outcome.await.messages()[0].target, vec!["entities", "404"]);
     }
 
     //#region 🔖️op_text_binary_roundtrip_law
@@ -737,12 +737,12 @@ mod tests {
         ];
         for mutation in mutations {
             let printed = mutation.print_op();
-            assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
-            let parsed = IfcMutation::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
+            assert!(!printed.await.contains('\n'), "print_op must be one line, got {printed:?}");
+            let parsed = IfcMutation::parse_op(&printed).await.unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
             assert_eq!(parsed, mutation, "print_op/parse_op round-trip mismatch for {mutation:?} (printed {printed:?})");
 
-            let encoded = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op({mutation:?}) failed: {e}"));
-            let decoded = IfcMutation::decode_op(&encoded).unwrap_or_else(|e| panic!("decode_op failed: {e}"));
+            let encoded = mutation.encode_op().await.unwrap_or_else(|e| panic!("encode_op({mutation:?}) failed: {e}"));
+            let decoded = IfcMutation::decode_op(&encoded).await.unwrap_or_else(|e| panic!("decode_op failed: {e}"));
             assert_eq!(decoded, mutation, "encode_op/decode_op round-trip mismatch for {mutation:?}");
         }
     }

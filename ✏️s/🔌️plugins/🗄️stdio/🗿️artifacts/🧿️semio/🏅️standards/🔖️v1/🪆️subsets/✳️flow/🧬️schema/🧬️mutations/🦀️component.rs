@@ -93,7 +93,7 @@ pub enum SemioFlowMutation {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn apply_semio_flow_mutation(snapshot: &mut SemioFlowSnapshot, mutation: &SemioFlowMutation) -> protocol::MutationOutcome<SemioFlowDiff> {
     let outcome = Mutation::diff(mutation, snapshot);
-    outcome.apply_to(snapshot)
+    outcome.await.apply_to(snapshot)
 }
 //#endregion 🔖️Apply
 
@@ -131,7 +131,7 @@ impl Mutation<SemioFlowSnapshot> for SemioFlowMutation {
             SemioFlowMutation::RemoveEdge { id } => diff_remove_edge(id),
             SemioFlowMutation::SetEdgeEndpoints { id, from, to } => diff_set_edge_endpoints(id, from.clone(), to.clone()),
             SemioFlowMutation::SetEdgeKind { id, kind } => diff_set_edge_kind(id, kind),
-        })
+        }).await
     }
 
     async fn inverse(&self, base: &SemioFlowSnapshot) -> Vec<Self> {
@@ -375,7 +375,7 @@ mod tests {
         for mutation in demo_mutation_cases() {
             let base = fixture();
             let diff_direct = Mutation::diff(&mutation, &base);
-            let applied_via_diff = protocol::MutationDiff::apply(diff_direct.diff(), &base).expect("apply must succeed for a well-formed fixture");
+            let applied_via_diff = protocol::MutationDiff::apply(&diff_direct.await.diff().await, &base).expect("apply must succeed for a well-formed fixture");
 
             let mut via_apply = base.clone();
             let diff_from_apply = apply_semio_flow_mutation(&mut via_apply, &mutation);
@@ -400,8 +400,8 @@ mod tests {
             assert_eq!(round_tripped, base, "inverse_law (mutation-level) failed for {mutation:?}");
 
             let diff = Mutation::diff(&mutation, &base);
-            let next = protocol::MutationDiff::apply(diff.diff(), &base).expect("apply must succeed for a well-formed fixture");
-            let inverse_diff = DiffAlgebra::inverse(diff.diff(), &base);
+            let next = protocol::MutationDiff::apply(&diff.await.diff().await, &base).expect("apply must succeed for a well-formed fixture");
+            let inverse_diff = DiffAlgebra::inverse(&diff.await.diff().await, &base);
             let restored = protocol::MutationDiff::apply(&inverse_diff, &next).expect("apply must succeed for a well-formed fixture");
             assert_eq!(restored, base, "inverse_law (diff-level) failed for {mutation:?}");
         }
@@ -413,12 +413,12 @@ mod tests {
     async fn op_text_binary_roundtrip_law() {
         for mutation in demo_mutation_cases() {
             let printed = mutation.print_op();
-            assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
-            let parsed = SemioFlowMutation::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
+            assert!(!printed.await.contains('\n'), "print_op must be one line, got {printed:?}");
+            let parsed = SemioFlowMutation::parse_op(&printed).await.unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
             assert_eq!(parsed, mutation, "print_op/parse_op round-trip mismatch for {mutation:?} (printed {printed:?})");
 
-            let encoded = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op({mutation:?}) failed: {e}"));
-            let decoded = SemioFlowMutation::decode_op(&encoded).unwrap_or_else(|e| panic!("decode_op failed: {e}"));
+            let encoded = mutation.encode_op().await.unwrap_or_else(|e| panic!("encode_op({mutation:?}) failed: {e}"));
+            let decoded = SemioFlowMutation::decode_op(&encoded).await.unwrap_or_else(|e| panic!("decode_op failed: {e}"));
             assert_eq!(decoded, mutation, "encode_op/decode_op round-trip mismatch for {mutation:?}");
         }
     }

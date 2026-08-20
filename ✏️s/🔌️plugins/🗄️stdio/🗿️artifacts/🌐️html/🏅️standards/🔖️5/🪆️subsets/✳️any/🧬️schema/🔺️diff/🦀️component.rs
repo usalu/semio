@@ -192,7 +192,7 @@ fn validate_html_node(base: &HtmlNode, diff: &HtmlNodeDiff) -> MutationApplyResu
         HtmlNodeDiff::RawText { .. } if matches!(base, HtmlNode::RawText { .. }) => Ok(()),
         HtmlNodeDiff::Element(element) => {
             let HtmlNode::Element { attributes, children, .. } = base else {
-                return Err(MutationApplyError::new("mutation.apply.conflicting-target", "element diff targets a non-element node").at(["root"]));
+                return Err(MutationApplyError::new("mutation.apply.conflicting-target", "element diff targets a non-element node").await.at(["root"]));
             };
             if let Some(attrs) = &element.attributes {
                 validate_html_attributes(attributes, attrs)?;
@@ -202,7 +202,7 @@ fn validate_html_node(base: &HtmlNode, diff: &HtmlNodeDiff) -> MutationApplyResu
             }
             Ok(())
         }
-        _ => Err(MutationApplyError::new("mutation.apply.conflicting-target", "node diff kind does not match its target").at(["root"])),
+        _ => Err(MutationApplyError::new("mutation.apply.conflicting-target", "node diff kind does not match its target").await.at(["root"])),
     }
 }
 
@@ -211,20 +211,20 @@ fn validate_html_attributes(base: &[HtmlAttr], diff: &HtmlAttributesDiff) -> Mut
     let mut removed = std::collections::HashSet::new();
     for name in &diff.removed {
         if base.iter().all(|attr| &attr.name != name) || !removed.insert(name) {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "removed attribute does not exist or is duplicated").at(["attributes", "removed"]));
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "removed attribute does not exist or is duplicated").await.at(["attributes", "removed"]));
         }
     }
     let mut modified = std::collections::HashSet::new();
     for entry in &diff.modified {
         if base.iter().all(|attr| attr.name != entry.name) || !modified.insert(&entry.name) || removed.contains(&entry.name) {
-            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "modified attribute is missing, duplicated, or removed").at(["attributes", "modified"]));
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "modified attribute is missing, duplicated, or removed").await.at(["attributes", "modified"]));
         }
     }
     let final_len = base.len().saturating_sub(diff.removed.len()).saturating_add(diff.added.len());
     let mut added_names = std::collections::HashSet::new();
     for entry in &diff.added {
         if entry.index > final_len || !added_names.insert(&entry.name) || base.iter().any(|attr| attr.name == entry.name) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "added attribute identity conflicts with the target state").at(["attributes", "added"]));
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "added attribute identity conflicts with the target state").await.at(["attributes", "added"]));
         }
     }
     Ok(())
@@ -235,13 +235,13 @@ fn validate_html_children(base: &[HtmlNode], diff: &HtmlChildrenDiff) -> Mutatio
     let mut removed = std::collections::HashSet::new();
     for &index in &diff.removed {
         if index >= base.len() || !removed.insert(index) {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "removed child is missing or duplicated").at(["children", "removed"]));
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "removed child is missing or duplicated").await.at(["children", "removed"]));
         }
     }
     let mut modified = std::collections::HashSet::new();
     for entry in &diff.modified {
         if entry.index >= base.len() || !modified.insert(entry.index) || removed.contains(&entry.index) {
-            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "modified child is missing, duplicated, or removed").at(["children", "modified"]));
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "modified child is missing, duplicated, or removed").await.at(["children", "modified"]));
         }
         Box::pin(validate_html_node(&base[entry.index], &entry.diff))?;
     }
@@ -249,7 +249,7 @@ fn validate_html_children(base: &[HtmlNode], diff: &HtmlChildrenDiff) -> Mutatio
     let mut indexes = std::collections::HashSet::new();
     for entry in &diff.added {
         if entry.index > final_len || !indexes.insert(entry.index) {
-            return Err(MutationApplyError::new("mutation.apply.invalid-index", "added child index is invalid or duplicated").at(["children", "added"]));
+            return Err(MutationApplyError::new("mutation.apply.invalid-index", "added child index is invalid or duplicated").await.at(["children", "added"]));
         }
     }
     Ok(())
@@ -1037,15 +1037,15 @@ mod handcrafted_diff_codec_tests {
         );
         let c = snapshot(None, HtmlNode::Text { text: "root-replaced".into() });
 
-        let cases = vec![HtmlDiff::default(), HtmlDiff::between(&a, &b), HtmlDiff::between(&b, &a), HtmlDiff::between(&a, &c), HtmlDiff::between(&c, &a)];
+        let cases = vec![HtmlDiff::default(), HtmlDiff::between(&a, &b).await, HtmlDiff::between(&b, &a).await, HtmlDiff::between(&a, &c).await, HtmlDiff::between(&c, &a)];
         for d in cases {
             let printed = d.print_diff();
             assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
-            let parsed = HtmlDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
+            let parsed = HtmlDiff::parse_diff(&printed).await.unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
             assert_eq!(parsed, d, "print_diff/parse_diff round-trip mismatch (printed {printed:?})");
 
             let encoded = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
-            let decoded = HtmlDiff::decode_diff(&encoded).unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
+            let decoded = HtmlDiff::decode_diff(&encoded).await.unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
             assert_eq!(decoded, d, "encode_diff/decode_diff round-trip mismatch");
         }
     }

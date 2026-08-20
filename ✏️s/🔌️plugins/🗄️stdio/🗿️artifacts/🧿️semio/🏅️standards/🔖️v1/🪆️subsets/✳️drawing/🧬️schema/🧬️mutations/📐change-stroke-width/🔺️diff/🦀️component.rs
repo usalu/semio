@@ -20,7 +20,7 @@ pub fn diff(payload: &ChangeStrokeWidth, base: &SemioDrawingSnapshot) -> protoco
         }
     }
     if old.stroke_width == payload.new_width {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Style \"{}\" already has that stroke width.", payload.style_name));
+        return protocol::MutationOutcome::empty().await.warn("mutation.no-op", format!("Style \"{}\" already has that stroke width.", payload.style_name));
     }
     protocol::MutationOutcome::new(SemioDrawingDiff {
         canvas: None,

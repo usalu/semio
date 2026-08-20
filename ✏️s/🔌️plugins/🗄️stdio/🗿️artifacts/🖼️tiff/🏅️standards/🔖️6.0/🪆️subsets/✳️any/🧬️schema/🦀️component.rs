@@ -283,7 +283,7 @@ pub fn demo_tiff_snapshot() -> TiffSnapshot {
         }],
         pixels,
     };
-    let encoded = encode_tiff(&seed).expect("demo_tiff_snapshot: encode must succeed");
-    decode_tiff(&encoded).expect("demo_tiff_snapshot: decode must succeed")
+    let encoded = encode_tiff(&seed).await.expect("demo_tiff_snapshot: encode must succeed");
+    decode_tiff(&encoded).await.expect("demo_tiff_snapshot: decode must succeed")
 }
 //#endregion 🔖️DocumentHelpers

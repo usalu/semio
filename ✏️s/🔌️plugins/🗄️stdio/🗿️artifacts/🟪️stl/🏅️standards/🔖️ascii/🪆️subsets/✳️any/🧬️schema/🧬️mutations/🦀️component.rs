@@ -88,7 +88,7 @@ impl Mutation<StlSnapshot> for StlMutation {
             StlMutation::RemoveTriangle { index } => diff::diff_remove_triangle(*index),
             StlMutation::SetTriangleNormal { index, normal } => diff::diff_set_triangle_normal(*index, *normal),
             StlMutation::SetTriangleVertices { index, vertices } => diff::diff_set_triangle_vertices(*index, *vertices),
-        })
+        }).await
     }
 
     /// ↩️ Handcrafted, index-aware mutation-level inverses. Index-targeted variants look the
@@ -304,7 +304,7 @@ impl OpBinary for StlMutation {
 /// conformance_law`/`protocol_walk_law` (same reuse pattern `binary`'s own `demo_mutation_cases`
 /// establishes).
 #[cfg(test)]
-pub(crate) async fn demo_mutation_cases() -> Vec<StlMutation> {
+pub(crate) fn demo_mutation_cases() -> Vec<StlMutation> {
     let base = StlSnapshot { schema: crate::artifacts::stl::STDIO_STL_DOCUMENT_SCHEMA.into(), solid_name: "mesh".into(), triangles: vec![StlTriangle { normal: [0.0, 0.0, 1.0], vertices: [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]] }] };
     vec![
         StlMutation::NoMutation,
@@ -327,7 +327,7 @@ mod tests {
     use protocol::{DiffCodec, MutationDiff};
 
     //#region Fixtures
-    async fn tri(nx: f64, ny: f64, nz: f64, seed: f64) -> StlTriangle {
+    fn tri(nx: f64, ny: f64, nz: f64, seed: f64) -> StlTriangle {
         StlTriangle { normal: [nx, ny, nz], vertices: [[seed, 0.0, 0.0], [seed + 1.0, 0.0, 0.0], [seed, 1.0, 0.0]] }
     }
 
@@ -342,7 +342,7 @@ mod tests {
         let mut applied_snapshot = base.clone();
         let returned_diff = apply_stl_mutation(&mut applied_snapshot, &mutation);
         assert_eq!(returned_diff, expected_diff, "apply_stl_mutation must return mutation.diff(base) for {mutation:?}");
-        assert_eq!(expected_diff.diff().apply(base).expect("valid mutation diff"), applied_snapshot, "diff.diff().apply(base) must equal the imperative mutation result for {mutation:?}");
+        assert_eq!(expected_diff.await.diff().apply(base).expect("valid mutation diff"), applied_snapshot, "diff.diff().apply(base) must equal the imperative mutation result for {mutation:?}");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -383,8 +383,8 @@ mod tests {
 
             // Diff-level round trip.
             let d = m.diff(&base);
-            let mutated = d.diff().apply(&base).expect("valid forward diff");
-            let inv_d = d.diff().inverse(&base);
+            let mutated = d.await.diff().apply(&base).expect("valid forward diff");
+            let inv_d = d.await.diff().inverse(&base);
             assert_eq!(inv_d.apply(&mutated).expect("valid inverse diff"), base, "diff-level inverse must restore base for {m:?}");
         }
     }
@@ -393,12 +393,12 @@ mod tests {
     //#region 🔖️absorb_law
     async fn assert_absorb_law(base: &StlSnapshot, m1: StlMutation, m2: StlMutation) {
         let d1 = m1.diff(base);
-        let mid = d1.diff().apply(base).expect("valid first diff");
+        let mid = d1.await.diff().apply(base).expect("valid first diff");
         let d2 = m2.diff(&mid);
-        let sequential = d2.diff().apply(&mid).expect("valid second diff");
+        let sequential = d2.await.diff().apply(&mid).expect("valid second diff");
 
-        let mut merged = d1.diff().clone();
-        merged.absorb(d2.diff().clone());
+        let mut merged = d1.await.diff().clone();
+        merged.absorb(d2.await.diff().clone());
         assert_eq!(merged.apply(base).expect("valid absorbed diff"), sequential, "absorb(d1,d2).apply(base) must equal sequential application for {m1:?} + {m2:?}");
     }
 
@@ -433,24 +433,24 @@ mod tests {
     async fn absorb_law_associativity() {
         let base = base_snapshot();
         let d1 = StlMutation::SetSolidName { name: "one".into() }.diff(&base);
-        let mid1 = d1.diff().apply(&base).expect("valid first diff");
+        let mid1 = d1.await.diff().apply(&base).expect("valid first diff");
         let d2 = StlMutation::InsertTriangle { index: 0, triangle: tri(1.0, 0.0, 0.0, 50.0) }.diff(&mid1);
-        let mid2 = d2.diff().apply(&mid1).expect("valid second diff");
+        let mid2 = d2.await.diff().apply(&mid1).expect("valid second diff");
         let d3 = StlMutation::SetTriangleNormal { index: 0, normal: [0.0, 1.0, 0.0] }.diff(&mid2);
 
         // (d1∘d2)∘d3
-        let mut left = d1.diff().clone();
-        left.absorb(d2.diff().clone());
-        left.absorb(d3.diff().clone());
+        let mut left = d1.await.diff().clone();
+        left.absorb(d2.await.diff().clone());
+        left.absorb(d3.await.diff().clone());
 
         // d1∘(d2∘d3)
-        let mut d23 = d2.diff().clone();
-        d23.absorb(d3.diff().clone());
-        let mut right = d1.diff().clone();
+        let mut d23 = d2.await.diff().clone();
+        d23.absorb(d3.await.diff().clone());
+        let mut right = d1.await.diff().clone();
         right.absorb(d23);
 
         assert_eq!(left.apply(&base).expect("valid left diff"), right.apply(&base).expect("valid right diff"), "absorb must associate");
-        assert_eq!(left.apply(&base).expect("valid associated diff"), d3.diff().apply(&mid2).expect("valid third diff"), "associated absorb must match full sequential application");
+        assert_eq!(left.apply(&base).expect("valid associated diff"), d3.await.diff().apply(&mid2).expect("valid third diff"), "associated absorb must match full sequential application");
     }
     //#endregion 🔖️absorb_law
 
@@ -459,10 +459,10 @@ mod tests {
     async fn between_roundtrip_law() {
         let a = base_snapshot();
         let mut b = base_snapshot();
-        b.solid_name = "changed solid name".into();
-        b.triangles.remove(0); // remove first triangle
-        b.triangles[0].normal = [0.0, 1.0, 0.0]; // modify (now index 0)
-        b.triangles.push(tri(0.0, 0.0, -1.0, 30.0)); // add a triangle
+        b.await.solid_name = "changed solid name".into();
+        b.await.triangles.remove(0); // remove first triangle
+        b.await.triangles[0].normal = [0.0, 1.0, 0.0]; // modify (now index 0)
+        b.await.triangles.push(tri(0.0, 0.0, -1.0, 30.0)); // add a triangle
 
         let d = <StlDiff as DiffAlgebra<StlSnapshot>>::between(&a, &b);
         assert_eq!(d.apply(&a).expect("valid forward diff"), b, "between(a,b).apply(a) must equal b");
@@ -526,11 +526,11 @@ mod tests {
         assert!(<StlDiff as DiffAlgebra<StlSnapshot>>::between(&a, &a).is_empty(), "between(a,a) must be empty");
 
         // solid_name: exercised in both directions (LWW scalar).
-        assert!(forward.solid_name.is_some(), "solid_name must be diffed forward");
-        assert!(backward.solid_name.is_some(), "solid_name must be diffed backward");
+        assert!(forward.await.solid_name.is_some(), "solid_name must be diffed forward");
+        assert!(backward.await.solid_name.is_some(), "solid_name must be diffed backward");
 
         // Forward (a -> b, b is longer): proves `modified` + `added`.
-        let ftd: &StlTrianglesDiff = forward.triangles.as_ref().expect("forward triangles diff must be present");
+        let ftd: &StlTrianglesDiff = forward.await.triangles.as_ref().expect("forward triangles diff must be present");
         assert!(ftd.removed.is_empty(), "forward direction must not produce removed (b is longer)");
         assert_eq!(ftd.modified.len(), 1, "exactly one triangle must be modified forward");
         let fmd = &ftd.modified[0];
@@ -539,10 +539,10 @@ mod tests {
         assert!(fmd.diff.vertices.is_some(), "vertices must be diffed");
         assert_eq!(ftd.added.len(), 1, "exactly one triangle must be added forward");
         assert_eq!(ftd.added[0].index, 2);
-        assert_eq!(ftd.added[0].triangle, b.triangles[2]);
+        assert_eq!(ftd.added[0].triangle, b.await.triangles[2]);
 
         // Backward (b -> a, a is longer): proves `modified` + `removed`.
-        let btd: &StlTrianglesDiff = backward.triangles.as_ref().expect("backward triangles diff must be present");
+        let btd: &StlTrianglesDiff = backward.await.triangles.as_ref().expect("backward triangles diff must be present");
         assert!(btd.added.is_empty(), "backward direction must not produce added (a is shorter)");
         assert_eq!(btd.modified.len(), 1, "exactly one triangle must be modified backward");
         assert_eq!(btd.modified[0].index, 0);
@@ -567,10 +567,10 @@ mod tests {
 
         let base = base_snapshot();
         let sequential = {
-            let mid = d1.apply(&base).expect("valid first diff");
-            d2.apply(&mid).expect("valid second diff")
+            let mid = d1.apply(&base).await.expect("valid first diff");
+            d2.apply(&mid).await.expect("valid second diff")
         };
-        assert_eq!(merged.apply(&base).expect("valid absorbed diff"), sequential);
+        assert_eq!(merged.apply(&base).await.expect("valid absorbed diff"), sequential);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -581,11 +581,11 @@ mod tests {
         merged.absorb(d2.clone());
         let base = base_snapshot();
         let sequential = {
-            let mid = d1.apply(&base).expect("valid first diff");
-            d2.apply(&mid).expect("valid second diff")
+            let mid = d1.apply(&base).await.expect("valid first diff");
+            d2.apply(&mid).await.expect("valid second diff")
         };
-        assert_eq!(merged.apply(&base).expect("valid absorbed diff"), sequential);
-        assert_eq!(sequential.triangles.len(), base.triangles.len() + 2);
+        assert_eq!(merged.apply(&base).await.expect("valid absorbed diff"), sequential);
+        assert_eq!(sequential.triangles.len(), base.await.triangles.len() + 2);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -601,10 +601,10 @@ mod tests {
 
         let base = base_snapshot();
         let sequential = {
-            let mid = d1.apply(&base).expect("valid first diff");
-            d2.apply(&mid).expect("valid second diff")
+            let mid = d1.apply(&base).await.expect("valid first diff");
+            d2.apply(&mid).await.expect("valid second diff")
         };
-        assert_eq!(merged.apply(&base).expect("valid absorbed diff"), sequential);
+        assert_eq!(merged.apply(&base).await.expect("valid absorbed diff"), sequential);
     }
     //#endregion 🔖️CanonicalCases
 
@@ -614,10 +614,10 @@ mod tests {
         let mut snap = base.clone();
         let outcome = apply_stl_mutation(&mut snap, &StlMutation::SetTriangleNormal { index: 999, normal: [1.0, 1.0, 1.0] });
         assert_eq!(snap, base);
-        assert_eq!(outcome.messages()[0].target, vec!["triangles", "999"]);
+        assert_eq!(outcome.await.messages()[0].target, vec!["triangles", "999"]);
         let outcome = apply_stl_mutation(&mut snap, &StlMutation::RemoveTriangle { index: 999 });
         assert_eq!(snap, base);
-        assert_eq!(outcome.messages()[0].target, vec!["triangles", "999"]);
+        assert_eq!(outcome.await.messages()[0].target, vec!["triangles", "999"]);
     }
 
     //#region 🔖️F6RoundtripLaws
@@ -633,12 +633,12 @@ mod tests {
         // conformance_law`/`protocol_walk_law` — same reuse pattern `binary`'s own pilot precedent.
         for mutation in demo_mutation_cases() {
             let printed = mutation.print_op();
-            assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
-            let parsed = StlMutation::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
+            assert!(!printed.await.contains('\n'), "print_op must be one line, got {printed:?}");
+            let parsed = StlMutation::parse_op(&printed).await.unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
             assert_eq!(parsed, mutation, "print_op/parse_op round-trip mismatch for {mutation:?} (printed {printed:?})");
 
-            let encoded = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op({mutation:?}) failed: {e}"));
-            let decoded = StlMutation::decode_op(&encoded).unwrap_or_else(|e| panic!("decode_op failed: {e}"));
+            let encoded = mutation.encode_op().await.unwrap_or_else(|e| panic!("encode_op({mutation:?}) failed: {e}"));
+            let decoded = StlMutation::decode_op(&encoded).await.unwrap_or_else(|e| panic!("decode_op failed: {e}"));
             assert_eq!(decoded, mutation, "encode_op/decode_op round-trip mismatch for {mutation:?}");
         }
     }
@@ -654,12 +654,12 @@ mod tests {
         // conformance_laws`'s `diff_grammar_conformance_law`/`protocol_walk_law`.
         for d in diff::demo_diff_cases() {
             let printed = d.print_diff();
-            assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
-            let parsed = StlDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
+            assert!(!printed.await.contains('\n'), "print_diff must be one line, got {printed:?}");
+            let parsed = StlDiff::parse_diff(&printed).await.unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
             assert_eq!(parsed, d, "print_diff/parse_diff round-trip mismatch (printed {printed:?})");
 
-            let encoded = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
-            let decoded = StlDiff::decode_diff(&encoded).unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
+            let encoded = d.encode_diff().await.unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
+            let decoded = StlDiff::decode_diff(&encoded).await.unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
             assert_eq!(decoded, d, "encode_diff/decode_diff round-trip mismatch");
         }
     }

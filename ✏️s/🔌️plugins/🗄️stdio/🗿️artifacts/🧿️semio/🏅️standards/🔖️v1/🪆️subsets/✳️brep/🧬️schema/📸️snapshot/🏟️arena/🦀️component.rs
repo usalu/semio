@@ -250,8 +250,8 @@ mod tests {
             let mut live: Vec<(TestId, u64)> = Vec::new();
             let mut removed: Vec<TestId> = Vec::new();
             for i in 0..2000u64 {
-                if !live.is_empty() && rng.next_bool(0.4) {
-                    let idx = rng.next_range(0, live.len() as u64) as usize;
+                if !live.is_empty() && rng.await.next_bool(0.4).await {
+                    let idx = rng.await.next_range(0, live.len() as u64) as usize;
                     let (id, _) = live.remove(idx);
                     store.remove(id);
                     removed.push(id);

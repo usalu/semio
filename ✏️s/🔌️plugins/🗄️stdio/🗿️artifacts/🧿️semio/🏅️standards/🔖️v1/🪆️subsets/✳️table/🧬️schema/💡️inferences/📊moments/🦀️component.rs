@@ -118,7 +118,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn moments_of_a_populated_numeric_column_are_the_real_descriptive_stats() {
         let values = store::infer_field::<SemioTableSnapshot, ColumnMoments>(&two_numeric_column_snapshot(), None);
-        let m = values.get("score").expect("score moments present");
+        let m = values.await.get("score").expect("score moments present");
         assert_eq!(m.count, 3);
         assert!((m.mean - 2.0).abs() < 1e-9);
         assert!((m.variance - 1.0).abs() < 1e-9);
@@ -128,13 +128,13 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn a_declared_str_column_is_absent_from_the_plan_not_a_faked_zero() {
         let values = store::infer_field::<SemioTableSnapshot, ColumnMoments>(&two_numeric_column_snapshot(), None);
-        assert!(values.get("label").is_none(), "non-numeric columns must not appear in the plan at all");
+        assert!(values.await.get("label").is_none(), "non-numeric columns must not appear in the plan at all");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn moments_of_an_all_empty_snapshot_yields_an_empty_plan() {
         let values = store::infer_field::<SemioTableSnapshot, ColumnMoments>(&SemioTableSnapshot::default(), None);
-        assert!(values.is_empty());
+        assert!(values.await.is_empty());
     }
     //#endregion 🧪️Honesty
 
@@ -155,11 +155,11 @@ mod tests {
         let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() });
         let base = two_numeric_column_snapshot();
         let _ = store::infer_field::<SemioTableSnapshot, ColumnMoments>(&base, Some(&mut cache));
-        let before = cache.stats();
+        let before = cache.await.stats();
         let _ = store::infer_field::<SemioTableSnapshot, ColumnMoments>(&base, Some(&mut cache));
-        let after = cache.stats();
-        assert_eq!(after.misses, before.misses, "an unchanged snapshot must produce zero new misses");
-        assert_eq!(after.hits - before.hits, 2, "both numeric columns must be cache hits");
+        let after = cache.await.stats();
+        assert_eq!(after.await.misses, before.await.misses, "an unchanged snapshot must produce zero new misses");
+        assert_eq!(after.await.hits - before.await.hits, 2, "both numeric columns must be cache hits");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -170,12 +170,12 @@ mod tests {
 
         let mut changed = base.clone();
         changed.rows[0].cells[0] = SemioValue::Float { lexeme: "99.0".into() };
-        let before = cache.stats();
+        let before = cache.await.stats();
         let values = store::infer_field::<SemioTableSnapshot, ColumnMoments>(&changed, Some(&mut cache));
-        let after = cache.stats();
+        let after = cache.await.stats();
 
-        assert_eq!(after.misses - before.misses, 1, "only score's own entry may miss when its own cells change");
-        assert_eq!(values.get("count").map(|m| m.count), Some(3), "count column's moments must be untouched");
+        assert_eq!(after.await.misses - before.await.misses, 1, "only score's own entry may miss when its own cells change");
+        assert_eq!(values.await.get("count").map(|m| m.count), Some(3), "count column's moments must be untouched");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -186,10 +186,10 @@ mod tests {
 
         let mut changed = base.clone();
         changed.rows[0].cells[2] = SemioValue::Str { value: "z".into() };
-        let before = cache.stats();
+        let before = cache.await.stats();
         let _ = store::infer_field::<SemioTableSnapshot, ColumnMoments>(&changed, Some(&mut cache));
-        let after = cache.stats();
-        assert_eq!(after.misses, before.misses, "the label column has no bearing on score/count dep chains");
+        let after = cache.await.stats();
+        assert_eq!(after.await.misses, before.await.misses, "the label column has no bearing on score/count dep chains");
     }
     //#endregion 🧪️IncrementalityLaw
 }

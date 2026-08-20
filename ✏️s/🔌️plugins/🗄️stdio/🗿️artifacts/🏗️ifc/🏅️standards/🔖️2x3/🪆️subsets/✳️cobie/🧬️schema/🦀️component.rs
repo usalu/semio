@@ -14,7 +14,7 @@ pub mod derived_construction {
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn stage_mutation_errors(diagnostics: &mut Vec<Diagnostic>, outcome: &protocol::MutationOutcome<Ifc2x3Diff>) {
-        diagnostics.extend(outcome.messages().iter().filter(|message| message.level >= Severity::Error).map(|message| Diagnostic {
+        diagnostics.extend(outcome.messages().await.iter().filter(|message| message.level >= Severity::Error).map(|message| Diagnostic {
             code: message.code.clone(),
             severity: message.level,
             span: dsl::TextSpan::at(1, 1),
@@ -113,13 +113,13 @@ pub mod derived_construction {
 
         #[semio_framework_async_macros::async_test]
         async fn new_builds_clean() {
-            let snapshot = Ifc2x3CobieBuilderConstruction::new().add_space("Room 101").build().expect("conforming construction must build");
+            let snapshot = Ifc2x3CobieBuilderConstruction::new().add_space("Room 101").build().await.expect("conforming construction must build");
             assert_eq!(snapshot.document.instances.len(), 5);
         }
 
         #[semio_framework_async_macros::async_test]
         async fn wrong_schema_via_raw_mutate_still_fails_build() {
-            let snapshot = Ifc2x3CobieBuilderConstruction::new().build().unwrap();
+            let snapshot = Ifc2x3CobieBuilderConstruction::new().build().await.unwrap();
             let mut bad = snapshot.clone();
             bad.document.header.file_schema = vec![Part21Value::List(vec![Part21Value::Str("IFC4".into())])];
             let (mutated, _diff) = Ifc2x3CobieBuilderConstruction::from_snapshot(Ifc2x3Snapshot::default()).mutate(Ifc2x3Mutation::SetSnapshot { snapshot: bad });

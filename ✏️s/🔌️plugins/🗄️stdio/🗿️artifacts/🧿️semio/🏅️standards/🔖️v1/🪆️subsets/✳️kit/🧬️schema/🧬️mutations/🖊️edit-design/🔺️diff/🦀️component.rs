@@ -15,7 +15,7 @@ pub fn diff(payload: &EditDesign, base: &SemioKitSnapshot) -> protocol::Mutation
         );
     };
     if existing.pieces == payload.pieces && existing.connections == payload.connections {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Design \"{}\" already has that content.", payload.id));
+        return protocol::MutationOutcome::empty().await.warn("mutation.no-op", format!("Design \"{}\" already has that content.", payload.id));
     }
     let mut designs = base.designs.clone();
     if let Some(d) = designs.iter_mut().find(|d| d.id == payload.id) {

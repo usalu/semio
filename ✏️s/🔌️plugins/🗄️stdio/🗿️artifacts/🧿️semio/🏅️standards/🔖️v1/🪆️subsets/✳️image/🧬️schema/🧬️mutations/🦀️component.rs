@@ -146,7 +146,7 @@ impl Mutation<SemioImageSnapshot> for SemioImageMutation {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn apply_semio_image_mutation(snapshot: &mut SemioImageSnapshot, mutation: &SemioImageMutation) -> protocol::MutationOutcome<SemioImageDiff> {
     let outcome = <SemioImageMutation as Mutation<SemioImageSnapshot>>::diff(mutation, snapshot);
-    outcome.apply_to(snapshot)
+    outcome.await.apply_to(snapshot)
 }
 //#endregion 🔖️Mutation
 
@@ -426,7 +426,7 @@ mod tests {
         for mutation in sample_mutations() {
             let base = fixture();
             let diff_direct = Mutation::diff(&mutation, &base);
-            let applied_via_diff = MutationDiff::apply(diff_direct.diff(), &base).expect("apply must succeed for a well-formed fixture");
+            let applied_via_diff = MutationDiff::apply(&diff_direct.await.diff().await, &base).expect("apply must succeed for a well-formed fixture");
 
             let mut via_apply = base.clone();
             let diff_from_apply = apply_semio_image_mutation(&mut via_apply, &mutation);
@@ -451,8 +451,8 @@ mod tests {
             assert_eq!(round_tripped, base, "inverse_law (mutation-level) failed for {mutation:?}");
 
             let diff = Mutation::diff(&mutation, &base);
-            let next = MutationDiff::apply(diff.diff(), &base).expect("apply must succeed for a well-formed fixture");
-            let inverse_diff = DiffAlgebra::inverse(diff.diff(), &base);
+            let next = MutationDiff::apply(&diff.await.diff().await, &base).expect("apply must succeed for a well-formed fixture");
+            let inverse_diff = DiffAlgebra::inverse(&diff.await.diff().await, &base);
             let restored = MutationDiff::apply(&inverse_diff, &next).expect("apply must succeed for a well-formed fixture");
             assert_eq!(restored, base, "inverse_law (diff-level) failed for {mutation:?}");
         }
@@ -467,7 +467,7 @@ mod tests {
         let mut snap = fixture();
         apply_semio_image_mutation(&mut snap, &SemioImageMutation::SetMetadataEntry { key: "Author".into(), value: "x".into() });
         let bytes = store::ArtifactPack::encode_pack(&snap);
-        let decoded = <SemioImageSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+        let decoded = <SemioImageSnapshot as store::ArtifactPack>::decode_pack(&bytes).await.expect("decode");
         assert_eq!(decoded, snap);
     }
     //#endregion 🔖️CodecRetentionLaw
@@ -477,12 +477,12 @@ mod tests {
     async fn op_text_binary_roundtrip_law() {
         for m in sample_mutations() {
             let printed = m.print_op();
-            assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
-            let parsed = SemioImageMutation::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
+            assert!(!printed.await.contains('\n'), "print_op must be one line, got {printed:?}");
+            let parsed = SemioImageMutation::parse_op(&printed).await.unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
             assert_eq!(parsed, m, "print_op/parse_op round-trip mismatch for {m:?} (printed {printed:?})");
 
-            let encoded = m.encode_op().unwrap_or_else(|e| panic!("encode_op({m:?}) failed: {e}"));
-            let decoded = SemioImageMutation::decode_op(&encoded).unwrap_or_else(|e| panic!("decode_op failed: {e}"));
+            let encoded = m.encode_op().await.unwrap_or_else(|e| panic!("encode_op({m:?}) failed: {e}"));
+            let decoded = SemioImageMutation::decode_op(&encoded).await.unwrap_or_else(|e| panic!("decode_op failed: {e}"));
             assert_eq!(decoded, m, "encode_op/decode_op round-trip mismatch for {m:?}");
         }
     }

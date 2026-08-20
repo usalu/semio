@@ -148,14 +148,14 @@ async fn write_csv_records(records: &[CsvRecord], line_ending: &str) -> String {
 /// `records[0]` should be read as a header row — RFC 4180 draws no structural distinction
 /// between a header record and a data record on the wire, so decoding never drops or
 /// relocates the first record.
-pub async fn decode_csv_with(text: &str, has_header: bool) -> CsvSnapshot {
+pub fn decode_csv_with(text: &str, has_header: bool) -> CsvSnapshot {
     let records = parse_csv_records(text);
-    CsvSnapshot { schema: STDIO_CSV_DOCUMENT_SCHEMA.into(), has_header, records }
+    CsvSnapshot { schema: STDIO_CSV_DOCUMENT_SCHEMA.into(), has_header, records: records.await }
 }
 
 /// 📥 Decodes assuming a header row is present (the pre-existing default behavior).
 pub async fn decode_csv(text: &str) -> Result<CsvSnapshot, String> {
-    Ok(decode_csv_with(text, true).await)
+    Ok(decode_csv_with(text, true))
 }
 
 /// 📤 Encodes with LF line endings.
@@ -175,7 +175,7 @@ pub async fn encode_csv_with(snap: &CsvSnapshot, line_ending: &str) -> String {
 
 //#region 🔖️DocumentHelpers
 /// 🌱 Empty persisted snapshot.
-pub async fn empty_csv_snapshot() -> CsvSnapshot {
+pub fn empty_csv_snapshot() -> CsvSnapshot {
     CsvSnapshot::default()
 }
 
@@ -199,7 +199,7 @@ impl store::ArtifactDsl for CsvSnapshot {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        Ok(decode_csv_with(body, true).await)
+        Ok(decode_csv_with(body, true))
     }
     async fn print_dsl(&self) -> String {
         let body = encode_csv(self);
@@ -222,7 +222,7 @@ impl store::ArtifactPack for CsvSnapshot {
         }
         let _ = options;
         let text = String::from_utf8(inner).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        Ok(decode_csv_with(&text, true).await)
+        Ok(decode_csv_with(&text, true))
     }
 }
 //#endregion 🔖️HandcraftedArtifactCodecs
@@ -243,10 +243,10 @@ mod tests {
     async fn codec_round_trip() {
         let snap = empty_csv_snapshot();
         let text = store::ArtifactDsl::print_dsl(&snap);
-        let parsed = <CsvSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
+        let parsed = <CsvSnapshot as store::ArtifactDsl>::parse_dsl(&text).await.expect("parse");
         assert_eq!(parsed.schema, snap.schema);
         let bytes = store::ArtifactPack::encode_pack(&snap);
-        let decoded = <CsvSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+        let decoded = <CsvSnapshot as store::ArtifactPack>::decode_pack(&bytes).await.expect("decode");
         assert_eq!(decoded, snap);
     }
 
@@ -308,7 +308,7 @@ mod tests {
     async fn encode_with_crlf_round_trips() {
         let snap = decode_csv_with("a,b\n1,2\n", true);
         let crlf_text = encode_csv_with(&snap, "\r\n");
-        assert!(crlf_text.contains("\r\n"));
+        assert!(crlf_text.await.contains("\r\n"));
         let reparsed = decode_csv_with(&crlf_text, true);
         assert_eq!(reparsed, snap);
     }
@@ -351,9 +351,9 @@ mod tests {
         let pack_bytes = <CsvSnapshot as store::ArtifactPack>::encode_pack(&demo);
         std::fs::write(assets.join("🎒️example.pack.semio"), &pack_bytes).unwrap();
         let mutation = CsvMutation::InsertRecord { index: 1, record: CsvRecord { fields: vec![CsvField { value: "brand-new".into(), quoted: true }] } };
-        let op_bytes = <CsvMutation as protocol::OpBinary>::encode_op(&mutation).unwrap();
+        let op_bytes = <CsvMutation as protocol::OpBinary>::encode_op(&mutation).await.unwrap();
         std::fs::write(assets.join("📡️example.spr.semio"), &op_bytes).unwrap();
-        eprintln!("[DEBUG] wrote {} pack bytes, {} spr bytes", pack_bytes.len(), op_bytes.len());
+        eprintln!("[DEBUG] wrote {} pack bytes, {} spr bytes", pack_bytes.await.len(), op_bytes.len());
     }
     //#endregion 🔖️ScratchFixtureGen
 }

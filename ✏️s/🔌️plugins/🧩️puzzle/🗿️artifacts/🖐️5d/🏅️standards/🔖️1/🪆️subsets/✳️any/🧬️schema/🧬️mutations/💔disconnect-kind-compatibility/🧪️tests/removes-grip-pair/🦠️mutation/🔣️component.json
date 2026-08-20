@@ -1,0 +1,5 @@
+{
+  "mutation": "disconnectKindCompatibility",
+  "source": "grip-kind-a",
+  "target": "grip-kind-b"
+}

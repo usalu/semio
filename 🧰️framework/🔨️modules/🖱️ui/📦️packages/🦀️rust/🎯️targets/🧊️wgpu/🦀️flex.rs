@@ -300,9 +300,10 @@ impl LayoutEngine {
 mod tests {
     use super::*;
     use crate::wgpu::component::ui::{UiFieldNode, UiPresence, UiSectionNode, UiStackNode, UiTextNode};
+    use crate::wgpu::Label;
 
     fn text(value: &str) -> UiNode {
-        UiNode::Text(UiTextNode { value: value.into(), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None })
+        UiNode::Text(UiTextNode { value: Label::data(value), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None })
     }
 
     fn stack(direction: &str, children: Vec<UiNode>) -> UiNode {
@@ -393,7 +394,7 @@ mod tests {
     #[test]
     fn field_child_grows_to_fill_the_label_adjusted_remainder() {
         let mut tree = UiTree::new();
-        let field = UiNode::Field(UiFieldNode { id: "f".into(), label: "Label".into(), description: None, required: None, error: None, child: Box::new(text("child")), presence: UiPresence::default(), menu: None });
+        let field = UiNode::Field(UiFieldNode { id: "f".into(), label: Label::data("Label"), description: None, required: None, error: None, child: Box::new(text("child")), presence: UiPresence::default(), menu: None });
         tree.apply_tree(&field);
         let root = tree.root.unwrap();
         let mut engine = LayoutEngine::new();
@@ -414,7 +415,7 @@ mod tests {
     #[test]
     fn section_children_stack_below_the_header_at_their_own_intrinsic_height_with_gap() {
         let mut tree = UiTree::new();
-        let section = UiNode::Section(UiSectionNode { id: "s".into(), label: Some("Section".into()), default_open: Some(true), presence: UiPresence::default(), children: vec![text("a"), text("a longer line of text")], menu: None });
+        let section = UiNode::Section(UiSectionNode { id: "s".into(), label: Some(Label::data("Section")), default_open: Some(true), presence: UiPresence::default(), children: vec![text("a"), text("a longer line of text")], menu: None });
         tree.apply_tree(&section);
         let root = tree.root.unwrap();
         let mut engine = LayoutEngine::new();

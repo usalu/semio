@@ -952,7 +952,7 @@ mod tests {
 
         let ab = <SemioAnimationDiff as DiffAlgebra<SemioAnimationSnapshot>>::between(&sweep_a, &sweep_b);
         assert_eq!(ab.apply(&sweep_a).expect("apply must succeed for a well-formed fixture"), sweep_b);
-        let timelines_ab = ab.timelines.as_ref().expect("timelines must differ");
+        let timelines_ab = ab.await.timelines.as_ref().expect("timelines must differ");
         assert!(!timelines_ab.removed.is_empty(), "sweep must exercise a removed timeline");
         assert!(!timelines_ab.modified.is_empty(), "sweep must exercise a modified timeline");
         let timeline_diff = &timelines_ab.modified[0].diff;
@@ -972,7 +972,7 @@ mod tests {
 
         let ba = <SemioAnimationDiff as DiffAlgebra<SemioAnimationSnapshot>>::between(&sweep_b, &sweep_a);
         assert_eq!(ba.apply(&sweep_b).expect("apply must succeed for a well-formed fixture"), sweep_a);
-        let timelines_ba = ba.timelines.as_ref().expect("timelines must differ");
+        let timelines_ba = ba.await.timelines.as_ref().expect("timelines must differ");
         assert!(!timelines_ba.added.is_empty(), "reverse direction must exercise an added timeline");
         assert!(!timelines_ba.modified.is_empty(), "reverse direction must exercise a modified timeline");
         let timeline_diff_ba = &timelines_ba.modified[0].diff;
@@ -990,12 +990,12 @@ mod tests {
     async fn diff_codec_text_binary_roundtrip_law() {
         for d in demo_diff_cases() {
             let printed = d.print_diff();
-            assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
-            let parsed = SemioAnimationDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
+            assert!(!printed.await.contains('\n'), "print_diff must be one line, got {printed:?}");
+            let parsed = SemioAnimationDiff::parse_diff(&printed).await.unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
             assert_eq!(parsed, d, "print_diff/parse_diff round-trip mismatch (printed {printed:?})");
 
-            let encoded = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
-            let decoded = SemioAnimationDiff::decode_diff(&encoded).unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
+            let encoded = d.encode_diff().await.unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
+            let decoded = SemioAnimationDiff::decode_diff(&encoded).await.unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
             assert_eq!(decoded, d, "encode_diff/decode_diff round-trip mismatch");
         }
     }

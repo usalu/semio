@@ -663,8 +663,8 @@ fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
+    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn write_str_lp(out: &mut Vec<u8>, s: &str) {
@@ -865,7 +865,7 @@ mod tests {
         assert_eq!(backward.apply(&b).expect("apply must succeed for a well-formed fixture"), a, "between(b,a).apply(b) must equal a");
         assert!(SemioCadDiff::between(&a, &a).is_empty(), "between(a,a) must be empty");
 
-        let layers_diff = forward.layers.as_ref().expect("layers diff present");
+        let layers_diff = forward.await.layers.as_ref().expect("layers diff present");
         assert!(!layers_diff.removed.is_empty(), "layers.removed not swept");
         assert!(!layers_diff.added.is_empty(), "layers.added not swept");
         let keep_layer_diff = &layers_diff.modified.iter().find(|m| m.key == "keep").expect("keep layer modified").diff;
@@ -873,7 +873,7 @@ mod tests {
         assert!(keep_layer_diff.line_type.is_some(), "layer.line_type not swept");
         assert!(keep_layer_diff.visible.is_some(), "layer.visible not swept");
 
-        let blocks_diff = forward.blocks.as_ref().expect("blocks diff present");
+        let blocks_diff = forward.await.blocks.as_ref().expect("blocks diff present");
         assert!(!blocks_diff.removed.is_empty(), "blocks.removed not swept");
         assert!(!blocks_diff.added.is_empty(), "blocks.added not swept");
         let keep_block_diff = &blocks_diff.modified.iter().find(|m| m.key == "keep-block").expect("keep-block modified").diff;
@@ -885,7 +885,7 @@ mod tests {
         assert!(be_keep_diff.layer.is_some(), "block entity.layer not swept");
         assert!(be_keep_diff.entity.is_some(), "block entity.entity not swept");
 
-        let entities_diff = forward.entities.as_ref().expect("entities diff present");
+        let entities_diff = forward.await.entities.as_ref().expect("entities diff present");
         assert!(!entities_diff.removed.is_empty(), "entities.removed not swept");
         assert!(!entities_diff.added.is_empty(), "entities.added not swept");
         let e_keep_diff = &entities_diff.modified.iter().find(|m| m.key == "e-keep").expect("e-keep modified").diff;
@@ -929,9 +929,9 @@ mod tests {
 
         // Associativity: absorb(absorb(d1,d2),d3) == absorb(d1,absorb(d2,d3)).
         let d1 = wrap_layer_diff("keep", CadLayerDiff { color_index: Some(42), line_type: None, visible: None });
-        let mid1 = d1.apply(&base).expect("apply must succeed for a well-formed fixture");
+        let mid1 = d1.apply(&base).await.expect("apply must succeed for a well-formed fixture");
         let d2 = SemioCadDiff { layers: Some(CadLayersDiff { removed: Vec::new(), modified: Vec::new(), added: vec![CadLayer { name: "assoc".into(), color_index: 1, line_type: "CONTINUOUS".into(), visible: true }] }), blocks: None, entities: None };
-        let _mid2 = d2.apply(&mid1).expect("apply must succeed for a well-formed fixture");
+        let _mid2 = d2.apply(&mid1).await.expect("apply must succeed for a well-formed fixture");
         let d3 = wrap_layer_diff("assoc", CadLayerDiff { color_index: None, line_type: Some("DASHED".into()), visible: None });
 
         let mut left = d1.clone();
@@ -943,15 +943,15 @@ mod tests {
         let mut right = d1;
         MutationDiff::absorb(&mut right, d2_d3);
 
-        assert_eq!(left.apply(&base).expect("apply must succeed for a well-formed fixture"), right.apply(&base).expect("apply must succeed for a well-formed fixture"), "absorb must be associative");
+        assert_eq!(left.apply(&base).await.expect("apply must succeed for a well-formed fixture"), right.apply(&base).await.expect("apply must succeed for a well-formed fixture"), "absorb must be associative");
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn assert_absorb_matches_sequential(base: &SemioCadSnapshot, d1: SemioCadDiff, d2: SemioCadDiff) -> SemioCadDiff {
-        let sequential = d2.apply(&d1.apply(base).expect("apply must succeed for a well-formed fixture")).expect("apply must succeed for a well-formed fixture");
+        let sequential = d2.apply(&d1.apply(base).await.expect("apply must succeed for a well-formed fixture")).await.expect("apply must succeed for a well-formed fixture");
         let mut absorbed = d1;
         MutationDiff::absorb(&mut absorbed, d2);
-        assert_eq!(absorbed.apply(base).expect("apply must succeed for a well-formed fixture"), sequential, "absorb(d1,d2).apply(base) must equal sequential application");
+        assert_eq!(absorbed.apply(base).await.expect("apply must succeed for a well-formed fixture"), sequential, "absorb(d1,d2).apply(base) must equal sequential application");
         absorbed
     }
     //#endregion
@@ -978,7 +978,7 @@ mod tests {
     async fn diff_codec_text_binary_roundtrip_law() {
         let a = sweep_a();
         let b = sweep_b();
-        let mut cases = vec![SemioCadDiff::default(), SemioCadDiff::between(&a, &b), SemioCadDiff::between(&b, &a), SemioCadDiff::between(&a, &a)];
+        let mut cases = vec![SemioCadDiff::default(), SemioCadDiff::between(&a, &b).await, SemioCadDiff::between(&b, &a).await, SemioCadDiff::between(&a, &a).await];
         // Exercise every remaining CadEntity variant not already covered by sweep_a/sweep_b.
         cases.push(wrap_entity_diff("h", CadEntityRecordDiff { layer: None, entity: Some(CadEntity::Polyline { vertices: vec![SemioPoint2 { x: 0.0, y: 0.0 }, SemioPoint2 { x: 1.0, y: 1.0 }], closed: true }) }));
         cases.push(wrap_entity_diff(
@@ -990,11 +990,11 @@ mod tests {
         for d in cases {
             let printed = d.print_diff();
             assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
-            let parsed = SemioCadDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
+            let parsed = SemioCadDiff::parse_diff(&printed).await.unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
             assert_eq!(parsed, d, "print_diff/parse_diff round-trip mismatch (printed {printed:?})");
 
             let encoded = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
-            let decoded = SemioCadDiff::decode_diff(&encoded).unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
+            let decoded = SemioCadDiff::decode_diff(&encoded).await.unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
             assert_eq!(decoded, d, "encode_diff/decode_diff round-trip mismatch");
         }
     }

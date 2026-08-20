@@ -143,7 +143,7 @@ impl Mutation<SemioAnimationSnapshot> for SemioAnimationMutation {
             RemoveKeyframe { timeline_index, channel_index, index } => diff_keyframe_collection(*timeline_index, *channel_index, IndexedTripleDiff { removed: vec![*index], ..Default::default() }),
             SetKeyframeTime { timeline_index, channel_index, index, t } => diff_keyframe_field(*timeline_index, *channel_index, *index, AnimKeyframeDiff { t: Some(*t), value: None }),
             SetKeyframeValue { timeline_index, channel_index, index, value } => diff_keyframe_field(*timeline_index, *channel_index, *index, AnimKeyframeDiff { t: None, value: Some(value.clone()) }),
-        })
+        }).await
     }
 
     async fn inverse(&self, base: &SemioAnimationSnapshot) -> Vec<Self> {
@@ -194,7 +194,7 @@ impl Mutation<SemioAnimationSnapshot> for SemioAnimationMutation {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn apply_semio_animation_mutation(snapshot: &mut SemioAnimationSnapshot, mutation: &SemioAnimationMutation) -> protocol::MutationOutcome<SemioAnimationDiff> {
     let outcome = <SemioAnimationMutation as Mutation<SemioAnimationSnapshot>>::diff(mutation, snapshot);
-    outcome.apply_to(snapshot)
+    outcome.await.apply_to(snapshot)
 }
 
 //#region SnapshotLit
@@ -436,7 +436,7 @@ mod tests {
         let base = fixture();
         for m in demo_mutation_cases() {
             let diff = <SemioAnimationMutation as Mutation<SemioAnimationSnapshot>>::diff(&m, &base);
-            let via_diff = diff.diff().apply(&base).expect("apply must succeed for a well-formed fixture");
+            let via_diff = diff.await.diff().apply(&base).expect("apply must succeed for a well-formed fixture");
 
             let mut applied = base.clone();
             let returned_diff = apply_semio_animation_mutation(&mut applied, &m);
@@ -454,7 +454,7 @@ mod tests {
             let mut mutated = base.clone();
             let _ = apply_semio_animation_mutation(&mut mutated, &m);
             let inv = <SemioAnimationMutation as Mutation<SemioAnimationSnapshot>>::inverse(&m, &base);
-            assert_eq!(inv.len(), 1, "every variant's inverse is exactly 1 mutation for {m:?}");
+            assert_eq!(inv.await.len(), 1, "every variant's inverse is exactly 1 mutation for {m:?}");
             let mut restored = mutated.clone();
             let _ = apply_semio_animation_mutation(&mut restored, &inv[0]);
             assert_eq!(restored, base, "inverse must restore base for {m:?}");
@@ -468,12 +468,12 @@ mod tests {
         let _base = fixture();
         for m in demo_mutation_cases() {
             let printed = m.print_op();
-            assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
-            let parsed = SemioAnimationMutation::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
+            assert!(!printed.await.contains('\n'), "print_op must be one line, got {printed:?}");
+            let parsed = SemioAnimationMutation::parse_op(&printed).await.unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
             assert_eq!(parsed, m, "print_op/parse_op round-trip mismatch for {m:?} (printed {printed:?})");
 
-            let encoded = m.encode_op().unwrap_or_else(|e| panic!("encode_op({m:?}) failed: {e}"));
-            let decoded = SemioAnimationMutation::decode_op(&encoded).unwrap_or_else(|e| panic!("decode_op failed: {e}"));
+            let encoded = m.encode_op().await.unwrap_or_else(|e| panic!("encode_op({m:?}) failed: {e}"));
+            let decoded = SemioAnimationMutation::decode_op(&encoded).await.unwrap_or_else(|e| panic!("decode_op failed: {e}"));
             assert_eq!(decoded, m, "encode_op/decode_op round-trip mismatch for {m:?}");
         }
     }

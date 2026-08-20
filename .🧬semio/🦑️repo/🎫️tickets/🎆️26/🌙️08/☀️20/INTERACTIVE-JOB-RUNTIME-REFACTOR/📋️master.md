@@ -124,3 +124,44 @@ winit → direct Win32/Cocoa/Wayland+X11/browser hosts behind the existing host 
 1. `ticket_open` master ticket under `🎯r2602🎯runningsketchpad`; copy this plan + explorer maps into the ticket folder as md files (all research lives in ticket files, not chat).
 2. Open Phase 0 ticket; dispatch the Phase 0 fleet (1 Sonnet + 4 Haiku scouts, parallel, foreground).
 3. Verify Phase 0 gate with a Haiku audit; close Phase 0 ticket (explicit path, ASCII file in `files`, `📌️important.md` cleared last); proceed wave by wave.
+
+---
+
+# Plan revision, after executing Phases 0, 1 and 1.5
+
+The original plan assumed a compiling repository. It was wrong, and the correction is the single most important thing learned so far. Live status is tracked in `📌️status.md`; this section records what changed in the *plan itself*.
+
+## Revision 1 — Phase 1.5 inserted as a prerequisite
+
+The repo did not build at the baseline commit. `cargo check --workspace --all-targets --keep-going` revealed roughly **20,000 in-scope errors**, essentially all of one class: `async fn` called without `.await`, the mechanical fallout of `AGENTS.md:44` ("You SHOULD implement everything async when it makes sense") applied to ~53,000 functions of which Phase 0 measured 88.28% as never suspending.
+
+Phases 3 and 5 rewrite the UI runtime and the frame transaction. They cannot land on crates that do not compile. So de-asyncing moved from a Phase 6/7 clean-up to **Phase 1.5, a hard prerequisite**.
+
+## Revision 2 — measurement methodology is part of the plan
+
+Three traps cost real time and must be treated as standing rules:
+
+1. **Always use `--keep-going`.** A crate that fails to compile stops `rustc` from reaching its dependents, so plain `cargo check --workspace` reports a small fraction of reality. The damage was discovered in layers — the derive macro hid `framework-machine` (408), which hid `framework-hash` (29), which hid `os-infinite` (2,155) and `s-plugin-stdio` (16,725).
+2. **Never judge progress by a workspace total.** Totals are non-deterministic run to run (1058 → 569 → 957 → 1145 with no edits between) precisely because of that masking. Measure per-crate with `cargo check -p <crate> --all-targets`.
+3. **Check platform-gated crates on their real target.** "452 errors" in the wasm32-only webgpu backend and "332" in the Windows-only d3d12 backend were pure artifacts of checking them on macOS; zero mentioned `Future` or `await`. Before attributing an error to the async class, confirm the diagnostic actually names `Future`/`await`.
+
+Related structural fix: `compile_error!` platform gates make a clean workspace build impossible forever, since `cargo check --workspace` visits every member regardless of dependency edges. All four render backends now use cfg-gated empty libs, with "wrong platform is an error" preserved at the consumer's target-gated dependency edge.
+
+## Revision 3 — tooling over headcount
+
+Hand-repairing ~20,000 errors crate by crate does not scale, and more parallel agents would not have fixed that — the work is sequential by dependency order and each fix changes what the next measurement means. The answer was a **compiler-driven codemod** (`🔧️r13-deasync-codemod.ts`): consume `cargo check --message-format=json`, apply span-keyed edits ranked by rustc's own machine-applicable suggestions, iterate to a fixpoint under a monotonic guard that reverts and halts on any regression, journalling every edit so the tool can undo itself (there is no `git stash` here).
+
+It took `s-plugin-stdio` from 16,725 errors to 5 in one wave of 8,327 edits, and cleared `os-kernel` (145), `geometry` (8), `mesh-engine` (11) and `math` (9) to zero.
+
+**The generalisable lesson for the later phases:** mass mechanical change in this repo should be compiler-driven and span-keyed, never name-keyed. R12 measured the difference concretely — of ~86 grep-matched call sites only ~14 were genuine edits, and two *unrelated* same-named `hash_bytes` functions existed that a textual replace would have silently corrupted. The one corruption the codemod did produce came from the single place it guessed (a `let-else` pattern sub-span mistaken for a call), and was closed with a denylist plus a regression self-test.
+
+## Revision 4 — carried-forward work items
+
+- **Def-use residue.** ~1,250 remaining diagnostics share one shape: the Future-typed expression is a bare `let`-bound local, not a fresh call. Resolving them needs data-flow tracing to the assignment site — a harder tool than the span-local one. This is the top remaining work item.
+- **Recursive async cycles** (E0733) in `semio-s-imperative` need either cycle extension or a human `Box::pin` decision.
+- **Trait-shape lockstep.** De-asyncing a trait method forces matching changes in macro-generated impls; `framework-machine` ↔ `machine-derive` already required this. Any future trait de-async must be planned as a coordinated multi-site change.
+- **Phase 1 leftovers**: `ManualRuntime::drive()` cannot observe completions from the real cross-thread pool (no-op waker); `WorkerPool::shutdown()` deadlock; `ComputePool::run_blocking` still takes an opaque `FnOnce` and should lose it when Phase 3 introduces the capability tokens.
+
+## Revision 5 — Phase 2 input
+
+`semio-framework-machine` already has much of the job protocol's shape: a `PersistedSnapshot`/`step()` round-trip, a `Command` effect/kernel split, and an `Inspector` event stream. But its `run_to_completion` drains to quiescence bounded by a *count*, not a deadline, with no mid-macrostep yield/resume, no preview channel and no fault channel. Phase 2 should make that microstep loop budget-aware and resumable — its pending-trigger queue is already a reified value — rather than adopting it wholesale as `InteractiveJob`.

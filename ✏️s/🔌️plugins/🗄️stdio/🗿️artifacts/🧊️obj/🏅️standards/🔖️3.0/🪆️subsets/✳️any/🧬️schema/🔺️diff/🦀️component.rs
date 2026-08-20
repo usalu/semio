@@ -844,13 +844,13 @@ fn validate_indexed_targets(base_len: usize, removed_indices: &[usize], modified
     let mut removed = BTreeSet::new();
     for &index in removed_indices {
         if index >= base_len || !removed.insert(index) {
-            return Err(MutationApplyError::new("invalid-remove-index", "removal target must exist exactly once").at([target, &index.to_string()]));
+            return Err(MutationApplyError::new("invalid-remove-index", "removal target must exist exactly once").await.at([target, &index.to_string()]));
         }
     }
     let mut modified = BTreeSet::new();
     for index in modified_indices {
         if index >= base_len || removed.contains(&index) || !modified.insert(index) {
-            return Err(MutationApplyError::new("invalid-modify-index", "modification target must exist exactly once and remain present").at([target, &index.to_string()]));
+            return Err(MutationApplyError::new("invalid-modify-index", "modification target must exist exactly once and remain present").await.at([target, &index.to_string()]));
         }
     }
     let mut length = base_len - removed.len();
@@ -859,7 +859,7 @@ fn validate_indexed_targets(base_len: usize, removed_indices: &[usize], modified
     let mut previous = None;
     for index in additions {
         if index > length || previous == Some(index) {
-            return Err(MutationApplyError::new("invalid-add-index", "addition target must be unique and within the evolving sequence").at([target, &index.to_string()]));
+            return Err(MutationApplyError::new("invalid-add-index", "addition target must be unique and within the evolving sequence").await.at([target, &index.to_string()]));
         }
         previous = Some(index);
         length += 1;
@@ -878,19 +878,19 @@ fn validate_named_targets<'a>(
     let mut base = BTreeSet::new();
     for name in base_names {
         if !base.insert(name) {
-            return Err(MutationApplyError::new("duplicate-base-target", "base names must be unique").at([target, name]));
+            return Err(MutationApplyError::new("duplicate-base-target", "base names must be unique").await.at([target, name]));
         }
     }
     let mut removed = BTreeSet::new();
     for name in removed_names {
         if !base.contains(name) || !removed.insert(name) {
-            return Err(MutationApplyError::new("invalid-remove-target", "removal target must exist exactly once").at([target, name]));
+            return Err(MutationApplyError::new("invalid-remove-target", "removal target must exist exactly once").await.at([target, name]));
         }
     }
     let mut modified = BTreeSet::new();
     for name in modified_names {
         if !base.contains(name) || removed.contains(name) || !modified.insert(name) {
-            return Err(MutationApplyError::new("invalid-modify-target", "modification target must exist exactly once and remain present").at([target, name]));
+            return Err(MutationApplyError::new("invalid-modify-target", "modification target must exist exactly once and remain present").await.at([target, name]));
         }
     }
     let mut length = base.len() - removed.len();
@@ -900,7 +900,7 @@ fn validate_named_targets<'a>(
     let mut previous = None;
     for (index, name) in additions {
         if base.contains(name) || !added_names.insert(name) || index > length || previous == Some(index) {
-            return Err(MutationApplyError::new("invalid-add-target", "addition name and position must be unique and valid").at([target, name]));
+            return Err(MutationApplyError::new("invalid-add-target", "addition name and position must be unique and valid").await.at([target, name]));
         }
         previous = Some(index);
         length += 1;
@@ -1665,7 +1665,7 @@ fn write_f64_bin(out: &mut Vec<u8>, v: f64) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_f64_bin(reader: &mut store::ByteReader<'_>) -> Result<f64, String> {
-    reader.read_f64_le().map_err(|e| e.to_string())
+    reader.read_f64_le().await.map_err(|e| e.to_string())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn write_str_bin(out: &mut Vec<u8>, s: &str) {
@@ -1674,8 +1674,8 @@ fn write_str_bin(out: &mut Vec<u8>, s: &str) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_str_bin(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
-    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-    String::from_utf8(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec()).map_err(|e| e.to_string())
+    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+    String::from_utf8(reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec()).map_err(|e| e.to_string())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn write_u32_bin(out: &mut Vec<u8>, v: u32) {
@@ -1683,7 +1683,7 @@ fn write_u32_bin(out: &mut Vec<u8>, v: u32) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_u32_bin(reader: &mut store::ByteReader<'_>) -> Result<u32, String> {
-    Ok(reader.read_varint_u64().map_err(|e| e.to_string())? as u32)
+    Ok(reader.read_varint_u64().await.map_err(|e| e.to_string())? as u32)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn write_usize_bin(out: &mut Vec<u8>, v: usize) {
@@ -1691,7 +1691,7 @@ fn write_usize_bin(out: &mut Vec<u8>, v: usize) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_usize_bin(reader: &mut store::ByteReader<'_>) -> Result<usize, String> {
-    Ok(reader.read_varint_u64().map_err(|e| e.to_string())? as usize)
+    Ok(reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn write_option_bin<T>(out: &mut Vec<u8>, opt: &Option<T>, enc: impl Fn(&T, &mut Vec<u8>)) {
@@ -1705,7 +1705,7 @@ fn write_option_bin<T>(out: &mut Vec<u8>, opt: &Option<T>, enc: impl Fn(&T, &mut
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_option_bin<T>(reader: &mut store::ByteReader<'_>, dec: impl Fn(&mut store::ByteReader<'_>) -> Result<T, String>) -> Result<Option<T>, String> {
-    match reader.read_u8().map_err(|e| e.to_string())? {
+    match reader.read_u8().await.map_err(|e| e.to_string())? {
         0 => Ok(None),
         1 => Ok(Some(dec(reader)?)),
         other => Err(format!("option binary: unknown tag {other}")),
@@ -1729,7 +1729,7 @@ fn write_tristate_bin<T>(out: &mut Vec<u8>, opt: &Option<Option<T>>, enc: impl F
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_tristate_bin<T>(reader: &mut store::ByteReader<'_>, dec: impl Fn(&mut store::ByteReader<'_>) -> Result<T, String>) -> Result<Option<Option<T>>, String> {
-    match reader.read_u8().map_err(|e| e.to_string())? {
+    match reader.read_u8().await.map_err(|e| e.to_string())? {
         0 => Ok(None),
         1 => Ok(Some(None)),
         2 => Ok(Some(Some(dec(reader)?))),
@@ -1745,7 +1745,7 @@ fn write_vec_bin<T>(out: &mut Vec<u8>, items: &[T], enc: impl Fn(&T, &mut Vec<u8
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_vec_bin<T>(reader: &mut store::ByteReader<'_>, dec: impl Fn(&mut store::ByteReader<'_>) -> Result<T, String>) -> Result<Vec<T>, String> {
-    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut out = Vec::with_capacity(count as usize);
     for _ in 0..count {
         out.push(dec(reader)?);
@@ -1967,14 +1967,14 @@ fn dec_index_triple_bin<T, D>(
     dec_item: impl Fn(&mut store::ByteReader<'_>) -> Result<T, String>,
 ) -> Result<(Vec<usize>, Vec<(usize, D)>, Vec<(usize, T)>), String> {
     let removed = read_vec_bin(reader, read_usize_bin)?;
-    let mc = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mc = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut modified = Vec::with_capacity(mc as usize);
     for _ in 0..mc {
         let idx = read_usize_bin(reader)?;
         let d = dec_diff(reader)?;
         modified.push((idx, d));
     }
-    let ac = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let ac = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut added = Vec::with_capacity(ac as usize);
     for _ in 0..ac {
         let idx = read_usize_bin(reader)?;
@@ -2004,14 +2004,14 @@ fn dec_named_triple_bin<T, D>(
     dec_item: impl Fn(&mut store::ByteReader<'_>) -> Result<T, String>,
 ) -> Result<(Vec<String>, Vec<(String, D)>, Vec<(usize, T)>), String> {
     let removed = read_vec_bin(reader, read_str_bin)?;
-    let mc = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let mc = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut modified = Vec::with_capacity(mc as usize);
     for _ in 0..mc {
         let name = read_str_bin(reader)?;
         let d = dec_diff(reader)?;
         modified.push((name, d));
     }
-    let ac = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let ac = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut added = Vec::with_capacity(ac as usize);
     for _ in 0..ac {
         let idx = read_usize_bin(reader)?;
@@ -2459,7 +2459,7 @@ mod tests {
     async fn invalid_collection_targets_are_rejected_before_mutation() {
         let base = ObjSnapshot::default();
         let diff = ObjDiff { vertices: Some(ObjVerticesDiff { removed: vec![0], ..Default::default() }), ..Default::default() };
-        let error = diff.apply(&base).expect_err("missing vertex target must be rejected");
+        let error = diff.apply(&base).await.expect_err("missing vertex target must be rejected");
         assert_eq!(error.code, "invalid-remove-index");
         assert_eq!(error.target, vec!["vertices", "0"]);
         assert_eq!(base, ObjSnapshot::default());
@@ -2475,20 +2475,20 @@ mod tests {
         let a = sweep_a();
         let b = sweep_b();
         let ab = <ObjDiff as DiffAlgebra<ObjSnapshot>>::between(&a, &b);
-        assert_eq!(ab.mtllib, Some(None), "mtllib tri-state must exercise Some(None)");
-        let td = ab.texcoords.as_ref().expect("texcoords diff populated");
+        assert_eq!(ab.await.mtllib, Some(None), "mtllib tri-state must exercise Some(None)");
+        let td = ab.await.texcoords.as_ref().expect("texcoords diff populated");
         assert_eq!(td.modified[0].diff.w, Some(None), "texcoord w tri-state must exercise Some(None)");
-        assert!(!ab.groups.as_ref().unwrap().removed.is_empty() && !ab.groups.as_ref().unwrap().modified.is_empty() && !ab.groups.as_ref().unwrap().added.is_empty(), "groups triple must exercise all 3 kinds");
+        assert!(!ab.await.groups.as_ref().unwrap().removed.is_empty() && !ab.await.groups.as_ref().unwrap().modified.is_empty() && !ab.await.groups.as_ref().unwrap().added.is_empty(), "groups triple must exercise all 3 kinds");
 
-        let cases = vec![ObjDiff::default(), ab, <ObjDiff as DiffAlgebra<ObjSnapshot>>::between(&b, &a)];
+        let cases = vec![ObjDiff::default(), ab.await, <ObjDiff as DiffAlgebra<ObjSnapshot>>::between(&b, &a).await];
         for d in cases {
             let printed = d.print_diff();
-            assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
-            let parsed = ObjDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
+            assert!(!printed.await.contains('\n'), "print_diff must be one line, got {printed:?}");
+            let parsed = ObjDiff::parse_diff(&printed).await.unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
             assert_eq!(parsed, d, "print_diff/parse_diff round-trip mismatch (printed {printed:?})");
 
-            let encoded = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
-            let decoded = ObjDiff::decode_diff(&encoded).unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
+            let encoded = d.encode_diff().await.unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
+            let decoded = ObjDiff::decode_diff(&encoded).await.unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
             assert_eq!(decoded, d, "encode_diff/decode_diff round-trip mismatch");
         }
     }

@@ -633,6 +633,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-part/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-part/🧪️tests/appends-part-c/🦀️component.rs"]
+                                    mod tests_appends_part_c;
                                 }
                                 #[path = "."]
                                 pub mod delete_part {
@@ -642,6 +645,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑delete-part/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑delete-part/🧪️tests/removes-part-a-and-severs-fastener/🦀️component.rs"]
+                                    mod tests_removes_part_a_and_severs_fastener;
                                 }
                                 #[path = "."]
                                 pub mod move_part_2d {
@@ -651,6 +657,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍move-part2d/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍move-part2d/🧪️tests/moves-part-a/🦀️component.rs"]
+                                    mod tests_moves_part_a;
                                 }
                                 #[path = "."]
                                 pub mod replace_part_2d_geometry {
@@ -660,6 +669,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊replace-part2d-geometry/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊replace-part2d-geometry/🧪️tests/circle-to-rectangle/🦀️component.rs"]
+                                    mod tests_circle_to_rectangle;
                                 }
                                 #[path = "."]
                                 pub mod edit_part_2d_text {
@@ -669,6 +681,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️edit-part2d-text/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️edit-part2d-text/🧪️tests/retitles-part-a/🦀️component.rs"]
+                                    mod tests_retitles_part_a;
                                 }
                                 #[path = "."]
                                 pub mod change_part_2d_icon {
@@ -678,6 +693,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨change-part2d-icon/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨change-part2d-icon/🧪️tests/swaps-icon/🦀️component.rs"]
+                                    mod tests_swaps_icon;
                                 }
                                 #[path = "."]
                                 pub mod change_part_2d_hidden {
@@ -687,6 +705,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🙈change-part2d-hidden/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🙈change-part2d-hidden/🧪️tests/hides-part-a/🦀️component.rs"]
+                                    mod tests_hides_part_a;
                                 }
                                 #[path = "."]
                                 pub mod change_part_2d_locked {
@@ -696,6 +717,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒change-part2d-locked/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒change-part2d-locked/🧪️tests/locks-part-a/🦀️component.rs"]
+                                    mod tests_locks_part_a;
                                 }
                                 #[path = "."]
                                 pub mod move_part_3d {
@@ -705,6 +729,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚀move-part3d/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚀move-part3d/🧪️tests/moves-part-a-in-world/🦀️component.rs"]
+                                    mod tests_moves_part_a_in_world;
                                 }
                                 #[path = "."]
                                 pub mod rotate_part_3d {
@@ -714,6 +741,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃rotate-part3d/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃rotate-part3d/🧪️tests/half-turn-about-z/🦀️component.rs"]
+                                    mod tests_half_turn_about_z;
                                 }
                                 #[path = "."]
                                 pub mod scale_part_3d {
@@ -723,6 +753,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏scale-part3d/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏scale-part3d/🧪️tests/uniform-double/🦀️component.rs"]
+                                    mod tests_uniform_double;
                                 }
                                 #[path = "."]
                                 pub mod change_part_3d_mesh {
@@ -732,6 +765,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱change-part3d-mesh/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱change-part3d-mesh/🧪️tests/repoints-mesh/🦀️component.rs"]
+                                    mod tests_repoints_mesh;
                                 }
                                 #[path = "."]
                                 pub mod edit_part_3d_label {
@@ -741,6 +777,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖋️edit-part3d-label/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖋️edit-part3d-label/🧪️tests/relabels-part-a/🦀️component.rs"]
+                                    mod tests_relabels_part_a;
                                 }
                                 #[path = "."]
                                 pub mod change_part_kind {
@@ -750,6 +789,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗change-part-kind/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗change-part-kind/🧪️tests/reassigns-kind/🦀️component.rs"]
+                                    mod tests_reassigns_kind;
                                 }
                                 #[path = "."]
                                 pub mod change_part_anchor {
@@ -759,6 +801,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚓change-part-anchor/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚓change-part-anchor/🧪️tests/fixed-to-derived/🦀️component.rs"]
+                                    mod tests_fixed_to_derived;
                                 }
                                 #[path = "."]
                                 pub mod add_part_grip {
@@ -768,6 +813,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕add-part-grip/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕add-part-grip/🧪️tests/appends-grip-3/🦀️component.rs"]
+                                    mod tests_appends_grip_3;
                                 }
                                 #[path = "."]
                                 pub mod remove_part_grip {
@@ -777,6 +825,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-part-grip/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-part-grip/🧪️tests/removes-grip-1-and-severs-fastener/🦀️component.rs"]
+                                    mod tests_removes_grip_1_and_severs_fastener;
                                 }
                                 #[path = "."]
                                 pub mod replace_part_grip {
@@ -786,6 +837,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌replace-part-grip/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌replace-part-grip/🧪️tests/rekinds-grip-1/🦀️component.rs"]
+                                    mod tests_rekinds_grip_1;
                                 }
                                 #[path = "."]
                                 pub mod connect_grips {
@@ -795,6 +849,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗connect-grips/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗connect-grips/🧪️tests/adds-second-fastener/🦀️component.rs"]
+                                    mod tests_adds_second_fastener;
                                 }
                                 #[path = "."]
                                 pub mod disconnect_grips {
@@ -804,6 +861,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-grips/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-grips/🧪️tests/removes-fast-1/🦀️component.rs"]
+                                    mod tests_removes_fast_1;
                                 }
                                 #[path = "."]
                                 pub mod replace_fastener_geometry {
@@ -813,6 +873,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮replace-fastener-geometry/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮replace-fastener-geometry/🧪️tests/repositions-fast-1/🦀️component.rs"]
+                                    mod tests_repositions_fast_1;
                                 }
                                 #[path = "."]
                                 pub mod change_fastener_kind {
@@ -822,6 +885,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎯change-fastener-kind/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎯change-fastener-kind/🧪️tests/rekinds-fast-1/🦀️component.rs"]
+                                    mod tests_rekinds_fast_1;
                                 }
                                 #[path = "."]
                                 pub mod rename_puzzle5d {
@@ -831,6 +897,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷rename-puzzle5d/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷rename-puzzle5d/🧪️tests/relabels-document/🦀️component.rs"]
+                                    mod tests_relabels_document;
                                 }
                                 #[path = "."]
                                 pub mod change_domain {
@@ -840,6 +909,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐change-domain/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐change-domain/🧪️tests/architecture-to-engineering/🦀️component.rs"]
+                                    mod tests_architecture_to_engineering;
                                 }
                                 #[path = "."]
                                 pub mod change_description {
@@ -849,6 +921,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝change-description/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝change-description/🧪️tests/rewrites-description/🦀️component.rs"]
+                                    mod tests_rewrites_description;
                                 }
                                 #[path = "."]
                                 pub mod connect_kind_compatibility {
@@ -858,6 +933,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤝connect-kind-compatibility/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤝connect-kind-compatibility/🧪️tests/adds-grip-pair/🦀️component.rs"]
+                                    mod tests_adds_grip_pair;
                                 }
                                 #[path = "."]
                                 pub mod disconnect_kind_compatibility {
@@ -867,6 +945,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💔disconnect-kind-compatibility/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💔disconnect-kind-compatibility/🧪️tests/removes-grip-pair/🦀️component.rs"]
+                                    mod tests_removes_grip_pair;
                                 }
                                 #[path = "."]
                                 pub mod replace_kind_catalogs {
@@ -876,6 +957,9 @@ pub mod artifacts {
                                     pub mod diff;
                                     #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚replace-kind-catalogs/↩️inverse/🦀️component.rs"]
                                     pub mod inverse;
+                                    #[cfg(test)]
+                                    #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚replace-kind-catalogs/🧪️tests/null-catalogs-is-noop/🦀️component.rs"]
+                                    mod tests_null_catalogs_is_noop;
                                 }
                             }
                             #[path = "."]

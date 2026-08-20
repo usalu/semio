@@ -1,0 +1,6 @@
+{
+  "mutation": "movePart2d",
+  "id": "part-a",
+  "newX": 5.0,
+  "newY": 7.0
+}

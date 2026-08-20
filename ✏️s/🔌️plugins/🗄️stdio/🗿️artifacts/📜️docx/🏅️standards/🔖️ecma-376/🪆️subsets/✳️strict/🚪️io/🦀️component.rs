@@ -127,7 +127,7 @@ pub mod derived_composition {
         async fn conforming_snapshot_composes_and_stamps_strict() {
             let bytes = conforming_pack_bytes(&strict_snapshot());
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
-            let composed = DocxStrictComposerComposition::compose(&sources).expect("clean strict document must compose");
+            let composed = DocxStrictComposerComposition::compose(&sources).await.expect("clean strict document must compose");
             assert!(composed.diagnostics.iter().all(|d| d.severity != Severity::Error), "got {:?}", composed.diagnostics);
         }
 
@@ -141,7 +141,7 @@ pub mod derived_composition {
             let snapshot = DocxSnapshot::from_parts(opc, Default::default());
             let bytes = <DocxSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
-            let err = DocxStrictComposerComposition::compose(&sources).expect_err("transitional relationship base must not stamp strict");
+            let err = DocxStrictComposerComposition::compose(&sources).await.expect_err("transitional relationship base must not stamp strict");
             assert!(err.diagnostics.iter().any(|d| d.code.0 == CODE_REL_BASE && d.severity == Severity::Error), "got {:?}", err.diagnostics);
         }
 
@@ -149,7 +149,7 @@ pub mod derived_composition {
         async fn subset_validator_rechecks_wire_payload() {
             let bytes = conforming_pack_bytes(&strict_snapshot());
             let diagnostics = DocxStrictValidator::validate(&IoPayload::Binary(bytes));
-            assert!(diagnostics.iter().all(|d| d.severity != Severity::Error), "got {diagnostics:?}");
+            assert!(diagnostics.await.iter().all(|d| d.severity != Severity::Error), "got {diagnostics:?}");
         }
     }
 }

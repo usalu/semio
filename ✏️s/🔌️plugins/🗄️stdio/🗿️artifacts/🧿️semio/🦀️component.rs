@@ -166,7 +166,7 @@ pub fn open_semio_member(envelope_pack: &[u8]) -> Result<SemioMembers, dsl::VcsE
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn subset_of_persisted_envelope(envelope_pack: &[u8]) -> Result<String, dsl::VcsError> {
     let (_, spr) = dsl::decode_document_pack_bytes(envelope_pack)?;
-    let log = dsl::decode_history(&spr, &dsl::os_spr::DecodeOptions::default()).map_err(|error| dsl::VcsError::Deserialize(error.to_string()))?;
+    let log = dsl::decode_history(&spr, &dsl::os_spr::DecodeOptions::default()).await.map_err(|error| dsl::VcsError::Deserialize(error.to_string()))?;
     log.composition.and_then(|composition| composition.dialect).map(|(_, _, subset)| subset).ok_or_else(|| dsl::VcsError::Deserialize("semio child store: persisted child carries no dialect, so its subset is unknowable".to_string()))
 }
 //#endregion 🔖️Members
@@ -213,17 +213,17 @@ mod tests {
     /// subset would fail with an unhelpful error rather than a named one.
     #[semio_framework_async_macros::async_test]
     async fn every_composable_subset_dispatches_to_a_real_child_store() {
-        for subset in composable_subsets().await {
-            let dialect = subset_dialect(subset).await;
+        for subset in composable_subsets() {
+            let dialect = subset_dialect(subset);
             // An empty pack is rejected by the production member, so this asserts the DISPATCH
             // reached a real typed variant rather than falling through to "no member kind".
-            let error = match create_semio_member("probe", &dialect, &[]).await {
+            let error = match create_semio_member("probe", &dialect, &[]) {
                 Ok(_) => panic!("empty genesis pack must be rejected"),
                 Err(error) => error,
             };
             assert!(!error.to_string().contains("no member kind"), "subset {subset} is not wired into the child-store dispatch");
         }
-        let unknown = match create_semio_member("probe", &subset_dialect("not-a-subset").await, &[]).await {
+        let unknown = match create_semio_member("probe", &subset_dialect("not-a-subset"), &[]) {
             Ok(_) => panic!("unknown subset must be rejected"),
             Err(error) => error,
         };
@@ -236,13 +236,13 @@ mod tests {
     /// subset is recovered from.
     #[semio_framework_async_macros::async_test]
     async fn a_semio_member_mints_and_reopens_a_real_child_envelope() {
-        let dialect = subset_dialect("mesh").await;
+        let dialect = subset_dialect("mesh");
 
         let seed = SemioMeshSnapshot::default();
-        let child = create_semio_member("mesh-child-1", &dialect, &seed.encode_pack().await).await.expect("create child");
+        let child = create_semio_member("mesh-child-1", &dialect, &seed.encode_pack().await).expect("create child");
         assert_eq!(child.document_id().await, "mesh-child-1");
 
-        let reopened = open_semio_member(&child.envelope_pack_bytes().await.expect("envelope pack")).await.expect("reopen child");
+        let reopened = open_semio_member(&child.envelope_pack_bytes().await.expect("envelope pack")).expect("reopen child");
         assert_eq!(reopened.document_pack_bytes().await.expect("head pack"), child.document_pack_bytes().await.expect("head pack"), "the reopened child diverged from the persisted one");
     }
 }

@@ -586,8 +586,8 @@ fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
+    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn write_str_lp(out: &mut Vec<u8>, s: &str) {
@@ -605,9 +605,9 @@ fn write_point3(out: &mut Vec<u8>, p: &SemioPoint3) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_point3(reader: &mut store::ByteReader<'_>) -> Result<SemioPoint3, String> {
-    let x = reader.read_f64_le().map_err(|e| e.to_string())?;
-    let y = reader.read_f64_le().map_err(|e| e.to_string())?;
-    let z = reader.read_f64_le().map_err(|e| e.to_string())?;
+    let x = reader.read_f64_le().await.map_err(|e| e.to_string())?;
+    let y = reader.read_f64_le().await.map_err(|e| e.to_string())?;
+    let z = reader.read_f64_le().await.map_err(|e| e.to_string())?;
     Ok(SemioPoint3 { x, y, z })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -619,10 +619,10 @@ fn write_f64_vec(out: &mut Vec<u8>, v: &[f64]) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_f64_vec(reader: &mut store::ByteReader<'_>) -> Result<Vec<f64>, String> {
-    let n = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let n = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut v = Vec::with_capacity(n as usize);
     for _ in 0..n {
-        v.push(reader.read_f64_le().map_err(|e| e.to_string())?);
+        v.push(reader.read_f64_le().await.map_err(|e| e.to_string())?);
     }
     Ok(v)
 }
@@ -635,7 +635,7 @@ fn write_point3_vec(out: &mut Vec<u8>, v: &[SemioPoint3]) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_point3_vec(reader: &mut store::ByteReader<'_>) -> Result<Vec<SemioPoint3>, String> {
-    let n = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let n = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut v = Vec::with_capacity(n as usize);
     for _ in 0..n {
         v.push(read_point3(reader)?);
@@ -648,7 +648,7 @@ fn write_bool(out: &mut Vec<u8>, b: bool) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_bool(reader: &mut store::ByteReader<'_>) -> Result<bool, String> {
-    Ok(reader.read_u8().map_err(|e| e.to_string())? != 0)
+    Ok(reader.read_u8().await.map_err(|e| e.to_string())? != 0)
 }
 
 /// 🏷️ `BrepCurve` variant tags — 0=Line, 1=Circle, 2=Ellipse, 3=Nurbs (declaration order).
@@ -684,12 +684,12 @@ fn write_curve(out: &mut Vec<u8>, c: &BrepCurve) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_curve(reader: &mut store::ByteReader<'_>) -> Result<BrepCurve, String> {
-    let tag = reader.read_u8().map_err(|e| e.to_string())?;
+    let tag = reader.read_u8().await.map_err(|e| e.to_string())?;
     match tag {
         0 => Ok(BrepCurve::Line { origin: read_point3(reader)?, direction: read_point3(reader)? }),
-        1 => Ok(BrepCurve::Circle { center: read_point3(reader)?, axis: read_point3(reader)?, radius: reader.read_f64_le().map_err(|e| e.to_string())? }),
-        2 => Ok(BrepCurve::Ellipse { center: read_point3(reader)?, axis: read_point3(reader)?, radius_major: reader.read_f64_le().map_err(|e| e.to_string())?, radius_minor: reader.read_f64_le().map_err(|e| e.to_string())? }),
-        3 => Ok(BrepCurve::Nurbs { control_points: read_point3_vec(reader)?, weights: read_f64_vec(reader)?, degree: reader.read_varint_u64().map_err(|e| e.to_string())? as u32, knots: read_f64_vec(reader)? }),
+        1 => Ok(BrepCurve::Circle { center: read_point3(reader)?, axis: read_point3(reader)?, radius: reader.read_f64_le().await.map_err(|e| e.to_string())? }),
+        2 => Ok(BrepCurve::Ellipse { center: read_point3(reader)?, axis: read_point3(reader)?, radius_major: reader.read_f64_le().await.map_err(|e| e.to_string())?, radius_minor: reader.read_f64_le().await.map_err(|e| e.to_string())? }),
+        3 => Ok(BrepCurve::Nurbs { control_points: read_point3_vec(reader)?, weights: read_f64_vec(reader)?, degree: reader.read_varint_u64().await.map_err(|e| e.to_string())? as u32, knots: read_f64_vec(reader)? }),
         other => Err(format!("curve: unknown binary tag {other}")),
     }
 }
@@ -743,20 +743,20 @@ fn write_surface(out: &mut Vec<u8>, s: &BrepSurface) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_surface(reader: &mut store::ByteReader<'_>) -> Result<BrepSurface, String> {
-    let tag = reader.read_u8().map_err(|e| e.to_string())?;
+    let tag = reader.read_u8().await.map_err(|e| e.to_string())?;
     match tag {
         0 => Ok(BrepSurface::Plane { origin: read_point3(reader)?, normal: read_point3(reader)? }),
-        1 => Ok(BrepSurface::Cylinder { origin: read_point3(reader)?, axis: read_point3(reader)?, radius: reader.read_f64_le().map_err(|e| e.to_string())? }),
-        2 => Ok(BrepSurface::Cone { origin: read_point3(reader)?, axis: read_point3(reader)?, radius: reader.read_f64_le().map_err(|e| e.to_string())?, half_angle: reader.read_f64_le().map_err(|e| e.to_string())? }),
-        3 => Ok(BrepSurface::Sphere { center: read_point3(reader)?, radius: reader.read_f64_le().map_err(|e| e.to_string())? }),
-        4 => Ok(BrepSurface::Torus { center: read_point3(reader)?, axis: read_point3(reader)?, major_radius: reader.read_f64_le().map_err(|e| e.to_string())?, minor_radius: reader.read_f64_le().map_err(|e| e.to_string())? }),
+        1 => Ok(BrepSurface::Cylinder { origin: read_point3(reader)?, axis: read_point3(reader)?, radius: reader.read_f64_le().await.map_err(|e| e.to_string())? }),
+        2 => Ok(BrepSurface::Cone { origin: read_point3(reader)?, axis: read_point3(reader)?, radius: reader.read_f64_le().await.map_err(|e| e.to_string())?, half_angle: reader.read_f64_le().await.map_err(|e| e.to_string())? }),
+        3 => Ok(BrepSurface::Sphere { center: read_point3(reader)?, radius: reader.read_f64_le().await.map_err(|e| e.to_string())? }),
+        4 => Ok(BrepSurface::Torus { center: read_point3(reader)?, axis: read_point3(reader)?, major_radius: reader.read_f64_le().await.map_err(|e| e.to_string())?, minor_radius: reader.read_f64_le().await.map_err(|e| e.to_string())? }),
         5 => Ok(BrepSurface::Nurbs {
             control_points: read_point3_vec(reader)?,
             weights: read_f64_vec(reader)?,
-            u_count: reader.read_varint_u64().map_err(|e| e.to_string())? as u32,
-            v_count: reader.read_varint_u64().map_err(|e| e.to_string())? as u32,
-            degree_u: reader.read_varint_u64().map_err(|e| e.to_string())? as u32,
-            degree_v: reader.read_varint_u64().map_err(|e| e.to_string())? as u32,
+            u_count: reader.read_varint_u64().await.map_err(|e| e.to_string())? as u32,
+            v_count: reader.read_varint_u64().await.map_err(|e| e.to_string())? as u32,
+            degree_u: reader.read_varint_u64().await.map_err(|e| e.to_string())? as u32,
+            degree_v: reader.read_varint_u64().await.map_err(|e| e.to_string())? as u32,
             knots_u: read_f64_vec(reader)?,
             knots_v: read_f64_vec(reader)?,
         }),
@@ -804,7 +804,7 @@ fn write_loop(out: &mut Vec<u8>, l: &BrepLoop) {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_loop(reader: &mut store::ByteReader<'_>) -> Result<BrepLoop, String> {
     let id = read_str_lp(reader)?;
-    let n = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let n = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut edges = Vec::with_capacity(n as usize);
     for _ in 0..n {
         edges.push(read_loop_edge(reader)?);
@@ -826,7 +826,7 @@ fn write_face(out: &mut Vec<u8>, f: &BrepFace) {
 fn read_face(reader: &mut store::ByteReader<'_>) -> Result<BrepFace, String> {
     let id = read_str_lp(reader)?;
     let outer_loop = read_str_lp(reader)?;
-    let n = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let n = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut inner_loops = Vec::with_capacity(n as usize);
     for _ in 0..n {
         inner_loops.push(read_str_lp(reader)?);
@@ -855,7 +855,7 @@ fn write_shell(out: &mut Vec<u8>, sh: &BrepShell) {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_shell(reader: &mut store::ByteReader<'_>) -> Result<BrepShell, String> {
     let id = read_str_lp(reader)?;
-    let n = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let n = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut faces = Vec::with_capacity(n as usize);
     for _ in 0..n {
         faces.push(read_shell_face(reader)?);
@@ -882,7 +882,7 @@ fn write_solid(out: &mut Vec<u8>, so: &BrepSolid) {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_solid(reader: &mut store::ByteReader<'_>) -> Result<BrepSolid, String> {
     let id = read_str_lp(reader)?;
-    let n = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let n = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut shells = Vec::with_capacity(n as usize);
     for _ in 0..n {
         shells.push(read_solid_shell(reader)?);
@@ -926,37 +926,37 @@ fn encode_brep_snapshot_binary(s: &SemioBrepSnapshot) -> Vec<u8> {
 fn decode_brep_snapshot_binary(bytes: &[u8]) -> Result<SemioBrepSnapshot, String> {
     const PACK_BINARY_FORMAT: u8 = 1;
     let mut reader = semio_framework_plugin::resolve_ready(store::ByteReader::new(bytes));
-    let format = reader.read_u8().map_err(|e| e.to_string())?;
+    let format = reader.read_u8().await.map_err(|e| e.to_string())?;
     if format != PACK_BINARY_FORMAT {
         return Err(format!("unsupported pack format {format}"));
     }
     let schema = read_str_lp(&mut reader)?;
-    let vertex_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let vertex_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut vertices = Vec::with_capacity(vertex_count as usize);
     for _ in 0..vertex_count {
         vertices.push(read_vertex(&mut reader)?);
     }
-    let edge_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let edge_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut edges = Vec::with_capacity(edge_count as usize);
     for _ in 0..edge_count {
         edges.push(read_edge(&mut reader)?);
     }
-    let loop_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let loop_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut loops = Vec::with_capacity(loop_count as usize);
     for _ in 0..loop_count {
         loops.push(read_loop(&mut reader)?);
     }
-    let face_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let face_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut faces = Vec::with_capacity(face_count as usize);
     for _ in 0..face_count {
         faces.push(read_face(&mut reader)?);
     }
-    let shell_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let shell_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut shells = Vec::with_capacity(shell_count as usize);
     for _ in 0..shell_count {
         shells.push(read_shell(&mut reader)?);
     }
-    let solid_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let solid_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut solids = Vec::with_capacity(solid_count as usize);
     for _ in 0..solid_count {
         solids.push(read_solid(&mut reader)?);
@@ -1086,7 +1086,7 @@ mod tests {
     async fn json_pack_round_trips() {
         let snap = SemioBrepSnapshot::default();
         let bytes = <SemioBrepSnapshot as store::ArtifactPack>::encode_pack(&snap);
-        let back = <SemioBrepSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+        let back = <SemioBrepSnapshot as store::ArtifactPack>::decode_pack(&bytes).await.expect("decode");
         assert_eq!(snap, back);
     }
 
@@ -1094,7 +1094,7 @@ mod tests {
     async fn dsl_text_round_trips() {
         let snap = SemioBrepSnapshot::default();
         let text = <SemioBrepSnapshot as store::ArtifactDsl>::print_dsl(&snap);
-        let back = <SemioBrepSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
+        let back = <SemioBrepSnapshot as store::ArtifactDsl>::parse_dsl(&text).await.expect("parse");
         assert_eq!(snap, back);
     }
 
@@ -1106,9 +1106,9 @@ mod tests {
     async fn codec_retention_law_populated_snapshot_round_trips_pack_and_dsl() {
         let snap = populated_snapshot();
         let packed = <SemioBrepSnapshot as store::ArtifactPack>::encode_pack(&snap);
-        assert_eq!(<SemioBrepSnapshot as store::ArtifactPack>::decode_pack(&packed).expect("decode"), snap);
+        assert_eq!(<SemioBrepSnapshot as store::ArtifactPack>::decode_pack(&packed).await.expect("decode"), snap);
         let text = <SemioBrepSnapshot as store::ArtifactDsl>::print_dsl(&snap);
-        assert_eq!(<SemioBrepSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse"), snap);
+        assert_eq!(<SemioBrepSnapshot as store::ArtifactDsl>::parse_dsl(&text).await.expect("parse"), snap);
     }
 
     /// 🧪️ Every `BrepCurve`/`BrepSurface` variant (incl. both `Nurbs` shapes) round-trips through
@@ -1118,9 +1118,9 @@ mod tests {
     async fn demo_snapshot_round_trips_pack_and_dsl() {
         let demo = demo_brep_snapshot();
         let packed = <SemioBrepSnapshot as store::ArtifactPack>::encode_pack(&demo);
-        assert_eq!(<SemioBrepSnapshot as store::ArtifactPack>::decode_pack(&packed).expect("decode"), demo);
+        assert_eq!(<SemioBrepSnapshot as store::ArtifactPack>::decode_pack(&packed).await.expect("decode"), demo);
         let text = <SemioBrepSnapshot as store::ArtifactDsl>::print_dsl(&demo);
-        assert_eq!(<SemioBrepSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse"), demo);
+        assert_eq!(<SemioBrepSnapshot as store::ArtifactDsl>::parse_dsl(&text).await.expect("parse"), demo);
     }
 }
 //#endregion 🔖️Tests

@@ -189,7 +189,7 @@ const CP437_HIGH: [char; 128] = [
     'Γ', 'π', 'Σ', 'σ', 'µ', 'τ', 'Φ', 'Θ', 'Ω', 'δ', '∞', 'φ', 'ε', '∩', '≡', '±', '≥', '≤', '⌠', '⌡', '÷', '≈', '°', '∙', '·', '√', 'ⁿ', '²', '■', '\u{00a0}',
 ];
 
-async fn cp437_decode(bytes: &[u8]) -> String {
+fn cp437_decode(bytes: &[u8]) -> String {
     bytes.iter().map(|&b| if b < 0x80 { b as char } else { CP437_HIGH[(b - 0x80) as usize] }).collect()
 }
 
@@ -198,7 +198,7 @@ async fn decode_zip_text(bytes: &[u8], utf8: bool, what: &'static str) -> Result
     if utf8 {
         String::from_utf8(bytes.to_vec()).map_err(|_| ZipError::Utf8 { what, name_hint: cp437_decode(bytes) })
     } else {
-        Ok(cp437_decode(bytes).await)
+        Ok(cp437_decode(bytes))
     }
 }
 
@@ -392,7 +392,7 @@ async fn resolve_central_directory(data: &[u8], eocd: usize) -> Result<CentralDi
 
     let needs_zip64 = count16 == 0xFFFF || cd_size32 == 0xFFFF_FFFF || cd_offset32 == 0xFFFF_FFFF;
     if !needs_zip64 {
-        return Ok(CentralDirLocation { count: count16 as usize, cd_size: cd_size32 as usize, cd_offset: cd_offset32 as usize, comment });
+        return Ok(CentralDirLocation { count: count16 as usize, cd_size: cd_size32 as usize, cd_offset: cd_offset32 as usize, comment: comment.await });
     }
 
     if eocd < 20 || read_u32(data, eocd - 20).await? != SIG_EOCD64_LOCATOR {
@@ -406,7 +406,7 @@ async fn resolve_central_directory(data: &[u8], eocd: usize) -> Result<CentralDi
     let total_entries = read_u64(data, record_offset + 32).await?;
     let cd_size = read_u64(data, record_offset + 40).await?;
     let cd_offset = read_u64(data, record_offset + 48).await?;
-    Ok(CentralDirLocation { count: total_entries as usize, cd_size: cd_size as usize, cd_offset: cd_offset as usize, comment })
+    Ok(CentralDirLocation { count: total_entries as usize, cd_size: cd_size as usize, cd_offset: cd_offset as usize, comment: comment.await })
 }
 
 //#endregion Eocd
@@ -775,7 +775,7 @@ mod codec_tests {
                 local.extend_from_slice(&u32_le(0));
                 local.extend_from_slice(&u32_le(0));
             } else {
-                local.extend_from_slice(&u32_le(crc));
+                local.extend_from_slice(&u32_le(crc.await));
                 local.extend_from_slice(&u32_le(comp_field));
                 local.extend_from_slice(&u32_le(uncomp_field));
             }
@@ -786,7 +786,7 @@ mod codec_tests {
             local.extend_from_slice(&payload);
             if e.use_descriptor {
                 local.extend_from_slice(&u32_le(SIG_DATA_DESCRIPTOR));
-                local.extend_from_slice(&u32_le(crc));
+                local.extend_from_slice(&u32_le(crc.await));
                 local.extend_from_slice(&u32_le(comp_field));
                 local.extend_from_slice(&u32_le(uncomp_field));
             }
@@ -799,7 +799,7 @@ mod codec_tests {
             cen.extend_from_slice(&u16_le(e.method));
             cen.extend_from_slice(&u16_le(0x1234));
             cen.extend_from_slice(&u16_le(0x5678));
-            cen.extend_from_slice(&u32_le(crc));
+            cen.extend_from_slice(&u32_le(crc.await));
             cen.extend_from_slice(&u32_le(comp_field));
             cen.extend_from_slice(&u32_le(uncomp_field));
             cen.extend_from_slice(&u16_le(e.name.len() as u16));
@@ -851,8 +851,8 @@ mod codec_tests {
             entries: vec![ZipEntry { name: "a.txt".into(), data: b"hello".to_vec(), ..Default::default() }, ZipEntry { name: "b/bin.dat".into(), data: vec![0, 1, 2, 3, 255], ..Default::default() }],
             comment: String::new(),
         };
-        let bytes = encode_zip(&snap).expect("encode store");
-        let decoded = decode_zip(&bytes).expect("decode store");
+        let bytes = encode_zip(&snap).await.expect("encode store");
+        let decoded = decode_zip(&bytes).await.expect("decode store");
         assert_eq!(decoded.entries.len(), 2);
         assert_eq!(decoded.entries[0].name, "a.txt");
         assert_eq!(decoded.entries[0].data, b"hello");
@@ -862,8 +862,8 @@ mod codec_tests {
     #[semio_framework_async_macros::async_test]
     async fn zip_deflate_round_trip() {
         let snap = ZipSnapshot { schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries: vec![ZipEntry { name: "poem.txt".into(), data: b"deflate inside zip via stdio.deflate raw".to_vec() }], comment: String::new() };
-        let bytes = encode_zip(&snap).expect("encode deflate");
-        let decoded = decode_zip(&bytes).expect("decode deflate");
+        let bytes = encode_zip(&snap).await.expect("encode deflate");
+        let decoded = decode_zip(&bytes).await.expect("decode deflate");
         assert_eq!(decoded.entries[0].data, snap.entries[0].data);
     }
 
@@ -871,7 +871,7 @@ mod codec_tests {
     async fn codec_round_trip() {
         let snap = ZipSnapshot { schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries: vec![ZipEntry { name: "x".into(), data: b"y".to_vec(), ..Default::default() }], comment: String::new() };
         let pack = store::ArtifactPack::encode_pack(&snap);
-        let decoded = <ZipSnapshot as store::ArtifactPack>::decode_pack(&pack).expect("decode");
+        let decoded = <ZipSnapshot as store::ArtifactPack>::decode_pack(&pack).await.expect("decode");
         // Byte round-tripping through the on-disk format legitimately normalizes metadata that
         // was never set (flags gain the UTF-8 bit, version fields gain their defaults) — see
         // `encode_zip`'s doc comment. The content-level invariant is name + data.
@@ -941,7 +941,7 @@ mod codec_tests {
             b"archive-level comment",
         );
 
-        let snap = decode_zip(&raw).expect("decode rich synthetic archive");
+        let snap = decode_zip(&raw).await.expect("decode rich synthetic archive");
         assert_eq!(snap.entries.len(), 5);
         assert_eq!(snap.comment, "archive-level comment");
 
@@ -985,7 +985,7 @@ mod codec_tests {
         // build_raw_zip always writes real (stored/deflate) payload bytes for its `data` field
         // regardless of the declared method, matching what a real archive with an unimplemented
         // method's raw compressed bytes would look like to this decoder.
-        let err = decode_zip(&raw).expect_err("method 12 must be rejected, not silently dropped");
+        let err = decode_zip(&raw).await.expect_err("method 12 must be rejected, not silently dropped");
         match err {
             ZipError::UnsupportedMethod { method, .. } => assert_eq!(method, 12),
             other => panic!("expected UnsupportedMethod, got {other:?}"),
@@ -998,7 +998,7 @@ mod codec_tests {
         // Corrupt the stored payload byte in place (after the 30-byte local header + name).
         let payload_offset = 30 + "a.txt".len();
         raw[payload_offset] ^= 0xFF;
-        let err = decode_zip(&raw).expect_err("corrupted payload must fail crc check");
+        let err = decode_zip(&raw).await.expect_err("corrupted payload must fail crc check");
         assert!(matches!(err, ZipError::Crc32Mismatch { .. }));
     }
 
@@ -1011,48 +1011,48 @@ mod codec_tests {
         let entry = ZipEntry { name: "readme.md".into(), data: b"# hello\nsome content here to compress".to_vec() };
         let snap = ZipSnapshot { schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries: vec![entry], comment: "archive comment".into() };
 
-        let bytes = encode_zip(&snap).expect("encode full metadata");
-        let decoded = decode_zip(&bytes).expect("decode full metadata");
+        let bytes = encode_zip(&snap).await.expect("encode full metadata");
+        let decoded = decode_zip(&bytes).await.expect("decode full metadata");
         assert_eq!(decoded.comment, "archive comment");
         let e = &decoded.entries[0];
         assert_eq!(e.name, "readme.md");
         assert_eq!(e.data, snap.entries[0].data);
 
         let pptx_bytes = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../temp/domai-specific-programmaning-language-for-architects.pptx")).expect("read exact OPC fixture");
-        let logical = decode_zip(&pptx_bytes).expect("decode native OPC ZIP");
+        let logical = decode_zip(&pptx_bytes).await.expect("decode native OPC ZIP");
         assert_eq!(logical.entries.len(), 211);
 
         let dsl = <ZipSnapshot as store::ArtifactDsl>::print_dsl(&logical);
-        let from_dsl = <ZipSnapshot as store::ArtifactDsl>::parse_dsl(&dsl).expect("parse logical ZIP DSL");
+        let from_dsl = <ZipSnapshot as store::ArtifactDsl>::parse_dsl(&dsl).await.expect("parse logical ZIP DSL");
         assert_eq!(from_dsl, logical);
         let pack = <ZipSnapshot as store::ArtifactPack>::encode_pack(&logical);
-        let from_pack = <ZipSnapshot as store::ArtifactPack>::decode_pack(&pack).expect("decode logical ZIP pack");
+        let from_pack = <ZipSnapshot as store::ArtifactPack>::decode_pack(&pack).await.expect("decode logical ZIP pack");
         assert_eq!(from_pack, logical);
 
         let self_diff = ZipDiff::between(&logical, &logical);
-        let text_diff = ZipDiff::parse_diff(&self_diff.print_diff()).expect("parse logical ZIP diff");
-        assert_eq!(text_diff.apply(&logical).unwrap(), logical);
-        let binary_diff = ZipDiff::decode_diff(&self_diff.encode_diff().expect("encode logical ZIP diff")).expect("decode logical ZIP diff");
-        assert_eq!(binary_diff.apply(&logical).unwrap(), logical);
+        let text_diff = ZipDiff::parse_diff(&self_diff.print_diff()).await.expect("parse logical ZIP diff");
+        assert_eq!(text_diff.apply(&logical).await.unwrap(), logical);
+        let binary_diff = ZipDiff::decode_diff(&self_diff.encode_diff().expect("encode logical ZIP diff")).await.expect("decode logical ZIP diff");
+        assert_eq!(binary_diff.apply(&logical).await.unwrap(), logical);
 
         let set_snapshot = ZipMutation::SetSnapshot { snapshot: logical.clone() };
-        let text_op = ZipMutation::parse_op(&set_snapshot.print_op()).expect("parse logical ZIP operation");
+        let text_op = ZipMutation::parse_op(&set_snapshot.print_op()).await.expect("parse logical ZIP operation");
         let mut from_text_op = ZipSnapshot::default();
         crate::artifacts::zip::schema::mutations::apply_zip_mutation(&mut from_text_op, &text_op);
         assert_eq!(from_text_op, logical);
-        let binary_op = ZipMutation::decode_op(&set_snapshot.encode_op().expect("encode logical ZIP operation")).expect("decode logical ZIP operation");
+        let binary_op = ZipMutation::decode_op(&set_snapshot.encode_op().await.expect("encode logical ZIP operation")).await.expect("decode logical ZIP operation");
         let mut from_binary_op = ZipSnapshot::default();
         crate::artifacts::zip::schema::mutations::apply_zip_mutation(&mut from_binary_op, &binary_op);
         assert_eq!(from_binary_op, logical);
 
         let analysis = crate::artifacts::zip::standards::v2_0::subsets::any::schema::ZipAnalyzerAnalysis::analyze(&[AnalyzeSource::Binary(&pptx_bytes)]);
-        assert_eq!(analysis.parts.snapshot.as_ref(), Some(&logical));
+        assert_eq!(analysis.await.parts.snapshot.as_ref(), Some(&logical));
         let dialect = <crate::artifacts::zip::standards::v2_0::subsets::any::schema::ZipAnalyzerAnalysis as ArtifactAnalysis>::DIALECT;
-        let composition = ZipComposerComposition::compose(&[ComposeSource { dialect, payload: AnalyzeSource::Binary(&pptx_bytes) }]).expect("compose native OPC ZIP");
+        let composition = ZipComposerComposition::compose(&[ComposeSource { dialect, payload: AnalyzeSource::Binary(&pptx_bytes) }]).await.expect("compose native OPC ZIP");
         assert_eq!(composition.snapshot, logical);
 
         for routed in [&from_dsl, &from_pack, &from_text_op, &from_binary_op, &composition.snapshot] {
-            assert_eq!(decode_zip(&encode_zip(routed).expect("materialize canonical logical ZIP")).expect("redecode canonical logical ZIP"), logical);
+            assert_eq!(decode_zip(&encode_zip(routed).await.expect("materialize canonical logical ZIP")).await.expect("redecode canonical logical ZIP"), logical);
         }
 
         let opc = crate::artifacts::zip::opc::decode_opc(&pptx_bytes).expect("decode logical OPC package");
@@ -1073,17 +1073,17 @@ mod codec_tests {
             entries.push(ZipEntry { name: format!("f{i}"), data: Vec::new(), ..Default::default() });
         }
         let snap = ZipSnapshot { schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries, comment: String::new() };
-        let err = encode_zip(&snap).expect_err("more than 0xFFFF entries requires ZIP64");
+        let err = encode_zip(&snap).await.expect_err("more than 0xFFFF entries requires ZIP64");
         assert_eq!(err, ZipError::UnsupportedZip64Write);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn sniff_recognizes_real_magic_and_rejects_garbage() {
         let snap = ZipSnapshot { schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries: vec![ZipEntry { name: "a".into(), data: b"b".to_vec(), ..Default::default() }], comment: String::new() };
-        let real = encode_zip(&snap).expect("encode");
+        let real = encode_zip(&snap).await.expect("encode");
         assert_eq!(sniff_zip_bytes(&real), SniffConfidence::High);
 
-        let empty_archive = encode_zip(&ZipSnapshot { schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries: Vec::new(), comment: String::new() }).unwrap();
+        let empty_archive = encode_zip(&ZipSnapshot { schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries: Vec::new(), comment: String::new() }).await.unwrap();
         assert_eq!(sniff_zip_bytes(&empty_archive), SniffConfidence::High);
 
         assert_eq!(sniff_zip_bytes(b"not a zip at all, just prose"), SniffConfidence::Low);

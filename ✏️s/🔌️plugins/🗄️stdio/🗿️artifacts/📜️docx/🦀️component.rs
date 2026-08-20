@@ -42,7 +42,7 @@ pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Resul
 pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     let formats = crate::registry::format_descriptors_for("docx")?;
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
-        .schema(crate::artifacts::docx::schema::docx_artifact_schema_descriptor())
+        .await.schema(crate::artifacts::docx::schema::docx_artifact_schema_descriptor())
         .formats(formats)
         .inferences([crate::artifacts::docx::standards::v_ecma_376::subsets::any::schema::inferences::docx_artifact_inference_descriptor()])
         .composers(crate::artifacts::docx::engine::io_registry::entries())

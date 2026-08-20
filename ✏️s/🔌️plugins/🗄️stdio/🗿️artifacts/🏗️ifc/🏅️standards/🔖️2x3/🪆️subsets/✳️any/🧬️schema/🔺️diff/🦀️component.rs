@@ -49,19 +49,19 @@ fn validate_ifc2x3_diff(diff: &Ifc2x3Diff, base: &Ifc2x3Snapshot) -> MutationApp
     let mut base_ids = BTreeSet::new();
     for instance in &base.document.instances {
         if !base_ids.insert(instance.id) {
-            return Err(MutationApplyError::new("duplicate-base-target", "base instance ids must be unique").at(["instances", &instance.id.to_string()]));
+            return Err(MutationApplyError::new("duplicate-base-target", "base instance ids must be unique").await.at(["instances", &instance.id.to_string()]));
         }
     }
     let mut removed = BTreeSet::new();
     for &id in &diff.removed_instances {
         if !base_ids.contains(&id) || !removed.insert(id) {
-            return Err(MutationApplyError::new("invalid-remove-target", "instance removal target must exist exactly once").at(["instances", &id.to_string()]));
+            return Err(MutationApplyError::new("invalid-remove-target", "instance removal target must exist exactly once").await.at(["instances", &id.to_string()]));
         }
     }
     let mut upserted = BTreeSet::new();
     for instance in &diff.upserted_instances {
         if removed.contains(&instance.id) || !upserted.insert(instance.id) {
-            return Err(MutationApplyError::new("invalid-upsert-target", "instance upsert target must be unique and not removed").at(["instances", &instance.id.to_string()]));
+            return Err(MutationApplyError::new("invalid-upsert-target", "instance upsert target must be unique and not removed").await.at(["instances", &instance.id.to_string()]));
         }
     }
     let mut final_ids = base_ids;
@@ -73,12 +73,12 @@ fn validate_ifc2x3_diff(diff: &Ifc2x3Diff, base: &Ifc2x3Snapshot) -> MutationApp
         let mut ordered = BTreeSet::new();
         for &id in order {
             if !final_ids.contains(&id) || !ordered.insert(id) {
-                return Err(MutationApplyError::new("invalid-instance-order", "instance order must contain each final id exactly once").at(["instanceOrder", &id.to_string()]));
+                return Err(MutationApplyError::new("invalid-instance-order", "instance order must contain each final id exactly once").await.at(["instanceOrder", &id.to_string()]));
             }
         }
         if ordered != final_ids {
             let missing = final_ids.difference(&ordered).next().copied().unwrap_or_default();
-            return Err(MutationApplyError::new("invalid-instance-order", "instance order must contain each final id exactly once").at(["instanceOrder", &missing.to_string()]));
+            return Err(MutationApplyError::new("invalid-instance-order", "instance order must contain each final id exactly once").await.at(["instanceOrder", &missing.to_string()]));
         }
     }
     Ok(())
@@ -370,8 +370,8 @@ pub(crate) fn write_str_bin(out: &mut Vec<u8>, s: &str) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn read_str_bin(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
-    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-    String::from_utf8(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec()).map_err(|e| e.to_string())
+    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+    String::from_utf8(reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec()).map_err(|e| e.to_string())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_edm_preamble_bin(preamble: &Ifc2x3EdmPreamble, out: &mut Vec<u8>) {
@@ -585,25 +585,25 @@ pub(crate) fn enc_part21_value_bin(v: &Part21Value, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_part21_value_bin(reader: &mut store::ByteReader<'_>) -> Result<Part21Value, String> {
-    let tag = reader.read_u8().map_err(|e| e.to_string())?;
+    let tag = reader.read_u8().await.map_err(|e| e.to_string())?;
     match tag {
         0 => Ok(Part21Value::Unset),
         1 => Ok(Part21Value::Derived),
-        2 => Ok(Part21Value::Int(reader.read_varint_i64().map_err(|e| e.to_string())?)),
+        2 => Ok(Part21Value::Int(reader.read_varint_i64().await.map_err(|e| e.to_string())?)),
         3 => {
-            let negative = reader.read_u8().map_err(|e| e.to_string())? != 0;
+            let negative = reader.read_u8().await.map_err(|e| e.to_string())? != 0;
             let coefficient = read_str_bin(reader)?;
-            let scale = reader.read_varint_u64().map_err(|e| e.to_string())? as u32;
-            let exponent = match reader.read_u8().map_err(|e| e.to_string())? {
+            let scale = reader.read_varint_u64().await.map_err(|e| e.to_string())? as u32;
+            let exponent = match reader.read_u8().await.map_err(|e| e.to_string())? {
                 0 => None,
-                1 => Some(reader.read_varint_i64().map_err(|e| e.to_string())? as i32),
+                1 => Some(reader.read_varint_i64().await.map_err(|e| e.to_string())? as i32),
                 tag => return Err(format!("Part21Decimal exponent presence: unknown tag {tag}")),
             };
             Ok(Part21Value::Real(Part21Decimal { negative, coefficient, scale, exponent }))
         }
         4 => Ok(Part21Value::Str(read_str_bin(reader)?)),
         5 => Ok(Part21Value::Enum(read_str_bin(reader)?)),
-        6 => Ok(Part21Value::Ref(reader.read_varint_u64().map_err(|e| e.to_string())?)),
+        6 => Ok(Part21Value::Ref(reader.read_varint_u64().await.map_err(|e| e.to_string())?)),
         7 => Ok(Part21Value::List(dec_part21_value_list_bin(reader)?)),
         8 => {
             let name = read_str_bin(reader)?;
@@ -622,7 +622,7 @@ pub(crate) fn enc_part21_value_list_bin(vs: &[Part21Value], out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_part21_value_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<Part21Value>, String> {
-    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     (0..count).map(|_| dec_part21_value_bin(reader)).collect()
 }
 //#endregion 🔖️Part21ValueBinaryCodecs
@@ -714,8 +714,8 @@ pub(crate) fn enc_part21_instance_bin(inst: &Part21Instance, out: &mut Vec<u8>) 
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_part21_instance_bin(reader: &mut store::ByteReader<'_>) -> Result<Part21Instance, String> {
-    let id = reader.read_varint_u64().map_err(|e| e.to_string())?;
-    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let id = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
+    let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut entities = Vec::with_capacity(count as usize);
     for _ in 0..count {
         let name = read_str_bin(reader)?;
@@ -748,7 +748,7 @@ pub(crate) fn enc_instance_list_bin(list: &[Part21Instance], out: &mut Vec<u8>) 
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_instance_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<Part21Instance>, String> {
-    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     (0..count).map(|_| dec_part21_instance_bin(reader)).collect()
 }
 //#endregion 🔖️HeaderInstanceCodecs
@@ -975,7 +975,7 @@ mod tests {
     async fn invalid_instance_order_is_rejected_before_mutation() {
         let base = Ifc2x3Snapshot::default();
         let diff = Ifc2x3Diff { instance_order: Some(vec![1]), ..Default::default() };
-        let error = diff.apply(&base).expect_err("unknown instance order target must be rejected");
+        let error = diff.apply(&base).await.expect_err("unknown instance order target must be rejected");
         assert_eq!(error.code, "invalid-instance-order");
         assert_eq!(error.target, vec!["instanceOrder", "1"]);
         assert_eq!(base, Ifc2x3Snapshot::default());
@@ -1006,10 +1006,10 @@ mod tests {
             vec![inst(1, "IFCWALLSTANDARDCASE"), inst(3, "IFCWINDOW")], // 1 modified, 2 removed, 3 added
         );
         let d = Ifc2x3Diff::between(&base, &next);
-        assert!(d.schema.is_some());
-        assert!(d.header.is_some());
-        assert_eq!(d.removed_instances, vec![2]);
-        assert_eq!(d.upserted_instances.len(), 2);
+        assert!(d.await.schema.is_some());
+        assert!(d.await.header.is_some());
+        assert_eq!(d.await.removed_instances, vec![2]);
+        assert_eq!(d.await.upserted_instances.len(), 2);
         assert_eq!(d.apply(&base).expect("valid between diff"), next);
     }
 
@@ -1039,17 +1039,17 @@ mod tests {
         let mut merged = d1.clone();
         merged.absorb(d2.clone());
         let sequential = {
-            let mid = d1.apply(&base).expect("valid first diff");
-            d2.apply(&mid).expect("valid second diff")
+            let mid = d1.apply(&base).await.expect("valid first diff");
+            d2.apply(&mid).await.expect("valid second diff")
         };
-        assert_eq!(merged.apply(&base).expect("valid absorbed diff"), sequential);
+        assert_eq!(merged.apply(&base).await.expect("valid absorbed diff"), sequential);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn inverse_diff_level_roundtrip() {
         let base = snap("stdio.ifc.2x3", Part21Header::default(), vec![inst(1, "IFCWALL"), inst(2, "IFCDOOR")]);
         let d = Ifc2x3Diff { removed_instances: vec![2], upserted_instances: vec![inst(1, "IFCWALLSTANDARDCASE"), inst(4, "IFCCOLUMN")], ..Default::default() };
-        let next = d.apply(&base).expect("valid forward diff");
+        let next = d.apply(&base).await.expect("valid forward diff");
         let inv = d.inverse(&base);
         assert_eq!(inv.apply(&next).expect("valid inverse diff"), base);
     }
@@ -1088,12 +1088,12 @@ mod tests {
         ];
         for d in cases {
             let printed = d.print_diff();
-            assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
-            let parsed = Ifc2x3Diff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
+            assert!(!printed.await.contains('\n'), "print_diff must be one line, got {printed:?}");
+            let parsed = Ifc2x3Diff::parse_diff(&printed).await.unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
             assert_eq!(parsed, d, "print_diff/parse_diff round-trip mismatch (printed {printed:?})");
 
-            let encoded = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed: {e:?}"));
-            let decoded = Ifc2x3Diff::decode_diff(&encoded).unwrap_or_else(|e| panic!("decode_diff failed: {e:?}"));
+            let encoded = d.encode_diff().await.unwrap_or_else(|e| panic!("encode_diff failed: {e:?}"));
+            let decoded = Ifc2x3Diff::decode_diff(&encoded).await.unwrap_or_else(|e| panic!("decode_diff failed: {e:?}"));
             assert_eq!(decoded, d, "encode_diff/decode_diff round-trip mismatch");
         }
     }

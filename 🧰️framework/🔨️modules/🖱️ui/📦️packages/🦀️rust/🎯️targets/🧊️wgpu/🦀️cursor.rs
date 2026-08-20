@@ -221,6 +221,7 @@ mod tests {
     use super::*;
     use crate::wgpu::component::ui::UiPresence;
     use crate::wgpu::geometry::Rect;
+    use crate::wgpu::Label;
     use std::collections::HashMap;
 
     fn hit(kind: HitKind, axis: Option<DragAxis>) -> HitTarget<()> {
@@ -315,14 +316,14 @@ mod tests {
 
     #[test]
     fn an_active_drag_capture_overrides_whatever_is_merely_hovered() {
-        let (tree, dragged) = leaf(UiNode::Text(UiTextNode { value: "x".into(), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None }));
+        let (tree, dragged) = leaf(UiNode::Text(UiTextNode { value: Label::data("x"), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None }));
         let cursor = resolve_semio_cursor_from_tree(&tree, None, Some((dragged, CaptureKind::Drag)));
         assert_eq!(cursor, SemioCursor::Grabbing);
     }
 
     #[test]
     fn a_vertical_scroll_thumb_capture_uses_the_ns_resize_cursor() {
-        let (tree, scrollable) = leaf(UiNode::Text(UiTextNode { value: "x".into(), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None }));
+        let (tree, scrollable) = leaf(UiNode::Text(UiTextNode { value: Label::data("x"), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None }));
         let cursor = resolve_semio_cursor_from_tree(&tree, None, Some((scrollable, CaptureKind::ScrollThumb(ScrollAxis::Vertical))));
         assert_eq!(cursor, SemioCursor::NsResize);
     }

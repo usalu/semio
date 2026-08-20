@@ -193,7 +193,7 @@ impl Mutation<SemioModelSnapshot> for SemioModelMutation {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn apply_semio_model_mutation(snapshot: &mut SemioModelSnapshot, mutation: &SemioModelMutation) -> protocol::MutationOutcome<SemioModelDiff> {
     let outcome = <SemioModelMutation as Mutation<SemioModelSnapshot>>::diff(mutation, snapshot);
-    outcome.apply_to(snapshot)
+    outcome.await.apply_to(snapshot)
 }
 //#endregion 🔖️Mutation
 
@@ -420,7 +420,7 @@ mod tests {
         let mut applied = base.clone();
         let produced = apply_semio_model_mutation(&mut applied, &mutation);
         assert_eq!(produced, diff, "diff() must match what apply_semio_model_mutation actually applied for {mutation:?}");
-        let expected = <SemioModelDiff as protocol::MutationDiff<SemioModelSnapshot>>::apply(diff.diff(), base).expect("apply must succeed for a well-formed fixture");
+        let expected = <SemioModelDiff as protocol::MutationDiff<SemioModelSnapshot>>::apply(diff.await.diff(), base).await.expect("apply must succeed for a well-formed fixture");
         assert_eq!(applied, expected, "applying the mutation must equal applying its own diff for {mutation:?}");
 
         let inv = <SemioModelMutation as Mutation<SemioModelSnapshot>>::inverse(&mutation, base);
@@ -476,12 +476,12 @@ mod tests {
     async fn op_text_binary_roundtrip_law() {
         for m in demo_mutation_cases() {
             let printed = m.print_op();
-            assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
-            let parsed = SemioModelMutation::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
+            assert!(!printed.await.contains('\n'), "print_op must be one line, got {printed:?}");
+            let parsed = SemioModelMutation::parse_op(&printed).await.unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
             assert_eq!(parsed, m, "print_op/parse_op round-trip mismatch for {m:?}");
 
-            let encoded = m.encode_op().unwrap_or_else(|e| panic!("encode_op({m:?}) failed: {e}"));
-            let decoded = SemioModelMutation::decode_op(&encoded).unwrap_or_else(|e| panic!("decode_op failed: {e}"));
+            let encoded = m.encode_op().await.unwrap_or_else(|e| panic!("encode_op({m:?}) failed: {e}"));
+            let decoded = SemioModelMutation::decode_op(&encoded).await.unwrap_or_else(|e| panic!("decode_op failed: {e}"));
             assert_eq!(decoded, m, "encode_op/decode_op round-trip mismatch for {m:?}");
         }
     }

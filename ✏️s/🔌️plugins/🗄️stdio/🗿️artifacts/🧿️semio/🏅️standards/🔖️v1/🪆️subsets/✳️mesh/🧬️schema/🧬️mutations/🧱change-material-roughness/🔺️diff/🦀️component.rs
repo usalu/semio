@@ -13,7 +13,7 @@ pub fn diff(payload: &ChangeMaterialRoughness, base: &SemioMeshSnapshot) -> prot
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Material \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
     if material.roughness == payload.new_roughness {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Material \"{}\" roughness factor is already {}.", payload.id, payload.new_roughness));
+        return protocol::MutationOutcome::empty().await.warn("mutation.no-op", format!("Material \"{}\" roughness factor is already {}.", payload.id, payload.new_roughness));
     }
     if !payload.new_roughness.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Material \"{}\" roughness factor {} is not finite.", payload.id, payload.new_roughness), [payload.id.clone()]);

@@ -1,0 +1,13 @@
+{
+  "title": "Compose to Puzzle5d Migration",
+  "emoji": "🧩️",
+  "status": "open",
+  "description": "End-to-end migration of the legacy `compose/` tree onto the `puzzle.puzzle5d@1` artifact schema, pinned to commit 5904ebe289a4d149e659b23e1f728895ad8de4e8.\n\nScope:\n1. Establish a canonical test-directory contract for every atomic and semantic mutation: `\u003cmutation\u003e/🧪️tests/\u003ctest\u003e/{mutation,diff,snapshot/{before,after},outcome}` with text/binary/JSON encodings for each artifact class (snapshot: .dsl.semio/.pack.semio/.json; mutation: .op.semio/.spr.semio/.json; diff: .patch.semio/.patch.spr.semio/.json) plus a typed `component.rs` fixture descriptor.\n2. Complete the missing binary-diff protocol wiring (`IoDeclaration.native.diff.binary` is currently `None`).\n3. Cover all 28 current atomic Puzzle5d mutations with fixtures, plus port every compose algorithm family (flatten, flatten-merkle, copy/paste, delete, move, diff/apply/invert, hash, validation, quality, filter-kit, find-replaceable-types, architect, representation export, kit-store) as either semantic mutations, inferences, or IO operations.\n4. Delete the parallel untyped document model: `Puzzle5dDocument`, `Puzzle5dPlaySnapshot`, the `serde_json::Value` mutation bridge, before/after document comparison as the primary mutation producer, and legacy embedded-catalog normalization.\n5. Translate all compose fixtures/assets to new terminology (kit-\u003ekind catalogs, design-\u003epuzzle snapshot, type-\u003epart kind, piece-\u003epart, connector-\u003egrip template, port-\u003egrip kind, connection-\u003efastener) via a ticket-scoped one-time translator that is deleted afterwards.\n6. Enforce coverage mechanically via permanent script.ts targets, then delete compose/ entirely.\n\nExecution uses an Opus coordinator + Sonnet execution fleet + Haiku read-only census fleet across 10 gated waves.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2575"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪e6a30068801a4b8290ee437af7cde85d"
+  ]
+}

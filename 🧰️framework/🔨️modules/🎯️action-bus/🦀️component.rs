@@ -75,7 +75,7 @@ impl<H: ActionHandler> ActionBus<H> {
 }
 
 /// @emoji 🔀️ Bridges staged `serde_json::Value` action args into `ActionDescriptor.args`.
-pub async fn optional_json_to_dsl(args: Option<serde_json::Value>) -> Option<DslValue> {
+pub fn optional_json_to_dsl(args: Option<serde_json::Value>) -> Option<DslValue> {
     args.map(|value| dsl::to_dsl_value(&value).unwrap_or(DslValue::Null))
 }
 

@@ -261,13 +261,13 @@ fn validate_md_blocks(base: &[MdBlock], diff: &MdBlocksDiff) -> MutationApplyRes
     let mut removed = std::collections::HashSet::new();
     for &index in &diff.removed {
         if index >= base.len() || !removed.insert(index) {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "markdown block removal is missing or duplicated").at(["blocks", "removed"]));
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "markdown block removal is missing or duplicated").await.at(["blocks", "removed"]));
         }
     }
     let mut modified = std::collections::HashSet::new();
     for entry in &diff.modified {
         if entry.index >= base.len() || !modified.insert(entry.index) || removed.contains(&entry.index) {
-            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "markdown block modification is missing, duplicated, or removed").at(["blocks", "modified"]));
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "markdown block modification is missing, duplicated, or removed").await.at(["blocks", "modified"]));
         }
         Box::pin(validate_md_block(&base[entry.index], &entry.diff))?;
     }
@@ -275,7 +275,7 @@ fn validate_md_blocks(base: &[MdBlock], diff: &MdBlocksDiff) -> MutationApplyRes
     let mut added = std::collections::HashSet::new();
     for entry in &diff.added {
         if entry.index > final_len || !added.insert(entry.index) {
-            return Err(MutationApplyError::new("mutation.apply.invalid-index", "markdown block addition index is invalid or duplicated").at(["blocks", "added"]));
+            return Err(MutationApplyError::new("mutation.apply.invalid-index", "markdown block addition index is invalid or duplicated").await.at(["blocks", "added"]));
         }
     }
     Ok(())
@@ -286,13 +286,13 @@ fn validate_md_list_items(base: &[Vec<MdBlock>], diff: &MdListItemsDiff) -> Muta
     let mut removed = std::collections::HashSet::new();
     for &index in &diff.removed {
         if index >= base.len() || !removed.insert(index) {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "markdown list-item removal is missing or duplicated").at(["items", "removed"]));
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "markdown list-item removal is missing or duplicated").await.at(["items", "removed"]));
         }
     }
     let mut modified = std::collections::HashSet::new();
     for entry in &diff.modified {
         if entry.index >= base.len() || !modified.insert(entry.index) || removed.contains(&entry.index) {
-            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "markdown list-item modification is missing, duplicated, or removed").at(["items", "modified"]));
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "markdown list-item modification is missing, duplicated, or removed").await.at(["items", "modified"]));
         }
         Box::pin(validate_md_blocks(&base[entry.index], &entry.diff))?;
     }
@@ -300,7 +300,7 @@ fn validate_md_list_items(base: &[Vec<MdBlock>], diff: &MdListItemsDiff) -> Muta
     let mut added = std::collections::HashSet::new();
     for entry in &diff.added {
         if entry.index > final_len || !added.insert(entry.index) {
-            return Err(MutationApplyError::new("mutation.apply.invalid-index", "markdown list-item addition index is invalid or duplicated").at(["items", "added"]));
+            return Err(MutationApplyError::new("mutation.apply.invalid-index", "markdown list-item addition index is invalid or duplicated").await.at(["items", "added"]));
         }
     }
     Ok(())
@@ -319,7 +319,7 @@ fn validate_md_block(base: &MdBlock, diff: &MdBlockDiff) -> MutationApplyResult<
         (MdBlock::List { .. }, MdBlockDiff::List { items: None, .. }) => Ok(()),
         (MdBlock::BlockQuote { blocks }, MdBlockDiff::BlockQuote { blocks: Some(blocks_diff) }) => validate_md_blocks(blocks, blocks_diff),
         (MdBlock::BlockQuote { .. }, MdBlockDiff::BlockQuote { blocks: None }) => Ok(()),
-        _ => Err(MutationApplyError::new("mutation.apply.conflicting-target", "markdown block diff kind does not match its target").at(["blocks"])),
+        _ => Err(MutationApplyError::new("mutation.apply.conflicting-target", "markdown block diff kind does not match its target").await.at(["blocks"])),
     }
 }
 
@@ -1001,7 +1001,7 @@ pub(crate) fn write_bool_bin(out: &mut Vec<u8>, b: bool) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn read_bool_bin(reader: &mut store::ByteReader<'_>) -> Result<bool, String> {
-    Ok(reader.read_u8().map_err(|e| e.to_string())? != 0)
+    Ok(reader.read_u8().await.map_err(|e| e.to_string())? != 0)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn write_str_bin(out: &mut Vec<u8>, s: &str) {
@@ -1010,8 +1010,8 @@ pub(crate) fn write_str_bin(out: &mut Vec<u8>, s: &str) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn read_str_bin(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
-    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-    String::from_utf8(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec()).map_err(|e| e.to_string())
+    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+    String::from_utf8(reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec()).map_err(|e| e.to_string())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn write_option_bin<T>(out: &mut Vec<u8>, opt: &Option<T>, enc: impl FnOnce(&T, &mut Vec<u8>)) {
@@ -1025,7 +1025,7 @@ pub(crate) fn write_option_bin<T>(out: &mut Vec<u8>, opt: &Option<T>, enc: impl 
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn read_option_bin<T>(reader: &mut store::ByteReader<'_>, dec: impl FnOnce(&mut store::ByteReader<'_>) -> Result<T, String>) -> Result<Option<T>, String> {
-    match reader.read_u8().map_err(|e| e.to_string())? {
+    match reader.read_u8().await.map_err(|e| e.to_string())? {
         0 => Ok(None),
         1 => Ok(Some(dec(reader)?)),
         other => Err(format!("option binary: unknown tag {other}")),
@@ -1046,7 +1046,7 @@ pub(crate) fn write_tristate_bin<T>(out: &mut Vec<u8>, opt: &Option<Option<T>>, 
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn read_tristate_bin<T>(reader: &mut store::ByteReader<'_>, dec: impl FnOnce(&mut store::ByteReader<'_>) -> Result<T, String>) -> Result<Option<Option<T>>, String> {
-    match reader.read_u8().map_err(|e| e.to_string())? {
+    match reader.read_u8().await.map_err(|e| e.to_string())? {
         0 => Ok(None),
         1 => Ok(Some(None)),
         2 => Ok(Some(Some(dec(reader)?))),
@@ -1154,7 +1154,7 @@ pub(crate) fn enc_inline_bin(n: &MdInline, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_inline_bin(reader: &mut store::ByteReader<'_>) -> Result<MdInline, String> {
-    let tag = reader.read_u8().map_err(|e| e.to_string())?;
+    let tag = reader.read_u8().await.map_err(|e| e.to_string())?;
     match tag {
         0 => Ok(MdInline::Text { text: read_str_bin(reader)? }),
         1 => Ok(MdInline::Emphasis { inlines: dec_inline_list_bin(reader)? }),
@@ -1187,7 +1187,7 @@ pub(crate) fn enc_inline_list_bin(list: &[MdInline], out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_inline_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<MdInline>, String> {
-    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     (0..count).map(|_| dec_inline_bin(reader)).collect()
 }
 //#endregion 🔖️InlineBinaryCodec
@@ -1269,7 +1269,7 @@ pub(crate) fn enc_block_bin(b: &MdBlock, out: &mut Vec<u8>) {
         MdBlock::List { ordered, start, tight, items } => {
             out.push(2);
             write_bool_bin(out, *ordered);
-            write_option_bin(out, start, |v, o| store::pack_rt::write_varint_u64(o, *v as u64));
+            write_option_bin(out, start, |v, o| { store::pack_rt::write_varint_u64(o, *v as u64); });
             write_bool_bin(out, *tight);
             enc_item_list_bin(items, out);
         }
@@ -1291,10 +1291,10 @@ pub(crate) fn enc_block_bin(b: &MdBlock, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_block_bin(reader: &mut store::ByteReader<'_>) -> Result<MdBlock, String> {
-    let tag = reader.read_u8().map_err(|e| e.to_string())?;
+    let tag = reader.read_u8().await.map_err(|e| e.to_string())?;
     match tag {
         0 => {
-            let level = reader.read_u8().map_err(|e| e.to_string())?;
+            let level = reader.read_u8().await.map_err(|e| e.to_string())?;
             let inlines = dec_inline_list_bin(reader)?;
             Ok(MdBlock::Heading { level, inlines })
         }
@@ -1326,7 +1326,7 @@ pub(crate) fn enc_block_list_bin(list: &[MdBlock], out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_block_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<MdBlock>, String> {
-    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     (0..count).map(|_| dec_block_bin(reader)).collect()
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -1338,7 +1338,7 @@ pub(crate) fn enc_item_list_bin(items: &[Vec<MdBlock>], out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_item_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<Vec<MdBlock>>, String> {
-    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     (0..count).map(|_| dec_block_list_bin(reader)).collect()
 }
 //#endregion 🔖️BlockBinaryCodec
@@ -1492,7 +1492,7 @@ pub(crate) fn enc_block_diff_bin(d: &MdBlockDiff, out: &mut Vec<u8>) {
         MdBlockDiff::List { ordered, start, tight, items } => {
             out.push(2);
             write_option_bin(out, ordered, |v, o| write_bool_bin(o, *v));
-            write_tristate_bin(out, start, |v, o| store::pack_rt::write_varint_u64(o, *v as u64));
+            write_tristate_bin(out, start, |v, o| { store::pack_rt::write_varint_u64(o, *v as u64); });
             write_option_bin(out, tight, |v, o| write_bool_bin(o, *v));
             write_option_bin(out, items, |v, o| enc_list_items_diff_bin(v, o));
         }
@@ -1518,7 +1518,7 @@ pub(crate) fn enc_block_diff_bin(d: &MdBlockDiff, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_block_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<MdBlockDiff, String> {
-    let tag = reader.read_u8().map_err(|e| e.to_string())?;
+    let tag = reader.read_u8().await.map_err(|e| e.to_string())?;
     match tag {
         0 => {
             let level = read_option_bin(reader, |r| semio_framework_plugin::resolve_ready(r.read_u8()).map_err(|e| e.to_string()))?;
@@ -1567,22 +1567,22 @@ pub(crate) fn enc_blocks_diff_bin(d: &MdBlocksDiff, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_blocks_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<MdBlocksDiff, String> {
-    let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let removed_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(removed_count as usize);
     for _ in 0..removed_count {
-        removed.push(reader.read_varint_u64().map_err(|e| e.to_string())? as usize);
+        removed.push(reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize);
     }
-    let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let modified_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut modified = Vec::with_capacity(modified_count as usize);
     for _ in 0..modified_count {
-        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+        let index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
         let diff = dec_block_diff_bin(reader)?;
         modified.push(MdBlockModified { index, diff });
     }
-    let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let added_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut added = Vec::with_capacity(added_count as usize);
     for _ in 0..added_count {
-        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+        let index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
         let item = dec_block_bin(reader)?;
         added.push(MdBlockAdded { index, item });
     }
@@ -1610,22 +1610,22 @@ pub(crate) fn enc_list_items_diff_bin(d: &MdListItemsDiff, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_list_items_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<MdListItemsDiff, String> {
-    let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let removed_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(removed_count as usize);
     for _ in 0..removed_count {
-        removed.push(reader.read_varint_u64().map_err(|e| e.to_string())? as usize);
+        removed.push(reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize);
     }
-    let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let modified_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut modified = Vec::with_capacity(modified_count as usize);
     for _ in 0..modified_count {
-        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+        let index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
         let diff = dec_blocks_diff_bin(reader)?;
         modified.push(MdListItemModified { index, diff });
     }
-    let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let added_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut added = Vec::with_capacity(added_count as usize);
     for _ in 0..added_count {
-        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+        let index = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
         let item = dec_block_list_bin(reader)?;
         added.push(MdListItemAdded { index, item });
     }
@@ -1824,12 +1824,12 @@ mod handcrafted_diff_codec_tests {
     async fn diff_codec_text_binary_roundtrip_law() {
         for d in demo_diff_cases() {
             let printed = d.print_diff();
-            assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
-            let parsed = MdDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
+            assert!(!printed.await.contains('\n'), "print_diff must be one line, got {printed:?}");
+            let parsed = MdDiff::parse_diff(&printed).await.unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
             assert_eq!(parsed, d, "print_diff/parse_diff round-trip mismatch (printed {printed:?})");
 
-            let encoded = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
-            let decoded = MdDiff::decode_diff(&encoded).unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
+            let encoded = d.encode_diff().await.unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
+            let decoded = MdDiff::decode_diff(&encoded).await.unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
             assert_eq!(decoded, d, "encode_diff/decode_diff round-trip mismatch");
         }
     }

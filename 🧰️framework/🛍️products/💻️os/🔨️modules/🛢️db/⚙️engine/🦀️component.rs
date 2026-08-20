@@ -268,6 +268,8 @@ impl db_artifact::AuthzHook for SecurityAuthzHook {
 /// `vcs` Cargo feature).
 #[cfg(feature = "vcs")]
 pub mod vcs_integration {
+    #[cfg(not(target_arch = "wasm32"))]
+    use crate::db_actor;
     use crate::db_ids::*;
     use crate::db_version_graph::*;
     use std::collections::HashMap;
@@ -514,25 +516,63 @@ pub mod vcs_integration {
         // DbError>` closure (the previous shape) cannot contain those awaits (R10 residue shape 1:
         // `.await` inside a sync closure). Each caller now locks `self.stores` itself and keeps the
         // guard alive across its own awaits instead of routing through a closure.
+        // 🔒️ A real `.await` reached while `stores`'s guard is alive extends its temporary across
+        // this whole `async fn` (R7), making the future non-`Send` — a hard requirement only where
+        // something needs to hand this future to a multi-threaded work-stealing scheduler
+        // (`semio-hub`'s axum handlers), not on `wasm32`, which has no such scheduler. `work` is
+        // driven by `db_actor::block_on` (this crate's sanctioned executor bridge — also fine here
+        // because `store::ArtifactStore`/`create_document_envelope` are pure in-memory computation,
+        // confirmed by grepping `store::` for I/O/channel primitives: none — so `work` always
+        // resolves on its first poll, `block_on` never parks) on every target that needs `Send`,
+        // and by a plain `.await` — `db_actor::block_on` doesn't exist for `wasm32` — on the one
+        // target that doesn't. This differs from the `if let`-scrutinee/bare-`let` cases elsewhere
+        // in this file: there the fix shortens the critical section, because a genuinely-cheap
+        // read/clone can move outside the lock; here the guarded region mutates one document's
+        // `ArtifactStore` in place and must stay atomic for the whole dispatch, so the lock has to
+        // span it regardless, on both targets, unlike those cases — this keeps that atomicity while
+        // making the future `Send` where it must be, instead of reaching for an async mutex just to
+        // dodge the bound.
+        // 🔕️ `clippy::await_holding_lock` still fires on the `.await`s inside `work` on the
+        // `block_on` arm — correctly, syntactically, but the lock's critical-section risk that lint
+        // warns about (blocking another thread's real suspension) doesn't apply here, per the
+        // never-parks rationale above. Allowed with that rationale, not as an unexamined escape.
+        #[allow(clippy::await_holding_lock)]
         async fn ensure_store(&self, document: &ArtifactId) -> Result<(), DbError> {
-            let mut stores = self.stores.lock().map_err(|_| DbError::Internal("vcs_integration: store registry mutex poisoned".to_string()))?;
-            if !stores.contains_key(&document.0) {
-                let envelope = store::create_document_envelope::<HashProjection, HashMutation>("db_engine.version_graph", &document.0, HashProjection::default(), None);
-                let created = store::ArtifactStore::new(envelope.await).await.map_err(map_vcs_error)?;
-                stores.insert(document.0.clone(), created);
-            }
-            Ok(())
+            let work = async {
+                let mut stores = self.stores.lock().map_err(|_| DbError::Internal("vcs_integration: store registry mutex poisoned".to_string()))?;
+                if !stores.contains_key(&document.0) {
+                    let envelope = store::create_document_envelope::<HashProjection, HashMutation>("db_engine.version_graph", &document.0, HashProjection::default(), None);
+                    let created = store::ArtifactStore::new(envelope).await.map_err(map_vcs_error)?;
+                    stores.insert(document.0.clone(), created);
+                }
+                Ok(())
+            };
+            #[cfg(not(target_arch = "wasm32"))]
+            let result = db_actor::block_on(work);
+            #[cfg(target_arch = "wasm32")]
+            let result = work.await;
+            result
         }
     }
 
     impl VersionGraph for VcsVersionGraph {
+        // 🔕️ See `ensure_store`'s doc above: `work` never parks on the `block_on` arm, so
+        // `clippy::await_holding_lock`'s blocking-risk warning doesn't apply.
+        #[allow(clippy::await_holding_lock)]
         async fn record_change(&self, document: &ArtifactId, change: ChangeRecord) -> Result<String, DbError> {
             self.ensure_store(document).await?;
-            let mut stores = self.stores.lock().map_err(|_| DbError::Internal("vcs_integration: store registry mutex poisoned".to_string()))?;
-            let store = stores.get_mut(&document.0).ok_or_else(|| DbError::Internal(format!("vcs_integration: store insertion disappeared for {}", document.0)))?;
-            let operation = HashMutation { hash: change.content_hash.0, author: Some(protocol::ActorId(change.author.0.clone())), timestamp: Some(protocol::HybridLogicalTimestamp::new(0, change.timestamp_ms).await) };
-            store.dispatch(store::ArtifactCommand::Apply { mutations: vec![operation], description: Some(change.message.clone()) }).await.map_err(map_vcs_error)?;
-            Ok(store.envelope().await.vcs.edits.last().map(|edit| edit.id.clone()).unwrap_or_default())
+            let work = async {
+                let mut stores = self.stores.lock().map_err(|_| DbError::Internal("vcs_integration: store registry mutex poisoned".to_string()))?;
+                let store = stores.get_mut(&document.0).ok_or_else(|| DbError::Internal(format!("vcs_integration: store insertion disappeared for {}", document.0)))?;
+                let operation = HashMutation { hash: change.content_hash.0, author: Some(protocol::ActorId(change.author.0.clone())), timestamp: Some(protocol::HybridLogicalTimestamp::new(0, change.timestamp_ms).await) };
+                store.dispatch(store::ArtifactCommand::Apply { mutations: vec![operation], description: Some(change.message.clone()) }).await.map_err(map_vcs_error)?;
+                Ok(store.envelope().await.vcs.edits.last().map(|edit| edit.id.clone()).unwrap_or_default())
+            };
+            #[cfg(not(target_arch = "wasm32"))]
+            let result = db_actor::block_on(work);
+            #[cfg(target_arch = "wasm32")]
+            let result = work.await;
+            result
         }
 
         /// @emoji 🎯️ Design choice: `request.parent_checkpoint`/`change_ids` are NOT threaded
@@ -543,31 +583,61 @@ pub mod vcs_integration {
         /// unused: `vcs`'s own `CommitCheckpoint` handler stamps its own `now_iso()` timestamp into
         /// the checkpoint (part of what its content-addressed id hashes over) — this crate cannot
         /// override that without reaching into `vcs`'s private state.
+        // 🔕️ See `ensure_store`'s doc above: `work` never parks on the `block_on` arm, so
+        // `clippy::await_holding_lock`'s blocking-risk warning doesn't apply.
+        #[allow(clippy::await_holding_lock)]
         async fn checkpoint(&self, document: &ArtifactId, request: CheckpointRequest) -> Result<String, DbError> {
             self.ensure_store(document).await?;
-            let mut stores = self.stores.lock().map_err(|_| DbError::Internal("vcs_integration: store registry mutex poisoned".to_string()))?;
-            let store = stores.get_mut(&document.0).ok_or_else(|| DbError::Internal(format!("vcs_integration: store insertion disappeared for {}", document.0)))?;
-            let authors: Vec<vcs::Author> = request.authors.iter().map(|author| vcs::Author { id: author.0.clone(), name: author.0.clone(), avatar: None }).collect();
-            store.dispatch(store::ArtifactCommand::CommitCheckpoint { message: Some(request.message.clone()), authors }).await.map_err(map_vcs_error)?;
-            store.current_checkpoint_id().await.map(str::to_string).ok_or_else(|| DbError::Internal("vcs: commit_checkpoint produced no checkpoint id".to_string()))
+            let work = async {
+                let mut stores = self.stores.lock().map_err(|_| DbError::Internal("vcs_integration: store registry mutex poisoned".to_string()))?;
+                let store = stores.get_mut(&document.0).ok_or_else(|| DbError::Internal(format!("vcs_integration: store insertion disappeared for {}", document.0)))?;
+                let authors: Vec<vcs::Author> = request.authors.iter().map(|author| vcs::Author { id: author.0.clone(), name: author.0.clone(), avatar: None }).collect();
+                store.dispatch(store::ArtifactCommand::CommitCheckpoint { message: Some(request.message.clone()), authors }).await.map_err(map_vcs_error)?;
+                store.current_checkpoint_id().await.map(str::to_string).ok_or_else(|| DbError::Internal("vcs: commit_checkpoint produced no checkpoint id".to_string()))
+            };
+            #[cfg(not(target_arch = "wasm32"))]
+            let result = db_actor::block_on(work);
+            #[cfg(target_arch = "wasm32")]
+            let result = work.await;
+            result
         }
 
+        // 🔕️ See `ensure_store`'s doc above: `work` never parks on the `block_on` arm, so
+        // `clippy::await_holding_lock`'s blocking-risk warning doesn't apply.
+        #[allow(clippy::await_holding_lock)]
         async fn merge_base(&self, document: &ArtifactId, a: &str, b: &str) -> Result<Option<String>, DbError> {
             self.ensure_store(document).await?;
-            let mut stores = self.stores.lock().map_err(|_| DbError::Internal("vcs_integration: store registry mutex poisoned".to_string()))?;
-            let store = stores.get_mut(&document.0).ok_or_else(|| DbError::Internal(format!("vcs_integration: store insertion disappeared for {}", document.0)))?;
-            Ok(store::merge_base(store.envelope().await, a, b).await)
+            let work = async {
+                let mut stores = self.stores.lock().map_err(|_| DbError::Internal("vcs_integration: store registry mutex poisoned".to_string()))?;
+                let store = stores.get_mut(&document.0).ok_or_else(|| DbError::Internal(format!("vcs_integration: store insertion disappeared for {}", document.0)))?;
+                Ok(store::merge_base(store.envelope().await, a, b).await)
+            };
+            #[cfg(not(target_arch = "wasm32"))]
+            let result = db_actor::block_on(work);
+            #[cfg(target_arch = "wasm32")]
+            let result = work.await;
+            result
         }
 
+        // 🔕️ See `ensure_store`'s doc above: `work` never parks on the `block_on` arm, so
+        // `clippy::await_holding_lock`'s blocking-risk warning doesn't apply.
+        #[allow(clippy::await_holding_lock)]
         async fn head(&self, document: &ArtifactId, alternative: &str) -> Result<Option<String>, DbError> {
             self.ensure_store(document).await?;
-            let mut stores = self.stores.lock().map_err(|_| DbError::Internal("vcs_integration: store registry mutex poisoned".to_string()))?;
-            let store = stores.get_mut(&document.0).ok_or_else(|| DbError::Internal(format!("vcs_integration: store insertion disappeared for {}", document.0)))?;
-            let envelope = store.envelope().await;
-            if let Some(found) = envelope.vcs.alternatives.iter().find(|candidate| candidate.id == alternative || candidate.name == alternative) {
-                return Ok(found.checkpoint_ids.last().cloned());
-            }
-            Ok(store.current_checkpoint_id().await.map(str::to_string))
+            let work = async {
+                let mut stores = self.stores.lock().map_err(|_| DbError::Internal("vcs_integration: store registry mutex poisoned".to_string()))?;
+                let store = stores.get_mut(&document.0).ok_or_else(|| DbError::Internal(format!("vcs_integration: store insertion disappeared for {}", document.0)))?;
+                let envelope = store.envelope().await;
+                if let Some(found) = envelope.vcs.alternatives.iter().find(|candidate| candidate.id == alternative || candidate.name == alternative) {
+                    return Ok(found.checkpoint_ids.last().cloned());
+                }
+                Ok(store.current_checkpoint_id().await.map(str::to_string))
+            };
+            #[cfg(not(target_arch = "wasm32"))]
+            let result = db_actor::block_on(work);
+            #[cfg(target_arch = "wasm32")]
+            let result = work.await;
+            result
         }
     }
     //#endregion 🔖️Store
@@ -888,9 +958,24 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
                 return Err(DbError::AlreadyExists(format!("document {} already exists", document.0)));
             }
             let mut entries = catalog.entries.clone();
-            entries.push(CatalogEntry { document: document.clone(), created_at_ms: now_ms().await });
-            let bytes = encode_catalog(&entries).await?;
-            let new_epoch = db_actor::block_on(async { self.storage.catalog().await.cas_root(catalog.epoch, &bytes).await })?;
+            let epoch = catalog.epoch;
+            // 🔒️ A real `.await` reached while `catalog`'s guard is alive would extend its
+            // temporary across this whole statement-block (R7), making the enclosing future
+            // non-`Send` — needed for `semio-hub`'s axum handlers, not for `wasm32`, which has no
+            // multi-threaded work-stealing scheduler to demand it. So: drive `commit` via
+            // `db_actor::block_on` (the same bridge `cas_root` alone used to reach for) on every
+            // target that DOES need `Send`, and via a plain `.await` — `db_actor::block_on` doesn't
+            // exist for `wasm32` — on the one target that doesn't. Either way `entries`/`epoch` are
+            // captured by reference, not moved, so this costs nothing beyond the `#[cfg]` split.
+            let commit = async {
+                entries.push(CatalogEntry { document: document.clone(), created_at_ms: now_ms().await });
+                let bytes = encode_catalog(&entries).await?;
+                self.storage.catalog().await.cas_root(epoch, &bytes).await
+            };
+            #[cfg(not(target_arch = "wasm32"))]
+            let new_epoch = db_actor::block_on(commit)?;
+            #[cfg(target_arch = "wasm32")]
+            let new_epoch = commit.await?;
             catalog.epoch = new_epoch;
             catalog.entries = entries;
         }
@@ -903,8 +988,12 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
     /// reusing an already-open `ArtifactAuthority` if one exists, else recovering it fresh from its
     /// WAL.
     pub async fn document(&self, id: &protocol::ArtifactId) -> Result<ArtifactHandle, DbError> {
-        if let Some(authority) = self.open_artifacts.lock().expect("db_engine: open_artifacts mutex poisoned").get(&id.0) {
-            return Ok(ArtifactHandle { authority: authority.clone(), storage: self.storage.clone(), document: id.clone(), core_document: to_core_document_id(id).await, pool: self.pool.clone() });
+        // 🔒️ `.cloned()` ends the guard's temporary scope at this `let`'s semicolon — under
+        // edition-2021 rules an `if let` scrutinee's temporary would otherwise extend across the
+        // `to_core_document_id(id).await` below, making this future non-`Send` (R7).
+        let existing = self.open_artifacts.lock().expect("db_engine: open_artifacts mutex poisoned").get(&id.0).cloned();
+        if let Some(authority) = existing {
+            return Ok(ArtifactHandle { authority, storage: self.storage.clone(), document: id.clone(), core_document: to_core_document_id(id).await, pool: self.pool.clone() });
         }
         let known = self.catalog.lock().expect("db_engine: catalog mutex poisoned").entries.iter().any(|entry| &entry.document == id);
         if !known {

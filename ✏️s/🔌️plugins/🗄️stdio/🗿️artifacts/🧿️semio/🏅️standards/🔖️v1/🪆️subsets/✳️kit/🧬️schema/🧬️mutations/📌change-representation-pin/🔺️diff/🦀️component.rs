@@ -15,7 +15,7 @@ pub fn diff(payload: &ChangeRepresentationPin, base: &SemioKitSnapshot) -> proto
         );
     };
     if existing.pin == payload.pin {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Representation link #{} is already pinned to that value.", payload.index));
+        return protocol::MutationOutcome::empty().await.warn("mutation.no-op", format!("Representation link #{} is already pinned to that value.", payload.index));
     }
     let mut representations = base.representations.clone();
     if let Some(link) = representations.get_mut(payload.index) {

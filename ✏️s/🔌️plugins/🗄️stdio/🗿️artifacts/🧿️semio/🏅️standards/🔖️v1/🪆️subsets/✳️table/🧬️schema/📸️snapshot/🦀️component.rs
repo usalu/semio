@@ -201,7 +201,7 @@ pub(crate) fn write_column(out: &mut Vec<u8>, c: &SemioTableColumn) {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn read_column(reader: &mut store::ByteReader<'_>) -> Result<SemioTableColumn, String> {
     let name = read_str_lp(reader)?;
-    let tag = reader.read_u8().map_err(|e| e.to_string())?;
+    let tag = reader.read_u8().await.map_err(|e| e.to_string())?;
     let kind = match tag {
         0 => SemioTableCellKind::Null,
         1 => SemioTableCellKind::Bool,
@@ -222,7 +222,7 @@ pub(crate) fn write_row(out: &mut Vec<u8>, r: &SemioTableRow) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn read_row(reader: &mut store::ByteReader<'_>) -> Result<SemioTableRow, String> {
-    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut cells = Vec::with_capacity(count as usize);
     for _ in 0..count {
         cells.push(crate::artifacts::semio::standards::v1::subsets::value::schema::diff::dec_semio_value_bin(reader)?);
@@ -255,17 +255,17 @@ fn encode_table_snapshot_binary(s: &SemioTableSnapshot) -> Vec<u8> {
 fn decode_table_snapshot_binary(bytes: &[u8]) -> Result<SemioTableSnapshot, String> {
     const PACK_BINARY_FORMAT: u8 = 1;
     let mut reader = semio_framework_plugin::resolve_ready(store::ByteReader::new(bytes));
-    let format = reader.read_u8().map_err(|e| e.to_string())?;
+    let format = reader.read_u8().await.map_err(|e| e.to_string())?;
     if format != PACK_BINARY_FORMAT {
         return Err(format!("unsupported pack format {format}"));
     }
     let schema = read_str_lp(&mut reader)?;
-    let column_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let column_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut columns = Vec::with_capacity(column_count as usize);
     for _ in 0..column_count {
         columns.push(read_column(&mut reader)?);
     }
-    let row_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let row_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut rows = Vec::with_capacity(row_count as usize);
     for _ in 0..row_count {
         rows.push(read_row(&mut reader)?);
@@ -353,7 +353,7 @@ mod tests {
     async fn json_pack_round_trips() {
         let snap = SemioTableSnapshot::default();
         let bytes = <SemioTableSnapshot as store::ArtifactPack>::encode_pack(&snap);
-        let back = <SemioTableSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+        let back = <SemioTableSnapshot as store::ArtifactPack>::decode_pack(&bytes).await.expect("decode");
         assert_eq!(snap, back);
     }
 
@@ -361,7 +361,7 @@ mod tests {
     async fn dsl_text_round_trips() {
         let snap = SemioTableSnapshot::default();
         let text = <SemioTableSnapshot as store::ArtifactDsl>::print_dsl(&snap);
-        let back = <SemioTableSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
+        let back = <SemioTableSnapshot as store::ArtifactDsl>::parse_dsl(&text).await.expect("parse");
         assert_eq!(snap, back);
     }
 
@@ -372,13 +372,13 @@ mod tests {
     async fn codec_retention_law() {
         let snap = populated();
         let bytes = <SemioTableSnapshot as store::ArtifactPack>::encode_pack(&snap);
-        let back = <SemioTableSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+        let back = <SemioTableSnapshot as store::ArtifactPack>::decode_pack(&bytes).await.expect("decode");
         assert_eq!(snap, back);
         for row in &back.rows {
             assert_eq!(row.cells.len(), back.columns.len(), "row/column alignment must survive a pack round trip");
         }
         let text = <SemioTableSnapshot as store::ArtifactDsl>::print_dsl(&snap);
-        let back_text = <SemioTableSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
+        let back_text = <SemioTableSnapshot as store::ArtifactDsl>::parse_dsl(&text).await.expect("parse");
         assert_eq!(snap, back_text);
     }
 }

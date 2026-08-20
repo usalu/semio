@@ -1422,7 +1422,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn artifact_dsl_rejects_native_svg_without_a_semio_envelope() {
-        assert!(<SvgSnapshot as store::ArtifactDsl>::parse_dsl(r#"<svg xmlns="http://www.w3.org/2000/svg"/>"#).is_err());
+        assert!(<SvgSnapshot as store::ArtifactDsl>::parse_dsl(r#"<svg xmlns="http://www.w3.org/2000/svg"/>"#).await.is_err());
     }
 
     //#region PathGrammar

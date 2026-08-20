@@ -156,7 +156,7 @@ mod tests {
     async fn json_pack_round_trips() {
         let snap = sample_snapshot();
         let bytes = <WavSnapshot as store::ArtifactPack>::encode_pack(&snap);
-        let back = <WavSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+        let back = <WavSnapshot as store::ArtifactPack>::decode_pack(&bytes).await.expect("decode");
         assert_eq!(snap, back);
     }
 
@@ -164,7 +164,7 @@ mod tests {
     async fn dsl_text_round_trips() {
         let snap = sample_snapshot();
         let text = <WavSnapshot as store::ArtifactDsl>::print_dsl(&snap);
-        let back = <WavSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
+        let back = <WavSnapshot as store::ArtifactDsl>::parse_dsl(&text).await.expect("parse");
         assert_eq!(snap, back);
     }
 }

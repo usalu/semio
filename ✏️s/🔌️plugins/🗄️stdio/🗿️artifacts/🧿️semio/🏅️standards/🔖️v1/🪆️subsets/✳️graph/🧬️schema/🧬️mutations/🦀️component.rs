@@ -104,7 +104,7 @@ mod tests {
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn round_trip(base: &SemioGraphSnapshot, operation: &SemioGraphMutation) -> SemioGraphSnapshot {
-        let forward = operation.diff(base).diff().apply(base).expect("apply must succeed for a well-formed fixture");
+        let forward = operation.diff(base).await.diff().apply(base).expect("apply must succeed for a well-formed fixture");
         let backwards = operation.inverse(base);
         let mut restored = forward.clone();
         // 🔧️ Each inverse's diff must be computed against the CURRENT (`restored`) state, not the
@@ -148,8 +148,8 @@ mod tests {
     async fn delete_node_of_an_absent_id_has_an_empty_inverse() {
         let base = fixture();
         let delete = SemioGraphMutation::DeleteNode(delete_node::mutation::DeleteNode { id: GraphNodeId::new("absent") });
-        assert!(delete.inverse(&base).is_empty(), "deleting an absent node has nothing to undo");
-        assert_eq!(delete.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base, "an absent-id delete is a no-op");
+        assert!(delete.inverse(&base).await.is_empty(), "deleting an absent node has nothing to undo");
+        assert_eq!(delete.diff(&base).await.diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base, "an absent-id delete is a no-op");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -157,7 +157,7 @@ mod tests {
         let base = fixture();
         let delete = SemioGraphMutation::DeleteNode(delete_node::mutation::DeleteNode { id: GraphNodeId::new("n1") });
         let undo = delete.inverse(&base);
-        assert_eq!(undo.len(), 2, "inverse must restore the node AND every severed edge");
+        assert_eq!(undo.await.len(), 2, "inverse must restore the node AND every severed edge");
         assert_eq!(
             undo[0],
             SemioGraphMutation::CreateNode(create_node::mutation::CreateNode {
@@ -189,7 +189,7 @@ mod tests {
         assert_eq!(after.nodes[0].position, SemioPoint2 { x: 99.0, y: -1.0 });
 
         let missing = SemioGraphMutation::ChangeNodeKind(change_node_kind::mutation::ChangeNodeKind { id: GraphNodeId::new("absent"), new_kind: "x".into() });
-        assert!(missing.inverse(&base).is_empty());
+        assert!(missing.inverse(&base).await.is_empty());
     }
 
     #[semio_framework_async_macros::async_test]
@@ -222,8 +222,8 @@ mod tests {
         assert_eq!(undo, vec![SemioGraphMutation::RemoveNodeProperty(remove_node_property::mutation::RemoveNodeProperty { node_id: GraphNodeId::new("n1"), index: 0 })]);
 
         let remove = SemioGraphMutation::RemoveNodeProperty(remove_node_property::mutation::RemoveNodeProperty { node_id: GraphNodeId::new("absent"), index: 0 });
-        assert!(remove.inverse(&base).is_empty());
-        assert_eq!(remove.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base);
+        assert!(remove.inverse(&base).await.is_empty());
+        assert_eq!(remove.diff(&base).await.diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -246,7 +246,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn semantic_kinds_cover_every_variant() {
-        assert_eq!(SemioGraphMutation::kinds().len(), 11);
+        assert_eq!(SemioGraphMutation::kinds().await.len(), 11);
         let mutation = SemioGraphMutation::DeleteNode(delete_node::mutation::DeleteNode { id: GraphNodeId::new("n1") });
         assert_eq!(mutation.semantics().kind, "delete-node");
         assert_eq!(mutation.semantics().record, "DeletedNode");

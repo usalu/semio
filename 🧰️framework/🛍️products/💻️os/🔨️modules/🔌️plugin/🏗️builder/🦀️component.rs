@@ -849,7 +849,7 @@ mod plugin_builder_dependency_tests {
                     .next()
                     .map(|descriptor| FlowExtensionDeclaration::new(descriptor.id, descriptor.manifest, descriptor.executable_identity))
                     .expect("a flow extension to rebuild from")
-                    .expect("the rebuilt descriptor to be valid"),
+                    .await.expect("the rebuilt descriptor to be valid"),
             )
             .await.flow_extension(conflict)
             .await.try_build()

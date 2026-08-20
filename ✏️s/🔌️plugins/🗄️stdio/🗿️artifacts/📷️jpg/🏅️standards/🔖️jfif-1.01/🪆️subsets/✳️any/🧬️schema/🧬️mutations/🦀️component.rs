@@ -129,7 +129,7 @@ impl Mutation<JpgSnapshot> for JpgMutation {
             JpgMutation::RemoveOtherSegment { index } => diff::diff_remove_other_segment(base, *index),
             JpgMutation::SetPixels { pixels } => diff::diff_set_pixels(base, pixels.clone()),
             JpgMutation::SetReEncodeQuality { quality } => diff::diff_set_re_encode_quality(base, *quality),
-        })
+        }).await
     }
 
     /// ↩️ Handcrafted, id/index-aware mutation-level inverses. Out-of-range/nonexistent targets
@@ -331,7 +331,7 @@ async fn enc_jpg_snapshot_bin(s: &JpgSnapshot, out: &mut Vec<u8>) {
     for t in &s.huffman_tables {
         diff::enc_huffman_table_bin(t, out);
     }
-    diff::write_opt(out, &s.restart_interval, |v, out| store::pack_rt::write_varint_u64(out, *v as u64));
+    diff::write_opt(out, &s.restart_interval, |v, out| { store::pack_rt::write_varint_u64(out, *v as u64); });
     store::pack_rt::write_varint_u64(out, s.other_segments.len() as u64);
     for seg in &s.other_segments {
         diff::enc_segment_bin(seg, out);
@@ -416,7 +416,7 @@ impl OpBinary for JpgMutation {
             }
             JpgMutation::SetRestartInterval { restart_interval } => {
                 out[1] = 7;
-                diff::write_opt(&mut out, restart_interval, |v, out| store::pack_rt::write_varint_u64(out, *v as u64));
+                diff::write_opt(&mut out, restart_interval, |v, out| { store::pack_rt::write_varint_u64(out, *v as u64); });
             }
             JpgMutation::InsertOtherSegment { index, segment } => {
                 out[1] = 8;
@@ -507,10 +507,10 @@ pub(crate) async fn demo_mutation_cases() -> Vec<JpgMutation> {
         frame: Some(JpgFrameHeader { precision: 8, width: 4, height: 4, components: vec![JpgFrameComponent { id: 1, h_sampling: 2, v_sampling: 2, quant_table_id: 0 }, JpgFrameComponent { id: 2, h_sampling: 1, v_sampling: 1, quant_table_id: 1 }] }),
         sof_marker: 0xC0,
         arithmetic: false,
-        quant_tables: vec![quant(0, 10)],
-        huffman_tables: vec![huffman(JpgHuffmanClass::Dc, 0, 1)],
+        quant_tables: vec![quant(0, 10).await],
+        huffman_tables: vec![huffman(JpgHuffmanClass::Dc, 0, 1).await],
         restart_interval: None,
-        other_segments: vec![segment(0xFE, vec![1, 2, 3])],
+        other_segments: vec![segment(0xFE, vec![1, 2, 3]).await],
     };
 
     vec![
@@ -526,13 +526,13 @@ pub(crate) async fn demo_mutation_cases() -> Vec<JpgMutation> {
         },
         JpgMutation::SetJfifHeader { version: (1, 2), density_units: JfifDensityUnits::PixelsPerCm, x_density: 300, y_density: 300, thumbnail: Some(JfifThumbnail { width: 1, height: 1, rgb_data: vec![9, 9, 9] }) },
         JpgMutation::SetJfifHeader { version: (1, 1), density_units: JfifDensityUnits::Aspect, x_density: 1, y_density: 1, thumbnail: None },
-        JpgMutation::SetQuantTable { table: quant(0, 77) },
+        JpgMutation::SetQuantTable { table: quant(0, 77).await },
         JpgMutation::RemoveQuantTable { id: 3 },
-        JpgMutation::SetHuffmanTable { table: huffman(JpgHuffmanClass::Ac, 2, 5) },
+        JpgMutation::SetHuffmanTable { table: huffman(JpgHuffmanClass::Ac, 2, 5).await },
         JpgMutation::RemoveHuffmanTable { key: JpgHuffmanTableKey { class: JpgHuffmanClass::Dc, id: 0 } },
         JpgMutation::SetRestartInterval { restart_interval: Some(16) },
         JpgMutation::SetRestartInterval { restart_interval: None },
-        JpgMutation::InsertOtherSegment { index: 1, segment: segment(0xE2, vec![7, 8]) },
+        JpgMutation::InsertOtherSegment { index: 1, segment: segment(0xE2, vec![7, 8]).await },
         JpgMutation::RemoveOtherSegment { index: 0 },
         JpgMutation::SetPixels { pixels: vec![9u8; base.pixels.len()] },
         JpgMutation::SetReEncodeQuality { quality: Some(50) },
@@ -580,10 +580,10 @@ mod tests {
             }),
             sof_marker: 0xC0,
             arithmetic: false,
-            quant_tables: vec![quant(0, 10)],
-            huffman_tables: vec![huffman(JpgHuffmanClass::Dc, 0, 1)],
+            quant_tables: vec![quant(0, 10).await],
+            huffman_tables: vec![huffman(JpgHuffmanClass::Dc, 0, 1).await],
             restart_interval: None,
-            other_segments: vec![segment(0xFE, vec![1, 2, 3])],
+            other_segments: vec![segment(0xFE, vec![1, 2, 3]).await],
         }
     }
     //#endregion 🔖️Fixtures
@@ -615,10 +615,10 @@ mod tests {
             }),
             sof_marker: 0xC0,
             arithmetic: false,
-            quant_tables: vec![quant(0, 10), quant(9, 20)],
-            huffman_tables: vec![huffman(JpgHuffmanClass::Dc, 0, 1), huffman(JpgHuffmanClass::Ac, 9, 2)],
+            quant_tables: vec![quant(0, 10).await, quant(9, 20).await],
+            huffman_tables: vec![huffman(JpgHuffmanClass::Dc, 0, 1).await, huffman(JpgHuffmanClass::Ac, 9, 2).await],
             restart_interval: Some(8),
-            other_segments: vec![segment(0xFE, vec![1, 2, 3]), segment(0xE1, vec![9, 9])],
+            other_segments: vec![segment(0xFE, vec![1, 2, 3]).await, segment(0xE1, vec![9, 9]).await],
         }
     }
 
@@ -637,10 +637,10 @@ mod tests {
             frame: Some(JpgFrameHeader { precision: 8, width: 11, height: 21, components: vec![JpgFrameComponent { id: 1, h_sampling: 1, v_sampling: 1, quant_table_id: 5 }] }),
             sof_marker: 0xC0,
             arithmetic: false,
-            quant_tables: vec![quant(0, 99)],
-            huffman_tables: vec![huffman(JpgHuffmanClass::Dc, 0, 7)],
+            quant_tables: vec![quant(0, 99).await],
+            huffman_tables: vec![huffman(JpgHuffmanClass::Dc, 0, 7).await],
             restart_interval: None,
-            other_segments: vec![segment(0xFE, vec![4, 5, 6])],
+            other_segments: vec![segment(0xFE, vec![4, 5, 6]).await],
         }
     }
     //#endregion 🔖️FieldSweepFixtures
@@ -651,10 +651,10 @@ mod tests {
         let mut applied_snapshot = base.clone();
         let returned_diff = apply_jpg_mutation(&mut applied_snapshot, &mutation);
         assert_eq!(returned_diff, expected_diff, "apply_jpg_mutation must return mutation.diff(base) for {mutation:?}");
-        assert_eq!(expected_diff.diff().apply(base).expect("diff must apply to base"), applied_snapshot, "diff.diff().apply(base) must equal the imperative mutation result for {mutation:?}");
+        assert_eq!(expected_diff.await.diff().apply(base).expect("diff must apply to base"), applied_snapshot, "diff.diff().apply(base) must equal the imperative mutation result for {mutation:?}");
     }
 
-    async fn all_variants(base: &JpgSnapshot) -> Vec<JpgMutation> {
+    fn all_variants(base: &JpgSnapshot) -> Vec<JpgMutation> {
         vec![
             JpgMutation::NoMutation,
             JpgMutation::SetSnapshot {
@@ -665,15 +665,15 @@ mod tests {
                 },
             },
             JpgMutation::SetJfifHeader { version: (1, 2), density_units: JfifDensityUnits::PixelsPerCm, x_density: 300, y_density: 300, thumbnail: Some(JfifThumbnail { width: 1, height: 1, rgb_data: vec![9, 9, 9] }) },
-            JpgMutation::SetQuantTable { table: quant(0, 77) },
-            JpgMutation::SetQuantTable { table: quant(3, 55) },
+            JpgMutation::SetQuantTable { table: quant(0, 77).await },
+            JpgMutation::SetQuantTable { table: quant(3, 55).await },
             JpgMutation::RemoveQuantTable { id: 0 },
-            JpgMutation::SetHuffmanTable { table: huffman(JpgHuffmanClass::Dc, 0, 9) },
-            JpgMutation::SetHuffmanTable { table: huffman(JpgHuffmanClass::Ac, 0, 3) },
+            JpgMutation::SetHuffmanTable { table: huffman(JpgHuffmanClass::Dc, 0, 9).await },
+            JpgMutation::SetHuffmanTable { table: huffman(JpgHuffmanClass::Ac, 0, 3).await },
             JpgMutation::RemoveHuffmanTable { key: HKey { class: JpgHuffmanClass::Dc, id: 0 } },
             JpgMutation::SetRestartInterval { restart_interval: Some(16) },
             JpgMutation::SetRestartInterval { restart_interval: None },
-            JpgMutation::InsertOtherSegment { index: 1, segment: segment(0xE2, vec![7, 8]) },
+            JpgMutation::InsertOtherSegment { index: 1, segment: segment(0xE2, vec![7, 8]).await },
             JpgMutation::RemoveOtherSegment { index: 0 },
             JpgMutation::SetPixels { pixels: vec![9u8; base.pixels.len()] },
             JpgMutation::SetReEncodeQuality { quality: Some(50) },
@@ -709,8 +709,8 @@ mod tests {
 
             // Diff-level round trip.
             let d = m.diff(&base);
-            let mutated = d.diff().apply(&base).expect("diff must apply to base");
-            let inv_d = d.diff().inverse(&base);
+            let mutated = d.await.diff().apply(&base).expect("diff must apply to base");
+            let inv_d = d.await.diff().inverse(&base);
             assert_eq!(inv_d.apply(&mutated).expect("inverse diff must apply to mutated"), base, "diff-level inverse must restore base for {m:?}");
         }
     }
@@ -719,12 +719,12 @@ mod tests {
     //#region 🔖️absorb_law
     async fn assert_absorb_law(base: &JpgSnapshot, m1: JpgMutation, m2: JpgMutation) {
         let d1 = m1.diff(base);
-        let mid = d1.diff().apply(base).expect("d1 must apply to base");
+        let mid = d1.await.diff().apply(base).expect("d1 must apply to base");
         let d2 = m2.diff(&mid);
-        let sequential = d2.diff().apply(&mid).expect("d2 must apply to mid");
+        let sequential = d2.await.diff().apply(&mid).expect("d2 must apply to mid");
 
-        let mut merged = d1.diff().clone();
-        merged.absorb(d2.diff().clone());
+        let mut merged = d1.await.diff().clone();
+        merged.absorb(d2.await.diff().clone());
         assert_eq!(merged.apply(base).expect("merged diff must apply to base"), sequential, "absorb(d1,d2).apply(base) must equal sequential application for {m1:?} + {m2:?}");
     }
 
@@ -734,19 +734,19 @@ mod tests {
 
         // Insert+Remove-before: other_segments has [seg@0]; insert at 1 -> [seg,new]; then
         // remove index 0 ("seg") -> [new] lands at final index 0 (the recipe's own canonical case).
-        assert_absorb_law(&base, JpgMutation::InsertOtherSegment { index: 1, segment: segment(0xE3, vec![1]) }, JpgMutation::RemoveOtherSegment { index: 0 });
+        assert_absorb_law(&base, JpgMutation::InsertOtherSegment { index: 1, segment: segment(0xE3, vec![1]).await }, JpgMutation::RemoveOtherSegment { index: 0 });
 
         // Insert+Insert-same-index: both survive.
-        assert_absorb_law(&base, JpgMutation::InsertOtherSegment { index: 1, segment: segment(0xE4, vec![2]) }, JpgMutation::InsertOtherSegment { index: 1, segment: segment(0xE5, vec![3]) });
+        assert_absorb_law(&base, JpgMutation::InsertOtherSegment { index: 1, segment: segment(0xE4, vec![2]).await }, JpgMutation::InsertOtherSegment { index: 1, segment: segment(0xE5, vec![3]).await });
 
         // Add+SetField: the second mutation patches directly into the still-pending added table.
-        assert_absorb_law(&base, JpgMutation::SetQuantTable { table: quant(5, 1) }, JpgMutation::SetQuantTable { table: quant(5, 2) });
+        assert_absorb_law(&base, JpgMutation::SetQuantTable { table: quant(5, 1).await }, JpgMutation::SetQuantTable { table: quant(5, 2).await });
 
         // Modify+Remove: a pending field patch on a since-removed base item vanishes.
-        assert_absorb_law(&base, JpgMutation::SetQuantTable { table: quant(0, 42) }, JpgMutation::RemoveQuantTable { id: 0 });
+        assert_absorb_law(&base, JpgMutation::SetQuantTable { table: quant(0, 42).await }, JpgMutation::RemoveQuantTable { id: 0 });
 
         // Insert then annihilate the very same insert — huffman_tables' id-keyed transport.
-        assert_absorb_law(&base, JpgMutation::SetHuffmanTable { table: huffman(JpgHuffmanClass::Ac, 3, 1) }, JpgMutation::RemoveHuffmanTable { key: HKey { class: JpgHuffmanClass::Ac, id: 3 } });
+        assert_absorb_law(&base, JpgMutation::SetHuffmanTable { table: huffman(JpgHuffmanClass::Ac, 3, 1).await }, JpgMutation::RemoveHuffmanTable { key: HKey { class: JpgHuffmanClass::Ac, id: 3 } });
 
         // Two unrelated scalar sets absorb via LWW.
         assert_absorb_law(&base, JpgMutation::SetRestartInterval { restart_interval: Some(1) }, JpgMutation::SetRestartInterval { restart_interval: Some(2) });
@@ -758,22 +758,22 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn absorb_law_associativity() {
         let base = base_snapshot();
-        let d1 = JpgMutation::SetQuantTable { table: quant(7, 1) }.diff(&base);
-        let s1 = d1.diff().apply(&base).expect("d1 must apply to base");
-        let d2 = JpgMutation::SetQuantTable { table: quant(7, 2) }.diff(&s1);
-        let s2 = d2.diff().apply(&s1).expect("d2 must apply to s1");
+        let d1 = JpgMutation::SetQuantTable { table: quant(7, 1).await }.diff(&base);
+        let s1 = d1.await.diff().apply(&base).expect("d1 must apply to base");
+        let d2 = JpgMutation::SetQuantTable { table: quant(7, 2).await }.diff(&s1);
+        let s2 = d2.await.diff().apply(&s1).expect("d2 must apply to s1");
         let d3 = JpgMutation::RemoveQuantTable { id: 0 }.diff(&s2);
-        let s3 = d3.diff().apply(&s2).expect("d3 must apply to s2");
+        let s3 = d3.await.diff().apply(&s2).expect("d3 must apply to s2");
 
         // (d1∘d2)∘d3
-        let mut left = d1.diff().clone();
-        left.absorb(d2.diff().clone());
-        left.absorb(d3.diff().clone());
+        let mut left = d1.await.diff().clone();
+        left.absorb(d2.await.diff().clone());
+        left.absorb(d3.await.diff().clone());
 
         // d1∘(d2∘d3)
-        let mut d23 = d2.diff().clone();
-        d23.absorb(d3.diff().clone());
-        let mut right = d1.diff().clone();
+        let mut d23 = d2.await.diff().clone();
+        d23.absorb(d3.await.diff().clone());
+        let mut right = d1.await.diff().clone();
         right.absorb(d23);
 
         assert_eq!(left.apply(&base).expect("left must apply to base"), s3);
@@ -787,9 +787,9 @@ mod tests {
     async fn between_roundtrip_law() {
         let a = base_snapshot();
         let mut b = base_snapshot();
-        b.width = 8;
-        b.quant_tables.push(quant(2, 5));
-        b.pixels = vec![5u8; a.pixels.len()];
+        b.await.width = 8;
+        b.await.quant_tables.push(quant(2, 5).await);
+        b.await.pixels = vec![5u8; a.await.pixels.len()];
 
         let d = JpgDiff::between(&a, &b);
         assert_eq!(d.apply(&a).expect("d must apply to a"), b, "between(a,b).apply(a) must equal b");
@@ -846,27 +846,27 @@ mod tests {
         assert!(JpgDiff::between(&a, &a).is_empty(), "between(a,a) must be empty");
 
         // Raster scalars.
-        assert!(forward.width.is_some());
-        assert!(forward.height.is_some());
-        assert!(forward.pixels.is_some());
+        assert!(forward.await.width.is_some());
+        assert!(forward.await.height.is_some());
+        assert!(forward.await.pixels.is_some());
 
         // Tri-state clears (forward: Some -> None).
-        assert_eq!(forward.re_encode_quality, Some(None), "re_encode_quality tri-state clear must show Some(None)");
-        assert_eq!(forward.jfif_thumbnail, Some(None), "jfif_thumbnail tri-state clear must show Some(None)");
-        assert_eq!(forward.restart_interval, Some(None), "restart_interval tri-state clear must show Some(None)");
+        assert_eq!(forward.await.re_encode_quality, Some(None), "re_encode_quality tri-state clear must show Some(None)");
+        assert_eq!(forward.await.jfif_thumbnail, Some(None), "jfif_thumbnail tri-state clear must show Some(None)");
+        assert_eq!(forward.await.restart_interval, Some(None), "restart_interval tri-state clear must show Some(None)");
         // Tri-state recreates (backward: None -> Some).
-        assert!(matches!(backward.re_encode_quality, Some(Some(_))));
-        assert!(matches!(backward.jfif_thumbnail, Some(Some(_))));
-        assert!(matches!(backward.restart_interval, Some(Some(_))));
+        assert!(matches!(backward.await.re_encode_quality, Some(Some(_))));
+        assert!(matches!(backward.await.jfif_thumbnail, Some(Some(_))));
+        assert!(matches!(backward.await.restart_interval, Some(Some(_))));
 
         // JFIF scalars.
-        assert!(forward.jfif_version.is_some());
-        assert!(forward.jfif_density_units.is_some());
-        assert!(forward.jfif_x_density.is_some());
-        assert!(forward.jfif_y_density.is_some());
+        assert!(forward.await.jfif_version.is_some());
+        assert!(forward.await.jfif_density_units.is_some());
+        assert!(forward.await.jfif_x_density.is_some());
+        assert!(forward.await.jfif_y_density.is_some());
 
         // frame: Modify with every sub-field populated (both sweep_a/b keep `Some(frame)`).
-        let frame_change = forward.frame.as_ref().expect("frame diff present");
+        let frame_change = forward.await.frame.as_ref().expect("frame diff present");
         match frame_change {
             JpgFrameChange::Modify(fd) => {
                 assert!(fd.precision.is_none(), "precision is 8 in both sweeps");
@@ -879,7 +879,7 @@ mod tests {
             }
             other => panic!("expected Modify, got {other:?}"),
         }
-        let bwd_frame_change = backward.frame.as_ref().expect("frame diff present");
+        let bwd_frame_change = backward.await.frame.as_ref().expect("frame diff present");
         match bwd_frame_change {
             JpgFrameChange::Modify(fd) => {
                 let cd = fd.components.as_ref().expect("components diff present");
@@ -890,35 +890,35 @@ mod tests {
             other => panic!("expected Modify, got {other:?}"),
         }
 
-        assert!(forward.sof_marker.is_none(), "sof_marker is 0xC0 in both sweeps");
-        assert!(forward.arithmetic.is_none(), "arithmetic is false in both sweeps");
+        assert!(forward.await.sof_marker.is_none(), "sof_marker is 0xC0 in both sweeps");
+        assert!(forward.await.arithmetic.is_none(), "arithmetic is false in both sweeps");
 
         // quant_tables: forward shows modified+removed, backward shows modified+added.
-        let qt_fwd = forward.quant_tables.as_ref().expect("quant_tables diff present");
+        let qt_fwd = forward.await.quant_tables.as_ref().expect("quant_tables diff present");
         assert_eq!(qt_fwd.removed, vec![9]);
         assert_eq!(qt_fwd.modified.len(), 1);
         assert!(qt_fwd.added.is_empty());
-        let qt_bwd = backward.quant_tables.as_ref().expect("quant_tables diff present");
+        let qt_bwd = backward.await.quant_tables.as_ref().expect("quant_tables diff present");
         assert!(qt_bwd.removed.is_empty());
         assert_eq!(qt_bwd.modified.len(), 1);
         assert_eq!(qt_bwd.added.len(), 1);
 
         // huffman_tables: same split, compound key.
-        let ht_fwd = forward.huffman_tables.as_ref().expect("huffman_tables diff present");
+        let ht_fwd = forward.await.huffman_tables.as_ref().expect("huffman_tables diff present");
         assert_eq!(ht_fwd.removed, vec![HKey { class: JpgHuffmanClass::Ac, id: 9 }]);
         assert_eq!(ht_fwd.modified.len(), 1);
         assert!(ht_fwd.added.is_empty());
-        let ht_bwd = backward.huffman_tables.as_ref().expect("huffman_tables diff present");
+        let ht_bwd = backward.await.huffman_tables.as_ref().expect("huffman_tables diff present");
         assert!(ht_bwd.removed.is_empty());
         assert_eq!(ht_bwd.modified.len(), 1);
         assert_eq!(ht_bwd.added.len(), 1);
 
         // other_segments: same split.
-        let os_fwd = forward.other_segments.as_ref().expect("other_segments diff present");
+        let os_fwd = forward.await.other_segments.as_ref().expect("other_segments diff present");
         assert_eq!(os_fwd.removed, vec![1]);
         assert_eq!(os_fwd.modified.len(), 1);
         assert!(os_fwd.added.is_empty());
-        let os_bwd = backward.other_segments.as_ref().expect("other_segments diff present");
+        let os_bwd = backward.await.other_segments.as_ref().expect("other_segments diff present");
         assert!(os_bwd.removed.is_empty());
         assert_eq!(os_bwd.modified.len(), 1);
         assert_eq!(os_bwd.added.len(), 1);
@@ -958,26 +958,26 @@ mod tests {
             },
             JpgMutation::SetJfifHeader { version: (1, 2), density_units: JfifDensityUnits::PixelsPerCm, x_density: 300, y_density: 300, thumbnail: Some(JfifThumbnail { width: 1, height: 1, rgb_data: vec![9, 9, 9] }) },
             JpgMutation::SetJfifHeader { version: (1, 1), density_units: JfifDensityUnits::Aspect, x_density: 1, y_density: 1, thumbnail: None },
-            JpgMutation::SetQuantTable { table: quant(0, 77) },
+            JpgMutation::SetQuantTable { table: quant(0, 77).await },
             JpgMutation::RemoveQuantTable { id: 3 },
-            JpgMutation::SetHuffmanTable { table: huffman(JpgHuffmanClass::Ac, 2, 5) },
+            JpgMutation::SetHuffmanTable { table: huffman(JpgHuffmanClass::Ac, 2, 5).await },
             JpgMutation::RemoveHuffmanTable { key: HKey { class: JpgHuffmanClass::Dc, id: 0 } },
             JpgMutation::SetRestartInterval { restart_interval: Some(16) },
             JpgMutation::SetRestartInterval { restart_interval: None },
-            JpgMutation::InsertOtherSegment { index: 1, segment: segment(0xE2, vec![7, 8]) },
+            JpgMutation::InsertOtherSegment { index: 1, segment: segment(0xE2, vec![7, 8]).await },
             JpgMutation::RemoveOtherSegment { index: 0 },
-            JpgMutation::SetPixels { pixels: vec![9u8; base.pixels.len()] },
+            JpgMutation::SetPixels { pixels: vec![9u8; base.await.pixels.len()] },
             JpgMutation::SetReEncodeQuality { quality: Some(50) },
             JpgMutation::SetReEncodeQuality { quality: None },
         ];
         for mutation in mutations {
             let printed = mutation.print_op();
-            assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
-            let parsed = JpgMutation::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
+            assert!(!printed.await.contains('\n'), "print_op must be one line, got {printed:?}");
+            let parsed = JpgMutation::parse_op(&printed).await.unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
             assert_eq!(parsed, mutation, "print_op/parse_op round-trip mismatch for {mutation:?} (printed {printed:?})");
 
-            let encoded = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op({mutation:?}) failed: {e}"));
-            let decoded = JpgMutation::decode_op(&encoded).unwrap_or_else(|e| panic!("decode_op failed: {e}"));
+            let encoded = mutation.encode_op().await.unwrap_or_else(|e| panic!("encode_op({mutation:?}) failed: {e}"));
+            let decoded = JpgMutation::decode_op(&encoded).await.unwrap_or_else(|e| panic!("decode_op failed: {e}"));
             assert_eq!(decoded, mutation, "encode_op/decode_op round-trip mismatch for {mutation:?}");
         }
     }

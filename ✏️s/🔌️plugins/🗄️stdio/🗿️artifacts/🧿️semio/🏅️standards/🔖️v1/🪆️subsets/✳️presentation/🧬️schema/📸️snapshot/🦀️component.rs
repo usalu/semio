@@ -233,8 +233,8 @@ fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
+    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn write_str_lp(out: &mut Vec<u8>, s: &str) {
@@ -250,7 +250,7 @@ fn write_f64(out: &mut Vec<u8>, v: f64) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_f64(reader: &mut store::ByteReader<'_>) -> Result<f64, String> {
-    reader.read_f64_le().map_err(|e| e.to_string())
+    reader.read_f64_le().await.map_err(|e| e.to_string())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn write_opt_str(out: &mut Vec<u8>, v: &Option<String>) {
@@ -264,7 +264,7 @@ fn write_opt_str(out: &mut Vec<u8>, v: &Option<String>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_opt_str(reader: &mut store::ByteReader<'_>) -> Result<Option<String>, String> {
-    match reader.read_u8().map_err(|e| e.to_string())? {
+    match reader.read_u8().await.map_err(|e| e.to_string())? {
         0 => Ok(None),
         1 => Ok(Some(read_str_lp(reader)?)),
         other => Err(format!("opt str: bad tag {other}")),
@@ -319,7 +319,7 @@ fn write_placeholder_kind(out: &mut Vec<u8>, k: &PlaceholderKind) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_placeholder_kind(reader: &mut store::ByteReader<'_>) -> Result<PlaceholderKind, String> {
-    match reader.read_u8().map_err(|e| e.to_string())? {
+    match reader.read_u8().await.map_err(|e| e.to_string())? {
         0 => Ok(PlaceholderKind::Title),
         1 => Ok(PlaceholderKind::Subtitle),
         2 => Ok(PlaceholderKind::Body),
@@ -345,7 +345,7 @@ fn write_blocks(out: &mut Vec<u8>, blocks: &[DocBlock]) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_blocks(reader: &mut store::ByteReader<'_>) -> Result<Vec<DocBlock>, String> {
-    let n = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let n = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut out = Vec::with_capacity(n as usize);
     for _ in 0..n {
         out.push(dec_block(&read_str_lp(reader)?)?);
@@ -369,7 +369,7 @@ fn write_table_row(out: &mut Vec<u8>, r: &SlideTableRow) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_table_row(reader: &mut store::ByteReader<'_>) -> Result<SlideTableRow, String> {
-    let n = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let n = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut cells = Vec::with_capacity(n as usize);
     for _ in 0..n {
         cells.push(read_table_cell(reader)?);
@@ -407,13 +407,13 @@ fn write_shape(out: &mut Vec<u8>, shape: &SlideShape) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_shape(reader: &mut store::ByteReader<'_>) -> Result<SlideShape, String> {
-    let tag = reader.read_u8().map_err(|e| e.to_string())?;
+    let tag = reader.read_u8().await.map_err(|e| e.to_string())?;
     match tag {
         0 => Ok(SlideShape::TextBox { frame: read_frame(reader)?, blocks: read_blocks(reader)? }),
         1 => Ok(SlideShape::Picture { frame: read_frame(reader)?, image: read_image(reader)? }),
         2 => {
             let frame = read_frame(reader)?;
-            let n = reader.read_varint_u64().map_err(|e| e.to_string())?;
+            let n = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
             let mut rows = Vec::with_capacity(n as usize);
             for _ in 0..n {
                 rows.push(read_table_row(reader)?);
@@ -433,7 +433,7 @@ fn write_shapes(out: &mut Vec<u8>, shapes: &[SlideShape]) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_shapes(reader: &mut store::ByteReader<'_>) -> Result<Vec<SlideShape>, String> {
-    let n = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let n = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut out = Vec::with_capacity(n as usize);
     for _ in 0..n {
         out.push(read_shape(reader)?);
@@ -495,22 +495,22 @@ fn encode_presentation_snapshot_binary(s: &SemioPresentationSnapshot) -> Vec<u8>
 fn decode_presentation_snapshot_binary(bytes: &[u8]) -> Result<SemioPresentationSnapshot, String> {
     const PACK_BINARY_FORMAT: u8 = 1;
     let mut reader = semio_framework_plugin::resolve_ready(store::ByteReader::new(bytes));
-    let format = reader.read_u8().map_err(|e| e.to_string())?;
+    let format = reader.read_u8().await.map_err(|e| e.to_string())?;
     if format != PACK_BINARY_FORMAT {
         return Err(format!("unsupported pack format {format}"));
     }
     let schema = read_str_lp(&mut reader)?;
-    let master_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let master_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut masters = Vec::with_capacity(master_count as usize);
     for _ in 0..master_count {
         masters.push(read_master(&mut reader)?);
     }
-    let layout_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let layout_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut layouts = Vec::with_capacity(layout_count as usize);
     for _ in 0..layout_count {
         layouts.push(read_layout(&mut reader)?);
     }
-    let slide_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let slide_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut slides = Vec::with_capacity(slide_count as usize);
     for _ in 0..slide_count {
         slides.push(read_slide(&mut reader)?);
@@ -611,7 +611,7 @@ mod tests {
     async fn pack_round_trips() {
         let snap = SemioPresentationSnapshot::default();
         let bytes = <SemioPresentationSnapshot as store::ArtifactPack>::encode_pack(&snap);
-        let back = <SemioPresentationSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+        let back = <SemioPresentationSnapshot as store::ArtifactPack>::decode_pack(&bytes).await.expect("decode");
         assert_eq!(snap, back);
     }
 
@@ -619,7 +619,7 @@ mod tests {
     async fn dsl_text_round_trips() {
         let snap = SemioPresentationSnapshot::default();
         let text = <SemioPresentationSnapshot as store::ArtifactDsl>::print_dsl(&snap);
-        let back = <SemioPresentationSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
+        let back = <SemioPresentationSnapshot as store::ArtifactDsl>::parse_dsl(&text).await.expect("parse");
         assert_eq!(snap, back);
     }
 
@@ -627,11 +627,11 @@ mod tests {
     async fn demo_snapshot_pack_and_dsl_round_trip() {
         let snap = demo_semio_presentation_snapshot();
         let bytes = <SemioPresentationSnapshot as store::ArtifactPack>::encode_pack(&snap);
-        let back = <SemioPresentationSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+        let back = <SemioPresentationSnapshot as store::ArtifactPack>::decode_pack(&bytes).await.expect("decode");
         assert_eq!(snap, back);
 
         let text = <SemioPresentationSnapshot as store::ArtifactDsl>::print_dsl(&snap);
-        let back_text = <SemioPresentationSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
+        let back_text = <SemioPresentationSnapshot as store::ArtifactDsl>::parse_dsl(&text).await.expect("parse");
         assert_eq!(snap, back_text);
     }
 
@@ -655,7 +655,7 @@ mod tests {
             }],
         };
         let bytes = <SemioPresentationSnapshot as store::ArtifactPack>::encode_pack(&snap);
-        let back = <SemioPresentationSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+        let back = <SemioPresentationSnapshot as store::ArtifactPack>::decode_pack(&bytes).await.expect("decode");
         assert_eq!(snap, back);
     }
 }

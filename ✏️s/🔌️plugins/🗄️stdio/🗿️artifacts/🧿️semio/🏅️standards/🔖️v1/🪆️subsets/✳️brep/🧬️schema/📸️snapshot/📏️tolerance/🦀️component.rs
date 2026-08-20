@@ -239,8 +239,8 @@ mod tests {
         async fn interval_arithmetic_always_contains_scalar_result() {
             let mut rng = semio_framework_geometry::random::Rng::from_seed(3);
             for _ in 0..500 {
-                let a = rng.next_f64() * 20.0 - 10.0;
-                let b = rng.next_f64() * 20.0 - 10.0;
+                let a = rng.await.next_f64() * 20.0 - 10.0;
+                let b = rng.await.next_f64() * 20.0 - 10.0;
                 let ia = Iv::exact(a);
                 let ib = Iv::exact(b);
                 let sum = ia.add(ib);

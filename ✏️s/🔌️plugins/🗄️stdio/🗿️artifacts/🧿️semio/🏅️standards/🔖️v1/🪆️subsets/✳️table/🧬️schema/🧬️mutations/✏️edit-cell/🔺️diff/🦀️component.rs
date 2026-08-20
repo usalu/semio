@@ -19,7 +19,7 @@ pub fn diff(payload: &EditCell, base: &SemioTableSnapshot) -> protocol::Mutation
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Row #{} has no cell for column \"{}\".", payload.row_index, payload.column_name), [payload.row_index.to_string(), payload.column_name.clone()]);
     };
     if *current == payload.new_value {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Cell #{} {} already has this value.", payload.row_index, payload.column_name));
+        return protocol::MutationOutcome::empty().await.warn("mutation.no-op", format!("Cell #{} {} already has this value.", payload.row_index, payload.column_name));
     }
     let mut rows = base.rows.clone();
     rows[payload.row_index].cells[col_index] = payload.new_value.clone();

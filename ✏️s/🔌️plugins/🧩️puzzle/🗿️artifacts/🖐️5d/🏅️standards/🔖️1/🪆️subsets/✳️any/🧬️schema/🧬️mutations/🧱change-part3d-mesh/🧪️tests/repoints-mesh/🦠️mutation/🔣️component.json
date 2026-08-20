@@ -1,0 +1,5 @@
+{
+  "mutation": "changePart3dMesh",
+  "id": "part-a",
+  "newMeshUrl": "mesh://alpha-v2"
+}

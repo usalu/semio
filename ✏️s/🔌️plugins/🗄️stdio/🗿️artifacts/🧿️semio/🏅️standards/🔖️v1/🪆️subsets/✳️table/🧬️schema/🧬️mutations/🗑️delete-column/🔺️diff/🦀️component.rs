@@ -26,7 +26,7 @@ pub fn diff(payload: &DeleteColumn, base: &SemioTableSnapshot) -> protocol::Muta
     if cascaded_rows == 0 {
         outcome
     } else {
-        outcome.info("mutation.cascade", format!("Deleting column \"{}\" also removed its cell from {} row(s).", payload.name, cascaded_rows))
+        outcome.await.info("mutation.cascade", format!("Deleting column \"{}\" also removed its cell from {} row(s).", payload.name, cascaded_rows))
     }
 }
 //#endregion 🔖️Diff

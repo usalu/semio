@@ -82,12 +82,12 @@ pub enum BmpMutation {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn apply_bmp_mutation(snapshot: &mut BmpSnapshot, mutation: &BmpMutation) -> protocol::MutationOutcome<BmpDiff> {
     let outcome = <BmpMutation as Mutation<BmpSnapshot>>::diff(mutation, snapshot);
-    match MutationDiff::apply(outcome.diff(), snapshot) {
+    match MutationDiff::apply(outcome.await.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.await.messages().to_vec()),
     }
 }
 //#endregion 🔖️Apply
@@ -171,17 +171,17 @@ impl protocol::OpText for BmpMutation {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline }).await?;
-                return <Self as dsl::DslVariants>::from_named_record(keyword, &record).await;
+                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
+                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
         Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
     }
     async fn print_op(&self) -> String {
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self).await;
+        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline).await
+        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
     }
 }
 
@@ -332,7 +332,7 @@ mod tests {
         let base = base_snapshot();
         for m in demo_mutation_cases() {
             let diff = m.diff(&base);
-            let expected = diff.diff().apply(&base).expect("diff must apply to base");
+            let expected = diff.await.diff().apply(&base).expect("diff must apply to base");
 
             let mut via_apply = base.clone();
             let returned_diff = apply_bmp_mutation(&mut via_apply, &m);
@@ -358,8 +358,8 @@ mod tests {
 
             // 🔁️ diff-level round trip
             let d = m.diff(&base);
-            let mid = d.diff().apply(&base).unwrap();
-            let back = d.diff().inverse(&base).apply(&mid).unwrap();
+            let mid = d.await.diff().apply(&base).unwrap();
+            let back = d.await.diff().inverse(&base).apply(&mid).unwrap();
             assert_eq!(back, base, "diff-level inverse round trip failed for {m:?}");
         }
     }
@@ -372,58 +372,58 @@ mod tests {
 
         // 🧩 Insert(2) + Remove(0): the two-op sequence base → mid → after.
         let d1 = BmpMutation::InsertPaletteEntry { index: 2, entry: entry(1, 2, 3, 0) }.diff(&base);
-        let mid = d1.diff().apply(&base).unwrap();
+        let mid = d1.await.diff().apply(&base).unwrap();
         let d2 = BmpMutation::RemovePaletteEntry { index: 0 }.diff(&mid);
-        let after = d2.diff().apply(&mid).unwrap();
-        let mut composed = d1.diff().clone();
-        composed.absorb(d2.diff().clone());
+        let after = d2.await.diff().apply(&mid).unwrap();
+        let mut composed = d1.await.diff().clone();
+        composed.absorb(d2.await.diff().clone());
         assert_eq!(composed.apply(&base).unwrap(), after, "Insert+Remove-before absorb mismatch");
 
         // 🧩 Insert(2,f) + Insert(2,g): both must survive (fixes the old op-slot LWW bug).
         let d1 = BmpMutation::InsertPaletteEntry { index: 2, entry: entry(9, 0, 0, 0) }.diff(&base);
-        let mid = d1.diff().apply(&base).unwrap();
+        let mid = d1.await.diff().apply(&base).unwrap();
         let d2 = BmpMutation::InsertPaletteEntry { index: 2, entry: entry(0, 9, 0, 0) }.diff(&mid);
-        let after = d2.diff().apply(&mid).unwrap();
-        let mut composed = d1.diff().clone();
-        composed.absorb(d2.diff().clone());
+        let after = d2.await.diff().apply(&mid).unwrap();
+        let mut composed = d1.await.diff().clone();
+        composed.absorb(d2.await.diff().clone());
         assert_eq!(composed.apply(&base).unwrap(), after, "Insert+Insert-same-index absorb mismatch");
         assert_eq!(after.palette.len(), base.palette.len() + 2, "both inserts must survive");
 
         // 🧩 Add + SetField (patch into the added payload).
         let d1 = BmpMutation::InsertPaletteEntry { index: 1, entry: entry(1, 1, 1, 1) }.diff(&base);
-        let mid = d1.diff().apply(&base).unwrap();
+        let mid = d1.await.diff().apply(&base).unwrap();
         let d2 = BmpMutation::SetPaletteEntry { index: 1, entry: entry(2, 2, 2, 2) }.diff(&mid);
-        let after = d2.diff().apply(&mid).unwrap();
-        let mut composed = d1.diff().clone();
-        composed.absorb(d2.diff().clone());
+        let after = d2.await.diff().apply(&mid).unwrap();
+        let mut composed = d1.await.diff().clone();
+        composed.absorb(d2.await.diff().clone());
         assert_eq!(composed.apply(&base).unwrap(), after, "Add+SetPaletteEntry absorb mismatch");
         assert_eq!(after.palette[1], entry(2, 2, 2, 2));
 
         // 🧩 Modify + Remove: modifying then removing the same entry collapses to a removal.
         let d1 = BmpMutation::SetPaletteEntry { index: 1, entry: entry(5, 5, 5, 5) }.diff(&base);
-        let mid = d1.diff().apply(&base).unwrap();
+        let mid = d1.await.diff().apply(&base).unwrap();
         let d2 = BmpMutation::RemovePaletteEntry { index: 1 }.diff(&mid);
-        let after = d2.diff().apply(&mid).unwrap();
-        let mut composed = d1.diff().clone();
-        composed.absorb(d2.diff().clone());
+        let after = d2.await.diff().apply(&mid).unwrap();
+        let mut composed = d1.await.diff().clone();
+        composed.absorb(d2.await.diff().clone());
         assert_eq!(composed.apply(&base).unwrap(), after, "Modify+Remove absorb mismatch");
 
         // 🧩 Associativity over a triple.
         let base = base_snapshot();
         let d1 = BmpMutation::InsertPaletteEntry { index: 0, entry: entry(1, 0, 0, 0) }.diff(&base);
-        let s1 = d1.diff().apply(&base).unwrap();
+        let s1 = d1.await.diff().apply(&base).unwrap();
         let d2 = BmpMutation::SetPaletteEntry { index: 0, entry: entry(2, 0, 0, 0) }.diff(&s1);
-        let s2 = d2.diff().apply(&s1).unwrap();
+        let s2 = d2.await.diff().apply(&s1).unwrap();
         let d3 = BmpMutation::RemovePaletteEntry { index: 2 }.diff(&s2);
-        let s3 = d3.diff().apply(&s2).unwrap();
+        let s3 = d3.await.diff().apply(&s2).unwrap();
 
-        let mut left = d1.diff().clone();
-        left.absorb(d2.diff().clone());
-        left.absorb(d3.diff().clone());
+        let mut left = d1.await.diff().clone();
+        left.absorb(d2.await.diff().clone());
+        left.absorb(d3.await.diff().clone());
 
-        let mut d23 = d2.diff().clone();
-        d23.absorb(d3.diff().clone());
-        let mut right = d1.diff().clone();
+        let mut d23 = d2.await.diff().clone();
+        d23.absorb(d3.await.diff().clone());
+        let mut right = d1.await.diff().clone();
         right.absorb(d23);
 
         assert_eq!(left.apply(&base).unwrap(), s3);
@@ -456,26 +456,26 @@ mod tests {
 
         // 🔍 Hand-written per-field assertion: every scalar field of `BmpDiff` is populated —
         // scalar compares have no positional-collision issue, so a single direction suffices.
-        assert!(ab.header_size.is_some(), "header_size must be populated");
-        assert!(ab.width.is_some(), "width must be populated");
-        assert!(ab.height.is_some(), "height must be populated");
-        assert!(ab.row_order.is_some(), "row_order must be populated");
-        assert!(ab.planes.is_some(), "planes must be populated");
-        assert!(ab.bits_per_pixel.is_some(), "bits_per_pixel must be populated");
-        assert!(ab.compression.is_some(), "compression must be populated");
-        assert!(ab.image_size.is_some(), "image_size must be populated");
-        assert!(ab.x_pixels_per_meter.is_some(), "x_pixels_per_meter must be populated");
-        assert!(ab.y_pixels_per_meter.is_some(), "y_pixels_per_meter must be populated");
-        assert!(ab.colors_used.is_some(), "colors_used must be populated");
-        assert!(ab.colors_important.is_some(), "colors_important must be populated");
-        assert!(ab.pixels.is_some(), "pixels must be populated");
+        assert!(ab.await.header_size.is_some(), "header_size must be populated");
+        assert!(ab.await.width.is_some(), "width must be populated");
+        assert!(ab.await.height.is_some(), "height must be populated");
+        assert!(ab.await.row_order.is_some(), "row_order must be populated");
+        assert!(ab.await.planes.is_some(), "planes must be populated");
+        assert!(ab.await.bits_per_pixel.is_some(), "bits_per_pixel must be populated");
+        assert!(ab.await.compression.is_some(), "compression must be populated");
+        assert!(ab.await.image_size.is_some(), "image_size must be populated");
+        assert!(ab.await.x_pixels_per_meter.is_some(), "x_pixels_per_meter must be populated");
+        assert!(ab.await.y_pixels_per_meter.is_some(), "y_pixels_per_meter must be populated");
+        assert!(ab.await.colors_used.is_some(), "colors_used must be populated");
+        assert!(ab.await.colors_important.is_some(), "colors_important must be populated");
+        assert!(ab.await.pixels.is_some(), "pixels must be populated");
 
         // 🧮 `palette` is a genuinely index-keyed collection: on a SAME-length pair, one
         // `between()` call can only ever show `removed` XOR `added`, never both (the F1-txt
         // structural trap) — `sweep_a`/`sweep_b` are deliberately asymmetric (2 vs 3 entries)
         // so each direction proves a different tail kind, exactly as `between_roundtrip_law`'s
         // own two-directions-checked shape already implies is the right level of rigor.
-        let pd_ab = ab.palette.as_ref().expect("palette diff must be populated (a->b)");
+        let pd_ab = ab.await.palette.as_ref().expect("palette diff must be populated (a->b)");
         assert!(pd_ab.removed.is_empty(), "a->b must not need a removal (palette grows)");
         assert!(!pd_ab.modified.is_empty(), "a->b must show the modified entry");
         assert!(!pd_ab.added.is_empty(), "a->b must show the added entry");
@@ -486,7 +486,7 @@ mod tests {
         assert_ne!(modified.entry.r, old_entry.r, "modified entry must change r");
         assert_ne!(modified.entry.reserved, old_entry.reserved, "modified entry must change reserved");
 
-        let pd_ba = ba.palette.as_ref().expect("palette diff must be populated (b->a)");
+        let pd_ba = ba.await.palette.as_ref().expect("palette diff must be populated (b->a)");
         assert!(!pd_ba.removed.is_empty(), "b->a must show the removed entry");
         assert!(!pd_ba.modified.is_empty(), "b->a must show the modified entry");
         assert!(pd_ba.added.is_empty(), "b->a must not need an addition (palette shrinks)");
@@ -505,12 +505,12 @@ mod tests {
 
         for m in demo_mutation_cases() {
             let printed = m.print_op();
-            assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
-            let parsed = BmpMutation::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
+            assert!(!printed.await.contains('\n'), "print_op must be one line, got {printed:?}");
+            let parsed = BmpMutation::parse_op(&printed).await.unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
             assert_eq!(parsed, m, "print_op/parse_op round-trip mismatch for {m:?} (printed {printed:?})");
 
-            let encoded = m.encode_op().unwrap_or_else(|e| panic!("encode_op({m:?}) failed: {e}"));
-            let decoded = BmpMutation::decode_op(&encoded).unwrap_or_else(|e| panic!("decode_op failed: {e}"));
+            let encoded = m.encode_op().await.unwrap_or_else(|e| panic!("encode_op({m:?}) failed: {e}"));
+            let decoded = BmpMutation::decode_op(&encoded).await.unwrap_or_else(|e| panic!("decode_op failed: {e}"));
             assert_eq!(decoded, m, "encode_op/decode_op round-trip mismatch for {m:?}");
         }
     }

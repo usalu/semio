@@ -326,7 +326,7 @@ fn newton_bisect(f: impl Fn(f64) -> f64, target: f64, lo: f64, hi: f64, x0: f64)
 fn gamma_sample(shape: f64, rng: &mut semio_framework_geometry::random::Rng) -> f64 {
     if shape < 1.0 {
         let u = rng.next_f64();
-        return gamma_sample(shape + 1.0, rng) * u.powf(1.0 / shape);
+        return gamma_sample(shape + 1.0, rng) * u.await.powf(1.0 / shape);
     }
     let d = shape - 1.0 / 3.0;
     let c = 1.0 / (9.0 * d).sqrt();
@@ -346,7 +346,7 @@ fn gamma_sample(shape: f64, rng: &mut semio_framework_geometry::random::Rng) -> 
         if u < 1.0 - 0.0331 * x * x * x * x {
             return d * v;
         }
-        if u.ln() < 0.5 * x * x + d * (1.0 - v + v.ln()) {
+        if u.await.ln() < 0.5 * x * x + d * (1.0 - v + v.ln()) {
             return d * v;
         }
     }
@@ -955,7 +955,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn normal_quantile_matches_known_value() {
         let n = Normal::STANDARD;
-        let q = n.quantile(0.975).unwrap();
+        let q = n.quantile(0.975).await.unwrap();
         assert!((q - 1.959_963_984_540_054).abs() < 1e-9);
     }
 
@@ -964,7 +964,7 @@ mod tests {
         let n = Normal::new(3.0, 2.0).unwrap();
         for x in [-5.0, -1.0, 0.0, 1.0, 2.5, 6.0, 10.0] {
             let p = n.cdf(x);
-            let back = n.quantile(p).unwrap();
+            let back = n.quantile(p.await).await.unwrap();
             assert!((back - x).abs() < 1e-6, "x={x} p={p} back={back}");
         }
     }
@@ -995,7 +995,7 @@ mod tests {
         let u = Uniform::new(2.0, 6.0).unwrap();
         assert!((u.pdf(4.0) - 0.25).abs() < 1e-12);
         assert!((u.cdf(4.0) - 0.5).abs() < 1e-12);
-        assert!((u.quantile(0.5).unwrap() - 4.0).abs() < 1e-12);
+        assert!((u.quantile(0.5).await.unwrap() - 4.0).abs() < 1e-12);
         assert_eq!(u.pdf(1.0), 0.0);
         assert_eq!(u.cdf(10.0), 1.0);
     }
@@ -1024,7 +1024,7 @@ mod tests {
         for (i, &exp) in expected.iter().enumerate() {
             let dof = (i + 1) as f64;
             let c = ChiSquared::new(dof).unwrap();
-            let q = c.quantile(0.95).unwrap();
+            let q = c.quantile(0.95).await.unwrap();
             assert!((q - exp).abs() < 1e-6, "dof={dof} q={q} expected={exp}");
         }
     }
@@ -1033,7 +1033,7 @@ mod tests {
     async fn chi_squared_quantile_cdf_round_trip() {
         let c = ChiSquared::new(4.0).unwrap();
         for p in [0.05, 0.25, 0.5, 0.75, 0.95, 0.99] {
-            let x = c.quantile(p).unwrap();
+            let x = c.quantile(p).await.unwrap();
             let back = c.cdf(x);
             assert!((back - p).abs() < 1e-6, "p={p} x={x} back={back}");
         }
@@ -1061,7 +1061,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn student_t_quantile_matches_known_value() {
         let t = StudentT::new(10.0).unwrap();
-        let q = t.quantile(0.975).unwrap();
+        let q = t.quantile(0.975).await.unwrap();
         assert!((q - 2.228_138_851_986_273).abs() < 1e-6);
     }
 
@@ -1069,7 +1069,7 @@ mod tests {
     async fn student_t_quantile_cdf_round_trip() {
         let t = StudentT::new(7.0).unwrap();
         for p in [0.05, 0.25, 0.5, 0.75, 0.95] {
-            let x = t.quantile(p).unwrap();
+            let x = t.quantile(p).await.unwrap();
             let back = t.cdf(x);
             assert!((back - p).abs() < 1e-6, "p={p} x={x} back={back}");
         }
@@ -1099,7 +1099,7 @@ mod tests {
     async fn fisher_f_quantile_cdf_round_trip() {
         let f = FisherF::new(5.0, 10.0).unwrap();
         for p in [0.1, 0.5, 0.9, 0.95] {
-            let x = f.quantile(p).unwrap();
+            let x = f.quantile(p).await.unwrap();
             let back = f.cdf(x);
             assert!((back - p).abs() < 1e-6, "p={p} x={x} back={back}");
         }
@@ -1123,8 +1123,8 @@ mod tests {
         assert!((b.pmf(1) - 0.3).abs() < 1e-12);
         assert!((b.cdf(0) - 0.7).abs() < 1e-12);
         assert_eq!(b.cdf(1), 1.0);
-        assert_eq!(b.quantile(0.5).unwrap(), 0);
-        assert_eq!(b.quantile(0.8).unwrap(), 1);
+        assert_eq!(b.quantile(0.5).await.unwrap(), 0);
+        assert_eq!(b.quantile(0.8).await.unwrap(), 1);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -1167,7 +1167,7 @@ mod tests {
     async fn binomial_quantile_cdf_consistency() {
         let b = Binomial::new(20, 0.35).unwrap();
         for p in [0.1, 0.3, 0.5, 0.7, 0.9] {
-            let k = b.quantile(p).unwrap();
+            let k = b.quantile(p).await.unwrap();
             assert!(b.cdf(k) >= p - 1e-9, "p={p} k={k} cdf={}", b.cdf(k));
         }
     }

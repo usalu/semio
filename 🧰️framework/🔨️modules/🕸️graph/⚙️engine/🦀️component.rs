@@ -348,7 +348,7 @@ impl<P: PortModel, D: Directedness> Storage<P, D> {
 
     // #subregion Handles
     /// 🪝️ Allocates a new handle anchored on `node`; only meaningful when `P::HAS_PORTS` — returns `None` otherwise (or if `node` doesn't exist), never panics.
-    pub async fn add_handle(&mut self, node: NodeId) -> Option<HandleId> {
+    pub fn add_handle(&mut self, node: NodeId) -> Option<HandleId> {
         if !P::HAS_PORTS || !self.nodes.contains_key(&node) {
             return None;
         }
@@ -369,7 +369,7 @@ impl<P: PortModel, D: Directedness> Storage<P, D> {
     // #endsubregion
 
     // #subregion Whole graph
-    pub async fn graph_attrs_mut(&mut self) -> &mut PropertyBag {
+    pub fn graph_attrs_mut(&mut self) -> &mut PropertyBag {
         &mut self.graph_attrs
     }
 
@@ -1446,8 +1446,8 @@ mod tests {
             let mut g = PU::new().await;
             let a = g.add_node().await;
             let b = g.add_node().await;
-            let ha = g.add_handle(a).await.expect("ported storage grants handles");
-            let hb = g.add_handle(b).await.expect("ported storage grants handles");
+            let ha = g.add_handle(a).expect("ported storage grants handles");
+            let hb = g.add_handle(b).expect("ported storage grants handles");
             let e = g.add_edge(ha, hb).await;
             assert!(g.remove_node(a).await);
             assert!(!g.contains_node(a).await);
@@ -1483,8 +1483,8 @@ mod tests {
             let mut g = PD::new().await;
             let a = g.add_node().await;
             let b = g.add_node().await;
-            let ha = g.add_handle(a).await.expect("ported");
-            let hb = g.add_handle(b).await.expect("ported");
+            let ha = g.add_handle(a).expect("ported");
+            let hb = g.add_handle(b).expect("ported");
             let e1 = g.add_edge(ha, hb).await;
             let e2 = g.add_edge(ha, hb).await;
             assert_ne!(e1, e2, "Ported storages always create a fresh parallel edge");
@@ -1498,7 +1498,7 @@ mod tests {
         block_on_test(async {
             let mut g = NU::new().await;
             let a = g.add_node().await;
-            assert!(g.add_handle(a).await.is_none());
+            assert!(g.add_handle(a).is_none());
             assert!(g.handles(a).await.is_empty());
         });
     }
@@ -1561,7 +1561,7 @@ mod tests {
     fn add_handle_denies_missing_node_and_handle_owner_is_none_for_unknown_handle() {
         block_on_test(async {
             let mut g = PU::new().await;
-            assert!(g.add_handle(999).await.is_none(), "cannot anchor a handle on a node that doesn't exist");
+            assert!(g.add_handle(999).is_none(), "cannot anchor a handle on a node that doesn't exist");
             assert!(g.handle_owner(999).await.is_none());
         });
     }

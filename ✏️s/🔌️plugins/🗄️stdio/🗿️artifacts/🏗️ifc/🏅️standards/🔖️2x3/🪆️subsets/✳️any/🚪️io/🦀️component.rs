@@ -32,7 +32,7 @@ pub async fn decode_ifc2x3(bytes: &[u8]) -> Result<Ifc2x3Snapshot, String> {
 
 /// 📤️ Regenerates valid IFC2X3 SPF bytes from a snapshot. Losslessness is `write_part21`'s job
 /// (shared with `step`/`4`); this function's only own contribution is the byte encoding.
-pub async fn encode_ifc2x3(snapshot: &Ifc2x3Snapshot) -> Result<Vec<u8>, String> {
+pub fn encode_ifc2x3(snapshot: &Ifc2x3Snapshot) -> Result<Vec<u8>, String> {
     crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::validate_ifc2x3_snapshot(snapshot)?;
     let options = Part21WriteOptions { line_ending: "\r\n", blank_after_header: snapshot.edm_preamble.is_some(), blank_before_data: true, blank_before_terminator: true, space_after_instance_equals: true };
     Ok(write_part21_with(&snapshot.document, options, snapshot.edm_preamble.as_ref()).into_bytes())
@@ -155,28 +155,28 @@ mod tests {
 
     async fn assert_exact(label: &str, actual: &[u8]) {
         let expected = exact_fixture_bytes();
-        let first_difference = actual.iter().zip(expected).position(|(left, right)| left != right);
-        assert!(actual == expected, "{label}: expected {} bytes, got {}; first differing byte: {first_difference:?}", expected.len(), actual.len(),);
+        let first_difference = actual.iter().zip(expected).await.await.await.await.await.position(|(left, right)| left != right);
+        assert!(actual == expected, "{label}: expected {} bytes, got {}; first differing byte: {first_difference:?}", expected.await.len(), actual.len(),);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn decode_rejects_non_ifc2x3_schema() {
         let step_ap214 = "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFILE_NAME('','',(''),(''),'','','');\nFILE_SCHEMA(('AUTOMOTIVE_DESIGN'));\nENDSEC;\nDATA;\nENDSEC;\nEND-ISO-10303-21;\n";
-        assert!(decode_ifc2x3(step_ap214.as_bytes()).is_err(), "must reject a non-IFC2X3 FILE_SCHEMA");
+        assert!(decode_ifc2x3(step_ap214.as_bytes()).await.is_err(), "must reject a non-IFC2X3 FILE_SCHEMA");
         let ifc4 = "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFILE_NAME('','',(''),(''),'','','');\nFILE_SCHEMA(('IFC4'));\nENDSEC;\nDATA;\nENDSEC;\nEND-ISO-10303-21;\n";
-        assert!(decode_ifc2x3(ifc4.as_bytes()).is_err(), "must reject IFC4 too -- 2x3 is a distinct standard, not a superset reader");
+        assert!(decode_ifc2x3(ifc4.as_bytes()).await.is_err(), "must reject IFC4 too -- 2x3 is a distinct standard, not a superset reader");
     }
 
     /// 🧪️ THE genuine decode→encode→decode round-trip law this ticket's own policy requires
     /// (`POLICY_ROUND_TRIP_TEST_ALLOWLIST` is shrink-only for new standards).
     #[semio_framework_async_macros::async_test]
     async fn decode_encode_decode_round_trip_is_lossless() {
-        let once = decode_ifc2x3(IFC2X3_FIXTURE.as_bytes()).expect("decode fixture");
+        let once = decode_ifc2x3(IFC2X3_FIXTURE.as_bytes()).await.expect("decode fixture");
         // 🩹 8 distinct instance ids in IFC2X3_FIXTURE: #1, #20, #21, #30, #31, #32, #40, #41.
         assert_eq!(once.document.instances.len(), 8);
         assert!(once.document.by_type("IFCPROJECT").next().is_some());
         let bytes = encode_ifc2x3(&once).expect("encode");
-        let twice = decode_ifc2x3(&bytes).expect("decode re-encoded bytes");
+        let twice = decode_ifc2x3(&bytes).await.expect("decode re-encoded bytes");
         assert_eq!(once, twice, "decode -> encode -> decode must be lossless at the snapshot level");
     }
 
@@ -188,12 +188,12 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn codec_round_trip_through_store_traits() {
-        let snap = decode_ifc2x3(IFC2X3_FIXTURE.as_bytes()).expect("decode");
+        let snap = decode_ifc2x3(IFC2X3_FIXTURE.as_bytes()).await.expect("decode");
         let text = store::ArtifactDsl::print_dsl(&snap);
-        let parsed = <Ifc2x3Snapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse_dsl");
+        let parsed = <Ifc2x3Snapshot as store::ArtifactDsl>::parse_dsl(&text).await.expect("parse_dsl");
         assert_eq!(parsed, snap);
         let packed = store::ArtifactPack::encode_pack(&snap);
-        let decoded = <Ifc2x3Snapshot as store::ArtifactPack>::decode_pack(&packed).expect("decode_pack");
+        let decoded = <Ifc2x3Snapshot as store::ArtifactPack>::decode_pack(&packed).await.expect("decode_pack");
         assert_eq!(decoded, snap);
     }
 
@@ -207,37 +207,37 @@ mod tests {
         use crate::artifacts::txt::TxtSnapshot;
 
         let original = exact_fixture_bytes();
-        let imported = decode_ifc2x3(original).expect("direct IFC2X3 import");
+        let imported = decode_ifc2x3(original.await).await.expect("direct IFC2X3 import");
         assert_eq!(imported.document.instances.len(), 409_102, "fixture entity count changed");
         assert_exact("direct engine export", &encode_ifc2x3(&imported).expect("direct engine export"));
 
-        let binary = BinarySnapshot { schema: STDIO_BINARY_DOCUMENT_SCHEMA.into(), bytes: original.to_vec() };
+        let binary = BinarySnapshot { schema: STDIO_BINARY_DOCUMENT_SCHEMA.into(), bytes: original.await.to_vec() };
         let binary_snapshot = binary_import::deserialize(&binary).expect("raw binary deserialize");
         let binary_output = binary_export::serialize(&binary_snapshot).expect("raw binary serialize");
         assert_exact("raw binary route", &binary_output.bytes);
 
-        let text = std::str::from_utf8(original).expect("fixture UTF-8");
+        let text = std::str::from_utf8(original.await).expect("fixture UTF-8");
         let txt = TxtSnapshot::from_body(text);
         let text_snapshot = text_import::deserialize(&txt).expect("raw text deserialize");
         let text_output = text_export::serialize(&text_snapshot).expect("raw text serialize");
         assert_exact("raw text route", text_output.to_body().as_bytes());
 
         let text_analysis = <Ifc2x3Analyzer as ArtifactAnalyzer>::analyze(&[AnalyzeSource::Text(text)]);
-        assert!(text_analysis.diagnostics.is_empty(), "text analyzer diagnostics: {:?}", text_analysis.diagnostics);
-        assert_exact("text analyzer export", &encode_ifc2x3(&text_analysis.parts.snapshot.expect("text analyzer snapshot")).expect("text analyzer export"));
+        assert!(text_analysis.await.diagnostics.is_empty(), "text analyzer diagnostics: {:?}", text_analysis.await.diagnostics);
+        assert_exact("text analyzer export", &encode_ifc2x3(&text_analysis.await.parts.snapshot.expect("text analyzer snapshot")).expect("text analyzer export"));
 
         let pack = store::ArtifactPack::encode_pack(&imported);
         let pack_analysis = <Ifc2x3Analyzer as ArtifactAnalyzer>::analyze(&[AnalyzeSource::Binary(&pack)]);
-        assert!(pack_analysis.diagnostics.is_empty(), "pack analyzer diagnostics: {:?}", pack_analysis.diagnostics);
-        assert_exact("pack analyzer export", &encode_ifc2x3(&pack_analysis.parts.snapshot.expect("pack analyzer snapshot")).expect("pack analyzer export"));
+        assert!(pack_analysis.await.diagnostics.is_empty(), "pack analyzer diagnostics: {:?}", pack_analysis.await.diagnostics);
+        assert_exact("pack analyzer export", &encode_ifc2x3(&pack_analysis.await.parts.snapshot.expect("pack analyzer snapshot")).expect("pack analyzer export"));
 
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.ifc", standard: StandardId("2x3"), subset: SubsetId("*") };
         let text_sources = [ComposeSource { dialect: DIALECT, payload: AnalyzeSource::Text(text) }];
-        let text_composition = Ifc2x3ComposerComposition::compose(&text_sources).expect("compose native IFC2X3 text");
+        let text_composition = Ifc2x3ComposerComposition::compose(&text_sources).await.expect("compose native IFC2X3 text");
         assert_exact("text composer export", &encode_ifc2x3(&text_composition.snapshot).expect("text composer export"));
 
         let pack_sources = [ComposeSource { dialect: DIALECT, payload: AnalyzeSource::Binary(&pack) }];
-        let pack_composition = Ifc2x3ComposerComposition::compose(&pack_sources).expect("compose IFC2X3 pack");
+        let pack_composition = Ifc2x3ComposerComposition::compose(&pack_sources).await.expect("compose IFC2X3 pack");
         assert_exact("pack composer export", &encode_ifc2x3(&pack_composition.snapshot).expect("pack composer export"));
     }
 
@@ -351,7 +351,7 @@ mod tests {
 
             let diff_spec = dsl::parse_protocol(diff::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse diff protocol");
             for d in diff::demo_diff_cases() {
-                let bytes = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed for {d:?}: {e:?}"));
+                let bytes = d.encode_diff().await.unwrap_or_else(|e| panic!("encode_diff failed for {d:?}: {e:?}"));
                 let trace = dsl::walk_protocol(&diff_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(diff) failed for {d:?} @{}: {}", e.offset, e.message));
                 assert_eq!(trace.consumed, bytes.len(), "diff walk did not consume every byte for {d:?}");
             }
@@ -366,11 +366,11 @@ mod tests {
 
             let demo = demo_ifc2x3_snapshot();
 
-            let parsed = <Ifc2x3Snapshot as store::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
+            let parsed = <Ifc2x3Snapshot as store::ArtifactDsl>::parse_dsl(FIXTURE_DSL).await.expect("parse shipped .dsl.semio fixture");
             assert_eq!(parsed, demo, "shipped .dsl.semio fixture does not parse back to demo_ifc2x3_snapshot()");
             assert_eq!(store::ArtifactDsl::print_dsl(&demo), FIXTURE_DSL, "print_dsl(demo_ifc2x3_snapshot()) drifted from the shipped .dsl.semio fixture");
 
-            let decoded = <Ifc2x3Snapshot as store::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode shipped .pack.semio fixture");
+            let decoded = <Ifc2x3Snapshot as store::ArtifactPack>::decode_pack(FIXTURE_PACK).await.expect("decode shipped .pack.semio fixture");
             assert_eq!(decoded, demo, "shipped .pack.semio fixture does not decode back to demo_ifc2x3_snapshot()");
             assert_eq!(store::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_ifc2x3_snapshot()) drifted from the shipped .pack.semio fixture");
         }

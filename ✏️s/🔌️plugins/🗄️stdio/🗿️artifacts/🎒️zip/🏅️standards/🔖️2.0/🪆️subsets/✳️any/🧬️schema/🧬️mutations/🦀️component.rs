@@ -42,12 +42,12 @@ pub enum ZipMutation {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn apply_zip_mutation(snapshot: &mut ZipSnapshot, mutation: &ZipMutation) -> protocol::MutationOutcome<ZipDiff> {
     let outcome = mutation.diff(snapshot);
-    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
+    match protocol::MutationDiff::apply(outcome.await.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.await.messages().to_vec()),
     }
 }
 
@@ -63,7 +63,7 @@ impl Mutation<ZipSnapshot> for ZipMutation {
             Self::RemoveEntry { name } => diff::diff_remove_entry(name),
             Self::RenameEntry { name, new_name } => diff::diff_rename_entry(name, new_name),
             Self::SetEntryData { name, data } => diff::diff_set_entry_data(name, data.clone()),
-        })
+        }).await
     }
 
     async fn inverse(&self, base: &ZipSnapshot) -> Vec<Self> {
@@ -86,18 +86,18 @@ impl protocol::OpText for ZipMutation {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec) in &variants {
             if line == keyword || line.starts_with(&format!("{keyword} ")) {
-                let record = dsl::parse(line, &spec(), &dsl::ParseOptions { limits: dsl::Limits { max_bytes: 64 * 1024 * 1024, ..dsl::Limits::default() }, mode: dsl::SourceMode::Inline }).await?;
-                return <Self as dsl::DslVariants>::from_named_record(keyword, &record).await;
+                let record = dsl::parse(line, &spec(), &dsl::ParseOptions { limits: dsl::Limits { max_bytes: 64 * 1024 * 1024, ..dsl::Limits::default() }, mode: dsl::SourceMode::Inline })?;
+                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
         Err(dsl::__rt::field_error(format!("unknown ZIP operation '{line}'")))
     }
 
     async fn print_op(&self) -> String {
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self).await;
+        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec = variants.iter().find(|(name, _)| name == &keyword).map(|(_, spec)| *spec).expect("ZIP operation spec");
-        dsl::print(&record, &spec(), dsl::JoinMode::Inline).await
+        dsl::print(&record, &spec(), dsl::JoinMode::Inline)
     }
 }
 
@@ -148,10 +148,10 @@ mod tests {
         let base = base_snapshot();
         for mutation in demo_mutation_cases() {
             let text = mutation.print_op();
-            assert_eq!(ZipMutation::parse_op(&text).expect("text operation"), mutation);
-            let bytes = mutation.encode_op().expect("binary operation");
-            assert_eq!(ZipMutation::decode_op(&bytes).expect("binary operation"), mutation);
-            assert_eq!(mutation.diff(&base).diff().apply(&base).unwrap(), {
+            assert_eq!(ZipMutation::parse_op(&text).await.expect("text operation"), mutation);
+            let bytes = mutation.encode_op().await.expect("binary operation");
+            assert_eq!(ZipMutation::decode_op(&bytes).await.expect("binary operation"), mutation);
+            assert_eq!(mutation.diff(&base).await.diff().apply(&base).unwrap(), {
                 let mut next = base.clone();
                 apply_zip_mutation(&mut next, &mutation);
                 next

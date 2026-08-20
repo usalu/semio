@@ -63,7 +63,7 @@ mod tests {
         }
 
         async fn infer(snapshot: &Self::Snapshot) -> Self::Inference {
-            DocxInference::infer(snapshot)
+            DocxInference::infer(snapshot).await
         }
 
         async fn sample_mutations(snapshot: &Self::Snapshot) -> Vec<Self::Mutation> {

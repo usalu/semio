@@ -47,7 +47,7 @@ pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Resul
 pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     let formats = crate::registry::format_descriptors_for("gltf")?;
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
-        .schema(crate::artifacts::gltf::schema::gltf_artifact_schema_descriptor())
+        .await.schema(crate::artifacts::gltf::schema::gltf_artifact_schema_descriptor())
         .formats(formats)
         .inferences(crate::artifacts::gltf::schema::inferences::gltf_artifact_inference_descriptors())
         .inference_services(gltf_inference_services())
@@ -153,7 +153,7 @@ fn gltf_inference_leaf_service(inference_schema: &'static str, infer: ArtifactIn
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn infer_gltf_leaf_cold(id: &'static str, request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
     let descriptor = crate::artifacts::gltf::schema::inferences::gltf_inference_leaf_service_descriptor(id).ok_or_else(|| ArtifactInferenceExecutionError::new("stdio.gltf.inference.unknown-leaf", id))?;
-    let snapshot = <GltfSnapshot as store::ArtifactPack>::decode_pack(request.canonical_payload).map_err(|error| ArtifactInferenceExecutionError::new("stdio.gltf.inference.snapshot-decode", error.to_string()))?;
+    let snapshot = <GltfSnapshot as store::ArtifactPack>::decode_pack(request.canonical_payload).await.map_err(|error| ArtifactInferenceExecutionError::new("stdio.gltf.inference.snapshot-decode", error.to_string()))?;
     let assembly = <crate::artifacts::gltf::schema::GltfBuilder as ArtifactInferrer>::infer(&snapshot);
     let value = (descriptor.encode)(&assembly.geometry.overall).map_err(|error| ArtifactInferenceExecutionError::new("stdio.gltf.inference.leaf-json", error.to_string()))?;
     let policy_hash = format!("{:016x}", stable_hash(request.policy));
@@ -644,7 +644,7 @@ mod tests {
         assert!(ids.contains("s.stdio.gltf.inference.overall-size.v1"));
         let mut registry = ArtifactInferenceServiceRegistry::new();
         for service in services {
-            registry.register(service).unwrap();
+            registry.await.register(service).await.unwrap();
         }
     }
 
@@ -663,7 +663,7 @@ mod tests {
             dependencies: &dependencies,
         };
         let service = gltf_inference_services().into_iter().find(|service| service.metadata().inference_schema == "s.stdio.gltf.inference.overall-size.v1").unwrap();
-        let execution = service.infer(&request).unwrap();
+        let execution = service.infer(&request).await.unwrap();
         let envelope = crate::artifacts::gltf::io::inferences::binary::decode_gltf_inference_leaf_binary(&execution.canonical_payload).unwrap();
         assert_eq!(envelope.id, "s.stdio.gltf.inference.overall-size.v1");
         assert!(envelope.cache_key.contains(":p"));

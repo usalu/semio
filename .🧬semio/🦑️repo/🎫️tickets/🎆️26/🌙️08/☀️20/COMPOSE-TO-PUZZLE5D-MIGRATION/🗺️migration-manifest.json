@@ -1,0 +1,943 @@
+{
+  "sourceCommit": "5904ebe289a4d149e659b23e1f728895ad8de4e8",
+  "schema": "puzzle.5d@1",
+  "generatedBy": "ticket 26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION",
+  "statusVocabulary": [
+    "migrated",
+    "reused-as-canonical-example",
+    "covered-by-inference-test",
+    "covered-by-io-test",
+    "duplicate-with-identified-canonical-target",
+    "obsolete-with-explicit-approved-reason"
+  ],
+  "entries": [
+    {
+      "source": "compose/fixture/flatten.cases.compose.json",
+      "sourceCase": "nakagin_capsule_tower",
+      "targetMutation": "flatten",
+      "targetTest": "nakagin-capsule-tower",
+      "targetPaths": [],
+      "sourceSemanticDigest": null,
+      "targetSemanticDigest": null,
+      "status": "covered-by-inference-test",
+      "renames": {},
+      "notes": [
+        "Case catalog only — carries NO expected output. Oracle is the legacy solver at the pin, cross-checked numerically against flatten-merkle. See w1-coordinator-verification.md CORRECTION 1."
+      ]
+    },
+    {
+      "source": "compose/fixture/flatten.cases.compose.json",
+      "sourceCase": "nakagin_capsule_tower_slanted",
+      "targetMutation": "flatten",
+      "targetTest": "nakagin-capsule-tower-slanted",
+      "targetPaths": [],
+      "sourceSemanticDigest": null,
+      "targetSemanticDigest": null,
+      "status": "covered-by-inference-test",
+      "renames": {},
+      "notes": [
+        "Same no-oracle caveat as the base case."
+      ]
+    },
+    {
+      "source": "compose/fixture/flatten.cases.compose.json",
+      "sourceCase": "nakagin_capsule_tower_twisted",
+      "targetMutation": "flatten",
+      "targetTest": "nakagin-capsule-tower-twisted",
+      "targetPaths": [],
+      "sourceSemanticDigest": null,
+      "targetSemanticDigest": null,
+      "status": "covered-by-inference-test",
+      "renames": {},
+      "notes": [
+        "Same no-oracle caveat as the base case."
+      ]
+    },
+    {
+      "source": "compose/fixture/flatten.cases.compose.json",
+      "sourceCase": "nakagin_capsule_tower_dancing",
+      "targetMutation": "flatten",
+      "targetTest": "nakagin-capsule-tower-dancing",
+      "targetPaths": [],
+      "sourceSemanticDigest": null,
+      "targetSemanticDigest": null,
+      "status": "covered-by-inference-test",
+      "renames": {},
+      "notes": [
+        "Same no-oracle caveat as the base case."
+      ]
+    },
+    {
+      "source": "compose/fixture/flatten.cases.compose.json",
+      "sourceCase": "capsule_dream",
+      "targetMutation": "flatten",
+      "targetTest": "capsule-dream",
+      "targetPaths": [],
+      "sourceSemanticDigest": null,
+      "targetSemanticDigest": null,
+      "status": "covered-by-inference-test",
+      "renames": {},
+      "notes": [
+        "Same no-oracle caveat as the base case."
+      ]
+    },
+    {
+      "source": "compose/fixture/flatten-merkle.cases.compose.json",
+      "sourceCase": null,
+      "targetMutation": "flatten",
+      "targetTest": "merkle-sensitivity",
+      "targetPaths": [],
+      "sourceSemanticDigest": null,
+      "targetSemanticDigest": null,
+      "status": "covered-by-inference-test",
+      "renames": {},
+      "notes": [
+        "11-row sensitivity matrix retained as a BEHAVIORAL oracle. Raw digests are NOT portable: entity-type labels feed merkle_node_str, so the terminology rename changes every hash by construction."
+      ]
+    },
+    {
+      "source": "compose/fixture/copy-paste.cases.compose.json",
+      "sourceCase": "nakagin_capsule_tower",
+      "targetMutation": "paste-fragment",
+      "targetTest": "nakagin-capsule-tower",
+      "targetPaths": [],
+      "sourceSemanticDigest": null,
+      "targetSemanticDigest": null,
+      "status": "migrated",
+      "renames": {},
+      "notes": [
+        "Paste ids come from Go rand.Read(16) (main.go:274). Migration MUST serialize the id map; it must not regenerate at apply time."
+      ]
+    },
+    {
+      "source": "compose/fixture/nakagin-capsule-tower.copy.design.compose.json",
+      "sourceCase": null,
+      "targetMutation": "paste-fragment",
+      "targetTest": "nakagin-capsule-tower",
+      "targetPaths": [],
+      "sourceSemanticDigest": null,
+      "targetSemanticDigest": null,
+      "status": "migrated",
+      "renames": {},
+      "notes": [
+        "Referenced by copy-paste.cases as expectedCopyAsset."
+      ]
+    },
+    {
+      "source": "compose/fixture/nakagin-capsule-tower.copy.design.selection.compose.json",
+      "sourceCase": null,
+      "targetMutation": "paste-fragment",
+      "targetTest": "nakagin-capsule-tower",
+      "targetPaths": [],
+      "sourceSemanticDigest": null,
+      "targetSemanticDigest": null,
+      "status": "migrated",
+      "renames": {},
+      "notes": [
+        "Referenced by copy-paste.cases as selectionAsset."
+      ]
+    },
+    {
+      "source": "compose/fixture/nakagin-capsule-tower.paste.design.compose.json",
+      "sourceCase": null,
+      "targetMutation": "paste-fragment",
+      "targetTest": "nakagin-capsule-tower",
+      "targetPaths": [],
+      "sourceSemanticDigest": null,
+      "targetSemanticDigest": null,
+      "status": "migrated",
+      "renames": {},
+      "notes": [
+        "Referenced by copy-paste.cases as pasteTargetAsset."
+      ]
+    },
+    {
+      "source": "compose/fixture/nakagin-capsule-tower.paste.design.diff.compose.json",
+      "sourceCase": null,
+      "targetMutation": "paste-fragment",
+      "targetTest": "nakagin-capsule-tower",
+      "targetPaths": [],
+      "sourceSemanticDigest": null,
+      "targetSemanticDigest": null,
+      "status": "migrated",
+      "renames": {},
+      "notes": [
+        "Referenced by copy-paste.cases as expectedPasteDiffAsset."
+      ]
+    },
+    {
+      "source": "compose/fixture/nakagin-capsule-tower.paste.with-coordinate.design.diff.compose.json",
+      "sourceCase": null,
+      "targetMutation": "paste-fragment",
+      "targetTest": "nakagin-capsule-tower",
+      "targetPaths": [],
+      "sourceSemanticDigest": null,
+      "targetSemanticDigest": null,
+      "status": "migrated",
+      "renames": {},
+      "notes": [
+        "Referenced by copy-paste.cases as expectedPasteWithCoordinateDiffAsset."
+      ]
+    },
+    {
+      "source": "compose/fixture/delete.cases.compose.json",
+      "sourceCase": "nakagin_capsule_tower",
+      "targetMutation": "delete-parts",
+      "targetTest": "nakagin-capsule-tower",
+      "targetPaths": [],
+      "sourceSemanticDigest": null,
+      "targetSemanticDigest": null,
+      "status": "migrated",
+      "renames": {},
+      "notes": [
+        "Cascade order: fasteners removed before parts; orphaned derived parts promoted to anchored using flattened absolute pose."
+      ]
+    },
+    {
+      "source": "compose/fixture/nakagin-capsule-tower.deleted.selection.compose.json",
+      "sourceCase": null,
+      "targetMutation": "delete-parts",
+      "targetTest": "nakagin-capsule-tower",
+      "targetPaths": [],
+      "sourceSemanticDigest": null,
+      "targetSemanticDigest": null,
+      "status": "migrated",
+      "renames": {},
+      "notes": []
+    },
+    {
+      "source": "compose/fixture/nakagin-capsule-tower.deleted.design.diff.compose.json",
+      "sourceCase": null,
+      "targetMutation": "delete-parts",
+      "targetTest": "nakagin-capsule-tower",
+      "targetPaths": [],
+      "sourceSemanticDigest": null,
+      "targetSemanticDigest": null,
+      "status": "migrated",
+      "renames": {},
+      "notes": [
+        "expectedDiffAsset — strong oracle."
+      ]
+    },
+    {
+      "source": "compose/fixture/move.compose.json",
+      "sourceCase": null,
+      "targetMutation": "move-part3d",
+      "targetTest": "story",
+      "targetPaths": [],
+      "sourceSemanticDigest": null,
+      "targetSemanticDigest": null,
+      "status": "migrated",
+      "renames": {},
+      "notes": []
+    },
+    {
+      "source": "compose/fixture/move/diff.design.compose.json",
+      "sourceCase": null,
+      "targetMutation": "move-part3d",
+      "targetTest": "story",
+      "targetPaths": [],
+      "sourceSemanticDigest": null,
+      "targetSemanticDigest": null,
+      "status": "migrated",
+      "renames": {},
+      "notes": []
+    },
+    {
+      "source": "compose/fixture/move/vector.compose.json",
+      "sourceCase": null,
+      "targetMutation": "move-part3d",
+      "targetTest": "story",
+      "targetPaths": [],
+      "sourceSemanticDigest": null,
+      "targetSemanticDigest": null,
+      "status": "migrated",
+      "renames": {},
+      "notes": []
+    },
+    {
+      "source": "compose/fixture/move/story.design.compose.json",
+      "sourceCase": null,
+      "targetMutation": "move-part3d",
+      "targetTest": "story",
+      "targetPaths": [],
+      "sourceSemanticDigest": null,
+      "targetSemanticDigest": null,
+      "status": "migrated",
+      "renames": {},
+      "notes": []
+    },
+    {
+      "source": "compose/fixture/drag/offset.compose.json",
+      "sourceCase": null,
+      "targetMutation": "move-part2d",
+      "targetTest": "drag",
+      "targetPaths": [],
+      "sourceSemanticDigest": null,
+      "targetSemanticDigest": null,
+      "status": "migrated",
+      "renames": {},
+      "notes": []
+    },
+    {
+      "source": "compose/fixture/drag/pieces.compose.json",
+      "sourceCase": null,
+      "targetMutation": "move-part2d",
+      "targetTest": "drag",
+      "targetPaths": [],
+      "sourceSemanticDigest": null,
+      "targetSemanticDigest": null,
+      "status": "migrated",
+      "renames": {},
+      "notes": []
+    },
+    {
+      "source": "compose/fixture/drag/design.compose.json",
+      "sourceCase": null,
+      "targetMutation": "move-part2d",
+      "targetTest": "drag",
+      "targetPaths": [],
+      "sourceSemanticDigest": null,
+      "targetSemanticDigest": null,
+      "status": "migrated",
+      "renames": {},
+      "notes": []
+    },
+    {
+      "source": "compose/fixture/drag/diff.design.compose.json",
+      "sourceCase": null,
+      "targetMutation": "move-part2d",
+      "targetTest": "drag",
+      "targetPaths": [],
+      "sourceSemanticDigest": null,
+      "targetSemanticDigest": null,
+      "status": "migrated",
+      "renames": {},
+      "notes": []
+    },
+    {
+      "source": "compose/fixture/drag/diff.design.free.compose.json",
+      "sourceCase": null,
+      "targetMutation": "move-part2d",
+      "targetTest": "drag",
+      "targetPaths": [],
+      "sourceSemanticDigest": null,
+      "targetSemanticDigest": null,
+      "status": "migrated",
+      "renames": {},
+      "notes": []
+    },
+    {
+      "source": "compose/fixture/drag/design.png",
+      "sourceCase": null,
+      "targetMutation": null,
+      "targetTest": null,
+      "targetPaths": [],
+      "sourceSemanticDigest": null,
+      "targetSemanticDigest": null,
+      "status": "obsolete-with-explicit-approved-reason",
+      "renames": {},
+      "notes": [
+        "Screenshot documentation of the drag fixture. Not machine-verified by any test; no puzzle5d counterpart."
+      ]
+    },
+    {
+      "source": "compose/fixture/drag/pieces.png",
+      "sourceCase": null,
+      "targetMutation": null,
+      "targetTest": null,
+      "targetPaths": [],
+      "sourceSemanticDigest": null,
+      "targetSemanticDigest": null,
+      "status": "obsolete-with-explicit-approved-reason",
+      "renames": {},
+      "notes": [
+        "Screenshot documentation of the drag fixture. Not machine-verified by any test; no puzzle5d counterpart."
+      ]
+    },
+    {
+      "source": "compose/fixture/capsule-dream.dragged.selection.compose.json",
+      "sourceCase": null,
+      "targetMutation": "move-part2d",
+      "targetTest": "capsule-dream-dragged",
+      "targetPaths": [],
+      "sourceSemanticDigest": null,
+      "targetSemanticDigest": null,
+      "status": "migrated",
+      "renames": {},
+      "notes": []
+    },
+    {
+      "source": "compose/fixture/design-with-diff.cases.compose.json",
+      "sourceCase": "nakagin_capsule_tower",
+      "targetMutation": null,
+      "targetTest": null,
+      "targetPaths": [],
+      "sourceSemanticDigest": null,
+      "targetSemanticDigest": null,
+      "status": "migrated",
+      "renames": {},
+      "notes": [
+        "Core diff engine. Carries expected + expectedPieceCounts + expectedConnectionCounts."
+      ]
+    },
+    {
+      "source": "compose/fixture/nakagin-capsule-tower.diff.design.compose.json",
+      "sourceCase": null,
+      "targetMutation": null,
+      "targetTest": null,
+      "targetPaths": [],
+      "sourceSemanticDigest": null,
+      "targetSemanticDigest": null,
+      "status": "migrated",
+      "renames": {},
+      "notes": [
+        "Diff/inverse oracle. Inversion in compose is at OPERATION level (Operation::to_backwards, lib.rs:10165), matching puzzle5d's Vec<Mutation> inverse — see contract D4."
+      ]
+    },
+    {
+      "source": "compose/fixture/nakagin-capsule-tower.with-diff.design.compose.json",
+      "sourceCase": null,
+      "targetMutation": null,
+      "targetTest": null,
+      "targetPaths": [],
+      "sourceSemanticDigest": null,
+      "targetSemanticDigest": null,
+      "status": "migrated",
+      "renames": {},
+      "notes": [
+        "Diff/inverse oracle. Inversion in compose is at OPERATION level (Operation::to_backwards, lib.rs:10165), matching puzzle5d's Vec<Mutation> inverse — see contract D4."
+      ]
+    },
+    {
+      "source": "compose/fixture/metabolism.kit.diff.compose.json",
+      "sourceCase": null,
+      "targetMutation": null,
+      "targetTest": null,
+      "targetPaths": [],
+      "sourceSemanticDigest": null,
+      "targetSemanticDigest": null,
+      "status": "migrated",
+      "renames": {},
+      "notes": [
+        "Diff/inverse oracle. Inversion in compose is at OPERATION level (Operation::to_backwards, lib.rs:10165), matching puzzle5d's Vec<Mutation> inverse — see contract D4."
+      ]
+    },
+    {
+      "source": "compose/fixture/metabolism.kit.diff.inverted.compose.json",
+      "sourceCase": null,
+      "targetMutation": null,
+      "targetTest": null,
+      "targetPaths": [],
+      "sourceSemanticDigest": null,
+      "targetSemanticDigest": null,
+      "status": "migrated",
+      "renames": {},
+      "notes": [
+        "Diff/inverse oracle. Inversion in compose is at OPERATION level (Operation::to_backwards, lib.rs:10165), matching puzzle5d's Vec<Mutation> inverse — see contract D4."
+      ]
+    },
+    {
+      "source": "compose/fixture/find-replaceable-types.cases.compose.json",
+      "sourceCase": null,
+      "targetMutation": "change-part-kind",
+      "targetTest": "replaceable",
+      "targetPaths": [],
+      "sourceSemanticDigest": null,
+      "targetSemanticDigest": null,
+      "status": "migrated",
+      "renames": {},
+      "notes": [
+        "6 cases, 8 assertion keys. Read-only in compose; the state-changing half maps to change-part-kind."
+      ]
+    },
+    {
+      "source": "compose/fixture/synthetic-find-replaceable.kit.compose.json",
+      "sourceCase": null,
+      "targetMutation": "change-part-kind",
+      "targetTest": "replaceable",
+      "targetPaths": [],
+      "sourceSemanticDigest": null,
+      "targetSemanticDigest": null,
+      "status": "migrated",
+      "renames": {},
+      "notes": []
+    },
+    {
+      "source": "compose/fixture/hash.cases.compose.json",
+      "sourceCase": null,
+      "targetMutation": null,
+      "targetTest": null,
+      "targetPaths": [],
+      "sourceSemanticDigest": null,
+      "targetSemanticDigest": null,
+      "status": "covered-by-inference-test",
+      "renames": {},
+      "notes": [
+        "Pinned digests. NOTE the ExpectedNet48 field: the .NET client already disagrees with the others. Rust uses BLAKE3, Go uses SHA256 — cross-impl hash parity is already broken in compose."
+      ]
+    },
+    {
+      "source": "compose/fixture/quality-sum.cases.compose.json",
+      "sourceCase": null,
+      "targetMutation": null,
+      "targetTest": null,
+      "targetPaths": [],
+      "sourceSemanticDigest": null,
+      "targetSemanticDigest": null,
+      "status": "covered-by-inference-test",
+      "renames": {},
+      "notes": [
+        "ORACLE CONFLICT: Rust quality_sum returns constant 0.0 (lib.rs:5279); fixture expects 2349.53. Go SumQualityInDesign (main.go:5639) is the real spec. Implement Go semantics."
+      ]
+    },
+    {
+      "source": "compose/fixture/validation.compose.json",
+      "sourceCase": null,
+      "targetMutation": null,
+      "targetTest": null,
+      "targetPaths": [],
+      "sourceSemanticDigest": null,
+      "targetSemanticDigest": null,
+      "status": "covered-by-inference-test",
+      "renames": {},
+      "notes": [
+        "Diagnostics: findings carry constraintId + entityKind/entityId, sorted lexicographically. No severity field."
+      ]
+    },
+    {
+      "source": "compose/fixture/invalid.kit.compose.json",
+      "sourceCase": null,
+      "targetMutation": null,
+      "targetTest": null,
+      "targetPaths": [],
+      "sourceSemanticDigest": null,
+      "targetSemanticDigest": null,
+      "status": "covered-by-inference-test",
+      "renames": {},
+      "notes": [
+        "Negative diagnostics fixture."
+      ]
+    },
+    {
+      "source": "compose/fixture/validate-kit-diff.cases.compose.json",
+      "sourceCase": null,
+      "targetMutation": null,
+      "targetTest": null,
+      "targetPaths": [],
+      "sourceSemanticDigest": null,
+      "targetSemanticDigest": null,
+      "status": "covered-by-inference-test",
+      "renames": {},
+      "notes": [
+        "Diagnostic delta before/after a patch."
+      ]
+    },
+    {
+      "source": "compose/fixture/filter-kit.cases.compose.json",
+      "sourceCase": null,
+      "targetMutation": null,
+      "targetTest": null,
+      "targetPaths": [],
+      "sourceSemanticDigest": null,
+      "targetSemanticDigest": null,
+      "status": "covered-by-inference-test",
+      "renames": {},
+      "notes": [
+        "Catalog filtering inference; expectedKit oracle."
+      ]
+    },
+    {
+      "source": "compose/fixture/nakagin-capsule-tower.filtered.kit.compose.json",
+      "sourceCase": null,
+      "targetMutation": null,
+      "targetTest": null,
+      "targetPaths": [],
+      "sourceSemanticDigest": null,
+      "targetSemanticDigest": null,
+      "status": "covered-by-inference-test",
+      "renames": {},
+      "notes": [
+        "expectedKit for filter-kit."
+      ]
+    },
+    {
+      "source": "compose/fixture/architect.cases.compose.json",
+      "sourceCase": null,
+      "targetMutation": null,
+      "targetTest": null,
+      "targetPaths": [],
+      "sourceSemanticDigest": null,
+      "targetSemanticDigest": null,
+      "status": "covered-by-inference-test",
+      "renames": {},
+      "notes": [
+        "13 cases / 4 tiers. Read-only proposal, deterministic — never mutates."
+      ]
+    },
+    {
+      "source": "compose/fixture/architect.harness.kit.compose.json",
+      "sourceCase": null,
+      "targetMutation": null,
+      "targetTest": null,
+      "targetPaths": [],
+      "sourceSemanticDigest": null,
+      "targetSemanticDigest": null,
+      "status": "covered-by-inference-test",
+      "renames": {},
+      "notes": [
+        "Architect harness kit."
+      ]
+    },
+    {
+      "source": "compose/fixture/nakagin.kpi.representation.compose.json",
+      "sourceCase": null,
+      "targetMutation": null,
+      "targetTest": null,
+      "targetPaths": [],
+      "sourceSemanticDigest": null,
+      "targetSemanticDigest": null,
+      "status": "covered-by-inference-test",
+      "renames": {},
+      "notes": [
+        "Geometric KPIs: surface area 5569.8, 18255 verts, 16812 faces, not watertight."
+      ]
+    },
+    {
+      "source": "compose/fixture/export-design-representation.cases.compose.json",
+      "sourceCase": null,
+      "targetMutation": null,
+      "targetTest": null,
+      "targetPaths": [],
+      "sourceSemanticDigest": null,
+      "targetSemanticDigest": null,
+      "status": "covered-by-io-test",
+      "renames": {},
+      "notes": [
+        "Carries NO expected output; the .gltf/.ifc are adopted as de-facto expected assets."
+      ]
+    },
+    {
+      "source": "compose/fixture/nakagin-capsule-tower.gltf",
+      "sourceCase": null,
+      "targetMutation": null,
+      "targetTest": null,
+      "targetPaths": [],
+      "sourceSemanticDigest": null,
+      "targetSemanticDigest": null,
+      "status": "covered-by-io-test",
+      "renames": {},
+      "notes": [
+        "Normalize away asset.generator (trimesh) before parity."
+      ]
+    },
+    {
+      "source": "compose/fixture/nakagin-capsule-tower.ifc",
+      "sourceCase": null,
+      "targetMutation": null,
+      "targetTest": null,
+      "targetPaths": [],
+      "sourceSemanticDigest": null,
+      "targetSemanticDigest": null,
+      "status": "covered-by-io-test",
+      "renames": {},
+      "notes": [
+        "Normalize away FILE_NAME timestamp (line 4) and entity numbering before parity."
+      ]
+    },
+    {
+      "source": "compose/fixture/representation.selection.compose.json",
+      "sourceCase": null,
+      "targetMutation": null,
+      "targetTest": null,
+      "targetPaths": [],
+      "sourceSemanticDigest": null,
+      "targetSemanticDigest": null,
+      "status": "covered-by-io-test",
+      "renames": {},
+      "notes": [
+        "5 tag-selection cases."
+      ]
+    },
+    {
+      "source": "compose/fixture/metabolism.zip",
+      "sourceCase": null,
+      "targetMutation": null,
+      "targetTest": null,
+      "targetPaths": [],
+      "sourceSemanticDigest": null,
+      "targetSemanticDigest": null,
+      "status": "covered-by-io-test",
+      "renames": {},
+      "notes": [
+        "182 members, REAL timestamps (05-20-2026 10:25) — normalize member order and timestamps."
+      ]
+    },
+    {
+      "source": "compose/fixture/kit-store.contract.compose.json",
+      "sourceCase": null,
+      "targetMutation": null,
+      "targetTest": null,
+      "targetPaths": [],
+      "sourceSemanticDigest": null,
+      "targetSemanticDigest": null,
+      "status": "covered-by-io-test",
+      "renames": {},
+      "notes": [
+        "Append-only semantic op log. Closest legacy analogue to the Puzzle5dOperation envelope — study before designing it."
+      ]
+    },
+    {
+      "source": "compose/fixture/kit-store.bundle.example.compose.json",
+      "sourceCase": null,
+      "targetMutation": null,
+      "targetTest": null,
+      "targetPaths": [],
+      "sourceSemanticDigest": null,
+      "targetSemanticDigest": null,
+      "status": "covered-by-io-test",
+      "renames": {},
+      "notes": [
+        "Bundle example."
+      ]
+    },
+    {
+      "source": "compose/fixture/metabolism.shallow.kit.compose.json",
+      "sourceCase": null,
+      "targetMutation": null,
+      "targetTest": null,
+      "targetPaths": [],
+      "sourceSemanticDigest": null,
+      "targetSemanticDigest": null,
+      "status": "covered-by-io-test",
+      "renames": {},
+      "notes": [
+        "Codec projection. meta = scalars only, all child collections dropped; shallow = full."
+      ]
+    },
+    {
+      "source": "compose/fixture/metabolism.meta.kit.compose.json",
+      "sourceCase": null,
+      "targetMutation": null,
+      "targetTest": null,
+      "targetPaths": [],
+      "sourceSemanticDigest": null,
+      "targetSemanticDigest": null,
+      "status": "covered-by-io-test",
+      "renames": {},
+      "notes": [
+        "Codec projection. meta = scalars only, all child collections dropped; shallow = full."
+      ]
+    },
+    {
+      "source": "compose/fixture/metabolism.kit.light.compose.json",
+      "sourceCase": null,
+      "targetMutation": null,
+      "targetTest": null,
+      "targetPaths": [],
+      "sourceSemanticDigest": null,
+      "targetSemanticDigest": null,
+      "status": "covered-by-io-test",
+      "renames": {},
+      "notes": [
+        "Codec projection. meta = scalars only, all child collections dropped; shallow = full."
+      ]
+    },
+    {
+      "source": "compose/fixture/nakagin-capsule-tower.shallow.design.compose.json",
+      "sourceCase": null,
+      "targetMutation": null,
+      "targetTest": null,
+      "targetPaths": [],
+      "sourceSemanticDigest": null,
+      "targetSemanticDigest": null,
+      "status": "covered-by-io-test",
+      "renames": {},
+      "notes": [
+        "Codec projection. meta = scalars only, all child collections dropped; shallow = full."
+      ]
+    },
+    {
+      "source": "compose/fixture/nakagin-capsule-tower.meta.design.compose.json",
+      "sourceCase": null,
+      "targetMutation": null,
+      "targetTest": null,
+      "targetPaths": [],
+      "sourceSemanticDigest": null,
+      "targetSemanticDigest": null,
+      "status": "covered-by-io-test",
+      "renames": {},
+      "notes": [
+        "Codec projection. meta = scalars only, all child collections dropped; shallow = full."
+      ]
+    },
+    {
+      "source": "compose/fixture/tambour.shallow.type.compose.json",
+      "sourceCase": null,
+      "targetMutation": null,
+      "targetTest": null,
+      "targetPaths": [],
+      "sourceSemanticDigest": null,
+      "targetSemanticDigest": null,
+      "status": "covered-by-io-test",
+      "renames": {},
+      "notes": [
+        "Codec projection. meta = scalars only, all child collections dropped; shallow = full."
+      ]
+    },
+    {
+      "source": "compose/fixture/tambour.meta.type.compose.json",
+      "sourceCase": null,
+      "targetMutation": null,
+      "targetTest": null,
+      "targetPaths": [],
+      "sourceSemanticDigest": null,
+      "targetSemanticDigest": null,
+      "status": "covered-by-io-test",
+      "renames": {},
+      "notes": [
+        "Codec projection. meta = scalars only, all child collections dropped; shallow = full."
+      ]
+    },
+    {
+      "source": "compose/fixture/kit/dev/metabolism/wip/initialKit/**",
+      "sourceCase": null,
+      "targetMutation": null,
+      "targetTest": null,
+      "targetPaths": [],
+      "sourceSemanticDigest": null,
+      "targetSemanticDigest": null,
+      "status": "reused-as-canonical-example",
+      "renames": {},
+      "notes": [
+        "61 files. Source kit for nearly every case fixture. Target: puzzle5d nakagin-capsule-tower example, ALREADY MIGRATED at 180 parts / 179 fasteners — exact topology match with compose's 180 pieces / 179 connections."
+      ]
+    },
+    {
+      "source": "compose/fixture/kit/dev/abbau-aufbau/wip/initialKit/**",
+      "sourceCase": null,
+      "targetMutation": null,
+      "targetTest": null,
+      "targetPaths": [],
+      "sourceSemanticDigest": null,
+      "targetSemanticDigest": null,
+      "status": "reused-as-canonical-example",
+      "renames": {},
+      "notes": [
+        "5 files. Second dev kit."
+      ]
+    },
+    {
+      "source": "compose/fixture/_debug_hash.txt",
+      "sourceCase": null,
+      "targetMutation": null,
+      "targetTest": null,
+      "targetPaths": [],
+      "sourceSemanticDigest": null,
+      "targetSemanticDigest": null,
+      "status": "obsolete-with-explicit-approved-reason",
+      "renames": {},
+      "notes": [
+        "Stale single-line debug output. Zero readers (grep-verified)."
+      ]
+    },
+    {
+      "source": "compose/fixture/test.json",
+      "sourceCase": null,
+      "targetMutation": null,
+      "targetTest": null,
+      "targetPaths": [],
+      "sourceSemanticDigest": null,
+      "targetSemanticDigest": null,
+      "status": "obsolete-with-explicit-approved-reason",
+      "renames": {},
+      "notes": [
+        "Scratch file, no referencing test."
+      ]
+    },
+    {
+      "source": "compose/fixture/placeholder.3dm",
+      "sourceCase": null,
+      "targetMutation": null,
+      "targetTest": null,
+      "targetPaths": [],
+      "sourceSemanticDigest": null,
+      "targetSemanticDigest": null,
+      "status": "obsolete-with-explicit-approved-reason",
+      "renames": {},
+      "notes": [
+        "995K Rhino placeholder; only Nx file-map references, no code reference."
+      ]
+    },
+    {
+      "source": "compose/fixture/AGENTS.md",
+      "sourceCase": null,
+      "targetMutation": null,
+      "targetTest": null,
+      "targetPaths": [],
+      "sourceSemanticDigest": null,
+      "targetSemanticDigest": null,
+      "status": "obsolete-with-explicit-approved-reason",
+      "renames": {},
+      "notes": [
+        "Compose-tree agent doc, removed with the tree."
+      ]
+    },
+    {
+      "source": "compose/fixture/package.json",
+      "sourceCase": null,
+      "targetMutation": null,
+      "targetTest": null,
+      "targetPaths": [],
+      "sourceSemanticDigest": null,
+      "targetSemanticDigest": null,
+      "status": "obsolete-with-explicit-approved-reason",
+      "renames": {},
+      "notes": [
+        "Workspace manifest for @semio-tech/compose-fixture."
+      ]
+    },
+    {
+      "source": "compose/fixture/📋️project.json",
+      "sourceCase": null,
+      "targetMutation": null,
+      "targetTest": null,
+      "targetPaths": [],
+      "sourceSemanticDigest": null,
+      "targetSemanticDigest": null,
+      "status": "obsolete-with-explicit-approved-reason",
+      "renames": {},
+      "notes": [
+        "Nx project for the fixture workspace."
+      ]
+    },
+    {
+      "source": "compose/fixture/📜️script.ts",
+      "sourceCase": null,
+      "targetMutation": null,
+      "targetTest": null,
+      "targetPaths": [],
+      "sourceSemanticDigest": null,
+      "targetSemanticDigest": null,
+      "status": "obsolete-with-explicit-approved-reason",
+      "renames": {},
+      "notes": [
+        "regenerate-metabolism-light / assemble-metabolism-initial-kit helpers."
+      ]
+    },
+    {
+      "source": "compose/fixture/js/index.ts",
+      "sourceCase": null,
+      "targetMutation": null,
+      "targetTest": null,
+      "targetPaths": [],
+      "sourceSemanticDigest": null,
+      "targetSemanticDigest": null,
+      "status": "obsolete-with-explicit-approved-reason",
+      "renames": {},
+      "notes": [
+        "JS fixture loader."
+      ]
+    }
+  ]
+}

@@ -1171,11 +1171,11 @@ mod tests {
     async fn snapshot_parse_dsl_print_dsl_round_trips() {
         let snap = parse_dxf_document(&sample_dxf_text()).expect("parse");
         let printed = store::ArtifactDsl::print_dsl(&snap);
-        let parsed = <DxfSnapshot as store::ArtifactDsl>::parse_dsl(&printed).expect("parse");
+        let parsed = <DxfSnapshot as store::ArtifactDsl>::parse_dsl(&printed).await.expect("parse");
         assert_eq!(parsed, snap);
 
         let packed = store::ArtifactPack::encode_pack(&snap);
-        let unpacked = <DxfSnapshot as store::ArtifactPack>::decode_pack(&packed).expect("unpack");
+        let unpacked = <DxfSnapshot as store::ArtifactPack>::decode_pack(&packed).await.expect("unpack");
         assert_eq!(unpacked, snap);
     }
 }

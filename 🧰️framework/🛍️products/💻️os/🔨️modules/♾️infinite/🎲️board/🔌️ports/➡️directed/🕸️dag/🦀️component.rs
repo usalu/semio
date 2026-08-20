@@ -710,7 +710,7 @@ fn validate_dag_fixture_node_kinds(nodes: &[DagNodeSpec]) -> Result<(), DagError
     let manifest = flow_dag_manifest();
     let validator = ManifestValidator::new(&manifest);
     for node in nodes {
-        validator.validate_node_kind(dag_node_kind_tag(&node.kind)).map_err(|error| DagError::InvalidNodeKind(format!("{}: {}", error.path, error.message)))?;
+        validator.await.validate_node_kind(dag_node_kind_tag(&node.kind)).map_err(|error| DagError::InvalidNodeKind(format!("{}: {}", error.path, error.message)))?;
     }
     Ok(())
 }
@@ -1129,7 +1129,7 @@ pub fn io_node_rect_port_angle(x: f64, y: f64, width: f64, height: f64, index: u
         y - hh + t * height
     };
     let port_x = if left { x - hw } else { x + hw };
-    rectangle_handle_angle_toward(Point::new(x, y), width, height, Point::new(port_x, port_y))
+    rectangle_handle_angle_toward(Point::new(x, y), width, height, Point::new(port_x, port_y)).await
 }
 
 fn io_node_rect_port_angle_for_node(node: &DagNodeSpec, port_index: usize, left: bool) -> f64 {
@@ -1139,7 +1139,7 @@ fn io_node_rect_port_angle_for_node(node: &DagNodeSpec, port_index: usize, left:
     let count = if left { node.inputs().len() } else { node.outputs().len() };
     let port_y = port_center_y(node, port_index, count);
     let port_x = if left { node.x - hw } else { node.x + hw };
-    rectangle_handle_angle_toward(Point::new(node.x, node.y), node.width, node.height, Point::new(port_x, port_y))
+    rectangle_handle_angle_toward(Point::new(node.x, node.y), node.width, node.height, Point::new(port_x, port_y)).await
 }
 // #endregion 🔖️IoNode
 
@@ -2194,7 +2194,7 @@ pub fn dag_fixture_to_wire_literal(fixture: &DagFixture) -> String {
             WireEdge { from, from_port, to, to_port, directed: true, properties: edge.properties.clone() }
         })
         .collect::<Vec<_>>();
-    wire_literal_from_dag(&nodes, &edges)
+    wire_literal_from_dag(&nodes, &edges).await
 }
 
 /// 🧵️ Build execution wire rows from an enriched DAG fixture.
@@ -3399,14 +3399,14 @@ impl DagHost {
         let mut path = canvas::BezPath::new();
         let mut x = x_off;
         while x <= w {
-            path.move_to(Point::new(x, 0.0));
-            path.line_to(Point::new(x, h));
+            path.await.move_to(Point::new(x, 0.0));
+            path.await.line_to(Point::new(x, h));
             x += step;
         }
         let mut y = y_off;
         while y <= h {
-            path.move_to(Point::new(0.0, y));
-            path.line_to(Point::new(w, y));
+            path.await.move_to(Point::new(0.0, y));
+            path.await.line_to(Point::new(w, y));
             y += step;
         }
         scene.stroke(&stroke, Affine::IDENTITY, color, None, &path);
@@ -4333,21 +4333,21 @@ impl DagHost {
 
     fn handle_cap_peak(&self, center: canvas::Point, outward: canvas::Vec2, radius: f64, shape: PortShape) -> canvas::Point {
         match shape {
-            PortShape::Semicircle => handle_exterior_cap_peak(center, outward, radius),
+            PortShape::Semicircle => handle_exterior_cap_peak(center, outward, radius).await,
             PortShape::Triangle => handle_exterior_cap_triangle_peak(center, outward, radius),
         }
     }
 
     fn handle_cap_fill_path(&self, center: canvas::Point, outward: canvas::Vec2, radius: f64, shape: PortShape) -> canvas::BezPath {
         match shape {
-            PortShape::Semicircle => handle_exterior_cap_fill_path(center, outward, radius),
+            PortShape::Semicircle => handle_exterior_cap_fill_path(center, outward, radius).await,
             PortShape::Triangle => handle_exterior_cap_triangle_fill_path(center, outward, radius),
         }
     }
 
     fn handle_cap_stroke_path(&self, center: canvas::Point, outward: canvas::Vec2, radius: f64, shape: PortShape) -> canvas::BezPath {
         match shape {
-            PortShape::Semicircle => handle_exterior_cap_stroke_path(center, outward, radius),
+            PortShape::Semicircle => handle_exterior_cap_stroke_path(center, outward, radius).await,
             PortShape::Triangle => handle_exterior_cap_triangle_stroke_path(center, outward, radius),
         }
     }
@@ -4360,13 +4360,13 @@ impl DagHost {
         let target_node = self.engine.nodes.get(&target_handle.node_id)?;
         let source_position = handle_position(source_node, source_handle);
         let target_position = handle_position(target_node, target_handle);
-        let source_out = handle_outward_at_node_rim(source_position, source_node.center, source_node.shape, source_node.radius, source_node.width, source_node.height)?;
-        let target_out = handle_outward_at_node_rim(target_position, target_node.center, target_node.shape, target_node.radius, target_node.width, target_node.height)?;
+        let source_out = handle_outward_at_node_rim(source_position, source_node.center, source_node.shape, source_node.radius, source_node.width, source_node.height).await?;
+        let target_out = handle_outward_at_node_rim(target_position, target_node.center, target_node.shape, target_node.radius, target_node.width, target_node.height).await?;
         let source_shape = self.handle_port_shape.get(&edge.source).copied().unwrap_or_default();
         let target_shape = self.handle_port_shape.get(&edge.target).copied().unwrap_or_default();
         let source_wire = self.handle_cap_peak(source_position, source_out, source_handle.radius, source_shape);
         let target_wire = self.handle_cap_peak(target_position, target_out, target_handle.radius, target_shape);
-        Some(compute_edge_sharp_sz_path(source_wire, target_wire, source_out, target_out))
+        Some(compute_edge_sharp_sz_path(source_wire, target_wire, source_out, target_out).await)
     }
 
     fn paint_node_handles_for_spec(&self, scene: &mut canvas::Scene, aff: &canvas::Affine, cam: &canvas::camera::Camera, node: &DagNodeSpec, chrome: &DagNodePaintChrome) {
@@ -4907,9 +4907,9 @@ impl DagHost {
             let t = (start_t + local * ARC_FRACTION).fract();
             let p = Self::rect_perimeter_point(rect, t);
             if i == 0 {
-                path.move_to(p);
+                path.await.move_to(p);
             } else {
-                path.line_to(p);
+                path.await.line_to(p);
             }
         }
         let stroke_px = dag_world_stroke(DAG_CHROME_STROKE_SCREEN_PX * 1.75, cam_zoom);
@@ -5245,7 +5245,7 @@ impl DagHost {
             let fill = dag_handle_body_fill(theme, is_dimmed, is_selected, is_highlighted, is_hovered);
             let stroke_c = dag_handle_body_stroke(theme, is_dimmed, is_selected, is_highlighted, is_hovered);
             let chrome = is_dimmed || is_selected || is_highlighted || is_hovered;
-            let outward = node_id.and_then(|nid| self.engine.nodes.get(&nid).and_then(|node| handle_outward_at_node_rim(*center, node.center, node.shape, node.radius, node.width, node.height)));
+            let outward = node_id.and_then(|nid| self.engine.nodes.get(&nid).and_then(|node| handle_outward_at_node_rim(*center, node.center, node.shape, node.radius, node.width, node.height).await));
             if let Some(out) = outward {
                 if chrome {
                     scene.fill(FillRule::NonZero, aff, fill, None, &self.handle_cap_fill_path(*center, out, DAG_HANDLE_WORLD_RADIUS, shape));
@@ -7036,14 +7036,14 @@ mod tests {
         let right_angle = io_node_rect_port_angle(center.x, center.y, width, height, 0, 1, false);
         let left_pos = handle_position_on_rectangle(center, width, height, left_angle);
         let right_pos = handle_position_on_rectangle(center, width, height, right_angle);
-        let left_out = handle_outward_at_node_rim(left_pos, center, NodeShape::Rectangle, 0.0, width, height).expect("left outward");
-        let right_out = handle_outward_at_node_rim(right_pos, center, NodeShape::Rectangle, 0.0, width, height).expect("right outward");
+        let left_out = handle_outward_at_node_rim(left_pos, center, NodeShape::Rectangle, 0.0, width, height).await.expect("left outward");
+        let right_out = handle_outward_at_node_rim(right_pos, center, NodeShape::Rectangle, 0.0, width, height).await.expect("right outward");
         assert!((left_out.x + 1.0).abs() < 1e-9 && left_out.y.abs() < 1e-9);
         assert!((right_out.x - 1.0).abs() < 1e-9 && right_out.y.abs() < 1e-9);
         let left_cap = handle_exterior_cap_fill_path(left_pos, left_out, DAG_HANDLE_WORLD_RADIUS);
         let right_cap = handle_exterior_cap_fill_path(right_pos, right_out, DAG_HANDLE_WORLD_RADIUS);
-        assert!(left_cap.bounding_box().x0() < left_pos.x - 1.0, "left input cap must bulge outside the west edge");
-        assert!(right_cap.bounding_box().x1() > right_pos.x + 1.0, "right output cap must bulge outside the east edge");
+        assert!(left_cap.await.bounding_box().x0() < left_pos.x - 1.0, "left input cap must bulge outside the west edge");
+        assert!(right_cap.await.bounding_box().x1() > right_pos.x + 1.0, "right output cap must bulge outside the east edge");
     }
 
     #[test]
@@ -7831,14 +7831,14 @@ impl MutationDiff<DagSnapshot> for DagDiff {
     fn apply(&self, snapshot: &DagSnapshot) -> protocol::MutationApplyResult<DagSnapshot> {
         let mut next = snapshot.clone();
         if self.created_node.is_some() != self.created_node_at.is_some() {
-            return Err(protocol::MutationApplyError::new("mutation.apply.incomplete-diff", "created node and its final index must be present together").at(["createdNode"]));
+            return Err(protocol::MutationApplyError::new("mutation.apply.incomplete-diff", "created node and its final index must be present together").await.at(["createdNode"]));
         }
         if let (Some(node), Some(at)) = (&self.created_node, self.created_node_at) {
             if next.nodes.iter().any(|entry| entry.id == node.id) {
-                return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "created node identity already exists").at(["nodes", node.id.as_str()]));
+                return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "created node identity already exists").await.at(["nodes", node.id.as_str()]));
             }
             if at > next.nodes.len() {
-                return Err(protocol::MutationApplyError::new("mutation.apply.invalid-index", format!("created node final index {at} is out of range for length {}", next.nodes.len())).at(["createdNodeAt"]));
+                return Err(protocol::MutationApplyError::new("mutation.apply.invalid-index", format!("created node final index {at} is out of range for length {}", next.nodes.len())).await.at(["createdNodeAt"]));
             }
             next.nodes.insert(at, node.clone());
         }
@@ -7846,83 +7846,83 @@ impl MutationDiff<DagSnapshot> for DagDiff {
             let mut seen = HashSet::new();
             for id in ids {
                 if !seen.insert(id) {
-                    return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "node is deleted more than once").at(["nodes", id.as_str()]));
+                    return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "node is deleted more than once").await.at(["nodes", id.as_str()]));
                 }
                 if !next.nodes.iter().any(|node| node.id == *id) {
-                    return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "deleted node does not exist").at(["nodes", id.as_str()]));
+                    return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "deleted node does not exist").await.at(["nodes", id.as_str()]));
                 }
             }
             next.nodes.retain(|node| !ids.contains(&node.id));
         }
         if let Some(renamed) = &self.renamed_node {
             if next.nodes.iter().any(|node| node.id == renamed.new_id && node.id != renamed.id) {
-                return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "renamed node identity already exists").at(["nodes", renamed.new_id.as_str()]));
+                return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "renamed node identity already exists").await.at(["nodes", renamed.new_id.as_str()]));
             }
-            let node = next.nodes.iter_mut().find(|node| node.id == renamed.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "renamed node does not exist").at(["nodes", renamed.id.as_str()]))?;
+            let node = next.nodes.iter_mut().find(|node| node.id == renamed.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "renamed node does not exist").await.at(["nodes", renamed.id.as_str()]))?;
             node.id = renamed.new_id.clone();
         }
         if let Some(moved) = &self.moved_node {
-            let node = next.nodes.iter_mut().find(|node| node.id == moved.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "moved node does not exist").at(["nodes", moved.id.as_str()]))?;
+            let node = next.nodes.iter_mut().find(|node| node.id == moved.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "moved node does not exist").await.at(["nodes", moved.id.as_str()]))?;
             node.x = moved.x;
             node.y = moved.y;
         }
         if let Some(resized) = &self.resized_node {
-            let node = next.nodes.iter_mut().find(|node| node.id == resized.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "resized node does not exist").at(["nodes", resized.id.as_str()]))?;
+            let node = next.nodes.iter_mut().find(|node| node.id == resized.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "resized node does not exist").await.at(["nodes", resized.id.as_str()]))?;
             node.width = resized.width;
             node.height = resized.height;
         }
         if let Some(changed) = &self.changed_node_name {
-            let node = next.nodes.iter_mut().find(|node| node.id == changed.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "changed node does not exist").at(["nodes", changed.id.as_str()]))?;
+            let node = next.nodes.iter_mut().find(|node| node.id == changed.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "changed node does not exist").await.at(["nodes", changed.id.as_str()]))?;
             node.name = changed.new_name.clone();
         }
         if let Some(changed) = &self.changed_node_icon {
-            let node = next.nodes.iter_mut().find(|node| node.id == changed.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "changed node does not exist").at(["nodes", changed.id.as_str()]))?;
+            let node = next.nodes.iter_mut().find(|node| node.id == changed.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "changed node does not exist").await.at(["nodes", changed.id.as_str()]))?;
             node.icon = changed.new_icon.clone();
         }
         if let Some(changed) = &self.changed_node_abbreviation {
-            let node = next.nodes.iter_mut().find(|node| node.id == changed.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "changed node does not exist").at(["nodes", changed.id.as_str()]))?;
+            let node = next.nodes.iter_mut().find(|node| node.id == changed.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "changed node does not exist").await.at(["nodes", changed.id.as_str()]))?;
             node.abbreviation = changed.new_abbreviation.clone();
         }
         if let Some(changed) = &self.changed_node_operator_kind {
-            let node = next.nodes.iter_mut().find(|node| node.id == changed.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "changed node does not exist").at(["nodes", changed.id.as_str()]))?;
+            let node = next.nodes.iter_mut().find(|node| node.id == changed.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "changed node does not exist").await.at(["nodes", changed.id.as_str()]))?;
             node.operator_kind = changed.new_operator_kind.clone();
         }
         if let Some(replaced) = &self.replaced_node_kind {
-            let node = next.nodes.iter_mut().find(|node| node.id == replaced.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "replaced node does not exist").at(["nodes", replaced.id.as_str()]))?;
+            let node = next.nodes.iter_mut().find(|node| node.id == replaced.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "replaced node does not exist").await.at(["nodes", replaced.id.as_str()]))?;
             node.kind = replaced.new_kind.clone();
         }
         if let Some(replaced) = &self.replaced_node_properties {
-            let node = next.nodes.iter_mut().find(|node| node.id == replaced.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "replaced node does not exist").at(["nodes", replaced.id.as_str()]))?;
+            let node = next.nodes.iter_mut().find(|node| node.id == replaced.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "replaced node does not exist").await.at(["nodes", replaced.id.as_str()]))?;
             node.properties = replaced.new_properties.clone();
         }
         if let Some(order) = &self.reordered_nodes {
             if order.len() != next.nodes.len() {
-                return Err(protocol::MutationApplyError::new("mutation.apply.incomplete-diff", format!("node order has length {}, expected {}", order.len(), next.nodes.len())).at(["reorderedNodes"]));
+                return Err(protocol::MutationApplyError::new("mutation.apply.incomplete-diff", format!("node order has length {}, expected {}", order.len(), next.nodes.len())).await.at(["reorderedNodes"]));
             }
             let mut seen = HashSet::new();
             for id in order {
                 if !seen.insert(id) {
-                    return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "node appears more than once in order").at(["reorderedNodes", id.as_str()]));
+                    return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "node appears more than once in order").await.at(["reorderedNodes", id.as_str()]));
                 }
                 if !next.nodes.iter().any(|node| node.id == *id) {
-                    return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "ordered node does not exist").at(["reorderedNodes", id.as_str()]));
+                    return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "ordered node does not exist").await.at(["reorderedNodes", id.as_str()]));
                 }
             }
             let mut reordered: Vec<DagNodeSpec> = Vec::with_capacity(next.nodes.len());
             for id in order {
-                let at = next.nodes.iter().position(|node| &node.id == id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "ordered node does not exist").at(["reorderedNodes", id.as_str()]))?;
+                let at = next.nodes.iter().position(|node| &node.id == id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "ordered node does not exist").await.at(["reorderedNodes", id.as_str()]))?;
                 reordered.push(next.nodes.remove(at));
             }
             next.nodes = reordered;
         }
         if let Some(edge) = &self.connected_edge {
             if next.edges.iter().any(|entry| entry.id == edge.id) {
-                return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "connected edge identity already exists").at(["edges", edge.id.as_str()]));
+                return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "connected edge identity already exists").await.at(["edges", edge.id.as_str()]));
             }
             for endpoint in [&edge.source, &edge.target] {
                 let node_id = split_dag_endpoint(endpoint).0;
                 if !next.nodes.iter().any(|node| node.id == node_id) {
-                    return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "connected edge endpoint node does not exist").at(["edges", edge.id.as_str(), node_id.as_str()]));
+                    return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "connected edge endpoint node does not exist").await.at(["edges", edge.id.as_str(), node_id.as_str()]));
                 }
             }
             next.edges.push(edge.clone());
@@ -7931,10 +7931,10 @@ impl MutationDiff<DagSnapshot> for DagDiff {
             let mut seen = HashSet::new();
             for id in ids {
                 if !seen.insert(id) {
-                    return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "edge is disconnected more than once").at(["edges", id.as_str()]));
+                    return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "edge is disconnected more than once").await.at(["edges", id.as_str()]));
                 }
                 if !next.edges.iter().any(|edge| edge.id == *id) {
-                    return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "disconnected edge does not exist").at(["edges", id.as_str()]));
+                    return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "disconnected edge does not exist").await.at(["edges", id.as_str()]));
                 }
             }
             next.edges.retain(|edge| !ids.contains(&edge.id));
@@ -7943,18 +7943,18 @@ impl MutationDiff<DagSnapshot> for DagDiff {
             let mut seen = HashSet::new();
             for rewrite in rewrites {
                 if !seen.insert(&rewrite.id) {
-                    return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "edge endpoint is rewritten more than once").at(["edges", rewrite.id.as_str()]));
+                    return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "edge endpoint is rewritten more than once").await.at(["edges", rewrite.id.as_str()]));
                 }
                 if rewrite.new_source.is_none() && rewrite.new_target.is_none() {
-                    return Err(protocol::MutationApplyError::new("mutation.apply.incomplete-diff", "edge endpoint rewrite contains no endpoint").at(["edges", rewrite.id.as_str()]));
+                    return Err(protocol::MutationApplyError::new("mutation.apply.incomplete-diff", "edge endpoint rewrite contains no endpoint").await.at(["edges", rewrite.id.as_str()]));
                 }
                 for endpoint in [rewrite.new_source.as_ref(), rewrite.new_target.as_ref()].into_iter().flatten() {
                     let node_id = split_dag_endpoint(endpoint).0;
                     if !next.nodes.iter().any(|node| node.id == node_id) {
-                        return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "rewritten edge endpoint node does not exist").at(["edges", rewrite.id.as_str(), node_id.as_str()]));
+                        return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "rewritten edge endpoint node does not exist").await.at(["edges", rewrite.id.as_str(), node_id.as_str()]));
                     }
                 }
-                let edge = next.edges.iter_mut().find(|edge| edge.id == rewrite.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "rewritten edge does not exist").at(["edges", rewrite.id.as_str()]))?;
+                let edge = next.edges.iter_mut().find(|edge| edge.id == rewrite.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "rewritten edge does not exist").await.at(["edges", rewrite.id.as_str()]))?;
                 if let Some(source) = &rewrite.new_source {
                     edge.source = source.clone();
                 }

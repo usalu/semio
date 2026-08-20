@@ -497,7 +497,7 @@ mod tests {
     async fn missing_element_target_is_rejected_before_mutation() {
         let base = PlySnapshot::default();
         let diff = PlyDiff { elements: Some(PlyElementsDiff { removed: vec!["missing".into()], ..Default::default() }), ..Default::default() };
-        let error = diff.apply(&base).expect_err("missing element target must be rejected");
+        let error = diff.apply(&base).await.expect_err("missing element target must be rejected");
         assert_eq!(error.code, "invalid-remove-target");
         assert_eq!(error.target, vec!["elements", "missing"]);
         assert_eq!(base, PlySnapshot::default());
@@ -513,10 +513,10 @@ mod tests {
     async fn codec_round_trip() {
         let snap = empty_ply_snapshot();
         let text = store::ArtifactDsl::print_dsl(&snap);
-        let parsed = <PlySnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
+        let parsed = <PlySnapshot as store::ArtifactDsl>::parse_dsl(&text).await.expect("parse");
         assert_eq!(parsed.schema, snap.schema);
         let bytes = store::ArtifactPack::encode_pack(&snap);
-        let decoded = <PlySnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+        let decoded = <PlySnapshot as store::ArtifactPack>::decode_pack(&bytes).await.expect("decode");
         assert_eq!(decoded, snap);
     }
 
@@ -643,7 +643,7 @@ mod tests {
             let returned = apply_ply_mutation(&mut snapshot, &m);
             let expected_diff = m.diff(&base);
             assert_eq!(returned, expected_diff, "returned diff must equal m.diff(base) for {m:?}");
-            assert_eq!(snapshot, expected_diff.diff().apply(&base).expect("valid mutation diff"), "apply_ply_mutation result must equal diff.diff().apply(base) for {m:?}");
+            assert_eq!(snapshot, expected_diff.await.diff().apply(&base).expect("valid mutation diff"), "apply_ply_mutation result must equal diff.diff().apply(base) for {m:?}");
         }
     }
     //#endregion
@@ -877,9 +877,9 @@ mod tests {
         let b = sweep_b();
 
         let ab = PlyDiff::between(&a, &b);
-        assert!(ab.format.is_some(), "format field must be exercised");
-        assert!(ab.comments.is_some(), "comments field must be exercised");
-        let ab_elements = ab.elements.as_ref().expect("elements diff must be present");
+        assert!(ab.await.format.is_some(), "format field must be exercised");
+        assert!(ab.await.comments.is_some(), "comments field must be exercised");
+        let ab_elements = ab.await.elements.as_ref().expect("elements diff must be present");
         assert!(!ab_elements.removed.is_empty(), "sweep must exercise a removed element (face)");
         assert!(!ab_elements.added.is_empty(), "sweep must exercise an added element (edge)");
         assert!(!ab_elements.modified.is_empty(), "sweep must exercise a modified element (vertex)");
@@ -889,7 +889,7 @@ mod tests {
         assert_eq!(ab.apply(&a).expect("valid forward diff"), b, "between(a,b).apply(a) == b");
 
         let ba = PlyDiff::between(&b, &a);
-        let ba_elements = ba.elements.as_ref().expect("reverse elements diff must be present");
+        let ba_elements = ba.await.elements.as_ref().expect("reverse elements diff must be present");
         assert!(!ba_elements.removed.is_empty(), "reverse direction: edge removed");
         assert!(!ba_elements.added.is_empty(), "reverse direction: face added");
         assert_eq!(ba.apply(&b).expect("valid backward diff"), a, "between(b,a).apply(b) == a");
@@ -915,14 +915,14 @@ mod tests {
             elements: vec![PlyElement { name: "point".into(), count: 3, properties: common_props, rows: vec![PlyRow { values: vec![PlyValue::Int(99)] }, PlyRow { values: vec![PlyValue::Int(2)] }, PlyRow { values: vec![PlyValue::Int(3)] }] }],
         };
         let ab = PlyDiff::between(&a, &b);
-        let ab_rows = ab.elements.as_ref().unwrap().modified[0].diff.rows.as_ref().expect("rows diff");
+        let ab_rows = ab.await.elements.as_ref().unwrap().modified[0].diff.rows.as_ref().expect("rows diff");
         assert!(!ab_rows.modified.is_empty(), "row 0 modified (1 -> 99)");
         assert!(!ab_rows.added.is_empty(), "row 2 added (b longer)");
         assert!(ab_rows.removed.is_empty(), "b is longer, no removed tail in this direction");
         assert_eq!(ab.apply(&a).expect("valid forward diff"), b);
 
         let ba = PlyDiff::between(&b, &a);
-        let ba_rows = ba.elements.as_ref().unwrap().modified[0].diff.rows.as_ref().expect("rows diff");
+        let ba_rows = ba.await.elements.as_ref().unwrap().modified[0].diff.rows.as_ref().expect("rows diff");
         assert!(!ba_rows.removed.is_empty(), "a is shorter, removed tail in this direction");
         assert_eq!(ba.apply(&b).expect("valid backward diff"), a);
     }
@@ -995,14 +995,14 @@ mod tests {
 
             let op_spec = dsl::parse_protocol(mutations::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
             for mutation in mutations::demo_mutation_cases() {
-                let bytes = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op failed for {mutation:?}: {e:?}"));
+                let bytes = mutation.encode_op().await.unwrap_or_else(|e| panic!("encode_op failed for {mutation:?}: {e:?}"));
                 let trace = dsl::walk_protocol(&op_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(op) failed for {mutation:?} @{}: {}", e.offset, e.message));
                 assert_eq!(trace.consumed, bytes.len(), "op walk did not consume every byte for {mutation:?}");
             }
 
             let diff_spec = dsl::parse_protocol(diff::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse diff protocol");
             for d in diff::demo_diff_cases() {
-                let bytes = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed for {d:?}: {e:?}"));
+                let bytes = d.encode_diff().await.unwrap_or_else(|e| panic!("encode_diff failed for {d:?}: {e:?}"));
                 let trace = dsl::walk_protocol(&diff_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(diff) failed for {d:?} @{}: {}", e.offset, e.message));
                 assert_eq!(trace.consumed, bytes.len(), "diff walk did not consume every byte for {d:?}");
             }
@@ -1015,11 +1015,11 @@ mod tests {
 
             let demo = demo_ply_snapshot();
 
-            let parsed = <PlySnapshot as store::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
+            let parsed = <PlySnapshot as store::ArtifactDsl>::parse_dsl(FIXTURE_DSL).await.expect("parse shipped .dsl.semio fixture");
             assert_eq!(parsed, demo, "shipped .dsl.semio fixture does not parse back to demo_ply_snapshot()");
             assert_eq!(store::ArtifactDsl::print_dsl(&demo), FIXTURE_DSL, "print_dsl(demo_ply_snapshot()) drifted from the shipped .dsl.semio fixture");
 
-            let decoded = <PlySnapshot as store::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode shipped .pack.semio fixture");
+            let decoded = <PlySnapshot as store::ArtifactPack>::decode_pack(FIXTURE_PACK).await.expect("decode shipped .pack.semio fixture");
             assert_eq!(decoded, demo, "shipped .pack.semio fixture does not decode back to demo_ply_snapshot()");
             assert_eq!(store::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_ply_snapshot()) drifted from the shipped .pack.semio fixture");
         }

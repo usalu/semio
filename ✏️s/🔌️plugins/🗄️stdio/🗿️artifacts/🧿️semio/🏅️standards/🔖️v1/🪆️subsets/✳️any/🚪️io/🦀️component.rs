@@ -165,8 +165,8 @@ pub mod derived_composition {
         async fn clean_audio_snapshot_delegates_and_reports_no_errors() {
             let snapshot = SemioSnapshot { subset: SemioSubsetSnapshot::Audio(SemioAudioSnapshot { sample_rate: 44_100, format: SemioAudioFormat::Pcm16, ..Default::default() }), ..Default::default() };
             let bytes = <SemioSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
-            let diagnostics = SemioValidator::validate(&IoPayload::Binary(bytes));
-            assert!(diagnostics.iter().all(|d| d.severity != dsl::Severity::Error), "clean snapshot must not report hard errors: {diagnostics:?}");
+            let diagnostics = SemioValidator::validate(&IoPayload::Binary(bytes.await));
+            assert!(diagnostics.await.iter().all(|d| d.severity != dsl::Severity::Error), "clean snapshot must not report hard errors: {diagnostics:?}");
         }
 
         /// 🧪️ An invalid audio snapshot (`sample_rate == 0`, a real invariant `SemioAudioValidator`
@@ -176,8 +176,8 @@ pub mod derived_composition {
         async fn invalid_audio_snapshot_surfaces_the_delegated_subsets_own_diagnostic() {
             let snapshot = SemioSnapshot { subset: SemioSubsetSnapshot::Audio(SemioAudioSnapshot { sample_rate: 0, format: SemioAudioFormat::Pcm16, ..Default::default() }), ..Default::default() };
             let bytes = <SemioSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
-            let diagnostics = SemioValidator::validate(&IoPayload::Binary(bytes));
-            assert!(!diagnostics.is_empty(), "zero sample_rate must be flagged");
+            let diagnostics = SemioValidator::validate(&IoPayload::Binary(bytes.await));
+            assert!(!diagnostics.await.is_empty(), "zero sample_rate must be flagged");
         }
 
         /// 🧪️ A payload that doesn't decode as a `SemioSnapshot` at all degrades to the documented
@@ -185,7 +185,7 @@ pub mod derived_composition {
         #[semio_framework_async_macros::async_test]
         async fn undecodable_payload_returns_soft_warning_not_panic() {
             let diagnostics = SemioValidator::validate(&IoPayload::Binary(vec![0xff, 0x00, 0x01]));
-            assert_eq!(diagnostics.len(), 1);
+            assert_eq!(diagnostics.await.len(), 1);
             assert_eq!(diagnostics[0].severity, dsl::Severity::Warning);
         }
 
@@ -269,14 +269,14 @@ pub mod derived_composition {
 
                 let op_spec = dsl::parse_protocol(mutations::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
                 for mutation in mutations::demo_mutation_cases() {
-                    let bytes = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op failed for {mutation:?}: {e:?}"));
+                    let bytes = mutation.encode_op().await.unwrap_or_else(|e| panic!("encode_op failed for {mutation:?}: {e:?}"));
                     let trace = dsl::walk_protocol(&op_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(op) failed for {mutation:?} @{}: {}", e.offset, e.message));
                     assert_eq!(trace.consumed, bytes.len(), "op walk did not consume every byte for {mutation:?}");
                 }
 
                 let diff_spec = dsl::parse_protocol(diff::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse diff protocol");
                 for d in diff::demo_diff_cases() {
-                    let bytes = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed for {d:?}: {e:?}"));
+                    let bytes = d.encode_diff().await.unwrap_or_else(|e| panic!("encode_diff failed for {d:?}: {e:?}"));
                     let trace = dsl::walk_protocol(&diff_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(diff) failed for {d:?} @{}: {}", e.offset, e.message));
                     assert_eq!(trace.consumed, bytes.len(), "diff walk did not consume every byte for {d:?}");
                 }
@@ -293,11 +293,11 @@ pub mod derived_composition {
 
                 let demo = snapshot::demo_semio_snapshot();
 
-                let parsed = <snapshot::SemioSnapshot as store::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
+                let parsed = <snapshot::SemioSnapshot as store::ArtifactDsl>::parse_dsl(FIXTURE_DSL).await.expect("parse shipped .dsl.semio fixture");
                 assert_eq!(parsed, demo, "shipped .dsl.semio fixture does not parse back to demo_semio_snapshot()");
                 assert_eq!(store::ArtifactDsl::print_dsl(&demo), FIXTURE_DSL, "print_dsl(demo_semio_snapshot()) drifted from the shipped .dsl.semio fixture");
 
-                let decoded = <snapshot::SemioSnapshot as store::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode shipped .pack.semio fixture");
+                let decoded = <snapshot::SemioSnapshot as store::ArtifactPack>::decode_pack(FIXTURE_PACK).await.expect("decode shipped .pack.semio fixture");
                 assert_eq!(decoded, demo, "shipped .pack.semio fixture does not decode back to demo_semio_snapshot()");
                 assert_eq!(store::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_semio_snapshot()) drifted from the shipped .pack.semio fixture");
             }

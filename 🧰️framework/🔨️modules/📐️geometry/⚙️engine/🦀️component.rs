@@ -768,7 +768,7 @@ pub async fn polygon_centroid(points: &[Point]) -> Point {
 
 /// 🧮️ Axis-aligned bounding box of a point set.
 pub async fn bounding_box(points: &[Point]) -> Option<geom_sel::WorldBox> {
-    geom_sel::world_box_from_points(points).await
+    geom_sel::world_box_from_points(points)
 }
 // #endregion 🔖️PolygonExtensions
 
@@ -784,19 +784,19 @@ pub mod geom_sel {
         pub max_y: f64,
     }
 
-    pub async fn inflate_world_box(b: WorldBox, pad: f64) -> WorldBox {
+    pub fn inflate_world_box(b: WorldBox, pad: f64) -> WorldBox {
         WorldBox { min_x: b.min_x - pad, min_y: b.min_y - pad, max_x: b.max_x + pad, max_y: b.max_y + pad }
     }
 
-    pub async fn world_boxes_overlap(a: WorldBox, b: WorldBox) -> bool {
+    pub fn world_boxes_overlap(a: WorldBox, b: WorldBox) -> bool {
         a.min_x <= b.max_x && a.max_x >= b.min_x && a.min_y <= b.max_y && a.max_y >= b.min_y
     }
 
-    pub async fn world_box_contains_point(b: WorldBox, p: Point) -> bool {
+    pub fn world_box_contains_point(b: WorldBox, p: Point) -> bool {
         p.x >= b.min_x && p.x <= b.max_x && p.y >= b.min_y && p.y <= b.max_y
     }
 
-    pub async fn world_box_contains_box(outer: WorldBox, inner: WorldBox) -> bool {
+    pub fn world_box_contains_box(outer: WorldBox, inner: WorldBox) -> bool {
         inner.min_x >= outer.min_x && inner.max_x <= outer.max_x && inner.min_y >= outer.min_y && inner.max_y <= outer.max_y
     }
 
@@ -804,7 +804,7 @@ pub mod geom_sel {
         [Point::new(b.min_x, b.min_y).await, Point::new(b.max_x, b.min_y).await, Point::new(b.max_x, b.max_y).await, Point::new(b.min_x, b.max_y).await]
     }
 
-    pub async fn world_box_from_points(points: &[Point]) -> Option<WorldBox> {
+    pub fn world_box_from_points(points: &[Point]) -> Option<WorldBox> {
         if points.is_empty() {
             return None;
         }
@@ -876,7 +876,7 @@ pub mod geom_sel {
     }
 
     pub async fn segment_intersects_world_box(start: Point, end: Point, box_: WorldBox) -> bool {
-        if world_box_contains_point(box_, start).await || world_box_contains_point(box_, end).await {
+        if world_box_contains_point(box_, start) || world_box_contains_point(box_, end) {
             return true;
         }
         let edges = world_box_edges(box_).await;
@@ -917,7 +917,7 @@ pub mod geom_sel {
             }
         }
         for &p in polygon {
-            if world_box_contains_point(box_, p).await {
+            if world_box_contains_point(box_, p) {
                 return true;
             }
         }

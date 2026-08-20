@@ -8,7 +8,7 @@ pub fn register() {}
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn deserialize(from: &BinarySnapshot) -> Result<TiffSnapshot, store::PackError> {
-    let mut snap = crate::artifacts::tiff::engine::decode_tiff(&from.bytes).map_err(|e| store::PackError::Schema(e))?;
+    let mut snap = crate::artifacts::tiff::engine::decode_tiff(&from.bytes).await.map_err(|e| store::PackError::Schema(e))?;
     snap.schema = STDIO_TIFF_DOCUMENT_SCHEMA.into();
     Ok(snap)
 }

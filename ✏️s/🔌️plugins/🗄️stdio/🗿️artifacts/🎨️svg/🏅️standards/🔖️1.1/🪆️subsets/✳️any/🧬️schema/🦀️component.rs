@@ -636,7 +636,7 @@ pub mod derived_analysis {
         async fn builder_constructs_a_complete_document_from_scratch() {
             let stops = vec![GradientStopSpec::new("0%").with_color("#ffffff"), GradientStopSpec::new("100%").with_color("#000000")];
             let snapshot = SvgBuilder::empty()
-                .set_view_box(0.0, 0.0, 200.0, 100.0)
+                .await.set_view_box(0.0, 0.0, 200.0, 100.0)
                 .set_dimensions("200", "100")
                 .define_linear_gradient("grad1", Some(0.0), Some(0.0), Some(1.0), Some(0.0), stops)
                 .add_group(CommonAttrs::new().with_id("layer1"), |g: ElementBuilder| {
@@ -645,7 +645,7 @@ pub mod derived_analysis {
                         .add_path(PathBuilder::new().move_to(10.0, 80.0).line_to(50.0, 80.0).arc_to(20.0, 20.0, 0.0, false, true, 90.0, 80.0).close(), CommonAttrs::new().with_stroke("blue"))
                 })
                 .build()
-                .expect("build succeeds");
+                .await.expect("build succeeds");
 
             let typed = svg_document_to_typed(&snapshot.doc).expect("typed conversion");
             let (view_box, children) = match &typed {
@@ -663,7 +663,7 @@ pub mod derived_analysis {
 
             // Round trip through the real text codec confirms the built document is well-formed SVG.
             let text = store::ArtifactDsl::print_dsl(&snapshot);
-            let reparsed = <SvgSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("reparse");
+            let reparsed = <SvgSnapshot as store::ArtifactDsl>::parse_dsl(&text).await.expect("reparse");
             let retyped = svg_document_to_typed(&reparsed.doc).expect("retyped");
             assert_eq!(retyped, typed);
             assert_eq!(parse_view_box("0 0 200 100").unwrap(), view_box.unwrap());
@@ -695,8 +695,8 @@ pub mod derived_analysis {
     </svg>"##;
 
             let analysis = SvgAnalyzerAnalysis::analyze(&[AnalyzeSource::Text(source_text)]);
-            assert!(analysis.diagnostics.is_empty(), "diagnostics: {:?}", analysis.diagnostics);
-            let original_typed = analysis.parts.typed.expect("typed parts present");
+            assert!(analysis.await.diagnostics.is_empty(), "diagnostics: {:?}", analysis.await.diagnostics);
+            let original_typed = analysis.await.parts.typed.expect("typed parts present");
 
             // 🧵 The fixture is pretty-printed, so raw children include whitespace-only text nodes
             // between elements (preserved losslessly by design) -- filter those before indexing.
@@ -766,7 +766,7 @@ pub mod derived_analysis {
                 other => panic!("expected LinearGradient, got {other:?}"),
             };
 
-            let mut builder = SvgBuilder::empty().set_view_box(0.0, 0.0, 100.0, 100.0);
+            let mut builder = SvgBuilder::empty().await.set_view_box(0.0, 0.0, 100.0, 100.0);
             if let Some(xmlns) = xmlns {
                 builder = builder.set_xmlns(xmlns);
             }
@@ -779,7 +779,7 @@ pub mod derived_analysis {
                     g
                 })
                 .build()
-                .expect("rebuild succeeds");
+                .await.expect("rebuild succeeds");
 
             let rebuilt_typed = svg_document_to_typed(&rebuilt_snapshot.doc).expect("typed rebuilt");
             assert_eq!(strip_whitespace(&original_typed), strip_whitespace(&rebuilt_typed));

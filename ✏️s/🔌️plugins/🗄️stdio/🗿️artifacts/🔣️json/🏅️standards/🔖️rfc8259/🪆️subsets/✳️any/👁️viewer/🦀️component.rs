@@ -62,7 +62,7 @@ impl ArtifactViewer for JsonAnyViewer {
     async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))).await,
+            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }
@@ -72,7 +72,7 @@ impl ArtifactViewer for JsonAnyViewer {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn create_json_viewer() -> semio_framework_plugin::AppDefinition {
     Viewer::builder(JSON_VIEWER_DIALECT)
-        .document(["semio", "stdio", "json"])
+        .await.document(["semio", "stdio", "json"])
         .icon_id("list-tree")
         .mode_def(view::definition())
         .default_mode_id(view::JSON_VIEW_MODE_ID)

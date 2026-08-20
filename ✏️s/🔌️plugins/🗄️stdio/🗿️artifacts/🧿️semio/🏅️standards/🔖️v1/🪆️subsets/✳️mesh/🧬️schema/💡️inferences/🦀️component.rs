@@ -110,7 +110,7 @@ mod tests {
         use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioPrimitive};
         let snapshot = SemioMeshSnapshot { meshes: vec![SemioMesh { id: "m1".into(), primitives: vec![SemioPrimitive { id: "p1".into(), positions: vec![SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 }], ..Default::default() }] }], ..Default::default() };
         let inference = SemioMeshInference::infer(&snapshot);
-        assert!(inference.aabb.contains_key(&aabb_key("m1", "p1")));
+        assert!(inference.await.aabb.contains_key(&aabb_key("m1", "p1")));
     }
 }
 //#endregion 🧪️Tests

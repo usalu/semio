@@ -1,0 +1,8 @@
+{
+  "mutation": "replacePart2dGeometry",
+  "id": "part-a",
+  "newShape": "rectangle",
+  "newRadius": null,
+  "newWidth": 30.0,
+  "newHeight": 40.0
+}

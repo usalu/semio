@@ -32,7 +32,7 @@ pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Resul
 pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use store::os_io::ArtifactKindId;
-    ArtifactDeclaration { kind: ArtifactKindId::parse("s.stdio.binary").expect("canonical stdio.binary kind"), localization: &[], standards: vec![crate::artifacts::binary::standards::v_raw::standard()] }
+    ArtifactDeclaration { kind: ArtifactKindId::parse("s.stdio.binary").await.expect("canonical stdio.binary kind"), localization: &[], standards: vec![crate::artifacts::binary::standards::v_raw::standard()] }
 }
 //#endregion 🔖️ArtifactDeclaration
 
@@ -93,7 +93,7 @@ pub mod io_registry {
         async fn compose_direct_round_trips_a_native_binary_payload() {
             let snapshot = crate::artifacts::binary::standards::v_raw::subsets::any::schema::empty_binary_snapshot();
             let bytes = store::ArtifactPack::encode_pack(&snapshot);
-            let sources = [ErasedComposeSource { dialect: DIALECT, payload: IoPayload::Binary(bytes) }];
+            let sources = [ErasedComposeSource { dialect: DIALECT, payload: IoPayload::Binary(bytes.await) }];
             let composed = compose(DIALECT, &sources).expect("compose");
             assert_eq!(composed.dialect, DIALECT);
             assert!(matches!(composed.payload, IoPayload::Binary(_)));
@@ -103,7 +103,7 @@ pub mod io_registry {
         async fn register_then_resolve_through_the_typed_registry_finds_this_composer() {
             register();
             let key = IoKey { artifact_kind: "s.stdio.binary".into(), standard: "raw".into(), subset: "*".into(), direction: IoDirection::Import, format_kind: "s.stdio.binary".into(), format_standard: "raw".into(), format_subset: "*".into() };
-            let entry = io_resolve(&key).expect("resolve");
+            let entry = io_resolve(&key).await.expect("resolve");
             assert_eq!(entry.writes, DIALECT);
         }
     }

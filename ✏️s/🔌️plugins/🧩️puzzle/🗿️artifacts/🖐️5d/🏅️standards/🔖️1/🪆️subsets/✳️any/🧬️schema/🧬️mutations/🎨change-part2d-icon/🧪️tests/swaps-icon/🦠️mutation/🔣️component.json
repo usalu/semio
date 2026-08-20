@@ -1,0 +1,5 @@
+{
+  "mutation": "changePart2dIcon",
+  "id": "part-a",
+  "newIconKind": "icon-beta"
+}

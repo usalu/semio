@@ -37,7 +37,7 @@ pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Resul
 pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     let formats = crate::registry::format_descriptors_for("stl")?;
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
-        .schema(crate::artifacts::stl::schema::stl_artifact_schema_descriptor())
+        .await.schema(crate::artifacts::stl::schema::stl_artifact_schema_descriptor())
         .formats(formats)
         .inferences([crate::artifacts::stl::schema::inferences::stl_artifact_inference_descriptor()])
         .composers(crate::artifacts::stl::engine::io_registry::entries())

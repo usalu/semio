@@ -1576,7 +1576,7 @@ mod tests {
         engine.submit(CommandBatch::new(vec![envelope("op-1", &[], "alice", &[("greeting", serde_json::json!("hello"))]).await]).await.unwrap(), SubmitOptions::default(), 0).await.unwrap();
 
         let query = db_query::Query::new().await.filter(db_query::Predicate::Eq(db_query::Path::empty().push_field("path"), db_query::Value::Text("greeting".to_string())));
-        let result = engine.query(query.await, db_query::Consistency::Canonical).await.unwrap();
+        let result = engine.query(query, db_query::Consistency::Canonical).await.unwrap();
         assert_eq!(result.rows.len(), 1);
     }
 

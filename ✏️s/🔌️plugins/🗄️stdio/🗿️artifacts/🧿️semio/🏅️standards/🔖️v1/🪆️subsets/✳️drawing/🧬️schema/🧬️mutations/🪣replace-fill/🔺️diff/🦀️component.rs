@@ -20,7 +20,7 @@ pub fn diff(payload: &ReplaceFill, base: &SemioDrawingSnapshot) -> protocol::Mut
         }
     }
     if old.fill == payload.new_fill {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Style \"{}\" already has that fill.", payload.style_name));
+        return protocol::MutationOutcome::empty().await.warn("mutation.no-op", format!("Style \"{}\" already has that fill.", payload.style_name));
     }
     protocol::MutationOutcome::new(SemioDrawingDiff {
         canvas: None,

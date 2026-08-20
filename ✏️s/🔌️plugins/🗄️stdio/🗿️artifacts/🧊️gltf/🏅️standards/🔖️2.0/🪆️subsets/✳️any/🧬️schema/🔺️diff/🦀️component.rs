@@ -271,13 +271,13 @@ impl<T: Clone + PartialEq, D: ItemDiff<T>> GltfCollectionDiff<T, D> {
         let mut removed = std::collections::BTreeSet::new();
         for &index in &self.removed {
             if index >= base_len || !removed.insert(index) {
-                return Err(protocol::MutationApplyError::new("mutation.apply.invalid-remove-index", format!("remove index {index} is absent or duplicated")).at([target]));
+                return Err(protocol::MutationApplyError::new("mutation.apply.invalid-remove-index", format!("remove index {index} is absent or duplicated")).await.at([target]));
             }
         }
         let mut modified = std::collections::BTreeSet::new();
         for entry in &self.modified {
             if entry.index >= base_len || removed.contains(&entry.index) || !modified.insert(entry.index) {
-                return Err(protocol::MutationApplyError::new("mutation.apply.invalid-modify-index", format!("modify index {} is absent, removed, or duplicated", entry.index)).at([target]));
+                return Err(protocol::MutationApplyError::new("mutation.apply.invalid-modify-index", format!("modify index {} is absent, removed, or duplicated", entry.index)).await.at([target]));
             }
         }
         let mut length = base_len - removed.len();
@@ -286,7 +286,7 @@ impl<T: Clone + PartialEq, D: ItemDiff<T>> GltfCollectionDiff<T, D> {
         let mut previous = None;
         for index in additions {
             if index > length || previous == Some(index) {
-                return Err(protocol::MutationApplyError::new("mutation.apply.invalid-add-index", format!("add index {index} is out of range or duplicated")).at([target]));
+                return Err(protocol::MutationApplyError::new("mutation.apply.invalid-add-index", format!("add index {index} is out of range or duplicated")).await.at([target]));
             }
             previous = Some(index);
             length += 1;
@@ -331,7 +331,7 @@ impl<T: Clone + PartialEq, D: ItemDiff<T>> GltfCollectionDiff<T, D> {
             other.removed,
             other.modified.into_iter().map(|m| (m.index, m.diff)).collect(),
             other.added.into_iter().map(|a| (a.index, a.item)).collect(),
-            |d, o| d.absorb_into(o),
+            |d, o| { d.absorb_into(o); },
             |d, item| d.apply(item),
         );
         self.removed = removed;
@@ -2795,7 +2795,7 @@ pub(crate) fn read_bin_f64_array<const N: usize>(r: &mut dsl::ByteReader<'_>) ->
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn write_bin_f64_vec(w: &mut dsl::ByteWriter, v: &[f64]) {
-    write_bin_vec(w, v, |w, x| w.write_f64_le(*x));
+    write_bin_vec(w, v, |w, x| { w.write_f64_le(*x); });
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn read_bin_f64_vec(r: &mut dsl::ByteReader<'_>) -> Result<Vec<f64>, dsl::PackError> {
@@ -2803,7 +2803,7 @@ pub(crate) fn read_bin_f64_vec(r: &mut dsl::ByteReader<'_>) -> Result<Vec<f64>, 
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn write_bin_usize_vec(w: &mut dsl::ByteWriter, v: &[usize]) {
-    write_bin_vec(w, v, |w, x: &usize| w.write_varint_u64(*x as u64));
+    write_bin_vec(w, v, |w, x: &usize| { w.write_varint_u64(*x as u64); });
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn read_bin_usize_vec(r: &mut dsl::ByteReader<'_>) -> Result<Vec<usize>, dsl::PackError> {
@@ -3044,9 +3044,9 @@ pub(crate) fn read_bin_scene_diff(r: &mut dsl::ByteReader<'_>) -> Result<GltfSce
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn write_bin_node(w: &mut dsl::ByteWriter, n: &GltfNode) {
     write_bin_usize_vec(w, &n.children);
-    write_bin_option(w, &n.mesh, |w, v| w.write_varint_u64(*v as u64));
-    write_bin_option(w, &n.camera, |w, v| w.write_varint_u64(*v as u64));
-    write_bin_option(w, &n.skin, |w, v| w.write_varint_u64(*v as u64));
+    write_bin_option(w, &n.mesh, |w, v| { w.write_varint_u64(*v as u64); });
+    write_bin_option(w, &n.camera, |w, v| { w.write_varint_u64(*v as u64); });
+    write_bin_option(w, &n.skin, |w, v| { w.write_varint_u64(*v as u64); });
     write_bin_option(w, &n.matrix, |w, v| write_bin_f64_array::<16>(w, v));
     write_bin_option(w, &n.translation, |w, v| write_bin_f64_array::<3>(w, v));
     write_bin_option(w, &n.rotation, |w, v| write_bin_f64_array::<4>(w, v));
@@ -3076,9 +3076,9 @@ pub(crate) fn read_bin_node(r: &mut dsl::ByteReader<'_>) -> Result<GltfNode, dsl
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn write_bin_node_diff(w: &mut dsl::ByteWriter, d: &GltfNodeDiff) {
     write_bin_option(w, &d.children, |w, v| write_bin_usize_vec(w, v));
-    write_bin_tri(w, &d.mesh, |w, v| w.write_varint_u64(*v as u64));
-    write_bin_tri(w, &d.camera, |w, v| w.write_varint_u64(*v as u64));
-    write_bin_tri(w, &d.skin, |w, v| w.write_varint_u64(*v as u64));
+    write_bin_tri(w, &d.mesh, |w, v| { w.write_varint_u64(*v as u64); });
+    write_bin_tri(w, &d.camera, |w, v| { w.write_varint_u64(*v as u64); });
+    write_bin_tri(w, &d.skin, |w, v| { w.write_varint_u64(*v as u64); });
     write_bin_tri(w, &d.matrix, |w, v| write_bin_f64_array::<16>(w, v));
     write_bin_tri(w, &d.translation, |w, v| write_bin_f64_array::<3>(w, v));
     write_bin_tri(w, &d.rotation, |w, v| write_bin_f64_array::<4>(w, v));
@@ -3111,9 +3111,9 @@ pub(crate) fn read_bin_node_diff(r: &mut dsl::ByteReader<'_>) -> Result<GltfNode
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn write_bin_primitive(w: &mut dsl::ByteWriter, p: &GltfPrimitive) {
     write_bin_attr_pairs(w, &p.attributes);
-    write_bin_option(w, &p.indices, |w, v| w.write_varint_u64(*v as u64));
-    write_bin_option(w, &p.material, |w, v| w.write_varint_u64(*v as u64));
-    write_bin_option(w, &p.mode, |w, v| w.write_varint_u64(*v));
+    write_bin_option(w, &p.indices, |w, v| { w.write_varint_u64(*v as u64); });
+    write_bin_option(w, &p.material, |w, v| { w.write_varint_u64(*v as u64); });
+    write_bin_option(w, &p.mode, |w, v| { w.write_varint_u64(*v); });
     write_bin_vec(w, &p.targets, |w, target| write_bin_attr_pairs(w, &target.0));
     write_bin_json_opt(w, &p.extensions);
     write_bin_json_opt(w, &p.extras);
@@ -3199,7 +3199,7 @@ pub(crate) fn read_bin_sparse_accessor(r: &mut dsl::ByteReader<'_>) -> Result<Gl
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn write_bin_accessor(w: &mut dsl::ByteWriter, a: &GltfAccessor) {
-    write_bin_option(w, &a.buffer_view, |w, v| w.write_varint_u64(*v as u64));
+    write_bin_option(w, &a.buffer_view, |w, v| { w.write_varint_u64(*v as u64); });
     w.write_varint_u64(a.byte_offset as u64);
     write_bin_component_type(w, a.component_type);
     w.write_u8(if a.normalized { 1 } else { 0 });
@@ -3231,11 +3231,11 @@ pub(crate) fn read_bin_accessor(r: &mut dsl::ByteReader<'_>) -> Result<GltfAcces
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn write_bin_accessor_diff(w: &mut dsl::ByteWriter, d: &GltfAccessorDiff) {
-    write_bin_tri(w, &d.buffer_view, |w, v| w.write_varint_u64(*v as u64));
-    write_bin_option(w, &d.byte_offset, |w, v| w.write_varint_u64(*v as u64));
+    write_bin_tri(w, &d.buffer_view, |w, v| { w.write_varint_u64(*v as u64); });
+    write_bin_option(w, &d.byte_offset, |w, v| { w.write_varint_u64(*v as u64); });
     write_bin_option(w, &d.component_type, |w, v| write_bin_component_type(w, *v));
-    write_bin_option(w, &d.normalized, |w, v| w.write_u8(if *v { 1 } else { 0 }));
-    write_bin_option(w, &d.count, |w, v| w.write_varint_u64(*v as u64));
+    write_bin_option(w, &d.normalized, |w, v| { w.write_u8(if *v { 1 } else { 0 }); });
+    write_bin_option(w, &d.count, |w, v| { w.write_varint_u64(*v as u64); });
     write_bin_option(w, &d.kind, |w, v| write_bin_accessor_type(w, *v));
     write_bin_tri(w, &d.max, |w, v| write_bin_f64_vec(w, v));
     write_bin_tri(w, &d.min, |w, v| write_bin_f64_vec(w, v));
@@ -3357,8 +3357,8 @@ pub(crate) fn write_bin_material_diff(w: &mut dsl::ByteWriter, d: &GltfMaterialD
     write_bin_tri(w, &d.emissive_texture, write_bin_texture_info);
     write_bin_option(w, &d.emissive_factor, |w, v| write_bin_f64_array::<3>(w, v));
     write_bin_option(w, &d.alpha_mode, |w, v| write_bin_alpha_mode(w, *v));
-    write_bin_option(w, &d.alpha_cutoff, |w, v| w.write_f64_le(*v));
-    write_bin_option(w, &d.double_sided, |w, v| w.write_u8(if *v { 1 } else { 0 }));
+    write_bin_option(w, &d.alpha_cutoff, |w, v| { w.write_f64_le(*v); });
+    write_bin_option(w, &d.double_sided, |w, v| { w.write_u8(if *v { 1 } else { 0 }); });
     write_bin_tri(w, &d.extensions, write_bin_json);
     write_bin_tri(w, &d.extras, write_bin_json);
 }
@@ -3395,7 +3395,7 @@ pub(crate) fn read_bin_buffer(r: &mut dsl::ByteReader<'_>) -> Result<GltfBuffer,
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn write_bin_buffer_diff(w: &mut dsl::ByteWriter, d: &GltfBufferDiff) {
-    write_bin_option(w, &d.byte_length, |w, v| w.write_varint_u64(*v as u64));
+    write_bin_option(w, &d.byte_length, |w, v| { w.write_varint_u64(*v as u64); });
     write_bin_tri(w, &d.uri, |w, v| write_bin_str(w, v));
     write_bin_tri(w, &d.name, |w, v| write_bin_str(w, v));
     write_bin_tri(w, &d.extensions, write_bin_json);
@@ -3416,8 +3416,8 @@ pub(crate) fn write_bin_buffer_view(w: &mut dsl::ByteWriter, v: &GltfBufferView)
     w.write_varint_u64(v.buffer as u64);
     w.write_varint_u64(v.byte_offset as u64);
     w.write_varint_u64(v.byte_length as u64);
-    write_bin_option(w, &v.byte_stride, |w, x| w.write_varint_u64(*x as u64));
-    write_bin_option(w, &v.target, |w, x| w.write_varint_u64(*x));
+    write_bin_option(w, &v.byte_stride, |w, x| { w.write_varint_u64(*x as u64); });
+    write_bin_option(w, &v.target, |w, x| { w.write_varint_u64(*x); });
     write_bin_option(w, &v.name, |w, x| write_bin_str(w, x));
     write_bin_json_opt(w, &v.extensions);
     write_bin_json_opt(w, &v.extras);
@@ -3440,8 +3440,8 @@ pub(crate) fn read_bin_buffer_view(r: &mut dsl::ByteReader<'_>) -> Result<GltfBu
 //#region 🔖️RealBinaryTextureImageSamplerSkinGroupCodecs
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn write_bin_texture(w: &mut dsl::ByteWriter, t: &GltfTexture) {
-    write_bin_option(w, &t.sampler, |w, v| w.write_varint_u64(*v as u64));
-    write_bin_option(w, &t.source, |w, v| w.write_varint_u64(*v as u64));
+    write_bin_option(w, &t.sampler, |w, v| { w.write_varint_u64(*v as u64); });
+    write_bin_option(w, &t.source, |w, v| { w.write_varint_u64(*v as u64); });
     write_bin_option(w, &t.name, |w, v| write_bin_str(w, v));
     write_bin_json_opt(w, &t.extensions);
     write_bin_json_opt(w, &t.extras);
@@ -3460,7 +3460,7 @@ pub(crate) fn read_bin_texture(r: &mut dsl::ByteReader<'_>) -> Result<GltfTextur
 pub(crate) fn write_bin_image(w: &mut dsl::ByteWriter, i: &GltfImage) {
     write_bin_option(w, &i.uri, |w, v| write_bin_str(w, v));
     write_bin_option(w, &i.mime_type, |w, v| write_bin_str(w, v));
-    write_bin_option(w, &i.buffer_view, |w, v| w.write_varint_u64(*v as u64));
+    write_bin_option(w, &i.buffer_view, |w, v| { w.write_varint_u64(*v as u64); });
     write_bin_option(w, &i.name, |w, v| write_bin_str(w, v));
     write_bin_json_opt(w, &i.extensions);
     write_bin_json_opt(w, &i.extras);
@@ -3478,8 +3478,8 @@ pub(crate) fn read_bin_image(r: &mut dsl::ByteReader<'_>) -> Result<GltfImage, d
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn write_bin_sampler(w: &mut dsl::ByteWriter, s: &GltfSampler) {
-    write_bin_option(w, &s.mag_filter, |w, v| w.write_varint_u64(*v));
-    write_bin_option(w, &s.min_filter, |w, v| w.write_varint_u64(*v));
+    write_bin_option(w, &s.mag_filter, |w, v| { w.write_varint_u64(*v); });
+    write_bin_option(w, &s.min_filter, |w, v| { w.write_varint_u64(*v); });
     w.write_varint_u64(s.wrap_s);
     w.write_varint_u64(s.wrap_t);
     write_bin_option(w, &s.name, |w, v| write_bin_str(w, v));
@@ -3500,8 +3500,8 @@ pub(crate) fn read_bin_sampler(r: &mut dsl::ByteReader<'_>) -> Result<GltfSample
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn write_bin_skin(w: &mut dsl::ByteWriter, v: &GltfSkin) {
-    write_bin_option(w, &v.inverse_bind_matrices, |w, x| w.write_varint_u64(*x as u64));
-    write_bin_option(w, &v.skeleton, |w, x| w.write_varint_u64(*x as u64));
+    write_bin_option(w, &v.inverse_bind_matrices, |w, x| { w.write_varint_u64(*x as u64); });
+    write_bin_option(w, &v.skeleton, |w, x| { w.write_varint_u64(*x as u64); });
     write_bin_usize_vec(w, &v.joints);
     write_bin_option(w, &v.name, |w, x| write_bin_str(w, x));
     write_bin_json_opt(w, &v.extensions);
@@ -3523,7 +3523,7 @@ pub(crate) fn read_bin_skin(r: &mut dsl::ByteReader<'_>) -> Result<GltfSkin, dsl
 //#region 🔖️RealBinaryAnimationGroupCodecs
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn write_bin_animation_channel_target(w: &mut dsl::ByteWriter, t: &GltfAnimationChannelTarget) {
-    write_bin_option(w, &t.node, |w, v| w.write_varint_u64(*v as u64));
+    write_bin_option(w, &t.node, |w, v| { w.write_varint_u64(*v as u64); });
     write_bin_animation_path(w, t.path);
     write_bin_json_opt(w, &t.extensions);
     write_bin_json_opt(w, &t.extras);
@@ -3572,9 +3572,9 @@ pub(crate) fn read_bin_animation(r: &mut dsl::ByteReader<'_>) -> Result<GltfAnim
 //#region 🔖️RealBinaryCameraGroupCodecs
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn write_bin_perspective(w: &mut dsl::ByteWriter, p: &GltfPerspective) {
-    write_bin_option(w, &p.aspect_ratio, |w, v| w.write_f64_le(*v));
+    write_bin_option(w, &p.aspect_ratio, |w, v| { w.write_f64_le(*v); });
     w.write_f64_le(p.yfov);
-    write_bin_option(w, &p.zfar, |w, v| w.write_f64_le(*v));
+    write_bin_option(w, &p.zfar, |w, v| { w.write_f64_le(*v); });
     w.write_f64_le(p.znear);
     write_bin_json_opt(w, &p.extensions);
     write_bin_json_opt(w, &p.extras);
@@ -3637,7 +3637,7 @@ pub(crate) fn read_bin_camera(r: &mut dsl::ByteReader<'_>) -> Result<GltfCamera,
 /// counts + real per-item recursive encoding (never text-as-bytes).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn write_bin_collection<T, D>(w: &mut dsl::ByteWriter, c: &GltfCollectionDiff<T, D>, write_item: impl Fn(&mut dsl::ByteWriter, &T), write_diff: impl Fn(&mut dsl::ByteWriter, &D)) {
-    write_bin_vec(w, &c.removed, |w, v: &usize| w.write_varint_u64(*v as u64));
+    write_bin_vec(w, &c.removed, |w, v: &usize| { w.write_varint_u64(*v as u64); });
     write_bin_vec(w, &c.modified, |w, m: &GltfModified<D>| {
         w.write_varint_u64(m.index as u64);
         write_diff(w, &m.diff);
@@ -3846,7 +3846,7 @@ impl protocol::DiffCodec for GltfDiff {
                 semio_framework_plugin::resolve_ready(inner.into_bytes())
             })
         });
-        write_bin_tri(&mut w, &self.scene, |w, v| w.write_varint_u64(*v as u64));
+        write_bin_tri(&mut w, &self.scene, |w, v| { w.write_varint_u64(*v as u64); });
         write_bin_option(&mut w, &self.scenes, |w, v| write_bin_blob(w, &write_bin_collection_blob(v, write_bin_scene, write_bin_scene_diff)));
         write_bin_option(&mut w, &self.nodes, |w, v| write_bin_blob(w, &write_bin_collection_blob(v, write_bin_node, write_bin_node_diff)));
         write_bin_option(&mut w, &self.meshes, |w, v| write_bin_blob(w, &write_bin_collection_blob(v, write_bin_mesh, write_bin_mesh_diff)));
@@ -4276,36 +4276,36 @@ mod tests {
 
         let ab = <GltfDiff as DiffAlgebra<GltfSnapshot>>::between(&sweep_a, &sweep_b);
         assert_eq!(MutationDiff::apply(&ab, &sweep_a).expect("apply must succeed for a well-formed fixture"), sweep_b);
-        assert!(ab.asset.is_some());
-        assert_eq!(ab.scene, Some(None), "scene going Some->None must be tri-state Some(None)");
-        assert!(ab.scenes.is_some());
-        assert!(ab.nodes.is_some());
-        assert!(ab.meshes.is_some());
-        assert!(ab.accessors.is_some());
-        assert!(ab.buffer_views.is_some());
-        assert!(ab.buffers.is_some());
-        assert!(ab.buffer_bytes.is_some());
-        assert!(ab.materials.is_some());
-        assert!(ab.textures.is_some());
-        assert!(ab.images.is_some());
-        assert!(ab.samplers.is_some());
-        assert!(ab.skins.is_some());
-        assert!(ab.animations.is_some());
-        assert!(ab.cameras.is_some());
-        assert!(ab.extensions_used.is_some());
-        assert!(ab.extensions_required.is_some());
-        assert!(ab.source_form.is_some());
-        assert_eq!(ab.extensions, Some(None), "document.extensions going Some->None must be tri-state Some(None)");
-        assert_eq!(ab.extras, Some(None), "document.extras going Some->None must be tri-state Some(None)");
-        let nodes_ab = ab.nodes.as_ref().unwrap();
+        assert!(ab.await.asset.is_some());
+        assert_eq!(ab.await.scene, Some(None), "scene going Some->None must be tri-state Some(None)");
+        assert!(ab.await.scenes.is_some());
+        assert!(ab.await.nodes.is_some());
+        assert!(ab.await.meshes.is_some());
+        assert!(ab.await.accessors.is_some());
+        assert!(ab.await.buffer_views.is_some());
+        assert!(ab.await.buffers.is_some());
+        assert!(ab.await.buffer_bytes.is_some());
+        assert!(ab.await.materials.is_some());
+        assert!(ab.await.textures.is_some());
+        assert!(ab.await.images.is_some());
+        assert!(ab.await.samplers.is_some());
+        assert!(ab.await.skins.is_some());
+        assert!(ab.await.animations.is_some());
+        assert!(ab.await.cameras.is_some());
+        assert!(ab.await.extensions_used.is_some());
+        assert!(ab.await.extensions_required.is_some());
+        assert!(ab.await.source_form.is_some());
+        assert_eq!(ab.await.extensions, Some(None), "document.extensions going Some->None must be tri-state Some(None)");
+        assert_eq!(ab.await.extras, Some(None), "document.extras going Some->None must be tri-state Some(None)");
+        let nodes_ab = ab.await.nodes.as_ref().unwrap();
         assert!(!nodes_ab.modified.is_empty() || !nodes_ab.added.is_empty());
         assert!(!nodes_ab.added.is_empty(), "sweep must exercise an added node (b is longer)");
 
         let ba = <GltfDiff as DiffAlgebra<GltfSnapshot>>::between(&sweep_b, &sweep_a);
         assert_eq!(MutationDiff::apply(&ba, &sweep_b).expect("apply must succeed for a well-formed fixture"), sweep_a);
-        let nodes_ba = ba.nodes.as_ref().unwrap();
+        let nodes_ba = ba.await.nodes.as_ref().unwrap();
         assert!(!nodes_ba.removed.is_empty(), "reverse direction must exercise a removed node (a is shorter, b is longer)");
-        let cameras_ba = ba.cameras.as_ref().unwrap();
+        let cameras_ba = ba.await.cameras.as_ref().unwrap();
         assert!(!cameras_ba.removed.is_empty(), "reverse direction must exercise a removed camera");
 
         assert!(<GltfDiff as DiffAlgebra<GltfSnapshot>>::between(&sweep_a, &sweep_a).is_empty());
@@ -4319,9 +4319,9 @@ mod tests {
             buffer_bytes: Some(GltfBufferBytesDiff { modified: vec![GltfModified { index: 2, diff: vec![1, 2] }], ..Default::default() }),
             ..Default::default()
         };
-        assert_eq!(modified.touches().paths, vec!["buffers/2", "document/nodes/3/transform"]);
+        assert_eq!(modified.touches().await.paths, vec!["buffers/2", "document/nodes/3/transform"]);
         let structural = GltfDiff { nodes: Some(GltfNodesDiff { removed: vec![1], ..Default::default() }), ..Default::default() };
-        assert_eq!(structural.touches().paths, vec!["document/nodes"]);
+        assert_eq!(structural.touches().await.paths, vec!["document/nodes"]);
     }
     //#endregion 🔖️FieldSweep
 }
@@ -4486,19 +4486,19 @@ mod handcrafted_diff_codec_tests {
 
         let cases = vec![
             GltfDiff::default(),
-            <GltfDiff as DiffAlgebra<GltfSnapshot>>::between(&sweep_a, &sweep_b),
-            <GltfDiff as DiffAlgebra<GltfSnapshot>>::between(&sweep_b, &sweep_a),
-            <GltfDiff as DiffAlgebra<GltfSnapshot>>::between(&tri_a, &tri_b),
+            <GltfDiff as DiffAlgebra<GltfSnapshot>>::between(&sweep_a, &sweep_b).await,
+            <GltfDiff as DiffAlgebra<GltfSnapshot>>::between(&sweep_b, &sweep_a).await,
+            <GltfDiff as DiffAlgebra<GltfSnapshot>>::between(&tri_a, &tri_b).await,
             <GltfDiff as DiffAlgebra<GltfSnapshot>>::between(&tri_b, &tri_a),
         ];
         for d in cases {
             let printed = d.print_diff();
             assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
-            let parsed = GltfDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
+            let parsed = GltfDiff::parse_diff(&printed).await.unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
             assert_eq!(parsed, d, "print_diff/parse_diff round-trip mismatch (printed {printed:?})");
 
             let encoded = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
-            let decoded = GltfDiff::decode_diff(&encoded).unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
+            let decoded = GltfDiff::decode_diff(&encoded).await.unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
             assert_eq!(decoded, d, "encode_diff/decode_diff round-trip mismatch");
         }
     }

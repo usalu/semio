@@ -299,18 +299,18 @@ mod tests {
     use protocol::{DiffCodec, MutationDiff, OpBinary, OpText};
     use std::sync::OnceLock;
 
-    async fn inst(id: u64, name: &str) -> Part21Instance {
+    fn inst(id: u64, name: &str) -> Part21Instance {
         Part21Instance { id, entities: vec![(name.to_string(), vec![Part21Value::Int(id as i64)])] }
     }
 
-    async fn exact_fixture_bytes() -> &'static [u8] {
+    fn exact_fixture_bytes() -> &'static [u8] {
         static BYTES: OnceLock<Vec<u8>> = OnceLock::new();
         BYTES.get_or_init(|| std::fs::read(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../temp/wellness-center-sama.ifc")).expect("read temp/wellness-center-sama.ifc"))
     }
 
     async fn exact_fixture() -> Ifc2x3Snapshot {
         static SNAPSHOT: OnceLock<Ifc2x3Snapshot> = OnceLock::new();
-        SNAPSHOT.get_or_init(|| crate::artifacts::ifc::standards::v2x3::engine::decode_ifc2x3(exact_fixture_bytes()).expect("import IFC2X3 fixture")).clone()
+        SNAPSHOT.get_or_init(|| crate::artifacts::ifc::standards::v2x3::engine::decode_ifc2x3(exact_fixture_bytes()).await.expect("import IFC2X3 fixture")).clone()
     }
 
     async fn assert_exact(label: &str, actual: &[u8]) {
@@ -346,7 +346,7 @@ mod tests {
     async fn op_text_round_trips() {
         let mutation = Ifc2x3Mutation::SetHeader { header: Part21Header::default() };
         let printed = OpText::print_op(&mutation);
-        let parsed = <Ifc2x3Mutation as OpText>::parse_op(&printed).expect("parse");
+        let parsed = <Ifc2x3Mutation as OpText>::parse_op(&printed).await.expect("parse");
         assert_eq!(parsed, mutation);
     }
 
@@ -363,11 +363,11 @@ mod tests {
         for mutation in mutations {
             let printed = mutation.print_op();
             assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
-            let parsed = Ifc2x3Mutation::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
+            let parsed = Ifc2x3Mutation::parse_op(&printed).await.unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
             assert_eq!(parsed, mutation, "print_op/parse_op round-trip mismatch for {mutation:?} (printed {printed:?})");
 
             let encoded = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op({mutation:?}) failed: {e:?}"));
-            let decoded = Ifc2x3Mutation::decode_op(&encoded).unwrap_or_else(|e| panic!("decode_op failed: {e:?}"));
+            let decoded = Ifc2x3Mutation::decode_op(&encoded).await.unwrap_or_else(|e| panic!("decode_op failed: {e:?}"));
             assert_eq!(decoded, mutation, "encode_op/decode_op round-trip mismatch for {mutation:?}");
         }
     }
@@ -382,13 +382,13 @@ mod tests {
         assert_eq!(crate::artifacts::ifc::standards::v2x3::engine::encode_ifc2x3(&imported).expect("repeat export"), direct);
 
         let packed = store::ArtifactPack::encode_pack(&imported);
-        let unpacked = <Ifc2x3Snapshot as store::ArtifactPack>::decode_pack(&packed).expect("pack decode");
-        assert!(unpacked == imported, "pack must retain the complete logical IFC model");
+        let unpacked = <Ifc2x3Snapshot as store::ArtifactPack>::decode_pack(&packed).await.expect("pack decode");
+        assert!(unpacked == imported.await, "pack must retain the complete logical IFC model");
         assert_exact("pack export", &crate::artifacts::ifc::standards::v2x3::engine::encode_ifc2x3(&unpacked).expect("pack export"));
 
         let printed = store::ArtifactDsl::print_dsl(&imported);
-        let parsed = <Ifc2x3Snapshot as store::ArtifactDsl>::parse_dsl(&printed).expect("DSL parse");
-        assert!(parsed == imported, "DSL must retain the complete logical IFC model");
+        let parsed = <Ifc2x3Snapshot as store::ArtifactDsl>::parse_dsl(&printed).await.expect("DSL parse");
+        assert!(parsed == imported.await, "DSL must retain the complete logical IFC model");
         assert_exact("DSL export", &crate::artifacts::ifc::standards::v2x3::engine::encode_ifc2x3(&parsed).expect("DSL export"));
     }
 
@@ -403,23 +403,23 @@ mod tests {
         apply_ifc2x3_mutation(&mut no_op, &Ifc2x3Mutation::NoMutation);
         assert_exact("no-op export", &crate::artifacts::ifc::standards::v2x3::engine::encode_ifc2x3(&no_op).expect("no-op export"));
 
-        let mut changed_header = imported.document.header.clone();
+        let mut changed_header = imported.await.document.header.clone();
         changed_header.file_name = vec![Part21Value::Str("semio-roundtrip-changed.ifc".into())];
         let mutation = Ifc2x3Mutation::SetHeader { header: changed_header };
         let d1 = Mutation::diff(&mutation, &imported);
-        let changed = MutationDiff::apply(d1.diff(), &imported).expect("valid forward diff");
+        let changed = MutationDiff::apply(&d1.await.diff().await, &imported).expect("valid forward diff");
         let changed_bytes = crate::artifacts::ifc::standards::v2x3::engine::encode_ifc2x3(&changed).expect("supported dirty export");
         assert!(changed_bytes != exact_fixture_bytes(), "effective IFC mutation must change deterministic output");
-        let reparsed = crate::artifacts::ifc::standards::v2x3::engine::decode_ifc2x3(&changed_bytes).expect("re-import supported dirty export");
+        let reparsed = crate::artifacts::ifc::standards::v2x3::engine::decode_ifc2x3(&changed_bytes).await.expect("re-import supported dirty export");
         assert_eq!(reparsed.document.header, changed.document.header);
 
-        let inverse_mutation = Mutation::inverse(&mutation, &imported).into_iter().next().expect("inverse mutation");
+        let inverse_mutation = Mutation::inverse(&mutation, &imported).into_iter().await.await.await.next().expect("inverse mutation");
         let d2 = Mutation::diff(&inverse_mutation, &changed);
         let restored = MutationDiff::apply(d2.diff(), &changed).expect("valid inverse diff");
         assert!(restored == imported, "inverse mutation must restore imported snapshot and provenance");
         assert_exact("inverse export", &crate::artifacts::ifc::standards::v2x3::engine::encode_ifc2x3(&restored).expect("inverse export"));
 
-        let mut absorbed = d1.diff().clone();
+        let mut absorbed = d1.await.diff().clone();
         MutationDiff::absorb(&mut absorbed, d2.diff().clone());
         let absorbed_result = MutationDiff::apply(&absorbed, &imported).expect("valid absorbed diff");
         assert!(absorbed_result == imported, "absorbed mutation pair must restore imported snapshot");
@@ -433,51 +433,51 @@ mod tests {
         {
             let diff = Ifc2x3Diff::between(&projection, &imported);
             let wire = diff.print_diff();
-            let decoded = Ifc2x3Diff::parse_diff(&wire).expect("diff text decode");
+            let decoded = Ifc2x3Diff::parse_diff(&wire).await.expect("diff text decode");
             drop(wire);
-            assert_eq!(decoded, diff);
+            assert_eq!(decoded, diff.await);
             drop(diff);
-            let applied = MutationDiff::apply(&decoded, &projection).expect("valid text diff");
+            let applied = MutationDiff::apply(&decoded, &projection).await.expect("valid text diff");
             drop(decoded);
-            assert!(applied == imported, "text diff must restore imported snapshot");
+            assert!(applied == imported.await, "text diff must restore imported snapshot");
             assert_exact("text diff export", &crate::artifacts::ifc::standards::v2x3::engine::encode_ifc2x3(&applied).expect("text diff export"));
         }
         {
             let diff = Ifc2x3Diff::between(&projection, &imported);
             let wire = diff.encode_diff().expect("diff binary encode");
-            let decoded = Ifc2x3Diff::decode_diff(&wire).expect("diff binary decode");
+            let decoded = Ifc2x3Diff::decode_diff(&wire).await.expect("diff binary decode");
             drop(wire);
-            assert_eq!(decoded, diff);
+            assert_eq!(decoded, diff.await);
             drop(diff);
-            let applied = MutationDiff::apply(&decoded, &projection).expect("valid binary diff");
+            let applied = MutationDiff::apply(&decoded, &projection).await.expect("valid binary diff");
             drop(decoded);
-            assert!(applied == imported, "binary diff must restore imported snapshot");
+            assert!(applied == imported.await, "binary diff must restore imported snapshot");
             assert_exact("binary diff export", &crate::artifacts::ifc::standards::v2x3::engine::encode_ifc2x3(&applied).expect("binary diff export"));
         }
         {
             let mutation = Ifc2x3Mutation::SetSnapshot { snapshot: imported.clone() };
             let wire = mutation.print_op();
             drop(mutation);
-            let decoded = Ifc2x3Mutation::parse_op(&wire).expect("op text decode");
+            let decoded = Ifc2x3Mutation::parse_op(&wire).await.expect("op text decode");
             drop(wire);
             assert!(matches!(&decoded, Ifc2x3Mutation::SetSnapshot { snapshot } if snapshot == &imported), "set-snapshot text codec must retain the logical IFC model");
             let diff = Mutation::diff(&decoded, &projection);
             drop(decoded);
-            let applied = MutationDiff::apply(diff.diff(), &projection).expect("valid text mutation diff");
+            let applied = MutationDiff::apply(&diff.await.diff().await, &projection).expect("valid text mutation diff");
             drop(diff);
             assert!(applied == imported, "set-snapshot text mutation must restore imported snapshot");
             assert_exact("set-snapshot text export", &crate::artifacts::ifc::standards::v2x3::engine::encode_ifc2x3(&applied).expect("set-snapshot text export"));
         }
         {
             let mutation = Ifc2x3Mutation::SetSnapshot { snapshot: imported.clone() };
-            let wire = mutation.encode_op().expect("op binary encode");
+            let wire = mutation.encode_op().await.expect("op binary encode");
             drop(mutation);
-            let decoded = Ifc2x3Mutation::decode_op(&wire).expect("op binary decode");
+            let decoded = Ifc2x3Mutation::decode_op(&wire).await.expect("op binary decode");
             drop(wire);
             assert!(matches!(&decoded, Ifc2x3Mutation::SetSnapshot { snapshot } if snapshot == &imported), "set-snapshot binary codec must retain the logical IFC model");
             let diff = Mutation::diff(&decoded, &projection);
             drop(decoded);
-            let applied = MutationDiff::apply(diff.diff(), &projection).expect("valid binary mutation diff");
+            let applied = MutationDiff::apply(&diff.await.diff().await, &projection).expect("valid binary mutation diff");
             drop(diff);
             assert!(applied == imported, "set-snapshot binary mutation must restore imported snapshot");
             assert_exact("set-snapshot binary export", &crate::artifacts::ifc::standards::v2x3::engine::encode_ifc2x3(&applied).expect("set-snapshot binary export"));
@@ -491,24 +491,24 @@ mod tests {
         edited.document.instances[1].entities[0].0 = "IFCCHANGEDENTITY".into();
         let edited_bytes = crate::artifacts::ifc::standards::v2x3::engine::encode_ifc2x3(&edited).expect("logical edit export");
         assert_ne!(edited_bytes, exact_fixture_bytes());
-        assert_eq!(crate::artifacts::ifc::standards::v2x3::engine::decode_ifc2x3(&edited_bytes).expect("logical edit import"), edited);
+        assert_eq!(crate::artifacts::ifc::standards::v2x3::engine::decode_ifc2x3(&edited_bytes).await.expect("logical edit import"), edited);
 
-        let target = imported.document.instances[1].clone();
+        let target = imported.await.document.instances[1].clone();
         let mut replacement = target.clone();
         replacement.entities[0].0 = "IFCCHANGEDENTITY".into();
         let mutation = Ifc2x3Mutation::UpsertInstance { instance: replacement };
         let changed_outcome = Mutation::diff(&mutation, &imported);
-        let changed = MutationDiff::apply(changed_outcome.diff(), &imported).expect("valid upsert diff");
+        let changed = MutationDiff::apply(&changed_outcome.await.diff().await, &imported).expect("valid upsert diff");
         assert_eq!(changed.document.instances[1].id, target.id, "upsert moved an interior entity");
-        let inverse = Mutation::inverse(&mutation, &imported).into_iter().next().expect("inverse");
+        let inverse = Mutation::inverse(&mutation, &imported).into_iter().await.await.await.next().expect("inverse");
         let restored_outcome = Mutation::diff(&inverse, &changed);
         let restored = MutationDiff::apply(restored_outcome.diff(), &changed).expect("valid inverse diff");
         assert_eq!(restored, imported);
         assert_exact("interior upsert inverse", &crate::artifacts::ifc::standards::v2x3::engine::encode_ifc2x3(&restored).expect("inverse export"));
 
-        let mut op = Ifc2x3Mutation::NoMutation.encode_op().expect("encode op");
+        let mut op = Ifc2x3Mutation::NoMutation.encode_op().await.expect("encode op");
         op.push(0);
-        assert!(Ifc2x3Mutation::decode_op(&op).is_err(), "trailing op bytes accepted");
+        assert!(Ifc2x3Mutation::decode_op(&op).await.is_err(), "trailing op bytes accepted");
     }
     //#endregion 🔖️LosslessLogicalModel
 }

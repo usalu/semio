@@ -2251,7 +2251,7 @@ pub mod app {
         }
 
         /// 🏷️ Returns the claim namespace.
-        pub async fn namespace(&self) -> &ArtifactIdentityNamespace {
+        pub fn namespace(&self) -> &ArtifactIdentityNamespace {
             &self.namespace
         }
 
@@ -6067,7 +6067,7 @@ pub mod app {
         }
 
         pub async fn action(&self, action: &str, args: Option<Value>) -> (ActionId, Option<UiValue>) {
-            (ActionId::v1(self.controller_id, action), semio_framework::optional_json_to_dsl(args).await.map(dsl_value_to_ui_value))
+            (ActionId::v1(self.controller_id, action), semio_framework::optional_json_to_dsl(args).map(dsl_value_to_ui_value))
         }
     }
     //#endregion 🔖️ActionFactory
@@ -10105,7 +10105,7 @@ pub mod app {
         /// above, behaviourally unchanged otherwise).
         async fn media_fingerprint(port: &str, doc: &ArtifactView<'_, Self::Snapshot>) -> Result<MediaFingerprint, MediaError> {
             match Self::export_media(port, doc).await {
-                Ok(media) => Ok(MediaFingerprint::of(&media).await),
+                Ok(media) => Ok(MediaFingerprint::of(&media)),
                 Err(error) => Err(error),
             }
         }
@@ -10958,10 +10958,10 @@ pub mod app {
             let draft_envelope = create_document_envelope::<A::Draft, A::DraftMutation>("draft.empty", &draft_id, A::initial_draft().await, None);
             let interaction_id = format!("{}-interaction", app_id);
             let interaction_envelope = create_document_envelope::<protocol::InteractionState, InteractionConfigMutation>("framework.interaction", &interaction_id, protocol::InteractionState::default(), None);
-            let mut store = ArtifactStore::new(envelope.await).await.expect("failed to create document store");
+            let mut store = ArtifactStore::new(envelope).await.expect("failed to create document store");
             let config_store = ConfigStore::new(config_envelope.await).await.expect("failed to create config store");
-            let draft_store = store::DraftStore::new(draft_envelope.await).await.expect("failed to create draft store");
-            let interaction_store = ConfigStore::new(interaction_envelope.await).await.expect("failed to create interaction store");
+            let draft_store = store::DraftStore::new(draft_envelope).await.expect("failed to create draft store");
+            let interaction_store = ConfigStore::new(interaction_envelope).await.expect("failed to create interaction store");
             let genesis_mutations = A::genesis().await;
             if !genesis_mutations.is_empty() {
                 store.dispatch(ArtifactCommand::Apply { mutations: genesis_mutations, description: Some("genesis".to_string()) }).await.expect("ArtifactApp::genesis mutations must apply cleanly onto a freshly constructed store");
@@ -14241,7 +14241,7 @@ pub mod app {
         /// 🌀️ `io-async-signatures`: async signature (delegates to the now-async `export_media`).
         async fn media_fingerprint(port: &str, doc: &ArtifactView<'_, Self::Snapshot>) -> Result<MediaFingerprint, MediaError> {
             match Self::export_media(port, doc).await {
-                Ok(media) => Ok(MediaFingerprint::of(&media).await),
+                Ok(media) => Ok(MediaFingerprint::of(&media)),
                 Err(error) => Err(error),
             }
         }
@@ -14344,7 +14344,7 @@ pub mod app {
         /// 🌀️ `io-async-signatures`: async signature (delegates to the now-async `export_media`).
         async fn media_fingerprint(port: &str, doc: &ArtifactView<'_, Self::Snapshot>) -> Result<MediaFingerprint, MediaError> {
             match Self::export_media(port, doc).await {
-                Ok(media) => Ok(MediaFingerprint::of(&media).await),
+                Ok(media) => Ok(MediaFingerprint::of(&media)),
                 Err(error) => Err(error),
             }
         }
@@ -14928,7 +14928,7 @@ pub mod app {
         /// ...build_definition()`, same as `PluginBuilder::editor::<E>`. `rights: Rights::Write`
         /// signals the commit walk to attach BOTH Read and Write document capabilities (baseline Read
         /// always, plus Write when `rights == Rights::Write`) — see `capability_rows_for`.
-        pub async fn editor_surface<E: ArtifactEditor, PA: PluginApp + From<VcsArtifactApp<EditorApp<E>>>>(def: AppDefinition) -> SurfaceDeclaration<PA> {
+        pub fn editor_surface<E: ArtifactEditor, PA: PluginApp + From<VcsArtifactApp<EditorApp<E>>>>(def: AppDefinition) -> SurfaceDeclaration<PA> {
             // 🚫️async: E4 fn-pointer slot
             fn factory<E: ArtifactEditor, PA: PluginApp + From<VcsArtifactApp<EditorApp<E>>>>(def: &AppDefinition) -> PA {
                 PA::from(resolve_ready(VcsArtifactApp::with_registry(EditorApp::<E>::default(), resolve_ready(AppActionRegistry::from_definition(def)))))
@@ -14943,7 +14943,7 @@ pub mod app {
 
         /// 👁️ Viewer twin of `editor_surface` — `rights: Rights::Read` (baseline Read only, contract
         /// §2.3 clause 4: a viewer's document store attaches Read only, never Write).
-        pub async fn viewer_surface<V: ArtifactViewer, PA: PluginApp + From<VcsArtifactApp<ViewerApp<V>>>>(def: AppDefinition) -> SurfaceDeclaration<PA> {
+        pub fn viewer_surface<V: ArtifactViewer, PA: PluginApp + From<VcsArtifactApp<ViewerApp<V>>>>(def: AppDefinition) -> SurfaceDeclaration<PA> {
             // 🚫️async: E4 fn-pointer slot
             fn factory<V: ArtifactViewer, PA: PluginApp + From<VcsArtifactApp<ViewerApp<V>>>>(def: &AppDefinition) -> PA {
                 PA::from(resolve_ready(VcsArtifactApp::with_registry(ViewerApp::<V>::default(), resolve_ready(AppActionRegistry::from_definition(def)))))
@@ -18823,7 +18823,7 @@ pub mod plugin_runtime {
             let alice = sample_presence_peer("user:alice#s1", Some(3), true);
             let bob = sample_presence_peer("user:bob#s1", Some(5), false);
 
-            app.adopt_presence(Some(9), &[alice.await.clone(), bob], 1000).await.expect("adopt roster");
+            app.adopt_presence(Some(9), &[alice.await.clone(), bob.await], 1000).await.expect("adopt roster");
             assert_eq!(app.own_color, Some(9));
             assert_eq!(app.presence_store.peers().await.len(), 1, "only the peer carrying a presence_pack adopts into presence_store");
             assert_eq!(app.presence_store.peers().await[0].0, "user:alice#s1");
@@ -18897,7 +18897,7 @@ pub mod plugin_runtime {
         /// of the identical document shape.
         async fn new_test_child(id: &str) -> Result<TestMembers, store::VcsError> {
             let envelope = store::create_document_envelope::<TestSnapshot, TestMutation>("semio.test/v1", id, TestSnapshot::default(), None);
-            Ok(TestMembers::Child(store::ArtifactStore::new(envelope.await).await?))
+            Ok(TestMembers::Child(store::ArtifactStore::new(envelope).await?))
         }
 
         async fn test_child_dialect() -> store::os_io::ArtifactDialect {
@@ -19118,7 +19118,7 @@ pub mod plugin_runtime {
 
             // The plugin cannot touch shell-owned state itself — it bubbles the inverse out as an effect
             // instead of replaying anything locally, and does NOT append a new log entry on its own.
-            assert_eq!(result.requested_effects, vec![Effect::ReplayShellCommand { action_id: "os.setThemeId".into(), args: semio_framework::optional_json_to_dsl(Some(json!({ "themeId": "light" }))).await }]);
+            assert_eq!(result.requested_effects, vec![Effect::ReplayShellCommand { action_id: "os.setThemeId".into(), args: semio_framework::optional_json_to_dsl(Some(json!({ "themeId": "light" }))) }]);
             assert_eq!(app.test_history().await.commands.len(), history.commands.len(), "bubbling the effect logs nothing new by itself");
         }
 

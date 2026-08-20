@@ -1090,17 +1090,16 @@ pub mod host {
         /// 📥️ Verifies + unpacks an `.sxt` byte stream and registers its descriptor, keyed by
         /// `extension_id` — idempotent for a byte-identical reinstall. This is the "install" half of
         /// `important.md`'s extension-activation ruling: "verify/unpack an `.sxt` → register its
-        /// descriptor". `async` (unlike this impl block's sibling query methods below): every
-        /// `store::extension` fn it calls — `verify`/`content_hash`, and
-        /// `ExtensionPackageManifest::extends_matches_primary_dependency` — is itself `async fn` on
-        /// disk (O1, universal async), so this is the one method in the region that genuinely must be.
+        /// descriptor". `async` (unlike this impl block's sibling query methods below): `verify` and
+        /// `ExtensionPackageManifest::extends_matches_primary_dependency` are still genuinely `async
+        /// fn`; `content_hash` is a pure blake3 digest and is called synchronously below.
         pub async fn install_extension_package(&mut self, bytes: &[u8]) -> Result<InstalledExtension, ExtensionInstallError> {
             let manifest = store::extension::verify(bytes).await?;
             if !manifest.extends_matches_primary_dependency().await {
                 let actual = manifest.dependencies.first().map(|dependency| dependency.plugin_id.clone()).unwrap_or_default();
                 return Err(ExtensionInstallError::ExtendsMismatch { extension_id: manifest.extension_id.clone(), extends: manifest.extends.clone(), actual });
             }
-            let content_hash = store::extension::content_hash(bytes).await;
+            let content_hash = store::extension::content_hash(bytes);
             let installed = InstalledExtension { manifest, content_hash };
             self.installed_extensions.insert(installed.manifest.extension_id.clone(), installed.clone());
             Ok(installed)

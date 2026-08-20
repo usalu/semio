@@ -320,11 +320,11 @@ mod tests {
     }
 
     fn text(value: &str) -> UiNode {
-        UiNode::Text(UiTextNode { value: value.into(), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None })
+        UiNode::Text(UiTextNode { value: Label::data(value), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None })
     }
 
     fn button(id: &str, label: &str) -> UiNode {
-        UiNode::Button(UiButtonNode { id: Some(id.into()), icon_id: IconName::CircleDot, label: label.into(), action: action(), style: None, presence: UiPresence::default(), menu: None })
+        UiNode::Button(UiButtonNode { id: Some(id.into()), icon_id: IconName::CircleDot, label: Label::data(label), action: action(), style: None, presence: UiPresence::default(), menu: None })
     }
 
     fn stack(id: &str, children: Vec<UiNode>) -> UiNode {
@@ -419,7 +419,7 @@ mod tests {
         UiNode::Select(UiSelectNode {
             id: id.into(),
             value: value.into(),
-            items: items.into_iter().map(|(value, label)| UiSelectItem { value: value.into(), label: label.into() }).collect(),
+            items: items.into_iter().map(|(value, label)| UiSelectItem { value: value.into(), label: Label::data(label) }).collect(),
             placeholder: None,
             on_change: action(),
             presence: UiPresence::default(),
@@ -430,7 +430,7 @@ mod tests {
     fn tree_item(id: &str, label: &str) -> UiTreeItemNode {
         UiTreeItemNode {
             id: id.into(),
-            label: label.into(),
+            label: Label::data(label),
             description: None,
             icon_id: None,
             presence: UiPresence::default(),
@@ -467,7 +467,7 @@ mod tests {
         assert_eq!(first.key, NodeKey::Explicit("a".into()));
         match &first.spec.0 {
             UiNode::Button(button) => {
-                assert_eq!(button.label, "Alpha");
+                assert_eq!(button.label.as_str(), "Alpha");
                 assert_eq!(button.action.args, Some(DslValue::Object(vec![("value".into(), DslValue::String("a".into()))])));
             }
             other => panic!("expected a synthesized Button row, got {other:?}"),
@@ -522,7 +522,7 @@ mod tests {
         let mut tree = UiTree::new();
         let item = UiTreeItemNode {
             control: Some(UiControlNode::Toggle(UiToggleNode { id: "tog".into(), icon_id: IconName::CircleDot, text: None, on_change: action(), presence: UiPresence::selected(true), menu: None })),
-            actions: Some(vec![UiTreeItemAction { icon_id: IconName::Trash2, label: Some("Delete".into()), action: action(), placement: Some(UiTreeActionPlacement::Menu) }]),
+            actions: Some(vec![UiTreeItemAction { icon_id: IconName::Trash2, label: Some(Label::data("Delete")), action: action(), placement: Some(UiTreeActionPlacement::Menu) }]),
             ..tree_item("leaf", "Leaf")
         };
         let ui = tree_ui(vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item] }], None);

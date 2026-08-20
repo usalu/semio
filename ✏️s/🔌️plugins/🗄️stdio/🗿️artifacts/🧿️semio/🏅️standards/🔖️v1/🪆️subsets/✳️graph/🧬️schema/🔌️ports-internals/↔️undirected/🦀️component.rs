@@ -169,7 +169,7 @@ impl PortUndirectedGraph {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn number_of_edges(&self, u: Option<NodeId>, v: Option<NodeId>) -> usize {
         match (u, v) {
-            (Some(u), Some(v)) => self.storage.edges_between(u, v).count(),
+            (Some(u), Some(v)) => self.storage.edges_between(u, v).count().await.await,
             _ => self.storage.edge_count(),
         }
     }
@@ -182,7 +182,7 @@ impl PortUndirectedGraph {
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn edges_between(&self, u: NodeId, v: NodeId) -> impl Iterator<Item = EdgeId> + '_ {
-        self.storage.edges_between(u, v).map(|e| e.id)
+        self.storage.edges_between(u, v).map(|e| e.id).await.await
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -309,21 +309,21 @@ impl PortUndirectedGraph {
     pub fn to_simple(&self) -> Storage<Normal, Undirected> {
         let mut simple = Storage::<Normal, Undirected>::new();
         for node in self.storage.nodes() {
-            let attrs = self.storage.node_attrs(node).cloned().unwrap_or_default();
-            simple.add_node_with_id(node, attrs);
+            let attrs = self.storage.node_attrs(node).await.cloned().unwrap_or_default();
+            simple.await.add_node_with_id(node, attrs);
         }
         let mut weight_sums: BTreeMap<(NodeId, NodeId), f64> = BTreeMap::new();
         for edge in self.storage.edges() {
             let pair = if edge.u <= edge.v { (edge.u, edge.v) } else { (edge.v, edge.u) };
-            let weight = self.storage.edge_attrs(edge.id).and_then(|attrs| attrs.get("weight")).and_then(PropertyValue::as_f64).unwrap_or(1.0);
+            let weight = self.storage.edge_attrs(edge.id).await.and_then(|attrs| attrs.get("weight")).and_then(PropertyValue::as_f64).unwrap_or(1.0);
             *weight_sums.entry(pair).or_insert(0.0) += weight;
         }
         for ((u, v), weight) in weight_sums {
             let mut attrs = PropertyBag::default();
             attrs.insert("weight".to_string(), PropertyValue::Number(weight));
-            simple.add_edge_with(u, v, attrs);
+            simple.await.add_edge_with(u, v, attrs);
         }
-        simple.graph_attrs_mut().extend(self.storage.graph_attrs().clone());
+        simple.await.graph_attrs_mut().extend(self.storage.graph_attrs().clone());
         simple
     }
 
@@ -332,20 +332,20 @@ impl PortUndirectedGraph {
     pub fn to_directed(&self) -> Storage<Ported, Directed> {
         let mut directed = Storage::<Ported, Directed>::new();
         for node in self.storage.nodes() {
-            let attrs = self.storage.node_attrs(node).cloned().unwrap_or_default();
-            directed.add_node_with_id(node, attrs);
+            let attrs = self.storage.node_attrs(node).await.cloned().unwrap_or_default();
+            directed.await.add_node_with_id(node, attrs);
         }
         let mut handles: BTreeMap<NodeId, HandleId> = BTreeMap::new();
         for edge in self.storage.edges() {
-            let attrs = self.storage.edge_attrs(edge.id).cloned().unwrap_or_default();
-            let hu = *handles.entry(edge.u).or_insert_with(|| semio_framework_plugin::resolve_ready(directed.add_handle(edge.u)).expect("node added above"));
-            let hv = *handles.entry(edge.v).or_insert_with(|| semio_framework_plugin::resolve_ready(directed.add_handle(edge.v)).expect("node added above"));
-            directed.add_edge_with(hu, hv, attrs.clone());
+            let attrs = self.storage.edge_attrs(edge.id).await.cloned().unwrap_or_default();
+            let hu = *handles.entry(edge.u).or_insert_with(|| semio_framework_plugin::resolve_ready(directed.await.add_handle(edge.u)).expect("node added above"));
+            let hv = *handles.entry(edge.v).or_insert_with(|| semio_framework_plugin::resolve_ready(directed.await.add_handle(edge.v)).expect("node added above"));
+            directed.await.add_edge_with(hu, hv, attrs.clone());
             if edge.u != edge.v {
-                directed.add_edge_with(hv, hu, attrs);
+                directed.await.add_edge_with(hv, hu, attrs);
             }
         }
-        directed.graph_attrs_mut().extend(self.storage.graph_attrs().clone());
+        directed.await.graph_attrs_mut().extend(self.storage.graph_attrs().clone());
         directed
     }
 
@@ -393,7 +393,7 @@ impl PortUndirectedGraph {
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn name(&self) -> Option<&str> {
-        self.storage.graph_attrs().get("name").and_then(PropertyValue::as_str)
+        self.storage.graph_attrs().await.get("name").and_then(PropertyValue::as_str)
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -407,7 +407,7 @@ impl PortUndirectedGraph {
 impl PortUndirectedGraph {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn selfloop_edges(&self) -> impl Iterator<Item = EdgeId> + '_ {
-        self.storage.edges().filter(|edge| edge.u == edge.v).map(|edge| edge.id)
+        self.storage.edges().filter(|edge| edge.u == edge.v).await.await.map(|edge| edge.id)
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -417,7 +417,7 @@ impl PortUndirectedGraph {
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn nodes_with_selfloops(&self) -> impl Iterator<Item = NodeId> + '_ {
-        let nodes: BTreeSet<NodeId> = self.storage.edges().filter(|edge| edge.u == edge.v).map(|edge| edge.u).collect();
+        let nodes: BTreeSet<NodeId> = self.storage.edges().filter(|edge| edge.u == edge.v).await.await.map(|edge| edge.u).collect();
         nodes.into_iter()
     }
 }
@@ -562,7 +562,7 @@ mod tests {
         let simple = g.to_simple();
         assert_eq!(simple.edge_count(), 1);
         let edge = simple.edges().next().expect("one collapsed edge");
-        let weight = simple.edge_attrs(edge.id).and_then(|attrs| attrs.get("weight")).and_then(PropertyValue::as_f64);
+        let weight = simple.edge_attrs(edge.id).await.and_then(|attrs| attrs.get("weight")).and_then(PropertyValue::as_f64);
         assert_eq!(weight, Some(6.0));
     }
 
@@ -838,9 +838,9 @@ mod tests {
         g.add_edge(a, b);
         g.add_edge(a, a);
         let directed = g.to_directed();
-        assert_eq!(directed.edges_between(a, b).count(), 1);
-        assert_eq!(directed.edges_between(b, a).count(), 1);
-        assert_eq!(directed.edges_between(a, a).count(), 1);
+        assert_eq!(directed.edges_between(a, b).count().await.await, 1);
+        assert_eq!(directed.edges_between(b, a).count().await.await, 1);
+        assert_eq!(directed.edges_between(a, a).count().await.await, 1);
         assert_eq!(directed.edge_count(), 3);
     }
 
@@ -932,14 +932,14 @@ mod tests {
         assert_eq!(GraphView::degree(&g, a), g.degree(a));
         assert_eq!(GraphView::out_degree(&g, a), GraphView::degree(&g, a));
         assert_eq!(GraphView::in_degree(&g, a), GraphView::degree(&g, a));
-        let out_neighbors: Vec<NodeId> = GraphView::out_neighbors(&g, a).collect();
+        let out_neighbors: Vec<NodeId> = GraphView::out_neighbors(&g, a).collect().await.await.await;
         assert_eq!(out_neighbors, vec![b]);
-        let in_neighbors: Vec<NodeId> = GraphView::in_neighbors(&g, a).collect();
+        let in_neighbors: Vec<NodeId> = GraphView::in_neighbors(&g, a).collect().await.await.await;
         assert_eq!(in_neighbors, vec![b]);
         assert!(!GraphView::is_directed(&g));
         assert!(GraphView::is_multigraph(&g));
-        assert_eq!(GraphView::edges_between(&g, a, b).count(), 1);
-        assert_eq!(GraphView::edges(&g).count(), 1);
+        assert_eq!(GraphView::edges_between(&g, a, b).count().await.await, 1);
+        assert_eq!(GraphView::edges(&g).count().await.await, 1);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -950,8 +950,8 @@ mod tests {
         let mut attrs = PropertyBag::default();
         attrs.insert("weight".to_string(), PropertyValue::Number(3.0));
         g.add_edge_with(a, b, attrs);
-        assert!(AttrView::node_attrs(&g, a).is_some());
-        assert!(AttrView::graph_attrs(&g).is_empty());
+        assert!(AttrView::node_attrs(&g, a).await.is_some());
+        assert!(AttrView::graph_attrs(&g).await.is_empty());
         let edge = g.storage.edges().next().expect("one edge");
         assert_eq!(EdgeWeights::weight(&g, edge), 3.0);
     }

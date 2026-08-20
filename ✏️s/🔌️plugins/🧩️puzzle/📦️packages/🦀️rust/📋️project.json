@@ -2,7 +2,10 @@
   "name": "@semio-tech/puzzle-plugin",
   "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
   "namedInputs": {
-    "default": ["{workspaceRoot}/✏️s/🔌️plugins/🧩️puzzle/**/*.rs", "{projectRoot}/**/*"]
+    "default": [
+      "{workspaceRoot}/✏️s/🔌️plugins/🧩️puzzle/**/*.rs",
+      "{projectRoot}/**/*"
+    ]
   },
   "targets": {
     "test": {
@@ -34,6 +37,14 @@
       "options": {
         "cwd": "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test exhaustive",
+        "forwardAllArgs": true
+      }
+    },
+    "fixtures-lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts fixtures lint",
         "forwardAllArgs": true
       }
     },

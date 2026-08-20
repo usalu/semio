@@ -258,8 +258,8 @@ fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
+    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn write_str_lp(out: &mut Vec<u8>, s: &str) {
@@ -271,7 +271,7 @@ fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_f32_le(reader: &mut store::ByteReader<'_>) -> Result<f32, String> {
-    let bytes = reader.read_bytes(4).map_err(|e| e.to_string())?;
+    let bytes = reader.read_bytes(4).await.map_err(|e| e.to_string())?;
     let arr: [u8; 4] = bytes.try_into().map_err(|_| "f32 read: truncated".to_string())?;
     Ok(f32::from_le_bytes(arr))
 }
@@ -333,24 +333,24 @@ fn encode_audio_snapshot_binary(s: &SemioAudioSnapshot) -> Vec<u8> {
 fn decode_audio_snapshot_binary(bytes: &[u8]) -> Result<SemioAudioSnapshot, String> {
     const PACK_BINARY_FORMAT: u8 = 1;
     let mut reader = semio_framework_plugin::resolve_ready(store::ByteReader::new(bytes));
-    let format = reader.read_u8().map_err(|e| e.to_string())?;
+    let format = reader.read_u8().await.map_err(|e| e.to_string())?;
     if format != PACK_BINARY_FORMAT {
         return Err(format!("unsupported pack format {format}"));
     }
     let schema = read_str_lp(&mut reader)?;
-    let sample_rate = reader.read_u32_le().map_err(|e| e.to_string())?;
-    let audio_format = format_from_tag(reader.read_u8().map_err(|e| e.to_string())?)?;
-    let channel_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let sample_rate = reader.read_u32_le().await.map_err(|e| e.to_string())?;
+    let audio_format = format_from_tag(reader.read_u8().await.map_err(|e| e.to_string())?)?;
+    let channel_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut channels = Vec::with_capacity(channel_count as usize);
     for _ in 0..channel_count {
-        let sample_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+        let sample_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
         let mut samples = Vec::with_capacity(sample_count as usize);
         for _ in 0..sample_count {
             samples.push(read_f32_le(&mut reader)?);
         }
         channels.push(SemioAudioChannel { samples });
     }
-    let tag_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
+    let tag_count = reader.read_varint_u64().await.map_err(|e| e.to_string())?;
     let mut tags = Vec::with_capacity(tag_count as usize);
     for _ in 0..tag_count {
         let key = read_str_lp(&mut reader)?;
@@ -438,7 +438,7 @@ mod tests {
     async fn json_pack_round_trips() {
         let snap = sample_snapshot();
         let bytes = <SemioAudioSnapshot as store::ArtifactPack>::encode_pack(&snap);
-        let back = <SemioAudioSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+        let back = <SemioAudioSnapshot as store::ArtifactPack>::decode_pack(&bytes).await.expect("decode");
         assert_eq!(snap, back);
     }
 
@@ -446,7 +446,7 @@ mod tests {
     async fn dsl_text_round_trips() {
         let snap = sample_snapshot();
         let text = <SemioAudioSnapshot as store::ArtifactDsl>::print_dsl(&snap);
-        let back = <SemioAudioSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
+        let back = <SemioAudioSnapshot as store::ArtifactDsl>::parse_dsl(&text).await.expect("parse");
         assert_eq!(snap, back);
     }
 
@@ -464,10 +464,10 @@ mod tests {
     async fn codec_retention_law() {
         let snap = sample_snapshot();
         let bytes = <SemioAudioSnapshot as store::ArtifactPack>::encode_pack(&snap);
-        let back = <SemioAudioSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+        let back = <SemioAudioSnapshot as store::ArtifactPack>::decode_pack(&bytes).await.expect("decode");
         assert_eq!(snap, back);
         let text = <SemioAudioSnapshot as store::ArtifactDsl>::print_dsl(&snap);
-        let back_text = <SemioAudioSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
+        let back_text = <SemioAudioSnapshot as store::ArtifactDsl>::parse_dsl(&text).await.expect("parse");
         assert_eq!(snap, back_text);
     }
 }

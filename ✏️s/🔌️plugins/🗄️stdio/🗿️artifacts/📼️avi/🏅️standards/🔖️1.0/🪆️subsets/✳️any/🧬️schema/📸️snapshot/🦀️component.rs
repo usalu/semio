@@ -257,7 +257,7 @@ mod tests {
     async fn json_pack_round_trips_via_real_avi_bytes() {
         let snap = sample_snapshot();
         let bytes = <AviSnapshot as store::ArtifactPack>::encode_pack(&snap);
-        let back = <AviSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+        let back = <AviSnapshot as store::ArtifactPack>::decode_pack(&bytes).await.expect("decode");
         assert_eq!(snap, back);
     }
 
@@ -265,7 +265,7 @@ mod tests {
     async fn dsl_text_round_trips_via_real_avi_bytes() {
         let snap = sample_snapshot();
         let text = <AviSnapshot as store::ArtifactDsl>::print_dsl(&snap);
-        let back = <AviSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
+        let back = <AviSnapshot as store::ArtifactDsl>::parse_dsl(&text).await.expect("parse");
         assert_eq!(snap, back);
     }
 
@@ -278,7 +278,7 @@ mod tests {
         // codec's own normal form, not the bare struct-derive default.
         let snap = AviSnapshot { schema: STDIO_AVI_DOCUMENT_SCHEMA.into(), main_header: AviMainHeader { reserved: vec![0; 4], ..AviMainHeader::default() }, idx1_present: false, ..AviSnapshot::default() };
         let bytes = <AviSnapshot as store::ArtifactPack>::encode_pack(&snap);
-        let back = <AviSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+        let back = <AviSnapshot as store::ArtifactPack>::decode_pack(&bytes).await.expect("decode");
         assert_eq!(snap, back);
     }
 }

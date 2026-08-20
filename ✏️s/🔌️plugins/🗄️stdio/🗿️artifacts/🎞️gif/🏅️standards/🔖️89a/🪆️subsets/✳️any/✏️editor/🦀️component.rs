@@ -68,7 +68,7 @@ impl ArtifactEditor for Gif89aEditor {
     async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))).await,
+            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }
@@ -78,7 +78,7 @@ impl ArtifactEditor for Gif89aEditor {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn create_gif_89a_editor() -> semio_framework_plugin::AppDefinition {
     Editor::builder(GIF_89A_DIALECT)
-        .document(["semio", "gif"])
+        .await.document(["semio", "gif"])
         .icon_id("image")
         .mode_def(edit::definition())
         .default_mode_id(edit::MODE_ID)

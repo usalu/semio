@@ -41,6 +41,13 @@ Use the main chat with GPT 5.6 Sol Ultra for creating the plan, then use the mai
 
 ---
 
+Extend/Refactor/Change clean mechanisms to properly achieve this.
+Exhaustively plan for work fleets of maximum possible parallel agents.
+Plan for a main Opus 5 High agent for plan coordination, then use multiple Sonnet 5 High agents for task execution, then use multiple Haiku 4.5 agents for read-only exploration.
+Everything end to end (ignore everything inside ./compose folder).
+
+---
+
 XXX is extremly adhoc. Make sure it has absolutely clean mechanisms, exhaustively feature complete and is battle-tested.
 Everything end to end.
 
@@ -452,18 +459,34 @@ The goal of the repo is to have 0 external dependencies, so all frameworks can b
 
 ---
 
-Every single mutation must be tested.
+Every single mutation must be tested. Every test must follow the same pattern.
 
 ```
 <mutation> e.g. `flatten` for puzzle 5d
-  fixtures
-    <fixture-file> e.g. nakagin-capsule-tower.puzzle5d.diff.semio, nakagin-capsule-tower-flat.puzzle5d.dsl.semio, etc
   tests
-    <test> e.g. nakagin-capsule-tower that uses the nakagin-capsule-tower.puzzle5d.dsl.semio fixture and checks if the nakagin-capsule-tower-flat.puzzle5d.dsl.semio fixture is the result
+    <test> e.g. nakagin-capsule-tower that uses the ✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏗️nakagin-capsule-tower/🖼️assets/🗣️tower.dsl.semio fixture and applies the flatten mutation without any arguments
+      diff
+        component.patch.semio # text based diff
+        component.
+      mutation
+        component.op.semio # custom text serialized operation
+        component.spr.semio # custom binary serialized mutation
+        component.json # standard json serialized mutation
+      snapshot # snapshots may be ommitted or reused from more examples e.g. the nakagin-capsule-tower.dsl.semio is reused more often and doesnt need to be duplicated for every test
+        before
+          component.dsl.semio
+          component.pack.semio
+          component.json
+        after
+          component.dsl.semio
+          component.pack.semio
+          component.json
       component.rs
       …
 
 ```
+
+Perform one time migration of all the compose algorithms and translate them to the new schema. Make sure that the new implementation becomes as complete as the old one yielding the same assets (just with new terminology)
 
 ---
 

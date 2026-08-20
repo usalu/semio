@@ -1053,8 +1053,8 @@ fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
+    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec())
 }
 
 impl protocol::DiffCodec for SemioDrawingDiff {
@@ -1225,15 +1225,15 @@ mod tests {
         let d = SemioDrawingDiff::between(&a, &b);
 
         // Every top-level facet changed.
-        assert!(d.canvas.is_some());
-        assert!(d.styles.is_some());
-        assert!(d.layers.is_some());
+        assert!(d.await.canvas.is_some());
+        assert!(d.await.styles.is_some());
+        assert!(d.await.layers.is_some());
 
-        let canvas = d.canvas.as_ref().unwrap();
+        let canvas = d.await.canvas.as_ref().unwrap();
         assert!(canvas.width.is_some() && canvas.height.is_some());
         assert_eq!(canvas.background, Some(None)); // tri-state clear
 
-        let styles = d.styles.as_ref().unwrap();
+        let styles = d.await.styles.as_ref().unwrap();
         assert_eq!(styles.removed, vec!["gone".to_string()]);
         assert_eq!(styles.modified.len(), 1);
         assert_eq!(styles.added.len(), 1);
@@ -1241,7 +1241,7 @@ mod tests {
         // `layers` (3 base -> 2 other): positional pairwise-then-tail gives removed (base tail,
         // `l1b`) + modified (indices 0 and 1) -- `added` is structurally empty here (see the
         // sweep doc comment); `children` below covers the `added` case instead.
-        let layers = d.layers.as_ref().unwrap();
+        let layers = d.await.layers.as_ref().unwrap();
         assert_eq!(layers.removed, vec![2usize]);
         assert_eq!(layers.modified.len(), 2);
         assert!(layers.added.is_empty());
@@ -1310,15 +1310,15 @@ mod tests {
         let a = sweep_a();
         let b = sweep_b();
         let c = SemioDrawingSnapshot::default();
-        let cases = vec![SemioDrawingDiff::default(), SemioDrawingDiff::between(&a, &b), SemioDrawingDiff::between(&b, &a), SemioDrawingDiff::between(&a, &c), SemioDrawingDiff::between(&c, &a)];
+        let cases = vec![SemioDrawingDiff::default(), SemioDrawingDiff::between(&a, &b).await, SemioDrawingDiff::between(&b, &a).await, SemioDrawingDiff::between(&a, &c).await, SemioDrawingDiff::between(&c, &a)];
         for d in cases {
             let printed = d.print_diff();
             assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
-            let parsed = SemioDrawingDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
+            let parsed = SemioDrawingDiff::parse_diff(&printed).await.unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
             assert_eq!(parsed, d, "print_diff/parse_diff round-trip mismatch (printed {printed:?})");
 
             let encoded = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
-            let decoded = SemioDrawingDiff::decode_diff(&encoded).unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
+            let decoded = SemioDrawingDiff::decode_diff(&encoded).await.unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
             assert_eq!(decoded, d, "encode_diff/decode_diff round-trip mismatch");
         }
     }

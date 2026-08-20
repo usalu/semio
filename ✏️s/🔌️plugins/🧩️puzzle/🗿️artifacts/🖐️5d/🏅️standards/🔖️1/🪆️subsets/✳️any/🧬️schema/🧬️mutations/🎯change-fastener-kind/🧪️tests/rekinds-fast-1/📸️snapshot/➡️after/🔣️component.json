@@ -1,0 +1,124 @@
+{
+  "schema": "puzzle.5d",
+  "domain": "architecture",
+  "label": "Fixture Base",
+  "meta": {
+    "description": "Two parts joined by one fastener."
+  },
+  "kindCompatibility": [
+    {
+      "source": "grip-kind-a",
+      "target": "grip-kind-b",
+      "bidirectional": true,
+      "important": false,
+      "specificity": "general"
+    }
+  ],
+  "parts": [
+    {
+      "id": "part-a",
+      "partKind": "part-kind-a",
+      "2d": {
+        "x": 0.0,
+        "y": 0.0,
+        "shape": "circle",
+        "radius": 10.0,
+        "text": "Alpha",
+        "iconKind": "icon-alpha"
+      },
+      "3d": {
+        "origin": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "meshUrl": "mesh://alpha",
+        "orientation": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "label": "Alpha 3d"
+      },
+      "grips": [
+        {
+          "id": "grip-1",
+          "gripKind": "grip-kind-a",
+          "2d": {
+            "angle": 0.0
+          },
+          "3d": {
+            "position": [
+              0.0,
+              0.0,
+              0.0
+            ]
+          }
+        },
+        {
+          "id": "grip-spare",
+          "gripKind": "grip-kind-a",
+          "2d": {
+            "angle": 0.0
+          },
+          "3d": {
+            "position": [
+              0.0,
+              0.0,
+              0.0
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "part-b",
+      "partKind": "part-kind-b",
+      "anchor": "derived",
+      "2d": {
+        "x": 10.0,
+        "y": 20.0
+      },
+      "3d": {
+        "origin": [
+          1.0,
+          2.0,
+          3.0
+        ]
+      },
+      "grips": [
+        {
+          "id": "grip-2",
+          "gripKind": "grip-kind-b",
+          "2d": {
+            "angle": 0.0
+          },
+          "3d": {
+            "position": [
+              0.0,
+              0.0,
+              0.0
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "fasteners": [
+    {
+      "id": "fast-1",
+      "source": "part-a:grip-1",
+      "target": "part-b:grip-2",
+      "fastenerKind": "fastener-kind-b",
+      "gap": 1.0,
+      "shift": 0.0,
+      "rise": 0.0,
+      "rotation": 0.0,
+      "turn": 0.0,
+      "tilt": 0.0,
+      "x": 0.0,
+      "y": 0.0
+    }
+  ]
+}

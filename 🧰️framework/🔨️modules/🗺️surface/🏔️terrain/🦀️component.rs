@@ -27,7 +27,7 @@ use std::collections::HashMap;
 pub mod projection {
     use std::f64::consts::PI;
 
-    pub async fn lonlat_to_tile_xy(lon: f64, lat: f64, z: u32) -> (f64, f64) {
+    pub fn lonlat_to_tile_xy(lon: f64, lat: f64, z: u32) -> (f64, f64) {
         let lat_rad = lat.clamp(-85.051_128_78, 85.051_128_78).to_radians();
         let n = 2f64.powi(z as i32);
         let x = (lon + 180.0) / 360.0 * n;
@@ -35,7 +35,7 @@ pub mod projection {
         (x, y)
     }
 
-    pub async fn tile_xy_to_lonlat(x: f64, y: f64, z: u32) -> (f64, f64) {
+    pub fn tile_xy_to_lonlat(x: f64, y: f64, z: u32) -> (f64, f64) {
         let n = 2f64.powi(z as i32);
         let lon = x / n * 360.0 - 180.0;
         let lat_rad = (PI * (1.0 - 2.0 * y / n)).sinh().atan();
@@ -45,13 +45,13 @@ pub mod projection {
     /// 📐️ Tangent-plane equirectangular approximation around a project origin — adequate for a
     /// single terrain viewport (a few tiles wide), and keeps mesh-vertex coordinates small
     /// (meters from the project origin) rather than global Web Mercator meters.
-    pub async fn lonlat_to_local_meters(lon: f64, lat: f64, origin_lon: f64, origin_lat: f64) -> (f64, f64) {
+    pub fn lonlat_to_local_meters(lon: f64, lat: f64, origin_lon: f64, origin_lat: f64) -> (f64, f64) {
         const M_PER_DEG_LAT: f64 = 111_320.0;
         let m_per_deg_lon = M_PER_DEG_LAT * origin_lat.to_radians().cos();
         ((lon - origin_lon) * m_per_deg_lon, (lat - origin_lat) * M_PER_DEG_LAT)
     }
 
-    pub async fn local_meters_to_lonlat(x: f64, y: f64, origin_lon: f64, origin_lat: f64) -> (f64, f64) {
+    pub fn local_meters_to_lonlat(x: f64, y: f64, origin_lon: f64, origin_lat: f64) -> (f64, f64) {
         const M_PER_DEG_LAT: f64 = 111_320.0;
         let m_per_deg_lon = M_PER_DEG_LAT * origin_lat.to_radians().cos();
         (origin_lon + x / m_per_deg_lon.max(1e-9), origin_lat + y / M_PER_DEG_LAT)
@@ -67,7 +67,7 @@ pub mod tiles {
     /// deliberately simple rather than frustum-exact; refine only if it proves too coarse.
     pub const TERRAIN_TILE_RADIUS: i64 = 2;
 
-    pub async fn tile_key(z: u32, x: u32, y: u32) -> String {
+    pub fn tile_key(z: u32, x: u32, y: u32) -> String {
         format!("{z}/{x}/{y}")
     }
 
@@ -91,7 +91,7 @@ pub mod tiles {
         zoom.clamp(TERRAIN_TILE_MIN_ZOOM as i64, TERRAIN_TILE_MAX_ZOOM as i64) as u32
     }
 
-    pub async fn visible_tiles(center_lon: f64, center_lat: f64, zoom: u32) -> Vec<(u32, u32, u32)> {
+    pub fn visible_tiles(center_lon: f64, center_lat: f64, zoom: u32) -> Vec<(u32, u32, u32)> {
         let (cx, cy) = super::projection::lonlat_to_tile_xy(center_lon, center_lat, zoom);
         let n = 2i64.pow(zoom);
         let cx = cx.floor() as i64;
@@ -128,7 +128,7 @@ pub enum FrameworkSurfaceTerrainError {
 //#endregion ⚠️ Errors
 
 /// 🎨️ Elevation decoded from a Mapzen/AWS "Terrarium" RGB-encoded PNG: `R*256 + G + B/256 - 32768`.
-async fn decode_terrarium_png(bytes: &[u8]) -> Result<image::RgbaImage, FrameworkSurfaceTerrainError> {
+fn decode_terrarium_png(bytes: &[u8]) -> Result<image::RgbaImage, FrameworkSurfaceTerrainError> {
     Ok(image::load_from_memory(bytes)?.to_rgba8())
 }
 
@@ -171,9 +171,9 @@ async fn build_terrain_tile_mesh(tile: &DecodedElevationTile, origin_lon: f64, o
             let px = (col as f32 / (n - 1) as f32) * (TERRARIUM_TILE_PX - 1) as f32;
             let py = (row as f32 / (n - 1) as f32) * (TERRARIUM_TILE_PX - 1) as f32;
             let elevation = sample_elevation(&tile.image, px, py);
-            heights[(row * n + col) as usize] = elevation;
-            min_elev = min_elev.min(elevation);
-            max_elev = max_elev.max(elevation);
+            heights[(row * n + col) as usize] = elevation.await;
+            min_elev = min_elev.min(elevation.await);
+            max_elev = max_elev.max(elevation.await);
         }
     }
     if !min_elev.is_finite() {
@@ -235,7 +235,7 @@ async fn build_terrain_tile_mesh(tile: &DecodedElevationTile, origin_lon: f64, o
     TerrainTileMeshJson { positions, normals, indices, uvs }
 }
 
-async fn normalize3(x: f64, y: f64, z: f64) -> (f64, f64, f64) {
+fn normalize3(x: f64, y: f64, z: f64) -> (f64, f64, f64) {
     let length = (x * x + y * y + z * z).sqrt().max(1e-9);
     (x / length, y / length, z / length)
 }
@@ -271,7 +271,7 @@ async fn visible_tile_coords(camera: &CameraRecord, origin_lon: f64, origin_lat:
     let distance = (dx * dx + dy * dy + dz * dz).sqrt().max(1.0);
     let zoom = tiles::pick_zoom(distance);
     let (center_lon, center_lat) = projection::local_meters_to_lonlat(target[0], target[1], origin_lon, origin_lat);
-    tiles::visible_tiles(center_lon, center_lat, zoom)
+    tiles::visible_tiles(center_lon, center_lat, zoom.await)
 }
 //#endregion VisibleTileQuery
 
@@ -334,7 +334,7 @@ impl TerrainSessionCore {
     pub async fn visible_terrain_tiles_json(&self, camera_json: &str) -> String {
         let camera: CameraRecord = serde_json::from_str(camera_json).unwrap_or(CameraRecord { position: None, target: None });
         let rows: Vec<VisibleTileRow> = visible_tile_coords(&camera, self.origin_lon, self.origin_lat)
-            .into_iter()
+            .into_iter().await.await
             .map(|(z, x, y)| VisibleTileRow { z, x, y, key: tiles::tile_key(z, x, y) })
             .collect();
         serde_json::to_string(&rows).unwrap_or_else(|_| "[]".to_string())
@@ -470,7 +470,7 @@ mod tests {
         assert!(rows.len() <= 25);
     }
 
-    async fn solid_terrarium_png(elevation: f32) -> Vec<u8> {
+    fn solid_terrarium_png(elevation: f32) -> Vec<u8> {
         let value = (elevation + 32768.0).round() as i64;
         let r = ((value >> 8) & 0xff) as u8;
         let remainder = value - ((r as i64) << 8);

@@ -20,14 +20,14 @@ impl UndirectedGraph {
     fn from_view<V: GraphView + AttrView>(view: &V) -> Self {
         let mut storage = Storage::<Normal, Undirected>::new();
         for node in view.nodes() {
-            let attrs = view.node_attrs(node).cloned().unwrap_or_default();
-            storage.add_node_with_id(node, attrs);
+            let attrs = view.node_attrs(node).await.cloned().unwrap_or_default();
+            storage.await.add_node_with_id(node, attrs);
         }
         for edge in view.edges() {
-            let attrs = view.edge_attrs(edge.id).cloned().unwrap_or_default();
-            storage.add_edge_with(edge.u, edge.v, attrs);
+            let attrs = view.edge_attrs(edge.id).await.cloned().unwrap_or_default();
+            storage.await.add_edge_with(edge.u, edge.v, attrs);
         }
-        storage.graph_attrs_mut().extend(view.graph_attrs().clone());
+        storage.await.graph_attrs_mut().extend(view.graph_attrs().clone());
         Self(storage)
     }
 }
@@ -158,7 +158,7 @@ impl UndirectedGraph {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn size(&self, weighted: bool) -> f64 {
         if weighted {
-            self.0.edges().map(|e| self.0.weight(e)).sum()
+            self.0.edges().map(|e| self.0.weight(e)).await.await.sum()
         } else {
             self.0.edge_count() as f64
         }
@@ -214,7 +214,7 @@ impl UndirectedGraph {
     /// 🗺️ NetworkX `G.adjacency()`: every node paired with its neighbor iterator.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn adjacency(&self) -> impl Iterator<Item = (NodeId, impl Iterator<Item = NodeId> + '_)> + '_ {
-        self.0.nodes().map(|n| (n, self.0.neighbors(n)))
+        self.0.nodes().map(|n| (n, self.0.neighbors(n))).await.await
     }
 
     /// 🔢️ Degree of `node`; a self-loop counts twice, matching NetworkX.
@@ -227,7 +227,7 @@ impl UndirectedGraph {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn weighted_degree(&self, node: NodeId, weight_name: &str) -> f64 {
         let weights = AttrWeight { graph: &self.0, name: weight_name, default: 1.0 };
-        self.0.neighbors(node).map(|nb| self.0.edges_between(node, nb).map(|e| weights.weight(e)).sum::<f64>()).sum()
+        self.0.neighbors(node).map(|nb| self.0.edges_between(node, nb).map(|e| weights.weight(e)).await.await.sum::<f64>()).await.await.sum()
     }
 
     /// 📐️ NetworkX density `2*m / (n*(n-1))`; defined as `0.0` for `n < 2` (including the empty graph) rather than dividing by zero.
@@ -276,17 +276,17 @@ impl UndirectedGraph {
     pub fn to_directed(&self) -> Storage<Normal, Directed> {
         let mut storage = Storage::<Normal, Directed>::new();
         for node in self.0.nodes() {
-            let attrs = self.0.node_attrs(node).cloned().unwrap_or_default();
-            storage.add_node_with_id(node, attrs);
+            let attrs = self.0.node_attrs(node).await.cloned().unwrap_or_default();
+            storage.await.add_node_with_id(node, attrs);
         }
         for edge in self.0.edges() {
-            let attrs = self.0.edge_attrs(edge.id).cloned().unwrap_or_default();
-            storage.add_edge_with(edge.u, edge.v, attrs.clone());
+            let attrs = self.0.edge_attrs(edge.id).await.cloned().unwrap_or_default();
+            storage.await.add_edge_with(edge.u, edge.v, attrs.clone());
             if edge.u != edge.v {
-                storage.add_edge_with(edge.v, edge.u, attrs);
+                storage.await.add_edge_with(edge.v, edge.u, attrs);
             }
         }
-        storage.graph_attrs_mut().extend(self.0.graph_attrs().clone());
+        storage.await.graph_attrs_mut().extend(self.0.graph_attrs().clone());
         storage
     }
 
@@ -319,7 +319,7 @@ impl UndirectedGraph {
     /// 🏷️ NetworkX `get_node_attributes(name)`: every node carrying `name`, mapped to its value.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn get_node_attributes(&self, name: &str) -> BTreeMap<NodeId, PropertyValue> {
-        self.0.nodes().filter_map(|node| semio_framework_plugin::resolve_ready(self.0.node_attrs(node)).and_then(|attrs| attrs.get(name)).map(|value| (node, value.clone()))).collect()
+        self.0.nodes().filter_map(|node| semio_framework_plugin::resolve_ready(self.0.node_attrs(node)).and_then(|attrs| attrs.get(name)).map(|value| (node, value.clone()))).await.await.await.collect()
     }
 
     /// 🏷️ NetworkX `set_edge_attributes`: merges `attrs` into the edge between each `(u, v)`; pairs without an edge are silently skipped.
@@ -345,14 +345,14 @@ impl UndirectedGraph {
                     let key = if edge.u <= edge.v { (edge.u, edge.v) } else { (edge.v, edge.u) };
                     (key, value.clone())
                 })
-            })
+            }).await.await.await
             .collect()
     }
 
     /// 🏷️ NetworkX graph `name` attribute, read from `graph_attrs["name"]`.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn name(&self) -> Option<String> {
-        self.0.graph_attrs().get("name").and_then(PropertyValue::as_str).map(str::to_owned)
+        self.0.graph_attrs().await.get("name").and_then(PropertyValue::as_str).map(str::to_owned)
     }
 
     /// 🏷️ Sets the NetworkX graph `name` attribute.
@@ -368,7 +368,7 @@ impl UndirectedGraph {
     /// 🔂️ Every self-loop edge id.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn selfloop_edges(&self) -> impl Iterator<Item = EdgeId> + '_ {
-        self.0.edges().filter(|e| e.u == e.v).map(|e| e.id)
+        self.0.edges().filter(|e| e.u == e.v).await.await.map(|e| e.id)
     }
 
     /// 🔢️ Self-loop count.
@@ -380,7 +380,7 @@ impl UndirectedGraph {
     /// 🔂️ Every node carrying a self-loop.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn nodes_with_selfloops(&self) -> impl Iterator<Item = NodeId> + '_ {
-        self.0.edges().filter(|e| e.u == e.v).map(|e| e.u)
+        self.0.edges().filter(|e| e.u == e.v).await.await.map(|e| e.u)
     }
 }
 // #endregion 🔖️SelfLoops
@@ -408,21 +408,21 @@ impl UndirectedGraph {
     /// 🤝️ Neighbors shared by both `u` and `v` (excluding `u` and `v` themselves).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn common_neighbors(&self, u: NodeId, v: NodeId) -> impl Iterator<Item = NodeId> + '_ {
-        let v_neighbors: std::collections::BTreeSet<NodeId> = self.0.neighbors(v).collect();
-        self.0.neighbors(u).filter(move |&n| n != u && n != v && v_neighbors.contains(&n))
+        let v_neighbors: std::collections::BTreeSet<NodeId> = self.0.neighbors(v).collect().await.await.await;
+        self.0.neighbors(u).filter(move |&n| n != u && n != v && v_neighbors.contains(&n)).await.await
     }
 
     /// 🚫️ Every node other than `u` that isn't a neighbor of `u`.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn non_neighbors(&self, u: NodeId) -> impl Iterator<Item = NodeId> + '_ {
-        let neighbors: std::collections::BTreeSet<NodeId> = self.0.neighbors(u).collect();
-        self.0.nodes().filter(move |&n| n != u && !neighbors.contains(&n))
+        let neighbors: std::collections::BTreeSet<NodeId> = self.0.neighbors(u).collect().await.await.await;
+        self.0.nodes().filter(move |&n| n != u && !neighbors.contains(&n)).await.await
     }
 
     /// 🚫️ Every unordered node pair with no edge between them.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn non_edges(&self) -> impl Iterator<Item = (NodeId, NodeId)> + '_ {
-        let nodes: Vec<NodeId> = self.0.nodes().collect();
+        let nodes: Vec<NodeId> = self.0.nodes().collect().await.await.await;
         let mut pairs = Vec::new();
         for i in 0..nodes.len() {
             for &v in &nodes[(i + 1)..] {

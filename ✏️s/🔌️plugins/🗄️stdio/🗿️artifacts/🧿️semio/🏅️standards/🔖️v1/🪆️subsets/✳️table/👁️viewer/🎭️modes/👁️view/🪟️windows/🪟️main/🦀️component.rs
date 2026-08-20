@@ -68,7 +68,7 @@ pub fn render(document: &SemioTableSnapshot) -> UiNode {
         camera_json: world3d_camera_json(SEMIO_TABLE_VIEW_DEFAULT_CAMERA_POSITION, SEMIO_TABLE_VIEW_DEFAULT_CAMERA_TARGET, SEMIO_TABLE_VIEW_DEFAULT_CAMERA_FOV),
         meshes_json,
         instances_json: world_instances_json(document),
-        selection_json: world3d_selection_json("rectangle", &[], None),
+        selection_json: world3d_selection_json("rectangle", &[], None).await,
     };
     MeshWindowKit::render(&view)
 }

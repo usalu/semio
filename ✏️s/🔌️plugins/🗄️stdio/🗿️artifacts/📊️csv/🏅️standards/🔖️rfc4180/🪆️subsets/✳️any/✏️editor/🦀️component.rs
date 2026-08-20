@@ -121,7 +121,7 @@ impl ArtifactEditor for CsvEditor {
     async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))).await,
+            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }
@@ -131,7 +131,7 @@ impl ArtifactEditor for CsvEditor {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn create_csv_editor() -> semio_framework_plugin::AppDefinition {
     Editor::builder(CSV_EDITOR_DIALECT)
-        .document(["semio", "stdio", "csv"])
+        .await.document(["semio", "stdio", "csv"])
         .icon_id("table-2")
         .mode_def(edit::definition())
         .default_mode_id(edit::CSV_EDIT_MODE_ID)
@@ -175,7 +175,7 @@ mod tests {
     async fn op_text_roundtrip() {
         let command = CsvEditorCommand::SetCell { row: 2, column: 5, value: "a value".into() };
         let printed = <CsvEditorCommand as protocol::OpText>::print_op(&command);
-        let parsed = <CsvEditorCommand as protocol::OpText>::parse_op(&printed).expect("parse ok");
+        let parsed = <CsvEditorCommand as protocol::OpText>::parse_op(&printed).await.expect("parse ok");
         assert_eq!(parsed, command);
     }
 }

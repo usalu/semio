@@ -129,7 +129,7 @@ pub mod derived_composition {
         async fn conforming_strict_package_composes_and_stamps_strict() {
             let hex = strict_package_hex();
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Text(&hex) }];
-            let composed = PptxStrictComposerComposition::compose(&sources).expect("clean Strict document must compose to strict");
+            let composed = PptxStrictComposerComposition::compose(&sources).await.expect("clean Strict document must compose to strict");
             assert!(composed.diagnostics.iter().all(|d| d.severity != Severity::Error), "no hard diagnostics expected: {:?}", composed.diagnostics);
         }
 
@@ -151,7 +151,7 @@ pub mod derived_composition {
             let bytes = opc::encode_opc(&opc).expect("encode hand-built Transitional OPC package");
             let hex = hex_encode(&bytes);
             let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Text(&hex) }];
-            let err = PptxStrictComposerComposition::compose(&sources).expect_err("a Transitional document must not stamp strict");
+            let err = PptxStrictComposerComposition::compose(&sources).await.expect_err("a Transitional document must not stamp strict");
             assert!(err.diagnostics.iter().any(|d| d.severity == Severity::Error), "got {:?}", err.diagnostics);
         }
 
@@ -159,7 +159,7 @@ pub mod derived_composition {
         async fn subset_validator_recheck_flags_clean_document_as_clean() {
             let hex = strict_package_hex();
             let diagnostics = PptxStrictValidator::validate(&IoPayload::Text(hex));
-            assert!(diagnostics.iter().all(|d| d.severity != Severity::Error), "wire recheck must never report a hard violation for a clean Strict document: {diagnostics:?}");
+            assert!(diagnostics.await.iter().all(|d| d.severity != Severity::Error), "wire recheck must never report a hard violation for a clean Strict document: {diagnostics:?}");
         }
     }
 }

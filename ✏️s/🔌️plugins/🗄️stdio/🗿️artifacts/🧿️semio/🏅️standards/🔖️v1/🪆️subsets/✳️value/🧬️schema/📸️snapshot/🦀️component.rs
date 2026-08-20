@@ -233,7 +233,7 @@ mod tests {
     async fn json_pack_round_trips() {
         let snap = demo_semio_value_snapshot();
         let bytes = <SemioValueSnapshot as store::ArtifactPack>::encode_pack(&snap);
-        let back = <SemioValueSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+        let back = <SemioValueSnapshot as store::ArtifactPack>::decode_pack(&bytes).await.expect("decode");
         assert_eq!(snap, back);
     }
 
@@ -241,7 +241,7 @@ mod tests {
     async fn dsl_text_round_trips() {
         let snap = demo_semio_value_snapshot();
         let text = <SemioValueSnapshot as store::ArtifactDsl>::print_dsl(&snap);
-        let back = <SemioValueSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
+        let back = <SemioValueSnapshot as store::ArtifactDsl>::parse_dsl(&text).await.expect("parse");
         assert_eq!(snap, back);
     }
 
@@ -259,7 +259,7 @@ mod tests {
             nodes: vec![SemioValueNode { id: ValueId::new("root-child"), value: SemioValue::Str { value: "leaf".into() } }],
         };
         let bytes = <SemioValueSnapshot as store::ArtifactPack>::encode_pack(&snap);
-        let back = <SemioValueSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+        let back = <SemioValueSnapshot as store::ArtifactPack>::decode_pack(&bytes).await.expect("decode");
         assert_eq!(snap, back);
         match &back.root {
             SemioValue::List { items } => {

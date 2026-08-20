@@ -1228,8 +1228,8 @@ pub(crate) fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
+    let len = reader.read_varint_u64().await.map_err(|e| e.to_string())? as usize;
+    Ok(reader.read_bytes(len).await.map_err(|e| e.to_string())?.to_vec())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn write_str_lp(out: &mut Vec<u8>, s: &str) {
@@ -1808,26 +1808,26 @@ mod tests {
     async fn diff_codec_text_binary_roundtrip_law() {
         let a = snapshot_a();
         let b = snapshot_b();
-        let cases = vec![SemioDocumentDiff::default(), SemioDocumentDiff::between(&a, &b), SemioDocumentDiff::between(&b, &a), SemioDocumentDiff::between(&a, &a)];
+        let cases = vec![SemioDocumentDiff::default(), SemioDocumentDiff::between(&a, &b).await, SemioDocumentDiff::between(&b, &a).await, SemioDocumentDiff::between(&a, &a).await];
         for d in cases {
             let printed = d.print_diff();
             assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
-            let parsed = SemioDocumentDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
+            let parsed = SemioDocumentDiff::parse_diff(&printed).await.unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
             assert_eq!(parsed, d, "print_diff/parse_diff round-trip mismatch (printed {printed:?})");
 
             let encoded = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
-            let decoded = SemioDocumentDiff::decode_diff(&encoded).unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
+            let decoded = SemioDocumentDiff::decode_diff(&encoded).await.unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
             assert_eq!(decoded, d, "encode_diff/decode_diff round-trip mismatch");
         }
 
         let diff_ab = SemioDocumentDiff::between(&a, &b);
-        let styles_diff = diff_ab.styles.as_ref().expect("styles diff present");
+        let styles_diff = diff_ab.await.styles.as_ref().expect("styles diff present");
         assert!(!styles_diff.removed.is_empty() && !styles_diff.modified.is_empty() && !styles_diff.added.is_empty(), "styles: not every flavor exercised");
         let style_mod = styles_diff.modified.iter().find(|m| m.key == "keep").expect("keep style modified");
         assert_eq!(style_mod.diff.based_on, Some(None), "based_on tri-state Some(None) not exercised");
-        let images_diff = diff_ab.images.as_ref().expect("images diff present");
+        let images_diff = diff_ab.await.images.as_ref().expect("images diff present");
         assert!(!images_diff.removed.is_empty() && !images_diff.added.is_empty());
-        let blocks_diff = diff_ab.blocks.as_ref().expect("blocks diff present");
+        let blocks_diff = diff_ab.await.blocks.as_ref().expect("blocks diff present");
         assert!(!blocks_diff.removed.is_empty(), "blocks: removed not exercised");
         assert_eq!(blocks_diff.modified.len(), 1);
         let DocBlockDiff::Paragraph(p_diff) = &blocks_diff.modified[0].diff else { panic!("expected paragraph diff") };

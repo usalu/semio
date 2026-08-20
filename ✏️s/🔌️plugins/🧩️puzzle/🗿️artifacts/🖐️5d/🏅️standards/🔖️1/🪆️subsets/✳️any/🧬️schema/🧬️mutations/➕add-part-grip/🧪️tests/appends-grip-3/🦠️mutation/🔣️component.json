@@ -1,0 +1,19 @@
+{
+  "mutation": "addPartGrip",
+  "partId": "part-a",
+  "grip": {
+    "id": "grip-3",
+    "gripKind": "grip-kind-b",
+    "2d": {
+      "angle": 0.0
+    },
+    "3d": {
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    }
+  },
+  "index": null
+}

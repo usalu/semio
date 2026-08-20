@@ -68,7 +68,7 @@ pub fn render(document: &LasSnapshot) -> UiNode {
         camera_json: world3d_camera_json(LAS_ANY_VIEW_DEFAULT_CAMERA_POSITION, LAS_ANY_VIEW_DEFAULT_CAMERA_TARGET, LAS_ANY_VIEW_DEFAULT_CAMERA_FOV),
         meshes_json,
         instances_json: world_instances_json(document),
-        selection_json: world3d_selection_json("rectangle", &[], None),
+        selection_json: world3d_selection_json("rectangle", &[], None).await,
     };
     MeshWindowKit::render(&view)
 }

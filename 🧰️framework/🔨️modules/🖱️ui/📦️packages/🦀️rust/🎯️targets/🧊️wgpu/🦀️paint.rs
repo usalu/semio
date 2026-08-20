@@ -896,7 +896,7 @@ mod tests {
     }
 
     fn text(value: &str) -> UiNode {
-        UiNode::Text(UiTextNode { value: value.into(), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None })
+        UiNode::Text(UiTextNode { value: Label::data(value), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None })
     }
 
     fn stack(children: Vec<UiNode>) -> UiNode {
@@ -907,7 +907,7 @@ mod tests {
         UiNode::Button(UiButtonNode {
             id: Some(id.into()),
             icon_id: IconName::CircleDot,
-            label: id.into(),
+            label: Label::data(id),
             action: ActionDescriptor { controller_id: "ctrl".into(), action: "go".into(), args: None },
             style: None,
             presence: UiPresence::status(UiStatus::Loading),
@@ -919,7 +919,7 @@ mod tests {
         UiNode::Button(UiButtonNode {
             id: Some(id.into()),
             icon_id: IconName::CircleDot,
-            label: id.into(),
+            label: Label::data(id),
             action: ActionDescriptor { controller_id: "ctrl".into(), action: "go".into(), args: None },
             style: None,
             presence: UiPresence::status(UiStatus::Waiting),
@@ -1013,7 +1013,7 @@ mod tests {
     // additive to the pre-existing tests above.
 
     fn button(id: &str, disabled: bool) -> UiNode {
-        UiNode::Button(UiButtonNode { id: Some(id.into()), icon_id: IconName::CircleDot, label: id.into(), action: action(), style: None, presence: UiPresence::disabled_if(disabled), menu: None })
+        UiNode::Button(UiButtonNode { id: Some(id.into()), icon_id: IconName::CircleDot, label: Label::data(id), action: action(), style: None, presence: UiPresence::disabled_if(disabled), menu: None })
     }
 
     #[test]
@@ -1028,7 +1028,7 @@ mod tests {
     }
 
     fn loading_section(id: &str) -> UiNode {
-        UiNode::Section(UiSectionNode { id: id.into(), label: Some("Sec".into()), default_open: Some(true), presence: UiPresence::status(UiStatus::Loading), children: vec![text("child")], menu: None })
+        UiNode::Section(UiSectionNode { id: id.into(), label: Some(Label::data("Sec")), default_open: Some(true), presence: UiPresence::status(UiStatus::Loading), children: vec![text("child")], menu: None })
     }
 
     #[test]
@@ -1043,7 +1043,7 @@ mod tests {
     }
 
     fn waiting_section(id: &str) -> UiNode {
-        UiNode::Section(UiSectionNode { id: id.into(), label: Some("Sec".into()), default_open: Some(true), presence: UiPresence::status(UiStatus::Waiting), children: vec![text("child")], menu: None })
+        UiNode::Section(UiSectionNode { id: id.into(), label: Some(Label::data("Sec")), default_open: Some(true), presence: UiPresence::status(UiStatus::Waiting), children: vec![text("child")], menu: None })
     }
 
     #[test]
@@ -1111,7 +1111,7 @@ mod tests {
 
     fn loading_tree() -> UiNode {
         UiNode::Tree(UiTreeNode {
-            sections: vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![UiTreeItemNode::base("i1", "Item")] }],
+            sections: vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![UiTreeItemNode::base("i1", Label::data("Item"))] }],
             presence: UiPresence::status(UiStatus::Loading),
             drop_action: None,
             menu: None,
@@ -1121,7 +1121,7 @@ mod tests {
 
     fn waiting_tree() -> UiNode {
         UiNode::Tree(UiTreeNode {
-            sections: vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![UiTreeItemNode::base("i1", "Item")] }],
+            sections: vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![UiTreeItemNode::base("i1", Label::data("Item"))] }],
             presence: UiPresence::status(UiStatus::Waiting),
             drop_action: None,
             menu: None,
@@ -1205,7 +1205,7 @@ mod tests {
     fn field(description: Option<&str>, required: bool, error: Option<&str>) -> UiNode {
         UiNode::Field(UiFieldNode {
             id: "f".into(),
-            label: "Label".into(),
+            label: Label::data("Label"),
             description: description.map(String::from),
             required: Some(required),
             error: error.map(String::from),
@@ -1231,7 +1231,7 @@ mod tests {
     }
 
     fn tree_with_item_description() -> UiNode {
-        let mut item = UiTreeItemNode::base("i1", "Item One");
+        let mut item = UiTreeItemNode::base("i1", Label::data("Item One"));
         item.description = Some("desc".into());
         item.actions = Some(vec![UiTreeItemAction { icon_id: IconName::Sparkles, label: None, action: action(), placement: None }]);
         UiNode::Tree(UiTreeNode {
@@ -1245,7 +1245,7 @@ mod tests {
 
     fn tree_with_bare_item() -> UiNode {
         UiNode::Tree(UiTreeNode {
-            sections: vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![UiTreeItemNode::base("i1", "Item One")] }],
+            sections: vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![UiTreeItemNode::base("i1", Label::data("Item One"))] }],
             presence: UiPresence::default(),
             drop_action: None,
             menu: None,
@@ -1279,7 +1279,7 @@ mod tests {
         UiNode::Select(UiSelectNode {
             id: id.into(),
             value: value.into(),
-            items: vec![UiSelectItem { value: "a".into(), label: "Alpha".into() }, UiSelectItem { value: "b".into(), label: "Beta".into() }],
+            items: vec![UiSelectItem { value: "a".into(), label: Label::data("Alpha") }, UiSelectItem { value: "b".into(), label: Label::data("Beta") }],
             placeholder: None,
             on_change: action(),
             presence: UiPresence::default(),
@@ -1381,7 +1381,7 @@ mod tests {
     }
 
     fn tree_with_draggable_item() -> UiNode {
-        let mut item = UiTreeItemNode::base("i1", "Item One");
+        let mut item = UiTreeItemNode::base("i1", Label::data("Item One"));
         item.draggable = Some(true);
         UiNode::Tree(UiTreeNode {
             sections: vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item] }],
@@ -1497,7 +1497,7 @@ mod tests {
     }
 
     fn toggle(id: &str) -> UiNode {
-        UiNode::Toggle(UiToggleNode { id: id.into(), icon_id: IconName::CircleDot, text: Some("Toggle".into()), on_change: action(), presence: UiPresence::default(), menu: None })
+        UiNode::Toggle(UiToggleNode { id: id.into(), icon_id: IconName::CircleDot, text: Some(Label::data("Toggle")), on_change: action(), presence: UiPresence::default(), menu: None })
     }
 
     fn icon_select(id: &str) -> UiNode {

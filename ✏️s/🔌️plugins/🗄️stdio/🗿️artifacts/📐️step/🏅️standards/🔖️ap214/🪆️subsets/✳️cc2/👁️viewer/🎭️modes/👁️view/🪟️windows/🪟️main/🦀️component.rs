@@ -68,7 +68,7 @@ pub fn render(document: &StepSnapshot) -> UiNode {
         camera_json: world3d_camera_json(STEP_CC2_VIEW_DEFAULT_CAMERA_POSITION, STEP_CC2_VIEW_DEFAULT_CAMERA_TARGET, STEP_CC2_VIEW_DEFAULT_CAMERA_FOV),
         meshes_json,
         instances_json: world_instances_json(document),
-        selection_json: world3d_selection_json("rectangle", &[], None),
+        selection_json: world3d_selection_json("rectangle", &[], None).await,
     };
     MeshWindowKit::render(&view)
 }

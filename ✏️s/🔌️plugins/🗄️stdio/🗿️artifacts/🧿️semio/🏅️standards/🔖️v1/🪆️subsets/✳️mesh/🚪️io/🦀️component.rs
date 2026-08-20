@@ -222,8 +222,8 @@ pub mod derived_composition {
         async fn validator_decodes_and_runs_the_referential_checks_end_to_end() {
             let snapshot = SemioMeshSnapshot { meshes: vec![SemioMesh { id: "m1".into(), primitives: vec![SemioPrimitive { id: "p1".into(), material_id: Some("missing".into()), ..Default::default() }] }], ..Default::default() };
             let bytes = store::ArtifactPack::encode_pack(&snapshot);
-            let diagnostics = SemioMeshValidator::validate(&IoPayload::Binary(bytes));
-            assert!(diagnostics.iter().any(|d| d.code.0 == "stdio.semio_mesh.dangling-material-ref"), "got {diagnostics:?}");
+            let diagnostics = SemioMeshValidator::validate(&IoPayload::Binary(bytes.await));
+            assert!(diagnostics.await.iter().any(|d| d.code.0 == "stdio.semio_mesh.dangling-material-ref"), "got {diagnostics:?}");
         }
 
         //#region 🔖️ConformanceLaws
@@ -303,14 +303,14 @@ pub mod derived_composition {
 
                 let op_spec = dsl::parse_protocol(mutations::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
                 for mutation in mutations::demo_mutation_cases() {
-                    let bytes = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op failed for {mutation:?}: {e:?}"));
+                    let bytes = mutation.encode_op().await.unwrap_or_else(|e| panic!("encode_op failed for {mutation:?}: {e:?}"));
                     let trace = dsl::walk_protocol(&op_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(op) failed for {mutation:?} @{}: {}", e.offset, e.message));
                     assert_eq!(trace.consumed, bytes.len(), "op walk did not consume every byte for {mutation:?}");
                 }
 
                 let diff_spec = dsl::parse_protocol(diff::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse diff protocol");
                 for d in diff::demo_diff_cases() {
-                    let bytes = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed for {d:?}: {e:?}"));
+                    let bytes = d.encode_diff().await.unwrap_or_else(|e| panic!("encode_diff failed for {d:?}: {e:?}"));
                     let trace = dsl::walk_protocol(&diff_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(diff) failed for {d:?} @{}: {}", e.offset, e.message));
                     assert_eq!(trace.consumed, bytes.len(), "diff walk did not consume every byte for {d:?}");
                 }
@@ -327,11 +327,11 @@ pub mod derived_composition {
 
                 let demo = snapshot::demo_mesh_snapshot();
 
-                let parsed = <snapshot::SemioMeshSnapshot as store::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
+                let parsed = <snapshot::SemioMeshSnapshot as store::ArtifactDsl>::parse_dsl(FIXTURE_DSL).await.expect("parse shipped .dsl.semio fixture");
                 assert_eq!(parsed, demo, "shipped .dsl.semio fixture does not parse back to demo_mesh_snapshot()");
                 assert_eq!(store::ArtifactDsl::print_dsl(&demo), FIXTURE_DSL, "print_dsl(demo_mesh_snapshot()) drifted from the shipped .dsl.semio fixture");
 
-                let decoded = <snapshot::SemioMeshSnapshot as store::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode shipped .pack.semio fixture");
+                let decoded = <snapshot::SemioMeshSnapshot as store::ArtifactPack>::decode_pack(FIXTURE_PACK).await.expect("decode shipped .pack.semio fixture");
                 assert_eq!(decoded, demo, "shipped .pack.semio fixture does not decode back to demo_mesh_snapshot()");
                 assert_eq!(store::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_mesh_snapshot()) drifted from the shipped .pack.semio fixture");
             }
@@ -386,7 +386,7 @@ pub mod derived_composition {
 
             async fn validate_payload(bytes: &[u8]) -> Result<(), Vec<String>> {
                 let text = std::str::from_utf8(bytes).map_err(|e| vec![e.to_string()])?;
-                let snapshot = <SemioMeshSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|e| vec![e.to_string()])?;
+                let snapshot = <SemioMeshSnapshot as store::ArtifactDsl>::parse_dsl(text).await.map_err(|e| vec![e.to_string()])?;
                 let hard: Vec<String> = check_mesh_referential_invariants(&snapshot).into_iter().filter(|d| matches!(d.severity, dsl::Severity::Error | dsl::Severity::Fatal)).map(|d| d.code.0).collect();
                 if hard.is_empty() {
                     Ok(())

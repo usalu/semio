@@ -52,12 +52,12 @@ pub enum TxtMutation {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn apply_txt_mutation(snapshot: &mut TxtSnapshot, mutation: &TxtMutation) -> protocol::MutationOutcome<TxtDiff> {
     let outcome = <TxtMutation as Mutation<TxtSnapshot>>::diff(mutation, &*snapshot);
-    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
+    match protocol::MutationDiff::apply(outcome.await.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome
         }
-        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
+        Err(error) => protocol::MutationOutcome::error(error.code, error.message, error.target).absorb_messages(outcome.await.messages().to_vec()),
     }
 }
 //#endregion 🔖️Apply
@@ -136,17 +136,17 @@ impl OpText for TxtMutation {
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline }).await?;
-                return <Self as dsl::DslVariants>::from_named_record(keyword, &record).await;
+                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
+                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
         Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
     }
     async fn print_op(&self) -> String {
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self).await;
+        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline).await
+        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
     }
 }
 
@@ -196,7 +196,7 @@ mod tests {
             let returned = apply_txt_mutation(&mut via_apply, &m);
             let expected_diff = m.diff(&b);
             assert_eq!(returned, expected_diff, "returned diff mismatch for {m:?}");
-            assert_eq!(via_apply, expected_diff.diff().apply(&b).unwrap(), "apply mismatch for {m:?}");
+            assert_eq!(via_apply, expected_diff.await.diff().apply(&b).unwrap(), "apply mismatch for {m:?}");
         }
     }
 
@@ -212,8 +212,8 @@ mod tests {
             assert_eq!(mutated, b, "mutation-level inverse round-trip failed for {m:?}");
 
             let d = m.diff(&b);
-            let next = d.diff().apply(&b).unwrap();
-            let inv = d.diff().inverse(&b);
+            let next = d.await.diff().apply(&b).unwrap();
+            let inv = d.await.diff().inverse(&b);
             assert_eq!(inv.apply(&next).unwrap(), b, "diff-level inverse round-trip failed for {m:?}");
         }
     }
@@ -224,12 +224,12 @@ mod tests {
         let variants = all_variants(&b);
         for m1 in &variants {
             let d1 = m1.diff(&b);
-            let mid = d1.diff().apply(&b).unwrap();
+            let mid = d1.await.diff().apply(&b).unwrap();
             for m2 in &variants {
                 let d2 = m2.diff(&mid);
-                let after = d2.diff().apply(&mid).unwrap();
-                let mut merged = d1.diff().clone();
-                merged.absorb(d2.diff().clone());
+                let after = d2.await.diff().apply(&mid).unwrap();
+                let mut merged = d1.await.diff().clone();
+                merged.absorb(d2.await.diff().clone());
                 assert_eq!(merged.apply(&b).unwrap(), after, "absorb({m1:?}, {m2:?}) mismatch");
             }
         }
@@ -243,12 +243,12 @@ mod tests {
         let b = base();
         for m in all_variants(&b) {
             let printed = m.print_op();
-            assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
-            let parsed = TxtMutation::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
+            assert!(!printed.await.contains('\n'), "print_op must be one line, got {printed:?}");
+            let parsed = TxtMutation::parse_op(&printed).await.unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
             assert_eq!(parsed, m, "print_op/parse_op round-trip mismatch for {m:?} (printed {printed:?})");
 
-            let encoded = m.encode_op().unwrap_or_else(|e| panic!("encode_op({m:?}) failed: {e}"));
-            let decoded = TxtMutation::decode_op(&encoded).unwrap_or_else(|e| panic!("decode_op failed: {e}"));
+            let encoded = m.encode_op().await.unwrap_or_else(|e| panic!("encode_op({m:?}) failed: {e}"));
+            let decoded = TxtMutation::decode_op(&encoded).await.unwrap_or_else(|e| panic!("decode_op failed: {e}"));
             assert_eq!(decoded, m, "encode_op/decode_op round-trip mismatch for {m:?}");
         }
     }
