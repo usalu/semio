@@ -108,6 +108,7 @@ const VIZ_API_COMMANDS = [
   "VizFigure",
   "VizSection",
   "VizColumn",
+  "\\SemioVizNoteBelow",
 ] as const;
 
 function vizGallerySources(): string {

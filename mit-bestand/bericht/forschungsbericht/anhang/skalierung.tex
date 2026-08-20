@@ -140,14 +140,12 @@ Die Angaben der Karte wurden aus öffentlich zugänglichen Quellen und den im Be
 \end{VizSection}
 
 \begin{VizSection}[title={H1 \ UNTERSTÜTZUNG (EU26)}]
-\begin{VizColumn}[width=72]
-\node[anchor=north west, align=left, text width=72mm, font=\SemioSans\fontsize{6.6pt}{7.6pt}\selectfont] at (0,-1) {19 Antworten, 10 Länder; n\,=\,18 abgeleitet};
+\begin{VizColumn}[width=72, note={19 Antworten, 10 Länder; n\,=\,18 abgeleitet}]
 \SemioVizLayout{bar}[data=sk-h1, label=label, value=value, orient=horizontal, domain={0,100}, unit={\,\%}, labelwidth=38, boxheight=2.6, frame=false]
 \end{VizColumn}
-\begin{VizColumn}[width=70, title={H2 \ HEMMNIS-KOPPLUNG}]
-\node[anchor=north west, align=left, text width=66mm, font=\SemioSans\fontsize{6.6pt}{7.6pt}\selectfont] at (0,-1) {C-Index (Jaccard), sign. Paare, Rakhshan 2020};
-\SemioVizLayout{heat}[data=sk-h2, row=zeile, col=spalte, value=value, header=true, boxheight=8]
-\node[anchor=north west, align=left, text width=66mm, font=\SemioSans\fontsize{6.6pt}{7.6pt}\selectfont] at (0,-38) {Zusammenhang, keine Kausalität (eigene Einordnung).};
+\begin{VizColumn}[width=70, title={H2 \ HEMMNIS-KOPPLUNG}, note={C-Index (Jaccard), sign. Paare, Rakhshan 2020}]
+\SemioVizLayout{heat}[data=sk-h2, row=zeile, col=spalte, value=value, header=true, boxheight=4.3, anchor=sk-h2-end]
+\SemioVizNoteBelow{sk-h2-end}{66}{Zusammenhang, keine Kausalität (eigene Einordnung).}
 \end{VizColumn}
 \end{VizSection}
 
@@ -155,8 +153,7 @@ Die Angaben der Karte wurden aus öffentlich zugänglichen Quellen und den im Be
 \begin{VizColumn}[width=72]
 \SemioVizLayout{bar}[data=sk-h3, label=label, value=value, orient=horizontal, labelwidth=38, boxheight=2.55, frame=false]
 \end{VizColumn}
-\begin{VizColumn}[width=68]
-\node[anchor=north west, align=left, text width=64mm, font=\SemioSans\fontsize{6.6pt}{7.6pt}\selectfont] at (0,-1) {Online-Zahlung: 13,4\,\% aller erfassten Lösungen. \enskip „Marktplatz“ ist nur eine von neun Kategorien (5,9\,\%); die Momentaufnahme 2022 ist kein aktueller Marktanteil.};
+\begin{VizColumn}[width=68, note={Online-Zahlung: 13,4\,\% aller erfassten Lösungen. \enskip „Marktplatz“ ist nur eine von neun Kategorien (5,9\,\%); die Momentaufnahme 2022 ist kein aktueller Marktanteil.}]
 \end{VizColumn}
 \end{VizSection}
 

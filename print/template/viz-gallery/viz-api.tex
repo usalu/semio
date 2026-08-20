@@ -42,8 +42,9 @@
 \begin{VizColumn}[width=48, title={Left}]
 \SemioVizText{label}[width=40]{0,0}{Text mark inside a column.}
 \end{VizColumn}
-\begin{VizColumn}[width=48, title={Right}]
-\SemioVizLayout{bar}[data=demo, label=label, value=value, orient=horizontal, labelwidth=20, frame=false]
+\begin{VizColumn}[width=48, title={Right}, note={Caption text before the chart.}]
+\SemioVizLayout{bar}[data=demo, label=label, value=value, orient=horizontal, labelwidth=20, frame=false, anchor=api-bar-end]
+\SemioVizNoteBelow{api-bar-end}{48}{Note positioned from the chart's own drawn extent.}
 \end{VizColumn}
 \end{VizSection}
 \end{VizFigure}

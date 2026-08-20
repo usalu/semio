@@ -139,8 +139,9 @@
 % pgf computes it from what was actually drawn inside -- shifted to sit on
 % the PREVIOUS section's own measured `.south west`. A three-line label
 % pushes every section below it down with nobody counting lines.
-\providecommand{\semio@viz@section@gap}{3.5mm}
-\providecommand{\semio@viz@section@content@gap}{4mm}
+\providecommand{\semio@viz@section@gap}{2.5mm}
+\providecommand{\semio@viz@section@content@gap}{4.5mm}
+\providecommand{\semio@viz@section@note@gap}{4mm}
 \providecommand{\semio@viz@column@gutter}{4mm}
 
 \tl_new:N \l_semio_viz_section_title_tl
@@ -218,27 +219,53 @@
 
 \fp_new:N \l_semio_viz_column_width_fp
 \tl_new:N \l_semio_viz_column_title_tl
+\tl_new:N \l_semio_viz_column_note_tl
 
 \keys_define:nn { semio / viz / column } {
   width .fp_set:N = \l_semio_viz_column_width_fp,
   title .tl_set:N = \l_semio_viz_column_title_tl,
+  note  .tl_set:N = \l_semio_viz_column_note_tl,
+}
+
+% 📝 A note draws below any title, in the caption weight already used
+% throughout (font@label), and reserves its own gap before content starts --
+% the mechanism-level replacement for skalierung.tex's H1/H2 caption lines,
+% which used to be a bare \node followed by a hand-tuned \begin{scope}[yshift=
+% -4mm] compensating for the caption's own height. text width is the column's
+% own real width, not a number copied from the call site.
+\cs_new_protected:Npn \semio_viz_column_note_draw: {
+  \node [ font=\semio@viz@font@label, text=semio-chrome-text-normal,
+          anchor=north~west, align=left, text~width=\fp_eval:n{\l_semio_viz_width_fp}mm ]
+    at ( 0 , 0 ) { \exp_not:V \l_semio_viz_column_note_tl } ;
 }
 
 \cs_new_protected:Npn \semio_viz_column_open:n #1 {
   \semio_viz_frame_require:n { VizColumn }
   \fp_set_eq:NN \l_semio_viz_column_width_fp \l_semio_viz_width_fp
   \tl_clear:N \l_semio_viz_column_title_tl
+  \tl_clear:N \l_semio_viz_column_note_tl
   \keys_set:nn { semio / viz / column } {#1}
   \fp_set_eq:NN \l_semio_viz_saved_width_fp \l_semio_viz_width_fp
   \begin{scope}[ shift={(\fp_eval:n{\g_semio_viz_column_cursor_fp},0)} ]
   \fp_set_eq:NN \l_semio_viz_width_fp \l_semio_viz_column_width_fp
-  \tl_if_empty:NF \l_semio_viz_column_title_tl {
-    \node [ font=\semio@viz@font@title, text=semio-chrome-foreground, anchor=north~west ]
-      at ( 0 , 0 ) { \exp_not:V \l_semio_viz_column_title_tl } ;
-  }
+  \tl_if_empty:NTF \l_semio_viz_column_title_tl
+    { \begin{scope} }
+    {
+      \node [ font=\semio@viz@font@title, text=semio-chrome-foreground, anchor=north~west ]
+        at ( 0 , 0 ) { \exp_not:V \l_semio_viz_column_title_tl } ;
+      \begin{scope}[ yshift=-\semio@viz@section@content@gap ]
+    }
+  \tl_if_empty:NTF \l_semio_viz_column_note_tl
+    { \begin{scope} }
+    {
+      \semio_viz_column_note_draw:
+      \begin{scope}[ yshift=-\semio@viz@section@note@gap ]
+    }
 }
 
 \cs_new_protected:Npn \semio_viz_column_close: {
+  \end{scope}
+  \end{scope}
   \end{scope}
   \fp_gset:Nn \g_semio_viz_column_cursor_fp
     { \fp_eval:n { \g_semio_viz_column_cursor_fp + \l_semio_viz_column_width_fp + \semio@viz@column@gutter } }
@@ -250,6 +277,19 @@
 \NewDocumentEnvironment { VizColumn } { O{} }
   { \semio_viz_column_open:n {#1} }
   { \semio_viz_column_close: }
+
+% 🪧 Caption-weight text below a captured anchor (see \SemioVizLayout's
+% anchor= key) -- the mechanism-level replacement for a hand-guessed
+% \node at (0,-N) after a variable-height layout, e.g. a note under a heat
+% matrix: the position tracks the data instead of needing manual retuning
+% whenever a row is added or removed.
+\cs_new_protected:Npn \semio_viz_note_below:nnn #1#2#3 {
+  \node [ font=\semio@viz@font@label, text=semio-chrome-text-normal,
+          anchor=north~west, align=left, text~width=\fp_eval:n{#2}mm ]
+    at ( [ yshift=-\semio@viz@section@note@gap ] #1 ) { \exp_not:n {#3} } ;
+}
+% 🪧 Places caption text below a \SemioVizLayout anchor= coordinate.
+\NewDocumentCommand \SemioVizNoteBelow { m m m } { \semio_viz_note_below:nnn {#1}{#2}{#3} }
 %endregion Sections
 
 %region ChartKinds

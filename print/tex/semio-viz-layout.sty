@@ -30,6 +30,8 @@
 \fp_new:N \l_semio_viz_ymax_fp
 \int_new:N \l_semio_viz_n_int
 \tl_new:N \l_semio_viz_color_tl
+\tl_new:N \l_semio_viz_layout_anchor_tl
+\int_new:N \g_semio_viz_layout_anchor_int
 
 \clist_map_inline:nn {
   bar, dot, line, area, pie, dist, tree, net, flow, geo, heat, radar,
@@ -92,6 +94,7 @@
   \bool_set_true:N \l_semio_viz_frame_bool
   \bool_set_false:N \l_semio_viz_header_bool
   \bool_set_false:N \l_semio_viz_domain_user_bool
+  \tl_clear:N \l_semio_viz_layout_anchor_tl
 }
 
 \keys_define:nn { semio / viz / layout } {
@@ -124,6 +127,7 @@
     \fp_set:Nn \l_semio_viz_domain_lo_user_fp { \clist_item:nn {#1} { 1 } }
     \fp_set:Nn \l_semio_viz_domain_hi_user_fp { \clist_item:nn {#1} { 2 } }
   },
+  anchor .tl_set:N = \l_semio_viz_layout_anchor_tl,
 }
 
 \cs_new_protected:Npn \semio_viz_inner_prep: {
@@ -577,11 +581,31 @@
   \exp_args:NV \semio_viz_legend_draw:n \l_semio_viz_legend_kind_tl
 }
 
+% 🧷 anchor=NAME captures the family's own drawn extent into an ordinary,
+% caller-named coordinate -- the same local-bounding-box-then-resolve-to-a-
+% plain-\path-coordinate technique VizSection uses to chain sections without
+% a hand-measured height. Lets trailing content (e.g. a note below a heat
+% matrix) position itself from what was actually drawn, instead of a guessed
+% \node at (0,-N) that silently goes wrong the moment the data changes.
 \cs_new_protected:Npn \semio_viz_layout:nn #1#2 {
   \semio_viz_layout_keys_reset:
   \keys_set:nn { semio / viz / layout } {#2}
   \seq_if_in:NnTF \g_semio_viz_layout_families_seq {#1}
-    { \use:c { semio_viz_family_ \tl_to_str:n {#1} : } }
+    {
+      \tl_if_empty:NTF \l_semio_viz_layout_anchor_tl
+        { \use:c { semio_viz_family_ \tl_to_str:n {#1} : } }
+        {
+          \int_gincr:N \g_semio_viz_layout_anchor_int
+          \begin{scope}[ local~bounding~box=vizlayoutanchor\int_use:N\g_semio_viz_layout_anchor_int ]
+          \use:c { semio_viz_family_ \tl_to_str:n {#1} : }
+          \end{scope}
+          \use:x {
+            \exp_not:N \path
+              ( vizlayoutanchor \int_use:N \g_semio_viz_layout_anchor_int .south~west )
+              coordinate ( \exp_not:V \l_semio_viz_layout_anchor_tl ) ;
+          }
+        }
+    }
     { \msg_error:nnn { semio-viz } { unknown-layout } {#1} }
 }
 

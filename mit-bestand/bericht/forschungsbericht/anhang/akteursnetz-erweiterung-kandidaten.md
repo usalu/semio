@@ -8,6 +8,20 @@ Kandidaten fuer die Erweiterung des Akteursnetzes (Anlage Akteursnetz) um die 71
 
 Status-Spalte: Alle Vorschläge sind im FINAL-DATA-Block abschließend als `keep`, `prune` oder `merge` entschieden. Bei der Verifikation abgelehnte Kandidaten stehen im Abschnitt Abgelehnt je Projekt, nicht zur Uebernahme vorgeschlagen. Uebernahme in die eigentlichen Netzdaten (eid-Vergabe, klassifikation_actor_project_final.json, kanten_klassifikation.json, Renderer) ist ein separater, spaeterer Schritt in E:\recherche -- nicht Teil dieses Dokuments.
 
+## Synchronisierungsabschluss Endbericht, 20.08.2026
+
+- Berichtsdaten: **798 Knoten** (650 Akteure, 148 Projekte), **444 Beziehungen**, **14 Programme**.
+- Beziehungen: 254 bereinigte Bestandsbeziehungen und 190 Erweiterungsbeziehungen; 50 projektübergreifend und 394 vorhabenspezifisch.
+- Profile: 38 institutionell, 7 strategisch, 5 operativ, 382 Vorhaben, 8 Leistung und 4 Ereignis.
+- Jede Beziehung besitzt Richtung, Profil, Quell-ID, URL, Belegzitat und Prüflauf; die längste Beschreibung hat exakt 60 Zeichen.
+- Korrekturen: BAM-Dublette vereinigt, `proj:95` zu La Caserne de Reuilly umbenannt, TradLab TRE ergänzt und Norsk Folkemuseum behalten.
+- Ausschlüsse: die drei generischen Bestandsbeziehungen, sechs dokumentierte Fehlbeziehungen und Brukspecialisten–Borås bleiben außerhalb des Endberichts.
+- Renderer-Prüfung: eindeutige Knoten und Kanten, gültige Endpunkte, keine Selbstkanten, offenen Rollen, Überlagerungen, Randverletzungen, Kanten-durch-Knoten- oder Logoabstandsfehler.
+- Zwei Renderläufe erzeugten bytegleiche Fragmente. Kanten-Prüfsumme: `ae684352b0c7e3776082a22498da37a4c4fdfdff657f002d96566cd4408faa6f`.
+- Forschungsquelle: `d10ad171feb07d04519d56ebc42f765e9a361e802ef4d45f49cc18a646fd1748`; vorheriger Semio-Stand: `30550c79c9ba972fd9f23a508e2032f000ea517917e44b231683475f37e761f5`.
+- Visuelle Abnahme: sämtliche Akteursnetzseiten und alle elf Länderdiagramme in heller und dunkler Darstellung geprüft; keine sichtbaren Layoutfehler.
+- Gesamtbericht: die helle PDF wurde erzeugt. Der vollständige erneute Hell-/Dunkel-Build ist derzeit außerhalb des Akteursnetzes durch die parallel geänderte Projekttabelle (`anhang/projekte.tex`, LaTeX-Ausrichtung) blockiert; der dunkle Akteursnetz-Anhang wurde deshalb isoliert erfolgreich gebaut und geprüft.
+
 ---
 
 <!-- FINAL-DATA:START -->
