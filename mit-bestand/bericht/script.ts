@@ -80,14 +80,20 @@ type ActorNode = {
 
 type ActorEdge = {
   key: string;
+  sourceEdgeId: string;
+  country: string;
   source: string;
   target: string;
   type: string;
+  direction: "A→B" | "B→A" | "—";
   description: string;
-  evidenceUrl?: string;
-  evidenceQuote?: string;
-  reviewBasis?: "retained-verified-baseline";
-  kind?: "normal" | "muted";
+  relationshipProfile: "Projektübergreifend / institutionell" | "Projektübergreifend / strategisch" |
+    "Projektübergreifend / operativ" | "Vorhabenspezifisch / Vorhaben" |
+    "Vorhabenspezifisch / Leistung" | "Vorhabenspezifisch / Ereignis";
+  evidenceUrl: string;
+  evidenceQuote: string;
+  reviewRun: string;
+  kind: "normal" | "muted";
 };
 
 type ActorProgram = {
@@ -103,8 +109,16 @@ type ActorProgram = {
 };
 
 type ActorNetworkData = {
-  schemaVersion: 1;
+  schemaVersion: 2;
   approved: boolean;
+  relationshipSync: {
+    reviewRun: string;
+    researchArtifactSha256: string;
+    previousLedgerSha256: string;
+    edgeSha256: string;
+    baseEdges: number;
+    extensionEdges: number;
+  };
   baseline: { nodes: number; edges: number; projects: number; programs: number };
   baselineCleanup: Array<{ key: string; decision: "prune" | "program"; reason: string }>;
   projectDecisions: ProjectDecision[];
@@ -132,6 +146,7 @@ type LayoutLink = {
 
 type LayoutMetrics = {
   overlaps: number;
+  logoClearanceViolations: number;
   duplicatePositions: number;
   outOfBounds: number;
   edgeNodeIntersections: number;
@@ -182,17 +197,26 @@ function tex(value: string): string {
 
 function validateActorNetwork(data = actorNetworkData()): void {
   const errors: string[] = [];
-  if (data.schemaVersion !== 1) errors.push("schemaVersion must be 1");
+  if (data.schemaVersion !== 2) errors.push("schemaVersion must be 2");
   if (!data.approved) errors.push("FINAL-DATA is not approved");
   if (data.nodes.length !== 798) errors.push(`expected 798 nodes, got ${data.nodes.length}`);
+  const actors = data.nodes.filter((node) => node.kind === "actor").length;
+  const projects = data.nodes.length - actors;
+  if (actors !== 650 || projects !== 148) errors.push(`expected 650 actors and 148 projects, got ${actors}/${projects}`);
+  if (data.edges.length !== 444) errors.push(`expected 444 edges, got ${data.edges.length}`);
   if (data.programs.length !== 14) errors.push(`expected 14 programs, got ${data.programs.length}`);
+  if (data.relationshipSync.reviewRun !== "2026-08-20_erweiterung_strict_final") errors.push("unexpected relationship review run");
+  if (!/^[a-f0-9]{64}$/i.test(data.relationshipSync.researchArtifactSha256) ||
+    !/^[a-f0-9]{64}$/i.test(data.relationshipSync.previousLedgerSha256)) errors.push("invalid relationship source checksums");
+  if (data.relationshipSync.baseEdges !== 254 || data.relationshipSync.extensionEdges !== 190)
+    errors.push("unexpected relationship source counts");
   if (data.baseline.nodes !== 618 || data.baseline.edges !== 264 || data.baseline.projects !== 78 || data.baseline.programs !== 9)
     errors.push("baseline fingerprint differs from 618/264/78/9");
   if (!data.baselineCleanup?.length) errors.push("missing baseline cleanup provenance");
   for (const item of data.baselineCleanup ?? []) {
     if (!item.key.trim() || !item.reason.trim()) errors.push("incomplete baseline cleanup decision");
   }
-  if (data.projectDecisions?.length !== 71) errors.push(`expected 71 project decisions, got ${data.projectDecisions?.length ?? 0}`);
+  if (data.projectDecisions?.length !== 72) errors.push(`expected 72 project decisions, got ${data.projectDecisions?.length ?? 0}`);
   const projectDecisionKeys = new Set<string>();
   for (const item of data.projectDecisions ?? []) {
     if (projectDecisionKeys.has(item.key)) errors.push(`duplicate project decision ${item.key}`);
@@ -236,19 +260,36 @@ function validateActorNetwork(data = actorNetworkData()): void {
     if (/Claus Asam/i.test(node.name)) errors.push("Claus Asam must not render");
   }
   const edgeKeys = new Set<string>();
-  const edgeTriples = new Set<string>();
+  const edgePairs = new Set<string>();
+  const profileCounts = new Map<string, number>();
   for (const edge of data.edges) {
     if (edgeKeys.has(edge.key)) errors.push(`duplicate edge key ${edge.key}`);
     edgeKeys.add(edge.key);
     if (!nodes.has(edge.source) || !nodes.has(edge.target)) errors.push(`dangling edge ${edge.key}`);
     if (edge.source === edge.target) errors.push(`self edge ${edge.key}`);
     const endpoints = [edge.source, edge.target].sort();
-    const triple = `${endpoints[0]}|${endpoints[1]}|${edge.type}`;
-    if (edgeTriples.has(triple)) errors.push(`duplicate edge ${triple}`);
-    edgeTriples.add(triple);
-    if (!edge.reviewBasis && (!edge.evidenceUrl?.startsWith("http") || !edge.evidenceQuote?.trim())) errors.push(`missing edge evidence ${edge.key}`);
+    const pair = `${endpoints[0]}|${endpoints[1]}`;
+    if (edgePairs.has(pair)) errors.push(`duplicate edge ${pair}`);
+    edgePairs.add(pair);
+    const sourceNode = nodes.get(edge.source);
+    const targetNode = nodes.get(edge.target);
+    if (sourceNode && targetNode && (sourceNode.country !== edge.country || targetNode.country !== edge.country))
+      errors.push(`edge country mismatch ${edge.key}`);
+    if (!edge.sourceEdgeId.trim() || !edge.evidenceUrl.startsWith("http") || !edge.evidenceQuote.trim() || !edge.reviewRun.trim())
+      errors.push(`missing edge provenance ${edge.key}`);
+    if (!edge.relationshipProfile.trim() || edge.kind !== (edge.relationshipProfile.startsWith("Projektübergreifend") ? "muted" : "normal"))
+      errors.push(`invalid edge profile/style ${edge.key}`);
+    if (!edge.description.trim() || edge.description.length > 60) errors.push(`invalid edge description ${edge.key}`);
+    profileCounts.set(edge.relationshipProfile, (profileCounts.get(edge.relationshipProfile) ?? 0) + 1);
     if (/Rolle noch offen|genaue Rolle noch offen/i.test(edge.description)) errors.push(`open edge ${edge.key}`);
   }
+  const expectedProfiles = new Map<string, number>([
+    ["Projektübergreifend / institutionell", 38], ["Projektübergreifend / strategisch", 7],
+    ["Projektübergreifend / operativ", 5], ["Vorhabenspezifisch / Vorhaben", 382],
+    ["Vorhabenspezifisch / Leistung", 8], ["Vorhabenspezifisch / Ereignis", 4],
+  ]);
+  for (const [profile, count] of expectedProfiles) if (profileCounts.get(profile) !== count)
+    errors.push(`expected ${count} edges for ${profile}, got ${profileCounts.get(profile) ?? 0}`);
   for (const decision of data.decisions.filter((item) => item.decision === "merge")) {
     if (!decision.target || !nodes.has(decision.target)) errors.push(`invalid merge target ${decision.key}`);
   }
@@ -264,7 +305,7 @@ function validateActorNetwork(data = actorNetworkData()): void {
   for (const decision of data.projectDecisions ?? []) {
     if ((decision.decision === "keep") !== nodes.has(decision.key)) errors.push(`project decision/render mismatch ${decision.key}`);
   }
-  for (const node of data.nodes.filter((item) => item.key.startsWith("proj:"))) {
+  for (const node of data.nodes.filter((item) => item.kind === "project" && !item.key.startsWith("base:"))) {
     if (!projectDecisionKeys.has(node.key)) errors.push(`extension project lacks decision ${node.key}`);
   }
   const programKeys = new Set<string>();
@@ -282,6 +323,8 @@ function validateActorNetwork(data = actorNetworkData()): void {
   const display = displayIds(data.nodes);
   const ids = data.nodes.map((node) => `${node.country}:${display.get(node.key)}`);
   if (new Set(ids).size !== ids.length) errors.push("duplicate visible IDs within a country");
+  const fingerprint = edgeFingerprint(data.edges);
+  if (fingerprint !== data.relationshipSync.edgeSha256) errors.push(`edge checksum mismatch ${fingerprint}`);
   if (errors.length) throw new Error(`Akteursnetz validation failed (${errors.length}):\n${errors.slice(0, 80).join("\n")}`);
   console.log(`[DEBUG] Akteursnetz valid: ${data.nodes.length} nodes, ${data.edges.length} edges, ${data.programs.length} programs`);
 }
@@ -291,6 +334,7 @@ const GRAPH_HEIGHTS = [45, 60, 75, 90] as const;
 const GRAPH_ACTOR_RADIUS = 2.275;
 const GRAPH_PROJECT_RADIUS = 2.575;
 const GRAPH_NODE_PADDING = 0.4;
+const GRAPH_LOGO_SAFETY = 0.06;
 const GRAPH_OUTPUT_SAFETY = 0.02;
 const GRAPH_LAYOUT_ATTEMPTS = 8;
 
@@ -333,11 +377,15 @@ function graphNodeRadius(node: ActorNode): number {
   return node.kind === "project" || node.state === "focal" ? GRAPH_PROJECT_RADIUS : GRAPH_ACTOR_RADIUS;
 }
 
+function graphNodeSafety(node: ActorNode): number {
+  return node.assetPath ? GRAPH_LOGO_SAFETY : 0;
+}
+
 function layoutBoundaryForce(width: number, height: number) {
   let nodes: LayoutNode[] = [];
   const force = (alpha: number) => {
     for (const node of nodes) {
-      const margin = node.radius + GRAPH_NODE_PADDING;
+      const margin = node.radius + GRAPH_NODE_PADDING + graphNodeSafety(node);
       const x = node.x ?? width / 2;
       const y = node.y ?? height / 2;
       if (x < margin) node.vx = (node.vx ?? 0) + (margin - x) * 0.9 * alpha;
@@ -351,7 +399,7 @@ function layoutBoundaryForce(width: number, height: number) {
 }
 
 function clampLayoutNode(node: LayoutNode, width: number, height: number): void {
-  const margin = node.radius + GRAPH_NODE_PADDING + GRAPH_OUTPUT_SAFETY;
+  const margin = node.radius + GRAPH_NODE_PADDING + graphNodeSafety(node) + GRAPH_OUTPUT_SAFETY;
   node.x = Math.max(margin, Math.min(width - margin, node.x ?? width / 2));
   node.y = Math.max(margin, Math.min(height - margin, node.y ?? height / 2));
 }
@@ -364,7 +412,7 @@ function relaxNodeOverlaps(nodes: LayoutNode[], width: number, height: number, s
       for (let right = left + 1; right < nodes.length; right++) {
         const a = nodes[left];
         const b = nodes[right];
-        const minimum = a.radius + b.radius + GRAPH_NODE_PADDING * 2 + 0.035;
+        const minimum = a.radius + b.radius + graphNodeSafety(a) + graphNodeSafety(b) + GRAPH_NODE_PADDING * 2 + 0.035;
         let dx = (b.x ?? 0) - (a.x ?? 0);
         let dy = (b.y ?? 0) - (a.y ?? 0);
         let distance = Math.hypot(dx, dy);
@@ -428,7 +476,7 @@ function relaxEdgeNodeIntersections(nodes: LayoutNode[], edges: ActorEdge[], wid
         let dx = px - nearestX;
         let dy = py - nearestY;
         let distance = Math.hypot(dx, dy);
-        const clearance = node.radius + GRAPH_NODE_PADDING + 0.08;
+        const clearance = node.radius + graphNodeSafety(node) + GRAPH_NODE_PADDING + 0.08;
         if (distance >= clearance) continue;
         if (distance < 1e-9) {
           const side = stableHash(`${edge.key}|${node.key}`) % 2 === 0 ? 1 : -1;
@@ -462,6 +510,7 @@ function segmentsCross(a: LayoutNode, b: LayoutNode, c: LayoutNode, d: LayoutNod
 function layoutMetrics(nodes: LayoutNode[], edges: ActorEdge[], width: number, height: number): LayoutMetrics {
   const byKey = new Map(nodes.map((node) => [node.key, node]));
   let overlaps = 0;
+  let logoClearanceViolations = 0;
   let duplicatePositions = 0;
   let outOfBounds = 0;
   let edgeNodeIntersections = 0;
@@ -469,7 +518,7 @@ function layoutMetrics(nodes: LayoutNode[], edges: ActorEdge[], width: number, h
   let legacyDisplacement = 0;
   let totalEdgeLength = 0;
   for (const node of nodes) {
-    const margin = node.radius + GRAPH_NODE_PADDING;
+    const margin = node.radius + GRAPH_NODE_PADDING + graphNodeSafety(node);
     if ((node.x ?? 0) < margin - 0.005 || (node.x ?? 0) > width - margin + 0.005 ||
       (node.y ?? 0) < margin - 0.005 || (node.y ?? 0) > height - margin + 0.005) outOfBounds++;
     if (node.legacyId) legacyDisplacement += Math.hypot((node.x ?? 0) - node.anchorX, (node.y ?? 0) - node.anchorY);
@@ -478,7 +527,12 @@ function layoutMetrics(nodes: LayoutNode[], edges: ActorEdge[], width: number, h
     for (let right = left + 1; right < nodes.length; right++) {
       const distance = Math.hypot((nodes[left].x ?? 0) - (nodes[right].x ?? 0), (nodes[left].y ?? 0) - (nodes[right].y ?? 0));
       if (distance < 0.005) duplicatePositions++;
-      if (distance < nodes[left].radius + nodes[right].radius + GRAPH_NODE_PADDING * 2 - 0.005) overlaps++;
+      const minimum = nodes[left].radius + nodes[right].radius + graphNodeSafety(nodes[left]) +
+        graphNodeSafety(nodes[right]) + GRAPH_NODE_PADDING * 2;
+      if (distance < minimum - 0.005) {
+        overlaps++;
+        if (nodes[left].assetPath || nodes[right].assetPath) logoClearanceViolations++;
+      }
     }
   }
   for (const edge of edges) {
@@ -487,7 +541,8 @@ function layoutMetrics(nodes: LayoutNode[], edges: ActorEdge[], width: number, h
     totalEdgeLength += Math.hypot((source.x ?? 0) - (target.x ?? 0), (source.y ?? 0) - (target.y ?? 0));
     for (const node of nodes) {
       if (node.key === edge.source || node.key === edge.target) continue;
-      if (pointSegmentDistance(node.x ?? 0, node.y ?? 0, source.x ?? 0, source.y ?? 0, target.x ?? 0, target.y ?? 0) < node.radius + GRAPH_NODE_PADDING - 0.005)
+      if (pointSegmentDistance(node.x ?? 0, node.y ?? 0, source.x ?? 0, source.y ?? 0, target.x ?? 0, target.y ?? 0) <
+        node.radius + graphNodeSafety(node) + GRAPH_NODE_PADDING - 0.005)
         edgeNodeIntersections++;
     }
   }
@@ -499,20 +554,21 @@ function layoutMetrics(nodes: LayoutNode[], edges: ActorEdge[], width: number, h
       if (segmentsCross(byKey.get(a.source)!, byKey.get(a.target)!, byKey.get(b.source)!, byKey.get(b.target)!)) edgeCrossings++;
     }
   }
-  return { overlaps, duplicatePositions, outOfBounds, edgeNodeIntersections, edgeCrossings, legacyDisplacement, totalEdgeLength };
+  return { overlaps, logoClearanceViolations, duplicatePositions, outOfBounds, edgeNodeIntersections, edgeCrossings, legacyDisplacement, totalEdgeLength };
 }
 
 function compareLayoutMetrics(left: LayoutMetrics, right: LayoutMetrics): number {
-  const leftValues = [left.overlaps, left.duplicatePositions, left.outOfBounds, left.edgeNodeIntersections,
+  const leftValues = [left.overlaps, left.logoClearanceViolations, left.duplicatePositions, left.outOfBounds, left.edgeNodeIntersections,
     left.edgeCrossings, left.legacyDisplacement, left.totalEdgeLength];
-  const rightValues = [right.overlaps, right.duplicatePositions, right.outOfBounds, right.edgeNodeIntersections,
+  const rightValues = [right.overlaps, right.logoClearanceViolations, right.duplicatePositions, right.outOfBounds, right.edgeNodeIntersections,
     right.edgeCrossings, right.legacyDisplacement, right.totalEdgeLength];
   for (let index = 0; index < leftValues.length; index++) if (leftValues[index] !== rightValues[index]) return leftValues[index] - rightValues[index];
   return 0;
 }
 
 function layoutPasses(metrics: LayoutMetrics): boolean {
-  return metrics.overlaps === 0 && metrics.duplicatePositions === 0 && metrics.outOfBounds === 0 && metrics.edgeNodeIntersections === 0;
+  return metrics.overlaps === 0 && metrics.logoClearanceViolations === 0 && metrics.duplicatePositions === 0 &&
+    metrics.outOfBounds === 0 && metrics.edgeNodeIntersections === 0;
 }
 
 function countryLayout(nodes: ActorNode[], edges: ActorEdge[], width: number, height: number, attempt: number): LayoutNode[] {
@@ -557,7 +613,7 @@ function countryLayout(nodes: ActorNode[], edges: ActorEdge[], width: number, he
     .force("link", forceLink<LayoutNode, LayoutLink>(links).id((node) => node.id)
       .distance((link) => link.kind === "muted" ? 16 : 12).strength((link) => link.kind === "muted" ? 0.06 : 0.18).iterations(2))
     .force("charge", forceManyBody<LayoutNode>().strength(-18).distanceMax(42))
-    .force("collide", forceCollide<LayoutNode>().radius((node) => node.radius + GRAPH_NODE_PADDING).strength(1).iterations(3))
+    .force("collide", forceCollide<LayoutNode>().radius((node) => node.radius + graphNodeSafety(node) + GRAPH_NODE_PADDING).strength(1).iterations(3))
     .force("x", forceX<LayoutNode>((node) => node.anchorX).strength((node) => node.legacyId ? 0.055 : 0.018))
     .force("y", forceY<LayoutNode>((node) => node.anchorY).strength((node) => node.legacyId ? 0.055 : 0.018))
     .force("bounds", layoutBoundaryForce(width, height)).stop();
@@ -718,7 +774,9 @@ function renderActorNetwork(): void {
   writeFileSync(ACTOR_NETWORK_TABLES, renderActorTables(data, ids));
   writeFileSync(ACTOR_NETWORK_PROGRAMS, renderActorPrograms(data));
   const projects = data.nodes.filter((node) => node.kind === "project").length;
-  const intro = `\\label{anlage:akteursnetz}\n\nDer Anhang dokumentiert das streng belegte Akteursnetz der Bauteil-Wiederverwendung in elf europäischen Ländern: ${data.nodes.length} Knoten, davon ${projects} Referenzprojekte, ${data.edges.length} Verbindungen und ${data.programs.length} getrennt geführte Programme (\\appendixref{anlage:akteursnetz-programme}).\n\nOrganisationen bleiben nur mit einer konkret belegten Reuse-Tätigkeit oder reuse-spezifischen Projektfunktion im Netz. Projekte zeigen tatsächlich geborgene oder eingebaute Bauteile. Partnerlisten, allgemeine Nachhaltigkeitsaussagen, Recycling und nur geplante Wiederverwendung wurden ausgeschlossen. Erhebungs- und Prüfstand: August~2026.\n\n\\input{anhang/akteursnetz-figuren}\n\n\\input{anhang/akteursnetz-tabellen}\n\n\\input{anhang/akteursnetz-programme}\n`;
+  const crossProject = data.edges.filter((edge) => edge.relationshipProfile.startsWith("Projektübergreifend")).length;
+  const projectSpecific = data.edges.length - crossProject;
+  const intro = `\\label{anlage:akteursnetz}\n\nDer Anhang dokumentiert das streng belegte Akteursnetz der Bauteil-Wiederverwendung in elf europäischen Ländern: ${data.nodes.length} Knoten, davon ${projects} Referenzprojekte, ${data.edges.length} Verbindungen und ${data.programs.length} getrennt geführte Programme (\\appendixref{anlage:akteursnetz-programme}). Von den Verbindungen sind ${crossProject} projektübergreifend und ${projectSpecific} vorhabenspezifisch.\n\nOrganisationen bleiben nur mit einer konkret belegten Reuse-Tätigkeit oder reuse-spezifischen Projektfunktion im Netz. Projekte zeigen tatsächlich geborgene oder eingebaute Bauteile. Partnerlisten, allgemeine Nachhaltigkeitsaussagen, Recycling und nur geplante Wiederverwendung wurden ausgeschlossen. Erhebungs- und Prüfstand: August~2026.\n\n\\input{anhang/akteursnetz-figuren}\n\n\\input{anhang/akteursnetz-tabellen}\n\n\\input{anhang/akteursnetz-programme}\n`;
   writeFileSync(ACTOR_NETWORK_INTRO, intro);
   const edgesAfter = edgeFingerprint(actorNetworkData().edges);
   if (edgesBefore !== edgesAfter) throw new Error(`Akteursnetz edge fingerprint changed during render: ${edgesBefore} -> ${edgesAfter}`);

@@ -75,6 +75,7 @@
 \cs_new_protected:Npn \semio_viz_figure_open:n #1 {
   \begin{Figure}[#1]
   \begin{tikzpicture}[ semio~viz~picture ]
+  \tl_gclear:N \g_semio_viz_section_prev_tl
   \fp_set:Nn \l_semio_viz_width_fp { \l_semio_viz_width_tl }
   \bool_if:NTF \l_semio_viz_height_auto_bool
     {
@@ -145,7 +146,7 @@
 \tl_new:N \l_semio_viz_section_title_tl
 \tl_new:N \l_semio_viz_section_aside_tl
 \bool_new:N \l_semio_viz_section_rule_bool
-\tl_new:N \l_semio_viz_section_prev_tl
+\tl_new:N \g_semio_viz_section_prev_tl
 \tl_new:N \l_semio_viz_section_name_tl
 \int_new:N \g_semio_viz_section_int
 \fp_new:N \g_semio_viz_column_cursor_fp
@@ -184,14 +185,14 @@
   \int_gincr:N \g_semio_viz_section_int
   \tl_set:Nx \l_semio_viz_section_name_tl { vizsectionbox \int_use:N \g_semio_viz_section_int }
   \fp_gzero:N \g_semio_viz_column_cursor_fp
-  \tl_if_empty:NTF \l_semio_viz_section_prev_tl
-    { \begin{scope}[ local~bounding~box=\l_semio_viz_section_name_tl ] }
+  \tl_if_empty:NTF \g_semio_viz_section_prev_tl
+    { \begin{scope} }
     {
       \begin{scope}[
-        shift={([yshift=-\semio@viz@section@gap]\l_semio_viz_section_prev_tl.south~west)},
-        local~bounding~box=\l_semio_viz_section_name_tl
+        shift={([yshift=-\semio@viz@section@gap]\g_semio_viz_section_prev_tl)}
       ]
     }
+  \begin{scope}[ local~bounding~box=\l_semio_viz_section_name_tl ]
   \semio_viz_section_chrome:
   \begin{scope}[ yshift=-\semio@viz@section@content@gap ]
 }
@@ -199,7 +200,14 @@
 \cs_new_protected:Npn \semio_viz_section_close: {
   \end{scope}
   \end{scope}
-  \tl_set_eq:NN \l_semio_viz_section_prev_tl \l_semio_viz_section_name_tl
+  \end{scope}
+  \use:x {
+    \exp_not:N \path
+      ( \exp_not:V \l_semio_viz_section_name_tl .south~west )
+      coordinate ( \exp_not:V \l_semio_viz_section_name_tl anchor ) ;
+  }
+  \tl_set:Nx \l_tmpa_tl { \l_semio_viz_section_name_tl anchor }
+  \tl_gset_eq:NN \g_semio_viz_section_prev_tl \l_tmpa_tl
 }
 
 % 📐 One horizontal band of the Systemkarte: a title/rule and everything the

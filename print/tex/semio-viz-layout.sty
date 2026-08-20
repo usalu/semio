@@ -396,7 +396,46 @@
 \fp_new:N \l_semio_viz_heat_xstart_fp
 \int_new:N \l_semio_viz_heat_nrows_int
 
-\cs_new_protected:Npn \semio_viz_family_heat: { }
+\cs_new_protected:Npn \semio_viz_family_heat: {
+  % Top-anchored (y=0 down to -nrows*boxheight), not a fraction of a
+  % pre-declared \l_semio_viz_height_fp: a matrix section's height is its
+  % row count, known once the unique rows are collected, so it never needs
+  % declaring in advance -- what lets VizSection measure it from content.
+  \semio_viz_table_nrows:nN { \l_semio_viz_data_tl } \l_semio_viz_n_int
+  \int_compare:nNnT \l_semio_viz_n_int = { 0 } { \int_set:Nn \l_semio_viz_n_int { 1 } }
+  \seq_clear:N \l_semio_viz_heat_rows_seq
+  \seq_clear:N \l_semio_viz_heat_cols_seq
+  \int_step_inline:nn { \l_semio_viz_n_int } {
+    \semio_viz_table_cell:nnnN { \l_semio_viz_data_tl } {##1} { \l_semio_viz_rowcol_tl } \l_tmpa_tl
+    \seq_if_in:NnF \l_semio_viz_heat_rows_seq { \l_tmpa_tl } { \seq_put_right:Nx \l_semio_viz_heat_rows_seq { \l_tmpa_tl } }
+    \semio_viz_table_cell:nnnN { \l_semio_viz_data_tl } {##1} { \l_semio_viz_colcol_tl } \l_tmpb_tl
+    \seq_if_in:NnF \l_semio_viz_heat_cols_seq { \l_tmpb_tl } { \seq_put_right:Nx \l_semio_viz_heat_cols_seq { \l_tmpb_tl } }
+  }
+  \tl_set:Nx \l_semio_viz_heat_rowlist_tl { \seq_use:Nn \l_semio_viz_heat_rows_seq { , } }
+  \tl_set:Nx \l_semio_viz_heat_collist_tl { \seq_use:Nn \l_semio_viz_heat_cols_seq { , } }
+  \int_set:Nn \l_semio_viz_heat_nrows_int { \seq_count:N \l_semio_viz_heat_rows_seq }
+  \fp_zero:N \l_semio_viz_heat_xstart_fp
+  \bool_if:NT \l_semio_viz_header_bool { \fp_set:Nn \l_semio_viz_heat_xstart_fp { 22 } }
+  \use:x {
+    \exp_not:N \semio_viz_scale_define:nnnn { \l_semio_viz_heat_rowscale_tl } { band }
+      { \l_semio_viz_heat_rowlist_tl } { 0 , \fp_eval:n { -1 * \l_semio_viz_heat_nrows_int * \l_semio_viz_boxheight_fp } }
+    \exp_not:N \semio_viz_scale_define:nnnn { \l_semio_viz_heat_colscale_tl } { band }
+      { \l_semio_viz_heat_collist_tl } { \l_semio_viz_heat_xstart_fp , \fp_eval:n { \l_semio_viz_width_fp } }
+  }
+  \bool_if:NT \l_semio_viz_header_bool {
+    \seq_map_inline:Nn \l_semio_viz_heat_cols_seq {
+      \semio_viz_scale_map:VnN \l_semio_viz_heat_colscale_tl {##1} \l_semio_viz_x_fp
+      \node [ font=\semio@viz@font@value, text=semio-chrome-text-normal, anchor=south ]
+        at ( \fp_eval:n { \l_semio_viz_x_fp } , 2 ) { \exp_not:n {##1} } ;
+    }
+    \seq_map_inline:Nn \l_semio_viz_heat_rows_seq {
+      \semio_viz_scale_map:VnN \l_semio_viz_heat_rowscale_tl {##1} \l_semio_viz_y_fp
+      \node [ font=\semio@viz@font@label, text=semio-chrome-text-normal, anchor=east ]
+        at ( \fp_eval:n { \l_semio_viz_heat_xstart_fp - 2 } , \fp_eval:n { \l_semio_viz_y_fp } ) { \exp_not:n {##1} } ;
+    }
+  }
+  \int_step_inline:nn { \l_semio_viz_n_int } { \semio_viz_heat_cell:n {##1} }
+}
 
 \cs_new_protected:Npn \semio_viz_family_hexbin: { \semio_viz_family_heat: }
 \cs_new_protected:Npn \semio_viz_family_voronoi: { \semio_viz_path_demo:n { voronoi-region } }

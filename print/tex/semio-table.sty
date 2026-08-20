@@ -1070,6 +1070,14 @@
 
 \newlength{\semio@project@bandheight}
 \setlength{\semio@project@bandheight}{26mm}
+\newif\ifsemio@project@extendedmeta
+\semio@project@extendedmetafalse
+% The Forschungsbericht opts into the eight-value project contract explicitly.
+% The Zwischenbericht keeps its current six-value cards and 26 mm overview band.
+\newcommand{\SemioProjectEightMetadata}{%
+  \semio@project@extendedmetatrue
+  \setlength{\semio@project@bandheight}{30mm}%
+}
 % Half the residual top/bottom packing mismatch outside the photo box, so
 % cellpad top+bottom pads still read visually even (same idea as text cells'
 % asymmetric \semio@table@vtop/@vbot strut pair).
@@ -1147,6 +1155,16 @@
   \def\semio@project@typ{#4}\def\semio@project@status{#5}\def\semio@project@quelle{#6}%
 }
 
+% Extended Forschungsbericht contract:
+% Stadt & Land & Jahr & Objekttyp & Projektcharakter & Projektphase &
+% ReUse-Realisierung & Quellen.
+\def\semio@project@splitmeta@eight#1&#2&#3&#4&#5&#6&#7&#8\relax{%
+  \def\semio@project@ort{#1}\def\semio@project@land{#2}\def\semio@project@jahr{#3}%
+  \def\semio@project@objekttyp{#4}\def\semio@project@charakter{#5}%
+  \def\semio@project@phase{#6}\def\semio@project@realisierung{#7}%
+  \def\semio@project@quelle{#8}%
+}
+
 % Metadata subgrid (right of the photo): labelled fields, muted label / normal
 % value. Ort/Stadt and Land are separate rows.
 \newcommand{\semio@project@meta}[6]{%
@@ -1175,6 +1193,23 @@
     Typ & #4\tabularnewline
     Status & #5\tabularnewline
     Quelle & #6\tabularnewline
+  \end{tabular}%
+  \endgroup
+}
+
+\newcommand{\semio@project@meta@eight}[8]{%
+  \begingroup
+  \setlength{\extrarowheight}{0pt}%
+  \renewcommand{\arraystretch}{1.05}%
+  \begin{tabular}[t]{@{}>{\SemioSansBold\semio@table@fontsize@apply\color{semio-chrome-foreground}}l@{\hspace{2\semio@table@long@cellpad}}>{\color{semio-chrome-text-normal}}l@{}}
+    Stadt & #1\tabularnewline
+    Land & #2\tabularnewline
+    Jahr & #3\tabularnewline
+    Objekttyp & #4\tabularnewline
+    Projektcharakter & #5\tabularnewline
+    Projektphase & #6\tabularnewline
+    ReUse-Realisierung & #7\tabularnewline
+    Quellen & #8\tabularnewline
   \end{tabular}%
   \endgroup
 }
@@ -1233,6 +1268,45 @@
   \\*\semio@table@rule
 }
 
+\newcommand{\semio@project@overview@band@eight}[9]{%
+  \multicolumn{2}{@{\semio@table@border@L}@{\semio@project@padendL}p{\semio@project@photow}@{\semio@project@padcp}}{%
+    \cellcolor{semio-chrome-canvas}%
+    \vtop{%
+      \color{semio-chrome-canvas}%
+      \hrule height\dimexpr\semio@table@long@cellpad+\semio@project@photo@vbias\relax depth\z@ width\dimexpr\linewidth\relax
+      \nointerlineskip
+      \hbox{%
+        \hspace{\semio@table@long@cellpad}%
+        \IfFileExists{#1}{%
+          \SemioProjectPhoto{#1}{\dimexpr\linewidth-2\semio@table@long@cellpad\relax}{\dimexpr\semio@project@bandheight-2\semio@table@long@cellpad\relax}%
+        }{%
+          \parbox[c][\dimexpr\semio@project@bandheight-2\semio@table@long@cellpad\relax][c]{\dimexpr\linewidth-2\semio@table@long@cellpad\relax}{%
+            \centering\SemioSans\itshape\fontsize{8pt}{10pt}\selectfont\color{semio-chrome-text-normal}Kein freigegebenes Bild%
+          }%
+        }%
+      }%
+      \nointerlineskip
+      \hrule height\dimexpr\semio@table@long@cellpad-\semio@project@photo@vbias\relax depth\z@ width\dimexpr\linewidth\relax
+    }%
+  }%
+  &
+  \multicolumn{6}{@{}>{\raggedright\arraybackslash}p{\semio@project@metaw}@{\semio@project@padendR}@{\semio@table@border@R}}{%
+    \cellcolor{semio-chrome-canvas}%
+    \vtop{%
+      \color{semio-chrome-canvas}%
+      \hrule height\semio@window@bodypad depth\z@ width\dimexpr\linewidth\relax
+      \nointerlineskip
+      \hbox{%
+        \begin{minipage}[t]{\linewidth}%
+          \semio@cell@inset
+          \semio@project@meta@eight{#2}{#3}{#4}{#5}{#6}{#7}{#8}{#9}%
+        \end{minipage}%
+      }%
+    }%
+  }%
+  \\*\semio@table@rule
+}
+
 \newcommand{\semio@project@headrow}{%
   \semio@table@header@cell{Bauteil} &
   \semio@table@header@cell{Neue Nutzung} &
@@ -1242,6 +1316,19 @@
   \semio@table@header@cell{Herkunftsweg} &
   \semio@table@header@cell{Herkunft $\rightarrow$ Ziel} &
   \semio@table@header@cell{Verfahren}\\
+  \semio@table@long@hhline@current
+  \noalign{\global\semio@table@row@startedfalse}%
+}
+
+\newcommand{\semio@project@headrow@eight}{%
+  \semio@table@header@cell{Bauteil} &
+  \semio@table@header@cell{Neue Funktion} &
+  \semio@table@header@cell{Menge} &
+  \semio@table@header@cell{Material} &
+  \semio@table@header@cell{Spender} &
+  \semio@table@header@cell{Herkunftsweg} &
+  \semio@table@header@cell{System\hspace{0pt}ebene vorher $\rightarrow$ nachher} &
+  \semio@table@header@cell{Prozess}\\
   \semio@table@long@hhline@current
   \noalign{\global\semio@table@row@startedfalse}%
 }
@@ -1305,33 +1392,63 @@
   \semio@tocline@link{#1}{\textcolor{semio-chrome-text-normal}{#1}}%
 }
 
-% \SemioProject{name}{label}{image}{ort & land & jahr & typ & status & quelle}{rows}
+% Legacy: Stadt & Land & Jahr & Typ & Status & Quelle.
+% Extended mode: Stadt & Land & Jahr & Objekttyp & Projektcharakter &
+% Projektphase & ReUse-Realisierung & Quellen.
 \newcommand{\SemioProject}[5]{%
   \SemioCardKeep
   \SemioProjectHeadingSilent{#1}{#2}%
   \protected@edef\semio@project@key{\semio@project@key@chip{\thesubsection}}%
   \gdef\semio@window@header@title{#1}%
   \expandafter\semio@window@header@number@set\expandafter{\semio@project@key}%
-  \semio@table@long@prepare{0.15,0.13,0.09,0.11,0.14,0.12,0.13,0.13}{Bauteil & Neue Nutzung & Menge & Material & Quelle & Herkunftsweg & Herkunft $\rightarrow$ Ziel & Verfahren}%
-  \semio@project@splitmeta#4\relax
+  \ifsemio@project@extendedmeta
+    \semio@table@long@prepare{0.15,0.13,0.09,0.11,0.14,0.12,0.13,0.13}{Bauteil & Neue Funktion & Menge & Material & Spender & Herkunftsweg & Systemebene vorher $\rightarrow$ nachher & Prozess}%
+    \semio@project@splitmeta@eight#4\relax
+  \else
+    \semio@table@long@prepare{0.15,0.13,0.09,0.11,0.14,0.12,0.13,0.13}{Bauteil & Neue Nutzung & Menge & Material & Quelle & Herkunftsweg & Herkunft $\rightarrow$ Ziel & Verfahren}%
+    \semio@project@splitmeta#4\relax
+  \fi
   % Cards with no documented components render band-only: the component column
   % header is dropped so no orphan header floats above an empty section.
   \def\semio@project@rows@arg{#5}%
   \ifx\semio@project@rows@arg\@empty
-    \long\def\semio@project@firsthead{%
-      \semio@project@overview@band{#3}%
-        {\semio@project@ort}{\semio@project@land}{\semio@project@jahr}%
-        {\semio@project@typ}{\semio@project@status}{\semio@project@quelle}%
-    }%
+    \ifsemio@project@extendedmeta
+      \long\def\semio@project@firsthead{%
+        \semio@project@overview@band@eight{#3}%
+          {\semio@project@ort}{\semio@project@land}{\semio@project@jahr}%
+          {\semio@project@objekttyp}{\semio@project@charakter}{\semio@project@phase}%
+          {\semio@project@realisierung}{\semio@project@quelle}%
+      }%
+    \else
+      \long\def\semio@project@firsthead{%
+        \semio@project@overview@band{#3}%
+          {\semio@project@ort}{\semio@project@land}{\semio@project@jahr}%
+          {\semio@project@typ}{\semio@project@status}{\semio@project@quelle}%
+      }%
+    \fi
   \else
-    \long\def\semio@project@firsthead{%
-      \semio@project@overview@band{#3}%
-        {\semio@project@ort}{\semio@project@land}{\semio@project@jahr}%
-        {\semio@project@typ}{\semio@project@status}{\semio@project@quelle}%
-      \semio@project@headrow
-    }%
+    \ifsemio@project@extendedmeta
+      \long\def\semio@project@firsthead{%
+        \semio@project@overview@band@eight{#3}%
+          {\semio@project@ort}{\semio@project@land}{\semio@project@jahr}%
+          {\semio@project@objekttyp}{\semio@project@charakter}{\semio@project@phase}%
+          {\semio@project@realisierung}{\semio@project@quelle}%
+        \semio@project@headrow@eight
+      }%
+    \else
+      \long\def\semio@project@firsthead{%
+        \semio@project@overview@band{#3}%
+          {\semio@project@ort}{\semio@project@land}{\semio@project@jahr}%
+          {\semio@project@typ}{\semio@project@status}{\semio@project@quelle}%
+        \semio@project@headrow
+      }%
+    \fi
   \fi
-  \long\def\semio@project@head{\semio@project@headrow}%
+  \ifsemio@project@extendedmeta
+    \long\def\semio@project@head{\semio@project@headrow@eight}%
+  \else
+    \long\def\semio@project@head{\semio@project@headrow}%
+  \fi
   % Render with the project colspec (continuous canvas via \columncolor overhangs)
   % instead of the default one, so the fill runs through the whole table ? header
   % and every row ? with no cream gaps between columns.
