@@ -335,6 +335,7 @@ pub mod ipc {
 
     pub const KIND_CONTROL: u8 = 1;
     pub const KIND_OUTPUT: u8 = 2;
+    pub const MAX_FRAME_BYTES: usize = 16 * 1024 * 1024;
 
     /// 🎛️ Client → daemon control envelope (JSON).
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -410,13 +411,32 @@ pub mod ipc {
         let mut len_buf = [0u8; 4];
         input.read_exact(&mut len_buf)?;
         let len = u32::from_le_bytes(len_buf) as usize;
-        if len == 0 || len > 16 * 1024 * 1024 {
+        if len == 0 || len > MAX_FRAME_BYTES {
             return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "bad frame length"));
         }
         let mut body = vec![0u8; len];
         input.read_exact(&mut body)?;
         let kind = body[0];
         Ok((kind, body[1..].to_vec()))
+    }
+
+    /// 🧩 Decodes one complete frame from a persistent nonblocking receive buffer.
+    pub fn try_decode_frame(buffer: &mut Vec<u8>) -> std::io::Result<Option<(u8, Vec<u8>)>> {
+        if buffer.len() < 4 {
+            return Ok(None);
+        }
+        let len = u32::from_le_bytes(buffer[..4].try_into().expect("frame prefix is four bytes")) as usize;
+        if len == 0 || len > MAX_FRAME_BYTES {
+            return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "bad frame length"));
+        }
+        let frame_len = 4usize.saturating_add(len);
+        if buffer.len() < frame_len {
+            return Ok(None);
+        }
+        let kind = buffer[4];
+        let payload = buffer[5..frame_len].to_vec();
+        buffer.drain(..frame_len);
+        Ok(Some((kind, payload)))
     }
 
     pub fn write_control(out: &mut impl Write, msg: &impl Serialize) -> std::io::Result<()> {
@@ -494,11 +514,57 @@ pub mod ipc {
 pub mod daemon {
     use crate::ipc::{self, ClientMsg, ServerMsg};
     use std::collections::HashMap;
-    use std::io::Write;
+    use std::io::{Read, Write};
     use std::path::{Path, PathBuf};
     use std::sync::atomic::{AtomicBool, Ordering};
-    use std::sync::{Arc, Mutex};
+    use std::sync::Arc;
     use std::time::Duration;
+
+    #[cfg(unix)]
+    const CLIENT_READ_BYTES_PER_TICK: usize = 64 * 1024;
+    #[cfg(unix)]
+    const CLIENT_FRAMES_PER_TICK: usize = 32;
+
+    #[cfg(unix)]
+    struct ClientReader {
+        id: u64,
+        stream: std::os::unix::net::UnixStream,
+        buffer: Vec<u8>,
+    }
+
+    #[cfg(unix)]
+    impl ClientReader {
+        fn new(id: u64, stream: std::os::unix::net::UnixStream) -> Self {
+            Self { id, stream, buffer: Vec::new() }
+        }
+
+        fn turn(&mut self, messages: &mut Vec<ClientMsg>) -> std::io::Result<bool> {
+            let mut chunk = [0u8; 16 * 1024];
+            let mut read_bytes = 0usize;
+            while read_bytes < CLIENT_READ_BYTES_PER_TICK {
+                let allowance = (CLIENT_READ_BYTES_PER_TICK - read_bytes).min(chunk.len());
+                match self.stream.read(&mut chunk[..allowance]) {
+                    Ok(0) => return Ok(false),
+                    Ok(count) => {
+                        self.buffer.extend_from_slice(&chunk[..count]);
+                        read_bytes = read_bytes.saturating_add(count);
+                    }
+                    Err(error) if error.kind() == std::io::ErrorKind::WouldBlock => break,
+                    Err(error) if error.kind() == std::io::ErrorKind::Interrupted => continue,
+                    Err(_) => return Ok(false),
+                }
+            }
+            for _ in 0..CLIENT_FRAMES_PER_TICK {
+                let Some((kind, payload)) = ipc::try_decode_frame(&mut self.buffer)? else { break };
+                if kind == ipc::KIND_CONTROL {
+                    if let Ok(message) = ipc::decode_control::<ClientMsg>(&payload) {
+                        messages.push(message);
+                    }
+                }
+            }
+            Ok(true)
+        }
+    }
 
     /// 📜 Append-only JSONL event log for session lifecycle (not PTY bytes).
     pub struct EventLog {
@@ -534,24 +600,25 @@ pub mod daemon {
     /// is the other's only impl), so this de-dyns to a GENERIC parameter rather than
     /// `dyn_enum_close!` — a hand-written enum would need a `#[cfg(test)]`-only variant, which the
     /// macro's DSL cannot express (see `📓️terra-dedyn-fw-hub-repo-report.md`). Only `Write + Send`
-    /// is required: `Supervisor` only ever writes to an attached client (reading happens on the
-    /// per-connection thread against the original, un-stored clone of the same stream).
+    /// is required: `Supervisor` writes to attached clients while the daemon's bounded nonblocking
+    /// connection cursors own the read halves.
     pub struct Supervisor<T: Write + Send> {
         sessions: HashMap<String, LiveSession>,
-        clients: Vec<T>,
+        clients: Vec<(u64, T)>,
+        next_client_id: u64,
         event_log: EventLog,
         _root: PathBuf,
     }
 
     impl<T: Write + Send> Supervisor<T> {
         pub fn new(root: &Path) -> std::io::Result<Self> {
-            Ok(Self { sessions: HashMap::new(), clients: Vec::new(), event_log: EventLog::open(root)?, _root: root.to_path_buf() })
+            Ok(Self { sessions: HashMap::new(), clients: Vec::new(), next_client_id: 1, event_log: EventLog::open(root)?, _root: root.to_path_buf() })
         }
 
         fn broadcast_control(&mut self, msg: &ServerMsg) {
             let _ = self.event_log.append(msg);
             let mut dead = Vec::new();
-            for (i, client) in self.clients.iter_mut().enumerate() {
+            for (i, (_, client)) in self.clients.iter_mut().enumerate() {
                 if ipc::write_control(client, msg).is_err() {
                     dead.push(i);
                 }
@@ -564,7 +631,7 @@ pub mod daemon {
         fn broadcast_output(&mut self, session_id: &str, data: &[u8]) {
             let payload = ipc::encode_output(session_id, data);
             let mut dead = Vec::new();
-            for (i, client) in self.clients.iter_mut().enumerate() {
+            for (i, (_, client)) in self.clients.iter_mut().enumerate() {
                 if ipc::write_frame(client, ipc::KIND_OUTPUT, &payload).is_err() {
                     dead.push(i);
                 }
@@ -574,10 +641,22 @@ pub mod daemon {
             }
         }
 
-        pub fn attach_client(&mut self, mut stream: T) -> std::io::Result<()> {
+        pub fn attach_client(&mut self, mut stream: T) -> std::io::Result<u64> {
             ipc::write_control(&mut stream, &ServerMsg::Attached { daemon_pid: std::process::id() })?;
-            self.clients.push(stream);
-            Ok(())
+            let id = self.next_client_id;
+            self.next_client_id = self.next_client_id.checked_add(1).ok_or_else(|| std::io::Error::other("dashboard client id space exhausted"))?;
+            self.clients.push((id, stream));
+            Ok(id)
+        }
+
+        fn has_client(&self, id: u64) -> bool {
+            self.clients.iter().any(|(candidate, _)| *candidate == id)
+        }
+
+        fn detach_client(&mut self, id: u64) {
+            if let Some(index) = self.clients.iter().position(|(candidate, _)| *candidate == id) {
+                self.clients.swap_remove(index);
+            }
         }
 
         pub fn handle_client_msg(&mut self, msg: ClientMsg) -> std::io::Result<()> {
@@ -731,41 +810,35 @@ pub mod daemon {
         write_pid(root)?;
         let listener = ipc::listen(root)?;
         listener.set_nonblocking(true)?;
-        let supervisor = Arc::new(Mutex::new(Supervisor::new(root)?));
+        let mut supervisor = Supervisor::new(root)?;
+        let mut readers = Vec::new();
         while running.load(Ordering::SeqCst) {
             match listener.accept() {
                 Ok((stream, _)) => {
-                    stream.set_nonblocking(false)?;
+                    stream.set_nonblocking(true)?;
                     let stream_for_client = stream.try_clone()?;
-                    {
-                        let mut sup = supervisor.lock().unwrap();
-                        let _ = sup.attach_client(stream_for_client);
-                    }
-                    let sup = Arc::clone(&supervisor);
-                    let running = Arc::clone(&running);
-                    std::thread::spawn(move || {
-                        let mut stream = stream;
-                        while running.load(Ordering::SeqCst) {
-                            match ipc::read_frame(&mut stream) {
-                                Ok((kind, payload)) if kind == ipc::KIND_CONTROL => {
-                                    if let Ok(msg) = ipc::decode_control::<ClientMsg>(&payload) {
-                                        let mut g = sup.lock().unwrap();
-                                        let _ = g.handle_client_msg(msg);
-                                    }
-                                }
-                                Ok(_) => {}
-                                Err(_) => break,
-                            }
-                        }
-                    });
+                    let client_id = supervisor.attach_client(stream_for_client)?;
+                    readers.push(ClientReader::new(client_id, stream));
                 }
                 Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => {}
                 Err(e) => return Err(e),
             }
-            {
-                let mut g = supervisor.lock().unwrap();
-                let _ = g.tick();
+            let mut messages = Vec::new();
+            let mut index = 0usize;
+            while index < readers.len() {
+                let client_id = readers[index].id;
+                let keep = supervisor.has_client(client_id) && matches!(readers[index].turn(&mut messages), Ok(true));
+                if !keep {
+                    readers.swap_remove(index);
+                    supervisor.detach_client(client_id);
+                } else {
+                    index += 1;
+                }
             }
+            for message in messages {
+                supervisor.handle_client_msg(message)?;
+            }
+            supervisor.tick()?;
             std::thread::sleep(Duration::from_millis(10));
         }
         let _ = std::fs::remove_file(ipc::pid_path(root));
@@ -941,6 +1014,32 @@ mod tests {
     }
 
     #[test]
+    fn ipc_nonblocking_decoder_preserves_fragmented_and_concatenated_frames() {
+        use crate::ipc::{self, ClientMsg};
+        let mut encoded = Vec::new();
+        ipc::write_control(&mut encoded, &ClientMsg::Ping).unwrap();
+        ipc::write_control(&mut encoded, &ClientMsg::Detach).unwrap();
+        let split = 3usize;
+        let mut buffered = encoded[..split].to_vec();
+        assert_eq!(ipc::try_decode_frame(&mut buffered).unwrap(), None);
+        buffered.extend_from_slice(&encoded[split..]);
+        let (_, first) = ipc::try_decode_frame(&mut buffered).unwrap().expect("first frame");
+        let (_, second) = ipc::try_decode_frame(&mut buffered).unwrap().expect("second frame");
+        assert_eq!(ipc::decode_control::<ClientMsg>(&first).unwrap(), ClientMsg::Ping);
+        assert_eq!(ipc::decode_control::<ClientMsg>(&second).unwrap(), ClientMsg::Detach);
+        assert!(buffered.is_empty());
+    }
+
+    #[test]
+    fn ipc_nonblocking_decoder_rejects_oversized_prefix_without_allocating() {
+        use crate::ipc;
+        let mut buffered = ((ipc::MAX_FRAME_BYTES as u32) + 1).to_le_bytes().to_vec();
+        let error = ipc::try_decode_frame(&mut buffered).expect_err("oversized frame must fail");
+        assert_eq!(error.kind(), std::io::ErrorKind::InvalidData);
+        assert_eq!(buffered.len(), 4);
+    }
+
+    #[test]
     fn daemon_supervisor_ping_appends_event_log() {
         use crate::daemon::{self, Supervisor};
         use crate::ipc::{self, ClientMsg, ServerMsg};
@@ -961,6 +1060,42 @@ mod tests {
         assert_eq!(msg, ServerMsg::Pong);
         let log = std::fs::read_to_string(ipc::event_log_path(&root)).unwrap();
         assert!(log.contains("pong") || log.contains("Pong") || log.contains("\"type\":\"pong\""));
+        std::fs::remove_dir_all(&root).ok();
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn daemon_nonblocking_connection_cursor_serves_ping_end_to_end() {
+        use crate::daemon;
+        use crate::ipc::{self, ClientMsg, ServerMsg};
+        use std::sync::atomic::{AtomicBool, Ordering};
+        use std::sync::Arc;
+        use std::time::Duration;
+
+        let nanos = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
+        let root = std::path::PathBuf::from("/tmp").join(format!("sd{}{}", std::process::id(), nanos % 1_000_000));
+        std::fs::create_dir_all(&root).unwrap();
+        let running = Arc::new(AtomicBool::new(true));
+        let server_running = running.clone();
+        let server_root = root.clone();
+        let server = std::thread::spawn(move || daemon::serve(&server_root, server_running));
+        let mut client = (0..100)
+            .find_map(|_| match ipc::connect(&root) {
+                Ok(stream) => Some(stream),
+                Err(_) => {
+                    std::thread::sleep(Duration::from_millis(5));
+                    None
+                }
+            })
+            .expect("daemon socket must become reachable");
+        client.set_read_timeout(Some(Duration::from_secs(2))).unwrap();
+        let (_, attached) = ipc::read_frame(&mut client).expect("attached frame");
+        assert!(matches!(ipc::decode_control::<ServerMsg>(&attached).unwrap(), ServerMsg::Attached { .. }));
+        ipc::write_control(&mut client, &ClientMsg::Ping).unwrap();
+        let (_, pong) = ipc::read_frame(&mut client).expect("pong frame");
+        assert_eq!(ipc::decode_control::<ServerMsg>(&pong).unwrap(), ServerMsg::Pong);
+        running.store(false, Ordering::SeqCst);
+        server.join().expect("daemon thread must not panic").expect("daemon must stop cleanly");
         std::fs::remove_dir_all(&root).ok();
     }
 

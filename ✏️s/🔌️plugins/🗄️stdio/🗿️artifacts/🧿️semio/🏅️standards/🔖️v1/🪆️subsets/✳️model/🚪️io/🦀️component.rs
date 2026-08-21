@@ -7,8 +7,8 @@ pub mod derived_composition {
     use crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::SemioModelSnapshot;
     use crate::artifacts::semio::standards::v1::subsets::model::schema::SemioModelAnalyzer;
     use semio_framework_plugin::{
-        deserializer_entry_of, register_composer_entries, register_subset_validator, serializer_entry_of, subset_validator_entry_of, AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, ComposerEntry, Composition,
-        Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry,
+        deserializer_entry_of, register_composer_entries, register_subset_validator, serializer_entry_of, subset_validator_entry_of, AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, ComposerEntry, Composition, Dialect, IoPayload,
+        StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry,
     };
     use std::collections::HashSet;
 
@@ -223,7 +223,7 @@ pub mod derived_composition {
         /// subsets' `register()` calls (no test module of its own, and out of this ticket's
         /// `✳️model/`-only edit scope anyway).
         mod conformance_laws {
-            
+
             use crate::artifacts::semio::standards::v1::subsets::model::schema::{diff, mutations, snapshot};
             use protocol::{DiffCodec, OpBinary, OpText};
 

@@ -24,7 +24,7 @@ pub struct SemioImageInference {
 }
 
 impl protocol::Inference<SemioImageSnapshot> for SemioImageInference {
-    async fn infer(snapshot: &SemioImageSnapshot) -> Self {
+    fn infer(snapshot: &SemioImageSnapshot) -> Self {
         Self { dimensions: compute_semio_image_dimensions(snapshot) }
     }
 }
@@ -40,13 +40,13 @@ impl Default for SemioImageInference {
 }
 
 impl protocol::InferenceSpec<SemioImageSnapshot> for SemioImageInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.stdio.semio.image.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.semio.image.inference.dimensions", reads: &["width", "height", "colorspace", "bitDepth", "frames"] }]
     }
 }

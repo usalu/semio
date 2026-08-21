@@ -41,7 +41,7 @@ pub(crate) fn distribution(context: &GltfGeometryContext<'_>) -> GltfStatistics 
 impl GltfInferenceStage<GltfGeometryContext<'_>> for GltfThicknessInference {
     type Output = GltfThicknessIndicators;
 
-    async fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
+    fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
         Self::Output {
             mean_thickness: mean_thickness::infer(context),
             minimum_thickness: minimum_thickness::infer(context),
@@ -50,7 +50,7 @@ impl GltfInferenceStage<GltfGeometryContext<'_>> for GltfThicknessInference {
         }
     }
 
-    async fn unavailable(diagnostic_ids: &[String]) -> Self::Output {
+    fn unavailable(diagnostic_ids: &[String]) -> Self::Output {
         Self::Output {
             mean_thickness: mean_thickness::unavailable_measure(diagnostic_ids),
             minimum_thickness: minimum_thickness::unavailable_measure(diagnostic_ids),

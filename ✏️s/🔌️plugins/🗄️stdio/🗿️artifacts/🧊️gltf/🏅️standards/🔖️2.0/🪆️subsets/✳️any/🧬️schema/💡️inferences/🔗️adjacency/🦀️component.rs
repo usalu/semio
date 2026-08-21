@@ -38,11 +38,11 @@ impl GltfAdjacencyInference {
 impl GltfInferenceStage<GltfGeometryContext<'_>> for GltfAdjacencyInference {
     type Output = GltfAdjacencyIndicators;
 
-    async fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
+    fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
         Self::Output { number_of_contacts: number_of_contacts::infer(context), contact_graph_degree: contact_graph_degree::infer(context), connected_components: connected_components::infer(context) }
     }
 
-    async fn unavailable(diagnostic_ids: &[String]) -> Self::Output {
+    fn unavailable(diagnostic_ids: &[String]) -> Self::Output {
         Self::Output {
             number_of_contacts: number_of_contacts::unavailable_measure(diagnostic_ids),
             contact_graph_degree: contact_graph_degree::unavailable_measure(diagnostic_ids),

@@ -3,9 +3,9 @@
 //! Emits the frozen `set-pixel-region` action onto the artifact's own frame/image pixel-index replace mutation (index fixed at 0 — a genuine per-region patch is not declared in this format's schema).
 //! MUST NOT be reached by the sibling `viewer` module (`policyViewerPurityBreaches`).
 
-use crate::artifacts::gif::{GIF_89A_DIALECT, STDIO_GIF_DOCUMENT_SCHEMA};
 use crate::artifacts::gif::standards::v89a::subsets::any::schema::mutations::GifMutation;
 use crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::GifSnapshot;
+use crate::artifacts::gif::{GIF_89A_DIALECT, STDIO_GIF_DOCUMENT_SCHEMA};
 use crate::editor::gif_89a::modes::edit;
 use crate::editor::gif_89a::modes::edit::windows::main;
 use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode};
@@ -65,11 +65,11 @@ impl ArtifactEditor for Gif89aEditor {
         }
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
-        match body_key {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::ComponentTree {
+        semio_framework_plugin::built_to_component_tree(match body_key {
             main::BODY_KEY => main::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
-        }
+            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))),
+        })
     }
 }
 //#endregion 🔖️Editor
@@ -77,14 +77,7 @@ impl ArtifactEditor for Gif89aEditor {
 //#region 🔖️Manifest
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn create_gif_89a_editor() -> semio_framework_plugin::AppDefinition {
-    Editor::builder(GIF_89A_DIALECT)
-        .document(["semio", "gif"])
-        .icon_id("image")
-        .mode_def(edit::definition())
-        .default_mode_id(edit::MODE_ID)
-        .window_kind_def(main::definition())
-        .default_layout(edit::layout())
-        .build_definition()
+    Editor::builder(GIF_89A_DIALECT).document(["semio", "gif"]).icon_id("image").mode_def(edit::definition()).default_mode_id(edit::MODE_ID).window_kind_def(main::definition()).default_layout(edit::layout()).build_definition()
 }
 //#endregion 🔖️Manifest
 

@@ -6,6 +6,7 @@
 use crate::algebra::{MatD, VecD};
 use crate::model::{BeamStation, Dof, Element, ElementContext, ElementResult, Elements, FemError, MemberUdl, NodalLoad, Node, NodeDisplacement, NodeReaction, PlaneStress, PlateMoments, ShellState, SolidStress, SolutionChecks, StaticResult, Support};
 use crate::sparse::{ldlt_factor, rcm_order, subspace_iteration, Coo, Csr, EigenPairs, LdltFactor};
+use semio_framework_job::{CommitCandidate, InteractiveJob, JobFault, Operation, StepContext, StepOutcome};
 use std::collections::{HashMap, HashSet};
 
 // #region 🔖️Model
@@ -47,6 +48,137 @@ pub struct BucklingResult {
 }
 // #endregion 🔖️Model
 
+// #region 🧩️JobGraph
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub enum FemJobStage {
+    ValidateReferences,
+    BuildDofMap,
+    OrderEquations,
+    Assemble,
+    Factor,
+    Solve,
+    Recover,
+    Finalize,
+}
+
+impl FemJobStage {
+    fn label(self) -> &'static str {
+        match self {
+            Self::ValidateReferences => "fem.validate-references",
+            Self::BuildDofMap => "fem.build-dof-map",
+            Self::OrderEquations => "fem.order-equations",
+            Self::Assemble => "fem.assemble",
+            Self::Factor => "fem.factor",
+            Self::Solve => "fem.solve",
+            Self::Recover => "fem.recover",
+            Self::Finalize => "fem.finalize",
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub struct FemStagePlan {
+    pub stage: FemJobStage,
+    pub units: u64,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub struct FemJobProgress {
+    pub stage: Option<FemJobStage>,
+    pub completed_stages: usize,
+    pub total_stages: usize,
+    pub completed_units: u64,
+    pub total_units: u64,
+}
+
+#[derive(Clone, serde::Serialize, serde::Deserialize)]
+struct FemGraphCheckpoint {
+    plans: Vec<FemStagePlan>,
+    stage_cursor: usize,
+    unit_cursor: u64,
+    completed_units: u64,
+    units_per_step: u64,
+    checkpoint_due: bool,
+}
+
+pub struct FemJobGraph {
+    operation: Operation,
+    state: FemGraphCheckpoint,
+}
+
+impl FemJobGraph {
+    pub fn new(operation: Operation, plans: Vec<FemStagePlan>, units_per_step: u64) -> Self {
+        assert!(units_per_step > 0, "fem graph batch must contain work");
+        Self { operation, state: FemGraphCheckpoint { plans, stage_cursor: 0, unit_cursor: 0, completed_units: 0, units_per_step, checkpoint_due: false } }
+    }
+
+    pub fn from_checkpoint(operation: Operation, bytes: &[u8]) -> Result<Self, serde_json::Error> {
+        Ok(Self { operation, state: serde_json::from_slice(bytes)? })
+    }
+
+    pub fn checkpoint_bytes(&self) -> Vec<u8> {
+        serde_json::to_vec(&self.state).expect("fem graph checkpoint is serializable")
+    }
+
+    pub fn progress(&self) -> FemJobProgress {
+        FemJobProgress {
+            stage: self.state.plans.get(self.state.stage_cursor).map(|plan| plan.stage),
+            completed_stages: self.state.stage_cursor,
+            total_stages: self.state.plans.len(),
+            completed_units: self.state.completed_units,
+            total_units: self.state.plans.iter().map(|plan| plan.units).sum(),
+        }
+    }
+}
+
+impl InteractiveJob for FemJobGraph {
+    fn step(&mut self, context: &mut StepContext<'_>) -> StepOutcome {
+        if context.is_cancelled() {
+            return StepOutcome::Cancelled;
+        }
+        if context.operation() != self.operation.operation || context.generation() != self.operation.generation {
+            return StepOutcome::Fault(JobFault { detail: b"stale-fem-job-graph-operation".to_vec() });
+        }
+        if self.state.checkpoint_due {
+            self.state.checkpoint_due = false;
+            return StepOutcome::CheckpointReady(semio_framework_job::Checkpoint { state: self.checkpoint_bytes(), applied_progress: self.state.completed_units });
+        }
+        if self.state.stage_cursor == self.state.plans.len() {
+            let progress = self.progress();
+            return StepOutcome::Complete(CommitCandidate { state: self.checkpoint_bytes(), output: serde_json::to_vec(&progress).expect("fem graph output is serializable") });
+        }
+        let stage = self.state.plans[self.state.stage_cursor].stage;
+        context.set_stage(stage.label());
+        let mut stepped = 0;
+        while stepped < self.state.units_per_step && !context.should_yield() && self.state.stage_cursor < self.state.plans.len() {
+            let remaining = self.state.plans[self.state.stage_cursor].units.saturating_sub(self.state.unit_cursor);
+            if remaining == 0 {
+                self.state.stage_cursor += 1;
+                self.state.unit_cursor = 0;
+                self.state.checkpoint_due = true;
+                break;
+            }
+            let take = remaining.min(self.state.units_per_step - stepped).min(context.fuel_remaining());
+            if take == 0 {
+                break;
+            }
+            self.state.unit_cursor += take;
+            self.state.completed_units += take;
+            stepped += take;
+            context.consume_fuel(take);
+            if context.is_cancelled() {
+                return StepOutcome::Cancelled;
+            }
+        }
+        if self.state.stage_cursor == self.state.plans.len() {
+            let progress = self.progress();
+            return StepOutcome::Complete(CommitCandidate { state: self.checkpoint_bytes(), output: serde_json::to_vec(&progress).expect("fem graph output is serializable") });
+        }
+        StepOutcome::PreviewReady(serde_json::to_vec(&self.progress()).expect("fem graph preview is serializable"))
+    }
+}
+// #endregion 🧩️JobGraph
+
 // #region 🔖️DofMap
 /// 🔢️ Numbers each node's active DOFs (the union of `dofs_per_node()` over elements touching it) —
 /// a small, self-contained reimplementation of `lib.rs`'s private `build_dof_map`/`DofMap` (not
@@ -57,16 +189,16 @@ struct DofMap {
 }
 
 impl DofMap {
-    async fn get(&self, node_id: &str, dof: Dof) -> Option<usize> {
+    fn get(&self, node_id: &str, dof: Dof) -> Option<usize> {
         self.index.get(&(node_id.to_string(), dof)).copied()
     }
 
-    async fn len(&self) -> usize {
+    fn len(&self) -> usize {
         self.order.len()
     }
 }
 
-async fn build_dof_map(nodes: &[Node], elements: &[Elements]) -> DofMap {
+fn build_dof_map(nodes: &[Node], elements: &[Elements]) -> DofMap {
     let mut order = Vec::new();
     let mut index = HashMap::new();
     for node in nodes {
@@ -89,11 +221,11 @@ async fn build_dof_map(nodes: &[Node], elements: &[Elements]) -> DofMap {
     DofMap { index, order }
 }
 
-async fn positions_of(nodes: &[Node], node_ids: &[String]) -> Vec<[f64; 3]> {
+fn positions_of(nodes: &[Node], node_ids: &[String]) -> Vec<[f64; 3]> {
     node_ids.iter().map(|id| nodes.iter().find(|n| &n.id == id).map(|n| n.pos).unwrap_or_default()).collect()
 }
 
-async fn element_global_indices(dof_map: &DofMap, node_ids: &[String], dofs: &[Dof]) -> Option<Vec<usize>> {
+fn element_global_indices(dof_map: &DofMap, node_ids: &[String], dofs: &[Dof]) -> Option<Vec<usize>> {
     let mut indices = Vec::with_capacity(node_ids.len() * dofs.len());
     for node_id in node_ids {
         for &dof in dofs {
@@ -105,7 +237,7 @@ async fn element_global_indices(dof_map: &DofMap, node_ids: &[String], dofs: &[D
 // #endregion 🔖️DofMap
 
 // #region 🔖️Validate
-async fn validate(model: &AnalysisModel) -> Result<(), FemError> {
+fn validate(model: &AnalysisModel) -> Result<(), FemError> {
     if model.nodes.is_empty() {
         return Err(FemError::EmptyModel);
     }
@@ -131,7 +263,7 @@ async fn validate(model: &AnalysisModel) -> Result<(), FemError> {
     Ok(())
 }
 
-async fn validate_case(model: &AnalysisModel, case: &LoadCase) -> Result<(), FemError> {
+fn validate_case(model: &AnalysisModel, case: &LoadCase) -> Result<(), FemError> {
     let node_exists = |id: &str| model.nodes.iter().any(|n| n.id == id);
     for load in &case.nodal_loads {
         if !node_exists(&load.node_id) {
@@ -150,7 +282,7 @@ struct RcmPermutation {
     inv_perm: Vec<usize>,
 }
 
-async fn build_rcm_permutation(nodes: &[Node], elements: &[Elements], dof_map: &DofMap) -> RcmPermutation {
+fn build_rcm_permutation(nodes: &[Node], elements: &[Elements], dof_map: &DofMap) -> RcmPermutation {
     let n_nodes = nodes.len();
     let node_index: HashMap<&str, usize> = nodes.iter().enumerate().map(|(i, n)| (n.id.as_str(), i)).collect();
     let mut adjacency: Vec<Vec<usize>> = vec![Vec::new(); n_nodes];
@@ -217,12 +349,12 @@ struct AssembledSystem {
 }
 
 impl AssembledSystem {
-    async fn n_free(&self) -> usize {
+    fn n_free(&self) -> usize {
         self.free_new.len()
     }
 }
 
-async fn assemble_system(model: &AnalysisModel) -> Result<AssembledSystem, FemError> {
+fn assemble_system(model: &AnalysisModel) -> Result<AssembledSystem, FemError> {
     validate(model)?;
     let dof_map = build_dof_map(&model.nodes, &model.elements);
     let ndof = dof_map.len();
@@ -276,7 +408,7 @@ async fn assemble_system(model: &AnalysisModel) -> Result<AssembledSystem, FemEr
 
 /// 🌬️ Per-node gravity pattern for an element's own `dofs_per_node()` layout — `[gx,gy,gz]` placed at
 /// each node's active `Tx/Ty/Tz` slots, `0.0` at any `Rx/Ry/Rz` slots, repeated node-major.
-async fn gravity_pattern(node_count: usize, dofs: &[Dof], gravity: [f64; 3]) -> VecD {
+fn gravity_pattern(node_count: usize, dofs: &[Dof], gravity: [f64; 3]) -> VecD {
     let mut out = VecD::zeros(node_count * dofs.len());
     for n in 0..node_count {
         for (i, &dof) in dofs.iter().enumerate() {
@@ -294,7 +426,7 @@ async fn gravity_pattern(node_count: usize, dofs: &[Dof], gravity: [f64; 3]) -> 
 
 /// 🌬️ Assembles one load case's RHS in ORIGINAL (old) DOF-index space — nodal loads, member-UDL
 /// equivalent loads, and (if `self_weight`) `element.mass() · gravity_pattern` self-weight loads.
-async fn case_rhs_old(model: &AnalysisModel, dof_map: &DofMap, case: &LoadCase, gravity: [f64; 3]) -> VecD {
+fn case_rhs_old(model: &AnalysisModel, dof_map: &DofMap, case: &LoadCase, gravity: [f64; 3]) -> VecD {
     let ndof = dof_map.len();
     let mut f = VecD::zeros(ndof);
 
@@ -335,7 +467,7 @@ async fn case_rhs_old(model: &AnalysisModel, dof_map: &DofMap, case: &LoadCase, 
 
 // #region 🔖️Combine
 /// 🌱️ A zero-valued `ElementResult` of the same variant/shape as `result` — the seed for superposition.
-async fn zero_like(result: &ElementResult) -> ElementResult {
+fn zero_like(result: &ElementResult) -> ElementResult {
     match result {
         ElementResult::Bar { .. } => ElementResult::Bar { n: 0.0 },
         ElementResult::Beam { stations } => ElementResult::Beam { stations: stations.iter().map(|s| BeamStation { x: s.x, n: 0.0, v: 0.0, m: 0.0 }).collect() },
@@ -347,7 +479,7 @@ async fn zero_like(result: &ElementResult) -> ElementResult {
 }
 
 /// ➕️ `acc + factor * term`, field-by-field, matched by `ElementResult` variant and Gauss-point index.
-async fn add_scaled_element_result(acc: &ElementResult, term: &ElementResult, factor: f64) -> ElementResult {
+fn add_scaled_element_result(acc: &ElementResult, term: &ElementResult, factor: f64) -> ElementResult {
     match (acc, term) {
         (ElementResult::Bar { n: an }, ElementResult::Bar { n: tn }) => ElementResult::Bar { n: an + factor * tn },
         (ElementResult::Beam { stations: acc_s }, ElementResult::Beam { stations: term_s }) => {
@@ -394,7 +526,7 @@ async fn add_scaled_element_result(acc: &ElementResult, term: &ElementResult, fa
     }
 }
 
-async fn combine_results(case_results: &[StaticResult], cases: &[LoadCase], combo: &Combination) -> Result<StaticResult, FemError> {
+fn combine_results(case_results: &[StaticResult], cases: &[LoadCase], combo: &Combination) -> Result<StaticResult, FemError> {
     let mut displacements: Vec<NodeDisplacement> = Vec::new();
     let mut reactions: Vec<NodeReaction> = Vec::new();
     let mut elements: Vec<(String, ElementResult)> = Vec::new();
@@ -439,7 +571,7 @@ async fn combine_results(case_results: &[StaticResult], cases: &[LoadCase], comb
 /// 🧮️ Assembles the model ONCE (sparse, RCM-ordered, free-free LDLT factored once), then solves every
 /// load case as one shared multi-RHS `solve_many` call, superposes `combinations` from the already-
 /// solved case results, and un-permutes everything back to original node identity.
-pub async fn solve_multi_case(model: &AnalysisModel, cases: &[LoadCase], combinations: &[Combination], gravity: [f64; 3]) -> Result<HashMap<String, StaticResult>, FemError> {
+pub fn solve_multi_case(model: &AnalysisModel, cases: &[LoadCase], combinations: &[Combination], gravity: [f64; 3]) -> Result<HashMap<String, StaticResult>, FemError> {
     for case in cases {
         validate_case(model, case)?;
     }
@@ -535,7 +667,7 @@ pub async fn solve_multi_case(model: &AnalysisModel, cases: &[LoadCase], combina
 /// 🎯️ Modal analysis: shares `solve_multi_case`'s sparse RCM-ordered free-free LDLT factor, assembles
 /// the global mass matrix over the SAME free DOFs (elements with `mass() == None` contribute nothing),
 /// and calls `subspace_iteration` for the lowest `count` frequencies/shapes.
-pub async fn modal(model: &AnalysisModel, count: usize) -> Result<ModalResult, FemError> {
+pub fn modal(model: &AnalysisModel, count: usize) -> Result<ModalResult, FemError> {
     let system = assemble_system(model)?;
     let ndof = system.ndof;
     let n_free = system.n_free();
@@ -571,7 +703,7 @@ pub async fn modal(model: &AnalysisModel, count: usize) -> Result<ModalResult, F
 /// 🔁️ Expands each compact free-DOF eigenvector back to full `ndof` (zero at constrained slots), then
 /// un-permutes RCM (new) index space back to the ORIGINAL `dof_map` order (node-major, matching
 /// `model.nodes`, DOF sub-order filtered to active DOFs).
-async fn unpermute_shapes(system: &AssembledSystem, ndof: usize, vectors: &[VecD]) -> Vec<VecD> {
+fn unpermute_shapes(system: &AssembledSystem, ndof: usize, vectors: &[VecD]) -> Vec<VecD> {
     vectors
         .iter()
         .map(|vec_compact| {
@@ -593,7 +725,7 @@ async fn unpermute_shapes(system: &AssembledSystem, ndof: usize, vectors: &[VecD
 /// 🌀️ Linear buckling: solves `reference_case` (via `solve_multi_case`) for `u_ref`, assembles the
 /// geometric stiffness `Kg` from every element's own axial state under `u_ref`, then solves
 /// `K φ = λ (−Kg) φ` via `subspace_iteration` — `factors[i] * reference_case` is the i-th critical load.
-pub async fn buckling(model: &AnalysisModel, reference_case: &LoadCase, count: usize) -> Result<BucklingResult, FemError> {
+pub fn buckling(model: &AnalysisModel, reference_case: &LoadCase, count: usize) -> Result<BucklingResult, FemError> {
     let ref_results = solve_multi_case(model, std::slice::from_ref(reference_case), &[], [0.0, 0.0, 0.0])?;
     let ref_result = ref_results.get(&reference_case.id).expect("reference case was just solved");
 
@@ -676,8 +808,8 @@ pub enum StressScalar {
 /// 📊️ An element's own Gauss-point-averaged value of `scalar`, or `None` if that element kind/scalar
 /// combination isn't defined (e.g. `VonMisesTop` on a `Plane` result, or any scalar on a `Bar`/`Beam`
 /// result — those carry no stress tensor to project).
-async fn element_scalar_average(result: &ElementResult, scalar: StressScalar) -> Option<f64> {
-    async fn avg(values: impl Iterator<Item = f64>) -> f64 {
+fn element_scalar_average(result: &ElementResult, scalar: StressScalar) -> Option<f64> {
+    fn avg(values: impl Iterator<Item = f64>) -> f64 {
         let mut sum = 0.0;
         let mut count = 0usize;
         for v in values {
@@ -720,7 +852,7 @@ async fn element_scalar_average(result: &ElementResult, scalar: StressScalar) ->
 /// touches; the returned value per node is that accumulation's mean. A node touched only by elements
 /// that report no value for `scalar` (e.g. a `Bar` in a mixed mesh) simply never appears in the map.
 /// Element-to-model matching is by `element.id()` against `result.elements`' ids.
-pub async fn nodal_averaged_scalar(model: &AnalysisModel, result: &StaticResult, scalar: StressScalar) -> HashMap<String, f64> {
+pub fn nodal_averaged_scalar(model: &AnalysisModel, result: &StaticResult, scalar: StressScalar) -> HashMap<String, f64> {
     let mut sums: HashMap<String, (f64, usize)> = HashMap::new();
     for (element_id, element_result) in &result.elements {
         let Some(value) = element_scalar_average(element_result, scalar) else { continue };
@@ -742,7 +874,7 @@ mod tests {
     use crate::elements2d::{Bar2, BeamEb2};
     use crate::model::{solve_linear_static, Model};
 
-    async fn cantilever_analysis_model(e: f64, area: f64, iy: f64, l: f64, density: f64) -> (AnalysisModel, Vec<LoadCase>) {
+    fn cantilever_analysis_model(e: f64, area: f64, iy: f64, l: f64, density: f64) -> (AnalysisModel, Vec<LoadCase>) {
         let model = AnalysisModel {
             nodes: vec![Node { id: "a".into(), pos: [0.0, 0.0, 0.0] }, Node { id: "b".into(), pos: [l, 0.0, 0.0] }],
             elements: vec![BeamEb2 { id: "e1".into(), start: "a".into(), end: "b".into(), e, area, iy, density }.into()],
@@ -755,8 +887,8 @@ mod tests {
     /// 🧮️ Cross-validates `solve_multi_case`'s sparse RCM-ordered pipeline (single case) against
     /// `solve_linear_static`'s already-correct dense pipeline on an equivalent model — same oracle
     /// strategy already used elsewhere in this crate.
-    #[semio_framework_async_macros::async_test]
-    async fn solve_multi_case_matches_single_case_dense_solve() {
+    #[test]
+    fn solve_multi_case_matches_single_case_dense_solve() {
         let (e, area, iy, l) = (200e9, 0.01, 1e-5, 2.0);
         let (model, cases) = cantilever_analysis_model(e, area, iy, l, 0.0);
         let results = solve_multi_case(&model, &cases, &[], [0.0, 0.0, 0.0]).expect("solves");
@@ -784,8 +916,8 @@ mod tests {
     }
 
     /// ➕️ A `Combination` must equal hand-computed superposition of the individually-solved case results.
-    #[semio_framework_async_macros::async_test]
-    async fn combination_equals_manual_superposition() {
+    #[test]
+    fn combination_equals_manual_superposition() {
         let (e, area, iy, l) = (200e9, 0.01, 1e-5, 2.0);
         let model = AnalysisModel {
             nodes: vec![Node { id: "a".into(), pos: [0.0, 0.0, 0.0] }, Node { id: "b".into(), pos: [l, 0.0, 0.0] }],
@@ -819,8 +951,8 @@ mod tests {
 
     /// ⚖️ Self-weight-only equilibrium: the sum of vertical reactions must equal `ρAL * g` — a
     /// strong, simple physical check independent of the moment distribution.
-    #[semio_framework_async_macros::async_test]
-    async fn self_weight_matches_total_mass_times_gravity() {
+    #[test]
+    fn self_weight_matches_total_mass_times_gravity() {
         let (e, area, iy, l, density) = (30e9, 0.05, 1e-4, 6.0, 2400.0);
         let model = AnalysisModel {
             nodes: vec![Node { id: "a".into(), pos: [0.0, 0.0, 0.0] }, Node { id: "b".into(), pos: [l, 0.0, 0.0] }],
@@ -838,8 +970,8 @@ mod tests {
     }
 
     /// 🎯️ Cantilever modal frequencies vs the classical closed form `f_i = (β_iL)²/(2πL²) · sqrt(EI/ρA)`.
-    #[semio_framework_async_macros::async_test]
-    async fn modal_cantilever_matches_analytical_frequencies() {
+    #[test]
+    fn modal_cantilever_matches_analytical_frequencies() {
         let (e, iy, area, density, total_l) = (200e9, 1e-5, 0.01, 7850.0, 3.0);
         let n = 9;
         let dl = total_l / n as f64;
@@ -857,8 +989,8 @@ mod tests {
     }
 
     /// 🌀️ Euler pinned-pinned column buckling load vs `π²EI/L²` (K=1.0).
-    #[semio_framework_async_macros::async_test]
-    async fn buckling_euler_column_matches_analytical_load() {
+    #[test]
+    fn buckling_euler_column_matches_analytical_load() {
         let (e, iy, area, density, total_l) = (200e9, 8e-6, 0.005, 7850.0, 3.0);
         let n = 7;
         let dl = total_l / n as f64;
@@ -887,16 +1019,16 @@ mod tests {
     }
 
     /// 🔍️ Duplicate-node-id models are rejected the same way `lib.rs::validate` rejects them.
-    #[semio_framework_async_macros::async_test]
-    async fn duplicate_node_id_is_rejected() {
+    #[test]
+    fn duplicate_node_id_is_rejected() {
         let model = AnalysisModel { nodes: vec![Node { id: "a".into(), pos: [0.0, 0.0, 0.0] }, Node { id: "a".into(), pos: [1.0, 0.0, 0.0] }], elements: vec![], supports: vec![] };
         let err = solve_multi_case(&model, &[], &[], [0.0, 0.0, 0.0]).unwrap_err();
         assert_eq!(err, FemError::DuplicateNodeId("a".into()));
     }
 
     /// 🔍️ A `Bar2` model works fine through the multi-case pipeline too (not just `BeamEb2`).
-    #[semio_framework_async_macros::async_test]
-    async fn solve_multi_case_supports_bar2_truss() {
+    #[test]
+    fn solve_multi_case_supports_bar2_truss() {
         let (e, area, l, p) = (200e9, 0.001, 2.0, 5000.0);
         let model = AnalysisModel {
             nodes: vec![Node { id: "a".into(), pos: [0.0, 0.0, 0.0] }, Node { id: "b".into(), pos: [l, 0.0, 0.0] }],
@@ -915,8 +1047,8 @@ mod tests {
     /// diagonal, both under the SAME uniform uniaxial strain field (`u=a*x`, `v=-nu*a*y`) — every
     /// node's averaged von Mises must equal the exact analytical `E*a` (a constant field averages to
     /// itself regardless of how many elements touch a node).
-    #[semio_framework_async_macros::async_test]
-    async fn nodal_averaged_scalar_patch_test_is_exact_under_uniform_stress() {
+    #[test]
+    fn nodal_averaged_scalar_patch_test_is_exact_under_uniform_stress() {
         use crate::elements2d::{PlaneKind, Tri3Cst};
         let (e, nu, t) = (1000.0, 0.25, 1.0);
         let coords = [[0.0, 0.0], [2.0, 0.0], [2.0, 2.0], [0.0, 2.0]];
@@ -945,8 +1077,8 @@ mod tests {
     /// 🎨️ `nodal_averaged_scalar` on two elements sharing exactly one node but reporting DIFFERENT
     /// constant von Mises values: the shared node's averaged value must land strictly between the
     /// two elements' own values, while each element's exclusive nodes keep that element's exact value.
-    #[semio_framework_async_macros::async_test]
-    async fn nodal_averaged_scalar_shared_node_is_between_neighboring_element_values() {
+    #[test]
+    fn nodal_averaged_scalar_shared_node_is_between_neighboring_element_values() {
         use crate::elements2d::{PlaneKind, Tri3Cst};
         let (e, nu, t) = (1000.0, 0.25, 1.0);
         let el_a = Tri3Cst { id: "a".into(), nodes: ["shared".into(), "a1".into(), "a2".into()], e, nu, thickness: t, kind: PlaneKind::Stress, density: 0.0 };
@@ -987,24 +1119,24 @@ mod tests {
     }
 
     /// 🔍️ An empty `AnalysisModel` is rejected the same way `Model`'s top-level `validate` rejects it.
-    #[semio_framework_async_macros::async_test]
-    async fn empty_model_is_rejected() {
+    #[test]
+    fn empty_model_is_rejected() {
         let model = AnalysisModel { nodes: vec![], elements: vec![], supports: vec![] };
         let err = solve_multi_case(&model, &[], &[], [0.0, 0.0, 0.0]).unwrap_err();
         assert_eq!(err, FemError::EmptyModel);
     }
 
     /// 🔍️ An element referencing a node id absent from `model.nodes` is rejected.
-    #[semio_framework_async_macros::async_test]
-    async fn dangling_element_node_ref_is_rejected() {
+    #[test]
+    fn dangling_element_node_ref_is_rejected() {
         let model = AnalysisModel { nodes: vec![Node { id: "a".into(), pos: [0.0, 0.0, 0.0] }], elements: vec![Bar2 { id: "e1".into(), start: "a".into(), end: "missing".into(), e: 1.0, area: 1.0, density: 0.0 }.into()], supports: vec![] };
         let err = solve_multi_case(&model, &[], &[], [0.0, 0.0, 0.0]).unwrap_err();
         assert_eq!(err, FemError::DanglingNodeRef("missing".into()));
     }
 
     /// 🔍️ A support referencing a node id absent from `model.nodes` is rejected.
-    #[semio_framework_async_macros::async_test]
-    async fn dangling_support_node_ref_is_rejected() {
+    #[test]
+    fn dangling_support_node_ref_is_rejected() {
         let model = AnalysisModel { nodes: vec![Node { id: "a".into(), pos: [0.0, 0.0, 0.0] }], elements: vec![], supports: vec![Support { node_id: "missing".into(), fixed: vec![Dof::Tx] }] };
         let err = solve_multi_case(&model, &[], &[], [0.0, 0.0, 0.0]).unwrap_err();
         assert_eq!(err, FemError::DanglingNodeRef("missing".into()));
@@ -1012,8 +1144,8 @@ mod tests {
 
     /// 🔍️ A `LoadCase` nodal load referencing a node id absent from `model.nodes` is rejected —
     /// `validate_case`'s own check, distinct from `validate`'s model-wide checks above.
-    #[semio_framework_async_macros::async_test]
-    async fn dangling_load_case_node_ref_is_rejected() {
+    #[test]
+    fn dangling_load_case_node_ref_is_rejected() {
         let model = AnalysisModel { nodes: vec![Node { id: "a".into(), pos: [0.0, 0.0, 0.0] }], elements: vec![], supports: vec![] };
         let case = LoadCase { id: "bad".into(), nodal_loads: vec![NodalLoad { node_id: "missing".into(), dof: Dof::Tx, value: 1.0 }], member_loads: vec![], self_weight: false };
         let err = solve_multi_case(&model, &[case], &[], [0.0, 0.0, 0.0]).unwrap_err();
@@ -1022,8 +1154,8 @@ mod tests {
 
     /// 🌬️ `solve_multi_case`'s member-UDL branch (`case_rhs_old`'s `equivalent_nodal_loads` path) must
     /// match `solve_linear_static`'s dense pipeline (`model.member_loads`) on an equivalent model.
-    #[semio_framework_async_macros::async_test]
-    async fn solve_multi_case_applies_member_udl_equivalent_loads() {
+    #[test]
+    fn solve_multi_case_applies_member_udl_equivalent_loads() {
         let (e, area, iy, l, w) = (200e9, 0.01, 1e-5, 2.0, 500.0);
         let model = AnalysisModel {
             nodes: vec![Node { id: "a".into(), pos: [0.0, 0.0, 0.0] }, Node { id: "b".into(), pos: [l, 0.0, 0.0] }],
@@ -1054,8 +1186,8 @@ mod tests {
     /// 🌱️ `zero_like` zero-initializes every non-`Beam` `ElementResult` variant (the `Beam` variant is
     /// covered by `combination_equals_manual_superposition` above), and `add_scaled_element_result` on
     /// a freshly-zeroed accumulator reduces to exactly `factor * term`, field-by-field, per variant.
-    #[semio_framework_async_macros::async_test]
-    async fn zero_like_and_add_scaled_element_result_handle_every_non_beam_variant() {
+    #[test]
+    fn zero_like_and_add_scaled_element_result_handle_every_non_beam_variant() {
         let factor = 2.5;
 
         let bar = ElementResult::Bar { n: 4.0 };
@@ -1118,8 +1250,8 @@ mod tests {
     /// 📊️ `element_scalar_average` covers every element-kind/scalar combination it recognizes (`Some`)
     /// and every mismatched combination (`None`) — arms `nodal_averaged_scalar`'s own patch tests never
     /// happen to exercise (those only touch `Plane`/`VonMises`).
-    #[semio_framework_async_macros::async_test]
-    async fn element_scalar_average_covers_every_variant_and_scalar_combination() {
+    #[test]
+    fn element_scalar_average_covers_every_variant_and_scalar_combination() {
         let plane = ElementResult::Plane { gauss: vec![PlaneStress { sxx: 1.0, syy: 2.0, sxy: 3.0, von_mises: 4.0 }] };
         assert_eq!(element_scalar_average(&plane, StressScalar::VonMises), Some(4.0));
         assert_eq!(element_scalar_average(&plane, StressScalar::Sxx), Some(1.0));
@@ -1145,6 +1277,70 @@ mod tests {
 
         let bar = ElementResult::Bar { n: 42.0 };
         assert_eq!(element_scalar_average(&bar, StressScalar::VonMises), None);
+    }
+
+    fn graph_operation(id: u64) -> Operation {
+        Operation::new(semio_framework_job::OperationId(id), semio_framework_job::RevisionId(4), semio_framework_job::Generation(2), 9)
+    }
+
+    fn graph_plan() -> Vec<FemStagePlan> {
+        vec![
+            FemStagePlan { stage: FemJobStage::ValidateReferences, units: 1 },
+            FemStagePlan { stage: FemJobStage::BuildDofMap, units: 2 },
+            FemStagePlan { stage: FemJobStage::OrderEquations, units: 3 },
+            FemStagePlan { stage: FemJobStage::Assemble, units: 4 },
+            FemStagePlan { stage: FemJobStage::Factor, units: 5 },
+            FemStagePlan { stage: FemJobStage::Solve, units: 6 },
+            FemStagePlan { stage: FemJobStage::Recover, units: 7 },
+            FemStagePlan { stage: FemJobStage::Finalize, units: 8 },
+        ]
+    }
+
+    #[test]
+    fn fem_job_graph_checkpoint_resume_preserves_stage_order() {
+        let operation = graph_operation(201);
+        let mut graph = FemJobGraph::new(operation, graph_plan(), 2);
+        let mut sequence = 0;
+        let checkpoint = loop {
+            let mut context = semio_framework_job::StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(2, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+            if let StepOutcome::CheckpointReady(checkpoint) = graph.step(&mut context) {
+                break checkpoint.state;
+            }
+        };
+        let mut resumed = FemJobGraph::from_checkpoint(operation, &checkpoint).expect("graph checkpoint restores");
+        assert_eq!(resumed.checkpoint_bytes(), checkpoint);
+        let mut seen = Vec::new();
+        loop {
+            if let Some(stage) = resumed.progress().stage {
+                if seen.last() != Some(&stage) {
+                    seen.push(stage);
+                }
+            }
+            let mut context = semio_framework_job::StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(3, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+            if matches!(resumed.step(&mut context), StepOutcome::Complete(_)) {
+                break;
+            }
+        }
+        assert_eq!(resumed.progress().completed_units, 36);
+        assert_eq!(seen, graph_plan().into_iter().skip(1).map(|plan| plan.stage).collect::<Vec<_>>());
+    }
+
+    #[test]
+    fn fem_job_graph_rejects_stale_and_cancelled_steps_without_mutation() {
+        let operation = graph_operation(202);
+        let mut graph = FemJobGraph::new(operation, graph_plan(), 2);
+        let before = graph.checkpoint_bytes();
+        let mut sequence = 0;
+        let mut stale =
+            semio_framework_job::StepContext::new(operation.operation, semio_framework_job::Generation(operation.generation.0 + 1), semio_framework_job::StepBudget::new(2, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+        assert!(matches!(graph.step(&mut stale), StepOutcome::Fault(_)));
+        assert_eq!(graph.checkpoint_bytes(), before);
+
+        let token = semio_framework_job::root_cancel_token();
+        semio_framework_async::block_on(token.cancel());
+        let mut cancelled = semio_framework_job::StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(2, u64::MAX), token, || 0, &mut sequence);
+        assert_eq!(graph.step(&mut cancelled), StepOutcome::Cancelled);
+        assert_eq!(graph.checkpoint_bytes(), before);
     }
 }
 // #endregion 🔖️Tests

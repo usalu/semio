@@ -6,7 +6,9 @@
 use crate::artifacts::tsv::{TsvMutation, TsvSnapshot, STDIO_TSV_DOCUMENT_SCHEMA};
 use crate::editor::tsv::modes::edit;
 use crate::editor::tsv::modes::edit::windows::main;
-use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId, UiNode};
+use semio_framework_plugin::{
+    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId, UiNode,
+};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Dialect
@@ -100,11 +102,11 @@ impl ArtifactEditor for TsvEditor {
         Ok(Emit { artifact_mutations: vec![TsvMutation::SetCell { row_index: *row as usize, field_index: *column as usize, value: value.clone() }], description: Some(format!("Set cell {row},{column}")), ..Default::default() })
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
-        match body_key {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::ComponentTree {
+        semio_framework_plugin::built_to_component_tree(match body_key {
             main::BODY_KEY => main::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
-        }
+            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))),
+        })
     }
 }
 //#endregion 🔖️Editor
@@ -112,14 +114,7 @@ impl ArtifactEditor for TsvEditor {
 //#region 🔖️Manifest
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn create_tsv_editor() -> semio_framework_plugin::AppDefinition {
-    Editor::builder(TSV_EDITOR_DIALECT)
-        .document(["semio", "stdio", "tsv"])
-        .icon_id("table-2")
-        .mode_def(edit::definition())
-        .default_mode_id(edit::TSV_EDIT_MODE_ID)
-        .window_kind_def(main::definition())
-        .default_layout(edit::layout())
-        .build_definition()
+    Editor::builder(TSV_EDITOR_DIALECT).document(["semio", "stdio", "tsv"]).icon_id("table-2").mode_def(edit::definition()).default_mode_id(edit::TSV_EDIT_MODE_ID).window_kind_def(main::definition()).default_layout(edit::layout()).build_definition()
 }
 //#endregion 🔖️Manifest
 

@@ -1,0 +1,1 @@
+[pure-file r13-76j3fymt] /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs: 156 exact syntax-token edits (dryRun=false)

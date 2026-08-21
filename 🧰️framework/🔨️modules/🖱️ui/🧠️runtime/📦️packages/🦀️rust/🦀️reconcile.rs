@@ -10,11 +10,12 @@
 //! a DOM node, a GPU cache entry) survive a re-present instead of being torn down and rebuilt every
 //! frame the way the old `PatchTracker` full-body-`Replace` stub forced.
 //!
-//! 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md. Every `fn`
-//! below is plain sync by owner ruling U1, which supersedes this program's general async-everything
-//! default for exactly this crate.
+//! The frame path uses [`SurfaceReconcileCursor`] internally: presentation discovery, identity
+//! allocation, postorder record diffing, and stale-tree removal each advance one node at a time.
+//! Plain synchronous calls are cooperative scheduler slices, not a hidden run-to-completion frame.
 
 use std::collections::{HashMap, HashSet};
+use std::mem::{size_of, take};
 
 //#region 🔖️Identity
 
@@ -52,7 +53,7 @@ fn assert_unique_child_keys(parent: ui_contract::UiNodeId, children: &[crate::Tr
 /// ♻️ Keyed differ for one render surface. Owns a shadow copy of what the receiver has (`retained`,
 /// `root`) plus the `(parent, key) → id` index (`key_index`) that carries every node's identity across
 /// frames, and the monotonic `allocator` that mints an id for a node the first time it is ever seen.
-/// [`SurfaceReconciler::reconcile`] is the only place any of these four change together.
+/// A completed reconcile is the only place any of these four change together.
 #[derive(Debug)]
 pub struct SurfaceReconciler {
     surface: ui_contract::SurfaceId,
@@ -124,6 +125,251 @@ impl SurfaceReconciler {
 }
 
 //#endregion 🔖️Reconciler
+
+//#region ⏭️ResumableReconcile
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum SurfaceReconcileStage {
+    TraversePresentation,
+    AllocateIdentities,
+    DiffRecords,
+    RemoveStale,
+    Finalize,
+}
+
+#[derive(Debug)]
+pub(crate) enum SurfaceReconcileStep {
+    Yield { nodes: usize, bytes: usize },
+    Complete { reconciler: SurfaceReconciler, patch: Option<ui_contract::UiPatch> },
+}
+
+struct FlatPresentedNode {
+    parent: Option<usize>,
+    node: crate::TreeNode,
+    child_ids: Vec<ui_contract::UiNodeId>,
+}
+
+struct PresentationFrame {
+    index: usize,
+    children: std::vec::IntoIter<crate::TreeNode>,
+}
+
+struct RemovalFrame {
+    id: ui_contract::UiNodeId,
+    next_child: usize,
+}
+
+/// ⏭️ Persistent one-node-at-a-time traversal and keyed differ for a single presented surface.
+/// The retained reconciler is read-only until `Complete`; abandoning this cursor therefore abandons
+/// every candidate identity, record, operation, and revision together.
+pub(crate) struct SurfaceReconcileCursor {
+    stage: SurfaceReconcileStage,
+    surface: ui_contract::SurfaceId,
+    base_revision: ui_contract::UiRevision,
+    allocator: ui_contract::UiNodeIdAllocator,
+    old_root: Option<ui_contract::UiNodeId>,
+    pending_root: Option<crate::TreeNode>,
+    traversal: Vec<PresentationFrame>,
+    flat: Vec<FlatPresentedNode>,
+    postorder: Vec<usize>,
+    seen: HashSet<(Option<usize>, String)>,
+    ids: Vec<ui_contract::UiNodeId>,
+    allocate_index: usize,
+    diff_index: usize,
+    new_retained: HashMap<ui_contract::UiNodeId, ui_contract::UiNodeRecord>,
+    new_key_index: HashMap<NodeIdentity, ui_contract::UiNodeId>,
+    remove_next: Option<ui_contract::UiNodeId>,
+    removal: Vec<RemovalFrame>,
+    ops: Vec<ui_contract::UiPatchOp>,
+}
+
+impl SurfaceReconcileCursor {
+    pub(crate) fn new(tree: crate::ComponentTree, current: &SurfaceReconciler) -> Self {
+        Self {
+            stage: SurfaceReconcileStage::TraversePresentation,
+            surface: current.surface.clone(),
+            base_revision: current.revision,
+            allocator: current.allocator.clone(),
+            old_root: current.root,
+            pending_root: Some(tree.root),
+            traversal: Vec::new(),
+            flat: Vec::new(),
+            postorder: Vec::new(),
+            seen: HashSet::new(),
+            ids: Vec::new(),
+            allocate_index: 0,
+            diff_index: 0,
+            new_retained: HashMap::new(),
+            new_key_index: HashMap::new(),
+            remove_next: None,
+            removal: Vec::new(),
+            ops: Vec::new(),
+        }
+    }
+
+    pub(crate) fn step(&mut self, current: &SurfaceReconciler) -> SurfaceReconcileStep {
+        assert_eq!(current.revision, self.base_revision, "🚫️ retained revision changed while a reconcile cursor was active");
+        loop {
+            match self.stage {
+                SurfaceReconcileStage::TraversePresentation => {
+                    let next = if let Some(root) = self.pending_root.take() {
+                        Some((None, root))
+                    } else {
+                        loop {
+                            let Some(frame) = self.traversal.last_mut() else {
+                                break None;
+                            };
+                            if let Some(child) = frame.children.next() {
+                                break Some((Some(frame.index), child));
+                            }
+                            let complete = self.traversal.pop().expect("traversal frame existed");
+                            self.postorder.push(complete.index);
+                        }
+                    };
+                    if let Some((parent, mut node)) = next {
+                        let key_bytes = node.key.len();
+                        assert!(self.seen.insert((parent, node.key.clone())), "🚫️ duplicate sibling key {:?} in resumable reconciliation", node.key);
+                        let children = take(&mut node.children).into_iter();
+                        let index = self.flat.len();
+                        self.flat.push(FlatPresentedNode { parent, node, child_ids: Vec::new() });
+                        self.traversal.push(PresentationFrame { index, children });
+                        return SurfaceReconcileStep::Yield { nodes: 1, bytes: key_bytes };
+                    }
+                    self.ids.reserve(self.flat.len());
+                    self.new_retained.reserve(self.flat.len());
+                    self.new_key_index.reserve(self.flat.len());
+                    self.stage = SurfaceReconcileStage::AllocateIdentities;
+                }
+                SurfaceReconcileStage::AllocateIdentities => {
+                    if self.allocate_index < self.flat.len() {
+                        let parent_index = self.flat[self.allocate_index].parent;
+                        let parent = parent_index.map(|index| self.ids[index]);
+                        let key = self.flat[self.allocate_index].node.key.clone();
+                        let key_bytes = key.len();
+                        let identity = (parent, key);
+                        let id = current.key_index.get(&identity).copied().unwrap_or_else(|| self.allocator.allocate());
+                        self.new_key_index.insert(identity, id);
+                        self.ids.push(id);
+                        if let Some(parent) = parent_index {
+                            self.flat[parent].child_ids.push(id);
+                        }
+                        self.allocate_index += 1;
+                        return SurfaceReconcileStep::Yield { nodes: 1, bytes: key_bytes };
+                    }
+                    self.stage = SurfaceReconcileStage::DiffRecords;
+                }
+                SurfaceReconcileStage::DiffRecords => {
+                    if self.diff_index < self.flat.len() {
+                        let index = self.postorder[self.diff_index];
+                        let id = self.ids[index];
+                        let children = take(&mut self.flat[index].child_ids);
+                        let flat = &self.flat[index];
+                        let transition = current.retained.get(&id).and_then(|record| record.transition);
+                        let record = build_record(id, &flat.node, children, transition);
+                        if let Some(old) = current.retained.get(&id) {
+                            self.ops.extend(diff_record(&self.surface, old, &record));
+                        } else {
+                            self.ops.push(ui_contract::UiPatchOp::Upsert(record.clone()));
+                        }
+                        let bytes = estimate_record_bytes(&record);
+                        self.new_retained.insert(id, record);
+                        self.diff_index += 1;
+                        return SurfaceReconcileStep::Yield { nodes: 1, bytes };
+                    }
+                    self.remove_next = self.old_root;
+                    self.stage = SurfaceReconcileStage::RemoveStale;
+                }
+                SurfaceReconcileStage::RemoveStale => {
+                    let next = if let Some(id) = self.remove_next.take() {
+                        Some(id)
+                    } else {
+                        loop {
+                            let Some(frame) = self.removal.last_mut() else {
+                                break None;
+                            };
+                            let child = current.retained.get(&frame.id).and_then(|record| record.children.get(frame.next_child)).copied();
+                            if let Some(child) = child {
+                                frame.next_child += 1;
+                                break Some(child);
+                            }
+                            self.removal.pop();
+                        }
+                    };
+                    if let Some(id) = next {
+                        if self.new_retained.contains_key(&id) {
+                            self.removal.push(RemovalFrame { id, next_child: 0 });
+                        } else {
+                            self.ops.push(ui_contract::UiPatchOp::Remove { id });
+                        }
+                        return SurfaceReconcileStep::Yield { nodes: 1, bytes: size_of::<ui_contract::UiNodeId>() };
+                    }
+                    self.stage = SurfaceReconcileStage::Finalize;
+                }
+                SurfaceReconcileStage::Finalize => {
+                    let new_root = self.ids.first().copied();
+                    if self.old_root != new_root {
+                        if let Some(id) = new_root {
+                            self.ops.push(ui_contract::UiPatchOp::SetRoot { id });
+                        }
+                    }
+                    let revision = if self.ops.is_empty() { self.base_revision } else { self.base_revision.next() };
+                    let patch = if self.ops.is_empty() { None } else { Some(ui_contract::UiPatch { surface: self.surface.clone(), base_revision: self.base_revision, revision, ops: take(&mut self.ops) }) };
+                    let reconciler = SurfaceReconciler { surface: self.surface.clone(), revision, allocator: self.allocator.clone(), retained: take(&mut self.new_retained), key_index: take(&mut self.new_key_index), root: new_root };
+                    return SurfaceReconcileStep::Complete { reconciler, patch };
+                }
+            }
+        }
+    }
+}
+
+fn estimate_record_bytes(record: &ui_contract::UiNodeRecord) -> usize {
+    size_of::<ui_contract::UiNodeRecord>().saturating_add(record.key.len()).saturating_add(record.children.len().saturating_mul(size_of::<ui_contract::UiNodeId>()))
+}
+
+fn diff_record(surface: &ui_contract::SurfaceId, old: &ui_contract::UiNodeRecord, new: &ui_contract::UiNodeRecord) -> Vec<ui_contract::UiPatchOp> {
+    let id = new.id;
+    let mut targeted = Vec::new();
+    if old.component != new.component {
+        targeted.push(ui_contract::UiPatchOp::SetComponent { id, component: new.component.clone() });
+    }
+    if old.layout != new.layout {
+        targeted.push(ui_contract::UiPatchOp::SetLayout { id, layout: new.layout.clone() });
+    }
+    if old.activity != new.activity || old.disabled != new.disabled {
+        targeted.push(ui_contract::UiPatchOp::SetActivity { id, activity: new.activity, disabled: new.disabled });
+    }
+    if old.children != new.children {
+        targeted.push(ui_contract::UiPatchOp::SetChildren { id, children: new.children.clone() });
+    }
+    if old.style != new.style {
+        targeted.push(ui_contract::UiPatchOp::SetStyle { id, style: new.style });
+    }
+    if old.accessibility != new.accessibility {
+        targeted.push(ui_contract::UiPatchOp::SetAccessibility { id, accessibility: new.accessibility.clone() });
+    }
+    if old.bindings != new.bindings {
+        targeted.push(ui_contract::UiPatchOp::SetBindings { id, bindings: new.bindings.clone() });
+    }
+    if old.menu != new.menu {
+        targeted.push(ui_contract::UiPatchOp::SetMenu { id, menu: new.menu.clone() });
+    }
+    if targeted.is_empty() {
+        return targeted;
+    }
+    let upsert = ui_contract::UiPatchOp::Upsert(new.clone());
+    if targeted.len() > 1 && estimate_ops_bytes(surface, std::slice::from_ref(&upsert)) < estimate_ops_bytes(surface, &targeted) {
+        vec![upsert]
+    } else {
+        targeted
+    }
+}
+
+fn estimate_ops_bytes(surface: &ui_contract::SurfaceId, ops: &[ui_contract::UiPatchOp]) -> usize {
+    let probe = ui_contract::UiPatch { surface: surface.clone(), base_revision: ui_contract::UiRevision::default(), revision: ui_contract::UiRevision::default(), ops: ops.to_vec() };
+    ui_contract::patch_byte_estimate(&probe)
+}
+
+//#endregion ⏭️ResumableReconcile
 
 //#region 🔖️Diff
 
@@ -345,7 +591,83 @@ mod tests {
             assert_eq!(state.nodes.get(&record.id), Some(record), "record {:?} diverges between snapshot and applied state", record.id);
         }
     }
+
+    fn reconcile_resumable(current: &SurfaceReconciler, component_tree: crate::ComponentTree) -> (SurfaceReconciler, Option<ui_contract::UiPatch>, usize) {
+        let mut cursor = SurfaceReconcileCursor::new(component_tree, current);
+        let mut yields = 0;
+        loop {
+            match cursor.step(current) {
+                SurfaceReconcileStep::Yield { .. } => yields += 1,
+                SurfaceReconcileStep::Complete { reconciler, patch } => return (reconciler, patch, yields),
+            }
+        }
+    }
     //#endregion 🔖️Fixtures
+
+    //#region ⏭️ResumableCursor
+    #[test]
+    fn resumable_cursor_matches_the_existing_keyed_diff_and_revision_semantics() {
+        let component_tree = tree(container("root", vec![text("a", "hello"), container("b", vec![leaf("x"), leaf("y")])]));
+        let mut direct = SurfaceReconciler::new("s");
+        let expected_patch = direct.reconcile(&component_tree).expect("initial direct patch");
+
+        let current = SurfaceReconciler::new("s");
+        let (resumed, actual_patch, yields) = reconcile_resumable(&current, component_tree);
+
+        assert_eq!(actual_patch, Some(expected_patch));
+        let actual = resumed.snapshot();
+        let expected = direct.snapshot();
+        assert_eq!(actual.revision, expected.revision);
+        assert_eq!(actual.root, expected.root);
+        assert_eq!(actual.nodes.len(), expected.nodes.len());
+        assert!(expected.nodes.iter().all(|record| actual.nodes.contains(record)));
+        assert!(yields >= 15, "five nodes must cross traversal, identity, and diff cursors");
+    }
+
+    #[test]
+    fn abandoned_large_tree_cursor_leaves_the_retained_shadow_and_revision_unchanged() {
+        let mut current = SurfaceReconciler::new("s");
+        current.reconcile(&tree(container("root", vec![leaf("baseline")]))).expect("baseline");
+        let before = current.snapshot();
+        let children = (0..4_096).map(|index| leaf(&format!("item-{index}"))).collect();
+        let mut cursor = SurfaceReconcileCursor::new(tree(container("root", children)), &current);
+
+        for _ in 0..1_000 {
+            assert!(matches!(cursor.step(&current), SurfaceReconcileStep::Yield { nodes: 1, .. }));
+        }
+        drop(cursor);
+
+        assert_eq!(current.snapshot(), before, "cancellation or supersession must discard only candidate state");
+    }
+
+    #[test]
+    fn every_large_tree_cursor_slice_stays_below_eight_milliseconds() {
+        use std::time::{Duration, Instant};
+
+        let children = (0..4_096).map(|index| leaf(&format!("item-{index}"))).collect();
+        let current = SurfaceReconciler::new("s");
+        let mut cursor = SurfaceReconcileCursor::new(tree(container("root", children)), &current);
+        let mut yields = 0;
+        loop {
+            let started = Instant::now();
+            let step = cursor.step(&current);
+            let elapsed = started.elapsed();
+            assert!(elapsed < Duration::from_millis(8), "one node cursor slice took {elapsed:?}");
+            match step {
+                SurfaceReconcileStep::Yield { nodes, .. } => {
+                    assert_eq!(nodes, 1);
+                    yields += 1;
+                }
+                SurfaceReconcileStep::Complete { reconciler, patch } => {
+                    assert_eq!(reconciler.snapshot().nodes.len(), 4_097);
+                    assert!(patch.is_some());
+                    break;
+                }
+            }
+        }
+        assert!(yields >= 12_291, "every presented node crosses three independent cursor phases");
+    }
+    //#endregion ⏭️ResumableCursor
 
     //#region 🔖️FirstReconcileAndIdempotence
     #[test]

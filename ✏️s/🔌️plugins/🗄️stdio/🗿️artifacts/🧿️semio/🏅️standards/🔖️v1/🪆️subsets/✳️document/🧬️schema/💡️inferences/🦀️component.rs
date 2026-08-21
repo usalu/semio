@@ -25,7 +25,7 @@ pub struct SemioDocumentInference {
 }
 
 impl protocol::Inference<SemioDocumentSnapshot> for SemioDocumentInference {
-    async fn infer(snapshot: &SemioDocumentSnapshot) -> Self {
+    fn infer(snapshot: &SemioDocumentSnapshot) -> Self {
         Self { outline: compute_semio_document_outline(snapshot) }
     }
 }
@@ -39,13 +39,13 @@ impl Default for SemioDocumentInference {
 }
 
 impl protocol::InferenceSpec<SemioDocumentSnapshot> for SemioDocumentInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.stdio.semio.document.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.semio.document.inference.outline", reads: &["blocks"] }]
     }
 }

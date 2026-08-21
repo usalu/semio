@@ -53,11 +53,11 @@ struct Beam {
 /// complete assignment. A cheap, purely domain-shape-based progress proxy — no soft-constraint
 /// scoring hook yet (deferred: a caller wanting soft-guided beam search can layer
 /// `crate::wfc_engine::soft::SoftConstraint` scoring on top once there's a concrete consumer).
-async fn score(domains: &DomainStore) -> f64 {
+fn score(domains: &DomainStore) -> f64 {
     -(domains.iter().map(|(_, d)| (d.cardinality().max(1) - 1) as f64).sum::<f64>())
 }
 
-async fn build_root<T: Topology>(model: &CompiledModel, topo: &T, init_domains: Option<&[PatternSet]>, fixed: &[(NodeId, PatternId)], metrics: &mut Metrics) -> Option<DomainStore> {
+fn build_root<T: Topology>(model: &CompiledModel, topo: &T, init_domains: Option<&[PatternSet]>, fixed: &[(NodeId, PatternId)], metrics: &mut Metrics) -> Option<DomainStore> {
     let node_count = topo.node_count();
     let w = model.weights();
     let mut domains = DomainStore::new_full(node_count, w);
@@ -91,7 +91,7 @@ async fn build_root<T: Topology>(model: &CompiledModel, topo: &T, init_domains: 
 
 /// 🌊️🔦️ Runs beam search to either a solution or exhaustion of every beam / `max_steps`. See this
 /// module's docs for the exact (incomplete) guarantees.
-pub(crate) async fn beam_search<T: Topology>(model: &CompiledModel, topo: &T, beam_config: BeamConfig, seed: u64, init_domains: Option<&[PatternSet]>, fixed: &[(NodeId, PatternId)]) -> SolveOutcome {
+pub(crate) fn beam_search<T: Topology>(model: &CompiledModel, topo: &T, beam_config: BeamConfig, seed: u64, init_domains: Option<&[PatternSet]>, fixed: &[(NodeId, PatternId)]) -> SolveOutcome {
     let fingerprint = model.fingerprint();
     let mut metrics = Metrics::default();
     let contradiction = |metrics: Metrics| SolveOutcome::Contradiction(ContradictionReport { node: NodeId(0), report: RunReport { metrics, model_fingerprint: fingerprint, seed, events: Vec::new() } });
@@ -149,7 +149,7 @@ mod tests {
     use crate::wfc_engine::oracle;
     use crate::wfc_engine::topology::GraphTopologyBuilder;
 
-    async fn checkerboard(n: usize) -> (CompiledModel, crate::wfc_engine::topology::GraphTopology, Vec<oracle::ArcSpec>) {
+    fn checkerboard(n: usize) -> (CompiledModel, crate::wfc_engine::topology::GraphTopology, Vec<oracle::ArcSpec>) {
         let mut b = ModelBuilder::new();
         let black = b.add_pattern(1.0);
         let white = b.add_pattern(1.0);
@@ -167,7 +167,7 @@ mod tests {
         (model, tb.build().unwrap(), arcs)
     }
 
-    async fn k_graph(n: usize, k: usize) -> (CompiledModel, crate::wfc_engine::topology::GraphTopology, Vec<oracle::ArcSpec>) {
+    fn k_graph(n: usize, k: usize) -> (CompiledModel, crate::wfc_engine::topology::GraphTopology, Vec<oracle::ArcSpec>) {
         let mut b = ModelBuilder::new();
         let patterns: Vec<_> = (0..k).map(|_| b.add_pattern(1.0)).collect();
         let ne = b.add_relation("ne");
@@ -194,8 +194,8 @@ mod tests {
         (model, tb.build().unwrap(), arcs)
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn finds_a_valid_solution_on_a_satisfiable_instance() {
+    #[test]
+    fn finds_a_valid_solution_on_a_satisfiable_instance() {
         let (model, topo, arcs) = checkerboard(8);
         let config = BeamConfig::default();
         for seed in 0..10 {
@@ -206,8 +206,8 @@ mod tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn finds_a_valid_solution_on_a_harder_coloring_instance() {
+    #[test]
+    fn finds_a_valid_solution_on_a_harder_coloring_instance() {
         let (model, topo, arcs) = k_graph(4, 4);
         let config = BeamConfig { width: 6, ..Default::default() };
         match beam_search(&model, &topo, config, 7, None, &[]) {
@@ -216,8 +216,8 @@ mod tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn reports_contradiction_not_a_panic_on_an_unsatisfiable_instance() {
+    #[test]
+    fn reports_contradiction_not_a_panic_on_an_unsatisfiable_instance() {
         // K5 needs 5 colors, only 4 available: genuinely unsatisfiable. Beam search must still
         // terminate cleanly and report Contradiction, never claim Solved or panic.
         let (model, topo, _arcs) = k_graph(5, 4);
@@ -226,8 +226,8 @@ mod tests {
         assert!(matches!(outcome, SolveOutcome::Contradiction(_)), "expected Contradiction, got {outcome:?}");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn width_one_still_finds_a_solution_when_no_backtrack_is_needed() {
+    #[test]
+    fn width_one_still_finds_a_solution_when_no_backtrack_is_needed() {
         // A checkerboard path never needs more than one live branch at a time (propagation alone
         // forces every other node), so width=1 should still succeed here.
         let (model, topo, arcs) = checkerboard(10);
@@ -238,8 +238,8 @@ mod tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn respects_fixed_pins() {
+    #[test]
+    fn respects_fixed_pins() {
         let (model, topo, _arcs) = checkerboard(4);
         let config = BeamConfig::default();
         match beam_search(&model, &topo, config, 1, None, &[(NodeId(0), PatternId(0))]) {
@@ -248,8 +248,8 @@ mod tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn contradictory_fixed_pins_report_contradiction_immediately() {
+    #[test]
+    fn contradictory_fixed_pins_report_contradiction_immediately() {
         let (model, topo, _arcs) = checkerboard(2);
         let config = BeamConfig::default();
         // Both nodes pinned to the same pattern is impossible under the mirrored adjacency rule.

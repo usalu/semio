@@ -1102,7 +1102,7 @@ pub(crate) fn dec_xml_node_bin(reader: &mut store::ByteReader<'_>) -> Result<Xml
             let child_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
             let mut children = Vec::with_capacity(child_count as usize);
             for _ in 0..child_count {
-                children.push(Box::pin(dec_xml_node_bin(reader))?);
+                children.push(dec_xml_node_bin(reader)?);
             }
             Ok(XmlNode::Element { name, attrs, children })
         }
@@ -1279,7 +1279,7 @@ fn dec_node_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<SvgNodeDiff, 
         0 => {
             let name = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
             let attributes = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_attrs_diff_bin(reader)?) } else { None };
-            let children = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(Box::pin(dec_children_diff_bin(reader))?) } else { None };
+            let children = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_children_diff_bin(reader)?) } else { None };
             Ok(SvgNodeDiff::Element(SvgElementDiff { name, attributes, children }))
         }
         1 => {
@@ -1365,7 +1365,7 @@ fn dec_children_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<SvgChildr
     let mut modified = Vec::with_capacity(modified_count as usize);
     for _ in 0..modified_count {
         let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-        let diff = Box::pin(dec_node_diff_bin(reader))?;
+        let diff = dec_node_diff_bin(reader)?;
         modified.push(SvgChildModified { index, diff });
     }
     let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
@@ -1473,20 +1473,20 @@ impl protocol::DiffCodec for SvgDiff {
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
         let _format = reader.read_u8().map_err(|e| malformed("diff format", 0, e.to_string()))?;
         let flags = reader.read_u8().map_err(|e| malformed("diff flags", 1, e.to_string()))?;
-        let prolog = if flags & 0b1000 != 0 { Some(dec_prolog_bin(&mut reader).map_err(|e| malformed("diff prolog", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
+        let prolog = if flags & 0b1000 != 0 { Some(dec_prolog_bin(&mut reader).map_err(|e| malformed("diff prolog", reader.position(), e))?) } else { None };
         let declaration = if flags & 0b001 != 0 {
-            let has = reader.read_u8().map_err(|e| malformed("diff declaration presence", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
-            Some(if has != 0 { Some(dec_declaration_bin(&mut reader).map_err(|e| malformed("diff declaration", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None })
+            let has = reader.read_u8().map_err(|e| malformed("diff declaration presence", reader.position(), e.to_string()))?;
+            Some(if has != 0 { Some(dec_declaration_bin(&mut reader).map_err(|e| malformed("diff declaration", reader.position(), e))?) } else { None })
         } else {
             None
         };
         let doctype = if flags & 0b010 != 0 {
-            let has = reader.read_u8().map_err(|e| malformed("diff doctype presence", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
-            Some(if has != 0 { Some(dec_doctype_bin(&mut reader).map_err(|e| malformed("diff doctype", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None })
+            let has = reader.read_u8().map_err(|e| malformed("diff doctype presence", reader.position(), e.to_string()))?;
+            Some(if has != 0 { Some(dec_doctype_bin(&mut reader).map_err(|e| malformed("diff doctype", reader.position(), e))?) } else { None })
         } else {
             None
         };
-        let root = if flags & 0b100 != 0 { Some(dec_node_diff_bin(&mut reader).map_err(|e| malformed("diff root", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
+        let root = if flags & 0b100 != 0 { Some(dec_node_diff_bin(&mut reader).map_err(|e| malformed("diff root", reader.position(), e))?) } else { None };
         Ok(SvgDiff { prolog, declaration, doctype, root })
     }
 }
@@ -1537,8 +1537,8 @@ mod handcrafted_diff_codec_tests {
     /// tri-states, attribute add/remove/modify, and nested child add/remove/modify. Reuses
     /// `demo_diff_cases()` (the single prolog of truth also consumed by `⚙️engine/🦀️component.rs`'s
     /// `diff_grammar_conformance_law`/`protocol_walk_law`).
-    #[semio_framework_async_macros::async_test]
-    async fn diff_codec_text_binary_roundtrip_law() {
+    #[test]
+    fn diff_codec_text_binary_roundtrip_law() {
         for d in demo_diff_cases() {
             let printed = d.print_diff();
             assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");

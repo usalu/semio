@@ -14,16 +14,16 @@ pub struct ChangeMaterialMetallic {
 impl protocol::MutationKind<SemioMeshSnapshot, SemioMeshMutation> for ChangeMaterialMetallic {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "material-metallic", kind: "change-material-metallic", record: "ChangedMaterialMetallic" };
 
-    async fn diff(&self, base: &SemioMeshSnapshot) -> protocol::MutationOutcome<<SemioMeshMutation as protocol::Mutation<SemioMeshSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioMeshSnapshot) -> protocol::MutationOutcome<<SemioMeshMutation as protocol::Mutation<SemioMeshSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &SemioMeshSnapshot) -> Vec<SemioMeshMutation> {
+    fn inverse(&self, base: &SemioMeshSnapshot) -> Vec<SemioMeshMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change material \"{}\" metallic factor", self.id)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

@@ -11,9 +11,9 @@
 use std::collections::HashSet;
 use std::f64::consts::FRAC_PI_2;
 
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::{make_convex_hull, solid_from_triangle_soup};
 #[cfg(test)]
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::make_box;
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::{make_convex_hull, solid_from_triangle_soup};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::mass_properties::edge_length;
 #[cfg(test)]
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::inferences::mass_properties::solid_volume;

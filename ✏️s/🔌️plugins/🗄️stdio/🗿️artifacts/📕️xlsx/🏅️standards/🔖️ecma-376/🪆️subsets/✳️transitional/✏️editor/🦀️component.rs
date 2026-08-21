@@ -12,7 +12,9 @@ use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::snapsho
 use crate::artifacts::xlsx::{XlsxMutation, XlsxSnapshot, STDIO_XLSX_DOCUMENT_SCHEMA};
 use crate::editor::xlsx::standards::v_ecma_376::subsets::transitional::modes::edit;
 use crate::editor::xlsx::standards::v_ecma_376::subsets::transitional::modes::edit::windows::main;
-use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId, UiNode};
+use semio_framework_plugin::{
+    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId, UiNode,
+};
 use serde::{Deserialize, Serialize};
 use store::EngineHandles;
 
@@ -105,10 +107,10 @@ impl protocol::OpBinary for XlsxTransitionalEditorCommand {
         let mut reader = store::ByteReader::new(bytes);
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
         let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
-        let row = reader.read_varint_u64().map_err(|e| malformed("op row", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as u32;
-        let len = reader.read_varint_u64().map_err(|e| malformed("op value len", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
-        let value_bytes = reader.read_bytes(len).map_err(|e| malformed("op value", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
-        let value = String::from_utf8(value_bytes.to_vec()).map_err(|e| malformed("op value", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
+        let row = reader.read_varint_u64().map_err(|e| malformed("op row", reader.position(), e.to_string()))? as u32;
+        let len = reader.read_varint_u64().map_err(|e| malformed("op value len", reader.position(), e.to_string()))? as usize;
+        let value_bytes = reader.read_bytes(len).map_err(|e| malformed("op value", reader.position(), e.to_string()))?;
+        let value = String::from_utf8(value_bytes.to_vec()).map_err(|e| malformed("op value", reader.position(), e.to_string()))?;
         Ok(XlsxTransitionalEditorCommand::SetCell { row, value })
     }
 }
@@ -158,11 +160,11 @@ impl ArtifactEditor for XlsxTransitionalEditor {
         Ok(Emit { artifact_mutations: vec![XlsxMutation::SetCell { sheet_name, row: cell_row, col: cell_col, value: parsed }], description: Some(description), ..Default::default() })
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
-        match body_key {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::ComponentTree {
+        semio_framework_plugin::built_to_component_tree(match body_key {
             main::BODY_KEY => main::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
-        }
+            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))),
+        })
     }
 }
 //#endregion 🔖️Editor
@@ -209,7 +211,10 @@ mod tests {
         use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::snapshot::{XlsxCell, XlsxSheet, XlsxWorkbook};
         let document = XlsxSnapshot {
             workbook: XlsxWorkbook {
-                sheets: vec![XlsxSheet { name: "S1".into(), cells: vec![XlsxCell { row: 1, col: 0, value: XlsxCellValue::Number(1.0) }] }, XlsxSheet { name: "S2".into(), cells: vec![XlsxCell { row: 2, col: 1, value: XlsxCellValue::Boolean(true) }] }],
+                sheets: vec![
+                    XlsxSheet { name: "S1".into(), cells: vec![XlsxCell { row: 1, col: 0, value: XlsxCellValue::Number(1.0) }] },
+                    XlsxSheet { name: "S2".into(), cells: vec![XlsxCell { row: 2, col: 1, value: XlsxCellValue::Boolean(true) }] },
+                ],
                 ..Default::default()
             },
             ..XlsxSnapshot::default()

@@ -24,7 +24,7 @@ pub struct JsonInference {
 }
 
 impl Inference<JsonSnapshot> for JsonInference {
-    async fn infer(snapshot: &JsonSnapshot) -> Self {
+    fn infer(snapshot: &JsonSnapshot) -> Self {
         Self { outline: JsonOutline::compute(snapshot) }
     }
 }
@@ -40,13 +40,13 @@ impl Default for JsonInference {
 }
 
 impl protocol::InferenceSpec<JsonSnapshot> for JsonInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.stdio.json.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.json.inference.outline", reads: &["value"] }]
     }
 }

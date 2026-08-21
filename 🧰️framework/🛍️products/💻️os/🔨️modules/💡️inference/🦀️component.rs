@@ -295,7 +295,7 @@ where
     F: InferredField<P>,
     D: crate::os_spr::command::DiffRegions,
 {
-    if !diff.touches().await.intersects_any(F::reads().await) {
+    if !diff.touches().intersects_any(F::reads().await) {
         if let Some((_, bytes)) = session.roots.get(F::FIELD_ID) {
             return decode::<BTreeMap<F::Key, F::Value>>(bytes).await;
         }

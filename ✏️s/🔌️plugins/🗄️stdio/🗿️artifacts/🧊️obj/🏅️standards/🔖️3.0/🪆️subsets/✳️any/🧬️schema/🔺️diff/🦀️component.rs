@@ -43,10 +43,10 @@ use serde::{Deserialize, Serialize};
 /// is that item's own PUBLIC sparse-patch type (`ObjVertexDiff`, …).
 trait ObjIndexElem: Clone + PartialEq {
     type Diff: Clone + PartialEq;
-    async fn diff_is_empty(d: &Self::Diff) -> bool;
-    async fn diff_between(a: &Self, b: &Self) -> Self::Diff;
-    async fn diff_apply(d: &Self::Diff, item: &mut Self);
-    async fn diff_absorb(base: &mut Self::Diff, other: Self::Diff);
+    fn diff_is_empty(d: &Self::Diff) -> bool;
+    fn diff_between(a: &Self, b: &Self) -> Self::Diff;
+    fn diff_apply(d: &Self::Diff, item: &mut Self);
+    fn diff_absorb(base: &mut Self::Diff, other: Self::Diff);
 }
 
 /// ▶️ Applies a `(removed, modified, added)` triple to a base array — modified on BASE
@@ -222,13 +222,13 @@ pub struct ObjVertexDiff {
 
 impl ObjIndexElem for ObjVertex {
     type Diff = ObjVertexDiff;
-    async fn diff_is_empty(d: &ObjVertexDiff) -> bool {
+    fn diff_is_empty(d: &ObjVertexDiff) -> bool {
         d == &ObjVertexDiff::default()
     }
-    async fn diff_between(a: &ObjVertex, b: &ObjVertex) -> ObjVertexDiff {
+    fn diff_between(a: &ObjVertex, b: &ObjVertex) -> ObjVertexDiff {
         ObjVertexDiff { x: (a.x != b.x).then_some(b.x), y: (a.y != b.y).then_some(b.y), z: (a.z != b.z).then_some(b.z), w: (a.w != b.w).then_some(b.w) }
     }
-    async fn diff_apply(d: &ObjVertexDiff, item: &mut ObjVertex) {
+    fn diff_apply(d: &ObjVertexDiff, item: &mut ObjVertex) {
         if let Some(v) = d.x {
             item.x = v;
         }
@@ -242,7 +242,7 @@ impl ObjIndexElem for ObjVertex {
             item.w = v;
         }
     }
-    async fn diff_absorb(base: &mut ObjVertexDiff, other: ObjVertexDiff) {
+    fn diff_absorb(base: &mut ObjVertexDiff, other: ObjVertexDiff) {
         if other.x.is_some() {
             base.x = other.x;
         }
@@ -332,13 +332,13 @@ pub struct ObjTexCoordDiff {
 }
 impl ObjIndexElem for ObjTexCoord {
     type Diff = ObjTexCoordDiff;
-    async fn diff_is_empty(d: &ObjTexCoordDiff) -> bool {
+    fn diff_is_empty(d: &ObjTexCoordDiff) -> bool {
         d == &ObjTexCoordDiff::default()
     }
-    async fn diff_between(a: &ObjTexCoord, b: &ObjTexCoord) -> ObjTexCoordDiff {
+    fn diff_between(a: &ObjTexCoord, b: &ObjTexCoord) -> ObjTexCoordDiff {
         ObjTexCoordDiff { u: (a.u != b.u).then_some(b.u), v: (a.v != b.v).then_some(b.v), w: (a.w != b.w).then_some(b.w) }
     }
-    async fn diff_apply(d: &ObjTexCoordDiff, item: &mut ObjTexCoord) {
+    fn diff_apply(d: &ObjTexCoordDiff, item: &mut ObjTexCoord) {
         if let Some(v) = d.u {
             item.u = v;
         }
@@ -349,7 +349,7 @@ impl ObjIndexElem for ObjTexCoord {
             item.w = v;
         }
     }
-    async fn diff_absorb(base: &mut ObjTexCoordDiff, other: ObjTexCoordDiff) {
+    fn diff_absorb(base: &mut ObjTexCoordDiff, other: ObjTexCoordDiff) {
         if other.u.is_some() {
             base.u = other.u;
         }
@@ -434,13 +434,13 @@ pub struct ObjNormalDiff {
 }
 impl ObjIndexElem for ObjNormal {
     type Diff = ObjNormalDiff;
-    async fn diff_is_empty(d: &ObjNormalDiff) -> bool {
+    fn diff_is_empty(d: &ObjNormalDiff) -> bool {
         d == &ObjNormalDiff::default()
     }
-    async fn diff_between(a: &ObjNormal, b: &ObjNormal) -> ObjNormalDiff {
+    fn diff_between(a: &ObjNormal, b: &ObjNormal) -> ObjNormalDiff {
         ObjNormalDiff { x: (a.x != b.x).then_some(b.x), y: (a.y != b.y).then_some(b.y), z: (a.z != b.z).then_some(b.z) }
     }
-    async fn diff_apply(d: &ObjNormalDiff, item: &mut ObjNormal) {
+    fn diff_apply(d: &ObjNormalDiff, item: &mut ObjNormal) {
         if let Some(v) = d.x {
             item.x = v;
         }
@@ -451,7 +451,7 @@ impl ObjIndexElem for ObjNormal {
             item.z = v;
         }
     }
-    async fn diff_absorb(base: &mut ObjNormalDiff, other: ObjNormalDiff) {
+    fn diff_absorb(base: &mut ObjNormalDiff, other: ObjNormalDiff) {
         if other.x.is_some() {
             base.x = other.x;
         }
@@ -535,18 +535,18 @@ pub struct ObjFaceDiff {
 }
 impl ObjIndexElem for ObjFace {
     type Diff = ObjFaceDiff;
-    async fn diff_is_empty(d: &ObjFaceDiff) -> bool {
+    fn diff_is_empty(d: &ObjFaceDiff) -> bool {
         d == &ObjFaceDiff::default()
     }
-    async fn diff_between(a: &ObjFace, b: &ObjFace) -> ObjFaceDiff {
+    fn diff_between(a: &ObjFace, b: &ObjFace) -> ObjFaceDiff {
         ObjFaceDiff { vertices: (a.vertices != b.vertices).then(|| b.vertices.clone()) }
     }
-    async fn diff_apply(d: &ObjFaceDiff, item: &mut ObjFace) {
+    fn diff_apply(d: &ObjFaceDiff, item: &mut ObjFace) {
         if let Some(v) = &d.vertices {
             item.vertices = v.clone();
         }
     }
-    async fn diff_absorb(base: &mut ObjFaceDiff, other: ObjFaceDiff) {
+    fn diff_absorb(base: &mut ObjFaceDiff, other: ObjFaceDiff) {
         if other.vertices.is_some() {
             base.vertices = other.vertices;
         }
@@ -630,15 +630,15 @@ fn group_diff_is_empty(d: &ObjGroupDiff) -> bool {
 /// types per the recipe — this tiny local trait lets `apply_group_diff`/membership helpers work
 /// over either without merging the two public types back into one shared type.
 trait HasFaces {
-    async fn faces_mut(&mut self) -> &mut Vec<usize>;
+    fn faces_mut(&mut self) -> &mut Vec<usize>;
 }
 impl HasFaces for ObjGroup {
-    async fn faces_mut(&mut self) -> &mut Vec<usize> {
+    fn faces_mut(&mut self) -> &mut Vec<usize> {
         &mut self.faces
     }
 }
 impl HasFaces for ObjObject {
-    async fn faces_mut(&mut self) -> &mut Vec<usize> {
+    fn faces_mut(&mut self) -> &mut Vec<usize> {
         &mut self.faces
     }
 }
@@ -2257,16 +2257,16 @@ impl DiffCodec for ObjDiff {
         let _format = reader.read_u8().map_err(|e| malformed("diff format", 0, e.to_string()))?;
         let flags_lo = reader.read_u8().map_err(|e| malformed("diff flags_lo", 1, e.to_string()))?;
         let flags_hi = reader.read_u8().map_err(|e| malformed("diff flags_hi", 2, e.to_string()))?;
-        let vertices = if flags_lo & 0b0000_0001 != 0 { Some(dec_vertices_diff_bin(&mut reader).map_err(|e| malformed("diff vertices", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
-        let texcoords = if flags_lo & 0b0000_0010 != 0 { Some(dec_texcoords_diff_bin(&mut reader).map_err(|e| malformed("diff texcoords", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
-        let normals = if flags_lo & 0b0000_0100 != 0 { Some(dec_normals_diff_bin(&mut reader).map_err(|e| malformed("diff normals", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
-        let faces = if flags_lo & 0b0000_1000 != 0 { Some(dec_faces_diff_bin(&mut reader).map_err(|e| malformed("diff faces", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
-        let groups = if flags_lo & 0b0001_0000 != 0 { Some(dec_groups_diff_bin(&mut reader).map_err(|e| malformed("diff groups", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
-        let objects = if flags_lo & 0b0010_0000 != 0 { Some(dec_objects_diff_bin(&mut reader).map_err(|e| malformed("diff objects", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
-        let mtllib = if flags_lo & 0b0100_0000 != 0 { Some(read_option_bin(&mut reader, read_str_bin).map_err(|e| malformed("diff mtllib", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
-        let usemtl = if flags_lo & 0b1000_0000 != 0 { Some(read_vec_bin(&mut reader, dec_usemtl_bin).map_err(|e| malformed("diff usemtl", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
-        let smoothing_groups = if flags_hi & 0b0000_0001 != 0 { Some(read_vec_bin(&mut reader, dec_smoothing_bin).map_err(|e| malformed("diff smoothing_groups", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
-        let unknown_statements = if flags_hi & 0b0000_0010 != 0 { Some(read_vec_bin(&mut reader, dec_unknown_bin).map_err(|e| malformed("diff unknown_statements", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
+        let vertices = if flags_lo & 0b0000_0001 != 0 { Some(dec_vertices_diff_bin(&mut reader).map_err(|e| malformed("diff vertices", reader.position(), e))?) } else { None };
+        let texcoords = if flags_lo & 0b0000_0010 != 0 { Some(dec_texcoords_diff_bin(&mut reader).map_err(|e| malformed("diff texcoords", reader.position(), e))?) } else { None };
+        let normals = if flags_lo & 0b0000_0100 != 0 { Some(dec_normals_diff_bin(&mut reader).map_err(|e| malformed("diff normals", reader.position(), e))?) } else { None };
+        let faces = if flags_lo & 0b0000_1000 != 0 { Some(dec_faces_diff_bin(&mut reader).map_err(|e| malformed("diff faces", reader.position(), e))?) } else { None };
+        let groups = if flags_lo & 0b0001_0000 != 0 { Some(dec_groups_diff_bin(&mut reader).map_err(|e| malformed("diff groups", reader.position(), e))?) } else { None };
+        let objects = if flags_lo & 0b0010_0000 != 0 { Some(dec_objects_diff_bin(&mut reader).map_err(|e| malformed("diff objects", reader.position(), e))?) } else { None };
+        let mtllib = if flags_lo & 0b0100_0000 != 0 { Some(read_option_bin(&mut reader, read_str_bin).map_err(|e| malformed("diff mtllib", reader.position(), e))?) } else { None };
+        let usemtl = if flags_lo & 0b1000_0000 != 0 { Some(read_vec_bin(&mut reader, dec_usemtl_bin).map_err(|e| malformed("diff usemtl", reader.position(), e))?) } else { None };
+        let smoothing_groups = if flags_hi & 0b0000_0001 != 0 { Some(read_vec_bin(&mut reader, dec_smoothing_bin).map_err(|e| malformed("diff smoothing_groups", reader.position(), e))?) } else { None };
+        let unknown_statements = if flags_hi & 0b0000_0010 != 0 { Some(read_vec_bin(&mut reader, dec_unknown_bin).map_err(|e| malformed("diff unknown_statements", reader.position(), e))?) } else { None };
         Ok(ObjDiff { vertices, texcoords, normals, faces, groups, objects, mtllib, usemtl, smoothing_groups, unknown_statements })
     }
 }
@@ -2455,8 +2455,8 @@ pub(crate) fn demo_diff_cases() -> Vec<ObjDiff> {
 mod tests {
     use super::*;
 
-    #[semio_framework_async_macros::async_test]
-    async fn invalid_collection_targets_are_rejected_before_mutation() {
+    #[test]
+    fn invalid_collection_targets_are_rejected_before_mutation() {
         let base = ObjSnapshot::default();
         let diff = ObjDiff { vertices: Some(ObjVerticesDiff { removed: vec![0], ..Default::default() }), ..Default::default() };
         let error = diff.apply(&base).expect_err("missing vertex target must be rejected");
@@ -2470,8 +2470,8 @@ mod tests {
     /// inside a modified item), and all three collection-triple kinds — index-keyed
     /// (`vertices`/`texcoords`/`normals`/`faces`) AND name-keyed (`groups`/`objects`) — via a real
     /// `between()` result in both directions.
-    #[semio_framework_async_macros::async_test]
-    async fn diff_codec_text_binary_roundtrip_law() {
+    #[test]
+    fn diff_codec_text_binary_roundtrip_law() {
         let a = sweep_a();
         let b = sweep_b();
         let ab = <ObjDiff as DiffAlgebra<ObjSnapshot>>::between(&a, &b);

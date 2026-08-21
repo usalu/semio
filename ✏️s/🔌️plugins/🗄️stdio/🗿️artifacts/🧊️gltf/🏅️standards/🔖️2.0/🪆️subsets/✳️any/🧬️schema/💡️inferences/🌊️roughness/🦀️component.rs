@@ -59,7 +59,7 @@ pub(crate) fn raw(context: &GltfGeometryContext<'_>) -> GltfRoughnessRaw {
 impl GltfInferenceStage<GltfGeometryContext<'_>> for GltfRoughnessInference {
     type Output = GltfRoughnessIndicators;
 
-    async fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
+    fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
         let raw = raw(context);
         Self::Output {
             deviation_from_ideal: deviation_from_ideal::infer(context),
@@ -70,7 +70,7 @@ impl GltfInferenceStage<GltfGeometryContext<'_>> for GltfRoughnessInference {
         }
     }
 
-    async fn unavailable(diagnostic_ids: &[String]) -> Self::Output {
+    fn unavailable(diagnostic_ids: &[String]) -> Self::Output {
         Self::Output {
             deviation_from_ideal: deviation_from_ideal::unavailable_measure(diagnostic_ids),
             deviation_from_smoothed_geometry: deviation_from_smoothed_geometry::unavailable_measure(diagnostic_ids),

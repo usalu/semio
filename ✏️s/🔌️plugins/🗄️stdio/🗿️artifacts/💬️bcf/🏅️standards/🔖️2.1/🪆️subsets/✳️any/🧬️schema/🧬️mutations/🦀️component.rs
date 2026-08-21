@@ -497,71 +497,71 @@ impl protocol::OpBinary for BcfMutation {
         let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
         match tag {
             0 => Ok(BcfMutation::NoMutation),
-            1 => Ok(BcfMutation::SetSnapshot { snapshot: dec_bcf_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", semio_framework_plugin::resolve_ready(reader.position()), e))? }),
-            2 => Ok(BcfMutation::SetVersion { version: read_str_lp(&mut reader).map_err(|e| malformed("op version", semio_framework_plugin::resolve_ready(reader.position()), e))? }),
-            3 => Ok(BcfMutation::InsertTopic { topic: dec_topic_bin(&mut reader).map_err(|e| malformed("op topic", semio_framework_plugin::resolve_ready(reader.position()), e))? }),
-            4 => Ok(BcfMutation::RemoveTopic { guid: read_str_lp(&mut reader).map_err(|e| malformed("op guid", semio_framework_plugin::resolve_ready(reader.position()), e))? }),
+            1 => Ok(BcfMutation::SetSnapshot { snapshot: dec_bcf_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", reader.position(), e))? }),
+            2 => Ok(BcfMutation::SetVersion { version: read_str_lp(&mut reader).map_err(|e| malformed("op version", reader.position(), e))? }),
+            3 => Ok(BcfMutation::InsertTopic { topic: dec_topic_bin(&mut reader).map_err(|e| malformed("op topic", reader.position(), e))? }),
+            4 => Ok(BcfMutation::RemoveTopic { guid: read_str_lp(&mut reader).map_err(|e| malformed("op guid", reader.position(), e))? }),
             5 => {
-                let guid = read_str_lp(&mut reader).map_err(|e| malformed("op guid", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let title = read_opt_str_bin(&mut reader).map_err(|e| malformed("op title", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let description = read_opt_str_bin(&mut reader).map_err(|e| malformed("op description", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let status = read_opt_str_bin(&mut reader).map_err(|e| malformed("op status", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let priority = read_opt_str_bin(&mut reader).map_err(|e| malformed("op priority", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let labels = if reader.read_u8().map_err(|e| malformed("op labels presence", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? != 0 { Some(read_str_list_bin(&mut reader).map_err(|e| malformed("op labels", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
-                let creation_date = read_opt_str_bin(&mut reader).map_err(|e| malformed("op creation_date", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let creation_author = read_opt_str_bin(&mut reader).map_err(|e| malformed("op creation_author", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let guid = read_str_lp(&mut reader).map_err(|e| malformed("op guid", reader.position(), e))?;
+                let title = read_opt_str_bin(&mut reader).map_err(|e| malformed("op title", reader.position(), e))?;
+                let description = read_opt_str_bin(&mut reader).map_err(|e| malformed("op description", reader.position(), e))?;
+                let status = read_opt_str_bin(&mut reader).map_err(|e| malformed("op status", reader.position(), e))?;
+                let priority = read_opt_str_bin(&mut reader).map_err(|e| malformed("op priority", reader.position(), e))?;
+                let labels = if reader.read_u8().map_err(|e| malformed("op labels presence", reader.position(), e.to_string()))? != 0 { Some(read_str_list_bin(&mut reader).map_err(|e| malformed("op labels", reader.position(), e))?) } else { None };
+                let creation_date = read_opt_str_bin(&mut reader).map_err(|e| malformed("op creation_date", reader.position(), e))?;
+                let creation_author = read_opt_str_bin(&mut reader).map_err(|e| malformed("op creation_author", reader.position(), e))?;
                 Ok(BcfMutation::SetTopicMarkup { guid, title, description, status, priority, labels, creation_date, creation_author })
             }
             6 => {
-                let topic_guid = read_str_lp(&mut reader).map_err(|e| malformed("op topic_guid", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let comment = dec_comment_bin(&mut reader).map_err(|e| malformed("op comment", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let topic_guid = read_str_lp(&mut reader).map_err(|e| malformed("op topic_guid", reader.position(), e))?;
+                let comment = dec_comment_bin(&mut reader).map_err(|e| malformed("op comment", reader.position(), e))?;
                 Ok(BcfMutation::InsertComment { topic_guid, comment })
             }
             7 => {
-                let topic_guid = read_str_lp(&mut reader).map_err(|e| malformed("op topic_guid", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let guid = read_str_lp(&mut reader).map_err(|e| malformed("op guid", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let topic_guid = read_str_lp(&mut reader).map_err(|e| malformed("op topic_guid", reader.position(), e))?;
+                let guid = read_str_lp(&mut reader).map_err(|e| malformed("op guid", reader.position(), e))?;
                 Ok(BcfMutation::RemoveComment { topic_guid, guid })
             }
             8 => {
-                let topic_guid = read_str_lp(&mut reader).map_err(|e| malformed("op topic_guid", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let guid = read_str_lp(&mut reader).map_err(|e| malformed("op guid", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let date = read_opt_str_bin(&mut reader).map_err(|e| malformed("op date", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let author = read_opt_str_bin(&mut reader).map_err(|e| malformed("op author", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let text = read_opt_str_bin(&mut reader).map_err(|e| malformed("op text", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let viewpoint_ref = if reader.read_u8().map_err(|e| malformed("op viewpoint_ref presence", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? != 0 {
-                    Some(read_opt_str_bin(&mut reader).map_err(|e| malformed("op viewpoint_ref", semio_framework_plugin::resolve_ready(reader.position()), e))?)
+                let topic_guid = read_str_lp(&mut reader).map_err(|e| malformed("op topic_guid", reader.position(), e))?;
+                let guid = read_str_lp(&mut reader).map_err(|e| malformed("op guid", reader.position(), e))?;
+                let date = read_opt_str_bin(&mut reader).map_err(|e| malformed("op date", reader.position(), e))?;
+                let author = read_opt_str_bin(&mut reader).map_err(|e| malformed("op author", reader.position(), e))?;
+                let text = read_opt_str_bin(&mut reader).map_err(|e| malformed("op text", reader.position(), e))?;
+                let viewpoint_ref = if reader.read_u8().map_err(|e| malformed("op viewpoint_ref presence", reader.position(), e.to_string()))? != 0 {
+                    Some(read_opt_str_bin(&mut reader).map_err(|e| malformed("op viewpoint_ref", reader.position(), e))?)
                 } else {
                     None
                 };
                 Ok(BcfMutation::SetComment { topic_guid, guid, date, author, text, viewpoint_ref })
             }
             9 => {
-                let topic_guid = read_str_lp(&mut reader).map_err(|e| malformed("op topic_guid", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let viewpoint = dec_viewpoint_bin(&mut reader).map_err(|e| malformed("op viewpoint", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let topic_guid = read_str_lp(&mut reader).map_err(|e| malformed("op topic_guid", reader.position(), e))?;
+                let viewpoint = dec_viewpoint_bin(&mut reader).map_err(|e| malformed("op viewpoint", reader.position(), e))?;
                 Ok(BcfMutation::InsertViewpoint { topic_guid, viewpoint })
             }
             10 => {
-                let topic_guid = read_str_lp(&mut reader).map_err(|e| malformed("op topic_guid", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let guid = read_str_lp(&mut reader).map_err(|e| malformed("op guid", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let topic_guid = read_str_lp(&mut reader).map_err(|e| malformed("op topic_guid", reader.position(), e))?;
+                let guid = read_str_lp(&mut reader).map_err(|e| malformed("op guid", reader.position(), e))?;
                 Ok(BcfMutation::RemoveViewpoint { topic_guid, guid })
             }
             11 => {
-                let topic_guid = read_str_lp(&mut reader).map_err(|e| malformed("op topic_guid", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let guid = read_str_lp(&mut reader).map_err(|e| malformed("op guid", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let camera = if reader.read_u8().map_err(|e| malformed("op camera presence", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? != 0 { Some(dec_camera_bin(&mut reader).map_err(|e| malformed("op camera", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
+                let topic_guid = read_str_lp(&mut reader).map_err(|e| malformed("op topic_guid", reader.position(), e))?;
+                let guid = read_str_lp(&mut reader).map_err(|e| malformed("op guid", reader.position(), e))?;
+                let camera = if reader.read_u8().map_err(|e| malformed("op camera presence", reader.position(), e.to_string()))? != 0 { Some(dec_camera_bin(&mut reader).map_err(|e| malformed("op camera", reader.position(), e))?) } else { None };
                 Ok(BcfMutation::SetViewpointCamera { topic_guid, guid, camera })
             }
             12 => {
-                let topic_guid = read_str_lp(&mut reader).map_err(|e| malformed("op topic_guid", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let guid = read_str_lp(&mut reader).map_err(|e| malformed("op guid", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let topic_guid = read_str_lp(&mut reader).map_err(|e| malformed("op topic_guid", reader.position(), e))?;
+                let guid = read_str_lp(&mut reader).map_err(|e| malformed("op guid", reader.position(), e))?;
                 let components =
-                    if reader.read_u8().map_err(|e| malformed("op components presence", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? != 0 { Some(dec_components_bin(&mut reader).map_err(|e| malformed("op components", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
+                    if reader.read_u8().map_err(|e| malformed("op components presence", reader.position(), e.to_string()))? != 0 { Some(dec_components_bin(&mut reader).map_err(|e| malformed("op components", reader.position(), e))?) } else { None };
                 Ok(BcfMutation::SetViewpointComponents { topic_guid, guid, components })
             }
             13 => {
-                let topic_guid = read_str_lp(&mut reader).map_err(|e| malformed("op topic_guid", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let guid = read_str_lp(&mut reader).map_err(|e| malformed("op guid", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let snapshot = if reader.read_u8().map_err(|e| malformed("op snapshot presence", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? != 0 { Some(read_bytes_lp(&mut reader).map_err(|e| malformed("op snapshot", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
+                let topic_guid = read_str_lp(&mut reader).map_err(|e| malformed("op topic_guid", reader.position(), e))?;
+                let guid = read_str_lp(&mut reader).map_err(|e| malformed("op guid", reader.position(), e))?;
+                let snapshot = if reader.read_u8().map_err(|e| malformed("op snapshot presence", reader.position(), e.to_string()))? != 0 { Some(read_bytes_lp(&mut reader).map_err(|e| malformed("op snapshot", reader.position(), e))?) } else { None };
                 Ok(BcfMutation::SetViewpointSnapshot { topic_guid, guid, snapshot })
             }
             other => Err(malformed("op tag", 1, format!("unknown BcfMutation tag {other}"))),

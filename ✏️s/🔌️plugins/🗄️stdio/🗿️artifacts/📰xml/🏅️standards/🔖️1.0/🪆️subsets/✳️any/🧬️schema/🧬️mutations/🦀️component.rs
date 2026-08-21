@@ -393,40 +393,40 @@ impl protocol::OpBinary for XmlMutation {
         match tag {
             0 => Ok(XmlMutation::NoMutation),
             1 => {
-                let snapshot = dec_xml_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let snapshot = dec_xml_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", reader.position(), e))?;
                 Ok(XmlMutation::SetSnapshot { snapshot })
             }
             2 => {
-                let has = reader.read_u8().map_err(|e| malformed("op declaration presence", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
-                let declaration = if has != 0 { Some(dec_declaration_bin(&mut reader).map_err(|e| malformed("op declaration", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
+                let has = reader.read_u8().map_err(|e| malformed("op declaration presence", reader.position(), e.to_string()))?;
+                let declaration = if has != 0 { Some(dec_declaration_bin(&mut reader).map_err(|e| malformed("op declaration", reader.position(), e))?) } else { None };
                 Ok(XmlMutation::SetDeclaration { declaration })
             }
             3 => {
-                let has = reader.read_u8().map_err(|e| malformed("op doctype presence", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
-                let doctype = if has != 0 { Some(dec_doctype_bin(&mut reader).map_err(|e| malformed("op doctype", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
+                let has = reader.read_u8().map_err(|e| malformed("op doctype presence", reader.position(), e.to_string()))?;
+                let doctype = if has != 0 { Some(dec_doctype_bin(&mut reader).map_err(|e| malformed("op doctype", reader.position(), e))?) } else { None };
                 Ok(XmlMutation::SetDoctype { doctype })
             }
             4 => {
-                let path = dec_node_path_bin(&mut reader).map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let index = reader.read_varint_u64().map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
-                let node = dec_xml_node_bin(&mut reader).map_err(|e| malformed("op node", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let path = dec_node_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
+                let node = dec_xml_node_bin(&mut reader).map_err(|e| malformed("op node", reader.position(), e))?;
                 Ok(XmlMutation::InsertElement { path, index, node })
             }
             5 => {
-                let path = dec_node_path_bin(&mut reader).map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let index = reader.read_varint_u64().map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
+                let path = dec_node_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
                 Ok(XmlMutation::RemoveElement { path, index })
             }
             6 => {
-                let path = dec_node_path_bin(&mut reader).map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let name = read_str_lp(&mut reader).map_err(|e| malformed("op name", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let has = reader.read_u8().map_err(|e| malformed("op value presence", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
-                let value = if has != 0 { Some(read_str_lp(&mut reader).map_err(|e| malformed("op value", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
+                let path = dec_node_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
+                let name = read_str_lp(&mut reader).map_err(|e| malformed("op name", reader.position(), e))?;
+                let has = reader.read_u8().map_err(|e| malformed("op value presence", reader.position(), e.to_string()))?;
+                let value = if has != 0 { Some(read_str_lp(&mut reader).map_err(|e| malformed("op value", reader.position(), e))?) } else { None };
                 Ok(XmlMutation::SetAttribute { path, name, value })
             }
             7 => {
-                let path = dec_node_path_bin(&mut reader).map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let text = read_str_lp(&mut reader).map_err(|e| malformed("op text", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let path = dec_node_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
+                let text = read_str_lp(&mut reader).map_err(|e| malformed("op text", reader.position(), e))?;
                 Ok(XmlMutation::SetText { path, text })
             }
             other => Err(malformed("op tag", 1, format!("unknown tag {other}"))),

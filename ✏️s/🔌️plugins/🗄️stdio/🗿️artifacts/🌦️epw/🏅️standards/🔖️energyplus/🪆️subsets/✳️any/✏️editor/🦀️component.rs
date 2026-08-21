@@ -11,7 +11,9 @@
 use crate::artifacts::epw::{EpwMutation, EpwSnapshot, STDIO_EPW_DOCUMENT_SCHEMA};
 use crate::editor::epw::modes::edit;
 use crate::editor::epw::modes::edit::windows::main;
-use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId, UiNode};
+use semio_framework_plugin::{
+    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId, UiNode,
+};
 use serde::{Deserialize, Serialize};
 use store::EngineHandles;
 
@@ -85,7 +87,7 @@ impl protocol::OpBinary for EpwEditorCommand {
         let spec = spec_fn();
         let body = &bytes[reader.position()..];
         let (record, _report) = store::pack_rt::decode_record_body(body, &spec, &store::PackDecodeOptions::default()).map_err(protocol::ProtocolError::from)?;
-        <Self as dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: semio_framework_plugin::resolve_ready(reader.position()) as u64, detail: error.to_string() })
+        <Self as dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
     }
 }
 //#endregion 🔖️OpCodec
@@ -118,7 +120,14 @@ impl ArtifactEditor for EpwEditor {
     /// ✏️ Resolves the addressed column to its canonical wire index and emits one
     /// `EpwMutation::SetRecordField`. An out-of-range row or unknown column is a documented no-op
     /// (`Emit::default()`), never a panic.
-    async fn handle(command: &Self::Command, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &semio_framework_plugin::app::InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Self::Mutation>, Fault> {
+    async fn handle(
+        command: &Self::Command,
+        doc: &ArtifactView<'_, Self::Snapshot>,
+        _cfg: &ConfigView<'_, Self::Config>,
+        _interaction: &semio_framework_plugin::app::InteractionView<'_>,
+        _draft: &DraftView<'_, Self::Draft>,
+        _engines: &EngineHandles,
+    ) -> Result<Emit<Self::Mutation>, Fault> {
         let EpwEditorCommand::SetCell { row, column, value } = command;
         let Some(field_index) = main::EPW_TABLE_COLUMNS.iter().position(|candidate| candidate == column) else { return Ok(Emit::default()) };
         if doc.snapshot.records.get(*row as usize).is_none() {
@@ -127,11 +136,11 @@ impl ArtifactEditor for EpwEditor {
         Ok(Emit { artifact_mutations: vec![EpwMutation::SetRecordField { record_index: *row as usize, field_index, value: value.clone() }], description: Some(format!("Set {column}")), ..Default::default() })
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
-        match body_key {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::ComponentTree {
+        semio_framework_plugin::built_to_component_tree(match body_key {
             main::BODY_KEY => main::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
-        }
+            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))),
+        })
     }
 }
 //#endregion 🔖️Editor
@@ -139,14 +148,7 @@ impl ArtifactEditor for EpwEditor {
 //#region 🔖️Manifest
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn create_epw_editor() -> semio_framework_plugin::AppDefinition {
-    Editor::builder(EPW_EDITOR_DIALECT)
-        .document(["stdio", "epw"])
-        .icon_id("cloud-sun")
-        .mode_def(edit::definition())
-        .default_mode_id(edit::EPW_EDIT_MODE_ID)
-        .window_kind_def(main::definition())
-        .default_layout(edit::layout())
-        .build_definition()
+    Editor::builder(EPW_EDITOR_DIALECT).document(["stdio", "epw"]).icon_id("cloud-sun").mode_def(edit::definition()).default_mode_id(edit::EPW_EDIT_MODE_ID).window_kind_def(main::definition()).default_layout(edit::layout()).build_definition()
 }
 //#endregion 🔖️Manifest
 

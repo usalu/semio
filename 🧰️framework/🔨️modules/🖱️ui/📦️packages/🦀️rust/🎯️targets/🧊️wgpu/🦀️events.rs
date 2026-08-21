@@ -1393,20 +1393,7 @@ mod tests {
     }
 
     fn input_ui(id: &str, value: &str) -> UiNode {
-        UiNode::Input(UiInputNode {
-            id: id.into(),
-            input_kind: "text".into(),
-            value: value.into(),
-            placeholder: None,
-            commit: None,
-            min: None,
-            max: None,
-            step: None,
-            accept: None,
-            on_change: action(),
-            presence: UiPresence::default(),
-            menu: None,
-        })
+        UiNode::Input(UiInputNode { id: id.into(), input_kind: "text".into(), value: value.into(), placeholder: None, commit: None, min: None, max: None, step: None, accept: None, on_change: action(), presence: UiPresence::default(), menu: None })
     }
 
     fn stack_ui() -> UiNode {
@@ -1948,18 +1935,7 @@ mod tests {
     }
 
     fn activatable_stack_ui(action: ActionDescriptor) -> UiNode {
-        UiNode::Stack(UiStackNode {
-            direction: "vertical".into(),
-            gap: None,
-            padding: None,
-            id: Some("card".into()),
-            presence: UiPresence::default(),
-            activate: Some(action),
-            drop_action: None,
-            drop_overlay: None,
-            children: Vec::new(),
-            menu: None,
-        })
+        UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: None, padding: None, id: Some("card".into()), presence: UiPresence::default(), activate: Some(action), drop_action: None, drop_overlay: None, children: Vec::new(), menu: None })
     }
 
     #[test]

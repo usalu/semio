@@ -11,8 +11,8 @@
 //! `Ifc2x3Snapshot` the TYPE is this standard's own.
 
 use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::diff::{
-    dec_edm_preamble_bin, dec_instance_list, dec_instance_list_bin, dec_optional_edm_preamble, dec_part21_header, dec_part21_header_bin, dec_str, enc_edm_preamble_bin, enc_instance_list_bin, enc_instance_list_into,
-    enc_optional_edm_preamble, enc_part21_header, enc_part21_header_bin, enc_str, read_str_bin, write_str_bin,
+    dec_edm_preamble_bin, dec_instance_list, dec_instance_list_bin, dec_optional_edm_preamble, dec_part21_header, dec_part21_header_bin, dec_str, enc_edm_preamble_bin, enc_instance_list_bin, enc_instance_list_into, enc_optional_edm_preamble,
+    enc_part21_header, enc_part21_header_bin, enc_str, read_str_bin, write_str_bin,
 };
 use crate::artifacts::step::engine::part21::Part21Document;
 use schema::ArtifactSchema;

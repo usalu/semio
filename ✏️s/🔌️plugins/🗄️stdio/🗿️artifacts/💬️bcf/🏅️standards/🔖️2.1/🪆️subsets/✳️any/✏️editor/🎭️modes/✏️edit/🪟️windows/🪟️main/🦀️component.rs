@@ -3,8 +3,8 @@
 //! Render is identical to the viewer's read; mutation is the surface root's `handle()` responsibility.
 
 use crate::artifacts::bcf::standards::v2_1::subsets::any::schema::snapshot::BcfSnapshot;
-use semio_framework_plugin::{UiNode, WindowKindDefinition, WindowKit};
 use semio_framework_plugin::app::{TableView, TableWindowKit};
+use semio_framework_plugin::{BuiltNode, WindowKindDefinition, WindowKit};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = TableWindowKit::KIND_ID;
@@ -27,7 +27,7 @@ fn columns_and_rows(document: &BcfSnapshot) -> (Vec<String>, Vec<Vec<String>>) {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &BcfSnapshot) -> UiNode {
+pub fn render(document: &BcfSnapshot) -> BuiltNode {
     let (columns, rows) = columns_and_rows(document);
     TableWindowKit::render(&TableView { columns, rows })
 }

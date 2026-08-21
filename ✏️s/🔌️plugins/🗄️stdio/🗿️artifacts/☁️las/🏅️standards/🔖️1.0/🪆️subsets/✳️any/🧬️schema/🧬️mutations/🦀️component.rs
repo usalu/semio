@@ -190,7 +190,7 @@ impl Mutation<LasSnapshot> for LasMutation {
 //#region 🔖️SnapshotCodec
 /// 📋 Whole-`LasHeader` positional codec — only needed by `SetSnapshot`'s `snapshot` argument (no
 /// other variant carries a full header).
-async fn enc_header(h: &LasHeader) -> String {
+fn enc_header(h: &LasHeader) -> String {
     let fields: Vec<String> = vec![
         h.version_major.to_string(),
         h.version_minor.to_string(),
@@ -220,7 +220,7 @@ async fn enc_header(h: &LasHeader) -> String {
     ];
     format!("[{}]", fields.join(","))
 }
-async fn dec_header(s: &str) -> Result<LasHeader, String> {
+fn dec_header(s: &str) -> Result<LasHeader, String> {
     let parts = diff::split_top_level(diff::strip_brackets(s)?, ',');
     let [version_major, version_minor, system_identifier, generating_software, creation_day_of_year, creation_year, header_size, offset_to_point_data, number_of_vlrs, point_data_format_id, point_data_record_length, number_of_point_records, points_by_return, x_scale, y_scale, z_scale, x_offset, y_offset, z_offset, max_x, min_x, max_y, min_y, max_z, min_z] =
         parts.as_slice()
@@ -255,18 +255,18 @@ async fn dec_header(s: &str) -> Result<LasHeader, String> {
         min_z: diff::parse_f64(min_z)?,
     })
 }
-async fn enc_snapshot(s: &LasSnapshot) -> String {
+fn enc_snapshot(s: &LasSnapshot) -> String {
     let vlrs = s.vlrs.iter().map(diff::enc_vlr).collect::<Vec<_>>().join(",");
     let points = s.points.iter().map(diff::enc_point).collect::<Vec<_>>().join(",");
     format!("[{},[{}],[{}]]", enc_header(&s.header), vlrs, points)
 }
-async fn dec_snapshot(s: &str) -> Result<LasSnapshot, String> {
+fn dec_snapshot(s: &str) -> Result<LasSnapshot, String> {
     let inner = diff::strip_brackets(s)?;
     let parts = diff::split_top_level(inner, ',');
     let [header_s, vlrs_s, points_s] = parts.as_slice() else {
         return Err(format!("snapshot: expected 3 top-level fields, got {}", parts.len()));
     };
-    let header = dec_header(header_s).await?;
+    let header = dec_header(header_s)?;
     let vlrs = diff::split_top_level(diff::strip_brackets(vlrs_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(diff::dec_vlr).collect::<Result<Vec<_>, String>>()?;
     let points = diff::split_top_level(diff::strip_brackets(points_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(diff::dec_point).collect::<Result<Vec<_>, String>>()?;
     Ok(LasSnapshot { schema: crate::artifacts::las::STDIO_LAS_DOCUMENT_SCHEMA.into(), header, vlrs, points })
@@ -274,10 +274,10 @@ async fn dec_snapshot(s: &str) -> Result<LasSnapshot, String> {
 //#endregion 🔖️SnapshotCodec
 
 //#region 🔖️TupleCodec
-async fn enc_f64x3(t: &(f64, f64, f64)) -> String {
+fn enc_f64x3(t: &(f64, f64, f64)) -> String {
     format!("[{},{},{}]", t.0, t.1, t.2)
 }
-async fn dec_f64x3(s: &str) -> Result<(f64, f64, f64), String> {
+fn dec_f64x3(s: &str) -> Result<(f64, f64, f64), String> {
     let parts = diff::split_top_level(diff::strip_brackets(s)?, ',');
     let [a, b, c] = parts.as_slice() else { return Err(format!("f64x3: expected 3 fields, got {}", parts.len())) };
     Ok((diff::parse_f64(a)?, diff::parse_f64(b)?, diff::parse_f64(c)?))
@@ -304,20 +304,20 @@ fn print_las_mutation(m: &LasMutation) -> String {
         LasMutation::SetPoint { index, point } => format!("set-point index={index} point={}", diff::enc_point(point)),
     }
 }
-async fn parse_las_mutation(line: &str) -> Result<LasMutation, String> {
+fn parse_las_mutation(line: &str) -> Result<LasMutation, String> {
     let mut tokens = line.split(' ');
     let keyword = tokens.next().filter(|k| !k.is_empty()).ok_or_else(|| "empty mutation line".to_string())?;
     let rest: Vec<&str> = tokens.collect();
     let arg = |key: &str| -> Result<&str, String> { rest.iter().find_map(|t| t.strip_prefix(key)).ok_or_else(|| format!("{keyword}: missing arg {key:?}")) };
     match keyword {
         "no-mutation" => Ok(LasMutation::NoMutation),
-        "set-snapshot" => Ok(LasMutation::SetSnapshot { snapshot: dec_snapshot(arg("snapshot=")?).await? }),
+        "set-snapshot" => Ok(LasMutation::SetSnapshot { snapshot: dec_snapshot(arg("snapshot=")?)? }),
         "set-version" => Ok(LasMutation::SetVersion { major: diff::parse_u8(arg("major=")?)?, minor: diff::parse_u8(arg("minor=")?)? }),
         "set-system-identifier" => Ok(LasMutation::SetSystemIdentifier { system_identifier: String::from_utf8(diff::hex_decode(arg("system-identifier=")?)?).map_err(|e| e.to_string())? }),
         "set-software-info" => Ok(LasMutation::SetSoftwareInfo { generating_software: String::from_utf8(diff::hex_decode(arg("generating-software=")?)?).map_err(|e| e.to_string())? }),
         "set-creation-date" => Ok(LasMutation::SetCreationDate { day_of_year: diff::parse_u16(arg("day-of-year=")?)?, year: diff::parse_u16(arg("year=")?)? }),
-        "set-scale-and-offset" => Ok(LasMutation::SetScaleAndOffset { scale: dec_f64x3(arg("scale=")?).await?, offset: dec_f64x3(arg("offset=")?).await? }),
-        "set-bounds" => Ok(LasMutation::SetBounds { max: dec_f64x3(arg("max=")?).await?, min: dec_f64x3(arg("min=")?).await? }),
+        "set-scale-and-offset" => Ok(LasMutation::SetScaleAndOffset { scale: dec_f64x3(arg("scale=")?)?, offset: dec_f64x3(arg("offset=")?)? }),
+        "set-bounds" => Ok(LasMutation::SetBounds { max: dec_f64x3(arg("max=")?)?, min: dec_f64x3(arg("min=")?)? }),
         "set-points-by-return" => Ok(LasMutation::SetPointsByReturn { counts: diff::dec_u32x5(arg("counts=")?)? }),
         "insert-vlr" => Ok(LasMutation::InsertVlr { index: diff::parse_usize(arg("index=")?)?, vlr: diff::dec_vlr(arg("vlr=")?)? }),
         "remove-vlr" => Ok(LasMutation::RemoveVlr { index: diff::parse_usize(arg("index=")?)? }),
@@ -349,18 +349,18 @@ impl protocol::OpText for LasMutation {
 /// a whole `SetSnapshot`/`InsertVlr`/`InsertPoint`/`SetPoint` payload, so one binary encoder per
 /// record type, shared across both facets, is the correct de-duplication (not a second,
 /// independently-drifting copy).
-async fn enc_f64x3_bin(t: (f64, f64, f64), out: &mut Vec<u8>) {
+fn enc_f64x3_bin(t: (f64, f64, f64), out: &mut Vec<u8>) {
     out.extend_from_slice(&t.0.to_le_bytes());
     out.extend_from_slice(&t.1.to_le_bytes());
     out.extend_from_slice(&t.2.to_le_bytes());
 }
-async fn dec_f64x3_bin(reader: &mut store::ByteReader<'_>) -> Result<(f64, f64, f64), String> {
+fn dec_f64x3_bin(reader: &mut store::ByteReader<'_>) -> Result<(f64, f64, f64), String> {
     Ok((reader.read_f64_le().map_err(|e| e.to_string())?, reader.read_f64_le().map_err(|e| e.to_string())?, reader.read_f64_le().map_err(|e| e.to_string())?))
 }
 
 /// 🧭️ A whole `LasSnapshot` — `schema` (real, genuinely round-tripped identity field) + the full
 /// `LasHeader` record + runtime-counted `vlrs`/`points` lists, each item a full record.
-async fn enc_snapshot_bin(s: &LasSnapshot, out: &mut Vec<u8>) {
+fn enc_snapshot_bin(s: &LasSnapshot, out: &mut Vec<u8>) {
     diff::write_str_lp(out, &s.schema);
     diff::enc_header_bin(&s.header, out);
     store::pack_rt::write_varint_u64(out, s.vlrs.len() as u64);
@@ -372,7 +372,7 @@ async fn enc_snapshot_bin(s: &LasSnapshot, out: &mut Vec<u8>) {
         diff::enc_point_bin(p, out);
     }
 }
-async fn dec_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<LasSnapshot, String> {
+fn dec_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<LasSnapshot, String> {
     let schema = diff::read_str_lp(reader)?;
     let header = diff::dec_header_bin(reader)?;
     let vlr_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
@@ -480,7 +480,7 @@ impl protocol::OpBinary for LasMutation {
         Ok(out)
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        async fn go(bytes: &[u8]) -> Result<LasMutation, String> {
+        fn go(bytes: &[u8]) -> Result<LasMutation, String> {
             let mut reader = store::ByteReader::new(bytes);
             let format = reader.read_u8().map_err(|e| e.to_string())?;
             if format != store::pack_rt::OP_BINARY_FORMAT {
@@ -489,13 +489,13 @@ impl protocol::OpBinary for LasMutation {
             let tag = reader.read_u8().map_err(|e| e.to_string())?;
             Ok(match tag {
                 TAG_NO_MUTATION => LasMutation::NoMutation,
-                TAG_SET_SNAPSHOT => LasMutation::SetSnapshot { snapshot: dec_snapshot_bin(&mut reader).await? },
+                TAG_SET_SNAPSHOT => LasMutation::SetSnapshot { snapshot: dec_snapshot_bin(&mut reader)? },
                 TAG_SET_VERSION => LasMutation::SetVersion { major: reader.read_u8().map_err(|e| e.to_string())?, minor: reader.read_u8().map_err(|e| e.to_string())? },
                 TAG_SET_SYSTEM_IDENTIFIER => LasMutation::SetSystemIdentifier { system_identifier: diff::read_str_lp(&mut reader)? },
                 TAG_SET_SOFTWARE_INFO => LasMutation::SetSoftwareInfo { generating_software: diff::read_str_lp(&mut reader)? },
                 TAG_SET_CREATION_DATE => LasMutation::SetCreationDate { day_of_year: reader.read_varint_u64().map_err(|e| e.to_string())? as u16, year: reader.read_varint_u64().map_err(|e| e.to_string())? as u16 },
-                TAG_SET_SCALE_AND_OFFSET => LasMutation::SetScaleAndOffset { scale: dec_f64x3_bin(&mut reader).await?, offset: dec_f64x3_bin(&mut reader).await? },
-                TAG_SET_BOUNDS => LasMutation::SetBounds { max: dec_f64x3_bin(&mut reader).await?, min: dec_f64x3_bin(&mut reader).await? },
+                TAG_SET_SCALE_AND_OFFSET => LasMutation::SetScaleAndOffset { scale: dec_f64x3_bin(&mut reader)?, offset: dec_f64x3_bin(&mut reader)? },
+                TAG_SET_BOUNDS => LasMutation::SetBounds { max: dec_f64x3_bin(&mut reader)?, min: dec_f64x3_bin(&mut reader)? },
                 TAG_SET_POINTS_BY_RETURN => {
                     let mut counts = [0u32; 5];
                     for slot in counts.iter_mut() {
@@ -521,12 +521,12 @@ impl protocol::OpBinary for LasMutation {
 /// 🧪️ Moved out of `mod tests` (was originally local to it) so `demo_mutation_cases()` below can
 /// share the exact same fixtures `mod tests` itself uses — single source of truth, per CLAUDE.md.
 #[cfg(test)]
-pub(crate) async fn vlr(user_id: &str, record_id: u16, data: &[u8]) -> LasVlr {
+pub(crate) fn vlr(user_id: &str, record_id: u16, data: &[u8]) -> LasVlr {
     LasVlr { user_id: user_id.into(), record_id, description: format!("vlr {record_id}"), data: data.to_vec() }
 }
 
 #[cfg(test)]
-pub(crate) async fn point(seed: u8) -> LasPoint {
+pub(crate) fn point(seed: u8) -> LasPoint {
     LasPoint {
         x: 100.0 + seed as f64,
         y: -50.0 + seed as f64 * 0.5,
@@ -546,7 +546,7 @@ pub(crate) async fn point(seed: u8) -> LasPoint {
 }
 
 #[cfg(test)]
-pub(crate) async fn base_snapshot() -> LasSnapshot {
+pub(crate) fn base_snapshot() -> LasSnapshot {
     let vlrs = vec![vlr("LASF_Spec", 100, b"vlr-a"), vlr("LASF_Spec", 101, b"vlr-b")];
     let points = vec![point(0), point(1), point(2)];
     LasSnapshot { schema: "stdio.las".into(), header: LasHeader { number_of_vlrs: vlrs.len() as u32, number_of_point_records: points.len() as u32, ..LasHeader::default() }, vlrs, points }
@@ -561,7 +561,7 @@ pub(crate) async fn base_snapshot() -> LasSnapshot {
 /// array (`SetPointsByReturn`), and a point/VLR carrying both tri-state-capable fields set
 /// (`gps_time`/`rgb`).
 #[cfg(test)]
-pub(crate) async fn demo_mutation_cases() -> Vec<LasMutation> {
+pub(crate) fn demo_mutation_cases() -> Vec<LasMutation> {
     let base = base_snapshot();
     let mut rich_point = point(9);
     rich_point.gps_time = Some(1234.5);
@@ -596,7 +596,7 @@ mod tests {
     use protocol::{OpBinary, OpText};
 
     //#region 🔖️mutation_diff_law
-    async fn assert_mutation_diff_law(base: &LasSnapshot, mutation: LasMutation) {
+    fn assert_mutation_diff_law(base: &LasSnapshot, mutation: LasMutation) {
         let expected_diff = mutation.diff(base);
         let mut applied_snapshot = base.clone();
         let returned_diff = apply_las_mutation(&mut applied_snapshot, &mutation);
@@ -604,8 +604,8 @@ mod tests {
         assert_eq!(expected_diff.diff().apply(base).expect("valid mutation diff"), applied_snapshot, "diff.diff().apply(base) must equal the imperative mutation result for {mutation:?}");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn mutation_diff_law() {
+    #[test]
+    fn mutation_diff_law() {
         let base = base_snapshot();
         assert_mutation_diff_law(&base, LasMutation::NoMutation);
         let mut alt = base.clone();
@@ -628,8 +628,8 @@ mod tests {
     //#endregion 🔖️mutation_diff_law
 
     //#region 🔖️inverse_law
-    #[semio_framework_async_macros::async_test]
-    async fn inverse_law() {
+    #[test]
+    fn inverse_law() {
         let base = base_snapshot();
         let variants = vec![
             LasMutation::NoMutation,
@@ -666,7 +666,7 @@ mod tests {
     //#endregion 🔖️inverse_law
 
     //#region 🔖️absorb_law
-    async fn assert_absorb_law(base: &LasSnapshot, m1: LasMutation, m2: LasMutation) {
+    fn assert_absorb_law(base: &LasSnapshot, m1: LasMutation, m2: LasMutation) {
         let d1 = m1.diff(base);
         let mid = d1.diff().apply(base).expect("valid first diff");
         let d2 = m2.diff(&mid);
@@ -677,8 +677,8 @@ mod tests {
         assert_eq!(merged.apply(base).expect("valid absorbed diff"), sequential, "absorb(d1,d2).apply(base) must equal sequential application for {m1:?} + {m2:?}");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn absorb_law() {
+    #[test]
+    fn absorb_law() {
         let base = base_snapshot();
 
         // Insert+Remove-before (vlrs): canonical shift case.
@@ -709,8 +709,8 @@ mod tests {
         assert_absorb_law(&base, LasMutation::SetSystemIdentifier { system_identifier: "first".into() }, LasMutation::SetSystemIdentifier { system_identifier: "second".into() });
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn absorb_law_associativity() {
+    #[test]
+    fn absorb_law_associativity() {
         let base = base_snapshot();
         let d1 = LasMutation::SetSystemIdentifier { system_identifier: "one".into() }.diff(&base);
         let mid1 = d1.diff().apply(&base).expect("valid first diff");
@@ -735,8 +735,8 @@ mod tests {
     //#endregion 🔖️absorb_law
 
     //#region 🔖️between_roundtrip_law
-    #[semio_framework_async_macros::async_test]
-    async fn between_roundtrip_law() {
+    #[test]
+    fn between_roundtrip_law() {
         let a = base_snapshot();
         let mut b = base_snapshot();
         b.header.creation_year = 2030;
@@ -756,8 +756,8 @@ mod tests {
     //#endregion 🔖️between_roundtrip_law
 
     //#region 🔖️codec_retention_law
-    #[semio_framework_async_macros::async_test]
-    async fn codec_retention_law() {
+    #[test]
+    fn codec_retention_law() {
         let bytes = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🗿️artifacts/☁️las/📚️examples/🎬️demo/🖼️assets/☁️example.las"));
         let snap = match bytes {
             Ok(b) => crate::artifacts::las::engine::decode_las(&b).expect("decode fixture"),
@@ -801,7 +801,7 @@ mod tests {
     /// backward), `points` GROWS a->b (added forward, removed backward); both collections'
     /// `modified` slot (index 0, which exists on both sides either way) is exercised in EVERY
     /// direction.
-    async fn sweep_a() -> LasSnapshot {
+    fn sweep_a() -> LasSnapshot {
         LasSnapshot {
             schema: "stdio.las".into(),
             header: LasHeader {
@@ -836,7 +836,7 @@ mod tests {
         }
     }
 
-    async fn sweep_b() -> LasSnapshot {
+    fn sweep_b() -> LasSnapshot {
         LasSnapshot {
             schema: "stdio.las".into(),
             header: LasHeader {
@@ -898,8 +898,8 @@ mod tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn field_sweep_covers_every_mutable_field() {
+    #[test]
+    fn field_sweep_covers_every_mutable_field() {
         let a = sweep_a();
         let b = sweep_b();
 
@@ -984,8 +984,8 @@ mod tests {
     }
     //#endregion 🔖️field_sweep
 
-    #[semio_framework_async_macros::async_test]
-    async fn out_of_range_index_mutation_is_rejected_without_mutating() {
+    #[test]
+    fn out_of_range_index_mutation_is_rejected_without_mutating() {
         let base = base_snapshot();
         let mut snap = base.clone();
         let outcome = apply_las_mutation(&mut snap, &LasMutation::RemoveVlr { index: 99 });
@@ -1004,8 +1004,8 @@ mod tests {
     /// (hand-rolled, `dsl::DslOps` blocked — see the `OpCodecs` region's doc comment), via
     /// `demo_mutation_cases()` — the single source of truth also reused by
     /// `⚙️engine/🦀️component.rs`'s `ops_grammar_conformance_law`/`protocol_walk_law`.
-    #[semio_framework_async_macros::async_test]
-    async fn op_text_binary_roundtrip_law() {
+    #[test]
+    fn op_text_binary_roundtrip_law() {
         for mutation in demo_mutation_cases() {
             let printed = mutation.print_op();
             assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");

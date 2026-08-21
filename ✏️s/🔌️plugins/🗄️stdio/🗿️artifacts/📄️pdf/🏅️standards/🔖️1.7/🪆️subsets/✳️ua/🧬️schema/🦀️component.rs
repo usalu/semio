@@ -114,13 +114,21 @@ pub mod derived_construction {
 
         #[semio_framework_async_macros::async_test]
         async fn new_requires_lang_and_builds_clean() {
-            let snapshot = PdfUaBuilderConstruction::new("en-US").add_page(PdfPage::new(200.0, 200.0)).set_info(PdfInfo { title: Some("An Accessible Doc".into()), ..PdfInfo::default() }).build().expect("conforming construction must build");
+            let snapshot = PdfUaBuilderConstruction::new("en-US")
+                .await
+                .add_page(PdfPage::new(200.0, 200.0))
+                .await
+                .set_info(PdfInfo { title: Some("An Accessible Doc".into()), ..PdfInfo::default() })
+                .await
+                .build()
+                .await
+                .expect("conforming construction must build");
             assert_eq!(snapshot.pages.len(), 1);
         }
 
         #[semio_framework_async_macros::async_test]
         async fn hard_violation_injected_via_raw_mutate_still_fails_build() {
-            let mut snapshot = PdfUaBuilderConstruction::new("en-US").add_page(PdfPage::new(100.0, 100.0)).build().unwrap();
+            let mut snapshot = PdfUaBuilderConstruction::new("en-US").await.add_page(PdfPage::new(100.0, 100.0)).await.build().await.unwrap();
             // Strip the seeded /StructTreeRoot to simulate a stripped-down document reaching the
             // builder via the generic `SetSnapshot` escape hatch.
             if let Some(catalog_obj) = snapshot.objects.iter_mut().find(|o| o.id.num == 1) {
@@ -128,7 +136,7 @@ pub mod derived_construction {
                     d.retain(|e| e.key != "StructTreeRoot");
                 }
             }
-            let (mutated, _diff) = PdfUaBuilderConstruction::from_snapshot(PdfSnapshot::default()).mutate(PdfMutation::SetSnapshot { snapshot });
+            let (mutated, _diff) = PdfUaBuilderConstruction::from_snapshot(PdfSnapshot::default()).await.mutate(PdfMutation::SetSnapshot { snapshot }).await;
             let err = mutated.build().expect_err("a Catalog missing /StructTreeRoot must fail build()");
             assert!(err.iter().any(|d| d.code.0 == crate::artifacts::pdf::standards::v1_7::subsets::ua::schema::CODE_STRUCT_TREE_ROOT));
         }

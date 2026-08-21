@@ -91,7 +91,7 @@ async fn produces_committed_diff() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical_and_narrowly_scoped() {
     let decoded: SemioBrepDiff = serde_json::from_str(DIFF).expect("committed delete-face diff decodes");
-    
+
     let faces = decoded.faces.as_ref().expect("delete-face must write the faces triple");
     assert_eq!(faces.removed, vec!["f1".to_string()], "the removal is addressed by face id");
     assert!(faces.modified.is_empty() && faces.added.is_empty(), "a removal neither modifies nor adds");

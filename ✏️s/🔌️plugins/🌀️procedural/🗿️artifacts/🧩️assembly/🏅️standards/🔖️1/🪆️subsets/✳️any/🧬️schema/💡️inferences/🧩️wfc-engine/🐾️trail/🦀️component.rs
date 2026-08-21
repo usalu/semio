@@ -39,32 +39,32 @@ pub(crate) struct Trail {
 }
 
 impl Trail {
-    pub async fn new() -> Self {
+    pub fn new() -> Self {
         Self::default()
     }
 
-    pub async fn record_removed(&mut self, node: NodeId, pattern: PatternId) {
+    pub fn record_removed(&mut self, node: NodeId, pattern: PatternId) {
         self.entries.push(RemovedEntry { node, pattern });
     }
 
-    pub async fn record_removed_set(&mut self, node: NodeId, removed: &PatternSet) {
+    pub fn record_removed_set(&mut self, node: NodeId, removed: &PatternSet) {
         for p in removed.iter_ones() {
             self.record_removed(node, p);
         }
     }
 
-    pub async fn push_frame(&mut self, decision: DecisionId, node: NodeId, candidate: PatternId, rng_state: [u64; 4]) {
+    pub fn push_frame(&mut self, decision: DecisionId, node: NodeId, candidate: PatternId, rng_state: [u64; 4]) {
         self.frames.push(DecisionFrame { decision, node, candidate, trail_mark: self.entries.len(), rng_state });
     }
 
-    pub async fn pop_frame(&mut self) -> Option<DecisionFrame> {
+    pub fn pop_frame(&mut self) -> Option<DecisionFrame> {
         self.frames.pop()
     }
 
     /// ↩️ Replays removal entries in exact reverse order down to (but not including) `mark`,
     /// re-adding each pattern. Order matters: entries must be undone LIFO so a pattern removed
     /// twice by different propagation steps is restored to the state each undo expects.
-    pub async fn undo_to(&mut self, mark: usize, domains: &mut DomainStore, w: &WeightTable) {
+    pub fn undo_to(&mut self, mark: usize, domains: &mut DomainStore, w: &WeightTable) {
         while self.entries.len() > mark {
             let entry = self.entries.pop().expect("checked entries.len() > mark > 0 above");
             domains.get_mut(entry.node).re_add(entry.pattern, w);
@@ -73,20 +73,20 @@ impl Trail {
 
     #[inline]
     #[allow(dead_code)] // used by checkpointing (a later phase); exercised today only by trail tests
-    pub async fn len(&self) -> usize {
+    pub fn len(&self) -> usize {
         self.entries.len()
     }
 
     #[inline]
     #[allow(dead_code)] // backs the public decision_depth() query added with the solver step API (a later phase)
-    pub async fn depth(&self) -> usize {
+    pub fn depth(&self) -> usize {
         self.frames.len()
     }
 
     /// ↩️ Every still-active decision's `(node, chosen-pattern)`, in the order each was made —
     /// exactly the combination [`crate::wfc_engine::nogood::NogoodIndex::record`] needs to learn from a
     /// contradiction: these decisions, together, are what led to it.
-    pub async fn active_decisions(&self) -> Vec<(NodeId, PatternId)> {
+    pub fn active_decisions(&self) -> Vec<(NodeId, PatternId)> {
         self.frames.iter().map(|f| (f.node, f.candidate)).collect()
     }
 }
@@ -106,7 +106,7 @@ pub struct Checkpoint {
 }
 
 impl Checkpoint {
-    pub async fn new(domains: Vec<PatternSet>, model_fingerprint: u64, seed: u64) -> Self {
+    pub fn new(domains: Vec<PatternSet>, model_fingerprint: u64, seed: u64) -> Self {
         Self { domains, model_fingerprint, seed }
     }
 }
@@ -118,8 +118,8 @@ mod tests {
     use super::*;
     use crate::wfc_engine::weights::WeightTable;
 
-    #[semio_framework_async_macros::async_test]
-    async fn undo_to_restores_removed_patterns() {
+    #[test]
+    fn undo_to_restores_removed_patterns() {
         let w = WeightTable::new(&[1.0, 2.0, 3.0]).unwrap();
         let mut domains = DomainStore::new_full(1, &w);
         let mut trail = Trail::new();
@@ -134,8 +134,8 @@ mod tests {
         domains.get(NodeId(0)).debug_assert_consistent(&w);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn undo_to_partial_mark_restores_only_later_entries() {
+    #[test]
+    fn undo_to_partial_mark_restores_only_later_entries() {
         let w = WeightTable::new(&[1.0, 1.0, 1.0]).unwrap();
         let mut domains = DomainStore::new_full(1, &w);
         let mut trail = Trail::new();
@@ -151,8 +151,8 @@ mod tests {
         assert!(domains.get(NodeId(0)).bits().get(PatternId(1)));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn decision_frames_push_and_pop() {
+    #[test]
+    fn decision_frames_push_and_pop() {
         let mut trail = Trail::new();
         trail.push_frame(DecisionId(0), NodeId(1), PatternId(2), [1, 2, 3, 4]);
         assert_eq!(trail.depth(), 1);
@@ -163,8 +163,8 @@ mod tests {
         assert!(trail.pop_frame().is_none());
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn active_decisions_lists_every_frame_in_order() {
+    #[test]
+    fn active_decisions_lists_every_frame_in_order() {
         let mut trail = Trail::new();
         assert!(trail.active_decisions().is_empty());
         trail.push_frame(DecisionId(0), NodeId(1), PatternId(2), [0; 4]);

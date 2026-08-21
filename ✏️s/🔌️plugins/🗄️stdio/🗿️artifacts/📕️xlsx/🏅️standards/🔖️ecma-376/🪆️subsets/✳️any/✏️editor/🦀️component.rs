@@ -13,7 +13,9 @@ use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::snapsho
 use crate::artifacts::xlsx::{XlsxMutation, XlsxSnapshot, STDIO_XLSX_DOCUMENT_SCHEMA};
 use crate::editor::xlsx::standards::v_ecma_376::subsets::any::modes::edit;
 use crate::editor::xlsx::standards::v_ecma_376::subsets::any::modes::edit::windows::main;
-use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId, UiNode};
+use semio_framework_plugin::{
+    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId, UiNode,
+};
 use serde::{Deserialize, Serialize};
 use store::EngineHandles;
 
@@ -108,10 +110,10 @@ impl protocol::OpBinary for XlsxEditorCommand {
         let mut reader = store::ByteReader::new(bytes);
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
         let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
-        let row = reader.read_varint_u64().map_err(|e| malformed("op row", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as u32;
-        let len = reader.read_varint_u64().map_err(|e| malformed("op value len", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
-        let value_bytes = reader.read_bytes(len).map_err(|e| malformed("op value", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
-        let value = String::from_utf8(value_bytes.to_vec()).map_err(|e| malformed("op value", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
+        let row = reader.read_varint_u64().map_err(|e| malformed("op row", reader.position(), e.to_string()))? as u32;
+        let len = reader.read_varint_u64().map_err(|e| malformed("op value len", reader.position(), e.to_string()))? as usize;
+        let value_bytes = reader.read_bytes(len).map_err(|e| malformed("op value", reader.position(), e.to_string()))?;
+        let value = String::from_utf8(value_bytes.to_vec()).map_err(|e| malformed("op value", reader.position(), e.to_string()))?;
         Ok(XlsxEditorCommand::SetCell { row, value })
     }
 }
@@ -161,11 +163,11 @@ impl ArtifactEditor for XlsxEditor {
         Ok(Emit { artifact_mutations: vec![XlsxMutation::SetCell { sheet_name, row: cell_row, col: cell_col, value: parsed }], description: Some(description), ..Default::default() })
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
-        match body_key {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::ComponentTree {
+        semio_framework_plugin::built_to_component_tree(match body_key {
             main::BODY_KEY => main::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
-        }
+            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))),
+        })
     }
 }
 //#endregion 🔖️Editor
@@ -173,14 +175,7 @@ impl ArtifactEditor for XlsxEditor {
 //#region 🔖️Manifest
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn create_xlsx_editor() -> semio_framework_plugin::AppDefinition {
-    Editor::builder(XLSX_DIALECT)
-        .document(["stdio", "xlsx"])
-        .icon_id("table")
-        .mode_def(edit::definition())
-        .default_mode_id(edit::XLSX_EDIT_MODE_ID)
-        .window_kind_def(main::definition())
-        .default_layout(edit::layout())
-        .build_definition()
+    Editor::builder(XLSX_DIALECT).document(["stdio", "xlsx"]).icon_id("table").mode_def(edit::definition()).default_mode_id(edit::XLSX_EDIT_MODE_ID).window_kind_def(main::definition()).default_layout(edit::layout()).build_definition()
 }
 //#endregion 🔖️Manifest
 
@@ -212,7 +207,10 @@ mod tests {
         use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::snapshot::{XlsxCell, XlsxSheet, XlsxWorkbook};
         let document = XlsxSnapshot {
             workbook: XlsxWorkbook {
-                sheets: vec![XlsxSheet { name: "S1".into(), cells: vec![XlsxCell { row: 1, col: 0, value: XlsxCellValue::Number(1.0) }] }, XlsxSheet { name: "S2".into(), cells: vec![XlsxCell { row: 2, col: 1, value: XlsxCellValue::Boolean(true) }] }],
+                sheets: vec![
+                    XlsxSheet { name: "S1".into(), cells: vec![XlsxCell { row: 1, col: 0, value: XlsxCellValue::Number(1.0) }] },
+                    XlsxSheet { name: "S2".into(), cells: vec![XlsxCell { row: 2, col: 1, value: XlsxCellValue::Boolean(true) }] },
+                ],
                 ..Default::default()
             },
             ..XlsxSnapshot::default()

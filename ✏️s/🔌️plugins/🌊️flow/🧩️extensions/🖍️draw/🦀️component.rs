@@ -3,7 +3,7 @@
 use flow_extension_sdk::with_drawing_kernel as with_kernel;
 use flow_extension_sdk::{DrawingHandle, DrawingKernel, DrawingStore, FillStyle, GradientStop, LineCap, LineJoin, StrokeStyle};
 use neural_engine::{channel_output, Atom, ChannelSpec, Dictionary, EvalError, FieldSpec, Operator, OperatorImpl, OperatorInfo, Registry, Schema, Value, ValueType};
-use semio_framework_2d::{block_on, DrawingError, Vec2};
+use semio_framework_2d::{DrawingError, Vec2};
 
 // #region 🔖️Helpers
 
@@ -25,7 +25,7 @@ fn kind_label(kind: flow_extension_sdk::DrawingKind) -> &'static str {
 }
 
 fn drawing_dict(kernel: &DrawingStore, handle: &DrawingHandle) -> Result<Dictionary, EvalError> {
-    let kind = block_on(kernel.kind(handle)).map_err(map_kernel_error)?;
+    let kind = kernel.kind(handle).map_err(map_kernel_error)?;
     Ok(Dictionary::with_schema("draw.drawing").insert("handle", Value::Atom(Atom::String(handle.as_str().to_string()))).insert("kind", Value::Atom(Atom::String(kind_label(kind).into()))))
 }
 
@@ -134,7 +134,7 @@ impl Operator for ShapeRect {
             let y = read_channel_number(input, "y")?;
             let width = read_channel_number(input, "width")?;
             let height = read_channel_number(input, "height")?;
-            let handle = block_on(k.rect(x, y, width, height)).map_err(map_kernel_error)?;
+            let handle = k.rect(x, y, width, height).map_err(map_kernel_error)?;
             Ok(channel_output("draw.drawing", drawing_dict(k, &handle)?))
         })
     }
@@ -148,7 +148,7 @@ impl Operator for ShapeEllipse {
             let cy = read_channel_number(input, "cy")?;
             let rx = read_channel_number(input, "rx")?;
             let ry = read_channel_number(input, "ry")?;
-            let handle = block_on(k.ellipse(cx, cy, rx, ry)).map_err(map_kernel_error)?;
+            let handle = k.ellipse(cx, cy, rx, ry).map_err(map_kernel_error)?;
             Ok(channel_output("draw.drawing", drawing_dict(k, &handle)?))
         })
     }
@@ -161,7 +161,7 @@ impl Operator for ShapeCircle {
             let cx = read_channel_number(input, "cx")?;
             let cy = read_channel_number(input, "cy")?;
             let r = read_channel_number(input, "r")?;
-            let handle = block_on(k.circle(cx, cy, r)).map_err(map_kernel_error)?;
+            let handle = k.circle(cx, cy, r).map_err(map_kernel_error)?;
             Ok(channel_output("draw.drawing", drawing_dict(k, &handle)?))
         })
     }
@@ -175,7 +175,7 @@ impl Operator for ShapeLine {
             let y1 = read_channel_number(input, "y1")?;
             let x2 = read_channel_number(input, "x2")?;
             let y2 = read_channel_number(input, "y2")?;
-            let handle = block_on(k.line(x1, y1, x2, y2)).map_err(map_kernel_error)?;
+            let handle = k.line(x1, y1, x2, y2).map_err(map_kernel_error)?;
             Ok(channel_output("draw.drawing", drawing_dict(k, &handle)?))
         })
     }
@@ -186,7 +186,7 @@ impl Operator for ShapePolygon {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|k| {
             let points = read_point_list(input, "points")?;
-            let handle = block_on(k.polygon(&points)).map_err(map_kernel_error)?;
+            let handle = k.polygon(&points).map_err(map_kernel_error)?;
             Ok(channel_output("draw.drawing", drawing_dict(k, &handle)?))
         })
     }
@@ -199,7 +199,7 @@ impl Operator for PathPolyline {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|k| {
             let points = read_point_list(input, "points")?;
-            let handle = block_on(k.polyline_path(&points)).map_err(map_kernel_error)?;
+            let handle = k.polyline_path(&points).map_err(map_kernel_error)?;
             Ok(channel_output("draw.drawing", drawing_dict(k, &handle)?))
         })
     }
@@ -213,7 +213,7 @@ impl Operator for PathRect {
             let y = read_channel_number(input, "y")?;
             let width = read_channel_number(input, "width")?;
             let height = read_channel_number(input, "height")?;
-            let handle = block_on(k.rect_path(x, y, width, height)).map_err(map_kernel_error)?;
+            let handle = k.rect_path(x, y, width, height).map_err(map_kernel_error)?;
             Ok(channel_output("draw.drawing", drawing_dict(k, &handle)?))
         })
     }
@@ -227,7 +227,7 @@ impl Operator for StyleFill {
         with_kernel(|k| {
             let drawing = read_drawing(input, "drawing")?;
             let color = read_rgba(input, "color")?;
-            let handle = block_on(k.set_fill(&drawing, FillStyle::Solid { color })).map_err(map_kernel_error)?;
+            let handle = k.set_fill(&drawing, FillStyle::Solid { color }).map_err(map_kernel_error)?;
             Ok(channel_output("draw.drawing", drawing_dict(k, &handle)?))
         })
     }
@@ -241,7 +241,7 @@ impl Operator for StyleStroke {
             let color = read_rgba(input, "color")?;
             let width = read_channel_number(input, "width").unwrap_or(1.0);
             let stroke = StrokeStyle { color, width, cap: LineCap::Butt, join: LineJoin::Miter, dash: Vec::new() };
-            let handle = block_on(k.set_stroke(&drawing, stroke)).map_err(map_kernel_error)?;
+            let handle = k.set_stroke(&drawing, stroke).map_err(map_kernel_error)?;
             Ok(channel_output("draw.drawing", drawing_dict(k, &handle)?))
         })
     }
@@ -256,7 +256,7 @@ impl Operator for XformTranslate {
             let drawing = read_drawing(input, "drawing")?;
             let dx = read_channel_number(input, "dx")?;
             let dy = read_channel_number(input, "dy")?;
-            let handle = block_on(k.translate(&drawing, dx, dy)).map_err(map_kernel_error)?;
+            let handle = k.translate(&drawing, dx, dy).map_err(map_kernel_error)?;
             Ok(channel_output("draw.drawing", drawing_dict(k, &handle)?))
         })
     }
@@ -268,7 +268,7 @@ impl Operator for XformRotate {
         with_kernel(|k| {
             let drawing = read_drawing(input, "drawing")?;
             let angle = read_channel_number(input, "angle")?;
-            let handle = block_on(k.rotate(&drawing, angle)).map_err(map_kernel_error)?;
+            let handle = k.rotate(&drawing, angle).map_err(map_kernel_error)?;
             Ok(channel_output("draw.drawing", drawing_dict(k, &handle)?))
         })
     }
@@ -281,7 +281,7 @@ impl Operator for XformScale {
             let drawing = read_drawing(input, "drawing")?;
             let sx = read_channel_number(input, "sx")?;
             let sy = read_channel_number(input, "sy").unwrap_or(sx);
-            let handle = block_on(k.scale(&drawing, sx, sy)).map_err(map_kernel_error)?;
+            let handle = k.scale(&drawing, sx, sy).map_err(map_kernel_error)?;
             Ok(channel_output("draw.drawing", drawing_dict(k, &handle)?))
         })
     }
@@ -295,7 +295,7 @@ impl Operator for GroupMerge {
         with_kernel(|k| {
             let a = read_drawing(input, "a")?;
             let b = read_drawing(input, "b")?;
-            let handle = block_on(k.group(&[a, b])).map_err(map_kernel_error)?;
+            let handle = k.group(&[a, b]).map_err(map_kernel_error)?;
             Ok(channel_output("draw.drawing", drawing_dict(k, &handle)?))
         })
     }
@@ -309,7 +309,7 @@ impl Operator for BoolUnion {
         with_kernel(|k| {
             let a = read_drawing(input, "a")?;
             let b = read_drawing(input, "b")?;
-            let handle = block_on(k.bool_union(&a, &b)).map_err(map_kernel_error)?;
+            let handle = k.bool_union(&a, &b).map_err(map_kernel_error)?;
             Ok(channel_output("draw.drawing", drawing_dict(k, &handle)?))
         })
     }
@@ -321,7 +321,7 @@ impl Operator for BoolDifference {
         with_kernel(|k| {
             let a = read_drawing(input, "a")?;
             let b = read_drawing(input, "b")?;
-            let handle = block_on(k.bool_difference(&a, &b)).map_err(map_kernel_error)?;
+            let handle = k.bool_difference(&a, &b).map_err(map_kernel_error)?;
             Ok(channel_output("draw.drawing", drawing_dict(k, &handle)?))
         })
     }
@@ -333,7 +333,7 @@ impl Operator for BoolIntersection {
         with_kernel(|k| {
             let a = read_drawing(input, "a")?;
             let b = read_drawing(input, "b")?;
-            let handle = block_on(k.bool_intersection(&a, &b)).map_err(map_kernel_error)?;
+            let handle = k.bool_intersection(&a, &b).map_err(map_kernel_error)?;
             Ok(channel_output("draw.drawing", drawing_dict(k, &handle)?))
         })
     }
@@ -349,7 +349,7 @@ impl Operator for DrawText {
             let y = read_channel_number(input, "y")?;
             let content = read_text(input, "text")?;
             let size = read_channel_number(input, "size").unwrap_or(16.0);
-            let handle = block_on(k.text(x, y, &content, size)).map_err(map_kernel_error)?;
+            let handle = k.text(x, y, &content, size).map_err(map_kernel_error)?;
             Ok(channel_output("draw.drawing", drawing_dict(k, &handle)?))
         })
     }
@@ -367,7 +367,7 @@ impl Operator for GradientLinear {
             let x2 = read_channel_number(input, "x2")?;
             let y2 = read_channel_number(input, "y2")?;
             let stops = vec![GradientStop { offset: 0.0, color: read_rgba(input, "start")? }, GradientStop { offset: 1.0, color: read_rgba(input, "end")? }];
-            let handle = block_on(k.linear_gradient_fill(&drawing, x1, y1, x2, y2, &stops)).map_err(map_kernel_error)?;
+            let handle = k.linear_gradient_fill(&drawing, x1, y1, x2, y2, &stops).map_err(map_kernel_error)?;
             Ok(channel_output("draw.drawing", drawing_dict(k, &handle)?))
         })
     }
@@ -381,7 +381,7 @@ impl Operator for ClipApply {
         with_kernel(|k| {
             let target = read_drawing(input, "target")?;
             let clip = read_drawing(input, "clip")?;
-            let handle = block_on(k.apply_clip(&target, &clip)).map_err(map_kernel_error)?;
+            let handle = k.apply_clip(&target, &clip).map_err(map_kernel_error)?;
             Ok(channel_output("draw.drawing", drawing_dict(k, &handle)?))
         })
     }

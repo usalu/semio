@@ -819,24 +819,24 @@ pub(crate) fn enc_values_bin(v: &TiffValues, out: &mut Vec<u8>) {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_values_bin(reader: &mut store::ByteReader<'_>) -> Result<TiffValues, String> {
     let tag = reader.read_u8().map_err(|e| e.to_string())?;
-    let count = |reader: &mut store::ByteReader<'_>| -> Result<u64, String> { semio_framework_plugin::resolve_ready(reader.read_varint_u64()).map_err(|e| e.to_string()) };
+    let count = |reader: &mut store::ByteReader<'_>| -> Result<u64, String> { reader.read_varint_u64().map_err(|e| e.to_string()) };
     match tag {
         0 => Ok(TiffValues::Byte(read_bytes_lp(reader)?)),
         1 => Ok(TiffValues::Ascii(read_str_lp(reader)?)),
         2 => {
             let n = count(reader)?;
-            (0..n).map(|_| semio_framework_plugin::resolve_ready(reader.read_u16_le()).map_err(|e| e.to_string())).collect::<Result<Vec<_>, _>>().map(TiffValues::Short)
+            (0..n).map(|_| reader.read_u16_le().map_err(|e| e.to_string())).collect::<Result<Vec<_>, _>>().map(TiffValues::Short)
         }
         3 => {
             let n = count(reader)?;
-            (0..n).map(|_| semio_framework_plugin::resolve_ready(reader.read_u32_le()).map_err(|e| e.to_string())).collect::<Result<Vec<_>, _>>().map(TiffValues::Long)
+            (0..n).map(|_| reader.read_u32_le().map_err(|e| e.to_string())).collect::<Result<Vec<_>, _>>().map(TiffValues::Long)
         }
         4 => {
             let n = count(reader)?;
             (0..n)
                 .map(|_| {
-                    let a = semio_framework_plugin::resolve_ready(reader.read_u32_le()).map_err(|e| e.to_string())?;
-                    let b = semio_framework_plugin::resolve_ready(reader.read_u32_le()).map_err(|e| e.to_string())?;
+                    let a = reader.read_u32_le().map_err(|e| e.to_string())?;
+                    let b = reader.read_u32_le().map_err(|e| e.to_string())?;
                     Ok((a, b))
                 })
                 .collect::<Result<Vec<_>, String>>()
@@ -844,23 +844,23 @@ pub(crate) fn dec_values_bin(reader: &mut store::ByteReader<'_>) -> Result<TiffV
         }
         5 => {
             let n = count(reader)?;
-            (0..n).map(|_| semio_framework_plugin::resolve_ready(reader.read_u8()).map_err(|e| e.to_string()).map(|b| b as i8)).collect::<Result<Vec<_>, _>>().map(TiffValues::SByte)
+            (0..n).map(|_| reader.read_u8().map_err(|e| e.to_string()).map(|b| b as i8)).collect::<Result<Vec<_>, _>>().map(TiffValues::SByte)
         }
         6 => Ok(TiffValues::Undefined(read_bytes_lp(reader)?)),
         7 => {
             let n = count(reader)?;
-            (0..n).map(|_| semio_framework_plugin::resolve_ready(reader.read_u16_le()).map_err(|e| e.to_string()).map(|x| x as i16)).collect::<Result<Vec<_>, _>>().map(TiffValues::SShort)
+            (0..n).map(|_| reader.read_u16_le().map_err(|e| e.to_string()).map(|x| x as i16)).collect::<Result<Vec<_>, _>>().map(TiffValues::SShort)
         }
         8 => {
             let n = count(reader)?;
-            (0..n).map(|_| semio_framework_plugin::resolve_ready(reader.read_u32_le()).map_err(|e| e.to_string()).map(|x| x as i32)).collect::<Result<Vec<_>, _>>().map(TiffValues::SLong)
+            (0..n).map(|_| reader.read_u32_le().map_err(|e| e.to_string()).map(|x| x as i32)).collect::<Result<Vec<_>, _>>().map(TiffValues::SLong)
         }
         9 => {
             let n = count(reader)?;
             (0..n)
                 .map(|_| {
-                    let a = semio_framework_plugin::resolve_ready(reader.read_u32_le()).map_err(|e| e.to_string())? as i32;
-                    let b = semio_framework_plugin::resolve_ready(reader.read_u32_le()).map_err(|e| e.to_string())? as i32;
+                    let a = reader.read_u32_le().map_err(|e| e.to_string())? as i32;
+                    let b = reader.read_u32_le().map_err(|e| e.to_string())? as i32;
                     Ok((a, b))
                 })
                 .collect::<Result<Vec<_>, String>>()
@@ -868,11 +868,11 @@ pub(crate) fn dec_values_bin(reader: &mut store::ByteReader<'_>) -> Result<TiffV
         }
         10 => {
             let n = count(reader)?;
-            (0..n).map(|_| semio_framework_plugin::resolve_ready(reader.read_bytes(4)).map_err(|e| e.to_string()).map(|b| f32::from_le_bytes(b.try_into().expect("4 bytes")))).collect::<Result<Vec<_>, _>>().map(TiffValues::Float)
+            (0..n).map(|_| reader.read_bytes(4).map_err(|e| e.to_string()).map(|b| f32::from_le_bytes(b.try_into().expect("4 bytes")))).collect::<Result<Vec<_>, _>>().map(TiffValues::Float)
         }
         11 => {
             let n = count(reader)?;
-            (0..n).map(|_| semio_framework_plugin::resolve_ready(reader.read_f64_le()).map_err(|e| e.to_string())).collect::<Result<Vec<_>, _>>().map(TiffValues::Double)
+            (0..n).map(|_| reader.read_f64_le().map_err(|e| e.to_string())).collect::<Result<Vec<_>, _>>().map(TiffValues::Double)
         }
         other => Err(format!("tiff values binary: unknown tag {other}")),
     }
@@ -1151,13 +1151,13 @@ impl protocol::DiffCodec for TiffDiff {
         let _format = reader.read_u8().map_err(|e| malformed("diff format", 0, e.to_string()))?;
         let flags = reader.read_u8().map_err(|e| malformed("diff flags", 1, e.to_string()))?;
         let byte_order = if flags & 0b001 != 0 {
-            let v = reader.read_u8().map_err(|e| malformed("diff byte_order", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
+            let v = reader.read_u8().map_err(|e| malformed("diff byte_order", reader.position(), e.to_string()))?;
             Some(if v == 0 { TiffByteOrder::LittleEndian } else { TiffByteOrder::BigEndian })
         } else {
             None
         };
-        let ifds = if flags & 0b010 != 0 { Some(dec_ifds_diff_bin(&mut reader).map_err(|e| malformed("diff ifds", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
-        let pixels = if flags & 0b100 != 0 { Some(read_bytes_lp(&mut reader).map_err(|e| malformed("diff pixels", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
+        let ifds = if flags & 0b010 != 0 { Some(dec_ifds_diff_bin(&mut reader).map_err(|e| malformed("diff ifds", reader.position(), e))?) } else { None };
+        let pixels = if flags & 0b100 != 0 { Some(read_bytes_lp(&mut reader).map_err(|e| malformed("diff pixels", reader.position(), e))?) } else { None };
         Ok(TiffDiff { byte_order, ifds, pixels })
     }
 }

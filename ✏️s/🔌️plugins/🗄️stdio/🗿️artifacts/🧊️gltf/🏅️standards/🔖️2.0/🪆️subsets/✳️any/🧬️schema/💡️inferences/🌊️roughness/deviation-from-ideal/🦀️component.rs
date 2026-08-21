@@ -1,8 +1,5 @@
 //! 💡️ deviation-from-ideal atomic glTF inference leaf.
-use super::super::super::modules::{
-    inference_measures::unavailable,
-    measurement_contracts::*,
-};
+use super::super::super::modules::{inference_measures::unavailable, measurement_contracts::*};
 use super::super::{geometry_core::GltfGeometryContext, GltfEntityIndicators, GltfInferenceLeaf, GltfInferenceLeafDescriptor, GLTF_GEOMETRY_READS};
 
 pub struct GltfDeviationFromIdealInference;

@@ -49,7 +49,7 @@ pub struct HeatRecoveryOutput {
 
 // #region 🔖️Ntu
 /// 📐️ Effectiveness from NTU and capacity ratio (counter-flow approximation).
-pub async fn effectiveness_from_ntu(ntu: f64, cr: f64, hx_type: HeatExchangerType) -> f64 {
+pub fn effectiveness_from_ntu(ntu: f64, cr: f64, hx_type: HeatExchangerType) -> f64 {
     let cr = cr.clamp(0.0, 1.0);
     let ntu = ntu.max(0.0);
     match hx_type {
@@ -69,7 +69,7 @@ pub async fn effectiveness_from_ntu(ntu: f64, cr: f64, hx_type: HeatExchangerTyp
 }
 
 /// 📐️ NTU from UA and minimum capacity rate.
-pub async fn ntu_from_ua(ua_w_per_k: f64, c_min: f64) -> f64 {
+pub fn ntu_from_ua(ua_w_per_k: f64, c_min: f64) -> f64 {
     if c_min < 1e-9 {
         return 0.0;
     }
@@ -79,7 +79,7 @@ pub async fn ntu_from_ua(ua_w_per_k: f64, c_min: f64) -> f64 {
 
 // #region 🔖️Exchange
 /// ♻️ Sensible and latent heat recovery exchange [W].
-pub async fn heat_recovery_exchange_w(unit: &HeatRecoveryUnit, supply_in: &HxAirstream, exhaust_in: &HxAirstream) -> HeatRecoveryOutput {
+pub fn heat_recovery_exchange_w(unit: &HeatRecoveryUnit, supply_in: &HxAirstream, exhaust_in: &HxAirstream) -> HeatRecoveryOutput {
     let m_sup = supply_in.mass_flow_kg_s.max(0.0);
     let m_exh = exhaust_in.mass_flow_kg_s.max(0.0);
     if m_sup < 1e-9 || m_exh < 1e-9 {
@@ -141,7 +141,7 @@ pub async fn heat_recovery_exchange_w(unit: &HeatRecoveryUnit, supply_in: &HxAir
     }
 }
 
-async fn passthrough(unit: &HeatRecoveryUnit, supply: &HxAirstream, exhaust: &HxAirstream) -> HeatRecoveryOutput {
+fn passthrough(unit: &HeatRecoveryUnit, supply: &HxAirstream, exhaust: &HxAirstream) -> HeatRecoveryOutput {
     HeatRecoveryOutput {
         supply_out: *supply,
         exhaust_out: *exhaust,
@@ -160,12 +160,12 @@ async fn passthrough(unit: &HeatRecoveryUnit, supply: &HxAirstream, exhaust: &Hx
 mod tests {
     use super::*;
 
-    async fn erv() -> HeatRecoveryUnit {
+    fn erv() -> HeatRecoveryUnit {
         HeatRecoveryUnit { hx_type: HeatExchangerType::CounterFlow, sensible_effectiveness: 0.75, latent_effectiveness: 0.6, frost_control_temp_c: -5.0, defrost_power_w: 200.0 }
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn winter_recovery_heats_supply() {
+    fn winter_recovery_heats_supply() {
         let unit = erv();
         let supply = HxAirstream { temperature_c: 5.0, humidity_ratio: 0.004, mass_flow_kg_s: 0.3, pressure_pa: 101_325.0 };
         let exhaust = HxAirstream { temperature_c: 22.0, humidity_ratio: 0.009, mass_flow_kg_s: 0.3, pressure_pa: 101_325.0 };
@@ -175,13 +175,13 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn effectiveness_ntu_counterflow() {
+    fn effectiveness_ntu_counterflow() {
         let eps = effectiveness_from_ntu(3.0, 0.5, HeatExchangerType::CounterFlow);
         assert!(eps > 0.5 && eps < 1.0);
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn frost_reduces_effectiveness() {
+    fn frost_reduces_effectiveness() {
         let unit = erv();
         let supply = HxAirstream { temperature_c: -10.0, humidity_ratio: 0.002, mass_flow_kg_s: 0.2, pressure_pa: 101_325.0 };
         let exhaust = HxAirstream { temperature_c: 20.0, humidity_ratio: 0.008, mass_flow_kg_s: 0.2, pressure_pa: 101_325.0 };

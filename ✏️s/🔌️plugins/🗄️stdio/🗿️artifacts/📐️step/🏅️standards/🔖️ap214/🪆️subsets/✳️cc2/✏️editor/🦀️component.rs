@@ -2,15 +2,14 @@
 //! 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.1). `StepCc2Editor`
 //! implements `ArtifactEditor`, wiring the shared `MeshWindowKit` to a single Main window.
 
-use crate::artifacts::step::standards::v_ap214::subsets::cc2::schema::snapshot::StepSnapshot;
 use crate::artifacts::step::standards::v_ap214::subsets::cc2::schema::mutations::StepMutation;
+use crate::artifacts::step::standards::v_ap214::subsets::cc2::schema::snapshot::StepSnapshot;
 use crate::editor::step_cc2::modes::edit;
 use crate::editor::step_cc2::modes::edit::windows::main;
-use semio_framework_plugin::{
-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation,
-    StandardId, SubsetId, UiNode,
-};
 use semio_framework_plugin::app::InteractionView;
+use semio_framework_plugin::{
+    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId, UiNode,
+};
 use store::EngineHandles;
 
 //#region 🔖️Dialect
@@ -66,16 +65,23 @@ impl ArtifactEditor for StepCc2Editor {
         StepSnapshot::default()
     }
 
-    async fn handle(command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
+    async fn handle(
+        command: &Self::Command,
+        _doc: &ArtifactView<'_, Self::Snapshot>,
+        _cfg: &ConfigView<'_, Self::Config>,
+        _interaction: &InteractionView<'_>,
+        _draft: &DraftView<'_, Self::Draft>,
+        _engines: &EngineHandles,
+    ) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
         let _ = command;
         Ok(Emit::default())
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
-        match body_key {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::ComponentTree {
+        semio_framework_plugin::built_to_component_tree(match body_key {
             main::BODY_KEY => main::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
-        }
+            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))),
+        })
     }
 }
 //#endregion 🔖️Editor
@@ -83,14 +89,7 @@ impl ArtifactEditor for StepCc2Editor {
 //#region 🔖️Manifest
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn create_step_cc2_editor() -> semio_framework_plugin::AppDefinition {
-    Editor::builder(STEP_CC2_DIALECT)
-        .document(["stdio", "step"])
-        .icon_id("box")
-        .mode_def(edit::definition())
-        .default_mode_id(edit::STEP_CC2_EDIT_MODE_ID)
-        .window_kind_def(main::definition())
-        .default_layout(edit::layout())
-        .build_definition()
+    Editor::builder(STEP_CC2_DIALECT).document(["stdio", "step"]).icon_id("box").mode_def(edit::definition()).default_mode_id(edit::STEP_CC2_EDIT_MODE_ID).window_kind_def(main::definition()).default_layout(edit::layout()).build_definition()
 }
 //#endregion 🔖️Manifest
 

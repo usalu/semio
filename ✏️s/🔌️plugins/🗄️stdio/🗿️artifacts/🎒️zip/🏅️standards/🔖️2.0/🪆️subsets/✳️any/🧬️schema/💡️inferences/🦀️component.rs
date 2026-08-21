@@ -25,7 +25,7 @@ pub struct ZipInference {
 }
 
 impl protocol::Inference<ZipSnapshot> for ZipInference {
-    async fn infer(snapshot: &ZipSnapshot) -> Self {
+    fn infer(snapshot: &ZipSnapshot) -> Self {
         Self { entries: compute_zip_entries(snapshot) }
     }
 }
@@ -39,13 +39,13 @@ impl Default for ZipInference {
 }
 
 impl protocol::InferenceSpec<ZipSnapshot> for ZipInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.stdio.zip.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.zip.inference.entries", reads: &["entries"] }]
     }
 }

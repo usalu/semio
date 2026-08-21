@@ -88,11 +88,8 @@ async fn committed_json_is_canonical() {
 async fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
     let status = outcome.get("status").and_then(serde_json::Value::as_str).expect("outcome carries a status");
-    let declared: Vec<(String, String)> = outcome
-        .get("messages")
-        .and_then(serde_json::Value::as_array)
-        .map(|rows| rows.iter().map(|row| (row["level"].as_str().unwrap_or_default().to_string(), row["code"].as_str().unwrap_or_default().to_string())).collect())
-        .unwrap_or_default();
+    let declared: Vec<(String, String)> =
+        outcome.get("messages").and_then(serde_json::Value::as_array).map(|rows| rows.iter().map(|row| (row["level"].as_str().unwrap_or_default().to_string(), row["code"].as_str().unwrap_or_default().to_string())).collect()).unwrap_or_default();
     let raised = <Mp4Mutation as protocol::Mutation<Mp4Snapshot>>::diff(&mutation(), &before());
     let produced: Vec<(String, String)> = raised
         .messages()
@@ -127,12 +124,18 @@ async fn produces_committed_diff() {
     let tracks = raised.diff().tracks.as_ref().expect("set-snapshot/promotes-the-second-sample-to-a-sync-frame: the tracks triple must be present");
     assert!(tracks.removed.is_empty() && tracks.added.is_empty(), "set-snapshot/promotes-the-second-sample-to-a-sync-frame: the file keeps its single video track");
     let track = &tracks.modified[0].diff;
-    assert!(track.codec.is_none() && track.metadata.is_none() && track.chunk_sample_counts.is_none(), "set-snapshot/promotes-the-second-sample-to-a-sync-frame: the avcC record, the track metadata and the chunk grouping are all unchanged whole-value slots");
+    assert!(
+        track.codec.is_none() && track.metadata.is_none() && track.chunk_sample_counts.is_none(),
+        "set-snapshot/promotes-the-second-sample-to-a-sync-frame: the avcC record, the track metadata and the chunk grouping are all unchanged whole-value slots"
+    );
     assert!(track.width.is_none() && track.height.is_none() && track.track_id.is_none(), "set-snapshot/promotes-the-second-sample-to-a-sync-frame: the track's own scalars do not move");
     let samples = track.samples.as_ref().expect("set-snapshot/promotes-the-second-sample-to-a-sync-frame: the samples triple must be present");
     assert_eq!(samples.modified[0].index, 1, "set-snapshot/promotes-the-second-sample-to-a-sync-frame: sample indices are BASE-state positions");
     assert_eq!(samples.modified[0].diff.sync, Some(true), "set-snapshot/promotes-the-second-sample-to-a-sync-frame: sync is the one scalar this payload moves");
-    assert!(samples.modified[0].diff.data.is_none() && samples.modified[0].diff.duration.is_none(), "set-snapshot/promotes-the-second-sample-to-a-sync-frame: a Some(data) here would mean the delta re-emitted the whole opaque payload for a one-bit flag change");
+    assert!(
+        samples.modified[0].diff.data.is_none() && samples.modified[0].diff.duration.is_none(),
+        "set-snapshot/promotes-the-second-sample-to-a-sync-frame: a Some(data) here would mean the delta re-emitted the whole opaque payload for a one-bit flag change"
+    );
 }
 
 /// 🔣️ The committed diff is itself canonical and decodes to Mp4Diff.
@@ -142,7 +145,11 @@ async fn committed_diff_is_canonical() {
     let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "set-snapshot/promotes-the-second-sample-to-a-sync-frame: committed diff JSON is not canonical");
-    assert_eq!(serde_json::from_str::<serde_json::Value>(DIFF).expect("diff reparses").pointer("/tracks/modified/0/diff/samples/modified/0/diff").and_then(serde_json::Value::as_object).map(|o| o.len()), Some(1), "set-snapshot/promotes-the-second-sample-to-a-sync-frame: exactly one of Mp4SampleDiff's four slots may appear in the committed sample patch");
+    assert_eq!(
+        serde_json::from_str::<serde_json::Value>(DIFF).expect("diff reparses").pointer("/tracks/modified/0/diff/samples/modified/0/diff").and_then(serde_json::Value::as_object).map(|o| o.len()),
+        Some(1),
+        "set-snapshot/promotes-the-second-sample-to-a-sync-frame: exactly one of Mp4SampleDiff's four slots may appear in the committed sample patch"
+    );
 }
 
 /// 🩹 Applying the committed diff directly to `before` yields the committed `after` — the diff is

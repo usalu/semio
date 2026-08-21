@@ -666,7 +666,7 @@ impl DiffCodec for SemioAudioDiff {
             return Err(protocol::ProtocolError::Malformed { what: "diff format", offset: 0, detail: format!("unsupported diff format {}", bytes[0]) });
         }
         let presence = bytes[1];
-        let mut reader = semio_framework_plugin::resolve_ready(store::ByteReader::new(&bytes[2..]));
+        let mut reader = store::ByteReader::new(&bytes[2..]);
         let sample_rate = if presence & 0b0001 != 0 {
             let text = read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff sample_rate blob", offset: 2, detail: e })?;
             Some(parse_u32(&text).map_err(|e| protocol::ProtocolError::Malformed { what: "diff sample_rate text", offset: 2, detail: e })?)

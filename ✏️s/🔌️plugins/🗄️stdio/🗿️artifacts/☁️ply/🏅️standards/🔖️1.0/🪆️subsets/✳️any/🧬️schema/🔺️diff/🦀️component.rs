@@ -1427,7 +1427,7 @@ fn read_bin_element_diff(r: &mut dsl::ByteReader<'_>) -> Result<PlyElementDiff, 
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_elements_diff_bin(d: &PlyElementsDiff) -> Vec<u8> {
-    let mut w = semio_framework_plugin::resolve_ready(dsl::ByteWriter::new());
+    let mut w = dsl::ByteWriter::new();
     write_bin_vec(&mut w, &d.removed, |w, n: &String| write_bin_str(w, n));
     write_bin_vec(&mut w, &d.modified, |w, m: &PlyElementModified| {
         write_bin_str(w, &m.name);
@@ -1441,7 +1441,7 @@ fn enc_elements_diff_bin(d: &PlyElementsDiff) -> Vec<u8> {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_elements_diff_bin(bytes: &[u8]) -> Result<PlyElementsDiff, dsl::PackError> {
-    let mut r = semio_framework_plugin::resolve_ready(dsl::ByteReader::new(bytes));
+    let mut r = dsl::ByteReader::new(bytes);
     let removed = read_bin_vec(&mut r, read_bin_str)?;
     let modified = read_bin_vec(&mut r, |r| {
         let name = read_bin_str(r)?;
@@ -1507,19 +1507,19 @@ impl DiffCodec for PlyDiff {
         let mut w = dsl::ByteWriter::new();
         write_bin_option(&mut w, &self.format, |w, f| write_bin_format(w, *f));
         write_bin_option(&mut w, &self.comments, |w, v: &Vec<String>| {
-            let mut inner = semio_framework_plugin::resolve_ready(dsl::ByteWriter::new());
+            let mut inner = dsl::ByteWriter::new();
             write_bin_vec(&mut inner, v, |w, c: &String| write_bin_str(w, c));
-            write_bin_blob(w, &semio_framework_plugin::resolve_ready(inner.into_bytes()));
+            write_bin_blob(w, &inner.into_bytes());
         });
         write_bin_option(&mut w, &self.elements, |w, v| write_bin_blob(w, &enc_elements_diff_bin(v)));
         Ok(w.into_bytes())
     }
     fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let mut r = semio_framework_plugin::resolve_ready(dsl::ByteReader::new(bytes));
+        let mut r = dsl::ByteReader::new(bytes);
         let format = read_bin_option(&mut r, |r| read_bin_format(r)).map_err(diff_pack_err)?;
         let comments = read_bin_option(&mut r, |r| {
             let blob = read_bin_blob(r)?;
-            let mut inner = semio_framework_plugin::resolve_ready(dsl::ByteReader::new(&blob));
+            let mut inner = dsl::ByteReader::new(&blob);
             read_bin_vec(&mut inner, read_bin_str)
         })
         .map_err(diff_pack_err)?;

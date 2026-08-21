@@ -810,8 +810,8 @@ impl protocol::DiffCodec for StlDiff {
         let mut reader = store::ByteReader::new(bytes);
         let _format = reader.read_u8().map_err(|e| protocol::ProtocolError::Malformed { what: "diff format", offset: 0, detail: e.to_string() })?;
         let flags = reader.read_u8().map_err(|e| protocol::ProtocolError::Malformed { what: "diff flags", offset: 1, detail: e.to_string() })?;
-        let solid_name = if flags & 0b01 != 0 { Some(read_str_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff solid_name", offset: semio_framework_plugin::resolve_ready(reader.position()) as u64, detail: e })?) } else { None };
-        let triangles = if flags & 0b10 != 0 { Some(dec_triangles_diff_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff triangles", offset: semio_framework_plugin::resolve_ready(reader.position()) as u64, detail: e })?) } else { None };
+        let solid_name = if flags & 0b01 != 0 { Some(read_str_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff solid_name", offset: reader.position() as u64, detail: e })?) } else { None };
+        let triangles = if flags & 0b10 != 0 { Some(dec_triangles_diff_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff triangles", offset: reader.position() as u64, detail: e })?) } else { None };
         Ok(StlDiff { solid_name, triangles })
     }
 }

@@ -9,8 +9,8 @@ use crate::wfc_engine::ids::{NodeId, PatternId};
 /// 🎯️ Scores a complete assignment. Lower is not inherently better or worse — [`BestOfN::keep`]
 /// decides the direction.
 pub trait SoftConstraint {
-    async fn name(&self) -> &'static str;
-    async fn score(&self, assignment: &[PatternId]) -> f64;
+    fn name(&self) -> &'static str;
+    fn score(&self, assignment: &[PatternId]) -> f64;
 }
 
 /// 🎯️ A [`SoftConstraint`] built from a plain closure, for one-off scoring without a named type.
@@ -20,11 +20,11 @@ pub struct ScoreFn<F: Fn(&[PatternId]) -> f64> {
 }
 
 impl<F: Fn(&[PatternId]) -> f64> SoftConstraint for ScoreFn<F> {
-    async fn name(&self) -> &'static str {
+    fn name(&self) -> &'static str {
         self.name
     }
 
-    async fn score(&self, assignment: &[PatternId]) -> f64 {
+    fn score(&self, assignment: &[PatternId]) -> f64 {
         (self.f)(assignment)
     }
 }
@@ -53,7 +53,7 @@ pub struct Attempt {
 /// 🚦️ De-dyn (O1/R11 open-set case): a caller's scorer is an open extension point (any
 /// [`SoftConstraint`] impl, not a fixed set this crate enumerates), so this is the trivially-generic
 /// parameter-position shape — `&dyn SoftConstraint` becomes `&S` — never an enum.
-pub async fn best_of_n<S: SoftConstraint>(base_seed: u64, n: u64, keep: BestOfNKeep, scorer: &S, mut solve_one: impl FnMut(u64) -> Option<Vec<PatternId>>) -> (Option<Attempt>, usize) {
+pub fn best_of_n<S: SoftConstraint>(base_seed: u64, n: u64, keep: BestOfNKeep, scorer: &S, mut solve_one: impl FnMut(u64) -> Option<Vec<PatternId>>) -> (Option<Attempt>, usize) {
     let mut best: Option<Attempt> = None;
     let mut solved_count = 0usize;
     for i in 0..n {
@@ -87,20 +87,20 @@ pub struct WeightField {
 }
 
 impl WeightField {
-    pub async fn identity(node_count: usize, pattern_count: usize) -> Self {
+    pub fn identity(node_count: usize, pattern_count: usize) -> Self {
         Self { node_count, pattern_count, factors: vec![1.0; node_count * pattern_count] }
     }
 
-    pub async fn set(&mut self, n: NodeId, p: PatternId, factor: f64) {
+    pub fn set(&mut self, n: NodeId, p: PatternId, factor: f64) {
         debug_assert!(factor.is_finite() && factor >= 0.0, "weight field factor must be finite and non-negative");
         self.factors[n.index() * self.pattern_count + p.index()] = factor;
     }
 
-    pub async fn get(&self, n: NodeId, p: PatternId) -> f64 {
+    pub fn get(&self, n: NodeId, p: PatternId) -> f64 {
         self.factors[n.index() * self.pattern_count + p.index()]
     }
 
-    pub async fn node_count(&self) -> usize {
+    pub fn node_count(&self) -> usize {
         self.node_count
     }
 }
@@ -111,8 +111,8 @@ impl WeightField {
 mod tests {
     use super::*;
 
-    #[semio_framework_async_macros::async_test]
-    async fn best_of_n_keeps_the_highest_scoring_attempt() {
+    #[test]
+    fn best_of_n_keeps_the_highest_scoring_attempt() {
         let scorer = ScoreFn { name: "sum", f: |a: &[PatternId]| a.iter().map(|p| p.get() as f64).sum() };
         let (best, solved) = best_of_n(0, 5, BestOfNKeep::Highest, &scorer, |seed| Some(vec![PatternId(seed as u32 % 10)]));
         assert_eq!(solved, 5);
@@ -120,31 +120,31 @@ mod tests {
         assert_eq!(best.assignment, vec![PatternId(4)]); // seeds 0..5 -> patterns 0..5, max is 4
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn best_of_n_keeps_the_lowest_scoring_attempt() {
+    #[test]
+    fn best_of_n_keeps_the_lowest_scoring_attempt() {
         let scorer = ScoreFn { name: "sum", f: |a: &[PatternId]| a.iter().map(|p| p.get() as f64).sum() };
         let (best, _) = best_of_n(0, 5, BestOfNKeep::Lowest, &scorer, |seed| Some(vec![PatternId(seed as u32 % 10)]));
         assert_eq!(best.unwrap().assignment, vec![PatternId(0)]);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn best_of_n_skips_failed_attempts() {
+    #[test]
+    fn best_of_n_skips_failed_attempts() {
         let scorer = ScoreFn { name: "const", f: |_: &[PatternId]| 0.0 };
         let (best, solved) = best_of_n(0, 5, BestOfNKeep::Highest, &scorer, |seed| if seed == 2 { Some(vec![PatternId(0)]) } else { None });
         assert_eq!(solved, 1);
         assert!(best.is_some());
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn best_of_n_returns_none_when_every_attempt_fails() {
+    #[test]
+    fn best_of_n_returns_none_when_every_attempt_fails() {
         let scorer = ScoreFn { name: "const", f: |_: &[PatternId]| 0.0 };
         let (best, solved) = best_of_n(0, 3, BestOfNKeep::Highest, &scorer, |_| None);
         assert_eq!(solved, 0);
         assert!(best.is_none());
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn weight_field_identity_is_all_ones() {
+    #[test]
+    fn weight_field_identity_is_all_ones() {
         let field = WeightField::identity(2, 3);
         for n in 0..2 {
             for p in 0..3 {
@@ -153,8 +153,8 @@ mod tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn weight_field_set_and_get_roundtrip() {
+    #[test]
+    fn weight_field_set_and_get_roundtrip() {
         let mut field = WeightField::identity(2, 2);
         field.set(NodeId(0), PatternId(1), 2.5);
         assert_eq!(field.get(NodeId(0), PatternId(1)), 2.5);

@@ -19,7 +19,7 @@ path = "📦️glue.rs"
 [features]
 default = []
 # ⌨️ Terminal target: semio-styled scene/cell renderer, wasm-safe. Carries no platform I/O on its own.
-tui = ["dep:unicode-width"]
+tui = ["dep:unicode-width", "dep:semio-framework-async"]
 # 🖥️ Native terminal backend for `tui`: raw mode, alt screen, stdin ANSI input decoding.
 tui-terminal = ["tui", "dep:libc", "dep:windows-sys"]
 # 🌐️ wasm-bindgen exports of the tui `WasmHost` for browser hosts (xterm.js); never default.
@@ -60,6 +60,7 @@ ui_scene = { path = "../../🎬️scene/📦️packages/🦀️rust", package = 
 # `widgets.rs`); `semio-framework-ui-scene`'s `math` module re-exports `Mat4`/`Vec3` from here too.
 semio-framework-geometry = { path = "../../../📐️geometry/📦️packages/🦀️rust", package = "semio-framework-geometry", optional = true }
 semio-framework-job = { path = "../../../🧵️job/📦️packages/🦀️rust", optional = true }
+semio-framework-async = { path = "../../../⏳️async/📦️packages/🦀️rust", optional = true }
 unicode-width = { version = "0.2.2", optional = true }
 dsl = { path = "../../../../🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel", optional = true }
 serde = { version = "1.0.219", features = ["derive"], optional = true }

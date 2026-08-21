@@ -103,7 +103,7 @@ async fn produces_committed_diff() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical_and_narrowly_scoped() {
     let decoded: SemioImageDiff = serde_json::from_str(DIFF).expect("committed set-snapshot diff decodes");
-    
+
     assert!(decoded.width.is_none() && decoded.height.is_none() && decoded.icc.is_none(), "fields the target left alone must be absent — this is the assertion a full-replace implementation would fail");
     assert!(decoded.colorspace.is_some() && decoded.bit_depth.is_some(), "the two changed scalars must be present");
     let frames = decoded.frames.as_ref().expect("the changed frame must be present");

@@ -7,7 +7,7 @@
 use crate::artifacts::json::schema::snapshot::{JsonMember, JsonValue};
 use crate::artifacts::json::JsonSnapshot;
 use semio_framework_plugin::app::{TreeNodeView, TreeView, TreeWindowKit, WindowKit};
-use semio_framework_plugin::{LocalizedLabel, UiNode, WindowKindDefinition};
+use semio_framework_plugin::{BuiltNode, LocalizedLabel, WindowKindDefinition};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = TreeWindowKit::KIND_ID;
@@ -44,11 +44,11 @@ fn scalar_label(value: &JsonValue) -> Option<String> {
 //#endregion 🔖️PathEncoding
 
 //#region 🔖️Render
-/// ✏️ Real `JsonSnapshot -> UiNode`: a labeled tree mirroring the document's own shape exactly —
+/// ✏️ Real `JsonSnapshot -> BuiltNode`: a labeled tree mirroring the document's own shape exactly —
 /// object members keep source order, array elements keep position, scalars show their literal
 /// value inline.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &JsonSnapshot) -> UiNode {
+pub fn render(document: &JsonSnapshot) -> BuiltNode {
     TreeWindowKit::render(&TreeView { roots: vec![node_view(Vec::new(), None, &document.value)] })
 }
 

@@ -1,0 +1,22 @@
+[run r13-78h456tf] crate=semio-framework-plugin dryRun=true target=(host)
+[run r13-78h456tf] iteration 1: total errors=11, async-class=11
+[run r13-78h456tf] iteration 1: planned 6 edits (6 residue)
+[run r13-78h456tf] DRY RUN — edits by kind: {
+  "call-remove-await": 6,
+}
+  call-remove-await /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs:65293-65299 ".await" -> ""
+  call-remove-await /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs:65205-65205 "" -> " where <Self as component::app::ArtifactInferrer>::Inference: std::future::Future"
+  call-remove-await /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs:545183-545189 ".await" -> ""
+  call-remove-await /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs:545361-545367 ".await" -> ""
+  call-remove-await /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs:224221-224227 ".await" -> ""
+  call-remove-await /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs:224375-224381 ".await" -> ""
+[run r13-78h456tf] DRY RUN — residue by category: {
+  "other/unclassified": 6,
+}
+[run r13-78h456tf] DRY RUN — residue (6):
+  - /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️builder/🦀️component.rs: no machine-applicable suggestion and no recognised fallback pattern; needs human triage :: `&[SemanticDescriptor]` is not a future
+  - /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️builder/🦀️component.rs: no machine-applicable suggestion and no recognised fallback pattern; needs human triage :: `&[SemanticDescriptor]` is not a future
+  - /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️builder/🦀️component.rs: no machine-applicable suggestion and no recognised fallback pattern; needs human triage :: `&[SemanticDescriptor]` is not a future
+  - /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️builder/🦀️component.rs: no machine-applicable suggestion and no recognised fallback pattern; needs human triage :: `&[SemanticDescriptor]` is not a future
+  - /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️builder/🦀️component.rs: no machine-applicable suggestion and no recognised fallback pattern; needs human triage :: `&[SemanticDescriptor]` is not a future
+  - /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️builder/🦀️component.rs: no machine-applicable suggestion and no recognised fallback pattern; needs human triage :: `&[SemanticDescriptor]` is not a future

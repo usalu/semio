@@ -74,71 +74,173 @@ pub struct PrecomputedModel {
 
 impl PrecomputedModel {
     /// 🧮️ Build precomputed data from model and timestep settings.
-    pub async fn build(model: &Model, zone_timestep_minutes: u32, system_timestep_minutes: u32) -> Self {
-        let zone_timestep_s = zone_timestep_minutes as f64 * 60.0;
-        let system_timestep_s = system_timestep_minutes as f64 * 60.0;
-        let mut zone_geometry: HashMap<EntityId, ZoneGeometry> = HashMap::new();
-        let mut surfaces = HashMap::new();
-        let mut fenestrations = HashMap::new();
-        let mut default_setpoints = HashMap::new();
-
-        for zone in &model.zones {
-            let zone_surfaces = model.surfaces_for_zone(zone.id);
-            let floor_area_m2 = zone_surfaces.iter().map(|s| surface_area_m2(&s.vertices_m)).sum::<f64>().max(1.0);
-            let exterior_area_m2 = zone_surfaces.iter().filter(|s| matches!(s.class, SurfaceClass::ExteriorWall | SurfaceClass::Roof)).map(|s| surface_area_m2(&s.vertices_m)).sum();
-            let roof_area_m2 = zone_surfaces.iter().filter(|s| matches!(s.class, SurfaceClass::Roof | SurfaceClass::Ceiling)).map(|s| surface_area_m2(&s.vertices_m)).sum();
-            zone_geometry.insert(zone.id, ZoneGeometry { floor_area_m2, exterior_area_m2, roof_area_m2 });
-            default_setpoints.insert(zone.id, ResolvedSetpoints { heating_c: 20.0, cooling_c: 26.0, heating_throttle_k: 2.0, cooling_throttle_k: 2.0 });
+    pub fn build(model: &Model, zone_timestep_minutes: u32, system_timestep_minutes: u32) -> Self {
+        let mut builder = PrecomputeBuilder::new(zone_timestep_minutes, system_timestep_minutes);
+        while !builder.is_complete() {
+            builder.step(model);
         }
-
-        for thermostat in &model.thermostats {
-            default_setpoints.insert(thermostat.zone_id, ResolvedSetpoints { heating_c: 20.0, cooling_c: 26.0, heating_throttle_k: thermostat.heating_throttle_range_k, cooling_throttle_k: thermostat.cooling_throttle_range_k });
-        }
-
-        for surface in &model.surfaces {
-            let area_m2 = surface_area_m2(&surface.vertices_m);
-            let normal = polygon_normal(&surface.vertices_m);
-            let orient = surface_tilt_azimuth(normal, model.site.north_axis_deg);
-            let tilt_deg = orient.tilt_deg;
-            let azimuth_deg = orient.azimuth_deg;
-            let (u_value, capacitance, solar_abs, emissivity) = model.construction_by_id(surface.construction_id).map_or((0.3, 50_000.0, 0.7, 0.9), |c| {
-                let layers: Vec<_> = c.layer_material_ids.iter().filter_map(|id| model.material_by_id(*id)).cloned().collect();
-                let u = construction_u_value(&layers, R_FILM_INTERIOR_M2K_W, R_FILM_EXTERIOR_M2K_W);
-                let cap = construction_thermal_mass(&layers);
-                let outer = layers.last();
-                (u, cap, outer.map_or(0.7, |m| m.solar_absorptance), outer.map_or(0.9, |m| m.thermal_absorptance))
-            });
-            let ctf = ConductionState::from_u_and_capacitance(u_value, capacitance, zone_timestep_s);
-            surfaces.insert(
-                surface.id,
-                SurfacePrecompute { area_m2, u_value_w_m2k: u_value, capacitance_j_m2k: capacitance, solar_absorptance: solar_abs, emissivity, tilt_deg, azimuth_deg, normal, ctf, zone_id: surface.zone_id, sun_exposed: surface.sun_exposed },
-            );
-        }
-
-        for fen in &model.fenestrations {
-            if let Some(surface) = model.surfaces.iter().find(|s| s.id == fen.surface_id) {
-                let normal = polygon_normal(&surface.vertices_m);
-                let orient = surface_tilt_azimuth(normal, model.site.north_axis_deg);
-                fenestrations
-                    .insert(fen.id, FenestrationPrecompute { surface_id: fen.surface_id, area_m2: fen.area_m2, u_value_w_m2k: fen.u_value_w_m2k, shgc: fen.shgc, vlt: fen.vlt, tilt_deg: orient.tilt_deg, azimuth_deg: orient.azimuth_deg, normal });
-            }
-        }
-
-        Self { zone_geometry, surfaces, fenestrations, default_setpoints, zone_timestep_s, system_timestep_s }
+        builder.finish()
     }
 
     /// ☀️ Solar incidence cosine for a surface at given solar position.
-    pub async fn surface_incidence(&self, surface_id: EntityId, sun_alt_deg: f64, sun_az_deg: f64) -> f64 {
+    pub fn surface_incidence(&self, surface_id: EntityId, sun_alt_deg: f64, sun_az_deg: f64) -> f64 {
         self.surfaces.get(&surface_id).map_or(0.0, |s| beam_incidence_cosine(s.normal, sun_alt_deg, sun_az_deg))
     }
 
     /// ☀️ Solar position for site at day/hour.
-    pub async fn solar_at(&self, model: &Model, day_of_year: u16, hour: f64) -> (f64, f64) {
+    pub fn solar_at(&self, model: &Model, day_of_year: u16, hour: f64) -> (f64, f64) {
         let pos = solar_position(model.site.latitude_deg, model.site.longitude_deg, day_of_year, hour);
         (pos.altitude_deg, pos.azimuth_deg)
     }
 }
 // #endregion 🔖️PrecomputedModel
+
+// #region 🔖️PrecomputeBuilder
+/// 🧮️ Persistent one-record-at-a-time precomputation used by interactive energy jobs and
+/// by [`PrecomputedModel::build`]'s batch adapter.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum PrecomputeStage {
+    Zones,
+    Surfaces,
+    NormalizeZones,
+    Thermostats,
+    Fenestrations,
+    Complete,
+}
+
+/// 🧮️ Cursor state for deterministic, resumable model precomputation.
+pub struct PrecomputeBuilder {
+    output: PrecomputedModel,
+    stage: PrecomputeStage,
+    cursor: usize,
+}
+
+impl PrecomputeBuilder {
+    pub fn new(zone_timestep_minutes: u32, system_timestep_minutes: u32) -> Self {
+        Self { output: PrecomputedModel { zone_timestep_s: zone_timestep_minutes as f64 * 60.0, system_timestep_s: system_timestep_minutes as f64 * 60.0, ..PrecomputedModel::default() }, stage: PrecomputeStage::Zones, cursor: 0 }
+    }
+
+    pub fn stage(&self) -> PrecomputeStage {
+        self.stage
+    }
+
+    pub fn cursor(&self) -> usize {
+        self.cursor
+    }
+
+    pub fn is_complete(&self) -> bool {
+        self.stage == PrecomputeStage::Complete
+    }
+
+    pub fn step(&mut self, model: &Model) {
+        match self.stage {
+            PrecomputeStage::Zones => {
+                if let Some(zone) = model.zones.get(self.cursor) {
+                    self.output.zone_geometry.insert(zone.id, ZoneGeometry::default());
+                    self.output.default_setpoints.insert(zone.id, ResolvedSetpoints { heating_c: 20.0, cooling_c: 26.0, heating_throttle_k: 2.0, cooling_throttle_k: 2.0 });
+                    self.cursor += 1;
+                } else {
+                    self.advance(PrecomputeStage::Surfaces);
+                }
+            }
+            PrecomputeStage::Surfaces => {
+                if let Some(surface) = model.surfaces.get(self.cursor) {
+                    let area_m2 = surface_area_m2(&surface.vertices_m);
+                    let geometry = self.output.zone_geometry.entry(surface.zone_id).or_default();
+                    geometry.floor_area_m2 += area_m2;
+                    if matches!(surface.class, SurfaceClass::ExteriorWall | SurfaceClass::Roof) {
+                        geometry.exterior_area_m2 += area_m2;
+                    }
+                    if matches!(surface.class, SurfaceClass::Roof | SurfaceClass::Ceiling) {
+                        geometry.roof_area_m2 += area_m2;
+                    }
+                    let normal = polygon_normal(&surface.vertices_m);
+                    let orient = surface_tilt_azimuth(normal, model.site.north_axis_deg);
+                    let (u_value, capacitance, solar_abs, emissivity) = model.construction_by_id(surface.construction_id).map_or((0.3, 50_000.0, 0.7, 0.9), |construction| {
+                        let layers: Vec<_> = construction.layer_material_ids.iter().filter_map(|id| model.material_by_id(*id)).cloned().collect();
+                        let u_value = construction_u_value(&layers, R_FILM_INTERIOR_M2K_W, R_FILM_EXTERIOR_M2K_W);
+                        let capacitance = construction_thermal_mass(&layers);
+                        let outer = layers.last();
+                        (u_value, capacitance, outer.map_or(0.7, |material| material.solar_absorptance), outer.map_or(0.9, |material| material.thermal_absorptance))
+                    });
+                    let ctf = ConductionState::from_u_and_capacitance(u_value, capacitance, self.output.zone_timestep_s);
+                    self.output.surfaces.insert(
+                        surface.id,
+                        SurfacePrecompute {
+                            area_m2,
+                            u_value_w_m2k: u_value,
+                            capacitance_j_m2k: capacitance,
+                            solar_absorptance: solar_abs,
+                            emissivity,
+                            tilt_deg: orient.tilt_deg,
+                            azimuth_deg: orient.azimuth_deg,
+                            normal,
+                            ctf,
+                            zone_id: surface.zone_id,
+                            sun_exposed: surface.sun_exposed,
+                        },
+                    );
+                    self.cursor += 1;
+                } else {
+                    self.advance(PrecomputeStage::NormalizeZones);
+                }
+            }
+            PrecomputeStage::NormalizeZones => {
+                if let Some(zone) = model.zones.get(self.cursor) {
+                    let geometry = self.output.zone_geometry.entry(zone.id).or_default();
+                    geometry.floor_area_m2 = geometry.floor_area_m2.max(1.0);
+                    self.cursor += 1;
+                } else {
+                    self.advance(PrecomputeStage::Thermostats);
+                }
+            }
+            PrecomputeStage::Thermostats => {
+                if let Some(thermostat) = model.thermostats.get(self.cursor) {
+                    self.output.default_setpoints.insert(thermostat.zone_id, ResolvedSetpoints { heating_c: 20.0, cooling_c: 26.0, heating_throttle_k: thermostat.heating_throttle_range_k, cooling_throttle_k: thermostat.cooling_throttle_range_k });
+                    self.cursor += 1;
+                } else {
+                    self.advance(PrecomputeStage::Fenestrations);
+                }
+            }
+            PrecomputeStage::Fenestrations => {
+                if let Some(fenestration) = model.fenestrations.get(self.cursor) {
+                    if let Some(surface) = model.surfaces.iter().find(|surface| surface.id == fenestration.surface_id) {
+                        let normal = polygon_normal(&surface.vertices_m);
+                        let orient = surface_tilt_azimuth(normal, model.site.north_axis_deg);
+                        self.output.fenestrations.insert(
+                            fenestration.id,
+                            FenestrationPrecompute {
+                                surface_id: fenestration.surface_id,
+                                area_m2: fenestration.area_m2,
+                                u_value_w_m2k: fenestration.u_value_w_m2k,
+                                shgc: fenestration.shgc,
+                                vlt: fenestration.vlt,
+                                tilt_deg: orient.tilt_deg,
+                                azimuth_deg: orient.azimuth_deg,
+                                normal,
+                            },
+                        );
+                    }
+                    self.cursor += 1;
+                } else {
+                    self.advance(PrecomputeStage::Complete);
+                }
+            }
+            PrecomputeStage::Complete => {}
+        }
+    }
+
+    pub fn finish(self) -> PrecomputedModel {
+        debug_assert!(self.is_complete());
+        self.output
+    }
+
+    fn advance(&mut self, stage: PrecomputeStage) {
+        self.stage = stage;
+        self.cursor = 0;
+    }
+}
+// #endregion 🔖️PrecomputeBuilder
 
 #[cfg(test)]
 mod tests {
@@ -146,7 +248,7 @@ mod tests {
     use crate::model::*;
 
     #[semio_framework_async_macros::async_test]
-    async fn precompute_builds_surface_ctf() {
+    fn precompute_builds_surface_ctf() {
         let model = crate::sim::test_model_single_zone();
         let pre = PrecomputedModel::build(&model, 60, 60);
         assert!(!pre.surfaces.is_empty());
@@ -154,14 +256,14 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn surface_incidence_is_zero_for_unknown_surface() {
+    fn surface_incidence_is_zero_for_unknown_surface() {
         let model = crate::sim::test_model_single_zone();
         let pre = PrecomputedModel::build(&model, 60, 60);
         assert_eq!(pre.surface_incidence(EntityId(999), 45.0, 180.0), 0.0);
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn surface_incidence_matches_known_surface_normal() {
+    fn surface_incidence_matches_known_surface_normal() {
         let model = crate::sim::test_model_single_zone();
         let pre = PrecomputedModel::build(&model, 60, 60);
         let incidence = pre.surface_incidence(EntityId(30), 45.0, 180.0);
@@ -169,7 +271,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn solar_at_returns_altitude_and_azimuth() {
+    fn solar_at_returns_altitude_and_azimuth() {
         let model = crate::sim::test_model_single_zone();
         let pre = PrecomputedModel::build(&model, 60, 60);
         let (alt, az) = pre.solar_at(&model, 172, 12.0);
@@ -178,7 +280,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn thermostat_overrides_default_setpoints() {
+    fn thermostat_overrides_default_setpoints() {
         let mut model = crate::sim::test_model_single_zone();
         model.thermostats.push(Thermostat { id: EntityId(50), zone_id: EntityId(1), heating_setpoint_schedule_id: ScheduleId(1), cooling_setpoint_schedule_id: ScheduleId(1), heating_throttle_range_k: 3.0, cooling_throttle_range_k: 4.0 });
         let pre = PrecomputedModel::build(&model, 60, 60);
@@ -188,7 +290,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn fenestration_precompute_derives_from_host_surface() {
+    fn fenestration_precompute_derives_from_host_surface() {
         let mut model = crate::sim::test_model_single_zone();
         model.fenestrations.push(Fenestration { id: EntityId(40), name: "Win".into(), surface_id: EntityId(30), u_value_w_m2k: 2.0, shgc: 0.4, vlt: 0.6, area_m2: 2.0, frame_conductance_w_k: 0.0, divider_conductance_w_k: 0.0 });
         let pre = PrecomputedModel::build(&model, 60, 60);

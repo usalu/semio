@@ -13,7 +13,10 @@ pub fn diff(payload: &CreateNode, base: &SemioDrawingSnapshot) -> protocol::Muta
     match node_at(base, &payload.parent) {
         Some(DrawNode::Group { children, .. }) => {
             let at = payload.index.min(children.len());
-            protocol::MutationOutcome::new(diff_at_path(&payload.parent, DrawNodeDiff::Group(DrawGroupDiff { transform: None, children: Some(IndexedTripleDiff { removed: Vec::new(), modified: Vec::new(), added: vec![IndexAdded { index: at, item: payload.node.clone() }] }) })))
+            protocol::MutationOutcome::new(diff_at_path(
+                &payload.parent,
+                DrawNodeDiff::Group(DrawGroupDiff { transform: None, children: Some(IndexedTripleDiff { removed: Vec::new(), modified: Vec::new(), added: vec![IndexAdded { index: at, item: payload.node.clone() }] }) }),
+            ))
         }
         _ => protocol::MutationOutcome::fatal("mutation.invariant", format!("Parent at layer #{} does not resolve to a group.", payload.parent.layer), [payload.parent.layer.to_string()]),
     }

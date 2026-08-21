@@ -152,7 +152,7 @@ mod derive_transformation {
 
     //#region 🔖️FaceAnalytics
     async fn face_mesh_analytics(kernel: &Brep, face: &GeometryHandle) -> Option<(Vec3, Vec3)> {
-        let mesh = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.tessellate(face, 0.1)).ok()?;
+        let mesh = kernel.tessellate(face, 0.1).ok()?;
         let mut area_sum = 0.0;
         let mut centroid = [0.0, 0.0, 0.0];
         let mut normal = [0.0, 0.0, 0.0];
@@ -277,18 +277,14 @@ mod derive_transformation {
     /// @emoji 📦️ Builds or reuses a kernel solid for a CAD object.
     pub(crate) async fn solid_for_object(kernel: &mut Brep, object: &CadObject) -> Option<GeometryHandle> {
         if let Some(handle) = object.solid_handle.as_ref() {
-            if semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.kind(&GeometryHandle(handle.clone()))).is_ok() {
+            if kernel.kind(&GeometryHandle(handle.clone())).is_ok() {
                 return Some(GeometryHandle(handle.clone()));
             }
         }
         let [ex, ey, ez] = object.extent.unwrap_or([1.0, 1.0, 1.0]);
         let (width, depth, height) = (ex.max(0.05), ey.max(0.05), ez.max(0.05));
         let is_cylindrical = object.typology.contains("column");
-        let handle = if is_cylindrical {
-            semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.cylinder_prim(width.max(depth) * 0.5, height)).ok()
-        } else {
-            semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.box_prim(width, depth, height)).ok()
-        }?;
+        let handle = if is_cylindrical { kernel.cylinder_prim(width.max(depth) * 0.5, height).ok() } else { kernel.box_prim(width, depth, height).ok() }?;
         Some(handle)
     }
 
@@ -297,9 +293,9 @@ mod derive_transformation {
         let [ex, ey, ez] = extent;
         let (width, depth, height) = (ex.max(0.05), ey.max(0.05), ez.max(0.05));
         if typology.contains("column") {
-            semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.cylinder_prim(width.max(depth) * 0.5, height)).ok()
+            kernel.cylinder_prim(width.max(depth) * 0.5, height).ok()
         } else {
-            semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.box_prim(width, depth, height)).ok()
+            kernel.box_prim(width, depth, height).ok()
         }
     }
 
@@ -310,7 +306,7 @@ mod derive_transformation {
         }
         let mut current = solids[0].clone();
         for solid in solids.iter().skip(1) {
-            current = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.fuse(&current, solid)).ok()?;
+            current = kernel.fuse(&current, solid).ok()?;
         }
         Some(current)
     }
@@ -340,7 +336,7 @@ mod derive_transformation {
             Some(hull) => hull,
             None => return Vec::new(),
         };
-        let topology = match semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.deconstruct(&hull)) {
+        let topology = match kernel.deconstruct(&hull) {
             Ok(topology) => topology,
             Err(_) => return Vec::new(),
         };
@@ -513,7 +509,7 @@ mod derive_transformation {
         #[semio_framework_async_macros::async_test]
         async fn derive_from_geometry_classifies_box() {
             let mut kernel = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::Brep::new();
-            let solid = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.box_prim(2.0, 2.0, 3.0)).expect("box");
+            let solid = kernel.box_prim(2.0, 2.0, 3.0).expect("box");
             let source = vec![CadObject {
                 id: "object-box".into(),
                 label: "Box".into(),
@@ -776,7 +772,7 @@ mod scene_compute {
     use semio_framework_3d::engine::MeshTransfer;
     use semio_framework_plugin::{mesh_from_kind, MeshData, WorldProjectionConfig};
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::mesh_data_from_mesh_transfer;
-    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{block_on, Brep, BrepKernel, GeometryHandle};
+    use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{Brep, BrepKernel, GeometryHandle};
     use serde_json::Value;
     use std::collections::HashSet;
     use std::sync::{Mutex, OnceLock};
@@ -834,31 +830,25 @@ mod scene_compute {
         let mut kernel = cad_brep_kernel();
         if let Some(handle_id) = solid_handle {
             let handle = GeometryHandle(handle_id.into());
-            if let Ok(mesh) = block_on(kernel.tessellate(&handle, 0.1)) {
+            if let Ok(mesh) = kernel.tessellate(&handle, 0.1) {
                 return mesh_data_from_mesh_transfer(&mesh);
             }
         }
         let [ex, ey, ez] = extent.unwrap_or(CAD_DEFAULT_TYPOLOGY_EXTENT);
         let (width, depth, height) = (ex.max(0.05), ey.max(0.05), ez.max(0.05));
         let is_cylindrical = typology_mesh_kind(typology) == "cylinder";
-        let handle = block_on(async {
-            if is_cylindrical {
-                kernel.cylinder_prim(width.max(depth) * 0.5, height).await
-            } else {
-                kernel.box_prim(width, depth, height).await
-            }
-        });
+        let handle = if is_cylindrical { kernel.cylinder_prim(width.max(depth) * 0.5, height) } else { kernel.box_prim(width, depth, height) };
         let Ok(handle) = handle else {
             return mesh_from_kind(typology_mesh_kind(typology));
         };
-        let mesh: MeshTransfer = match block_on(kernel.tessellate(&handle, 0.1)) {
+        let mesh: MeshTransfer = match kernel.tessellate(&handle, 0.1) {
             Ok(mesh) => mesh,
             Err(_) => {
-                block_on(kernel.dispose(&handle));
+                let _ = kernel.dispose(&handle);
                 return mesh_from_kind(typology_mesh_kind(typology));
             }
         };
-        block_on(kernel.dispose(&handle));
+        let _ = kernel.dispose(&handle);
         let mut mesh_data = mesh_data_from_mesh_transfer(&mesh);
         if let Some(center) = centroid {
             translate_mesh_positions(&mut mesh_data, [center[0] as f32, center[1] as f32, center[2] as f32]);

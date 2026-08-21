@@ -15,7 +15,7 @@
 use semio_framework_3d::engine::Vec3;
 use semio_framework_plugin::{ArtifactSerializer, MeshData};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::mesh_data_from_mesh_transfer;
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{block_on, Brep, BrepKernel, GeometryHandle};
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{Brep, BrepKernel, GeometryHandle};
 use serde_json::Value;
 use std::collections::HashMap;
 // 🌉️ Ticket 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT W5a: the
@@ -267,7 +267,7 @@ pub(crate) async fn import_geometry_handles(kernel: &mut Brep, geometry: &CadGeo
         if points.len() < 2 {
             continue;
         }
-        if let Ok(handle) = block_on(kernel.polyline_wire(&points)) {
+        if let Ok(handle) = kernel.polyline_wire(&points) {
             handles.insert(wire.id.clone(), handle.0.clone());
         }
     }
@@ -276,11 +276,11 @@ pub(crate) async fn import_geometry_handles(kernel: &mut Brep, geometry: &CadGeo
         if let Some(wire_id) = face.wire_ids.first() {
             if let Some(wire_handle) = handles.get(wire_id) {
                 let wire = GeometryHandle(wire_handle.clone());
-                if let Ok(handle) = block_on(kernel.planar_face_from_wire(&wire)) {
+                if let Ok(handle) = kernel.planar_face_from_wire(&wire) {
                     handles.insert(face.id.clone(), handle.0.clone());
                     continue;
                 }
-                if let Ok(handle) = block_on(kernel.face_from_wire(&wire)) {
+                if let Ok(handle) = kernel.face_from_wire(&wire) {
                     handles.insert(face.id.clone(), handle.0.clone());
                     continue;
                 }
@@ -290,7 +290,7 @@ pub(crate) async fn import_geometry_handles(kernel: &mut Brep, geometry: &CadGeo
         if points.len() < 3 {
             continue;
         }
-        if let Ok(handle) = block_on(kernel.planar_face_from_points(&points)) {
+        if let Ok(handle) = kernel.planar_face_from_points(&points) {
             handles.insert(face.id.clone(), handle.0.clone());
         }
     }
@@ -300,7 +300,7 @@ pub(crate) async fn import_geometry_handles(kernel: &mut Brep, geometry: &CadGeo
         if face_handles.is_empty() {
             continue;
         }
-        if let Ok(solid) = block_on(kernel.sew_faces(&face_handles, 0.01)) {
+        if let Ok(solid) = kernel.sew_faces(&face_handles, 0.01) {
             handles.insert(shell.id.clone(), solid.0.clone());
         }
     }
@@ -315,7 +315,7 @@ pub(crate) async fn import_geometry_handles(kernel: &mut Brep, geometry: &CadGeo
         if face_handles.is_empty() {
             continue;
         }
-        if let Ok(built) = block_on(kernel.sew_faces(&face_handles, 0.01)) {
+        if let Ok(built) = kernel.sew_faces(&face_handles, 0.01) {
             handles.insert(solid.id.clone(), built.0.clone());
         }
     }
@@ -403,7 +403,7 @@ pub(crate) async fn centroid_from_fixture_primitives(geometry: &CadGeometry, pri
 /// 🧵️ Tessellates an object through a kernel handle when that handle is still resident.
 pub(crate) async fn tessellate_object_mesh(kernel: &mut Brep, object: &CadObject, kind: &str) -> Option<MeshData> {
     let handle_id = object.solid_handle.as_deref()?;
-    if block_on(kernel.kind(&GeometryHandle(handle_id.into()))).is_err() {
+    if kernel.kind(&GeometryHandle(handle_id.into())).is_err() {
         return None;
     }
     tessellate_geometry_handle(kernel, handle_id, kind)
@@ -452,7 +452,7 @@ pub async fn tessellate_geometry_handle(kernel: &mut Brep, handle_id: &str, kind
     if kind == "curve" {
         return curve_mesh_from_wire(kernel, &handle);
     }
-    if let Ok(mesh) = block_on(kernel.tessellate(&handle, 0.1)) {
+    if let Ok(mesh) = kernel.tessellate(&handle, 0.1) {
         let data = strip_degenerate_triangles(mesh_data_from_mesh_transfer(&mesh));
         if data.indices.len() < 3 {
             return None;
@@ -463,7 +463,7 @@ pub async fn tessellate_geometry_handle(kernel: &mut Brep, handle_id: &str, kind
 }
 
 async fn curve_mesh_from_wire(kernel: &mut Brep, wire: &GeometryHandle) -> Option<MeshData> {
-    let mesh = block_on(kernel.tessellate(wire, 0.1)).ok()?;
+    let mesh = kernel.tessellate(wire, 0.1).ok()?;
     Some(mesh_data_from_mesh_transfer(&mesh))
 }
 
@@ -490,13 +490,13 @@ async fn semio_mesh_snapshot_from_mesh_data(mesh: &MeshData) -> Option<SemioMesh
 
 /// 📦️ Serializes triangle mesh data to real OBJ text (stdio's own `semio/mesh` → `obj` codec) the
 /// kernel's OBJ reader can round-trip into a solid; `None` when the mesh has no real triangles.
-async fn mesh_to_obj_text(mesh: &MeshData) -> Option<String> {
+fn mesh_to_obj_text(mesh: &MeshData) -> Option<String> {
     let semio_mesh = semio_mesh_snapshot_from_mesh_data(mesh)?;
     let obj_snapshot = semio_framework_plugin::resolve_ready(SemioMeshToObj::serialize(&semio_mesh)).ok()?;
     Some(encode_obj(&obj_snapshot))
 }
 
-async fn mesh_extent(mesh: &MeshData) -> Option<[f64; 3]> {
+fn mesh_extent(mesh: &MeshData) -> Option<[f64; 3]> {
     if mesh.positions.is_empty() {
         return None;
     }
@@ -516,9 +516,9 @@ async fn mesh_extent(mesh: &MeshData) -> Option<[f64; 3]> {
 /// `solidHandle`/`primitives` path fixture geometry uses. Falls back to an extent-only object
 /// with no primitives (rendered via the typology bounding-box mesh fallback) when the mesh has
 /// no triangles or the kernel is unable to import it.
-pub(crate) async fn cad_object_from_mesh(kernel: &mut Brep, id: impl Into<String>, label: impl Into<String>, typology: impl Into<String>, mesh: &MeshData) -> CadObject {
+pub(crate) fn cad_object_from_mesh(kernel: &mut Brep, id: impl Into<String>, label: impl Into<String>, typology: impl Into<String>, mesh: &MeshData) -> CadObject {
     let extent = mesh_extent(mesh);
-    let solid_handle = mesh_to_obj_text(mesh).and_then(|text| block_on(kernel.import_obj(&text, 0.01)).ok()).map(|handle| handle.0);
+    let solid_handle = mesh_to_obj_text(mesh).and_then(|text| kernel.import_obj(&text, 0.01).ok()).map(|handle| handle.0);
     let primitives = solid_handle.clone().map(|primitive_id| vec![CadPrimitiveSlot { slot: "solid".into(), primitive_id, kind: "solid".into() }]).unwrap_or_default();
     CadObject { id: id.into(), label: label.into(), typology: typology.into(), visible: true, locked: false, origin: [0.0, 0.0, 0.0], orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None, mesh_url: None, extent, solid_handle, primitives }
 }

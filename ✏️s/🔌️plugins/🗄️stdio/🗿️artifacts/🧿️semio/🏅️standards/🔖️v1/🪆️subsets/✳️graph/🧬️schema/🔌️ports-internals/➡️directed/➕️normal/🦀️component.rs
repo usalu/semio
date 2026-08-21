@@ -371,7 +371,7 @@ impl PortDirectedGraph {
             if let Some(&h) = handles.get(&node) {
                 return h;
             }
-            let h = semio_framework_plugin::resolve_ready(out.add_handle(node)).expect("node was inserted above before any handle is requested");
+            let h = out.add_handle(node).expect("node was inserted above before any handle is requested");
             handles.insert(node, h);
             h
         };
@@ -486,7 +486,7 @@ impl GraphView for PortDirectedGraph {
     fn node_count(&self) -> usize {
         self.storage.node_count()
     }
-    async fn nodes(&self) -> impl Iterator<Item = NodeId> {
+    fn nodes(&self) -> impl Iterator<Item = NodeId> {
         self.storage.nodes()
     }
     fn contains_node(&self, node: NodeId) -> bool {
@@ -495,16 +495,16 @@ impl GraphView for PortDirectedGraph {
     fn edge_count(&self) -> usize {
         self.storage.edge_count()
     }
-    async fn edges(&self) -> impl Iterator<Item = EdgeRef> {
+    fn edges(&self) -> impl Iterator<Item = EdgeRef> {
         self.storage.edges()
     }
-    async fn neighbors(&self, node: NodeId) -> impl Iterator<Item = NodeId> {
+    fn neighbors(&self, node: NodeId) -> impl Iterator<Item = NodeId> {
         self.storage.neighbors(node)
     }
-    async fn out_neighbors(&self, node: NodeId) -> impl Iterator<Item = NodeId> {
+    fn out_neighbors(&self, node: NodeId) -> impl Iterator<Item = NodeId> {
         self.storage.out_neighbors(node)
     }
-    async fn in_neighbors(&self, node: NodeId) -> impl Iterator<Item = NodeId> {
+    fn in_neighbors(&self, node: NodeId) -> impl Iterator<Item = NodeId> {
         self.storage.in_neighbors(node)
     }
     fn degree(&self, node: NodeId) -> usize {
@@ -522,7 +522,7 @@ impl GraphView for PortDirectedGraph {
     fn is_multigraph(&self) -> bool {
         self.storage.is_multigraph()
     }
-    async fn edges_between(&self, u: NodeId, v: NodeId) -> impl Iterator<Item = EdgeRef> {
+    fn edges_between(&self, u: NodeId, v: NodeId) -> impl Iterator<Item = EdgeRef> {
         self.storage.edges_between(u, v)
     }
 }
@@ -551,8 +551,8 @@ impl EdgeWeights for PortDirectedGraph {
 mod tests {
     use super::*;
 
-    #[semio_framework_async_macros::async_test]
-    async fn parallel_directed_edges_are_never_upserted() {
+    #[test]
+    fn parallel_directed_edges_are_never_upserted() {
         let mut g = PortDirectedGraph::new();
         let a = g.add_node();
         let b = g.add_node();
@@ -563,8 +563,8 @@ mod tests {
         assert_eq!(g.edges_between(a, b).collect::<Vec<_>>(), vec![e1, e2]);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn reverse_pair_is_independent() {
+    #[test]
+    fn reverse_pair_is_independent() {
         let mut g = PortDirectedGraph::new();
         let a = g.add_node();
         let b = g.add_node();
@@ -578,8 +578,8 @@ mod tests {
         assert_eq!(g.number_of_edges(Some(b), Some(a)), 1);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn successors_and_predecessors_dedupe_despite_parallels() {
+    #[test]
+    fn successors_and_predecessors_dedupe_despite_parallels() {
         let mut g = PortDirectedGraph::new();
         let a = g.add_node();
         let b = g.add_node();
@@ -590,8 +590,8 @@ mod tests {
         assert_eq!(g.predecessors(b).collect::<Vec<_>>(), vec![a]);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn in_out_degree_count_every_parallel_edge() {
+    #[test]
+    fn in_out_degree_count_every_parallel_edge() {
         let mut g = PortDirectedGraph::new();
         let a = g.add_node();
         let b = g.add_node();
@@ -603,8 +603,8 @@ mod tests {
         assert_eq!(g.degree(a), 3);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn selfloop_counts_twice_towards_degree() {
+    #[test]
+    fn selfloop_counts_twice_towards_degree() {
         let mut g = PortDirectedGraph::new();
         let a = g.add_node();
         g.add_edge(a, a);
@@ -615,8 +615,8 @@ mod tests {
         assert_eq!(g.degree(a), 2);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn remove_one_edge_leaves_the_rest() {
+    #[test]
+    fn remove_one_edge_leaves_the_rest() {
         let mut g = PortDirectedGraph::new();
         let a = g.add_node();
         let b = g.add_node();
@@ -628,8 +628,8 @@ mod tests {
         assert_eq!(g.number_of_edges(Some(a), Some(b)), 1);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn to_undirected_non_reciprocal_keeps_both_directions_as_separate_parallel_edges() {
+    #[test]
+    fn to_undirected_non_reciprocal_keeps_both_directions_as_separate_parallel_edges() {
         let mut g = PortDirectedGraph::new();
         let a = g.add_node();
         let b = g.add_node();
@@ -641,8 +641,8 @@ mod tests {
         assert_eq!(GraphView::degree(&u, b), 2);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn to_undirected_reciprocal_keeps_only_mutual_pairs() {
+    #[test]
+    fn to_undirected_reciprocal_keeps_only_mutual_pairs() {
         let mut g = PortDirectedGraph::new();
         let a = g.add_node();
         let b = g.add_node();
@@ -656,8 +656,8 @@ mod tests {
         assert_eq!(GraphView::degree(&u, c), 0);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn to_simple_sums_weights() {
+    #[test]
+    fn to_simple_sums_weights() {
         let mut g = PortDirectedGraph::new();
         let a = g.add_node();
         let b = g.add_node();
@@ -676,8 +676,8 @@ mod tests {
         assert_eq!(s.edge_attrs(ba.id).and_then(|attrs| attrs.get("weight")).and_then(PropertyValue::as_f64), Some(1.0));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn reverse_flips_every_edge() {
+    #[test]
+    fn reverse_flips_every_edge() {
         let mut g = PortDirectedGraph::new();
         let a = g.add_node();
         let b = g.add_node();
@@ -688,8 +688,8 @@ mod tests {
         assert_eq!(r.number_of_edges(Some(b), Some(a)), 2);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn add_edge_auto_creates_missing_nodes() {
+    #[test]
+    fn add_edge_auto_creates_missing_nodes() {
         let mut g = PortDirectedGraph::new();
         assert!(!g.has_node(0));
         assert!(!g.has_node(1));
@@ -699,8 +699,8 @@ mod tests {
         assert!(g.has_edge(0, 1));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn add_path_cycle_star_build_directed_shapes() {
+    #[test]
+    fn add_path_cycle_star_build_directed_shapes() {
         let mut g = PortDirectedGraph::new();
         g.add_path([0, 1, 2]);
         assert!(g.has_edge(0, 1));
@@ -721,8 +721,8 @@ mod tests {
         assert!(!star.has_edge(1, 2));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn subgraph_and_edge_subgraph_restrict_correctly() {
+    #[test]
+    fn subgraph_and_edge_subgraph_restrict_correctly() {
         let mut g = PortDirectedGraph::new();
         let a = g.add_node();
         let b = g.add_node();
@@ -741,8 +741,8 @@ mod tests {
         assert!(!esub.has_node(b));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn density_can_exceed_one_for_multigraph() {
+    #[test]
+    fn density_can_exceed_one_for_multigraph() {
         let mut g = PortDirectedGraph::new();
         let a = g.add_node();
         let b = g.add_node();
@@ -752,8 +752,8 @@ mod tests {
         assert!(g.density() > 1.0);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn clear_and_clear_edges_behave() {
+    #[test]
+    fn clear_and_clear_edges_behave() {
         let mut g = PortDirectedGraph::new();
         let a = g.add_node();
         let b = g.add_node();
@@ -765,8 +765,8 @@ mod tests {
         assert_eq!(g.number_of_nodes(), 0);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn add_node_with_and_with_id_apply_attrs() {
+    #[test]
+    fn add_node_with_and_with_id_apply_attrs() {
         let mut g = PortDirectedGraph::new();
         let mut attrs = PropertyBag::new();
         attrs.insert("color".to_string(), PropertyValue::String("red".to_string()));
@@ -778,8 +778,8 @@ mod tests {
         assert_eq!(g.get_node_attributes(42), Some(&attrs));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn add_nodes_from_and_remove_nodes_from() {
+    #[test]
+    fn add_nodes_from_and_remove_nodes_from() {
         let mut g = PortDirectedGraph::new();
         g.add_nodes_from([1, 2, 3]);
         assert_eq!(g.number_of_nodes(), 3);
@@ -792,8 +792,8 @@ mod tests {
         assert_eq!(g.number_of_nodes(), 1);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn remove_node_cascades_incident_edges_and_forgets_handle() {
+    #[test]
+    fn remove_node_cascades_incident_edges_and_forgets_handle() {
         let mut g = PortDirectedGraph::new();
         let a = g.add_node();
         let b = g.add_node();
@@ -807,8 +807,8 @@ mod tests {
         assert_eq!(g.out_degree(a), 0);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn remove_edge_reports_existence() {
+    #[test]
+    fn remove_edge_reports_existence() {
         let mut g = PortDirectedGraph::new();
         let a = g.add_node();
         let b = g.add_node();
@@ -819,8 +819,8 @@ mod tests {
         assert!(!g.remove_one_edge(a, b));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn add_edges_from_and_weighted_edges_from() {
+    #[test]
+    fn add_edges_from_and_weighted_edges_from() {
         let mut g = PortDirectedGraph::new();
         g.add_edges_from([(0, 1), (1, 2)]);
         assert!(g.has_edge(0, 1));
@@ -832,8 +832,8 @@ mod tests {
         assert_eq!(w.get_edge_data(e).and_then(|a| a.get("weight")).and_then(PropertyValue::as_f64), Some(2.5));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn number_of_edges_single_endpoint_counts_in_and_out() {
+    #[test]
+    fn number_of_edges_single_endpoint_counts_in_and_out() {
         let mut g = PortDirectedGraph::new();
         let a = g.add_node();
         let b = g.add_node();
@@ -844,8 +844,8 @@ mod tests {
         assert_eq!(g.number_of_edges(None, Some(a)), 2);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn in_edges_and_out_edges_yield_correct_refs() {
+    #[test]
+    fn in_edges_and_out_edges_yield_correct_refs() {
         let mut g = PortDirectedGraph::new();
         let a = g.add_node();
         let b = g.add_node();
@@ -856,8 +856,8 @@ mod tests {
         assert_eq!(g.in_edges(a).map(|e| e.id).collect::<Vec<_>>(), vec![e2]);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn all_neighbors_unions_predecessors_and_successors() {
+    #[test]
+    fn all_neighbors_unions_predecessors_and_successors() {
         let mut g = PortDirectedGraph::new();
         let a = g.add_node();
         let b = g.add_node();
@@ -867,11 +867,11 @@ mod tests {
         assert_eq!(g.all_neighbors(a).collect::<Vec<_>>(), vec![b, c]);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn weighted_degree_sums_in_and_out_weights() {
+    #[test]
+    fn weighted_degree_sums_in_and_out_weights() {
         struct UnitWeights;
         impl EdgeWeights for UnitWeights {
-            async fn weight(&self, edge: EdgeRef) -> f64 {
+            fn weight(&self, edge: EdgeRef) -> f64 {
                 edge.id as f64
             }
         }
@@ -884,16 +884,16 @@ mod tests {
         assert_eq!(g.weighted_degree(a, &weights), (out + inn) as f64);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn density_is_zero_below_two_nodes() {
+    #[test]
+    fn density_is_zero_below_two_nodes() {
         let mut g = PortDirectedGraph::new();
         assert_eq!(g.density(), 0.0);
         g.add_node();
         assert_eq!(g.density(), 0.0);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn is_empty_tracks_edge_presence_not_node_presence() {
+    #[test]
+    fn is_empty_tracks_edge_presence_not_node_presence() {
         let mut g = PortDirectedGraph::new();
         assert!(g.is_empty());
         g.add_node();
@@ -904,8 +904,8 @@ mod tests {
         assert!(!g.is_empty());
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn copy_produces_an_independent_clone() {
+    #[test]
+    fn copy_produces_an_independent_clone() {
         let mut g = PortDirectedGraph::new();
         let a = g.add_node();
         let b = g.add_node();
@@ -916,8 +916,8 @@ mod tests {
         assert!(c.has_edge(b, a));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn edge_subgraph_skips_edges_not_in_the_keep_set() {
+    #[test]
+    fn edge_subgraph_skips_edges_not_in_the_keep_set() {
         let mut g = PortDirectedGraph::new();
         let a = g.add_node();
         let b = g.add_node();
@@ -929,8 +929,8 @@ mod tests {
         assert_eq!(esub.number_of_edges(None, None), 0);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn subgraph_ignores_nonexistent_node_ids() {
+    #[test]
+    fn subgraph_ignores_nonexistent_node_ids() {
         let mut g = PortDirectedGraph::new();
         let a = g.add_node();
         let sub = g.subgraph([a, 999]);
@@ -938,8 +938,8 @@ mod tests {
         assert!(!sub.has_node(999));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn set_and_get_node_and_edge_attributes() {
+    #[test]
+    fn set_and_get_node_and_edge_attributes() {
         let mut g = PortDirectedGraph::new();
         let a = g.add_node();
         let b = g.add_node();
@@ -958,23 +958,23 @@ mod tests {
         assert_eq!(g.get_node_attributes(999), None);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn name_defaults_empty_and_is_settable() {
+    #[test]
+    fn name_defaults_empty_and_is_settable() {
         let mut g = PortDirectedGraph::new();
         assert_eq!(g.name(), "");
         g.set_name("my-graph");
         assert_eq!(g.name(), "my-graph");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn default_matches_new() {
+    #[test]
+    fn default_matches_new() {
         let g = PortDirectedGraph::default();
         assert_eq!(g.number_of_nodes(), 0);
         assert_eq!(g.number_of_edges(None, None), 0);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn graph_view_and_attr_view_delegate_correctly() {
+    #[test]
+    fn graph_view_and_attr_view_delegate_correctly() {
         let mut g = PortDirectedGraph::new();
         let a = g.add_node();
         let b = g.add_node();

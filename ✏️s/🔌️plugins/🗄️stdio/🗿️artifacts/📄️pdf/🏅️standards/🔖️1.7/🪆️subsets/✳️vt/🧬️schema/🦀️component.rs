@@ -123,19 +123,20 @@ pub mod derived_construction {
 
         #[semio_framework_async_macros::async_test]
         async fn new_requires_output_condition_and_builds_clean() {
-            let snapshot = PdfVtBuilderConstruction::new("FOGRA39").add_page(PdfPage::new(200.0, 200.0)).set_info(PdfInfo { title: Some("A VT Test".into()), ..PdfInfo::default() }).build().expect("conforming construction must build");
+            let snapshot =
+                PdfVtBuilderConstruction::new("FOGRA39").await.add_page(PdfPage::new(200.0, 200.0)).await.set_info(PdfInfo { title: Some("A VT Test".into()), ..PdfInfo::default() }).await.build().await.expect("conforming construction must build");
             assert_eq!(snapshot.pages.len(), 1);
         }
 
         #[semio_framework_async_macros::async_test]
         async fn hard_violation_injected_via_raw_mutate_still_fails_build() {
-            let mut snapshot = PdfVtBuilderConstruction::new("FOGRA39").add_page(PdfPage::new(100.0, 100.0)).build().unwrap();
+            let mut snapshot = PdfVtBuilderConstruction::new("FOGRA39").await.add_page(PdfPage::new(100.0, 100.0)).await.build().await.unwrap();
             if let Some(catalog_obj) = snapshot.objects.iter_mut().find(|o| o.id.num == 1) {
                 if let PdfObject::Dict(d) = &mut catalog_obj.value {
                     d.retain(|e| e.key != "DPartRoot");
                 }
             }
-            let (mutated, _diff) = PdfVtBuilderConstruction::from_snapshot(PdfSnapshot::default()).mutate(PdfMutation::SetSnapshot { snapshot });
+            let (mutated, _diff) = PdfVtBuilderConstruction::from_snapshot(PdfSnapshot::default()).await.mutate(PdfMutation::SetSnapshot { snapshot }).await;
             let err = mutated.build().expect_err("a Catalog missing /DPartRoot must fail build()");
             assert!(err.iter().any(|d| d.code.0 == crate::artifacts::pdf::standards::v1_7::subsets::vt::schema::CODE_DPART_ROOT));
         }

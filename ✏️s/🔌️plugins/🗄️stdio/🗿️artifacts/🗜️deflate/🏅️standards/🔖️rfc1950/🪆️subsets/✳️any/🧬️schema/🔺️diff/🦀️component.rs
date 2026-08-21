@@ -379,18 +379,18 @@ impl protocol::DiffCodec for DeflateDiff {
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
         let _format = reader.read_u8().map_err(|e| malformed("diff format", 0, e.to_string()))?;
         let flags = reader.read_u8().map_err(|e| malformed("diff flags", 1, e.to_string()))?;
-        let compression_method = if flags & 0b0_0001 != 0 { Some(reader.read_u8().map_err(|e| malformed("diff compression_method", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?) } else { None };
-        let window_bits = if flags & 0b0_0010 != 0 { Some(reader.read_u8().map_err(|e| malformed("diff window_bits", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?) } else { None };
+        let compression_method = if flags & 0b0_0001 != 0 { Some(reader.read_u8().map_err(|e| malformed("diff compression_method", reader.position(), e.to_string()))?) } else { None };
+        let window_bits = if flags & 0b0_0010 != 0 { Some(reader.read_u8().map_err(|e| malformed("diff window_bits", reader.position(), e.to_string()))?) } else { None };
         let compression_level_hint = if flags & 0b0_0100 != 0 {
-            let bits = reader.read_u8().map_err(|e| malformed("diff compression_level_hint", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
+            let bits = reader.read_u8().map_err(|e| malformed("diff compression_level_hint", reader.position(), e.to_string()))?;
             Some(DeflateLevelHint::from_bits(bits))
         } else {
             None
         };
         let dict_id = if flags & 0b0_1000 != 0 {
-            let has = reader.read_u8().map_err(|e| malformed("diff dict_id presence", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
+            let has = reader.read_u8().map_err(|e| malformed("diff dict_id presence", reader.position(), e.to_string()))?;
             Some(if has != 0 {
-                let bytes4 = reader.read_bytes(4).map_err(|e| malformed("diff dict_id", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
+                let bytes4 = reader.read_bytes(4).map_err(|e| malformed("diff dict_id", reader.position(), e.to_string()))?;
                 Some(u32::from_le_bytes([bytes4[0], bytes4[1], bytes4[2], bytes4[3]]))
             } else {
                 None
@@ -399,7 +399,7 @@ impl protocol::DiffCodec for DeflateDiff {
             None
         };
         let payload = if flags & 0b1_0000 != 0 {
-            let rest = reader.read_bytes(reader.remaining()).map_err(|e| malformed("diff payload", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
+            let rest = reader.read_bytes(reader.remaining()).map_err(|e| malformed("diff payload", reader.position(), e.to_string()))?;
             Some(rest.to_vec())
         } else {
             None

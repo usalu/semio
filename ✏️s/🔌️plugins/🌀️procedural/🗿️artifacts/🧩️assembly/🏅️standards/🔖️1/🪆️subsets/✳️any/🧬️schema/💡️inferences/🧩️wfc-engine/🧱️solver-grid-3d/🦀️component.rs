@@ -24,17 +24,17 @@ pub struct Grid3dSolverBuilder {
 }
 
 impl Grid3dSolverBuilder {
-    pub async fn new(model: CompiledModel, topology: Grid3dTopology) -> Self {
+    pub fn new(model: CompiledModel, topology: Grid3dTopology) -> Self {
         Self { model, topology, init_domains: None, fixed: Vec::new(), config: SearchConfig::default(), constraints: Vec::new() }
     }
 
-    pub async fn fix(mut self, x: usize, y: usize, z: usize, p: PatternId) -> Result<Self, SolveError> {
+    pub fn fix(mut self, x: usize, y: usize, z: usize, p: PatternId) -> Result<Self, SolveError> {
         let n = self.topology.node_at(x, y, z).ok_or(SolveError::ModelTopologyMismatch { reason: "fix() coordinate out of range" })?;
         self.fixed.push((n, p));
         Ok(self)
     }
 
-    pub async fn domain(mut self, x: usize, y: usize, z: usize, allowed: PatternSet) -> Result<Self, SolveError> {
+    pub fn domain(mut self, x: usize, y: usize, z: usize, allowed: PatternSet) -> Result<Self, SolveError> {
         let n = self.topology.node_at(x, y, z).ok_or(SolveError::ModelTopologyMismatch { reason: "domain() coordinate out of range" })?;
         let node_count = self.topology.node_count();
         let domains = self.init_domains.get_or_insert_with(|| vec![self.model.full_domain(); node_count]);
@@ -42,19 +42,19 @@ impl Grid3dSolverBuilder {
         Ok(self)
     }
 
-    pub async fn config(mut self, cfg: SearchConfig) -> Self {
+    pub fn config(mut self, cfg: SearchConfig) -> Self {
         self.config = cfg;
         self
     }
 
     /// 🏗️ Adds a global constraint. See [`crate::wfc_engine::constraint::Constraint`]'s docs for exactly when
     /// it runs (initial restriction + complete-assignment validation, not incremental mid-search).
-    pub async fn constraint(mut self, c: Constraints) -> Self {
+    pub fn constraint(mut self, c: Constraints) -> Self {
         self.constraints.push(c);
         self
     }
 
-    pub async fn build(self) -> Result<Grid3dSolver, SolveError> {
+    pub fn build(self) -> Result<Grid3dSolver, SolveError> {
         let node_count = self.topology.node_count();
         let mut init_domains = self.init_domains.unwrap_or_else(|| vec![self.model.full_domain(); node_count]);
         let mut fixed = self.fixed;
@@ -86,7 +86,7 @@ pub struct Grid3dSolver {
 }
 
 impl Grid3dSolver {
-    async fn constraint_set(&self) -> Option<ConstraintSet<'_>> {
+    fn constraint_set(&self) -> Option<ConstraintSet<'_>> {
         if self.constraints.is_empty() {
             None
         } else {
@@ -94,41 +94,41 @@ impl Grid3dSolver {
         }
     }
 
-    pub async fn solve(&mut self, seed: u64) -> SolveOutcome {
+    pub fn solve(&mut self, seed: u64) -> SolveOutcome {
         match self.constraint_set() {
             Some(cs) => search::solve_with_constraints(&self.model, &self.topology, &self.config, seed, Some(&self.init_domains), &self.fixed, None, &cs),
             None => search::solve(&self.model, &self.topology, &self.config, seed, Some(&self.init_domains), &self.fixed),
         }
     }
 
-    pub async fn solve_cancellable(&mut self, seed: u64, cancel: &CancelToken) -> SolveOutcome {
+    pub fn solve_cancellable(&mut self, seed: u64, cancel: &CancelToken) -> SolveOutcome {
         match self.constraint_set() {
             Some(cs) => search::solve_with_constraints(&self.model, &self.topology, &self.config, seed, Some(&self.init_domains), &self.fixed, Some(cancel), &cs),
             None => search::solve_cancellable(&self.model, &self.topology, &self.config, seed, Some(&self.init_domains), &self.fixed, cancel),
         }
     }
 
-    pub async fn solve_all(&mut self, seed: u64, limit: usize) -> (Vec<Solution>, bool) {
+    pub fn solve_all(&mut self, seed: u64, limit: usize) -> (Vec<Solution>, bool) {
         match self.constraint_set() {
             Some(cs) => search::solve_all_with_constraints(&self.model, &self.topology, &self.config, seed, Some(&self.init_domains), &self.fixed, limit, &cs),
             None => search::solve_all(&self.model, &self.topology, &self.config, seed, Some(&self.init_domains), &self.fixed, limit),
         }
     }
 
-    pub async fn model(&self) -> &CompiledModel {
+    pub fn model(&self) -> &CompiledModel {
         &self.model
     }
 
-    pub async fn topology(&self) -> &Grid3dTopology {
+    pub fn topology(&self) -> &Grid3dTopology {
         &self.topology
     }
 
-    pub async fn get(&self, solution: &Solution, x: usize, y: usize, z: usize) -> Option<PatternId> {
+    pub fn get(&self, solution: &Solution, x: usize, y: usize, z: usize) -> Option<PatternId> {
         let n = self.topology.node_at(x, y, z)?;
         solution.assignment.get(n.index()).copied()
     }
 
-    pub async fn decode_tiles(&self, solution: &Solution) -> Vec<Option<crate::wfc_engine::ids::TileId>> {
+    pub fn decode_tiles(&self, solution: &Solution) -> Vec<Option<crate::wfc_engine::ids::TileId>> {
         solution.assignment.iter().map(|&p| self.model.pattern_info(p).tile).collect()
     }
 }
@@ -142,7 +142,7 @@ mod tests {
     use crate::wfc_engine::grid3d::{declare_stencil_relations_3d_tiled, Stencil3d};
     use crate::wfc_engine::tiled::TiledModelBuilder;
 
-    async fn checkerboard3d(size: usize, boundary: Boundary) -> (CompiledModel, Grid3dTopology) {
+    fn checkerboard3d(size: usize, boundary: Boundary) -> (CompiledModel, Grid3dTopology) {
         let mut b = TiledModelBuilder::new();
         let black = b.tile(1.0);
         let white = b.tile(1.0);
@@ -155,16 +155,16 @@ mod tests {
         (model, topo)
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn solves_a_checkerboard_volume() {
+    #[test]
+    fn solves_a_checkerboard_volume() {
         let (model, topo) = checkerboard3d(4, Boundary::Open);
         let mut solver = Grid3dSolverBuilder::new(model, topo).build().unwrap();
         let outcome = solver.solve(1);
         assert!(matches!(outcome, SolveOutcome::Solved(_)));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn fix_pins_a_voxel_and_propagates() {
+    #[test]
+    fn fix_pins_a_voxel_and_propagates() {
         let (model, topo) = checkerboard3d(3, Boundary::Open);
         let black = PatternId(0);
         let white = PatternId(1);
@@ -179,8 +179,8 @@ mod tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn masked_voxels_are_excluded_and_solve_completes() {
+    #[test]
+    fn masked_voxels_are_excluded_and_solve_completes() {
         let mut b = TiledModelBuilder::new();
         let black = b.tile(1.0);
         let white = b.tile(1.0);
@@ -196,22 +196,22 @@ mod tests {
         assert!(matches!(solver.solve(1), SolveOutcome::Solved(_)));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn wrap_boundary_solves_consistently() {
+    #[test]
+    fn wrap_boundary_solves_consistently() {
         let (model, topo) = checkerboard3d(4, Boundary::Wrap);
         let mut solver = Grid3dSolverBuilder::new(model, topo).build().unwrap();
         assert!(matches!(solver.solve(1), SolveOutcome::Solved(_)));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn odd_size_wrap_is_unsatisfiable_for_two_color_checkerboard() {
+    #[test]
+    fn odd_size_wrap_is_unsatisfiable_for_two_color_checkerboard() {
         let (model, topo) = checkerboard3d(3, Boundary::Wrap);
         let mut solver = Grid3dSolverBuilder::new(model, topo).config(SearchConfig { mode: search::SearchMode::Backtrack, ..Default::default() }).build().unwrap();
         assert!(matches!(solver.solve(1), SolveOutcome::Unsatisfiable(_)));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn graph_vs_grid3d_strict_equivalence_face6_open() {
+    #[test]
+    fn graph_vs_grid3d_strict_equivalence_face6_open() {
         // Independently hand-enumerated arcs for a 2x2x3 Face6/Open grid, fed into a
         // GraphTopology, compared against the same model solved through Grid3dTopology.
         let width = 2usize;

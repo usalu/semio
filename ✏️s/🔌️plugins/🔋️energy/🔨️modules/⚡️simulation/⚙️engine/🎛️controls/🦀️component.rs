@@ -15,15 +15,15 @@ pub struct ZoneLoad {
 }
 
 impl ZoneLoad {
-    pub async fn total_w(&self) -> f64 {
+    pub fn total_w(&self) -> f64 {
         self.heating_w + self.cooling_w + self.humidifying_w + self.dehumidifying_w
     }
 
-    pub async fn net_sensible_w(&self) -> f64 {
+    pub fn net_sensible_w(&self) -> f64 {
         self.heating_w - self.cooling_w + self.sensible_w
     }
 
-    pub async fn net_latent_w(&self) -> f64 {
+    pub fn net_latent_w(&self) -> f64 {
         self.humidifying_w - self.dehumidifying_w + self.latent_w
     }
 }
@@ -88,7 +88,7 @@ pub struct ZoneEquipmentPriority(pub u8);
 // #endregion 🔖️ZoneEquipmentPriority
 
 // #region 🔖️Thermostat
-async fn proportional_fraction(error: f64, throttle: f64) -> f64 {
+fn proportional_fraction(error: f64, throttle: f64) -> f64 {
     if error <= 0.0 || throttle <= 0.0 {
         return 0.0;
     }
@@ -96,7 +96,7 @@ async fn proportional_fraction(error: f64, throttle: f64) -> f64 {
 }
 
 /// 🌡️ Evaluate thermostat and humidistat for current zone conditions.
-pub async fn evaluate_controls(thermostat: &ThermostatSpec, humidistat: Option<&HumidistatSpec>, zone_temp_c: f64, zone_rh: f64) -> ThermostatOutput {
+pub fn evaluate_controls(thermostat: &ThermostatSpec, humidistat: Option<&HumidistatSpec>, zone_temp_c: f64, zone_rh: f64) -> ThermostatOutput {
     let heat_err = thermostat.heating_setpoint_c - zone_temp_c;
     let cool_err = zone_temp_c - thermostat.cooling_setpoint_c;
     let heating_fraction = proportional_fraction(heat_err, thermostat.heating_throttle_range_k);
@@ -125,7 +125,7 @@ pub async fn evaluate_controls(thermostat: &ThermostatSpec, humidistat: Option<&
 
 // #region 🔖️LoadPrediction
 /// 📈️ Predict zone loads from balance residuals and control fractions.
-pub async fn predict_zone_load(sensible_residual_w: f64, latent_residual_w: f64, output: &ThermostatOutput, max_heating_w: f64, max_cooling_w: f64, max_humidifying_w: f64, max_dehumidifying_w: f64) -> ZoneLoad {
+pub fn predict_zone_load(sensible_residual_w: f64, latent_residual_w: f64, output: &ThermostatOutput, max_heating_w: f64, max_cooling_w: f64, max_humidifying_w: f64, max_dehumidifying_w: f64) -> ZoneLoad {
     let mut load = ZoneLoad { sensible_w: sensible_residual_w, latent_w: latent_residual_w, ..Default::default() };
 
     if sensible_residual_w < 0.0 {
@@ -146,7 +146,7 @@ pub async fn predict_zone_load(sensible_residual_w: f64, latent_residual_w: f64,
 
 // #region 🔖️ActionMapping
 /// 🎛️ Map zone load to prioritized control actions.
-pub async fn load_to_actions(load: &ZoneLoad, ventilation_flow_m3_s: f64) -> Vec<ControlAction> {
+pub fn load_to_actions(load: &ZoneLoad, ventilation_flow_m3_s: f64) -> Vec<ControlAction> {
     let mut actions = Vec::new();
     if load.heating_w > 0.0 {
         actions.push(ControlAction::Heat { power_w: load.heating_w });
@@ -172,7 +172,7 @@ pub async fn load_to_actions(load: &ZoneLoad, ventilation_flow_m3_s: f64) -> Vec
 
 // #region 🔖️EquipmentAllocation
 /// 🏆️ Allocate zone load across equipment by priority until capacity exhausted.
-pub async fn allocate_load_by_priority(load: ZoneLoad, capacities_w: &[(ZoneEquipmentPriority, f64)]) -> Vec<(ZoneEquipmentPriority, ZoneLoad)> {
+pub fn allocate_load_by_priority(load: ZoneLoad, capacities_w: &[(ZoneEquipmentPriority, f64)]) -> Vec<(ZoneEquipmentPriority, ZoneLoad)> {
     let mut sorted: Vec<_> = capacities_w.to_vec();
     sorted.sort_by_key(|(p, _)| *p);
     let mut remaining = load;
@@ -205,25 +205,25 @@ pub async fn allocate_load_by_priority(load: ZoneLoad, capacities_w: &[(ZoneEqui
 mod tests {
     use super::*;
 
-    async fn default_thermostat() -> ThermostatSpec {
+    fn default_thermostat() -> ThermostatSpec {
         ThermostatSpec { heating_setpoint_c: 21.0, cooling_setpoint_c: 24.0, heating_throttle_range_k: 2.0, cooling_throttle_range_k: 2.0, min_heating_setpoint_c: 10.0, max_cooling_setpoint_c: 30.0 }
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn heating_fraction_full_when_cold() {
+    fn heating_fraction_full_when_cold() {
         let out = evaluate_controls(&default_thermostat(), None, 18.0, 0.5);
         assert!((out.heating_fraction - 1.0).abs() < 1e-9);
         assert!((out.cooling_fraction).abs() < 1e-9);
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn cooling_fraction_when_warm() {
+    fn cooling_fraction_when_warm() {
         let out = evaluate_controls(&default_thermostat(), None, 26.0, 0.5);
         assert!((out.cooling_fraction - 1.0).abs() < 1e-9);
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn predict_heating_load_when_negative_residual() {
+    fn predict_heating_load_when_negative_residual() {
         let out = evaluate_controls(&default_thermostat(), None, 19.0, 0.5);
         let load = predict_zone_load(-3000.0, 0.0, &out, 5000.0, 5000.0, 1000.0, 1000.0);
         assert!(load.heating_w > 0.0);
@@ -231,7 +231,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn equipment_priority_allocates_in_order() {
+    fn equipment_priority_allocates_in_order() {
         let load = ZoneLoad { heating_w: 8000.0, ..Default::default() };
         let caps = [(ZoneEquipmentPriority(1), 3000.0), (ZoneEquipmentPriority(2), 5000.0)];
         let alloc = allocate_load_by_priority(load, &caps);

@@ -93,7 +93,7 @@ async fn produces_committed_diff() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical_and_narrowly_scoped() {
     let decoded: SemioBrepDiff = serde_json::from_str(DIFF).expect("committed replace-surface diff decodes");
-    
+
     let faces = decoded.faces.as_ref().expect("replace-surface must write the faces triple");
     assert!(faces.removed.is_empty() && faces.added.is_empty(), "a replace is a per-field modification, never a remove-and-re-add");
     assert_eq!(faces.modified.len(), 1, "exactly one face is modified");

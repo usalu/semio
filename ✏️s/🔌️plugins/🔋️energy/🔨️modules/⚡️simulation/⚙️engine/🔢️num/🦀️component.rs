@@ -2,7 +2,7 @@
 
 // #region 🔖️Interpolation
 /// 📈️ Linear interpolation with clamping.
-pub async fn lerp(x: f64, x0: f64, x1: f64, y0: f64, y1: f64) -> f64 {
+pub fn lerp(x: f64, x0: f64, x1: f64, y0: f64, y1: f64) -> f64 {
     if (x1 - x0).abs() < 1e-12 {
         return y0;
     }
@@ -11,7 +11,7 @@ pub async fn lerp(x: f64, x0: f64, x1: f64, y0: f64, y1: f64) -> f64 {
 }
 
 /// 📈️ Bilinear interpolation on a regular grid.
-pub async fn bilinear(x: f64, y: f64, x_vals: &[f64], y_vals: &[f64], table: &[Vec<f64>]) -> f64 {
+pub fn bilinear(x: f64, y: f64, x_vals: &[f64], y_vals: &[f64], table: &[Vec<f64>]) -> f64 {
     let xi = bracket_index(x, x_vals);
     let yi = bracket_index(y, y_vals);
     let x0 = x_vals[xi];
@@ -27,7 +27,7 @@ pub async fn bilinear(x: f64, y: f64, x_vals: &[f64], y_vals: &[f64], table: &[V
     lerp(ty, 0.0, 1.0, lerp(tx, 0.0, 1.0, q00, q10), lerp(tx, 0.0, 1.0, q01, q11))
 }
 
-async fn bracket_index(x: f64, vals: &[f64]) -> usize {
+fn bracket_index(x: f64, vals: &[f64]) -> usize {
     if vals.len() < 2 {
         return 0;
     }
@@ -42,19 +42,19 @@ async fn bracket_index(x: f64, vals: &[f64]) -> usize {
 
 // #region 🔖️Polynomial
 /// 📐️ Evaluate polynomial Σ cᵢ xⁱ.
-pub async fn poly_eval(coeffs: &[f64], x: f64) -> f64 {
+pub fn poly_eval(coeffs: &[f64], x: f64) -> f64 {
     coeffs.iter().rev().fold(0.0, |acc, &c| acc * x + c)
 }
 
 /// 📐️ Biquadratic f(x,y) = c0 + c1*x + c2*x² + c3*y + c4*y² + c5*x*y.
-pub async fn biquadratic(c: [f64; 6], x: f64, y: f64) -> f64 {
+pub fn biquadratic(c: [f64; 6], x: f64, y: f64) -> f64 {
     c[0] + c[1] * x + c[2] * x * x + c[3] * y + c[4] * y * y + c[5] * x * y
 }
 // #endregion 🔖️Polynomial
 
 // #region 🔖️Integration
 /// ∫f(x)dx from a to b via Simpson's rule (n = even number of subintervals).
-pub async fn simpson_integrate(f: impl Fn(f64) -> f64, a: f64, b: f64, n: usize) -> f64 {
+pub fn simpson_integrate(f: impl Fn(f64) -> f64, a: f64, b: f64, n: usize) -> f64 {
     let mut n = n.max(2);
     if !n.is_multiple_of(2) {
         n += 1;
@@ -69,12 +69,12 @@ pub async fn simpson_integrate(f: impl Fn(f64) -> f64, a: f64, b: f64, n: usize)
 }
 
 /// Explicit Euler step.
-pub async fn euler_step(y: f64, dydt: f64, dt: f64) -> f64 {
+pub fn euler_step(y: f64, dydt: f64, dt: f64) -> f64 {
     y + dydt * dt
 }
 
 /// Third-order backward difference coefficient for zone temperature.
-pub async fn third_order_backward_diff(history: [f64; 3], dt: f64, dtdt: f64) -> f64 {
+pub fn third_order_backward_diff(history: [f64; 3], dt: f64, dtdt: f64) -> f64 {
     let (y0, y1, y2) = (history[0], history[1], history[2]);
     let coeff = 11.0 / 6.0;
     (coeff * y0 - 3.0 * y1 + 1.5 * y2 - 0.5 * history[2]) / dt + dtdt
@@ -83,7 +83,7 @@ pub async fn third_order_backward_diff(history: [f64; 3], dt: f64, dtdt: f64) ->
 
 // #region 🔖️Solvers
 /// 🔍️ Newton-Raphson root finder.
-pub async fn newton_raphson(mut x: f64, f: impl Fn(f64) -> f64, df: impl Fn(f64) -> f64, max_iter: usize, tol: f64) -> Option<f64> {
+pub fn newton_raphson(mut x: f64, f: impl Fn(f64) -> f64, df: impl Fn(f64) -> f64, max_iter: usize, tol: f64) -> Option<f64> {
     for _ in 0..max_iter {
         let fx = f(x);
         if fx.abs() < tol {
@@ -103,7 +103,7 @@ pub async fn newton_raphson(mut x: f64, f: impl Fn(f64) -> f64, df: impl Fn(f64)
 }
 
 /// 🔍️ Gauss-Seidel iterative solver for Ax = b (dense).
-pub async fn gauss_seidel(a: &[Vec<f64>], b: &[f64], x: &mut [f64], max_iter: usize, tol: f64) -> bool {
+pub fn gauss_seidel(a: &[Vec<f64>], b: &[f64], x: &mut [f64], max_iter: usize, tol: f64) -> bool {
     let n = b.len();
     for _ in 0..max_iter {
         let mut max_delta = 0.0_f64;
@@ -140,7 +140,7 @@ pub struct LookupTable2D {
 }
 
 impl LookupTable2D {
-    pub async fn evaluate(&self, x: f64, y: f64) -> f64 {
+    pub fn evaluate(&self, x: f64, y: f64) -> f64 {
         bilinear(x, y, &self.x, &self.y, &self.values)
     }
 }
@@ -151,18 +151,18 @@ mod tests {
     use super::*;
 
     #[semio_framework_async_macros::async_test]
-    async fn lerp_endpoints() {
+    fn lerp_endpoints() {
         assert!((lerp(0.5, 0.0, 1.0, 0.0, 10.0) - 5.0).abs() < 1e-9);
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn newton_finds_sqrt() {
+    fn newton_finds_sqrt() {
         let r = newton_raphson(2.0, |x| x * x - 2.0, |x| 2.0 * x, 20, 1e-10).unwrap();
         assert!((r - std::f64::consts::SQRT_2).abs() < 1e-8);
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn simpson_integrates_x_squared() {
+    fn simpson_integrates_x_squared() {
         let integral = simpson_integrate(|x| x * x, 0.0, 1.0, 100);
         assert!((integral - 1.0 / 3.0).abs() < 1e-6);
     }

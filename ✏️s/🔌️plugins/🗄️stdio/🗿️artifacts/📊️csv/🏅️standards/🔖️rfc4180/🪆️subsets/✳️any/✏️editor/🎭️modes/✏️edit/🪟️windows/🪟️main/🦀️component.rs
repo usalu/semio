@@ -5,7 +5,7 @@
 
 use crate::artifacts::csv::CsvSnapshot;
 use semio_framework_plugin::app::{TableView, TableWindowKit, WindowKit};
-use semio_framework_plugin::{LocalizedLabel, UiNode, WindowKindDefinition};
+use semio_framework_plugin::{BuiltNode, LocalizedLabel, WindowKindDefinition};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = TableWindowKit::KIND_ID;
@@ -21,12 +21,12 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-/// ✏️ Real `CsvSnapshot -> UiNode`: header row (if any) supplies column labels, every remaining
+/// ✏️ Real `CsvSnapshot -> BuiltNode`: header row (if any) supplies column labels, every remaining
 /// record is one editable row — `set-cell`'s `row`/`column` index this rendered grid directly
 /// (see the surface root's `CsvEditorCommand::SetCell` for the row-offset math back to
 /// `CsvMutation::SetField`'s `record_index`).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &CsvSnapshot) -> UiNode {
+pub fn render(document: &CsvSnapshot) -> BuiltNode {
     let (columns, data_rows): (Vec<String>, &[crate::artifacts::csv::CsvRecord]) = if document.has_header && !document.records.is_empty() {
         (document.records[0].fields.iter().map(|field| field.value.clone()).collect(), &document.records[1..])
     } else {

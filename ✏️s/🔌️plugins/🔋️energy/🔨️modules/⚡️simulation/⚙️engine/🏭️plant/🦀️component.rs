@@ -14,7 +14,7 @@ pub struct PlantStream {
 }
 
 impl PlantStream {
-    pub async fn new(temperature_c: f64, mass_flow_kg_s: f64) -> Self {
+    pub fn new(temperature_c: f64, mass_flow_kg_s: f64) -> Self {
         Self { temperature_c, mass_flow_kg_s }
     }
 }
@@ -42,7 +42,7 @@ pub struct Pump {
 
 impl Pump {
     /// ⚙️ Pump hydraulic and electrical power for a requested mass flow.
-    pub async fn simulate(&self, inlet: PlantStream, requested_flow_kg_s: f64) -> PlantOutput {
+    pub fn simulate(&self, inlet: PlantStream, requested_flow_kg_s: f64) -> PlantOutput {
         let flow = requested_flow_kg_s.clamp(0.0, self.design_flow_kg_s * 1.2);
         let plr = self.part_load_curve.part_load(flow, self.design_flow_kg_s);
         let head = self.design_head_pa * self.part_load_curve.evaluate(plr);
@@ -66,7 +66,7 @@ pub struct Boiler {
 
 impl Boiler {
     /// 🔥️ Deliver hot-water heating to meet plant load.
-    pub async fn simulate(&self, inlet: PlantStream, heating_load_w: f64, operating: bool) -> PlantOutput {
+    pub fn simulate(&self, inlet: PlantStream, heating_load_w: f64, operating: bool) -> PlantOutput {
         if !operating || heating_load_w <= 0.0 {
             return PlantOutput { electrical_power_w: 50.0, gas_power_w: self.standby_loss_w, outlet: PlantStream::new(inlet.temperature_c, inlet.mass_flow_kg_s), ..Default::default() };
         }
@@ -95,7 +95,7 @@ pub struct ChillerEir {
 
 impl ChillerEir {
     /// ❄️ Electric chiller cooling via Energy Input Ratio curves.
-    pub async fn simulate(&self, inlet: PlantStream, cooling_load_w: f64, operating: bool) -> PlantOutput {
+    pub fn simulate(&self, inlet: PlantStream, cooling_load_w: f64, operating: bool) -> PlantOutput {
         if !operating || cooling_load_w <= 0.0 {
             return PlantOutput { outlet: PlantStream::new(inlet.temperature_c, inlet.mass_flow_kg_s), ..Default::default() };
         }
@@ -123,7 +123,7 @@ pub struct ChillerAbsorption {
 
 impl ChillerAbsorption {
     /// 🔥️ Absorption chiller with generator heat input.
-    pub async fn simulate(&self, inlet: PlantStream, cooling_load_w: f64, generator_inlet_c: f64, operating: bool) -> PlantOutput {
+    pub fn simulate(&self, inlet: PlantStream, cooling_load_w: f64, generator_inlet_c: f64, operating: bool) -> PlantOutput {
         if !operating || cooling_load_w <= 0.0 || generator_inlet_c < self.min_generator_inlet_c {
             return PlantOutput { outlet: PlantStream::new(inlet.temperature_c, inlet.mass_flow_kg_s), ..Default::default() };
         }
@@ -152,7 +152,7 @@ pub struct HeatPump {
 
 impl HeatPump {
     /// 🌡️ Bidirectional heat pump for heating or cooling plant load.
-    pub async fn simulate(&self, inlet: PlantStream, load_w: f64, mode: HeatPumpMode, source_temp_c: f64) -> PlantOutput {
+    pub fn simulate(&self, inlet: PlantStream, load_w: f64, mode: HeatPumpMode, source_temp_c: f64) -> PlantOutput {
         if load_w.abs() < 1.0 {
             return PlantOutput { outlet: PlantStream::new(inlet.temperature_c, inlet.mass_flow_kg_s), ..Default::default() };
         }
@@ -194,7 +194,7 @@ pub struct CoolingTower {
 
 impl CoolingTower {
     /// 🌊️ Reject condenser heat to outdoor air via evaporative cooling.
-    pub async fn simulate(&self, inlet: PlantStream, heat_rejection_w: f64, outdoor_wb_c: f64) -> PlantOutput {
+    pub fn simulate(&self, inlet: PlantStream, heat_rejection_w: f64, outdoor_wb_c: f64) -> PlantOutput {
         if heat_rejection_w <= 0.0 {
             return PlantOutput { outlet: PlantStream::new(inlet.temperature_c, inlet.mass_flow_kg_s), ..Default::default() };
         }
@@ -219,7 +219,7 @@ pub struct HeatExchanger {
 
 impl HeatExchanger {
     /// 🔀️ Transfer heat between hot and cold plant streams.
-    pub async fn simulate(&self, hot: PlantStream, cold: PlantStream) -> (PlantOutput, PlantOutput) {
+    pub fn simulate(&self, hot: PlantStream, cold: PlantStream) -> (PlantOutput, PlantOutput) {
         let c_hot = hot.mass_flow_kg_s * water_cp_j_per_kg_k(hot.temperature_c);
         let c_cold = cold.mass_flow_kg_s * water_cp_j_per_kg_k(cold.temperature_c);
         let c_min = c_hot.min(c_cold).max(1e-6);
@@ -246,7 +246,7 @@ pub struct Gshp {
 
 impl Gshp {
     /// 🌍️ Simulate GSHP with ground temperature penalty from sustained extraction.
-    pub async fn simulate(&self, inlet: PlantStream, load_w: f64, mode: HeatPumpMode, cumulative_ground_load_j: f64) -> PlantOutput {
+    pub fn simulate(&self, inlet: PlantStream, load_w: f64, mode: HeatPumpMode, cumulative_ground_load_j: f64) -> PlantOutput {
         let penalty_k = (cumulative_ground_load_j / 1e9).clamp(0.0, 8.0);
         let source_t = match mode {
             HeatPumpMode::Heating => self.ground_temperature_c - penalty_k,
@@ -282,7 +282,7 @@ pub struct ThermalStorageState {
 
 impl ThermalStorage {
     /// 🧊️ Charge or discharge storage and return loop outlet stream.
-    pub async fn simulate(&self, inlet: PlantStream, charge_w: f64, dt_s: f64) -> (PlantOutput, ThermalStorageState) {
+    pub fn simulate(&self, inlet: PlantStream, charge_w: f64, dt_s: f64) -> (PlantOutput, ThermalStorageState) {
         let rho = water_density(inlet.temperature_c);
         let cp = water_cp_j_per_kg_k(inlet.temperature_c);
         let mut state = self.state.clone();
@@ -317,7 +317,7 @@ pub struct PlantLoopSimulation {
 
 impl PlantLoopSimulation {
     /// 🔄️ Solve one plant loop timestep with pump and demand heat exchanger.
-    pub async fn simulate(&self, demand_load_w: f64) -> PlantOutput {
+    pub fn simulate(&self, demand_load_w: f64) -> PlantOutput {
         let rho = if self.glycol_fraction > 0.0 { glycol_density(self.supply.temperature_c, self.glycol_fraction) } else { water_density(self.supply.temperature_c) };
         let cp = if self.glycol_fraction > 0.0 { glycol_cp_j_per_kg_k(self.supply.temperature_c, self.glycol_fraction) } else { water_cp_j_per_kg_k(self.supply.temperature_c) };
         let delta_t = demand_load_w / (self.supply.mass_flow_kg_s.max(0.01) * cp);
@@ -334,12 +334,12 @@ mod tests {
     use super::*;
     use crate::curves::PerformanceCurve;
 
-    async fn flat_curve() -> PerformanceCurve {
+    fn flat_curve() -> PerformanceCurve {
         PerformanceCurve::Constant(1.0)
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn boiler_meets_partial_load() {
+    fn boiler_meets_partial_load() {
         let boiler = Boiler { rated_capacity_w: 100_000.0, combustion_efficiency: 0.9, part_load_curve: flat_curve(), standby_loss_w: 200.0, supply_temperature_c: 80.0 };
         let inlet = PlantStream::new(60.0, 2.0);
         let out = boiler.simulate(inlet, 50_000.0, true);
@@ -348,7 +348,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn chiller_eir_cooling() {
+    fn chiller_eir_cooling() {
         let chiller = ChillerEir { rated_capacity_w: 200_000.0, reference_cop: 5.0, eir_curve: PerformanceCurve::Constant(0.2), eir_f_t_curve: PerformanceCurve::Constant(1.0), leaving_water_c: 7.0, entering_condenser_c: 29.0 };
         let inlet = PlantStream::new(12.0, 10.0);
         let out = chiller.simulate(inlet, 100_000.0, true);
@@ -358,7 +358,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn cooling_tower_rejects_heat() {
+    fn cooling_tower_rejects_heat() {
         let tower = CoolingTower { design_range_k: 5.0, design_approach_k: 3.0, design_flow_kg_s: 20.0, fan_power_at_design_w: 15_000.0, fan_curve: flat_curve() };
         let inlet = PlantStream::new(35.0, 20.0);
         let out = tower.simulate(inlet, 500_000.0, 22.0);
@@ -367,7 +367,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn heat_exchanger_transfers_positive() {
+    fn heat_exchanger_transfers_positive() {
         let hx = HeatExchanger { ua_w_per_k: 10_000.0, effectiveness: 0.8 };
         let hot = PlantStream::new(70.0, 5.0);
         let cold = PlantStream::new(10.0, 5.0);
@@ -379,7 +379,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn thermal_storage_changes_temperature() {
+    fn thermal_storage_changes_temperature() {
         let storage = ThermalStorage {
             volume_m3: 5.0,
             height_m: 2.0,
@@ -395,7 +395,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn pump_power_scales_with_flow() {
+    fn pump_power_scales_with_flow() {
         let pump = Pump { design_head_pa: 200_000.0, design_flow_kg_s: 10.0, motor_efficiency: 0.85, part_load_curve: flat_curve() };
         let inlet = PlantStream::new(20.0, 0.0);
         let low = pump.simulate(inlet, 2.0);
@@ -404,7 +404,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn gshp_penalty_increases_with_ground_load() {
+    fn gshp_penalty_increases_with_ground_load() {
         let gshp = Gshp {
             heat_pump: HeatPump { rated_heating_w: 50_000.0, rated_cooling_w: 50_000.0, rated_cop_heating: 4.0, rated_cop_cooling: 4.5, heating_curve: flat_curve(), cooling_curve: flat_curve() },
             borehole_depth_m: 100.0,

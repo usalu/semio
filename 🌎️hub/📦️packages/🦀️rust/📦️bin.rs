@@ -718,7 +718,7 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sur
         }
     };
 
-    let session_id = uuid::Uuid::now_v7().to_string();
+    let session_id = directory::os_identity::time_ordered_id();
     // 🔖️ 64KiB inline-snapshot threshold: this crate's own choice (`db_sync::build_welcome`'s
     // `snapshot_chunk_bytes` fixes the threshold, not a value) — generous enough that a fresh
     // replica's typical backlog never needs a follow-up `SnapshotChunk` round trip, small enough
@@ -1711,14 +1711,14 @@ mod tests {
     /// @emoji 🏛️ The seeded space id every test routes against (see `SqliteDirectory::seed`).
     const STUDIO: &str = "default";
 
-    /// @emoji 📁️ A fresh, never-reused temp directory per call — `uuid::Uuid::now_v7` rather than
+    /// @emoji 📁️ A fresh, never-reused temp directory per call — the owned `time_ordered_id` rather than
     /// `now_ms()` alone, since `cargo test` runs this whole module's `#[tokio::test]`s
     /// concurrently within one process: two tests calling `test_state()` in the same millisecond
     /// would otherwise collide on the identical `os-hub-test-db-<pid>-<ms>` path and open the SAME
     /// `db::Database` storage root, corrupting each other's catalog/WAL state.
     fn tempdir(name: &str) -> std::path::PathBuf {
         let mut dir = std::env::temp_dir();
-        dir.push(format!("os-hub-test-{name}-{}", uuid::Uuid::now_v7()));
+        dir.push(format!("os-hub-test-{name}-{}", directory::os_identity::time_ordered_id()));
         dir
     }
 

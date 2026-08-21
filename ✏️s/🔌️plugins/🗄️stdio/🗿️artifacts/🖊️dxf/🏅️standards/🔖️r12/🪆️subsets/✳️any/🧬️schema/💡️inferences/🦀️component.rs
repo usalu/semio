@@ -25,7 +25,7 @@ pub struct DxfInference {
 }
 
 impl protocol::Inference<DxfSnapshot> for DxfInference {
-    async fn infer(snapshot: &DxfSnapshot) -> Self {
+    fn infer(snapshot: &DxfSnapshot) -> Self {
         Self { bounds: compute_dxf_bounds(snapshot) }
     }
 }
@@ -39,13 +39,13 @@ impl Default for DxfInference {
 }
 
 impl protocol::InferenceSpec<DxfSnapshot> for DxfInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.stdio.dxf.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.dxf.inference.bounds", reads: &["entities", "blocks"] }]
     }
 }

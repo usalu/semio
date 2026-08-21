@@ -4,7 +4,7 @@
 
 use crate::artifacts::txt::TxtSnapshot;
 use semio_framework_plugin::app::{TextView, TextWindowKit, WindowKit};
-use semio_framework_plugin::{LocalizedLabel, UiNode, WindowKindDefinition};
+use semio_framework_plugin::{BuiltNode, LocalizedLabel, WindowKindDefinition};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = TextWindowKit::KIND_ID;
@@ -20,9 +20,9 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-/// 👁️ Pure `TxtSnapshot -> UiNode` read: same join as the editor's own render, `read_only: true`.
+/// 👁️ Pure `TxtSnapshot -> BuiltNode` read: same join as the editor's own render, `read_only: true`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &TxtSnapshot) -> UiNode {
+pub fn render(document: &TxtSnapshot) -> BuiltNode {
     let mut text = document.lines.join(document.line_ending.as_str());
     if document.trailing_newline && !document.lines.is_empty() {
         text.push_str(document.line_ending.as_str());

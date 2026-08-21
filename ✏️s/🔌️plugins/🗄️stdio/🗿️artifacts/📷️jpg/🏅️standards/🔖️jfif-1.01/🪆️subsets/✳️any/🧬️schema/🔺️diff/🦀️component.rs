@@ -1916,9 +1916,9 @@ fn enc_component_diff_bin(d: &JpgComponentDiff, out: &mut Vec<u8>) {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_component_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<JpgComponentDiff, String> {
     Ok(JpgComponentDiff {
-        h_sampling: read_opt(reader, |r| semio_framework_plugin::resolve_ready(r.read_u8()).map_err(|e| e.to_string()))?,
-        v_sampling: read_opt(reader, |r| semio_framework_plugin::resolve_ready(r.read_u8()).map_err(|e| e.to_string()))?,
-        quant_table_id: read_opt(reader, |r| semio_framework_plugin::resolve_ready(r.read_u8()).map_err(|e| e.to_string()))?,
+        h_sampling: read_opt(reader, |r| r.read_u8().map_err(|e| e.to_string()))?,
+        v_sampling: read_opt(reader, |r| r.read_u8().map_err(|e| e.to_string()))?,
+        quant_table_id: read_opt(reader, |r| r.read_u8().map_err(|e| e.to_string()))?,
     })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -1972,11 +1972,11 @@ fn enc_quant_table_diff_bin(d: &JpgQuantTableDiff, out: &mut Vec<u8>) {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_quant_table_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<JpgQuantTableDiff, String> {
     Ok(JpgQuantTableDiff {
-        precision: read_opt(reader, |r| semio_framework_plugin::resolve_ready(r.read_u8()).map_err(|e| e.to_string()))?,
+        precision: read_opt(reader, |r| r.read_u8().map_err(|e| e.to_string()))?,
         values: read_opt(reader, |r| {
             let mut values = [0u16; 64];
             for v in values.iter_mut() {
-                *v = semio_framework_plugin::resolve_ready(r.read_u16_le()).map_err(|e| e.to_string())?;
+                *v = r.read_u16_le().map_err(|e| e.to_string())?;
             }
             Ok(values)
         })?,
@@ -2030,7 +2030,7 @@ fn enc_huffman_table_diff_bin(d: &JpgHuffmanTableDiff, out: &mut Vec<u8>) {
 fn dec_huffman_table_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<JpgHuffmanTableDiff, String> {
     Ok(JpgHuffmanTableDiff {
         bits: read_opt(reader, |r| {
-            let v = semio_framework_plugin::resolve_ready(r.read_bytes(16)).map_err(|e| e.to_string())?.to_vec();
+            let v = r.read_bytes(16).map_err(|e| e.to_string())?.to_vec();
             v.try_into().map_err(|_| "huffman table diff bits: expected 16 bytes".to_string())
         })?,
         values: read_opt(reader, read_bytes_lp)?,
@@ -2082,7 +2082,7 @@ fn enc_segment_diff_bin(d: &JpgSegmentDiff, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_segment_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<JpgSegmentDiff, String> {
-    Ok(JpgSegmentDiff { marker: read_opt(reader, |r| semio_framework_plugin::resolve_ready(r.read_u8()).map_err(|e| e.to_string()))?, data: read_opt(reader, read_bytes_lp)? })
+    Ok(JpgSegmentDiff { marker: read_opt(reader, |r| r.read_u8().map_err(|e| e.to_string()))?, data: read_opt(reader, read_bytes_lp)? })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_other_segments_diff_bin(d: &JpgOtherSegmentsDiff, out: &mut Vec<u8>) {
@@ -2157,9 +2157,9 @@ fn enc_frame_fields_diff_bin(fd: &JpgFrameFieldsDiff, out: &mut Vec<u8>) {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_frame_fields_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<JpgFrameFieldsDiff, String> {
     Ok(JpgFrameFieldsDiff {
-        precision: read_opt(reader, |r| semio_framework_plugin::resolve_ready(r.read_u8()).map_err(|e| e.to_string()))?,
-        width: read_opt(reader, |r| Ok(semio_framework_plugin::resolve_ready(r.read_varint_u64()).map_err(|e| e.to_string())? as u16))?,
-        height: read_opt(reader, |r| Ok(semio_framework_plugin::resolve_ready(r.read_varint_u64()).map_err(|e| e.to_string())? as u16))?,
+        precision: read_opt(reader, |r| r.read_u8().map_err(|e| e.to_string()))?,
+        width: read_opt(reader, |r| Ok(r.read_varint_u64().map_err(|e| e.to_string())? as u16))?,
+        height: read_opt(reader, |r| Ok(r.read_varint_u64().map_err(|e| e.to_string())? as u16))?,
         components: read_opt(reader, dec_components_diff_bin)?,
     })
 }
@@ -2395,22 +2395,22 @@ impl protocol::DiffCodec for JpgDiff {
         let _format = reader.read_u8().map_err(|e| malformed("diff format", 0, e.to_string()))?;
         let flags = reader.read_u16_le().map_err(|e| malformed("diff flags", 1, e.to_string()))?;
 
-        let width = if flags & (1 << 0) != 0 { Some(reader.read_varint_u64().map_err(|e| malformed("diff width", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as u32) } else { None };
-        let height = if flags & (1 << 1) != 0 { Some(reader.read_varint_u64().map_err(|e| malformed("diff height", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as u32) } else { None };
-        let pixels = if flags & (1 << 2) != 0 { Some(read_bytes_lp(&mut reader).map_err(|e| malformed("diff pixels", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
-        let re_encode_quality = if flags & (1 << 3) != 0 { Some(read_opt(&mut reader, |r| semio_framework_plugin::resolve_ready(r.read_u8()).map_err(|e| e.to_string())).map_err(|e| malformed("diff re-encode-quality", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
-        let jfif_version = if flags & (1 << 4) != 0 { Some(dec_version_bin(&mut reader).map_err(|e| malformed("diff jfif-version", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
-        let jfif_density_units = if flags & (1 << 5) != 0 { Some(dec_density_units_bin(&mut reader).map_err(|e| malformed("diff jfif-density-units", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
-        let jfif_x_density = if flags & (1 << 6) != 0 { Some(reader.read_varint_u64().map_err(|e| malformed("diff jfif-x-density", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as u16) } else { None };
-        let jfif_y_density = if flags & (1 << 7) != 0 { Some(reader.read_varint_u64().map_err(|e| malformed("diff jfif-y-density", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as u16) } else { None };
-        let jfif_thumbnail = if flags & (1 << 8) != 0 { Some(read_opt(&mut reader, dec_thumbnail_bin).map_err(|e| malformed("diff jfif-thumbnail", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
-        let frame = if flags & (1 << 9) != 0 { Some(dec_frame_change_bin(&mut reader).map_err(|e| malformed("diff frame", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
-        let sof_marker = if flags & (1 << 10) != 0 { Some(reader.read_u8().map_err(|e| malformed("diff sof-marker", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?) } else { None };
-        let arithmetic = if flags & (1 << 11) != 0 { Some(reader.read_u8().map_err(|e| malformed("diff arithmetic", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? != 0) } else { None };
-        let quant_tables = if flags & (1 << 12) != 0 { Some(dec_quant_tables_diff_bin(&mut reader).map_err(|e| malformed("diff quant-tables", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
-        let huffman_tables = if flags & (1 << 13) != 0 { Some(dec_huffman_tables_diff_bin(&mut reader).map_err(|e| malformed("diff huffman-tables", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
-        let restart_interval = if flags & (1 << 14) != 0 { Some(read_opt(&mut reader, |r| Ok(semio_framework_plugin::resolve_ready(r.read_varint_u64()).map_err(|e| e.to_string())? as u16)).map_err(|e| malformed("diff restart-interval", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
-        let other_segments = if flags & (1 << 15) != 0 { Some(dec_other_segments_diff_bin(&mut reader).map_err(|e| malformed("diff other-segments", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
+        let width = if flags & (1 << 0) != 0 { Some(reader.read_varint_u64().map_err(|e| malformed("diff width", reader.position(), e.to_string()))? as u32) } else { None };
+        let height = if flags & (1 << 1) != 0 { Some(reader.read_varint_u64().map_err(|e| malformed("diff height", reader.position(), e.to_string()))? as u32) } else { None };
+        let pixels = if flags & (1 << 2) != 0 { Some(read_bytes_lp(&mut reader).map_err(|e| malformed("diff pixels", reader.position(), e))?) } else { None };
+        let re_encode_quality = if flags & (1 << 3) != 0 { Some(read_opt(&mut reader, |r| r.read_u8().map_err(|e| e.to_string())).map_err(|e| malformed("diff re-encode-quality", reader.position(), e))?) } else { None };
+        let jfif_version = if flags & (1 << 4) != 0 { Some(dec_version_bin(&mut reader).map_err(|e| malformed("diff jfif-version", reader.position(), e))?) } else { None };
+        let jfif_density_units = if flags & (1 << 5) != 0 { Some(dec_density_units_bin(&mut reader).map_err(|e| malformed("diff jfif-density-units", reader.position(), e))?) } else { None };
+        let jfif_x_density = if flags & (1 << 6) != 0 { Some(reader.read_varint_u64().map_err(|e| malformed("diff jfif-x-density", reader.position(), e.to_string()))? as u16) } else { None };
+        let jfif_y_density = if flags & (1 << 7) != 0 { Some(reader.read_varint_u64().map_err(|e| malformed("diff jfif-y-density", reader.position(), e.to_string()))? as u16) } else { None };
+        let jfif_thumbnail = if flags & (1 << 8) != 0 { Some(read_opt(&mut reader, dec_thumbnail_bin).map_err(|e| malformed("diff jfif-thumbnail", reader.position(), e))?) } else { None };
+        let frame = if flags & (1 << 9) != 0 { Some(dec_frame_change_bin(&mut reader).map_err(|e| malformed("diff frame", reader.position(), e))?) } else { None };
+        let sof_marker = if flags & (1 << 10) != 0 { Some(reader.read_u8().map_err(|e| malformed("diff sof-marker", reader.position(), e.to_string()))?) } else { None };
+        let arithmetic = if flags & (1 << 11) != 0 { Some(reader.read_u8().map_err(|e| malformed("diff arithmetic", reader.position(), e.to_string()))? != 0) } else { None };
+        let quant_tables = if flags & (1 << 12) != 0 { Some(dec_quant_tables_diff_bin(&mut reader).map_err(|e| malformed("diff quant-tables", reader.position(), e))?) } else { None };
+        let huffman_tables = if flags & (1 << 13) != 0 { Some(dec_huffman_tables_diff_bin(&mut reader).map_err(|e| malformed("diff huffman-tables", reader.position(), e))?) } else { None };
+        let restart_interval = if flags & (1 << 14) != 0 { Some(read_opt(&mut reader, |r| Ok(r.read_varint_u64().map_err(|e| e.to_string())? as u16)).map_err(|e| malformed("diff restart-interval", reader.position(), e))?) } else { None };
+        let other_segments = if flags & (1 << 15) != 0 { Some(dec_other_segments_diff_bin(&mut reader).map_err(|e| malformed("diff other-segments", reader.position(), e))?) } else { None };
 
         Ok(JpgDiff { width, height, pixels, re_encode_quality, jfif_version, jfif_density_units, jfif_x_density, jfif_y_density, jfif_thumbnail, frame, sof_marker, arithmetic, quant_tables, huffman_tables, restart_interval, other_segments })
     }

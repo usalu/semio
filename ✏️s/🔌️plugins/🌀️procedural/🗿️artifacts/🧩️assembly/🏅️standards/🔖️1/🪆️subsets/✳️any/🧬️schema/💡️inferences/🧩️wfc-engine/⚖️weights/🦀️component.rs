@@ -44,7 +44,7 @@ impl WeightTable {
     /// ⚖️ Builds a table from raw positive-finite weights. `w_int` is populated only when every
     /// weight is already an exact non-negative integer value (the common case for hand-authored
     /// tilesets and frequency-counted extraction).
-    pub async fn new(weights: &[f64]) -> Result<Self, ModelError> {
+    pub fn new(weights: &[f64]) -> Result<Self, ModelError> {
         let mut w = Vec::with_capacity(weights.len());
         let mut ln_w = Vec::with_capacity(weights.len());
         let mut w_ln_w = Vec::with_capacity(weights.len());
@@ -68,44 +68,44 @@ impl WeightTable {
     }
 
     #[inline]
-    pub async fn len(&self) -> usize {
+    pub fn len(&self) -> usize {
         self.w.len()
     }
 
     #[inline]
-    pub async fn is_empty(&self) -> bool {
+    pub fn is_empty(&self) -> bool {
         self.w.is_empty()
     }
 
     #[inline]
-    pub async fn w(&self, p: PatternId) -> f64 {
+    pub fn w(&self, p: PatternId) -> f64 {
         self.w[p.index()]
     }
 
     #[inline]
-    pub async fn ln_w(&self, p: PatternId) -> f64 {
+    pub fn ln_w(&self, p: PatternId) -> f64 {
         self.ln_w[p.index()]
     }
 
     #[inline]
-    pub async fn w_ln_w(&self, p: PatternId) -> f64 {
+    pub fn w_ln_w(&self, p: PatternId) -> f64 {
         self.w_ln_w[p.index()]
     }
 
     /// ⚖️ Exact integer weight, when [`WeightTable::has_integer_weights`] is `true`.
     #[inline]
-    pub async fn w_int(&self, p: PatternId) -> Option<u64> {
+    pub fn w_int(&self, p: PatternId) -> Option<u64> {
         self.w_int.as_ref().map(|v| v[p.index()])
     }
 
-    pub async fn has_integer_weights(&self) -> bool {
+    pub fn has_integer_weights(&self) -> bool {
         self.w_int.is_some()
     }
 
     /// ⚖️ `(sum_w, sum_w_ln_w)` restricted to the patterns present in `set`. O(domain size); used
     /// only to rebuild caches from scratch (initialization, periodic drift correction, debug
     /// verification) — never on the hot incremental path.
-    pub async fn sum_over(&self, set: &crate::wfc_engine::bitset::PatternSet) -> (f64, f64) {
+    pub fn sum_over(&self, set: &crate::wfc_engine::bitset::PatternSet) -> (f64, f64) {
         let mut sum_w = 0.0;
         let mut sum_w_ln_w = 0.0;
         for p in set.iter_ones() {
@@ -117,7 +117,7 @@ impl WeightTable {
 
     /// ⚖️ Exact-integer analogue of [`WeightTable::sum_over`], `None` if this table lacks integer
     /// weights.
-    pub async fn sum_int_over(&self, set: &crate::wfc_engine::bitset::PatternSet) -> Option<u64> {
+    pub fn sum_int_over(&self, set: &crate::wfc_engine::bitset::PatternSet) -> Option<u64> {
         self.w_int.as_ref().map(|w_int| set.iter_ones().map(|p| w_int[p.index()]).sum())
     }
 }
@@ -129,30 +129,30 @@ mod tests {
     use super::*;
     use crate::wfc_engine::bitset::PatternSet;
 
-    #[semio_framework_async_macros::async_test]
-    async fn rejects_negative_and_nonfinite() {
+    #[test]
+    fn rejects_negative_and_nonfinite() {
         assert!(WeightTable::new(&[1.0, -1.0]).is_err());
         assert!(WeightTable::new(&[1.0, f64::NAN]).is_err());
         assert!(WeightTable::new(&[1.0, f64::INFINITY]).is_err());
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn precomputes_terms() {
+    #[test]
+    fn precomputes_terms() {
         let t = WeightTable::new(&[1.0, core::f64::consts::E]).unwrap();
         assert_eq!(t.w(PatternId(0)), 1.0);
         assert!((t.ln_w(PatternId(1)) - 1.0).abs() < 1e-12);
         assert!((t.w_ln_w(PatternId(1)) - core::f64::consts::E).abs() < 1e-9);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn zero_weight_terms_are_zero_not_nan() {
+    #[test]
+    fn zero_weight_terms_are_zero_not_nan() {
         let t = WeightTable::new(&[0.0, 2.0]).unwrap();
         assert_eq!(t.ln_w(PatternId(0)), 0.0);
         assert_eq!(t.w_ln_w(PatternId(0)), 0.0);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn integer_detection() {
+    #[test]
+    fn integer_detection() {
         let t = WeightTable::new(&[1.0, 3.0, 5.0]).unwrap();
         assert!(t.has_integer_weights());
         assert_eq!(t.w_int(PatternId(1)), Some(3));
@@ -161,8 +161,8 @@ mod tests {
         assert!(!f.has_integer_weights());
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn sum_over_matches_manual() {
+    #[test]
+    fn sum_over_matches_manual() {
         let t = WeightTable::new(&[1.0, 2.0, 4.0]).unwrap();
         let mut set = PatternSet::new_empty(3);
         set.set(PatternId(0), true);

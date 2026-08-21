@@ -79,9 +79,10 @@ pub fn register() {
     register_artifact_inferences();
     register_pilot_languages();
     register_schema_specs();
-    let _ = store::register_document_codec(store::ArtifactCodec::of::<crate::artifacts::binary::standards::v_raw::subsets::any::schema::snapshot::BinarySnapshot, crate::artifacts::binary::standards::v_raw::subsets::any::schema::mutations::BinaryMutation>(
-        crate::artifacts::binary::STDIO_BINARY_DOCUMENT_SCHEMA,
-    ));
+    let _ = store::register_document_codec(store::ArtifactCodec::of::<
+        crate::artifacts::binary::standards::v_raw::subsets::any::schema::snapshot::BinarySnapshot,
+        crate::artifacts::binary::standards::v_raw::subsets::any::schema::mutations::BinaryMutation,
+    >(crate::artifacts::binary::STDIO_BINARY_DOCUMENT_SCHEMA));
 }
 
 /// 📇️ P2-P3 follow-up fix: `dsl::registry::register_schema_spec` (P2-M3's `FullResolver` insertion

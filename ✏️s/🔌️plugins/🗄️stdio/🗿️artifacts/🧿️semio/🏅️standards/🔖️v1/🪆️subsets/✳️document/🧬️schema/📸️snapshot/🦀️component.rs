@@ -441,7 +441,7 @@ fn read_block(reader: &mut store::ByteReader<'_>) -> Result<DocBlock, String> {
                 let bn = reader.read_varint_u64().map_err(|e| e.to_string())?;
                 let mut blocks = Vec::with_capacity(bn as usize);
                 for _ in 0..bn {
-                    blocks.push(Box::pin(read_block(reader))?);
+                    blocks.push(read_block(reader)?);
                 }
                 items.push(DocListItem { blocks });
             }
@@ -457,7 +457,7 @@ fn read_block(reader: &mut store::ByteReader<'_>) -> Result<DocBlock, String> {
                     let bn = reader.read_varint_u64().map_err(|e| e.to_string())?;
                     let mut blocks = Vec::with_capacity(bn as usize);
                     for _ in 0..bn {
-                        blocks.push(Box::pin(read_block(reader))?);
+                        blocks.push(read_block(reader)?);
                     }
                     cells.push(DocTableCell { blocks });
                 }
@@ -474,7 +474,7 @@ fn read_block(reader: &mut store::ByteReader<'_>) -> Result<DocBlock, String> {
             let n = reader.read_varint_u64().map_err(|e| e.to_string())?;
             let mut blocks = Vec::with_capacity(n as usize);
             for _ in 0..n {
-                blocks.push(Box::pin(read_block(reader))?);
+                blocks.push(read_block(reader)?);
             }
             Ok(DocBlock::Quote { blocks })
         }
@@ -534,7 +534,7 @@ fn encode_document_snapshot_binary(s: &SemioDocumentSnapshot) -> Vec<u8> {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn decode_document_snapshot_binary(bytes: &[u8]) -> Result<SemioDocumentSnapshot, String> {
     const PACK_BINARY_FORMAT: u8 = 1;
-    let mut reader = semio_framework_plugin::resolve_ready(store::ByteReader::new(bytes));
+    let mut reader = store::ByteReader::new(bytes);
     let format = reader.read_u8().map_err(|e| e.to_string())?;
     if format != PACK_BINARY_FORMAT {
         return Err(format!("unsupported pack format {format}"));

@@ -24,7 +24,7 @@ use std::collections::HashMap;
 /// colors — sorting is what makes the result depend only on the neighborhood's *structure*, not
 /// on arc enumeration order.
 #[allow(dead_code)] // no consumer yet turns signatures into model patterns (see this module's scope note); exercised today only by this module's own tests
-pub(crate) async fn refine_colors<T: Topology>(topo: &T, initial_labels: &[u64], rounds: usize) -> Vec<u64> {
+pub(crate) fn refine_colors<T: Topology>(topo: &T, initial_labels: &[u64], rounds: usize) -> Vec<u64> {
     let n = topo.node_count();
     debug_assert_eq!(initial_labels.len(), n);
     let mut colors = initial_labels.to_vec();
@@ -44,7 +44,7 @@ pub(crate) async fn refine_colors<T: Topology>(topo: &T, initial_labels: &[u64],
 
 /// 🔬️ FNV-1a-style mixing (matching `CompiledModel::fingerprint`'s own convention), folding in a
 /// node's own color, its neighbor count, and every neighbor color in sorted order.
-async fn signature_hash(own: u64, neighbor_colors: &[u64]) -> u64 {
+fn signature_hash(own: u64, neighbor_colors: &[u64]) -> u64 {
     let mut h: u64 = 0xcbf2_9ce4_8422_2325;
     let mut mix = |x: u64| {
         for b in x.to_le_bytes() {
@@ -65,7 +65,7 @@ async fn signature_hash(own: u64, neighbor_colors: &[u64]) -> u64 {
 /// signature hashes into compact motif ids. Returns the relabeled colors and `k`, the number of
 /// distinct colors found.
 #[allow(dead_code)] // exercised today only by this module's own tests; see refine_colors' note
-pub(crate) async fn canonicalize(colors: &[u64]) -> (Vec<u32>, usize) {
+pub(crate) fn canonicalize(colors: &[u64]) -> (Vec<u32>, usize) {
     let mut map: HashMap<u64, u32> = HashMap::new();
     let mut out = Vec::with_capacity(colors.len());
     for &c in colors {
@@ -84,8 +84,8 @@ mod tests {
     use crate::wfc_engine::ids::RelationId;
     use crate::wfc_engine::topology::GraphTopologyBuilder;
 
-    #[semio_framework_async_macros::async_test]
-    async fn isomorphic_rooted_neighborhoods_get_identical_signatures() {
+    #[test]
+    fn isomorphic_rooted_neighborhoods_get_identical_signatures() {
         // Two disjoint triangles: every node in each triangle has the exact same rooted
         // 1-hop neighborhood shape (two same-labeled neighbors), so 1 round of refinement must
         // make all six nodes' signatures identical.
@@ -101,8 +101,8 @@ mod tests {
         assert!(colors.iter().all(|&c| c == colors[0]));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn structurally_different_neighborhoods_get_different_signatures() {
+    #[test]
+    fn structurally_different_neighborhoods_get_different_signatures() {
         // A 4-node "star" (node0 connects to 1,2,3; they don't connect to each other): the semio_hub
         // has 3 neighbors, the leaves have 1 each — must not collide after refinement.
         let mut b = GraphTopologyBuilder::new(4);
@@ -119,8 +119,8 @@ mod tests {
         assert_eq!(colors[2], colors[3], "the three leaves are structurally identical");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn different_base_labels_propagate_into_different_signatures() {
+    #[test]
+    fn different_base_labels_propagate_into_different_signatures() {
         let mut b = GraphTopologyBuilder::new(2);
         let r = RelationId(0);
         b.arc(NodeId(0), NodeId(1), r);
@@ -132,8 +132,8 @@ mod tests {
         assert_ne!(different_labels[0], different_labels[1]);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn zero_rounds_is_the_identity_on_labels_modulo_hashing() {
+    #[test]
+    fn zero_rounds_is_the_identity_on_labels_modulo_hashing() {
         // With 0 rounds, colors are exactly `initial_labels` unchanged (no hashing applied at all).
         let b = GraphTopologyBuilder::new(3);
         let topo = b.build().unwrap();
@@ -141,8 +141,8 @@ mod tests {
         assert_eq!(refine_colors(&topo, &labels, 0), labels);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn refine_colors_is_deterministic() {
+    #[test]
+    fn refine_colors_is_deterministic() {
         let mut b = GraphTopologyBuilder::new(5);
         let r = RelationId(0);
         for &(a, c) in &[(0, 1), (1, 2), (2, 3), (3, 4), (4, 0)] {
@@ -154,15 +154,15 @@ mod tests {
         assert_eq!(refine_colors(&topo, &labels, 3), refine_colors(&topo, &labels, 3));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn canonicalize_produces_dense_first_seen_ids() {
+    #[test]
+    fn canonicalize_produces_dense_first_seen_ids() {
         let (ids, k) = canonicalize(&[100, 200, 100, 300, 200]);
         assert_eq!(ids, vec![0, 1, 0, 2, 1]);
         assert_eq!(k, 3);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn canonicalize_of_empty_input_is_empty() {
+    #[test]
+    fn canonicalize_of_empty_input_is_empty() {
         let (ids, k) = canonicalize(&[]);
         assert!(ids.is_empty());
         assert_eq!(k, 0);

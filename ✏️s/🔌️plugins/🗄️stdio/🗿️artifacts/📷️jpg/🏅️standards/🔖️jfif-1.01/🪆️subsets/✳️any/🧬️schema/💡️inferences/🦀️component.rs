@@ -22,7 +22,7 @@ pub struct JpgInference {
 }
 
 impl protocol::Inference<JpgSnapshot> for JpgInference {
-    async fn infer(snapshot: &JpgSnapshot) -> Self {
+    fn infer(snapshot: &JpgSnapshot) -> Self {
         Self { dimensions: compute_jpg_dimensions(snapshot) }
     }
 }
@@ -39,13 +39,13 @@ impl Default for JpgInference {
 }
 
 impl protocol::InferenceSpec<JpgSnapshot> for JpgInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.stdio.jpg.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.jpg.inference.dimensions", reads: &["width", "height", "frame"] }]
     }
 }

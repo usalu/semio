@@ -24,7 +24,7 @@ pub struct GifInference {
 }
 
 impl protocol::Inference<GifSnapshot> for GifInference {
-    async fn infer(snapshot: &GifSnapshot) -> Self {
+    fn infer(snapshot: &GifSnapshot) -> Self {
         Self { dimensions: compute_gif_dimensions(snapshot) }
     }
 }
@@ -41,13 +41,13 @@ impl Default for GifInference {
 }
 
 impl protocol::InferenceSpec<GifSnapshot> for GifInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.stdio.gif.89a.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.gif.89a.inference.dimensions", reads: &["width", "height", "gct", "frames"] }]
     }
 }

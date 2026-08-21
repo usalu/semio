@@ -16,9 +16,9 @@
 
 use crate::artifacts::gltf::engine::{GltfAccessorType, GltfComponentType};
 use crate::artifacts::gltf::schema::snapshot::{
-    GltfAccessor, GltfAlphaMode, GltfAnimation, GltfAnimationChannel, GltfAnimationChannelTarget, GltfAnimationPath, GltfAnimationSampler, GltfAsset, GltfBuffer, GltfBufferView, GltfCamera, GltfCameraProjection, GltfImage,
-    GltfInterpolation, GltfJson, GltfMaterial, GltfMesh, GltfMorphTarget, GltfNode, GltfNormalTextureInfo, GltfOcclusionTextureInfo, GltfOrthographic, GltfPbrMetallicRoughness, GltfPerspective, GltfPrimitive, GltfSampler, GltfScene, GltfSkin,
-    GltfSnapshot, GltfSourceForm, GltfSparseAccessor, GltfSparseIndices, GltfSparseValues, GltfTexture, GltfTextureInfo,
+    GltfAccessor, GltfAlphaMode, GltfAnimation, GltfAnimationChannel, GltfAnimationChannelTarget, GltfAnimationPath, GltfAnimationSampler, GltfAsset, GltfBuffer, GltfBufferView, GltfCamera, GltfCameraProjection, GltfImage, GltfInterpolation,
+    GltfJson, GltfMaterial, GltfMesh, GltfMorphTarget, GltfNode, GltfNormalTextureInfo, GltfOcclusionTextureInfo, GltfOrthographic, GltfPbrMetallicRoughness, GltfPerspective, GltfPrimitive, GltfSampler, GltfScene, GltfSkin, GltfSnapshot,
+    GltfSourceForm, GltfSparseAccessor, GltfSparseIndices, GltfSparseValues, GltfTexture, GltfTextureInfo,
 };
 // 🧬️ `GltfDocument` is only reached through `mod tests`' `use super::*;` glob (its non-test uses
 // below are all inside `#[cfg(test)]`), so — like the reactor/puzzle wasm-only imports elsewhere in
@@ -181,25 +181,25 @@ fn inverse_indexed_collection<T: Clone, D: Clone>(removed: &[usize], modified: &
 /// structs for STRONG entities (`GltfNodeDiff`, `GltfMeshDiff`, …), and by the blanket `T for T`
 /// impl below for WEAK entities (the "diff" IS the whole new value).
 pub trait ItemDiff<T>: Clone + PartialEq {
-    async fn between(base: &T, other: &T) -> Self;
-    async fn apply(&self, base: &T) -> T;
-    async fn inverse(&self, base: &T) -> Self;
-    async fn absorb_into(&mut self, other: Self);
+    fn between(base: &T, other: &T) -> Self;
+    fn apply(&self, base: &T) -> T;
+    fn inverse(&self, base: &T) -> Self;
+    fn absorb_into(&mut self, other: Self);
 }
 
 /// 🍃️ WEAK entities: the diff type IS the item type (whole-value replace), per the recipe's
 /// strong/weak split -- no further sub-structure worth diffing.
 impl<T: Clone + PartialEq> ItemDiff<T> for T {
-    async fn between(_base: &T, other: &T) -> Self {
+    fn between(_base: &T, other: &T) -> Self {
         other.clone()
     }
-    async fn apply(&self, _base: &T) -> T {
+    fn apply(&self, _base: &T) -> T {
         self.clone()
     }
-    async fn inverse(&self, base: &T) -> Self {
+    fn inverse(&self, base: &T) -> Self {
         base.clone()
     }
-    async fn absorb_into(&mut self, other: Self) {
+    fn absorb_into(&mut self, other: Self) {
         *self = other;
     }
 }
@@ -331,7 +331,9 @@ impl<T: Clone + PartialEq, D: ItemDiff<T>> GltfCollectionDiff<T, D> {
             other.removed,
             other.modified.into_iter().map(|m| (m.index, m.diff)).collect(),
             other.added.into_iter().map(|a| (a.index, a.item)).collect(),
-            |d, o| { d.absorb_into(o); },
+            |d, o| {
+                d.absorb_into(o);
+            },
             |d, item| d.apply(item),
         );
         self.removed = removed;
@@ -460,7 +462,7 @@ pub struct GltfSceneDiff {
 }
 
 impl ItemDiff<GltfScene> for GltfSceneDiff {
-    async fn between(base: &GltfScene, other: &GltfScene) -> Self {
+    fn between(base: &GltfScene, other: &GltfScene) -> Self {
         Self {
             nodes: (base.nodes != other.nodes).then(|| other.nodes.clone()),
             name: (base.name != other.name).then(|| other.name.clone()),
@@ -468,7 +470,7 @@ impl ItemDiff<GltfScene> for GltfSceneDiff {
             extras: (base.extras != other.extras).then(|| other.extras.clone()),
         }
     }
-    async fn apply(&self, base: &GltfScene) -> GltfScene {
+    fn apply(&self, base: &GltfScene) -> GltfScene {
         let mut next = base.clone();
         if let Some(v) = &self.nodes {
             next.nodes = v.clone();
@@ -484,7 +486,7 @@ impl ItemDiff<GltfScene> for GltfSceneDiff {
         }
         next
     }
-    async fn inverse(&self, base: &GltfScene) -> Self {
+    fn inverse(&self, base: &GltfScene) -> Self {
         Self {
             nodes: self.nodes.as_ref().map(|_| base.nodes.clone()),
             name: self.name.as_ref().map(|_| base.name.clone()),
@@ -492,7 +494,7 @@ impl ItemDiff<GltfScene> for GltfSceneDiff {
             extras: self.extras.as_ref().map(|_| base.extras.clone()),
         }
     }
-    async fn absorb_into(&mut self, other: Self) {
+    fn absorb_into(&mut self, other: Self) {
         if other.nodes.is_some() {
             self.nodes = other.nodes;
         }
@@ -540,7 +542,7 @@ pub struct GltfNodeDiff {
 }
 
 impl ItemDiff<GltfNode> for GltfNodeDiff {
-    async fn between(base: &GltfNode, other: &GltfNode) -> Self {
+    fn between(base: &GltfNode, other: &GltfNode) -> Self {
         Self {
             children: (base.children != other.children).then(|| other.children.clone()),
             mesh: (base.mesh != other.mesh).then_some(other.mesh),
@@ -556,7 +558,7 @@ impl ItemDiff<GltfNode> for GltfNodeDiff {
             extras: (base.extras != other.extras).then(|| other.extras.clone()),
         }
     }
-    async fn apply(&self, base: &GltfNode) -> GltfNode {
+    fn apply(&self, base: &GltfNode) -> GltfNode {
         let mut next = base.clone();
         if let Some(v) = &self.children {
             next.children = v.clone();
@@ -596,7 +598,7 @@ impl ItemDiff<GltfNode> for GltfNodeDiff {
         }
         next
     }
-    async fn inverse(&self, base: &GltfNode) -> Self {
+    fn inverse(&self, base: &GltfNode) -> Self {
         Self {
             children: self.children.as_ref().map(|_| base.children.clone()),
             mesh: self.mesh.map(|_| base.mesh),
@@ -612,7 +614,7 @@ impl ItemDiff<GltfNode> for GltfNodeDiff {
             extras: self.extras.as_ref().map(|_| base.extras.clone()),
         }
     }
-    async fn absorb_into(&mut self, other: Self) {
+    fn absorb_into(&mut self, other: Self) {
         if other.children.is_some() {
             self.children = other.children;
         }
@@ -670,7 +672,7 @@ pub struct GltfMeshDiff {
 }
 
 impl ItemDiff<GltfMesh> for GltfMeshDiff {
-    async fn between(base: &GltfMesh, other: &GltfMesh) -> Self {
+    fn between(base: &GltfMesh, other: &GltfMesh) -> Self {
         Self {
             primitives: (base.primitives != other.primitives).then(|| other.primitives.clone()),
             weights: (base.weights != other.weights).then(|| other.weights.clone()),
@@ -679,7 +681,7 @@ impl ItemDiff<GltfMesh> for GltfMeshDiff {
             extras: (base.extras != other.extras).then(|| other.extras.clone()),
         }
     }
-    async fn apply(&self, base: &GltfMesh) -> GltfMesh {
+    fn apply(&self, base: &GltfMesh) -> GltfMesh {
         let mut next = base.clone();
         if let Some(v) = &self.primitives {
             next.primitives = v.clone();
@@ -698,7 +700,7 @@ impl ItemDiff<GltfMesh> for GltfMeshDiff {
         }
         next
     }
-    async fn inverse(&self, base: &GltfMesh) -> Self {
+    fn inverse(&self, base: &GltfMesh) -> Self {
         Self {
             primitives: self.primitives.as_ref().map(|_| base.primitives.clone()),
             weights: self.weights.as_ref().map(|_| base.weights.clone()),
@@ -707,7 +709,7 @@ impl ItemDiff<GltfMesh> for GltfMeshDiff {
             extras: self.extras.as_ref().map(|_| base.extras.clone()),
         }
     }
-    async fn absorb_into(&mut self, other: Self) {
+    fn absorb_into(&mut self, other: Self) {
         if other.primitives.is_some() {
             self.primitives = other.primitives;
         }
@@ -758,7 +760,7 @@ pub struct GltfAccessorDiff {
 }
 
 impl ItemDiff<GltfAccessor> for GltfAccessorDiff {
-    async fn between(base: &GltfAccessor, other: &GltfAccessor) -> Self {
+    fn between(base: &GltfAccessor, other: &GltfAccessor) -> Self {
         Self {
             buffer_view: (base.buffer_view != other.buffer_view).then_some(other.buffer_view),
             byte_offset: (base.byte_offset != other.byte_offset).then_some(other.byte_offset),
@@ -774,7 +776,7 @@ impl ItemDiff<GltfAccessor> for GltfAccessorDiff {
             extras: (base.extras != other.extras).then(|| other.extras.clone()),
         }
     }
-    async fn apply(&self, base: &GltfAccessor) -> GltfAccessor {
+    fn apply(&self, base: &GltfAccessor) -> GltfAccessor {
         let mut next = base.clone();
         if let Some(v) = self.buffer_view {
             next.buffer_view = v;
@@ -814,7 +816,7 @@ impl ItemDiff<GltfAccessor> for GltfAccessorDiff {
         }
         next
     }
-    async fn inverse(&self, base: &GltfAccessor) -> Self {
+    fn inverse(&self, base: &GltfAccessor) -> Self {
         Self {
             buffer_view: self.buffer_view.map(|_| base.buffer_view),
             byte_offset: self.byte_offset.map(|_| base.byte_offset),
@@ -830,7 +832,7 @@ impl ItemDiff<GltfAccessor> for GltfAccessorDiff {
             extras: self.extras.as_ref().map(|_| base.extras.clone()),
         }
     }
-    async fn absorb_into(&mut self, other: Self) {
+    fn absorb_into(&mut self, other: Self) {
         if other.buffer_view.is_some() {
             self.buffer_view = other.buffer_view;
         }
@@ -900,7 +902,7 @@ pub struct GltfMaterialDiff {
 }
 
 impl ItemDiff<GltfMaterial> for GltfMaterialDiff {
-    async fn between(base: &GltfMaterial, other: &GltfMaterial) -> Self {
+    fn between(base: &GltfMaterial, other: &GltfMaterial) -> Self {
         Self {
             name: (base.name != other.name).then(|| other.name.clone()),
             pbr_metallic_roughness: (base.pbr_metallic_roughness != other.pbr_metallic_roughness).then(|| other.pbr_metallic_roughness.clone()),
@@ -915,7 +917,7 @@ impl ItemDiff<GltfMaterial> for GltfMaterialDiff {
             extras: (base.extras != other.extras).then(|| other.extras.clone()),
         }
     }
-    async fn apply(&self, base: &GltfMaterial) -> GltfMaterial {
+    fn apply(&self, base: &GltfMaterial) -> GltfMaterial {
         let mut next = base.clone();
         if let Some(v) = &self.name {
             next.name = v.clone();
@@ -952,7 +954,7 @@ impl ItemDiff<GltfMaterial> for GltfMaterialDiff {
         }
         next
     }
-    async fn inverse(&self, base: &GltfMaterial) -> Self {
+    fn inverse(&self, base: &GltfMaterial) -> Self {
         Self {
             name: self.name.as_ref().map(|_| base.name.clone()),
             pbr_metallic_roughness: self.pbr_metallic_roughness.as_ref().map(|_| base.pbr_metallic_roughness.clone()),
@@ -967,7 +969,7 @@ impl ItemDiff<GltfMaterial> for GltfMaterialDiff {
             extras: self.extras.as_ref().map(|_| base.extras.clone()),
         }
     }
-    async fn absorb_into(&mut self, other: Self) {
+    fn absorb_into(&mut self, other: Self) {
         if other.name.is_some() {
             self.name = other.name;
         }
@@ -1027,7 +1029,7 @@ pub struct GltfBufferDiff {
 }
 
 impl ItemDiff<GltfBuffer> for GltfBufferDiff {
-    async fn between(base: &GltfBuffer, other: &GltfBuffer) -> Self {
+    fn between(base: &GltfBuffer, other: &GltfBuffer) -> Self {
         Self {
             byte_length: (base.byte_length != other.byte_length).then_some(other.byte_length),
             uri: (base.uri != other.uri).then(|| other.uri.clone()),
@@ -1036,7 +1038,7 @@ impl ItemDiff<GltfBuffer> for GltfBufferDiff {
             extras: (base.extras != other.extras).then(|| other.extras.clone()),
         }
     }
-    async fn apply(&self, base: &GltfBuffer) -> GltfBuffer {
+    fn apply(&self, base: &GltfBuffer) -> GltfBuffer {
         let mut next = base.clone();
         if let Some(v) = self.byte_length {
             next.byte_length = v;
@@ -1055,7 +1057,7 @@ impl ItemDiff<GltfBuffer> for GltfBufferDiff {
         }
         next
     }
-    async fn inverse(&self, base: &GltfBuffer) -> Self {
+    fn inverse(&self, base: &GltfBuffer) -> Self {
         Self {
             byte_length: self.byte_length.map(|_| base.byte_length),
             uri: self.uri.as_ref().map(|_| base.uri.clone()),
@@ -1064,7 +1066,7 @@ impl ItemDiff<GltfBuffer> for GltfBufferDiff {
             extras: self.extras.as_ref().map(|_| base.extras.clone()),
         }
     }
-    async fn absorb_into(&mut self, other: Self) {
+    fn absorb_into(&mut self, other: Self) {
         if other.byte_length.is_some() {
             self.byte_length = other.byte_length;
         }
@@ -1201,7 +1203,7 @@ impl GltfDiff {
 
 //#region 🗺️TouchedRegions
 impl protocol::DiffRegions for GltfDiff {
-    async fn touches(&self) -> protocol::TouchedPaths {
+    fn touches(&self) -> protocol::TouchedPaths {
         let mut paths = Vec::new();
         if self.asset.as_ref().is_some_and(|diff| !diff.is_empty()) {
             paths.push("document/asset".to_string());
@@ -3673,7 +3675,7 @@ pub(crate) fn read_bin_collection<T, D>(
 /// other stdio pilot's own nested-payload field).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn write_bin_collection_blob<T, D>(c: &GltfCollectionDiff<T, D>, write_item: impl Fn(&mut dsl::ByteWriter, &T), write_diff: impl Fn(&mut dsl::ByteWriter, &D)) -> Vec<u8> {
-    let mut inner = semio_framework_plugin::resolve_ready(dsl::ByteWriter::new());
+    let mut inner = dsl::ByteWriter::new();
     write_bin_collection(&mut inner, c, write_item, write_diff);
     inner.into_bytes()
 }
@@ -3683,7 +3685,7 @@ pub(crate) fn read_bin_collection_blob<T, D>(
     read_item: impl Fn(&mut dsl::ByteReader<'_>) -> Result<T, dsl::PackError>,
     read_diff: impl Fn(&mut dsl::ByteReader<'_>) -> Result<D, dsl::PackError>,
 ) -> Result<GltfCollectionDiff<T, D>, dsl::PackError> {
-    let mut inner = semio_framework_plugin::resolve_ready(dsl::ByteReader::new(bytes));
+    let mut inner = dsl::ByteReader::new(bytes);
     read_bin_collection(&mut inner, read_item, read_diff)
 }
 //#endregion 🔖️RealBinaryGenericCollectionCodec
@@ -3841,9 +3843,9 @@ impl protocol::DiffCodec for GltfDiff {
         // past without knowing its byte length up front.
         write_bin_option(&mut w, &self.asset, |w, v| {
             write_bin_blob(w, &{
-                let mut inner = semio_framework_plugin::resolve_ready(dsl::ByteWriter::new());
+                let mut inner = dsl::ByteWriter::new();
                 write_bin_asset_diff(&mut inner, v);
-                semio_framework_plugin::resolve_ready(inner.into_bytes())
+                inner.into_bytes()
             })
         });
         write_bin_tri(&mut w, &self.scene, |w, v| w.write_varint_u64(*v as u64));
@@ -3863,40 +3865,40 @@ impl protocol::DiffCodec for GltfDiff {
         write_bin_option(&mut w, &self.cameras, |w, v| write_bin_blob(w, &write_bin_collection_blob(v, write_bin_camera, write_bin_camera)));
         write_bin_option(&mut w, &self.extensions_used, |w, v| {
             write_bin_blob(w, &{
-                let mut inner = semio_framework_plugin::resolve_ready(dsl::ByteWriter::new());
+                let mut inner = dsl::ByteWriter::new();
                 write_bin_string_vec(&mut inner, v);
-                semio_framework_plugin::resolve_ready(inner.into_bytes())
+                inner.into_bytes()
             })
         });
         write_bin_option(&mut w, &self.extensions_required, |w, v| {
             write_bin_blob(w, &{
-                let mut inner = semio_framework_plugin::resolve_ready(dsl::ByteWriter::new());
+                let mut inner = dsl::ByteWriter::new();
                 write_bin_string_vec(&mut inner, v);
-                semio_framework_plugin::resolve_ready(inner.into_bytes())
+                inner.into_bytes()
             })
         });
         write_bin_tri(&mut w, &self.extensions, |w, v| {
             write_bin_blob(w, &{
-                let mut inner = semio_framework_plugin::resolve_ready(dsl::ByteWriter::new());
+                let mut inner = dsl::ByteWriter::new();
                 write_bin_json(&mut inner, v);
-                semio_framework_plugin::resolve_ready(inner.into_bytes())
+                inner.into_bytes()
             })
         });
         write_bin_tri(&mut w, &self.extras, |w, v| {
             write_bin_blob(w, &{
-                let mut inner = semio_framework_plugin::resolve_ready(dsl::ByteWriter::new());
+                let mut inner = dsl::ByteWriter::new();
                 write_bin_json(&mut inner, v);
-                semio_framework_plugin::resolve_ready(inner.into_bytes())
+                inner.into_bytes()
             })
         });
         write_bin_option(&mut w, &self.source_form, |w, v| write_bin_source_form(w, *v));
         Ok(w.into_bytes())
     }
     fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let mut r = semio_framework_plugin::resolve_ready(dsl::ByteReader::new(bytes));
+        let mut r = dsl::ByteReader::new(bytes);
         let asset = read_bin_option(&mut r, |r| {
             let b = read_bin_blob(r)?;
-            let mut inner = semio_framework_plugin::resolve_ready(dsl::ByteReader::new(&b));
+            let mut inner = dsl::ByteReader::new(&b);
             read_bin_asset_diff(&mut inner)
         })
         .map_err(gltf_bin_err)?;
@@ -3973,25 +3975,25 @@ impl protocol::DiffCodec for GltfDiff {
         .map_err(gltf_bin_err)?;
         let extensions_used = read_bin_option(&mut r, |r| {
             let b = read_bin_blob(r)?;
-            let mut inner = semio_framework_plugin::resolve_ready(dsl::ByteReader::new(&b));
+            let mut inner = dsl::ByteReader::new(&b);
             read_bin_string_vec(&mut inner)
         })
         .map_err(gltf_bin_err)?;
         let extensions_required = read_bin_option(&mut r, |r| {
             let b = read_bin_blob(r)?;
-            let mut inner = semio_framework_plugin::resolve_ready(dsl::ByteReader::new(&b));
+            let mut inner = dsl::ByteReader::new(&b);
             read_bin_string_vec(&mut inner)
         })
         .map_err(gltf_bin_err)?;
         let extensions = read_bin_tri(&mut r, |r| {
             let b = read_bin_blob(r)?;
-            let mut inner = semio_framework_plugin::resolve_ready(dsl::ByteReader::new(&b));
+            let mut inner = dsl::ByteReader::new(&b);
             read_bin_json(&mut inner)
         })
         .map_err(gltf_bin_err)?;
         let extras = read_bin_tri(&mut r, |r| {
             let b = read_bin_blob(r)?;
-            let mut inner = semio_framework_plugin::resolve_ready(dsl::ByteReader::new(&b));
+            let mut inner = dsl::ByteReader::new(&b);
             read_bin_json(&mut inner)
         })
         .map_err(gltf_bin_err)?;
@@ -4077,8 +4079,8 @@ mod tests {
 
     //#region 🔖️AbsorbCanonicalCases
     /// 🧪️ Canonical absorb case 1: `Insert(2,x)` then `Remove(0)` → `{removed:[0], added:[(1,x)]}`.
-    #[semio_framework_async_macros::async_test]
-    async fn absorb_law_insert_then_remove_before_shifts_index() {
+    #[test]
+    fn absorb_law_insert_then_remove_before_shifts_index() {
         let n = node(9);
         let mut d1 = GltfNodesDiff { added: vec![GltfAdded { index: 2, item: n.clone() }], ..Default::default() };
         let d2 = GltfNodesDiff { removed: vec![0], ..Default::default() };
@@ -4089,8 +4091,8 @@ mod tests {
     }
 
     /// 🧪️ Canonical absorb case 2: `Insert(2,f)` then `Insert(2,g)` → BOTH survive.
-    #[semio_framework_async_macros::async_test]
-    async fn absorb_law_insert_insert_same_index_both_survive() {
+    #[test]
+    fn absorb_law_insert_insert_same_index_both_survive() {
         let f = node(1);
         let g = node(2);
         let mut d1 = GltfNodesDiff { added: vec![GltfAdded { index: 2, item: f.clone() }], ..Default::default() };
@@ -4101,8 +4103,8 @@ mod tests {
 
     /// 🧪️ Canonical absorb case 3: `Insert(1,f)` then `SetField(1,name)` patches INTO the added
     /// payload -- merged has only `added`, no separate `modified` entry.
-    #[semio_framework_async_macros::async_test]
-    async fn absorb_law_insert_then_set_field_patches_into_added() {
+    #[test]
+    fn absorb_law_insert_then_set_field_patches_into_added() {
         let f = node(1);
         let mut d1 = GltfNodesDiff { added: vec![GltfAdded { index: 1, item: f.clone() }], ..Default::default() };
         let d2 = GltfNodesDiff { modified: vec![GltfModified { index: 1, diff: GltfNodeDiff { name: Some(Some("renamed".into())), ..Default::default() } }], ..Default::default() };
@@ -4116,8 +4118,8 @@ mod tests {
     /// 🧪️ Canonical absorb case 4 (id-keyed-collection-analog / modify-of-removed): `Remove(0)`
     /// then `Modify(0)` (post-remove index 0 refers to a DIFFERENT surviving base item) must NOT
     /// corrupt the removed item and must attach the d2 patch to the correct transported base index.
-    #[semio_framework_async_macros::async_test]
-    async fn absorb_law_remove_then_modify_transports_to_correct_surviving_item() {
+    #[test]
+    fn absorb_law_remove_then_modify_transports_to_correct_surviving_item() {
         let mut d1 = GltfNodesDiff { removed: vec![0], ..Default::default() };
         // after d1, base[1] is now at position 0 -- d2 modifies position 0 (== base[1]).
         let d2 = GltfNodesDiff { modified: vec![GltfModified { index: 0, diff: GltfNodeDiff { name: Some(Some("x".into())), ..Default::default() } }], ..Default::default() };
@@ -4127,8 +4129,8 @@ mod tests {
         assert_eq!(d1.modified[0].index, 1, "d2's patch at post-remove position 0 must transport to BASE index 1");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn absorb_law_holds_over_curated_ops() {
+    #[test]
+    fn absorb_law_holds_over_curated_ops() {
         let base = base_snapshot();
         let mid = {
             let mut s = base.clone();
@@ -4154,8 +4156,8 @@ mod tests {
     //#endregion 🔖️AbsorbCanonicalCases
 
     //#region 🔖️BetweenRoundtripLaw
-    #[semio_framework_async_macros::async_test]
-    async fn between_roundtrip_law_holds_on_synthetic_fixture() {
+    #[test]
+    fn between_roundtrip_law_holds_on_synthetic_fixture() {
         let a = base_snapshot();
         let mut b = a.clone();
         b.document.nodes.push(node(5));
@@ -4170,8 +4172,8 @@ mod tests {
     //#endregion 🔖️BetweenRoundtripLaw
 
     //#region 🔖️InverseLaw
-    #[semio_framework_async_macros::async_test]
-    async fn inverse_law_diff_level_round_trips() {
+    #[test]
+    fn inverse_law_diff_level_round_trips() {
         let base = base_snapshot();
         let next = {
             let mut s = base.clone();
@@ -4197,7 +4199,7 @@ mod tests {
     /// roundtrip_law` (`HandcraftedDiffCodec` tests, further down) can reuse the exact same
     /// comprehensive diff rather than re-deriving a second copy. `pub(super)` (not private) so the
     /// sibling `handcrafted_diff_codec_tests` module can reach it via `super::tests::sweep_a()`.
-    pub(super) async fn sweep_a() -> GltfSnapshot {
+    pub(super) fn sweep_a() -> GltfSnapshot {
         GltfSnapshot {
             schema: STDIO_GLTF_DOCUMENT_SCHEMA.into(),
             document: GltfDocument {
@@ -4225,7 +4227,7 @@ mod tests {
             source_form: GltfSourceForm::Json,
         }
     }
-    pub(super) async fn sweep_b() -> GltfSnapshot {
+    pub(super) fn sweep_b() -> GltfSnapshot {
         GltfSnapshot {
             schema: STDIO_GLTF_DOCUMENT_SCHEMA.into(),
             document: GltfDocument {
@@ -4244,14 +4246,7 @@ mod tests {
                 skins: vec![],
                 animations: vec![],
                 cameras: vec![GltfCamera {
-                    projection: GltfCameraProjection::Perspective(GltfPerspective {
-                        aspect_ratio: Some(1.5),
-                        yfov: 0.8,
-                        zfar: Some(100.0),
-                        znear: 0.1,
-                        extensions: None,
-                        extras: None,
-                    }),
+                    projection: GltfCameraProjection::Perspective(GltfPerspective { aspect_ratio: Some(1.5), yfov: 0.8, zfar: Some(100.0), znear: 0.1, extensions: None, extras: None }),
                     name: Some("cam".into()),
                     extensions: None,
                     extras: None,
@@ -4269,8 +4264,8 @@ mod tests {
     /// 🧪️ Field sweep — the acceptance criterion: `sweep_a`/`sweep_b` differ in EVERY mutable
     /// field, incl. every tri-state exercising `Some(None)`, with asymmetric collection lengths
     /// split across both `between()` directions (F1's structural trap).
-    #[semio_framework_async_macros::async_test]
-    async fn field_sweep_covers_every_mutable_field() {
+    #[test]
+    fn field_sweep_covers_every_mutable_field() {
         let sweep_a = sweep_a();
         let sweep_b = sweep_b();
 
@@ -4311,8 +4306,8 @@ mod tests {
         assert!(<GltfDiff as DiffAlgebra<GltfSnapshot>>::between(&sweep_a, &sweep_a).is_empty());
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn touched_regions_are_stable_precise_for_modification_and_conservative_for_transport() {
+    #[test]
+    fn touched_regions_are_stable_precise_for_modification_and_conservative_for_transport() {
         use protocol::DiffRegions as _;
         let modified = GltfDiff {
             nodes: Some(GltfNodesDiff { modified: vec![GltfModified { index: 3, diff: GltfNodeDiff { translation: Some(Some([1.0, 2.0, 3.0])), ..Default::default() } }], ..Default::default() }),
@@ -4415,12 +4410,7 @@ mod handcrafted_diff_codec_tests {
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn camera_orthographic() -> GltfCamera {
-        GltfCamera {
-            projection: GltfCameraProjection::Orthographic(GltfOrthographic { xmag: 1.0, ymag: 1.0, zfar: 10.0, znear: 0.1, extensions: None, extras: Some(GltfJson::Null) }),
-            name: None,
-            extensions: None,
-            extras: None,
-        }
+        GltfCamera { projection: GltfCameraProjection::Orthographic(GltfOrthographic { xmag: 1.0, ymag: 1.0, zfar: 10.0, znear: 0.1, extensions: None, extras: Some(GltfJson::Null) }), name: None, extensions: None, extras: None }
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -4477,8 +4467,8 @@ mod handcrafted_diff_codec_tests {
     /// variants, and at least one tri-state field per STRONG entity diff type
     /// (`Asset`/`Scene`/`Node`/`Mesh`/`Accessor`/`Material`/`Buffer`), which is the representative
     /// slice this law test commits to (documented here, not literally all 42 occurrences).
-    #[semio_framework_async_macros::async_test]
-    async fn diff_codec_text_binary_roundtrip_law() {
+    #[test]
+    fn diff_codec_text_binary_roundtrip_law() {
         let sweep_a = tests::sweep_a();
         let sweep_b = tests::sweep_b();
         let tri_a = tristate_snapshot_a();
@@ -4493,12 +4483,12 @@ mod handcrafted_diff_codec_tests {
         ];
         for d in cases {
             let printed = d.print_diff();
-            assert!(!printed.await.contains('\n'), "print_diff must be one line, got {printed:?}");
-            let parsed = GltfDiff::parse_diff(&printed).await.unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
+            assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
+            let parsed = GltfDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
             assert_eq!(parsed, d, "print_diff/parse_diff round-trip mismatch (printed {printed:?})");
 
             let encoded = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
-            let decoded = GltfDiff::decode_diff(&encoded).await.unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
+            let decoded = GltfDiff::decode_diff(&encoded).unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
             assert_eq!(decoded, d, "encode_diff/decode_diff round-trip mismatch");
         }
     }

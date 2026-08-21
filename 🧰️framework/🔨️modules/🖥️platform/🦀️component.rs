@@ -1,7 +1,7 @@
 // #region platform
 //! 🖥️ Root shell: apps, URI chrome, panel toggles, and shared action bus.
 
-use crate::action_bus::{ActionBus, NoActionHandlers};
+use crate::action_bus::{ActionBus, NoToolJobFactories};
 use crate::ui::AppDefinition;
 
 #[derive(Clone, Debug, PartialEq, Eq, Default)]
@@ -19,7 +19,7 @@ pub struct PlatformSpec {
 }
 
 pub struct Platform {
-    pub action_bus: ActionBus<NoActionHandlers>,
+    pub action_bus: ActionBus<NoToolJobFactories>,
     pub apps: Vec<AppDefinition>,
     pub active_app_id: String,
     pub generation: u64,

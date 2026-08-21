@@ -27,7 +27,7 @@ pub struct DeflateInference {
 }
 
 impl protocol::Inference<DeflateSnapshot> for DeflateInference {
-    async fn infer(snapshot: &DeflateSnapshot) -> Self {
+    fn infer(snapshot: &DeflateSnapshot) -> Self {
         Self { window: compute_deflate_window(snapshot) }
     }
 }
@@ -42,13 +42,13 @@ impl Default for DeflateInference {
 }
 
 impl protocol::InferenceSpec<DeflateSnapshot> for DeflateInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.stdio.deflate.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.deflate.inference.window", reads: &["windowBits", "compressionLevelHint", "dictId", "payload"] }]
     }
 }

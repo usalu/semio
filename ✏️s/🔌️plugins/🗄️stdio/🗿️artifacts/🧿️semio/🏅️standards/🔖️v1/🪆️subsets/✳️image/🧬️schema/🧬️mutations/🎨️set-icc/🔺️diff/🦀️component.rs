@@ -1,6 +1,6 @@
 use crate::artifacts::semio::standards::v1::subsets::image::schema::diff::SemioImageDiff;
-use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
 use crate::artifacts::semio::standards::v1::subsets::image::schema::mutations::SemioImageMutation;
+use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
 use protocol::Mutation;
 
 /// 🔺️ Diff helper for set-icc — a root-scoped singleton field; `icc` already equal to

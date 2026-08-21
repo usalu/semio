@@ -922,7 +922,7 @@ fn read_bin_image_diff(r: &mut dsl::ByteReader<'_>) -> Result<GifImageDiff, dsl:
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_images_diff_bin(d: &GifImagesDiff) -> Vec<u8> {
-    let mut w = semio_framework_plugin::resolve_ready(dsl::ByteWriter::new());
+    let mut w = dsl::ByteWriter::new();
     write_bin_vec(&mut w, &d.removed, |w, v: &usize| w.write_varint_u64(*v as u64));
     write_bin_vec(&mut w, &d.modified, |w, m: &GifImageModified| {
         w.write_varint_u64(m.index as u64);
@@ -936,7 +936,7 @@ fn enc_images_diff_bin(d: &GifImagesDiff) -> Vec<u8> {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_images_diff_bin(bytes: &[u8]) -> Result<GifImagesDiff, dsl::PackError> {
-    let mut r = semio_framework_plugin::resolve_ready(dsl::ByteReader::new(bytes));
+    let mut r = dsl::ByteReader::new(bytes);
     let removed = read_bin_vec(&mut r, |r| Ok(r.read_varint_u64()? as usize))?;
     let modified = read_bin_vec(&mut r, |r| {
         let index = r.read_varint_u64()? as usize;
@@ -1020,9 +1020,9 @@ impl DiffCodec for GifDiff {
         write_bin_option(&mut w, &self.width, |w, v| w.write_u32_le(*v));
         write_bin_option(&mut w, &self.height, |w, v| w.write_u32_le(*v));
         write_bin_tri_flag(&mut w, &self.gct, |w, v| {
-            let mut inner = semio_framework_plugin::resolve_ready(dsl::ByteWriter::new());
+            let mut inner = dsl::ByteWriter::new();
             write_bin_color_table(&mut inner, v);
-            write_bin_blob(w, &semio_framework_plugin::resolve_ready(inner.into_bytes()));
+            write_bin_blob(w, &inner.into_bytes());
         });
         write_bin_option(&mut w, &self.background_color_index, |w, v| w.write_u8(*v));
         write_bin_option(&mut w, &self.pixel_aspect_ratio, |w, v| w.write_u8(*v));
@@ -1030,12 +1030,12 @@ impl DiffCodec for GifDiff {
         Ok(w.into_bytes())
     }
     fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let mut r = semio_framework_plugin::resolve_ready(dsl::ByteReader::new(bytes));
+        let mut r = dsl::ByteReader::new(bytes);
         let width = read_bin_option(&mut r, |r| r.read_u32_le()).map_err(diff_pack_err)?;
         let height = read_bin_option(&mut r, |r| r.read_u32_le()).map_err(diff_pack_err)?;
         let gct = read_bin_tri_flag(&mut r, |r| {
             let blob = read_bin_blob(r)?;
-            let mut inner = semio_framework_plugin::resolve_ready(dsl::ByteReader::new(&blob));
+            let mut inner = dsl::ByteReader::new(&blob);
             read_bin_color_table(&mut inner)
         })
         .map_err(diff_pack_err)?;

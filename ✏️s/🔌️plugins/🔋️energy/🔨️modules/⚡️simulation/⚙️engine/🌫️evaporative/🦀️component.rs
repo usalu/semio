@@ -35,12 +35,12 @@ pub struct EvaporativeOutput {
 
 // #region 🔖️WetBulb
 /// 🌡️ Simplified wet-bulb estimate from dry-bulb and humidity ratio.
-pub async fn wet_bulb_approx_c(t_db_c: f64, w: f64, p_atm: f64) -> f64 {
+pub fn wet_bulb_approx_c(t_db_c: f64, w: f64, p_atm: f64) -> f64 {
     let rh = relative_humidity_from_w(t_db_c, w, p_atm);
     t_db_c * rh.atan() / (std::f64::consts::FRAC_PI_2 + 0.15 * rh.atan()) + 0.5
 }
 
-async fn relative_humidity_from_w(t_c: f64, w: f64, p_atm: f64) -> f64 {
+fn relative_humidity_from_w(t_c: f64, w: f64, p_atm: f64) -> f64 {
     let p_ws = saturation_pressure_pa(t_c);
     let p_w = w * p_atm / (0.621_945 + w);
     (p_w / p_ws).clamp(0.0, 1.0)
@@ -49,7 +49,7 @@ async fn relative_humidity_from_w(t_c: f64, w: f64, p_atm: f64) -> f64 {
 
 // #region 🔖️Simulate
 /// 💧️ Simulate direct or indirect evaporative cooling.
-pub async fn evaporative_cool(cooler: &EvaporativeCooler, inlet: &EvaporativeInlet, enabled: bool) -> EvaporativeOutput {
+pub fn evaporative_cool(cooler: &EvaporativeCooler, inlet: &EvaporativeInlet, enabled: bool) -> EvaporativeOutput {
     if !enabled || inlet.mass_flow_kg_s < 1e-9 {
         return EvaporativeOutput { dry_bulb_c: inlet.dry_bulb_c, humidity_ratio: inlet.humidity_ratio, sensible_cooling_w: 0.0, latent_heat_w: 0.0, water_consumption_kg_s: 0.0, effectiveness_achieved: 0.0 };
     }
@@ -84,7 +84,7 @@ mod tests {
     use crate::units::P_STD;
 
     #[semio_framework_async_macros::async_test]
-    async fn direct_cooling_lowers_dry_bulb() {
+    fn direct_cooling_lowers_dry_bulb() {
         let cooler = EvaporativeCooler::Direct { effectiveness: 0.8, pad_area_m2: 10.0 };
         let inlet = EvaporativeInlet { dry_bulb_c: 35.0, humidity_ratio: humidity_ratio_from_rh(35.0, 0.3, P_STD), mass_flow_kg_s: 1.0, pressure_pa: P_STD };
         let out = evaporative_cool(&cooler, &inlet, true);
@@ -94,7 +94,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn indirect_preserves_humidity_ratio() {
+    fn indirect_preserves_humidity_ratio() {
         let cooler = EvaporativeCooler::Indirect { sensible_effectiveness: 0.65, primary_flow_m3_s: 1.0, secondary_flow_m3_s: 1.0 };
         let inlet = EvaporativeInlet { dry_bulb_c: 32.0, humidity_ratio: 0.01, mass_flow_kg_s: 1.2, pressure_pa: P_STD };
         let out = evaporative_cool(&cooler, &inlet, true);
@@ -103,7 +103,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn disabled_no_effect() {
+    fn disabled_no_effect() {
         let cooler = EvaporativeCooler::Direct { effectiveness: 0.9, pad_area_m2: 5.0 };
         let inlet = EvaporativeInlet { dry_bulb_c: 30.0, humidity_ratio: 0.012, mass_flow_kg_s: 0.8, pressure_pa: P_STD };
         let out = evaporative_cool(&cooler, &inlet, false);

@@ -7,7 +7,7 @@
 //! packet's own report for the tradeoff).
 
 use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::Ifc2x3Snapshot;
-use semio_framework_plugin::{mesh_from_kind, world3d_camera_json, world3d_selection_json, MeshView, MeshWindowKit, UiNode, WindowKindDefinition, WindowKit};
+use semio_framework_plugin::{mesh_from_kind, world3d_camera_json, world3d_selection_json, BuiltNode, MeshView, MeshWindowKit, WindowKindDefinition, WindowKit};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = MeshWindowKit::KIND_ID;
@@ -33,11 +33,7 @@ pub fn definition() -> WindowKindDefinition {
 /// to field names a live peer ticket may still be refactoring.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn entity_count(document: &Ifc2x3Snapshot) -> usize {
-    serde_json::to_value(document)
-        .ok()
-        .and_then(|value| value.as_object().map(|object| object.values().filter_map(|field| field.as_array().map(|array| array.len())).max().unwrap_or(0)))
-        .unwrap_or(0)
-        .clamp(1, 6)
+    serde_json::to_value(document).ok().and_then(|value| value.as_object().map(|object| object.values().filter_map(|field| field.as_array().map(|array| array.len())).max().unwrap_or(0))).unwrap_or(0).clamp(1, 6)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -59,10 +55,10 @@ fn world_instances_json(document: &Ifc2x3Snapshot) -> String {
     serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into())
 }
 
-/// 👁️ Pure `Ifc2x3Snapshot -> UiNode` read: default camera (a viewer has no persisted
+/// 👁️ Pure `Ifc2x3Snapshot -> BuiltNode` read: default camera (a viewer has no persisted
 /// per-session camera — `Config = NoConfig`), no selection/gumball/engagement overlay.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &Ifc2x3Snapshot) -> UiNode {
+pub fn render(document: &Ifc2x3Snapshot) -> BuiltNode {
     let meshes_json = serde_json::to_string(&[serde_json::json!({ "id": IFC2X3_ANY_VIEW_FALLBACK_MESH_KIND, "data": mesh_from_kind(IFC2X3_ANY_VIEW_FALLBACK_MESH_KIND) })]).unwrap_or_else(|_| "[]".into());
     let view = MeshView {
         camera_json: world3d_camera_json(IFC2X3_ANY_VIEW_DEFAULT_CAMERA_POSITION, IFC2X3_ANY_VIEW_DEFAULT_CAMERA_TARGET, IFC2X3_ANY_VIEW_DEFAULT_CAMERA_FOV),

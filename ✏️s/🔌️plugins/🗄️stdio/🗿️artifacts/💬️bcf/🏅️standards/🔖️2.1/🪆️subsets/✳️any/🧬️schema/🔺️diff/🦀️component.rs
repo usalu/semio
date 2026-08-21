@@ -1543,9 +1543,9 @@ impl protocol::DiffCodec for BcfDiff {
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
         let _format = reader.read_u8().map_err(|e| malformed("diff format", 0, e.to_string()))?;
         let flags = reader.read_u8().map_err(|e| malformed("diff flags", 1, e.to_string()))?;
-        let version = if flags & 0b001 != 0 { Some(read_str_lp(&mut reader).map_err(|e| malformed("diff version", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
-        let topics = if flags & 0b010 != 0 { Some(dec_topics_diff_bin(&mut reader).map_err(|e| malformed("diff topics", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
-        let parts = if flags & 0b100 != 0 { Some(dec_parts_diff_bin(&mut reader).map_err(|e| malformed("diff parts", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
+        let version = if flags & 0b001 != 0 { Some(read_str_lp(&mut reader).map_err(|e| malformed("diff version", reader.position(), e))?) } else { None };
+        let topics = if flags & 0b010 != 0 { Some(dec_topics_diff_bin(&mut reader).map_err(|e| malformed("diff topics", reader.position(), e))?) } else { None };
+        let parts = if flags & 0b100 != 0 { Some(dec_parts_diff_bin(&mut reader).map_err(|e| malformed("diff parts", reader.position(), e))?) } else { None };
         Ok(BcfDiff { version, topics, parts })
     }
 }

@@ -91,7 +91,7 @@ async fn produces_committed_diff() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical_and_narrowly_scoped() {
     let decoded: SemioBrepDiff = serde_json::from_str(DIFF).expect("committed create-shell diff decodes");
-    
+
     let shells = decoded.shells.as_ref().expect("create-shell must write the shells triple");
     assert_eq!(shells.added.len(), 1, "exactly one shell is added");
     assert!(shells.removed.is_empty() && shells.modified.is_empty(), "a create neither removes nor modifies");

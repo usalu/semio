@@ -1,0 +1,13 @@
+[package]
+name = "semio-fem-solver-harness"
+version = "0.0.0"
+edition = "2021"
+
+[workspace]
+
+[dependencies]
+semio-framework-job = { path = "../../../../../../../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust" }
+semio-framework-async = { path = "../../../../../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust", features = ["entrypoint"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["float_roundtrip"] }
+thiserror = "2"

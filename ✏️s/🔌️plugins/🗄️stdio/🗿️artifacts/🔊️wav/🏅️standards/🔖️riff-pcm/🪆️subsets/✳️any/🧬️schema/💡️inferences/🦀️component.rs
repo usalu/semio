@@ -24,7 +24,7 @@ pub struct WavInference {
 }
 
 impl protocol::Inference<WavSnapshot> for WavInference {
-    async fn infer(snapshot: &WavSnapshot) -> Self {
+    fn infer(snapshot: &WavSnapshot) -> Self {
         Self { duration: compute_wav_duration(snapshot) }
     }
 }
@@ -39,13 +39,13 @@ impl Default for WavInference {
 }
 
 impl protocol::InferenceSpec<WavSnapshot> for WavInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.stdio.wav.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.wav.inference.duration", reads: &["fmt", "data"] }]
     }
 }

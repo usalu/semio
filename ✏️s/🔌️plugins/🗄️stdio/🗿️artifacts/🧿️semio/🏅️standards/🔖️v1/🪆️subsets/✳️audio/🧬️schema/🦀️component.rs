@@ -183,7 +183,13 @@ pub mod derived_construction {
             let builder = SemioAudioBuilderConstruction::new(48_000, SemioAudioFormat::Float32);
             let (builder, diff) = builder.mutate(SemioAudioMutation::InsertChannel { index: 0, channel: SemioAudioChannel { samples: vec![1.0, 2.0] } });
             let snapshot_after_mutate = builder.clone().build().expect("build");
-            let rebuilt = SemioAudioBuilderConstruction::empty().absorb(SemioAudioDiff::default()).expect("absorb must succeed for a well-formed fixture").mutate(SemioAudioMutation::SetSampleRate { sample_rate: 48_000 }).0.mutate(SemioAudioMutation::SetFormat { format: SemioAudioFormat::Float32 }).0;
+            let rebuilt = SemioAudioBuilderConstruction::empty()
+                .absorb(SemioAudioDiff::default())
+                .expect("absorb must succeed for a well-formed fixture")
+                .mutate(SemioAudioMutation::SetSampleRate { sample_rate: 48_000 })
+                .0
+                .mutate(SemioAudioMutation::SetFormat { format: SemioAudioFormat::Float32 })
+                .0;
             let rebuilt = rebuilt.absorb(diff.diff().clone()).expect("absorb must succeed for a well-formed fixture");
             assert_eq!(rebuilt.build().expect("build"), snapshot_after_mutate);
         }

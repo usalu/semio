@@ -426,34 +426,34 @@ impl protocol::OpBinary for JsonMutation {
         match tag {
             0 => Ok(JsonMutation::NoMutation),
             1 => {
-                let snapshot = dec_json_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let snapshot = dec_json_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", reader.position(), e))?;
                 Ok(JsonMutation::SetSnapshot { snapshot })
             }
             2 => {
-                let path = dec_json_path_bin(&mut reader).map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let key = read_str_lp(&mut reader).map_err(|e| malformed("op key", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let value = dec_json_value_bin(&mut reader).map_err(|e| malformed("op value", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let path = dec_json_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
+                let key = read_str_lp(&mut reader).map_err(|e| malformed("op key", reader.position(), e))?;
+                let value = dec_json_value_bin(&mut reader).map_err(|e| malformed("op value", reader.position(), e))?;
                 Ok(JsonMutation::SetMember { path, key, value })
             }
             3 => {
-                let path = dec_json_path_bin(&mut reader).map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let key = read_str_lp(&mut reader).map_err(|e| malformed("op key", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let path = dec_json_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
+                let key = read_str_lp(&mut reader).map_err(|e| malformed("op key", reader.position(), e))?;
                 Ok(JsonMutation::RemoveMember { path, key })
             }
             4 => {
-                let path = dec_json_path_bin(&mut reader).map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let index = reader.read_varint_u64().map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
-                let value = dec_json_value_bin(&mut reader).map_err(|e| malformed("op value", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let path = dec_json_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
+                let value = dec_json_value_bin(&mut reader).map_err(|e| malformed("op value", reader.position(), e))?;
                 Ok(JsonMutation::InsertArrayElement { path, index, value })
             }
             5 => {
-                let path = dec_json_path_bin(&mut reader).map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let index = reader.read_varint_u64().map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
+                let path = dec_json_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
                 Ok(JsonMutation::RemoveArrayElement { path, index })
             }
             6 => {
-                let path = dec_json_path_bin(&mut reader).map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let value = dec_json_value_bin(&mut reader).map_err(|e| malformed("op value", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let path = dec_json_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
+                let value = dec_json_value_bin(&mut reader).map_err(|e| malformed("op value", reader.position(), e))?;
                 Ok(JsonMutation::SetScalar { path, value })
             }
             other => Err(malformed("op tag", 1, format!("unknown tag {other}"))),

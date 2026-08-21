@@ -18,6 +18,8 @@ pub async fn definition(label: LocalizedLabel) -> ToolDefinition {
 
 /// 🎚️ The fill-count slider, surfaced in the mode-level tool panel while the fill tool is active.
 pub async fn measures(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> WindowMeasure {
+    let accepted = envelope.runtime.fill_job_preview.as_ref().and_then(|preview| preview.get("accepted_count").or_else(|| preview.get("acceptedCount"))).and_then(serde_json::Value::as_u64).unwrap_or(0) as f64;
+    let running = envelope.runtime.fill_job_checkpoint.is_some();
     WindowMeasure::Group {
         id: "puzzle2d-tool-options-fill".into(),
         label: labels.fill.into(),
@@ -38,8 +40,8 @@ pub async fn measures(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> Wind
             min: 0.0,
             max: PUZZLE2D_FILL_COUNT_MAX as f64,
             step: Some(1.0),
-            ready: None,
-            loading: None,
+            ready: running.then_some(accepted),
+            loading: running.then_some(true),
             waiting: None,
             disabled: None,
             reveal: None,

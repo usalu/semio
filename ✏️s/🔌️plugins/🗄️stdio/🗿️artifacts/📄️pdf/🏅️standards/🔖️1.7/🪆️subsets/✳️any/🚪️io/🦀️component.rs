@@ -81,7 +81,7 @@ impl std::fmt::Display for PdfEngineError {
 impl std::error::Error for PdfEngineError {}
 
 type PResult<T> = Result<T, PdfEngineError>;
-async fn malformed<T>(msg: impl Into<String>) -> PResult<T> {
+fn malformed<T>(msg: impl Into<String>) -> PResult<T> {
     Err(PdfEngineError::Malformed(msg.into()))
 }
 //#endregion 🔖️Error
@@ -103,27 +103,27 @@ pub struct Lexer<'a> {
 }
 
 impl<'a> Lexer<'a> {
-    pub async fn new(data: &'a [u8]) -> Self {
+    pub fn new(data: &'a [u8]) -> Self {
         Self { data, pos: 0 }
     }
-    pub async fn at(&self, offset: usize) -> Self {
+    pub fn at(&self, offset: usize) -> Self {
         Self { data: self.data, pos: offset }
     }
-    async fn peek(&self) -> Option<u8> {
+    fn peek(&self) -> Option<u8> {
         self.data.get(self.pos).copied()
     }
-    async fn peek_at(&self, n: usize) -> Option<u8> {
+    fn peek_at(&self, n: usize) -> Option<u8> {
         self.data.get(self.pos + n).copied()
     }
 
-    pub async fn skip_ws(&mut self) {
+    pub fn skip_ws(&mut self) {
         loop {
-            match self.peek().await {
+            match self.peek() {
                 Some(b) if is_ws(b) => {
                     self.pos += 1;
                 }
                 Some(b'%') => {
-                    while let Some(c) = self.peek().await {
+                    while let Some(c) = self.peek() {
                         self.pos += 1;
                         if c == b'\n' || c == b'\r' {
                             break;
@@ -135,9 +135,9 @@ impl<'a> Lexer<'a> {
         }
     }
 
-    async fn read_regular_run(&mut self) -> &'a [u8] {
+    fn read_regular_run(&mut self) -> &'a [u8] {
         let start = self.pos;
-        while let Some(b) = self.peek().await {
+        while let Some(b) = self.peek() {
             if is_ws(b) || is_delim(b) {
                 break;
             }
@@ -146,12 +146,12 @@ impl<'a> Lexer<'a> {
         &self.data[start..self.pos]
     }
 
-    async fn starts_with(&self, kw: &[u8]) -> bool {
+    fn starts_with(&self, kw: &[u8]) -> bool {
         self.data.get(self.pos..self.pos + kw.len()) == Some(kw)
     }
 
-    async fn consume_keyword(&mut self, kw: &[u8]) -> bool {
-        if self.starts_with(kw).await {
+    fn consume_keyword(&mut self, kw: &[u8]) -> bool {
+        if self.starts_with(kw) {
             self.pos += kw.len();
             true
         } else {
@@ -159,14 +159,14 @@ impl<'a> Lexer<'a> {
         }
     }
 
-    async fn parse_number(&mut self) -> PResult<PdfObject> {
+    fn parse_number(&mut self) -> PResult<PdfObject> {
         let start = self.pos;
-        if matches!(self.peek().await, Some(b'+') | Some(b'-')) {
+        if matches!(self.peek(), Some(b'+') | Some(b'-')) {
             self.pos += 1;
         }
         let mut is_real = false;
         let mut saw_digit = false;
-        while let Some(b) = self.peek().await {
+        while let Some(b) = self.peek() {
             match b {
                 b'0'..=b'9' => {
                     saw_digit = true;
@@ -183,7 +183,7 @@ impl<'a> Lexer<'a> {
             }
         }
         if !saw_digit {
-            return malformed("expected number").await;
+            return malformed("expected number");
         }
         let text = std::str::from_utf8(&self.data[start..self.pos]).unwrap_or("0");
         if is_real {
@@ -193,14 +193,14 @@ impl<'a> Lexer<'a> {
         }
     }
 
-    async fn parse_name(&mut self) -> PResult<PdfObject> {
+    fn parse_name(&mut self) -> PResult<PdfObject> {
         self.pos += 1; // consume '/'
         let mut out = String::new();
-        while let Some(b) = self.peek().await {
+        while let Some(b) = self.peek() {
             if is_ws(b) || is_delim(b) {
                 break;
             }
-            if b == b'#' && self.peek_at(1).await.is_some() && self.peek_at(2).await.is_some() {
+            if b == b'#' && self.peek_at(1).is_some() && self.peek_at(2).is_some() {
                 let h = &self.data[self.pos + 1..self.pos + 3];
                 if let Ok(s) = std::str::from_utf8(h) {
                     if let Ok(v) = u8::from_str_radix(s, 16) {
@@ -216,11 +216,11 @@ impl<'a> Lexer<'a> {
         Ok(PdfObject::Name(out))
     }
 
-    async fn parse_literal_string(&mut self) -> PResult<PdfObject> {
+    fn parse_literal_string(&mut self) -> PResult<PdfObject> {
         self.pos += 1; // consume '('
         let mut depth = 1i32;
         let mut out = Vec::new();
-        while let Some(b) = self.peek().await {
+        while let Some(b) = self.peek() {
             self.pos += 1;
             match b {
                 b'(' => {
@@ -234,7 +234,7 @@ impl<'a> Lexer<'a> {
                     }
                     out.push(b);
                 }
-                b'\\' => match self.peek().await {
+                b'\\' => match self.peek() {
                     Some(b'n') => {
                         out.push(b'\n');
                         self.pos += 1;
@@ -280,7 +280,7 @@ impl<'a> Lexer<'a> {
                         let mut v: u32 = 0;
                         let mut n = 0;
                         while n < 3 {
-                            match self.peek().await {
+                            match self.peek() {
                                 Some(dd) if (b'0'..=b'7').contains(&dd) => {
                                     v = v * 8 + (dd - b'0') as u32;
                                     self.pos += 1;
@@ -300,14 +300,14 @@ impl<'a> Lexer<'a> {
                 other => out.push(other),
             }
         }
-        malformed("unterminated literal string").await
+        malformed("unterminated literal string")
     }
 
-    async fn parse_hex_string(&mut self) -> PResult<PdfObject> {
+    fn parse_hex_string(&mut self) -> PResult<PdfObject> {
         self.pos += 1; // consume '<'
         let mut nibbles = Vec::new();
         loop {
-            match self.peek().await {
+            match self.peek() {
                 Some(b'>') => {
                     self.pos += 1;
                     break;
@@ -319,7 +319,7 @@ impl<'a> Lexer<'a> {
                 Some(b) if is_ws(b) => {
                     self.pos += 1;
                 }
-                None => return malformed("unterminated hex string").await,
+                None => return malformed("unterminated hex string"),
                 Some(_) => {
                     self.pos += 1;
                 }
@@ -331,7 +331,7 @@ impl<'a> Lexer<'a> {
         Ok(PdfObject::Str(nibbles.chunks(2).map(|c| (c[0] << 4) | c[1]).collect()))
     }
 
-    async fn parse_array(&mut self) -> PResult<PdfObject> {
+    fn parse_array(&mut self) -> PResult<PdfObject> {
         self.pos += 1; // consume '['
         let mut items = Vec::new();
         loop {
@@ -340,38 +340,38 @@ impl<'a> Lexer<'a> {
                 self.pos += 1;
                 break;
             }
-            if self.peek().await.is_none() {
-                return malformed("unterminated array").await;
+            if self.peek().is_none() {
+                return malformed("unterminated array");
             }
-            items.push(self.parse_object().await?);
+            items.push(self.parse_object()?);
         }
         Ok(PdfObject::Array(items))
     }
 
-    async fn parse_dict_or_stream(&mut self, allow_stream: bool) -> PResult<PdfObject> {
+    fn parse_dict_or_stream(&mut self, allow_stream: bool) -> PResult<PdfObject> {
         self.pos += 2; // consume '<<'
         let mut entries = Vec::new();
         loop {
             self.skip_ws();
-            if self.starts_with(b">>").await {
+            if self.starts_with(b">>") {
                 self.pos += 2;
                 break;
             }
             if self.peek() != Some(b'/') {
-                return malformed("expected dict key").await;
+                return malformed("expected dict key");
             }
-            let key = match self.parse_name().await? {
+            let key = match self.parse_name()? {
                 PdfObject::Name(n) => n,
                 _ => unreachable!(),
             };
             self.skip_ws();
-            let value = self.parse_object().await?;
+            let value = self.parse_object()?;
             entries.push(PdfDictEntry { key, value });
         }
         if allow_stream {
             let save = self.pos;
             self.skip_ws();
-            if self.consume_keyword(b"stream").await {
+            if self.consume_keyword(b"stream") {
                 // 📏 spec: CRLF or LF (not bare CR) must follow the `stream` keyword.
                 if self.peek() == Some(b'\r') {
                     self.pos += 1;
@@ -386,7 +386,7 @@ impl<'a> Lexer<'a> {
                 });
                 let data_end = match declared_len {
                     Some(len) if data_start + len <= self.data.len() => data_start + len,
-                    _ => find_subslice(self.data, data_start, b"endstream").await.unwrap_or(self.data.len()),
+                    _ => find_subslice(self.data, data_start, b"endstream").unwrap_or(self.data.len()),
                 };
                 let raw = self.data[data_start..data_end.min(self.data.len())].to_vec();
                 self.pos = data_end;
@@ -401,28 +401,28 @@ impl<'a> Lexer<'a> {
 
     /// 🎯 Parses one value: number, `N G R` reference, name, string, array, dict/stream,
     /// `true`/`false`/`null`.
-    pub async fn parse_object(&mut self) -> PResult<PdfObject> {
+    pub fn parse_object(&mut self) -> PResult<PdfObject> {
         self.skip_ws();
-        match self.peek().await {
-            None => malformed("unexpected end of input").await,
-            Some(b'/') => self.parse_name().await,
-            Some(b'(') => self.parse_literal_string().await,
-            Some(b'<') if self.peek_at(1) == Some(b'<') => self.parse_dict_or_stream(true).await,
-            Some(b'<') => self.parse_hex_string().await,
-            Some(b'[') => self.parse_array().await,
+        match self.peek() {
+            None => malformed("unexpected end of input"),
+            Some(b'/') => self.parse_name(),
+            Some(b'(') => self.parse_literal_string(),
+            Some(b'<') if self.peek_at(1) == Some(b'<') => self.parse_dict_or_stream(true),
+            Some(b'<') => self.parse_hex_string(),
+            Some(b'[') => self.parse_array(),
             Some(b'-') | Some(b'+') | Some(b'.') | Some(b'0'..=b'9') => {
                 let save = self.pos;
-                let first = self.parse_number().await?;
+                let first = self.parse_number()?;
                 if let PdfObject::Int(num) = first {
                     if num >= 0 {
                         let save2 = self.pos;
                         self.skip_ws();
-                        if matches!(self.peek().await, Some(b'0'..=b'9')) {
+                        if matches!(self.peek(), Some(b'0'..=b'9')) {
                             let gen_save = self.pos;
-                            if let Ok(PdfObject::Int(gen)) = self.parse_number().await {
+                            if let Ok(PdfObject::Int(gen)) = self.parse_number() {
                                 if gen >= 0 {
                                     self.skip_ws();
-                                    if self.consume_keyword(b"R").await && self.peek().await.map(|b| is_ws(b) || is_delim(b)).unwrap_or(true) {
+                                    if self.consume_keyword(b"R") && self.peek().map(|b| is_ws(b) || is_delim(b)).unwrap_or(true) {
                                         return Ok(PdfObject::Ref(ObjRef { num: num as u32, gen: gen as u16 }));
                                     }
                                 }
@@ -436,16 +436,16 @@ impl<'a> Lexer<'a> {
                 Ok(first)
             }
             Some(_) => {
-                if self.consume_keyword(b"true").await {
+                if self.consume_keyword(b"true") {
                     return Ok(PdfObject::Bool(true));
                 }
-                if self.consume_keyword(b"false").await {
+                if self.consume_keyword(b"false") {
                     return Ok(PdfObject::Bool(false));
                 }
-                if self.consume_keyword(b"null").await {
+                if self.consume_keyword(b"null") {
                     return Ok(PdfObject::Null);
                 }
-                let run = self.read_regular_run().await;
+                let run = self.read_regular_run();
                 if run.is_empty() {
                     self.pos += 1;
                     return Ok(PdfObject::Null);
@@ -456,7 +456,7 @@ impl<'a> Lexer<'a> {
     }
 }
 
-async fn hex_val(b: u8) -> u8 {
+fn hex_val(b: u8) -> u8 {
     match b {
         b'0'..=b'9' => b - b'0',
         b'a'..=b'f' => b - b'a' + 10,
@@ -465,7 +465,7 @@ async fn hex_val(b: u8) -> u8 {
     }
 }
 
-async fn find_subslice(data: &[u8], from: usize, needle: &[u8]) -> Option<usize> {
+fn find_subslice(data: &[u8], from: usize, needle: &[u8]) -> Option<usize> {
     if from > data.len() {
         return None;
     }
@@ -476,25 +476,25 @@ async fn find_subslice(data: &[u8], from: usize, needle: &[u8]) -> Option<usize>
 //#region 🔖️IndirectObjects
 /// 📦️ Parses one `N G obj ... endobj` at `offset`. Returns the parsed value and the id it
 /// actually declared (used by the brute-force scanner, which doesn't trust its own guessed id).
-async fn parse_indirect_at(data: &[u8], offset: usize) -> PResult<(ObjRef, PdfObject)> {
-    let mut lex = Lexer::new(data).await.at(offset);
-    lex.await.skip_ws();
-    let num = match lex.await.parse_number().await? {
+fn parse_indirect_at(data: &[u8], offset: usize) -> PResult<(ObjRef, PdfObject)> {
+    let mut lex = Lexer::new(data).at(offset);
+    lex.skip_ws();
+    let num = match lex.parse_number()? {
         PdfObject::Int(i) if i >= 0 => i as u32,
-        _ => return malformed("bad object number").await,
+        _ => return malformed("bad object number"),
     };
-    lex.await.skip_ws();
-    let gen = match lex.await.parse_number().await? {
+    lex.skip_ws();
+    let gen = match lex.parse_number()? {
         PdfObject::Int(i) if i >= 0 => i as u16,
-        _ => return malformed("bad generation number").await,
+        _ => return malformed("bad generation number"),
     };
-    lex.await.skip_ws();
-    if !lex.await.consume_keyword(b"obj") {
-        return malformed("expected 'obj' keyword").await;
+    lex.skip_ws();
+    if !lex.consume_keyword(b"obj") {
+        return malformed("expected 'obj' keyword");
     }
-    let value = lex.await.parse_object().await?;
-    lex.await.skip_ws();
-    let _ = lex.await.consume_keyword(b"endobj");
+    let value = lex.parse_object()?;
+    lex.skip_ws();
+    let _ = lex.consume_keyword(b"endobj");
     Ok((ObjRef { num, gen }, value))
 }
 
@@ -502,23 +502,23 @@ async fn parse_indirect_at(data: &[u8], offset: usize) -> PResult<(ObjRef, PdfOb
 /// used when structured xref parsing fails outright (damaged/`%%EOF`-free files). Real readers
 /// all do this; last occurrence of a given object number wins (later generation/incremental
 /// update, matching how classic xref updates are meant to shadow earlier ones).
-async fn brute_force_scan(data: &[u8]) -> HashMap<u32, (ObjRef, usize)> {
+fn brute_force_scan(data: &[u8]) -> HashMap<u32, (ObjRef, usize)> {
     let mut found: HashMap<u32, (ObjRef, usize)> = HashMap::new();
     let mut i = 0usize;
     while i < data.len() {
         if data[i].is_ascii_digit() && (i == 0 || is_ws(data[i - 1]) || is_delim(data[i - 1])) {
             let start = i;
-            let mut lex = Lexer::new(data).await.at(start);
-            if let Ok(PdfObject::Int(num)) = lex.await.parse_number().await {
+            let mut lex = Lexer::new(data).at(start);
+            if let Ok(PdfObject::Int(num)) = lex.parse_number() {
                 if num >= 0 {
-                    lex.await.skip_ws();
-                    let gen_pos = lex.await.pos;
-                    if let Ok(PdfObject::Int(gen)) = lex.await.parse_number().await {
+                    lex.skip_ws();
+                    let gen_pos = lex.pos;
+                    if let Ok(PdfObject::Int(gen)) = lex.parse_number() {
                         if gen >= 0 {
-                            lex.await.skip_ws();
-                            if lex.await.consume_keyword(b"obj").await {
+                            lex.skip_ws();
+                            if lex.consume_keyword(b"obj") {
                                 found.insert(num as u32, (ObjRef { num: num as u32, gen: gen as u16 }, start));
-                                i = lex.await.pos;
+                                i = lex.pos;
                                 continue;
                             }
                         }
@@ -535,7 +535,7 @@ async fn brute_force_scan(data: &[u8]) -> HashMap<u32, (ObjRef, usize)> {
 
 //#region 🔖️Filters
 /// 🔤️ `/ASCIIHexDecode`.
-pub async fn ascii_hex_decode(s: &[u8]) -> Vec<u8> {
+pub fn ascii_hex_decode(s: &[u8]) -> Vec<u8> {
     let mut nibbles = Vec::new();
     for &b in s {
         if b == b'>' {
@@ -555,7 +555,7 @@ pub async fn ascii_hex_decode(s: &[u8]) -> Vec<u8> {
 }
 
 /// 🔡️ `/ASCII85Decode`.
-pub async fn ascii85_decode(s: &[u8]) -> PResult<Vec<u8>> {
+pub fn ascii85_decode(s: &[u8]) -> PResult<Vec<u8>> {
     let mut out = Vec::new();
     let mut group = [0u8; 5];
     let mut glen = 0usize;
@@ -575,7 +575,7 @@ pub async fn ascii85_decode(s: &[u8]) -> PResult<Vec<u8>> {
             continue;
         }
         if !(b'!'..=b'u').contains(&b) {
-            return malformed("bad ascii85 byte").await;
+            return malformed("bad ascii85 byte");
         }
         group[glen] = b - b'!';
         glen += 1;
@@ -603,7 +603,7 @@ pub async fn ascii85_decode(s: &[u8]) -> PResult<Vec<u8>> {
 }
 
 /// 🏃️ `/RunLengthDecode`.
-pub async fn run_length_decode(s: &[u8]) -> Vec<u8> {
+pub fn run_length_decode(s: &[u8]) -> Vec<u8> {
     let mut out = Vec::new();
     let mut i = 0;
     while i < s.len() {
@@ -631,7 +631,7 @@ pub async fn run_length_decode(s: &[u8]) -> Vec<u8> {
     out
 }
 
-async fn paeth(a: u8, b: u8, c: u8) -> u8 {
+fn paeth(a: u8, b: u8, c: u8) -> u8 {
     let (a, b, c) = (a as i32, b as i32, c as i32);
     let p = a + b - c;
     let pa = (p - a).abs();
@@ -649,11 +649,11 @@ async fn paeth(a: u8, b: u8, c: u8) -> u8 {
 /// 🧮 PNG predictor decode (Predictor >= 10, ISO 32000-1 §7.4.4.4 / PNG spec §6): each row is
 /// prefixed by a filter-type byte. Reused by xref streams and any Flate/LZW stream declaring
 /// `/DecodeParms /Predictor`. Verified standalone against hand-checked rows before landing here.
-pub async fn png_predictor_decode(raw: &[u8], columns: usize, colors: usize, bpc: usize) -> PResult<Vec<u8>> {
+pub fn png_predictor_decode(raw: &[u8], columns: usize, colors: usize, bpc: usize) -> PResult<Vec<u8>> {
     let bpp = ((colors * bpc + 7) / 8).max(1);
     let row_bytes = (columns * colors * bpc + 7) / 8;
     if row_bytes == 0 {
-        return malformed("predictor: zero row width").await;
+        return malformed("predictor: zero row width");
     }
     let mut out = Vec::with_capacity(raw.len());
     let mut prev = vec![0u8; row_bytes];
@@ -676,8 +676,8 @@ pub async fn png_predictor_decode(raw: &[u8], columns: usize, colors: usize, bpc
                 1 => filt[x].wrapping_add(a),
                 2 => filt[x].wrapping_add(b),
                 3 => filt[x].wrapping_add(((a as u16 + b as u16) / 2) as u8),
-                4 => filt[x].wrapping_add(paeth(a, b, c).await),
-                other => return malformed(format!("unsupported PNG predictor filter type {other}")).await,
+                4 => filt[x].wrapping_add(paeth(a, b, c)),
+                other => return malformed(format!("unsupported PNG predictor filter type {other}")),
             };
         }
         out.extend_from_slice(&cur);
@@ -688,7 +688,7 @@ pub async fn png_predictor_decode(raw: &[u8], columns: usize, colors: usize, bpc
 
 /// 🧮 TIFF predictor 2 decode (horizontal differencing, 8 bits/component) — the other predictor
 /// value the spec allows besides the PNG family.
-pub async fn tiff_predictor2_decode(raw: &[u8], columns: usize, colors: usize) -> Vec<u8> {
+pub fn tiff_predictor2_decode(raw: &[u8], columns: usize, colors: usize) -> Vec<u8> {
     let mut out = raw.to_vec();
     let row_bytes = columns * colors;
     if row_bytes == 0 {
@@ -704,7 +704,7 @@ pub async fn tiff_predictor2_decode(raw: &[u8], columns: usize, colors: usize) -
 
 /// 🎛️ Reads `/DecodeParms` (or `/DP`) `{Predictor, Colors, BitsPerComponent, Columns}` from a
 /// stream dict, applying spec defaults (Predictor 1 = none, Colors 1, BPC 8, Columns 1).
-async fn decode_parms(dict: &[PdfDictEntry]) -> (i64, usize, usize, usize) {
+fn decode_parms(dict: &[PdfDictEntry]) -> (i64, usize, usize, usize) {
     let parms = dict.iter().find(|e| e.key == "DecodeParms" || e.key == "DP").map(|e| &e.value);
     let get = |key: &str, default: i64| -> i64 { parms.and_then(|p| p.dict_get(key)).and_then(|v| v.as_i64()).unwrap_or(default) };
     (get("Predictor", 1), get("Colors", 1).max(1) as usize, get("BitsPerComponent", 8).max(1) as usize, get("Columns", 1).max(1) as usize)
@@ -712,7 +712,7 @@ async fn decode_parms(dict: &[PdfDictEntry]) -> (i64, usize, usize, usize) {
 
 /// 🗜️ Decodes a stream's bytes per its `/Filter` chain. Filters without a logical decoder
 /// are rejected so native encoded representations never enter the semantic snapshot.
-pub async fn decode_stream(dict: &[PdfDictEntry], raw: &[u8]) -> PResult<(Vec<u8>, Vec<PdfStreamFilter>)> {
+pub fn decode_stream(dict: &[PdfDictEntry], raw: &[u8]) -> PResult<(Vec<u8>, Vec<PdfStreamFilter>)> {
     let filters: Vec<String> = match dict.iter().find(|e| e.key == "Filter").map(|e| &e.value) {
         Some(PdfObject::Name(n)) => vec![n.clone()],
         Some(PdfObject::Array(a)) => a.iter().filter_map(|o| o.as_name().map(|s| s.to_string())).collect(),
@@ -723,25 +723,25 @@ pub async fn decode_stream(dict: &[PdfDictEntry], raw: &[u8]) -> PResult<(Vec<u8
     for filter in &filters {
         match filter.as_str() {
             "FlateDecode" | "Fl" => {
-                data = crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_decompress(&data).await.map_err(|e| PdfEngineError::Malformed(format!("FlateDecode: {e}")))?;
-                let (predictor, colors, bpc, columns) = decode_parms(dict).await;
+                data = crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_decompress(&data).map_err(|e| PdfEngineError::Malformed(format!("FlateDecode: {e}")))?;
+                let (predictor, colors, bpc, columns) = decode_parms(dict);
                 if predictor >= 10 {
-                    data = png_predictor_decode(&data, columns, colors, bpc).await?;
+                    data = png_predictor_decode(&data, columns, colors, bpc)?;
                 } else if predictor == 2 {
-                    data = tiff_predictor2_decode(&data, columns, colors).await;
+                    data = tiff_predictor2_decode(&data, columns, colors);
                 }
                 pipeline.push(PdfStreamFilter::Flate { predictor: (predictor != 1).then_some(PdfPredictor { predictor: predictor as u32, colors: colors as u32, bits_per_component: bpc as u32, columns: columns as u32 }) });
             }
             "ASCIIHexDecode" | "AHx" => {
-                data = ascii_hex_decode(&data).await;
+                data = ascii_hex_decode(&data);
                 pipeline.push(PdfStreamFilter::AsciiHex);
             }
             "ASCII85Decode" | "A85" => {
-                data = ascii85_decode(&data).await?;
+                data = ascii85_decode(&data)?;
                 pipeline.push(PdfStreamFilter::Ascii85);
             }
             "RunLengthDecode" | "RL" => {
-                data = run_length_decode(&data).await;
+                data = run_length_decode(&data);
                 pipeline.push(PdfStreamFilter::RunLength);
             }
             other => return Err(PdfEngineError::Unsupported(format!("stream filter /{other} has no logical decoder"))),
@@ -763,13 +763,13 @@ struct XrefState {
     trailer: Vec<PdfDictEntry>,
 }
 
-async fn dict_ref_i64(entries: &[PdfDictEntry], key: &str) -> Option<i64> {
+fn dict_ref_i64(entries: &[PdfDictEntry], key: &str) -> Option<i64> {
     entries.iter().find(|e| e.key == key).and_then(|e| e.value.as_i64())
 }
 
 /// 📐️ Decodes one row of an xref stream given `/W = [w0,w1,w2]` (field widths in bytes; `w0==0`
 /// defaults field 1/type to `1` per spec note in §7.5.8.2). Verified standalone.
-async fn decode_xref_row(row: &[u8], w: [usize; 3]) -> (u8, u64, u64) {
+fn decode_xref_row(row: &[u8], w: [usize; 3]) -> (u8, u64, u64) {
     let mut pos = 0usize;
     let mut read = |width: usize, default: u64| -> u64 {
         if width == 0 {
@@ -790,70 +790,70 @@ async fn decode_xref_row(row: &[u8], w: [usize; 3]) -> (u8, u64, u64) {
 
 /// 🌊 Parses a classic `xref` table + its `trailer` dict starting at `offset`. Handles multiple
 /// subsections; lenient about the fixed-width-20-byte convention (splits on whitespace instead).
-async fn parse_classic_xref(data: &[u8], offset: usize) -> PResult<(HashMap<u32, XrefEntry>, Vec<PdfDictEntry>)> {
-    let mut lex = Lexer::new(data).await.at(offset);
-    lex.await.skip_ws();
-    if !lex.await.consume_keyword(b"xref") {
-        return malformed("expected 'xref' keyword").await;
+fn parse_classic_xref(data: &[u8], offset: usize) -> PResult<(HashMap<u32, XrefEntry>, Vec<PdfDictEntry>)> {
+    let mut lex = Lexer::new(data).at(offset);
+    lex.skip_ws();
+    if !lex.consume_keyword(b"xref") {
+        return malformed("expected 'xref' keyword");
     }
     let mut entries = HashMap::new();
     loop {
-        lex.await.skip_ws();
-        if lex.await.starts_with(b"trailer").await {
+        lex.skip_ws();
+        if lex.starts_with(b"trailer") {
             break;
         }
-        if !matches!(lex.await.peek().await, Some(b'0'..=b'9')) {
+        if !matches!(lex.peek(), Some(b'0'..=b'9')) {
             break;
         }
-        let start = match lex.await.parse_number().await? {
+        let start = match lex.parse_number()? {
             PdfObject::Int(i) => i as u32,
-            _ => return malformed("bad xref subsection start").await,
+            _ => return malformed("bad xref subsection start"),
         };
-        lex.await.skip_ws();
-        let count = match lex.await.parse_number().await? {
+        lex.skip_ws();
+        let count = match lex.parse_number()? {
             PdfObject::Int(i) => i as u32,
-            _ => return malformed("bad xref subsection count").await,
+            _ => return malformed("bad xref subsection count"),
         };
         for i in 0..count {
-            lex.await.skip_ws();
-            let off_tok = lex.await.read_regular_run();
-            lex.await.skip_ws();
-            let gen_tok = lex.await.read_regular_run();
-            lex.await.skip_ws();
-            let flag_tok = lex.await.read_regular_run();
-            let off: usize = std::str::from_utf8(off_tok.await).ok().and_then(|s| s.parse().ok()).unwrap_or(0);
-            let gen: u16 = std::str::from_utf8(gen_tok.await).ok().and_then(|s| s.parse().ok()).unwrap_or(0);
-            let in_use = flag_tok.await.first() == Some(&b'n');
+            lex.skip_ws();
+            let off_tok = lex.read_regular_run();
+            lex.skip_ws();
+            let gen_tok = lex.read_regular_run();
+            lex.skip_ws();
+            let flag_tok = lex.read_regular_run();
+            let off: usize = std::str::from_utf8(off_tok).ok().and_then(|s| s.parse().ok()).unwrap_or(0);
+            let gen: u16 = std::str::from_utf8(gen_tok).ok().and_then(|s| s.parse().ok()).unwrap_or(0);
+            let in_use = flag_tok.first() == Some(&b'n');
             if in_use {
                 entries.entry(start + i).or_insert(XrefEntry::Normal { offset: off, gen });
             }
         }
     }
-    lex.await.skip_ws();
-    if !lex.await.consume_keyword(b"trailer") {
-        return malformed("expected 'trailer' keyword").await;
+    lex.skip_ws();
+    if !lex.consume_keyword(b"trailer") {
+        return malformed("expected 'trailer' keyword");
     }
-    lex.await.skip_ws();
-    let trailer = match lex.await.parse_object().await? {
+    lex.skip_ws();
+    let trailer = match lex.parse_object()? {
         PdfObject::Dict(d) => d,
-        _ => return malformed("trailer is not a dict").await,
+        _ => return malformed("trailer is not a dict"),
     };
     Ok((entries, trailer))
 }
 
 /// 🌊 Parses an xref STREAM (`/Type /XRef`) at `offset` — requirement #2.
-async fn parse_xref_stream(data: &[u8], offset: usize) -> PResult<(HashMap<u32, XrefEntry>, Vec<PdfDictEntry>)> {
-    let (_id, obj) = parse_indirect_at(data, offset).await?;
+fn parse_xref_stream(data: &[u8], offset: usize) -> PResult<(HashMap<u32, XrefEntry>, Vec<PdfDictEntry>)> {
+    let (_id, obj) = parse_indirect_at(data, offset)?;
     let (dict, raw) = match &obj {
         PdfObject::Stream { dict, data, .. } => (dict.clone(), data.clone()),
-        _ => return malformed("xref stream object is not a stream").await,
+        _ => return malformed("xref stream object is not a stream"),
     };
-    let (decoded, _) = decode_stream(&dict, &raw).await?;
+    let (decoded, _) = decode_stream(&dict, &raw)?;
     let w = match dict.iter().find(|e| e.key == "W").map(|e| &e.value) {
         Some(PdfObject::Array(a)) if a.len() >= 3 => [a[0].as_i64().unwrap_or(0).max(0) as usize, a[1].as_i64().unwrap_or(0).max(0) as usize, a[2].as_i64().unwrap_or(0).max(0) as usize],
-        _ => return malformed("xref stream missing /W").await,
+        _ => return malformed("xref stream missing /W"),
     };
-    let size = dict_ref_i64(&dict, "Size").await.unwrap_or(0);
+    let size = dict_ref_i64(&dict, "Size").unwrap_or(0);
     let index: Vec<i64> = match dict.iter().find(|e| e.key == "Index").map(|e| &e.value) {
         Some(PdfObject::Array(a)) => a.iter().filter_map(|o| o.as_i64()).collect(),
         _ => vec![0, size],
@@ -871,7 +871,7 @@ async fn parse_xref_stream(data: &[u8], offset: usize) -> PResult<(HashMap<u32, 
             if pos + row_bytes > decoded.len() {
                 break;
             }
-            let (ty, f1, f2) = decode_xref_row(&decoded[pos..pos + row_bytes], w).await;
+            let (ty, f1, f2) = decode_xref_row(&decoded[pos..pos + row_bytes], w);
             pos += row_bytes;
             let num = start + i;
             match ty {
@@ -891,7 +891,7 @@ async fn parse_xref_stream(data: &[u8], offset: usize) -> PResult<(HashMap<u32, 
 /// 🧵 Follows `/Prev` (and hybrid `/XRefStm`) chains, merging older sections without overwriting
 /// newer entries. Falls back to a brute-force `N G obj` scan (requirement #2) if the structured
 /// chain can't even be started.
-async fn build_xref(data: &[u8], start_offset: usize) -> XrefState {
+fn build_xref(data: &[u8], start_offset: usize) -> XrefState {
     let mut entries: HashMap<u32, XrefEntry> = HashMap::new();
     let mut trailer: Vec<PdfDictEntry> = Vec::new();
     let mut visited = HashSet::new();
@@ -902,12 +902,12 @@ async fn build_xref(data: &[u8], start_offset: usize) -> XrefState {
             break;
         }
         let parsed = {
-            let mut l = Lexer::new(data).await.at(off);
-            l.await.skip_ws();
-            if l.await.starts_with(b"xref").await {
-                parse_classic_xref(data, off).await
+            let mut l = Lexer::new(data).at(off);
+            l.skip_ws();
+            if l.starts_with(b"xref") {
+                parse_classic_xref(data, off)
             } else {
-                parse_xref_stream(data, off).await
+                parse_xref_stream(data, off)
             }
         };
         let Ok((sect_entries, sect_trailer)) = parsed else { break };
@@ -919,14 +919,14 @@ async fn build_xref(data: &[u8], start_offset: usize) -> XrefState {
             trailer = sect_trailer.clone();
         }
         // Hybrid: classic table's trailer may point at a companion xref STREAM via /XRefStm.
-        if let Some(stm_off) = dict_ref_i64(&sect_trailer, "XRefStm").await {
-            if let Ok((stm_entries, _)) = parse_xref_stream(data, stm_off as usize).await {
+        if let Some(stm_off) = dict_ref_i64(&sect_trailer, "XRefStm") {
+            if let Ok((stm_entries, _)) = parse_xref_stream(data, stm_off as usize) {
                 for (k, v) in stm_entries {
                     entries.entry(k).or_insert(v);
                 }
             }
         }
-        cursor = dict_ref_i64(&sect_trailer, "Prev").await.map(|p| p as usize);
+        cursor = dict_ref_i64(&sect_trailer, "Prev").map(|p| p as usize);
     }
     if !any_structured || entries.is_empty() {
         // 🩹 Brute-force fallback (requirement #2).
@@ -937,7 +937,7 @@ async fn build_xref(data: &[u8], start_offset: usize) -> XrefState {
         if trailer.is_empty() {
             // Reconstruct a minimal trailer: find an object with /Type /Catalog to use as Root.
             for (num, (id, off)) in &scanned {
-                if let Ok((_, obj)) = parse_indirect_at(data, *off).await {
+                if let Ok((_, obj)) = parse_indirect_at(data, *off) {
                     if obj.dict_get("Type").and_then(|v| v.as_name()) == Some("Catalog") {
                         trailer = vec![PdfDictEntry { key: "Root".into(), value: PdfObject::Ref(*id) }];
                         let _ = num;
@@ -963,42 +963,42 @@ struct Resolver<'a> {
 }
 
 impl<'a> Resolver<'a> {
-    async fn new(data: &'a [u8], xref: HashMap<u32, XrefEntry>) -> Self {
+    fn new(data: &'a [u8], xref: HashMap<u32, XrefEntry>) -> Self {
         Self { data, xref, cache: HashMap::new(), objstm_cache: HashMap::new(), objstm_bytes: HashMap::new() }
     }
 
-    async fn resolve(&mut self, num: u32) -> Option<PdfObject> {
+    fn resolve(&mut self, num: u32) -> Option<PdfObject> {
         if let Some(v) = self.cache.get(&num) {
             return Some(v.clone());
         }
         let entry = *self.xref.get(&num)?;
         let value = match entry {
-            XrefEntry::Normal { offset, .. } => parse_indirect_at(self.data, offset).await.ok()?.1,
-            XrefEntry::Compressed { stream_num, index } => self.resolve_compressed(stream_num, index).await?,
+            XrefEntry::Normal { offset, .. } => parse_indirect_at(self.data, offset).ok()?.1,
+            XrefEntry::Compressed { stream_num, index } => self.resolve_compressed(stream_num, index)?,
         };
         self.cache.insert(num, value.clone());
         Some(value)
     }
 
-    async fn resolve_compressed(&mut self, stream_num: u32, index: u32) -> Option<PdfObject> {
+    fn resolve_compressed(&mut self, stream_num: u32, index: u32) -> Option<PdfObject> {
         if !self.objstm_bytes.contains_key(&stream_num) {
             let stream_entry = *self.xref.get(&stream_num)?;
             let XrefEntry::Normal { offset, .. } = stream_entry else { return None };
-            let (_, obj) = parse_indirect_at(self.data, offset).await.ok()?;
+            let (_, obj) = parse_indirect_at(self.data, offset).ok()?;
             let PdfObject::Stream { dict, data, .. } = &obj else { return None };
-            let (decoded, _) = decode_stream(dict, data).await.ok()?;
-            let n = dict_ref_i64(dict, "N").await.unwrap_or(0) as usize;
-            let first = dict_ref_i64(dict, "First").await.unwrap_or(0) as usize;
-            let mut lex = Lexer::new(&decoded).await;
+            let (decoded, _) = decode_stream(dict, data).ok()?;
+            let n = dict_ref_i64(dict, "N").unwrap_or(0) as usize;
+            let first = dict_ref_i64(dict, "First").unwrap_or(0) as usize;
+            let mut lex = Lexer::new(&decoded);
             let mut pairs = Vec::with_capacity(n);
             for _ in 0..n {
-                lex.skip_ws().await;
-                let on = match lex.parse_number().await {
+                lex.skip_ws();
+                let on = match lex.parse_number() {
                     Ok(PdfObject::Int(i)) => i as u32,
                     _ => break,
                 };
-                lex.skip_ws().await;
-                let oo = match lex.parse_number().await {
+                lex.skip_ws();
+                let oo = match lex.parse_number() {
                     Ok(PdfObject::Int(i)) => i as usize,
                     _ => break,
                 };
@@ -1010,13 +1010,13 @@ impl<'a> Resolver<'a> {
         let pairs = self.objstm_cache.get(&stream_num)?;
         let (_, local_off) = *pairs.get(index as usize)?;
         let bytes = self.objstm_bytes.get(&stream_num)?;
-        let mut lex = Lexer::new(bytes).await.at(local_off);
-        lex.await.parse_object().await.ok()
+        let mut lex = Lexer::new(bytes).at(local_off);
+        lex.parse_object().ok()
     }
 
     /// 📚️ Materializes every entry reachable from the xref table into `PdfIndirectObject`s
     /// (requirement #10: full object graph in the typed model, for lossless retention).
-    async fn resolve_all(&mut self) -> PResult<Vec<PdfIndirectObject>> {
+    fn resolve_all(&mut self) -> PResult<Vec<PdfIndirectObject>> {
         let mut nums: Vec<u32> = self.xref.keys().copied().collect();
         nums.sort_by_key(|num| match self.xref.get(num) {
             Some(XrefEntry::Normal { offset, .. }) => (*offset, 0),
@@ -1031,12 +1031,12 @@ impl<'a> Resolver<'a> {
         });
         let mut out = Vec::with_capacity(nums.len());
         for num in nums {
-            if let Some(value) = self.resolve(num).await {
+            if let Some(value) = self.resolve(num) {
                 let gen = match self.xref.get(&num) {
                     Some(XrefEntry::Normal { gen, .. }) => *gen,
                     _ => 0,
                 };
-                out.push(PdfIndirectObject { id: ObjRef { num, gen }, value: normalize_pdf_object(value).await? });
+                out.push(PdfIndirectObject { id: ObjRef { num, gen }, value: normalize_pdf_object(value)? });
             }
         }
         Ok(out)
@@ -1045,12 +1045,12 @@ impl<'a> Resolver<'a> {
 
 /// 🧹 Converts parsed COS into semantic snapshot form. Filter declarations describe the
 /// native encoding and are removed after their decoded value has been materialized.
-async fn normalize_pdf_object(value: PdfObject) -> PResult<PdfObject> {
+fn normalize_pdf_object(value: PdfObject) -> PResult<PdfObject> {
     match value {
         PdfObject::Array(items) => Ok(PdfObject::Array(items.into_iter().map(normalize_pdf_object).collect::<PResult<_>>()?)),
         PdfObject::Dict(entries) => Ok(PdfObject::Dict(entries.into_iter().map(|entry| Ok(PdfDictEntry { key: entry.key, value: normalize_pdf_object(entry.value)? })).collect::<PResult<_>>()?)),
         PdfObject::Stream { dict, data, .. } => {
-            let (decoded, filters) = decode_stream(&dict, &data).await?;
+            let (decoded, filters) = decode_stream(&dict, &data)?;
             let dict = dict.into_iter().filter(|entry| !matches!(entry.key.as_str(), "Filter" | "F" | "DecodeParms" | "DP")).map(|entry| Ok(PdfDictEntry { key: entry.key, value: normalize_pdf_object(entry.value)? })).collect::<PResult<_>>()?;
             Ok(PdfObject::Stream { dict, data: decoded, filters })
         }
@@ -1063,7 +1063,7 @@ async fn normalize_pdf_object(value: PdfObject) -> PResult<PdfObject> {
 /// 🔤️ WinAnsiEncoding (ISO 32000-1 Annex D.2 — matches cp1252 with a handful of undefined codes
 /// mapping to bullet per spec) for codes 0x20-0xFF. ASCII range is identical to Unicode; this is
 /// the common default `/Encoding` for non-symbolic TrueType/Type1 fonts.
-async fn win_ansi(code: u8) -> Option<char> {
+fn win_ansi(code: u8) -> Option<char> {
     if (0x20..=0x7E).contains(&code) {
         return Some(code as char);
     }
@@ -1106,7 +1106,7 @@ async fn win_ansi(code: u8) -> Option<char> {
 /// common Latin-1 supplement (incl. German umlauts/ß — the bachelor-thesis fixture needs these),
 /// standard ligatures, and the two spec-sanctioned programmatic forms (`uniXXXX`, `uXXXX`).
 /// Anything outside this table resolves to `None` -> the caller emits honest U+FFFD.
-async fn agl_lookup(name: &str) -> Option<&'static str> {
+fn agl_lookup(name: &str) -> Option<&'static str> {
     if let Some(rest) = name.strip_prefix("uni") {
         if rest.len() == 4 && rest.chars().all(|c| c.is_ascii_hexdigit()) {
             if let Ok(v) = u32::from_str_radix(rest, 16) {
@@ -1278,14 +1278,14 @@ async fn agl_lookup(name: &str) -> Option<&'static str> {
 /// 🧩 Resolves a `/Differences`-remapped or ligature glyph name to a real Unicode string,
 /// including underscore-joined names like `"f_i"` (seen in the bachelor-thesis fixture) by
 /// resolving each part -- never partially fabricates: any unresolved part fails the whole name.
-async fn glyph_name_to_unicode(name: &str) -> Option<String> {
-    if let Some(direct) = agl_lookup(name).await {
+fn glyph_name_to_unicode(name: &str) -> Option<String> {
+    if let Some(direct) = agl_lookup(name) {
         return Some(direct.to_string());
     }
     if name.contains('_') {
         let mut out = String::new();
         for part in name.split('_') {
-            out.push_str(agl_lookup(part).await?);
+            out.push_str(agl_lookup(part)?);
         }
         return Some(out);
     }
@@ -1301,7 +1301,7 @@ struct FontDecoder {
 }
 
 impl FontDecoder {
-    async fn decode(&self, bytes: &[u8]) -> String {
+    fn decode(&self, bytes: &[u8]) -> String {
         let mut out = String::new();
         let w = self.byte_width.max(1);
         for chunk in bytes.chunks(w) {
@@ -1330,10 +1330,10 @@ impl FontDecoder {
 
 /// 🗺️ Parses a `/ToUnicode` CMap stream body (bfchar + bfrange, both scalar-dst and array-dst
 /// forms) — ISO 32000-1 §9.10.3. Byte width inferred from the first `codespacerange` entry.
-async fn parse_tounicode_cmap(text: &[u8]) -> FontDecoder {
+fn parse_tounicode_cmap(text: &[u8]) -> FontDecoder {
     let mut fd = FontDecoder { byte_width: 2, chars: HashMap::new(), ranges: Vec::new() };
     let s = String::from_utf8_lossy(text);
-    if let Some(csr) = extract_block(&s, "begincodespacerange", "endcodespacerange").await {
+    if let Some(csr) = extract_block(&s, "begincodespacerange", "endcodespacerange") {
         if let Some(first_hex) = csr.split_whitespace().next() {
             let hexlen = first_hex.trim_matches(|c| c == '<' || c == '>').len();
             if hexlen > 0 {
@@ -1345,8 +1345,8 @@ async fn parse_tounicode_cmap(text: &[u8]) -> FontDecoder {
         let toks: Vec<&str> = block.split_whitespace().collect();
         let mut i = 0;
         while i + 1 < toks.len() {
-            if let Some(src) = hex_tok(toks[i]).await {
-                if let Some(u) = hex_to_unicode_string(toks[i + 1]).await {
+            if let Some(src) = hex_tok(toks[i]) {
+                if let Some(u) = hex_to_unicode_string(toks[i + 1]) {
                     fd.chars.insert(src, u);
                 }
             }
@@ -1361,7 +1361,7 @@ async fn parse_tounicode_cmap(text: &[u8]) -> FontDecoder {
             let hi = hex_tok(toks.get(i + 1).copied().unwrap_or(""));
             match (lo, hi, toks.get(i + 2)) {
                 (Some(lo), Some(hi), Some(dst)) if dst.starts_with('<') => {
-                    if let Some(dst_v) = hex_tok(dst).await {
+                    if let Some(dst_v) = hex_tok(dst) {
                         fd.ranges.push((lo, hi, dst_v));
                     }
                     i += 3;
@@ -1378,7 +1378,7 @@ async fn parse_tounicode_cmap(text: &[u8]) -> FontDecoder {
     fd
 }
 
-async fn extract_block<'a>(s: &'a str, start: &str, end: &str) -> Option<&'a str> {
+fn extract_block<'a>(s: &'a str, start: &str, end: &str) -> Option<&'a str> {
     let i = s.find(start)? + start.len();
     let j = s[i..].find(end)? + i;
     Some(&s[i..j])
@@ -1394,14 +1394,14 @@ fn extract_all_blocks<'a>(s: &'a str, start: &str, end: &str) -> Vec<&'a str> {
     }
     out
 }
-async fn hex_tok(tok: &str) -> Option<u32> {
+fn hex_tok(tok: &str) -> Option<u32> {
     let inner = tok.trim_start_matches('<').trim_end_matches('>');
     if inner.is_empty() {
         return None;
     }
     u32::from_str_radix(inner, 16).ok()
 }
-async fn hex_to_unicode_string(hex: &str) -> Option<String> {
+fn hex_to_unicode_string(hex: &str) -> Option<String> {
     let inner = hex.trim_start_matches('<').trim_end_matches('>');
     let bytes: Vec<u8> = (0..inner.len()).step_by(2).filter_map(|i| inner.get(i..i + 2)).filter_map(|h| u8::from_str_radix(h, 16).ok()).collect();
     let mut out = String::new();
@@ -1420,7 +1420,7 @@ async fn hex_to_unicode_string(hex: &str) -> Option<String> {
 /// `/Encoding` (base name or `/Differences`) resolved through AGL, else an honest ASCII-only
 /// default (documented scope cut — StandardEncoding's upper range isn't assumed without more
 /// info, so unmapped codes there stay U+FFFD rather than guessing).
-async fn build_font_decoder(font_dict: &PdfObject, resolve: &mut dyn FnMut(u32) -> Option<PdfObject>) -> FontDecoder {
+fn build_font_decoder(font_dict: &PdfObject, resolve: &mut dyn FnMut(u32) -> Option<PdfObject>) -> FontDecoder {
     let is_type0 = font_dict.dict_get("Subtype").and_then(|v| v.as_name()) == Some("Type0");
     if let Some(tu) = font_dict.dict_get("ToUnicode") {
         let stream = match tu {
@@ -1428,8 +1428,8 @@ async fn build_font_decoder(font_dict: &PdfObject, resolve: &mut dyn FnMut(u32) 
             other => Some(other.clone()),
         };
         if let Some(PdfObject::Stream { dict, data, .. }) = stream {
-            if let Ok((decoded, _)) = decode_stream(&dict, &data).await {
-                return parse_tounicode_cmap(&decoded).await;
+            if let Ok((decoded, _)) = decode_stream(&dict, &data) {
+                return parse_tounicode_cmap(&decoded);
             }
         }
     }
@@ -1448,7 +1448,7 @@ async fn build_font_decoder(font_dict: &PdfObject, resolve: &mut dyn FnMut(u32) 
     };
     if base_name.as_deref() == Some("WinAnsiEncoding") || (base_name.is_none() && differences.is_none()) {
         for code in 0u32..=0xFF {
-            if let Some(c) = win_ansi(code as u8).await {
+            if let Some(c) = win_ansi(code as u8) {
                 fd.chars.insert(code, c.to_string());
             }
         }
@@ -1459,7 +1459,7 @@ async fn build_font_decoder(font_dict: &PdfObject, resolve: &mut dyn FnMut(u32) 
             match item {
                 PdfObject::Int(i) => cur = i as u32,
                 PdfObject::Name(name) => {
-                    if let Some(u) = glyph_name_to_unicode(&name).await {
+                    if let Some(u) = glyph_name_to_unicode(&name) {
                         fd.chars.insert(cur, u);
                     } else {
                         fd.chars.remove(&cur);
@@ -1488,9 +1488,9 @@ enum ContentOperand {
 /// 🖋️ Extracts shown text from a content stream: `Tj`/`'`/`"`/`TJ` inside `BT..ET`, resolving
 /// font encoding per the currently-selected `Tf` resource (requirement #6). Never fabricates —
 /// unresolvable codes come back as U+FFFD from `FontDecoder::decode` itself.
-async fn extract_text(content: &[u8], resources: &PdfObject, resolve: &mut dyn FnMut(u32) -> Option<PdfObject>) -> String {
+fn extract_text(content: &[u8], resources: &PdfObject, resolve: &mut dyn FnMut(u32) -> Option<PdfObject>) -> String {
     let mut out = String::new();
-    let mut lex = Lexer::new(content).await;
+    let mut lex = Lexer::new(content);
     let mut operands: Vec<ContentOperand> = Vec::new();
     let mut in_text = false;
     let mut font_cache: HashMap<String, FontDecoder> = HashMap::new();
@@ -1510,48 +1510,48 @@ async fn extract_text(content: &[u8], resources: &PdfObject, resolve: &mut dyn F
     };
 
     loop {
-        lex.skip_ws().await;
+        lex.skip_ws();
         let Some(b) = lex.data.get(lex.pos).copied() else { break };
         match b {
             b'/' => {
-                if let Ok(PdfObject::Name(n)) = lex.parse_name().await {
+                if let Ok(PdfObject::Name(n)) = lex.parse_name() {
                     operands.push(ContentOperand::Name(n));
                 }
             }
             b'(' => {
-                if let Ok(PdfObject::Str(s)) = lex.parse_literal_string().await {
+                if let Ok(PdfObject::Str(s)) = lex.parse_literal_string() {
                     operands.push(ContentOperand::Str(s));
                 }
             }
-            b'<' if lex.peek_at(1).await != Some(b'<') => {
-                if let Ok(PdfObject::Str(s)) = lex.parse_hex_string().await {
+            b'<' if lex.peek_at(1) != Some(b'<') => {
+                if let Ok(PdfObject::Str(s)) = lex.parse_hex_string() {
                     operands.push(ContentOperand::Str(s));
                 }
             }
             b'<' => {
-                let _ = lex.parse_dict_or_stream(false).await;
+                let _ = lex.parse_dict_or_stream(false);
             } // marked-content property list; skip
             b'[' => {
                 lex.pos += 1;
                 let mut arr = Vec::new();
                 loop {
-                    lex.skip_ws().await;
+                    lex.skip_ws();
                     match lex.data.get(lex.pos).copied() {
                         Some(b']') => {
                             lex.pos += 1;
                             break;
                         }
                         Some(b'(') => {
-                            if let Ok(PdfObject::Str(s)) = lex.parse_literal_string().await {
+                            if let Ok(PdfObject::Str(s)) = lex.parse_literal_string() {
                                 arr.push(ContentOperand::Str(s));
                             }
                         }
                         Some(b'<') => {
-                            if let Ok(PdfObject::Str(s)) = lex.parse_hex_string().await {
+                            if let Ok(PdfObject::Str(s)) = lex.parse_hex_string() {
                                 arr.push(ContentOperand::Str(s));
                             }
                         }
-                        Some(c) if c == b'-' || c == b'+' || c == b'.' || c.is_ascii_digit() => match lex.parse_number().await {
+                        Some(c) if c == b'-' || c == b'+' || c == b'.' || c.is_ascii_digit() => match lex.parse_number() {
                             Ok(PdfObject::Int(_)) => arr.push(ContentOperand::Num),
                             Ok(PdfObject::Real(real)) => {
                                 if real.to_f64().is_some() {
@@ -1568,7 +1568,7 @@ async fn extract_text(content: &[u8], resources: &PdfObject, resolve: &mut dyn F
                 }
                 operands.push(ContentOperand::Array(arr));
             }
-            c if c == b'-' || c == b'+' || c == b'.' || c.is_ascii_digit() => match lex.parse_number().await {
+            c if c == b'-' || c == b'+' || c == b'.' || c.is_ascii_digit() => match lex.parse_number() {
                 Ok(PdfObject::Int(_)) => operands.push(ContentOperand::Num),
                 Ok(PdfObject::Real(r)) => {
                     if r.to_f64().is_some() {
@@ -1578,10 +1578,10 @@ async fn extract_text(content: &[u8], resources: &PdfObject, resolve: &mut dyn F
                 _ => {}
             },
             b'%' => {
-                lex.skip_ws().await;
+                lex.skip_ws();
             }
             _ => {
-                let op = lex.read_regular_run().await;
+                let op = lex.read_regular_run();
                 if op.is_empty() {
                     lex.pos += 1;
                     continue;
@@ -1599,7 +1599,7 @@ async fn extract_text(content: &[u8], resources: &PdfObject, resolve: &mut dyn F
                             current_font = Some(n.clone());
                             if !font_cache.contains_key(n) {
                                 if let Some(fd) = font_dict_for(n, resources, resolve) {
-                                    font_cache.insert(n.clone(), build_font_decoder(&fd, resolve).await);
+                                    font_cache.insert(n.clone(), build_font_decoder(&fd, resolve));
                                 }
                             }
                         }
@@ -1666,7 +1666,7 @@ struct Inherited {
     rotate: i32,
 }
 
-async fn as_box(v: &PdfObject) -> Option<[f64; 4]> {
+fn as_box(v: &PdfObject) -> Option<[f64; 4]> {
     let a = v.as_array()?;
     if a.len() < 4 {
         return None;
@@ -1677,7 +1677,7 @@ async fn as_box(v: &PdfObject) -> Option<[f64; 4]> {
 /// 🌳️ Walks `/Root -> /Pages -> /Kids`, applying inherited `/Resources`/`/MediaBox`/`/CropBox`/
 /// `/Rotate` down to `/Page` leaves (requirement #5), extracting each leaf's text (requirement
 /// #6). Cycle-guarded — malformed files sometimes have self-referential kids.
-async fn walk_page_tree(node_ref: ObjRef, resolve: &mut dyn FnMut(u32) -> Option<PdfObject>, inherited: &Inherited, visited: &mut HashSet<u32>, out: &mut Vec<PdfPage>) {
+fn walk_page_tree(node_ref: ObjRef, resolve: &mut dyn FnMut(u32) -> Option<PdfObject>, inherited: &Inherited, visited: &mut HashSet<u32>, out: &mut Vec<PdfPage>) {
     if !visited.insert(node_ref.num) {
         return;
     }
@@ -1728,7 +1728,7 @@ async fn walk_page_tree(node_ref: ObjRef, resolve: &mut dyn FnMut(u32) -> Option
         let mut combined = Vec::new();
         for r in refs {
             if let Some(PdfObject::Stream { dict, data, .. }) = resolve(r.num) {
-                if let Ok((decoded, _)) = decode_stream(&dict, &data).await {
+                if let Ok((decoded, _)) = decode_stream(&dict, &data) {
                     if !combined.is_empty() {
                         combined.push(b' ');
                     }
@@ -1736,7 +1736,7 @@ async fn walk_page_tree(node_ref: ObjRef, resolve: &mut dyn FnMut(u32) -> Option
                 }
             }
         }
-        text = extract_text(&combined, &resources, resolve).await;
+        text = extract_text(&combined, &resources, resolve);
     }
     out.push(PdfPage { media_box, crop_box: here.crop_box, rotate: here.rotate, text });
 }
@@ -1745,32 +1745,32 @@ async fn walk_page_tree(node_ref: ObjRef, resolve: &mut dyn FnMut(u32) -> Option
 //#region 🔖️Decode
 /// 📥️ Real decode (requirements #1-#6). Returns `Unsupported` if `/Encrypt` is present
 /// (requirement #4) — never guesses a password or produces garbage.
-pub async fn decode_pdf(data: &[u8]) -> PResult<PdfSnapshot> {
+pub fn decode_pdf(data: &[u8]) -> PResult<PdfSnapshot> {
     if data.len() < 5 || &data[0..5] != b"%PDF-" {
         return Err(PdfEngineError::NotPdf);
     }
     let header_end = data.iter().take(32).position(|&b| b == b'\n' || b == b'\r').unwrap_or(data.len().min(16));
     let declared_version = String::from_utf8_lossy(&data[5..header_end.max(5)]).trim().to_string();
 
-    let startxref_pos = find_last_subslice(data, b"startxref").await.ok_or(PdfEngineError::Malformed("missing startxref".into()));
+    let startxref_pos = find_last_subslice(data, b"startxref").ok_or(PdfEngineError::Malformed("missing startxref".into()));
     let xref = match startxref_pos {
         Ok(pos) => {
-            let mut lex = Lexer::new(data).await.at(pos + b"startxref".len());
-            lex.await.skip_ws();
-            match lex.await.parse_number().await {
+            let mut lex = Lexer::new(data).at(pos + b"startxref".len());
+            lex.skip_ws();
+            match lex.parse_number() {
                 Ok(PdfObject::Int(off)) if off >= 0 && (off as usize) < data.len() => build_xref(data, off as usize),
                 _ => build_xref(data, data.len()), // forces brute-force fallback
             }
         }
         Err(_) => build_xref(data, data.len()),
-    }.await;
+    };
 
     if xref.trailer.iter().any(|e| e.key == "Encrypt") {
         return Err(PdfEngineError::Unsupported("/Encrypt present -- encrypted PDFs are not read".into()));
     }
 
-    let mut resolver = Resolver::new(data, xref.entries.clone()).await;
-    let mut resolve = |num: u32| semio_framework_plugin::resolve_ready(resolver.resolve(num));
+    let mut resolver = Resolver::new(data, xref.entries.clone());
+    let mut resolve = |num: u32| resolver.resolve(num);
 
     let root_ref = xref.trailer.iter().find(|e| e.key == "Root").and_then(|e| e.value.as_ref());
     let mut pages = Vec::new();
@@ -1802,22 +1802,22 @@ pub async fn decode_pdf(data: &[u8]) -> PResult<PdfSnapshot> {
         })
         .unwrap_or_default();
 
-    let objects = resolver.resolve_all().await?;
+    let objects = resolver.resolve_all()?;
     let trailer = xref.trailer.clone();
 
     Ok(PdfSnapshot { schema: STDIO_PDF17_DOCUMENT_SCHEMA.into(), declared_version, pages, info, objects, trailer })
 }
 
-async fn pdf_string_to_text(v: &PdfObject) -> Option<String> {
+fn pdf_string_to_text(v: &PdfObject) -> Option<String> {
     let PdfObject::Str(bytes) = v else { return None };
     if bytes.len() >= 2 && bytes[0] == 0xFE && bytes[1] == 0xFF {
         let units: Vec<u16> = bytes[2..].chunks(2).filter(|c| c.len() == 2).map(|c| ((c[0] as u16) << 8) | c[1] as u16).collect();
         return Some(String::from_utf16_lossy(&units));
     }
-    Some(bytes.iter().map(|&b| semio_framework_plugin::resolve_ready(win_ansi(b)).unwrap_or('\u{FFFD}')).collect())
+    Some(bytes.iter().map(|&b| win_ansi(b).unwrap_or('\u{FFFD}')).collect())
 }
 
-async fn find_last_subslice(data: &[u8], needle: &[u8]) -> Option<usize> {
+fn find_last_subslice(data: &[u8], needle: &[u8]) -> Option<usize> {
     if needle.len() > data.len() {
         return None;
     }
@@ -1828,7 +1828,7 @@ async fn find_last_subslice(data: &[u8], needle: &[u8]) -> Option<usize> {
 //#region 🔖️Encode
 const TOUNICODE_IDENTITY_CMAP: &str = "/CIDInit /ProcSet findresource begin\n12 dict begin\nbegincmap\n1 begincodespacerange\n<0000> <FFFF>\nendcodespacerange\n1 beginbfrange\n<0000> <FFFF> <0000>\nendbfrange\nendcmap\nend\nend\n";
 
-async fn hex_string_utf16(s: &str) -> String {
+fn hex_string_utf16(s: &str) -> String {
     let mut out = String::from("<");
     for c in s.chars() {
         let cp = c as u32;
@@ -1842,7 +1842,7 @@ async fn hex_string_utf16(s: &str) -> String {
     out
 }
 
-async fn pdf_text_string(s: &str) -> String {
+fn pdf_text_string(s: &str) -> String {
     if s.is_ascii() {
         let escaped: String = s
             .chars()
@@ -1864,7 +1864,7 @@ async fn pdf_text_string(s: &str) -> String {
     }
 }
 
-async fn build_content_ops(text: &str) -> String {
+fn build_content_ops(text: &str) -> String {
     if text.is_empty() {
         return String::new();
     }
@@ -1880,7 +1880,7 @@ async fn build_content_ops(text: &str) -> String {
     ops
 }
 
-async fn write_pdf_name(out: &mut Vec<u8>, name: &str) {
+fn write_pdf_name(out: &mut Vec<u8>, name: &str) {
     out.push(b'/');
     for character in name.chars() {
         let value = character as u32;
@@ -1899,7 +1899,7 @@ async fn write_pdf_name(out: &mut Vec<u8>, name: &str) {
     }
 }
 
-async fn write_pdf_dict(out: &mut Vec<u8>, entries: &[PdfDictEntry], stream_length: Option<usize>, top_level: bool, illustrator: bool) {
+fn write_pdf_dict(out: &mut Vec<u8>, entries: &[PdfDictEntry], stream_length: Option<usize>, top_level: bool, illustrator: bool) {
     let stream = stream_length.is_some();
     let compact_names = entries.first().is_some_and(|entry| entry.key == "Type" && matches!(&entry.value, PdfObject::Name(name) if name == "Group"));
     let inline_action = entries.iter().any(|entry| entry.key == "S" && matches!(&entry.value, PdfObject::Name(name) if name == "GoTo"));
@@ -1946,17 +1946,17 @@ async fn write_pdf_dict(out: &mut Vec<u8>, entries: &[PdfDictEntry], stream_leng
             match (&entry.value, stream_length) {
                 (PdfObject::Int(_), Some(length)) if unpadded_stream_length => out.extend_from_slice(length.to_string().as_bytes()),
                 (PdfObject::Int(_), Some(length)) => out.extend_from_slice(format!("{length:<10}").as_bytes()),
-                _ => write_pdf_object(out, &entry.value, illustrator).await,
+                _ => write_pdf_object(out, &entry.value, illustrator),
             }
         } else {
             match (&entry.value, inline_action && entry.key == "D") {
-                (PdfObject::Str(bytes), true) => write_pdf_string(out, bytes, true).await,
-                (PdfObject::Str(bytes), _) if entry.key == "PTEX.FileName" => write_pdf_filename_string(out, bytes).await,
-                (PdfObject::Str(bytes), _) if entry.key == "PTEX.Fullbanner" => write_pdf_fullbanner_string(out, bytes).await,
-                (PdfObject::Dict(entries), _) if entry.key == "PageLabels" => write_pdf_page_labels(out, entries).await,
-                (PdfObject::Array(items), _) if entry.key == "Filter" && illustrator => write_pdf_array(out, items, false, illustrator).await,
-                (PdfObject::Array(items), _) if entry.key == "Differences" => write_pdf_differences_array(out, items, entries.iter().any(|entry| entry.key == "BaseEncoding"), illustrator).await,
-                (PdfObject::Array(items), _) if matches!(entry.key.as_str(), "Names" | "Limits") => write_pdf_name_tree_array(out, items, illustrator).await,
+                (PdfObject::Str(bytes), true) => write_pdf_string(out, bytes, true),
+                (PdfObject::Str(bytes), _) if entry.key == "PTEX.FileName" => write_pdf_filename_string(out, bytes),
+                (PdfObject::Str(bytes), _) if entry.key == "PTEX.Fullbanner" => write_pdf_fullbanner_string(out, bytes),
+                (PdfObject::Dict(entries), _) if entry.key == "PageLabels" => write_pdf_page_labels(out, entries),
+                (PdfObject::Array(items), _) if entry.key == "Filter" && illustrator => write_pdf_array(out, items, false, illustrator),
+                (PdfObject::Array(items), _) if entry.key == "Differences" => write_pdf_differences_array(out, items, entries.iter().any(|entry| entry.key == "BaseEncoding"), illustrator),
+                (PdfObject::Array(items), _) if matches!(entry.key.as_str(), "Names" | "Limits") => write_pdf_name_tree_array(out, items, illustrator),
                 (PdfObject::Array(items), _) if entry.key == "Kids" => write_pdf_array(out, items, false, illustrator),
                 (PdfObject::Array(items), _) if entry.key == "BBox" => write_pdf_array_spacing(out, items, !matches!(items.first(), Some(PdfObject::Int(0))), false, illustrator),
                 (PdfObject::Array(items), _) if entry.key == "FontBBox" && type3_font => write_pdf_array_spacing(out, items, true, true, illustrator),
@@ -1987,7 +1987,7 @@ async fn write_pdf_dict(out: &mut Vec<u8>, entries: &[PdfDictEntry], stream_leng
     out.extend_from_slice(if multiline || compact_names || compact_uri_action || compact_tt_font || compact_font_resources { b">>" } else { b" >>" });
 }
 
-async fn encode_ascii_hex(data: &[u8]) -> Vec<u8> {
+fn encode_ascii_hex(data: &[u8]) -> Vec<u8> {
     let mut out = Vec::with_capacity(data.len() * 2 + 1);
     for byte in data {
         out.extend_from_slice(format!("{byte:02X}").as_bytes());
@@ -1996,7 +1996,7 @@ async fn encode_ascii_hex(data: &[u8]) -> Vec<u8> {
     out
 }
 
-async fn encode_ascii85(data: &[u8]) -> Vec<u8> {
+fn encode_ascii85(data: &[u8]) -> Vec<u8> {
     let mut out = Vec::new();
     for chunk in data.chunks(4) {
         let mut word = 0u32;
@@ -2018,7 +2018,7 @@ async fn encode_ascii85(data: &[u8]) -> Vec<u8> {
     out
 }
 
-async fn encode_run_length(data: &[u8]) -> Vec<u8> {
+fn encode_run_length(data: &[u8]) -> Vec<u8> {
     let mut out = Vec::new();
     let mut index = 0;
     while index < data.len() {
@@ -2052,7 +2052,7 @@ async fn encode_run_length(data: &[u8]) -> Vec<u8> {
     out
 }
 
-async fn write_pdf_string(out: &mut Vec<u8>, bytes: &[u8], escape_spaces: bool) {
+fn write_pdf_string(out: &mut Vec<u8>, bytes: &[u8], escape_spaces: bool) {
     if bytes.iter().all(|byte| matches!(byte, 0x20..=0x7e)) {
         out.push(b'(');
         for byte in bytes {
@@ -2075,7 +2075,7 @@ async fn write_pdf_string(out: &mut Vec<u8>, bytes: &[u8], escape_spaces: bool) 
     }
 }
 
-async fn write_pdf_filename_string(out: &mut Vec<u8>, bytes: &[u8]) {
+fn write_pdf_filename_string(out: &mut Vec<u8>, bytes: &[u8]) {
     out.push(b'(');
     for byte in bytes {
         if matches!(byte, b'(' | b')' | b'\\') {
@@ -2090,7 +2090,7 @@ async fn write_pdf_filename_string(out: &mut Vec<u8>, bytes: &[u8]) {
     out.push(b')');
 }
 
-async fn write_pdf_fullbanner_string(out: &mut Vec<u8>, bytes: &[u8]) {
+fn write_pdf_fullbanner_string(out: &mut Vec<u8>, bytes: &[u8]) {
     out.push(b'(');
     for byte in bytes {
         if *byte == b'\\' {
@@ -2128,27 +2128,27 @@ fn has_illustrator_piece_info(dict: &[PdfDictEntry]) -> bool {
     dict.iter().any(|entry| entry.key == "PieceInfo" && matches!(&entry.value, PdfObject::Dict(entries) if entries.iter().any(|entry| entry.key == "Illustrator")))
 }
 
-async fn encode_stream_data(data: &[u8], filters: &[PdfStreamFilter], illustrator: bool) -> Vec<u8> {
+fn encode_stream_data(data: &[u8], filters: &[PdfStreamFilter], illustrator: bool) -> Vec<u8> {
     let mut encoded = data.to_vec();
     for filter in filters.iter().rev() {
         encoded = match filter {
             PdfStreamFilter::Flate { predictor } => {
                 let predicted = predictor.as_ref().map_or_else(|| encoded.clone(), |value| encode_predictor(&encoded, value));
                 if illustrator {
-                    crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_compress_illustrator(&predicted).await.expect("logical Illustrator stream is zlib-encodable")
+                    crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_compress_illustrator(&predicted).expect("logical Illustrator stream is zlib-encodable")
                 } else {
-                    crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_compress_deterministic(&predicted).await.expect("logical PDF stream is zlib-encodable")
+                    crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_compress_deterministic(&predicted).expect("logical PDF stream is zlib-encodable")
                 }
             }
-            PdfStreamFilter::AsciiHex => encode_ascii_hex(&encoded).await,
-            PdfStreamFilter::Ascii85 => encode_ascii85(&encoded).await,
-            PdfStreamFilter::RunLength => encode_run_length(&encoded).await,
+            PdfStreamFilter::AsciiHex => encode_ascii_hex(&encoded),
+            PdfStreamFilter::Ascii85 => encode_ascii85(&encoded),
+            PdfStreamFilter::RunLength => encode_run_length(&encoded),
         };
     }
     encoded
 }
 
-async fn stream_serialization_dict(dict: &[PdfDictEntry], filters: &[PdfStreamFilter], illustrator: bool) -> Vec<PdfDictEntry> {
+fn stream_serialization_dict(dict: &[PdfDictEntry], filters: &[PdfStreamFilter], illustrator: bool) -> Vec<PdfDictEntry> {
     let mut entries = dict.to_vec();
     let names = filters
         .iter()
@@ -2193,22 +2193,22 @@ async fn stream_serialization_dict(dict: &[PdfDictEntry], filters: &[PdfStreamFi
     entries
 }
 
-async fn write_pdf_object(out: &mut Vec<u8>, object: &PdfObject, illustrator: bool) {
+fn write_pdf_object(out: &mut Vec<u8>, object: &PdfObject, illustrator: bool) {
     match object {
         PdfObject::Null => out.extend_from_slice(b"null"),
         PdfObject::Bool(value) => out.extend_from_slice(if *value { b"true" } else { b"false" }),
         PdfObject::Int(value) => out.extend_from_slice(value.to_string().as_bytes()),
         PdfObject::Real(value) => out.extend_from_slice(value.to_string().as_bytes()),
-        PdfObject::Str(bytes) => write_pdf_string(out, bytes, false).await,
-        PdfObject::Name(name) => write_pdf_name(out, name).await,
+        PdfObject::Str(bytes) => write_pdf_string(out, bytes, false),
+        PdfObject::Name(name) => write_pdf_name(out, name),
         PdfObject::Array(items) => {
             let padded = !items.is_empty() && (items.iter().all(|item| matches!(item, PdfObject::Name(_))) || items.iter().all(|item| matches!(item, PdfObject::Ref(_))));
             write_pdf_array(out, items, padded, illustrator);
         }
-        PdfObject::Dict(entries) => write_pdf_dict(out, entries, None, false, illustrator).await,
+        PdfObject::Dict(entries) => write_pdf_dict(out, entries, None, false, illustrator),
         PdfObject::Ref(reference) => out.extend_from_slice(format!("{} {} R", reference.num, reference.gen).as_bytes()),
         PdfObject::Stream { dict, data, filters } => {
-            let encoded = encode_stream_data(data, filters, illustrator).await;
+            let encoded = encode_stream_data(data, filters, illustrator);
             let dict = stream_serialization_dict(dict, filters, illustrator);
             write_pdf_dict(out, &dict, Some(encoded.len()), true, illustrator);
             out.extend_from_slice(b"\nstream\n");
@@ -2218,11 +2218,11 @@ async fn write_pdf_object(out: &mut Vec<u8>, object: &PdfObject, illustrator: bo
     }
 }
 
-async fn write_pdf_array(out: &mut Vec<u8>, items: &[PdfObject], padded: bool, illustrator: bool) {
+fn write_pdf_array(out: &mut Vec<u8>, items: &[PdfObject], padded: bool, illustrator: bool) {
     write_pdf_array_spacing(out, items, padded, padded, illustrator);
 }
 
-async fn write_pdf_array_spacing(out: &mut Vec<u8>, items: &[PdfObject], leading: bool, trailing: bool, illustrator: bool) {
+fn write_pdf_array_spacing(out: &mut Vec<u8>, items: &[PdfObject], leading: bool, trailing: bool, illustrator: bool) {
     out.push(b'[');
     if leading {
         out.push(b' ');
@@ -2239,7 +2239,7 @@ async fn write_pdf_array_spacing(out: &mut Vec<u8>, items: &[PdfObject], leading
     out.push(b']');
 }
 
-async fn write_pdf_differences_array(out: &mut Vec<u8>, items: &[PdfObject], leading: bool, illustrator: bool) {
+fn write_pdf_differences_array(out: &mut Vec<u8>, items: &[PdfObject], leading: bool, illustrator: bool) {
     out.push(b'[');
     if leading {
         out.push(b' ');
@@ -2253,21 +2253,21 @@ async fn write_pdf_differences_array(out: &mut Vec<u8>, items: &[PdfObject], lea
     out.push(b']');
 }
 
-async fn write_pdf_name_tree_array(out: &mut Vec<u8>, items: &[PdfObject], illustrator: bool) {
+fn write_pdf_name_tree_array(out: &mut Vec<u8>, items: &[PdfObject], illustrator: bool) {
     out.push(b'[');
     for (index, item) in items.iter().enumerate() {
         if index > 0 {
             out.push(b' ');
         }
         match item {
-            PdfObject::Str(bytes) => write_pdf_string(out, bytes, true).await,
-            value => write_pdf_object(out, value, illustrator).await,
+            PdfObject::Str(bytes) => write_pdf_string(out, bytes, true),
+            value => write_pdf_object(out, value, illustrator),
         }
     }
     out.push(b']');
 }
 
-async fn write_pdf_page_labels(out: &mut Vec<u8>, entries: &[PdfDictEntry]) {
+fn write_pdf_page_labels(out: &mut Vec<u8>, entries: &[PdfDictEntry]) {
     out.extend_from_slice(b"<<");
     for entry in entries {
         write_pdf_name(out, &entry.key);
@@ -2284,29 +2284,29 @@ async fn write_pdf_page_labels(out: &mut Vec<u8>, entries: &[PdfDictEntry]) {
                             }
                             out.extend_from_slice(b">>");
                         }
-                        value => write_pdf_object(out, value, false).await,
+                        value => write_pdf_object(out, value, false),
                     }
                 }
                 out.push(b']');
             }
-            value => write_pdf_object(out, value, false).await,
+            value => write_pdf_object(out, value, false),
         }
     }
     out.extend_from_slice(b">>");
 }
 
-async fn collect_pdf_references(value: &PdfObject, references: &mut Vec<u32>) {
+fn collect_pdf_references(value: &PdfObject, references: &mut Vec<u32>) {
     match value {
         PdfObject::Ref(reference) => references.push(reference.num),
-        PdfObject::Array(items) => items.iter().for_each(|item| semio_framework_plugin::resolve_ready(collect_pdf_references(item, references))),
+        PdfObject::Array(items) => items.iter().for_each(|item| collect_pdf_references(item, references)),
         PdfObject::Dict(entries) | PdfObject::Stream { dict: entries, .. } => {
-            entries.iter().for_each(|entry| semio_framework_plugin::resolve_ready(collect_pdf_references(&entry.value, references)));
+            entries.iter().for_each(|entry| collect_pdf_references(&entry.value, references));
         }
         _ => {}
     }
 }
 
-async fn illustrator_object_ids(objects: &[&PdfIndirectObject]) -> HashSet<u32> {
+fn illustrator_object_ids(objects: &[&PdfIndirectObject]) -> HashSet<u32> {
     let by_id = objects.iter().map(|object| (object.id.num, &object.value)).collect::<HashMap<_, _>>();
     let mut pending = objects
         .iter()
@@ -2328,13 +2328,13 @@ async fn illustrator_object_ids(objects: &[&PdfIndirectObject]) -> HashSet<u32> 
     ids
 }
 
-async fn encode_logical_pdf(snap: &PdfSnapshot) -> PResult<Vec<u8>> {
+fn encode_logical_pdf(snap: &PdfSnapshot) -> PResult<Vec<u8>> {
     let version = if snap.declared_version.is_empty() { "1.7" } else { snap.declared_version.as_str() };
     if !version.bytes().all(|byte| byte.is_ascii_digit() || byte == b'.') {
-        return malformed("declared PDF version is not numeric").await;
+        return malformed("declared PDF version is not numeric");
     }
     let objects = snap.objects.iter().collect::<Vec<_>>();
-    let illustrator_ids = illustrator_object_ids(&objects).await;
+    let illustrator_ids = illustrator_object_ids(&objects);
     let type3_width_ids = objects
         .iter()
         .filter_map(|object| match &object.value {
@@ -2355,7 +2355,7 @@ async fn encode_logical_pdf(snap: &PdfSnapshot) -> PResult<Vec<u8>> {
         let offset = body.len();
         body.extend_from_slice(format!("{} {} obj\n", object.id.num, object.id.gen).as_bytes());
         match &object.value {
-            PdfObject::Dict(entries) => write_pdf_dict(&mut body, entries, None, true, illustrator).await,
+            PdfObject::Dict(entries) => write_pdf_dict(&mut body, entries, None, true, illustrator),
             PdfObject::Array(items) if illustrator => {
                 body.push(b'[');
                 for item in items {
@@ -2363,8 +2363,8 @@ async fn encode_logical_pdf(snap: &PdfSnapshot) -> PResult<Vec<u8>> {
                 }
                 body.push(b']');
             }
-            PdfObject::Array(items) if type3_width_ids.contains(&object.id.num) => write_pdf_array_spacing(&mut body, items, false, true, illustrator).await,
-            value => write_pdf_object(&mut body, value, illustrator).await,
+            PdfObject::Array(items) if type3_width_ids.contains(&object.id.num) => write_pdf_array_spacing(&mut body, items, false, true, illustrator),
+            value => write_pdf_object(&mut body, value, illustrator),
         }
         body.extend_from_slice(b"\nendobj\n");
         offsets[object.id.num as usize] = Some((offset, object.id.gen));
@@ -2409,9 +2409,9 @@ async fn encode_logical_pdf(snap: &PdfSnapshot) -> PResult<Vec<u8>> {
 }
 
 /// 📤️ Deterministically writes the logical COS object graph or an authored page model.
-pub async fn encode_pdf(snap: &PdfSnapshot) -> PResult<Vec<u8>> {
+pub fn encode_pdf(snap: &PdfSnapshot) -> PResult<Vec<u8>> {
     if !snap.objects.is_empty() {
-        return encode_logical_pdf(snap).await;
+        return encode_logical_pdf(snap);
     }
     let mut next_num = 1u32;
     let mut alloc = || {
@@ -2435,7 +2435,8 @@ pub async fn encode_pdf(snap: &PdfSnapshot) -> PResult<Vec<u8>> {
     let mut objects: Vec<(u32, Vec<u8>)> = Vec::new();
 
     if let (Some(fnum), Some(cnum)) = (font_num, cmap_num) {
-        let compressed = crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(TOUNICODE_IDENTITY_CMAP.as_bytes()).await.map_err(|e| PdfEngineError::Malformed(format!("cmap compress: {e}")))?;
+        let compressed =
+            crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(TOUNICODE_IDENTITY_CMAP.as_bytes()).map_err(|e| PdfEngineError::Malformed(format!("cmap compress: {e}")))?;
         let mut cbytes = Vec::new();
         cbytes.extend_from_slice(format!("{cnum} 0 obj\n<< /Length {} /Filter /FlateDecode >>\nstream\n", compressed.len()).as_bytes());
         cbytes.extend_from_slice(&compressed);
@@ -2450,8 +2451,8 @@ pub async fn encode_pdf(snap: &PdfSnapshot) -> PResult<Vec<u8>> {
     for (i, page) in snap.pages.iter().enumerate() {
         let pnum = page_nums[i];
         let cnum = content_nums[i];
-        let ops = build_content_ops(&page.text).await;
-        let compressed = crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(ops.as_bytes()).await.map_err(|e| PdfEngineError::Malformed(format!("content compress: {e}")))?;
+        let ops = build_content_ops(&page.text);
+        let compressed = crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(ops.as_bytes()).map_err(|e| PdfEngineError::Malformed(format!("content compress: {e}")))?;
         let mut cbytes = Vec::new();
         cbytes.extend_from_slice(format!("{cnum} 0 obj\n<< /Length {} /Filter /FlateDecode >>\nstream\n", compressed.len()).as_bytes());
         cbytes.extend_from_slice(&compressed);
@@ -2531,7 +2532,7 @@ pub async fn encode_pdf(snap: &PdfSnapshot) -> PResult<Vec<u8>> {
 //#region 🔖️Sniff
 /// 🔍️ Real magic + version probe (requirement #9): `%PDF-` header, version digits parsed and
 /// reported (not discarded).
-pub async fn sniff_pdf(bytes: &[u8]) -> Option<String> {
+pub fn sniff_pdf(bytes: &[u8]) -> Option<String> {
     if bytes.len() < 8 || &bytes[0..5] != b"%PDF-" {
         return None;
     }
@@ -2552,41 +2553,41 @@ mod tests {
     use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::demo_pdf17_snapshot;
 
     //#region Filters
-    #[semio_framework_async_macros::async_test]
-    async fn ascii_hex_decode_roundtrips() {
+    #[test]
+    fn ascii_hex_decode_roundtrips() {
         assert_eq!(ascii_hex_decode(b"48656C6C6F>"), b"Hello");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn ascii85_decode_classic_vector() {
+    #[test]
+    fn ascii85_decode_classic_vector() {
         let dec = ascii85_decode(b"9jqo^BlbD-BleB1DJ+*+F(f,q").unwrap();
         assert_eq!(&dec, b"Man is distinguished");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn run_length_decode_literal_and_repeat() {
+    #[test]
+    fn run_length_decode_literal_and_repeat() {
         let out = run_length_decode(&[2, b'a', b'b', b'c', 254, b'x', 128]);
         assert_eq!(out, b"abcxxx".to_vec());
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn png_predictor_decode_hand_checked_rows() {
+    #[test]
+    fn png_predictor_decode_hand_checked_rows() {
         let mut raw = vec![0u8, 10, 20, 30, 40];
         raw.extend_from_slice(&[2u8, 5, 5, 5, 5]);
         let dec = png_predictor_decode(&raw, 4, 1, 8).unwrap();
         assert_eq!(dec, vec![10, 20, 30, 40, 15, 25, 35, 45]);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn xref_row_decoding_matches_spec_field_widths() {
+    #[test]
+    fn xref_row_decoding_matches_spec_field_widths() {
         assert_eq!(decode_xref_row(&[1, 0x12, 0x34, 0x00], [1, 2, 1]), (1, 0x1234, 0));
         assert_eq!(decode_xref_row(&[2, 5, 3], [1, 1, 1]), (2, 5, 3));
         assert_eq!(decode_xref_row(&[0x00, 0x10, 0x00], [0, 2, 1]), (1, 0x0010, 0));
     }
     //#endregion Filters
 
-    #[semio_framework_async_macros::async_test]
-    async fn demo_snapshot_round_trip() {
+    #[test]
+    fn demo_snapshot_round_trip() {
         let snap = demo_pdf17_snapshot();
         let text = store::ArtifactDsl::print_dsl(&snap);
         let parsed = <PdfSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
@@ -2660,17 +2661,17 @@ mod tests {
         assert_eq!(restored, base);
         assert_original("mutation inverse native export", encode_pdf(&restored).expect("mutation inverse native export"));
 
-        let analysis = <PdfAnalyzer as ArtifactAnalyzer>::analyze(&[AnalyzeSource::Binary(&original)]);
+        let analysis = <PdfAnalyzer as ArtifactAnalyzer>::analyze(&[AnalyzeSource::Binary(&original)]).await;
         let analyzed = analysis.parts.snapshot.expect("analyzer snapshot");
         assert_original("analyzer native export", encode_pdf(&analyzed).expect("analyzer native export"));
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.pdf", standard: StandardId("1.7"), subset: SubsetId("*") };
         let sources = [ComposeSource { dialect: DIALECT, payload: AnalyzeSource::Binary(&original) }];
-        let composed = PdfComposerComposition::compose(&sources).expect("composer snapshot");
+        let composed = PdfComposerComposition::compose(&sources).await.expect("composer snapshot");
         assert_original("composer native export", encode_pdf(&composed.snapshot).expect("composer native export"));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn pdf_snapshot_and_facets_forbid_native_shadow_state() {
+    #[test]
+    fn pdf_snapshot_and_facets_forbid_native_shadow_state() {
         let rust = include_str!("../🧬️schema/📸️snapshot/🦀️component.rs");
         for forbidden in ["pub physical:", "pub source:", "pub lexical:", "pub native:", "pub raw_bytes:", "pub artifact_source:", "pub document_wire:", "pub raw_filter:"] {
             assert!(!rust.contains(forbidden), "snapshot Rust contains forbidden shadow field {forbidden}");
@@ -2705,20 +2706,20 @@ mod tests {
     /// §2.3's own documented exception), and the fixture-honesty round-trip.
     mod conformance_laws {
         use super::*;
-        use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::{diff, mutations, snapshot};
         use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::diff::{PdfDiff, PdfPathSegment};
         use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::mutations::PdfMutation;
+        use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::{diff, mutations, snapshot};
 
         use protocol::command::DiffAlgebra;
         use protocol::{DiffCodec, OpBinary, OpText};
 
-        async fn oref(num: u32, gen: u16) -> ObjRef {
+        fn oref(num: u32, gen: u16) -> ObjRef {
             ObjRef { num, gen }
         }
 
         /// 🧹 Every `PdfMutation` variant (tags 0-14), incl. object-graph/path-addressing
         /// variants that exercise `pdf-object`'s full recursive grammar (Array/Dict/Ref/Stream).
-        async fn demo_mutation_cases() -> Vec<PdfMutation> {
+        fn demo_mutation_cases() -> Vec<PdfMutation> {
             vec![
                 PdfMutation::NoMutation,
                 PdfMutation::SetSnapshot { snapshot: demo_pdf17_snapshot() },
@@ -2741,7 +2742,7 @@ mod tests {
 
         /// 🧹 A representative `PdfDiff` sweep: every top-level field set, plus every
         /// `PdfValueDiff` tag (Replace/scalar/Array/Dict/Stream) reachable through `objects`.
-        async fn demo_diff_cases() -> Vec<PdfDiff> {
+        fn demo_diff_cases() -> Vec<PdfDiff> {
             let a = demo_pdf17_snapshot();
             let mut b = a.clone();
             b.declared_version = "1.4".into();
@@ -2759,8 +2760,8 @@ mod tests {
 
         /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio` files
         /// parse under the real dialect.
-        #[semio_framework_async_macros::async_test]
-        async fn committed_facet_files_parse() {
+        #[test]
+        fn committed_facet_files_parse() {
             for (label, text) in [("snapshot grammar", snapshot::text::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", mutations::text::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", diff::text::COMPONENT_GRAMMAR_SEMIO)] {
                 let grammar = dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
                 assert_eq!(grammar.dialect, dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
@@ -2771,8 +2772,8 @@ mod tests {
         }
 
         /// ✅️ `grammar_conformance_law`: the snapshot grammar recognizes real `print_dsl` output.
-        #[semio_framework_async_macros::async_test]
-        async fn grammar_conformance_law() {
+        #[test]
+        fn grammar_conformance_law() {
             let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
             let text = store::ArtifactDsl::print_dsl(&demo_pdf17_snapshot());
@@ -2783,8 +2784,8 @@ mod tests {
 
         /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes real `print_op`
         /// output for every demo `PdfMutation` variant.
-        #[semio_framework_async_macros::async_test]
-        async fn ops_grammar_conformance_law() {
+        #[test]
+        fn ops_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(mutations::text::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
             for mutation in demo_mutation_cases() {
@@ -2794,8 +2795,8 @@ mod tests {
         }
 
         /// ✅️ `diff_grammar_conformance_law`: the diff grammar recognizes real `print_diff` output.
-        #[semio_framework_async_macros::async_test]
-        async fn diff_grammar_conformance_law() {
+        #[test]
+        fn diff_grammar_conformance_law() {
             let grammar = dsl::parse_grammar(diff::text::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
             let recognizer = dsl::Recognizer::compile(&grammar);
             for d in demo_diff_cases() {
@@ -2807,8 +2808,8 @@ mod tests {
         /// ✅️ `protocol_walk_law`: `walk_protocol` against REAL bytes for all three facets. The
         /// snapshot protocol declares a `backward` block, so its own walk asserts a bounded
         /// `consumed` (not `== len`) — mutations/diff frames still consume every byte exactly.
-        #[semio_framework_async_macros::async_test]
-        async fn protocol_walk_law() {
+        #[test]
+        fn protocol_walk_law() {
             let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
             let packed = store::ArtifactPack::encode_pack(&demo_pdf17_snapshot());
             let (_, inner) = store::semio_format::unwrap_binary(&packed).expect("unwrap semio envelope");
@@ -2833,8 +2834,8 @@ mod tests {
 
         /// ✅️ `fixture_honesty_law`: the shipped `.dsl.semio`/`.pack.semio` fixtures are GENUINE
         /// `print_dsl`/`encode_pack` output of `demo_pdf17_snapshot()`.
-        #[semio_framework_async_macros::async_test]
-        async fn fixture_honesty_law() {
+        #[test]
+        fn fixture_honesty_law() {
             const FIXTURE_DSL: &str = include_str!("../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
             const FIXTURE_PACK: &[u8] = include_bytes!("../📚️examples/🎬️demo/🖼️assets/🎒️example.pack.semio");
 
@@ -2852,8 +2853,8 @@ mod tests {
         /// ✅️ `op_diff_codec_binary_roundtrip_law`: the upgraded REAL `OpBinary`/`DiffCodec`
         /// binary frames round-trip every demo case (the FG1/FG2 binary-frame lesson's own early
         /// warning — independent of `protocol_walk_law`'s dialect-level check above).
-        #[semio_framework_async_macros::async_test]
-        async fn op_diff_codec_binary_roundtrip_law() {
+        #[test]
+        fn op_diff_codec_binary_roundtrip_law() {
             for mutation in demo_mutation_cases() {
                 let bytes = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op failed for {mutation:?}: {e:?}"));
                 assert_eq!(bytes[0], store::pack_rt::OP_BINARY_FORMAT, "op format byte must be OP_BINARY_FORMAT");
@@ -2871,7 +2872,7 @@ mod tests {
     //#endregion 🔖️ConformanceLaws
 
     //#region WriterReaderRoundTrip
-    async fn sample_snapshot() -> PdfSnapshot {
+    fn sample_snapshot() -> PdfSnapshot {
         PdfSnapshot {
             schema: STDIO_PDF17_DOCUMENT_SCHEMA.into(),
             declared_version: "1.7".into(),
@@ -2885,8 +2886,8 @@ mod tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn encode_then_decode_recovers_pages_and_text_via_identity_tounicode() {
+    #[test]
+    fn encode_then_decode_recovers_pages_and_text_via_identity_tounicode() {
         let snap = sample_snapshot();
         let bytes = encode_pdf(&snap).expect("encode ok");
         assert!(bytes.starts_with(b"%PDF-1.7"));
@@ -2901,8 +2902,8 @@ mod tests {
         assert!(!decoded.pages[0].text.contains('\u{FFFD}'), "our own writer's Identity-H + ToUnicode round trip must never need U+FFFD");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn empty_page_text_produces_no_content_ops_and_still_decodes() {
+    #[test]
+    fn empty_page_text_produces_no_content_ops_and_still_decodes() {
         let snap = PdfSnapshot { pages: vec![PdfPage::new(200.0, 200.0)], ..PdfSnapshot::default() };
         let bytes = encode_pdf(&snap).unwrap();
         let decoded = decode_pdf(&bytes).unwrap();
@@ -2910,22 +2911,22 @@ mod tests {
         assert_eq!(decoded.pages[0].text, "");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn sniff_reports_real_version_not_a_constant() {
+    #[test]
+    fn sniff_reports_real_version_not_a_constant() {
         assert_eq!(sniff_pdf(b"%PDF-1.7\n%stuff"), Some("1.7".to_string()));
         assert_eq!(sniff_pdf(b"%PDF-1.4\n"), Some("1.4".to_string()));
         assert_eq!(sniff_pdf(b"not a pdf"), None);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn decode_rejects_non_pdf() {
+    #[test]
+    fn decode_rejects_non_pdf() {
         assert_eq!(decode_pdf(b"hello world"), Err(PdfEngineError::NotPdf));
     }
     //#endregion WriterReaderRoundTrip
 
     //#region Encryption
-    #[semio_framework_async_macros::async_test]
-    async fn decode_returns_unsupported_for_encrypted_trailer() {
+    #[test]
+    fn decode_returns_unsupported_for_encrypted_trailer() {
         // 🔒 Minimal hand-built classic-xref file whose trailer declares /Encrypt.
         let mut body = Vec::new();
         body.extend_from_slice(b"%PDF-1.7\n");
@@ -2944,8 +2945,8 @@ mod tests {
     //#endregion Encryption
 
     //#region BruteForceFallback
-    #[semio_framework_async_macros::async_test]
-    async fn brute_force_scan_recovers_pages_when_xref_is_missing() {
+    #[test]
+    fn brute_force_scan_recovers_pages_when_xref_is_missing() {
         // 🩹 Same minimal file as the round-trip test, but with its xref/trailer/startxref tail
         // sliced off entirely (simulates a truncated/damaged file) -- requirement #2.
         let snap = sample_snapshot();
@@ -2963,8 +2964,8 @@ mod tests {
     /// PNG-predictor-encoded, Flate-compressed body -- exercises requirement #2's stream-xref +
     /// predictor path end to end (the bachelor-thesis fixture uses a classic table, so this path
     /// needs its own synthetic coverage).
-    #[semio_framework_async_macros::async_test]
-    async fn xref_stream_with_png_predictor_decodes() {
+    #[test]
+    fn xref_stream_with_png_predictor_decodes() {
         let mut body = Vec::new();
         body.extend_from_slice(b"%PDF-1.7\n");
         let o1 = body.len();
@@ -3014,8 +3015,8 @@ mod tests {
     //#endregion XrefStreamAndPredictor
 
     //#region ObjectStreams
-    #[semio_framework_async_macros::async_test]
-    async fn object_stream_compressed_objects_resolve() {
+    #[test]
+    fn object_stream_compressed_objects_resolve() {
         // 📦️ Object 3 (the Page) lives compressed inside an ObjStm (object 4); classic xref
         // marks object 3 as type-2 (compressed) pointing at stream 4, index 0.
         let mut body = Vec::new();
@@ -3057,8 +3058,8 @@ mod tests {
     //#endregion ObjectStreams
 
     //#region Encodings
-    #[semio_framework_async_macros::async_test]
-    async fn differences_and_agl_resolve_german_umlauts_and_ligature() {
+    #[test]
+    fn differences_and_agl_resolve_german_umlauts_and_ligature() {
         // 🔤️ `/Differences [31 /f_i]` style remap seen verbatim in the bachelor-thesis fixture,
         // plus a WinAnsiEncoding-direct umlaut, both resolved via AGL (never fabricated).
         let font = PdfObject::Dict(vec![
@@ -3078,8 +3079,8 @@ mod tests {
         assert_eq!(fd.decode(&[200]), "\u{FFFD}", "unresolvable subset-specific glyph name must emit U+FFFD, never fabricate");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn tounicode_cmap_bfrange_identity_and_bfchar() {
+    #[test]
+    fn tounicode_cmap_bfrange_identity_and_bfchar() {
         let cmap = b"1 begincodespacerange\n<0000> <FFFF>\nendcodespacerange\n1 beginbfrange\n<0001> <0003> <0041>\nendbfrange\n1 beginbfchar\n<0009> <0058>\nendbfchar\n";
         let fd = parse_tounicode_cmap(cmap);
         assert_eq!(fd.byte_width, 2);
@@ -3090,8 +3091,8 @@ mod tests {
     //#endregion Encodings
 
     //#region PageTreeInheritance
-    #[semio_framework_async_macros::async_test]
-    async fn page_tree_inherits_media_box_and_overrides_rotate() {
+    #[test]
+    fn page_tree_inherits_media_box_and_overrides_rotate() {
         let mut body = Vec::new();
         body.extend_from_slice(b"%PDF-1.7\n");
         let o1 = body.len();

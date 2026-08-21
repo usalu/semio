@@ -26,7 +26,7 @@ pub struct SemioTextInference {
 }
 
 impl protocol::Inference<SemioTextSnapshot> for SemioTextInference {
-    async fn infer(snapshot: &SemioTextSnapshot) -> Self {
+    fn infer(snapshot: &SemioTextSnapshot) -> Self {
         Self { profile: compute_semio_text_profile(snapshot) }
     }
 }
@@ -42,13 +42,13 @@ impl Default for SemioTextInference {
 }
 
 impl protocol::InferenceSpec<SemioTextSnapshot> for SemioTextInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.stdio.semio.text.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.semio.text.inference.profile", reads: &["runs"] }]
     }
 }

@@ -25,7 +25,7 @@ pub struct SemioPresentationInference {
 }
 
 impl protocol::Inference<SemioPresentationSnapshot> for SemioPresentationInference {
-    async fn infer(snapshot: &SemioPresentationSnapshot) -> Self {
+    fn infer(snapshot: &SemioPresentationSnapshot) -> Self {
         Self { outline: compute_semio_presentation_outline(snapshot) }
     }
 }
@@ -41,13 +41,13 @@ impl Default for SemioPresentationInference {
 }
 
 impl protocol::InferenceSpec<SemioPresentationSnapshot> for SemioPresentationInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.stdio.semio.presentation.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.semio.presentation.inference.outline", reads: &["masters", "layouts", "slides"] }]
     }
 }

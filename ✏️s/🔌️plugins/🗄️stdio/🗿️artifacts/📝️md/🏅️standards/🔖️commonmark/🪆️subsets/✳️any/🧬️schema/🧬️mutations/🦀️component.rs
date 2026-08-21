@@ -324,30 +324,30 @@ impl protocol::OpBinary for MdMutation {
         match tag {
             0 => Ok(MdMutation::NoMutation),
             1 => {
-                let snapshot = dec_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let snapshot = dec_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", reader.position(), e))?;
                 Ok(MdMutation::SetSnapshot { snapshot })
             }
             2 => {
-                let path = dec_path_bin(&mut reader).map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let index = reader.read_varint_u64().map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
-                let block = dec_block_bin(&mut reader).map_err(|e| malformed("op block", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let path = dec_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
+                let block = dec_block_bin(&mut reader).map_err(|e| malformed("op block", reader.position(), e))?;
                 Ok(MdMutation::InsertBlock { path, index, block })
             }
             3 => {
-                let path = dec_path_bin(&mut reader).map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let index = reader.read_varint_u64().map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
+                let path = dec_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
                 Ok(MdMutation::RemoveBlock { path, index })
             }
             4 => {
-                let path = dec_path_bin(&mut reader).map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let index = reader.read_varint_u64().map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
-                let block = dec_block_bin(&mut reader).map_err(|e| malformed("op block", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let path = dec_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
+                let block = dec_block_bin(&mut reader).map_err(|e| malformed("op block", reader.position(), e))?;
                 Ok(MdMutation::ReplaceBlock { path, index, block })
             }
             5 => {
-                let path = dec_path_bin(&mut reader).map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let index = reader.read_varint_u64().map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
-                let inlines = dec_inline_list_bin(&mut reader).map_err(|e| malformed("op inlines", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let path = dec_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
+                let inlines = dec_inline_list_bin(&mut reader).map_err(|e| malformed("op inlines", reader.position(), e))?;
                 Ok(MdMutation::SetInlines { path, index, inlines })
             }
             other => Err(malformed("op tag", 1, format!("unknown tag {other}"))),

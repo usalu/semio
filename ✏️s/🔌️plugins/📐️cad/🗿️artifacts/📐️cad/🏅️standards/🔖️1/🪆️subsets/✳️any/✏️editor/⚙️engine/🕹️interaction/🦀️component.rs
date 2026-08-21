@@ -535,7 +535,7 @@ async fn commit_primitive_box(kernel: &mut Brep, params: &HashMap<String, Value>
     let height = params.get("height").and_then(|value| value.as_f64()).unwrap_or(1.0);
     let width = (corner_b[0] - corner_a[0]).abs().max(0.05);
     let depth = (corner_b[1] - corner_a[1]).abs().max(0.05);
-    let solid = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.box_prim(width, depth, height.max(0.05))).ok()?;
+    let solid = kernel.box_prim(width, depth, height.max(0.05)).ok()?;
     Some(CadObject {
         id: next_id("object"),
         label: format!("Box {}", label_count + 1),
@@ -564,7 +564,7 @@ async fn commit_from_2_points_and_height(kernel: &mut Brep, params: &HashMap<Str
 
     if lower.contains("column") {
         let radius = 0.25;
-        let solid = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.cylinder_prim(radius, height.max(0.05))).ok()?;
+        let solid = kernel.cylinder_prim(radius, height.max(0.05)).ok()?;
         return Some(CadObject {
             id: next_id("object"),
             label: format!("{label} {}", label_count + 1),
@@ -593,7 +593,7 @@ async fn commit_from_2_points_and_height(kernel: &mut Brep, params: &HashMap<Str
         let d = (point_b[1] - point_a[1]).abs().max(0.5);
         (w, d, height.max(0.05))
     };
-    let solid = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.box_prim(width, depth, solid_height)).ok()?;
+    let solid = kernel.box_prim(width, depth, solid_height).ok()?;
     Some(CadObject {
         id: next_id("object"),
         label: format!("{label} {}", label_count + 1),
@@ -628,7 +628,7 @@ async fn commit_command_finish(kernel: &mut Brep, params: &HashMap<String, Value
                 ((radius_point[0] - center[0]).powi(2) + (radius_point[1] - center[1]).powi(2) + (radius_point[2] - center[2]).powi(2)).sqrt()
             }
             .max(0.05);
-            let solid = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.sphere_prim(radius)).ok()?;
+            let solid = kernel.sphere_prim(radius).ok()?;
             Some(CadObject {
                 id: next_id("object"),
                 label: format!("Sphere {}", label_count + 1),
@@ -654,7 +654,7 @@ async fn legacy_commit_object(kernel: &mut Brep, session: &CadEngagementScratch,
         let base = context_point(session, "base")?;
         let height = session.context.0.get("height").and_then(|value| value.as_f64()).unwrap_or(3.0);
         let radius = 0.25;
-        let solid = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.cylinder_prim(radius, height.max(0.05))).ok()?;
+        let solid = kernel.cylinder_prim(radius, height.max(0.05)).ok()?;
         return Some(CadObject {
             id: next_id("object"),
             label: format!("{} {}", entry.label, label_count + 1),
@@ -691,7 +691,7 @@ async fn legacy_commit_object(kernel: &mut Brep, session: &CadEngagementScratch,
     } else {
         (width, depth, height.max(0.05))
     };
-    let solid = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::block_on(kernel.box_prim(solid_width, solid_depth, solid_height)).ok()?;
+    let solid = kernel.box_prim(solid_width, solid_depth, solid_height).ok()?;
     Some(CadObject {
         id: next_id("object"),
         label: format!("{} {}", entry.label, label_count + 1),

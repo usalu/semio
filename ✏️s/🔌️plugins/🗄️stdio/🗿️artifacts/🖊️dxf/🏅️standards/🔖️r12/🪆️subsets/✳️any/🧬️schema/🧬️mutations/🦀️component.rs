@@ -499,66 +499,66 @@ impl OpBinary for DxfMutation {
         let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
         match tag {
             0 => Ok(DxfMutation::NoMutation),
-            1 => Ok(DxfMutation::SetSnapshot { snapshot: dec_dxf_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", semio_framework_plugin::resolve_ready(reader.position()), e))? }),
+            1 => Ok(DxfMutation::SetSnapshot { snapshot: dec_dxf_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", reader.position(), e))? }),
             2 => {
-                let name = read_str_lp(&mut reader).map_err(|e| malformed("op name", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let header_var = dec_header_var_bin(&mut reader).map_err(|e| malformed("op header_var", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let name = read_str_lp(&mut reader).map_err(|e| malformed("op name", reader.position(), e))?;
+                let header_var = dec_header_var_bin(&mut reader).map_err(|e| malformed("op header_var", reader.position(), e))?;
                 Ok(DxfMutation::SetHeaderVar { name, header_var })
             }
-            3 => Ok(DxfMutation::RemoveHeaderVar { name: read_str_lp(&mut reader).map_err(|e| malformed("op name", semio_framework_plugin::resolve_ready(reader.position()), e))? }),
+            3 => Ok(DxfMutation::RemoveHeaderVar { name: read_str_lp(&mut reader).map_err(|e| malformed("op name", reader.position(), e))? }),
             4 => {
-                let index = reader.read_varint_u64().map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
-                let layer = dec_layer_bin(&mut reader).map_err(|e| malformed("op layer", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
+                let layer = dec_layer_bin(&mut reader).map_err(|e| malformed("op layer", reader.position(), e))?;
                 Ok(DxfMutation::InsertLayer { index, layer })
             }
-            5 => Ok(DxfMutation::RemoveLayer { name: read_str_lp(&mut reader).map_err(|e| malformed("op name", semio_framework_plugin::resolve_ready(reader.position()), e))? }),
+            5 => Ok(DxfMutation::RemoveLayer { name: read_str_lp(&mut reader).map_err(|e| malformed("op name", reader.position(), e))? }),
             6 => {
-                let name = read_str_lp(&mut reader).map_err(|e| malformed("op name", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let layer = dec_layer_bin(&mut reader).map_err(|e| malformed("op layer", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let name = read_str_lp(&mut reader).map_err(|e| malformed("op name", reader.position(), e))?;
+                let layer = dec_layer_bin(&mut reader).map_err(|e| malformed("op layer", reader.position(), e))?;
                 Ok(DxfMutation::SetLayer { name, layer })
             }
             7 => {
-                let index = reader.read_varint_u64().map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
-                let style = dec_style_bin(&mut reader).map_err(|e| malformed("op style", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
+                let style = dec_style_bin(&mut reader).map_err(|e| malformed("op style", reader.position(), e))?;
                 Ok(DxfMutation::InsertStyle { index, style })
             }
-            8 => Ok(DxfMutation::RemoveStyle { name: read_str_lp(&mut reader).map_err(|e| malformed("op name", semio_framework_plugin::resolve_ready(reader.position()), e))? }),
+            8 => Ok(DxfMutation::RemoveStyle { name: read_str_lp(&mut reader).map_err(|e| malformed("op name", reader.position(), e))? }),
             9 => {
-                let name = read_str_lp(&mut reader).map_err(|e| malformed("op name", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let style = dec_style_bin(&mut reader).map_err(|e| malformed("op style", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let name = read_str_lp(&mut reader).map_err(|e| malformed("op name", reader.position(), e))?;
+                let style = dec_style_bin(&mut reader).map_err(|e| malformed("op style", reader.position(), e))?;
                 Ok(DxfMutation::SetStyle { name, style })
             }
             10 => {
-                let index = reader.read_varint_u64().map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
-                let linetype = dec_linetype_bin(&mut reader).map_err(|e| malformed("op linetype", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
+                let linetype = dec_linetype_bin(&mut reader).map_err(|e| malformed("op linetype", reader.position(), e))?;
                 Ok(DxfMutation::InsertLinetype { index, linetype })
             }
-            11 => Ok(DxfMutation::RemoveLinetype { name: read_str_lp(&mut reader).map_err(|e| malformed("op name", semio_framework_plugin::resolve_ready(reader.position()), e))? }),
+            11 => Ok(DxfMutation::RemoveLinetype { name: read_str_lp(&mut reader).map_err(|e| malformed("op name", reader.position(), e))? }),
             12 => {
-                let name = read_str_lp(&mut reader).map_err(|e| malformed("op name", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let linetype = dec_linetype_bin(&mut reader).map_err(|e| malformed("op linetype", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let name = read_str_lp(&mut reader).map_err(|e| malformed("op name", reader.position(), e))?;
+                let linetype = dec_linetype_bin(&mut reader).map_err(|e| malformed("op linetype", reader.position(), e))?;
                 Ok(DxfMutation::SetLinetype { name, linetype })
             }
             13 => {
-                let index = reader.read_varint_u64().map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
-                let entity = dec_dxf_entity_bin(&mut reader).map_err(|e| malformed("op entity", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
+                let entity = dec_dxf_entity_bin(&mut reader).map_err(|e| malformed("op entity", reader.position(), e))?;
                 Ok(DxfMutation::InsertEntity { index, entity })
             }
-            14 => Ok(DxfMutation::RemoveEntity { index: reader.read_varint_u64().map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize }),
+            14 => Ok(DxfMutation::RemoveEntity { index: reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize }),
             15 => {
-                let index = reader.read_varint_u64().map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
-                let entity = dec_dxf_entity_bin(&mut reader).map_err(|e| malformed("op entity", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
+                let entity = dec_dxf_entity_bin(&mut reader).map_err(|e| malformed("op entity", reader.position(), e))?;
                 Ok(DxfMutation::SetEntity { index, entity })
             }
             16 => {
-                let index = reader.read_varint_u64().map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
-                let block = dec_block_bin(&mut reader).map_err(|e| malformed("op block", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
+                let block = dec_block_bin(&mut reader).map_err(|e| malformed("op block", reader.position(), e))?;
                 Ok(DxfMutation::InsertBlock { index, block })
             }
-            17 => Ok(DxfMutation::RemoveBlock { index: reader.read_varint_u64().map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize }),
+            17 => Ok(DxfMutation::RemoveBlock { index: reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize }),
             18 => {
-                let index = reader.read_varint_u64().map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
-                let block = dec_block_bin(&mut reader).map_err(|e| malformed("op block", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
+                let block = dec_block_bin(&mut reader).map_err(|e| malformed("op block", reader.position(), e))?;
                 Ok(DxfMutation::SetBlock { index, block })
             }
             other => Err(malformed("op tag", 1, format!("unknown tag {other}"))),

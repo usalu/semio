@@ -4,6 +4,8 @@
 //! NEVER leaks through this module's public API — every public type here is a first-party plain-data
 //! struct/enum of `f64`/`u32` so callers never need to import or know about `spade`.
 
+use semio_framework_job::{Checkpoint, CommitCandidate, InteractiveJob, JobFault, Operation, StepContext, StepOutcome};
+use spade::handles::FixedVertexHandle;
 use spade::{AngleLimit, ConstrainedDelaunayTriangulation, Point2, RefinementParameters, Triangulation};
 use std::collections::HashMap;
 
@@ -43,7 +45,7 @@ type Cdt = ConstrainedDelaunayTriangulation<Point2<f64>>;
 
 /// 🧵️ Inserts one closed loop's points as constrained CDT vertices, then constrains consecutive
 /// pairs (wrapping around) so the loop's edges survive triangulation/refinement unbroken-in-shape.
-async fn insert_loop(cdt: &mut Cdt, loop_pts: &[[f64; 2]]) -> Result<(), MeshError> {
+fn insert_loop(cdt: &mut Cdt, loop_pts: &[[f64; 2]]) -> Result<(), MeshError> {
     let mut handles = Vec::with_capacity(loop_pts.len());
     for p in loop_pts {
         let handle = cdt.insert(Point2::new(p[0], p[1])).map_err(|e| MeshError::TriangulationFailed(format!("{e:?}")))?;
@@ -60,7 +62,7 @@ async fn insert_loop(cdt: &mut Cdt, loop_pts: &[[f64; 2]]) -> Result<(), MeshErr
 }
 
 /// 🎯️ Ray-casting point-in-polygon test (standard even-odd rule; polygon need not be convex).
-async fn point_in_polygon(point: [f64; 2], polygon: &[[f64; 2]]) -> bool {
+fn point_in_polygon(point: [f64; 2], polygon: &[[f64; 2]]) -> bool {
     if polygon.len() < 3 {
         return false;
     }
@@ -87,7 +89,7 @@ async fn point_in_polygon(point: [f64; 2], polygon: &[[f64; 2]]) -> bool {
 /// `<= 0.0`). Triangle inside/outside classification happens AFTER refinement, by a local
 /// point-in-polygon centroid test — `spade`'s own outer-face exclusion is not relied upon, since a
 /// domain with holes has several disjoint constrained loops that classification must handle directly.
-pub async fn triangulate(domain: &PlanarDomain, opts: &MeshOpts) -> Result<TriMesh2, MeshError> {
+pub fn triangulate(domain: &PlanarDomain, opts: &MeshOpts) -> Result<TriMesh2, MeshError> {
     if domain.outer.len() < 3 {
         return Err(MeshError::DegenerateDomain);
     }
@@ -149,6 +151,314 @@ pub async fn triangulate(domain: &PlanarDomain, opts: &MeshOpts) -> Result<TriMe
 }
 // #endregion 🔖️PlanarDomain
 
+// #region 🧵️IncrementalMeshJob
+/// 🎚️ The fidelity of a [`MeshJobPreview`].
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum MeshQualityTier {
+    Coarse,
+    Refined,
+    Final,
+}
+
+/// 🗺️ A replaceable, non-authoritative mesh overlay published while [`MeshJob`] is running.
+#[derive(Clone, Debug, PartialEq)]
+pub struct MeshJobPreview {
+    pub sequence: u64,
+    pub tier: MeshQualityTier,
+    pub refinement_steps: usize,
+    pub mesh: TriMesh2,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum MeshJobStage {
+    Validate,
+    InsertBoundary,
+    ConstrainBoundary,
+    Classify,
+    Refine,
+    Finalize,
+    Complete,
+}
+
+const MESH_JOB_UNIT_BATCH: usize = 8;
+
+/// 🧵️ Persistent constrained-mesh state machine. Boundary insertion, constraint creation, face
+/// classification and refinement are cursor-resumable. Refinement grants the current triangulator at
+/// most one additional vertex per call; the public job and deterministic payload remain unchanged when
+/// the owned Bowyer-Watson implementation replaces that internal seam.
+pub struct MeshJob {
+    operation: Operation,
+    domain: PlanarDomain,
+    options: MeshOpts,
+    cdt: Cdt,
+    handles: Vec<Vec<FixedVertexHandle>>,
+    stage: MeshJobStage,
+    loop_cursor: usize,
+    point_cursor: usize,
+    edge_cursor: usize,
+    face_cursor: usize,
+    after_classify: MeshJobStage,
+    preview_tier: MeshQualityTier,
+    mesh: TriMesh2,
+    point_index: HashMap<(u64, u64), u32>,
+    refinement_steps: usize,
+    max_refinement_steps: usize,
+}
+
+impl MeshJob {
+    /// 🌱️ Creates a deterministic mesh operation from an immutable domain snapshot.
+    pub fn new(domain: PlanarDomain, options: MeshOpts, operation: Operation) -> Self {
+        let loop_count = 1 + domain.holes.len();
+        let input_points = domain.outer.len() + domain.holes.iter().map(Vec::len).sum::<usize>();
+        Self {
+            operation,
+            domain,
+            options,
+            cdt: ConstrainedDelaunayTriangulation::new(),
+            handles: vec![Vec::new(); loop_count],
+            stage: MeshJobStage::Validate,
+            loop_cursor: 0,
+            point_cursor: 0,
+            edge_cursor: 0,
+            face_cursor: 0,
+            after_classify: MeshJobStage::Finalize,
+            preview_tier: MeshQualityTier::Coarse,
+            mesh: TriMesh2 { points: Vec::new(), tris: Vec::new() },
+            point_index: HashMap::new(),
+            refinement_steps: 0,
+            max_refinement_steps: input_points.saturating_mul(10).max(1),
+        }
+    }
+
+    /// 🗺️ The latest complete replaceable overlay; authoritative callers commit only the final outcome.
+    pub fn preview(&self) -> MeshJobPreview {
+        MeshJobPreview { sequence: self.operation.preview_sequence, tier: self.preview_tier, refinement_steps: self.refinement_steps, mesh: self.mesh.clone() }
+    }
+
+    fn loop_points(&self, index: usize) -> &[[f64; 2]] {
+        if index == 0 {
+            &self.domain.outer
+        } else {
+            &self.domain.holes[index - 1]
+        }
+    }
+
+    fn needs_refinement(&self) -> bool {
+        self.options.max_edge > 0.0 || self.options.min_angle_deg > 0.0
+    }
+
+    fn begin_classification(&mut self, tier: MeshQualityTier, after: MeshJobStage) {
+        self.mesh.points.clear();
+        self.mesh.tris.clear();
+        self.point_index.clear();
+        self.face_cursor = 0;
+        self.preview_tier = tier;
+        self.after_classify = after;
+        self.stage = MeshJobStage::Classify;
+    }
+
+    fn refinement_parameters(&self) -> RefinementParameters<f64> {
+        let mut parameters = RefinementParameters::new().with_max_additional_vertices(1);
+        if self.options.min_angle_deg > 0.0 {
+            parameters = parameters.with_angle_limit(AngleLimit::from_deg(self.options.min_angle_deg));
+        }
+        if self.options.max_edge > 0.0 {
+            parameters = parameters.with_max_allowed_area((3f64.sqrt() / 4.0) * self.options.max_edge * self.options.max_edge);
+        }
+        parameters
+    }
+
+    fn append_face(&mut self, positions: [[f64; 2]; 3]) {
+        let centroid = [(positions[0][0] + positions[1][0] + positions[2][0]) / 3.0, (positions[0][1] + positions[1][1] + positions[2][1]) / 3.0];
+        if !point_in_polygon(centroid, &self.domain.outer) || self.domain.holes.iter().any(|hole| point_in_polygon(centroid, hole)) {
+            return;
+        }
+        let mut indices = [0; 3];
+        for (slot, position) in positions.into_iter().enumerate() {
+            let key = (position[0].to_bits(), position[1].to_bits());
+            indices[slot] = *self.point_index.entry(key).or_insert_with(|| {
+                self.mesh.points.push(position);
+                (self.mesh.points.len() - 1) as u32
+            });
+        }
+        self.mesh.tris.push(indices);
+    }
+
+    fn encode_preview(&mut self, context: &mut StepContext<'_>) -> Vec<u8> {
+        let sequence = context.next_preview_sequence();
+        self.operation.preview_sequence = sequence + 1;
+        self.encode_mesh(sequence, false)
+    }
+
+    fn encode_mesh(&self, sequence: u64, complete: bool) -> Vec<u8> {
+        let mut bytes = Vec::with_capacity(42 + self.mesh.points.len() * 16 + self.mesh.tris.len() * 12);
+        bytes.extend_from_slice(b"FEMMESH1");
+        bytes.push(match self.preview_tier {
+            MeshQualityTier::Coarse => 0,
+            MeshQualityTier::Refined => 1,
+            MeshQualityTier::Final => 2,
+        });
+        bytes.push(u8::from(complete));
+        bytes.extend_from_slice(&sequence.to_le_bytes());
+        bytes.extend_from_slice(&(self.refinement_steps as u64).to_le_bytes());
+        bytes.extend_from_slice(&(self.mesh.points.len() as u64).to_le_bytes());
+        bytes.extend_from_slice(&(self.mesh.tris.len() as u64).to_le_bytes());
+        for point in &self.mesh.points {
+            bytes.extend_from_slice(&point[0].to_bits().to_le_bytes());
+            bytes.extend_from_slice(&point[1].to_bits().to_le_bytes());
+        }
+        for triangle in &self.mesh.tris {
+            for index in triangle {
+                bytes.extend_from_slice(&index.to_le_bytes());
+            }
+        }
+        bytes
+    }
+
+    fn fail(message: impl Into<Vec<u8>>) -> StepOutcome {
+        StepOutcome::Fault(JobFault { detail: message.into() })
+    }
+}
+
+impl InteractiveJob for MeshJob {
+    fn step(&mut self, context: &mut StepContext<'_>) -> StepOutcome {
+        if context.is_cancelled() {
+            return StepOutcome::Cancelled;
+        }
+        if context.operation() != self.operation.operation || context.generation() != self.operation.generation {
+            return Self::fail(b"stale-mesh-operation".to_vec());
+        }
+        context.set_stage(match self.stage {
+            MeshJobStage::Validate => "validate-references",
+            MeshJobStage::InsertBoundary => "insert-boundary",
+            MeshJobStage::ConstrainBoundary => "constrain-boundary",
+            MeshJobStage::Classify => "classify-elements",
+            MeshJobStage::Refine => "refine-quality",
+            MeshJobStage::Finalize => "finalize-mesh",
+            MeshJobStage::Complete => "complete",
+        });
+        match self.stage {
+            MeshJobStage::Validate => {
+                if self.domain.outer.len() < 3 || self.domain.holes.iter().any(|hole| hole.len() < 3) {
+                    return Self::fail(b"degenerate-planar-domain".to_vec());
+                }
+                self.stage = MeshJobStage::InsertBoundary;
+                context.consume_fuel(1);
+                StepOutcome::Yield
+            }
+            MeshJobStage::InsertBoundary => {
+                let mut units = 0;
+                while self.loop_cursor < self.handles.len() && units < MESH_JOB_UNIT_BATCH && !context.should_yield() {
+                    let point_count = self.loop_points(self.loop_cursor).len();
+                    if self.point_cursor == point_count {
+                        self.loop_cursor += 1;
+                        self.point_cursor = 0;
+                        continue;
+                    }
+                    let point = self.loop_points(self.loop_cursor)[self.point_cursor];
+                    let handle = match self.cdt.insert(Point2::new(point[0], point[1])) {
+                        Ok(handle) => handle,
+                        Err(error) => return Self::fail(format!("triangulation insertion failed: {error:?}").into_bytes()),
+                    };
+                    self.handles[self.loop_cursor].push(handle);
+                    self.point_cursor += 1;
+                    units += 1;
+                    context.consume_fuel(1);
+                    if context.is_cancelled() {
+                        return StepOutcome::Cancelled;
+                    }
+                }
+                if self.loop_cursor == self.handles.len() {
+                    self.loop_cursor = 0;
+                    self.edge_cursor = 0;
+                    self.stage = MeshJobStage::ConstrainBoundary;
+                }
+                StepOutcome::Yield
+            }
+            MeshJobStage::ConstrainBoundary => {
+                let mut units = 0;
+                while self.loop_cursor < self.handles.len() && units < MESH_JOB_UNIT_BATCH && !context.should_yield() {
+                    let handles = &self.handles[self.loop_cursor];
+                    if self.edge_cursor == handles.len() {
+                        self.loop_cursor += 1;
+                        self.edge_cursor = 0;
+                        continue;
+                    }
+                    let a = handles[self.edge_cursor];
+                    let b = handles[(self.edge_cursor + 1) % handles.len()];
+                    if a != b {
+                        self.cdt.add_constraint(a, b);
+                    }
+                    self.edge_cursor += 1;
+                    units += 1;
+                    context.consume_fuel(1);
+                }
+                if self.loop_cursor == self.handles.len() {
+                    let after = if self.needs_refinement() { MeshJobStage::Refine } else { MeshJobStage::Finalize };
+                    self.begin_classification(MeshQualityTier::Coarse, after);
+                }
+                StepOutcome::Yield
+            }
+            MeshJobStage::Classify => {
+                let face_count = self.cdt.num_inner_faces();
+                let mut positions = Vec::new();
+                for handle in self.cdt.fixed_inner_faces().skip(self.face_cursor).take(MESH_JOB_UNIT_BATCH) {
+                    let vertices = self.cdt.face(handle).vertices();
+                    positions.push(std::array::from_fn(|index| {
+                        let point = vertices[index].position();
+                        [point.x, point.y]
+                    }));
+                }
+                for face in positions {
+                    self.append_face(face);
+                    self.face_cursor += 1;
+                    context.consume_fuel(1);
+                    if context.is_cancelled() {
+                        return StepOutcome::Cancelled;
+                    }
+                    if context.should_yield() {
+                        break;
+                    }
+                }
+                if self.face_cursor >= face_count {
+                    self.stage = self.after_classify;
+                    return StepOutcome::PreviewReady(self.encode_preview(context));
+                }
+                StepOutcome::Yield
+            }
+            MeshJobStage::Refine => {
+                if context.should_yield() {
+                    return StepOutcome::Yield;
+                }
+                let before = self.cdt.num_vertices();
+                let parameters = self.refinement_parameters();
+                let result = self.cdt.refine(parameters);
+                let after = self.cdt.num_vertices();
+                self.refinement_steps += after.saturating_sub(before);
+                context.consume_fuel(1);
+                let final_pass = result.refinement_complete || after == before || self.refinement_steps >= self.max_refinement_steps;
+                if final_pass {
+                    self.begin_classification(MeshQualityTier::Final, MeshJobStage::Finalize);
+                } else if self.refinement_steps % 8 == 0 {
+                    self.begin_classification(MeshQualityTier::Refined, MeshJobStage::Refine);
+                }
+                StepOutcome::Yield
+            }
+            MeshJobStage::Finalize => {
+                self.preview_tier = MeshQualityTier::Final;
+                self.stage = MeshJobStage::Complete;
+                let state = self.encode_mesh(self.operation.preview_sequence, true);
+                StepOutcome::CheckpointReady(Checkpoint { applied_progress: self.mesh.tris.len() as u64, state })
+            }
+            MeshJobStage::Complete => {
+                let output = self.encode_mesh(self.operation.preview_sequence, true);
+                StepOutcome::Complete(CommitCandidate { state: output.clone(), output })
+            }
+        }
+    }
+}
+// #endregion 🧵️IncrementalMeshJob
+
 // #region 🔖️QuadMesh2
 /// 🔲️ A structured quad mesh: shared node positions plus quads as index quadruples into `points`.
 #[derive(Clone, Debug, PartialEq)]
@@ -159,7 +469,7 @@ pub struct QuadMesh2 {
 
 /// 🔲️ An `nx` x `ny` structured grid of quads over an axis-aligned rectangle `[x0,x1] x [y0,y1]`,
 /// row-major point numbering, each quad wound `[bottom-left, bottom-right, top-right, top-left]`.
-pub async fn quad_grid(x0: f64, y0: f64, x1: f64, y1: f64, nx: usize, ny: usize) -> QuadMesh2 {
+pub fn quad_grid(x0: f64, y0: f64, x1: f64, y1: f64, nx: usize, ny: usize) -> QuadMesh2 {
     let mut points = Vec::with_capacity((nx + 1) * (ny + 1));
     for j in 0..=ny {
         for i in 0..=nx {
@@ -190,7 +500,7 @@ pub struct TriMesh2Quadratic {
 
 /// 🔗️ Looks up (or creates, welding shared edges to exactly one mid-node) the mid-edge point index
 /// for edge `(a,b)`, keyed by the sorted `(min,max)` index pair.
-async fn mid_index(a: u32, b: u32, points: &mut Vec<[f64; 2]>, edge_mid: &mut HashMap<(u32, u32), u32>) -> u32 {
+fn mid_index(a: u32, b: u32, points: &mut Vec<[f64; 2]>, edge_mid: &mut HashMap<(u32, u32), u32>) -> u32 {
     let key = if a < b { (a, b) } else { (b, a) };
     if let Some(&idx) = edge_mid.get(&key) {
         return idx;
@@ -209,7 +519,7 @@ async fn mid_index(a: u32, b: u32, points: &mut Vec<[f64; 2]>, edge_mid: &mut Ha
 /// triangle's 6 node indices follow `[n0,n1,n2, mid(n0,n1), mid(n1,n2), mid(n2,n0)]` — the standard
 /// Tri6 convention (matches `elements2d.rs`'s `shape_tri6` node ordering, documented here since that
 /// function may land concurrently with this module).
-pub async fn to_quadratic(mesh: &TriMesh2) -> TriMesh2Quadratic {
+pub fn to_quadratic(mesh: &TriMesh2) -> TriMesh2Quadratic {
     let mut points = mesh.points.clone();
     let mut edge_mid: HashMap<(u32, u32), u32> = HashMap::new();
     let mut tris6 = Vec::with_capacity(mesh.tris.len());
@@ -246,7 +556,7 @@ pub struct VolumeMesh {
 /// equal-height layers, producing one `Wedge6` per (triangle, layer) — node order
 /// `[bottom0,bottom1,bottom2, top0,top1,top2]` (bottom face matches the triangle's own `[n0,n1,n2]`
 /// winding, top face directly above).
-pub async fn extrude_tri_mesh(mesh: &TriMesh2, height: f64, layers: usize) -> VolumeMesh {
+pub fn extrude_tri_mesh(mesh: &TriMesh2, height: f64, layers: usize) -> VolumeMesh {
     let layers = layers.max(1);
     let n = mesh.points.len();
     let mut points = Vec::with_capacity(n * (layers + 1));
@@ -270,7 +580,7 @@ pub async fn extrude_tri_mesh(mesh: &TriMesh2, height: f64, layers: usize) -> Vo
 
 /// 🧱️ Extrudes a flat `QuadMesh2` along +z by `height` into `layers` layers of `Hex8` cells — node
 /// order `[bottom0,bottom1,bottom2,bottom3, top0,top1,top2,top3]` matching the quad's own winding.
-pub async fn extrude_quad_mesh(mesh: &QuadMesh2, height: f64, layers: usize) -> VolumeMesh {
+pub fn extrude_quad_mesh(mesh: &QuadMesh2, height: f64, layers: usize) -> VolumeMesh {
     let layers = layers.max(1);
     let n = mesh.points.len();
     let mut points = Vec::with_capacity(n * (layers + 1));
@@ -296,7 +606,7 @@ pub async fn extrude_quad_mesh(mesh: &QuadMesh2, height: f64, layers: usize) -> 
 /// into 2 triangles, choosing the diagonal FROM the corner with the smallest global point index. This
 /// depends only on the face's own 4 global indices (not on cell/apex choice), so two cells sharing a
 /// quad face always agree — the parity-consistency guarantee `split_to_tets` relies on.
-async fn split_quad_face(a: u32, b: u32, c: u32, d: u32) -> [[u32; 3]; 2] {
+fn split_quad_face(a: u32, b: u32, c: u32, d: u32) -> [[u32; 3]; 2] {
     let min = a.min(b).min(c).min(d);
     if min == a || min == c {
         [[a, b, c], [a, c, d]]
@@ -311,7 +621,7 @@ async fn split_quad_face(a: u32, b: u32, c: u32, d: u32) -> [[u32; 3]; 2] {
 /// — the standard star/cone decomposition of a convex polyhedron, valid since convexity guarantees no
 /// overlap/gaps. Faces touching `apex` need no explicit tet: their volume is degenerate (zero) from
 /// `apex`'s own cone and is instead captured as internal faces of tets from adjacent, non-apex faces.
-async fn split_cell_to_tets(quad_faces: &[[u32; 4]], tri_faces: &[[u32; 3]], apex: u32) -> Vec<[u32; 4]> {
+fn split_cell_to_tets(quad_faces: &[[u32; 4]], tri_faces: &[[u32; 3]], apex: u32) -> Vec<[u32; 4]> {
     let mut tets = Vec::new();
     for &[a, b, c, d] in quad_faces {
         for tri in split_quad_face(a, b, c, d) {
@@ -331,7 +641,7 @@ async fn split_cell_to_tets(quad_faces: &[[u32; 4]], tri_faces: &[[u32; 3]], ape
 /// 🔪️ Splits every `Wedge6`/`Hex8` cell into `Tet4` cells (`Wedge6` → 3 tets, `Hex8` → 6 tets), using
 /// the minimum-global-node-index apex + face-diagonal rule so adjacent cells split their SHARED quad
 /// faces identically (see [`split_quad_face`]). `Tet4` cells in the input pass through unchanged.
-pub async fn split_to_tets(mesh: &VolumeMesh) -> VolumeMesh {
+pub fn split_to_tets(mesh: &VolumeMesh) -> VolumeMesh {
     let mut cells = Vec::with_capacity(mesh.cells.len());
     for cell in &mesh.cells {
         match cell {
@@ -360,7 +670,7 @@ pub async fn split_to_tets(mesh: &VolumeMesh) -> VolumeMesh {
 
 /// 🧭️ The average of `mesh.points` at `idxs` — shared by `boundary_faces`'s per-tet and per-face
 /// centroid computations.
-async fn point_centroid(mesh: &VolumeMesh, idxs: &[u32]) -> [f64; 3] {
+fn point_centroid(mesh: &VolumeMesh, idxs: &[u32]) -> [f64; 3] {
     let mut c = [0.0; 3];
     for &i in idxs {
         let p = mesh.points[i as usize];
@@ -377,7 +687,7 @@ async fn point_centroid(mesh: &VolumeMesh, idxs: &[u32]) -> [f64; 3] {
 /// Each returned triangle is independently wound so its `cross(edge0,edge1)` normal points AWAY from
 /// its own tet's centroid (outward) — determined per-tet via a centroid side-test, so the result
 /// doesn't depend on any input node-order convention. Used by `fem_3d`'s solid mesh preview/rendering.
-pub async fn boundary_faces(mesh: &VolumeMesh) -> Vec<[u32; 3]> {
+pub fn boundary_faces(mesh: &VolumeMesh) -> Vec<[u32; 3]> {
     let mut counts: HashMap<[u32; 3], usize> = HashMap::new();
     let mut oriented: HashMap<[u32; 3], [u32; 3]> = HashMap::new();
 
@@ -419,7 +729,7 @@ pub struct QualityReport {
 }
 
 /// 📐️ Interior angle at `p`, between the edges to `prev` and `next`, in degrees.
-async fn angle_at(prev: [f64; 2], p: [f64; 2], next: [f64; 2]) -> f64 {
+fn angle_at(prev: [f64; 2], p: [f64; 2], next: [f64; 2]) -> f64 {
     let v1 = [prev[0] - p[0], prev[1] - p[1]];
     let v2 = [next[0] - p[0], next[1] - p[1]];
     let dot = v1[0] * v2[0] + v1[1] * v2[1];
@@ -432,7 +742,7 @@ async fn angle_at(prev: [f64; 2], p: [f64; 2], next: [f64; 2]) -> f64 {
 /// 📊️ Min/max interior angle across all triangles; `min_jacobian_sign_positive` mirrors the 2D
 /// analogue of the 3D check — true iff every triangle's signed area (shoelace, `[n0,n1,n2]` order) is
 /// positive, i.e. consistently wound.
-pub async fn tri_mesh_quality(mesh: &TriMesh2) -> QualityReport {
+pub fn tri_mesh_quality(mesh: &TriMesh2) -> QualityReport {
     let mut min_angle = f64::INFINITY;
     let mut max_angle = f64::NEG_INFINITY;
     let mut all_positive = true;
@@ -456,7 +766,7 @@ pub async fn tri_mesh_quality(mesh: &TriMesh2) -> QualityReport {
 }
 
 /// 🧮️ Signed tet volume via the scalar triple product of edge vectors from `p0`.
-async fn tet_signed_volume(p0: [f64; 3], p1: [f64; 3], p2: [f64; 3], p3: [f64; 3]) -> f64 {
+fn tet_signed_volume(p0: [f64; 3], p1: [f64; 3], p2: [f64; 3], p3: [f64; 3]) -> f64 {
     let a = [p1[0] - p0[0], p1[1] - p0[1], p1[2] - p0[2]];
     let b = [p2[0] - p0[0], p2[1] - p0[1], p2[2] - p0[2]];
     let c = [p3[0] - p0[0], p3[1] - p0[1], p3[2] - p0[2]];
@@ -469,7 +779,7 @@ async fn tet_signed_volume(p0: [f64; 3], p1: [f64; 3], p2: [f64; 3], p3: [f64; 3
 /// documented local node order (`extrude_tri_mesh`/`extrude_quad_mesh`'s convention) is right-handed,
 /// independent of the cell's global point indices. Verified by hand against a unit right prism and a
 /// unit cube (both give the expected positive volume for correctly-ordered nodes).
-async fn cell_signed_volume(points: &[[f64; 3]], cell: &Cell) -> f64 {
+fn cell_signed_volume(points: &[[f64; 3]], cell: &Cell) -> f64 {
     let p = |i: u32| points[i as usize];
     match cell {
         Cell::Tet4([a, b, c, d]) => tet_signed_volume(p(*a), p(*b), p(*c), p(*d)),
@@ -488,7 +798,7 @@ async fn cell_signed_volume(points: &[[f64; 3]], cell: &Cell) -> f64 {
 /// 📊️ `min_jacobian_sign_positive` is true iff every cell's signed volume is positive — a negative
 /// signed volume flags inverted/degenerate connectivity. Angle bounds are a 2D-only concept and are
 /// left at `0.0` here.
-pub async fn volume_mesh_quality(mesh: &VolumeMesh) -> QualityReport {
+pub fn volume_mesh_quality(mesh: &VolumeMesh) -> QualityReport {
     let all_positive = mesh.cells.iter().all(|cell| cell_signed_volume(&mesh.points, cell) > 0.0);
     QualityReport { min_angle_deg: 0.0, max_angle_deg: 0.0, min_jacobian_sign_positive: all_positive, element_count: mesh.cells.len() }
 }
@@ -498,9 +808,38 @@ pub async fn volume_mesh_quality(mesh: &VolumeMesh) -> QualityReport {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use semio_framework_job::{root_cancel_token, Generation, OperationId, RevisionId, StepBudget};
     use std::collections::HashSet;
+    use std::time::{Duration, Instant};
 
-    async fn shoelace_area(points: &[[f64; 2]]) -> f64 {
+    fn mesh_operation() -> Operation {
+        Operation::new(OperationId(700), RevisionId(11), Generation(3), 19)
+    }
+
+    fn drive_mesh_job(mut job: MeshJob) -> (Vec<u8>, usize, Duration) {
+        fn now() -> u64 {
+            0
+        }
+        let cancel = root_cancel_token();
+        let mut sequence = 0;
+        let mut previews = 0;
+        let mut worst = Duration::ZERO;
+        for _ in 0..10_000 {
+            let mut context = StepContext::new(job.operation.operation, job.operation.generation, StepBudget::new(64, 10), cancel.clone(), now, &mut sequence);
+            let started = Instant::now();
+            let outcome = job.step(&mut context);
+            worst = worst.max(started.elapsed());
+            match outcome {
+                StepOutcome::PreviewReady(_) => previews += 1,
+                StepOutcome::Complete(candidate) => return (candidate.output, previews, worst),
+                StepOutcome::Yield | StepOutcome::CheckpointReady(_) => {}
+                other => panic!("mesh job failed: {other:?}"),
+            }
+        }
+        panic!("mesh job did not complete")
+    }
+
+    fn shoelace_area(points: &[[f64; 2]]) -> f64 {
         let mut sum = 0.0;
         for i in 0..points.len() {
             let a = points[i];
@@ -510,19 +849,19 @@ mod tests {
         (sum * 0.5).abs()
     }
 
-    async fn tri_area(mesh: &TriMesh2, tri: &[u32; 3]) -> f64 {
+    fn tri_area(mesh: &TriMesh2, tri: &[u32; 3]) -> f64 {
         shoelace_area(&[mesh.points[tri[0] as usize], mesh.points[tri[1] as usize], mesh.points[tri[2] as usize]])
     }
 
-    async fn total_area(mesh: &TriMesh2) -> f64 {
+    fn total_area(mesh: &TriMesh2) -> f64 {
         mesh.tris.iter().map(|t| tri_area(mesh, t)).sum()
     }
 
-    async fn no_refine() -> MeshOpts {
+    fn no_refine() -> MeshOpts {
         MeshOpts { max_edge: 0.0, min_angle_deg: 0.0 }
     }
 
-    async fn square(side: f64) -> Vec<[f64; 2]> {
+    fn square(side: f64) -> Vec<[f64; 2]> {
         vec![[0.0, 0.0], [side, 0.0], [side, side], [0.0, side]]
     }
 
@@ -817,6 +1156,46 @@ mod tests {
             Cell::Tet4(nodes) => assert_eq!(nodes, [0, 1, 2, 3]),
             _ => panic!("expected the Tet4 cell to pass through unchanged"),
         }
+    }
+
+    #[test]
+    fn mesh_job_is_previewing_deterministic_and_step_bounded() {
+        let domain = PlanarDomain { outer: square(8.0), holes: vec![square(2.0).into_iter().map(|point| [point[0] + 3.0, point[1] + 3.0]).collect()] };
+        let options = MeshOpts { max_edge: 0.0, min_angle_deg: 0.0 };
+        let first = drive_mesh_job(MeshJob::new(domain.clone(), options, mesh_operation()));
+        let second = drive_mesh_job(MeshJob::new(domain, options, mesh_operation()));
+        assert_eq!(first.0, second.0);
+        assert!(first.1 > 0);
+        assert!(first.2 < Duration::from_millis(8), "worst mesh job step was {:?}", first.2);
+    }
+
+    #[test]
+    fn mesh_job_observes_cancellation_before_mutating() {
+        fn now() -> u64 {
+            0
+        }
+        let operation = mesh_operation();
+        let mut job = MeshJob::new(PlanarDomain { outer: square(2.0), holes: vec![] }, MeshOpts { max_edge: 0.0, min_angle_deg: 0.0 }, operation);
+        let cancel = root_cancel_token();
+        cancel.cancel_now();
+        let mut sequence = 0;
+        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(64, 10), cancel, now, &mut sequence);
+        assert_eq!(job.step(&mut context), StepOutcome::Cancelled);
+        assert_eq!(job.stage, MeshJobStage::Validate);
+        assert_eq!(job.cdt.num_vertices(), 0);
+    }
+
+    #[test]
+    fn mesh_job_large_boundary_never_runs_to_completion_in_one_step() {
+        let boundary = (0..1_024)
+            .map(|index| {
+                let angle = index as f64 * std::f64::consts::TAU / 1_024.0;
+                [angle.cos() * 100.0, angle.sin() * 100.0]
+            })
+            .collect();
+        let (_, previews, worst) = drive_mesh_job(MeshJob::new(PlanarDomain { outer: boundary, holes: vec![] }, MeshOpts { max_edge: 0.0, min_angle_deg: 0.0 }, mesh_operation()));
+        assert!(previews > 0);
+        assert!(worst < Duration::from_millis(8), "worst large-boundary mesh job step was {worst:?}");
     }
 }
 // #endregion 🔖️Tests

@@ -28,7 +28,7 @@ pub struct BinaryInference {
 }
 
 impl protocol::Inference<BinarySnapshot> for BinaryInference {
-    async fn infer(snapshot: &BinarySnapshot) -> Self {
+    fn infer(snapshot: &BinarySnapshot) -> Self {
         Self { extent: compute_binary_extent(snapshot) }
     }
 }
@@ -42,13 +42,13 @@ impl Default for BinaryInference {
 }
 
 impl protocol::InferenceSpec<BinarySnapshot> for BinaryInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.stdio.binary.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.binary.inference.extent", reads: &["bytes"] }]
     }
 }

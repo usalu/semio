@@ -20,39 +20,90 @@ use semio_framework_actor::ShardTransport;
 use std::collections::VecDeque;
 use std::io::{self, Read, Write};
 use std::path::Path;
-use std::process::{Child, ChildStdin, Command, Stdio};
+use std::process::{Child, ChildStdin, ChildStdout, Command, Stdio};
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
-use std::thread::{self, JoinHandle};
+#[cfg(test)]
+use std::thread;
 #[cfg(test)]
 use std::time::Duration;
 
-/// 🚪️ P1f: the ONE reason a dedicated `thread::Builder` survives in this module at all — a real,
-/// blocking `std::io::Read` off a child's stdout/the process's own stdin, with no non-blocking
-/// alternative reachable without a new dependency (this crate deliberately owns no async-I/O crate;
-/// `tokio`'s own "process"/"io-util" features are out — see this crate's `Cargo.toml` note that
-/// `tokio` here is `["sync", "rt"]` ONLY, no runtime, no I/O). Bounded (exactly one per
-/// `ProcessTransport`/`StdioTransport` instance — i.e. one per child process, never per-message,
-/// never unbounded) and registered with `semio_framework_trace`'s thread-role API so a thread census
-/// sees it as a counted, justified I/O boundary rather than an invisible extra thread. See
-/// `📓️p1f-epoch-transport.md`'s "process-transport threads" section for the full accounting.
-const IO_BOUNDARY_PARENT_READER: &str = "process-shard-reader";
-const IO_BOUNDARY_CHILD_READER: &str = "shard-stdin-reader";
+const PIPE_READ_BYTES_PER_POLL: usize = 64 * 1024;
+const PIPE_FRAMES_PER_POLL: usize = 32;
+const MAX_FRAME_BYTES: usize = 16 * 1024 * 1024;
 
-async fn now_ms() -> u64 {
+fn now_ms() -> u64 {
     std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |duration| duration.as_millis() as u64)
 }
 
+//#region 🚪️NonblockingPipe
+#[cfg(unix)]
+fn prepare_nonblocking<R: std::os::fd::AsRawFd>(reader: &R) -> io::Result<()> {
+    use std::os::raw::c_int;
+    unsafe extern "C" {
+        fn fcntl(fd: c_int, command: c_int, ...) -> c_int;
+    }
+    const F_GETFL: c_int = 3;
+    const F_SETFL: c_int = 4;
+    #[cfg(any(target_os = "macos", target_os = "ios", target_os = "freebsd", target_os = "openbsd", target_os = "netbsd", target_os = "dragonfly"))]
+    const O_NONBLOCK: c_int = 0x0004;
+    #[cfg(not(any(target_os = "macos", target_os = "ios", target_os = "freebsd", target_os = "openbsd", target_os = "netbsd", target_os = "dragonfly")))]
+    const O_NONBLOCK: c_int = 0x0800;
+    let descriptor = reader.as_raw_fd();
+    let flags = unsafe { fcntl(descriptor, F_GETFL) };
+    if flags < 0 || unsafe { fcntl(descriptor, F_SETFL, flags | O_NONBLOCK) } < 0 {
+        return Err(io::Error::last_os_error());
+    }
+    Ok(())
+}
+
+#[cfg(unix)]
+fn readable_bytes<R: std::os::fd::AsRawFd>(_reader: &R) -> io::Result<usize> {
+    Ok(PIPE_READ_BYTES_PER_POLL)
+}
+
+#[cfg(windows)]
+fn prepare_nonblocking<R: std::os::windows::io::AsRawHandle>(_reader: &R) -> io::Result<()> {
+    Ok(())
+}
+
+#[cfg(windows)]
+fn readable_bytes<R: std::os::windows::io::AsRawHandle>(reader: &R) -> io::Result<usize> {
+    use std::ffi::c_void;
+    unsafe extern "system" {
+        fn PeekNamedPipe(handle: *mut c_void, buffer: *mut c_void, buffer_size: u32, bytes_read: *mut u32, total_available: *mut u32, bytes_left: *mut u32) -> i32;
+    }
+    let mut available = 0u32;
+    let ok = unsafe { PeekNamedPipe(reader.as_raw_handle().cast(), std::ptr::null_mut(), 0, std::ptr::null_mut(), &mut available, std::ptr::null_mut()) };
+    if ok == 0 {
+        return Err(io::Error::last_os_error());
+    }
+    Ok((available as usize).min(PIPE_READ_BYTES_PER_POLL))
+}
+//#endregion 🚪️NonblockingPipe
+
 //#region 📦️Framing
 mod framing {
-    use super::{io, Read, Write};
+    use super::{io, Read, VecDeque, Write, MAX_FRAME_BYTES, PIPE_FRAMES_PER_POLL};
 
     pub const TAG_DATA: u8 = 0;
     pub const TAG_HEARTBEAT: u8 = 1;
 
+    #[derive(Debug, PartialEq, Eq)]
     pub enum Frame {
         Data(Vec<u8>),
         Heartbeat,
+    }
+
+    #[derive(Default)]
+    pub struct Decoder {
+        bytes: Vec<u8>,
+        frames: VecDeque<Frame>,
+    }
+
+    pub enum PipeState {
+        Open,
+        Eof,
     }
 
     /// ✍️ One frame: `[tag][len:u32 LE][payload]`. A single `lock()`-guarded writer (both
@@ -61,17 +112,60 @@ mod framing {
     /// separate `write_all`s interleaved with another thread's frame would corrupt the boundary,
     /// which is why both sides share one `Mutex`-guarded handle rather than re-acquiring
     /// `io::stdout()` per call.
-    pub async fn write_frame<W: Write>(writer: &mut W, tag: u8, payload: &[u8]) -> io::Result<()> {
+    pub fn write_frame<W: Write>(writer: &mut W, tag: u8, payload: &[u8]) -> io::Result<()> {
+        if payload.len() > MAX_FRAME_BYTES {
+            return Err(io::Error::new(io::ErrorKind::InvalidData, "process transport frame exceeds byte ceiling"));
+        }
         writer.write_all(&[tag])?;
         writer.write_all(&(payload.len() as u32).to_le_bytes())?;
         writer.write_all(payload)?;
         writer.flush()
     }
 
-    /// 📖️ Blocking read of one frame. `Ok(None)` is a clean EOF (the other end closed its write
-    /// half) — the ONE unambiguous "the process is gone" signal `ProcessTransport`'s reader thread
-    /// needs, distinct from `Heartbeat`'s "still alive, nothing to say".
-    pub async fn read_frame<R: Read>(reader: &mut R) -> io::Result<Option<Frame>> {
+    impl Decoder {
+        pub fn poll<R: Read>(&mut self, reader: &mut R, readable: usize) -> io::Result<PipeState> {
+            if readable > 0 {
+                let mut chunk = vec![0u8; readable.min(super::PIPE_READ_BYTES_PER_POLL)];
+                match reader.read(&mut chunk) {
+                    Ok(0) => return Ok(PipeState::Eof),
+                    Ok(read) => self.bytes.extend_from_slice(&chunk[..read]),
+                    Err(error) if error.kind() == io::ErrorKind::WouldBlock => {}
+                    Err(error) if error.kind() == io::ErrorKind::Interrupted => {}
+                    Err(error) => return Err(error),
+                }
+            }
+            self.decode()?;
+            Ok(PipeState::Open)
+        }
+
+        pub fn pop(&mut self) -> Option<Frame> {
+            self.frames.pop_front()
+        }
+
+        fn decode(&mut self) -> io::Result<()> {
+            for _ in 0..PIPE_FRAMES_PER_POLL {
+                if self.bytes.len() < 5 {
+                    break;
+                }
+                let len = u32::from_le_bytes(self.bytes[1..5].try_into().expect("five-byte frame prefix")) as usize;
+                if len > MAX_FRAME_BYTES {
+                    return Err(io::Error::new(io::ErrorKind::InvalidData, "process transport frame exceeds byte ceiling"));
+                }
+                let frame_len = 5usize.checked_add(len).ok_or_else(|| io::Error::new(io::ErrorKind::InvalidData, "process transport frame length overflow"))?;
+                if self.bytes.len() < frame_len {
+                    break;
+                }
+                let tag = self.bytes[0];
+                let payload = self.bytes[5..frame_len].to_vec();
+                self.bytes.drain(..frame_len);
+                self.frames.push_back(if tag == TAG_HEARTBEAT { Frame::Heartbeat } else { Frame::Data(payload) });
+            }
+            Ok(())
+        }
+    }
+
+    #[cfg(test)]
+    pub fn read_frame<R: Read>(reader: &mut R) -> io::Result<Option<Frame>> {
         let mut tag = [0u8; 1];
         match reader.read_exact(&mut tag) {
             Ok(()) => {}
@@ -81,20 +175,20 @@ mod framing {
         let mut len_bytes = [0u8; 4];
         reader.read_exact(&mut len_bytes)?;
         let len = u32::from_le_bytes(len_bytes) as usize;
+        if len > MAX_FRAME_BYTES {
+            return Err(io::Error::new(io::ErrorKind::InvalidData, "process transport frame exceeds byte ceiling"));
+        }
         let mut payload = vec![0u8; len];
         reader.read_exact(&mut payload)?;
-        if tag[0] == TAG_HEARTBEAT {
-            Ok(Some(Frame::Heartbeat))
-        } else {
-            Ok(Some(Frame::Data(payload)))
-        }
+        Ok(Some(if tag[0] == TAG_HEARTBEAT { Frame::Heartbeat } else { Frame::Data(payload) }))
     }
 }
 //#endregion 📦️Framing
 
 //#region 🖥️ProcessTransport
 /// 🖥️ Parent-side `ShardTransport`: spawns a `semio-shard` child, writes `Envelope` bytes to its
-/// stdin, and reads `ShardOutcome` bytes off its stdout on a dedicated reader thread (mirrors
+/// stdin, and incrementally reads `ShardOutcome` bytes off nonblocking stdout during bounded
+/// transport turns (mirrors
 /// `ThreadTransport`'s `Mutex<Receiver<Vec<u8>>>` shape — `recv()` must never block past whatever is
 /// ALREADY buffered, `ShardLoop::pump`'s own drain-loop contract). `heartbeat()` is wall-clock ms of
 /// the last frame (data OR heartbeat) seen from the child; [`Self::is_child_alive`] is the EOF
@@ -103,69 +197,61 @@ mod framing {
 pub struct ProcessTransport {
     child: Mutex<Child>,
     stdin: Mutex<ChildStdin>,
-    inbound: Arc<Mutex<VecDeque<Vec<u8>>>>,
+    stdout: Mutex<ChildStdout>,
+    decoder: Mutex<framing::Decoder>,
+    inbound: Mutex<VecDeque<Vec<u8>>>,
     heartbeat_ms: Arc<AtomicU64>,
     alive: Arc<AtomicBool>,
     killed: Arc<AtomicBool>,
-    _reader: Option<JoinHandle<()>>,
 }
 
 impl ProcessTransport {
     /// 🚀️ Spawns `program args…` with piped stdin/stdout (stderr inherited — the child's own
     /// `[DEBUG]`/panic output belongs in the PARENT's own log, not silently swallowed) and starts the
-    /// reader thread immediately, so no frame the child sends before this call returns is lost.
+    /// stdout in nonblocking mode. [`ShardTransport::recv`] performs at most one 64 KiB read and 32
+    /// frame decodes per turn, so pipe I/O consumes finite shared-pool work and owns no thread.
     pub async fn spawn(program: &Path, args: &[String]) -> io::Result<Self> {
         let mut child = Command::new(program).args(args).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::inherit()).spawn()?;
         let stdin = child.stdin.take().expect("Command::stdin(Stdio::piped()) guarantees Some");
-        let mut stdout = child.stdout.take().expect("Command::stdout(Stdio::piped()) guarantees Some");
-
-        let inbound: Arc<Mutex<VecDeque<Vec<u8>>>> = Arc::new(Mutex::new(VecDeque::new()));
-        let heartbeat_ms = Arc::new(AtomicU64::new(now_ms().await));
+        let stdout = child.stdout.take().expect("Command::stdout(Stdio::piped()) guarantees Some");
+        prepare_nonblocking(&stdout)?;
+        let heartbeat_ms = Arc::new(AtomicU64::new(now_ms()));
         let alive = Arc::new(AtomicBool::new(true));
 
-        let reader = {
-            let inbound = inbound.clone();
-            let heartbeat_ms = heartbeat_ms.clone();
-            let alive = alive.clone();
-            thread::Builder::new()
-                .name("semio-process-shard-reader".to_string())
-                .spawn(move || {
-                    semio_framework_trace::register_io_boundary_thread(IO_BOUNDARY_PARENT_READER);
-                    loop {
-                        // 🚫️async: dedicated reader thread IS its own executor (R4 clause 2/4 —
-                        // same shape as the db postgres/neo4j bridge threads and
-                        // `ShardExecutor::spawn`'s thread root); `read_frame` never actually
-                        // suspends (blocking std I/O, zero internal `.await`s), so `block_on` here
-                        // is a trivial, non-parking bridge.
-                        match semio_framework_async::block_on(framing::read_frame(&mut stdout)) {
-                            Ok(Some(framing::Frame::Data(bytes))) => {
-                                heartbeat_ms.store(semio_framework_async::block_on(now_ms()), Ordering::SeqCst);
-                                inbound.lock().expect("process-shard inbound lock").push_back(bytes);
-                            }
-                            Ok(Some(framing::Frame::Heartbeat)) => {
-                                heartbeat_ms.store(semio_framework_async::block_on(now_ms()), Ordering::SeqCst);
-                            }
-                            Ok(None) | Err(_) => {
-                                // 💀️ Clean EOF or a read error both mean the same thing here: the
-                                // child's write half is gone (exited, or `kill -9`'d out from
-                                // under it) — the ONE definitive "the process is dead" signal,
-                                // faster than waiting out a heartbeat timeout.
-                                alive.store(false, Ordering::SeqCst);
-                                break;
-                            }
-                        }
-                    }
-                })
-                .expect("spawn process-shard reader thread")
-        };
-
-        Ok(Self { child: Mutex::new(child), stdin: Mutex::new(stdin), inbound, heartbeat_ms, alive, killed: Arc::new(AtomicBool::new(false)), _reader: Some(reader) })
+        Ok(Self { child: Mutex::new(child), stdin: Mutex::new(stdin), stdout: Mutex::new(stdout), decoder: Mutex::new(framing::Decoder::default()), inbound: Mutex::new(VecDeque::new()), heartbeat_ms, alive, killed: Arc::new(AtomicBool::new(false)) })
     }
 
-    /// 💀️ `false` once the reader thread has observed EOF/an error on the child's stdout — the
+    fn poll_pipe(&self) {
+        if !self.alive.load(Ordering::SeqCst) {
+            return;
+        }
+        let Ok(mut stdout) = self.stdout.lock() else {
+            self.alive.store(false, Ordering::SeqCst);
+            return;
+        };
+        let Ok(mut decoder) = self.decoder.lock() else {
+            self.alive.store(false, Ordering::SeqCst);
+            return;
+        };
+        let state = readable_bytes(&*stdout).and_then(|readable| decoder.poll(&mut *stdout, readable));
+        if matches!(state, Ok(framing::PipeState::Eof) | Err(_)) {
+            self.alive.store(false, Ordering::SeqCst);
+        }
+        while let Some(frame) = decoder.pop() {
+            self.heartbeat_ms.store(now_ms(), Ordering::SeqCst);
+            if let framing::Frame::Data(bytes) = frame {
+                if let Ok(mut inbound) = self.inbound.lock() {
+                    inbound.push_back(bytes);
+                }
+            }
+        }
+    }
+
+    /// 💀️ `false` once a bounded pipe poll has observed EOF/an error on the child's stdout — the
     /// fast, definitive half of "the parent detects it (heartbeat/EOF)"; [`ShardTransport::
     /// heartbeat`] going stale is the slower half (a hung-but-not-dead child, e.g. `SIGSTOP`).
     pub async fn is_child_alive(&self) -> bool {
+        self.poll_pipe();
         self.alive.load(Ordering::SeqCst)
     }
 
@@ -183,15 +269,17 @@ impl ShardTransport for ProcessTransport {
             return;
         }
         if let Ok(mut stdin) = self.stdin.lock() {
-            let _ = framing::write_frame(&mut *stdin, framing::TAG_DATA, bytes).await;
+            let _ = framing::write_frame(&mut *stdin, framing::TAG_DATA, bytes);
         }
     }
 
     async fn recv(&self) -> Option<Vec<u8>> {
-        self.inbound.lock().ok().and_then(|mut queue| queue.pop_front())
+        self.poll_pipe();
+        self.inbound.lock().ok().and_then(|mut inbound| inbound.pop_front())
     }
 
     async fn heartbeat(&self) -> u64 {
+        self.poll_pipe();
         self.heartbeat_ms.load(Ordering::SeqCst)
     }
 
@@ -213,11 +301,12 @@ impl ShardTransport for ProcessTransport {
 impl Drop for ProcessTransport {
     fn drop(&mut self) {
         if !self.killed.load(Ordering::SeqCst) {
-            // 🚫️async: E5 executor bridge. `Drop::drop` (E1 — an externally-declared trait, `Drop`
-            // is language-fixed sync) cannot `.await`; this is the one `block_on` this file needs,
-            // bridging a destructor into `ShardTransport::kill`'s now-async signature. Sound: `kill`
-            // does no real awaiting (pure `AtomicBool`/`Mutex` work), so this never actually parks.
-            semio_framework_async::block_on(ShardTransport::kill(self));
+            self.killed.store(true, Ordering::SeqCst);
+            if let Ok(mut child) = self.child.lock() {
+                let _ = child.kill();
+                let _ = child.wait();
+            }
+            self.alive.store(false, Ordering::SeqCst);
         }
     }
 }
@@ -233,46 +322,19 @@ impl Drop for ProcessTransport {
 /// currently has any outcome to send (an idle shard must still prove it is alive).
 pub struct StdioTransport {
     stdout: Arc<Mutex<io::Stdout>>,
-    inbound: Arc<Mutex<VecDeque<Vec<u8>>>>,
+    stdin: Mutex<io::Stdin>,
+    decoder: Mutex<framing::Decoder>,
+    inbound: Mutex<VecDeque<Vec<u8>>>,
     alive: Arc<AtomicBool>,
-    _reader: JoinHandle<()>,
-    // 🧵️ P1f: the heartbeat sender is a periodic sleep+write, not a blocking I/O read — it moved
-    // onto the shared `WorkerPool`'s `Lane::Timer` ([`super::PeriodicPoolTimer`], the same mechanism
-    // `EpochTicker` uses) instead of owning a dedicated `JoinHandle<()>`. `_reader` (above) stays a
-    // real OS thread: a genuinely blocking stdin read has no non-blocking alternative here — see
-    // this file's own [`IO_BOUNDARY_CHILD_READER`] doc.
     _heartbeat: super::PeriodicPoolTimer,
 }
 
 impl StdioTransport {
     pub async fn new(heartbeat_interval_ms: u64) -> Self {
         let stdout = Arc::new(Mutex::new(io::stdout()));
-        let inbound: Arc<Mutex<VecDeque<Vec<u8>>>> = Arc::new(Mutex::new(VecDeque::new()));
+        let stdin = io::stdin();
+        prepare_nonblocking(&stdin).expect("configure shard stdin as nonblocking");
         let alive = Arc::new(AtomicBool::new(true));
-
-        let reader = {
-            let inbound = inbound.clone();
-            let alive = alive.clone();
-            thread::Builder::new()
-                .name("semio-shard-stdin-reader".to_string())
-                .spawn(move || {
-                    semio_framework_trace::register_io_boundary_thread(IO_BOUNDARY_CHILD_READER);
-                    let mut stdin = io::stdin();
-                    loop {
-                        // 🚫️async: dedicated reader thread IS its own executor — see the parent-side
-                        // reader thread's own comment on this same pattern, above in this file.
-                        match semio_framework_async::block_on(framing::read_frame(&mut stdin)) {
-                            Ok(Some(framing::Frame::Data(bytes))) => inbound.lock().expect("stdio-shard inbound lock").push_back(bytes),
-                            Ok(Some(framing::Frame::Heartbeat)) => {}
-                            Ok(None) | Err(_) => {
-                                alive.store(false, Ordering::SeqCst);
-                                break;
-                            }
-                        }
-                    }
-                })
-                .expect("spawn stdio-shard stdin reader thread")
-        };
 
         // 🧵️ P1f: a periodic sleep+write, not a blocking pipe read — driven off the shared
         // `WorkerPool`'s `Lane::Timer` ([`super::PeriodicPoolTimer`], the same mechanism
@@ -288,22 +350,48 @@ impl StdioTransport {
                     return false;
                 }
                 let Ok(mut guard) = stdout.lock() else { return false };
-                semio_framework_async::block_on(framing::write_frame(&mut *guard, framing::TAG_HEARTBEAT, &[])).is_ok()
+                framing::write_frame(&mut *guard, framing::TAG_HEARTBEAT, &[]).is_ok()
             })
         };
 
-        Self { stdout, inbound, alive, _reader: reader, _heartbeat: heartbeat }
+        Self { stdout, stdin: Mutex::new(stdin), decoder: Mutex::new(framing::Decoder::default()), inbound: Mutex::new(VecDeque::new()), alive, _heartbeat: heartbeat }
+    }
+
+    fn poll_pipe(&self) {
+        if !self.alive.load(Ordering::SeqCst) {
+            return;
+        }
+        let Ok(mut stdin) = self.stdin.lock() else {
+            self.alive.store(false, Ordering::SeqCst);
+            return;
+        };
+        let Ok(mut decoder) = self.decoder.lock() else {
+            self.alive.store(false, Ordering::SeqCst);
+            return;
+        };
+        let state = readable_bytes(&*stdin).and_then(|readable| decoder.poll(&mut *stdin, readable));
+        if matches!(state, Ok(framing::PipeState::Eof) | Err(_)) {
+            self.alive.store(false, Ordering::SeqCst);
+        }
+        while let Some(frame) = decoder.pop() {
+            if let framing::Frame::Data(bytes) = frame {
+                if let Ok(mut inbound) = self.inbound.lock() {
+                    inbound.push_back(bytes);
+                }
+            }
+        }
     }
 }
 
 impl ShardTransport for StdioTransport {
     async fn send(&self, bytes: &[u8]) {
         if let Ok(mut guard) = self.stdout.lock() {
-            let _ = framing::write_frame(&mut *guard, framing::TAG_DATA, bytes).await;
+            let _ = framing::write_frame(&mut *guard, framing::TAG_DATA, bytes);
         }
     }
 
     async fn recv(&self) -> Option<Vec<u8>> {
+        self.poll_pipe();
         self.inbound.lock().ok().and_then(|mut queue| queue.pop_front())
     }
 
@@ -414,9 +502,9 @@ mod tests {
     async fn a_data_frame_round_trips_arbitrary_bytes_including_zero_and_newline() {
         let payload = vec![0u8, 1, 2, b'\n', 255, 0u8];
         let mut buffer = Vec::new();
-        framing::write_frame(&mut buffer, framing::TAG_DATA, &payload).await.expect("write");
+        framing::write_frame(&mut buffer, framing::TAG_DATA, &payload).expect("write");
         let mut cursor = io::Cursor::new(buffer);
-        match framing::read_frame(&mut cursor).await.expect("read").expect("some frame") {
+        match framing::read_frame(&mut cursor).expect("read").expect("some frame") {
             framing::Frame::Data(bytes) => assert_eq!(bytes, payload),
             framing::Frame::Heartbeat => panic!("expected Data"),
         }
@@ -425,11 +513,11 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn a_heartbeat_frame_carries_no_payload_and_does_not_desync_the_next_frame() {
         let mut buffer = Vec::new();
-        framing::write_frame(&mut buffer, framing::TAG_HEARTBEAT, &[]).await.expect("write heartbeat");
-        framing::write_frame(&mut buffer, framing::TAG_DATA, b"after").await.expect("write data");
+        framing::write_frame(&mut buffer, framing::TAG_HEARTBEAT, &[]).expect("write heartbeat");
+        framing::write_frame(&mut buffer, framing::TAG_DATA, b"after").expect("write data");
         let mut cursor = io::Cursor::new(buffer);
-        assert!(matches!(framing::read_frame(&mut cursor).await.expect("read").expect("some"), framing::Frame::Heartbeat));
-        match framing::read_frame(&mut cursor).await.expect("read").expect("some") {
+        assert!(matches!(framing::read_frame(&mut cursor).expect("read").expect("some"), framing::Frame::Heartbeat));
+        match framing::read_frame(&mut cursor).expect("read").expect("some") {
             framing::Frame::Data(bytes) => assert_eq!(bytes, b"after"),
             framing::Frame::Heartbeat => panic!("expected Data"),
         }
@@ -438,7 +526,36 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn read_frame_reports_clean_eof_as_none_not_an_error() {
         let mut cursor = io::Cursor::new(Vec::<u8>::new());
-        assert!(framing::read_frame(&mut cursor).await.expect("EOF is Ok(None), not Err").is_none());
+        assert!(framing::read_frame(&mut cursor).expect("EOF is Ok(None), not Err").is_none());
+    }
+
+    #[test]
+    fn nonblocking_decoder_preserves_fragmented_and_concatenated_frames() {
+        let mut encoded = Vec::new();
+        framing::write_frame(&mut encoded, framing::TAG_DATA, b"first").expect("first");
+        framing::write_frame(&mut encoded, framing::TAG_HEARTBEAT, &[]).expect("heartbeat");
+        framing::write_frame(&mut encoded, framing::TAG_DATA, b"second").expect("second");
+        let split_a = 3;
+        let split_b = encoded.len() - 4;
+        let mut decoder = framing::Decoder::default();
+        for fragment in [&encoded[..split_a], &encoded[split_a..split_b], &encoded[split_b..]] {
+            let mut cursor = io::Cursor::new(fragment);
+            assert!(matches!(decoder.poll(&mut cursor, fragment.len()).expect("decode fragment"), framing::PipeState::Open));
+        }
+        assert_eq!(decoder.pop(), Some(framing::Frame::Data(b"first".to_vec())));
+        assert_eq!(decoder.pop(), Some(framing::Frame::Heartbeat));
+        assert_eq!(decoder.pop(), Some(framing::Frame::Data(b"second".to_vec())));
+        assert_eq!(decoder.pop(), None);
+    }
+
+    #[test]
+    fn nonblocking_decoder_rejects_oversized_prefix_before_payload_allocation() {
+        let mut prefix = vec![framing::TAG_DATA];
+        prefix.extend_from_slice(&((MAX_FRAME_BYTES as u32) + 1).to_le_bytes());
+        let mut cursor = io::Cursor::new(prefix.clone());
+        let mut decoder = framing::Decoder::default();
+        let error = decoder.poll(&mut cursor, prefix.len()).expect_err("oversized prefix must fail");
+        assert_eq!(error.kind(), io::ErrorKind::InvalidData);
     }
     //#endregion 🧪️FramingTests
 
@@ -611,11 +728,11 @@ mod tests {
         let status = Command::new("kill").args(["-9", &pid_a.to_string()]).status().expect("run kill -9 on shard a");
         assert!(status.success(), "kill -9 shard a must succeed");
 
-        let mut watchdog = ProcessShardWatchdog::new(500, now_ms().await).await;
+        let mut watchdog = ProcessShardWatchdog::new(500, now_ms()).await;
         let mut lost = false;
         for _ in 0..100 {
             thread::sleep(Duration::from_millis(50));
-            if watchdog.poll_with_liveness(semio_framework_async::block_on(shard_a.heartbeat()), shard_a.is_child_alive().await, now_ms().await).await {
+            if watchdog.poll_with_liveness(semio_framework_async::block_on(shard_a.heartbeat()), shard_a.is_child_alive().await, now_ms()).await {
                 lost = true;
                 break;
             }

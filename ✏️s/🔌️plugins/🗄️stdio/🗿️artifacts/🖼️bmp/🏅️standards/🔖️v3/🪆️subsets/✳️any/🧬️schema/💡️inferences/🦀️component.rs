@@ -22,7 +22,7 @@ pub struct BmpInference {
 }
 
 impl protocol::Inference<BmpSnapshot> for BmpInference {
-    async fn infer(snapshot: &BmpSnapshot) -> Self {
+    fn infer(snapshot: &BmpSnapshot) -> Self {
         Self { dimensions: compute_bmp_dimensions(snapshot) }
     }
 }
@@ -39,13 +39,13 @@ impl Default for BmpInference {
 }
 
 impl protocol::InferenceSpec<BmpSnapshot> for BmpInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.stdio.bmp.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.bmp.inference.dimensions", reads: &["width", "height", "bitsPerPixel"] }]
     }
 }

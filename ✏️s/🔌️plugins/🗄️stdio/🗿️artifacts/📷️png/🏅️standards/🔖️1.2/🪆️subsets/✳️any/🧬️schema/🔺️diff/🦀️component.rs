@@ -1907,7 +1907,7 @@ pub(crate) fn read_bin_snapshot(r: &mut dsl::ByteReader<'_>) -> Result<PngSnapsh
 // added shape isn't further protocol-walkable, see that file's own doc comment).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_plte_diff_bin(d: &PngPlteDiff) -> Vec<u8> {
-    let mut w = semio_framework_plugin::resolve_ready(dsl::ByteWriter::new());
+    let mut w = dsl::ByteWriter::new();
     write_bin_vec(&mut w, &d.removed, |w, v: &usize| w.write_varint_u64(*v as u64));
     write_bin_vec(&mut w, &d.modified, |w, m: &PngPlteEntryModified| {
         w.write_varint_u64(m.index as u64);
@@ -1921,7 +1921,7 @@ fn enc_plte_diff_bin(d: &PngPlteDiff) -> Vec<u8> {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_plte_diff_bin(bytes: &[u8]) -> Result<PngPlteDiff, dsl::PackError> {
-    let mut r = semio_framework_plugin::resolve_ready(dsl::ByteReader::new(bytes));
+    let mut r = dsl::ByteReader::new(bytes);
     let removed = read_bin_vec(&mut r, |r| Ok(r.read_varint_u64()? as usize))?;
     let modified = read_bin_vec(&mut r, |r| {
         let index = r.read_varint_u64()? as usize;
@@ -1957,7 +1957,7 @@ fn read_bin_text_chunk_diff(r: &mut dsl::ByteReader<'_>) -> Result<PngTextChunkD
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_text_chunks_diff_bin(d: &PngTextChunksDiff) -> Vec<u8> {
-    let mut w = semio_framework_plugin::resolve_ready(dsl::ByteWriter::new());
+    let mut w = dsl::ByteWriter::new();
     write_bin_vec(&mut w, &d.removed, |w, v: &usize| w.write_varint_u64(*v as u64));
     write_bin_vec(&mut w, &d.modified, |w, m: &PngTextChunkModified| {
         w.write_varint_u64(m.index as u64);
@@ -1971,7 +1971,7 @@ fn enc_text_chunks_diff_bin(d: &PngTextChunksDiff) -> Vec<u8> {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_text_chunks_diff_bin(bytes: &[u8]) -> Result<PngTextChunksDiff, dsl::PackError> {
-    let mut r = semio_framework_plugin::resolve_ready(dsl::ByteReader::new(bytes));
+    let mut r = dsl::ByteReader::new(bytes);
     let removed = read_bin_vec(&mut r, |r| Ok(r.read_varint_u64()? as usize))?;
     let modified = read_bin_vec(&mut r, |r| {
         let index = r.read_varint_u64()? as usize;
@@ -1987,7 +1987,7 @@ fn dec_text_chunks_diff_bin(bytes: &[u8]) -> Result<PngTextChunksDiff, dsl::Pack
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_chunk_order_diff_bin(d: &PngChunkOrderDiff) -> Vec<u8> {
-    let mut w = semio_framework_plugin::resolve_ready(dsl::ByteWriter::new());
+    let mut w = dsl::ByteWriter::new();
     write_bin_vec(&mut w, &d.removed, |w, v: &usize| w.write_varint_u64(*v as u64));
     write_bin_vec(&mut w, &d.modified, |w, m: &PngChunkOrderModified| {
         w.write_varint_u64(m.index as u64);
@@ -2001,7 +2001,7 @@ fn enc_chunk_order_diff_bin(d: &PngChunkOrderDiff) -> Vec<u8> {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_chunk_order_diff_bin(bytes: &[u8]) -> Result<PngChunkOrderDiff, dsl::PackError> {
-    let mut r = semio_framework_plugin::resolve_ready(dsl::ByteReader::new(bytes));
+    let mut r = dsl::ByteReader::new(bytes);
     let removed = read_bin_vec(&mut r, |r| Ok(r.read_varint_u64()? as usize))?;
     let modified = read_bin_vec(&mut r, |r| {
         let index = r.read_varint_u64()? as usize;
@@ -2017,7 +2017,7 @@ fn dec_chunk_order_diff_bin(bytes: &[u8]) -> Result<PngChunkOrderDiff, dsl::Pack
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_unknown_chunks_diff_bin(d: &PngUnknownChunksDiff) -> Vec<u8> {
-    let mut w = semio_framework_plugin::resolve_ready(dsl::ByteWriter::new());
+    let mut w = dsl::ByteWriter::new();
     write_bin_vec(&mut w, &d.removed, |w, v: &usize| w.write_varint_u64(*v as u64));
     write_bin_vec(&mut w, &d.modified, |w, m: &PngUnknownChunkModified| {
         w.write_varint_u64(m.index as u64);
@@ -2031,7 +2031,7 @@ fn enc_unknown_chunks_diff_bin(d: &PngUnknownChunksDiff) -> Vec<u8> {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_unknown_chunks_diff_bin(bytes: &[u8]) -> Result<PngUnknownChunksDiff, dsl::PackError> {
-    let mut r = semio_framework_plugin::resolve_ready(dsl::ByteReader::new(bytes));
+    let mut r = dsl::ByteReader::new(bytes);
     let removed = read_bin_vec(&mut r, |r| Ok(r.read_varint_u64()? as usize))?;
     let modified = read_bin_vec(&mut r, |r| {
         let index = r.read_varint_u64()? as usize;
@@ -2202,9 +2202,9 @@ impl protocol::DiffCodec for PngDiff {
 
         write_bin_tri_flag(&mut w, &self.plte, |w, v| write_bin_blob(w, &enc_plte_diff_bin(v)));
         write_bin_tri_flag(&mut w, &self.trns, |w, v| {
-            let mut inner = semio_framework_plugin::resolve_ready(dsl::ByteWriter::new());
+            let mut inner = dsl::ByteWriter::new();
             write_bin_transparency(&mut inner, v);
-            write_bin_blob(w, &semio_framework_plugin::resolve_ready(inner.into_bytes()));
+            write_bin_blob(w, &inner.into_bytes());
         });
         write_bin_tri_flag(&mut w, &self.gama, |w, v| w.write_u32_le(*v));
         write_bin_tri_flag(&mut w, &self.chrm, |w, v| write_bin_chromaticities(w, v));
@@ -2212,9 +2212,9 @@ impl protocol::DiffCodec for PngDiff {
         write_bin_tri_flag(&mut w, &self.phys, |w, v| write_bin_physical_dims(w, v));
         write_bin_tri_flag(&mut w, &self.time, |w, v| write_bin_timestamp(w, v));
         write_bin_tri_flag(&mut w, &self.bkgd, |w, v| {
-            let mut inner = semio_framework_plugin::resolve_ready(dsl::ByteWriter::new());
+            let mut inner = dsl::ByteWriter::new();
             write_bin_background(&mut inner, v);
-            write_bin_blob(w, &semio_framework_plugin::resolve_ready(inner.into_bytes()));
+            write_bin_blob(w, &inner.into_bytes());
         });
 
         write_bin_option(&mut w, &self.text_chunks, |w, v| write_bin_blob(w, &enc_text_chunks_diff_bin(v)));
@@ -2225,7 +2225,7 @@ impl protocol::DiffCodec for PngDiff {
         Ok(w.into_bytes())
     }
     fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let mut r = semio_framework_plugin::resolve_ready(dsl::ByteReader::new(bytes));
+        let mut r = dsl::ByteReader::new(bytes);
         let width = read_bin_option(&mut r, |r| r.read_u32_le()).map_err(diff_pack_err)?;
         let height = read_bin_option(&mut r, |r| r.read_u32_le()).map_err(diff_pack_err)?;
         let bit_depth = read_bin_option(&mut r, |r| r.read_u8()).map_err(diff_pack_err)?;
@@ -2235,7 +2235,7 @@ impl protocol::DiffCodec for PngDiff {
         let plte = read_bin_tri_flag(&mut r, |r| dec_plte_diff_bin(&read_bin_blob(r)?)).map_err(diff_pack_err)?;
         let trns = read_bin_tri_flag(&mut r, |r| {
             let blob = read_bin_blob(r)?;
-            let mut inner = semio_framework_plugin::resolve_ready(dsl::ByteReader::new(&blob));
+            let mut inner = dsl::ByteReader::new(&blob);
             read_bin_transparency(&mut inner)
         })
         .map_err(diff_pack_err)?;
@@ -2246,7 +2246,7 @@ impl protocol::DiffCodec for PngDiff {
         let time = read_bin_tri_flag(&mut r, read_bin_timestamp).map_err(diff_pack_err)?;
         let bkgd = read_bin_tri_flag(&mut r, |r| {
             let blob = read_bin_blob(r)?;
-            let mut inner = semio_framework_plugin::resolve_ready(dsl::ByteReader::new(&blob));
+            let mut inner = dsl::ByteReader::new(&blob);
             read_bin_background(&mut inner)
         })
         .map_err(diff_pack_err)?;

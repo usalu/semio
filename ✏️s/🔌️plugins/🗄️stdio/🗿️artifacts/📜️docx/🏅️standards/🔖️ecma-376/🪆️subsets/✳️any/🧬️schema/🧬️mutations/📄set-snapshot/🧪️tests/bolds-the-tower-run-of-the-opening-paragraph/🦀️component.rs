@@ -92,11 +92,8 @@ async fn committed_json_is_canonical() {
 async fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
     let status = outcome.get("status").and_then(serde_json::Value::as_str).expect("outcome carries a status");
-    let declared: Vec<(String, String)> = outcome
-        .get("messages")
-        .and_then(serde_json::Value::as_array)
-        .map(|rows| rows.iter().map(|row| (row["level"].as_str().unwrap_or_default().to_string(), row["code"].as_str().unwrap_or_default().to_string())).collect())
-        .unwrap_or_default();
+    let declared: Vec<(String, String)> =
+        outcome.get("messages").and_then(serde_json::Value::as_array).map(|rows| rows.iter().map(|row| (row["level"].as_str().unwrap_or_default().to_string(), row["code"].as_str().unwrap_or_default().to_string())).collect()).unwrap_or_default();
     let raised = <DocxMutation as protocol::Mutation<DocxSnapshot>>::diff(&mutation(), &before());
     let produced: Vec<(String, String)> = raised
         .messages()
@@ -151,7 +148,10 @@ async fn committed_diff_is_canonical() {
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "set-snapshot/bolds-the-tower-run-of-the-opening-paragraph: committed diff JSON is not canonical");
     let body = decoded.document.as_ref().expect("document diff").body.as_ref().expect("body triple");
-    assert!(matches!(&body.modified[0].diff, crate::artifacts::docx::standards::v_ecma_376::subsets::any::schema::diff::DocxBlockDiff::Paragraph(paragraph) if paragraph.style.is_none()), "set-snapshot/bolds-the-tower-run-of-the-opening-paragraph: the tri-state style slot must round-trip as absent — a committed null would collapse the Some(None) 'style cleared' state that Option<Option<String>> cannot express in JSON");
+    assert!(
+        matches!(&body.modified[0].diff, crate::artifacts::docx::standards::v_ecma_376::subsets::any::schema::diff::DocxBlockDiff::Paragraph(paragraph) if paragraph.style.is_none()),
+        "set-snapshot/bolds-the-tower-run-of-the-opening-paragraph: the tri-state style slot must round-trip as absent — a committed null would collapse the Some(None) 'style cleared' state that Option<Option<String>> cannot express in JSON"
+    );
 }
 
 /// 🩹 Applying the committed diff directly to `before` yields the committed `after` — the diff is

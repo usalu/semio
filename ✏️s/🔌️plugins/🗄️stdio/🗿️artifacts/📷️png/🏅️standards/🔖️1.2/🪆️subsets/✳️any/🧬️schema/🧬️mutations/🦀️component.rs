@@ -99,7 +99,7 @@ pub enum PngMutation {
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`: `let d = mutation.diff(&*snapshot); *snapshot =
 /// d.apply(snapshot); d` — the diff is the single semantics source (csv precedent).
-pub async fn apply_png_mutation(snapshot: &mut PngSnapshot, mutation: &PngMutation) -> protocol::MutationOutcome<PngDiff> {
+pub fn apply_png_mutation(snapshot: &mut PngSnapshot, mutation: &PngMutation) -> protocol::MutationOutcome<PngDiff> {
     let outcome = <PngMutation as Mutation<PngSnapshot>>::diff(mutation, snapshot);
     match MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
@@ -186,7 +186,7 @@ impl Mutation<PngSnapshot> for PngMutation {
 /// variant (no `DslVariants` scaffolding available since nothing here derives it). `SetSnapshot`'s
 /// whole-snapshot payload is a single positional `[schema,width,height,...]` tuple reusing every
 /// per-field value codec already written for the diff side.
-async fn enc_png_snapshot(s: &PngSnapshot) -> String {
+fn enc_png_snapshot(s: &PngSnapshot) -> String {
     format!(
         "[{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}]",
         enc_str(&s.schema),
@@ -209,7 +209,7 @@ async fn enc_png_snapshot(s: &PngSnapshot) -> String {
         enc_list(&s.unknown_chunks, enc_chunk),
     )
 }
-async fn dec_png_snapshot(s: &str) -> Result<PngSnapshot, String> {
+fn dec_png_snapshot(s: &str) -> Result<PngSnapshot, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [schema, width, height, bit_depth, color_type, interlace, plte, trns, gama, chrm, srgb, phys, time, bkgd, text_chunks, pixels, chunk_order, unknown_chunks] = parts.as_slice() else {
         return Err(format!("png snapshot: expected 18 fields, got {}", parts.len()));
@@ -257,7 +257,7 @@ fn print_png_mutation(m: &PngMutation) -> String {
         PngMutation::RemoveUnknownChunk { index } => format!("remove-unknown-chunk index={index}"),
     }
 }
-async fn parse_png_mutation(line: &str) -> Result<PngMutation, String> {
+fn parse_png_mutation(line: &str) -> Result<PngMutation, String> {
     if line == "no-mutation" {
         return Ok(PngMutation::NoMutation);
     }
@@ -266,7 +266,7 @@ async fn parse_png_mutation(line: &str) -> Result<PngMutation, String> {
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("png mutation: missing arg '{k}' for '{keyword}'"));
     let usize_arg = |k: &str| -> Result<usize, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
     match keyword {
-        "set-snapshot" => Ok(PngMutation::SetSnapshot { snapshot: dec_png_snapshot(arg("snapshot")?).await? }),
+        "set-snapshot" => Ok(PngMutation::SetSnapshot { snapshot: dec_png_snapshot(arg("snapshot")?)? }),
         "set-header" => {
             Ok(PngMutation::SetHeader { width: parse_u32(arg("width")?)?, height: parse_u32(arg("height")?)?, bit_depth: parse_u8(arg("bit-depth")?)?, color_type: dec_color_type(arg("color-type")?)?, interlace: arg("interlace")? == "1" })
         }
@@ -309,7 +309,7 @@ impl OpText for PngMutation {
 /// `PngSnapshot`/`PngTransparency`/`PngBackground`/… payload inside most arms is one honest
 /// opaque tail blob rather than individually walked at the protocol-description level (the
 /// Rust encoding below IS genuinely, fully structured real binary).
-async fn op_pack_err(e: dsl::PackError) -> protocol::ProtocolError {
+fn op_pack_err(e: dsl::PackError) -> protocol::ProtocolError {
     protocol::ProtocolError::Malformed { what: "png op binary", offset: 0, detail: e.to_string() }
 }
 
@@ -451,12 +451,12 @@ impl OpBinary for PngMutation {
 /// calls it too (single source of truth, per CLAUDE.md — moved out of `mod tests` verbatim,
 /// only the `pub(crate)`/`#[cfg(test)]` visibility changed).
 #[cfg(test)]
-async fn demo_text_chunk(keyword: &str, value: &str) -> PngTextChunk {
+fn demo_text_chunk(keyword: &str, value: &str) -> PngTextChunk {
     PngTextChunk { keyword: keyword.into(), value: value.into(), compressed: false, kind: crate::artifacts::png::schema::snapshot::PngTextKind::Text, language_tag: String::new(), translated_keyword: String::new() }
 }
 
 #[cfg(test)]
-pub(crate) async fn demo_base_snapshot() -> PngSnapshot {
+pub(crate) fn demo_base_snapshot() -> PngSnapshot {
     use crate::artifacts::png::schema::snapshot::PngChunkMarker;
     PngSnapshot {
         schema: "stdio.png".into(),
@@ -485,7 +485,7 @@ pub(crate) async fn demo_base_snapshot() -> PngSnapshot {
 /// `op_text_binary_roundtrip_law` (this file) AND `ops_grammar_conformance_law`/
 /// `protocol_walk_law` (`⚙️engine/🦀️component.rs`) all exercise.
 #[cfg(test)]
-pub(crate) async fn demo_mutation_cases() -> Vec<PngMutation> {
+pub(crate) fn demo_mutation_cases() -> Vec<PngMutation> {
     let base = demo_base_snapshot();
     vec![
         PngMutation::NoMutation,
@@ -530,11 +530,11 @@ mod tests {
     /// single source of truth, per CLAUDE.md) — kept as short LOCAL names since both are used
     /// pervasively for ad hoc per-test values below (`absorb_law` etc.), not just the mutation
     /// case list.
-    async fn text_chunk(keyword: &str, value: &str) -> PngTextChunk {
+    fn text_chunk(keyword: &str, value: &str) -> PngTextChunk {
         demo_text_chunk(keyword, value)
     }
 
-    async fn base_snapshot() -> PngSnapshot {
+    fn base_snapshot() -> PngSnapshot {
         demo_base_snapshot()
     }
     //#endregion 🔖️Fixtures
@@ -546,7 +546,7 @@ mod tests {
     /// "removed-in-forward / added-in-backward" item as the tail at position 1 — the recipe's
     /// own documented workaround for the structural "same-length between() can show removed
     /// XOR added, never both from one call" trap (see `f1-closer-report.md` §4.4).
-    async fn sweep_a() -> PngSnapshot {
+    fn sweep_a() -> PngSnapshot {
         PngSnapshot {
             schema: "stdio.png".into(),
             width: 10,
@@ -569,7 +569,7 @@ mod tests {
         }
     }
 
-    async fn sweep_b() -> PngSnapshot {
+    fn sweep_b() -> PngSnapshot {
         PngSnapshot {
             schema: "stdio.png".into(),
             width: 11,
@@ -594,7 +594,7 @@ mod tests {
     //#endregion 🔖️FieldSweepFixtures
 
     //#region 🔖️mutation_diff_law
-    async fn assert_mutation_diff_law(base: &PngSnapshot, mutation: PngMutation) {
+    fn assert_mutation_diff_law(base: &PngSnapshot, mutation: PngMutation) {
         let expected_diff = mutation.diff(base);
         let mut applied_snapshot = base.clone();
         let returned_diff = apply_png_mutation(&mut applied_snapshot, &mutation);
@@ -606,13 +606,13 @@ mod tests {
     /// truth) — kept as a local name taking the SAME `&PngSnapshot` signature every call site
     /// below already uses; `demo_mutation_cases()` builds its own (structurally identical)
     /// base internally, so the passed-in `base` is intentionally unused here.
-    async fn all_variants(base: &PngSnapshot) -> Vec<PngMutation> {
+    fn all_variants(base: &PngSnapshot) -> Vec<PngMutation> {
         let _ = base;
         demo_mutation_cases()
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn mutation_diff_law() {
+    #[test]
+    fn mutation_diff_law() {
         let base = base_snapshot();
         for m in all_variants(&base) {
             assert_mutation_diff_law(&base, m);
@@ -621,8 +621,8 @@ mod tests {
     //#endregion 🔖️mutation_diff_law
 
     //#region 🔖️inverse_law
-    #[semio_framework_async_macros::async_test]
-    async fn inverse_law() {
+    #[test]
+    fn inverse_law() {
         let base = base_snapshot();
         for m in all_variants(&base) {
             // Mutation-level round trip.
@@ -643,7 +643,7 @@ mod tests {
     //#endregion 🔖️inverse_law
 
     //#region 🔖️absorb_law
-    async fn assert_absorb_law(base: &PngSnapshot, m1: PngMutation, m2: PngMutation) {
+    fn assert_absorb_law(base: &PngSnapshot, m1: PngMutation, m2: PngMutation) {
         let d1 = m1.diff(base);
         let mid = d1.diff().apply(base).expect("d1 must apply to base");
         let d2 = m2.diff(&mid);
@@ -654,8 +654,8 @@ mod tests {
         assert_eq!(merged.apply(base).expect("merged diff must apply to base"), sequential, "absorb(d1,d2).apply(base) must equal sequential application for {m1:?} + {m2:?}");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn absorb_law() {
+    #[test]
+    fn absorb_law() {
         let base = base_snapshot();
 
         // Insert+Remove-before: base has [Title] at 0; insert "New" at 1 -> [Title,New]; then
@@ -684,8 +684,8 @@ mod tests {
         assert_absorb_law(&base, PngMutation::SetTransparency { trns: Some(PngTransparency::Grayscale { gray: 1 }) }, PngMutation::SetTransparency { trns: None });
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn absorb_law_associativity() {
+    #[test]
+    fn absorb_law_associativity() {
         let base = base_snapshot();
         let d1 = PngMutation::InsertTextChunk { index: 0, chunk: text_chunk("A", "a") }.diff(&base);
         let s1 = d1.diff().apply(&base).expect("d1 must apply to base");
@@ -712,8 +712,8 @@ mod tests {
     //#endregion 🔖️absorb_law
 
     //#region 🔖️between_roundtrip_law
-    #[semio_framework_async_macros::async_test]
-    async fn between_roundtrip_law() {
+    #[test]
+    fn between_roundtrip_law() {
         let a = base_snapshot();
         let mut b = base_snapshot();
         b.width = 8;
@@ -729,8 +729,8 @@ mod tests {
     //#endregion 🔖️between_roundtrip_law
 
     //#region 🔖️codec_retention_law
-    #[semio_framework_async_macros::async_test]
-    async fn codec_retention_law() {
+    #[test]
+    fn codec_retention_law() {
         let bytes = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🗿️artifacts/📷️png/📚️examples/🎬️demo/🖼️assets/📷️example.png"));
         let bytes = match bytes {
             Ok(b) if !b.is_empty() => b,
@@ -750,8 +750,8 @@ mod tests {
     //#endregion 🔖️codec_retention_law
 
     //#region 🔖️field_sweep
-    #[semio_framework_async_macros::async_test]
-    async fn field_sweep_covers_every_mutable_field() {
+    #[test]
+    fn field_sweep_covers_every_mutable_field() {
         let a = sweep_a();
         let b = sweep_b();
 
@@ -838,8 +838,8 @@ mod tests {
     }
     //#endregion 🔖️field_sweep
 
-    #[semio_framework_async_macros::async_test]
-    async fn out_of_range_mutation_is_noop_not_panic() {
+    #[test]
+    fn out_of_range_mutation_is_noop_not_panic() {
         let base = base_snapshot();
         let mut snap = base.clone();
         apply_png_mutation(&mut snap, &PngMutation::RemoveTextChunk { index: 42 });
@@ -856,8 +856,8 @@ mod tests {
     /// payload) plus two extra `SetSnapshot` cases (`sweep_a`/`sweep_b`) so the whole-snapshot
     /// positional codec's `Some` AND `None` branches for every one of its 8 optional fields, plus
     /// its `text_chunks`/`chunk_order`/`unknown_chunks` lists, both get covered.
-    #[semio_framework_async_macros::async_test]
-    async fn op_text_binary_roundtrip_law() {
+    #[test]
+    fn op_text_binary_roundtrip_law() {
         let base = base_snapshot();
         let mut mutations = all_variants(&base);
         mutations.push(PngMutation::SetSnapshot { snapshot: sweep_a() });

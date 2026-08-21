@@ -24,7 +24,7 @@ pub struct HtmlInference {
 }
 
 impl Inference<HtmlSnapshot> for HtmlInference {
-    async fn infer(snapshot: &HtmlSnapshot) -> Self {
+    fn infer(snapshot: &HtmlSnapshot) -> Self {
         Self { outline: HtmlOutline::compute(snapshot) }
     }
 }
@@ -40,13 +40,13 @@ impl Default for HtmlInference {
 }
 
 impl protocol::InferenceSpec<HtmlSnapshot> for HtmlInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.stdio.html.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.html.inference.outline", reads: &["root"] }]
     }
 }

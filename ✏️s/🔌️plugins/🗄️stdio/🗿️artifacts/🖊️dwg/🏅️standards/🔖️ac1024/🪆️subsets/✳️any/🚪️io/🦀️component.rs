@@ -677,7 +677,6 @@ fn write_data_page(output: &mut Vec<u8>, page: &EncodedR2004Page) -> Result<(), 
     Ok(())
 }
 
-
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn materialize_r2004_ordinary_pages_without_header(snapshot: &crate::artifacts::dwg::DwgSnapshot) -> Result<Vec<EncodedR2004Page>, String> {
     let (objects, pairs) = materialize_r2010_objects(&snapshot.drawing.objects)?;
@@ -724,7 +723,6 @@ fn materialize_r2004_ordinary_pages_without_header(snapshot: &crate::artifacts::
     }
     Ok(pages)
 }
-
 
 struct R2004SectionDescriptor {
     name: &'static str,
@@ -813,7 +811,6 @@ fn encode_r2004_section_info(descriptors: &[R2004SectionDescriptor], pages: &[En
     Ok(output)
 }
 
-
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn write_r2004_system_page(output: &mut Vec<u8>, page_type: u32, decoded: &[u8], physical_allocation: Option<usize>, fill_skip: usize) -> Result<usize, String> {
     let start = output.len();
@@ -876,7 +873,6 @@ fn r2004_section_descriptors(snapshot: &crate::artifacts::dwg::DwgSnapshot, head
     }));
     Ok(descriptors)
 }
-
 
 /// 🏗️ Materializes a canonical R2004-family directory from logical AC1024 section descriptors.
 /// Section payloads are serialization products and are never retained in the artifact schema.
@@ -3827,9 +3823,6 @@ pub(crate) fn decode_r2004_document_sections(bytes: &[u8]) -> Result<DwgDocument
         application_history: decode_application_history(&data("AcDb:AppInfoHistory")?).map_err(|error| format!("AcDb:AppInfoHistory: {error}"))?,
     })
 }
-
-
-
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_r2004_modular_char(bytes: &[u8], position: &mut usize, signed: bool) -> Result<i64, String> {
@@ -10910,51 +10903,6 @@ pub(crate) fn decode_r2004_object_identities(bytes: &[u8], classes: &[crate::art
     decode_r2004_object_records(bytes, classes).map(|(objects, _)| objects)
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn r2010_string_stream(bytes: &[u8], end_bit: usize) -> Result<(DwgBitReader<'_>, usize), String> {
     if end_bit < 17 || end_bit > bytes.len().saturating_mul(8) {
@@ -12144,8 +12092,9 @@ pub mod io_registry {
     }
 }
 //#endregion 🚪️DerivedIoRegistry
-#[semio_framework_async_macros::async_test]
-async fn schema_facets_reject_imported_byte_shadow_state() {
+#[cfg(test)]
+#[test]
+fn schema_facets_reject_imported_byte_shadow_state() {
     let facets = [
         include_str!("../🧬️schema/📸️snapshot/🦀️component.rs"),
         include_str!("../🧬️schema/📸️snapshot/🟦️component.ts"),

@@ -14,12 +14,12 @@
 //!   (tEXt/zTXt/iTXt)/`compressed`/`language_tag`/`translated_keyword` have no home on
 //!   `SemioImageMetadataEntry` and are dropped on import.
 
+#[cfg(test)]
+use crate::artifacts::png::schema::snapshot::{PngChunkMarker, PngTextKind};
 use crate::artifacts::png::{
     schema::snapshot::{PngColorType, PngTextChunk},
     PngSnapshot,
 };
-#[cfg(test)]
-use crate::artifacts::png::schema::snapshot::{PngChunkMarker, PngTextKind};
 use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot, STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
 

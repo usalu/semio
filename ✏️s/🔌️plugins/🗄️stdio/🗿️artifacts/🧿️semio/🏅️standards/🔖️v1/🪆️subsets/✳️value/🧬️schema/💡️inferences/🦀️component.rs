@@ -29,7 +29,7 @@ pub struct SemioValueInference {
 }
 
 impl protocol::Inference<SemioValueSnapshot> for SemioValueInference {
-    async fn infer(snapshot: &SemioValueSnapshot) -> Self {
+    fn infer(snapshot: &SemioValueSnapshot) -> Self {
         Self { census: compute_semio_value_census(snapshot) }
     }
 }
@@ -47,13 +47,13 @@ impl Default for SemioValueInference {
 }
 
 impl protocol::InferenceSpec<SemioValueSnapshot> for SemioValueInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.stdio.semio.value.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.semio.value.inference.census", reads: &["root", "nodes"] }]
     }
 }

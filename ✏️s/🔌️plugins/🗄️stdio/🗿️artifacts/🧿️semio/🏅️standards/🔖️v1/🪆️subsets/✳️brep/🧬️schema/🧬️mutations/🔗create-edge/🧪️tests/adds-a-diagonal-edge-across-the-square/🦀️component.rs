@@ -91,7 +91,7 @@ async fn produces_committed_diff() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical_and_narrowly_scoped() {
     let decoded: SemioBrepDiff = serde_json::from_str(DIFF).expect("committed create-edge diff decodes");
-    
+
     let edges = decoded.edges.as_ref().expect("create-edge must write the edges triple");
     assert_eq!(edges.added.len(), 1, "exactly one edge is added");
     assert!(edges.removed.is_empty() && edges.modified.is_empty(), "a create neither removes nor modifies");

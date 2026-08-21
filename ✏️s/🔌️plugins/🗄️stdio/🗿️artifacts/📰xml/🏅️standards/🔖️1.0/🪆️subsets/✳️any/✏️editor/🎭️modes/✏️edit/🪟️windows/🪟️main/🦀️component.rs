@@ -7,7 +7,7 @@
 use crate::artifacts::xml::schema::snapshot::XmlNode;
 use crate::artifacts::xml::XmlSnapshot;
 use semio_framework_plugin::app::{TreeNodeView, TreeView, TreeWindowKit, WindowKit};
-use semio_framework_plugin::{LocalizedLabel, UiNode, WindowKindDefinition};
+use semio_framework_plugin::{BuiltNode, LocalizedLabel, WindowKindDefinition};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = TreeWindowKit::KIND_ID;
@@ -23,10 +23,10 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-/// ✏️ Real `XmlSnapshot -> UiNode`: an empty document renders a single placeholder leaf, otherwise
+/// ✏️ Real `XmlSnapshot -> BuiltNode`: an empty document renders a single placeholder leaf, otherwise
 /// the real element tree, child-index paths as node ids.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &XmlSnapshot) -> UiNode {
+pub fn render(document: &XmlSnapshot) -> BuiltNode {
     let root = match &document.doc.root {
         Some(node) => node_view(Vec::new(), node),
         None => TreeNodeView { id: String::new(), label: "(empty document)".to_string(), children: Vec::new() },
@@ -72,7 +72,15 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn render_walks_element_children() {
-        let document = XmlSnapshot { schema: "stdio.xml".into(), doc: crate::artifacts::xml::schema::snapshot::XmlDocument { root: Some(XmlNode::Element { name: "root".into(), attrs: Vec::new(), children: vec![XmlNode::Text { text: "hi".into() }] }), doctype: None, declaration: None, prolog: Vec::new() } };
+        let document = XmlSnapshot {
+            schema: "stdio.xml".into(),
+            doc: crate::artifacts::xml::schema::snapshot::XmlDocument {
+                root: Some(XmlNode::Element { name: "root".into(), attrs: Vec::new(), children: vec![XmlNode::Text { text: "hi".into() }] }),
+                doctype: None,
+                declaration: None,
+                prolog: Vec::new(),
+            },
+        };
         let UiNode::Tree(node) = render(&document) else { panic!("expected Tree") };
         let root = &node.sections[0].items[0];
         assert_eq!(root.id, "");

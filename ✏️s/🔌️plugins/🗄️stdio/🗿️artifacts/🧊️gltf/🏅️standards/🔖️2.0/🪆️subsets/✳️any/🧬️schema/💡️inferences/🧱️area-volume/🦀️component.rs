@@ -53,7 +53,7 @@ impl GltfAreaVolumeInference {
 impl GltfInferenceStage<GltfGeometryContext<'_>> for GltfAreaVolumeInference {
     type Output = GltfAreaVolumeIndicators;
 
-    async fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
+    fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
         Self::Output {
             surface_area: surface_area::infer(context),
             total_area: total_area::infer(context),
@@ -66,7 +66,7 @@ impl GltfInferenceStage<GltfGeometryContext<'_>> for GltfAreaVolumeInference {
         }
     }
 
-    async fn unavailable(diagnostic_ids: &[String]) -> Self::Output {
+    fn unavailable(diagnostic_ids: &[String]) -> Self::Output {
         Self::Output {
             surface_area: surface_area::unavailable_measure(diagnostic_ids),
             total_area: total_area::unavailable_measure(diagnostic_ids),

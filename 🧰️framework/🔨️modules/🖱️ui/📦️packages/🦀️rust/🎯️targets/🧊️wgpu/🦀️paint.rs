@@ -1177,9 +1177,10 @@ mod tests {
 
         paint_tree(&mut tree, root, &theme, &mut atlas, None, false, &mut draw);
 
-        let has_muted_glyph = draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).any(|instance| {
-            (instance.params[2] - KIND_GLYPH).abs() < 0.01 && (instance.color[0] - theme.text_muted.r).abs() < 0.001 && (instance.color[1] - theme.text_muted.g).abs() < 0.001 && (instance.color[2] - theme.text_muted.b).abs() < 0.001
-        });
+        let has_muted_glyph =
+            draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).any(|instance| {
+                (instance.params[2] - KIND_GLYPH).abs() < 0.01 && (instance.color[0] - theme.text_muted.r).abs() < 0.001 && (instance.color[1] - theme.text_muted.g).abs() < 0.001 && (instance.color[2] - theme.text_muted.b).abs() < 0.001
+            });
         assert!(has_muted_glyph, "a non-uniform (mixed) NumberStepper should paint its center value's glyphs in theme.text_muted (the 'Mixed' placeholder)");
     }
 
@@ -1414,20 +1415,7 @@ mod tests {
     // focusable control kind (`Button`/`Select`/`Toggle`/`NumberStepper`/`IconSelect`, plus a
     // `NumberStepper` hover tint) that only `paint_input` had before this pass.
     fn input(id: &str, value: &str) -> UiNode {
-        UiNode::Input(UiInputNode {
-            id: id.into(),
-            input_kind: "text".into(),
-            value: value.into(),
-            placeholder: None,
-            commit: None,
-            min: None,
-            max: None,
-            step: None,
-            accept: None,
-            on_change: action(),
-            presence: UiPresence::default(),
-            menu: None,
-        })
+        UiNode::Input(UiInputNode { id: id.into(), input_kind: "text".into(), value: value.into(), placeholder: None, commit: None, min: None, max: None, step: None, accept: None, on_change: action(), presence: UiPresence::default(), menu: None })
     }
 
     fn focus(tree: &mut UiTree, id: NodeId) {

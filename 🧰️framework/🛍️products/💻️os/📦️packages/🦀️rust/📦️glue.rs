@@ -172,6 +172,9 @@ pub mod os_spr {
 #[path = "../../🔨️modules/🌿️vcs/🦀️component.rs"]
 pub mod os_vcs;
 
+#[path = "../../🔨️modules/🪪️identity/🦀️component.rs"]
+pub mod os_identity;
+
 // 📇️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS C1: directory event log
 // schema + pure read model (`DirectoryEvent`/`DirectoryReadModel`/`fold`) — plain serde data, no
 // cross-crate dependency, so it mounts cleanly unlike `🔁️workflow` below.

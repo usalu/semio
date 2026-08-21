@@ -284,7 +284,7 @@ fn encode_semio_snapshot_binary(snap: &SemioSnapshot) -> Vec<u8> {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn decode_semio_snapshot_binary(bytes: &[u8]) -> Result<SemioSnapshot, String> {
-    let mut reader = semio_framework_plugin::resolve_ready(store::ByteReader::new(bytes));
+    let mut reader = store::ByteReader::new(bytes);
     let format = reader.read_u8().map_err(|e| e.to_string())?;
     if format != PACK_BINARY_FORMAT {
         return Err(format!("unsupported pack format {format}"));

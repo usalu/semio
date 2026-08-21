@@ -22,22 +22,22 @@ pub enum PlanarValidation {
 // #endregion 🔖️Types
 
 // #region 🔖️VecHelpers
-async fn to_vec3(v: [f64; 3]) -> Vec3 {
+fn to_vec3(v: [f64; 3]) -> Vec3 {
     Vec3::new(v[0] as f32, v[1] as f32, v[2] as f32)
 }
 
-async fn from_vec3(v: Vec3) -> [f64; 3] {
+fn from_vec3(v: Vec3) -> [f64; 3] {
     [v.x as f64, v.y as f64, v.z as f64]
 }
 
-async fn normalize(v: [f64; 3]) -> [f64; 3] {
+fn normalize(v: [f64; 3]) -> [f64; 3] {
     from_vec3(to_vec3(v).normalize())
 }
 // #endregion 🔖️VecHelpers
 
 // #region 🔖️AreaNormal
 /// 📏️ Signed polygon area [m²] via cross-sum (positive for CCW when viewed along outward normal).
-pub async fn surface_area_m2(vertices_m: &[[f64; 3]]) -> f64 {
+pub fn surface_area_m2(vertices_m: &[[f64; 3]]) -> f64 {
     if vertices_m.len() < 3 {
         return 0.0;
     }
@@ -52,7 +52,7 @@ pub async fn surface_area_m2(vertices_m: &[[f64; 3]]) -> f64 {
 }
 
 /// 🧭️ Outward unit normal from polygon winding (Newell's method).
-pub async fn polygon_normal(vertices_m: &[[f64; 3]]) -> [f64; 3] {
+pub fn polygon_normal(vertices_m: &[[f64; 3]]) -> [f64; 3] {
     if vertices_m.len() < 3 {
         return [0.0, 0.0, 1.0];
     }
@@ -71,7 +71,7 @@ pub async fn polygon_normal(vertices_m: &[[f64; 3]]) -> [f64; 3] {
 
 // #region 🔖️Orientation
 /// 🧭️ Tilt from horizontal and azimuth clockwise from north (+Y) with optional north-axis offset.
-pub async fn surface_tilt_azimuth(normal: [f64; 3], north_axis_deg: f64) -> TiltAzimuth {
+pub fn surface_tilt_azimuth(normal: [f64; 3], north_axis_deg: f64) -> TiltAzimuth {
     let n = normalize(normal);
     let tilt_deg = rad_to_deg(n[2].clamp(-1.0, 1.0).acos());
     let mut azimuth_deg = rad_to_deg(n[0].atan2(n[1]));
@@ -85,7 +85,7 @@ pub async fn surface_tilt_azimuth(normal: [f64; 3], north_axis_deg: f64) -> Tilt
 
 // #region 🔖️Volume
 /// 📦️ Zone volume [m³] from closed watertight surface set (pyramid sum to interior reference point).
-pub async fn zone_volume_from_surfaces(surfaces: &[&[[f64; 3]]]) -> f64 {
+pub fn zone_volume_from_surfaces(surfaces: &[&[[f64; 3]]]) -> f64 {
     let mut ref_pt = [0.0_f64; 3];
     let mut count = 0usize;
     for vertices in surfaces {
@@ -105,7 +105,7 @@ pub async fn zone_volume_from_surfaces(surfaces: &[&[[f64; 3]]]) -> f64 {
     surfaces.iter().map(|face| face_pyramid_volume_m3(face, ref_pt)).sum::<f64>().abs()
 }
 
-async fn face_pyramid_volume_m3(vertices: &[[f64; 3]], ref_pt: [f64; 3]) -> f64 {
+fn face_pyramid_volume_m3(vertices: &[[f64; 3]], ref_pt: [f64; 3]) -> f64 {
     if vertices.len() < 3 {
         return 0.0;
     }
@@ -133,7 +133,7 @@ async fn face_pyramid_volume_m3(vertices: &[[f64; 3]], ref_pt: [f64; 3]) -> f64 
 
 // #region 🔖️Validation
 /// ✅️ Check polygon planarity within tolerance [m].
-pub async fn validate_polygon_planar(vertices_m: &[[f64; 3]], tolerance_m: f64) -> PlanarValidation {
+pub fn validate_polygon_planar(vertices_m: &[[f64; 3]], tolerance_m: f64) -> PlanarValidation {
     if vertices_m.len() < 3 {
         return PlanarValidation::TooFewVertices;
     }
@@ -157,12 +157,12 @@ pub async fn validate_polygon_planar(vertices_m: &[[f64; 3]], tolerance_m: f64) 
 
 // #region 🔖️Transform
 /// 🔄️ Apply 4×4 transform to polygon vertices (building ↔ world).
-pub async fn transform_vertices(vertices_m: &[[f64; 3]], transform: geometry::Mat4) -> Vec<[f64; 3]> {
+pub fn transform_vertices(vertices_m: &[[f64; 3]], transform: geometry::Mat4) -> Vec<[f64; 3]> {
     vertices_m.iter().map(|v| from_vec3(transform.transform_point(to_vec3(*v)))).collect()
 }
 
 /// 🔄️ Rotate direction vector (no translation).
-pub async fn transform_direction(direction: [f64; 3], transform: geometry::Mat4) -> [f64; 3] {
+pub fn transform_direction(direction: [f64; 3], transform: geometry::Mat4) -> [f64; 3] {
     from_vec3(transform.transform_direction(to_vec3(direction)))
 }
 // #endregion 🔖️Transform
@@ -173,25 +173,25 @@ mod tests {
     use geometry::Mat4;
 
     #[semio_framework_async_macros::async_test]
-    async fn unit_square_area() {
+    fn unit_square_area() {
         let verts = [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 1.0, 0.0], [0.0, 1.0, 0.0]];
         assert!((surface_area_m2(&verts) - 1.0).abs() < 1e-6);
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn horizontal_roof_tilt_zero() {
+    fn horizontal_roof_tilt_zero() {
         let ta = surface_tilt_azimuth([0.0, 0.0, 1.0], 0.0);
         assert!(ta.tilt_deg.abs() < 1e-6);
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn vertical_wall_tilt_ninety() {
+    fn vertical_wall_tilt_ninety() {
         let ta = surface_tilt_azimuth([1.0, 0.0, 0.0], 0.0);
         assert!((ta.tilt_deg - 90.0).abs() < 1e-6);
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn box_volume() {
+    fn box_volume() {
         let floor = [[0.0, 0.0, 0.0], [0.0, 3.0, 0.0], [4.0, 3.0, 0.0], [4.0, 0.0, 0.0]];
         let ceiling = [[0.0, 0.0, 3.0], [4.0, 0.0, 3.0], [4.0, 3.0, 3.0], [0.0, 3.0, 3.0]];
         let walls = [
@@ -209,13 +209,13 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn planar_validation_ok() {
+    fn planar_validation_ok() {
         let verts = [[0.0, 0.0, 0.0], [2.0, 0.0, 0.0], [1.0, 2.0, 0.0]];
         assert_eq!(validate_polygon_planar(&verts, 1e-6), PlanarValidation::Ok);
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn identity_transform_preserves_vertices() {
+    fn identity_transform_preserves_vertices() {
         let verts = [[1.0, 2.0, 3.0]];
         let out = transform_vertices(&verts, Mat4::identity());
         assert!((out[0][0] - 1.0).abs() < 1e-5);

@@ -3984,7 +3984,7 @@ pub mod artifacts {
     }
 
     #[path = "."]
-    
+
     pub mod pdf {
         #[path = "../../🗿️artifacts/📄️pdf/🦀️component.rs"]
         mod component;
@@ -4397,7 +4397,7 @@ pub mod artifacts {
     }
 
     #[path = "."]
-    
+
     pub mod jpg {
         #[path = "../../🗿️artifacts/📷️jpg/🦀️component.rs"]
         mod component;
@@ -4572,7 +4572,7 @@ pub mod artifacts {
     }
 
     #[path = "."]
-    
+
     pub mod gif {
         #[path = "../../🗿️artifacts/🎞️gif/🦀️component.rs"]
         mod component;
@@ -4884,7 +4884,7 @@ pub mod artifacts {
     }
 
     #[path = "."]
-    
+
     pub mod tiff {
         #[path = "../../🗿️artifacts/🖼️tiff/🦀️component.rs"]
         mod component;
@@ -5066,7 +5066,7 @@ pub mod artifacts {
     }
 
     #[path = "."]
-    
+
     pub mod docx {
         #[path = "../../🗿️artifacts/📜️docx/🦀️component.rs"]
         mod component;
@@ -5278,7 +5278,7 @@ pub mod artifacts {
     }
 
     #[path = "."]
-    
+
     pub mod pptx {
         #[path = "../../🗿️artifacts/🎞️pptx/🦀️component.rs"]
         mod component;
@@ -5493,7 +5493,7 @@ pub mod artifacts {
     }
 
     #[path = "."]
-    
+
     pub mod xlsx {
         #[path = "../../🗿️artifacts/📕️xlsx/🦀️component.rs"]
         mod component;
@@ -5705,7 +5705,7 @@ pub mod artifacts {
     }
 
     #[path = "."]
-    
+
     pub mod bcf {
         #[path = "../../🗿️artifacts/💬️bcf/🦀️component.rs"]
         mod component;
@@ -9670,7 +9670,6 @@ pub mod artifacts {
 }
 //#endregion Artifacts
 
-
 //#region ✏️Editor
 #[path = "."]
 pub mod editor {
@@ -11467,78 +11466,78 @@ pub mod editor {
             pub mod v_ecma_376 {
                 #[path = "."]
                 pub mod subsets {
-            #[path = "."]
-            pub mod any {
-                #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/✏️editor/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "."]
-                pub mod modes {
                     #[path = "."]
-                    pub mod edit {
-                        #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️component.rs"]
+                    pub mod any {
+                        #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/✏️editor/🦀️component.rs"]
                         mod component;
                         pub use component::*;
                         #[path = "."]
-                        pub mod windows {
+                        pub mod modes {
                             #[path = "."]
-                            pub mod main {
-                                #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs"]
+                            pub mod edit {
+                                #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️component.rs"]
                                 mod component;
                                 pub use component::*;
+                                #[path = "."]
+                                pub mod windows {
+                                    #[path = "."]
+                                    pub mod main {
+                                        #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs"]
+                                        mod component;
+                                        pub use component::*;
+                                    }
+                                }
                             }
                         }
                     }
-                }
-            }
-            #[path = "."]
-            pub mod strict {
-                #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/✏️editor/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "."]
-                pub mod modes {
                     #[path = "."]
-                    pub mod edit {
-                        #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/✏️editor/🎭️modes/✏️edit/🦀️component.rs"]
+                    pub mod strict {
+                        #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/✏️editor/🦀️component.rs"]
                         mod component;
                         pub use component::*;
                         #[path = "."]
-                        pub mod windows {
+                        pub mod modes {
                             #[path = "."]
-                            pub mod main {
-                                #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs"]
+                            pub mod edit {
+                                #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/✏️editor/🎭️modes/✏️edit/🦀️component.rs"]
                                 mod component;
                                 pub use component::*;
+                                #[path = "."]
+                                pub mod windows {
+                                    #[path = "."]
+                                    pub mod main {
+                                        #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs"]
+                                        mod component;
+                                        pub use component::*;
+                                    }
+                                }
                             }
                         }
                     }
-                }
-            }
-            #[path = "."]
-            pub mod transitional {
-                #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/✏️editor/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "."]
-                pub mod modes {
                     #[path = "."]
-                    pub mod edit {
-                        #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/✏️editor/🎭️modes/✏️edit/🦀️component.rs"]
+                    pub mod transitional {
+                        #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/✏️editor/🦀️component.rs"]
                         mod component;
                         pub use component::*;
                         #[path = "."]
-                        pub mod windows {
+                        pub mod modes {
                             #[path = "."]
-                            pub mod main {
-                                #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs"]
+                            pub mod edit {
+                                #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/✏️editor/🎭️modes/✏️edit/🦀️component.rs"]
                                 mod component;
                                 pub use component::*;
+                                #[path = "."]
+                                pub mod windows {
+                                    #[path = "."]
+                                    pub mod main {
+                                        #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs"]
+                                        mod component;
+                                        pub use component::*;
+                                    }
+                                }
                             }
                         }
                     }
-                }
-            }
                 }
             }
         }
@@ -11551,78 +11550,78 @@ pub mod editor {
             pub mod v_ecma_376 {
                 #[path = "."]
                 pub mod subsets {
-            #[path = "."]
-            pub mod any {
-                #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/✏️editor/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "."]
-                pub mod modes {
                     #[path = "."]
-                    pub mod edit {
-                        #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️component.rs"]
+                    pub mod any {
+                        #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/✏️editor/🦀️component.rs"]
                         mod component;
                         pub use component::*;
                         #[path = "."]
-                        pub mod windows {
+                        pub mod modes {
                             #[path = "."]
-                            pub mod main {
-                                #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs"]
+                            pub mod edit {
+                                #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️component.rs"]
                                 mod component;
                                 pub use component::*;
+                                #[path = "."]
+                                pub mod windows {
+                                    #[path = "."]
+                                    pub mod main {
+                                        #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs"]
+                                        mod component;
+                                        pub use component::*;
+                                    }
+                                }
                             }
                         }
                     }
-                }
-            }
-            #[path = "."]
-            pub mod strict {
-                #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/✏️editor/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "."]
-                pub mod modes {
                     #[path = "."]
-                    pub mod edit {
-                        #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/✏️editor/🎭️modes/✏️edit/🦀️component.rs"]
+                    pub mod strict {
+                        #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/✏️editor/🦀️component.rs"]
                         mod component;
                         pub use component::*;
                         #[path = "."]
-                        pub mod windows {
+                        pub mod modes {
                             #[path = "."]
-                            pub mod main {
-                                #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs"]
+                            pub mod edit {
+                                #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/✏️editor/🎭️modes/✏️edit/🦀️component.rs"]
                                 mod component;
                                 pub use component::*;
+                                #[path = "."]
+                                pub mod windows {
+                                    #[path = "."]
+                                    pub mod main {
+                                        #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs"]
+                                        mod component;
+                                        pub use component::*;
+                                    }
+                                }
                             }
                         }
                     }
-                }
-            }
-            #[path = "."]
-            pub mod transitional {
-                #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/✏️editor/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "."]
-                pub mod modes {
                     #[path = "."]
-                    pub mod edit {
-                        #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/✏️editor/🎭️modes/✏️edit/🦀️component.rs"]
+                    pub mod transitional {
+                        #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/✏️editor/🦀️component.rs"]
                         mod component;
                         pub use component::*;
                         #[path = "."]
-                        pub mod windows {
+                        pub mod modes {
                             #[path = "."]
-                            pub mod main {
-                                #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs"]
+                            pub mod edit {
+                                #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/✏️editor/🎭️modes/✏️edit/🦀️component.rs"]
                                 mod component;
                                 pub use component::*;
+                                #[path = "."]
+                                pub mod windows {
+                                    #[path = "."]
+                                    pub mod main {
+                                        #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs"]
+                                        mod component;
+                                        pub use component::*;
+                                    }
+                                }
                             }
                         }
                     }
-                }
-            }
                 }
             }
         }
@@ -11638,78 +11637,78 @@ pub mod editor {
             pub mod v_ecma_376 {
                 #[path = "."]
                 pub mod subsets {
-            #[path = "."]
-            pub mod any {
-                #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/✏️editor/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "."]
-                pub mod modes {
                     #[path = "."]
-                    pub mod edit {
-                        #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️component.rs"]
+                    pub mod any {
+                        #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/✏️editor/🦀️component.rs"]
                         mod component;
                         pub use component::*;
                         #[path = "."]
-                        pub mod windows {
+                        pub mod modes {
                             #[path = "."]
-                            pub mod main {
-                                #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs"]
+                            pub mod edit {
+                                #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️component.rs"]
                                 mod component;
                                 pub use component::*;
+                                #[path = "."]
+                                pub mod windows {
+                                    #[path = "."]
+                                    pub mod main {
+                                        #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs"]
+                                        mod component;
+                                        pub use component::*;
+                                    }
+                                }
                             }
                         }
                     }
-                }
-            }
-            #[path = "."]
-            pub mod strict {
-                #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/✏️editor/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "."]
-                pub mod modes {
                     #[path = "."]
-                    pub mod edit {
-                        #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/✏️editor/🎭️modes/✏️edit/🦀️component.rs"]
+                    pub mod strict {
+                        #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/✏️editor/🦀️component.rs"]
                         mod component;
                         pub use component::*;
                         #[path = "."]
-                        pub mod windows {
+                        pub mod modes {
                             #[path = "."]
-                            pub mod main {
-                                #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs"]
+                            pub mod edit {
+                                #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/✏️editor/🎭️modes/✏️edit/🦀️component.rs"]
                                 mod component;
                                 pub use component::*;
+                                #[path = "."]
+                                pub mod windows {
+                                    #[path = "."]
+                                    pub mod main {
+                                        #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs"]
+                                        mod component;
+                                        pub use component::*;
+                                    }
+                                }
                             }
                         }
                     }
-                }
-            }
-            #[path = "."]
-            pub mod transitional {
-                #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/✏️editor/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "."]
-                pub mod modes {
                     #[path = "."]
-                    pub mod edit {
-                        #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/✏️editor/🎭️modes/✏️edit/🦀️component.rs"]
+                    pub mod transitional {
+                        #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/✏️editor/🦀️component.rs"]
                         mod component;
                         pub use component::*;
                         #[path = "."]
-                        pub mod windows {
+                        pub mod modes {
                             #[path = "."]
-                            pub mod main {
-                                #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs"]
+                            pub mod edit {
+                                #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/✏️editor/🎭️modes/✏️edit/🦀️component.rs"]
                                 mod component;
                                 pub use component::*;
+                                #[path = "."]
+                                pub mod windows {
+                                    #[path = "."]
+                                    pub mod main {
+                                        #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs"]
+                                        mod component;
+                                        pub use component::*;
+                                    }
+                                }
                             }
                         }
                     }
-                }
-            }
                 }
             }
         }
@@ -11743,54 +11742,54 @@ pub mod editor {
     }
     #[path = "."]
     pub mod zip {
+        #[path = "."]
+        pub mod any {
+            #[path = "../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/✏️editor/🦀️component.rs"]
+            mod component;
+            pub use component::*;
             #[path = "."]
-            pub mod any {
-                #[path = "../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/✏️editor/🦀️component.rs"]
-                mod component;
-                pub use component::*;
+            pub mod modes {
                 #[path = "."]
-                pub mod modes {
+                pub mod edit {
+                    #[path = "../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
                     #[path = "."]
-                    pub mod edit {
-                        #[path = "../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️component.rs"]
-                        mod component;
-                        pub use component::*;
+                    pub mod windows {
                         #[path = "."]
-                        pub mod windows {
-                            #[path = "."]
-                            pub mod main {
-                                #[path = "../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs"]
-                                mod component;
-                                pub use component::*;
-                            }
+                        pub mod main {
+                            #[path = "../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
                         }
                     }
                 }
             }
+        }
+        #[path = "."]
+        pub mod iso21320 {
+            #[path = "../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320/✏️editor/🦀️component.rs"]
+            mod component;
+            pub use component::*;
             #[path = "."]
-            pub mod iso21320 {
-                #[path = "../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320/✏️editor/🦀️component.rs"]
-                mod component;
-                pub use component::*;
+            pub mod modes {
                 #[path = "."]
-                pub mod modes {
+                pub mod edit {
+                    #[path = "../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320/✏️editor/🎭️modes/✏️edit/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
                     #[path = "."]
-                    pub mod edit {
-                        #[path = "../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320/✏️editor/🎭️modes/✏️edit/🦀️component.rs"]
-                        mod component;
-                        pub use component::*;
+                    pub mod windows {
                         #[path = "."]
-                        pub mod windows {
-                            #[path = "."]
-                            pub mod main {
-                                #[path = "../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs"]
-                                mod component;
-                                pub use component::*;
-                            }
+                        pub mod main {
+                            #[path = "../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
                         }
                     }
                 }
             }
+        }
     }
     #[path = "."]
     pub mod deflate {
@@ -13640,78 +13639,78 @@ pub mod viewer {
             pub mod v_ecma_376 {
                 #[path = "."]
                 pub mod subsets {
-            #[path = "."]
-            pub mod any {
-                #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/👁️viewer/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "."]
-                pub mod modes {
                     #[path = "."]
-                    pub mod view {
-                        #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️component.rs"]
+                    pub mod any {
+                        #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/👁️viewer/🦀️component.rs"]
                         mod component;
                         pub use component::*;
                         #[path = "."]
-                        pub mod windows {
+                        pub mod modes {
                             #[path = "."]
-                            pub mod main {
-                                #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs"]
+                            pub mod view {
+                                #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️component.rs"]
                                 mod component;
                                 pub use component::*;
+                                #[path = "."]
+                                pub mod windows {
+                                    #[path = "."]
+                                    pub mod main {
+                                        #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs"]
+                                        mod component;
+                                        pub use component::*;
+                                    }
+                                }
                             }
                         }
                     }
-                }
-            }
-            #[path = "."]
-            pub mod strict {
-                #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/👁️viewer/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "."]
-                pub mod modes {
                     #[path = "."]
-                    pub mod view {
-                        #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/👁️viewer/🎭️modes/👁️view/🦀️component.rs"]
+                    pub mod strict {
+                        #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/👁️viewer/🦀️component.rs"]
                         mod component;
                         pub use component::*;
                         #[path = "."]
-                        pub mod windows {
+                        pub mod modes {
                             #[path = "."]
-                            pub mod main {
-                                #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs"]
+                            pub mod view {
+                                #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/👁️viewer/🎭️modes/👁️view/🦀️component.rs"]
                                 mod component;
                                 pub use component::*;
+                                #[path = "."]
+                                pub mod windows {
+                                    #[path = "."]
+                                    pub mod main {
+                                        #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs"]
+                                        mod component;
+                                        pub use component::*;
+                                    }
+                                }
                             }
                         }
                     }
-                }
-            }
-            #[path = "."]
-            pub mod transitional {
-                #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/👁️viewer/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "."]
-                pub mod modes {
                     #[path = "."]
-                    pub mod view {
-                        #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/👁️viewer/🎭️modes/👁️view/🦀️component.rs"]
+                    pub mod transitional {
+                        #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/👁️viewer/🦀️component.rs"]
                         mod component;
                         pub use component::*;
                         #[path = "."]
-                        pub mod windows {
+                        pub mod modes {
                             #[path = "."]
-                            pub mod main {
-                                #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs"]
+                            pub mod view {
+                                #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/👁️viewer/🎭️modes/👁️view/🦀️component.rs"]
                                 mod component;
                                 pub use component::*;
+                                #[path = "."]
+                                pub mod windows {
+                                    #[path = "."]
+                                    pub mod main {
+                                        #[path = "../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs"]
+                                        mod component;
+                                        pub use component::*;
+                                    }
+                                }
                             }
                         }
                     }
-                }
-            }
                 }
             }
         }
@@ -13724,78 +13723,78 @@ pub mod viewer {
             pub mod v_ecma_376 {
                 #[path = "."]
                 pub mod subsets {
-            #[path = "."]
-            pub mod any {
-                #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/👁️viewer/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "."]
-                pub mod modes {
                     #[path = "."]
-                    pub mod view {
-                        #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️component.rs"]
+                    pub mod any {
+                        #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/👁️viewer/🦀️component.rs"]
                         mod component;
                         pub use component::*;
                         #[path = "."]
-                        pub mod windows {
+                        pub mod modes {
                             #[path = "."]
-                            pub mod main {
-                                #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs"]
+                            pub mod view {
+                                #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️component.rs"]
                                 mod component;
                                 pub use component::*;
+                                #[path = "."]
+                                pub mod windows {
+                                    #[path = "."]
+                                    pub mod main {
+                                        #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs"]
+                                        mod component;
+                                        pub use component::*;
+                                    }
+                                }
                             }
                         }
                     }
-                }
-            }
-            #[path = "."]
-            pub mod strict {
-                #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/👁️viewer/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "."]
-                pub mod modes {
                     #[path = "."]
-                    pub mod view {
-                        #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/👁️viewer/🎭️modes/👁️view/🦀️component.rs"]
+                    pub mod strict {
+                        #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/👁️viewer/🦀️component.rs"]
                         mod component;
                         pub use component::*;
                         #[path = "."]
-                        pub mod windows {
+                        pub mod modes {
                             #[path = "."]
-                            pub mod main {
-                                #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs"]
+                            pub mod view {
+                                #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/👁️viewer/🎭️modes/👁️view/🦀️component.rs"]
                                 mod component;
                                 pub use component::*;
+                                #[path = "."]
+                                pub mod windows {
+                                    #[path = "."]
+                                    pub mod main {
+                                        #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs"]
+                                        mod component;
+                                        pub use component::*;
+                                    }
+                                }
                             }
                         }
                     }
-                }
-            }
-            #[path = "."]
-            pub mod transitional {
-                #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/👁️viewer/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "."]
-                pub mod modes {
                     #[path = "."]
-                    pub mod view {
-                        #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/👁️viewer/🎭️modes/👁️view/🦀️component.rs"]
+                    pub mod transitional {
+                        #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/👁️viewer/🦀️component.rs"]
                         mod component;
                         pub use component::*;
                         #[path = "."]
-                        pub mod windows {
+                        pub mod modes {
                             #[path = "."]
-                            pub mod main {
-                                #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs"]
+                            pub mod view {
+                                #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/👁️viewer/🎭️modes/👁️view/🦀️component.rs"]
                                 mod component;
                                 pub use component::*;
+                                #[path = "."]
+                                pub mod windows {
+                                    #[path = "."]
+                                    pub mod main {
+                                        #[path = "../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs"]
+                                        mod component;
+                                        pub use component::*;
+                                    }
+                                }
                             }
                         }
                     }
-                }
-            }
                 }
             }
         }
@@ -13811,78 +13810,78 @@ pub mod viewer {
             pub mod v_ecma_376 {
                 #[path = "."]
                 pub mod subsets {
-            #[path = "."]
-            pub mod any {
-                #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/👁️viewer/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "."]
-                pub mod modes {
                     #[path = "."]
-                    pub mod view {
-                        #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️component.rs"]
+                    pub mod any {
+                        #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/👁️viewer/🦀️component.rs"]
                         mod component;
                         pub use component::*;
                         #[path = "."]
-                        pub mod windows {
+                        pub mod modes {
                             #[path = "."]
-                            pub mod main {
-                                #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs"]
+                            pub mod view {
+                                #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️component.rs"]
                                 mod component;
                                 pub use component::*;
+                                #[path = "."]
+                                pub mod windows {
+                                    #[path = "."]
+                                    pub mod main {
+                                        #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs"]
+                                        mod component;
+                                        pub use component::*;
+                                    }
+                                }
                             }
                         }
                     }
-                }
-            }
-            #[path = "."]
-            pub mod strict {
-                #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/👁️viewer/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "."]
-                pub mod modes {
                     #[path = "."]
-                    pub mod view {
-                        #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/👁️viewer/🎭️modes/👁️view/🦀️component.rs"]
+                    pub mod strict {
+                        #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/👁️viewer/🦀️component.rs"]
                         mod component;
                         pub use component::*;
                         #[path = "."]
-                        pub mod windows {
+                        pub mod modes {
                             #[path = "."]
-                            pub mod main {
-                                #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs"]
+                            pub mod view {
+                                #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/👁️viewer/🎭️modes/👁️view/🦀️component.rs"]
                                 mod component;
                                 pub use component::*;
+                                #[path = "."]
+                                pub mod windows {
+                                    #[path = "."]
+                                    pub mod main {
+                                        #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs"]
+                                        mod component;
+                                        pub use component::*;
+                                    }
+                                }
                             }
                         }
                     }
-                }
-            }
-            #[path = "."]
-            pub mod transitional {
-                #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/👁️viewer/🦀️component.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "."]
-                pub mod modes {
                     #[path = "."]
-                    pub mod view {
-                        #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/👁️viewer/🎭️modes/👁️view/🦀️component.rs"]
+                    pub mod transitional {
+                        #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/👁️viewer/🦀️component.rs"]
                         mod component;
                         pub use component::*;
                         #[path = "."]
-                        pub mod windows {
+                        pub mod modes {
                             #[path = "."]
-                            pub mod main {
-                                #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs"]
+                            pub mod view {
+                                #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/👁️viewer/🎭️modes/👁️view/🦀️component.rs"]
                                 mod component;
                                 pub use component::*;
+                                #[path = "."]
+                                pub mod windows {
+                                    #[path = "."]
+                                    pub mod main {
+                                        #[path = "../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs"]
+                                        mod component;
+                                        pub use component::*;
+                                    }
+                                }
                             }
                         }
                     }
-                }
-            }
                 }
             }
         }
@@ -13916,54 +13915,54 @@ pub mod viewer {
     }
     #[path = "."]
     pub mod zip {
+        #[path = "."]
+        pub mod any {
+            #[path = "../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/👁️viewer/🦀️component.rs"]
+            mod component;
+            pub use component::*;
             #[path = "."]
-            pub mod any {
-                #[path = "../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/👁️viewer/🦀️component.rs"]
-                mod component;
-                pub use component::*;
+            pub mod modes {
                 #[path = "."]
-                pub mod modes {
+                pub mod view {
+                    #[path = "../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
                     #[path = "."]
-                    pub mod view {
-                        #[path = "../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️component.rs"]
-                        mod component;
-                        pub use component::*;
+                    pub mod windows {
                         #[path = "."]
-                        pub mod windows {
-                            #[path = "."]
-                            pub mod main {
-                                #[path = "../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs"]
-                                mod component;
-                                pub use component::*;
-                            }
+                        pub mod main {
+                            #[path = "../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
                         }
                     }
                 }
             }
+        }
+        #[path = "."]
+        pub mod iso21320 {
+            #[path = "../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320/👁️viewer/🦀️component.rs"]
+            mod component;
+            pub use component::*;
             #[path = "."]
-            pub mod iso21320 {
-                #[path = "../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320/👁️viewer/🦀️component.rs"]
-                mod component;
-                pub use component::*;
+            pub mod modes {
                 #[path = "."]
-                pub mod modes {
+                pub mod view {
+                    #[path = "../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320/👁️viewer/🎭️modes/👁️view/🦀️component.rs"]
+                    mod component;
+                    pub use component::*;
                     #[path = "."]
-                    pub mod view {
-                        #[path = "../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320/👁️viewer/🎭️modes/👁️view/🦀️component.rs"]
-                        mod component;
-                        pub use component::*;
+                    pub mod windows {
                         #[path = "."]
-                        pub mod windows {
-                            #[path = "."]
-                            pub mod main {
-                                #[path = "../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs"]
-                                mod component;
-                                pub use component::*;
-                            }
+                        pub mod main {
+                            #[path = "../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
                         }
                     }
                 }
             }
+        }
     }
     #[path = "."]
     pub mod deflate {

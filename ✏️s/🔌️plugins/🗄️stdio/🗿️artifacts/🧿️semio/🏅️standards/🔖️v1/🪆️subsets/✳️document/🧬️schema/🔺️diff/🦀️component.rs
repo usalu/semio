@@ -1725,7 +1725,7 @@ impl protocol::DiffCodec for SemioDocumentDiff {
             return Err(protocol::ProtocolError::Malformed { what: "diff format", offset: 0, detail: format!("unsupported diff format {}", bytes[0]) });
         }
         let presence = bytes[1];
-        let mut reader = semio_framework_plugin::resolve_ready(store::ByteReader::new(&bytes[2..]));
+        let mut reader = store::ByteReader::new(&bytes[2..]);
         let styles = if presence & 0b001 != 0 {
             let text = read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff styles blob", offset: 2, detail: e })?;
             Some(dec_styles_diff(&text).map_err(|e| protocol::ProtocolError::Malformed { what: "diff styles text", offset: 2, detail: e })?)

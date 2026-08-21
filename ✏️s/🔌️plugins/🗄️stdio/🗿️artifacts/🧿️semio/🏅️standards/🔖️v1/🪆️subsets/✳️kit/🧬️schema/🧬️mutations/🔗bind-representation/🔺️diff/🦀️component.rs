@@ -8,11 +8,7 @@ use crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::Semi
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff(payload: &BindRepresentation, base: &SemioKitSnapshot) -> protocol::MutationOutcome<SemioKitDiff> {
     if !base.types.iter().any(|t| t.id == payload.role) {
-        return protocol::MutationOutcome::error(
-            "mutation.target-missing",
-            format!("Type \"{}\" does not exist.", payload.role),
-            [payload.role.clone()],
-        );
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Type \"{}\" does not exist.", payload.role), [payload.role.clone()]);
     }
     let new_link = store::ArtifactLink { target: payload.target.clone(), pin: payload.pin.clone(), role: payload.role.clone() };
     if base.representations.contains(&new_link) {

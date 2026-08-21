@@ -24,7 +24,7 @@ pub struct SemioCadInference {
 }
 
 impl protocol::Inference<SemioCadSnapshot> for SemioCadInference {
-    async fn infer(snapshot: &SemioCadSnapshot) -> Self {
+    fn infer(snapshot: &SemioCadSnapshot) -> Self {
         Self { bounds: compute_semio_cad_bounds(snapshot) }
     }
 }
@@ -38,13 +38,13 @@ impl Default for SemioCadInference {
 }
 
 impl protocol::InferenceSpec<SemioCadSnapshot> for SemioCadInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.stdio.semio.cad.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.semio.cad.inference.bounds", reads: &["entities", "blocks"] }]
     }
 }

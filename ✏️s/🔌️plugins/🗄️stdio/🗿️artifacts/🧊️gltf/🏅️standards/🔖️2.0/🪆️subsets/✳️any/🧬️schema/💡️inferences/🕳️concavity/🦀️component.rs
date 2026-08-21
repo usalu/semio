@@ -52,7 +52,7 @@ pub(crate) fn raw(context: &GltfGeometryContext<'_>) -> GltfConcavityRaw {
 impl GltfInferenceStage<GltfGeometryContext<'_>> for GltfConcavityInference {
     type Output = GltfConcavityIndicators;
 
-    async fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
+    fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
         let raw = raw(context);
         Self::Output {
             convex_hull_gap: convex_hull_gap::from_raw(context, &raw),
@@ -62,7 +62,7 @@ impl GltfInferenceStage<GltfGeometryContext<'_>> for GltfConcavityInference {
         }
     }
 
-    async fn unavailable(diagnostic_ids: &[String]) -> Self::Output {
+    fn unavailable(diagnostic_ids: &[String]) -> Self::Output {
         Self::Output {
             convex_hull_gap: convex_hull_gap::unavailable_measure(diagnostic_ids),
             reentrant_area: reentrant_area::unavailable_measure(diagnostic_ids),

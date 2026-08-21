@@ -91,7 +91,7 @@ async fn produces_committed_diff() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical_and_narrowly_scoped() {
     let decoded: SemioBrepDiff = serde_json::from_str(DIFF).expect("committed delete-shell diff decodes");
-    
+
     let shells = decoded.shells.as_ref().expect("delete-shell must write the shells triple");
     assert_eq!(shells.removed, vec!["s1".to_string()], "the removal is addressed by shell id");
     assert!(shells.modified.is_empty() && shells.added.is_empty(), "a removal neither modifies nor adds");

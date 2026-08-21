@@ -7,10 +7,12 @@
 //! declares, `ZipEditorCommand::SetNode`, which renames either the archive comment or one entry's
 //! name (see the window's own doc comment for the honest scope note).
 
-use crate::artifacts::zip::{STDIO_ZIP_DOCUMENT_SCHEMA, ZipMutation, ZipSnapshot};
+use crate::artifacts::zip::{ZipMutation, ZipSnapshot, STDIO_ZIP_DOCUMENT_SCHEMA};
 use crate::editor::zip::iso21320::modes::edit;
 use crate::editor::zip::iso21320::modes::edit::windows::main;
-use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId, UiNode};
+use semio_framework_plugin::{
+    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId, UiNode,
+};
 use serde::{Deserialize, Serialize};
 use store::EngineHandles;
 
@@ -83,7 +85,7 @@ impl protocol::OpBinary for ZipEditorCommand {
         let spec = spec_fn();
         let body = &bytes[reader.position()..];
         let (record, _report) = store::pack_rt::decode_record_body(body, &spec, &store::PackDecodeOptions::default()).map_err(protocol::ProtocolError::from)?;
-        <Self as dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: semio_framework_plugin::resolve_ready(reader.position()) as u64, detail: error.to_string() })
+        <Self as dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
     }
 }
 //#endregion 🔖️OpCodec
@@ -116,7 +118,14 @@ impl ArtifactEditor for ZipIso21320Editor {
     /// ✏️ `node_id == "comment"` renames the archive comment; `"entry:{index}"` renames that entry's
     /// name. An unknown node id or out-of-range entry index is a documented no-op (`Emit::default()`),
     /// never a panic.
-    async fn handle(command: &Self::Command, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &semio_framework_plugin::app::InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Self::Mutation>, Fault> {
+    async fn handle(
+        command: &Self::Command,
+        doc: &ArtifactView<'_, Self::Snapshot>,
+        _cfg: &ConfigView<'_, Self::Config>,
+        _interaction: &semio_framework_plugin::app::InteractionView<'_>,
+        _draft: &DraftView<'_, Self::Draft>,
+        _engines: &EngineHandles,
+    ) -> Result<Emit<Self::Mutation>, Fault> {
         let ZipEditorCommand::SetNode { node_id, value } = command;
         if node_id == main::COMMENT_NODE_ID {
             return Ok(Emit { artifact_mutations: vec![ZipMutation::SetArchiveComment { comment: value.clone() }], description: Some("Set comment".into()), ..Default::default() });
@@ -127,11 +136,11 @@ impl ArtifactEditor for ZipIso21320Editor {
         Ok(Emit { artifact_mutations: vec![ZipMutation::RenameEntry { name: entry.name.clone(), new_name: value.clone() }], description: Some("Rename entry".into()), ..Default::default() })
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
-        match body_key {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::ComponentTree {
+        semio_framework_plugin::built_to_component_tree(match body_key {
             main::BODY_KEY => main::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
-        }
+            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))),
+        })
     }
 }
 //#endregion 🔖️Editor

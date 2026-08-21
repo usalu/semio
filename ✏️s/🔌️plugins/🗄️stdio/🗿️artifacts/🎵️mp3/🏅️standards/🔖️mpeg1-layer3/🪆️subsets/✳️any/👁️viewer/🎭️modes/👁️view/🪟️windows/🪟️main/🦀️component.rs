@@ -3,7 +3,7 @@
 
 use crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::snapshot::Mp3Snapshot;
 use semio_framework_plugin::app::{MediaKind, MediaView, MediaWindowKit};
-use semio_framework_plugin::{UiNode, WindowKindDefinition, WindowKit};
+use semio_framework_plugin::{BuiltNode, WindowKindDefinition, WindowKit};
 
 pub const WINDOW_KIND_ID: &str = MediaWindowKit::KIND_ID;
 pub const BODY_KEY: &str = MediaWindowKit::KIND_ID;
@@ -17,7 +17,7 @@ pub fn definition() -> WindowKindDefinition {
 /// model a playable transport position yet (thin v1: the kit's own transport chrome is real, the
 /// per-document duration/position feed is a documented follow-up, not invented here).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(_snapshot: &Mp3Snapshot) -> UiNode {
+pub fn render(_snapshot: &Mp3Snapshot) -> BuiltNode {
     MediaWindowKit::render(&MediaView { duration_ms: 0, position_ms: 0, kind: MediaKind::Audio })
 }
 

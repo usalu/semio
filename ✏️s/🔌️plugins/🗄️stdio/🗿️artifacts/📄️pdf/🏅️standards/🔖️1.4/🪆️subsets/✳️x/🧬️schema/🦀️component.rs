@@ -74,7 +74,7 @@ pub mod derived_construction {
 
         #[semio_framework_async_macros::async_test]
         async fn pass_through_build_never_fails_on_conformance_grounds() {
-            let snapshot = PdfXBuilderConstruction::empty().build().expect("no hard check exists at this schema; build must succeed");
+            let snapshot = PdfXBuilderConstruction::empty().await.build().await.expect("no hard check exists at this schema; build must succeed");
             assert_eq!(snapshot.page.width, 612.0);
         }
     }

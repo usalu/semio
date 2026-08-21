@@ -2,22 +2,9 @@
 
 use super::super::modules::{measurement_contracts::*, mesh_topology::Topology};
 use super::{
-    adjacency::GltfAdjacencyInference,
-    area_volume::GltfAreaVolumeInference,
-    clearance::GltfClearanceInference,
-    compactness::GltfCompactnessInference,
-    concavity::GltfConcavityInference,
-    curvature::GltfCurvatureInference,
-    geometry_core::*,
-    mass_distribution::GltfMassInference,
-    orientation::GltfOrientationInference,
-    proportion::GltfProportionInference,
-    roughness::GltfRoughnessInference,
-    size::GltfSizeInference,
-    symmetry::GltfSymmetryInference,
-    thickness::GltfThicknessInference,
-    topology::GltfTopologyInference,
-    GltfEntityIndicators, GltfGeometricInference, GltfInferenceCounts, GltfPairInference, GltfPartInference,
+    adjacency::GltfAdjacencyInference, area_volume::GltfAreaVolumeInference, clearance::GltfClearanceInference, compactness::GltfCompactnessInference, concavity::GltfConcavityInference, curvature::GltfCurvatureInference, geometry_core::*,
+    mass_distribution::GltfMassInference, orientation::GltfOrientationInference, proportion::GltfProportionInference, roughness::GltfRoughnessInference, size::GltfSizeInference, symmetry::GltfSymmetryInference, thickness::GltfThicknessInference,
+    topology::GltfTopologyInference, GltfEntityIndicators, GltfGeometricInference, GltfInferenceCounts, GltfPairInference, GltfPartInference,
 };
 use crate::artifacts::gltf::schema::snapshot::GltfSnapshot;
 

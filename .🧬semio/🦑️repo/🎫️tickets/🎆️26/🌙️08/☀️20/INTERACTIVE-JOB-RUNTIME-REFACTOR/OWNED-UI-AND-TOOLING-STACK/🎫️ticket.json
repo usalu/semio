@@ -1,0 +1,13 @@
+{
+  "title": "Owned UI and Tooling Stack",
+  "emoji": "🛠️",
+  "status": "open",
+  "description": "Phase 10 of the Interactivity-First Refactor. Replace third-party UI, graphics, text, browser boundary, clipboard, React product, Storybook, browser automation, build graph, cache, test runner, bundler, lint/format, docs and release dependencies with owned implementations behind existing contracts. Maintain direct platform host/graphics boundaries for Win32/Cocoa/Wayland/X11/browser and D3D12/Metal/Vulkan/WebGPU, differential fixtures throughout, cross-platform zero-touch operation, launch.json ordering, and a dependency audit/CI gate proving zero third-party packages under the declared runtime/build/test/tooling boundary.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2584"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪1c05b2e776b24d66a57304a7e3213f51"
+  ]
+}

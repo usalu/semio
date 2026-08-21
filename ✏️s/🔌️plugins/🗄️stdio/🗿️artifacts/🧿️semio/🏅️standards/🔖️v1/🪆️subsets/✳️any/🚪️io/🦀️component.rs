@@ -25,9 +25,7 @@ pub mod derived_composition {
     use crate::artifacts::semio::standards::v1::subsets::value::io::SemioValueValidator;
     use crate::artifacts::semio::standards::v1::subsets::video::io::SemioVideoValidator;
     use dsl::Diagnostic;
-    use semio_framework_plugin::{
-        register_subset_validator, subset_validator_entry_of, AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry,
-    };
+    use semio_framework_plugin::{register_subset_validator, subset_validator_entry_of, AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry};
     use std::sync::OnceLock;
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("*") };
@@ -197,7 +195,7 @@ pub mod derived_composition {
         /// `🏅️standards/🔖️v1/⚙️engine/🦀️component.rs` only aggregates all 14 subsets' `register()`
         /// calls (no test module of its own, and out of this ticket's `✳️any/`-only edit scope anyway).
         mod conformance_laws {
-            
+
             use crate::artifacts::semio::standards::v1::subsets::any::schema::{diff, mutations, snapshot};
             use protocol::{DiffCodec, OpBinary, OpText};
 

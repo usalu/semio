@@ -20,7 +20,7 @@ use crate::wfc_engine::trail::Trail;
 /// domain can never re-report `Wipeout`, it can only ever report `Unchanged`). Returns `Err(node)`
 /// for the first node whose domain is wiped to empty; `Ok(())` means every queued node's out-arcs
 /// are consistent (`domain(m)` is a subset of what every arc from an assigned/reduced neighbor allows).
-pub(crate) async fn run_to_fixed_point<T: Topology>(model: &CompiledModel, topo: &T, domains: &mut DomainStore, queue: &mut PropQueue, trail: &mut Trail, metrics: &mut Metrics) -> Result<(), NodeId> {
+pub(crate) fn run_to_fixed_point<T: Topology>(model: &CompiledModel, topo: &T, domains: &mut DomainStore, queue: &mut PropQueue, trail: &mut Trail, metrics: &mut Metrics) -> Result<(), NodeId> {
     let p = model.pattern_count();
     let mut union = PatternSet::new_empty(p);
     let mut removed = PatternSet::new_empty(p);
@@ -76,7 +76,7 @@ mod tests {
     use crate::wfc_engine::model::ModelBuilder;
     use crate::wfc_engine::topology::GraphTopologyBuilder;
 
-    async fn checkerboard(n: usize) -> (CompiledModel, crate::wfc_engine::topology::GraphTopology, RelationId) {
+    fn checkerboard(n: usize) -> (CompiledModel, crate::wfc_engine::topology::GraphTopology, RelationId) {
         let mut b = ModelBuilder::new();
         let black = b.add_pattern(1.0);
         let white = b.add_pattern(1.0);
@@ -91,8 +91,8 @@ mod tests {
         (model, tb.build().unwrap(), adj)
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn propagation_forces_alternation_after_one_pin() {
+    #[test]
+    fn propagation_forces_alternation_after_one_pin() {
         let (model, topo, _adj) = checkerboard(4);
         let mut domains = DomainStore::new_full(4, model.weights());
         let mut removed = PatternSet::new_empty(2);
@@ -109,8 +109,8 @@ mod tests {
         assert!(metrics.propagations > 0);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn odd_cycle_pin_propagates_to_wipeout() {
+    #[test]
+    fn odd_cycle_pin_propagates_to_wipeout() {
         let mut b = ModelBuilder::new();
         let black = b.add_pattern(1.0);
         let white = b.add_pattern(1.0);
@@ -138,8 +138,8 @@ mod tests {
         assert!(result.is_err());
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn no_dirty_nodes_means_no_op() {
+    #[test]
+    fn no_dirty_nodes_means_no_op() {
         let (model, topo, _adj) = checkerboard(3);
         let mut domains = DomainStore::new_full(3, model.weights());
         let mut queue = PropQueue::new(3);

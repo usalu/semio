@@ -24,7 +24,7 @@ pub struct SemioAnimationInference {
 }
 
 impl protocol::Inference<SemioAnimationSnapshot> for SemioAnimationInference {
-    async fn infer(snapshot: &SemioAnimationSnapshot) -> Self {
+    fn infer(snapshot: &SemioAnimationSnapshot) -> Self {
         Self { duration: compute_semio_animation_duration(snapshot) }
     }
 }
@@ -38,13 +38,13 @@ impl Default for SemioAnimationInference {
 }
 
 impl protocol::InferenceSpec<SemioAnimationSnapshot> for SemioAnimationInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.stdio.semio.animation.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.semio.animation.inference.duration", reads: &["timelines"] }]
     }
 }

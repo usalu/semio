@@ -89,11 +89,8 @@ async fn committed_json_is_canonical() {
 async fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
     let status = outcome.get("status").and_then(serde_json::Value::as_str).expect("outcome carries a status");
-    let declared: Vec<(String, String)> = outcome
-        .get("messages")
-        .and_then(serde_json::Value::as_array)
-        .map(|rows| rows.iter().map(|row| (row["level"].as_str().unwrap_or_default().to_string(), row["code"].as_str().unwrap_or_default().to_string())).collect())
-        .unwrap_or_default();
+    let declared: Vec<(String, String)> =
+        outcome.get("messages").and_then(serde_json::Value::as_array).map(|rows| rows.iter().map(|row| (row["level"].as_str().unwrap_or_default().to_string(), row["code"].as_str().unwrap_or_default().to_string())).collect()).unwrap_or_default();
     let raised = <LasMutation as protocol::Mutation<LasSnapshot>>::diff(&mutation(), &before());
     let produced: Vec<(String, String)> = raised
         .messages()
@@ -125,13 +122,19 @@ async fn produces_committed_diff() {
     assert_eq!(produced, committed, "set-snapshot/lifts-the-second-point-and-stretches-the-z-bound: produced diff differs from the committed 🔺️diff/🔣️component.json");
     assert!(raised.diff().vlrs.is_none(), "set-snapshot/lifts-the-second-point-and-stretches-the-z-bound: an empty VLR list on both sides must not produce a triple at all");
     assert!(raised.diff().number_of_point_records.is_none(), "set-snapshot/lifts-the-second-point-and-stretches-the-z-bound: the STRUCTURAL point count is equal on both sides and must stay out of the delta");
-    assert!(raised.diff().min_z.is_none() && raised.diff().max_x.is_none() && raised.diff().max_y.is_none(), "set-snapshot/lifts-the-second-point-and-stretches-the-z-bound: only the maxZ bound moves — the other five bounding-box scalars must stay absent");
+    assert!(
+        raised.diff().min_z.is_none() && raised.diff().max_x.is_none() && raised.diff().max_y.is_none(),
+        "set-snapshot/lifts-the-second-point-and-stretches-the-z-bound: only the maxZ bound moves — the other five bounding-box scalars must stay absent"
+    );
     assert_eq!(raised.diff().max_z, Some(2.5), "set-snapshot/lifts-the-second-point-and-stretches-the-z-bound: maxZ is the one header scalar this payload moves");
     let points = raised.diff().points.as_ref().expect("set-snapshot/lifts-the-second-point-and-stretches-the-z-bound: the points triple must be present");
     assert!(points.removed.is_empty() && points.added.is_empty(), "set-snapshot/lifts-the-second-point-and-stretches-the-z-bound: raising a point never adds or drops one");
     assert_eq!(points.modified[0].index, 1, "set-snapshot/lifts-the-second-point-and-stretches-the-z-bound: LasPointModified indices are BASE-state indices");
     assert_eq!(points.modified[0].diff.z, Some(2.5), "set-snapshot/lifts-the-second-point-and-stretches-the-z-bound: the point patch names z");
-    assert!(points.modified[0].diff.x.is_none() && points.modified[0].diff.y.is_none() && points.modified[0].diff.intensity.is_none(), "set-snapshot/lifts-the-second-point-and-stretches-the-z-bound: X, Y and intensity are unchanged on that point and must not be rewritten");
+    assert!(
+        points.modified[0].diff.x.is_none() && points.modified[0].diff.y.is_none() && points.modified[0].diff.intensity.is_none(),
+        "set-snapshot/lifts-the-second-point-and-stretches-the-z-bound: X, Y and intensity are unchanged on that point and must not be rewritten"
+    );
 }
 
 /// 🔣️ The committed diff is itself canonical and decodes to LasDiff.
@@ -142,7 +145,10 @@ async fn committed_diff_is_canonical() {
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "set-snapshot/lifts-the-second-point-and-stretches-the-z-bound: committed diff JSON is not canonical");
     let point_patch = &decoded.points.as_ref().expect("points triple").modified[0].diff;
-    assert!(point_patch.gps_time.is_none() && point_patch.rgb.is_none(), "set-snapshot/lifts-the-second-point-and-stretches-the-z-bound: the tri-state gpsTime/rgb slots must round-trip as absent — a committed null would collapse the Some(None) 'field cleared' state that Option<Option<_>> cannot express in JSON");
+    assert!(
+        point_patch.gps_time.is_none() && point_patch.rgb.is_none(),
+        "set-snapshot/lifts-the-second-point-and-stretches-the-z-bound: the tri-state gpsTime/rgb slots must round-trip as absent — a committed null would collapse the Some(None) 'field cleared' state that Option<Option<_>> cannot express in JSON"
+    );
 }
 
 /// 🩹 Applying the committed diff directly to `before` yields the committed `after` — the diff is

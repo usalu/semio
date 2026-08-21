@@ -7,7 +7,9 @@ use crate::artifacts::pptx::schema::snapshot::{PptxParagraph, PptxShape, PptxSli
 use crate::artifacts::pptx::{PptxMutation, PptxSnapshot, STDIO_PPTX_DOCUMENT_SCHEMA};
 use crate::editor::pptx::standards::v_ecma_376::subsets::transitional::modes::edit;
 use crate::editor::pptx::standards::v_ecma_376::subsets::transitional::modes::edit::windows::main;
-use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId, UiNode};
+use semio_framework_plugin::{
+    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId, UiNode,
+};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Dialect
@@ -127,11 +129,11 @@ impl ArtifactEditor for PptxTransitionalEditor {
         }
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
-        match body_key {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::ComponentTree {
+        semio_framework_plugin::built_to_component_tree(match body_key {
             main::BODY_KEY => main::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
-        }
+            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))),
+        })
     }
 }
 //#endregion 🔖️Editor
@@ -176,12 +178,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn set_page_writes_the_first_text_bearing_shape_only() {
         let mut snapshot = PptxSnapshot::default();
-        snapshot.presentation.slides.push(PptxSlide {
-            shapes: vec![
-                PptxShape::Picture { blip_rel_id: "rId1".into(), position: Default::default() },
-                PptxShape::TextBox { text_frame: vec![PptxParagraph::text("old")], position: Default::default() },
-            ],
-        });
+        snapshot.presentation.slides.push(PptxSlide { shapes: vec![PptxShape::Picture { blip_rel_id: "rId1".into(), position: Default::default() }, PptxShape::TextBox { text_frame: vec![PptxParagraph::text("old")], position: Default::default() }] });
         let mutation = build_set_page_mutation(&snapshot, 0, "new line one\nnew line two").expect("mutation");
         let PptxMutation::SetShapeText { slide_index, shape_index, text_frame } = &mutation else { panic!("expected SetShapeText") };
         assert_eq!(*slide_index, 0);

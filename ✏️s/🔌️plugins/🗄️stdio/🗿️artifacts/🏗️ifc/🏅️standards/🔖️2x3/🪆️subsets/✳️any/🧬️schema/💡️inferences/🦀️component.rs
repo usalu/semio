@@ -26,7 +26,7 @@ pub struct Ifc2x3Inference {
 }
 
 impl protocol::Inference<Ifc2x3Snapshot> for Ifc2x3Inference {
-    async fn infer(snapshot: &Ifc2x3Snapshot) -> Self {
+    fn infer(snapshot: &Ifc2x3Snapshot) -> Self {
         Self { bounds: compute_ifc2x3_bounds(snapshot) }
     }
 }
@@ -40,13 +40,13 @@ impl Default for Ifc2x3Inference {
 }
 
 impl protocol::InferenceSpec<Ifc2x3Snapshot> for Ifc2x3Inference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.stdio.ifc.2x3.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.ifc.2x3.inference.bounds", reads: &["document"] }]
     }
 }

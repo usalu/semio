@@ -23,19 +23,19 @@ pub struct CsvInference {
 }
 
 impl protocol::Inference<CsvSnapshot> for CsvInference {
-    async fn infer(snapshot: &CsvSnapshot) -> Self {
+    fn infer(snapshot: &CsvSnapshot) -> Self {
         Self { outline: CsvOutline::compute(snapshot) }
     }
 }
 
 impl protocol::InferenceSpec<CsvSnapshot> for CsvInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.stdio.csv.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.csv.inference.outline", reads: &["records", "hasHeader"] }]
     }
 }
@@ -89,7 +89,7 @@ mod tests {
     /// out of the former `⚙️engine`'s own test region (ticket
     /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES).
     mod conformance_laws {
-        
+
         use crate::artifacts::csv::schema::snapshot::{self, CsvField, CsvRecord};
         use crate::artifacts::csv::{CsvDiff, CsvMutation};
         use protocol::{DiffCodec, OpBinary};

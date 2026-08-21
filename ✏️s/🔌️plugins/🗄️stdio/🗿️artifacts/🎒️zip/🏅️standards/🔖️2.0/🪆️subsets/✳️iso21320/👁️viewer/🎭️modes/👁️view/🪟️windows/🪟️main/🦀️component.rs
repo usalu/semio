@@ -5,7 +5,7 @@
 
 use crate::artifacts::zip::ZipSnapshot;
 use semio_framework_plugin::app::{TreeNodeView, TreeView, TreeWindowKit, WindowKit};
-use semio_framework_plugin::{LocalizedLabel, UiNode, WindowKindDefinition};
+use semio_framework_plugin::{BuiltNode, LocalizedLabel, WindowKindDefinition};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = TreeWindowKit::KIND_ID;
@@ -23,10 +23,10 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-/// 👁️ Pure `ZipSnapshot -> UiNode` read: root = the archive comment, one leaf per entry labeled
+/// 👁️ Pure `ZipSnapshot -> BuiltNode` read: root = the archive comment, one leaf per entry labeled
 /// `"{name} ({n} bytes)"`, no edit affordances.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &ZipSnapshot) -> UiNode {
+pub fn render(document: &ZipSnapshot) -> BuiltNode {
     let children = document.entries.iter().enumerate().map(|(index, entry)| TreeNodeView { id: format!("{ENTRY_NODE_PREFIX}{index}"), label: format!("{} ({} bytes)", entry.name, entry.data.len()), children: Vec::new() }).collect();
     let root = TreeNodeView { id: COMMENT_NODE_ID.into(), label: format!("Comment: {}", document.comment), children };
     TreeWindowKit::render(&TreeView { roots: vec![root] })

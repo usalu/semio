@@ -25,7 +25,7 @@ pub struct LasInference {
 }
 
 impl protocol::Inference<LasSnapshot> for LasInference {
-    async fn infer(snapshot: &LasSnapshot) -> Self {
+    fn infer(snapshot: &LasSnapshot) -> Self {
         Self { bounds: compute_las_bounds(snapshot) }
     }
 }
@@ -39,13 +39,13 @@ impl Default for LasInference {
 }
 
 impl protocol::InferenceSpec<LasSnapshot> for LasInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.stdio.las.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.las.inference.bounds", reads: &["header"] }]
     }
 }

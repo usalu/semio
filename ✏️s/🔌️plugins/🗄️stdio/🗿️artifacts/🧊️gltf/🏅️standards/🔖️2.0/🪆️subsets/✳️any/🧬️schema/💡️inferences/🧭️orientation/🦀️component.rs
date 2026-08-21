@@ -39,11 +39,11 @@ impl GltfOrientationInference {
 impl GltfInferenceStage<GltfGeometryContext<'_>> for GltfOrientationInference {
     type Output = GltfOrientationIndicators;
 
-    async fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
+    fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
         Self::Output { main_axis_direction: main_axis_direction::infer(context), face_normal_distribution: face_normal_distribution::infer(context), orientation_consistency: orientation_consistency::infer(context) }
     }
 
-    async fn unavailable(diagnostic_ids: &[String]) -> Self::Output {
+    fn unavailable(diagnostic_ids: &[String]) -> Self::Output {
         Self::Output {
             main_axis_direction: main_axis_direction::unavailable_measure(diagnostic_ids),
             face_normal_distribution: face_normal_distribution::unavailable_measure(diagnostic_ids),

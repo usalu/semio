@@ -101,7 +101,7 @@ async fn produces_committed_diff() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical_and_narrowly_scoped() {
     let decoded: SemioImageDiff = serde_json::from_str(DIFF).expect("committed set-frame-pixels diff decodes");
-    
+
     let frames = decoded.frames.as_ref().expect("set-frame-pixels must write the frames slot");
     assert!(frames.removed.is_empty() && frames.added.is_empty(), "a repaint adds and removes no frame");
     assert_eq!(frames.modified.len(), 1, "exactly one frame is modified");

@@ -101,7 +101,7 @@ async fn produces_committed_diff() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical_and_narrowly_scoped() {
     let decoded: SemioImageDiff = serde_json::from_str(DIFF).expect("committed remove-metadata-entry diff decodes");
-    
+
     let metadata = decoded.metadata.as_ref().expect("remove-metadata-entry must write the metadata slot");
     assert_eq!(metadata.removed, vec!["Comment".to_string()], "the removal is addressed by name key");
     assert!(metadata.modified.is_empty() && metadata.added.is_empty(), "a removal neither modifies nor adds");

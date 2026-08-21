@@ -48,7 +48,7 @@ pub(crate) fn raw(context: &GltfGeometryContext<'_>) -> GltfCompactnessRaw {
 impl GltfInferenceStage<GltfGeometryContext<'_>> for GltfCompactnessInference {
     type Output = GltfCompactnessIndicators;
 
-    async fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
+    fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
         let raw = raw(context);
         Self::Output {
             compactness: compactness::from_raw(context, &raw),
@@ -59,7 +59,7 @@ impl GltfInferenceStage<GltfGeometryContext<'_>> for GltfCompactnessInference {
         }
     }
 
-    async fn unavailable(diagnostic_ids: &[String]) -> Self::Output {
+    fn unavailable(diagnostic_ids: &[String]) -> Self::Output {
         Self::Output {
             compactness: compactness::unavailable_measure(diagnostic_ids),
             surface_to_volume_ratio: surface_to_volume_ratio::unavailable_measure(diagnostic_ids),

@@ -1,0 +1,12 @@
+[DEBUG] focused native debug: PASS, 11/11 wgpu::prepared::tests
+[DEBUG] focused native release: PASS, 11/11 wgpu::prepared::tests with SEMIO_TEST_BUDGET_MS=120000
+[DEBUG] wasm32-unknown-unknown WGPU check: PASS
+[DEBUG] dependency verification: PASS, baseline=238 current=238
+[DEBUG] initial full native debug: 260 run, 259 passed, 1 incorrect pre-existing fixture at wgpu/component.rs:1330 (actual canonical f64 args 42.0, fixture expected 42)
+[DEBUG] initial full native release: 260 run, 259 passed, same incorrect fixture
+[DEBUG] fixture correction: GOLDEN_ACTION_DESCRIPTOR_JSON args changed from 42 to canonical f64 serialization 42.0 by coordinator authorization
+[DEBUG] final full native debug: PASS, 260/260
+[DEBUG] final focused native release after bounded-cursor change: PASS, 11/11
+[DEBUG] clippy all-targets: 27 existing non-prepared diagnostics, zero prepared.rs diagnostics
+[DEBUG] clippy lib: 19 existing non-prepared diagnostics, zero prepared.rs diagnostics
+[DEBUG] WGPU/ticket diff check: PASS

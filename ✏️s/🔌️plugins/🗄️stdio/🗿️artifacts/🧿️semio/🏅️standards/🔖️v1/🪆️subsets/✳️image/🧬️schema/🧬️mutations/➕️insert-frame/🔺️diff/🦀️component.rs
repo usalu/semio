@@ -1,6 +1,6 @@
 use crate::artifacts::semio::standards::v1::subsets::image::schema::diff::SemioImageDiff;
-use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::{SemioImageFrame, SemioImageSnapshot};
 use crate::artifacts::semio::standards::v1::subsets::image::schema::mutations::SemioImageMutation;
+use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::{SemioImageFrame, SemioImageSnapshot};
 use protocol::Mutation;
 
 /// 🔺️ Diff helper for insert-frame — an `index` past the end of `base.frames` is

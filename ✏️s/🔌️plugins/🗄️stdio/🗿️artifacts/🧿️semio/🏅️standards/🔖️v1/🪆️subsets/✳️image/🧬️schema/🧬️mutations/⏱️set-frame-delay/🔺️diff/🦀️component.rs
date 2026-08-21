@@ -1,6 +1,6 @@
 use crate::artifacts::semio::standards::v1::subsets::image::schema::diff::SemioImageDiff;
-use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
 use crate::artifacts::semio::standards::v1::subsets::image::schema::mutations::SemioImageMutation;
+use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
 use protocol::Mutation;
 
 /// 🔺️ Diff helper for set-frame-delay — an absent BASE frame `index` is `mutation.target-missing`

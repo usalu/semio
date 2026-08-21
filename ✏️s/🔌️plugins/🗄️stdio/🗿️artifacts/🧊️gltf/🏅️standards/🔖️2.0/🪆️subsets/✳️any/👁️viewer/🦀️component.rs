@@ -8,10 +8,8 @@ use crate::artifacts::gltf::standards::v2_0::subsets::any::schema::snapshot::Glt
 use crate::artifacts::gltf::GltfMutation;
 use crate::viewer::gltf::modes::view;
 use crate::viewer::gltf::modes::view::windows::main;
-use semio_framework_plugin::{
-    ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId, UiNode, ViewEmit, Viewer,
-};
 use semio_framework_plugin::app::InteractionView;
+use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId, UiNode, ViewEmit, Viewer};
 use store::EngineHandles;
 
 //#region 🔖️Dialect
@@ -67,11 +65,11 @@ impl ArtifactViewer for GltfAnyViewer {
         Ok(ViewEmit::default())
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
-        match body_key {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::ComponentTree {
+        semio_framework_plugin::built_to_component_tree(match body_key {
             main::BODY_KEY => main::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
-        }
+            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))),
+        })
     }
 }
 //#endregion 🔖️Viewer
@@ -79,14 +77,7 @@ impl ArtifactViewer for GltfAnyViewer {
 //#region 🔖️Manifest
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn create_gltf_any_viewer() -> semio_framework_plugin::AppDefinition {
-    Viewer::builder(GLTF_ANY_DIALECT)
-        .document(["stdio", "gltf"])
-        .icon_id("box")
-        .mode_def(view::definition())
-        .default_mode_id(view::GLTF_ANY_VIEW_MODE_ID)
-        .window_kind_def(main::definition())
-        .default_layout(view::layout())
-        .build_definition()
+    Viewer::builder(GLTF_ANY_DIALECT).document(["stdio", "gltf"]).icon_id("box").mode_def(view::definition()).default_mode_id(view::GLTF_ANY_VIEW_MODE_ID).window_kind_def(main::definition()).default_layout(view::layout()).build_definition()
 }
 //#endregion 🔖️Manifest
 

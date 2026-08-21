@@ -135,18 +135,7 @@ mod tests {
     }
 
     fn stack(children: Vec<UiNode>) -> UiNode {
-        UiNode::Stack(UiStackNode {
-            direction: "vertical".into(),
-            gap: Some("none".into()),
-            padding: Some("standard".into()),
-            id: None,
-            presence: UiPresence::default(),
-            activate: None,
-            drop_action: None,
-            drop_overlay: None,
-            children,
-            menu: None,
-        })
+        UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: Some("none".into()), padding: Some("standard".into()), id: None, presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, children, menu: None })
     }
 
     fn group(children: Vec<UiNode>) -> UiNode {

@@ -400,7 +400,6 @@ impl StepEntitiesDiff {
         }
         entities
     }
-
 }
 
 /// ➕️ Free-function core of `entities` absorb — id-keyed, no rename transport needed (unlike
@@ -1268,7 +1267,7 @@ pub(crate) fn dec_entity_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<
     let name = read_option_bin(reader, read_str_bin)?;
     let args = read_option_bin(reader, dec_args_diff_bin)?;
     let complex = read_option_bin(reader, |r| {
-        let count = semio_framework_plugin::resolve_ready(r.read_varint_u64()).map_err(|e| e.to_string())?;
+        let count = r.read_varint_u64().map_err(|e| e.to_string())?;
         (0..count).map(|_| dec_complex_bin(r)).collect::<Result<Vec<_>, String>>()
     })?;
     Ok(StepEntityDiff { name, args, complex })
@@ -1392,10 +1391,10 @@ impl protocol::DiffCodec for StepDiff {
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
         let _format = reader.read_u8().map_err(|e| malformed("diff format", 0, e.to_string()))?;
         let flags = reader.read_u8().map_err(|e| malformed("diff flags", 1, e.to_string()))?;
-        let file_description = if flags & 1 != 0 { Some(dec_file_description_bin(&mut reader).map_err(|e| malformed("diff file_description", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
-        let file_name = if flags & 2 != 0 { Some(dec_file_name_bin(&mut reader).map_err(|e| malformed("diff file_name", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
-        let file_schema = if flags & 4 != 0 { Some(dec_file_schema_bin(&mut reader).map_err(|e| malformed("diff file_schema", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
-        let entities = if flags & 8 != 0 { Some(dec_entities_diff_bin(&mut reader).map_err(|e| malformed("diff entities", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
+        let file_description = if flags & 1 != 0 { Some(dec_file_description_bin(&mut reader).map_err(|e| malformed("diff file_description", reader.position(), e))?) } else { None };
+        let file_name = if flags & 2 != 0 { Some(dec_file_name_bin(&mut reader).map_err(|e| malformed("diff file_name", reader.position(), e))?) } else { None };
+        let file_schema = if flags & 4 != 0 { Some(dec_file_schema_bin(&mut reader).map_err(|e| malformed("diff file_schema", reader.position(), e))?) } else { None };
+        let entities = if flags & 8 != 0 { Some(dec_entities_diff_bin(&mut reader).map_err(|e| malformed("diff entities", reader.position(), e))?) } else { None };
         Ok(StepDiff { file_description, file_name, file_schema, entities })
     }
 }

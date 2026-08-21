@@ -81,13 +81,13 @@ enum Endian {
 }
 
 impl Endian {
-    async fn u16(self, b: &[u8]) -> u16 {
+    fn u16(self, b: &[u8]) -> u16 {
         match self {
             Endian::Little => u16::from_le_bytes([b[0], b[1]]),
             Endian::Big => u16::from_be_bytes([b[0], b[1]]),
         }
     }
-    async fn u32(self, b: &[u8]) -> u32 {
+    fn u32(self, b: &[u8]) -> u32 {
         match self {
             Endian::Little => u32::from_le_bytes([b[0], b[1], b[2], b[3]]),
             Endian::Big => u32::from_be_bytes([b[0], b[1], b[2], b[3]]),
@@ -434,21 +434,33 @@ async fn value_bytes(values: &TiffValues, bo: TiffByteOrder) -> Vec<u8> {
             out.extend_from_slice(s.as_bytes());
             out.push(0);
         }
-        TiffValues::Short(v) => v.iter().for_each(|&x| { write_u16(&mut out, x, bo); }),
-        TiffValues::Long(v) => v.iter().for_each(|&x| { write_u32(&mut out, x, bo); }),
+        TiffValues::Short(v) => v.iter().for_each(|&x| {
+            write_u16(&mut out, x, bo);
+        }),
+        TiffValues::Long(v) => v.iter().for_each(|&x| {
+            write_u32(&mut out, x, bo);
+        }),
         TiffValues::Rational(v) => v.iter().for_each(|&(n, d)| {
             write_u32(&mut out, n, bo);
             write_u32(&mut out, d, bo);
         }),
         TiffValues::SByte(v) => out.extend(v.iter().map(|&x| x as u8)),
-        TiffValues::SShort(v) => v.iter().for_each(|&x| { write_u16(&mut out, x as u16, bo); }),
-        TiffValues::SLong(v) => v.iter().for_each(|&x| { write_u32(&mut out, x as u32, bo); }),
+        TiffValues::SShort(v) => v.iter().for_each(|&x| {
+            write_u16(&mut out, x as u16, bo);
+        }),
+        TiffValues::SLong(v) => v.iter().for_each(|&x| {
+            write_u32(&mut out, x as u32, bo);
+        }),
         TiffValues::SRational(v) => v.iter().for_each(|&(n, d)| {
             write_u32(&mut out, n as u32, bo);
             write_u32(&mut out, d as u32, bo);
         }),
-        TiffValues::Float(v) => v.iter().for_each(|&x| { write_u32(&mut out, x.to_bits(), bo); }),
-        TiffValues::Double(v) => v.iter().for_each(|&x| { write_u64(&mut out, x.to_bits(), bo); }),
+        TiffValues::Float(v) => v.iter().for_each(|&x| {
+            write_u32(&mut out, x.to_bits(), bo);
+        }),
+        TiffValues::Double(v) => v.iter().for_each(|&x| {
+            write_u64(&mut out, x.to_bits(), bo);
+        }),
     }
     out
 }

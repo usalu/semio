@@ -524,7 +524,7 @@ pub fn test_implied_independencies<T: CiTest>(
 // #region 🔖️CiTest
 /// 🔬️ A conditional-independence test on tabular data, indexed by table/DAG column.
 pub trait CiTest {
-    async fn test(
+    fn test(
         &self,
         data: &crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table,
         x: usize,
@@ -551,7 +551,7 @@ impl FisherZ {
 }
 
 impl CiTest for FisherZ {
-    async fn test(
+    fn test(
         &self,
         _data: &crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table,
         x: usize,
@@ -566,7 +566,7 @@ impl CiTest for FisherZ {
 pub struct GSquared;
 
 impl CiTest for GSquared {
-    async fn test(
+    fn test(
         &self,
         data: &crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table,
         x: usize,
@@ -1734,36 +1734,36 @@ mod tests {
     // #endregion 🔖️Fixtures
 
     // #region 🔖️DSeparationTests
-    #[semio_framework_async_macros::async_test]
-    async fn chain_d_separation_pattern() {
+    #[test]
+    fn chain_d_separation_pattern() {
         let dag = chain3();
         assert!(d_separated(&dag, &[0], &[2], &[1]), "x _||_ z | y should hold on a chain");
         assert!(!d_separated(&dag, &[0], &[2], &[]), "x _||_ z should not hold marginally on a chain");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn fork_d_separation_pattern() {
+    #[test]
+    fn fork_d_separation_pattern() {
         let dag = fork3();
         assert!(d_separated(&dag, &[0], &[2], &[1]), "x _||_ z | y should hold on a fork");
         assert!(!d_separated(&dag, &[0], &[2], &[]), "x _||_ z should not hold marginally on a fork");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn collider_d_separation_pattern() {
+    #[test]
+    fn collider_d_separation_pattern() {
         let dag = collider3();
         assert!(d_separated(&dag, &[0], &[1], &[]), "x _||_ y should hold marginally on a collider");
         assert!(!d_separated(&dag, &[0], &[1], &[2]), "x _||_ y | z should not hold: conditioning on the collider opens the path");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn moralization_marries_coparents() {
+    #[test]
+    fn moralization_marries_coparents() {
         let dag = collider3();
         let moral = dag.moralize();
         assert!(moral.contains(&(0, 1)), "co-parents 0 and 1 of the collider should be married");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn implied_independencies_hold_by_d_separation() {
+    #[test]
+    fn implied_independencies_hold_by_d_separation() {
         let dag = chain3();
         for stmt in implied_independencies(&dag) {
             assert!(d_separated(&dag, &[stmt.x], &[stmt.y], &stmt.z), "implied statement {stmt:?} should be d-separated");
@@ -1772,24 +1772,24 @@ mod tests {
     // #endregion 🔖️DSeparationTests
 
     // #region 🔖️CpdagTests
-    #[semio_framework_async_macros::async_test]
-    async fn cpdag_from_chain_is_fully_undirected() {
+    #[test]
+    fn cpdag_from_chain_is_fully_undirected() {
         let cpdag = Cpdag::from_dag(&chain3());
         assert!(cpdag.is_undirected(0, 1));
         assert!(cpdag.is_undirected(1, 2));
         assert!(cpdag.directed_edges().is_empty());
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn cpdag_from_collider_keeps_both_arrows() {
+    #[test]
+    fn cpdag_from_collider_keeps_both_arrows() {
         let cpdag = Cpdag::from_dag(&collider3());
         assert!(cpdag.is_directed(0, 2));
         assert!(cpdag.is_directed(1, 2));
         assert!(!cpdag.has_edge(0, 1), "collider parents should not be adjacent");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn cpdag_to_dag_round_trip_preserves_skeleton_and_v_structures() {
+    #[test]
+    fn cpdag_to_dag_round_trip_preserves_skeleton_and_v_structures() {
         let dag = collider3();
         let cpdag = Cpdag::from_dag(&dag);
         let extended = cpdag.to_dag().expect("collider CPDAG is extendable");
@@ -1797,16 +1797,16 @@ mod tests {
         assert!(extended.parents(2).contains(&0) && extended.parents(2).contains(&1));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn cpdag_to_dag_round_trip_on_chain_is_acyclic_and_same_skeleton() {
+    #[test]
+    fn cpdag_to_dag_round_trip_on_chain_is_acyclic_and_same_skeleton() {
         let dag = chain3();
         let cpdag = Cpdag::from_dag(&dag);
         let extended = cpdag.to_dag().expect("chain CPDAG is extendable");
         assert_eq!(extended.edges().len(), 2);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn meek_rule1_orients_to_avoid_new_collider() {
+    #[test]
+    fn meek_rule1_orients_to_avoid_new_collider() {
         // a -> b, b - c undirected, a and c not adjacent => b -> c.
         let mut cpdag = Cpdag::new(vec!["a".into(), "b".into(), "c".into()]);
         cpdag.directed.insert((0, 1));
@@ -1815,8 +1815,8 @@ mod tests {
         assert!(cpdag.is_directed(1, 2));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn meek_rule2_orients_to_avoid_cycle() {
+    #[test]
+    fn meek_rule2_orients_to_avoid_cycle() {
         // a -> b -> c, a - c undirected => a -> c.
         let mut cpdag = Cpdag::new(vec!["a".into(), "b".into(), "c".into()]);
         cpdag.directed.insert((0, 1));
@@ -1826,8 +1826,8 @@ mod tests {
         assert!(cpdag.is_directed(0, 2));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn meek_rule3_orients_via_two_directed_co_parents() {
+    #[test]
+    fn meek_rule3_orients_via_two_directed_co_parents() {
         // a-b, a-c, a-d undirected; c->b, d->b directed; c,d not adjacent => a->b.
         let mut cpdag = Cpdag::new(vec!["a".into(), "b".into(), "c".into(), "d".into()]);
         cpdag.undirected.insert((0, 1));
@@ -1842,8 +1842,8 @@ mod tests {
     // #endregion 🔖️CpdagTests
 
     // #region 🔖️CiTestTests
-    #[semio_framework_async_macros::async_test]
-    async fn fisher_z_ci_test_via_causal_dag_columns() {
+    #[test]
+    fn fisher_z_ci_test_via_causal_dag_columns() {
         let mut table = crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table::new();
         let n = 200;
         let mut rng = semio_framework_geometry::random::Rng::from_seed(7);
@@ -1877,8 +1877,8 @@ mod tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn local_bic_prefers_the_true_parent_set() {
+    #[test]
+    fn local_bic_prefers_the_true_parent_set() {
         let scm = linear_chain_scm();
         let mut rng = semio_framework_geometry::random::Rng::from_seed(99);
         let mut data = scm.simulate(500, &mut rng).unwrap();
@@ -1896,51 +1896,51 @@ mod tests {
     // #endregion 🔖️DiscoveryTests
 
     // #region 🔖️IdentificationTests
-    #[semio_framework_async_macros::async_test]
-    async fn backdoor_minimal_set_on_confounder_triangle() {
+    #[test]
+    fn backdoor_minimal_set_on_confounder_triangle() {
         // z -> x, z -> y, x -> y.
         let dag = CausalDag::from_named_edges(vec!["x".into(), "y".into(), "z".into()], &[("z", "x"), ("z", "y"), ("x", "y")]).unwrap();
         let sets = minimal_backdoor_sets(&dag, 0, 1, 3);
         assert_eq!(sets, vec![vec![2]]);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn backdoor_m_bias_graph_allows_empty_adjustment() {
+    #[test]
+    fn backdoor_m_bias_graph_allows_empty_adjustment() {
         // a -> x, b -> y, a -> m, b -> m (m is a collider, not on any backdoor path): x -> y direct edge.
         let dag = CausalDag::from_named_edges(vec!["x".into(), "y".into(), "a".into(), "b".into(), "m".into()], &[("a", "x"), ("b", "y"), ("a", "m"), ("b", "m"), ("x", "y")]).unwrap();
         assert!(backdoor_satisfied(&dag, 0, 1, &[]), "no backdoor path from x to y should exist here");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn frontdoor_satisfied_on_classic_mediator_graph() {
+    #[test]
+    fn frontdoor_satisfied_on_classic_mediator_graph() {
         // u -> x, u -> y (unobserved confounder u), x -> m -> y.
         let dag = CausalDag::from_named_edges(vec!["x".into(), "y".into(), "m".into(), "u".into()], &[("u", "x"), ("u", "y"), ("x", "m"), ("m", "y")]).unwrap();
         assert!(frontdoor_satisfied(&dag, 0, 1, &[2]));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn identify_returns_no_confounding_for_a_direct_unconfounded_edge() {
+    #[test]
+    fn identify_returns_no_confounding_for_a_direct_unconfounded_edge() {
         let dag = CausalDag::from_named_edges(vec!["x".into(), "y".into()], &[("x", "y")]).unwrap();
         assert_eq!(identify(&dag, 0, 1).unwrap(), Identification::NoConfounding);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn identify_returns_backdoor_for_a_confounded_edge() {
+    #[test]
+    fn identify_returns_backdoor_for_a_confounded_edge() {
         let dag = CausalDag::from_named_edges(vec!["x".into(), "y".into(), "z".into()], &[("z", "x"), ("z", "y"), ("x", "y")]).unwrap();
         assert_eq!(identify(&dag, 0, 1).unwrap(), Identification::Backdoor { adjustment: vec![2] });
     }
     // #endregion 🔖️IdentificationTests
 
     // #region 🔖️ScmLinearTests
-    #[semio_framework_async_macros::async_test]
-    async fn linear_scm_total_effect_matches_analytic_path_product() {
+    #[test]
+    fn linear_scm_total_effect_matches_analytic_path_product() {
         let scm = linear_chain_scm();
         assert!((scm.total_effect(0, 2) - 3.0).abs() < 1e-9);
         assert!((scm.ate(0, 2) - 3.0).abs() < 1e-9);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn linear_scm_implied_covariance_matches_hand_computation() {
+    #[test]
+    fn linear_scm_implied_covariance_matches_hand_computation() {
         let scm = linear_chain_scm();
         let cov = scm.implied_covariance().unwrap();
         // Var(x) = 1.0; Var(m) = 4*1.0 + 0.25 = 4.25; Var(y) = 1.5^2*4.25 + 0.25 = 9.8125; Cov(x,y) = 2.0*1.5*Var(x) = 3.0.
@@ -1950,8 +1950,8 @@ mod tests {
         assert!((cov.get(0, 2) - 3.0).abs() < 1e-9);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn linear_scm_counterfactual_shifts_by_exact_path_product_preserving_noise() {
+    #[test]
+    fn linear_scm_counterfactual_shifts_by_exact_path_product_preserving_noise() {
         let scm = linear_chain_scm();
         let observed = [1.0, 2.5, 5.0]; // noise_m = 2.5 - 2.0*1.0 = 0.5; noise_y = 5.0 - 1.5*2.5 = 1.25
         let cf = scm.counterfactual(&observed, &[(0, 2.0)]).unwrap();
@@ -1962,8 +1962,8 @@ mod tests {
         assert!((cf.get(2) - observed[2] - 3.0).abs() < 1e-9);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn what_if_query_level2_vs_level3() {
+    #[test]
+    fn what_if_query_level2_vs_level3() {
         let scm = linear_chain_scm();
         let interventional = scm.query(2, &WhatIf::new().do_(0, 2.0)).unwrap();
         // E[y | do(x=2)] = 1.5 * (2.0 * 2.0) = 6.0 (all intercepts are 0 in this fixture).
@@ -2001,8 +2001,8 @@ mod tests {
         DiscreteScm { dag, cardinalities, cpts: vec![cloudy, sprinkler, rain, wet] }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn sprinkler_posterior_vs_interventional_distribution_contrast() {
+    #[test]
+    fn sprinkler_posterior_vs_interventional_distribution_contrast() {
         let scm = sprinkler_scm();
         let posterior_rain = scm.posterior(2, &[(3, 1)]).unwrap();
         let prior_rain = scm.posterior(2, &[]).unwrap();
@@ -2030,22 +2030,22 @@ mod tests {
     // #endregion 🔖️EstimationTests
 
     // #region 🔖️ErrorPathTests
-    #[semio_framework_async_macros::async_test]
-    async fn cyclic_edges_are_rejected() {
+    #[test]
+    fn cyclic_edges_are_rejected() {
         let err = CausalDag::new(vec!["a".into(), "b".into()], &[(0, 1), (1, 0)]).unwrap_err();
         assert!(matches!(err, CausalError::NotADag(_)));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn wrong_column_type_errors() {
+    #[test]
+    fn wrong_column_type_errors() {
         let mut table = crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::Table::new();
         table.push_continuous("x", vec![1.0, 2.0]).unwrap();
         let err = GSquared.test(&table, 0, 0, &[]).unwrap_err();
         assert!(matches!(err, CausalError::Tabular(_)));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn oversized_variable_elimination_is_rejected() {
+    #[test]
+    fn oversized_variable_elimination_is_rejected() {
         // 20 independent binary roots all feeding one "sink" child: the sink's own CPT factor
         // already has 2^21 entries (21 binary variables), well past the 1e6-entry guard, and
         // eliminating any root multiplies straight into that factor.
@@ -2072,8 +2072,8 @@ mod tests {
     mod quick {
         use super::*;
 
-        #[semio_framework_async_macros::async_test]
-        async fn pc_stable_recovers_known_cpdag_from_simulated_chain() {
+        #[test]
+        fn pc_stable_recovers_known_cpdag_from_simulated_chain() {
             let scm = linear_chain_scm();
             let mut rng = semio_framework_geometry::random::Rng::from_seed(2024);
             let data = scm.simulate(2000, &mut rng).unwrap();
@@ -2084,8 +2084,8 @@ mod tests {
             assert_eq!(result.cpdag.undirected_edges(), truth.undirected_edges());
         }
 
-        #[semio_framework_async_macros::async_test]
-        async fn ges_recovers_known_cpdag_from_simulated_chain() {
+        #[test]
+        fn ges_recovers_known_cpdag_from_simulated_chain() {
             let scm = linear_chain_scm();
             let mut rng = semio_framework_geometry::random::Rng::from_seed(4242);
             let data = scm.simulate(2000, &mut rng).unwrap();
@@ -2095,8 +2095,8 @@ mod tests {
             assert_eq!(found.undirected_edges(), truth.undirected_edges());
         }
 
-        #[semio_framework_async_macros::async_test]
-        async fn direct_lingam_recovers_causal_order_on_uniform_noise_sem() {
+        #[test]
+        fn direct_lingam_recovers_causal_order_on_uniform_noise_sem() {
             // x -> y with uniform (non-Gaussian) noise.
             let n = 3000;
             let mut rng = semio_framework_geometry::random::Rng::from_seed(55);
@@ -2108,8 +2108,8 @@ mod tests {
             assert!(result.dag.parents(1).contains(&0), "y should have x as a parent after pruning");
         }
 
-        #[semio_framework_async_macros::async_test]
-        async fn linear_scm_simulate_then_fit_recovers_coefficients() {
+        #[test]
+        fn linear_scm_simulate_then_fit_recovers_coefficients() {
             let scm = linear_chain_scm();
             let mut rng = semio_framework_geometry::random::Rng::from_seed(321);
             let data = scm.simulate(5000, &mut rng).unwrap();
@@ -2118,8 +2118,8 @@ mod tests {
             assert!((refit.weights.get(2, 1) - 1.5).abs() < 0.1);
         }
 
-        #[semio_framework_async_macros::async_test]
-        async fn discrete_scm_fit_recovers_cpts_from_simulated_data() {
+        #[test]
+        fn discrete_scm_fit_recovers_cpts_from_simulated_data() {
             let scm = sprinkler_scm();
             let mut rng = semio_framework_geometry::random::Rng::from_seed(17);
             let data = scm.simulate(20_000, &mut rng).unwrap();
@@ -2128,8 +2128,8 @@ mod tests {
             assert!((cloudy_fit.probs[1] - 0.5).abs() < 0.05, "recovered P(cloudy=1) should be near 0.5, got {}", cloudy_fit.probs[1]);
         }
 
-        #[semio_framework_async_macros::async_test]
-        async fn naive_difference_is_biased_while_adjusted_estimators_recover_true_ate() {
+        #[test]
+        fn naive_difference_is_biased_while_adjusted_estimators_recover_true_ate() {
             let true_ate = 1.5;
             let data = confounded_dataset(true_ate, 4000, 42);
             let opts = EstimationOptions::default();
@@ -2143,8 +2143,8 @@ mod tests {
             assert!((ipw.estimate - true_ate).abs() < 0.35, "IPW estimate {} should be close to {true_ate}", ipw.estimate);
         }
 
-        #[semio_framework_async_macros::async_test]
-        async fn bootstrap_ci_contains_true_ate() {
+        #[test]
+        fn bootstrap_ci_contains_true_ate() {
             let true_ate = 1.5;
             let data = confounded_dataset(true_ate, 5000, 7);
             let opts = EstimationOptions { bootstrap: Some(BootstrapOptions { replicates: 300, seed: 11, level: 0.95 }) };

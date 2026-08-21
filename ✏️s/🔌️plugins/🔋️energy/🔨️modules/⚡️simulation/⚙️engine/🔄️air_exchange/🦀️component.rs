@@ -68,7 +68,7 @@ pub struct HybridVentilationControl {
 
 // #region 🔖️InfiltrationFlow
 /// 💨️ Infiltration volumetric flow [m³/s].
-pub async fn infiltration_flow_m3_s(spec: &InfiltrationSpec, zone_volume_m3: f64, exterior_area_m2: f64, outdoor_temp_c: f64, zone_temp_c: f64, wind_speed_m_s: f64, p_atm: f64) -> f64 {
+pub fn infiltration_flow_m3_s(spec: &InfiltrationSpec, zone_volume_m3: f64, exterior_area_m2: f64, outdoor_temp_c: f64, zone_temp_c: f64, wind_speed_m_s: f64, p_atm: f64) -> f64 {
     let sf = spec.schedule_factor.clamp(0.0, 1.0);
     match spec.method {
         InfiltrationMethod::ScheduledAch => sf * spec.ach * zone_volume_m3 / 3600.0,
@@ -88,7 +88,7 @@ pub async fn infiltration_flow_m3_s(spec: &InfiltrationSpec, zone_volume_m3: f64
     }
 }
 
-async fn wind_stack_pressure_pa(height_m: f64, t_out_c: f64, t_zone_c: f64, wind_m_s: f64, c_const: f64, c_temp: f64, c_vel: f64, c_vel2: f64) -> f64 {
+fn wind_stack_pressure_pa(height_m: f64, t_out_c: f64, t_zone_c: f64, wind_m_s: f64, c_const: f64, c_temp: f64, c_vel: f64, c_vel2: f64) -> f64 {
     let t_out_k = t_out_c + 273.15;
     let t_zone_k = t_zone_c + 273.15;
     let stack = RHO_AIR_REF * GRAVITY * height_m * (t_out_k - t_zone_k).abs() / t_zone_k.max(250.0);
@@ -99,7 +99,7 @@ async fn wind_stack_pressure_pa(height_m: f64, t_out_c: f64, t_zone_c: f64, wind
 
 // #region 🔖️VentilationLoad
 /// 🔥️ Ventilation sensible and latent loads [W].
-pub async fn ventilation_load_w(flow_m3_s: f64, t_zone_c: f64, w_zone: f64, t_out_c: f64, w_out: f64, p_atm: f64, heat_recovery_effectiveness: f64) -> (f64, f64) {
+pub fn ventilation_load_w(flow_m3_s: f64, t_zone_c: f64, w_zone: f64, t_out_c: f64, w_out: f64, p_atm: f64, heat_recovery_effectiveness: f64) -> (f64, f64) {
     if flow_m3_s <= 0.0 {
         return (0.0, 0.0);
     }
@@ -117,7 +117,7 @@ pub async fn ventilation_load_w(flow_m3_s: f64, t_zone_c: f64, w_zone: f64, t_ou
 
 // #region 🔖️Interzone
 /// ↔ Sensible and latent exchange [W] from interzone mixing flow.
-pub async fn interzone_exchange_w(mixing: &InterzoneMixing, t_zone_c: f64, w_zone: f64, t_adjacent_c: f64, w_adjacent: f64, p_atm: f64) -> (f64, f64) {
+pub fn interzone_exchange_w(mixing: &InterzoneMixing, t_zone_c: f64, w_zone: f64, t_adjacent_c: f64, w_adjacent: f64, p_atm: f64) -> (f64, f64) {
     let flow = mixing.flow_m3_s * mixing.schedule_factor.clamp(0.0, 1.0);
     ventilation_load_w(flow, t_zone_c, w_zone, t_adjacent_c, w_adjacent, p_atm, 0.0)
 }
@@ -125,7 +125,7 @@ pub async fn interzone_exchange_w(mixing: &InterzoneMixing, t_zone_c: f64, w_zon
 
 // #region 🔖️Hybrid
 /// 🎛️ Hybrid ventilation flow [m³/s]: natural when outdoor conditions favorable.
-pub async fn hybrid_ventilation_flow_m3_s(control: &HybridVentilationControl, zone_volume_m3: f64, outdoor_temp_c: f64, wind_speed_m_s: f64, mechanical_flow_m3_s: f64) -> f64 {
+pub fn hybrid_ventilation_flow_m3_s(control: &HybridVentilationControl, zone_volume_m3: f64, outdoor_temp_c: f64, wind_speed_m_s: f64, mechanical_flow_m3_s: f64) -> f64 {
     let natural_ok = outdoor_temp_c >= control.outdoor_temp_min_c && outdoor_temp_c <= control.outdoor_temp_max_c && wind_speed_m_s <= control.max_wind_speed_m_s;
     if natural_ok {
         control.natural_ach * zone_volume_m3 / 3600.0
@@ -150,18 +150,7 @@ pub struct AirExchangeResult {
 }
 
 /// 💨️ Compute combined infiltration and ventilation for a zone timestep.
-pub async fn compute_air_exchange(
-    infiltration: &InfiltrationSpec,
-    ventilation: &VentilationSpec,
-    zone_volume_m3: f64,
-    exterior_area_m2: f64,
-    t_zone_c: f64,
-    w_zone: f64,
-    t_out_c: f64,
-    w_out: f64,
-    wind_speed_m_s: f64,
-    p_atm: f64,
-) -> AirExchangeResult {
+pub fn compute_air_exchange(infiltration: &InfiltrationSpec, ventilation: &VentilationSpec, zone_volume_m3: f64, exterior_area_m2: f64, t_zone_c: f64, w_zone: f64, t_out_c: f64, w_out: f64, wind_speed_m_s: f64, p_atm: f64) -> AirExchangeResult {
     let inf_flow = infiltration_flow_m3_s(infiltration, zone_volume_m3, exterior_area_m2, t_out_c, t_zone_c, wind_speed_m_s, p_atm);
     let vent_flow = ventilation.design_flow_m3_s * ventilation.schedule_factor.clamp(0.0, 1.0);
     let (inf_sens, inf_lat) = ventilation_load_w(inf_flow, t_zone_c, w_zone, t_out_c, w_out, p_atm, 0.0);
@@ -183,7 +172,7 @@ mod tests {
     use crate::units::P_STD;
 
     #[semio_framework_async_macros::async_test]
-    async fn ach_infiltration_scales_with_volume() {
+    fn ach_infiltration_scales_with_volume() {
         let spec = InfiltrationSpec {
             method: InfiltrationMethod::ScheduledAch,
             schedule_factor: 1.0,
@@ -202,20 +191,20 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn ventilation_load_positive_when_outdoor_colder() {
+    fn ventilation_load_positive_when_outdoor_colder() {
         let (sens, _) = ventilation_load_w(0.1, 22.0, 0.009, 5.0, 0.004, P_STD, 0.0);
         assert!(sens < 0.0);
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn heat_recovery_reduces_load() {
+    fn heat_recovery_reduces_load() {
         let (sens0, _) = ventilation_load_w(0.2, 22.0, 0.009, 5.0, 0.004, P_STD, 0.0);
         let (sens1, _) = ventilation_load_w(0.2, 22.0, 0.009, 5.0, 0.004, P_STD, 0.8);
         assert!(sens1.abs() < sens0.abs());
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn hybrid_uses_natural_when_favorable() {
+    fn hybrid_uses_natural_when_favorable() {
         let ctrl = HybridVentilationControl { outdoor_temp_min_c: 10.0, outdoor_temp_max_c: 28.0, max_wind_speed_m_s: 5.0, natural_ach: 2.0, mechanical_backup: true };
         let flow = hybrid_ventilation_flow_m3_s(&ctrl, 300.0, 20.0, 2.0, 0.05);
         assert!((flow - 300.0 * 2.0 / 3600.0).abs() < 1e-9);

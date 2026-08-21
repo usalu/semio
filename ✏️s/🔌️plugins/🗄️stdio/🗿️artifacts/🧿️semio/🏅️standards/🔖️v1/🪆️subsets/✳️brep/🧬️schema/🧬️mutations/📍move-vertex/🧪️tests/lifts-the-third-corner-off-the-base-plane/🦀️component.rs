@@ -99,7 +99,7 @@ async fn committed_diff_applies_to_after() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical_and_narrowly_scoped() {
     let decoded: SemioBrepDiff = serde_json::from_str(DIFF).expect("committed move-vertex diff decodes");
-    
+
     let vertices = decoded.vertices.as_ref().expect("move-vertex must write the vertices triple");
     assert!(vertices.removed.is_empty() && vertices.added.is_empty(), "a move is a per-field modification, never a remove-and-re-add");
     assert_eq!(vertices.modified.len(), 1, "exactly one vertex is modified");

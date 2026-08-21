@@ -2,15 +2,14 @@
 //! 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.1). `SemioMeshEditor`
 //! implements `ArtifactEditor`, wiring the shared `MeshWindowKit` to a single Main window.
 
-use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 use crate::artifacts::semio::standards::v1::subsets::mesh::schema::mutations::SemioMeshMutation;
+use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 use crate::editor::semio_mesh::modes::edit;
 use crate::editor::semio_mesh::modes::edit::windows::main;
-use semio_framework_plugin::{
-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation,
-    StandardId, SubsetId, UiNode,
-};
 use semio_framework_plugin::app::InteractionView;
+use semio_framework_plugin::{
+    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId, UiNode,
+};
 use store::EngineHandles;
 
 //#region 🔖️Dialect
@@ -50,10 +49,14 @@ impl protocol::OpBinary for SemioMeshEditCommand {
         let mesh_index = value.get("meshIndex").and_then(|v| v.as_u64()).unwrap_or(0) as usize;
         let primitive_index = value.get("primitiveIndex").and_then(|v| v.as_u64()).unwrap_or(0) as usize;
         let vertex_index = value.get("vertexIndex").and_then(|v| v.as_u64()).unwrap_or(0) as usize;
-        let point = value.get("point").and_then(|v| v.as_array()).map(|array| {
-            let get = |index: usize| array.get(index).and_then(|value| value.as_f64()).unwrap_or(0.0);
-            [get(0), get(1), get(2)]
-        }).unwrap_or([0.0, 0.0, 0.0]);
+        let point = value
+            .get("point")
+            .and_then(|v| v.as_array())
+            .map(|array| {
+                let get = |index: usize| array.get(index).and_then(|value| value.as_f64()).unwrap_or(0.0);
+                [get(0), get(1), get(2)]
+            })
+            .unwrap_or([0.0, 0.0, 0.0]);
         Ok(SemioMeshEditCommand::SetVertex(SemioMeshSetVertexArgs { mesh_index, primitive_index, vertex_index, point }))
     }
 }
@@ -83,10 +86,21 @@ impl ArtifactEditor for SemioMeshEditor {
         SemioMeshSnapshot::default()
     }
 
-    async fn handle(command: &Self::Command, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, Self::Draft>, _engines: &EngineHandles) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
+    async fn handle(
+        command: &Self::Command,
+        doc: &ArtifactView<'_, Self::Snapshot>,
+        _cfg: &ConfigView<'_, Self::Config>,
+        _interaction: &InteractionView<'_>,
+        _draft: &DraftView<'_, Self::Draft>,
+        _engines: &EngineHandles,
+    ) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
         let SemioMeshEditCommand::SetVertex(args) = command;
-        let Some(mesh) = doc.snapshot.meshes.get(args.mesh_index) else { return Ok(Emit::default()); };
-        let Some(primitive) = mesh.primitives.get(args.primitive_index) else { return Ok(Emit::default()); };
+        let Some(mesh) = doc.snapshot.meshes.get(args.mesh_index) else {
+            return Ok(Emit::default());
+        };
+        let Some(primitive) = mesh.primitives.get(args.primitive_index) else {
+            return Ok(Emit::default());
+        };
         if primitive.positions.get(args.vertex_index).is_none() {
             return Ok(Emit::default());
         }
@@ -100,29 +114,29 @@ impl ArtifactEditor for SemioMeshEditor {
         Ok(Emit::mutations(vec![mutation]).await)
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
-        match body_key {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::ComponentTree {
+        semio_framework_plugin::built_to_component_tree(match body_key {
             main::BODY_KEY => main::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
-        }
+            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))),
+        })
     }
 
     async fn command_from_action(action: &str, args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
         if action != "set-vertex" {
-            return Err(Fault::new(
-                semio_framework_plugin::FaultOrigin::App,
-                semio_framework_plugin::FaultCode::new("app.command.unsupported"),
-                format!("action '{action}' is not supported by SemioMeshEditor"),
-            ));
+            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.unsupported"), format!("action '{action}' is not supported by SemioMeshEditor")));
         }
         let value = args.cloned().unwrap_or(serde_json::Value::Null);
         let mesh_index = value.get("meshIndex").and_then(|v| v.as_u64()).unwrap_or(0) as usize;
         let primitive_index = value.get("primitiveIndex").and_then(|v| v.as_u64()).unwrap_or(0) as usize;
         let vertex_index = value.get("vertexIndex").and_then(|v| v.as_u64()).unwrap_or(0) as usize;
-        let point = value.get("point").and_then(|v| v.as_array()).map(|array| {
-            let get = |index: usize| array.get(index).and_then(|value| value.as_f64()).unwrap_or(0.0);
-            [get(0), get(1), get(2)]
-        }).unwrap_or([0.0, 0.0, 0.0]);
+        let point = value
+            .get("point")
+            .and_then(|v| v.as_array())
+            .map(|array| {
+                let get = |index: usize| array.get(index).and_then(|value| value.as_f64()).unwrap_or(0.0);
+                [get(0), get(1), get(2)]
+            })
+            .unwrap_or([0.0, 0.0, 0.0]);
         Ok(SemioMeshEditCommand::SetVertex(SemioMeshSetVertexArgs { mesh_index, primitive_index, vertex_index, point }))
     }
 }
@@ -131,14 +145,7 @@ impl ArtifactEditor for SemioMeshEditor {
 //#region 🔖️Manifest
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn create_semio_mesh_editor() -> semio_framework_plugin::AppDefinition {
-    Editor::builder(SEMIO_MESH_DIALECT)
-        .document(["stdio", "semio"])
-        .icon_id("box")
-        .mode_def(edit::definition())
-        .default_mode_id(edit::SEMIO_MESH_EDIT_MODE_ID)
-        .window_kind_def(main::definition())
-        .default_layout(edit::layout())
-        .build_definition()
+    Editor::builder(SEMIO_MESH_DIALECT).document(["stdio", "semio"]).icon_id("box").mode_def(edit::definition()).default_mode_id(edit::SEMIO_MESH_EDIT_MODE_ID).window_kind_def(main::definition()).default_layout(edit::layout()).build_definition()
 }
 //#endregion 🔖️Manifest
 

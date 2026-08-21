@@ -158,10 +158,10 @@ pub mod model {
 //#endregion 🔖️Model
 
 use directory::os_directory::{DirectoryActor, DirectoryActorKind, DirectoryCommand, DirectoryEvent, DirectoryEventBody, DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility, DirectoryStreamMessage, Hlc};
+use directory::os_identity::time_ordered_id;
 use error::{DirectoryError, DirectoryResult};
 use model::*;
 use std::sync::Arc;
-use uuid::Uuid;
 
 //#region 🔖️Wire
 // 🔗️ This crate's storage-row vocabulary (`SpaceRole`, plain `kind`/`visibility` strings — see
@@ -322,7 +322,7 @@ pub async fn decide(dir: &HubDirectories, actor: &DirectoryActor, command: Direc
     match command {
         DirectoryCommand::CreateSpace { name, space_kind, visibility } => {
             let owner_user_id = actor_user_id(actor)?.to_string();
-            let space_id = Uuid::now_v7().to_string();
+            let space_id = time_ordered_id();
             let owner_role = if space_kind == DirectorySpaceKind::Archive { DirectorySpaceRole::Spectator } else { DirectorySpaceRole::Author };
             let events = vec![
                 new_event(clock, actor, Some(space_id.clone()), Some(owner_user_id.clone()), DirectoryEventBody::SpaceCreated { space_id: space_id.clone(), name, space_kind, visibility, owner_user_id: owner_user_id.clone() }),
@@ -359,7 +359,7 @@ pub async fn decide(dir: &HubDirectories, actor: &DirectoryActor, command: Direc
             let user_id = match dir.get_user_by_email(&email).await? {
                 Some(existing) => existing.id,
                 None => {
-                    let user_id = Uuid::now_v7().to_string();
+                    let user_id = time_ordered_id();
                     let display_name = email.split('@').next().unwrap_or(&email).to_string();
                     events.push(new_event(clock, actor, None, Some(user_id.clone()), DirectoryEventBody::UserCreated { user_id: user_id.clone(), email: email.clone(), display_name }));
                     user_id
@@ -454,7 +454,7 @@ impl DirectoryService {
         let user_id = match self.dir.get_user_by_email(email).await? {
             Some(existing) => existing.id,
             None => {
-                let user_id = Uuid::now_v7().to_string();
+                let user_id = time_ordered_id();
                 events.push(new_event(&mut clock, &actor, None, Some(user_id.clone()), DirectoryEventBody::UserCreated { user_id: user_id.clone(), email: email.to_string(), display_name: display_name.to_string() }));
                 user_id
             }

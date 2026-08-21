@@ -198,7 +198,7 @@ fn validate_html_node(base: &HtmlNode, diff: &HtmlNodeDiff) -> MutationApplyResu
                 validate_html_attributes(attributes, attrs)?;
             }
             if let Some(children_diff) = &element.children {
-                Box::pin(validate_html_children(children, children_diff))?;
+                validate_html_children(children, children_diff)?;
             }
             Ok(())
         }
@@ -243,7 +243,7 @@ fn validate_html_children(base: &[HtmlNode], diff: &HtmlChildrenDiff) -> Mutatio
         if entry.index >= base.len() || !modified.insert(entry.index) || removed.contains(&entry.index) {
             return Err(MutationApplyError::new("mutation.apply.conflicting-target", "modified child is missing, duplicated, or removed").at(["children", "modified"]));
         }
-        Box::pin(validate_html_node(&base[entry.index], &entry.diff))?;
+        validate_html_node(&base[entry.index], &entry.diff)?;
     }
     let final_len = base.len().saturating_sub(diff.removed.len()).saturating_add(diff.added.len());
     let mut indexes = std::collections::HashSet::new();
@@ -1021,8 +1021,8 @@ mod handcrafted_diff_codec_tests {
     /// 🧪️ diff_codec_text_binary_roundtrip_law: exercises the recursive enum tree (`Element`/
     /// `Text`/`Comment`/`RawText`/`Replace` `HtmlNodeDiff` variants), the top-level tri-state, and
     /// nested attribute/child add/remove/modify.
-    #[semio_framework_async_macros::async_test]
-    async fn diff_codec_text_binary_roundtrip_law() {
+    #[test]
+    fn diff_codec_text_binary_roundtrip_law() {
         let a = snapshot(Some("DOCTYPE html"), elem("html", vec![("lang", Some("en"))], vec![elem("p", vec![("id", Some("x")), ("disabled", None)], vec![])]));
         let b = snapshot(
             None,
@@ -1040,12 +1040,12 @@ mod handcrafted_diff_codec_tests {
         let cases = vec![HtmlDiff::default(), HtmlDiff::between(&a, &b), HtmlDiff::between(&b, &a), HtmlDiff::between(&a, &c), HtmlDiff::between(&c, &a)];
         for d in cases {
             let printed = d.print_diff();
-            assert!(!printed.await.contains('\n'), "print_diff must be one line, got {printed:?}");
-            let parsed = HtmlDiff::parse_diff(&printed).await.unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
+            assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");
+            let parsed = HtmlDiff::parse_diff(&printed).unwrap_or_else(|e| panic!("parse_diff({printed:?}) failed: {e}"));
             assert_eq!(parsed, d, "print_diff/parse_diff round-trip mismatch (printed {printed:?})");
 
             let encoded = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed: {e}"));
-            let decoded = HtmlDiff::decode_diff(&encoded).await.unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
+            let decoded = HtmlDiff::decode_diff(&encoded).unwrap_or_else(|e| panic!("decode_diff failed: {e}"));
             assert_eq!(decoded, d, "encode_diff/decode_diff round-trip mismatch");
         }
     }

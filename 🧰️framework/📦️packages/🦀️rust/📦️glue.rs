@@ -58,7 +58,7 @@ pub mod interaction {
 #[path = "../../🛍️products/💻️os/🔨️modules/🔁️workflow/🦀️component.rs"]
 pub mod workflow;
 
-pub use action_bus::{optional_json_to_dsl, ActionBus, ActionHandler};
+pub use action_bus::{optional_json_to_dsl, ActionBus, NoInteractiveJobs, NoToolJobFactories, ToolDispatchError, ToolJobDispatch, ToolJobFactory, ToolJobFactoryError, ToolOperationSpec, ToolRegistrationError};
 pub use dsl::{from_dsl_value, to_dsl_value, DslValue};
 pub use dsl::{Diagnostic, Fault, FaultCause, FaultCode, FaultFrom, FaultOrigin, FaultScope, Severity, TextError, TextSpan};
 

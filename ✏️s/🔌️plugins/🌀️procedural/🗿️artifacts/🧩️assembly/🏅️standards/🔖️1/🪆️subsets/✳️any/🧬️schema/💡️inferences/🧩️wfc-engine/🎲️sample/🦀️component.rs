@@ -17,7 +17,7 @@ pub enum ValueSampler {
 }
 
 /// 🎲️ Draws one pattern from `domain` (must be non-empty) according to `sampler`.
-pub(crate) async fn sample_pattern(sampler: ValueSampler, domain: &Domain, model: &CompiledModel, rng: &mut Rng) -> PatternId {
+pub(crate) fn sample_pattern(sampler: ValueSampler, domain: &Domain, model: &CompiledModel, rng: &mut Rng) -> PatternId {
     debug_assert!(domain.cardinality() > 0, "sample_pattern: domain must be non-empty");
     match sampler {
         ValueSampler::Uniform => {
@@ -52,7 +52,7 @@ mod tests {
     use super::*;
     use crate::wfc_engine::model::ModelBuilder;
 
-    async fn model_and_domain(weights: &[f64]) -> (CompiledModel, Domain) {
+    fn model_and_domain(weights: &[f64]) -> (CompiledModel, Domain) {
         let mut b = ModelBuilder::new();
         for &w in weights {
             b.add_pattern(w);
@@ -63,8 +63,8 @@ mod tests {
         (model, domain)
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn uniform_only_ever_returns_live_patterns() {
+    #[test]
+    fn uniform_only_ever_returns_live_patterns() {
         let (model, domain) = model_and_domain(&[1.0, 1.0, 1.0]);
         let mut rng = Rng::from_seed(1);
         for _ in 0..50 {
@@ -73,8 +73,8 @@ mod tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn weighted_roulette_only_ever_returns_live_patterns() {
+    #[test]
+    fn weighted_roulette_only_ever_returns_live_patterns() {
         let (model, domain) = model_and_domain(&[1.0, 5.0, 10.0]);
         let mut rng = Rng::from_seed(2);
         for _ in 0..50 {
@@ -83,8 +83,8 @@ mod tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn weighted_roulette_is_biased_toward_heavier_pattern() {
+    #[test]
+    fn weighted_roulette_is_biased_toward_heavier_pattern() {
         let (model, domain) = model_and_domain(&[1.0, 99.0]);
         let mut rng = Rng::from_seed(3);
         let mut counts = [0u32; 2];
@@ -95,8 +95,8 @@ mod tests {
         assert!(counts[1] > counts[0] * 10);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn same_seed_produces_same_sequence() {
+    #[test]
+    fn same_seed_produces_same_sequence() {
         let (model, domain) = model_and_domain(&[1.0, 2.0, 3.0]);
         let mut r1 = Rng::from_seed(42);
         let mut r2 = Rng::from_seed(42);

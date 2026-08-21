@@ -24,7 +24,7 @@ pub struct Mp3Inference {
 }
 
 impl protocol::Inference<Mp3Snapshot> for Mp3Inference {
-    async fn infer(snapshot: &Mp3Snapshot) -> Self {
+    fn infer(snapshot: &Mp3Snapshot) -> Self {
         Self { duration: compute_mp3_duration(snapshot) }
     }
 }
@@ -38,13 +38,13 @@ impl Default for Mp3Inference {
 }
 
 impl protocol::InferenceSpec<Mp3Snapshot> for Mp3Inference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.stdio.mp3.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.mp3.inference.duration", reads: &["frames"] }]
     }
 }

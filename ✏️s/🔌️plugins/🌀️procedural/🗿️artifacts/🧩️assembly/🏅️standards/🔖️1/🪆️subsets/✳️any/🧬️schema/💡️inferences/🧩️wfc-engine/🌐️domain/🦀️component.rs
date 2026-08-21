@@ -39,7 +39,7 @@ pub struct Domain {
 
 impl Domain {
     /// 📦️ The full domain (every pattern in `w` possible), with caches seeded from `w`'s totals.
-    pub async fn new_full(w: &WeightTable) -> Self {
+    pub fn new_full(w: &WeightTable) -> Self {
         let bits = PatternSet::new_full(w.len());
         let sum_w = (0..w.len()).map(|i| w.w(PatternId::from_index(i))).sum();
         let sum_w_ln_w = (0..w.len()).map(|i| w.w_ln_w(PatternId::from_index(i))).sum();
@@ -49,34 +49,34 @@ impl Domain {
 
     /// 📦️ An explicitly-restricted starting domain (e.g. a per-node initial mask); caches are
     /// computed exactly from `allowed` and `w` (no assumption `allowed` came from a full domain).
-    pub async fn new_restricted(allowed: &PatternSet, w: &WeightTable) -> Self {
+    pub fn new_restricted(allowed: &PatternSet, w: &WeightTable) -> Self {
         let (sum_w, sum_w_ln_w) = w.sum_over(allowed);
         let sum_w_int = w.has_integer_weights().then(|| w.sum_int_over(allowed).unwrap_or(0));
         Self { bits: allowed.clone(), cardinality: allowed.count_ones(), sum_w, sum_w_ln_w, sum_w_int, revision: 0 }
     }
 
     #[inline]
-    pub async fn bits(&self) -> &PatternSet {
+    pub fn bits(&self) -> &PatternSet {
         &self.bits
     }
 
     #[inline]
-    pub async fn cardinality(&self) -> u32 {
+    pub fn cardinality(&self) -> u32 {
         self.cardinality
     }
 
     #[inline]
-    pub async fn revision(&self) -> u64 {
+    pub fn revision(&self) -> u64 {
         self.revision
     }
 
     #[inline]
-    pub async fn is_wiped(&self) -> bool {
+    pub fn is_wiped(&self) -> bool {
         self.cardinality == 0
     }
 
     /// 📦️ `Some(pattern)` iff this domain is a singleton.
-    pub async fn singleton(&self) -> Option<PatternId> {
+    pub fn singleton(&self) -> Option<PatternId> {
         if self.cardinality == 1 {
             self.bits.first_set()
         } else {
@@ -85,25 +85,25 @@ impl Domain {
     }
 
     #[inline]
-    pub async fn sum_w(&self) -> f64 {
+    pub fn sum_w(&self) -> f64 {
         self.sum_w
     }
 
     #[inline]
-    pub async fn sum_w_int(&self) -> Option<u64> {
+    pub fn sum_w_int(&self) -> Option<u64> {
         self.sum_w_int
     }
 
     /// 📊️ Incremental weighted Shannon entropy in nats: `ln(Σw) - Σ(w·ln w)/Σw`. `0.0` for an
     /// empty or singleton domain (a determined or contradictory variable carries no uncertainty).
-    pub async fn entropy(&self) -> f64 {
+    pub fn entropy(&self) -> f64 {
         if self.sum_w <= 0.0 {
             return 0.0;
         }
         self.sum_w.ln() - self.sum_w_ln_w / self.sum_w
     }
 
-    async fn apply_removed(&mut self, removed: &PatternSet, w: &WeightTable) -> u32 {
+    fn apply_removed(&mut self, removed: &PatternSet, w: &WeightTable) -> u32 {
         let cleared = removed.count_ones();
         if cleared == 0 {
             return 0;
@@ -121,7 +121,7 @@ impl Domain {
         cleared
     }
 
-    async fn maybe_resync(&mut self, w: &WeightTable) {
+    fn maybe_resync(&mut self, w: &WeightTable) {
         if self.revision.is_multiple_of(RESYNC_INTERVAL) {
             let (sw, swlw) = w.sum_over(&self.bits);
             self.sum_w = sw;
@@ -135,7 +135,7 @@ impl Domain {
     /// 📦️ Classifies the post-mutation state, given how many patterns this specific operation
     /// removed (only the caller knows that count — `self.cardinality` alone cannot distinguish
     /// "removed 1 of 4" from "removed 3 of 4" when both leave the same remaining count).
-    async fn result_for(&self, removed_count: u32) -> RestrictResult {
+    fn result_for(&self, removed_count: u32) -> RestrictResult {
         match self.cardinality {
             0 => RestrictResult::Wipeout,
             1 => RestrictResult::Singleton(self.bits.first_set().expect("cardinality 1 domain must have a set bit")),
@@ -145,7 +145,7 @@ impl Domain {
 
     /// 📦️ Intersects with `allowed`, collecting the removed-pattern mask into `removed_out`
     /// (caller-supplied to avoid a per-call allocation on the propagation hot path).
-    pub async fn restrict_collecting(&mut self, allowed: &PatternSet, w: &WeightTable, removed_out: &mut PatternSet) -> RestrictResult {
+    pub fn restrict_collecting(&mut self, allowed: &PatternSet, w: &WeightTable, removed_out: &mut PatternSet) -> RestrictResult {
         let cleared = self.bits.restrict_returning_removed(allowed, removed_out);
         if cleared == 0 {
             return RestrictResult::Unchanged;
@@ -155,13 +155,13 @@ impl Domain {
     }
 
     /// 📦️ Convenience over [`Domain::restrict_collecting`] that allocates its own scratch buffer.
-    pub async fn restrict(&mut self, allowed: &PatternSet, w: &WeightTable) -> RestrictResult {
+    pub fn restrict(&mut self, allowed: &PatternSet, w: &WeightTable) -> RestrictResult {
         let mut removed = PatternSet::new_empty(self.bits.len());
         self.restrict_collecting(allowed, w, &mut removed)
     }
 
     /// 📦️ Removes exactly one pattern (a no-op if it is already absent).
-    pub async fn remove(&mut self, p: PatternId, w: &WeightTable) -> RestrictResult {
+    pub fn remove(&mut self, p: PatternId, w: &WeightTable) -> RestrictResult {
         if !self.bits.get(p) {
             return RestrictResult::Unchanged;
         }
@@ -179,14 +179,14 @@ impl Domain {
 
     /// 📦️ Forces this domain to exactly `{p}` — the WFC "observe" operation. Collects every
     /// removed pattern into `removed_out` (used by the trail and by AC-4's decrement fan-out).
-    pub async fn assign_collecting(&mut self, p: PatternId, w: &WeightTable, removed_out: &mut PatternSet) -> RestrictResult {
+    pub fn assign_collecting(&mut self, p: PatternId, w: &WeightTable, removed_out: &mut PatternSet) -> RestrictResult {
         let mut singleton = PatternSet::new_empty(self.bits.len());
         singleton.set(p, true);
         self.restrict_collecting(&singleton, w, removed_out)
     }
 
     /// 📦️ Convenience over [`Domain::assign_collecting`] that allocates its own scratch buffer.
-    pub async fn assign(&mut self, p: PatternId, w: &WeightTable) -> RestrictResult {
+    pub fn assign(&mut self, p: PatternId, w: &WeightTable) -> RestrictResult {
         let mut removed = PatternSet::new_empty(self.bits.len());
         self.assign_collecting(p, w, &mut removed)
     }
@@ -194,7 +194,7 @@ impl Domain {
     /// ↩️ Trail-undo primitive: re-adds a single previously-removed pattern. Exact inverse of one
     /// bit flip inside [`Domain::remove`]/[`Domain::restrict_collecting`] — never resyncs (the
     /// caller is replaying a trail in exact reverse order, so incremental restoration is exact).
-    pub async fn re_add(&mut self, p: PatternId, w: &WeightTable) {
+    pub fn re_add(&mut self, p: PatternId, w: &WeightTable) {
         debug_assert!(!self.bits.get(p), "re_add: pattern was not actually removed");
         self.bits.set(p, true);
         self.sum_w += w.w(p);
@@ -208,7 +208,7 @@ impl Domain {
 
     /// 🩺️ Debug-only: recomputes every cache from `bits` and asserts it matches the incremental
     /// value within tolerance. Called by tests and by callers wanting an expensive sanity pass.
-    pub async fn debug_assert_consistent(&self, w: &WeightTable) {
+    pub fn debug_assert_consistent(&self, w: &WeightTable) {
         let recomputed_card = self.bits.count_ones();
         assert_eq!(self.cardinality, recomputed_card, "cardinality cache drifted");
         let (sw, swlw) = w.sum_over(&self.bits);
@@ -231,43 +231,43 @@ pub struct DomainStore {
 }
 
 impl DomainStore {
-    pub async fn new_full(node_count: usize, w: &WeightTable) -> Self {
+    pub fn new_full(node_count: usize, w: &WeightTable) -> Self {
         Self { domains: (0..node_count).map(|_| Domain::new_full(w)).collect() }
     }
 
     #[inline]
-    pub async fn len(&self) -> usize {
+    pub fn len(&self) -> usize {
         self.domains.len()
     }
 
     #[inline]
-    pub async fn is_empty(&self) -> bool {
+    pub fn is_empty(&self) -> bool {
         self.domains.is_empty()
     }
 
     #[inline]
-    pub async fn get(&self, n: crate::wfc_engine::ids::NodeId) -> &Domain {
+    pub fn get(&self, n: crate::wfc_engine::ids::NodeId) -> &Domain {
         &self.domains[n.index()]
     }
 
     #[inline]
-    pub async fn get_mut(&mut self, n: crate::wfc_engine::ids::NodeId) -> &mut Domain {
+    pub fn get_mut(&mut self, n: crate::wfc_engine::ids::NodeId) -> &mut Domain {
         &mut self.domains[n.index()]
     }
 
-    pub async fn iter(&self) -> impl Iterator<Item = (crate::wfc_engine::ids::NodeId, &Domain)> {
+    pub fn iter(&self) -> impl Iterator<Item = (crate::wfc_engine::ids::NodeId, &Domain)> {
         self.domains.iter().enumerate().map(|(i, d)| (crate::wfc_engine::ids::NodeId::from_index(i), d))
     }
 
-    pub async fn all_singleton(&self) -> bool {
+    pub fn all_singleton(&self) -> bool {
         self.domains.iter().all(|d| d.cardinality() == 1)
     }
 
-    pub async fn any_wiped(&self) -> bool {
+    pub fn any_wiped(&self) -> bool {
         self.domains.iter().any(|d| d.is_wiped())
     }
 
-    pub async fn debug_assert_consistent(&self, w: &WeightTable) {
+    pub fn debug_assert_consistent(&self, w: &WeightTable) {
         for d in &self.domains {
             d.debug_assert_consistent(w);
         }
@@ -280,12 +280,12 @@ impl DomainStore {
 mod tests {
     use super::*;
 
-    async fn table() -> WeightTable {
+    fn table() -> WeightTable {
         WeightTable::new(&[1.0, 2.0, 4.0, 8.0]).unwrap()
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn new_full_has_all_patterns_and_correct_sums() {
+    #[test]
+    fn new_full_has_all_patterns_and_correct_sums() {
         let w = table();
         let d = Domain::new_full(&w);
         assert_eq!(d.cardinality(), 4);
@@ -294,8 +294,8 @@ mod tests {
         d.debug_assert_consistent(&w);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn restrict_reduces_and_updates_caches() {
+    #[test]
+    fn restrict_reduces_and_updates_caches() {
         let w = table();
         let mut d = Domain::new_full(&w);
         let mut allowed = PatternSet::new_empty(4);
@@ -308,8 +308,8 @@ mod tests {
         d.debug_assert_consistent(&w);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn restrict_unchanged_when_already_subset() {
+    #[test]
+    fn restrict_unchanged_when_already_subset() {
         let w = table();
         let mut d = Domain::new_full(&w);
         let mut allowed = PatternSet::new_empty(4);
@@ -319,8 +319,8 @@ mod tests {
         assert_eq!(result, RestrictResult::Unchanged);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn reduced_count_is_removed_not_remaining() {
+    #[test]
+    fn reduced_count_is_removed_not_remaining() {
         // 6 patterns, remove exactly 1 -> remaining 5. Reduced(_) must report 1, not 5.
         let w = WeightTable::new(&[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]).unwrap();
         let mut d = Domain::new_full(&w);
@@ -339,8 +339,8 @@ mod tests {
         assert_eq!(d2.cardinality(), 3);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn remove_to_singleton_and_wipeout() {
+    #[test]
+    fn remove_to_singleton_and_wipeout() {
         let w = WeightTable::new(&[1.0, 1.0]).unwrap();
         let mut d = Domain::new_full(&w);
         let r1 = d.remove(PatternId(0), &w);
@@ -350,8 +350,8 @@ mod tests {
         assert!(d.is_wiped());
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn assign_forces_single_pattern() {
+    #[test]
+    fn assign_forces_single_pattern() {
         let w = table();
         let mut d = Domain::new_full(&w);
         let result = d.assign(PatternId(2), &w);
@@ -361,8 +361,8 @@ mod tests {
         d.debug_assert_consistent(&w);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn re_add_exactly_reverses_remove() {
+    #[test]
+    fn re_add_exactly_reverses_remove() {
         let w = table();
         let mut d = Domain::new_full(&w);
         d.remove(PatternId(1), &w);
@@ -373,31 +373,31 @@ mod tests {
         d.debug_assert_consistent(&w);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn singleton_has_zero_entropy_regardless_of_weight() {
+    #[test]
+    fn singleton_has_zero_entropy_regardless_of_weight() {
         let w = WeightTable::new(&[1.0, 100.0]).unwrap();
         let mut d = Domain::new_full(&w);
         d.assign(PatternId(1), &w);
         assert!(d.entropy().abs() < 1e-9);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn wiped_domain_has_zero_entropy() {
+    #[test]
+    fn wiped_domain_has_zero_entropy() {
         let w = WeightTable::new(&[1.0]).unwrap();
         let mut d = Domain::new_full(&w);
         d.remove(PatternId(0), &w);
         assert_eq!(d.entropy(), 0.0);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn uniform_weights_entropy_matches_ln_cardinality() {
+    #[test]
+    fn uniform_weights_entropy_matches_ln_cardinality() {
         let w = WeightTable::new(&[1.0, 1.0, 1.0, 1.0]).unwrap();
         let d = Domain::new_full(&w);
         assert!((d.entropy() - 4.0f64.ln()).abs() < 1e-9);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn domain_store_all_singleton() {
+    #[test]
+    fn domain_store_all_singleton() {
         let w = table();
         let mut store = DomainStore::new_full(2, &w);
         assert!(!store.all_singleton());
@@ -410,8 +410,8 @@ mod tests {
     mod quick {
         use super::*;
 
-        #[semio_framework_async_macros::async_test]
-        async fn random_remove_re_add_sequences_preserve_invariants() {
+        #[test]
+        fn random_remove_re_add_sequences_preserve_invariants() {
             let w = WeightTable::new(&[1.0, 3.0, 5.0, 2.0, 7.0, 1.0, 9.0, 4.0]).unwrap();
             let mut rng = geometry::random::Rng::from_seed(999);
             for _ in 0..100 {
@@ -433,8 +433,8 @@ mod tests {
             }
         }
 
-        #[semio_framework_async_macros::async_test]
-        async fn resync_boundary_does_not_change_observable_state() {
+        #[test]
+        fn resync_boundary_does_not_change_observable_state() {
             let w = WeightTable::new(&(0..70).map(|i| 1.0 + i as f64).collect::<Vec<_>>()).unwrap();
             let mut d = Domain::new_full(&w);
             // Cross the RESYNC_INTERVAL boundary via single-pattern removals on a large domain.

@@ -1595,26 +1595,9 @@ impl<'a> Evaluator<'a> {
                 compute_jobs.push((neuron_id.clone(), neuron.kind.clone(), input.merge(&neuron.params)));
             }
 
-            #[cfg(feature = "parallel")]
-            {
-                use rayon::prelude::*;
-                let parallel_outputs: Vec<(String, Dictionary)> = compute_jobs
-                    .par_iter()
-                    .map(|(neuron_id, kind, merged)| {
-                        let out = evaluate_cached_output(cache, kind, merged, || dispatch(kind, merged));
-                        (neuron_id.clone(), out)
-                    })
-                    .collect();
-                for entry in parallel_outputs {
-                    level_outputs.insert(entry.0, entry.1);
-                }
-            }
-            #[cfg(not(feature = "parallel"))]
-            {
-                for (neuron_id, kind, merged) in compute_jobs {
-                    let out = evaluate_cached_output(cache, &kind, &merged, || dispatch(&kind, &merged));
-                    level_outputs.insert(neuron_id, out);
-                }
+            for (neuron_id, kind, merged) in compute_jobs {
+                let out = evaluate_cached_output(cache, &kind, &merged, || dispatch(&kind, &merged));
+                level_outputs.insert(neuron_id, out);
             }
 
             for (neuron_id, sub_tree, input) in deferred_clusters {

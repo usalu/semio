@@ -1,6 +1,6 @@
 use crate::artifacts::semio::standards::v1::subsets::image::schema::diff::SemioImageDiff;
-use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
 use crate::artifacts::semio::standards::v1::subsets::image::schema::mutations::SemioImageMutation;
+use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
 use protocol::Mutation;
 
 /// 🔺️ Diff helper for set-frame-pixels — an absent BASE frame `index` is `mutation.target-missing`
@@ -14,11 +14,7 @@ pub fn diff(base: &SemioImageSnapshot, index: usize, rgba8: Vec<u8>) -> protocol
     }
     let expected_len = base.width as usize * base.height as usize * 4;
     if rgba8.len() != expected_len {
-        return protocol::MutationOutcome::fatal(
-            "mutation.invariant",
-            format!("Frame index {index} pixel buffer has {} byte(s), expected {expected_len} (width*height*4).", rgba8.len()),
-            [index.to_string()],
-        );
+        return protocol::MutationOutcome::fatal("mutation.invariant", format!("Frame index {index} pixel buffer has {} byte(s), expected {expected_len} (width*height*4).", rgba8.len()), [index.to_string()]);
     }
     Mutation::diff(&SemioImageMutation::SetFramePixels { index, rgba8 }, base)
 }

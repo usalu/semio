@@ -3,13 +3,13 @@
 //! `Ifc2x3Diff`'s own id-keyed shape.
 
 use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::diff::{
-    dec_edm_preamble_bin, dec_instance_list, dec_optional_edm_preamble, dec_part21_header, dec_part21_header_bin, dec_part21_instance, dec_part21_instance_bin, dec_str, enc_edm_preamble_bin,
-    enc_instance_list_into, enc_optional_edm_preamble, enc_part21_header, enc_part21_header_bin, enc_part21_instance, enc_part21_instance_bin, enc_str, read_str_bin, split_top_level, strip_brackets, write_str_bin, Ifc2x3Diff,
+    dec_edm_preamble_bin, dec_instance_list, dec_optional_edm_preamble, dec_part21_header, dec_part21_header_bin, dec_part21_instance, dec_part21_instance_bin, dec_str, enc_edm_preamble_bin, enc_instance_list_into, enc_optional_edm_preamble,
+    enc_part21_header, enc_part21_header_bin, enc_part21_instance, enc_part21_instance_bin, enc_str, read_str_bin, split_top_level, strip_brackets, write_str_bin, Ifc2x3Diff,
 };
 use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::Ifc2x3Snapshot;
-use crate::artifacts::step::engine::part21::{Part21Document, Part21Header, Part21Instance};
 #[cfg(test)]
 use crate::artifacts::step::engine::part21::Part21Value;
+use crate::artifacts::step::engine::part21::{Part21Document, Part21Header, Part21Instance};
 use protocol::os_spr::command::DiffAlgebra;
 use protocol::Mutation;
 use serde::{Deserialize, Serialize};
@@ -228,19 +228,19 @@ impl protocol::OpBinary for Ifc2x3Mutation {
         let mutation = match tag {
             0 => Ifc2x3Mutation::NoMutation,
             1 => {
-                let snapshot = dec_ifc2x3_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let snapshot = dec_ifc2x3_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", reader.position(), e))?;
                 Ifc2x3Mutation::SetSnapshot { snapshot }
             }
             2 => {
-                let instance = dec_part21_instance_bin(&mut reader).map_err(|e| malformed("op instance", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let instance = dec_part21_instance_bin(&mut reader).map_err(|e| malformed("op instance", reader.position(), e))?;
                 Ifc2x3Mutation::UpsertInstance { instance }
             }
             3 => {
-                let id = reader.read_varint_u64().map_err(|e| malformed("op id", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
+                let id = reader.read_varint_u64().map_err(|e| malformed("op id", reader.position(), e.to_string()))?;
                 Ifc2x3Mutation::RemoveInstance { id }
             }
             4 => {
-                let header = dec_part21_header_bin(&mut reader).map_err(|e| malformed("op header", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let header = dec_part21_header_bin(&mut reader).map_err(|e| malformed("op header", reader.position(), e))?;
                 Ifc2x3Mutation::SetHeader { header }
             }
             other => return Err(malformed("op tag", 1, format!("unknown tag {other}"))),
@@ -297,13 +297,11 @@ mod tests {
     use super::*;
     use protocol::os_spr::command::DiffAlgebra;
     use protocol::{DiffCodec, MutationDiff, OpBinary, OpText};
-    use std::sync::OnceLock;async 
-
-    fn inst(id: u64, name: &str) -> Part21Instance {
+    use std::sync::OnceLock;
+    async fn inst(id: u64, name: &str) -> Part21Instance {
         Part21Instance { id, entities: vec![(name.to_string(), vec![Part21Value::Int(id as i64)])] }
-    }async 
-
-    fn exact_fixture_bytes() -> &'static [u8] {
+    }
+    async fn exact_fixture_bytes() -> &'static [u8] {
         static BYTES: OnceLock<Vec<u8>> = OnceLock::new();
         BYTES.get_or_init(|| std::fs::read(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../temp/wellness-center-sama.ifc")).expect("read temp/wellness-center-sama.ifc"))
     }

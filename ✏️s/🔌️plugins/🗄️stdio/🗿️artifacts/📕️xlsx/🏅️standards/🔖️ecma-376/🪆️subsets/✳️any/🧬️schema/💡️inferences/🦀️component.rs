@@ -23,19 +23,19 @@ pub struct XlsxInference {
 }
 
 impl protocol::Inference<XlsxSnapshot> for XlsxInference {
-    async fn infer(snapshot: &XlsxSnapshot) -> Self {
+    fn infer(snapshot: &XlsxSnapshot) -> Self {
         Self { outline: XlsxOutline::compute(snapshot) }
     }
 }
 
 impl protocol::InferenceSpec<XlsxSnapshot> for XlsxInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.stdio.xlsx.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.xlsx.inference.outline", reads: &["workbook"] }]
     }
 }

@@ -7,16 +7,13 @@
 //!
 //! Two properties make this crate what it is:
 //!
-//! 1. **A transaction is run-to-completion.** [`transaction`]'s `transact()` drains the inbox,
-//!    dispatches intents, flushes effects to a fixpoint, presents dirty surfaces and reconciles —
-//!    without a single suspension point (ruling U1, ticket
-//!    `26/08/20/SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY`). Async lives at the edges: the embedder's
-//!    event loop, the actor mailbox, asset loading. `spawn_local` hands a future to the embedder's
-//!    executor and the result re-enters through the inbox at the next transaction boundary, so a
-//!    mutable entity reference can never be held across an await.
+//! 1. **A transaction is persistent and atomically published.** [`transaction`]'s
+//!    `FrameTransaction::step()` advances seven scheduler-bounded stages. Reconciliation happens on
+//!    shadow state, and only a completed snapshot changes the retained revisions.
 //! 2. **It runs on both sides of the plugin boundary.** A guest plugin embeds it to produce patches;
 //!    a host embeds it to drive its own screens. Hence no `Send` bounds and no dependency beyond the
-//!    contract — it compiles for `wasm32-wasip2` and `wasm32-unknown-unknown` by construction.
+//!    contract and shared job protocol — it compiles for `wasm32-wasip2` and
+//!    `wasm32-unknown-unknown` by construction.
 
 #[path = "🦀️context.rs"]
 mod context;

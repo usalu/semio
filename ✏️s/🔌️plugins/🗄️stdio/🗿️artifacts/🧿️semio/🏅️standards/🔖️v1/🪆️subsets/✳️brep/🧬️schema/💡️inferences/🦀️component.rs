@@ -29,19 +29,19 @@ pub struct SemioBrepInference {
 }
 
 impl protocol::Inference<SemioBrepSnapshot> for SemioBrepInference {
-    async fn infer(snapshot: &SemioBrepSnapshot) -> Self {
-        Self { validation_report: store::infer_field::<SemioBrepSnapshot, BrepValidationReport>(snapshot, None).await.remove("document").unwrap_or_default() }
+    fn infer(snapshot: &SemioBrepSnapshot) -> Self {
+        Self { validation_report: store::infer_field::<SemioBrepSnapshot, BrepValidationReport>(snapshot, None).remove("document").unwrap_or_default() }
     }
 }
 
 impl protocol::InferenceSpec<SemioBrepSnapshot> for SemioBrepInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.stdio.semio.brep.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.semio.brep.inference.validationReport", reads: &["vertices", "edges", "loops", "faces", "shells", "solids"] }]
     }
 }

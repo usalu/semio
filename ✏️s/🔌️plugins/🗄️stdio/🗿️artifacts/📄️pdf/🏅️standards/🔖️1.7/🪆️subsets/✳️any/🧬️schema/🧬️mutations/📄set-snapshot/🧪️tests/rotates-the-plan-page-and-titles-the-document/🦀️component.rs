@@ -90,11 +90,8 @@ async fn committed_json_is_canonical() {
 async fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
     let status = outcome.get("status").and_then(serde_json::Value::as_str).expect("outcome carries a status");
-    let declared: Vec<(String, String)> = outcome
-        .get("messages")
-        .and_then(serde_json::Value::as_array)
-        .map(|rows| rows.iter().map(|row| (row["level"].as_str().unwrap_or_default().to_string(), row["code"].as_str().unwrap_or_default().to_string())).collect())
-        .unwrap_or_default();
+    let declared: Vec<(String, String)> =
+        outcome.get("messages").and_then(serde_json::Value::as_array).map(|rows| rows.iter().map(|row| (row["level"].as_str().unwrap_or_default().to_string(), row["code"].as_str().unwrap_or_default().to_string())).collect()).unwrap_or_default();
     let raised = <PdfMutation as protocol::Mutation<PdfSnapshot>>::diff(&mutation(), &before());
     let produced: Vec<(String, String)> = raised
         .messages()
@@ -126,7 +123,11 @@ async fn produces_committed_diff() {
     assert_eq!(produced, committed, "set-snapshot/rotates-the-plan-page-and-titles-the-document: produced diff differs from the committed 🔺️diff/🔣️component.json");
     assert!(raised.diff().declared_version.is_none(), "set-snapshot/rotates-the-plan-page-and-titles-the-document: the declared PDF version is equal on both sides");
     assert!(raised.diff().objects.is_none() && raised.diff().trailer.is_none(), "set-snapshot/rotates-the-plan-page-and-titles-the-document: the COS object graph and the trailer dictionary are untouched and must not produce triples");
-    assert_eq!(raised.diff().info.as_ref().expect("info slot").title.as_deref(), Some("Capsule Tower"), "set-snapshot/rotates-the-plan-page-and-titles-the-document: PdfInfo is a whole-record slot, so the delta carries the complete new /Info dictionary");
+    assert_eq!(
+        raised.diff().info.as_ref().expect("info slot").title.as_deref(),
+        Some("Capsule Tower"),
+        "set-snapshot/rotates-the-plan-page-and-titles-the-document: PdfInfo is a whole-record slot, so the delta carries the complete new /Info dictionary"
+    );
     let pages = raised.diff().pages.as_ref().expect("set-snapshot/rotates-the-plan-page-and-titles-the-document: the pages triple must be present");
     assert!(pages.removed.is_empty() && pages.added.is_empty(), "set-snapshot/rotates-the-plan-page-and-titles-the-document: the page count does not change");
     assert_eq!(pages.modified[0].index, 1, "set-snapshot/rotates-the-plan-page-and-titles-the-document: PdfPageModified indices are BASE-state positions");
@@ -141,7 +142,10 @@ async fn committed_diff_is_canonical() {
     let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "set-snapshot/rotates-the-plan-page-and-titles-the-document: committed diff JSON is not canonical");
-    assert!(decoded.pages.as_ref().expect("pages triple").modified[0].diff.crop_box.is_none(), "set-snapshot/rotates-the-plan-page-and-titles-the-document: the tri-state cropBox slot must round-trip as absent — a committed null would collapse the Some(None) 'CropBox cleared' state that Option<Option<[f64; 4]>> cannot express in JSON");
+    assert!(
+        decoded.pages.as_ref().expect("pages triple").modified[0].diff.crop_box.is_none(),
+        "set-snapshot/rotates-the-plan-page-and-titles-the-document: the tri-state cropBox slot must round-trip as absent — a committed null would collapse the Some(None) 'CropBox cleared' state that Option<Option<[f64; 4]>> cannot express in JSON"
+    );
 }
 
 /// 🩹 Applying the committed diff directly to `before` yields the committed `after` — the diff is

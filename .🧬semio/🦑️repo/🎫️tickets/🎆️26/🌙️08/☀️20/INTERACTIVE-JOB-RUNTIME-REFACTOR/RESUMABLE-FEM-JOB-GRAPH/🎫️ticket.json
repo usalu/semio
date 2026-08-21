@@ -1,0 +1,13 @@
+{
+  "title": "Resumable FEM Job Graph",
+  "emoji": "🏗️",
+  "status": "open",
+  "description": "Phase 6 of the Interactivity-First Refactor. Strip decorative async throughout the FEM algebra and engine, implement a staged InteractiveJob graph from validation through meshing, assembly, iterative/direct/eigen solving and finalize, with persistent bounded state, progress, cancellation, checkpointing, deterministic reductions, and visual preview data. Make meshing coarse-first and incrementally refined; implement persistent PCG/LDLT/subspace iteration jobs; verify reference tolerances, coarse preview under 50 ms, stale-edit cancellation, and no step at or above 8 ms.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2582"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪e80e1e430061442b9920278d599b94d5"
+  ]
+}

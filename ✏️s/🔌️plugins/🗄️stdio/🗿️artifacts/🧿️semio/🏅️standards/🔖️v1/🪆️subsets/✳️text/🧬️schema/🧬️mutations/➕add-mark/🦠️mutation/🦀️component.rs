@@ -16,16 +16,16 @@ pub struct AddMark {
 impl protocol::MutationKind<SemioTextSnapshot, SemioTextMutation> for AddMark {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "mark", kind: "add-mark", record: "AddedMarkToRun" };
 
-    async fn diff(&self, base: &SemioTextSnapshot) -> protocol::MutationOutcome<<SemioTextMutation as protocol::Mutation<SemioTextSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioTextSnapshot) -> protocol::MutationOutcome<<SemioTextMutation as protocol::Mutation<SemioTextSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &SemioTextSnapshot) -> Vec<SemioTextMutation> {
+    fn inverse(&self, base: &SemioTextSnapshot) -> Vec<SemioTextMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Add mark to run #{} at #{}", self.run_index, self.index)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.run_index.to_string(), self.index.to_string()]
     }
 }

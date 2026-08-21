@@ -900,7 +900,7 @@ export class VerifyScript extends Script {
    * `26/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR`). Scans [[INTERACTIVITY_AUDIT_UI_ROOTS]] for
    * `block_on`/`run_blocking`/sync-fs/sync-net/sync-clipboard/sync-process/sync-db, and the whole
    * repo (minus `compose/` and [[INTERACTIVITY_AUDIT_RUNTIME_SANCTIONED_ROOTS]]) for
-   * `std::thread::spawn`/rayon pool construction/`tokio::runtime::Builder`. WARN in Phase 0 (report,
+   * direct thread construction/scoped threads/Rayon/Tokio runtime construction. WARN in Phase 0 (report,
    * exit 0); flip [[INTERACTIVITY_AUDIT_SEVERITY]] to `"deny"` at Phase 3 packet P3c.
    */
   private runInteractivityAudit(): void {
@@ -1303,12 +1303,11 @@ const INTERACTIVITY_AUDIT_UI_ROOTS = ["🧰️framework/🔨️modules/🖱️ui
  * ⏱️ The "single sanctioned runtime module" the thread/pool-construction rule (category
  * `thread-pool`) is scoped OUTSIDE of — this is a repo-wide check (minus `compose/`), unlike the
  * `blocking-bridge`/`sync-*` categories which are scoped to [[INTERACTIVITY_AUDIT_UI_ROOTS]] only.
- * Two roots: the async primitives crate (`ThreadPlan`/`block_on`/`ManualRuntime`) and the os
- * services crate, whose `TokioHostRuntime` is the one place that actually calls
- * `tokio::runtime::Builder` today. Both are replaced by the single global `WorkerPool` in Phase 1
- * (packets P1a/P1b) — this allowlist-by-prefix shrinks to nothing then.
+ * The async primitives crate is the only sanctioned root because it owns the process-wide
+ * `WorkerPool` worker constructors. Every service, product, plugin, and domain module remains in
+ * scope so an implicit or explicit private scheduler cannot escape the one-pool invariant.
  */
-const INTERACTIVITY_AUDIT_RUNTIME_SANCTIONED_ROOTS = ["🧰️framework/🔨️modules/⏳️async/", "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/"] as const;
+const INTERACTIVITY_AUDIT_RUNTIME_SANCTIONED_ROOTS = ["🧰️framework/🔨️modules/⏳️async/"] as const;
 
 /**
  * 🚦️ Severity for `verify interactivity`: `"warn"` reports and always exits 0 (Phase 0 — this
@@ -1333,8 +1332,10 @@ const INTERACTIVITY_AUDIT_PATTERNS: readonly InteractivityAuditPatternDef[] = [
   { category: "sync-process", re: /\bstd::process::Command\b/, label: "std::process::Command", scope: "ui" },
   { category: "sync-db", re: /\brusqlite::/, label: "rusqlite::", scope: "ui" },
   { category: "sync-db", re: /\bsqlx::/, label: "sqlx::", scope: "ui" },
-  { category: "thread-pool", re: /\bstd::thread::spawn\s*\(/, label: "std::thread::spawn(", scope: "runtime-repo-wide" },
-  { category: "thread-pool", re: /\brayon::ThreadPoolBuilder\b/, label: "rayon::ThreadPoolBuilder", scope: "runtime-repo-wide" },
+  { category: "thread-pool", re: /\b(?:std::)?thread::spawn\s*\(/, label: "thread::spawn(", scope: "runtime-repo-wide" },
+  { category: "thread-pool", re: /\b(?:std::)?thread::Builder\b/, label: "thread::Builder", scope: "runtime-repo-wide" },
+  { category: "thread-pool", re: /\b(?:std::)?thread::scope\s*\(/, label: "thread::scope(", scope: "runtime-repo-wide" },
+  { category: "thread-pool", re: /\brayon::/, label: "rayon::", scope: "runtime-repo-wide" },
   { category: "thread-pool", re: /\btokio::runtime::Builder\b/, label: "tokio::runtime::Builder", scope: "runtime-repo-wide" },
 ];
 
@@ -1350,8 +1351,7 @@ type InteractivityAllowlistEntry = { file: string; lineHint: number; pattern: "b
 
 /**
  * ⏱️ Known `block_on`/`run_blocking` call sites as of the Phase 0 audit (baseline commit
- * `95b8688ee2`). Verified against the repo, not copied blind from the master ticket — 3 of the 5
- * entries below carry a correction (see each `reason`). CI fails once `verify interactivity` flips
+ * `95b8688ee2`). Verified against the repo, not copied blind from the master ticket. CI fails once `verify interactivity` flips
  * to `"deny"` if an entry here stops matching any real finding (stale) — see `runInteractivityAudit`.
  */
 const INTERACTIVITY_AUDIT_ALLOWLIST: readonly InteractivityAllowlistEntry[] = [
@@ -1362,14 +1362,6 @@ const INTERACTIVITY_AUDIT_ALLOWLIST: readonly InteractivityAllowlistEntry[] = [
     reason: "CLI root — approved process entry point (semio_framework_async::block_on(run_async(args))).",
     phase: "PERMANENT",
     inScope: false, // 🏃️run/ is not under any INTERACTIVITY_AUDIT_UI_ROOTS prefix today; pre-declared for when scope widens.
-  },
-  {
-    file: "🧰️framework/🛍️products/💻️os/🖥️host/🎠️activation.rs",
-    lineHint: 114,
-    pattern: "block_on",
-    reason: "Shard forwarder poll loop (semio_framework_async::block_on(forward_side.recv_deadline(FORWARD_POLL))) — deleted in Phase 1 (P1c) with the forwarder threads themselves.",
-    phase: "Phase 1 (P1c) — removed",
-    inScope: true, // 🖥️host/ IS a UI-reachable root.
   },
   {
     file: "🧰️framework/🛍️products/💻️os/🖥️host/🦀️component.rs",
@@ -1386,7 +1378,7 @@ const INTERACTIVITY_AUDIT_ALLOWLIST: readonly InteractivityAllowlistEntry[] = [
     pattern: "run_blocking",
     reason: "CORRECTED PATH: the master ticket's anchor (…/🛎️services/📦️packages/🦀️rust/🦀️component.rs) does not exist; the real file is …/🛎️services/🦀️component.rs (no 📦️packages/🦀️rust segment). `ComputeScheduler::run_blocking` (line 605, `pub async fn run_blocking<T,R>`) and its production call sites become job submissions in Phase 1 (P1b).",
     phase: "Phase 1 (P1b) — becomes job submission",
-    inScope: false, // 🛎️services/ is not a UI-reachable root today (it IS a INTERACTIVITY_AUDIT_RUNTIME_SANCTIONED_ROOTS entry for the separate thread-pool category).
+    inScope: false, // 🛎️services/ is not under a current UI-reachable root; its thread creation is nevertheless scanned repo-wide.
   },
   {
     file: "🧰️framework/🔨️modules/⏳️async/✨️macros/🦀️component.rs",
@@ -1410,6 +1402,43 @@ function interactivityIsRuntimeSanctioned(relPath: string): boolean {
   return INTERACTIVITY_AUDIT_RUNTIME_SANCTIONED_ROOTS.some((root) => relPath.startsWith(root));
 }
 
+/** ⏱️True for authored runtime sources; build scripts, fixtures, test trees, ticket scratch, and compose never execute in an interactive product process. */
+function interactivityIsRuntimeSource(relPath: string): boolean {
+  return !relPath.startsWith("compose/") && !relPath.startsWith(".🧬semio/") && !relPath.includes("/🧫️fixtures/") && !relPath.includes("/🧪️tests/") && !relPath.endsWith("/build.rs");
+}
+
+/** ⏱️Masks line and nested block comments after literals have been masked, preserving block depth across lines. */
+function interactivityMaskComments(raw: string, initialDepth: number): { code: string; depth: number } {
+  const masked = policyMaskLiterals(raw);
+  let code = "";
+  let depth = initialDepth;
+  let index = 0;
+  while (index < masked.length) {
+    const pair = masked.slice(index, index + 2);
+    if (depth > 0) {
+      if (pair === "/*") {
+        depth += 1;
+        index += 2;
+      } else if (pair === "*/") {
+        depth -= 1;
+        index += 2;
+      } else {
+        index += 1;
+      }
+      continue;
+    }
+    if (pair === "//") break;
+    if (pair === "/*") {
+      depth = 1;
+      index += 2;
+      continue;
+    }
+    code += masked[index];
+    index += 1;
+  }
+  return { code, depth };
+}
+
 /** ⏱️Scans one file's lines for `patterns`, skipping `#[cfg(test)] mod … { … }` bodies — matches this repo's own R4 precedent that a test module is a sanctioned executor/blocking entry point, and keeps the audit signal free of unit-test noise unrelated to the UI-thread interactivity goal. */
 function interactivityScanFile(repoRoot: string, relPath: string, patterns: readonly InteractivityAuditPatternDef[]): InteractivityFinding[] {
   const content = policyReadFileSafe(repoRoot, relPath);
@@ -1417,10 +1446,13 @@ function interactivityScanFile(repoRoot: string, relPath: string, patterns: read
   const findings: InteractivityFinding[] = [];
   const lines = content.split(/\r?\n/);
   const testSpans = policyTestModSpans(lines);
+  let blockCommentDepth = 0;
   lines.forEach((raw, i) => {
     const lineNo = i + 1;
+    const masked = interactivityMaskComments(raw, blockCommentDepth);
+    blockCommentDepth = masked.depth;
     if (policyLineInTestMod(testSpans, lineNo)) return;
-    const codeOnly = policyMaskLiterals(raw).replace(/\/\/.*$/, "");
+    const codeOnly = masked.code;
     for (const pattern of patterns) {
       if (pattern.re.test(codeOnly)) findings.push({ category: pattern.category, file: relPath, line: lineNo, text: raw.trim().slice(0, 200) });
     }
@@ -1430,7 +1462,7 @@ function interactivityScanFile(repoRoot: string, relPath: string, patterns: read
 
 /** ⏱️Full forbidden-call scan: `blocking-bridge`/`sync-*` categories over [[INTERACTIVITY_AUDIT_UI_ROOTS]]; `thread-pool` repo-wide (minus `compose/` and [[INTERACTIVITY_AUDIT_RUNTIME_SANCTIONED_ROOTS]]). */
 function interactivityAuditScan(repoRoot: string): InteractivityFinding[] {
-  const allRustFiles = policyAllRustFiles(repoRoot).filter((p) => !p.startsWith("compose/"));
+  const allRustFiles = policyAllRustFiles(repoRoot).filter(interactivityIsRuntimeSource);
   const uiPatterns = INTERACTIVITY_AUDIT_PATTERNS.filter((p) => p.scope === "ui");
   const runtimePatterns = INTERACTIVITY_AUDIT_PATTERNS.filter((p) => p.scope === "runtime-repo-wide");
   const findings: InteractivityFinding[] = [];

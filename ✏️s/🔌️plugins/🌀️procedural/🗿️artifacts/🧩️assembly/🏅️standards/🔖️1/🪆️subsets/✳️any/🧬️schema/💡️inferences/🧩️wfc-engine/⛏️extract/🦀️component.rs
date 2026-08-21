@@ -19,7 +19,7 @@ pub struct Sample2d {
 }
 
 impl Sample2d {
-    pub async fn new(width: usize, height: usize, tiles: Vec<TileId>) -> Self {
+    pub fn new(width: usize, height: usize, tiles: Vec<TileId>) -> Self {
         debug_assert_eq!(tiles.len(), width * height);
         Self { width, height, tiles }
     }
@@ -56,20 +56,20 @@ pub struct PatternDecoder2d {
 }
 
 impl PatternDecoder2d {
-    pub async fn window(&self) -> usize {
+    pub fn window(&self) -> usize {
         self.window
     }
 
-    pub async fn anchor_tile(&self, p: PatternId) -> TileId {
+    pub fn anchor_tile(&self, p: PatternId) -> TileId {
         self.pattern_windows[p.index()][0]
     }
 
-    pub async fn window_of(&self, p: PatternId) -> &[TileId] {
+    pub fn window_of(&self, p: PatternId) -> &[TileId] {
         &self.pattern_windows[p.index()]
     }
 
     /// 🧪️ Decodes a full grid assignment to its anchor-tile image, row-major.
-    pub async fn decode(&self, assignment: &[PatternId]) -> Vec<TileId> {
+    pub fn decode(&self, assignment: &[PatternId]) -> Vec<TileId> {
         assignment.iter().map(|&p| self.anchor_tile(p)).collect()
     }
 }
@@ -83,7 +83,7 @@ pub struct ExtractedModel2d {
     pub decoder: PatternDecoder2d,
 }
 
-async fn window_at(sample: &Sample2d, x: usize, y: usize, n: usize, periodic: bool) -> Option<Vec<TileId>> {
+fn window_at(sample: &Sample2d, x: usize, y: usize, n: usize, periodic: bool) -> Option<Vec<TileId>> {
     if !periodic && (x + n > sample.width || y + n > sample.height) {
         return None;
     }
@@ -100,7 +100,7 @@ async fn window_at(sample: &Sample2d, x: usize, y: usize, n: usize, periodic: bo
 
 /// 🧪️ `a` placed at the origin, `b` placed at grid offset `(dx, dy)` — compatible iff every cell
 /// where their `n × n` footprints overlap holds the same tile.
-async fn windows_overlap_compatible(a: &[TileId], b: &[TileId], n: usize, dx: i32, dy: i32) -> bool {
+fn windows_overlap_compatible(a: &[TileId], b: &[TileId], n: usize, dx: i32, dy: i32) -> bool {
     for y in 0..n as i32 {
         for x in 0..n as i32 {
             let bx = x - dx;
@@ -116,7 +116,7 @@ async fn windows_overlap_compatible(a: &[TileId], b: &[TileId], n: usize, dx: i3
 /// 🧪️ Extracts overlapping patterns from one or more samples (frequencies merge across samples),
 /// expanding each window under `cfg.symmetry` before deduplication, and compiles a model whose
 /// relations are exactly [`Stencil2d::VonNeumann`]'s four unit offsets.
-pub async fn extract_2d(samples: &[Sample2d], cfg: &Extract2dConfig) -> Result<ExtractedModel2d, crate::wfc_engine::error::ModelError> {
+pub fn extract_2d(samples: &[Sample2d], cfg: &Extract2dConfig) -> Result<ExtractedModel2d, crate::wfc_engine::error::ModelError> {
     use crate::wfc_engine::error::ModelError;
     let n = cfg.window;
     if n == 0 {
@@ -172,7 +172,7 @@ pub async fn extract_2d(samples: &[Sample2d], cfg: &Extract2dConfig) -> Result<E
 mod tests {
     use super::*;
 
-    async fn checkerboard_sample(size: usize) -> Sample2d {
+    fn checkerboard_sample(size: usize) -> Sample2d {
         let mut tiles = vec![TileId(0); size * size];
         for y in 0..size {
             for x in 0..size {
@@ -182,22 +182,22 @@ mod tests {
         Sample2d::new(size, size, tiles)
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn extraction_rejects_empty_sample_list() {
+    #[test]
+    fn extraction_rejects_empty_sample_list() {
         let cfg = Extract2dConfig::default();
         assert!(extract_2d(&[], &cfg).is_err());
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn window_one_extracts_one_pattern_per_distinct_tile() {
+    #[test]
+    fn window_one_extracts_one_pattern_per_distinct_tile() {
         let sample = checkerboard_sample(4);
         let cfg = Extract2dConfig { window: 1, periodic_input: true, symmetry: SymmetryGroup2d::None };
         let extracted = extract_2d(&[sample], &cfg).unwrap();
         assert_eq!(extracted.model.pattern_count(), 2);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn window_two_deduplicates_repeated_windows() {
+    #[test]
+    fn window_two_deduplicates_repeated_windows() {
         let sample = checkerboard_sample(4);
         let cfg = Extract2dConfig { window: 2, periodic_input: true, symmetry: SymmetryGroup2d::None };
         let extracted = extract_2d(&[sample], &cfg).unwrap();
@@ -205,8 +205,8 @@ mod tests {
         assert_eq!(extracted.model.pattern_count(), 2);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn symmetry_expansion_can_only_add_patterns_never_remove() {
+    #[test]
+    fn symmetry_expansion_can_only_add_patterns_never_remove() {
         let sample = checkerboard_sample(4);
         let cfg_none = Extract2dConfig { window: 2, periodic_input: true, symmetry: SymmetryGroup2d::None };
         let cfg_d4 = Extract2dConfig { window: 2, periodic_input: true, symmetry: SymmetryGroup2d::D4 };
@@ -215,16 +215,16 @@ mod tests {
         assert!(d4.model.pattern_count() >= none.model.pattern_count());
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn extracted_model_relations_match_von_neumann_stencil() {
+    #[test]
+    fn extracted_model_relations_match_von_neumann_stencil() {
         let sample = checkerboard_sample(4);
         let cfg = Extract2dConfig { window: 2, periodic_input: true, symmetry: SymmetryGroup2d::None };
         let extracted = extract_2d(&[sample], &cfg).unwrap();
         assert_eq!(extracted.model.relation_count(), 4);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn periodic_sample_solves_on_a_same_size_wrapped_grid() {
+    #[test]
+    fn periodic_sample_solves_on_a_same_size_wrapped_grid() {
         // The canonical WFC sanity check: a periodic training sample's own tiling must remain a
         // satisfiable solution of the extracted model on a same-size, wrap-boundary grid — if
         // extraction/compatibility were buggy, even the sample's own arrangement could become
@@ -244,8 +244,8 @@ mod tests {
         assert!(matches!(outcome, crate::wfc_engine::outcome::SolveOutcome::Solved(_)), "extracted model must remain solvable on a same-size wrapped grid");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn window_content_is_preserved_for_decode() {
+    #[test]
+    fn window_content_is_preserved_for_decode() {
         let sample = checkerboard_sample(4);
         let cfg = Extract2dConfig { window: 2, periodic_input: true, symmetry: SymmetryGroup2d::None };
         let extracted = extract_2d(&[sample], &cfg).unwrap();
@@ -255,8 +255,8 @@ mod tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn multiple_samples_merge_frequencies() {
+    #[test]
+    fn multiple_samples_merge_frequencies() {
         let a = checkerboard_sample(4);
         let b = checkerboard_sample(4);
         let cfg = Extract2dConfig { window: 1, periodic_input: true, symmetry: SymmetryGroup2d::None };

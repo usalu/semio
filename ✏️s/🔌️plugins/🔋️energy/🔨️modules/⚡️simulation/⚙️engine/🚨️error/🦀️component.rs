@@ -23,19 +23,19 @@ pub struct Error {
 }
 
 impl Error {
-    pub async fn fatal(message: impl Into<String>) -> Self {
+    pub fn fatal(message: impl Into<String>) -> Self {
         Self { severity: Severity::Fatal, message: message.into(), context: None }
     }
 
-    pub async fn severe(message: impl Into<String>) -> Self {
+    pub fn severe(message: impl Into<String>) -> Self {
         Self { severity: Severity::Severe, message: message.into(), context: None }
     }
 
-    pub async fn warning(message: impl Into<String>) -> Self {
+    pub fn warning(message: impl Into<String>) -> Self {
         Self { severity: Severity::Warning, message: message.into(), context: None }
     }
 
-    pub async fn with_context(mut self, context: impl Into<String>) -> Self {
+    pub fn with_context(mut self, context: impl Into<String>) -> Self {
         self.context = Some(context.into());
         self
     }
@@ -62,15 +62,15 @@ pub struct Diagnostics {
 }
 
 impl Diagnostics {
-    pub async fn push(&mut self, err: Error) {
+    pub fn push(&mut self, err: Error) {
         self.messages.push(err);
     }
 
-    pub async fn has_fatal(&self) -> bool {
+    pub fn has_fatal(&self) -> bool {
         self.messages.iter().any(|e| e.severity == Severity::Fatal)
     }
 
-    pub async fn merge(&mut self, other: Diagnostics) {
+    pub fn merge(&mut self, other: Diagnostics) {
         self.messages.extend(other.messages);
     }
 }
@@ -81,25 +81,25 @@ mod tests {
     use super::*;
 
     #[semio_framework_async_macros::async_test]
-    async fn fatal_has_correct_severity() {
+    fn fatal_has_correct_severity() {
         let e = Error::fatal("bad model");
         assert_eq!(e.severity, Severity::Fatal);
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn severe_and_warning_severities() {
+    fn severe_and_warning_severities() {
         assert_eq!(Error::severe("x").severity, Severity::Severe);
         assert_eq!(Error::warning("x").severity, Severity::Warning);
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn with_context_sets_context() {
+    fn with_context_sets_context() {
         let e = Error::fatal("bad").with_context("zone1");
         assert_eq!(e.context.as_deref(), Some("zone1"));
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn display_includes_context_when_present() {
+    fn display_includes_context_when_present() {
         let with_ctx = Error::severe("oops").with_context("surf1");
         assert!(format!("{with_ctx}").contains("surf1"));
         let without_ctx = Error::warning("hmm");
@@ -107,7 +107,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn diagnostics_push_has_fatal_and_merge() {
+    fn diagnostics_push_has_fatal_and_merge() {
         let mut diag = Diagnostics::default();
         assert!(!diag.has_fatal());
         diag.push(Error::warning("minor"));

@@ -44,7 +44,11 @@ async fn applies_to_committed_after() {
     assert!(outcome.messages().is_empty(), "set-snapshot/slows-the-second-frame-and-marks-it-do-not-dispose: set-snapshot raised diagnostics it should not have");
     assert_eq!(snapshot, expected_after(), "set-snapshot/slows-the-second-frame-and-marks-it-do-not-dispose: applied state differs from committed after-snapshot");
     assert_eq!(snapshot.frames[1].delay_cs, 25, "set-snapshot/slows-the-second-frame-and-marks-it-do-not-dispose: the second frame must hold for 25 hundredths of a second");
-    assert_eq!(snapshot.frames[1].disposal, crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::GifDisposal::DoNotDispose, "set-snapshot/slows-the-second-frame-and-marks-it-do-not-dispose: the second frame's GCE disposal method must become do-not-dispose");
+    assert_eq!(
+        snapshot.frames[1].disposal,
+        crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::GifDisposal::DoNotDispose,
+        "set-snapshot/slows-the-second-frame-and-marks-it-do-not-dispose: the second frame's GCE disposal method must become do-not-dispose"
+    );
     assert_eq!(snapshot.frames[1].indices, vec![1u8, 0], "set-snapshot/slows-the-second-frame-and-marks-it-do-not-dispose: the frame's palette indices are unchanged by a timing edit");
     assert_eq!(snapshot.frames[0], before().frames[0], "set-snapshot/slows-the-second-frame-and-marks-it-do-not-dispose: the first frame is identical on both sides and must survive untouched");
     assert_eq!(snapshot.loop_count, Some(0), "set-snapshot/slows-the-second-frame-and-marks-it-do-not-dispose: the NETSCAPE2.0 loop count still says loop forever");
@@ -89,11 +93,8 @@ async fn committed_json_is_canonical() {
 async fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
     let status = outcome.get("status").and_then(serde_json::Value::as_str).expect("outcome carries a status");
-    let declared: Vec<(String, String)> = outcome
-        .get("messages")
-        .and_then(serde_json::Value::as_array)
-        .map(|rows| rows.iter().map(|row| (row["level"].as_str().unwrap_or_default().to_string(), row["code"].as_str().unwrap_or_default().to_string())).collect())
-        .unwrap_or_default();
+    let declared: Vec<(String, String)> =
+        outcome.get("messages").and_then(serde_json::Value::as_array).map(|rows| rows.iter().map(|row| (row["level"].as_str().unwrap_or_default().to_string(), row["code"].as_str().unwrap_or_default().to_string())).collect()).unwrap_or_default();
     let raised = <GifMutation as protocol::Mutation<GifSnapshot>>::diff(&mutation(), &before());
     let produced: Vec<(String, String)> = raised
         .messages()

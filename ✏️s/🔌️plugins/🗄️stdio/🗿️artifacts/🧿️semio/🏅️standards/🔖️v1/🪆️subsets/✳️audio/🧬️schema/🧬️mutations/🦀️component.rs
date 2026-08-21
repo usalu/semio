@@ -337,7 +337,11 @@ mod tests {
             let returned_diff = apply_semio_audio_mutation(&mut snap, &mutation);
             let expected_diff = mutation.diff(&base);
             assert_eq!(returned_diff, expected_diff, "returned diff must equal mutation.diff(base) for {mutation:?}");
-            assert_eq!(snap, <SemioAudioDiff as protocol::MutationDiff<SemioAudioSnapshot>>::apply(expected_diff.diff(), &base).expect("apply must succeed for a well-formed fixture"), "apply_semio_audio_mutation must match diff.diff().apply(base) for {mutation:?}");
+            assert_eq!(
+                snap,
+                <SemioAudioDiff as protocol::MutationDiff<SemioAudioSnapshot>>::apply(expected_diff.diff(), &base).expect("apply must succeed for a well-formed fixture"),
+                "apply_semio_audio_mutation must match diff.diff().apply(base) for {mutation:?}"
+            );
         }
     }
 

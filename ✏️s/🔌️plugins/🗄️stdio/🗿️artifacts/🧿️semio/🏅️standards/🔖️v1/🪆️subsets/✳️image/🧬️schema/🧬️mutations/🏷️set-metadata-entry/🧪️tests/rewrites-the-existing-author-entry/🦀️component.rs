@@ -104,7 +104,7 @@ async fn produces_committed_diff() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical_and_narrowly_scoped() {
     let decoded: SemioImageDiff = serde_json::from_str(DIFF).expect("committed set-metadata-entry diff decodes");
-    
+
     let metadata = decoded.metadata.as_ref().expect("set-metadata-entry must write the metadata slot");
     assert!(metadata.removed.is_empty() && metadata.added.is_empty(), "an in-place rewrite neither adds nor removes an entry");
     assert_eq!(metadata.modified.len(), 1, "exactly one entry is modified");

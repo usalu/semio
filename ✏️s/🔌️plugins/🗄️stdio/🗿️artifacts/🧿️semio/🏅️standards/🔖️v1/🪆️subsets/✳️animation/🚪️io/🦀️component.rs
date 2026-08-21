@@ -24,8 +24,8 @@ pub mod derived_composition {
     use crate::artifacts::semio::standards::v1::subsets::animation::schema::snapshot::SemioAnimationSnapshot;
     use crate::artifacts::semio::standards::v1::subsets::animation::schema::SemioAnimationAnalyzer;
     use semio_framework_plugin::{
-        deserializer_entry_of, register_composer_entries, register_subset_validator, serializer_entry_of, subset_validator_entry_of, AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, ComposerEntry, Composition,
-        Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry,
+        deserializer_entry_of, register_composer_entries, register_subset_validator, serializer_entry_of, subset_validator_entry_of, AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, ComposerEntry, Composition, Dialect, IoPayload,
+        StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry,
     };
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("animation") };
@@ -205,7 +205,7 @@ pub mod derived_composition {
         /// aggregator, which has no test module of its own and is out of this wave's `✳️animation/`-only
         /// edit scope) — same home every prior semio wave's report identifies as correct.
         mod conformance_laws {
-            
+
             use crate::artifacts::semio::standards::v1::subsets::animation::schema::{diff, mutations, snapshot};
             use protocol::{DiffCodec, OpBinary, OpText};
 

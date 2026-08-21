@@ -263,30 +263,30 @@ impl OpBinary for StlMutation {
         match tag {
             0 => Ok(StlMutation::NoMutation),
             1 => {
-                let snapshot = dec_snapshot_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "op snapshot", offset: semio_framework_plugin::resolve_ready(reader.position()) as u64, detail: e })?;
+                let snapshot = dec_snapshot_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "op snapshot", offset: reader.position() as u64, detail: e })?;
                 Ok(StlMutation::SetSnapshot { snapshot })
             }
             2 => {
-                let name = diff::read_str_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "op name", offset: semio_framework_plugin::resolve_ready(reader.position()) as u64, detail: e })?;
+                let name = diff::read_str_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "op name", offset: reader.position() as u64, detail: e })?;
                 Ok(StlMutation::SetSolidName { name })
             }
             3 => {
-                let index = reader.read_varint_u64().map_err(|e| protocol::ProtocolError::Malformed { what: "op index", offset: semio_framework_plugin::resolve_ready(reader.position()) as u64, detail: e.to_string() })? as usize;
-                let triangle = diff::dec_triangle_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "op triangle", offset: semio_framework_plugin::resolve_ready(reader.position()) as u64, detail: e })?;
+                let index = reader.read_varint_u64().map_err(|e| protocol::ProtocolError::Malformed { what: "op index", offset: reader.position() as u64, detail: e.to_string() })? as usize;
+                let triangle = diff::dec_triangle_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "op triangle", offset: reader.position() as u64, detail: e })?;
                 Ok(StlMutation::InsertTriangle { index, triangle })
             }
             4 => {
-                let index = reader.read_varint_u64().map_err(|e| protocol::ProtocolError::Malformed { what: "op index", offset: semio_framework_plugin::resolve_ready(reader.position()) as u64, detail: e.to_string() })? as usize;
+                let index = reader.read_varint_u64().map_err(|e| protocol::ProtocolError::Malformed { what: "op index", offset: reader.position() as u64, detail: e.to_string() })? as usize;
                 Ok(StlMutation::RemoveTriangle { index })
             }
             5 => {
-                let index = reader.read_varint_u64().map_err(|e| protocol::ProtocolError::Malformed { what: "op index", offset: semio_framework_plugin::resolve_ready(reader.position()) as u64, detail: e.to_string() })? as usize;
-                let normal = diff::dec_vec3_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "op normal", offset: semio_framework_plugin::resolve_ready(reader.position()) as u64, detail: e })?;
+                let index = reader.read_varint_u64().map_err(|e| protocol::ProtocolError::Malformed { what: "op index", offset: reader.position() as u64, detail: e.to_string() })? as usize;
+                let normal = diff::dec_vec3_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "op normal", offset: reader.position() as u64, detail: e })?;
                 Ok(StlMutation::SetTriangleNormal { index, normal })
             }
             6 => {
-                let index = reader.read_varint_u64().map_err(|e| protocol::ProtocolError::Malformed { what: "op index", offset: semio_framework_plugin::resolve_ready(reader.position()) as u64, detail: e.to_string() })? as usize;
-                let vertices = diff::dec_vertices_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "op vertices", offset: semio_framework_plugin::resolve_ready(reader.position()) as u64, detail: e })?;
+                let index = reader.read_varint_u64().map_err(|e| protocol::ProtocolError::Malformed { what: "op index", offset: reader.position() as u64, detail: e.to_string() })? as usize;
+                let vertices = diff::dec_vertices_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "op vertices", offset: reader.position() as u64, detail: e })?;
                 Ok(StlMutation::SetTriangleVertices { index, vertices })
             }
             other => Err(protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: format!("unknown tag {other}") }),

@@ -22,7 +22,7 @@ pub struct PngInference {
 }
 
 impl protocol::Inference<PngSnapshot> for PngInference {
-    async fn infer(snapshot: &PngSnapshot) -> Self {
+    fn infer(snapshot: &PngSnapshot) -> Self {
         Self { dimensions: compute_png_dimensions(snapshot) }
     }
 }
@@ -39,13 +39,13 @@ impl Default for PngInference {
 }
 
 impl protocol::InferenceSpec<PngSnapshot> for PngInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.stdio.png.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.png.inference.dimensions", reads: &["width", "height", "bitDepth", "colorType"] }]
     }
 }

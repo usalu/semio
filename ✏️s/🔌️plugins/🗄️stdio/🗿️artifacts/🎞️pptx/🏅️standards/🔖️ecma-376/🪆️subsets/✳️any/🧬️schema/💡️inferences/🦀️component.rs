@@ -23,19 +23,19 @@ pub struct PptxInference {
 }
 
 impl protocol::Inference<PptxSnapshot> for PptxInference {
-    async fn infer(snapshot: &PptxSnapshot) -> Self {
+    fn infer(snapshot: &PptxSnapshot) -> Self {
         Self { outline: PptxOutline::compute(snapshot) }
     }
 }
 
 impl protocol::InferenceSpec<PptxSnapshot> for PptxInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.stdio.pptx.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.pptx.inference.outline", reads: &["presentation"] }]
     }
 }

@@ -1,7 +1,7 @@
 //! 👁️ `md` view (any) — the `view` mode: a single
 //! full-pane Main window, the only mode this thin surface declares.
 
-use crate::viewer::md::modes::view::windows::main as main;
+use crate::viewer::md::modes::view::windows::main;
 use semio_framework_plugin::{LocalizedLabel, ModeDefinition, WindowLayout, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode};
 
 pub const MODE_ID: &str = "view";

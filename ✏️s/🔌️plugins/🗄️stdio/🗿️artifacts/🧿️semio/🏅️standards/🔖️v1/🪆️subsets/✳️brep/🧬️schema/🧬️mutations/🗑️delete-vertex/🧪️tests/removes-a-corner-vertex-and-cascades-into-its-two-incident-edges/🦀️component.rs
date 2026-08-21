@@ -74,7 +74,7 @@ async fn declared_outcome_holds_as_committed() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "delete-vertex/removes-a-corner-vertex-and-cascades-into-its-two-incident-edges: this case is declared applied");
     let produced = mutation().diff(&before());
-    
+
     let messages = produced.messages();
     assert_eq!(messages.len(), 1, "deleting a vertex that really severed edges raises exactly one message");
     assert_eq!(messages[0].code.0, "mutation.cascade", "the message must be the cascade note, not a rejection");
@@ -104,7 +104,7 @@ async fn committed_diff_applies_to_after() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical_and_narrowly_scoped() {
     let decoded: SemioBrepDiff = serde_json::from_str(DIFF).expect("committed delete-vertex diff decodes");
-    
+
     let vertices = decoded.vertices.as_ref().expect("the vertices triple must be present");
     let edges = decoded.edges.as_ref().expect("the edges triple must be present — the cascade is part of the same diff");
     assert_eq!(vertices.removed, vec!["v2".to_string()], "the vertex is addressed by id");

@@ -10,7 +10,7 @@
 
 use crate::artifacts::binary::BinarySnapshot;
 use semio_framework_plugin::app::{TextView, TextWindowKit, WindowKit};
-use semio_framework_plugin::{LocalizedLabel, UiNode, WindowKindDefinition};
+use semio_framework_plugin::{BuiltNode, LocalizedLabel, WindowKindDefinition};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = TextWindowKit::KIND_ID;
@@ -31,19 +31,15 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-/// ✏️ Real `BinarySnapshot -> UiNode`: the first `HEX_PREVIEW_CAP_BYTES` bytes as contiguous
+/// ✏️ Real `BinarySnapshot -> BuiltNode`: the first `HEX_PREVIEW_CAP_BYTES` bytes as contiguous
 /// lowercase hex, editable (`read_only: false`), plus a trailing `#`-prefixed byte-count comment
 /// (never parsed back — informational only).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &BinarySnapshot) -> UiNode {
+pub fn render(document: &BinarySnapshot) -> BuiltNode {
     let total = document.bytes.len();
     let shown = total.min(HEX_PREVIEW_CAP_BYTES);
     let hex: String = document.bytes[..shown].iter().map(|byte| format!("{byte:02x}")).collect();
-    let text = if total > shown {
-        format!("{hex}\n# total bytes: {total} (showing first {shown}; editing while truncated replaces the buffer with exactly what is shown)")
-    } else {
-        format!("{hex}\n# total bytes: {total}")
-    };
+    let text = if total > shown { format!("{hex}\n# total bytes: {total} (showing first {shown}; editing while truncated replaces the buffer with exactly what is shown)") } else { format!("{hex}\n# total bytes: {total}") };
     TextWindowKit::render(&TextView { text, language: Some("hex".into()), read_only: false })
 }
 //#endregion 🔖️Render

@@ -645,6 +645,25 @@ pub struct BrushCollisionFreeResult {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct FillBuildPreview {
+    pub sequence: u64,
+    pub generation: u64,
+    pub stage: String,
+    pub target_vortex_full_id: Option<String>,
+    pub candidate_object_kind_id: Option<String>,
+    pub broad_phase_object_ids: Vec<String>,
+    pub current_pair_object_id: Option<String>,
+    pub sample_cursor: usize,
+    pub inside_both: usize,
+    pub last_sample: Option<[f32; 3]>,
+    pub rejection_reason: Option<String>,
+    pub target_cursor: usize,
+    pub candidate_cursor: usize,
+    pub accepted_count: usize,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct FillBuildProgress {
     pub(crate) count: usize,
     pub(crate) applied_count: usize,
@@ -656,6 +675,8 @@ pub struct FillBuildProgress {
     pub(crate) appended_attractions: Vec<AttractionProps>,
     #[serde(default)]
     pub(crate) sequence: Vec<BrushPlacePayload>,
+    #[serde(default)]
+    pub(crate) preview: Option<FillBuildPreview>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -668,7 +689,7 @@ pub struct FillProgressSummary {
 }
 
 /// 🪪️ `objectId:vortexId`, unless the vortex id already carries its owner's prefix.
-pub(crate) async fn puzzle3d_vortex_full_id(object_id: &str, vortex_id: &str) -> String {
+pub(crate) fn puzzle3d_vortex_full_id(object_id: &str, vortex_id: &str) -> String {
     if vortex_id.contains(':') {
         vortex_id.to_string()
     } else {

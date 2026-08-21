@@ -102,21 +102,69 @@ fn key_action_from_event(event: &KeyEvent) -> Option<KeyAction> {
 }
 
 //#region 🔖️ClipboardHost
-/** 📋️ OS clipboard write for `events::UiCommand::ClipboardCopy`/`ClipboardCut` — a caller (e.g.
- * `framework/renderer/wgpu`'s `interpreter::apply_ui_commands`) hands over the already-computed
- * copied/cut `text` and this fn is the ONLY thing in either engine that touches a real clipboard
- * backend, matching this crate's "wrap external libraries behind an interface, never leak the
- * library's own types past it" convention. Native wraps `arboard::Clipboard::set_text` (silently
- * no-ops without a display/clipboard, e.g. headless CI — `Clipboard::new()`'s `Err` is swallowed
- * rather than propagated, since there is no sensible way for a UI copy gesture to surface a clipboard
- * backend failure back through this call chain). Wasm fires the async Clipboard API's `writeText`
- * without awaiting it: the underlying `Promise` already starts executing the instant it's created, so
- * not awaiting it just means this fn doesn't itself learn whether the write ultimately succeeded —
- * exactly like a browser's own Ctrl+C, which never blocks the UI thread on the OS clipboard settling. */
 #[cfg(not(target_arch = "wasm32"))]
-pub async fn clipboard_write_text(text: &str) {
-    if let Ok(mut clipboard) = arboard::Clipboard::new() {
-        let _ = clipboard.set_text(text.to_string());
+enum ClipboardIoOperation {
+    Read,
+    Write(String),
+}
+
+/// 📋️ Worker-owned native clipboard operation. Hosts submit it to the process `WorkerPool`
+/// I/O lane and poll the returned receiver; no event callback executes or waits for `arboard`.
+#[cfg(not(target_arch = "wasm32"))]
+pub struct ClipboardIoJob {
+    operation: Option<ClipboardIoOperation>,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl ClipboardIoJob {
+    pub fn read() -> Self {
+        Self { operation: Some(ClipboardIoOperation::Read) }
+    }
+
+    pub fn write(text: String) -> Self {
+        Self { operation: Some(ClipboardIoOperation::Write(text)) }
+    }
+
+    /// 📥️ Decodes a successful read candidate. Write candidates and empty clipboards return
+    /// `None`; cancellation/fault/yield are not terminal results and also return `None`.
+    pub fn read_candidate(outcome: &semio_framework_job::StepOutcome) -> Option<String> {
+        let semio_framework_job::StepOutcome::Complete(candidate) = outcome else { return None };
+        let (&present, bytes) = candidate.output.split_first()?;
+        (present == 1).then(|| String::from_utf8(bytes.to_vec()).ok()).flatten()
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl semio_framework_job::InteractiveJob for ClipboardIoJob {
+    fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
+        if cx.is_cancelled() {
+            return semio_framework_job::StepOutcome::Cancelled;
+        }
+        if cx.should_yield() {
+            return semio_framework_job::StepOutcome::Yield;
+        }
+        cx.set_stage("ClipboardIo");
+        use arboard as system_clipboard;
+        let output = match self.operation.take() {
+            Some(ClipboardIoOperation::Read) => system_clipboard::Clipboard::new().ok().and_then(|mut clipboard| clipboard.get_text().ok()).map_or_else(
+                || vec![0],
+                |text| {
+                    let mut output = Vec::with_capacity(text.len() + 1);
+                    output.push(1);
+                    output.extend_from_slice(text.as_bytes());
+                    output
+                },
+            ),
+            Some(ClipboardIoOperation::Write(text)) => {
+                if let Ok(mut clipboard) = system_clipboard::Clipboard::new() {
+                    let _ = clipboard.set_text(text);
+                }
+                Vec::new()
+            }
+            None => Vec::new(),
+        };
+        cx.consume_fuel(1);
+        semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate { state: Vec::new(), output })
     }
 }
 
@@ -125,16 +173,6 @@ pub async fn clipboard_write_text(text: &str) {
     if let Some(window) = web_sys::window() {
         let _ = window.navigator().clipboard().write_text(text);
     }
-}
-
-/** 📋️ Blocking OS clipboard read for `events::UiCommand::ClipboardPasteRequested` — native only:
- * `arboard::Clipboard::get_text` is itself synchronous, so a caller can read the OS clipboard and
- * feed the result straight back into `engine::Ui::dispatch_event` as a `events::UiEvent::Paste`
- * within the very same call. `None` on any failure (no clipboard backend, or the clipboard doesn't
- * currently hold text) — a caller treats that identically to "user pasted nothing". */
-#[cfg(not(target_arch = "wasm32"))]
-pub async fn clipboard_read_text() -> Option<String> {
-    arboard::Clipboard::new().ok()?.get_text().ok()
 }
 
 /** 📋️ The wasm mirror of `clipboard_read_text` above — `async` because the browser's Clipboard API

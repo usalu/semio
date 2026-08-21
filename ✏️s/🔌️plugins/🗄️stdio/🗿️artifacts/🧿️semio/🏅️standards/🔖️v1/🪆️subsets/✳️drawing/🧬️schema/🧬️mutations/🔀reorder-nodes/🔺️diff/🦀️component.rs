@@ -16,7 +16,10 @@ pub fn diff(payload: &ReorderNodes, base: &SemioDrawingSnapshot) -> protocol::Mu
                 return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Node #{} in layer #{} is already at position #{}.", payload.from, payload.parent.layer, payload.to));
             }
             let item = children[payload.from].clone();
-            protocol::MutationOutcome::new(diff_at_path(&payload.parent, DrawNodeDiff::Group(DrawGroupDiff { transform: None, children: Some(IndexedTripleDiff { removed: vec![payload.from], modified: Vec::new(), added: vec![IndexAdded { index: payload.to, item }] }) })))
+            protocol::MutationOutcome::new(diff_at_path(
+                &payload.parent,
+                DrawNodeDiff::Group(DrawGroupDiff { transform: None, children: Some(IndexedTripleDiff { removed: vec![payload.from], modified: Vec::new(), added: vec![IndexAdded { index: payload.to, item }] }) }),
+            ))
         }
         _ => protocol::MutationOutcome::error("mutation.target-missing", format!("Parent at layer #{} does not resolve to a group, or index #{} is out of range.", payload.parent.layer, payload.from), [payload.parent.layer.to_string()]),
     }

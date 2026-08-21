@@ -65,7 +65,7 @@ pub struct DehumidifierOutput {
 
 // #region 🔖️HumidifierOutput
 /// 💦️ Humidifier moisture addition rate [kg/s].
-pub async fn humidifier_output_kg_s(humidifier: &Humidifier, inlet: &HumidifierInlet) -> HumidifierOutput {
+pub fn humidifier_output_kg_s(humidifier: &Humidifier, inlet: &HumidifierInlet) -> HumidifierOutput {
     let m_dot = inlet.mass_flow_kg_s.max(0.0);
     if m_dot < 1e-9 || inlet.humidity_ratio >= inlet.target_humidity_ratio {
         return HumidifierOutput { humidity_ratio: inlet.humidity_ratio, water_added_kg_s: 0.0, power_w: 0.0, gas_consumption_w: 0.0 };
@@ -102,7 +102,7 @@ pub async fn humidifier_output_kg_s(humidifier: &Humidifier, inlet: &HumidifierI
 
 // #region 🔖️DehumidifierOutput
 /// 🌬️ Dehumidifier moisture removal rate [kg/s].
-pub async fn dehumidifier_output_kg_s(dehumidifier: &Dehumidifier, inlet: &DehumidifierInlet) -> DehumidifierOutput {
+pub fn dehumidifier_output_kg_s(dehumidifier: &Dehumidifier, inlet: &DehumidifierInlet) -> DehumidifierOutput {
     let m_dot = inlet.mass_flow_kg_s.max(0.0);
     if m_dot < 1e-9 || inlet.humidity_ratio <= inlet.target_humidity_ratio {
         return DehumidifierOutput { humidity_ratio: inlet.humidity_ratio, moisture_removed_kg_s: 0.0, latent_cooling_w: 0.0, power_w: 0.0 };
@@ -131,7 +131,7 @@ pub async fn dehumidifier_output_kg_s(dehumidifier: &Dehumidifier, inlet: &Dehum
     }
 }
 
-async fn saturation_humidity_ratio(t_c: f64, p_atm: f64) -> f64 {
+fn saturation_humidity_ratio(t_c: f64, p_atm: f64) -> f64 {
     let p_ws = saturation_pressure_pa(t_c);
     0.621_945 * p_ws / (p_atm - p_ws).max(1.0)
 }
@@ -143,7 +143,7 @@ mod tests {
     use crate::units::P_STD;
 
     #[semio_framework_async_macros::async_test]
-    async fn steam_humidifier_adds_moisture() {
+    fn steam_humidifier_adds_moisture() {
         let hum = Humidifier::SteamElectric { capacity_kg_s: 0.01, efficiency: 0.95 };
         let inlet = HumidifierInlet { dry_bulb_c: 20.0, humidity_ratio: 0.005, mass_flow_kg_s: 0.5, target_humidity_ratio: 0.009, pressure_pa: P_STD };
         let out = humidifier_output_kg_s(&hum, &inlet);
@@ -153,7 +153,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn refrigerant_dehumidifier_removes_moisture() {
+    fn refrigerant_dehumidifier_removes_moisture() {
         let dehum = Dehumidifier::Refrigerant { cop: 2.5, capacity_kg_s: 0.005 };
         let inlet = DehumidifierInlet { dry_bulb_c: 26.0, humidity_ratio: 0.014, mass_flow_kg_s: 0.6, target_humidity_ratio: 0.009, pressure_pa: P_STD };
         let out = dehumidifier_output_kg_s(&dehum, &inlet);
@@ -162,7 +162,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn at_target_no_humidification() {
+    fn at_target_no_humidification() {
         let hum = Humidifier::SteamElectric { capacity_kg_s: 0.01, efficiency: 1.0 };
         let inlet = HumidifierInlet { dry_bulb_c: 22.0, humidity_ratio: 0.01, mass_flow_kg_s: 0.5, target_humidity_ratio: 0.009, pressure_pa: P_STD };
         let out = humidifier_output_kg_s(&hum, &inlet);

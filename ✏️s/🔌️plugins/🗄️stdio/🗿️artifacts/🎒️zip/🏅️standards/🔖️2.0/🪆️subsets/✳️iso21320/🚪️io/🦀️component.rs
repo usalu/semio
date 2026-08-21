@@ -41,9 +41,7 @@ pub mod derived_composition {
                     None
                 }
             }
-            IoPayload::Text(text) => <ZipSnapshot as store::ArtifactDsl>::parse_dsl(text)
-                .ok()
-                .and_then(|snapshot| semio_framework_plugin::resolve_ready(crate::artifacts::zip::standards::v2_0::subsets::any::io::encode_zip(&snapshot)).ok()),
+            IoPayload::Text(text) => <ZipSnapshot as store::ArtifactDsl>::parse_dsl(text).ok().and_then(|snapshot| crate::artifacts::zip::standards::v2_0::subsets::any::io::encode_zip(&snapshot).ok()),
         }
     }
     //#endregion 🔖️Normalize
@@ -128,8 +126,8 @@ pub mod derived_composition {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::artifacts::zip::standards::v2_0::subsets::iso21320::schema::{check_iso21320_wire_conformance, CODE_ENCRYPTED, FLAG_ENCRYPTED};
         use crate::artifacts::zip::standards::v2_0::subsets::iso21320::schema::ZipIso21320BuilderConstruction as ZipIso21320Builder;
+        use crate::artifacts::zip::standards::v2_0::subsets::iso21320::schema::{check_iso21320_wire_conformance, CODE_ENCRYPTED, FLAG_ENCRYPTED};
         use semio_framework_plugin::AnalyzeSource;
         use semio_framework_plugin::ArtifactBuilder as _;
 

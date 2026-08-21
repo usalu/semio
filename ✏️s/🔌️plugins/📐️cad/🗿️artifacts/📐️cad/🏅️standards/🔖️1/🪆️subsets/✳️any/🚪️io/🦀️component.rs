@@ -296,7 +296,7 @@ use semio_s_plugin_stdio::artifacts::obj::standards::v3_0::engine::encode_obj;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::io::export::serializers::artifacts::step::v_ap214::any::SemioBrepToStep;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::io::import::deserializers::artifacts::step::v_ap214::any::SemioBrepFromStep;
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{block_on, Brep, BrepKernel, GeometryHandle};
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{Brep, BrepKernel, GeometryHandle};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 #[cfg(test)]
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::io::export::serializers::artifacts::gltf::v2_0::any::SemioMeshToGltf;
@@ -353,7 +353,7 @@ async fn cad_solid_export_mime_type(dialect_id: &str) -> Option<&'static str> {
 async fn semio_mesh_snapshot_from_solids(kernel: &mut Brep, solids: &[GeometryHandle], deflection: f64) -> Option<SemioMeshSnapshot> {
     let mut meshes = Vec::new();
     for (index, handle) in solids.iter().enumerate() {
-        let Ok(transfer) = block_on(kernel.tessellate(handle, deflection)) else { continue };
+        let Ok(transfer) = kernel.tessellate(handle, deflection) else { continue };
         if transfer.index.is_empty() || transfer.position.is_empty() {
             continue;
         }
@@ -454,7 +454,7 @@ pub async fn export_solids_as(kernel: &mut Brep, solids: &[GeometryHandle], form
             Some(CadSolidExport { filename, data: Value::String(encoded), mime_type, encoding: Some("base64".into()) })
         }
         CAD_SOLID_EXPORT_DIALECT_STEP => {
-            let kernel_text = block_on(kernel.export_step(solids)).ok()?;
+            let kernel_text = kernel.export_step(solids).ok()?;
             let brep_snapshot = semio_brep_snapshot_from_step_text(&kernel_text)?;
             let text = step_text_from_semio_brep_snapshot(&brep_snapshot)?;
             Some(CadSolidExport { filename, data: Value::String(text), mime_type, encoding: None })
@@ -493,7 +493,7 @@ pub async fn cad_file_text_from_payload(payload: &Value) -> Option<String> {
 /// child is the caller's job (a `create`/`change` mutation dispatched against that CHILD document).
 pub async fn import_step_object(text: &str) -> Option<semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::model::schema::snapshot::SemioModelElement> {
     let mut kernel = crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::cad_brep_kernel();
-    let handle = block_on(kernel.import_step(text)).ok()?.into_iter().next()?;
+    let handle = kernel.import_step(text).ok()?.into_iter().next()?;
     Some(model_element_from_solid_handle(crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::next_cad_id("object-step"), handle))
 }
 
@@ -501,14 +501,14 @@ pub async fn import_step_object(text: &str) -> Option<semio_s_plugin_stdio::arti
 /// `import_step_object`'s doc comment for the returned shape's rationale.
 pub async fn import_obj_object(text: &str) -> Option<semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::model::schema::snapshot::SemioModelElement> {
     let mut kernel = crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::cad_brep_kernel();
-    let handle = block_on(kernel.import_obj(text, 0.01)).ok()?;
+    let handle = kernel.import_obj(text, 0.01).ok()?;
     Some(model_element_from_solid_handle(crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::next_cad_id("object-obj"), handle))
 }
 
 /// @emoji 🧊️ Imports an STL payload into the shared kernel as a new `SemioModelElement`.
 pub async fn import_stl_object(bytes: &[u8]) -> Option<semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::model::schema::snapshot::SemioModelElement> {
     let mut kernel = crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::cad_brep_kernel();
-    let handle = block_on(kernel.import_stl(bytes, 0.01)).ok()?;
+    let handle = kernel.import_stl(bytes, 0.01).ok()?;
     Some(model_element_from_solid_handle(crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::next_cad_id("object-stl"), handle))
 }
 
@@ -518,13 +518,13 @@ pub async fn import_stl_object(bytes: &[u8]) -> Option<semio_s_plugin_stdio::art
 pub async fn import_glb_object(bytes: &[u8]) -> Option<semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::model::schema::snapshot::SemioModelElement> {
     let mesh = semio_framework_plugin::GlbImporter.import(bytes).ok()?;
     let mut kernel = crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::cad_brep_kernel();
-    let handle_id = mesh_to_obj_text_for_import(&mesh).and_then(|text| block_on(kernel.import_obj(&text, 0.01)).ok())?;
+    let handle_id = mesh_to_obj_text_for_import(&mesh).and_then(|text| kernel.import_obj(&text, 0.01).ok())?;
     Some(model_element_from_solid_handle(crate::artifacts::cad::standards::v1::subsets::any::schema::inferences::next_cad_id("object-glb"), handle_id))
 }
 
 /// 🌉️ Builds a `SemioModelElement` from a live kernel solid handle — id, identity placement, and a
 /// `GeometryRef::Brep{brep_id}` naming the handle. Shared by every native-geometry import path.
-async fn model_element_from_solid_handle(id: String, handle: GeometryHandle) -> semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::model::schema::snapshot::SemioModelElement {
+fn model_element_from_solid_handle(id: String, handle: GeometryHandle) -> semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::model::schema::snapshot::SemioModelElement {
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioTransform;
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::model::schema::snapshot::{ElementClass, GeometryRef, SemioModelElement};
     SemioModelElement { id, class: ElementClass::Other { name: "spatial.shape.imported".into() }, placement: SemioTransform::identity(), geometry: GeometryRef::Brep { brep_id: handle.0 }, spatial_id: None, psets: Vec::new() }
@@ -533,13 +533,13 @@ async fn model_element_from_solid_handle(id: String, handle: GeometryHandle) -> 
 /// 🌉️ Same OBJ-text bridge `cad_object_from_mesh` used before this wave's rewrite (reused, not
 /// reimplemented) — factored out so `import_glb_object` can mint a kernel handle without going
 /// through the geometry-import module's now-`pub(crate)`-only `CadObject`.
-async fn mesh_to_obj_text_for_import(mesh: &semio_framework_plugin::MeshData) -> Option<String> {
+fn mesh_to_obj_text_for_import(mesh: &semio_framework_plugin::MeshData) -> Option<String> {
     let snapshot = semio_mesh_snapshot_from_solids_placeholder(mesh)?;
     let obj_snapshot = semio_framework_plugin::resolve_ready(SemioMeshToObj::serialize(&snapshot)).ok()?;
     Some(encode_obj(&obj_snapshot))
 }
 
-async fn semio_mesh_snapshot_from_solids_placeholder(mesh: &semio_framework_plugin::MeshData) -> Option<SemioMeshSnapshot> {
+fn semio_mesh_snapshot_from_solids_placeholder(mesh: &semio_framework_plugin::MeshData) -> Option<SemioMeshSnapshot> {
     if mesh.indices.is_empty() || mesh.indices.len() % 3 != 0 || mesh.positions.is_empty() {
         return None;
     }
@@ -728,7 +728,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn export_solids_as_obj_uses_real_stdio_mesh_codec_not_hand_rolled_bytes() {
         let mut kernel = Brep::new();
-        let solid = block_on(kernel.box_prim(1.0, 1.0, 1.0)).expect("box");
+        let solid = kernel.box_prim(1.0, 1.0, 1.0).expect("box");
         let export = export_solids_as(&mut kernel, std::slice::from_ref(&solid), CAD_SOLID_EXPORT_DIALECT_OBJ, "box").expect("obj export");
         let Value::String(text) = export.data else { panic!("expected text data") };
         let vertex_lines = text.lines().filter(|l| l.starts_with("v ")).count();
@@ -742,7 +742,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn export_solids_as_stl_uses_real_stdio_mesh_codec() {
         let mut kernel = Brep::new();
-        let solid = block_on(kernel.box_prim(1.0, 1.0, 1.0)).expect("box");
+        let solid = kernel.box_prim(1.0, 1.0, 1.0).expect("box");
         let export = export_solids_as(&mut kernel, std::slice::from_ref(&solid), CAD_SOLID_EXPORT_DIALECT_STL, "box").expect("stl export");
         let Value::String(encoded) = export.data else { panic!("expected base64 text data") };
         assert_eq!(export.encoding.as_deref(), Some("base64"));
@@ -756,8 +756,8 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn export_solids_as_obj_none_for_a_solid_that_fails_to_tessellate() {
         let mut kernel = Brep::new();
-        let solid = block_on(kernel.box_prim(1.0, 1.0, 1.0)).expect("box");
-        block_on(kernel.dispose(&solid));
+        let solid = kernel.box_prim(1.0, 1.0, 1.0).expect("box");
+        let _ = kernel.dispose(&solid);
         assert!(export_solids_as(&mut kernel, std::slice::from_ref(&solid), CAD_SOLID_EXPORT_DIALECT_OBJ, "gone").is_none());
     }
     //#endregion 🔖️SemioMeshBridge
@@ -766,11 +766,11 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn export_solids_as_step_round_trips_through_real_semio_brep_bridge() {
         let mut kernel = Brep::new();
-        let solid = block_on(kernel.box_prim(2.0, 3.0, 4.0)).expect("box");
-        let original_volume = block_on(kernel.volume(&solid)).expect("volume");
+        let solid = kernel.box_prim(2.0, 3.0, 4.0).expect("box");
+        let original_volume = kernel.volume(&solid).expect("volume");
         assert!((original_volume - 24.0).abs() < 1e-6, "box volume sanity: {original_volume}");
 
-        let kernel_text = block_on(kernel.export_step(std::slice::from_ref(&solid))).expect("kernel step export");
+        let kernel_text = kernel.export_step(std::slice::from_ref(&solid)).expect("kernel step export");
         let original_brep = semio_brep_snapshot_from_step_text(&kernel_text).expect("semio/brep from kernel step");
 
         let export = export_solids_as(&mut kernel, std::slice::from_ref(&solid), CAD_SOLID_EXPORT_DIALECT_STEP, "box").expect("step export");
@@ -828,8 +828,8 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn semio_brep_snapshot_from_step_text_carries_real_topology() {
         let mut kernel = Brep::new();
-        let solid = block_on(kernel.box_prim(1.0, 1.0, 1.0)).expect("box");
-        let step_text = block_on(kernel.export_step(std::slice::from_ref(&solid))).expect("kernel step export");
+        let solid = kernel.box_prim(1.0, 1.0, 1.0).expect("box");
+        let step_text = kernel.export_step(std::slice::from_ref(&solid)).expect("kernel step export");
         let brep = semio_brep_snapshot_from_step_text(&step_text).expect("semio/brep from step");
         assert!(!brep.solids.is_empty(), "expected at least one real BrepSolid");
         assert!(!brep.faces.is_empty(), "expected real BrepFaces, not an empty shell");

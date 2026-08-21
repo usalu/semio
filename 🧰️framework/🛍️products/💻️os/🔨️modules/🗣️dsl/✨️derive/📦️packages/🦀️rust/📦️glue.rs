@@ -1123,7 +1123,7 @@ pub fn derive_mutations(input: TokenStream) -> TokenStream {
                     ::semio_framework_os_kernel::SchemaVersion(1),
                     ::semio_framework_os_kernel::StateClass::Artifact,
                 )
-                
+
                 .with_semantics(&<#payload_ty as ::semio_framework_os_kernel::MutationKind<#snapshot_ty, #name>>::SEMANTICS)
                 ,
             )

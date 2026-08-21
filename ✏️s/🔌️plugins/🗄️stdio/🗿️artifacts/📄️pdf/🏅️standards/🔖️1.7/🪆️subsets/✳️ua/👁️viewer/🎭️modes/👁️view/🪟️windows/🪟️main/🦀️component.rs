@@ -5,10 +5,11 @@
 //! `PdfPage` itself (populated by ToUnicode-aware content-stream extraction on decode, or authored
 //! directly on a fresh page), never a placeholder invented by this window.
 
-use crate::artifacts::pdf::PdfSnapshot;
 use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::PdfPage;
-use semio_framework_plugin::app::{DocumentPage, DocumentView, DocumentWindowKit, WindowKit};
-use semio_framework_plugin::{LocalizedLabel, UiNode, WindowKindDefinition};
+use crate::artifacts::pdf::PdfSnapshot;
+use semio_framework_plugin::app::{DocumentWindowKit, WindowKit};
+use semio_framework_plugin::{LocalizedLabel, WindowKindDefinition};
+use semio_framework_ui_contract::{Buildable, BuiltNode, HasBase, HasChildren};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = DocumentWindowKit::KIND_ID;
@@ -24,7 +25,7 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-/// 👁️ Pure `PdfSnapshot -> UiNode` read: one summary line per page, no mutation.
+/// 👁️ Pure `PdfSnapshot -> BuiltNode` read: one summary line per page, no mutation.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn page_summary(index: usize, page: &PdfPage) -> String {
     let media = page.media_box;
@@ -34,9 +35,9 @@ fn page_summary(index: usize, page: &PdfPage) -> String {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &PdfSnapshot) -> UiNode {
-    let pages = document.pages.iter().enumerate().map(|(index, page)| DocumentPage { text: page_summary(index, page) }).collect();
-    DocumentWindowKit::render(&DocumentView { pages })
+pub fn render(document: &PdfSnapshot) -> BuiltNode {
+    let pages = document.pages.iter().enumerate().map(|(index, page)| semio_framework_ui_contract::text(page_summary(index, page)).id(format!("page-{index}")).build());
+    semio_framework_ui_contract::column().id(BODY_KEY).children(pages).build()
 }
 //#endregion 🔖️Render
 
@@ -46,21 +47,21 @@ mod tests {
     use super::*;
     use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::demo_pdf17_snapshot;
 
-    #[semio_framework_async_macros::async_test]
-    async fn definition_declares_a_document_window() {
+    #[test]
+    fn definition_declares_a_document_window() {
         let def = definition();
         assert_eq!(def.id, WINDOW_KIND_ID);
         assert_eq!(def.body_key, BODY_KEY);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn render_lists_one_line_per_page_with_media_box_and_text() {
+    #[test]
+    fn render_lists_one_line_per_page_with_media_box_and_text() {
         let document = demo_pdf17_snapshot();
         assert_eq!(document.pages.len(), 1);
-        let UiNode::Stack(node) = render(&document) else { panic!("expected Stack") };
+        let node = render(&document);
         assert_eq!(node.children.len(), 1);
-        let UiNode::Text(text_node) = &node.children[0] else { panic!("expected Text") };
-        assert!(text_node.value.as_str().contains("MediaBox"));
+        let semio_framework_ui_contract::Component::Text(text_node) = &node.children[0].component else { panic!("expected Text") };
+        assert!(text_node.value.0.contains("MediaBox"));
     }
 }
 //#endregion 🧪️Tests

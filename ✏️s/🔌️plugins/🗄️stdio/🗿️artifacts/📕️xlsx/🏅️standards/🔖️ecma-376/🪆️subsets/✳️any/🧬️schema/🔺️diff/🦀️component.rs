@@ -1530,7 +1530,7 @@ pub(crate) fn dec_cell_value_bin(reader: &mut store::ByteReader<'_>) -> Result<X
         3 => Ok(XlsxCellValue::Boolean(reader.read_u8().map_err(|e| e.to_string())? != 0)),
         4 => {
             let expr = read_str_lp(reader)?;
-            let cached = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(Box::new(Box::pin(dec_cell_value_bin(reader))?)) } else { None };
+            let cached = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(Box::new(dec_cell_value_bin(reader)?)) } else { None };
             Ok(XlsxCellValue::Formula { expr, cached })
         }
         5 => Ok(XlsxCellValue::Empty),
@@ -1697,7 +1697,7 @@ fn enc_shared_strings_diff_bin(d: &XlsxSharedStringsDiff, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_shared_strings_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxSharedStringsDiff, String> {
-    dec_named_triple_bin(reader, |r| Ok(semio_framework_plugin::resolve_ready(r.read_varint_u64()).map_err(|e| e.to_string())? as usize), |r| read_str_lp(r), dec_shared_string_item_bin)
+    dec_named_triple_bin(reader, |r| Ok(r.read_varint_u64().map_err(|e| e.to_string())? as usize), |r| read_str_lp(r), dec_shared_string_item_bin)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -1907,8 +1907,8 @@ impl protocol::DiffCodec for XlsxDiff {
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
         let _format = reader.read_u8().map_err(|e| malformed("diff format", 0, e.to_string()))?;
         let flags = reader.read_u8().map_err(|e| malformed("diff flags", 1, e.to_string()))?;
-        let opc = if flags & 0b01 != 0 { Some(dec_opc_diff_bin(&mut reader).map_err(|e| malformed("diff opc", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
-        let workbook = if flags & 0b10 != 0 { Some(dec_workbook_diff_bin(&mut reader).map_err(|e| malformed("diff workbook", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
+        let opc = if flags & 0b01 != 0 { Some(dec_opc_diff_bin(&mut reader).map_err(|e| malformed("diff opc", reader.position(), e))?) } else { None };
+        let workbook = if flags & 0b10 != 0 { Some(dec_workbook_diff_bin(&mut reader).map_err(|e| malformed("diff workbook", reader.position(), e))?) } else { None };
         Ok(XlsxDiff { opc, workbook })
     }
 }

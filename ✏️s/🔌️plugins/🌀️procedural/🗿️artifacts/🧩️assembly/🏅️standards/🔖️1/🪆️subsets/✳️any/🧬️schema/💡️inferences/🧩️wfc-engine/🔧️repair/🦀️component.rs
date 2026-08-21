@@ -17,7 +17,7 @@ use crate::wfc_engine::topology::Topology;
 /// 🩹️ Every node within `radius` relation-hops of any node in `centers` (inclusive of the centers
 /// themselves), found via breadth-first search over `adjacency`. `radius = 0` returns exactly
 /// `centers` (deduplicated).
-pub(crate) async fn halo(adjacency: &AdjacencyView, centers: &[NodeId], radius: usize) -> Vec<NodeId> {
+pub(crate) fn halo(adjacency: &AdjacencyView, centers: &[NodeId], radius: usize) -> Vec<NodeId> {
     let mut visited = vec![false; adjacency.node_count()];
     let mut frontier: Vec<NodeId> = Vec::new();
     for &c in centers {
@@ -57,7 +57,7 @@ pub(crate) async fn halo(adjacency: &AdjacencyView, centers: &[NodeId], radius: 
 /// `previous_assignment` must have one entry per node (as produced by a prior `Solved` outcome on
 /// this same model/topology).
 #[allow(clippy::too_many_arguments)]
-pub(crate) async fn repair_region<T: Topology>(model: &CompiledModel, topo: &T, adjacency: &AdjacencyView, previous_assignment: &[PatternId], centers: &[NodeId], radius: usize, config: &SearchConfig, seed: u64) -> SolveOutcome {
+pub(crate) fn repair_region<T: Topology>(model: &CompiledModel, topo: &T, adjacency: &AdjacencyView, previous_assignment: &[PatternId], centers: &[NodeId], radius: usize, config: &SearchConfig, seed: u64) -> SolveOutcome {
     let region = halo(adjacency, centers, radius);
     let mut in_region = vec![false; adjacency.node_count()];
     for &n in &region {
@@ -74,7 +74,7 @@ mod tests {
     use super::*;
     use crate::wfc_engine::ids::RegionId;
 
-    async fn line_adjacency(n: usize) -> AdjacencyView {
+    fn line_adjacency(n: usize) -> AdjacencyView {
         let mut neighbors = vec![Vec::new(); n];
         for i in 0..n.saturating_sub(1) {
             neighbors[i].push(NodeId::from_index(i + 1));
@@ -83,16 +83,16 @@ mod tests {
         AdjacencyView::new(neighbors, vec![RegionId(0); n])
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn halo_radius_zero_is_just_the_centers() {
+    #[test]
+    fn halo_radius_zero_is_just_the_centers() {
         let adj = line_adjacency(5);
         let mut h = halo(&adj, &[NodeId(2)], 0);
         h.sort();
         assert_eq!(h, vec![NodeId(2)]);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn halo_expands_by_relation_hops_and_stays_in_bounds() {
+    #[test]
+    fn halo_expands_by_relation_hops_and_stays_in_bounds() {
         let adj = line_adjacency(5);
         let mut h = halo(&adj, &[NodeId(2)], 1);
         h.sort();
@@ -105,16 +105,16 @@ mod tests {
         assert_eq!(whole, (0..5).map(NodeId::from_index).collect::<Vec<_>>());
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn halo_from_multiple_centers_unions_their_neighborhoods() {
+    #[test]
+    fn halo_from_multiple_centers_unions_their_neighborhoods() {
         let adj = line_adjacency(7);
         let mut h = halo(&adj, &[NodeId(0), NodeId(6)], 1);
         h.sort();
         assert_eq!(h, vec![NodeId(0), NodeId(1), NodeId(5), NodeId(6)]);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn repair_region_reproduces_a_solved_checkerboard_when_reopened_around_one_node() {
+    #[test]
+    fn repair_region_reproduces_a_solved_checkerboard_when_reopened_around_one_node() {
         use crate::wfc_engine::model::ModelBuilder;
         use crate::wfc_engine::oracle;
         use crate::wfc_engine::topology::GraphTopologyBuilder;
@@ -159,8 +159,8 @@ mod tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn repair_region_with_radius_zero_pins_everything_and_reproduces_the_input_exactly() {
+    #[test]
+    fn repair_region_with_radius_zero_pins_everything_and_reproduces_the_input_exactly() {
         use crate::wfc_engine::model::ModelBuilder;
         use crate::wfc_engine::topology::GraphTopologyBuilder;
 

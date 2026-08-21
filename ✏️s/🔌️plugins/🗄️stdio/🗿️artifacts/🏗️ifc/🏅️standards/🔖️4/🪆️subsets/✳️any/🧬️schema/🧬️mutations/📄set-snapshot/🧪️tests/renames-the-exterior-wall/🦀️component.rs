@@ -42,7 +42,11 @@ async fn applies_to_committed_after() {
     let outcome = apply_ifc_mutation(&mut snapshot, &mutation());
     assert!(outcome.messages().is_empty(), "set-snapshot/renames-the-exterior-wall: set-snapshot raised diagnostics it should not have");
     assert_eq!(snapshot, expected_after(), "set-snapshot/renames-the-exterior-wall: applied state differs from committed after-snapshot");
-    assert_eq!(snapshot.entities[0].args[2], crate::artifacts::ifc::standards::v4::subsets::any::schema::snapshot::IfcValue::String("Exterior Wall".into()), "set-snapshot/renames-the-exterior-wall: the wall's Name attribute must land on 'Exterior Wall'");
+    assert_eq!(
+        snapshot.entities[0].args[2],
+        crate::artifacts::ifc::standards::v4::subsets::any::schema::snapshot::IfcValue::String("Exterior Wall".into()),
+        "set-snapshot/renames-the-exterior-wall: the wall's Name attribute must land on 'Exterior Wall'"
+    );
     assert_eq!(snapshot.entities[0].name, "IFCWALL", "set-snapshot/renames-the-exterior-wall: the EXPRESS entity keyword is untouched");
     assert!(matches!(snapshot.entities[0].args[1], crate::artifacts::ifc::standards::v4::subsets::any::schema::snapshot::IfcValue::Unset), "set-snapshot/renames-the-exterior-wall: the OwnerHistory attribute stays the Part-21 unset marker");
     assert_eq!(snapshot.entities[1], before().entities[1], "set-snapshot/renames-the-exterior-wall: the IFCPROJECT instance is identical on both sides and must survive untouched");
@@ -87,11 +91,8 @@ async fn committed_json_is_canonical() {
 async fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
     let status = outcome.get("status").and_then(serde_json::Value::as_str).expect("outcome carries a status");
-    let declared: Vec<(String, String)> = outcome
-        .get("messages")
-        .and_then(serde_json::Value::as_array)
-        .map(|rows| rows.iter().map(|row| (row["level"].as_str().unwrap_or_default().to_string(), row["code"].as_str().unwrap_or_default().to_string())).collect())
-        .unwrap_or_default();
+    let declared: Vec<(String, String)> =
+        outcome.get("messages").and_then(serde_json::Value::as_array).map(|rows| rows.iter().map(|row| (row["level"].as_str().unwrap_or_default().to_string(), row["code"].as_str().unwrap_or_default().to_string())).collect()).unwrap_or_default();
     let raised = <IfcMutation as protocol::Mutation<IfcSnapshot>>::diff(&mutation(), &before());
     let produced: Vec<(String, String)> = raised
         .messages()
@@ -121,7 +122,10 @@ async fn produces_committed_diff() {
     let produced = serde_json::to_value(raised.diff()).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "set-snapshot/renames-the-exterior-wall: produced diff differs from the committed 🔺️diff/🔣️component.json");
-    assert!(raised.diff().file_description.is_none() && raised.diff().file_name.is_none() && raised.diff().file_schema.is_none(), "set-snapshot/renames-the-exterior-wall: the three HEADER slots are independent whole-tuple replacements and must stay absent here");
+    assert!(
+        raised.diff().file_description.is_none() && raised.diff().file_name.is_none() && raised.diff().file_schema.is_none(),
+        "set-snapshot/renames-the-exterior-wall: the three HEADER slots are independent whole-tuple replacements and must stay absent here"
+    );
     let entities = raised.diff().entities.as_ref().expect("set-snapshot/renames-the-exterior-wall: the entities triple must be present");
     assert!(entities.removed.is_empty() && entities.added.is_empty(), "set-snapshot/renames-the-exterior-wall: renaming a wall never adds or removes an instance");
     assert_eq!(entities.modified[0].id, 1, "set-snapshot/renames-the-exterior-wall: IfcEntityModified is keyed by the #N instance id");
@@ -138,7 +142,11 @@ async fn committed_diff_is_canonical() {
     let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "set-snapshot/renames-the-exterior-wall: committed diff JSON is not canonical");
-    assert_eq!(serde_json::from_str::<serde_json::Value>(DIFF).expect("diff reparses").pointer("/entities/modified/0/diff/args/modified/0/value/kind").and_then(serde_json::Value::as_str), Some("string"), "set-snapshot/renames-the-exterior-wall: IfcValue is adjacently tagged, so the committed argument carries a separate kind/value pair — step's externally tagged spelling would be wrong here");
+    assert_eq!(
+        serde_json::from_str::<serde_json::Value>(DIFF).expect("diff reparses").pointer("/entities/modified/0/diff/args/modified/0/value/kind").and_then(serde_json::Value::as_str),
+        Some("string"),
+        "set-snapshot/renames-the-exterior-wall: IfcValue is adjacently tagged, so the committed argument carries a separate kind/value pair — step's externally tagged spelling would be wrong here"
+    );
 }
 
 /// 🩹 Applying the committed diff directly to `before` yields the committed `after` — the diff is

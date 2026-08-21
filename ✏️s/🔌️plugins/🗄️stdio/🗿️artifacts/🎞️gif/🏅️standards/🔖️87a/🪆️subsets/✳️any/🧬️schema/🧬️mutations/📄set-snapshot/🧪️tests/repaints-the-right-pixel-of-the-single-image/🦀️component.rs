@@ -46,7 +46,11 @@ async fn applies_to_committed_after() {
     assert_eq!(snapshot.gct, before().gct, "set-snapshot/repaints-the-right-pixel-of-the-single-image: the global colour table is identical on both sides and must survive untouched");
     assert_eq!(snapshot.images[0].width, 2, "set-snapshot/repaints-the-right-pixel-of-the-single-image: the image rectangle does not move");
     assert!(snapshot.images[0].lct.is_none(), "set-snapshot/repaints-the-right-pixel-of-the-single-image: this image has no local colour table on either side");
-    assert_eq!(snapshot.images[0].rgba(snapshot.gct.as_ref()), vec![0u8, 0, 0, 255, 255, 255, 255, 255], "set-snapshot/repaints-the-right-pixel-of-the-single-image: the derived RGBA view must show black then white — 87a has no transparency, so every pixel stays fully opaque");
+    assert_eq!(
+        snapshot.images[0].rgba(snapshot.gct.as_ref()),
+        vec![0u8, 0, 0, 255, 255, 255, 255, 255],
+        "set-snapshot/repaints-the-right-pixel-of-the-single-image: the derived RGBA view must show black then white — 87a has no transparency, so every pixel stays fully opaque"
+    );
 }
 
 /// ↩️ `set-snapshot`'s inverse is a single `SetSnapshot` carrying the pre-state GifSnapshot back, so
@@ -87,11 +91,8 @@ async fn committed_json_is_canonical() {
 async fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
     let status = outcome.get("status").and_then(serde_json::Value::as_str).expect("outcome carries a status");
-    let declared: Vec<(String, String)> = outcome
-        .get("messages")
-        .and_then(serde_json::Value::as_array)
-        .map(|rows| rows.iter().map(|row| (row["level"].as_str().unwrap_or_default().to_string(), row["code"].as_str().unwrap_or_default().to_string())).collect())
-        .unwrap_or_default();
+    let declared: Vec<(String, String)> =
+        outcome.get("messages").and_then(serde_json::Value::as_array).map(|rows| rows.iter().map(|row| (row["level"].as_str().unwrap_or_default().to_string(), row["code"].as_str().unwrap_or_default().to_string())).collect()).unwrap_or_default();
     let raised = <GifMutation as protocol::Mutation<GifSnapshot>>::diff(&mutation(), &before());
     let produced: Vec<(String, String)> = raised
         .messages()

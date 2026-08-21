@@ -87,7 +87,7 @@ pub enum SvgMutation {
 /// ▶️ Applies `mutation` to `snapshot`: `let d = mutation.diff(&*snapshot); *snapshot =
 /// d.apply(snapshot); d` -- the diff is the single semantics source, never a separate imperative
 /// apply path (apply-and-capture is banned).
-pub async fn apply_svg_mutation(snapshot: &mut SvgSnapshot, mutation: &SvgMutation) -> protocol::MutationOutcome<SvgDiff> {
+pub fn apply_svg_mutation(snapshot: &mut SvgSnapshot, mutation: &SvgMutation) -> protocol::MutationOutcome<SvgDiff> {
     let outcome = Mutation::diff(mutation, snapshot);
     match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
         Ok(next) => {
@@ -105,7 +105,7 @@ pub async fn apply_svg_mutation(snapshot: &mut SvgSnapshot, mutation: &SvgMutati
 /// Resolves the PRIOR value of `name` on the element addressed by `path` against `base`, then
 /// builds the exact `SvgAttributesDiff` entry (`removed`/`modified`/`added`) the transition
 /// requires, lowered through `diff_at_path`.
-async fn attribute_diff_at_path(base: &SvgSnapshot, path: &[usize], name: &str, value: Option<String>) -> SvgDiff {
+fn attribute_diff_at_path(base: &SvgSnapshot, path: &[usize], name: &str, value: Option<String>) -> SvgDiff {
     let target = node_at(&base.doc, path).ok();
     let existing = target.and_then(|n| match n {
         XmlNode::Element { attrs, .. } => attrs.iter().find(|a| a.name == name),
@@ -208,16 +208,16 @@ impl Mutation<SvgSnapshot> for SvgMutation {
 /// them a second time in this file. Grammar: `keyword arg=value ...` (space-separated, same shape
 /// the derive's own handcrafted-wrapper convention uses), one match arm per variant (no
 /// `DslVariants` scaffolding available since nothing here derives it).
-async fn enc_node_path(p: &NodePath) -> String {
+fn enc_node_path(p: &NodePath) -> String {
     format!("[{}]", p.iter().map(|i| i.to_string()).collect::<Vec<_>>().join(","))
 }
-async fn dec_node_path(s: &str) -> Result<NodePath, String> {
+fn dec_node_path(s: &str) -> Result<NodePath, String> {
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|s| s.parse().map_err(|e: std::num::ParseIntError| e.to_string())).collect()
 }
-async fn enc_view_box(v: &ViewBox) -> String {
+fn enc_view_box(v: &ViewBox) -> String {
     format!("[{},{},{},{}]", v.min_x, v.min_y, v.width, v.height)
 }
-async fn dec_view_box(s: &str) -> Result<ViewBox, String> {
+fn dec_view_box(s: &str) -> Result<ViewBox, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [min_x, min_y, width, height] = parts.as_slice() else { return Err(format!("view box: expected 4 fields, got {}", parts.len())) };
     let f = |s: &str| s.parse::<f64>().map_err(|e| e.to_string());
@@ -226,7 +226,7 @@ async fn dec_view_box(s: &str) -> Result<ViewBox, String> {
 /// 🔄 `TransformOp` is itself a data-carrying enum (same reason `SvgNodeDiff` needs a hand-rolled
 /// codec) — tag-prefixed like `enc_xml_node`: `M[a,b,c,d,e,f]` / `T[x,[y?]]` / `S[x,[y?]]` /
 /// `R[angle,[cx,cy]?]` / `X[angle]` (skew-x) / `Y[angle]` (skew-y).
-async fn enc_transform_op(t: &TransformOp) -> String {
+fn enc_transform_op(t: &TransformOp) -> String {
     let f64_opt = |o: &Option<f64>| encode_option(o, |v| v.to_string());
     match t {
         TransformOp::Matrix { a, b, c, d, e, f } => format!("M[{a},{b},{c},{d},{e},{f}]"),
@@ -237,7 +237,7 @@ async fn enc_transform_op(t: &TransformOp) -> String {
         TransformOp::SkewY { angle } => format!("Y[{angle}]"),
     }
 }
-async fn dec_transform_op(s: &str) -> Result<TransformOp, String> {
+fn dec_transform_op(s: &str) -> Result<TransformOp, String> {
     let (tag, rest) = s.split_at(1);
     let f = |s: &str| s.parse::<f64>().map_err(|e: std::num::ParseFloatError| e.to_string());
     let inner = strip_brackets(rest)?;
@@ -275,10 +275,10 @@ async fn dec_transform_op(s: &str) -> Result<TransformOp, String> {
 fn enc_transform_list(list: &[TransformOp]) -> String {
     format!("[{}]", list.iter().map(enc_transform_op).collect::<Vec<_>>().join(","))
 }
-async fn dec_transform_list(s: &str) -> Result<Vec<TransformOp>, String> {
+fn dec_transform_list(s: &str) -> Result<Vec<TransformOp>, String> {
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_transform_op).collect()
 }
-pub(crate) async fn enc_svg_snapshot(s: &SvgSnapshot) -> String {
+pub(crate) fn enc_svg_snapshot(s: &SvgSnapshot) -> String {
     format!("[{},{},{},{},{}]", enc_str(&s.schema), encode_option(&s.doc.root, enc_xml_node), encode_option(&s.doc.doctype, enc_doctype), encode_option(&s.doc.declaration, enc_declaration), enc_prolog(&s.doc.prolog),)
 }
 pub(crate) fn dec_svg_snapshot(s: &str) -> Result<SvgSnapshot, String> {
@@ -305,7 +305,7 @@ fn print_svg_mutation(m: &SvgMutation) -> String {
         SvgMutation::SetTransform { path, transform } => format!("set-transform path={} transform={}", enc_node_path(path), encode_option(transform, |v| enc_transform_list(v))),
     }
 }
-async fn parse_svg_mutation(line: &str) -> Result<SvgMutation, String> {
+fn parse_svg_mutation(line: &str) -> Result<SvgMutation, String> {
     if line == "no-mutation" {
         return Ok(SvgMutation::NoMutation);
     }
@@ -317,13 +317,13 @@ async fn parse_svg_mutation(line: &str) -> Result<SvgMutation, String> {
         "set-snapshot" => Ok(SvgMutation::SetSnapshot { snapshot: dec_svg_snapshot(arg("snapshot")?)? }),
         "set-declaration" => Ok(SvgMutation::SetDeclaration { declaration: decode_option(arg("declaration")?, dec_declaration)? }),
         "set-doctype" => Ok(SvgMutation::SetDoctype { doctype: decode_option(arg("doctype")?, dec_doctype)? }),
-        "insert-element" => Ok(SvgMutation::InsertElement { parent: dec_node_path(arg("parent")?).await?, index: usize_arg("index")?, node: dec_xml_node(arg("node")?)? }),
-        "remove-element" => Ok(SvgMutation::RemoveElement { parent: dec_node_path(arg("parent")?).await?, index: usize_arg("index")? }),
-        "set-element-name" => Ok(SvgMutation::SetElementName { path: dec_node_path(arg("path")?).await?, name: dec_str(arg("name")?)? }),
-        "set-attribute" => Ok(SvgMutation::SetAttribute { path: dec_node_path(arg("path")?).await?, name: dec_str(arg("name")?)?, value: decode_option(arg("value")?, dec_str)? }),
-        "set-text" => Ok(SvgMutation::SetText { path: dec_node_path(arg("path")?).await?, text: dec_str(arg("text")?)? }),
-        "set-view-box" => Ok(SvgMutation::SetViewBox { path: dec_node_path(arg("path")?).await?, view_box: decode_option(arg("view-box")?, dec_view_box)? }),
-        "set-transform" => Ok(SvgMutation::SetTransform { path: dec_node_path(arg("path")?).await?, transform: decode_option(arg("transform")?, dec_transform_list)? }),
+        "insert-element" => Ok(SvgMutation::InsertElement { parent: dec_node_path(arg("parent")?)?, index: usize_arg("index")?, node: dec_xml_node(arg("node")?)? }),
+        "remove-element" => Ok(SvgMutation::RemoveElement { parent: dec_node_path(arg("parent")?)?, index: usize_arg("index")? }),
+        "set-element-name" => Ok(SvgMutation::SetElementName { path: dec_node_path(arg("path")?)?, name: dec_str(arg("name")?)? }),
+        "set-attribute" => Ok(SvgMutation::SetAttribute { path: dec_node_path(arg("path")?)?, name: dec_str(arg("name")?)?, value: decode_option(arg("value")?, dec_str)? }),
+        "set-text" => Ok(SvgMutation::SetText { path: dec_node_path(arg("path")?)?, text: dec_str(arg("text")?)? }),
+        "set-view-box" => Ok(SvgMutation::SetViewBox { path: dec_node_path(arg("path")?)?, view_box: decode_option(arg("view-box")?, dec_view_box)? }),
+        "set-transform" => Ok(SvgMutation::SetTransform { path: dec_node_path(arg("path")?)?, transform: decode_option(arg("transform")?, dec_transform_list)? }),
         other => Err(format!("svg mutation: unknown keyword {other:?}")),
     }
 }
@@ -344,7 +344,7 @@ impl OpText for SvgMutation {
 /// `store::ByteReader` plus `SvgDiff`'s own `write_str_lp`/`read_str_lp`/`enc_xml_node_bin`/
 /// `dec_xml_node_bin`/`enc_declaration_bin`/`dec_declaration_bin` (`../🔺️diff/🦀️component.rs`,
 /// `pub(crate)` to this artifact).
-async fn enc_node_path_bin(p: &NodePath, out: &mut Vec<u8>) {
+fn enc_node_path_bin(p: &NodePath, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, p.len() as u64);
     for index in p {
         store::pack_rt::write_varint_u64(out, *index as u64);
@@ -359,7 +359,7 @@ fn dec_node_path_bin(reader: &mut store::ByteReader<'_>) -> Result<NodePath, Str
     Ok(path)
 }
 /// 📐️ `ViewBox` -- four fixed-width LE `f64` fields, in `min_x`/`min_y`/`width`/`height` order.
-async fn enc_view_box_bin(v: &ViewBox, out: &mut Vec<u8>) {
+fn enc_view_box_bin(v: &ViewBox, out: &mut Vec<u8>) {
     out.extend_from_slice(&v.min_x.to_le_bytes());
     out.extend_from_slice(&v.min_y.to_le_bytes());
     out.extend_from_slice(&v.width.to_le_bytes());
@@ -371,7 +371,7 @@ fn dec_view_box_bin(reader: &mut store::ByteReader<'_>) -> Result<ViewBox, Strin
 /// 🔄️ `TransformOp` -- 1-byte kind tag (`0`=Matrix/`1`=Translate/`2`=Scale/`3`=Rotate/`4`=SkewX/
 /// `5`=SkewY, distinct numbering from the text codec's letter tags) followed by its fixed-width LE
 /// `f64` fields; an `Option<f64>`/`Option<(f64,f64)>` slot gets its own presence byte first.
-async fn enc_transform_op_bin(t: &TransformOp, out: &mut Vec<u8>) {
+fn enc_transform_op_bin(t: &TransformOp, out: &mut Vec<u8>) {
     let opt_f64 = |out: &mut Vec<u8>, v: &Option<f64>| {
         out.push(if v.is_some() { 1 } else { 0 });
         if let Some(v) = v {
@@ -414,8 +414,8 @@ async fn enc_transform_op_bin(t: &TransformOp, out: &mut Vec<u8>) {
         }
     }
 }
-async fn dec_transform_op_bin(reader: &mut store::ByteReader<'_>) -> Result<TransformOp, String> {
-    let opt_f64 = |reader: &mut store::ByteReader<'_>| -> Result<Option<f64>, String> { Ok(if semio_framework_plugin::resolve_ready(reader.read_u8()).map_err(|e| e.to_string())? != 0 { Some(semio_framework_plugin::resolve_ready(reader.read_f64_le()).map_err(|e| e.to_string())?) } else { None }) };
+fn dec_transform_op_bin(reader: &mut store::ByteReader<'_>) -> Result<TransformOp, String> {
+    let opt_f64 = |reader: &mut store::ByteReader<'_>| -> Result<Option<f64>, String> { Ok(if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(reader.read_f64_le().map_err(|e| e.to_string())?) } else { None }) };
     let tag = reader.read_u8().map_err(|e| e.to_string())?;
     match tag {
         0 => {
@@ -451,21 +451,21 @@ async fn dec_transform_op_bin(reader: &mut store::ByteReader<'_>) -> Result<Tran
         other => Err(format!("transform op binary: unknown tag {other}")),
     }
 }
-async fn enc_transform_list_bin(list: &[TransformOp], out: &mut Vec<u8>) {
+fn enc_transform_list_bin(list: &[TransformOp], out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, list.len() as u64);
     for op in list {
         enc_transform_op_bin(op, out);
     }
 }
-async fn dec_transform_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<TransformOp>, String> {
+fn dec_transform_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<TransformOp>, String> {
     let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut list = Vec::with_capacity(count as usize);
     for _ in 0..count {
-        list.push(dec_transform_op_bin(reader).await?);
+        list.push(dec_transform_op_bin(reader)?);
     }
     Ok(list)
 }
-pub(crate) async fn enc_svg_snapshot_bin(s: &SvgSnapshot, out: &mut Vec<u8>) {
+pub(crate) fn enc_svg_snapshot_bin(s: &SvgSnapshot, out: &mut Vec<u8>) {
     write_str_lp(out, &s.schema);
     out.push(if s.doc.root.is_some() { 1 } else { 0 });
     if let Some(root) = &s.doc.root {
@@ -578,57 +578,57 @@ impl OpBinary for SvgMutation {
         match tag {
             0 => Ok(SvgMutation::NoMutation),
             1 => {
-                let snapshot = dec_svg_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let snapshot = dec_svg_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", reader.position(), e))?;
                 Ok(SvgMutation::SetSnapshot { snapshot })
             }
             2 => {
-                let has = reader.read_u8().map_err(|e| malformed("op declaration presence", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
-                let declaration = if has != 0 { Some(dec_declaration_bin(&mut reader).map_err(|e| malformed("op declaration", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
+                let has = reader.read_u8().map_err(|e| malformed("op declaration presence", reader.position(), e.to_string()))?;
+                let declaration = if has != 0 { Some(dec_declaration_bin(&mut reader).map_err(|e| malformed("op declaration", reader.position(), e))?) } else { None };
                 Ok(SvgMutation::SetDeclaration { declaration })
             }
             3 => {
-                let has = reader.read_u8().map_err(|e| malformed("op doctype presence", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
-                let doctype = if has != 0 { Some(dec_doctype_bin(&mut reader).map_err(|e| malformed("op doctype", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
+                let has = reader.read_u8().map_err(|e| malformed("op doctype presence", reader.position(), e.to_string()))?;
+                let doctype = if has != 0 { Some(dec_doctype_bin(&mut reader).map_err(|e| malformed("op doctype", reader.position(), e))?) } else { None };
                 Ok(SvgMutation::SetDoctype { doctype })
             }
             4 => {
-                let parent = dec_node_path_bin(&mut reader).map_err(|e| malformed("op parent", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let index = reader.read_varint_u64().map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
-                let node = dec_xml_node_bin(&mut reader).map_err(|e| malformed("op node", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let parent = dec_node_path_bin(&mut reader).map_err(|e| malformed("op parent", reader.position(), e))?;
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
+                let node = dec_xml_node_bin(&mut reader).map_err(|e| malformed("op node", reader.position(), e))?;
                 Ok(SvgMutation::InsertElement { parent, index, node })
             }
             5 => {
-                let parent = dec_node_path_bin(&mut reader).map_err(|e| malformed("op parent", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let index = reader.read_varint_u64().map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
+                let parent = dec_node_path_bin(&mut reader).map_err(|e| malformed("op parent", reader.position(), e))?;
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
                 Ok(SvgMutation::RemoveElement { parent, index })
             }
             6 => {
-                let path = dec_node_path_bin(&mut reader).map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let name = read_str_lp(&mut reader).map_err(|e| malformed("op name", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let path = dec_node_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
+                let name = read_str_lp(&mut reader).map_err(|e| malformed("op name", reader.position(), e))?;
                 Ok(SvgMutation::SetElementName { path, name })
             }
             7 => {
-                let path = dec_node_path_bin(&mut reader).map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let name = read_str_lp(&mut reader).map_err(|e| malformed("op name", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let has = reader.read_u8().map_err(|e| malformed("op value presence", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
-                let value = if has != 0 { Some(read_str_lp(&mut reader).map_err(|e| malformed("op value", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
+                let path = dec_node_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
+                let name = read_str_lp(&mut reader).map_err(|e| malformed("op name", reader.position(), e))?;
+                let has = reader.read_u8().map_err(|e| malformed("op value presence", reader.position(), e.to_string()))?;
+                let value = if has != 0 { Some(read_str_lp(&mut reader).map_err(|e| malformed("op value", reader.position(), e))?) } else { None };
                 Ok(SvgMutation::SetAttribute { path, name, value })
             }
             8 => {
-                let path = dec_node_path_bin(&mut reader).map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let text = read_str_lp(&mut reader).map_err(|e| malformed("op text", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let path = dec_node_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
+                let text = read_str_lp(&mut reader).map_err(|e| malformed("op text", reader.position(), e))?;
                 Ok(SvgMutation::SetText { path, text })
             }
             9 => {
-                let path = dec_node_path_bin(&mut reader).map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let has = reader.read_u8().map_err(|e| malformed("op view_box presence", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
-                let view_box = if has != 0 { Some(dec_view_box_bin(&mut reader).map_err(|e| malformed("op view_box", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
+                let path = dec_node_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
+                let has = reader.read_u8().map_err(|e| malformed("op view_box presence", reader.position(), e.to_string()))?;
+                let view_box = if has != 0 { Some(dec_view_box_bin(&mut reader).map_err(|e| malformed("op view_box", reader.position(), e))?) } else { None };
                 Ok(SvgMutation::SetViewBox { path, view_box })
             }
             10 => {
-                let path = dec_node_path_bin(&mut reader).map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let has = reader.read_u8().map_err(|e| malformed("op transform presence", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
-                let transform = if has != 0 { Some(dec_transform_list_bin(&mut reader).map_err(|e| malformed("op transform", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
+                let path = dec_node_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
+                let has = reader.read_u8().map_err(|e| malformed("op transform presence", reader.position(), e.to_string()))?;
+                let transform = if has != 0 { Some(dec_transform_list_bin(&mut reader).map_err(|e| malformed("op transform", reader.position(), e))?) } else { None };
                 Ok(SvgMutation::SetTransform { path, transform })
             }
             other => Err(malformed("op tag", 1, format!("unknown tag {other}"))),
@@ -644,7 +644,7 @@ impl OpBinary for SvgMutation {
 /// `op_text_binary_roundtrip_law` below AND by `⚙️engine/🦀️component.rs`'s
 /// `ops_grammar_conformance_law`/`protocol_walk_law` conformance tests.
 #[cfg(test)]
-pub(crate) async fn demo_mutation_cases() -> Vec<SvgMutation> {
+pub(crate) fn demo_mutation_cases() -> Vec<SvgMutation> {
     use crate::artifacts::xml::schema::snapshot::XmlAttr;
 
     let base = SvgSnapshot::import_utf8(r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><rect x="0" y="0" width="5" height="5"/></svg>"#.as_bytes()).unwrap();
@@ -691,20 +691,20 @@ mod tests {
     use protocol::command::DiffAlgebra;
     use protocol::{DiffCodec, MutationDiff};
 
-    async fn fixture() -> SvgSnapshot {
+    fn fixture() -> SvgSnapshot {
         SvgSnapshot::import_utf8(r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><rect x="0" y="0" width="5" height="5"/></svg>"#.as_bytes()).unwrap()
     }
 
-    async fn exact_fixture_bytes() -> Vec<u8> {
+    fn exact_fixture_bytes() -> Vec<u8> {
         std::fs::read(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../temp/artifacts.svg")).expect("read temp/artifacts.svg")
     }
 
-    async fn exact_fixture() -> SvgSnapshot {
+    fn exact_fixture() -> SvgSnapshot {
         SvgSnapshot::import_utf8(&exact_fixture_bytes()).expect("import temp/artifacts.svg")
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn insert_then_remove_element_apply_and_inverse() {
+    #[test]
+    fn insert_then_remove_element_apply_and_inverse() {
         let base = fixture();
         let insert = SvgMutation::InsertElement { parent: vec![], index: 1, node: XmlNode::Element { name: "circle".into(), attrs: vec![XmlAttr { name: "r".into(), value: "1".into() }], children: vec![] } };
         let mut after = base.clone();
@@ -721,8 +721,8 @@ mod tests {
         assert_eq!(restored, base);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn set_attribute_apply_and_inverse_round_trip() {
+    #[test]
+    fn set_attribute_apply_and_inverse_round_trip() {
         let base = fixture();
         let mutation = SvgMutation::SetAttribute { path: vec![0], name: "width".into(), value: Some("99".into()) };
         let diff = Mutation::diff(&mutation, &base);
@@ -737,8 +737,8 @@ mod tests {
         assert_eq!(write_svg_xml(&restored.doc), write_svg_xml(&base.doc));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn set_view_box_and_set_transform_apply_and_inverse() {
+    #[test]
+    fn set_view_box_and_set_transform_apply_and_inverse() {
         let base = fixture();
         let vb = SvgMutation::SetViewBox { path: vec![], view_box: Some(ViewBox { min_x: 1.0, min_y: 2.0, width: 3.0, height: 4.0 }) };
         let mut after = base.clone();
@@ -759,8 +759,8 @@ mod tests {
         assert_eq!(write_svg_xml(&after2.doc), write_svg_xml(&base.doc));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn remove_element_inverse_restores_removed_node() {
+    #[test]
+    fn remove_element_inverse_restores_removed_node() {
         let base = fixture();
         let remove = SvgMutation::RemoveElement { parent: vec![], index: 0 };
         let mut after = base.clone();
@@ -775,8 +775,8 @@ mod tests {
         assert_eq!(write_svg_xml(&after.doc), write_svg_xml(&base.doc));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn set_element_name_apply_and_inverse() {
+    #[test]
+    fn set_element_name_apply_and_inverse() {
         let base = fixture();
         let mutation = SvgMutation::SetElementName { path: vec![0], name: "circle".into() };
         let mut after = base.clone();
@@ -800,7 +800,7 @@ mod tests {
     /// instance -- so `removed` is exercised at the top-level children triple and `added` at the
     /// nested triple inside the modified child, while that same modified child's OWN diff
     /// (name+attributes+children all `Some`) is the "modified-in-every-field" collection entry.
-    async fn sweep_a() -> SvgSnapshot {
+    fn sweep_a() -> SvgSnapshot {
         SvgSnapshot {
             schema: crate::artifacts::svg::STDIO_SVG_DOCUMENT_SCHEMA.into(),
             doc: XmlDocument {
@@ -820,7 +820,7 @@ mod tests {
         }
     }
 
-    async fn sweep_b() -> SvgSnapshot {
+    fn sweep_b() -> SvgSnapshot {
         let snapshot = SvgSnapshot {
             schema: crate::artifacts::svg::STDIO_SVG_DOCUMENT_SCHEMA.into(),
             doc: XmlDocument {
@@ -856,7 +856,7 @@ mod tests {
     /// which tracks the true original index via `inverse_attrs_diff`), never at the
     /// mutation-replay level, which is exercised here on the LAST attribute specifically so the
     /// append-on-restore behavior coincides with the original position.
-    async fn sample_mutations() -> Vec<SvgMutation> {
+    fn sample_mutations() -> Vec<SvgMutation> {
         vec![
             SvgMutation::NoMutation,
             SvgMutation::SetSnapshot { snapshot: sweep_b() },
@@ -874,8 +874,8 @@ mod tests {
         ]
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn mutation_diff_law() {
+    #[test]
+    fn mutation_diff_law() {
         for mutation in sample_mutations() {
             let base = fixture();
             let diff_direct = Mutation::diff(&mutation, &base);
@@ -891,8 +891,8 @@ mod tests {
     //#endregion 🔖️MutationDiffLaw
 
     //#region 🔖️InverseLaw
-    #[semio_framework_async_macros::async_test]
-    async fn inverse_law() {
+    #[test]
+    fn inverse_law() {
         for mutation in sample_mutations() {
             let base = fixture();
 
@@ -915,8 +915,8 @@ mod tests {
     /// removing a MIDDLE attribute (`"width"`, not the last) and inverting at the DIFF level (not
     /// via a bare replayed `SetAttribute` mutation) DOES restore its exact original Vec position,
     /// because `inverse_attrs_diff` tracks the true original index directly off `base`.
-    #[semio_framework_async_macros::async_test]
-    async fn inverse_diff_level_restores_middle_attribute_position() {
+    #[test]
+    fn inverse_diff_level_restores_middle_attribute_position() {
         let base = fixture();
         let mutation = SvgMutation::SetAttribute { path: vec![0], name: "width".into(), value: None };
         let diff = Mutation::diff(&mutation, &base);
@@ -930,7 +930,7 @@ mod tests {
     //#endregion 🔖️InverseLaw
 
     //#region 🔖️AbsorbLaw
-    async fn two_child_root(a_name: &str, b_name: &str) -> SvgSnapshot {
+    fn two_child_root(a_name: &str, b_name: &str) -> SvgSnapshot {
         SvgSnapshot {
             schema: crate::artifacts::svg::STDIO_SVG_DOCUMENT_SCHEMA.into(),
             doc: XmlDocument {
@@ -946,7 +946,7 @@ mod tests {
         }
     }
 
-    async fn assert_absorb_matches_sequential(base: &SvgSnapshot, d1: &SvgDiff, d2: &SvgDiff) -> SvgDiff {
+    fn assert_absorb_matches_sequential(base: &SvgSnapshot, d1: &SvgDiff, d2: &SvgDiff) -> SvgDiff {
         let sequential = MutationDiff::apply(d2, &MutationDiff::apply(d1, base).unwrap()).unwrap();
         let mut absorbed = d1.clone();
         MutationDiff::absorb(&mut absorbed, d2.clone());
@@ -954,15 +954,15 @@ mod tests {
         absorbed
     }
 
-    async fn root_children_diff(diff: &SvgDiff) -> &SvgChildrenDiff {
+    fn root_children_diff(diff: &SvgDiff) -> &SvgChildrenDiff {
         match diff.root.as_ref().expect("root diff present") {
             SvgNodeDiffT::Element(e) => e.children.as_ref().expect("children diff present"),
             other => panic!("expected element diff, got {other:?}"),
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn absorb_law() {
+    #[test]
+    fn absorb_law() {
         // Canonical: Insert(2)+Remove(0) -> {removed:[0], added:[(1,f)]}.
         {
             let base = two_child_root("a", "b");
@@ -1051,8 +1051,8 @@ mod tests {
     //#endregion 🔖️AbsorbLaw
 
     //#region 🔖️BetweenRoundtripLaw
-    #[semio_framework_async_macros::async_test]
-    async fn between_roundtrip_law() {
+    #[test]
+    fn between_roundtrip_law() {
         let a = sweep_a();
         let b = sweep_b();
         assert_eq!(MutationDiff::apply(&<SvgDiff as DiffAlgebra<SvgSnapshot>>::between(&a, &b), &a).unwrap(), b);
@@ -1072,8 +1072,8 @@ mod tests {
     //#endregion 🔖️BetweenRoundtripLaw
 
     //#region 🔖️CodecRetentionLaw
-    #[semio_framework_async_macros::async_test]
-    async fn codec_retention_law() {
+    #[test]
+    fn codec_retention_law() {
         let text = r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><g id="layer1"><rect x="0" y="0" width="10" height="10"/><circle cx="50" cy="50" r="5"/></g></svg>"#;
         let doc = crate::artifacts::svg::schema::snapshot::parse_svg_xml(text).expect("fixture parses");
         // Documented normal form: attribute/element structure round-trips byte-for-byte since the
@@ -1093,8 +1093,8 @@ mod tests {
     /// 🎯️ THE acceptance criterion: `sweep_a`/`sweep_b` differ in every mutable field (see the
     /// fixtures' doc comment for exactly how each collection flavor -- removed/modified/added --
     /// is exercised given the recipe's naive positional `between_children`).
-    #[semio_framework_async_macros::async_test]
-    async fn field_sweep() {
+    #[test]
+    fn field_sweep() {
         let a = sweep_a();
         let b = sweep_b();
 
@@ -1136,8 +1136,8 @@ mod tests {
     /// full nested-document payload, and `SetViewBox`/`SetTransform`'s typed geometry payloads.
     /// Reuses `demo_mutation_cases()` (the single source of truth also consumed by
     /// `⚙️engine/🦀️component.rs`'s `ops_grammar_conformance_law`/`protocol_walk_law`).
-    #[semio_framework_async_macros::async_test]
-    async fn op_text_binary_roundtrip_law() {
+    #[test]
+    fn op_text_binary_roundtrip_law() {
         for mutation in demo_mutation_cases() {
             let printed = mutation.print_op();
             assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
@@ -1151,8 +1151,8 @@ mod tests {
     }
 
     //#region 🔖️LosslessLogicalState
-    #[semio_framework_async_macros::async_test]
-    async fn exact_native_direct_pack_and_dsl_roundtrips() {
+    #[test]
+    fn exact_native_direct_pack_and_dsl_roundtrips() {
         let original = exact_fixture_bytes();
         let imported = SvgSnapshot::import_utf8(&original).expect("direct import");
         assert_eq!(imported.export_utf8().expect("direct export"), original);
@@ -1173,8 +1173,8 @@ mod tests {
         assert_eq!(restored.export_utf8().expect("xml bridge export"), original);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn exact_native_between_noop_inverse_and_absorb_roundtrips() {
+    #[test]
+    fn exact_native_between_noop_inverse_and_absorb_roundtrips() {
         let original = exact_fixture_bytes();
         let imported = exact_fixture();
 
@@ -1207,30 +1207,30 @@ mod tests {
         assert_eq!(absorbed_result.export_utf8().expect("absorbed export"), original);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn exact_native_logical_state_survives_diff_and_set_snapshot_codecs() {
+    #[test]
+    fn exact_native_logical_state_survives_diff_and_set_snapshot_codecs() {
         let original = exact_fixture_bytes();
         let imported = exact_fixture();
         assert!(imported.doc.prolog.iter().any(|node| matches!(node, XmlNode::Comment { .. })));
         let projection = imported.semantic_projection();
-        assert_eq!(projection, imported.await);
+        assert_eq!(projection, imported);
 
         let diff = <SvgDiff as DiffAlgebra<SvgSnapshot>>::between(&projection, &imported);
-        let text_diff = SvgDiff::parse_diff(&diff.print_diff()).await.expect("diff text decode");
-        let binary_diff = SvgDiff::decode_diff(&diff.encode_diff().expect("diff binary encode")).await.expect("diff binary decode");
+        let text_diff = SvgDiff::parse_diff(&diff.print_diff()).expect("diff text decode");
+        let binary_diff = SvgDiff::decode_diff(&diff.encode_diff().expect("diff binary encode")).expect("diff binary decode");
         assert_eq!(text_diff, diff);
         assert_eq!(binary_diff, diff);
         let restored_projection = MutationDiff::apply(&binary_diff, &projection).unwrap();
-        assert_eq!(restored_projection, imported.await);
+        assert_eq!(restored_projection, imported);
         assert_eq!(restored_projection.export_utf8().expect("diff export"), original);
 
         let mutation = SvgMutation::SetSnapshot { snapshot: imported.clone() };
-        let text_op = SvgMutation::parse_op(&mutation.print_op()).await.expect("op text decode");
-        let binary_op = SvgMutation::decode_op(&mutation.encode_op().await.expect("op binary encode")).await.expect("op binary decode");
+        let text_op = SvgMutation::parse_op(&mutation.print_op()).expect("op text decode");
+        let binary_op = SvgMutation::decode_op(&mutation.encode_op().expect("op binary encode")).expect("op binary decode");
         assert_eq!(text_op, mutation);
         assert_eq!(binary_op, mutation);
         let set_snapshot_outcome = Mutation::diff(&binary_op, &projection);
-        let applied = MutationDiff::apply(&set_snapshot_outcome.await.diff().await, &projection).unwrap();
+        let applied = MutationDiff::apply(&set_snapshot_outcome.diff(), &projection).unwrap();
         assert_eq!(applied, imported);
         assert_eq!(applied.export_utf8().expect("set snapshot export"), original);
     }

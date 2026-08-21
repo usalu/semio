@@ -42,7 +42,11 @@ async fn applies_to_committed_after() {
     let outcome = apply_step_mutation(&mut snapshot, &mutation());
     assert!(outcome.messages().is_empty(), "set-snapshot/restamps-the-product-long-name: set-snapshot raised diagnostics it should not have");
     assert_eq!(snapshot, expected_after(), "set-snapshot/restamps-the-product-long-name: applied state differs from committed after-snapshot");
-    assert_eq!(snapshot.entities[0].args[1], crate::artifacts::step::standards::v_ap214::subsets::any::schema::snapshot::StepValue::String("Capsule Unit A".into()), "set-snapshot/restamps-the-product-long-name: the PRODUCT long name must land on 'Capsule Unit A'");
+    assert_eq!(
+        snapshot.entities[0].args[1],
+        crate::artifacts::step::standards::v_ap214::subsets::any::schema::snapshot::StepValue::String("Capsule Unit A".into()),
+        "set-snapshot/restamps-the-product-long-name: the PRODUCT long name must land on 'Capsule Unit A'"
+    );
     assert_eq!(snapshot.entities[0].name, "PRODUCT", "set-snapshot/restamps-the-product-long-name: the entity keyword is untouched");
     assert_eq!(snapshot.entities[0].args.len(), 4, "set-snapshot/restamps-the-product-long-name: no argument is inserted or dropped");
     assert_eq!(snapshot.entities[1], before().entities[1], "set-snapshot/restamps-the-product-long-name: #2 is identical on both sides and must survive untouched");
@@ -87,11 +91,8 @@ async fn committed_json_is_canonical() {
 async fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
     let status = outcome.get("status").and_then(serde_json::Value::as_str).expect("outcome carries a status");
-    let declared: Vec<(String, String)> = outcome
-        .get("messages")
-        .and_then(serde_json::Value::as_array)
-        .map(|rows| rows.iter().map(|row| (row["level"].as_str().unwrap_or_default().to_string(), row["code"].as_str().unwrap_or_default().to_string())).collect())
-        .unwrap_or_default();
+    let declared: Vec<(String, String)> =
+        outcome.get("messages").and_then(serde_json::Value::as_array).map(|rows| rows.iter().map(|row| (row["level"].as_str().unwrap_or_default().to_string(), row["code"].as_str().unwrap_or_default().to_string())).collect()).unwrap_or_default();
     let raised = <StepMutation as protocol::Mutation<StepSnapshot>>::diff(&mutation(), &before());
     let produced: Vec<(String, String)> = raised
         .messages()
@@ -121,7 +122,10 @@ async fn produces_committed_diff() {
     let produced = serde_json::to_value(raised.diff()).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "set-snapshot/restamps-the-product-long-name: produced diff differs from the committed 🔺️diff/🔣️component.json");
-    assert!(raised.diff().file_description.is_none() && raised.diff().file_name.is_none() && raised.diff().file_schema.is_none(), "set-snapshot/restamps-the-product-long-name: the three HEADER records are weak whole-replace slots and must stay absent here");
+    assert!(
+        raised.diff().file_description.is_none() && raised.diff().file_name.is_none() && raised.diff().file_schema.is_none(),
+        "set-snapshot/restamps-the-product-long-name: the three HEADER records are weak whole-replace slots and must stay absent here"
+    );
     let entities = raised.diff().entities.as_ref().expect("set-snapshot/restamps-the-product-long-name: the entities triple must be present");
     assert!(entities.removed.is_empty() && entities.added.is_empty(), "set-snapshot/restamps-the-product-long-name: no instance enters or leaves the graph");
     assert_eq!(entities.modified[0].id, 1, "set-snapshot/restamps-the-product-long-name: StepEntityModified is keyed by the stable #N instance number, not by position");
@@ -138,7 +142,11 @@ async fn committed_diff_is_canonical() {
     let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "set-snapshot/restamps-the-product-long-name: committed diff JSON is not canonical");
-    assert_eq!(serde_json::from_str::<serde_json::Value>(DIFF).expect("diff reparses").pointer("/entities/modified/0/diff/args/modified/0/value").and_then(|v| v.get("string")).and_then(serde_json::Value::as_str), Some("Capsule Unit A"), "set-snapshot/restamps-the-product-long-name: StepValue is externally tagged, so the committed argument reads {\"string\": …} — an adjacently tagged {\"kind\",\"value\"} pair would be ifc4's encoding, not step's");
+    assert_eq!(
+        serde_json::from_str::<serde_json::Value>(DIFF).expect("diff reparses").pointer("/entities/modified/0/diff/args/modified/0/value").and_then(|v| v.get("string")).and_then(serde_json::Value::as_str),
+        Some("Capsule Unit A"),
+        "set-snapshot/restamps-the-product-long-name: StepValue is externally tagged, so the committed argument reads {\"string\": …} — an adjacently tagged {\"kind\",\"value\"} pair would be ifc4's encoding, not step's"
+    );
 }
 
 /// 🩹 Applying the committed diff directly to `before` yields the committed `after` — the diff is

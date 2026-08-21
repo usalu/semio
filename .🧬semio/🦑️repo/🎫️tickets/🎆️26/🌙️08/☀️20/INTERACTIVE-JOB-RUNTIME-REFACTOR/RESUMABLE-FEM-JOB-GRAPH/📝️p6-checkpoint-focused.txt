@@ -1,0 +1,19 @@
+   Compiling serde_json v1.0.151
+   Compiling semio-fem-solver-harness v0.0.0 (/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/RESUMABLE-FEM-JOB-GRAPH/🧪️harness-p6)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 6.11s
+     Running unittests src/lib.rs (.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/RESUMABLE-FEM-JOB-GRAPH/🧪️target-p6-harness/debug/deps/semio_fem_solver_harness-7b86fbf56f3b026f)
+
+running 2 tests
+test sparse::tests::ldlt_job_checkpoint_resume_matches_reference ... ok
+test sparse::tests::pcg_job_checkpoint_resume_is_exact ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 19 filtered out; finished in 0.01s
+
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.03s
+     Running unittests src/lib.rs (.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/RESUMABLE-FEM-JOB-GRAPH/🧪️target-p6-harness/debug/deps/semio_fem_solver_harness-7b86fbf56f3b026f)
+
+running 1 test
+test sparse::tests::subspace_job_resume_and_scheduling_are_deterministic ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 20 filtered out; finished in 0.01s
+

@@ -45,7 +45,11 @@ async fn the_undo_reorder_moves_the_run_back_to_the_head() {
     let base = before();
     let mutation = reorder_runs();
     let undo = mutation.inverse(&base);
-    assert_eq!(undo, vec![SemioTextMutation::ReorderRuns(crate::artifacts::semio::standards::v1::subsets::text::schema::mutations::reorder_runs::mutation::ReorderRuns { from: 2, to: 0 })], "the undo must address the landed index #2 and send it back to #0");
+    assert_eq!(
+        undo,
+        vec![SemioTextMutation::ReorderRuns(crate::artifacts::semio::standards::v1::subsets::text::schema::mutations::reorder_runs::mutation::ReorderRuns { from: 2, to: 0 })],
+        "the undo must address the landed index #2 and send it back to #0"
+    );
     let mut current = mutation.diff(&base).diff().apply(&base).expect("forward reorder-runs applies");
     for step in &undo {
         current = step.diff(&current).diff().apply(&current).expect("the undo reorder-runs applies to the reordered state");

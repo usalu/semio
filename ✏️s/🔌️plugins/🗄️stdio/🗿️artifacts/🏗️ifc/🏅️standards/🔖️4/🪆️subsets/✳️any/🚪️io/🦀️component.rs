@@ -60,7 +60,7 @@ pub use derived_composition::*;
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
-    
+
     use crate::artifacts::ifc::standards::v4::engine::{demo_ifc_snapshot, empty_ifc_snapshot};
     use crate::artifacts::ifc::IfcSnapshot;
     use crate::artifacts::ifc::STDIO_IFC_DOCUMENT_SCHEMA;

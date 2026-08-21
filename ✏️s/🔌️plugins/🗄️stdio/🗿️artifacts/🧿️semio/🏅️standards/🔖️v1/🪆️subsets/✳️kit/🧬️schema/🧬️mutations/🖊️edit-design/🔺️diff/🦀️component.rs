@@ -8,11 +8,7 @@ use crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::Semi
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff(payload: &EditDesign, base: &SemioKitSnapshot) -> protocol::MutationOutcome<SemioKitDiff> {
     let Some(existing) = base.designs.iter().find(|d| d.id == payload.id) else {
-        return protocol::MutationOutcome::error(
-            "mutation.target-missing",
-            format!("Design \"{}\" does not exist.", payload.id),
-            [payload.id.clone()],
-        );
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Design \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
     if existing.pieces == payload.pieces && existing.connections == payload.connections {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Design \"{}\" already has that content.", payload.id));

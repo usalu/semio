@@ -92,11 +92,8 @@ async fn committed_json_is_canonical() {
 async fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
     let status = outcome.get("status").and_then(serde_json::Value::as_str).expect("outcome carries a status");
-    let declared: Vec<(String, String)> = outcome
-        .get("messages")
-        .and_then(serde_json::Value::as_array)
-        .map(|rows| rows.iter().map(|row| (row["level"].as_str().unwrap_or_default().to_string(), row["code"].as_str().unwrap_or_default().to_string())).collect())
-        .unwrap_or_default();
+    let declared: Vec<(String, String)> =
+        outcome.get("messages").and_then(serde_json::Value::as_array).map(|rows| rows.iter().map(|row| (row["level"].as_str().unwrap_or_default().to_string(), row["code"].as_str().unwrap_or_default().to_string())).collect()).unwrap_or_default();
     let raised = <PptxMutation as protocol::Mutation<PptxSnapshot>>::diff(&mutation(), &before());
     let produced: Vec<(String, String)> = raised
         .messages()
@@ -127,7 +124,14 @@ async fn produces_committed_diff() {
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "set-snapshot/retitles-and-lowers-the-title-placeholder: produced diff differs from the committed 🔺️diff/🔣️component.json");
     assert!(raised.diff().opc.is_none() && raised.diff().xml_parts.is_none(), "set-snapshot/retitles-and-lowers-the-title-placeholder: a presentation-level edit must reach neither the OPC lane nor the retained logical XML parts");
-    let slides = raised.diff().presentation.as_ref().expect("set-snapshot/retitles-and-lowers-the-title-placeholder: the presentation diff must be present").slides.as_ref().expect("set-snapshot/retitles-and-lowers-the-title-placeholder: the slides triple must be present");
+    let slides = raised
+        .diff()
+        .presentation
+        .as_ref()
+        .expect("set-snapshot/retitles-and-lowers-the-title-placeholder: the presentation diff must be present")
+        .slides
+        .as_ref()
+        .expect("set-snapshot/retitles-and-lowers-the-title-placeholder: the slides triple must be present");
     assert!(slides.removed.is_empty() && slides.added.is_empty(), "set-snapshot/retitles-and-lowers-the-title-placeholder: the deck keeps its single slide");
     let shapes = slides.modified[0].diff.shapes.as_ref().expect("set-snapshot/retitles-and-lowers-the-title-placeholder: the shapes triple must be present");
     assert_eq!(shapes.modified.len(), 1, "set-snapshot/retitles-and-lowers-the-title-placeholder: only the title placeholder is patched — the picture must not appear");
@@ -150,7 +154,11 @@ async fn committed_diff_is_canonical() {
     let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "set-snapshot/retitles-and-lowers-the-title-placeholder: committed diff JSON is not canonical");
-    assert_eq!(serde_json::from_str::<serde_json::Value>(DIFF).expect("diff reparses").pointer("/presentation/slides/modified/0/diff/shapes/modified/0/kind").and_then(serde_json::Value::as_str), Some("placeholder"), "set-snapshot/retitles-and-lowers-the-title-placeholder: PptxShapeDiff is tagged `kind` — the SNAPSHOT enum's own tag is `shapeKind`, and mixing the two up is exactly the collision this artifact renamed around");
+    assert_eq!(
+        serde_json::from_str::<serde_json::Value>(DIFF).expect("diff reparses").pointer("/presentation/slides/modified/0/diff/shapes/modified/0/kind").and_then(serde_json::Value::as_str),
+        Some("placeholder"),
+        "set-snapshot/retitles-and-lowers-the-title-placeholder: PptxShapeDiff is tagged `kind` — the SNAPSHOT enum's own tag is `shapeKind`, and mixing the two up is exactly the collision this artifact renamed around"
+    );
 }
 
 /// 🩹 Applying the committed diff directly to `before` yields the committed `after` — the diff is

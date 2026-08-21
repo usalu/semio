@@ -27,7 +27,7 @@ pub struct StepInference {
 }
 
 impl protocol::Inference<StepSnapshot> for StepInference {
-    async fn infer(snapshot: &StepSnapshot) -> Self {
+    fn infer(snapshot: &StepSnapshot) -> Self {
         Self { bounds: compute_step_bounds(snapshot) }
     }
 }
@@ -41,13 +41,13 @@ impl Default for StepInference {
 }
 
 impl protocol::InferenceSpec<StepSnapshot> for StepInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.stdio.step.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.step.inference.bounds", reads: &["entities"] }]
     }
 }

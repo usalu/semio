@@ -18,9 +18,9 @@ use crate::artifacts::tiff::schema::diff::{
     self, dec_byte_order, dec_field_type, dec_ifd, dec_ifd_bin, dec_list, dec_str, dec_values, dec_values_bin, enc_byte_order, enc_field_type, enc_ifd, enc_ifd_bin, enc_list, enc_str, enc_values, enc_values_bin, hex_decode, hex_encode, parse_num,
     read_bytes_lp, read_str_lp, split_top_level, strip_brackets, write_bytes_lp, write_str_lp, TiffDiff,
 };
-use crate::artifacts::tiff::schema::snapshot::{TiffByteOrder, TiffFieldType, TiffIfd, TiffValues};
 #[cfg(test)]
 use crate::artifacts::tiff::schema::snapshot::TiffTag;
+use crate::artifacts::tiff::schema::snapshot::{TiffByteOrder, TiffFieldType, TiffIfd, TiffValues};
 use crate::artifacts::tiff::TiffSnapshot;
 use protocol::OpBinary;
 use protocol::{Mutation, MutationDiff, OpText};
@@ -278,36 +278,36 @@ impl OpBinary for TiffMutation {
         match tag {
             0 => Ok(TiffMutation::NoMutation),
             1 => {
-                let snapshot = dec_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let snapshot = dec_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", reader.position(), e))?;
                 Ok(TiffMutation::SetSnapshot { snapshot })
             }
             2 => {
-                let v = reader.read_u8().map_err(|e| malformed("op byte_order", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
+                let v = reader.read_u8().map_err(|e| malformed("op byte_order", reader.position(), e.to_string()))?;
                 Ok(TiffMutation::SetByteOrder { byte_order: if v == 0 { TiffByteOrder::LittleEndian } else { TiffByteOrder::BigEndian } })
             }
             3 => {
-                let index = reader.read_varint_u64().map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
-                let ifd = dec_ifd_bin(&mut reader).map_err(|e| malformed("op ifd", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
+                let ifd = dec_ifd_bin(&mut reader).map_err(|e| malformed("op ifd", reader.position(), e))?;
                 Ok(TiffMutation::InsertIfd { index, ifd })
             }
             4 => {
-                let index = reader.read_varint_u64().map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
                 Ok(TiffMutation::RemoveIfd { index })
             }
             5 => {
-                let ifd_index = reader.read_varint_u64().map_err(|e| malformed("op ifd_index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
-                let tag = reader.read_u16_le().map_err(|e| malformed("op tag", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
-                let kind = TiffFieldType::from_u16(reader.read_u8().map_err(|e| malformed("op kind", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as u16).map_err(|e| malformed("op kind", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let values = dec_values_bin(&mut reader).map_err(|e| malformed("op values", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let ifd_index = reader.read_varint_u64().map_err(|e| malformed("op ifd_index", reader.position(), e.to_string()))? as usize;
+                let tag = reader.read_u16_le().map_err(|e| malformed("op tag", reader.position(), e.to_string()))?;
+                let kind = TiffFieldType::from_u16(reader.read_u8().map_err(|e| malformed("op kind", reader.position(), e.to_string()))? as u16).map_err(|e| malformed("op kind", reader.position(), e))?;
+                let values = dec_values_bin(&mut reader).map_err(|e| malformed("op values", reader.position(), e))?;
                 Ok(TiffMutation::SetTag { ifd_index, tag, kind, values })
             }
             6 => {
-                let ifd_index = reader.read_varint_u64().map_err(|e| malformed("op ifd_index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
-                let tag = reader.read_u16_le().map_err(|e| malformed("op tag", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
+                let ifd_index = reader.read_varint_u64().map_err(|e| malformed("op ifd_index", reader.position(), e.to_string()))? as usize;
+                let tag = reader.read_u16_le().map_err(|e| malformed("op tag", reader.position(), e.to_string()))?;
                 Ok(TiffMutation::RemoveTag { ifd_index, tag })
             }
             7 => {
-                let pixels = read_bytes_lp(&mut reader).map_err(|e| malformed("op pixels", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let pixels = read_bytes_lp(&mut reader).map_err(|e| malformed("op pixels", reader.position(), e))?;
                 Ok(TiffMutation::SetPixels { pixels })
             }
             other => Err(malformed("op tag", 1, format!("unknown tag {other}"))),

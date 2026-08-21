@@ -42,7 +42,11 @@ async fn applies_to_committed_after() {
     let outcome = apply_ply_mutation(&mut snapshot, &mutation());
     assert!(outcome.messages().is_empty(), "set-snapshot/lifts-the-second-vertex-and-appends-a-comment: set-snapshot raised diagnostics it should not have");
     assert_eq!(snapshot, expected_after(), "set-snapshot/lifts-the-second-vertex-and-appends-a-comment: applied state differs from committed after-snapshot");
-    assert_eq!(snapshot.elements[0].rows[1].values[2], crate::artifacts::ply::standards::v1_0::subsets::any::schema::snapshot::PlyValue::Float(2.0), "set-snapshot/lifts-the-second-vertex-and-appends-a-comment: the second vertex's z cell must land on 2.0");
+    assert_eq!(
+        snapshot.elements[0].rows[1].values[2],
+        crate::artifacts::ply::standards::v1_0::subsets::any::schema::snapshot::PlyValue::Float(2.0),
+        "set-snapshot/lifts-the-second-vertex-and-appends-a-comment: the second vertex's z cell must land on 2.0"
+    );
     assert_eq!(snapshot.elements[0].rows[0], before().elements[0].rows[0], "set-snapshot/lifts-the-second-vertex-and-appends-a-comment: the first vertex row is identical on both sides and must survive untouched");
     assert_eq!(snapshot.elements[0].count, 2, "set-snapshot/lifts-the-second-vertex-and-appends-a-comment: apply_element_diff keeps count synced to rows.len(), and no row was added or removed");
     assert_eq!(snapshot.elements[0].properties, before().elements[0].properties, "set-snapshot/lifts-the-second-vertex-and-appends-a-comment: the property declarations are untouched");
@@ -87,11 +91,8 @@ async fn committed_json_is_canonical() {
 async fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
     let status = outcome.get("status").and_then(serde_json::Value::as_str).expect("outcome carries a status");
-    let declared: Vec<(String, String)> = outcome
-        .get("messages")
-        .and_then(serde_json::Value::as_array)
-        .map(|rows| rows.iter().map(|row| (row["level"].as_str().unwrap_or_default().to_string(), row["code"].as_str().unwrap_or_default().to_string())).collect())
-        .unwrap_or_default();
+    let declared: Vec<(String, String)> =
+        outcome.get("messages").and_then(serde_json::Value::as_array).map(|rows| rows.iter().map(|row| (row["level"].as_str().unwrap_or_default().to_string(), row["code"].as_str().unwrap_or_default().to_string())).collect()).unwrap_or_default();
     let raised = <PlyMutation as protocol::Mutation<PlySnapshot>>::diff(&mutation(), &before());
     let produced: Vec<(String, String)> = raised
         .messages()

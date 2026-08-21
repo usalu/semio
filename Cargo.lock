@@ -6690,6 +6690,7 @@ dependencies = [
  "semio-framework-actor",
  "semio-framework-async-macros",
  "semio-framework-hash",
+ "semio-framework-job",
  "semio-framework-mesh-engine",
  "semio-framework-os-kernel",
  "semio-framework-ui",
@@ -6896,7 +6897,6 @@ dependencies = [
  "tiny-skia",
  "tokio",
  "usvg 0.45.1",
- "uuid",
  "wasm-bindgen",
  "zip 2.4.2",
 ]
@@ -6949,6 +6949,7 @@ dependencies = [
  "semio-framework-compiler",
  "semio-framework-geometry",
  "semio-framework-graph",
+ "semio-framework-job",
  "semio-framework-math",
  "semio-framework-os-kernel",
  "semio-framework-ui",
@@ -7037,7 +7038,6 @@ dependencies = [
 name = "semio-framework-os-kernel-neural-engine"
 version = "0.1.0"
 dependencies = [
- "rayon",
  "serde",
  "serde_json",
  "thiserror 2.0.18",
@@ -7328,6 +7328,7 @@ dependencies = [
  "libc",
  "parley",
  "pollster",
+ "semio-framework-async",
  "semio-framework-async-macros",
  "semio-framework-geometry",
  "semio-framework-job",
@@ -7411,6 +7412,7 @@ dependencies = [
  "arboard",
  "js-sys",
  "raw-window-handle",
+ "semio-framework-job",
  "semio-framework-ui-backend-d3d12",
  "semio-framework-ui-backend-metal",
  "semio-framework-ui-backend-vulkan",
@@ -7442,6 +7444,7 @@ dependencies = [
 name = "semio-framework-ui-runtime"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-job",
  "semio-framework-ui-contract",
  "serde",
  "serde_json",
@@ -7483,7 +7486,6 @@ dependencies = [
  "tokio-tungstenite 0.26.2",
  "tracing",
  "tracing-subscriber",
- "uuid",
 ]
 
 [[package]]
@@ -7733,6 +7735,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-async-macros",
  "semio-framework-geometry",
+ "semio-framework-job",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-framework-schema",
@@ -7746,7 +7749,9 @@ name = "semio-s-plugin-fem"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
+ "semio-framework-async",
  "semio-framework-async-macros",
+ "semio-framework-job",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-framework-schema",
@@ -8151,6 +8156,7 @@ dependencies = [
  "semio-framework-dispatch-macros",
  "semio-framework-geometry",
  "semio-framework-graph",
+ "semio-framework-job",
  "semio-framework-os",
  "semio-framework-os-flow",
  "semio-framework-os-infinite",
@@ -8246,6 +8252,7 @@ dependencies = [
  "semio-framework-geometry",
  "semio-framework-graph",
  "semio-framework-hash",
+ "semio-framework-job",
  "semio-framework-os",
  "semio-framework-os-infinite",
  "semio-framework-os-kernel",
@@ -8437,7 +8444,6 @@ dependencies = [
  "flate2",
  "libz-sys",
  "miniz_oxide",
- "pollster",
  "semio-framework",
  "semio-framework-3d",
  "semio-framework-async-macros",

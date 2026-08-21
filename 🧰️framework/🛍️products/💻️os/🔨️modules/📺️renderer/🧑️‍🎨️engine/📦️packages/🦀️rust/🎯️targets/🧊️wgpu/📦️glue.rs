@@ -81,8 +81,8 @@ mod winit_app;
 
 // 🎠️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-kernel-loop): the real multi-shard `Kernel`
 // loop — `ParallelRuntime` — used by both `kernel_runtime` (below) and `scale_bench`. Native-only,
-// same reason `kernel_runtime`/`scale_bench` themselves are: real OS threads (`ShardExecutor`s +
-// their outcome forwarders), not available on wasm32.
+// same reason `kernel_runtime`/`scale_bench` themselves are: native guest execution and the shared
+// native worker pool are not available on wasm32.
 #[cfg(not(target_arch = "wasm32"))]
 #[path = "🎠️runtime.rs"]
 pub mod parallel_runtime;
@@ -125,7 +125,7 @@ use winit::window::Window;
 /// 🧵️ P1e (INTERACTIVE-JOB-RUNTIME-REFACTOR, one-pool-worker-runtime): the ONE process-wide
 /// [`semio_framework_async::WorkerPool`] this renderer crate itself owns — real dependency
 /// injection into every consumer that needs one below (`shell::ShellState::new`'s
-/// `TokioHostRuntime::with_pool`, `kernel_runtime::KernelThreadState::new`'s `ParallelRuntime::new`),
+/// `TokioHostRuntime::with_pool`, `kernel_runtime::KernelPoolState::new`'s `ParallelRuntime::new`),
 /// never a second pool minted per-consumer. Per P1a/P1b's own reports this renderer was the
 /// explicitly-named "next place to inject a real, externally-owned `WorkerPool`" rather than falling
 /// through to `semio-framework-os-services`'s own private `global_worker_pool()` default (that
@@ -151,15 +151,16 @@ pub(crate) fn renderer_worker_pool() -> semio_framework_async::WorkerPool {
 
 //#region 🎠️KernelRuntime
 /// 🎭️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (packet H3-wgpu-native; upgraded by terra-kernel-loop):
-/// `📓️design-runtime.md` §1's "wgpu native" host — `Kernel` runs on a dedicated kernel thread; the
-/// winit thread only submits requests and drains outbound results. terra-kernel-loop replaced the
+/// `📓️design-runtime.md` §1's "wgpu native" host — `Kernel` runs as a persistent, bounded-poll state
+/// machine on the renderer's shared worker pool; the winit thread only submits requests and drains
+/// outbound results. terra-kernel-loop replaced the
 /// original single-`ShardLoop` request-servant with `crate::parallel_runtime::ParallelRuntime`: real
 /// `Kernel::submit`/`tick`/`complete` (DRR fairness, failure-ladder/metrics bookkeeping) dispatched
-/// across K real `ShardExecutor` OS threads, one per `ShardTable`-pinned shard — see
+/// across K logical `ShardExecutor`s on the same pool, one per `ShardTable`-pinned shard — see
 /// `📓️terra-kernel-loop-report.md` for what is (and, per that report's own honest-gaps section, is
 /// NOT) wired all the way through. `ProgramBridgeBackend::Wasm` (in `ProgramBridge/`) holds a
 /// [`KernelClient`] instead of the deleted `Arc<WasmPluginRuntime>`; every plugin turn now executes
-/// on this thread via `Kernel` + `GuestRuntime`/`WasmtimeRuntime` + `ParallelRuntime`, never
+/// through `Kernel` + `GuestRuntime`/`WasmtimeRuntime` + `ParallelRuntime` on pool workers, never
 /// in-process on the winit thread.
 #[cfg(not(target_arch = "wasm32"))]
 pub(crate) mod kernel_runtime {
@@ -172,7 +173,6 @@ pub(crate) mod kernel_runtime {
     use std::path::PathBuf;
     use std::pin::Pin;
     use std::sync::atomic::{AtomicU64, Ordering};
-    use std::sync::mpsc;
     use std::sync::{Arc, Mutex, OnceLock};
     use std::task::{Context, Poll, Waker};
     use std::time::Duration;
@@ -199,7 +199,7 @@ pub(crate) mod kernel_runtime {
     /// the pool object itself is touched here (`ShardExecutor` count, not thread count — shards are a
     /// pure scheduling/affinity unit post-P1c, never a thread per shard). `available_parallelism()`
     /// failing (rare; a sandboxed/exotic host) falls back to `4` cores' worth of shards rather than
-    /// panicking the kernel thread before it can even start.
+    /// faulting the kernel pool task before it can start.
     fn native_shard_count() -> u16 {
         let cores = std::thread::available_parallelism().map(|n| n.get()).unwrap_or(4);
         semio_framework_async::worker_count_for(semio_framework_async::ProcessKind::InteractiveNative, cores) as u16
@@ -305,7 +305,7 @@ pub(crate) mod kernel_runtime {
     pub(crate) struct ExchangeOutcome {
         pub frames: Vec<protocol::AppFrame>,
         /// 🖼️ Surfaces this turn repainted or retained on desync — reconciled against the kernel
-        /// thread's own retained tree (`KernelThreadState::retained`); see that field's doc for the
+        /// pool state machine's retained tree (`KernelPoolState::retained`); see that field's doc for the
         /// full-body-vs-desync policy.
         pub surfaces: HashMap<String, UiNode>,
         /// 🧾️ Every effect this turn produced that was NOT one of the `Effect::SendMessage{target:
@@ -346,7 +346,7 @@ pub(crate) mod kernel_runtime {
     struct KernelFuture {
         slot: Arc<ResponseSlot>,
         request: Option<KernelRequest>,
-        sender: mpsc::Sender<(KernelRequest, Arc<ResponseSlot>)>,
+        queue: Arc<KernelRequestQueue>,
     }
 
     impl Future for KernelFuture {
@@ -354,7 +354,7 @@ pub(crate) mod kernel_runtime {
         fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
             let this = self.get_mut();
             if let Some(request) = this.request.take() {
-                let _ = this.sender.send((request, this.slot.clone()));
+                this.queue.push(request, this.slot.clone());
             }
             let mut result = this.slot.result.lock().expect("response slot lock");
             if let Some(outcome) = result.take() {
@@ -370,7 +370,8 @@ pub(crate) mod kernel_runtime {
     //#region 🔖️KernelClient
     #[derive(Clone)]
     pub(crate) struct KernelClient {
-        sender: mpsc::Sender<(KernelRequest, Arc<ResponseSlot>)>,
+        queue: Arc<KernelRequestQueue>,
+        _task: Arc<KernelPoolFuture>,
     }
 
     fn global_client() -> &'static OnceLock<KernelClient> {
@@ -379,21 +380,19 @@ pub(crate) mod kernel_runtime {
     }
 
     impl KernelClient {
-        /// ▶️ Spawns the kernel thread exactly once (lazily, on first use — every `ProgramBridgeEntry`
-        /// clones the same handle afterward). Native-only; there is no equivalent on wasm32, where
-        /// the JS host already owns the actual plugin execution off this crate's own thread.
+        /// ▶️ Mounts the kernel request state machine on the process-wide worker pool exactly once.
         pub(crate) fn get() -> KernelClient {
             global_client()
                 .get_or_init(|| {
-                    let (tx, rx) = mpsc::channel::<(KernelRequest, Arc<ResponseSlot>)>();
-                    std::thread::Builder::new().name("semio-kernel".into()).spawn(move || run_kernel_thread(rx)).expect("spawn kernel thread");
-                    KernelClient { sender: tx }
+                    let queue = Arc::new(KernelRequestQueue::default());
+                    let task = KernelPoolFuture::spawn(crate::renderer_worker_pool(), Lane::Interactive, run_kernel_pool(queue.clone()));
+                    KernelClient { queue, _task: task }
                 })
                 .clone()
         }
 
         fn submit(&self, request: KernelRequest) -> KernelFuture {
-            KernelFuture { slot: Arc::new(ResponseSlot::default()), request: Some(request), sender: self.sender.clone() }
+            KernelFuture { slot: Arc::new(ResponseSlot::default()), request: Some(request), queue: self.queue.clone() }
         }
 
         pub(crate) async fn create_app(&self, wasm_path: PathBuf, plugin_id: String, app_id: String) -> Result<u32, String> {
@@ -404,9 +403,9 @@ pub(crate) mod kernel_runtime {
         }
 
         /// ✂️ Fire-and-forget, matching the old `WasmPluginRuntime::destroy_app`'s `fn(&self, u32)`
-        /// (no result) shape — the kernel thread frees the actor's `GuestInstance` asynchronously.
+        /// (no result) shape — the kernel pool task frees the actor's `GuestInstance` asynchronously.
         pub(crate) fn destroy_app(&self, instance: u32) {
-            let _ = self.sender.send((KernelRequest::DestroyApp { instance }, Arc::new(ResponseSlot::default())));
+            self.queue.push(KernelRequest::DestroyApp { instance }, Arc::new(ResponseSlot::default()));
         }
 
         pub(crate) async fn exchange_commands(&self, instance: u32, commands: Vec<protocol::AppCommand>) -> Result<ExchangeOutcome, String> {
@@ -423,13 +422,13 @@ pub(crate) mod kernel_runtime {
     }
     //#endregion
 
-    //#region 🔖️KernelThreadState
+    //#region 🔖️KernelPoolState
     struct RetainedSurface {
         revision: u64,
         node: UiNode,
     }
 
-    struct KernelThreadState {
+    struct KernelPoolState {
         guest_runtime: Arc<GuestRuntimes>,
         /// 🎠️ terra-kernel-loop: the real multi-shard engine — replaces the single physical
         /// `ShardLoop`/`Kernel::new(.., 1, 0, ..)` this host used to run. `Kernel::new(Native, K, 2,
@@ -462,13 +461,13 @@ pub(crate) mod kernel_runtime {
         pending_rejections: HashMap<(u32, String), u64>,
     }
 
-    impl KernelThreadState {
+    impl KernelPoolState {
         /// ⏱️ P3a (INTERACTIVE-JOB-RUNTIME-REFACTOR, ui-thread-isolation): this whole `impl` block used
         /// to bridge every single `ParallelRuntime`/`GuestRuntime` call with its OWN `pollster::block_on`
         /// (15 call sites — the design doc's Category C, "THE PHASE 3 FOCUS"). Those calls never
         /// actually blocked the UI/winit thread (they only ever ran inside `run_kernel_thread`'s own
-        /// dedicated `"semio-kernel"` background thread — see that fn's own doc comment), but they were
-        /// still disguised, scattered `block_on` calls outside any approved entry point, which is
+        /// former dedicated `"semio-kernel"` background thread), but they were still disguised,
+        /// scattered `block_on` calls outside any approved entry point, which is
         /// exactly what the audit's "block_on confined to approved process/test entry points" rule
         /// forbids and what inflated the interactivity audit's blocking-bridge count. Every method below
         /// is now a genuine `async fn`; the ONE remaining bridge lives at `run_kernel_thread`'s own
@@ -654,15 +653,15 @@ pub(crate) mod kernel_runtime {
         /// but does not abort the turn since `Coalesced`/`Dropped` both still leave AT LEAST one
         /// envelope queued and `Rejected` on a freshly-activated actor's own generous Interactive-lane
         /// mailbox should not occur in practice) → `Kernel::tick` → dispatch to the actor's OWN pinned
-        /// shard (a REAL `ShardExecutor` OS thread, not the single physical `ShardLoop` this host used
-        /// to drive) → wait for that shard's `ShardOutcome` → `Kernel::complete` (closing the bridging
+        /// logical shard executor on the shared pool → wait for that shard's `ShardOutcome` →
+        /// `Kernel::complete` (closing the bridging
         /// gap this method's OWN doc comment used to flag as unreached) → hand the result to
         /// `apply_turn_result`. Loops `tick_and_dispatch` until nothing is left to grant — normally
         /// one iteration (this host submits for exactly one actor per call), but `Kernel::tick`'s DRR
         /// scheduler is global, so this stays correct if that ever changes.
         ///
         /// 🕳️ Honest gap: `Kernel::commit_frame`/`apply_scene_patch` are NOT called here —
-        /// `KernelThreadState::activate` (via `ParallelRuntime::activate`) still passes `window: None`
+        /// `KernelPoolState::activate` (via `ParallelRuntime::activate`) still passes `window: None`
         /// for every actor, so `Kernel`'s own `SceneStore` would stay permanently empty regardless;
         /// this host's UI pipeline already has its own frame-boundary mechanism (`retained`/
         /// `apply_ui_patch`, "item 4" of the original H3 packet). Wiring per-window `Kernel::
@@ -738,7 +737,7 @@ pub(crate) mod kernel_runtime {
                         // 🚧️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (K1, landed mid-session):
                         // `ShardOutcome` grew `Job`/`Checkpoint`/`Resumed`/`Cancelled` for job-stepping
                         // and the newly-wired `Payload::Suspend`/`Resume`/`Cancel` dispatch. This
-                        // kernel thread never sends those payloads (only `run_turn`'s own
+                        // kernel pool state machine never sends those payloads (only `run_turn`'s own
                         // `Payload::Event`), so any of them reaching here — for `actor` OR any other
                         // actor `Kernel::tick` happened to grant in the SAME call — is silently
                         // ignored rather than aborting an otherwise-successful turn; unlike the
@@ -807,38 +806,103 @@ pub(crate) mod kernel_runtime {
         }
     }
 
-    /// ⏱️ P3a: the ONE `pollster::block_on` for this whole background thread's lifetime — an
-    /// approved-entry-point bridge (this fn IS the thread's entry point, spawned once by
-    /// `KernelClient::get`), not a disguised one scattered through product logic. Everything inside
-    /// `KernelThreadState`'s methods is now genuine `async fn`/`.await`; `mpsc::Receiver::recv()`
-    /// itself stays a plain blocking channel receive (a consumer thread waiting on its own work queue
-    /// is not the `block_on(async_future)` pattern the audit targets).
-    fn run_kernel_thread(rx: mpsc::Receiver<(KernelRequest, Arc<ResponseSlot>)>) {
-        // ⏱️ P3a (INTERACTIVE-JOB-RUNTIME-REFACTOR, ui-thread-isolation): this thread was invisible to
-        // the thread census before this packet — a real ad-hoc OS thread (`KernelClient::get`'s own
-        // `std::thread::Builder::spawn`, predating this packet) outside `WorkerPool`, never registered
-        // with any role. Registered as an `IoBoundary` (the closest existing category — see
-        // `semio_framework_trace::ThreadRole`'s own doc: "a genuinely blocking OS pipe read... counted
-        // separately and bounded per its own site") rather than `Worker`, since it is NOT a
-        // `WorkerPool`-indexed worker. Retiring this thread entirely in favour of a real pool
-        // submission is flagged as follow-up work in `📓️p3a-render-snapshot.md` — out of this packet's
-        // boundary (it would mean changing how `KernelClient::get` mints its handle, a wider blast
-        // radius than the block_on removal this packet targets).
-        semio_framework_trace::register_io_boundary_thread("semio-kernel");
-        pollster::block_on(async move {
-            let mut state = KernelThreadState::new().await;
-            while let Ok((request, slot)) = rx.recv() {
-                let outcome = match request {
-                    KernelRequest::CreateApp { wasm_path, plugin_id, app_id } => KernelOutcome::Created(state.create_app(wasm_path, plugin_id, app_id).await),
-                    KernelRequest::DestroyApp { instance } => {
-                        state.destroy_app(instance).await;
-                        continue;
-                    }
-                    KernelRequest::Exchange { instance, events } => KernelOutcome::Exchanged(state.exchange(instance, events).await),
-                };
-                slot.deliver(outcome);
+    #[derive(Default)]
+    struct KernelRequestQueue {
+        pending: Mutex<std::collections::VecDeque<(KernelRequest, Arc<ResponseSlot>)>>,
+        waker: Mutex<Option<Waker>>,
+    }
+
+    impl KernelRequestQueue {
+        fn push(&self, request: KernelRequest, slot: Arc<ResponseSlot>) {
+            self.pending.lock().expect("kernel request queue lock").push_back((request, slot));
+            if let Some(waker) = self.waker.lock().expect("kernel request queue lock").take() {
+                waker.wake();
             }
-        });
+        }
+
+        fn poll(&self, cx: &mut Context<'_>) -> Poll<(KernelRequest, Arc<ResponseSlot>)> {
+            if let Some(request) = self.pending.lock().expect("kernel request queue lock").pop_front() {
+                return Poll::Ready(request);
+            }
+            *self.waker.lock().expect("kernel request queue lock") = Some(cx.waker().clone());
+            match self.pending.lock().expect("kernel request queue lock").pop_front() {
+                Some(request) => {
+                    self.waker.lock().expect("kernel request queue lock").take();
+                    Poll::Ready(request)
+                }
+                None => Poll::Pending,
+            }
+        }
+
+        async fn next(&self) -> (KernelRequest, Arc<ResponseSlot>) {
+            std::future::poll_fn(|cx| self.poll(cx)).await
+        }
+    }
+
+    struct KernelPoolFuture {
+        pool: semio_framework_async::WorkerPool,
+        lane: Lane,
+        future: Mutex<Option<Pin<Box<dyn Future<Output = ()> + Send + 'static>>>>,
+        scheduled: std::sync::atomic::AtomicBool,
+        notified: std::sync::atomic::AtomicBool,
+    }
+
+    impl KernelPoolFuture {
+        fn spawn(pool: semio_framework_async::WorkerPool, lane: Lane, future: impl Future<Output = ()> + Send + 'static) -> Arc<Self> {
+            let task = Arc::new(Self { pool, lane, future: Mutex::new(Some(Box::pin(future))), scheduled: std::sync::atomic::AtomicBool::new(false), notified: std::sync::atomic::AtomicBool::new(true) });
+            task.schedule();
+            task
+        }
+
+        fn schedule(self: &Arc<Self>) {
+            self.notified.store(true, std::sync::atomic::Ordering::Release);
+            if self.scheduled.swap(true, std::sync::atomic::Ordering::AcqRel) {
+                return;
+            }
+            let task = self.clone();
+            self.pool.submit(self.lane, Box::new(move || task.run_turn()));
+        }
+
+        fn run_turn(self: Arc<Self>) {
+            self.notified.store(false, std::sync::atomic::Ordering::Release);
+            if let Some(mut future) = self.future.lock().expect("kernel pool future lock").take() {
+                let waker = Waker::from(self.clone());
+                let mut context = Context::from_waker(&waker);
+                if future.as_mut().poll(&mut context).is_pending() {
+                    *self.future.lock().expect("kernel pool future lock") = Some(future);
+                }
+            }
+            self.scheduled.store(false, std::sync::atomic::Ordering::Release);
+            if self.notified.load(std::sync::atomic::Ordering::Acquire) && self.future.lock().expect("kernel pool future lock").is_some() {
+                self.schedule();
+            }
+        }
+    }
+
+    impl std::task::Wake for KernelPoolFuture {
+        fn wake(self: Arc<Self>) {
+            self.schedule();
+        }
+
+        fn wake_by_ref(self: &Arc<Self>) {
+            self.schedule();
+        }
+    }
+
+    async fn run_kernel_pool(queue: Arc<KernelRequestQueue>) {
+        let mut state = KernelPoolState::new().await;
+        loop {
+            let (request, slot) = queue.next().await;
+            let outcome = match request {
+                KernelRequest::CreateApp { wasm_path, plugin_id, app_id } => KernelOutcome::Created(state.create_app(wasm_path, plugin_id, app_id).await),
+                KernelRequest::DestroyApp { instance } => {
+                    state.destroy_app(instance).await;
+                    continue;
+                }
+                KernelRequest::Exchange { instance, events } => KernelOutcome::Exchanged(state.exchange(instance, events).await),
+            };
+            slot.deliver(outcome);
+        }
     }
     //#endregion
 

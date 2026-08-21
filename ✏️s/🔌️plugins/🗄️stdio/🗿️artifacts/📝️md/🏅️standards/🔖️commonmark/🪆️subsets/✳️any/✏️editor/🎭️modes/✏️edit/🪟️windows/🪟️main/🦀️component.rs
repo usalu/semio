@@ -3,7 +3,7 @@
 
 use crate::artifacts::md::standards::v_commonmark::subsets::any::schema::snapshot::MdSnapshot;
 use semio_framework_plugin::app::{TextView, TextWindowKit};
-use semio_framework_plugin::{UiNode, WindowKindDefinition, WindowKit};
+use semio_framework_plugin::{BuiltNode, WindowKindDefinition, WindowKit};
 use store::ArtifactDsl;
 
 pub const WINDOW_KIND_ID: &str = TextWindowKit::KIND_ID;
@@ -18,7 +18,7 @@ pub fn definition() -> WindowKindDefinition {
 /// markup — the same textual form `parse_dsl` accepts back on `replace-text` (see the sibling root
 /// `handle`). Round-trips exactly for any document this format's own grammar can already print.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(snapshot: &MdSnapshot) -> UiNode {
+pub fn render(snapshot: &MdSnapshot) -> BuiltNode {
     TextWindowKit::render(&TextView { text: snapshot.print_dsl(), language: Some("md".into()), read_only: false })
 }
 

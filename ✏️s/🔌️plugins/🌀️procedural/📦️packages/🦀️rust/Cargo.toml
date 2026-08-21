@@ -59,8 +59,9 @@ ui_wgpu = {path = "../../../../../🧰️framework/🔨️modules/🖱️ui/📦
 ui_styling = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
 semio-framework = { path = "../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }
 semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
+semio-framework-job = { workspace = true }
 serde.workspace = true
-serde_json.workspace = true
+serde_json = { workspace = true, features = ["float_roundtrip"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen = "0.2.106"
@@ -77,4 +78,3 @@ semio-framework-async-macros = { path = "../../../../../🧰️framework/🔨️
 # above (Cargo rejects depending on one crate under two different names) with the extra
 # `wgpu-engine` features cargo's resolver unifies in for dev/test builds only.
 ui_wgpu = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu-engine"] }
-

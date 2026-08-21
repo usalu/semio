@@ -1,0 +1,38 @@
+./🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust/📦️glue.rs:1084:        let server = std::thread::spawn(move || daemon::serve(&server_root, server_running));
+./compose/client/bin/gql/rs/bin.rs:222:    std::thread::spawn(|| {
+./🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️asyncprobe/🖥️host/🦀️main.rs:239:    let ticker = std::thread::spawn(move || {
+./🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️asyncprobe/🖥️host/🦀️main.rs:377:                let pusher = std::thread::spawn(move || {
+./compose/client/lib/rs/lib.rs:14361:            std::thread::spawn(move || futures_lite::future::block_on(fut));
+./🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️asyncprobe/🖥️host-turn/🦀️main.rs:159:    let handle = std::thread::spawn(move || {
+./🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️asyncprobe/🖥️host-turn/🦀️main.rs:534:    let rt = tokio::runtime::Builder::new_multi_thread().enable_all().build()?;
+./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️render_snapshot.rs:188:        std::thread::scope(|scope| {
+./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:12115:        let chrome = std::thread::spawn(move || {
+./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🧊️component.rs:12130:        std::thread::spawn(move || {
+./🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🎭️actor/🦀️component.rs:1073:        let sender_thread = std::thread::spawn(move || blocked_address.send_blocking(Priority::Command, 2));
+./🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🎭️actor/🦀️component.rs:1117:        let sender_thread = std::thread::spawn(move || tx.send(42));
+./🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🦀️component.rs:298:    /// `tokio::runtime::Builder::build()` path, constructing a [`ScopeTable`] over an already-live
+./🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🦀️component.rs:2195:    /// `Runtime`, so `tokio::spawn` is gone — a plain `std::thread::spawn` driving its own
+./🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🦀️component.rs:2214:        let handle = std::thread::spawn(move || {
+./🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🦀️component.rs:2359:        std::thread::spawn(move || {
+./🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🦀️component.rs:2363:                std::thread::spawn(move || {
+./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🏃️executor.rs:489:            handles.push(std::thread::spawn(move || {
+./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🚚️process-transport/🦀️component.rs:30:/// 🚪️ P1f: the ONE reason a dedicated `thread::Builder` survives in this module at all — a real,
+./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🚚️process-transport/🦀️component.rs:130:            thread::Builder::new()
+./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🚚️process-transport/🦀️component.rs:256:            thread::Builder::new()
+./🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🦀️component.rs:19://! bounded `ComputePool` semaphore instead of an unbounded `std::thread::spawn` per call.
+./🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🦀️component.rs:433:/// `HttpPool` admits onto its bounded pool — no per-call `std::thread::spawn` and no private
+./🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🦀️component.rs:453:    /// old unbounded `std::thread::spawn` per call) and races it against `ctx.deadline_ms` via the
+./🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️prepared.rs:565:        let identity = std::thread::spawn(move || (packet.scene_revision, packet.preview_generation)).join().expect("worker packet");
+./🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️prepared.rs:573:        std::thread::spawn(move || {
+./🧰️framework/🔨️modules/⏳️async/🦀️component.rs:1320:                let handle = thread::Builder::new().name(format!("semio-pool-worker-{index}")).spawn(move || worker_loop(&worker_inner, index as u32)).expect("WorkerPool: failed to spawn worker thread");
+./🧰️framework/🔨️modules/⏳️async/🦀️component.rs:1920:        let sender = std::thread::spawn(move || {
+./🧰️framework/🔨️modules/⏳️async/🦀️component.rs:2090:        std::thread::spawn(move || {
+./🧰️framework/🔨️modules/⏳️async/🦀️component.rs:2129:        std::thread::spawn(move || {
+./🧰️framework/🔨️modules/⏳️async/🦀️component.rs:2160:        std::thread::spawn(move || {
+./🧰️framework/🔨️modules/⏳️async/🦀️component.rs:2222:                std::thread::spawn(move || {
+./🧰️framework/🔨️modules/⏳️async/🦀️component.rs:2411:                std::thread::spawn(move || {
+./🧰️framework/🔨️modules/⏳️async/🦀️component.rs:2446:        let shutdown = std::thread::spawn(move || {
+./🧰️framework/🔨️modules/🎒️pack/⏳️async/🦀️component.rs:54:    // plain `std::thread::spawn` closure with no executor, simulating a foreign-thread cancel
+./🧰️framework/🔨️modules/🎒️pack/⏳️async/🦀️component.rs:557:        let canceller = std::thread::spawn(move || {
+./🧰️framework/🔨️modules/🎒️pack/⏳️async/🦀️component.rs:628:        let canceller = std::thread::spawn(move || {
+./🧰️framework/🔨️modules/🎒️pack/🌐️http/🦀️component.rs:306:    /// `std::thread::spawn(..).join()` (an unbounded, budget-blind thread PLUS a synchronous block

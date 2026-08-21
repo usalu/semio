@@ -20,7 +20,7 @@ pub(crate) fn collect_flattened_leaves(children: &[DrawNode]) -> Option<Vec<Draw
                 if *transform != SemioTransform::identity() {
                     return None;
                 }
-                out.extend(Box::pin(collect_flattened_leaves(nested))?);
+                out.extend(collect_flattened_leaves(nested)?);
             }
             leaf => out.push(leaf.clone()),
         }

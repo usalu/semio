@@ -24,7 +24,7 @@ pub struct PdfInference {
 }
 
 impl Inference<PdfSnapshot> for PdfInference {
-    async fn infer(snapshot: &PdfSnapshot) -> Self {
+    fn infer(snapshot: &PdfSnapshot) -> Self {
         Self { outline: PdfOutline::compute(snapshot) }
     }
 }
@@ -41,13 +41,13 @@ impl Default for PdfInference {
 }
 
 impl protocol::InferenceSpec<PdfSnapshot> for PdfInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.stdio.pdf.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.pdf.inference.outline", reads: &["page"] }]
     }
 }
@@ -84,14 +84,14 @@ mod tests {
     use super::*;
     use protocol::Inference;
 
-    #[semio_framework_async_macros::async_test]
-    async fn inference_determinism_law() {
+    #[test]
+    fn inference_determinism_law() {
         let snapshot = PdfSnapshot::default();
         assert_eq!(PdfInference::infer(&snapshot), PdfInference::infer(&snapshot));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn inference_default_law() {
+    #[test]
+    fn inference_default_law() {
         assert_eq!(PdfInference::infer(&PdfSnapshot::default()), PdfInference::default());
     }
 }

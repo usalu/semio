@@ -182,7 +182,6 @@ impl Mutation<PptxSnapshot> for PptxMutation {
 /// field (`slides: Vec<PptxSlide>`), same convention `enc_slide`/`enc_paragraph` use.
 //#endregion 🔖️SnapshotCodec
 
-
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
 struct PptxMutationRecord {
     kind: String,

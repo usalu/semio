@@ -24,7 +24,7 @@ pub struct BcfInference {
 }
 
 impl protocol::Inference<BcfSnapshot> for BcfInference {
-    async fn infer(snapshot: &BcfSnapshot) -> Self {
+    fn infer(snapshot: &BcfSnapshot) -> Self {
         Self { topic_stats: compute_bcf_topic_stats(snapshot) }
     }
 }
@@ -38,13 +38,13 @@ impl Default for BcfInference {
 }
 
 impl protocol::InferenceSpec<BcfSnapshot> for BcfInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.stdio.bcf.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.bcf.inference.topicStats", reads: &["topics"] }]
     }
 }

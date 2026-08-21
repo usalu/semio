@@ -7,7 +7,7 @@
 
 use crate::artifacts::epw::EpwSnapshot;
 use semio_framework_plugin::app::{TableView, TableWindowKit, WindowKit};
-use semio_framework_plugin::{LocalizedLabel, UiNode, WindowKindDefinition};
+use semio_framework_plugin::{BuiltNode, LocalizedLabel, WindowKindDefinition};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = TableWindowKit::KIND_ID;
@@ -64,10 +64,10 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-/// ✏️ Real `EpwSnapshot -> UiNode`: one row per hourly record, all 35 spec columns — every column is
+/// ✏️ Real `EpwSnapshot -> BuiltNode`: one row per hourly record, all 35 spec columns — every column is
 /// a real `set-cell` edit target (`EpwEditorCommand::SetCell`, keyed by row index + column name).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &EpwSnapshot) -> UiNode {
+pub fn render(document: &EpwSnapshot) -> BuiltNode {
     let columns = EPW_TABLE_COLUMNS.iter().map(|column| column.to_string()).collect();
     let rows = document.records.iter().map(|record| record.fields().iter().map(|field| field.to_string()).collect()).collect();
     TableWindowKit::render(&TableView { columns, rows })

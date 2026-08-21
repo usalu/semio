@@ -1,7 +1,7 @@
 //! ✏️ `svg` edit (tiny) — the `edit` mode: a single
 //! full-pane Main window, the only mode this thin surface declares.
 
-use crate::editor::svg_tiny::modes::edit::windows::main as main;
+use crate::editor::svg_tiny::modes::edit::windows::main;
 use semio_framework_plugin::{LocalizedLabel, ModeDefinition, WindowLayout, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode};
 
 pub const MODE_ID: &str = "edit";

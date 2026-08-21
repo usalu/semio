@@ -548,7 +548,9 @@ fn inverse_node_diff(current: &DrawNode, diff: &DrawNodeDiff) -> DrawNodeDiff {
             other => DrawNodeDiff::Replace { node: other.clone() },
         },
         DrawNodeDiff::Group(gd) => match current {
-            DrawNode::Group { transform, children } => DrawNodeDiff::Group(DrawGroupDiff { transform: gd.transform.as_ref().map(|_| *transform), children: gd.children.as_ref().map(|cd| inverse_indexed(children, cd, |c, d| inverse_node_diff(c, d))) }),
+            DrawNode::Group { transform, children } => {
+                DrawNodeDiff::Group(DrawGroupDiff { transform: gd.transform.as_ref().map(|_| *transform), children: gd.children.as_ref().map(|cd| inverse_indexed(children, cd, |c, d| inverse_node_diff(c, d))) })
+            }
             other => DrawNodeDiff::Replace { node: other.clone() },
         },
         DrawNodeDiff::Image(id) => match current {

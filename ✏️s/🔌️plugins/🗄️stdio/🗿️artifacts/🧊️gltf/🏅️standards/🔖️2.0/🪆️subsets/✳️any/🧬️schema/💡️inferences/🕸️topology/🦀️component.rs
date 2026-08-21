@@ -30,11 +30,11 @@ pub struct GltfTopologyInference;
 impl GltfInferenceStage<GltfGeometryContext<'_>> for GltfTopologyInference {
     type Output = GltfTopologyIndicators;
 
-    async fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
+    fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
         Self::Output { holes: holes::infer(context), handles: handles::infer(context), boundary_loops: boundary_loops::infer(context), euler_characteristic: euler_characteristic::infer(context), genus: genus::infer(context) }
     }
 
-    async fn unavailable(diagnostic_ids: &[String]) -> Self::Output {
+    fn unavailable(diagnostic_ids: &[String]) -> Self::Output {
         Self::Output {
             holes: holes::unavailable_measure(diagnostic_ids),
             handles: handles::unavailable_measure(diagnostic_ids),
@@ -102,8 +102,8 @@ mod canonical_vectors {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn every_topology_leaf_executes_its_shared_vectors() {
+    #[test]
+    fn every_topology_leaf_executes_its_shared_vectors() {
         assert_unsigned(include_str!("boundary-loops/🧪️contract/🔣️component.json"), boundary_loops::infer, boundary_loops::unavailable_measure);
         assert_signed(include_str!("euler-characteristic/🧪️contract/🔣️component.json"), euler_characteristic::infer, euler_characteristic::unavailable_measure);
         assert_unsigned(include_str!("genus/🧪️contract/🔣️component.json"), genus::infer, genus::unavailable_measure);

@@ -310,50 +310,50 @@ impl OpBinary for StepMutation {
         match tag {
             0 => Ok(StepMutation::NoMutation),
             1 => {
-                let snapshot = dec_step_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let snapshot = dec_step_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", reader.position(), e))?;
                 Ok(StepMutation::SetSnapshot { snapshot })
             }
             2 => {
-                let file_description = dec_file_description_bin(&mut reader).map_err(|e| malformed("op file_description", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let file_description = dec_file_description_bin(&mut reader).map_err(|e| malformed("op file_description", reader.position(), e))?;
                 Ok(StepMutation::SetFileDescription { file_description })
             }
             3 => {
-                let file_name = dec_file_name_bin(&mut reader).map_err(|e| malformed("op file_name", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let file_name = dec_file_name_bin(&mut reader).map_err(|e| malformed("op file_name", reader.position(), e))?;
                 Ok(StepMutation::SetFileName { file_name })
             }
             4 => {
-                let file_schema = dec_file_schema_bin(&mut reader).map_err(|e| malformed("op file_schema", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let file_schema = dec_file_schema_bin(&mut reader).map_err(|e| malformed("op file_schema", reader.position(), e))?;
                 Ok(StepMutation::SetFileSchema { file_schema })
             }
             5 => {
-                let index = reader.read_varint_u64().map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
-                let entity = dec_entity_bin(&mut reader).map_err(|e| malformed("op entity", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
+                let entity = dec_entity_bin(&mut reader).map_err(|e| malformed("op entity", reader.position(), e))?;
                 Ok(StepMutation::InsertEntity { index, entity })
             }
             6 => {
-                let id = reader.read_varint_u64().map_err(|e| malformed("op id", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
+                let id = reader.read_varint_u64().map_err(|e| malformed("op id", reader.position(), e.to_string()))?;
                 Ok(StepMutation::RemoveEntity { id })
             }
             7 => {
-                let id = reader.read_varint_u64().map_err(|e| malformed("op id", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
-                let name = read_str_bin(&mut reader).map_err(|e| malformed("op name", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let id = reader.read_varint_u64().map_err(|e| malformed("op id", reader.position(), e.to_string()))?;
+                let name = read_str_bin(&mut reader).map_err(|e| malformed("op name", reader.position(), e))?;
                 Ok(StepMutation::SetEntityName { id, name })
             }
             8 => {
-                let id = reader.read_varint_u64().map_err(|e| malformed("op id", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
-                let arg_index = reader.read_varint_u64().map_err(|e| malformed("op arg_index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
-                let value = dec_value_bin(&mut reader).map_err(|e| malformed("op value", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let id = reader.read_varint_u64().map_err(|e| malformed("op id", reader.position(), e.to_string()))?;
+                let arg_index = reader.read_varint_u64().map_err(|e| malformed("op arg_index", reader.position(), e.to_string()))? as usize;
+                let value = dec_value_bin(&mut reader).map_err(|e| malformed("op value", reader.position(), e))?;
                 Ok(StepMutation::SetEntityArg { id, arg_index, value })
             }
             9 => {
-                let id = reader.read_varint_u64().map_err(|e| malformed("op id", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
-                let arg_index = reader.read_varint_u64().map_err(|e| malformed("op arg_index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
-                let value = dec_value_bin(&mut reader).map_err(|e| malformed("op value", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let id = reader.read_varint_u64().map_err(|e| malformed("op id", reader.position(), e.to_string()))?;
+                let arg_index = reader.read_varint_u64().map_err(|e| malformed("op arg_index", reader.position(), e.to_string()))? as usize;
+                let value = dec_value_bin(&mut reader).map_err(|e| malformed("op value", reader.position(), e))?;
                 Ok(StepMutation::InsertEntityArg { id, arg_index, value })
             }
             10 => {
-                let id = reader.read_varint_u64().map_err(|e| malformed("op id", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
-                let arg_index = reader.read_varint_u64().map_err(|e| malformed("op arg_index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
+                let id = reader.read_varint_u64().map_err(|e| malformed("op id", reader.position(), e.to_string()))?;
+                let arg_index = reader.read_varint_u64().map_err(|e| malformed("op arg_index", reader.position(), e.to_string()))? as usize;
                 Ok(StepMutation::RemoveEntityArg { id, arg_index })
             }
             other => Err(malformed("op tag", 1, format!("unknown tag {other}"))),

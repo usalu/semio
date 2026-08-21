@@ -7,8 +7,8 @@
 //! `BcfSnapshot.topics` directly — this file imports nothing from the sibling editor module.
 
 use crate::artifacts::bcf::standards::v2_1::subsets::any::schema::snapshot::BcfSnapshot;
-use semio_framework_plugin::{UiNode, WindowKindDefinition, WindowKit};
 use semio_framework_plugin::app::{TableView, TableWindowKit};
+use semio_framework_plugin::{BuiltNode, WindowKindDefinition, WindowKit};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = TableWindowKit::KIND_ID;
@@ -23,10 +23,10 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-/// 👁️ Pure `BcfSnapshot -> UiNode` read: one row per topic, real fields
+/// 👁️ Pure `BcfSnapshot -> BuiltNode` read: one row per topic, real fields
 /// (guid/title/status/priority/creation author) straight off the document.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &BcfSnapshot) -> UiNode {
+pub fn render(document: &BcfSnapshot) -> BuiltNode {
     let columns = vec!["GUID".to_string(), "Title".to_string(), "Status".to_string(), "Priority".to_string(), "Author".to_string()];
     let rows: Vec<Vec<String>> = document.topics.iter().map(|topic| vec![topic.guid.clone(), topic.title.clone(), topic.status.clone(), topic.priority.clone(), topic.creation_author.clone()]).collect();
     let view = TableView { columns, rows };
@@ -53,7 +53,18 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn render_lists_one_row_per_topic() {
         let mut document = BcfSnapshot::default();
-        document.topics.push(crate::artifacts::bcf::schema::snapshot::BcfTopic { guid: "g1".into(), title: "Clash".into(), description: String::new(), status: "open".into(), priority: "high".into(), labels: Vec::new(), creation_date: String::new(), creation_author: "tester".into(), comments: Vec::new(), viewpoints: Vec::new() });
+        document.topics.push(crate::artifacts::bcf::schema::snapshot::BcfTopic {
+            guid: "g1".into(),
+            title: "Clash".into(),
+            description: String::new(),
+            status: "open".into(),
+            priority: "high".into(),
+            labels: Vec::new(),
+            creation_date: String::new(),
+            creation_author: "tester".into(),
+            comments: Vec::new(),
+            viewpoints: Vec::new(),
+        });
         let _node = render(&document);
         assert_eq!(document.topics.len(), 1);
     }

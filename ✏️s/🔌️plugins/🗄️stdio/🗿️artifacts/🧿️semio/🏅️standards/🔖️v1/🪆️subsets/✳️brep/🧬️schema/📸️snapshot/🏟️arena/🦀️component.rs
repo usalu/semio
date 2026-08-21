@@ -12,9 +12,9 @@
 
 /// 🗄️ The (index, generation) pair every typed id newtype wraps. Implemented by [`define_id!`].
 pub trait ArenaId: Copy + Eq + std::hash::Hash + std::fmt::Debug {
-    async fn from_raw(index: u32, generation: u32) -> Self;
-    async fn raw_index(self) -> u32;
-    async fn raw_generation(self) -> u32;
+    fn from_raw(index: u32, generation: u32) -> Self;
+    fn raw_index(self) -> u32;
+    fn raw_generation(self) -> u32;
 }
 
 /// 🗄️ Declares a `Copy + Eq + Hash + Ord + Serialize` newtype id backed by `(u32, u32)`, with a
@@ -29,13 +29,13 @@ macro_rules! define_id {
             generation: u32,
         }
         impl $crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::ArenaId for $name {
-            async fn from_raw(index: u32, generation: u32) -> Self {
+            fn from_raw(index: u32, generation: u32) -> Self {
                 $name { index, generation }
             }
-            async fn raw_index(self) -> u32 {
+            fn raw_index(self) -> u32 {
                 self.index
             }
-            async fn raw_generation(self) -> u32 {
+            fn raw_generation(self) -> u32 {
                 self.generation
             }
         }

@@ -1,0 +1,9 @@
+   Compiling semio-fem-solver-harness v0.0.0 (/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/RESUMABLE-FEM-JOB-GRAPH/🧪️harness-p6)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.75s
+     Running unittests src/lib.rs (.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/RESUMABLE-FEM-JOB-GRAPH/🧪️target-p6-harness/debug/deps/semio_fem_solver_harness-7b86fbf56f3b026f)
+
+running 1 test
+test sparse::tests::pcg_job_publishes_coarse_preview_before_final_tolerance ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 21 filtered out; finished in 0.00s
+

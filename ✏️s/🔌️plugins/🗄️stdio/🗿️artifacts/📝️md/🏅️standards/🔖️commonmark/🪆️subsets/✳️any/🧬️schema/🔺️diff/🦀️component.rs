@@ -269,7 +269,7 @@ fn validate_md_blocks(base: &[MdBlock], diff: &MdBlocksDiff) -> MutationApplyRes
         if entry.index >= base.len() || !modified.insert(entry.index) || removed.contains(&entry.index) {
             return Err(MutationApplyError::new("mutation.apply.conflicting-target", "markdown block modification is missing, duplicated, or removed").at(["blocks", "modified"]));
         }
-        Box::pin(validate_md_block(&base[entry.index], &entry.diff))?;
+        validate_md_block(&base[entry.index], &entry.diff)?;
     }
     let final_len = base.len().saturating_sub(diff.removed.len()).saturating_add(diff.added.len());
     let mut added = std::collections::HashSet::new();
@@ -294,7 +294,7 @@ fn validate_md_list_items(base: &[Vec<MdBlock>], diff: &MdListItemsDiff) -> Muta
         if entry.index >= base.len() || !modified.insert(entry.index) || removed.contains(&entry.index) {
             return Err(MutationApplyError::new("mutation.apply.conflicting-target", "markdown list-item modification is missing, duplicated, or removed").at(["items", "modified"]));
         }
-        Box::pin(validate_md_blocks(&base[entry.index], &entry.diff))?;
+        validate_md_blocks(&base[entry.index], &entry.diff)?;
     }
     let final_len = base.len().saturating_sub(diff.removed.len()).saturating_add(diff.added.len());
     let mut added = std::collections::HashSet::new();
@@ -1301,7 +1301,7 @@ pub(crate) fn dec_block_bin(reader: &mut store::ByteReader<'_>) -> Result<MdBloc
         1 => Ok(MdBlock::Paragraph { inlines: dec_inline_list_bin(reader)? }),
         2 => {
             let ordered = read_bool_bin(reader)?;
-            let start = read_option_bin(reader, |r| Ok(semio_framework_plugin::resolve_ready(r.read_varint_u64()).map_err(|e| e.to_string())? as u32))?;
+            let start = read_option_bin(reader, |r| Ok(r.read_varint_u64().map_err(|e| e.to_string())? as u32))?;
             let tight = read_bool_bin(reader)?;
             let items = dec_item_list_bin(reader)?;
             Ok(MdBlock::List { ordered, start, tight, items })
@@ -1521,14 +1521,14 @@ pub(crate) fn dec_block_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<M
     let tag = reader.read_u8().map_err(|e| e.to_string())?;
     match tag {
         0 => {
-            let level = read_option_bin(reader, |r| semio_framework_plugin::resolve_ready(r.read_u8()).map_err(|e| e.to_string()))?;
+            let level = read_option_bin(reader, |r| r.read_u8().map_err(|e| e.to_string()))?;
             let inlines = read_option_bin(reader, dec_inline_list_bin)?;
             Ok(MdBlockDiff::Heading { level, inlines })
         }
         1 => Ok(MdBlockDiff::Paragraph { inlines: read_option_bin(reader, dec_inline_list_bin)? }),
         2 => {
             let ordered = read_option_bin(reader, read_bool_bin)?;
-            let start = read_tristate_bin(reader, |r| Ok(semio_framework_plugin::resolve_ready(r.read_varint_u64()).map_err(|e| e.to_string())? as u32))?;
+            let start = read_tristate_bin(reader, |r| Ok(r.read_varint_u64().map_err(|e| e.to_string())? as u32))?;
             let tight = read_option_bin(reader, read_bool_bin)?;
             let items = read_option_bin(reader, dec_list_items_diff_bin)?;
             Ok(MdBlockDiff::List { ordered, start, tight, items })
@@ -1680,7 +1680,7 @@ impl protocol::DiffCodec for MdDiff {
         let mut reader = store::ByteReader::new(bytes);
         let _format = reader.read_u8().map_err(|e| protocol::ProtocolError::Malformed { what: "diff format", offset: 0, detail: e.to_string() })?;
         let has_value = reader.read_u8().map_err(|e| protocol::ProtocolError::Malformed { what: "diff has_value", offset: 1, detail: e.to_string() })?;
-        let blocks = if has_value != 0 { Some(dec_blocks_diff_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff blocks", offset: semio_framework_plugin::resolve_ready(reader.position()) as u64, detail: e })?) } else { None };
+        let blocks = if has_value != 0 { Some(dec_blocks_diff_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff blocks", offset: reader.position() as u64, detail: e })?) } else { None };
         Ok(MdDiff { blocks })
     }
 }
@@ -1820,8 +1820,8 @@ mod handcrafted_diff_codec_tests {
 
     /// 🧪️ F6/P2-FG1: `DiffCodec` round-trip laws over the hand-rolled `MdDiff` grammar — see
     /// `demo_diff_cases()`'s own doc comment for exactly what each case exercises.
-    #[semio_framework_async_macros::async_test]
-    async fn diff_codec_text_binary_roundtrip_law() {
+    #[test]
+    fn diff_codec_text_binary_roundtrip_law() {
         for d in demo_diff_cases() {
             let printed = d.print_diff();
             assert!(!printed.contains('\n'), "print_diff must be one line, got {printed:?}");

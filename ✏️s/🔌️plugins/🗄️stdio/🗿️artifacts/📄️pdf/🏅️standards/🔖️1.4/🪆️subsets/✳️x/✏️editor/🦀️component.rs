@@ -15,8 +15,10 @@ use crate::artifacts::pdf::{PdfMutation, PdfSnapshot, PDF_ARTIFACT_SCHEMA_ID, ST
 use crate::editor::pdf14x::modes::edit;
 use crate::editor::pdf14x::modes::edit::windows::main;
 use semio_framework_plugin::{
-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId, UiNode,
+    built_to_component_tree, ArtifactEditor, ArtifactView, ComponentTree, ConfigView, Dialect, DraftView, Editor, Emit, Fault, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation,
+    StandardId, SubsetId,
 };
+use semio_framework_ui_contract::Buildable;
 use serde::{Deserialize, Serialize};
 use store::EngineHandles;
 
@@ -87,7 +89,7 @@ impl protocol::OpBinary for Pdf14XEditorCommand {
         let spec = spec_fn();
         let body = &bytes[reader.position()..];
         let (record, _report) = store::pack_rt::decode_record_body(body, &spec, &store::PackDecodeOptions::default()).map_err(protocol::ProtocolError::from)?;
-        <Self as dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: semio_framework_plugin::resolve_ready(reader.position()) as u64, detail: error.to_string() })
+        <Self as dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
     }
 }
 //#endregion 🔖️OpCodec
@@ -139,10 +141,10 @@ impl ArtifactEditor for Pdf14XEditor {
         }
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> ComponentTree {
         match body_key {
-            main::BODY_KEY => main::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
+            main::BODY_KEY => built_to_component_tree(main::render(doc.snapshot)),
+            _ => built_to_component_tree(semio_framework_ui_contract::text(format!("Unknown body: {body_key}")).build()),
         }
     }
 }
@@ -151,14 +153,14 @@ impl ArtifactEditor for Pdf14XEditor {
 //#region 🔖️Manifest
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn create_pdf14_x_editor() -> semio_framework_plugin::AppDefinition {
-    Editor::builder(PDF14X_DIALECT)
-        .document(["stdio", "pdf", "1.4", "x"])
-        .icon_id("file-text")
-        .mode_def(edit::definition())
-        .default_mode_id(edit::PDF14X_EDIT_MODE_ID)
-        .window_kind_def(main::definition())
-        .default_layout(edit::layout())
-        .build_definition()
+    let builder = Editor::builder(PDF14X_DIALECT);
+    let builder = semio_framework_plugin::resolve_ready(builder.document(["stdio", "pdf", "1.4", "x"]));
+    let builder = semio_framework_plugin::resolve_ready(builder.icon_id("file-text"));
+    let builder = semio_framework_plugin::resolve_ready(builder.mode_def(edit::definition()));
+    let builder = semio_framework_plugin::resolve_ready(builder.default_mode_id(edit::PDF14X_EDIT_MODE_ID));
+    let builder = semio_framework_plugin::resolve_ready(builder.window_kind_def(main::definition()));
+    let builder = semio_framework_plugin::resolve_ready(builder.default_layout(edit::layout()));
+    semio_framework_plugin::resolve_ready(builder.build_definition())
 }
 //#endregion 🔖️Manifest
 

@@ -27,37 +27,37 @@ pub struct GraphSolverBuilder {
 }
 
 impl GraphSolverBuilder {
-    pub async fn new(model: CompiledModel, topology: GraphTopology) -> Self {
+    pub fn new(model: CompiledModel, topology: GraphTopology) -> Self {
         Self { model, topology, init_domains: None, fixed: Vec::new(), config: SearchConfig::default(), constraints: Vec::new() }
     }
 
     /// 🏗️ Restricts `n`'s initial domain (heterogeneous per-node domains). Nodes never touched
     /// keep the full pattern universe.
-    pub async fn domain(mut self, n: NodeId, allowed: PatternSet) -> Self {
+    pub fn domain(mut self, n: NodeId, allowed: PatternSet) -> Self {
         let node_count = self.topology.node_count();
         let domains = self.init_domains.get_or_insert_with(|| vec![self.model.full_domain(); node_count]);
         domains[n.index()] = allowed;
         self
     }
 
-    pub async fn fix(mut self, n: NodeId, p: PatternId) -> Self {
+    pub fn fix(mut self, n: NodeId, p: PatternId) -> Self {
         self.fixed.push((n, p));
         self
     }
 
-    pub async fn config(mut self, cfg: SearchConfig) -> Self {
+    pub fn config(mut self, cfg: SearchConfig) -> Self {
         self.config = cfg;
         self
     }
 
     /// 🏗️ Adds a global constraint. See [`crate::wfc_engine::constraint::Constraint`]'s docs for exactly when
     /// it runs (initial restriction + complete-assignment validation, not incremental mid-search).
-    pub async fn constraint(mut self, c: Constraints) -> Self {
+    pub fn constraint(mut self, c: Constraints) -> Self {
         self.constraints.push(c);
         self
     }
 
-    pub async fn build(self) -> Result<GraphSolver, SolveError> {
+    pub fn build(self) -> Result<GraphSolver, SolveError> {
         for &(n, _) in &self.fixed {
             if n.index() >= self.topology.node_count() {
                 return Err(SolveError::UnknownNode(n));
@@ -82,7 +82,7 @@ pub struct GraphSolver {
 }
 
 impl GraphSolver {
-    async fn constraint_set(&self) -> Option<ConstraintSet<'_>> {
+    fn constraint_set(&self) -> Option<ConstraintSet<'_>> {
         if self.constraints.is_empty() {
             None
         } else {
@@ -90,14 +90,14 @@ impl GraphSolver {
         }
     }
 
-    pub async fn solve(&mut self, seed: u64) -> SolveOutcome {
+    pub fn solve(&mut self, seed: u64) -> SolveOutcome {
         match self.constraint_set() {
             Some(cs) => search::solve_with_constraints(&self.model, &self.topology, &self.config, seed, self.init_domains.as_deref(), &self.fixed, None, &cs),
             None => search::solve(&self.model, &self.topology, &self.config, seed, self.init_domains.as_deref(), &self.fixed),
         }
     }
 
-    pub async fn solve_cancellable(&mut self, seed: u64, cancel: &CancelToken) -> SolveOutcome {
+    pub fn solve_cancellable(&mut self, seed: u64, cancel: &CancelToken) -> SolveOutcome {
         match self.constraint_set() {
             Some(cs) => search::solve_with_constraints(&self.model, &self.topology, &self.config, seed, self.init_domains.as_deref(), &self.fixed, Some(cancel), &cs),
             None => search::solve_cancellable(&self.model, &self.topology, &self.config, seed, self.init_domains.as_deref(), &self.fixed, cancel),
@@ -106,7 +106,7 @@ impl GraphSolver {
 
     /// 🕸️ Exhaustively enumerates up to `limit` solutions; the returned `bool` is `true` iff the
     /// whole search tree was explored (a `false` means `limit` or a budget cut it short).
-    pub async fn solve_all(&mut self, seed: u64, limit: usize) -> (Vec<Solution>, bool) {
+    pub fn solve_all(&mut self, seed: u64, limit: usize) -> (Vec<Solution>, bool) {
         match self.constraint_set() {
             Some(cs) => search::solve_all_with_constraints(&self.model, &self.topology, &self.config, seed, self.init_domains.as_deref(), &self.fixed, limit, &cs),
             None => search::solve_all(&self.model, &self.topology, &self.config, seed, self.init_domains.as_deref(), &self.fixed, limit),
@@ -115,7 +115,7 @@ impl GraphSolver {
 
     /// 🕸️ Resumes from a [`Checkpoint`] taken from this same model (fingerprint-checked). See
     /// [`Checkpoint`]'s docs for the resumability fidelity this provides.
-    pub async fn resume(&mut self, checkpoint: &Checkpoint) -> Result<SolveOutcome, SolveError> {
+    pub fn resume(&mut self, checkpoint: &Checkpoint) -> Result<SolveOutcome, SolveError> {
         if checkpoint.model_fingerprint != self.model.fingerprint() {
             return Err(SolveError::CorruptCheckpoint { reason: "model fingerprint mismatch" });
         }
@@ -125,11 +125,11 @@ impl GraphSolver {
         Ok(search::solve(&self.model, &self.topology, &self.config, checkpoint.seed, Some(&checkpoint.domains), &[]))
     }
 
-    pub async fn model(&self) -> &CompiledModel {
+    pub fn model(&self) -> &CompiledModel {
         &self.model
     }
 
-    pub async fn topology(&self) -> &GraphTopology {
+    pub fn topology(&self) -> &GraphTopology {
         &self.topology
     }
 
@@ -137,14 +137,14 @@ impl GraphSolver {
     /// other node to its value in `previous_assignment` (typically a prior `Solved` outcome's
     /// assignment). See [`crate::wfc_engine::repair`]'s module docs for the exact contract — a returned
     /// `Unsatisfiable` means no fix exists at this radius, not that the whole model is unsat.
-    pub async fn repair(&self, previous_assignment: &[PatternId], centers: &[NodeId], radius: usize, seed: u64) -> SolveOutcome {
+    pub fn repair(&self, previous_assignment: &[PatternId], centers: &[NodeId], radius: usize, seed: u64) -> SolveOutcome {
         repair::repair_region(&self.model, &self.topology, &self.adjacency, previous_assignment, centers, radius, &self.config, seed)
     }
 
     /// 🌊️🔦️ Runs incomplete beam search instead of the exact backtracking kernel — see
     /// [`crate::wfc_engine::beam`]'s module docs for the (intentionally incomplete) guarantees. Ignores
     /// `init_domains`/constraints/soft scoring; only `fixed` pins are honored.
-    pub async fn solve_beam(&self, beam_config: BeamConfig, seed: u64) -> SolveOutcome {
+    pub fn solve_beam(&self, beam_config: BeamConfig, seed: u64) -> SolveOutcome {
         beam::beam_search(&self.model, &self.topology, beam_config, seed, self.init_domains.as_deref(), &self.fixed)
     }
 
@@ -152,7 +152,7 @@ impl GraphSolver {
     /// deterministically from `base_seed`) and deterministically reduces them — see
     /// [`crate::wfc_engine::parallel::multi_start`]'s docs for the exact reduction rule. Ignores constraints
     /// (like `solve`/`solve_all` without constraints attached); ignores soft scoring.
-    pub async fn solve_multi_start(&self, base_seed: u64, attempts: usize) -> SolveOutcome {
+    pub fn solve_multi_start(&self, base_seed: u64, attempts: usize) -> SolveOutcome {
         parallel::multi_start(&self.model, &self.topology, &self.config, base_seed, self.init_domains.as_deref(), &self.fixed, attempts)
     }
 }
@@ -166,7 +166,7 @@ mod tests {
     use crate::wfc_engine::outcome::SolveOutcome;
     use crate::wfc_engine::topology::GraphTopologyBuilder;
 
-    async fn checkerboard(n: usize) -> (CompiledModel, GraphTopology) {
+    fn checkerboard(n: usize) -> (CompiledModel, GraphTopology) {
         let mut b = ModelBuilder::new();
         let black = b.add_pattern(1.0);
         let white = b.add_pattern(1.0);
@@ -181,16 +181,16 @@ mod tests {
         (model, tb.build().unwrap())
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn builds_and_solves() {
+    #[test]
+    fn builds_and_solves() {
         let (model, topo) = checkerboard(5);
         let mut solver = GraphSolverBuilder::new(model, topo).build().unwrap();
         let outcome = solver.solve(1);
         assert!(matches!(outcome, SolveOutcome::Solved(_)));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn fix_pins_a_node() {
+    #[test]
+    fn fix_pins_a_node() {
         let (model, topo) = checkerboard(4);
         let mut solver = GraphSolverBuilder::new(model, topo).fix(NodeId(0), PatternId(0)).build().unwrap();
         match solver.solve(1) {
@@ -199,15 +199,15 @@ mod tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn fix_on_unknown_node_is_rejected() {
+    #[test]
+    fn fix_on_unknown_node_is_rejected() {
         let (model, topo) = checkerboard(2);
         let result = GraphSolverBuilder::new(model, topo).fix(NodeId(99), PatternId(0)).build();
         assert!(result.is_err());
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn domain_override_restricts_a_node() {
+    #[test]
+    fn domain_override_restricts_a_node() {
         let (model, topo) = checkerboard(3);
         let mut allowed = PatternSet::new_empty(2);
         allowed.set(PatternId(1), true);
@@ -218,8 +218,8 @@ mod tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn solve_all_finds_both_checkerboard_colorings() {
+    #[test]
+    fn solve_all_finds_both_checkerboard_colorings() {
         let (model, topo) = checkerboard(4);
         let mut solver = GraphSolverBuilder::new(model, topo).build().unwrap();
         let (solutions, complete) = solver.solve_all(1, 100);
@@ -227,8 +227,8 @@ mod tests {
         assert_eq!(solutions.len(), 2);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn solve_cancellable_reports_cancelled_when_pre_cancelled() {
+    #[test]
+    fn solve_cancellable_reports_cancelled_when_pre_cancelled() {
         let (model, topo) = checkerboard(5);
         let mut solver = GraphSolverBuilder::new(model, topo).build().unwrap();
         let cancel = CancelToken::new();
@@ -237,8 +237,8 @@ mod tests {
         assert!(matches!(outcome, SolveOutcome::Cancelled { .. }));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn resume_from_checkpoint_completes_the_solve() {
+    #[test]
+    fn resume_from_checkpoint_completes_the_solve() {
         let (model, topo) = checkerboard(5);
         let fingerprint = model.fingerprint();
         let mut solver = GraphSolverBuilder::new(model, topo).build().unwrap();
@@ -255,8 +255,8 @@ mod tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn resume_rejects_mismatched_fingerprint() {
+    #[test]
+    fn resume_rejects_mismatched_fingerprint() {
         let (model, topo) = checkerboard(3);
         let mut solver = GraphSolverBuilder::new(model, topo).build().unwrap();
         let domains = vec![solver.model().full_domain(); solver.topology().node_count()];
@@ -264,8 +264,8 @@ mod tests {
         assert!(solver.resume(&checkpoint).is_err());
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn repair_reopens_only_the_requested_halo() {
+    #[test]
+    fn repair_reopens_only_the_requested_halo() {
         let (model, topo) = checkerboard(6);
         let mut solver = GraphSolverBuilder::new(model, topo).build().unwrap();
         let previous = match solver.solve(1) {
@@ -283,8 +283,8 @@ mod tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn solve_beam_finds_a_valid_solution_and_respects_fixed_pins() {
+    #[test]
+    fn solve_beam_finds_a_valid_solution_and_respects_fixed_pins() {
         use crate::wfc_engine::beam::BeamConfig;
         let (model, topo) = checkerboard(6);
         let solver = GraphSolverBuilder::new(model, topo).fix(NodeId(0), PatternId(1)).build().unwrap();
@@ -294,8 +294,8 @@ mod tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn solve_multi_start_finds_a_valid_solution_and_respects_fixed_pins() {
+    #[test]
+    fn solve_multi_start_finds_a_valid_solution_and_respects_fixed_pins() {
         let (model, topo) = checkerboard(10);
         let solver = GraphSolverBuilder::new(model, topo).fix(NodeId(0), PatternId(0)).build().unwrap();
         match solver.solve_multi_start(11, 4) {
@@ -309,8 +309,8 @@ mod tests {
     // `GraphSolverBuilder::constraint(...)` through `solve()`, proving the `search::solve_with_constraints`
     // path — initial restriction, per-complete-assignment rejection, and backtrack-and-retry on
     // rejection — actually wires together end to end.
-    #[semio_framework_async_macros::async_test]
-    async fn cardinality_constraint_forces_the_unique_matching_checkerboard_coloring() {
+    #[test]
+    fn cardinality_constraint_forces_the_unique_matching_checkerboard_coloring() {
         use crate::wfc_engine::constraint::PatternSelector;
         use crate::wfc_engine::constraints_card::{CardinalityConstraint, Scope};
 
@@ -333,8 +333,8 @@ mod tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn cardinality_constraint_beyond_both_colorings_is_unsatisfiable() {
+    #[test]
+    fn cardinality_constraint_beyond_both_colorings_is_unsatisfiable() {
         use crate::wfc_engine::constraint::PatternSelector;
         use crate::wfc_engine::constraints_card::{CardinalityConstraint, Scope};
 
@@ -351,8 +351,8 @@ mod tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn flow_constraint_end_to_end_forces_a_connected_path_through_a_real_solve() {
+    #[test]
+    fn flow_constraint_end_to_end_forces_a_connected_path_through_a_real_solve() {
         use crate::wfc_engine::constraint::PatternSelector;
         use crate::wfc_engine::flow::FlowConstraint;
         use crate::wfc_engine::model::ModelBuilder;

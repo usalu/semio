@@ -1944,11 +1944,11 @@ fn enc_vlrs_diff_bin(d: &LasVlrsDiff, out: &mut Vec<u8>) {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_vlrs_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<LasVlrsDiff, String> {
     let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
-    let removed = (0..removed_count).map(|_| Ok(semio_framework_plugin::resolve_ready(reader.read_varint_u64()).map_err(|e| e.to_string())? as usize)).collect::<Result<Vec<_>, String>>()?;
+    let removed = (0..removed_count).map(|_| Ok(reader.read_varint_u64().map_err(|e| e.to_string())? as usize)).collect::<Result<Vec<_>, String>>()?;
     let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let modified = (0..modified_count)
         .map(|_| -> Result<LasVlrModified, String> {
-            let index = semio_framework_plugin::resolve_ready(reader.read_varint_u64()).map_err(|e| e.to_string())? as usize;
+            let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
             let diff = dec_vlr_diff_bin(reader)?;
             Ok(LasVlrModified { index, diff })
         })
@@ -1956,7 +1956,7 @@ fn dec_vlrs_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<LasVlrsDiff, 
     let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let added = (0..added_count)
         .map(|_| -> Result<LasVlrAdded, String> {
-            let index = semio_framework_plugin::resolve_ready(reader.read_varint_u64()).map_err(|e| e.to_string())? as usize;
+            let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
             let vlr = dec_vlr_bin(reader)?;
             Ok(LasVlrAdded { index, vlr })
         })
@@ -1984,11 +1984,11 @@ fn enc_points_diff_bin(d: &LasPointsDiff, out: &mut Vec<u8>) {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_points_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<LasPointsDiff, String> {
     let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
-    let removed = (0..removed_count).map(|_| Ok(semio_framework_plugin::resolve_ready(reader.read_varint_u64()).map_err(|e| e.to_string())? as usize)).collect::<Result<Vec<_>, String>>()?;
+    let removed = (0..removed_count).map(|_| Ok(reader.read_varint_u64().map_err(|e| e.to_string())? as usize)).collect::<Result<Vec<_>, String>>()?;
     let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let modified = (0..modified_count)
         .map(|_| -> Result<LasPointModified, String> {
-            let index = semio_framework_plugin::resolve_ready(reader.read_varint_u64()).map_err(|e| e.to_string())? as usize;
+            let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
             let diff = dec_point_diff_bin(reader)?;
             Ok(LasPointModified { index, diff })
         })
@@ -1996,7 +1996,7 @@ fn dec_points_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<LasPointsDi
     let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let added = (0..added_count)
         .map(|_| -> Result<LasPointAdded, String> {
-            let index = semio_framework_plugin::resolve_ready(reader.read_varint_u64()).map_err(|e| e.to_string())? as usize;
+            let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
             let point = dec_point_bin(reader)?;
             Ok(LasPointAdded { index, point })
         })

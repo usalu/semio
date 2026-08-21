@@ -31,7 +31,7 @@ pub struct DwgInference {
 }
 
 impl protocol::Inference<DwgSnapshot> for DwgInference {
-    async fn infer(snapshot: &DwgSnapshot) -> Self {
+    fn infer(snapshot: &DwgSnapshot) -> Self {
         Self { structure: compute_dwg_structure(snapshot) }
     }
 }
@@ -44,13 +44,13 @@ impl Default for DwgInference {
 }
 
 impl protocol::InferenceSpec<DwgSnapshot> for DwgInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.stdio.dwg.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.dwg.inference.structure", reads: &["drawing", "codepage", "version"] }]
     }
 }

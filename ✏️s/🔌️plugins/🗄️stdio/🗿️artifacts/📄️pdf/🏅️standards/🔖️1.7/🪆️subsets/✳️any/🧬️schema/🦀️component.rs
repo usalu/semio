@@ -108,12 +108,12 @@ pub mod derived_construction {
         // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_page(self, page: PdfPage) -> Self {
             let index = self.snapshot.pages.len();
-            let (next, _diff) = self.mutate(PdfMutation::InsertPage { index, page });
+            let (next, _diff) = semio_framework_plugin::resolve_ready(self.mutate(PdfMutation::InsertPage { index, page }));
             next
         }
         // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn set_info(self, info: PdfInfo) -> Self {
-            let (next, _diff) = self.mutate(PdfMutation::SetInfo { info });
+            let (next, _diff) = semio_framework_plugin::resolve_ready(self.mutate(PdfMutation::SetInfo { info }));
             next
         }
     }
@@ -180,7 +180,7 @@ pub mod derived_analysis {
         /// `engine::sniff_pdf`, does not discard its argument.
         async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             match source {
-                AnalyzeSource::Binary(bytes) => match crate::artifacts::pdf::standards::v1_7::subsets::any::io::sniff_pdf(bytes).await {
+                AnalyzeSource::Binary(bytes) => match crate::artifacts::pdf::standards::v1_7::subsets::any::io::sniff_pdf(bytes) {
                     Some(_version) => IoConfidence::High,
                     None => IoConfidence::Low,
                 },
@@ -191,7 +191,7 @@ pub mod derived_analysis {
                     };
                     let hex: String = body.chars().filter(|c| !c.is_whitespace()).take(10).collect();
                     let magic: Vec<u8> = (0..hex.len().min(10)).step_by(2).filter_map(|i| hex.get(i..i + 2)).filter_map(|h| u8::from_str_radix(h, 16).ok()).collect();
-                    match crate::artifacts::pdf::standards::v1_7::subsets::any::io::sniff_pdf(&magic).await {
+                    match crate::artifacts::pdf::standards::v1_7::subsets::any::io::sniff_pdf(&magic) {
                         Some(_) => IoConfidence::Medium,
                         None => IoConfidence::Low,
                     }
@@ -206,7 +206,7 @@ pub mod derived_analysis {
             for source in sources {
                 match source {
                     AnalyzeSource::Text(text) => match if text.as_bytes().starts_with(b"%PDF-") {
-                        crate::artifacts::pdf::standards::v1_7::subsets::any::io::decode_pdf(text.as_bytes()).await.map_err(|error| format!("{error:?}"))
+                        crate::artifacts::pdf::standards::v1_7::subsets::any::io::decode_pdf(text.as_bytes()).map_err(|error| format!("{error:?}"))
                     } else {
                         <PdfSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
                     } {
@@ -216,8 +216,8 @@ pub mod derived_analysis {
                             diagnostics.push(dsl::Diagnostic::error("stdio.analyze.text", dsl::TextSpan::at(1, 1), err));
                         }
                     },
-                    AnalyzeSource::Binary(bytes) => match if crate::artifacts::pdf::standards::v1_7::subsets::any::io::sniff_pdf(bytes).await.is_some() {
-                        crate::artifacts::pdf::standards::v1_7::subsets::any::io::decode_pdf(bytes).await.map_err(|error| format!("{error:?}"))
+                    AnalyzeSource::Binary(bytes) => match if crate::artifacts::pdf::standards::v1_7::subsets::any::io::sniff_pdf(bytes).is_some() {
+                        crate::artifacts::pdf::standards::v1_7::subsets::any::io::decode_pdf(bytes).map_err(|error| format!("{error:?}"))
                     } else {
                         <PdfSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| error.to_string())
                     } {

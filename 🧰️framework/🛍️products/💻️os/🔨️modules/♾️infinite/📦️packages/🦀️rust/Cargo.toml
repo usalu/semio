@@ -35,6 +35,7 @@ path = "📦️glue.rs"
 
 [dependencies]
 semio-framework-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-framework-job = { workspace = true }
 semio-framework = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
 math = { path = "../../../../../../🔨️modules/🧮️math/📦️packages/🦀️rust", package = "semio-framework-math" }
 geometry = { path = "../../../../../../🔨️modules/📐️geometry/📦️packages/🦀️rust", package = "semio-framework-geometry" }

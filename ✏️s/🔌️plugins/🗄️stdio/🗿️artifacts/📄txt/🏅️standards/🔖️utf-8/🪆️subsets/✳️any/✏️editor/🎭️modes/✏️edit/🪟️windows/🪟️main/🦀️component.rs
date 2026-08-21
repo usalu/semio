@@ -4,7 +4,7 @@
 
 use crate::artifacts::txt::TxtSnapshot;
 use semio_framework_plugin::app::{TextView, TextWindowKit, WindowKit};
-use semio_framework_plugin::{LocalizedLabel, UiNode, WindowKindDefinition};
+use semio_framework_plugin::{BuiltNode, LocalizedLabel, WindowKindDefinition};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = TextWindowKit::KIND_ID;
@@ -20,11 +20,11 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-/// ✏️ Real `TxtSnapshot -> UiNode`: `lines` joined by the document's own `line_ending`, with a
+/// ✏️ Real `TxtSnapshot -> BuiltNode`: `lines` joined by the document's own `line_ending`, with a
 /// trailing terminator when `trailing_newline` is set — the exact same join the artifact's own
 /// codec uses to re-serialize, so what's shown here IS what re-encoding would emit.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &TxtSnapshot) -> UiNode {
+pub fn render(document: &TxtSnapshot) -> BuiltNode {
     let mut text = document.lines.join(document.line_ending.as_str());
     if document.trailing_newline && !document.lines.is_empty() {
         text.push_str(document.line_ending.as_str());

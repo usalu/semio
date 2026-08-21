@@ -261,7 +261,7 @@ impl protocol::DiffCodec for SemioKitDiff {
             return Err(protocol::ProtocolError::Malformed { what: "diff format", offset: 0, detail: format!("unsupported diff format {}", bytes[0]) });
         }
         let presence = bytes[1];
-        let mut reader = semio_framework_plugin::resolve_ready(store::ByteReader::new(&bytes[2..]));
+        let mut reader = store::ByteReader::new(&bytes[2..]);
         let map_err = |e: String| protocol::ProtocolError::Malformed { what: "kit diff field", offset: 2, detail: e };
         let types = if presence & 0b0000_0001 != 0 { Some(SemioKitTypeList { values: read_type_list(&mut reader).map_err(map_err)? }) } else { None };
         let designs = if presence & 0b0000_0010 != 0 { Some(SemioKitDesignList { values: read_design_list(&mut reader).map_err(map_err)? }) } else { None };

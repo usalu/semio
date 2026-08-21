@@ -26,7 +26,7 @@ pub struct SemioVideoInference {
 }
 
 impl protocol::Inference<SemioVideoSnapshot> for SemioVideoInference {
-    async fn infer(snapshot: &SemioVideoSnapshot) -> Self {
+    fn infer(snapshot: &SemioVideoSnapshot) -> Self {
         Self { duration: compute_semio_video_duration(snapshot) }
     }
 }
@@ -42,13 +42,13 @@ impl Default for SemioVideoInference {
 }
 
 impl protocol::InferenceSpec<SemioVideoSnapshot> for SemioVideoInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.stdio.semio.video.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.semio.video.inference.duration", reads: &["streams"] }]
     }
 }

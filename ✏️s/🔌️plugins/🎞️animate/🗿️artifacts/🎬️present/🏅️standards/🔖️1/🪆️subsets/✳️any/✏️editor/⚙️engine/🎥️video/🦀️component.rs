@@ -658,7 +658,6 @@ pub mod renderer {
     use crate::editor::animate::engine::scene::sobject::{Sobject, Sobjects};
     use crate::editor::animate::engine::text::color::Color;
     use crate::editor::animate::engine::video::VideoError;
-    use pollster::block_on;
     use vello::kurbo::Stroke as KurboStroke;
     use vello::peniko::Color as VelloColor;
     use vello::{AaConfig, AaSupport, RenderParams, Renderer, RendererOptions, Scene};
@@ -693,17 +692,21 @@ pub mod renderer {
             let width = width.max(1);
             let height = height.max(1);
             let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor { backends: wgpu::Backends::PRIMARY, ..Default::default() });
-            let adapter = block_on(instance.request_adapter(&wgpu::RequestAdapterOptions { power_preference: wgpu::PowerPreference::HighPerformance, compatible_surface: None, force_fallback_adapter: false }))
+            let adapter = instance
+                .request_adapter(&wgpu::RequestAdapterOptions { power_preference: wgpu::PowerPreference::HighPerformance, compatible_surface: None, force_fallback_adapter: false })
+                .await
                 .map_err(|err| VideoError::backend("no wgpu adapter available", format!("{err:?}")))?;
-            let (device, queue) = block_on(adapter.request_device(&wgpu::DeviceDescriptor {
-                label: Some("animate_video"),
-                required_features: wgpu::Features::empty(),
-                required_limits: wgpu::Limits::default(),
-                memory_hints: wgpu::MemoryHints::Performance,
-                trace: wgpu::Trace::Off,
-                experimental_features: Default::default(),
-            }))
-            .map_err(|err| VideoError::backend("wgpu device", format!("{err:?}")))?;
+            let (device, queue) = adapter
+                .request_device(&wgpu::DeviceDescriptor {
+                    label: Some("animate_video"),
+                    required_features: wgpu::Features::empty(),
+                    required_limits: wgpu::Limits::default(),
+                    memory_hints: wgpu::MemoryHints::Performance,
+                    trace: wgpu::Trace::Off,
+                    experimental_features: Default::default(),
+                })
+                .await
+                .map_err(|err| VideoError::backend("wgpu device", format!("{err:?}")))?;
             let renderer = Renderer::new(&device, RendererOptions { use_cpu: false, antialiasing_support: AaSupport::area_only(), num_init_threads: std::num::NonZeroUsize::new(1), pipeline_cache: None })
                 .map_err(|err| VideoError::backend("vello renderer", format!("{err:?}")))?;
             let (target_texture, target_view) = create_target_texture(&device, width, height);

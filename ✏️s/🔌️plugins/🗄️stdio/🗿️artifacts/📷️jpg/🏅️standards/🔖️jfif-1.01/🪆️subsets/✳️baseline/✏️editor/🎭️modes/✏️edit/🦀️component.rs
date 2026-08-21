@@ -1,7 +1,7 @@
 //! ✏️ `jpg` edit (baseline) — the `edit` mode: a single
 //! full-pane Main window, the only mode this thin surface declares.
 
-use crate::editor::jpg_baseline::modes::edit::windows::main as main;
+use crate::editor::jpg_baseline::modes::edit::windows::main;
 use semio_framework_plugin::{LocalizedLabel, ModeDefinition, WindowLayout, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode};
 
 pub const MODE_ID: &str = "edit";

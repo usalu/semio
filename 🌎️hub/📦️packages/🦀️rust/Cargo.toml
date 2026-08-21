@@ -33,7 +33,6 @@ axum = { version = "0.8", features = ["ws"] }
 serde.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true
-uuid = { version = "1.20", features = ["v7", "serde"] }
 tokio = { workspace = true, features = ["full"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }

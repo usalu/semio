@@ -15,33 +15,33 @@ pub struct Mat2 {
 impl Mat2 {
     pub const IDENTITY: Self = Self { cols: [[1.0, 0.0], [0.0, 1.0]] };
 
-    pub async fn new(a: f64, b: f64, c: f64, d: f64) -> Self {
+    pub fn new(a: f64, b: f64, c: f64, d: f64) -> Self {
         Self { cols: [[a, c], [b, d]] }
     }
 
     #[allow(clippy::should_implement_trait, reason = "value-semantics mul used pervasively as a plain method (not operator overload) by dependent crates outside this campaign wave's scope; renaming is a breaking API change")]
-    pub async fn mul(self, other: Self) -> Self {
+    pub fn mul(self, other: Self) -> Self {
         let entry = |row: usize, col: usize| self.cols[0][row] * other.cols[col][0] + self.cols[1][row] * other.cols[col][1];
         Self { cols: [[entry(0, 0), entry(1, 0)], [entry(0, 1), entry(1, 1)]] }
     }
 
-    pub async fn apply(self, v: (f64, f64)) -> (f64, f64) {
+    pub fn apply(self, v: (f64, f64)) -> (f64, f64) {
         (self.cols[0][0] * v.0 + self.cols[1][0] * v.1, self.cols[0][1] * v.0 + self.cols[1][1] * v.1)
     }
 
-    pub async fn det(self) -> f64 {
+    pub fn det(self) -> f64 {
         self.cols[0][0] * self.cols[1][1] - self.cols[1][0] * self.cols[0][1]
     }
 
-    pub async fn trace(self) -> f64 {
+    pub fn trace(self) -> f64 {
         self.cols[0][0] + self.cols[1][1]
     }
 
-    pub async fn transpose(self) -> Self {
+    pub fn transpose(self) -> Self {
         Self::new(self.cols[0][0], self.cols[0][1], self.cols[1][0], self.cols[1][1])
     }
 
-    pub async fn inverse(self) -> Option<Self> {
+    pub fn inverse(self) -> Option<Self> {
         let d = self.det();
         if d.abs() < 1e-12 {
             return None;
@@ -51,7 +51,7 @@ impl Mat2 {
     }
 
     /// 🧮️ Real eigenvalues (if any) of a 2x2 matrix via the characteristic polynomial `λ² - tr·λ + det = 0`.
-    pub async fn eigenvalues(self) -> Option<(f64, f64)> {
+    pub fn eigenvalues(self) -> Option<(f64, f64)> {
         let t = self.trace();
         let d = self.det();
         let disc = t * t - 4.0 * d;
@@ -66,59 +66,59 @@ impl Mat2 {
 
 // #region 🔖️VecD
 /// 📏️ Heap-allocated f64 vector for element and system-level numerics (loads, displacements, residuals).
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct VecD(pub Vec<f64>);
 
 impl VecD {
-    pub async fn zeros(n: usize) -> Self {
+    pub fn zeros(n: usize) -> Self {
         Self(vec![0.0; n])
     }
 
-    pub async fn from_vec(data: Vec<f64>) -> Self {
+    pub fn from_vec(data: Vec<f64>) -> Self {
         Self(data)
     }
 
-    pub async fn len(&self) -> usize {
+    pub fn len(&self) -> usize {
         self.0.len()
     }
 
-    pub async fn is_empty(&self) -> bool {
+    pub fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
 
-    pub async fn get(&self, i: usize) -> f64 {
+    pub fn get(&self, i: usize) -> f64 {
         self.0[i]
     }
 
-    pub async fn set(&mut self, i: usize, value: f64) {
+    pub fn set(&mut self, i: usize, value: f64) {
         self.0[i] = value;
     }
 
-    pub async fn add_at(&mut self, i: usize, value: f64) {
+    pub fn add_at(&mut self, i: usize, value: f64) {
         self.0[i] += value;
     }
 
-    pub async fn dot(&self, other: &Self) -> f64 {
+    pub fn dot(&self, other: &Self) -> f64 {
         self.0.iter().zip(other.0.iter()).map(|(a, b)| a * b).sum()
     }
 
-    pub async fn scale(&self, s: f64) -> Self {
+    pub fn scale(&self, s: f64) -> Self {
         Self(self.0.iter().map(|v| v * s).collect())
     }
 
-    pub async fn add(&self, other: &Self) -> Self {
+    pub fn add(&self, other: &Self) -> Self {
         Self(self.0.iter().zip(other.0.iter()).map(|(a, b)| a + b).collect())
     }
 
-    pub async fn sub(&self, other: &Self) -> Self {
+    pub fn sub(&self, other: &Self) -> Self {
         Self(self.0.iter().zip(other.0.iter()).map(|(a, b)| a - b).collect())
     }
 
-    pub async fn norm2(&self) -> f64 {
+    pub fn norm2(&self) -> f64 {
         self.dot(self).sqrt()
     }
 
-    pub async fn norm_inf(&self) -> f64 {
+    pub fn norm_inf(&self) -> f64 {
         self.0.iter().fold(0.0_f64, |acc, v| acc.max(v.abs()))
     }
 }
@@ -126,7 +126,7 @@ impl VecD {
 
 // #region 🔖️MatD
 /// 🧮️ Dynamic dense f64 matrix, row-major storage; sized for element stiffness matrices and small global systems.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct MatD {
     pub rows: usize,
     pub cols: usize,
@@ -134,11 +134,11 @@ pub struct MatD {
 }
 
 impl MatD {
-    pub async fn zeros(rows: usize, cols: usize) -> Self {
+    pub fn zeros(rows: usize, cols: usize) -> Self {
         Self { rows, cols, data: vec![0.0; rows * cols] }
     }
 
-    pub async fn identity(n: usize) -> Self {
+    pub fn identity(n: usize) -> Self {
         let mut m = Self::zeros(n, n);
         for i in 0..n {
             m.set(i, i, 1.0);
@@ -146,19 +146,19 @@ impl MatD {
         m
     }
 
-    pub async fn get(&self, row: usize, col: usize) -> f64 {
+    pub fn get(&self, row: usize, col: usize) -> f64 {
         self.data[row * self.cols + col]
     }
 
-    pub async fn set(&mut self, row: usize, col: usize, value: f64) {
+    pub fn set(&mut self, row: usize, col: usize, value: f64) {
         self.data[row * self.cols + col] = value;
     }
 
-    pub async fn add_at(&mut self, row: usize, col: usize, value: f64) {
+    pub fn add_at(&mut self, row: usize, col: usize, value: f64) {
         self.data[row * self.cols + col] += value;
     }
 
-    pub async fn transpose(&self) -> Self {
+    pub fn transpose(&self) -> Self {
         let mut out = Self::zeros(self.cols, self.rows);
         for row in 0..self.rows {
             for col in 0..self.cols {
@@ -168,7 +168,7 @@ impl MatD {
         out
     }
 
-    pub async fn matmul(&self, other: &Self) -> Self {
+    pub fn matmul(&self, other: &Self) -> Self {
         assert_eq!(self.cols, other.rows, "matmul dimension mismatch");
         let mut out = Self::zeros(self.rows, other.cols);
         for row in 0..self.rows {
@@ -185,7 +185,7 @@ impl MatD {
         out
     }
 
-    pub async fn mul_vec(&self, x: &VecD) -> VecD {
+    pub fn mul_vec(&self, x: &VecD) -> VecD {
         assert_eq!(self.cols, x.len(), "mul_vec dimension mismatch");
         let mut out = VecD::zeros(self.rows);
         for row in 0..self.rows {
@@ -199,7 +199,7 @@ impl MatD {
     }
 
     /// 🧮️ `Bᵀ D B` scaled by `weight`, accumulated into `self` — the element-stiffness Gauss-point kernel.
-    pub async fn add_triple_product(&mut self, b: &MatD, d: &MatD, weight: f64) {
+    pub fn add_triple_product(&mut self, b: &MatD, d: &MatD, weight: f64) {
         let btdb = b.transpose().matmul(d).matmul(b);
         for i in 0..self.data.len() {
             self.data[i] += weight * btdb.data[i];
@@ -207,7 +207,7 @@ impl MatD {
     }
 
     /// 🧮️ Solves `Ax = b` via Gaussian elimination with partial pivoting; `None` if `A` is singular.
-    pub async fn lu_solve(&self, b: &VecD) -> Option<VecD> {
+    pub fn lu_solve(&self, b: &VecD) -> Option<VecD> {
         assert_eq!(self.rows, self.cols, "lu_solve requires a square matrix");
         assert_eq!(self.rows, b.len(), "lu_solve dimension mismatch");
         let n = self.rows;
@@ -266,34 +266,34 @@ impl Mat3d {
     pub const IDENTITY: Self = Self { cols: [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]] };
 
     /// 🧭️ Rotation matrix from an orthonormal local basis, columns `(x, y, z)` expressed in global coordinates.
-    pub async fn from_axes(x: [f64; 3], y: [f64; 3], z: [f64; 3]) -> Self {
+    pub fn from_axes(x: [f64; 3], y: [f64; 3], z: [f64; 3]) -> Self {
         Self { cols: [x, y, z] }
     }
 
-    pub async fn transpose(self) -> Self {
+    pub fn transpose(self) -> Self {
         Self { cols: [[self.cols[0][0], self.cols[1][0], self.cols[2][0]], [self.cols[0][1], self.cols[1][1], self.cols[2][1]], [self.cols[0][2], self.cols[1][2], self.cols[2][2]]] }
     }
 
     #[allow(clippy::should_implement_trait, reason = "value-semantics mul used pervasively as a plain method (not operator overload) by dependent crates outside this campaign wave's scope; renaming is a breaking API change")]
-    pub async fn mul(self, other: Self) -> Self {
+    pub fn mul(self, other: Self) -> Self {
         let entry = |row: usize, col: usize| self.cols[0][row] * other.cols[col][0] + self.cols[1][row] * other.cols[col][1] + self.cols[2][row] * other.cols[col][2];
         Self { cols: [[entry(0, 0), entry(1, 0), entry(2, 0)], [entry(0, 1), entry(1, 1), entry(2, 1)], [entry(0, 2), entry(1, 2), entry(2, 2)]] }
     }
 
-    pub async fn mul_vec3(self, v: [f64; 3]) -> [f64; 3] {
+    pub fn mul_vec3(self, v: [f64; 3]) -> [f64; 3] {
         [self.cols[0][0] * v[0] + self.cols[1][0] * v[1] + self.cols[2][0] * v[2], self.cols[0][1] * v[0] + self.cols[1][1] * v[1] + self.cols[2][1] * v[2], self.cols[0][2] * v[0] + self.cols[1][2] * v[1] + self.cols[2][2] * v[2]]
     }
 }
 
-pub async fn vec3d_sub(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
+pub fn vec3d_sub(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
     [a[0] - b[0], a[1] - b[1], a[2] - b[2]]
 }
 
-pub async fn vec3d_length(v: [f64; 3]) -> f64 {
+pub fn vec3d_length(v: [f64; 3]) -> f64 {
     (v[0] * v[0] + v[1] * v[1] + v[2] * v[2]).sqrt()
 }
 
-pub async fn vec3d_normalize(v: [f64; 3]) -> [f64; 3] {
+pub fn vec3d_normalize(v: [f64; 3]) -> [f64; 3] {
     let len = vec3d_length(v);
     if len < 1e-12 {
         return [0.0, 0.0, 0.0];
@@ -301,7 +301,7 @@ pub async fn vec3d_normalize(v: [f64; 3]) -> [f64; 3] {
     [v[0] / len, v[1] / len, v[2] / len]
 }
 
-pub async fn vec3d_cross(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
+pub fn vec3d_cross(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
     [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]
 }
 // #endregion 🔖️Mat3d

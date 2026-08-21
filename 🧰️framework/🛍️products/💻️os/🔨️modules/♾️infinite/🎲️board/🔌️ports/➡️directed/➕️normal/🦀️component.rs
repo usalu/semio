@@ -8,7 +8,7 @@ pub mod board_host {
     #![allow(clippy::too_many_arguments, reason = "Immediate-mode paint helpers take one positional arg per geometry/style input; grouping them into structs would obscure call sites more than it clarifies.")]
 
     use crate::infinite::canvas::{Affine, Circle, Color, CubicBez, FillRule, Point, Rect, Scene, Stroke, Vec2};
-    use serde::Deserialize;
+    use serde::{Deserialize, Serialize};
     use serde_json::json;
     use std::collections::{BTreeMap, BTreeSet};
 
@@ -249,6 +249,167 @@ pub mod board_host {
         state: u64,
         max_count: usize,
         stalled: bool,
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+    enum BoardFillShape {
+        Circle,
+        Rectangle,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    struct BoardFillNodeSnapshot {
+        id: String,
+        bounds: [f64; 4],
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    struct BoardFillHandleSnapshot {
+        id: String,
+        node_kind: String,
+        handle_kind: String,
+        slot: [f64; 2],
+        visible: bool,
+        connected: bool,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    struct BoardFillTemplateSnapshot {
+        handle_kind: String,
+        angle: f64,
+        radius: Option<f64>,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    struct BoardFillKindSnapshot {
+        id: String,
+        shape: BoardFillShape,
+        radius: f64,
+        width: f64,
+        height: f64,
+        icon: Option<String>,
+        handles: Vec<BoardFillTemplateSnapshot>,
+    }
+
+    /// 📸️ Send-only immutable input captured from a board host before fill work enters a worker.
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    pub struct BoardFillSnapshot {
+        nodes: Vec<BoardFillNodeSnapshot>,
+        handles: Vec<BoardFillHandleSnapshot>,
+        kinds: Vec<BoardFillKindSnapshot>,
+        compatibility: BTreeSet<String>,
+        node_weights: BTreeMap<String, f64>,
+        handle_weights: BTreeMap<String, f64>,
+        suggestion_offset: f64,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    struct BoardFillSource {
+        id: String,
+        node_kind: String,
+        handle_kind: String,
+        slot: [f64; 2],
+        weight: f64,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    struct BoardFillVirtualNode {
+        id: String,
+        node_kind: String,
+        bounds: [f64; 4],
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    struct BoardFillVirtualHandle {
+        id: String,
+        node_kind: String,
+        handle_kind: String,
+        slot: [f64; 2],
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    struct BoardFillCandidate {
+        kind_index: usize,
+        target_handle_index: usize,
+        weight: f64,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    struct BoardFillCandidatePreview {
+        source_id: String,
+        kind_index: usize,
+        target_handle_index: usize,
+        x: f64,
+        y: f64,
+        bounds: [f64; 4],
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+    pub enum BoardFillStage {
+        PrepareSources,
+        SelectTarget,
+        PrepareCandidates,
+        SelectCandidate,
+        ConstructPreview,
+        ScanHostCollision,
+        ScanVirtualCollision,
+        AcceptCandidate,
+        PublishPlanPrefix,
+        Complete,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    struct BoardFillJobState {
+        snapshot: BoardFillSnapshot,
+        stage: BoardFillStage,
+        max_count: usize,
+        rng_state: u64,
+        sources: Vec<BoardFillSource>,
+        source_scan_cursor: usize,
+        rejected_targets: BTreeSet<usize>,
+        target_selection_cursor: usize,
+        target_best: Option<(f64, usize)>,
+        current_target: Option<usize>,
+        candidates: Vec<BoardFillCandidate>,
+        kind_cursor: usize,
+        template_cursor: usize,
+        rejected_candidates: BTreeSet<usize>,
+        candidate_selection_cursor: usize,
+        candidate_best: Option<(f64, usize)>,
+        current_candidate: Option<usize>,
+        current_preview: Option<BoardFillCandidatePreview>,
+        host_collision_cursor: usize,
+        virtual_collision_cursor: usize,
+        connected: BTreeSet<String>,
+        virtual_nodes: Vec<BoardFillVirtualNode>,
+        virtual_handles: Vec<BoardFillVirtualHandle>,
+        placements: Vec<serde_json::Value>,
+        next_serial: u32,
+        stalled: bool,
+        rejection: Option<String>,
+        search_count: u64,
+    }
+
+    /// 📡️ Latest bounded fill search projection, separate from authoritative placements.
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    pub struct BoardFillPreview {
+        pub sequence: u64,
+        pub generation: u64,
+        pub stage: BoardFillStage,
+        pub accepted_count: usize,
+        pub target_handle_id: Option<String>,
+        pub candidate_node_kind_id: Option<String>,
+        pub host_collision_cursor: usize,
+        pub virtual_collision_cursor: usize,
+        pub tested_collision_id: Option<String>,
+        pub rejection: Option<String>,
+        pub search_count: u64,
+    }
+
+    /// 🧵️ Persistent worker-owned fill search over a Send board snapshot.
+    pub struct BoardFillJob {
+        operation: semio_framework_job::Operation,
+        state: BoardFillJobState,
     }
 
     #[derive(Clone, Debug)]
@@ -1960,6 +2121,79 @@ pub mod board_host {
         }
 
         //#region 🪣️Fill
+        /// 📸️ Captures only immutable fill inputs; render caches and the host's `RefCell` state never enter a job.
+        pub fn board_fill_snapshot(&self) -> BoardFillSnapshot {
+            let nodes = self
+                .nodes
+                .values()
+                .map(|node| {
+                    let bounds = self.node_world_bounds(node, 0.0);
+                    BoardFillNodeSnapshot { id: node.id.clone(), bounds: [bounds.min_x, bounds.min_y, bounds.max_x, bounds.max_y] }
+                })
+                .collect();
+            let empty = FillAccum::default();
+            let handles = self
+                .handles
+                .values()
+                .filter_map(|handle| {
+                    let slot = self.fill_slot_center_world(&empty, &handle.id)?;
+                    Some(BoardFillHandleSnapshot {
+                        id: handle.id.clone(),
+                        node_kind: self.nodes.get(&handle.node_id)?.node_kind.clone(),
+                        handle_kind: handle.handle_kind.clone(),
+                        slot: [slot.x, slot.y],
+                        visible: self.handle_effectively_visible(&handle.id),
+                        connected: self.handle_has_incident_edge(&handle.id),
+                    })
+                })
+                .collect::<Vec<_>>();
+            let kinds = self
+                .node_kinds
+                .iter()
+                .map(|(id, kind)| {
+                    let radius = self.brush_node_size * 0.5 * kind.scale;
+                    let (width, height) = if kind.shape == NodeShape::Rectangle { (self.brush_node_size * kind.scale, self.brush_node_size * kind.scale) } else { (radius * 2.0, radius * 2.0) };
+                    BoardFillKindSnapshot {
+                        id: id.clone(),
+                        shape: if kind.shape == NodeShape::Rectangle { BoardFillShape::Rectangle } else { BoardFillShape::Circle },
+                        radius,
+                        width,
+                        height,
+                        icon: kind.icon.clone(),
+                        handles: kind.handles.iter().map(|template| BoardFillTemplateSnapshot { handle_kind: template.handle_kind.clone(), angle: template.angle, radius: template.radius }).collect(),
+                    }
+                })
+                .collect::<Vec<_>>();
+            let mut source_pairs = BTreeSet::new();
+            for handle in &handles {
+                source_pairs.insert((handle.node_kind.clone(), handle.handle_kind.clone()));
+            }
+            for kind in &kinds {
+                for template in &kind.handles {
+                    source_pairs.insert((kind.id.clone(), template.handle_kind.clone()));
+                }
+            }
+            let mut compatibility = BTreeSet::new();
+            for (source_node, source_handle) in source_pairs {
+                for (kind_index, kind) in kinds.iter().enumerate() {
+                    for (template_index, template) in kind.handles.iter().enumerate() {
+                        if self.link_kinds_compatible_for_brush(&source_node, &source_handle, &kind.id, &template.handle_kind) {
+                            compatibility.insert(BoardFillJob::compatibility_key(&source_node, &source_handle, kind_index, template_index));
+                        }
+                    }
+                }
+            }
+            BoardFillSnapshot {
+                nodes,
+                handles,
+                kinds,
+                compatibility,
+                node_weights: self.brush_node_kind_weights.iter().map(|(id, weight)| (id.clone(), *weight)).collect(),
+                handle_weights: self.brush_handle_kind_weights.iter().map(|(id, weight)| (id.clone(), *weight)).collect(),
+                suggestion_offset: self.suggestion_offset,
+            }
+        }
+
         fn fill_preview_bounds(preview: &BrushPreviewSnapshot) -> WorldBox {
             match preview.shape {
                 NodeShape::Rectangle => WorldBox { min_x: preview.x - preview.width / 2.0, min_y: preview.y - preview.height / 2.0, max_x: preview.x + preview.width / 2.0, max_y: preview.y + preview.height / 2.0 },
@@ -2220,6 +2454,492 @@ pub mod board_host {
             serde_json::json!({ "placements": placements, "done": done, "count": count }).to_string()
         }
         //#endregion 🪣️Fill
+
+        //#region 🧵️FillJob
+    }
+
+    impl BoardFillJob {
+        pub fn new(snapshot: BoardFillSnapshot, max_count: u32, seed: u64, base_revision: u64, generation: u64) -> Self {
+            let operation = semio_framework_job::Operation::new(
+                semio_framework_job::allocate_operation_id(),
+                semio_framework_job::RevisionId(base_revision),
+                semio_framework_job::Generation(generation),
+                seed,
+            );
+            Self::with_operation(snapshot, max_count, operation)
+        }
+
+        pub fn with_operation(snapshot: BoardFillSnapshot, max_count: u32, operation: semio_framework_job::Operation) -> Self {
+            Self {
+                operation,
+                state: BoardFillJobState {
+                    snapshot,
+                    stage: if max_count == 0 { BoardFillStage::Complete } else { BoardFillStage::PrepareSources },
+                    max_count: max_count.min(1000) as usize,
+                    rng_state: operation.seed,
+                    sources: Vec::new(),
+                    source_scan_cursor: 0,
+                    rejected_targets: BTreeSet::new(),
+                    target_selection_cursor: 0,
+                    target_best: None,
+                    current_target: None,
+                    candidates: Vec::new(),
+                    kind_cursor: 0,
+                    template_cursor: 0,
+                    rejected_candidates: BTreeSet::new(),
+                    candidate_selection_cursor: 0,
+                    candidate_best: None,
+                    current_candidate: None,
+                    current_preview: None,
+                    host_collision_cursor: 0,
+                    virtual_collision_cursor: 0,
+                    connected: BTreeSet::new(),
+                    virtual_nodes: Vec::new(),
+                    virtual_handles: Vec::new(),
+                    placements: Vec::new(),
+                    next_serial: 0,
+                    stalled: false,
+                    rejection: None,
+                    search_count: 0,
+                },
+            }
+        }
+
+        pub fn restore(checkpoint: &[u8], operation: semio_framework_job::Operation) -> Result<Self, serde_json::Error> {
+            Ok(Self { operation, state: serde_json::from_slice(checkpoint)? })
+        }
+
+        pub fn operation(&self) -> semio_framework_job::Operation {
+            self.operation
+        }
+
+        pub fn checkpoint_bytes(&self) -> Vec<u8> {
+            serde_json::to_vec(&self.state).expect("board fill checkpoint is serializable")
+        }
+
+        pub fn placements(&self) -> &[serde_json::Value] {
+            &self.state.placements
+        }
+
+        pub fn stage(&self) -> BoardFillStage {
+            self.state.stage
+        }
+
+        fn compatibility_key(source_node: &str, source_handle: &str, kind_index: usize, template_index: usize) -> String {
+            format!("{source_node}\u{1f}{source_handle}\u{1f}{kind_index}\u{1f}{template_index}")
+        }
+
+        fn stage_label(&self) -> &'static str {
+            match self.state.stage {
+                BoardFillStage::PrepareSources => "puzzle2d-fill-prepare-sources",
+                BoardFillStage::SelectTarget => "puzzle2d-fill-select-target",
+                BoardFillStage::PrepareCandidates => "puzzle2d-fill-prepare-candidates",
+                BoardFillStage::SelectCandidate => "puzzle2d-fill-select-candidate",
+                BoardFillStage::ConstructPreview => "puzzle2d-fill-construct-preview",
+                BoardFillStage::ScanHostCollision => "puzzle2d-fill-scan-host-collision",
+                BoardFillStage::ScanVirtualCollision => "puzzle2d-fill-scan-virtual-collision",
+                BoardFillStage::AcceptCandidate => "puzzle2d-fill-accept-candidate",
+                BoardFillStage::PublishPlanPrefix => "puzzle2d-fill-publish-prefix",
+                BoardFillStage::Complete => "puzzle2d-fill-complete",
+            }
+        }
+
+        fn next_seed(&mut self) -> u64 {
+            self.state.rng_state = self.state.rng_state.wrapping_mul(6364136223846793005).wrapping_add(1);
+            self.state.rng_state
+        }
+
+        fn weighted_rank(&mut self, weight: f64) -> f64 {
+            let unit = ((self.next_seed() >> 11) as f64 + 1.0) / ((1_u64 << 53) as f64 + 1.0);
+            -unit.ln() / weight.max(f64::EPSILON)
+        }
+
+        fn boxes_overlap(left: [f64; 4], right: [f64; 4]) -> bool {
+            left[0] <= right[2] && left[2] >= right[0] && left[1] <= right[3] && left[3] >= right[1]
+        }
+
+        fn prepare_source(&mut self) {
+            let base_len = self.state.snapshot.handles.len();
+            let cursor = self.state.source_scan_cursor;
+            let source = if cursor < base_len {
+                let handle = &self.state.snapshot.handles[cursor];
+                (!handle.connected && handle.visible && !self.state.connected.contains(&handle.id)).then(|| BoardFillSource {
+                    id: handle.id.clone(),
+                    node_kind: handle.node_kind.clone(),
+                    handle_kind: handle.handle_kind.clone(),
+                    slot: handle.slot,
+                    weight: self.state.snapshot.handle_weights.get(&handle.handle_kind).copied().filter(|weight| weight.is_finite() && *weight > 0.0).unwrap_or(1.0),
+                })
+            } else {
+                self.state.virtual_handles.get(cursor - base_len).and_then(|handle| {
+                    (!self.state.connected.contains(&handle.id)).then(|| BoardFillSource {
+                        id: handle.id.clone(),
+                        node_kind: handle.node_kind.clone(),
+                        handle_kind: handle.handle_kind.clone(),
+                        slot: handle.slot,
+                        weight: self.state.snapshot.handle_weights.get(&handle.handle_kind).copied().filter(|weight| weight.is_finite() && *weight > 0.0).unwrap_or(1.0),
+                    })
+                })
+            };
+            if let Some(source) = source {
+                self.state.sources.push(source);
+            }
+            self.state.source_scan_cursor += 1;
+            if self.state.source_scan_cursor >= base_len + self.state.virtual_handles.len() {
+                if self.state.sources.is_empty() {
+                    self.state.stalled = true;
+                    self.state.stage = BoardFillStage::Complete;
+                } else {
+                    self.state.stage = BoardFillStage::SelectTarget;
+                    self.state.target_selection_cursor = 0;
+                    self.state.target_best = None;
+                }
+            }
+        }
+
+        fn select_target(&mut self) {
+            if self.state.target_selection_cursor < self.state.sources.len() {
+                let index = self.state.target_selection_cursor;
+                self.state.target_selection_cursor += 1;
+                if !self.state.rejected_targets.contains(&index) {
+                    let rank = self.weighted_rank(self.state.sources[index].weight);
+                    if self.state.target_best.is_none_or(|best| rank < best.0 || (rank == best.0 && index < best.1)) {
+                        self.state.target_best = Some((rank, index));
+                    }
+                }
+                return;
+            }
+            let Some((_, index)) = self.state.target_best.take() else {
+                self.state.stalled = true;
+                self.state.stage = BoardFillStage::Complete;
+                return;
+            };
+            self.state.current_target = Some(index);
+            self.state.candidates.clear();
+            self.state.kind_cursor = 0;
+            self.state.template_cursor = 0;
+            self.state.rejected_candidates.clear();
+            self.state.rejection = None;
+            self.state.stage = BoardFillStage::PrepareCandidates;
+        }
+
+        fn prepare_candidate(&mut self) {
+            let Some(target_index) = self.state.current_target else {
+                self.reject_target("missing-target");
+                return;
+            };
+            let Some(kind) = self.state.snapshot.kinds.get(self.state.kind_cursor) else {
+                if self.state.candidates.is_empty() {
+                    self.reject_target("no-compatible-candidate");
+                } else {
+                    self.state.candidate_selection_cursor = 0;
+                    self.state.candidate_best = None;
+                    self.state.stage = BoardFillStage::SelectCandidate;
+                }
+                return;
+            };
+            if let Some(template) = kind.handles.get(self.state.template_cursor) {
+                let target = &self.state.sources[target_index];
+                let key = Self::compatibility_key(&target.node_kind, &target.handle_kind, self.state.kind_cursor, self.state.template_cursor);
+                if self.state.snapshot.compatibility.contains(&key) {
+                    let node_weight = self.state.snapshot.node_weights.get(&kind.id).copied().filter(|weight| weight.is_finite() && *weight > 0.0).unwrap_or(1.0);
+                    let handle_weight = self.state.snapshot.handle_weights.get(&template.handle_kind).copied().filter(|weight| weight.is_finite() && *weight > 0.0).unwrap_or(1.0);
+                    self.state.candidates.push(BoardFillCandidate { kind_index: self.state.kind_cursor, target_handle_index: self.state.template_cursor, weight: node_weight * handle_weight });
+                }
+                self.state.template_cursor += 1;
+            } else {
+                self.state.kind_cursor += 1;
+                self.state.template_cursor = 0;
+            }
+        }
+
+        fn select_candidate(&mut self) {
+            if self.state.candidate_selection_cursor < self.state.candidates.len() {
+                let index = self.state.candidate_selection_cursor;
+                self.state.candidate_selection_cursor += 1;
+                if !self.state.rejected_candidates.contains(&index) {
+                    let rank = self.weighted_rank(self.state.candidates[index].weight);
+                    if self.state.candidate_best.is_none_or(|best| rank < best.0 || (rank == best.0 && index < best.1)) {
+                        self.state.candidate_best = Some((rank, index));
+                    }
+                }
+                return;
+            }
+            let Some((_, index)) = self.state.candidate_best.take() else {
+                self.reject_target("candidates-exhausted");
+                return;
+            };
+            self.state.current_candidate = Some(index);
+            self.state.stage = BoardFillStage::ConstructPreview;
+        }
+
+        fn construct_preview(&mut self) {
+            let Some(target_index) = self.state.current_target else {
+                self.reject_target("missing-target");
+                return;
+            };
+            let Some(candidate_index) = self.state.current_candidate else {
+                self.reject_target("missing-candidate");
+                return;
+            };
+            let target = &self.state.sources[target_index];
+            let candidate = &self.state.candidates[candidate_index];
+            let kind = &self.state.snapshot.kinds[candidate.kind_index];
+            let [x, y] = target.slot;
+            let bounds = match kind.shape {
+                BoardFillShape::Rectangle => [x - kind.width / 2.0, y - kind.height / 2.0, x + kind.width / 2.0, y + kind.height / 2.0],
+                BoardFillShape::Circle => [x - kind.radius, y - kind.radius, x + kind.radius, y + kind.radius],
+            };
+            self.state.current_preview = Some(BoardFillCandidatePreview { source_id: target.id.clone(), kind_index: candidate.kind_index, target_handle_index: candidate.target_handle_index, x, y, bounds });
+            self.state.host_collision_cursor = 0;
+            self.state.virtual_collision_cursor = 0;
+            self.state.search_count += 1;
+            self.state.stage = BoardFillStage::ScanHostCollision;
+        }
+
+        fn scan_host_collision(&mut self) {
+            let Some(preview) = self.state.current_preview.as_ref() else {
+                self.reject_candidate("missing-preview");
+                return;
+            };
+            if let Some(node) = self.state.snapshot.nodes.get(self.state.host_collision_cursor) {
+                self.state.host_collision_cursor += 1;
+                if Self::boxes_overlap(preview.bounds, node.bounds) {
+                    self.reject_candidate(&format!("host-collision:{}", node.id));
+                }
+            } else {
+                self.state.stage = BoardFillStage::ScanVirtualCollision;
+            }
+        }
+
+        fn scan_virtual_collision(&mut self) {
+            let Some(preview) = self.state.current_preview.as_ref() else {
+                self.reject_candidate("missing-preview");
+                return;
+            };
+            if let Some(node) = self.state.virtual_nodes.get(self.state.virtual_collision_cursor) {
+                self.state.virtual_collision_cursor += 1;
+                if Self::boxes_overlap(preview.bounds, node.bounds) {
+                    self.reject_candidate(&format!("virtual-collision:{}", node.id));
+                }
+            } else {
+                self.state.stage = BoardFillStage::AcceptCandidate;
+            }
+        }
+
+        fn accept_candidate(&mut self) -> semio_framework_job::StepOutcome {
+            let Some(preview) = self.state.current_preview.clone() else {
+                self.reject_candidate("missing-preview");
+                return self.preview_outcome();
+            };
+            let kind = self.state.snapshot.kinds[preview.kind_index].clone();
+            let serial = self.state.next_serial;
+            self.state.next_serial += 1;
+            let node_id = format!("puzzle2d.fill.{serial}");
+            let edge_id = format!("puzzle2d.fill.edge.{serial}");
+            let target_handle_id = format!("{node_id}:h{}", preview.target_handle_index);
+            self.state.connected.insert(preview.source_id.clone());
+            self.state.connected.insert(target_handle_id);
+            self.state.virtual_nodes.push(BoardFillVirtualNode { id: node_id.clone(), node_kind: kind.id.clone(), bounds: preview.bounds });
+            let center = Point::new(preview.x, preview.y);
+            for (index, template) in kind.handles.iter().enumerate() {
+                let id = format!("{node_id}:h{index}");
+                if self.state.connected.contains(&id) {
+                    continue;
+                }
+                let anchor = match kind.shape {
+                    BoardFillShape::Circle => handle_position_on_circle(center, kind.radius, template.angle),
+                    BoardFillShape::Rectangle => handle_position_on_rectangle(center, kind.width, kind.height, template.angle),
+                };
+                let normal = normalize_or_zero(anchor - center);
+                let slot = anchor + normal * self.state.snapshot.suggestion_offset;
+                self.state.virtual_handles.push(BoardFillVirtualHandle { id, node_kind: kind.id.clone(), handle_kind: template.handle_kind.clone(), slot: [slot.x, slot.y] });
+            }
+            let handles = kind
+                .handles
+                .iter()
+                .map(|template| {
+                    let mut row = serde_json::json!({ "angle": template.angle, "handleKind": template.handle_kind });
+                    if let Some(radius) = template.radius {
+                        row["radius"] = serde_json::json!(radius);
+                    }
+                    row
+                })
+                .collect::<Vec<_>>();
+            let mut placement = serde_json::json!({
+                "nodeId": node_id,
+                "edgeId": edge_id,
+                "nodeKind": kind.id,
+                "sourceHandleId": preview.source_id,
+                "targetHandleIndex": preview.target_handle_index,
+                "x": preview.x,
+                "y": preview.y,
+                "shape": if kind.shape == BoardFillShape::Rectangle { "rectangle" } else { "circle" },
+                "handles": handles,
+            });
+            if kind.shape == BoardFillShape::Rectangle {
+                placement["width"] = serde_json::json!(kind.width);
+                placement["height"] = serde_json::json!(kind.height);
+            } else {
+                placement["radius"] = serde_json::json!(kind.radius);
+            }
+            if let Some(icon) = kind.icon {
+                placement["iconKind"] = serde_json::json!(icon);
+            }
+            self.state.placements.push(placement);
+            self.state.stage = BoardFillStage::PublishPlanPrefix;
+            semio_framework_job::StepOutcome::CheckpointReady(semio_framework_job::Checkpoint { state: self.checkpoint_bytes(), applied_progress: self.state.placements.len() as u64 })
+        }
+
+        fn publish_prefix(&mut self) -> semio_framework_job::StepOutcome {
+            if self.state.placements.len() >= self.state.max_count {
+                self.state.stage = BoardFillStage::Complete;
+            } else {
+                self.state.sources.clear();
+                self.state.source_scan_cursor = 0;
+                self.state.rejected_targets.clear();
+                self.state.current_target = None;
+                self.state.current_candidate = None;
+                self.state.current_preview = None;
+                self.state.stage = BoardFillStage::PrepareSources;
+            }
+            self.preview_outcome()
+        }
+
+        fn reject_candidate(&mut self, reason: &str) {
+            if let Some(index) = self.state.current_candidate.take() {
+                self.state.rejected_candidates.insert(index);
+            }
+            self.state.rejection = Some(reason.to_string());
+            self.state.current_preview = None;
+            self.state.host_collision_cursor = 0;
+            self.state.virtual_collision_cursor = 0;
+            self.state.candidate_selection_cursor = 0;
+            self.state.candidate_best = None;
+            self.state.stage = BoardFillStage::SelectCandidate;
+        }
+
+        fn reject_target(&mut self, reason: &str) {
+            if let Some(index) = self.state.current_target.take() {
+                self.state.rejected_targets.insert(index);
+            }
+            self.state.rejection = Some(reason.to_string());
+            self.state.candidates.clear();
+            self.state.rejected_candidates.clear();
+            self.state.current_candidate = None;
+            self.state.current_preview = None;
+            self.state.target_selection_cursor = 0;
+            self.state.target_best = None;
+            self.state.stage = BoardFillStage::SelectTarget;
+        }
+
+        fn preview(&self, sequence: u64) -> BoardFillPreview {
+            let target_handle_id = self.state.current_target.and_then(|index| self.state.sources.get(index)).map(|source| source.id.clone());
+            let candidate_node_kind_id = self
+                .state
+                .current_candidate
+                .and_then(|index| self.state.candidates.get(index))
+                .and_then(|candidate| self.state.snapshot.kinds.get(candidate.kind_index))
+                .map(|kind| kind.id.clone());
+            let tested_collision_id = match self.state.stage {
+                BoardFillStage::ScanHostCollision => self.state.snapshot.nodes.get(self.state.host_collision_cursor.saturating_sub(1)).map(|node| node.id.clone()),
+                BoardFillStage::ScanVirtualCollision => self.state.virtual_nodes.get(self.state.virtual_collision_cursor.saturating_sub(1)).map(|node| node.id.clone()),
+                _ => None,
+            };
+            BoardFillPreview {
+                sequence,
+                generation: self.operation.generation.0,
+                stage: self.state.stage,
+                accepted_count: self.state.placements.len(),
+                target_handle_id,
+                candidate_node_kind_id,
+                host_collision_cursor: self.state.host_collision_cursor,
+                virtual_collision_cursor: self.state.virtual_collision_cursor,
+                tested_collision_id,
+                rejection: self.state.rejection.clone(),
+                search_count: self.state.search_count,
+            }
+        }
+
+        fn preview_outcome(&self) -> semio_framework_job::StepOutcome {
+            semio_framework_job::StepOutcome::PreviewReady(serde_json::to_vec(&self.preview(self.operation.preview_sequence)).expect("board fill preview is serializable"))
+        }
+
+        fn complete(&self) -> semio_framework_job::StepOutcome {
+            let output = serde_json::to_vec(&serde_json::json!({
+                "placements": self.state.placements,
+                "done": true,
+                "count": self.state.placements.len(),
+                "stalled": self.state.stalled,
+                "searchCount": self.state.search_count,
+            }))
+            .expect("board fill output is serializable");
+            semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate { state: self.checkpoint_bytes(), output })
+        }
+    }
+
+    impl semio_framework_job::InteractiveJob for BoardFillJob {
+        fn step(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
+            if context.is_cancelled() {
+                return semio_framework_job::StepOutcome::Cancelled;
+            }
+            if context.operation() != self.operation.operation || context.generation() != self.operation.generation {
+                return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: b"stale-puzzle2d-fill-operation".to_vec() });
+            }
+            if context.should_yield() {
+                return semio_framework_job::StepOutcome::Yield;
+            }
+            context.set_stage(self.stage_label());
+            let outcome = match self.state.stage {
+                BoardFillStage::PrepareSources => {
+                    self.prepare_source();
+                    None
+                }
+                BoardFillStage::SelectTarget => {
+                    self.select_target();
+                    None
+                }
+                BoardFillStage::PrepareCandidates => {
+                    self.prepare_candidate();
+                    None
+                }
+                BoardFillStage::SelectCandidate => {
+                    self.select_candidate();
+                    None
+                }
+                BoardFillStage::ConstructPreview => {
+                    self.construct_preview();
+                    None
+                }
+                BoardFillStage::ScanHostCollision => {
+                    self.scan_host_collision();
+                    None
+                }
+                BoardFillStage::ScanVirtualCollision => {
+                    self.scan_virtual_collision();
+                    None
+                }
+                BoardFillStage::AcceptCandidate => return self.accept_candidate(),
+                BoardFillStage::PublishPlanPrefix => return self.publish_prefix(),
+                BoardFillStage::Complete => return self.complete(),
+            };
+            context.consume_fuel(1);
+            if context.is_cancelled() {
+                return semio_framework_job::StepOutcome::Cancelled;
+            }
+            self.operation.preview_sequence = context.next_preview_sequence();
+            outcome.unwrap_or_else(|| self.preview_outcome())
+        }
+    }
+
+    const _: fn() = || {
+        fn assert_send<T: Send>() {}
+        assert_send::<BoardFillSnapshot>();
+        assert_send::<BoardFillJob>();
+    };
+
+    impl BoardHost {
+        //#endregion 🧵️FillJob
 
         fn brush_preview_snapshot_from_session_json(node: &serde_json::Value, edge: &serde_json::Value, source_handle_id: &str) -> Option<BrushPreviewSnapshot> {
             let node_kind_id = node.get("nodeKind").and_then(|x| x.as_str()).map(str::trim).filter(|s| !s.is_empty())?;

@@ -88,11 +88,8 @@ async fn committed_json_is_canonical() {
 async fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
     let status = outcome.get("status").and_then(serde_json::Value::as_str).expect("outcome carries a status");
-    let declared: Vec<(String, String)> = outcome
-        .get("messages")
-        .and_then(serde_json::Value::as_array)
-        .map(|rows| rows.iter().map(|row| (row["level"].as_str().unwrap_or_default().to_string(), row["code"].as_str().unwrap_or_default().to_string())).collect())
-        .unwrap_or_default();
+    let declared: Vec<(String, String)> =
+        outcome.get("messages").and_then(serde_json::Value::as_array).map(|rows| rows.iter().map(|row| (row["level"].as_str().unwrap_or_default().to_string(), row["code"].as_str().unwrap_or_default().to_string())).collect()).unwrap_or_default();
     let raised = <ZipMutation as protocol::Mutation<ZipSnapshot>>::diff(&mutation(), &before());
     let produced: Vec<(String, String)> = raised
         .messages()
@@ -138,7 +135,11 @@ async fn committed_diff_is_canonical() {
     let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "set-snapshot/extends-the-readme-and-adds-a-version-member: committed diff JSON is not canonical");
-    assert_eq!(decoded.entries.as_ref().expect("entries triple").added[0].data, vec![49u8], "set-snapshot/extends-the-readme-and-adds-a-version-member: member payloads decode from JSON number arrays — a base64 string would mean the committed diff was written against the DSL codec instead");
+    assert_eq!(
+        decoded.entries.as_ref().expect("entries triple").added[0].data,
+        vec![49u8],
+        "set-snapshot/extends-the-readme-and-adds-a-version-member: member payloads decode from JSON number arrays — a base64 string would mean the committed diff was written against the DSL codec instead"
+    );
 }
 
 /// 🩹 Applying the committed diff directly to `before` yields the committed `after` — the diff is

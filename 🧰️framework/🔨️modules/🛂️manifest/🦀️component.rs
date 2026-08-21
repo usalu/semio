@@ -572,7 +572,7 @@ pub async fn catalog_example_icon_id(id: &str) -> IconName {
 }
 
 /// @emoji 🎯️ Canonical catalog icon for a declared action id (view/shell/operation/history/clipboard).
-pub async fn catalog_action_icon_id(id: &str, kind: ActionKind) -> IconName {
+pub fn catalog_action_icon_id(id: &str, kind: ActionKind) -> IconName {
     match id {
         "undo" => "undo-2".into(),
         "redo" => "redo-2".into(),
@@ -639,7 +639,7 @@ pub async fn catalog_action_icon_id(id: &str, kind: ActionKind) -> IconName {
 }
 
 /// @emoji 🎛️ Canonical catalog icon for a footer command id.
-pub async fn catalog_command_icon_id(id: &str) -> IconName {
+pub fn catalog_command_icon_id(id: &str) -> IconName {
     match id {
         id if id.starts_with("os.set") => "settings".into(),
         "os.resetDock" => "panel-left".into(),
@@ -667,7 +667,7 @@ pub async fn catalog_command_icon_id(id: &str) -> IconName {
 pub struct ResourceSelector(pub String);
 
 impl ResourceSelector {
-    pub async fn new(selector: impl Into<String>) -> Self {
+    pub fn new(selector: impl Into<String>) -> Self {
         Self(selector.into())
     }
 }
@@ -765,6 +765,22 @@ pub enum ExecutionClass {
     Job,
 }
 
+/// @emoji 🧵️ Phase-8 migration disposition for every action and command declaration. The
+/// default is deliberately not executable: manifests decoded without an explicit disposition remain
+/// visible to audit tooling but are rejected by [`validate_interactive_job_classification`] before a
+/// release catalog can be activated.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub enum InteractiveJobClassification {
+    #[default]
+    Unclassified,
+    Migrated,
+    BatchOnlyPendingRewrite,
+    ForbiddenFromUi,
+    Deleted,
+}
+
 /// @emoji ⚙️ Preview/undo/idempotency/cancellation shape of one capability invocation.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
@@ -782,6 +798,8 @@ pub struct CapabilityExecution {
     pub cancellable: bool,
     #[serde(default)]
     pub class: ExecutionClass,
+    #[serde(default)]
+    pub interactive_job: InteractiveJobClassification,
 }
 
 /// @emoji 🎯️ What an `ActionDefinition`/`CommandDefinition` MEANS to an agent: effects, policy,
@@ -816,23 +834,64 @@ impl ActionSemantics {
     /// needs `documents.write` gated `WhenDestructive`; `View`/`Interaction` read the config lane
     /// (`documents.read` + `shell.observe`); `History` needs `documents.write`; `Clipboard` needs
     /// `shell.clipboard`; `Shell` is not reversible and needs `shell.navigate`.
-    pub async fn for_kind(kind: ActionKind) -> Self {
-        match kind {
+    pub fn for_kind(kind: ActionKind) -> Self {
+        let mut semantics = match kind {
             ActionKind::Mutation => Self {
-                effects: CapabilityEffects { writes: vec![ResourceSelector::new("artifact:{self}").await], reversible: true, ..Default::default() },
+                effects: CapabilityEffects { writes: vec![ResourceSelector::new("artifact:{self}")], reversible: true, ..Default::default() },
                 policy: CapabilityPolicy { scopes: vec![kernel::CapabilityId("documents.write".into())], approval: ApprovalMode::WhenDestructive },
                 execution: CapabilityExecution { preview: PreviewMode::Diff, undo: UndoMode::Inverse, expected_revision: true, ..Default::default() },
                 ..Default::default()
             },
             ActionKind::View | ActionKind::Interaction => Self {
-                effects: CapabilityEffects { reads: vec![ResourceSelector::new("config:{self}").await], ..Default::default() },
+                effects: CapabilityEffects { reads: vec![ResourceSelector::new("config:{self}")], ..Default::default() },
                 policy: CapabilityPolicy { scopes: vec![kernel::CapabilityId("documents.read".into()), kernel::CapabilityId("shell.observe".into())], ..Default::default() },
                 ..Default::default()
             },
             ActionKind::History => Self { policy: CapabilityPolicy { scopes: vec![kernel::CapabilityId("documents.write".into())], ..Default::default() }, ..Default::default() },
             ActionKind::Clipboard => Self { policy: CapabilityPolicy { scopes: vec![kernel::CapabilityId("shell.clipboard".into())], ..Default::default() }, ..Default::default() },
             ActionKind::Shell => Self { effects: CapabilityEffects { reversible: false, ..Default::default() }, policy: CapabilityPolicy { scopes: vec![kernel::CapabilityId("shell.navigate".into())], ..Default::default() }, ..Default::default() },
+        };
+        semantics.execution.interactive_job = InteractiveJobClassification::Migrated;
+        semantics
+    }
+}
+
+/// @emoji 🛡️ One release-blocking Phase-8 classification failure, addressed by owner path and
+/// declaration id so generated catalogs can report every omission in one pass.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct InteractiveJobClassificationError {
+    pub owner: String,
+    pub id: String,
+}
+
+impl std::fmt::Display for InteractiveJobClassificationError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(formatter, "unclassified interactive command '{}:{}'", self.owner, self.id)
+    }
+}
+
+impl std::error::Error for InteractiveJobClassificationError {}
+
+/// @emoji ✅️ Rejects an action/command catalog containing an unclassified declaration. Deleted and
+/// batch-only declarations are classified data, while UI dispatch separately rejects dispositions
+/// that are not [`InteractiveJobClassification::Migrated`].
+pub fn validate_interactive_job_classification<'a>(actions: impl IntoIterator<Item = (&'a str, &'a ActionDefinition)>, commands: impl IntoIterator<Item = (&'a str, &'a CommandDefinition)>) -> Result<(), Vec<InteractiveJobClassificationError>> {
+    let mut errors = Vec::new();
+    for (owner, action) in actions {
+        if action.semantics.execution.interactive_job == InteractiveJobClassification::Unclassified {
+            errors.push(InteractiveJobClassificationError { owner: owner.to_string(), id: action.id.clone() });
         }
+    }
+    for (owner, command) in commands {
+        if command.semantics.execution.interactive_job == InteractiveJobClassification::Unclassified {
+            errors.push(InteractiveJobClassificationError { owner: owner.to_string(), id: command.id.clone() });
+        }
+    }
+    errors.sort_by(|left, right| (&left.owner, &left.id).cmp(&(&right.owner, &right.id)));
+    if errors.is_empty() {
+        Ok(())
+    } else {
+        Err(errors)
     }
 }
 //#endregion 🔖️ActionSemantics
@@ -867,14 +926,14 @@ pub struct ActionDefinition {
 }
 
 impl ActionDefinition {
-    pub async fn new(id: impl Into<String>, label: impl Into<LocalizedLabel>, kind: ActionKind, icon_id: impl Into<IconName>) -> Self {
-        Self { id: id.into(), label: label.into(), kind, icon_id: icon_id.into(), args: Vec::new(), keys: None, in_palette: true, category: None, semantics: ActionSemantics::for_kind(kind).await }
+    pub fn new(id: impl Into<String>, label: impl Into<LocalizedLabel>, kind: ActionKind, icon_id: impl Into<IconName>) -> Self {
+        Self { id: id.into(), label: label.into(), kind, icon_id: icon_id.into(), args: Vec::new(), keys: None, in_palette: true, category: None, semantics: ActionSemantics::for_kind(kind) }
     }
 
     /// @emoji 🎯️ Declares an action whose icon is resolved from {@link catalog_action_icon_id}.
-    pub async fn new_catalog(id: impl Into<String>, label: impl Into<LocalizedLabel>, kind: ActionKind) -> Self {
+    pub fn new_catalog(id: impl Into<String>, label: impl Into<LocalizedLabel>, kind: ActionKind) -> Self {
         let id = id.into();
-        Self::new(id.clone(), label, kind, catalog_action_icon_id(&id, kind).await).await
+        Self::new(id.clone(), label, kind, catalog_action_icon_id(&id, kind))
     }
 
     /// @emoji 📝️ Attaches typed argument declarations to this action.
@@ -946,13 +1005,13 @@ pub const REVERT_TO_COMMAND_ACTION_ID: &str = "revertToCommand";
 /// @emoji 🕹️ The seven framework-owned History actions, auto-injected into every `AppDefinition`.
 pub async fn history_action_definitions() -> Vec<ActionDefinition> {
     vec![
-        ActionDefinition { keys: Some("mod+z".into()), ..ActionDefinition::new_catalog("undo", LocalizedLabel::native("Undo", "Rückgängig"), ActionKind::History).await },
-        ActionDefinition { keys: Some("mod+shift+z".into()), ..ActionDefinition::new_catalog("redo", LocalizedLabel::native("Redo", "Wiederholen"), ActionKind::History).await },
-        ActionDefinition::new_catalog("commitCheckpoint", LocalizedLabel::native("Commit Checkpoint", "Checkpoint festschreiben"), ActionKind::History).await,
-        ActionDefinition::new_catalog("createAlternative", LocalizedLabel::native("Create Alternative", "Alternative erstellen"), ActionKind::History).await,
-        ActionDefinition::new_catalog("switchAlternative", LocalizedLabel::native("Switch Alternative", "Alternative wechseln"), ActionKind::History).await,
-        ActionDefinition::new_catalog("checkoutCheckpoint", LocalizedLabel::native("Checkout Checkpoint", "Checkpoint auschecken"), ActionKind::History).await,
-        ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(REVERT_TO_COMMAND_ACTION_ID, LocalizedLabel::native("Revert to Command", "Auf Befehl zurücksetzen"), ActionKind::History).await }
+        ActionDefinition { keys: Some("mod+z".into()), ..ActionDefinition::new_catalog("undo", LocalizedLabel::native("Undo", "Rückgängig"), ActionKind::History) },
+        ActionDefinition { keys: Some("mod+shift+z".into()), ..ActionDefinition::new_catalog("redo", LocalizedLabel::native("Redo", "Wiederholen"), ActionKind::History) },
+        ActionDefinition::new_catalog("commitCheckpoint", LocalizedLabel::native("Commit Checkpoint", "Checkpoint festschreiben"), ActionKind::History),
+        ActionDefinition::new_catalog("createAlternative", LocalizedLabel::native("Create Alternative", "Alternative erstellen"), ActionKind::History),
+        ActionDefinition::new_catalog("switchAlternative", LocalizedLabel::native("Switch Alternative", "Alternative wechseln"), ActionKind::History),
+        ActionDefinition::new_catalog("checkoutCheckpoint", LocalizedLabel::native("Checkout Checkpoint", "Checkpoint auschecken"), ActionKind::History),
+        ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(REVERT_TO_COMMAND_ACTION_ID, LocalizedLabel::native("Revert to Command", "Auf Befehl zurücksetzen"), ActionKind::History) }
             .with_args([ActionArgDef::number("entrySeq", LocalizedLabel::native("Entry", "Eintrag")).await.required().await])
             .await,
     ]
@@ -973,7 +1032,7 @@ pub async fn set_history_command_filter_action_definition() -> ActionDefinition 
         ActionArgOption::new("withoutOperations", LocalizedLabel::native("Without Operations", "Ohne Operationen")).await,
         ActionArgOption::new("onlyOperations", LocalizedLabel::native("Only Operations", "Nur Operationen")).await,
     ];
-    ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(SET_HISTORY_COMMAND_FILTER_ACTION_ID, LocalizedLabel::native("Set History Filter", "Verlaufsfilter festlegen"), ActionKind::View).await }
+    ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(SET_HISTORY_COMMAND_FILTER_ACTION_ID, LocalizedLabel::native("Set History Filter", "Verlaufsfilter festlegen"), ActionKind::View) }
         .with_args([ActionArgDef::select("value", LocalizedLabel::native("Filter", "Filter"), options).await.default_value(serde_json::json!("all")).await])
         .await
 }
@@ -988,7 +1047,7 @@ pub const NOTE_SHELL_COMMAND_ACTION_ID: &str = "noteShellCommand";
 /// outside the normal `ActionDescriptor` path. `commandId` and `label` are required; `detail` is an
 /// optional free-text elaboration shown in the history panel.
 pub async fn note_shell_command_action_definition() -> ActionDefinition {
-    ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(NOTE_SHELL_COMMAND_ACTION_ID, LocalizedLabel::native("Note Shell Command", "Shell-Befehl vermerken"), ActionKind::Shell).await }
+    ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(NOTE_SHELL_COMMAND_ACTION_ID, LocalizedLabel::native("Note Shell Command", "Shell-Befehl vermerken"), ActionKind::Shell) }
         .with_args([
             ActionArgDef::text("commandId", LocalizedLabel::native("Command", "Befehl")).await.required().await,
             ActionArgDef::text("label", LocalizedLabel::native("Label", "Bezeichnung")).await.required().await,
@@ -1012,9 +1071,9 @@ pub async fn clipboard_action_definitions() -> Vec<ActionDefinition> {
         ActionArgOption::new("topRight", LocalizedLabel::native("Top Right", "Oben rechts")).await,
     ];
     vec![
-        ActionDefinition { keys: Some("mod+c".into()), ..ActionDefinition::new_catalog("copy", LocalizedLabel::native("Copy", "Kopieren"), ActionKind::Clipboard).await },
-        ActionDefinition { keys: Some("mod+x".into()), ..ActionDefinition::new_catalog("cut", LocalizedLabel::native("Cut", "Ausschneiden"), ActionKind::Clipboard).await },
-        ActionDefinition { keys: Some("mod+v".into()), ..ActionDefinition::new_catalog("paste", LocalizedLabel::native("Paste", "Einfügen"), ActionKind::Clipboard).await }
+        ActionDefinition { keys: Some("mod+c".into()), ..ActionDefinition::new_catalog("copy", LocalizedLabel::native("Copy", "Kopieren"), ActionKind::Clipboard) },
+        ActionDefinition { keys: Some("mod+x".into()), ..ActionDefinition::new_catalog("cut", LocalizedLabel::native("Cut", "Ausschneiden"), ActionKind::Clipboard) },
+        ActionDefinition { keys: Some("mod+v".into()), ..ActionDefinition::new_catalog("paste", LocalizedLabel::native("Paste", "Einfügen"), ActionKind::Clipboard) }
             .with_args([
                 ActionArgDef::select("anchor", LocalizedLabel::native("Anchoring", "Verankerung"), anchoring_options).await.default_value(serde_json::json!("original")).await,
                 ActionArgDef::vec3("position", LocalizedLabel::native("Position", "Position")).await,
@@ -1072,7 +1131,7 @@ pub async fn interaction_action_definitions(app: &AppDefinition) -> Vec<ActionDe
     ];
     let mode_options = vec![ActionArgOption::new("single", LocalizedLabel::native("Single", "Einzeln")).await, ActionArgOption::new("multiple", LocalizedLabel::native("Multiple", "Mehrfach")).await];
     vec![
-        ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(INTERACTION_SELECT_ACTION_ID, LocalizedLabel::native("Select", "Auswählen"), ActionKind::Interaction).await }
+        ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(INTERACTION_SELECT_ACTION_ID, LocalizedLabel::native("Select", "Auswählen"), ActionKind::Interaction) }
             .with_args([
                 ActionArgDef::text("domainId", LocalizedLabel::native("Domain", "Domäne")).await.required().await,
                 ActionArgDef::text("targets", LocalizedLabel::native("Targets", "Ziele")).await.required().await,
@@ -1080,21 +1139,19 @@ pub async fn interaction_action_definitions(app: &AppDefinition) -> Vec<ActionDe
                 ActionArgDef::select("method", LocalizedLabel::native("Method", "Methode"), method_options).await.required().await,
             ])
             .await,
-        ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(INTERACTION_HOVER_ACTION_ID, LocalizedLabel::native("Hover", "Hover"), ActionKind::Interaction).await }
+        ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(INTERACTION_HOVER_ACTION_ID, LocalizedLabel::native("Hover", "Hover"), ActionKind::Interaction) }
             .with_args([
                 ActionArgDef::text("domainId", LocalizedLabel::native("Domain", "Domäne")).await.required().await,
                 ActionArgDef::text("channel", LocalizedLabel::native("Channel", "Kanal")).await.required().await,
                 ActionArgDef::text("targets", LocalizedLabel::native("Targets", "Ziele")).await.required().await,
             ])
             .await,
-        ActionDefinition { keys: Some("escape".into()), ..ActionDefinition::new_catalog(CLEAR_SELECTION_ACTION_ID, LocalizedLabel::native("Clear Selection", "Auswahl aufheben"), ActionKind::Interaction).await },
-        ActionDefinition { keys: Some("mod+a".into()), ..ActionDefinition::new_catalog(SELECT_ALL_ACTION_ID, LocalizedLabel::native("Select All", "Alles auswählen"), ActionKind::Interaction).await },
+        ActionDefinition { keys: Some("escape".into()), ..ActionDefinition::new_catalog(CLEAR_SELECTION_ACTION_ID, LocalizedLabel::native("Clear Selection", "Auswahl aufheben"), ActionKind::Interaction) },
+        ActionDefinition { keys: Some("mod+a".into()), ..ActionDefinition::new_catalog(SELECT_ALL_ACTION_ID, LocalizedLabel::native("Select All", "Alles auswählen"), ActionKind::Interaction) },
         ActionDefinition::new_catalog(SET_SELECTION_MODE_ACTION_ID, LocalizedLabel::native("Set Selection Mode", "Auswahlmodus festlegen"), ActionKind::Interaction)
-            .await
             .with_args([ActionArgDef::text("domainId", LocalizedLabel::native("Domain", "Domäne")).await.required().await, ActionArgDef::select("mode", LocalizedLabel::native("Mode", "Modus"), mode_options).await.required().await])
             .await,
         ActionDefinition::new_catalog(SET_INTERACTION_GRANULARITY_ACTION_ID, LocalizedLabel::native("Set Granularity", "Granularität festlegen"), ActionKind::Interaction)
-            .await
             .with_args([ActionArgDef::text("domainId", LocalizedLabel::native("Domain", "Domäne")).await.required().await, ActionArgDef::text("granularityId", LocalizedLabel::native("Granularity", "Granularität")).await.required().await])
             .await,
     ]
@@ -1109,7 +1166,7 @@ pub const SET_ACTIVE_UTILITY_ACTION_ID: &str = "setActiveUtility";
 /// host-owned active utility of a window kind. `utilityId` is required; `windowKindId` is contextual (the
 /// shell fills it from the focused window when absent).
 pub async fn set_active_utility_action_definition() -> ActionDefinition {
-    ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(SET_ACTIVE_UTILITY_ACTION_ID, LocalizedLabel::native("Set Active Utility", "Aktives Hilfsmittel festlegen"), ActionKind::View).await }
+    ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(SET_ACTIVE_UTILITY_ACTION_ID, LocalizedLabel::native("Set Active Utility", "Aktives Hilfsmittel festlegen"), ActionKind::View) }
         .with_args([ActionArgDef::text("utilityId", LocalizedLabel::native("Utility", "Hilfsmittel")).await.required().await, ActionArgDef::text("windowKindId", LocalizedLabel::native("Window", "Fenster")).await])
         .await
 }
@@ -1122,7 +1179,7 @@ pub const SET_ACTIVE_TOOL_ACTION_ID: &str = "setActiveTool";
 /// host-owned active tool of the active mode. Unlike `setActiveUtility` this takes no `windowKindId` —
 /// tools are windowless, scoped to the whole mode.
 pub async fn set_active_tool_action_definition() -> ActionDefinition {
-    ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(SET_ACTIVE_TOOL_ACTION_ID, LocalizedLabel::native("Set Active Tool", "Aktives Werkzeug festlegen"), ActionKind::View).await }
+    ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(SET_ACTIVE_TOOL_ACTION_ID, LocalizedLabel::native("Set Active Tool", "Aktives Werkzeug festlegen"), ActionKind::View) }
         .with_args([ActionArgDef::text("toolId", LocalizedLabel::native("Tool", "Werkzeug")).await.required().await])
         .await
 }
@@ -1137,7 +1194,7 @@ pub const START_INTRODUCTION_ACTION_ID: &str = "startIntroduction";
 /// Unlike ordinary app actions this stays out of the action palette because the shell exposes the
 /// dedicated `Introduce App` command.
 pub async fn start_introduction_action_definition() -> ActionDefinition {
-    ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(START_INTRODUCTION_ACTION_ID, LocalizedLabel::native("Introduce App", "App vorstellen"), ActionKind::View).await }
+    ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(START_INTRODUCTION_ACTION_ID, LocalizedLabel::native("Introduce App", "App vorstellen"), ActionKind::View) }
 }
 
 /// 📇️ A relative action id used by declarations nested beneath an owning window kind.
@@ -1296,14 +1353,14 @@ pub struct CommandDefinition {
 }
 
 impl CommandDefinition {
-    pub async fn new(id: impl Into<String>, label: impl Into<LocalizedLabel>, category: impl Into<String>, icon_id: impl Into<IconName>, kind: ActionKind) -> Self {
-        Self { id: id.into(), label: label.into(), category: category.into(), icon_id: icon_id.into(), kind, args: Vec::new(), keybindings: Vec::new(), in_palette: true, semantics: ActionSemantics::for_kind(kind).await }
+    pub fn new(id: impl Into<String>, label: impl Into<LocalizedLabel>, category: impl Into<String>, icon_id: impl Into<IconName>, kind: ActionKind) -> Self {
+        Self { id: id.into(), label: label.into(), category: category.into(), icon_id: icon_id.into(), kind, args: Vec::new(), keybindings: Vec::new(), in_palette: true, semantics: ActionSemantics::for_kind(kind) }
     }
 
     /// @emoji 🎛️ Declares a command whose icon is resolved from {@link catalog_command_icon_id}.
-    pub async fn new_catalog(id: impl Into<String>, label: impl Into<LocalizedLabel>, category: impl Into<String>, kind: ActionKind) -> Self {
+    pub fn new_catalog(id: impl Into<String>, label: impl Into<LocalizedLabel>, category: impl Into<String>, kind: ActionKind) -> Self {
         let id = id.into();
-        Self::new(id.clone(), label, category, catalog_command_icon_id(&id).await, kind).await
+        Self::new(id.clone(), label, category, catalog_command_icon_id(&id), kind)
     }
 
     /// @emoji 📝️ Attaches typed argument declarations to this command.
@@ -2479,7 +2536,7 @@ pub async fn start_tutorial_action_definition(tutorials: &[TutorialDefinition]) 
     for t in tutorials {
         options.push(ActionArgOption::new(t.id.clone(), t.title.clone()).await);
     }
-    ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(START_TUTORIAL_ACTION_ID, LocalizedLabel::native("Play Tutorial", "Tutorial abspielen"), ActionKind::View).await }
+    ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(START_TUTORIAL_ACTION_ID, LocalizedLabel::native("Play Tutorial", "Tutorial abspielen"), ActionKind::View) }
         .with_args([ActionArgDef::select("tutorialId", LocalizedLabel::native("Tutorial", "Tutorial"), options).await.required().await])
         .await
 }
@@ -2491,7 +2548,7 @@ pub const RECORD_TUTORIAL_ACTION_ID: &str = "recordTutorial";
 /// @emoji ⏺️ The framework-injected `recordTutorial` View action: fully shell-intercepted, arms the
 /// recorder against the live document (never a sandboxed copy — a recording IS the user's work).
 pub async fn record_tutorial_action_definition() -> ActionDefinition {
-    ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(RECORD_TUTORIAL_ACTION_ID, LocalizedLabel::native("Record Tutorial", "Tutorial aufzeichnen"), ActionKind::View).await }
+    ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(RECORD_TUTORIAL_ACTION_ID, LocalizedLabel::native("Record Tutorial", "Tutorial aufzeichnen"), ActionKind::View) }
 }
 
 /// ⏱️ Real-time (not timeline-time, not rate-scaled) duration of the camera glide the player performs
@@ -5234,6 +5291,19 @@ mod app_label_tests {
         assert_eq!(action.semantics.examples, vec!["deleteSelection removes every currently selected object".to_string()]);
     }
 
+    #[test]
+    fn interactive_job_classification_is_explicit_and_release_validated() {
+        let migrated_action = super::ActionDefinition::new_catalog("select", super::LocalizedLabel::data("Select"), super::ActionKind::Interaction);
+        let migrated_command = super::CommandDefinition::new_catalog("solve", super::LocalizedLabel::data("Solve"), "analysis", super::ActionKind::Mutation);
+        assert_eq!(migrated_action.semantics.execution.interactive_job, super::InteractiveJobClassification::Migrated);
+        assert!(super::validate_interactive_job_classification([("app", &migrated_action)], [("app", &migrated_command)]).is_ok());
+
+        let mut unclassified = migrated_command.clone();
+        unclassified.semantics.execution.interactive_job = super::InteractiveJobClassification::Unclassified;
+        let errors = super::validate_interactive_job_classification(std::iter::empty(), [("app.mode", &unclassified)]).expect_err("unclassified command must block a release catalog");
+        assert_eq!(errors, vec![super::InteractiveJobClassificationError { owner: "app.mode".into(), id: "solve".into() }]);
+    }
+
     /// @emoji 🧪️ `ActionArgDef::json_schema`/`arg_schema_json_schema` produce sane JSON Schema 2020-12
     /// leaves for the shapes P3-manifest-schema actually introduces.
     #[semio_framework_async_macros::async_test]
@@ -6488,6 +6558,7 @@ mod app_label_tests {
         crate::ui::UndoMode::export_all().unwrap();
         crate::ui::IdempotencyMode::export_all().unwrap();
         crate::ui::ExecutionClass::export_all().unwrap();
+        crate::ui::InteractiveJobClassification::export_all().unwrap();
         crate::ui::CapabilityExecution::export_all().unwrap();
         crate::ui::ActionSemantics::export_all().unwrap();
         crate::ui::ActionDefinition::export_all().unwrap();

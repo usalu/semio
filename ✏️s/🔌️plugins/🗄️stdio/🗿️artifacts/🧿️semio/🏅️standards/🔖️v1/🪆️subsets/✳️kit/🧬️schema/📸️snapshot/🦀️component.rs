@@ -477,7 +477,7 @@ pub(crate) fn write_transform(out: &mut Vec<u8>, t: &SemioTransform) {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn read_transform(reader: &mut store::ByteReader<'_>) -> Result<SemioTransform, String> {
     use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint3, SemioQuaternion};
-    let mut next = || -> Result<f64, String> { Ok(f64::from_le_bytes(semio_framework_plugin::resolve_ready(reader.read_bytes(8)).map_err(|e| e.to_string())?.try_into().map_err(|_| "transform: short read".to_string())?)) };
+    let mut next = || -> Result<f64, String> { Ok(f64::from_le_bytes(reader.read_bytes(8).map_err(|e| e.to_string())?.try_into().map_err(|_| "transform: short read".to_string())?)) };
     Ok(SemioTransform { translation: SemioPoint3 { x: next()?, y: next()?, z: next()? }, rotation: SemioQuaternion { x: next()?, y: next()?, z: next()?, w: next()? }, scale: SemioPoint3 { x: next()?, y: next()?, z: next()? } })
 }
 
@@ -578,7 +578,7 @@ fn encode_kit_snapshot_binary(s: &SemioKitSnapshot) -> Vec<u8> {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn decode_kit_snapshot_binary(bytes: &[u8]) -> Result<SemioKitSnapshot, String> {
     const PACK_BINARY_FORMAT: u8 = 1;
-    let mut reader = semio_framework_plugin::resolve_ready(store::ByteReader::new(bytes));
+    let mut reader = store::ByteReader::new(bytes);
     let format = reader.read_u8().map_err(|e| e.to_string())?;
     if format != PACK_BINARY_FORMAT {
         return Err(format!("unsupported pack format {format}"));

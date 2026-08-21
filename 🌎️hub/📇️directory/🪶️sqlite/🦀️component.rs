@@ -15,9 +15,9 @@ use crate::directory::error::{DirectoryError, DirectoryResult};
 use crate::directory::model::*;
 use crate::directory::{kind_to_str, role_from_wire, visibility_to_str, HubClock, HubDirectory, NewDirectoryEvent};
 use directory::os_directory::{DirectoryActor, DirectoryActorKind, DirectoryEvent, DirectoryEventBody, DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility, Hlc};
+use directory::os_identity::time_ordered_id;
 use rusqlite::{Connection, OptionalExtension, Transaction};
 use std::sync::{Arc, Mutex};
-use uuid::Uuid;
 
 //#region 🔖️Schema
 const SCHEMA: &str = "\
@@ -233,7 +233,7 @@ impl SqliteDirectory {
 impl HubDirectory for SqliteDirectory {
     //#region ShareTokens
     async fn create_share_token(&self, document_id: &str) -> DirectoryResult<String> {
-        let token = Uuid::now_v7().to_string();
+        let token = time_ordered_id();
         self.lock()?.execute("INSERT INTO share_token (token, document_id, created_at) VALUES (?1, ?2, ?3)", rusqlite::params![token, document_id, now_ms()]).map_err(backend)?;
         Ok(token)
     }
@@ -256,7 +256,7 @@ impl HubDirectory for SqliteDirectory {
 
     //#region Users
     async fn create_user(&self, email: &str, display_name: &str, password_hash: Option<&str>, sso_subject: Option<&str>, sso_provider: Option<&str>) -> DirectoryResult<UserRecord> {
-        let id = Uuid::now_v7().to_string();
+        let id = time_ordered_id();
         let created_at = now_ms();
         self.lock()?
             .execute(
@@ -353,7 +353,7 @@ impl HubDirectory for SqliteDirectory {
 
     //#region AuthSessions
     async fn create_auth_session(&self, user_id: &str, ttl_secs: i64, sso_provider: Option<&str>) -> DirectoryResult<AuthSessionRecord> {
-        let id = Uuid::now_v7().to_string();
+        let id = time_ordered_id();
         let created_at = now_ms();
         let expires_at = created_at + ttl_secs * 1000;
         self.lock()?.execute("INSERT INTO hub_auth_session (id, user_id, created_at, expires_at, sso_provider) VALUES (?1, ?2, ?3, ?4, ?5)", rusqlite::params![id, user_id, created_at, expires_at, sso_provider]).map_err(backend)?;
@@ -377,8 +377,8 @@ impl HubDirectory for SqliteDirectory {
 
     //#region Invites
     async fn create_invite(&self, space_id: &str, role: SpaceRole, ttl_secs: i64) -> DirectoryResult<InviteRecord> {
-        let id = Uuid::now_v7().to_string();
-        let token = Uuid::now_v7().to_string();
+        let id = time_ordered_id();
+        let token = time_ordered_id();
         let created_at = now_ms();
         let expires_at = created_at + ttl_secs * 1000;
         self.lock()?.execute("INSERT INTO hub_space_invite (id, token, space_id, role, created_at, expires_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6)", rusqlite::params![id, token, space_id, role.as_str(), created_at, expires_at]).map_err(backend)?;
@@ -404,7 +404,7 @@ impl HubDirectory for SqliteDirectory {
 
     //#region SyncSessions
     async fn record_sync_session_open(&self, space_id: &str, document_id: &str, surface: &str, user_id: Option<&str>, space_role: Option<SpaceRole>, client_label: &str) -> DirectoryResult<SyncSessionRecord> {
-        let id = Uuid::now_v7().to_string();
+        let id = time_ordered_id();
         let connected_at = now_ms();
         let role_str = space_role.map(|r| r.as_str());
         self.lock()?
@@ -470,7 +470,7 @@ impl HubDirectory for SqliteDirectory {
         let tx = conn.transaction_with_behavior(rusqlite::TransactionBehavior::Immediate).map_err(backend)?;
         let mut persisted = Vec::with_capacity(events.len());
         for event in events {
-            let id = Uuid::now_v7().to_string();
+            let id = time_ordered_id();
             let recorded_at_ms = now_ms();
             let payload_value = serde_json::to_value(&event.body).map_err(backend)?;
             let kind = payload_value.get("kind").and_then(|value| value.as_str()).unwrap_or_default().to_string();
@@ -573,7 +573,7 @@ mod tests {
     /// `append_events` — see the module root's `//#region 🔖️Decider`); this recreates just enough
     /// of a `create-space` decision by hand so backend tests do not need a full `DirectoryService`.
     async fn seed_space(dir: &SqliteDirectory, clock: &mut HubClock, owner_user_id: &str, kind: DirectorySpaceKind) -> String {
-        let space_id = Uuid::now_v7().to_string();
+        let space_id = time_ordered_id();
         let owner_role = if kind == DirectorySpaceKind::Archive { DirectorySpaceRole::Spectator } else { DirectorySpaceRole::Author };
         let events = vec![
             NewDirectoryEvent {

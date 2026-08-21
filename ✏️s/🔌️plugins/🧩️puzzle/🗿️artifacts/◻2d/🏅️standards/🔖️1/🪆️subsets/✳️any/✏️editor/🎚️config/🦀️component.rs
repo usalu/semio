@@ -73,6 +73,19 @@ pub struct Puzzle2dConfig {
     pub brush_candidate_source_handle_id: String,
     #[serde(default)]
     pub fill_count: u32,
+    /// 🧵️ Persistent Puzzle 2D fill job checkpoint, local to this app session.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fill_job_checkpoint: Option<Vec<u8>>,
+    #[serde(default)]
+    pub fill_job_operation: u64,
+    #[serde(default)]
+    pub fill_job_generation: u64,
+    #[serde(default)]
+    pub fill_job_seed: u64,
+    #[serde(default)]
+    pub fill_job_applied_count: usize,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fill_job_preview: Option<Value>,
     #[serde(default)]
     pub grid_snap_enabled: bool,
     #[serde(default = "default_grid_factor")]
@@ -109,6 +122,12 @@ impl Default for Puzzle2dConfig {
             brush_candidates: Vec::new(),
             brush_candidate_source_handle_id: String::new(),
             fill_count: 0,
+            fill_job_checkpoint: None,
+            fill_job_operation: 0,
+            fill_job_generation: 0,
+            fill_job_seed: 1,
+            fill_job_applied_count: 0,
+            fill_job_preview: None,
             grid_snap_enabled: false,
             grid_factor: default_grid_factor(),
             suggestion_offset: default_suggestion_offset(),

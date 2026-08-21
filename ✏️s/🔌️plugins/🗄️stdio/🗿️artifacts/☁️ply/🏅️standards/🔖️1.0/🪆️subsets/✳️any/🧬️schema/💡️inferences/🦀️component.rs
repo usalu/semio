@@ -25,7 +25,7 @@ pub struct PlyInference {
 }
 
 impl protocol::Inference<PlySnapshot> for PlyInference {
-    async fn infer(snapshot: &PlySnapshot) -> Self {
+    fn infer(snapshot: &PlySnapshot) -> Self {
         Self { bounds: compute_ply_bounds(snapshot) }
     }
 }
@@ -39,13 +39,13 @@ impl Default for PlyInference {
 }
 
 impl protocol::InferenceSpec<PlySnapshot> for PlyInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.stdio.ply.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.ply.inference.bounds", reads: &["elements"] }]
     }
 }

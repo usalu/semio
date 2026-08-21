@@ -89,11 +89,8 @@ async fn committed_json_is_canonical() {
 async fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
     let status = outcome.get("status").and_then(serde_json::Value::as_str).expect("outcome carries a status");
-    let declared: Vec<(String, String)> = outcome
-        .get("messages")
-        .and_then(serde_json::Value::as_array)
-        .map(|rows| rows.iter().map(|row| (row["level"].as_str().unwrap_or_default().to_string(), row["code"].as_str().unwrap_or_default().to_string())).collect())
-        .unwrap_or_default();
+    let declared: Vec<(String, String)> =
+        outcome.get("messages").and_then(serde_json::Value::as_array).map(|rows| rows.iter().map(|row| (row["level"].as_str().unwrap_or_default().to_string(), row["code"].as_str().unwrap_or_default().to_string())).collect()).unwrap_or_default();
     let raised = <EpwMutation as protocol::Mutation<EpwSnapshot>>::diff(&mutation(), &before());
     let produced: Vec<(String, String)> = raised
         .messages()
@@ -123,14 +120,29 @@ async fn produces_committed_diff() {
     let produced = serde_json::to_value(raised.diff()).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "set-snapshot/warms-the-second-hour-and-restamps-the-station-city: produced diff differs from the committed 🔺️diff/🔣️component.json");
-    assert!(raised.diff().design_conditions.is_none() && raised.diff().typical_extreme_periods.is_none() && raised.diff().ground_temperatures.is_none() && raised.diff().holidays_dst.is_none() && raised.diff().comments_1.is_none() && raised.diff().comments_2.is_none(), "set-snapshot/warms-the-second-hour-and-restamps-the-station-city: the six verbatim-retained header lines are equal on both sides and must stay out of the delta");
+    assert!(
+        raised.diff().design_conditions.is_none()
+            && raised.diff().typical_extreme_periods.is_none()
+            && raised.diff().ground_temperatures.is_none()
+            && raised.diff().holidays_dst.is_none()
+            && raised.diff().comments_1.is_none()
+            && raised.diff().comments_2.is_none(),
+        "set-snapshot/warms-the-second-hour-and-restamps-the-station-city: the six verbatim-retained header lines are equal on both sides and must stay out of the delta"
+    );
     assert!(raised.diff().data_periods.is_none(), "set-snapshot/warms-the-second-hour-and-restamps-the-station-city: the DATA PERIODS header line is unchanged");
-    assert_eq!(raised.diff().location.as_ref().expect("location slot").city, "Hannover-Langenhagen", "set-snapshot/warms-the-second-hour-and-restamps-the-station-city: EpwLocation is a whole-substruct replace slot, so the delta carries the complete new header line");
+    assert_eq!(
+        raised.diff().location.as_ref().expect("location slot").city,
+        "Hannover-Langenhagen",
+        "set-snapshot/warms-the-second-hour-and-restamps-the-station-city: EpwLocation is a whole-substruct replace slot, so the delta carries the complete new header line"
+    );
     let records = raised.diff().records.as_ref().expect("set-snapshot/warms-the-second-hour-and-restamps-the-station-city: the records triple must be present");
     assert!(records.removed.is_empty() && records.added.is_empty(), "set-snapshot/warms-the-second-hour-and-restamps-the-station-city: no hourly record is added or dropped");
     assert_eq!(records.modified[0].index, 1, "set-snapshot/warms-the-second-hour-and-restamps-the-station-city: EpwRecordModified indices are BASE-state indices");
     assert_eq!(records.modified[0].diff.dry_bulb_temp.as_deref(), Some("5.6"), "set-snapshot/warms-the-second-hour-and-restamps-the-station-city: the record patch names the dry-bulb column");
-    assert!(records.modified[0].diff.year.is_none() && records.modified[0].diff.hour.is_none() && records.modified[0].diff.wind_speed.is_none(), "set-snapshot/warms-the-second-hour-and-restamps-the-station-city: the other 34 spec columns of that record are unchanged and must not be rewritten");
+    assert!(
+        records.modified[0].diff.year.is_none() && records.modified[0].diff.hour.is_none() && records.modified[0].diff.wind_speed.is_none(),
+        "set-snapshot/warms-the-second-hour-and-restamps-the-station-city: the other 34 spec columns of that record are unchanged and must not be rewritten"
+    );
 }
 
 /// 🔣️ The committed diff is itself canonical and decodes to EpwDiff.
@@ -140,7 +152,11 @@ async fn committed_diff_is_canonical() {
     let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "set-snapshot/warms-the-second-hour-and-restamps-the-station-city: committed diff JSON is not canonical");
-    assert_eq!(serde_json::from_str::<serde_json::Value>(DIFF).expect("diff reparses").get("records").and_then(|r| r.get("modified")).and_then(|m| m.get(0)).and_then(|m| m.get("diff")).and_then(serde_json::Value::as_object).map(|o| o.len()), Some(1), "set-snapshot/warms-the-second-hour-and-restamps-the-station-city: exactly one of EpwRecordDiff's 35 column slots may appear in the committed record patch");
+    assert_eq!(
+        serde_json::from_str::<serde_json::Value>(DIFF).expect("diff reparses").get("records").and_then(|r| r.get("modified")).and_then(|m| m.get(0)).and_then(|m| m.get("diff")).and_then(serde_json::Value::as_object).map(|o| o.len()),
+        Some(1),
+        "set-snapshot/warms-the-second-hour-and-restamps-the-station-city: exactly one of EpwRecordDiff's 35 column slots may appear in the committed record patch"
+    );
 }
 
 /// 🩹 Applying the committed diff directly to `before` yields the committed `after` — the diff is

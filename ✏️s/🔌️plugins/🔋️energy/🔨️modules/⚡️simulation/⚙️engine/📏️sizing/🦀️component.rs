@@ -54,7 +54,7 @@ pub struct SizingManager;
 
 impl SizingManager {
     /// 📐️ Run sizing pass and populate sizing tables.
-    pub async fn size(model: &Model, config: &SizingConfig) -> SizingTables {
+    pub fn size(model: &Model, config: &SizingConfig) -> SizingTables {
         let mut tables = SizingTables::default();
         let sf = config.sizing_factor * config.safety_factor;
 
@@ -82,12 +82,12 @@ impl SizingManager {
     }
 
     /// 📐️ Coincident peak across zones.
-    pub async fn coincident_peak(loads: &[f64]) -> f64 {
+    pub fn coincident_peak(loads: &[f64]) -> f64 {
         loads.iter().sum()
     }
 
     /// 📐️ Non-coincident peak (sum of individual peaks).
-    pub async fn non_coincident_peak(loads: &[f64]) -> f64 {
+    pub fn non_coincident_peak(loads: &[f64]) -> f64 {
         loads.iter().copied().fold(0.0, f64::max)
     }
 }
@@ -100,7 +100,7 @@ mod tests {
     use crate::model::{Model, Site, Zone};
 
     #[semio_framework_async_macros::async_test]
-    async fn sizes_zone_with_surfaces() {
+    fn sizes_zone_with_surfaces() {
         let model = Model {
             name: "Test".into(),
             site: Site { latitude_deg: 45.0, longitude_deg: 0.0, elevation_m: 100.0, time_zone_hours: 0.0, north_axis_deg: 0.0 },
@@ -112,7 +112,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn sizes_equipment_for_ideal_loads_zone() {
+    fn sizes_equipment_for_ideal_loads_zone() {
         let model = crate::sim::test_model_single_zone();
         let tables = SizingManager::size(&model, &SizingConfig::default());
         assert_eq!(tables.equipment.len(), 1);
@@ -120,13 +120,13 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn coincident_peak_sums_all_loads() {
+    fn coincident_peak_sums_all_loads() {
         assert!((SizingManager::coincident_peak(&[1000.0, 2000.0, 500.0]) - 3500.0).abs() < 1e-9);
         assert_eq!(SizingManager::coincident_peak(&[]), 0.0);
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn non_coincident_peak_takes_maximum() {
+    fn non_coincident_peak_takes_maximum() {
         assert!((SizingManager::non_coincident_peak(&[1000.0, 2000.0, 500.0]) - 2000.0).abs() < 1e-9);
         assert_eq!(SizingManager::non_coincident_peak(&[]), 0.0);
     }

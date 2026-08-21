@@ -24,7 +24,7 @@ pub struct ObjInference {
 }
 
 impl protocol::Inference<ObjSnapshot> for ObjInference {
-    async fn infer(snapshot: &ObjSnapshot) -> Self {
+    fn infer(snapshot: &ObjSnapshot) -> Self {
         Self { bounds: compute_obj_bounds(snapshot) }
     }
 }
@@ -38,13 +38,13 @@ impl Default for ObjInference {
 }
 
 impl protocol::InferenceSpec<ObjSnapshot> for ObjInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.stdio.obj.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.obj.inference.bounds", reads: &["vertices", "faces", "groups"] }]
     }
 }

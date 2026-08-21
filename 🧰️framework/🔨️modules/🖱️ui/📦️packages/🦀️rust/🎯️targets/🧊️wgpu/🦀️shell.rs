@@ -211,8 +211,7 @@ fn build_root(tree: &mut UiTree, parent: NodeId, root: &WindowLayoutRoot, ctx: &
 }
 
 fn build_axis(tree: &mut UiTree, parent: NodeId, axis: &WindowLayoutAxisNode, ordinal: u32, ctx: &ShellPaintContext<'_>) {
-    let spec =
-        UiNode::Stack(UiStackNode { direction: axis.kind.clone(), gap: Some("none".into()), padding: None, id: None, presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, children: Vec::new(), menu: None });
+    let spec = UiNode::Stack(UiStackNode { direction: axis.kind.clone(), gap: Some("none".into()), padding: None, id: None, presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, children: Vec::new(), menu: None });
     let id = tree.insert_child(Some(parent), Node::new(NodeKey::Positional(SHELL_AXIS, ordinal), WidgetSpec(spec)));
     tree.mark_dirty(id, NodeFlags::DIRTY_LAYOUT);
     for (index, child) in axis.children.iter().enumerate() {

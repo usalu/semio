@@ -2,11 +2,10 @@
 //!
 //! A [`HandleIntent`] handler is the one place a [`ui_contract::UiIntent`] turns into local mutation
 //! plus a *description* of outward effects — it never submits a command or publishes presence
-//! itself, it only tells `runtime-transact`'s `crate::UiRuntime::transact` what to do with them once
-//! every queued intent this transaction has been routed, which is what keeps ordering well-defined
-//! across a whole run-to-completion frame (ruling U1).
+//! itself, it only tells [`crate::FrameTransaction::step`] what to do with them as queued work,
+//! which is what keeps ordering well-defined across resumable slices.
 //!
-//! **The revision guard is the point.** [`is_stale_intent`] is the pure predicate `transact` applies
+//! **The revision guard is the point.** [`is_stale_intent`] is the pure predicate the route stage applies
 //! before a queued intent ever reaches a [`HandleIntent::on_intent`] call: an intent whose
 //! [`ui_contract::UiIntent::revision`] trails the surface's current revision by more than
 //! [`DEFAULT_REVISION_TOLERANCE`] targets geometry the user never actually saw, so it is dropped —
@@ -21,8 +20,8 @@
 
 //#region 🔖️Intent
 
-/// 🎯️ A run-to-completion, revision-guarded moment: a presenter's own type implements this once, and
-/// `crate::UiRuntime::transact` routes every queued [`ui_contract::UiIntent`] addressed at that
+/// 🎯️ A revision-guarded moment: a presenter's own type implements this once, and
+/// [`crate::FrameTransaction::step`] routes every queued [`ui_contract::UiIntent`] addressed at that
 /// presenter's registered surface through it. `cx` is the same lease-scoped `crate::Context` any
 /// other entity mutation uses — `notify`/`emit`/`defer`/`spawn_local`, never an await, by the same
 /// construction `crate::EntityStore::update` already enforces on every other mutation path.
@@ -52,15 +51,14 @@ pub fn is_stale_intent(intent_revision: ui_contract::UiRevision, current_revisio
 
 /// 📤️ What one [`HandleIntent::on_intent`] call produced. Never carries a future or performs a
 /// side effect itself (ruling U1) — a handler *describes* outward effects instead, which is what lets
-/// `crate::UiRuntime::transact` apply them in a well-defined order after every queued intent this
-/// transaction has been routed.
+/// [`crate::FrameTransaction::step`] apply them in a well-defined resumable order.
 #[derive(Debug)]
 pub enum DispatchOutcome {
     /// ✅️ The intent was applied; no outward effect beyond whatever entity mutation the handler made
     /// (itself already reflected by the next present/reconcile pass).
     Handled,
     /// ✅️ The intent was applied and additionally describes commands to submit and/or deferred work
-    /// for `transact` to carry out.
+    /// for the frame transaction to carry out.
     HandledWith { commands: Vec<crate::Command>, deferred: Vec<DeferredOp> },
     /// 🕰️ Dropped: the handler itself recognizes this intent as targeting a stale moment, for a
     /// reason the revision guard alone could not see. Converges with a revision-guard drop: no patch,

@@ -24,7 +24,7 @@ pub struct SemioAudioInference {
 }
 
 impl protocol::Inference<SemioAudioSnapshot> for SemioAudioInference {
-    async fn infer(snapshot: &SemioAudioSnapshot) -> Self {
+    fn infer(snapshot: &SemioAudioSnapshot) -> Self {
         Self { duration: compute_semio_audio_duration(snapshot) }
     }
 }
@@ -38,13 +38,13 @@ impl Default for SemioAudioInference {
 }
 
 impl protocol::InferenceSpec<SemioAudioSnapshot> for SemioAudioInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.stdio.semio.audio.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.semio.audio.inference.duration", reads: &["sampleRate", "channels"] }]
     }
 }

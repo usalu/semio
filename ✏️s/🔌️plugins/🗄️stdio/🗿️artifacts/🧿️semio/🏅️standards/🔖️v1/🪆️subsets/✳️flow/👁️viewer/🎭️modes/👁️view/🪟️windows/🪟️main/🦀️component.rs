@@ -7,7 +7,7 @@
 //! packet's own report for the tradeoff).
 
 use crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
-use semio_framework_plugin::{mesh_from_kind, world3d_camera_json, world3d_selection_json, MeshView, MeshWindowKit, UiNode, WindowKindDefinition, WindowKit};
+use semio_framework_plugin::{mesh_from_kind, world3d_camera_json, world3d_selection_json, BuiltNode, MeshView, MeshWindowKit, WindowKindDefinition, WindowKit};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = MeshWindowKit::KIND_ID;
@@ -33,11 +33,7 @@ pub fn definition() -> WindowKindDefinition {
 /// to field names a live peer ticket may still be refactoring.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn entity_count(document: &SemioFlowSnapshot) -> usize {
-    serde_json::to_value(document)
-        .ok()
-        .and_then(|value| value.as_object().map(|object| object.values().filter_map(|field| field.as_array().map(|array| array.len())).max().unwrap_or(0)))
-        .unwrap_or(0)
-        .clamp(1, 6)
+    serde_json::to_value(document).ok().and_then(|value| value.as_object().map(|object| object.values().filter_map(|field| field.as_array().map(|array| array.len())).max().unwrap_or(0))).unwrap_or(0).clamp(1, 6)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -59,10 +55,10 @@ fn world_instances_json(document: &SemioFlowSnapshot) -> String {
     serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into())
 }
 
-/// 👁️ Pure `SemioFlowSnapshot -> UiNode` read: default camera (a viewer has no persisted
+/// 👁️ Pure `SemioFlowSnapshot -> BuiltNode` read: default camera (a viewer has no persisted
 /// per-session camera — `Config = NoConfig`), no selection/gumball/engagement overlay.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &SemioFlowSnapshot) -> UiNode {
+pub fn render(document: &SemioFlowSnapshot) -> BuiltNode {
     let meshes_json = serde_json::to_string(&[serde_json::json!({ "id": SEMIO_FLOW_VIEW_FALLBACK_MESH_KIND, "data": mesh_from_kind(SEMIO_FLOW_VIEW_FALLBACK_MESH_KIND) })]).unwrap_or_else(|_| "[]".into());
     let view = MeshView {
         camera_json: world3d_camera_json(SEMIO_FLOW_VIEW_DEFAULT_CAMERA_POSITION, SEMIO_FLOW_VIEW_DEFAULT_CAMERA_TARGET, SEMIO_FLOW_VIEW_DEFAULT_CAMERA_FOV),

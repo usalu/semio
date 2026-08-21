@@ -39,7 +39,7 @@ impl Ac4Engine {
     /// reacts to counters that are *decremented* to zero by a removal event: a counter that starts
     /// at zero — a pattern with literally no compatible neighbor anywhere in the model — would
     /// never trigger a removal without this pass. Returns `Err(node)` if that alone empties a domain.
-    pub async fn new<T: Topology>(model: &CompiledModel, topo: &T, domains: &mut DomainStore, metrics: &mut Metrics) -> Result<Self, NodeId> {
+    pub fn new<T: Topology>(model: &CompiledModel, topo: &T, domains: &mut DomainStore, metrics: &mut Metrics) -> Result<Self, NodeId> {
         let pattern_count = model.pattern_count();
         let total_slots = topo.node_count() * topo.max_in_degree().max(1);
         let mut counts = vec![0u32; total_slots * pattern_count];
@@ -84,7 +84,7 @@ impl Ac4Engine {
     }
 
     #[cfg(test)]
-    pub(crate) async fn count_at(&self, slot: usize, p: PatternId) -> u32 {
+    pub(crate) fn count_at(&self, slot: usize, p: PatternId) -> u32 {
         self.counts[slot * self.pattern_count + p.index()]
     }
 
@@ -97,7 +97,7 @@ impl Ac4Engine {
     /// straw for its own node would otherwise be invisible here (an already-empty domain can only
     /// ever report `Unchanged`, never re-report `Wipeout`, the same hazard this crate's AC-3 search
     /// integration hit once with un-checked `Domain::remove` results).
-    pub async fn propagate<T: Topology>(&mut self, model: &CompiledModel, topo: &T, domains: &mut DomainStore, seed_removed: &[(NodeId, PatternId)], metrics: &mut Metrics) -> Result<(), NodeId> {
+    pub fn propagate<T: Topology>(&mut self, model: &CompiledModel, topo: &T, domains: &mut DomainStore, seed_removed: &[(NodeId, PatternId)], metrics: &mut Metrics) -> Result<(), NodeId> {
         for &(v, _) in seed_removed {
             if domains.get(v).is_wiped() {
                 return Err(v);
@@ -142,7 +142,7 @@ impl Ac4Engine {
     /// `domains` so this stays read-only from the caller's perspective even though [`Ac4Engine::new`]
     /// itself mutates whatever store it is given.
     #[cfg(test)]
-    pub(crate) async fn debug_assert_consistent<T: Topology>(&self, model: &CompiledModel, topo: &T, domains: &DomainStore) {
+    pub(crate) fn debug_assert_consistent<T: Topology>(&self, model: &CompiledModel, topo: &T, domains: &DomainStore) {
         let mut scratch = domains.clone();
         let mut scratch_metrics = Metrics::default();
         let fresh = Self::new(model, topo, &mut scratch, &mut scratch_metrics).expect("recomputation from an already-consistent domain state cannot newly wipe out");
@@ -164,7 +164,7 @@ mod tests {
     use crate::wfc_engine::topology::GraphTopologyBuilder;
     use crate::wfc_engine::trail::Trail;
 
-    async fn checkerboard(n: usize) -> (CompiledModel, crate::wfc_engine::topology::GraphTopology, RelationId) {
+    fn checkerboard(n: usize) -> (CompiledModel, crate::wfc_engine::topology::GraphTopology, RelationId) {
         let mut b = ModelBuilder::new();
         let black = b.add_pattern(1.0);
         let white = b.add_pattern(1.0);
@@ -179,8 +179,8 @@ mod tests {
         (model, tb.build().unwrap(), adj)
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn initial_counts_match_full_domain_supporter_popcounts() {
+    #[test]
+    fn initial_counts_match_full_domain_supporter_popcounts() {
         let (model, topo, adj) = checkerboard(3);
         let mut domains = DomainStore::new_full(3, model.weights());
         let mut metrics = Metrics::default();
@@ -196,8 +196,8 @@ mod tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn propagation_forces_alternation_after_one_pin() {
+    #[test]
+    fn propagation_forces_alternation_after_one_pin() {
         let (model, topo, _adj) = checkerboard(4);
         let mut domains = DomainStore::new_full(4, model.weights());
         let mut metrics = Metrics::default();
@@ -213,8 +213,8 @@ mod tests {
         engine.debug_assert_consistent(&model, &topo, &domains);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn odd_cycle_pin_propagates_to_wipeout() {
+    #[test]
+    fn odd_cycle_pin_propagates_to_wipeout() {
         let mut b = ModelBuilder::new();
         let black = b.add_pattern(1.0);
         let white = b.add_pattern(1.0);
@@ -248,7 +248,7 @@ mod tests {
     /// is) but not for comparing two propagators' fixed points directly: this crate's AC-3 engine
     /// (per its own module docs) only reaches *full* arc-consistency when both directions of an
     /// edge encode the same well-formed constraint, which requires a validated, symmetric table.
-    async fn random_symmetric_model(rng: &mut geometry::random::Rng, pattern_count: usize, density: f64) -> (CompiledModel, RelationId) {
+    fn random_symmetric_model(rng: &mut geometry::random::Rng, pattern_count: usize, density: f64) -> (CompiledModel, RelationId) {
         let mut b = ModelBuilder::new();
         let patterns: Vec<_> = (0..pattern_count).map(|_| b.add_pattern(1.0 + rng.next_range(0, 5) as f64)).collect();
         let r = b.add_relation("r");
@@ -271,8 +271,8 @@ mod tests {
     /// twice for a single logical removal — over-pruning patterns that still had support. Applying
     /// a batch of removals up front (one `propagate` call with the whole worklist) must give
     /// exactly the same result as applying them one at a time (one `propagate` call each).
-    #[semio_framework_async_macros::async_test]
-    async fn sequential_and_batch_seed_application_agree() {
+    #[test]
+    fn sequential_and_batch_seed_application_agree() {
         let mut rng = geometry::random::Rng::from_seed(4040);
         for trial in 0..100 {
             let pattern_count = 1 + rng.next_range(0, 4) as usize;
@@ -359,8 +359,8 @@ mod tests {
         /// on a malformed one (e.g. a self-inverse relation with an asymmetric table, which
         /// `oracle::testgen::random_model` can produce) would compare two *different*, each
         /// internally-valid, propagation strengths rather than testing for a real disagreement.
-        #[semio_framework_async_macros::async_test]
-        async fn ac3_and_ac4_reach_identical_fixed_points_on_random_instances() {
+        #[test]
+        fn ac3_and_ac4_reach_identical_fixed_points_on_random_instances() {
             let mut rng = geometry::random::Rng::from_seed(4040);
             for trial in 0..300 {
                 let pattern_count = 1 + rng.next_range(0, 4) as usize;

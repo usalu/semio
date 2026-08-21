@@ -5,7 +5,7 @@
 
 use crate::artifacts::csv::CsvSnapshot;
 use semio_framework_plugin::app::{TableView, TableWindowKit, WindowKit};
-use semio_framework_plugin::{LocalizedLabel, UiNode, WindowKindDefinition};
+use semio_framework_plugin::{BuiltNode, LocalizedLabel, WindowKindDefinition};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = TableWindowKit::KIND_ID;
@@ -21,10 +21,10 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-/// 👁️ Pure `CsvSnapshot -> UiNode` read: header row (if any) supplies column labels, every
+/// 👁️ Pure `CsvSnapshot -> BuiltNode` read: header row (if any) supplies column labels, every
 /// remaining record is one read-only row — no mutation, no selection state.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &CsvSnapshot) -> UiNode {
+pub fn render(document: &CsvSnapshot) -> BuiltNode {
     let (columns, data_rows): (Vec<String>, &[crate::artifacts::csv::CsvRecord]) = if document.has_header && !document.records.is_empty() {
         (document.records[0].fields.iter().map(|field| field.value.clone()).collect(), &document.records[1..])
     } else {

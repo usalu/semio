@@ -154,36 +154,21 @@ pub mod derived_analysis {
         let mut out = Vec::new();
         for (index, entry) in entries.iter().enumerate() {
             if entry.flags & FLAG_ENCRYPTED != 0 {
-                out.push(hard(
-                    CODE_ENCRYPTED,
-                    format!("entry {index} ({:?}) has general-purpose bit 0 (encryption) set -- ISO/IEC 21320-1 §4.1 forbids encrypted entries", entry.name),
-                ));
+                out.push(hard(CODE_ENCRYPTED, format!("entry {index} ({:?}) has general-purpose bit 0 (encryption) set -- ISO/IEC 21320-1 §4.1 forbids encrypted entries", entry.name)));
             }
             if entry.flags & (FLAG_STRONG_ENCRYPTION | FLAG_MASKED_LOCAL_HEADERS) != 0 {
                 out.push(hard(
                     CODE_STRONG_ENCRYPTION,
-                    format!(
-                        "entry {index} ({:?}) has general-purpose bit 6 and/or bit 13 (Strong Encryption / masked local header values) set -- ISO/IEC 21320-1 forbids the Strong Encryption extension entirely",
-                        entry.name
-                    ),
+                    format!("entry {index} ({:?}) has general-purpose bit 6 and/or bit 13 (Strong Encryption / masked local header values) set -- ISO/IEC 21320-1 forbids the Strong Encryption extension entirely", entry.name),
                 ));
             }
             if entry.flags & FLAG_DATA_DESCRIPTOR != 0 {
-                out.push(soft(
-                    CODE_DATA_DESCRIPTOR,
-                    format!(
-                        "entry {index} ({:?}) has general-purpose bit 3 (trailing data descriptor) set -- interoperability warning: not every ISO/IEC 21320-1 reader trusts streamed sizes",
-                        entry.name
-                    ),
-                ));
+                out.push(soft(CODE_DATA_DESCRIPTOR, format!("entry {index} ({:?}) has general-purpose bit 3 (trailing data descriptor) set -- interoperability warning: not every ISO/IEC 21320-1 reader trusts streamed sizes", entry.name)));
             }
             if entry.version_needed > VERSION_NEEDED_SOFT_CEILING {
                 out.push(soft(
                     CODE_VERSION_NEEDED,
-                    format!(
-                        "entry {index} ({:?}) declares version-needed-to-extract {} > {VERSION_NEEDED_SOFT_CEILING} -- signals a feature ISO/IEC 21320-1's restricted Stored/Deflate profile shouldn't require",
-                        entry.name, entry.version_needed
-                    ),
+                    format!("entry {index} ({:?}) declares version-needed-to-extract {} > {VERSION_NEEDED_SOFT_CEILING} -- signals a feature ISO/IEC 21320-1's restricted Stored/Deflate profile shouldn't require", entry.name, entry.version_needed),
                 ));
             }
         }

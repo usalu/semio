@@ -28,19 +28,19 @@ pub struct SemioFlowInference {
 }
 
 impl protocol::Inference<SemioFlowSnapshot> for SemioFlowInference {
-    async fn infer(snapshot: &SemioFlowSnapshot) -> Self {
+    fn infer(snapshot: &SemioFlowSnapshot) -> Self {
         Self { topology: compute_semio_flow_topology(snapshot) }
     }
 }
 
 impl protocol::InferenceSpec<SemioFlowSnapshot> for SemioFlowInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.stdio.semio.flow.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.semio.flow.inference.topology", reads: &["nodes", "edges"] }]
     }
 }

@@ -8,11 +8,11 @@ use crate::artifacts::semio::standards::v1::subsets::animation::schema::diff::{d
 use crate::artifacts::semio::standards::v1::subsets::animation::schema::snapshot::{AnimChannel, AnimInterpolation, AnimKeyframe, AnimTarget, AnimTimeline, AnimValue, SemioAnimationSnapshot};
 use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff};
 use protocol::Mutation;
-use protocol::{OpBinary, OpText};
 /// 🔧️ `MutationDiff` added — the `#[cfg(test)] mod tests` block below calls `diff.apply(&base)`
 /// via method syntax on `SemioAnimationDiff`, which needs `MutationDiff` in scope (W2b closer fix).
 #[cfg(test)]
 use protocol::MutationDiff;
+use protocol::{OpBinary, OpText};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation

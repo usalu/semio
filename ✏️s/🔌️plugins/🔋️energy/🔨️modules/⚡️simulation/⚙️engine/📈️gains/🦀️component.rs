@@ -15,7 +15,7 @@ pub struct GainDecomposition {
 }
 
 impl GainDecomposition {
-    pub async fn add(&self, other: &Self) -> Self {
+    pub fn add(&self, other: &Self) -> Self {
         Self {
             total_w: self.total_w + other.total_w,
             sensible_w: self.sensible_w + other.sensible_w,
@@ -40,7 +40,7 @@ pub enum ActivityLevel {
 }
 
 impl ActivityLevel {
-    pub async fn metabolic_w_per_person(self) -> f64 {
+    pub fn metabolic_w_per_person(self) -> f64 {
         match self {
             Self::SeatedQuiet => 70.0,
             Self::OfficeWork => 100.0,
@@ -50,7 +50,7 @@ impl ActivityLevel {
         }
     }
 
-    pub async fn sensible_fraction(self) -> f64 {
+    pub fn sensible_fraction(self) -> f64 {
         match self {
             Self::SeatedQuiet | Self::OfficeWork => 0.58,
             Self::StandingLight => 0.55,
@@ -58,13 +58,13 @@ impl ActivityLevel {
         }
     }
 
-    pub async fn latent_fraction(self) -> f64 {
+    pub fn latent_fraction(self) -> f64 {
         1.0 - self.sensible_fraction()
     }
 }
 
 /// 👤️ People gain [W] from count, activity, and radiant fraction.
-pub async fn compute_people_gain_w(count: f64, activity: ActivityLevel, schedule_factor: f64, radiant_fraction: f64) -> GainDecomposition {
+pub fn compute_people_gain_w(count: f64, activity: ActivityLevel, schedule_factor: f64, radiant_fraction: f64) -> GainDecomposition {
     let total = count * activity.metabolic_w_per_person() * schedule_factor.clamp(0.0, 1.0);
     let sensible = total * activity.sensible_fraction();
     let latent = total * activity.latent_fraction();
@@ -76,7 +76,7 @@ pub async fn compute_people_gain_w(count: f64, activity: ActivityLevel, schedule
 
 // #region 🔖️Lighting
 /// 💡️ Lighting gain [W] from power density and fractions.
-pub async fn compute_lighting_gain_w(watts_per_area: f64, floor_area_m2: f64, schedule_factor: f64, radiant_fraction: f64, return_air_fraction: f64) -> GainDecomposition {
+pub fn compute_lighting_gain_w(watts_per_area: f64, floor_area_m2: f64, schedule_factor: f64, radiant_fraction: f64, return_air_fraction: f64) -> GainDecomposition {
     let total = watts_per_area * floor_area_m2 * schedule_factor.clamp(0.0, 1.0);
     let radiant = total * radiant_fraction.clamp(0.0, 1.0);
     let return_air = total * return_air_fraction.clamp(0.0, 1.0);
@@ -87,7 +87,7 @@ pub async fn compute_lighting_gain_w(watts_per_area: f64, floor_area_m2: f64, sc
 
 // #region 🔖️Equipment
 /// 🔌️ Electric equipment gain [W].
-pub async fn compute_equipment_gain_w(watts_per_area: f64, floor_area_m2: f64, schedule_factor: f64, radiant_fraction: f64, latent_fraction: f64) -> GainDecomposition {
+pub fn compute_equipment_gain_w(watts_per_area: f64, floor_area_m2: f64, schedule_factor: f64, radiant_fraction: f64, latent_fraction: f64) -> GainDecomposition {
     let total = watts_per_area * floor_area_m2 * schedule_factor.clamp(0.0, 1.0);
     let latent = total * latent_fraction.clamp(0.0, 1.0);
     let sensible = total - latent;
@@ -99,7 +99,7 @@ pub async fn compute_equipment_gain_w(watts_per_area: f64, floor_area_m2: f64, s
 
 // #region 🔖️Process
 /// 🏭️ Process load gain [W] with configurable split.
-pub async fn compute_process_gain_w(design_load_w: f64, schedule_factor: f64, sensible_fraction: f64, latent_fraction: f64, radiant_fraction: f64) -> GainDecomposition {
+pub fn compute_process_gain_w(design_load_w: f64, schedule_factor: f64, sensible_fraction: f64, latent_fraction: f64, radiant_fraction: f64) -> GainDecomposition {
     let total = design_load_w * schedule_factor.clamp(0.0, 1.0);
     let latent = total * latent_fraction.clamp(0.0, 1.0);
     let sensible = total * sensible_fraction.clamp(0.0, 1.0);
@@ -111,7 +111,7 @@ pub async fn compute_process_gain_w(design_load_w: f64, schedule_factor: f64, se
 
 // #region 🔖️DataCenter
 /// 🖥️ Data center IT load [W] with air-side heat capture fraction.
-pub async fn compute_datacenter_gain_w(it_load_w: f64, schedule_factor: f64, air_cooled_fraction: f64, supply_return_delta_t_k: f64) -> GainDecomposition {
+pub fn compute_datacenter_gain_w(it_load_w: f64, schedule_factor: f64, air_cooled_fraction: f64, supply_return_delta_t_k: f64) -> GainDecomposition {
     let total = it_load_w * schedule_factor.clamp(0.0, 1.0);
     let air_frac = air_cooled_fraction.clamp(0.0, 1.0);
     let air_w = total * air_frac;
@@ -126,14 +126,14 @@ mod tests {
     use super::*;
 
     #[semio_framework_async_macros::async_test]
-    async fn people_gain_scales_with_count() {
+    fn people_gain_scales_with_count() {
         let g1 = compute_people_gain_w(1.0, ActivityLevel::OfficeWork, 1.0, 0.3);
         let g10 = compute_people_gain_w(10.0, ActivityLevel::OfficeWork, 1.0, 0.3);
         assert!((g10.total_w - 10.0 * g1.total_w).abs() < 1e-6);
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn lighting_return_air_reduces_convective() {
+    fn lighting_return_air_reduces_convective() {
         let g = compute_lighting_gain_w(10.0, 100.0, 1.0, 0.2, 0.5);
         assert!((g.total_w - 1000.0).abs() < 1e-6);
         assert!((g.return_air_w - 500.0).abs() < 1e-6);
@@ -141,14 +141,14 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn equipment_latent_reduces_sensible() {
+    fn equipment_latent_reduces_sensible() {
         let g = compute_equipment_gain_w(5.0, 200.0, 1.0, 0.5, 0.1);
         assert!((g.latent_w - 100.0).abs() < 1e-6);
         assert!((g.sensible_w - 900.0).abs() < 1e-6);
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn datacenter_total_matches_it_load() {
+    fn datacenter_total_matches_it_load() {
         let g = compute_datacenter_gain_w(50_000.0, 0.8, 0.7, 12.0);
         assert!((g.total_w - 40_000.0).abs() < 1e-6);
     }

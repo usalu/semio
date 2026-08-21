@@ -17,18 +17,18 @@ struct UnionFind {
 }
 
 impl UnionFind {
-    async fn new(n: usize) -> Self {
+    fn new(n: usize) -> Self {
         Self { parent: (0..n).collect(), rank: vec![0; n] }
     }
 
-    async fn find(&mut self, x: usize) -> usize {
+    fn find(&mut self, x: usize) -> usize {
         if self.parent[x] != x {
             self.parent[x] = self.find(self.parent[x]);
         }
         self.parent[x]
     }
 
-    async fn union(&mut self, a: usize, b: usize) {
+    fn union(&mut self, a: usize, b: usize) {
         let (ra, rb) = (self.find(a), self.find(b));
         if ra == rb {
             return;
@@ -56,25 +56,25 @@ pub struct ConnectivityConstraint {
 }
 
 impl ConnectivityConstraint {
-    pub async fn new(model: CompiledModel, selector: PatternSelector) -> Self {
+    pub fn new(model: CompiledModel, selector: PatternSelector) -> Self {
         Self { selector, model }
     }
 }
 
 impl Constraint for ConnectivityConstraint {
-    async fn name(&self) -> &'static str {
+    fn name(&self) -> &'static str {
         "connectivity"
     }
 
-    async fn exactness(&self) -> Exactness {
+    fn exactness(&self) -> Exactness {
         Exactness::Exact
     }
 
-    async fn initialize(&self, _domains: &DomainStore, _weights: &WeightTable, _adjacency: &AdjacencyView) -> Result<Vec<(NodeId, PatternSet)>, ConstraintError> {
+    fn initialize(&self, _domains: &DomainStore, _weights: &WeightTable, _adjacency: &AdjacencyView) -> Result<Vec<(NodeId, PatternSet)>, ConstraintError> {
         Ok(Vec::new())
     }
 
-    async fn validate_complete(&self, assignment: &[PatternId], adjacency: &AdjacencyView) -> Result<(), String> {
+    fn validate_complete(&self, assignment: &[PatternId], adjacency: &AdjacencyView) -> Result<(), String> {
         let selected: Vec<usize> = (0..assignment.len()).filter(|&n| self.selector.matches(&self.model, assignment[n])).collect();
         if selected.len() <= 1 {
             return Ok(());
@@ -109,25 +109,25 @@ pub struct ReachabilityConstraint {
 }
 
 impl ReachabilityConstraint {
-    pub async fn new(model: CompiledModel, from: Vec<NodeId>, to: Vec<NodeId>, selector: PatternSelector) -> Self {
+    pub fn new(model: CompiledModel, from: Vec<NodeId>, to: Vec<NodeId>, selector: PatternSelector) -> Self {
         Self { from, to, selector, model }
     }
 }
 
 impl Constraint for ReachabilityConstraint {
-    async fn name(&self) -> &'static str {
+    fn name(&self) -> &'static str {
         "reachability"
     }
 
-    async fn exactness(&self) -> Exactness {
+    fn exactness(&self) -> Exactness {
         Exactness::Exact
     }
 
-    async fn initialize(&self, _domains: &DomainStore, _weights: &WeightTable, _adjacency: &AdjacencyView) -> Result<Vec<(NodeId, PatternSet)>, ConstraintError> {
+    fn initialize(&self, _domains: &DomainStore, _weights: &WeightTable, _adjacency: &AdjacencyView) -> Result<Vec<(NodeId, PatternSet)>, ConstraintError> {
         Ok(Vec::new())
     }
 
-    async fn validate_complete(&self, assignment: &[PatternId], adjacency: &AdjacencyView) -> Result<(), String> {
+    fn validate_complete(&self, assignment: &[PatternId], adjacency: &AdjacencyView) -> Result<(), String> {
         for &start in &self.from {
             if !self.selector.matches(&self.model, assignment[start.index()]) {
                 return Err(format!("reachability constraint: source node {start} is not itself selected"));
@@ -160,7 +160,7 @@ mod tests {
     use super::*;
     use crate::wfc_engine::model::ModelBuilder;
 
-    async fn floor_wall_model() -> CompiledModel {
+    fn floor_wall_model() -> CompiledModel {
         let mut b = ModelBuilder::new();
         let floor = b.add_pattern(1.0);
         let wall = b.add_pattern(1.0);
@@ -172,7 +172,7 @@ mod tests {
     }
 
     /// A 5-node "H" shape: 0-1-2, 2-3, 2-4 (so node2 is a semio_hub).
-    async fn hub_adjacency() -> AdjacencyView {
+    fn hub_adjacency() -> AdjacencyView {
         let edges = [(0, 1), (1, 2), (2, 3), (2, 4)];
         let mut neighbors = vec![Vec::new(); 5];
         for &(a, b) in &edges {
@@ -182,8 +182,8 @@ mod tests {
         AdjacencyView::new(neighbors, vec![crate::wfc_engine::ids::RegionId(0); 5])
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn connectivity_accepts_single_connected_component() {
+    #[test]
+    fn connectivity_accepts_single_connected_component() {
         let model = floor_wall_model();
         let adjacency = hub_adjacency();
         let c = ConnectivityConstraint::new(model, PatternSelector::Pattern(PatternId(0)));
@@ -192,8 +192,8 @@ mod tests {
         assert!(c.validate_complete(&assignment, &adjacency).is_ok());
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn connectivity_rejects_split_components() {
+    #[test]
+    fn connectivity_rejects_split_components() {
         let model = floor_wall_model();
         let adjacency = hub_adjacency();
         let c = ConnectivityConstraint::new(model, PatternSelector::Pattern(PatternId(0)));
@@ -202,8 +202,8 @@ mod tests {
         assert!(c.validate_complete(&assignment, &adjacency).is_err());
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn connectivity_trivially_accepts_zero_or_one_selected() {
+    #[test]
+    fn connectivity_trivially_accepts_zero_or_one_selected() {
         let model = floor_wall_model();
         let adjacency = hub_adjacency();
         let c = ConnectivityConstraint::new(model, PatternSelector::Pattern(PatternId(0)));
@@ -211,8 +211,8 @@ mod tests {
         assert!(c.validate_complete(&all_wall, &adjacency).is_ok());
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn reachability_accepts_connected_path() {
+    #[test]
+    fn reachability_accepts_connected_path() {
         let model = floor_wall_model();
         let adjacency = hub_adjacency();
         let c = ReachabilityConstraint::new(model, vec![NodeId(0)], vec![NodeId(3), NodeId(4)], PatternSelector::Pattern(PatternId(0)));
@@ -220,8 +220,8 @@ mod tests {
         assert!(c.validate_complete(&assignment, &adjacency).is_ok());
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn reachability_rejects_blocked_path() {
+    #[test]
+    fn reachability_rejects_blocked_path() {
         let model = floor_wall_model();
         let adjacency = hub_adjacency();
         let c = ReachabilityConstraint::new(model, vec![NodeId(0)], vec![NodeId(3)], PatternSelector::Pattern(PatternId(0)));

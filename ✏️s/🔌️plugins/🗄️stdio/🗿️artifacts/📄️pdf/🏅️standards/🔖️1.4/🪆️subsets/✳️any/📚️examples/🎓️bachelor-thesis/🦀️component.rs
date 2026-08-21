@@ -24,5 +24,5 @@ fn decoded_summary_json() -> String {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn source() -> ExampleSource {
-    ExampleSource::new(ID, label(), decoded_summary_json(), ICON)
+    semio_framework_plugin::resolve_ready(ExampleSource::new(ID, label(), decoded_summary_json(), ICON))
 }

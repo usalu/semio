@@ -25,20 +25,28 @@ pub fn clear_default_app(dialect: ArtifactDialect, role: AppRole) -> OpeningConf
 impl MutationKind<OpeningPreferences, OpeningConfigMutation> for ClearDefaultApp {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "clear", entity: "default-app", kind: "clear-default-app", record: "Cleared" };
 
-    async fn diff(&self, base: &OpeningPreferences) -> MutationOutcome<OpeningPreferences> {
+    fn diff(&self, base: &OpeningPreferences) -> MutationOutcome<OpeningPreferences> {
         super::diff::diff(self, base)
     }
 
-    async fn inverse(&self, base: &OpeningPreferences) -> Vec<OpeningConfigMutation> {
+    fn inverse(&self, base: &OpeningPreferences) -> Vec<OpeningConfigMutation> {
         super::inverse::inverse(self, base)
     }
 
-    async fn label(&self) -> String {
-        format!("Clear default {} for \"{}\"", self.role.as_str().await, self.dialect.to_coordinate())
+    fn label(&self) -> String {
+        let role = match self.role {
+            AppRole::Viewer => "viewer",
+            AppRole::Editor => "editor",
+        };
+        format!("Clear default {} for \"{}\"", role, self.dialect.to_coordinate())
     }
 
-    async fn target(&self) -> Vec<String> {
-        vec![self.dialect.to_coordinate(), self.role.as_str().await.to_string()]
+    fn target(&self) -> Vec<String> {
+        let role = match self.role {
+            AppRole::Viewer => "viewer",
+            AppRole::Editor => "editor",
+        };
+        vec![self.dialect.to_coordinate(), role.to_string()]
     }
 }
 //#endregion 🔖️Mutation
@@ -48,11 +56,11 @@ impl MutationKind<OpeningPreferences, OpeningConfigMutation> for ClearDefaultApp
 mod tests {
     use super::*;
 
-    #[semio_framework_async_macros::async_test]
-    async fn clear_default_app_label_names_role_and_dialect() {
+    #[test]
+    fn clear_default_app_label_names_role_and_dialect() {
         let dialect = ArtifactDialect { artifact_kind: "s.cad.cad".to_string(), standard: "1".to_string(), subset: "*".to_string() };
         let payload = ClearDefaultApp { dialect: dialect.clone(), role: AppRole::Viewer };
-        assert_eq!(MutationKind::<OpeningPreferences, OpeningConfigMutation>::label(&payload).await, "Clear default viewer for \"s.cad.cad@1/*\"");
+        assert_eq!(MutationKind::<OpeningPreferences, OpeningConfigMutation>::label(&payload), "Clear default viewer for \"s.cad.cad@1/*\"");
     }
 }
 //#endregion 🧪️Tests

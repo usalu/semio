@@ -29,7 +29,10 @@ pub fn diff(payload: &GroupNodes, base: &SemioDrawingSnapshot) -> protocol::Muta
             let grouped: Vec<DrawNode> = payload.indices.iter().map(|&i| children[i].clone()).collect();
             let new_group = DrawNode::Group { transform: payload.transform, children: grouped };
             let at = payload.indices[0];
-            protocol::MutationOutcome::new(diff_at_path(&payload.parent, DrawNodeDiff::Group(DrawGroupDiff { transform: None, children: Some(IndexedTripleDiff { removed: payload.indices.clone(), modified: Vec::new(), added: vec![IndexAdded { index: at, item: new_group }] }) })))
+            protocol::MutationOutcome::new(diff_at_path(
+                &payload.parent,
+                DrawNodeDiff::Group(DrawGroupDiff { transform: None, children: Some(IndexedTripleDiff { removed: payload.indices.clone(), modified: Vec::new(), added: vec![IndexAdded { index: at, item: new_group }] }) }),
+            ))
         }
         _ => protocol::MutationOutcome::error("mutation.target-missing", format!("Parent at layer #{} does not resolve to a group, or an index is out of range.", payload.parent.layer), [payload.parent.layer.to_string()]),
     }

@@ -18,9 +18,9 @@ use semio_framework_plugin::ArtifactInferrer;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
-use super::aabb::SemioAabb;
 #[cfg(test)]
 use super::aabb::aabb_key;
+use super::aabb::SemioAabb;
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a mesh snapshot. One field per named inference under
@@ -36,19 +36,19 @@ pub struct SemioMeshInference {
 }
 
 impl protocol::Inference<SemioMeshSnapshot> for SemioMeshInference {
-    async fn infer(snapshot: &SemioMeshSnapshot) -> Self {
+    fn infer(snapshot: &SemioMeshSnapshot) -> Self {
         Self { aabb: store::infer_field::<SemioMeshSnapshot, super::aabb::MeshAabb>(snapshot, None) }
     }
 }
 
 impl protocol::InferenceSpec<SemioMeshSnapshot> for SemioMeshInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.stdio.semio.mesh.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.semio.mesh.inference.aabb", reads: &["meshes"] }]
     }
 }

@@ -51,7 +51,7 @@ impl GltfClearanceInference {
 impl GltfInferenceStage<GltfGeometryContext<'_>> for GltfClearanceInference {
     type Output = GltfClearanceIndicators;
 
-    async fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
+    fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
         Self::Output {
             minimum_distance_to_neighbors: minimum_distance_to_neighbors::infer(context),
             clearance_distribution: clearance_distribution::infer(context),
@@ -60,7 +60,7 @@ impl GltfInferenceStage<GltfGeometryContext<'_>> for GltfClearanceInference {
         }
     }
 
-    async fn unavailable(diagnostic_ids: &[String]) -> Self::Output {
+    fn unavailable(diagnostic_ids: &[String]) -> Self::Output {
         Self::Output {
             minimum_distance_to_neighbors: minimum_distance_to_neighbors::unavailable_measure(diagnostic_ids),
             clearance_distribution: clearance_distribution::unavailable_measure(diagnostic_ids),

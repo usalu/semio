@@ -10,6 +10,10 @@ pub async fn set_active_utility(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&V
         ctx.scene.runtime.active_utility_by_window_id.insert(wid, utility_id.to_string());
     }
     ctx.host.borrow_mut().brush_fill_session_clear();
+    ctx.scene.runtime.fill_job_generation = ctx.scene.runtime.fill_job_generation.saturating_add(1);
+    ctx.scene.runtime.fill_job_checkpoint = None;
+    ctx.scene.runtime.fill_job_applied_count = 0;
+    ctx.scene.runtime.fill_job_preview = None;
     ctx.host.borrow_mut().brush_cancel_slot();
     let _ = ctx.host.borrow_mut().drain_events_json();
     ctx.scene.runtime.fill_count = 0;

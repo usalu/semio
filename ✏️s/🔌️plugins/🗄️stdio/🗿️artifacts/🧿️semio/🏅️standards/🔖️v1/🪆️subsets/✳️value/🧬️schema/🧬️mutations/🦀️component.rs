@@ -503,43 +503,43 @@ impl protocol::OpBinary for SemioValueMutation {
         match tag {
             0 => Ok(SemioValueMutation::NoMutation),
             1 => {
-                let snapshot = dec_semio_value_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let snapshot = dec_semio_value_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", reader.position(), e))?;
                 Ok(SemioValueMutation::SetSnapshot { snapshot })
             }
             2 => {
-                let path = dec_semio_path_bin(&mut reader).map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let value = dec_semio_value_bin(&mut reader).map_err(|e| malformed("op value", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let path = dec_semio_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
+                let value = dec_semio_value_bin(&mut reader).map_err(|e| malformed("op value", reader.position(), e))?;
                 Ok(SemioValueMutation::SetValue { path, value })
             }
             3 => {
-                let path = dec_semio_path_bin(&mut reader).map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let key = read_str_lp(&mut reader).map_err(|e| malformed("op key", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let value = dec_semio_value_bin(&mut reader).map_err(|e| malformed("op value", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let path = dec_semio_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
+                let key = read_str_lp(&mut reader).map_err(|e| malformed("op key", reader.position(), e))?;
+                let value = dec_semio_value_bin(&mut reader).map_err(|e| malformed("op value", reader.position(), e))?;
                 Ok(SemioValueMutation::SetMapEntry { path, key, value })
             }
             4 => {
-                let path = dec_semio_path_bin(&mut reader).map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let key = read_str_lp(&mut reader).map_err(|e| malformed("op key", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let path = dec_semio_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
+                let key = read_str_lp(&mut reader).map_err(|e| malformed("op key", reader.position(), e))?;
                 Ok(SemioValueMutation::RemoveMapEntry { path, key })
             }
             5 => {
-                let path = dec_semio_path_bin(&mut reader).map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let index = reader.read_varint_u64().map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
-                let value = dec_semio_value_bin(&mut reader).map_err(|e| malformed("op value", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let path = dec_semio_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
+                let value = dec_semio_value_bin(&mut reader).map_err(|e| malformed("op value", reader.position(), e))?;
                 Ok(SemioValueMutation::InsertListItem { path, index, value })
             }
             6 => {
-                let path = dec_semio_path_bin(&mut reader).map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let index = reader.read_varint_u64().map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
+                let path = dec_semio_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
                 Ok(SemioValueMutation::RemoveListItem { path, index })
             }
             7 => {
-                let id = ValueId::new(read_str_lp(&mut reader).map_err(|e| malformed("op id", semio_framework_plugin::resolve_ready(reader.position()), e))?);
-                let value = dec_semio_value_bin(&mut reader).map_err(|e| malformed("op value", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let id = ValueId::new(read_str_lp(&mut reader).map_err(|e| malformed("op id", reader.position(), e))?);
+                let value = dec_semio_value_bin(&mut reader).map_err(|e| malformed("op value", reader.position(), e))?;
                 Ok(SemioValueMutation::SetNode { id, value })
             }
             8 => {
-                let id = ValueId::new(read_str_lp(&mut reader).map_err(|e| malformed("op id", semio_framework_plugin::resolve_ready(reader.position()), e))?);
+                let id = ValueId::new(read_str_lp(&mut reader).map_err(|e| malformed("op id", reader.position(), e))?);
                 Ok(SemioValueMutation::RemoveNode { id })
             }
             other => Err(malformed("op tag", 1, format!("unknown op tag {other}"))),

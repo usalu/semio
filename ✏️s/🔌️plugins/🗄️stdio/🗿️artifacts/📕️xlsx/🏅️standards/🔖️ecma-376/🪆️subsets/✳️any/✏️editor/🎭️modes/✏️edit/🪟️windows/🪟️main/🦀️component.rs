@@ -8,7 +8,7 @@
 use crate::artifacts::xlsx::XlsxSnapshot;
 use crate::editor::xlsx::standards::v_ecma_376::subsets::any::{render_xlsx_cell_value, xlsx_flat_cells};
 use semio_framework_plugin::app::{TableView, TableWindowKit, WindowKit};
-use semio_framework_plugin::{LocalizedLabel, UiNode, WindowKindDefinition};
+use semio_framework_plugin::{BuiltNode, LocalizedLabel, WindowKindDefinition};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = TableWindowKit::KIND_ID;
@@ -24,9 +24,9 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-/// ✏️ Real `XlsxSnapshot -> UiNode`: one row per cell, columns `sheet`/`row`/`col`/`value`.
+/// ✏️ Real `XlsxSnapshot -> BuiltNode`: one row per cell, columns `sheet`/`row`/`col`/`value`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &XlsxSnapshot) -> UiNode {
+pub fn render(document: &XlsxSnapshot) -> BuiltNode {
     let shared_strings = &document.workbook.shared_strings;
     let columns = vec!["sheet".to_string(), "row".to_string(), "col".to_string(), "value".to_string()];
     let rows = xlsx_flat_cells(document).into_iter().map(|(sheet, row, col, value)| vec![sheet, row.to_string(), col.to_string(), render_xlsx_cell_value(&value, shared_strings)]).collect();

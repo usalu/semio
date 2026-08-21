@@ -25,22 +25,22 @@ pub const GRAVITY: f64 = 9.806_65;
 
 // #region 🔖️Conversions
 /// 🌡️ Celsius to Kelvin.
-pub async fn c_to_k(t_c: f64) -> f64 {
+pub fn c_to_k(t_c: f64) -> f64 {
     t_c + 273.15
 }
 
 /// 🌡️ Kelvin to Celsius.
-pub async fn k_to_c(t_k: f64) -> f64 {
+pub fn k_to_c(t_k: f64) -> f64 {
     t_k - 273.15
 }
 
 /// 📐️ Degrees to radians.
-pub async fn deg_to_rad(deg: f64) -> f64 {
+pub fn deg_to_rad(deg: f64) -> f64 {
     deg * std::f64::consts::PI / 180.0
 }
 
 /// 📐️ Radians to degrees.
-pub async fn rad_to_deg(rad: f64) -> f64 {
+pub fn rad_to_deg(rad: f64) -> f64 {
     rad * 180.0 / std::f64::consts::PI
 }
 // #endregion 🔖️Conversions
@@ -73,19 +73,19 @@ pub struct Quantity {
 }
 
 impl Quantity {
-    pub async fn new(unit: Unit, value: f64) -> Self {
+    pub fn new(unit: Unit, value: f64) -> Self {
         Self { unit, value }
     }
 
-    pub async fn watts(v: f64) -> Self {
+    pub fn watts(v: f64) -> Self {
         Self::new(Unit::Watts, v)
     }
 
-    pub async fn joules(v: f64) -> Self {
+    pub fn joules(v: f64) -> Self {
         Self::new(Unit::Joules, v)
     }
 
-    pub async fn celsius(v: f64) -> Self {
+    pub fn celsius(v: f64) -> Self {
         Self::new(Unit::Celsius, v)
     }
 }
@@ -96,7 +96,7 @@ mod tests {
     use super::*;
 
     #[semio_framework_async_macros::async_test]
-    async fn celsius_kelvin_roundtrip() {
+    fn celsius_kelvin_roundtrip() {
         assert!((k_to_c(c_to_k(20.0)) - 20.0).abs() < 1e-9);
     }
 }

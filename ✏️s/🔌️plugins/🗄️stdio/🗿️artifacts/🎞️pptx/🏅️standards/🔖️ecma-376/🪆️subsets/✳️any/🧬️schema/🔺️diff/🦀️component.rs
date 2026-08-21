@@ -17,9 +17,9 @@
 //! too (docx already flagged the same hoist).
 
 use crate::artifacts::pptx::schema::snapshot::{PptxParagraph, PptxPresentation, PptxRun, PptxShape, PptxSlide, PptxTransform, PptxXmlPart};
+use crate::artifacts::pptx::PptxSnapshot;
 #[cfg(test)]
 use crate::artifacts::xml::schema::snapshot::XmlNode;
-use crate::artifacts::pptx::PptxSnapshot;
 use crate::artifacts::zip::opc::{OpcContentTypes, OpcPackage, OpcPart, OpcRelationship, OpcTargetMode};
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
@@ -1610,8 +1610,6 @@ pub fn diff_set_shape_position(presentation: &PptxPresentation, slide_index: usi
 /// text forms above. `pub(crate)` so `../🧬️mutations/🦀️component.rs` reuses these rather than
 /// re-deriving its own copies (same intra-artifact reuse pattern the text codecs already use).
 
-
-
 /// 🖼️ `PptxShape` (full item): `0`=TextBox, `1`=Picture, `2`=Placeholder, `3`=Other — same
 /// declaration order as the enum itself, tag-prefixed like `enc_xml_node_bin`'s own convention.
 
@@ -1627,13 +1625,8 @@ pub fn diff_set_shape_position(presentation: &PptxPresentation, slide_index: usi
 
 //#region 🔖️DiffValueBinaryCodecs
 
-
 /// 🌳️ `PptxShapeDiff` -- `0`=TextBox, `1`=Picture, `2`=Placeholder, `3`=Replace, same tag
 /// numbering `enc_shape_bin` uses for the full-item form (never mixed in the same binary stream).
-
-
-
-
 
 //#endregion 🔖️DiffValueBinaryCodecs
 //#endregion 🔖️BinaryCodecs

@@ -3735,10 +3735,19 @@ pub mod backend {
     }
 
     //#region ???Clipboard
-    /// ??? Host clipboard access, kept behind an interface so VT panes never depend on a crate.
+    /// 📋️ Completion delivered by a clipboard I/O worker mailbox.
+    #[derive(Debug)]
+    pub enum ClipboardResult {
+        Copied,
+        Pasted(String),
+        Failed(BackendError),
+    }
+
+    /// 📋️ Enqueue-only clipboard access. Event callbacks submit and return; a later tick polls.
     pub trait Clipboard {
-        fn copy_text(&mut self, text: &str) -> Result<(), BackendError>;
-        fn paste_text(&mut self) -> Result<String, BackendError>;
+        fn enqueue_copy(&mut self, text: String);
+        fn enqueue_paste(&mut self);
+        fn poll(&mut self) -> Option<ClipboardResult>;
     }
 
     fn base64_encode(data: &[u8]) -> String {
@@ -3780,14 +3789,14 @@ pub mod backend {
         BackendError { message: message.into() }
     }
 
-    fn native_copy(text: &str) -> Result<(), BackendError> {
+    fn native_copy_worker(text: &str) -> Result<(), BackendError> {
         #[cfg(all(unix, not(target_arch = "wasm32")))]
         {
             use std::io::Write;
-            use std::process::{Command, Stdio};
+            use std::process as system_process;
             let candidates: &[&[&str]] = if cfg!(target_os = "macos") { &[&["pbcopy"]] } else { &[&["wl-copy"], &["xclip", "-selection", "clipboard"], &["xsel", "--clipboard", "--input"]] };
             for argv in candidates {
-                let mut child = match Command::new(argv[0]).args(&argv[1..]).stdin(Stdio::piped()).stdout(Stdio::null()).stderr(Stdio::null()).spawn() {
+                let mut child = match system_process::Command::new(argv[0]).args(&argv[1..]).stdin(system_process::Stdio::piped()).stdout(system_process::Stdio::null()).stderr(system_process::Stdio::null()).spawn() {
                     Ok(c) => c,
                     Err(_) => continue,
                 };
@@ -3805,8 +3814,8 @@ pub mod backend {
         #[cfg(all(windows, not(target_arch = "wasm32")))]
         {
             use std::io::Write;
-            use std::process::{Command, Stdio};
-            let mut child = Command::new("clip").stdin(Stdio::piped()).stdout(Stdio::null()).stderr(Stdio::null()).spawn().map_err(|e| clip_err(e.to_string()))?;
+            use std::process as system_process;
+            let mut child = system_process::Command::new("clip").stdin(system_process::Stdio::piped()).stdout(system_process::Stdio::null()).stderr(system_process::Stdio::null()).spawn().map_err(|e| clip_err(e.to_string()))?;
             if let Some(mut stdin) = child.stdin.take() {
                 stdin.write_all(text.as_bytes()).map_err(|e| clip_err(e.to_string()))?;
             }
@@ -3822,13 +3831,13 @@ pub mod backend {
         }
     }
 
-    fn native_paste() -> Result<String, BackendError> {
+    fn native_paste_worker() -> Result<String, BackendError> {
         #[cfg(all(unix, not(target_arch = "wasm32")))]
         {
-            use std::process::Command;
+            use std::process as system_process;
             let candidates: &[&[&str]] = if cfg!(target_os = "macos") { &[&["pbpaste"]] } else { &[&["wl-paste", "--no-newline"], &["xclip", "-selection", "clipboard", "-o"], &["xsel", "--clipboard", "--output"]] };
             for argv in candidates {
-                if let Ok(out) = Command::new(argv[0]).args(&argv[1..]).output() {
+                if let Ok(out) = system_process::Command::new(argv[0]).args(&argv[1..]).output() {
                     if out.status.success() {
                         return Ok(String::from_utf8_lossy(&out.stdout).into_owned());
                     }
@@ -3838,8 +3847,8 @@ pub mod backend {
         }
         #[cfg(all(windows, not(target_arch = "wasm32")))]
         {
-            use std::process::Command;
-            let out = Command::new("powershell").args(["-NoProfile", "-Command", "Get-Clipboard"]).output().map_err(|e| clip_err(e.to_string()))?;
+            use std::process as system_process;
+            let out = system_process::Command::new("powershell").args(["-NoProfile", "-Command", "Get-Clipboard"]).output().map_err(|e| clip_err(e.to_string()))?;
             if out.status.success() {
                 Ok(String::from_utf8_lossy(&out.stdout).trim_end_matches(&['\r', '\n'][..]).to_string())
             } else {
@@ -3852,39 +3861,51 @@ pub mod backend {
         }
     }
 
-    /// ??? Clipboard that prefers OSC 52 (survives SSH/devcontainer) then falls back to native tools.
-    pub struct HostClipboard<F>
-    where
-        F: FnMut(&[u8]) -> Result<(), BackendError>,
-    {
-        pub write_osc: Option<F>,
+    /// 📋️ Native clipboard mailbox backed by the process-wide worker pool's I/O lane.
+    pub struct HostClipboard {
+        pool: std::sync::Arc<semio_framework_async::WorkerPool>,
+        pending: std::collections::VecDeque<std::sync::mpsc::Receiver<ClipboardResult>>,
     }
 
-    impl<F> HostClipboard<F>
-    where
-        F: FnMut(&[u8]) -> Result<(), BackendError>,
-    {
-        pub fn new(write_osc: Option<F>) -> Self {
-            Self { write_osc }
+    impl HostClipboard {
+        pub fn new(pool: std::sync::Arc<semio_framework_async::WorkerPool>) -> Self {
+            Self { pool, pending: std::collections::VecDeque::new() }
+        }
+
+        fn submit(&mut self, operation: impl FnOnce() -> ClipboardResult + Send + 'static) {
+            let (sender, receiver) = std::sync::mpsc::channel();
+            self.pool.submit(
+                semio_framework_async::Lane::Io,
+                Box::new(move || {
+                    let _ = sender.send(operation());
+                }),
+            );
+            self.pending.push_back(receiver);
         }
     }
 
-    impl<F> Clipboard for HostClipboard<F>
-    where
-        F: FnMut(&[u8]) -> Result<(), BackendError>,
-    {
-        fn copy_text(&mut self, text: &str) -> Result<(), BackendError> {
-            if let Some(write) = self.write_osc.as_mut() {
-                let seq = osc52_copy_sequence(text);
-                if write(seq.as_bytes()).is_ok() {
-                    return Ok(());
+    impl Clipboard for HostClipboard {
+        fn enqueue_copy(&mut self, text: String) {
+            self.submit(move || native_copy_worker(&text).map_or_else(ClipboardResult::Failed, |_| ClipboardResult::Copied));
+        }
+
+        fn enqueue_paste(&mut self) {
+            self.submit(|| native_paste_worker().map_or_else(ClipboardResult::Failed, ClipboardResult::Pasted));
+        }
+
+        fn poll(&mut self) -> Option<ClipboardResult> {
+            let result = self.pending.front()?.try_recv();
+            match result {
+                Ok(result) => {
+                    self.pending.pop_front();
+                    Some(result)
+                }
+                Err(std::sync::mpsc::TryRecvError::Empty) => None,
+                Err(std::sync::mpsc::TryRecvError::Disconnected) => {
+                    self.pending.pop_front();
+                    Some(ClipboardResult::Failed(clip_err("clipboard worker disconnected")))
                 }
             }
-            native_copy(text)
-        }
-
-        fn paste_text(&mut self) -> Result<String, BackendError> {
-            native_paste()
         }
     }
 
@@ -3892,16 +3913,46 @@ pub mod backend {
     #[derive(Default)]
     pub struct MemoryClipboard {
         pub text: String,
+        pending: std::collections::VecDeque<ClipboardResult>,
     }
 
     impl Clipboard for MemoryClipboard {
-        fn copy_text(&mut self, text: &str) -> Result<(), BackendError> {
-            self.text = text.to_string();
-            Ok(())
+        fn enqueue_copy(&mut self, text: String) {
+            self.text = text;
+            self.pending.push_back(ClipboardResult::Copied);
         }
 
-        fn paste_text(&mut self) -> Result<String, BackendError> {
-            Ok(self.text.clone())
+        fn enqueue_paste(&mut self) {
+            self.pending.push_back(ClipboardResult::Pasted(self.text.clone()));
+        }
+
+        fn poll(&mut self) -> Option<ClipboardResult> {
+            self.pending.pop_front()
+        }
+    }
+
+    #[cfg(all(test, not(target_arch = "wasm32")))]
+    mod clipboard_mailbox_tests {
+        use super::*;
+
+        #[test]
+        fn stalled_clipboard_worker_keeps_poll_callback_p99_below_two_ms() {
+            let pool = std::sync::Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, 1)));
+            let mut clipboard = HostClipboard::new(std::sync::Arc::clone(&pool));
+            clipboard.submit(|| {
+                std::thread::sleep(std::time::Duration::from_millis(80));
+                ClipboardResult::Copied
+            });
+            let mut samples = Vec::with_capacity(4096);
+            for _ in 0..4096 {
+                let started = std::time::Instant::now();
+                let _ = clipboard.poll();
+                samples.push(started.elapsed());
+            }
+            samples.sort_unstable();
+            let p99 = samples[samples.len() * 99 / 100];
+            assert!(p99 < std::time::Duration::from_millis(2), "[DEBUG] clipboard poll callback p99 was {p99:?}");
+            pool.shutdown();
         }
     }
     //#endregion ???Clipboard
@@ -4179,15 +4230,15 @@ pub mod pty {
     #[cfg(all(unix, not(target_arch = "wasm32")))]
     mod unix_impl {
         use super::*;
-        use std::fs::File;
+        use std::fs as system_fs;
         use std::os::unix::io::{AsRawFd, FromRawFd, RawFd};
         use std::os::unix::process::CommandExt;
-        use std::process::{Child, Command};
+        use std::process as system_process;
 
         /// ?? Unix PTY master plus child process.
         pub struct Pty {
-            master: File,
-            child: Child,
+            master: system_fs::File,
+            child: system_process::Child,
         }
 
         impl Pty {
@@ -4212,7 +4263,7 @@ pub mod pty {
                     return Err(err("fcntl O_NONBLOCK failed"));
                 }
 
-                let mut command = Command::new(cmd);
+                let mut command = system_process::Command::new(cmd);
                 command.args(args);
                 for (k, v) in env {
                     command.env(k, v);
@@ -4220,9 +4271,9 @@ pub mod pty {
                 if let Some(dir) = cwd {
                     command.current_dir(dir);
                 }
-                command.stdin(std::process::Stdio::null());
-                command.stdout(std::process::Stdio::null());
-                command.stderr(std::process::Stdio::null());
+                command.stdin(system_process::Stdio::null());
+                command.stdout(system_process::Stdio::null());
+                command.stderr(system_process::Stdio::null());
                 unsafe {
                     command.pre_exec(move || {
                         if libc::setsid() < 0 {
@@ -4257,7 +4308,7 @@ pub mod pty {
                 unsafe {
                     libc::close(slave);
                 }
-                let master = unsafe { File::from_raw_fd(master) };
+                let master = unsafe { system_fs::File::from_raw_fd(master) };
                 Ok(Self { master, child })
             }
 
@@ -6070,8 +6121,13 @@ mod tests {
         assert!(seq.contains("]52;c;aGk="), "got {seq:?}");
         assert_eq!(*seq.as_bytes().last().unwrap(), 0x07);
         let mut mem = crate::tui::backend::MemoryClipboard::default();
-        crate::tui::backend::Clipboard::copy_text(&mut mem, "abc").unwrap();
-        assert_eq!(crate::tui::backend::Clipboard::paste_text(&mut mem).unwrap(), "abc");
+        crate::tui::backend::Clipboard::enqueue_copy(&mut mem, "abc".to_string());
+        assert!(matches!(crate::tui::backend::Clipboard::poll(&mut mem), Some(crate::tui::backend::ClipboardResult::Copied)));
+        crate::tui::backend::Clipboard::enqueue_paste(&mut mem);
+        assert!(matches!(
+            crate::tui::backend::Clipboard::poll(&mut mem),
+            Some(crate::tui::backend::ClipboardResult::Pasted(text)) if text == "abc"
+        ));
     }
     //#endregion ???Clipboard
 
@@ -6109,7 +6165,7 @@ mod tests {
     #[test]
     fn pty_kill_terminates_child_process_group() {
         use crate::tui::pty::{Pty, PtySize};
-        use std::process::Command;
+        use std::process as system_process;
         use std::time::{Duration, Instant};
 
         let mut pty = Pty::spawn("bash", &["-c", "sleep 300 & sleep 300; wait"], &[], None, PtySize { cols: 80, rows: 24 }).expect("spawn bash sleep group");
@@ -6117,7 +6173,7 @@ mod tests {
         let deadline = Instant::now() + Duration::from_secs(2);
         let mut saw_child = false;
         while Instant::now() < deadline {
-            let out = Command::new("pgrep").args(["-P", &pid.to_string()]).output().expect("pgrep");
+            let out = system_process::Command::new("pgrep").args(["-P", &pid.to_string()]).output().expect("pgrep");
             if !out.stdout.is_empty() {
                 saw_child = true;
                 break;
@@ -6127,9 +6183,9 @@ mod tests {
         assert!(saw_child, "[DEBUG] expected child processes under pty leader pid={pid}");
         pty.kill().expect("kill pty group");
         std::thread::sleep(Duration::from_millis(200));
-        let out = Command::new("pgrep").args(["-P", &pid.to_string()]).output().expect("pgrep after kill");
+        let out = system_process::Command::new("pgrep").args(["-P", &pid.to_string()]).output().expect("pgrep after kill");
         assert!(out.stdout.is_empty(), "[DEBUG] child processes still alive after kill: {:?}", String::from_utf8_lossy(&out.stdout));
-        let leader = Command::new("ps").args(["-p", &pid.to_string()]).output().expect("ps leader");
+        let leader = system_process::Command::new("ps").args(["-p", &pid.to_string()]).output().expect("ps leader");
         assert!(leader.status.success() == false || leader.stdout.len() < 2, "[DEBUG] pty leader still running");
     }
 

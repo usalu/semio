@@ -327,7 +327,7 @@ fn apply_dict_diff(diff: &PdfDictDiff, base: &[PdfDictEntry]) -> Vec<PdfDictEntr
     for m in &diff.modified {
         if let Some(pos) = entries.iter().position(|e| e.key == m.key) {
             let old = entries[pos].value.clone();
-            entries[pos].value = Box::pin(apply_value_diff(&m.diff, &old));
+            entries[pos].value = apply_value_diff(&m.diff, &old);
         }
     }
     for key in &diff.removed {
@@ -350,7 +350,7 @@ fn dict_diff_between(a: &[PdfDictEntry], b: &[PdfDictEntry]) -> PdfDictDiff {
     for ae in a {
         match b.iter().find(|be| be.key == ae.key) {
             Some(be) => {
-                if let Some(d) = Box::pin(value_diff_between(&ae.value, &be.value)) {
+                if let Some(d) = value_diff_between(&ae.value, &be.value) {
                     modified.push(PdfDictModified { key: ae.key.clone(), diff: d });
                 }
             }
@@ -453,7 +453,7 @@ fn apply_array_diff(diff: &PdfArrayDiff, base: &[PdfObject]) -> Vec<PdfObject> {
     for m in &diff.modified {
         if let Some(old) = base.get(m.index) {
             if let Some(slot) = items.get_mut(m.index) {
-                *slot = Box::pin(apply_value_diff(&m.diff, old));
+                *slot = apply_value_diff(&m.diff, old);
             }
         }
     }
@@ -478,7 +478,7 @@ fn array_diff_between(a: &[PdfObject], b: &[PdfObject]) -> PdfArrayDiff {
     let min = a.len().min(b.len());
     let mut modified = Vec::new();
     for i in 0..min {
-        if let Some(d) = Box::pin(value_diff_between(&a[i], &b[i])) {
+        if let Some(d) = value_diff_between(&a[i], &b[i]) {
             modified.push(PdfArrayModified { index: i, diff: d });
         }
     }
@@ -557,7 +557,7 @@ fn absorb_array_diff(d1: PdfArrayDiff, d2: PdfArrayDiff) -> PdfArrayDiff {
             match slot {
                 AfterSlot::Base { diff, .. } => {
                     let combined = match diff.take() {
-                        Some(existing) => Box::pin(absorb_value_diff(existing, m.diff.clone())),
+                        Some(existing) => absorb_value_diff(existing, m.diff.clone()),
                         None => m.diff.clone(),
                     };
                     *diff = if is_value_diff_effectively_empty(&combined) { None } else { Some(combined) };
@@ -663,7 +663,7 @@ pub fn apply_value_diff(diff: &PdfValueDiff, base: &PdfObject) -> PdfObject {
                 PdfObject::Array(a) => a.as_slice(),
                 _ => &[],
             };
-            PdfObject::Array(Box::pin(apply_array_diff(diff, items)))
+            PdfObject::Array(apply_array_diff(diff, items))
         }
         PdfValueDiff::Dict { diff } => {
             let entries: &[PdfDictEntry] = match base {
@@ -671,7 +671,7 @@ pub fn apply_value_diff(diff: &PdfValueDiff, base: &PdfObject) -> PdfObject {
                 PdfObject::Stream { dict, .. } => dict.as_slice(),
                 _ => &[],
             };
-            PdfObject::Dict(Box::pin(apply_dict_diff(diff, entries)))
+            PdfObject::Dict(apply_dict_diff(diff, entries))
         }
         PdfValueDiff::Stream { dict, data, filters } => {
             let (base_dict, base_data, base_filters): (&[PdfDictEntry], &[u8], &[PdfStreamFilter]) = match base {
@@ -706,7 +706,7 @@ pub fn value_diff_between(a: &PdfObject, b: &PdfObject) -> Option<PdfValueDiff> 
         (PdfObject::Name(_), PdfObject::Name(nb)) => Some(PdfValueDiff::Name { value: nb.clone() }),
         (PdfObject::Ref(_), PdfObject::Ref(nb)) => Some(PdfValueDiff::Ref { value: *nb }),
         (PdfObject::Array(av), PdfObject::Array(bv)) => {
-            let d = Box::pin(array_diff_between(av, bv));
+            let d = array_diff_between(av, bv);
             if d.is_empty() {
                 None
             } else {
@@ -714,7 +714,7 @@ pub fn value_diff_between(a: &PdfObject, b: &PdfObject) -> Option<PdfValueDiff> 
             }
         }
         (PdfObject::Dict(ad), PdfObject::Dict(bd)) => {
-            let d = Box::pin(dict_diff_between(ad, bd));
+            let d = dict_diff_between(ad, bd);
             if d.is_empty() {
                 None
             } else {
@@ -774,7 +774,7 @@ fn absorb_value_diff(d1: PdfValueDiff, d2: PdfValueDiff) -> PdfValueDiff {
         (PdfValueDiff::Str { .. }, PdfValueDiff::Str { value }) => PdfValueDiff::Str { value },
         (PdfValueDiff::Name { .. }, PdfValueDiff::Name { value }) => PdfValueDiff::Name { value },
         (PdfValueDiff::Ref { .. }, PdfValueDiff::Ref { value }) => PdfValueDiff::Ref { value },
-        (PdfValueDiff::Array { diff: a1 }, PdfValueDiff::Array { diff: a2 }) => PdfValueDiff::Array { diff: Box::pin(absorb_array_diff(a1, a2)) },
+        (PdfValueDiff::Array { diff: a1 }, PdfValueDiff::Array { diff: a2 }) => PdfValueDiff::Array { diff: absorb_array_diff(a1, a2) },
         (PdfValueDiff::Dict { diff: d1 }, PdfValueDiff::Dict { diff: d2 }) => PdfValueDiff::Dict { diff: absorb_dict_diff(d1, d2) },
         (PdfValueDiff::Stream { dict: d1, data: da1, filters: f1 }, PdfValueDiff::Stream { dict: d2, data: da2, filters: f2 }) => PdfValueDiff::Stream {
             dict: match (d1, d2) {
@@ -1084,7 +1084,7 @@ fn validate_dict_diff(diff: &PdfDictDiff, base: &[PdfDictEntry]) -> MutationAppl
         "dict",
     )?;
     for modified in &diff.modified {
-        let entry = base.iter().find(|entry| entry.key == modified.key).ok_or_else(|| semio_framework_plugin::resolve_ready(MutationApplyError::new("mutation.apply.missing-target", "dictionary modification target does not exist")).at(vec!["dict".to_string(), modified.key.clone()]))?;
+        let entry = base.iter().find(|entry| entry.key == modified.key).ok_or_else(|| MutationApplyError::new("mutation.apply.missing-target", "dictionary modification target does not exist").at(vec!["dict".to_string(), modified.key.clone()]))?;
         validate_value_diff(&modified.diff, &entry.value).map_err(|error| error.under(vec!["dict".to_string(), modified.key.clone()]))?;
     }
     let removed_indices: Vec<usize> = (0..diff.removed.len()).collect();
@@ -1095,7 +1095,7 @@ fn validate_dict_diff(diff: &PdfDictDiff, base: &[PdfDictEntry]) -> MutationAppl
 fn validate_array_diff(diff: &PdfArrayDiff, base: &[PdfObject]) -> MutationApplyResult<()> {
     validate_index_triple(base.len(), &diff.removed, &diff.modified.iter().map(|item| item.index).collect::<Vec<_>>(), &diff.added.iter().map(|item| item.index).collect::<Vec<_>>(), "array")?;
     for modified in &diff.modified {
-        let item = base.get(modified.index).ok_or_else(|| semio_framework_plugin::resolve_ready(MutationApplyError::new("mutation.apply.missing-target", "array modification target does not exist")).at(vec!["array".to_string(), modified.index.to_string()]))?;
+        let item = base.get(modified.index).ok_or_else(|| MutationApplyError::new("mutation.apply.missing-target", "array modification target does not exist").at(vec!["array".to_string(), modified.index.to_string()]))?;
         validate_value_diff(&modified.diff, item).map_err(|error| error.under(vec!["array".to_string(), modified.index.to_string()]))?;
     }
     Ok(())
@@ -1139,7 +1139,7 @@ fn validate_objects_diff(diff: &PdfObjectsDiff, base: &[PdfIndirectObject]) -> M
     let removed_indices: Vec<usize> = (0..diff.removed.len()).collect();
     validate_index_triple(base.len(), &removed_indices, &[], &diff.added.iter().map(|item| item.index).collect::<Vec<_>>(), "objects")?;
     for modified in &diff.modified {
-        let object = base.iter().find(|object| object.id == modified.id).ok_or_else(|| semio_framework_plugin::resolve_ready(MutationApplyError::new("mutation.apply.missing-target", "object modification target does not exist")).at(["objects"]))?;
+        let object = base.iter().find(|object| object.id == modified.id).ok_or_else(|| MutationApplyError::new("mutation.apply.missing-target", "object modification target does not exist").at(["objects"]))?;
         validate_value_diff(&modified.diff, &object.value).map_err(|error| error.under(["objects"]))?;
     }
     Ok(())
@@ -1817,7 +1817,7 @@ pub(crate) fn enc_dict_entry_bin(e: &PdfDictEntry, out: &mut Vec<u8>) {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_dict_entry_bin(reader: &mut store::ByteReader<'_>) -> Result<PdfDictEntry, String> {
     let key = read_str_lp(reader)?;
-    let value = Box::pin(dec_pdf_object_bin(reader))?;
+    let value = dec_pdf_object_bin(reader)?;
     Ok(PdfDictEntry { key, value })
 }
 /// 🌳 Recursive: a 1-byte kind tag (`0`=Null/`1`=Bool/`2`=Int/`3`=Real/`4`=Str/`5`=Name/`6`=Array/
@@ -1892,7 +1892,7 @@ pub(crate) fn dec_pdf_object_bin(reader: &mut store::ByteReader<'_>) -> Result<P
             let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
             let mut items = Vec::with_capacity(count as usize);
             for _ in 0..count {
-                items.push(Box::pin(dec_pdf_object_bin(reader))?);
+                items.push(dec_pdf_object_bin(reader)?);
             }
             Ok(PdfObject::Array(items))
         }
@@ -1900,7 +1900,7 @@ pub(crate) fn dec_pdf_object_bin(reader: &mut store::ByteReader<'_>) -> Result<P
             let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
             let mut entries = Vec::with_capacity(count as usize);
             for _ in 0..count {
-                entries.push(Box::pin(dec_dict_entry_bin(reader))?);
+                entries.push(dec_dict_entry_bin(reader)?);
             }
             Ok(PdfObject::Dict(entries))
         }
@@ -1947,7 +1947,7 @@ pub(crate) fn enc_pdf_info_bin(i: &PdfInfo, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_pdf_info_bin(reader: &mut store::ByteReader<'_>) -> Result<PdfInfo, String> {
-    let mut read_opt = || -> Result<Option<String>, String> { Ok(if semio_framework_plugin::resolve_ready(reader.read_u8()).map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None }) };
+    let mut read_opt = || -> Result<Option<String>, String> { Ok(if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None }) };
     Ok(PdfInfo { title: read_opt()?, author: read_opt()?, subject: read_opt()?, keywords: read_opt()?, creator: read_opt()?, producer: read_opt()? })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -2350,7 +2350,7 @@ fn dec_dict_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<PdfDictDiff, 
     let mut modified = Vec::with_capacity(modified_count as usize);
     for _ in 0..modified_count {
         let key = read_str_lp(reader)?;
-        let diff = Box::pin(dec_value_diff_bin(reader))?;
+        let diff = dec_value_diff_bin(reader)?;
         modified.push(PdfDictModified { key, diff });
     }
     let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
@@ -2392,7 +2392,7 @@ fn dec_array_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<PdfArrayDiff
     let mut modified = Vec::with_capacity(modified_count as usize);
     for _ in 0..modified_count {
         let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-        let diff = Box::pin(dec_value_diff_bin(reader))?;
+        let diff = dec_value_diff_bin(reader)?;
         modified.push(PdfArrayModified { index, diff });
     }
     let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
@@ -2472,8 +2472,8 @@ fn dec_value_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<PdfValueDiff
         4 => Ok(PdfValueDiff::Str { value: read_bytes_lp(reader)? }),
         5 => Ok(PdfValueDiff::Name { value: read_str_lp(reader)? }),
         6 => Ok(PdfValueDiff::Ref { value: dec_objref_bin(reader)? }),
-        7 => Ok(PdfValueDiff::Array { diff: Box::pin(dec_array_diff_bin(reader))? }),
-        8 => Ok(PdfValueDiff::Dict { diff: Box::pin(dec_dict_diff_bin(reader))? }),
+        7 => Ok(PdfValueDiff::Array { diff: dec_array_diff_bin(reader)? }),
+        8 => Ok(PdfValueDiff::Dict { diff: dec_dict_diff_bin(reader)? }),
         9 => {
             let dict = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_dict_diff_bin(reader)?) } else { None };
             let data = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_bytes_lp(reader)?) } else { None };
@@ -2640,11 +2640,11 @@ impl protocol::DiffCodec for PdfDiff {
         if flags & !0b0001_1111 != 0 {
             return Err(malformed("diff flags", 1, format!("unknown flag bits {:#010b}", flags & !0b0001_1111)));
         }
-        let declared_version = if flags & 0b00001 != 0 { Some(read_str_lp(&mut reader).map_err(|e| malformed("diff declared_version", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
-        let info = if flags & 0b00010 != 0 { Some(dec_pdf_info_bin(&mut reader).map_err(|e| malformed("diff info", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
-        let pages = if flags & 0b00100 != 0 { Some(dec_pages_diff_bin(&mut reader).map_err(|e| malformed("diff pages", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
-        let objects = if flags & 0b01000 != 0 { Some(dec_objects_diff_bin(&mut reader).map_err(|e| malformed("diff objects", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
-        let trailer = if flags & 0b010000 != 0 { Some(dec_dict_diff_bin(&mut reader).map_err(|e| malformed("diff trailer", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
+        let declared_version = if flags & 0b00001 != 0 { Some(read_str_lp(&mut reader).map_err(|e| malformed("diff declared_version", reader.position(), e))?) } else { None };
+        let info = if flags & 0b00010 != 0 { Some(dec_pdf_info_bin(&mut reader).map_err(|e| malformed("diff info", reader.position(), e))?) } else { None };
+        let pages = if flags & 0b00100 != 0 { Some(dec_pages_diff_bin(&mut reader).map_err(|e| malformed("diff pages", reader.position(), e))?) } else { None };
+        let objects = if flags & 0b01000 != 0 { Some(dec_objects_diff_bin(&mut reader).map_err(|e| malformed("diff objects", reader.position(), e))?) } else { None };
+        let trailer = if flags & 0b010000 != 0 { Some(dec_dict_diff_bin(&mut reader).map_err(|e| malformed("diff trailer", reader.position(), e))?) } else { None };
         if reader.remaining() != 0 {
             return Err(malformed("diff trailing bytes", reader.position(), format!("{} trailing bytes", reader.remaining())));
         }
@@ -2713,8 +2713,8 @@ mod handcrafted_diff_codec_tests {
     /// recursive `PdfValueDiff` tree (`Replace`/`Array`/`Dict`/`Stream` variants, incl. `Stream`'s
     /// own typed filter pipeline), the index-keyed `pages` triple (incl. `PdfPageDiff`'s tri-state
     /// `crop_box`), the id-keyed `objects` triple, and the name-keyed `trailer` triple.
-    #[semio_framework_async_macros::async_test]
-    async fn diff_codec_text_binary_roundtrip_law() {
+    #[test]
+    fn diff_codec_text_binary_roundtrip_law() {
         let a = a_snapshot();
         let b = b_snapshot();
         let cases = vec![PdfDiff::default(), PdfDiff::between(&a, &b), PdfDiff::between(&b, &a), PdfDiff::between(&a, &a)];
@@ -2729,8 +2729,8 @@ mod handcrafted_diff_codec_tests {
             assert_eq!(decoded, d, "encode_diff/decode_diff round-trip mismatch");
         }
     }
-    #[semio_framework_async_macros::async_test]
-    async fn rejects_missing_page_target_without_mutating_base() {
+    #[test]
+    fn rejects_missing_page_target_without_mutating_base() {
         let base = PdfSnapshot::default();
         let diff = PdfDiff { pages: Some(PdfPagesDiff { modified: vec![PdfPageModified { index: 0, diff: PdfPageDiff::default() }], ..Default::default() }), ..Default::default() };
         let result = diff.apply(&base);
@@ -2780,8 +2780,8 @@ mod tests {
     }
 
     //#region between_roundtrip_law
-    #[semio_framework_async_macros::async_test]
-    async fn between_roundtrip_law_value_scalars_and_kind_change() {
+    #[test]
+    fn between_roundtrip_law_value_scalars_and_kind_change() {
         let cases = [
             (PdfObject::Null, PdfObject::Bool(true)),
             (PdfObject::Bool(true), PdfObject::Bool(false)),
@@ -2800,8 +2800,8 @@ mod tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn between_roundtrip_law_nested_array_and_dict() {
+    #[test]
+    fn between_roundtrip_law_nested_array_and_dict() {
         let a = dict(vec![("Kids", PdfObject::Array(vec![PdfObject::Int(1), PdfObject::Int(2)])), ("N", PdfObject::Int(1))]);
         let b = dict(vec![("Kids", PdfObject::Array(vec![PdfObject::Int(1), PdfObject::Int(20), PdfObject::Int(30)])), ("N", PdfObject::Int(2)), ("Extra", PdfObject::Bool(true))]);
         let d_ab = value_diff_between(&a, &b).expect("must differ");
@@ -2810,23 +2810,23 @@ mod tests {
         assert_eq!(apply_value_diff(&d_ba, &b), a);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn between_roundtrip_law_snapshot_level() {
+    #[test]
+    fn between_roundtrip_law_snapshot_level() {
         let (a, b) = (base_snapshot(), sweep_b());
         assert_eq!(PdfDiff::between(&a, &b).apply(&a).unwrap(), b);
         assert_eq!(PdfDiff::between(&b, &a).apply(&b).unwrap(), a);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn between_self_is_empty() {
+    #[test]
+    fn between_self_is_empty() {
         let a = base_snapshot();
         assert!(PdfDiff::between(&a, &a).is_empty());
     }
     //#endregion between_roundtrip_law
 
     //#region inverse_law
-    #[semio_framework_async_macros::async_test]
-    async fn inverse_law_diff_level() {
+    #[test]
+    fn inverse_law_diff_level() {
         let (a, b) = (base_snapshot(), sweep_b());
         let d = PdfDiff::between(&a, &b);
         let mid = d.apply(&a).unwrap();
@@ -2842,8 +2842,8 @@ mod tests {
         PdfDiff { pages: Some(d), ..Default::default() }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn absorb_law_pages_insert_then_remove_before() {
+    #[test]
+    fn absorb_law_pages_insert_then_remove_before() {
         // base=[a,b,c]; d1=Insert(2,f) -> mid=[a,b,f,c]; d2=Remove(0) -> after=[b,f,c].
         let base = PdfSnapshot { pages: vec![page([0.0; 4], None, 0, "a"), page([0.0; 4], None, 0, "b"), page([0.0; 4], None, 0, "c")], ..base_snapshot() };
         let d1 = pages_diff(PdfPagesDiff { added: vec![PdfPageAdded { index: 2, page: page([0.0; 4], None, 0, "f") }], ..Default::default() });
@@ -2862,8 +2862,8 @@ mod tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn absorb_law_pages_insert_insert_same_index_both_survive() {
+    #[test]
+    fn absorb_law_pages_insert_insert_same_index_both_survive() {
         let base = PdfSnapshot { pages: vec![page([0.0; 4], None, 0, "a"), page([0.0; 4], None, 0, "b")], ..base_snapshot() };
         let d1 = pages_diff(PdfPagesDiff { added: vec![PdfPageAdded { index: 2, page: page([0.0; 4], None, 0, "f") }], ..Default::default() });
         let d2 = pages_diff(PdfPagesDiff { added: vec![PdfPageAdded { index: 2, page: page([0.0; 4], None, 0, "g") }], ..Default::default() });
@@ -2877,8 +2877,8 @@ mod tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn absorb_law_pages_add_then_setfield_patches_added_payload() {
+    #[test]
+    fn absorb_law_pages_add_then_setfield_patches_added_payload() {
         let base = PdfSnapshot { pages: vec![], ..base_snapshot() };
         let d1 = pages_diff(PdfPagesDiff { added: vec![PdfPageAdded { index: 0, page: page([0.0; 4], None, 0, "x") }], ..Default::default() });
         let d2 = pages_diff(PdfPagesDiff { modified: vec![PdfPageModified { index: 0, diff: PdfPageDiff { rotate: Some(90), ..Default::default() } }], ..Default::default() });
@@ -2895,8 +2895,8 @@ mod tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn absorb_law_pages_modify_then_remove_drops_pending_patch() {
+    #[test]
+    fn absorb_law_pages_modify_then_remove_drops_pending_patch() {
         let base = PdfSnapshot { pages: vec![page([0.0; 4], None, 0, "a"), page([0.0; 4], None, 0, "b")], ..base_snapshot() };
         let d1 = pages_diff(PdfPagesDiff { modified: vec![PdfPageModified { index: 0, diff: PdfPageDiff { rotate: Some(180), ..Default::default() } }], ..Default::default() });
         let d2 = pages_diff(PdfPagesDiff { removed: vec![0], ..Default::default() });
@@ -2913,8 +2913,8 @@ mod tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn absorb_law_pages_associativity() {
+    #[test]
+    fn absorb_law_pages_associativity() {
         let s0 = PdfSnapshot { pages: vec![page([0.0; 4], None, 0, "1"), page([0.0; 4], None, 0, "2"), page([0.0; 4], None, 0, "3")], ..base_snapshot() };
         let s1 = PdfSnapshot { pages: vec![page([0.0; 4], None, 0, "1"), page([0.0; 4], None, 0, "9"), page([0.0; 4], None, 0, "3")], ..base_snapshot() };
         let s2 = PdfSnapshot { pages: vec![page([0.0; 4], None, 0, "9"), page([0.0; 4], None, 0, "3"), page([0.0; 4], None, 0, "4")], ..base_snapshot() };
@@ -2941,8 +2941,8 @@ mod tests {
         PdfDiff { objects: Some(d), ..Default::default() }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn absorb_law_objects_add_then_setfield_patches_added_payload() {
+    #[test]
+    fn absorb_law_objects_add_then_setfield_patches_added_payload() {
         let base = PdfSnapshot { objects: vec![], ..base_snapshot() };
         let d1 = objects_diff(PdfObjectsDiff { added: vec![PdfObjectAdded { index: 0, id: oref(5, 0), value: dict(vec![("X", PdfObject::Int(1))]) }], ..Default::default() });
         let d2 = objects_diff(PdfObjectsDiff {
@@ -2962,8 +2962,8 @@ mod tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn absorb_law_objects_modify_then_remove_drops_pending_patch() {
+    #[test]
+    fn absorb_law_objects_modify_then_remove_drops_pending_patch() {
         let base = PdfSnapshot { objects: vec![PdfIndirectObject { id: oref(1, 0), value: PdfObject::Int(1) }, PdfIndirectObject { id: oref(2, 0), value: PdfObject::Int(2) }], ..base_snapshot() };
         let d1 = objects_diff(PdfObjectsDiff { modified: vec![PdfObjectModified { id: oref(1, 0), diff: PdfValueDiff::Int { value: 9 } }], ..Default::default() });
         let d2 = objects_diff(PdfObjectsDiff { removed: vec![oref(1, 0)], ..Default::default() });
@@ -2980,8 +2980,8 @@ mod tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn absorb_law_objects_two_independent_inserts_both_survive() {
+    #[test]
+    fn absorb_law_objects_two_independent_inserts_both_survive() {
         let base = PdfSnapshot { objects: vec![], ..base_snapshot() };
         let d1 = objects_diff(PdfObjectsDiff { added: vec![PdfObjectAdded { index: 0, id: oref(5, 0), value: PdfObject::Int(1) }], ..Default::default() });
         let d2 = objects_diff(PdfObjectsDiff { added: vec![PdfObjectAdded { index: 1, id: oref(6, 0), value: PdfObject::Int(2) }], ..Default::default() });
@@ -2995,8 +2995,8 @@ mod tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn absorb_law_objects_associativity() {
+    #[test]
+    fn absorb_law_objects_associativity() {
         let s0 = PdfSnapshot { objects: vec![PdfIndirectObject { id: oref(1, 0), value: PdfObject::Int(1) }], ..base_snapshot() };
         let s1 = PdfSnapshot { objects: vec![PdfIndirectObject { id: oref(1, 0), value: PdfObject::Int(1) }, PdfIndirectObject { id: oref(2, 0), value: PdfObject::Int(2) }], ..base_snapshot() };
         let s2 = PdfSnapshot { objects: vec![PdfIndirectObject { id: oref(1, 0), value: PdfObject::Int(9) }, PdfIndirectObject { id: oref(2, 0), value: PdfObject::Int(2) }], ..base_snapshot() };
@@ -3018,8 +3018,8 @@ mod tests {
     //#endregion absorb_law (objects / id-keyed)
 
     //#region absorb_law (trailer / name-keyed)
-    #[semio_framework_async_macros::async_test]
-    async fn absorb_law_trailer_add_then_setfield_patches_added_payload() {
+    #[test]
+    fn absorb_law_trailer_add_then_setfield_patches_added_payload() {
         let base = PdfSnapshot { trailer: vec![], ..base_snapshot() };
         let d1 = PdfDiff { trailer: Some(PdfDictDiff { added: vec![PdfDictAdded { index: 0, key: "Config".into(), item: dict(vec![]) }], ..Default::default() }), ..Default::default() };
         let d2 = PdfDiff {
@@ -3042,8 +3042,8 @@ mod tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn absorb_law_trailer_modify_then_remove_drops_pending_patch() {
+    #[test]
+    fn absorb_law_trailer_modify_then_remove_drops_pending_patch() {
         let base = PdfSnapshot { trailer: vec![entry("A", PdfObject::Int(1)), entry("B", PdfObject::Int(2))], ..base_snapshot() };
         let d1 = PdfDiff { trailer: Some(PdfDictDiff { modified: vec![PdfDictModified { key: "A".into(), diff: PdfValueDiff::Int { value: 9 } }], ..Default::default() }), ..Default::default() };
         let d2 = PdfDiff { trailer: Some(PdfDictDiff { removed: vec!["A".into()], ..Default::default() }), ..Default::default() };
@@ -3089,16 +3089,16 @@ mod tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn field_sweep_between_roundtrips_both_directions() {
+    #[test]
+    fn field_sweep_between_roundtrips_both_directions() {
         let (a, b) = (sweep_a(), sweep_b());
         assert_eq!(PdfDiff::between(&a, &b).apply(&a).unwrap(), b);
         assert_eq!(PdfDiff::between(&b, &a).apply(&b).unwrap(), a);
         assert!(PdfDiff::between(&a, &a).is_empty());
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn field_sweep_every_field_present_in_diff() {
+    #[test]
+    fn field_sweep_every_field_present_in_diff() {
         let (a, b) = (sweep_a(), sweep_b());
         let ab = PdfDiff::between(&a, &b);
         assert!(ab.declared_version.is_some(), "declaredVersion must be present");

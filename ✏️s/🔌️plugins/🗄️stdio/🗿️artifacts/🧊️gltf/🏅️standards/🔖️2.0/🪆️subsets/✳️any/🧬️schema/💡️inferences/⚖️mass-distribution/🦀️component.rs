@@ -30,7 +30,7 @@ pub struct GltfMassInference;
 impl GltfInferenceStage<GltfGeometryContext<'_>> for GltfMassInference {
     type Output = GltfMassIndicators;
 
-    async fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
+    fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
         Self::Output {
             centroid: centroid::infer(context),
             principal_frame: principal_frame::infer(context),
@@ -40,7 +40,7 @@ impl GltfInferenceStage<GltfGeometryContext<'_>> for GltfMassInference {
         }
     }
 
-    async fn unavailable(diagnostic_ids: &[String]) -> Self::Output {
+    fn unavailable(diagnostic_ids: &[String]) -> Self::Output {
         Self::Output {
             centroid: centroid::unavailable_measure(diagnostic_ids),
             principal_frame: principal_frame::unavailable_measure(diagnostic_ids),

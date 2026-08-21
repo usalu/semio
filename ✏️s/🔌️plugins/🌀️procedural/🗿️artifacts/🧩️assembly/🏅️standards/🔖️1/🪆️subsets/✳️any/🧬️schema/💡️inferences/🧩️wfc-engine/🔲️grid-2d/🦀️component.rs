@@ -26,7 +26,7 @@ pub enum Stencil2d {
 }
 
 impl Stencil2d {
-    pub async fn offsets(&self) -> Vec<(i32, i32)> {
+    pub fn offsets(&self) -> Vec<(i32, i32)> {
         match self {
             Stencil2d::VonNeumann => vec![(1, 0), (-1, 0), (0, 1), (0, -1)],
             Stencil2d::Moore => vec![(1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (1, -1), (-1, 1), (-1, -1)],
@@ -35,7 +35,7 @@ impl Stencil2d {
         }
     }
 
-    async fn validate(&self) -> Result<(), TopologyError> {
+    fn validate(&self) -> Result<(), TopologyError> {
         let offsets = self.offsets();
         if offsets.is_empty() {
             return Err(TopologyError::InvalidStencil { reason: "stencil has zero offsets" });
@@ -59,7 +59,7 @@ impl Stencil2d {
 
 /// 🗺️ Registers one directed relation per stencil offset (paired with its negation as inverse)
 /// and returns them in `stencil.offsets()` order, ready to pass to [`Grid2dTopology::new`].
-pub async fn declare_stencil_relations(builder: &mut ModelBuilder, stencil: &Stencil2d) -> Result<Vec<RelationId>, ModelError> {
+pub fn declare_stencil_relations(builder: &mut ModelBuilder, stencil: &Stencil2d) -> Result<Vec<RelationId>, ModelError> {
     stencil.validate().map_err(|_| ModelError::InvalidSymmetryGroup { reason: "invalid stencil passed to declare_stencil_relations" })?;
     let offsets = stencil.offsets();
     let mut relations = Vec::with_capacity(offsets.len());
@@ -75,7 +75,7 @@ pub async fn declare_stencil_relations(builder: &mut ModelBuilder, stencil: &Ste
 }
 
 /// 🗺️ [`declare_stencil_relations`] for a [`TiledModelBuilder`].
-pub async fn declare_stencil_relations_tiled(builder: &mut TiledModelBuilder, stencil: &Stencil2d) -> Result<Vec<RelationId>, ModelError> {
+pub fn declare_stencil_relations_tiled(builder: &mut TiledModelBuilder, stencil: &Stencil2d) -> Result<Vec<RelationId>, ModelError> {
     stencil.validate().map_err(|_| ModelError::InvalidSymmetryGroup { reason: "invalid stencil passed to declare_stencil_relations_tiled" })?;
     let offsets = stencil.offsets();
     let mut relations = Vec::with_capacity(offsets.len());
@@ -113,7 +113,7 @@ pub enum Boundary {
     Mirror,
 }
 
-pub(crate) async fn resolve_coord(coord: i32, size: usize, boundary: Boundary) -> Option<usize> {
+pub(crate) fn resolve_coord(coord: i32, size: usize, boundary: Boundary) -> Option<usize> {
     if coord >= 0 && (coord as usize) < size {
         return Some(coord as usize);
     }
@@ -156,7 +156,7 @@ pub struct Grid2dTopology {
 
 impl Grid2dTopology {
     #[allow(clippy::too_many_arguments)]
-    pub async fn new(width: usize, height: usize, stencil: &Stencil2d, relations: Vec<RelationId>, boundary_x: Boundary, boundary_y: Boundary, mask: Option<Vec<bool>>) -> Result<Self, TopologyError> {
+    pub fn new(width: usize, height: usize, stencil: &Stencil2d, relations: Vec<RelationId>, boundary_x: Boundary, boundary_y: Boundary, mask: Option<Vec<bool>>) -> Result<Self, TopologyError> {
         if width == 0 {
             return Err(TopologyError::ZeroDimension { axis: "width" });
         }
@@ -178,17 +178,17 @@ impl Grid2dTopology {
     }
 
     #[inline]
-    pub async fn width(&self) -> usize {
+    pub fn width(&self) -> usize {
         self.width
     }
 
     #[inline]
-    pub async fn height(&self) -> usize {
+    pub fn height(&self) -> usize {
         self.height
     }
 
     #[inline]
-    pub async fn node_at(&self, x: usize, y: usize) -> Option<NodeId> {
+    pub fn node_at(&self, x: usize, y: usize) -> Option<NodeId> {
         if x >= self.width || y >= self.height {
             return None;
         }
@@ -196,26 +196,26 @@ impl Grid2dTopology {
     }
 
     #[inline]
-    pub async fn coords(&self, n: NodeId) -> (usize, usize) {
+    pub fn coords(&self, n: NodeId) -> (usize, usize) {
         let idx = n.index();
         (idx % self.width, idx / self.width)
     }
 
     #[inline]
-    pub async fn is_active(&self, x: usize, y: usize) -> bool {
+    pub fn is_active(&self, x: usize, y: usize) -> bool {
         self.mask.as_ref().is_none_or(|m| m[y * self.width + x])
     }
 
     /// 🗺️ Cells masked out (inactive) — these must be pinned to a placeholder pattern by the
     /// solver builder so they never participate in the search (see [`crate::wfc_engine::solver_grid2d`]).
-    pub async fn inactive_cells(&self) -> Vec<NodeId> {
+    pub fn inactive_cells(&self) -> Vec<NodeId> {
         let Some(mask) = &self.mask else { return Vec::new() };
         (0..mask.len()).filter(|&i| !mask[i]).map(NodeId::from_index).collect()
     }
 
     /// 🗺️ Every `(node, relation, outside_pattern)` an edge cell must be restricted by at init
     /// time, derived from [`Boundary::FixedOutside`] axes.
-    pub async fn fixed_outside_restrictions(&self) -> Vec<(NodeId, RelationId, PatternId)> {
+    pub fn fixed_outside_restrictions(&self) -> Vec<(NodeId, RelationId, PatternId)> {
         let mut out = Vec::new();
         for y in 0..self.height {
             for x in 0..self.width {
@@ -247,11 +247,11 @@ impl Grid2dTopology {
 
 impl Topology for Grid2dTopology {
     #[inline]
-    async fn node_count(&self) -> usize {
+    fn node_count(&self) -> usize {
         self.width * self.height
     }
 
-    async fn arc_count(&self) -> usize {
+    fn arc_count(&self) -> usize {
         let mut count = 0;
         for y in 0..self.height {
             for x in 0..self.width {
@@ -273,11 +273,11 @@ impl Topology for Grid2dTopology {
     }
 
     #[inline]
-    async fn region_of(&self, _n: NodeId) -> RegionId {
+    fn region_of(&self, _n: NodeId) -> RegionId {
         RegionId(0)
     }
 
-    async fn for_each_out_arc(&self, n: NodeId, mut f: impl FnMut(NodeId, RelationId)) {
+    fn for_each_out_arc(&self, n: NodeId, mut f: impl FnMut(NodeId, RelationId)) {
         let (x, y) = self.coords(n);
         if !self.is_active(x, y) {
             return;
@@ -293,7 +293,7 @@ impl Topology for Grid2dTopology {
         }
     }
 
-    async fn for_each_in_arc(&self, n: NodeId, mut f: impl FnMut(NodeId, RelationId, usize)) {
+    fn for_each_in_arc(&self, n: NodeId, mut f: impl FnMut(NodeId, RelationId, usize)) {
         let (x, y) = self.coords(n);
         if !self.is_active(x, y) {
             return;
@@ -311,7 +311,7 @@ impl Topology for Grid2dTopology {
         }
     }
 
-    async fn max_in_degree(&self) -> usize {
+    fn max_in_degree(&self) -> usize {
         self.offsets.len()
     }
 }
@@ -322,27 +322,27 @@ impl Topology for Grid2dTopology {
 mod tests {
     use super::*;
 
-    #[semio_framework_async_macros::async_test]
-    async fn von_neumann_offsets_are_symmetric() {
+    #[test]
+    fn von_neumann_offsets_are_symmetric() {
         Stencil2d::VonNeumann.validate().unwrap();
         Stencil2d::Moore.validate().unwrap();
         Stencil2d::Hex.validate().unwrap();
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn custom_stencil_rejects_unpaired_offset() {
+    #[test]
+    fn custom_stencil_rejects_unpaired_offset() {
         let s = Stencil2d::Custom(vec![(1, 0)]);
         assert!(s.validate().is_err());
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn custom_stencil_rejects_duplicate_and_self_offset() {
+    #[test]
+    fn custom_stencil_rejects_duplicate_and_self_offset() {
         assert!(Stencil2d::Custom(vec![(1, 0), (1, 0), (-1, 0)]).validate().is_err());
         assert!(Stencil2d::Custom(vec![(0, 0)]).validate().is_err());
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn node_at_and_coords_roundtrip() {
+    #[test]
+    fn node_at_and_coords_roundtrip() {
         let mut b = ModelBuilder::new();
         b.add_pattern(1.0);
         let rels = declare_stencil_relations(&mut b, &Stencil2d::VonNeumann).unwrap();
@@ -352,8 +352,8 @@ mod tests {
         assert_eq!(topo.node_at(4, 0), None);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn open_boundary_drops_out_of_range_arcs() {
+    #[test]
+    fn open_boundary_drops_out_of_range_arcs() {
         let mut b = ModelBuilder::new();
         b.add_pattern(1.0);
         let rels = declare_stencil_relations(&mut b, &Stencil2d::VonNeumann).unwrap();
@@ -364,8 +364,8 @@ mod tests {
         assert_eq!(out.len(), 2); // only east and south exist from the top-left corner
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn wrap_boundary_connects_opposite_edges() {
+    #[test]
+    fn wrap_boundary_connects_opposite_edges() {
         let mut b = ModelBuilder::new();
         b.add_pattern(1.0);
         let rels = declare_stencil_relations(&mut b, &Stencil2d::VonNeumann).unwrap();
@@ -378,8 +378,8 @@ mod tests {
         assert!(out.contains(&topo.node_at(0, 2).unwrap())); // north wraps to y=2
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn size_one_axis_wrap_self_loops() {
+    #[test]
+    fn size_one_axis_wrap_self_loops() {
         let mut b = ModelBuilder::new();
         b.add_pattern(1.0);
         let rels = declare_stencil_relations(&mut b, &Stencil2d::VonNeumann).unwrap();
@@ -391,8 +391,8 @@ mod tests {
         assert_eq!(out.len(), 4);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn mirror_boundary_reflects_at_edges() {
+    #[test]
+    fn mirror_boundary_reflects_at_edges() {
         let mut b = ModelBuilder::new();
         b.add_pattern(1.0);
         let rels = declare_stencil_relations(&mut b, &Stencil2d::VonNeumann).unwrap();
@@ -405,8 +405,8 @@ mod tests {
         assert!(out.contains(&topo.node_at(0, 1).unwrap())); // north mirrors back to y=1
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn mask_excludes_inactive_cells_from_arcs() {
+    #[test]
+    fn mask_excludes_inactive_cells_from_arcs() {
         let mut b = ModelBuilder::new();
         b.add_pattern(1.0);
         let rels = declare_stencil_relations(&mut b, &Stencil2d::VonNeumann).unwrap();
@@ -420,8 +420,8 @@ mod tests {
         assert_eq!(topo.inactive_cells(), vec![NodeId(4)]);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn fixed_outside_restrictions_only_on_boundary_facing_axis() {
+    #[test]
+    fn fixed_outside_restrictions_only_on_boundary_facing_axis() {
         let mut b = ModelBuilder::new();
         let solid = b.add_pattern(1.0);
         let rels = declare_stencil_relations(&mut b, &Stencil2d::VonNeumann).unwrap();
@@ -432,8 +432,8 @@ mod tests {
         assert!(restrictions.iter().all(|&(_, _, p)| p == solid));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn in_arc_matches_out_arc_on_open_boundary() {
+    #[test]
+    fn in_arc_matches_out_arc_on_open_boundary() {
         let mut b = ModelBuilder::new();
         b.add_pattern(1.0);
         let rels = declare_stencil_relations(&mut b, &Stencil2d::Moore).unwrap();

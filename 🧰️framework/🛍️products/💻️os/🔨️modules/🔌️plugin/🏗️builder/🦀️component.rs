@@ -341,13 +341,12 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
         /// (`crate::app::commit_owner_mutation_roster`), the "owner half" of
         /// `contributor.list-artifact-mutations`.
         // 🚫️async: E4 fn-pointer slot — `owner_mutation_rosters: Vec<fn() -> ...>` is a bare fn
-        // pointer table; `kinds()` is a pure static-table accessor (io-async-signatures), bridged
-        // via `resolve_ready`.
+        // pointer table; `kinds()` is a pure static-table accessor.
         fn owner_mutation_roster<A: ArtifactApp>() -> (&'static str, &'static [protocol::SemanticDescriptor])
         where
             A::Mutation: protocol::SemanticMutation<A::Snapshot>,
         {
-            (A::DOCUMENT_SCHEMA, resolve_ready(<A::Mutation as protocol::SemanticMutation<A::Snapshot>>::kinds()))
+            (A::DOCUMENT_SCHEMA, <A::Mutation as protocol::SemanticMutation<A::Snapshot>>::kinds())
         }
         self.owner_mutation_rosters.push(owner_mutation_roster::<A>);
         self
@@ -403,7 +402,7 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
         where
             V::Mutation: protocol::SemanticMutation<V::Snapshot>,
         {
-            (V::DOCUMENT_SCHEMA, resolve_ready(<V::Mutation as protocol::SemanticMutation<V::Snapshot>>::kinds()))
+            (V::DOCUMENT_SCHEMA, <V::Mutation as protocol::SemanticMutation<V::Snapshot>>::kinds())
         }
         self.owner_mutation_rosters.push(owner_mutation_roster::<V>);
         self
@@ -448,7 +447,7 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
         where
             E::Mutation: protocol::SemanticMutation<E::Snapshot>,
         {
-            (E::DOCUMENT_SCHEMA, resolve_ready(<E::Mutation as protocol::SemanticMutation<E::Snapshot>>::kinds()))
+            (E::DOCUMENT_SCHEMA, <E::Mutation as protocol::SemanticMutation<E::Snapshot>>::kinds())
         }
         self.owner_mutation_rosters.push(owner_mutation_roster::<E>);
         self

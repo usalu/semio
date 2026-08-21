@@ -163,23 +163,23 @@ impl Mutation<IfcSnapshot> for IfcMutation {
 /// duplicating them a second time in this file. Grammar: `keyword arg=value ...` (space-separated,
 /// same shape the derive's own handcrafted-wrapper convention uses), one match arm per variant (no
 /// `DslVariants` scaffolding available since nothing here derives it).
-async fn enc_ifc_header(h: &IfcHeader) -> String {
+fn enc_ifc_header(h: &IfcHeader) -> String {
     format!("[{},{},{}]", enc_ifc_value_list(&h.file_description), enc_ifc_value_list(&h.file_name), enc_ifc_value_list(&h.file_schema))
 }
-async fn dec_ifc_header(s: &str) -> Result<IfcHeader, String> {
+fn dec_ifc_header(s: &str) -> Result<IfcHeader, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [fd, fname, fs] = parts.as_slice() else { return Err(format!("ifc header: expected 3 fields, got {}", parts.len())) };
     Ok(IfcHeader { file_description: dec_ifc_value_list(fd)?, file_name: dec_ifc_value_list(fname)?, file_schema: dec_ifc_value_list(fs)? })
 }
-async fn enc_ifc_snapshot(s: &IfcSnapshot) -> String {
+fn enc_ifc_snapshot(s: &IfcSnapshot) -> String {
     let entities = s.entities.iter().map(enc_entity).collect::<Vec<_>>().join(",");
     format!("[{},{},[{}]]", enc_str(&s.schema), enc_ifc_header(&s.header), entities)
 }
-async fn dec_ifc_snapshot(s: &str) -> Result<IfcSnapshot, String> {
+fn dec_ifc_snapshot(s: &str) -> Result<IfcSnapshot, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [schema, header, entities] = parts.as_slice() else { return Err(format!("ifc snapshot: expected 3 fields, got {}", parts.len())) };
     let entities = split_top_level(strip_brackets(entities)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_entity).collect::<Result<Vec<_>, String>>()?;
-    Ok(IfcSnapshot { schema: dec_str(schema)?, header: dec_ifc_header(header).await?, entities })
+    Ok(IfcSnapshot { schema: dec_str(schema)?, header: dec_ifc_header(header)?, entities })
 }
 
 fn print_ifc_mutation(m: &IfcMutation) -> String {
@@ -197,7 +197,7 @@ fn print_ifc_mutation(m: &IfcMutation) -> String {
         IfcMutation::RemoveEntityArg { id, index } => format!("remove-entity-arg id={id} index={index}"),
     }
 }
-async fn parse_ifc_mutation(line: &str) -> Result<IfcMutation, String> {
+fn parse_ifc_mutation(line: &str) -> Result<IfcMutation, String> {
     if line == "no-mutation" {
         return Ok(IfcMutation::NoMutation);
     }
@@ -207,7 +207,7 @@ async fn parse_ifc_mutation(line: &str) -> Result<IfcMutation, String> {
     let usize_arg = |k: &str| -> Result<usize, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
     let u64_arg = |k: &str| -> Result<u64, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
     match keyword {
-        "set-snapshot" => Ok(IfcMutation::SetSnapshot { snapshot: dec_ifc_snapshot(arg("snapshot")?).await? }),
+        "set-snapshot" => Ok(IfcMutation::SetSnapshot { snapshot: dec_ifc_snapshot(arg("snapshot")?)? }),
         "set-file-description" => Ok(IfcMutation::SetFileDescription { values: dec_ifc_value_list(arg("values")?)? }),
         "set-file-name" => Ok(IfcMutation::SetFileName { values: dec_ifc_value_list(arg("values")?)? }),
         "set-file-schema" => Ok(IfcMutation::SetFileSchema { values: dec_ifc_value_list(arg("values")?)? }),
@@ -236,25 +236,25 @@ impl OpText for IfcMutation {
 /// `write_str_bin` primitives (`../../🔺️diff/🦀️component.rs`, imported above) for the SHARED
 /// `IfcEntity`/`IfcValue` shape (same intra-artifact-reuse split the TEXT codec above already
 /// uses), only `IfcHeader`/`IfcSnapshot`'s own binary shape is genuinely new here.
-async fn enc_ifc_header_bin(h: &IfcHeader, out: &mut Vec<u8>) {
+fn enc_ifc_header_bin(h: &IfcHeader, out: &mut Vec<u8>) {
     enc_ifc_value_list_bin(&h.file_description, out);
     enc_ifc_value_list_bin(&h.file_name, out);
     enc_ifc_value_list_bin(&h.file_schema, out);
 }
-async fn dec_ifc_header_bin(reader: &mut store::ByteReader<'_>) -> Result<IfcHeader, String> {
+fn dec_ifc_header_bin(reader: &mut store::ByteReader<'_>) -> Result<IfcHeader, String> {
     let file_description = dec_ifc_value_list_bin(reader)?;
     let file_name = dec_ifc_value_list_bin(reader)?;
     let file_schema = dec_ifc_value_list_bin(reader)?;
     Ok(IfcHeader { file_description, file_name, file_schema })
 }
-async fn enc_ifc_snapshot_bin(s: &IfcSnapshot, out: &mut Vec<u8>) {
+fn enc_ifc_snapshot_bin(s: &IfcSnapshot, out: &mut Vec<u8>) {
     write_str_bin(out, &s.schema);
     enc_ifc_header_bin(&s.header, out);
     enc_entity_list_bin(&s.entities, out);
 }
-async fn dec_ifc_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<IfcSnapshot, String> {
+fn dec_ifc_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<IfcSnapshot, String> {
     let schema = read_str_bin(reader)?;
-    let header = dec_ifc_header_bin(reader).await?;
+    let header = dec_ifc_header_bin(reader)?;
     let entities = dec_entity_list_bin(reader)?;
     Ok(IfcSnapshot { schema, header, entities })
 }
@@ -325,50 +325,50 @@ impl OpBinary for IfcMutation {
         match tag {
             0 => Ok(IfcMutation::NoMutation),
             1 => {
-                let snapshot = dec_ifc_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let snapshot = dec_ifc_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", reader.position(), e))?;
                 Ok(IfcMutation::SetSnapshot { snapshot })
             }
             2 => {
-                let values = dec_ifc_value_list_bin(&mut reader).map_err(|e| malformed("op values", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let values = dec_ifc_value_list_bin(&mut reader).map_err(|e| malformed("op values", reader.position(), e))?;
                 Ok(IfcMutation::SetFileDescription { values })
             }
             3 => {
-                let values = dec_ifc_value_list_bin(&mut reader).map_err(|e| malformed("op values", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let values = dec_ifc_value_list_bin(&mut reader).map_err(|e| malformed("op values", reader.position(), e))?;
                 Ok(IfcMutation::SetFileName { values })
             }
             4 => {
-                let values = dec_ifc_value_list_bin(&mut reader).map_err(|e| malformed("op values", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let values = dec_ifc_value_list_bin(&mut reader).map_err(|e| malformed("op values", reader.position(), e))?;
                 Ok(IfcMutation::SetFileSchema { values })
             }
             5 => {
-                let index = reader.read_varint_u64().map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
-                let entity = dec_entity_bin(&mut reader).map_err(|e| malformed("op entity", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
+                let entity = dec_entity_bin(&mut reader).map_err(|e| malformed("op entity", reader.position(), e))?;
                 Ok(IfcMutation::InsertEntity { index, entity })
             }
             6 => {
-                let id = reader.read_varint_u64().map_err(|e| malformed("op id", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
+                let id = reader.read_varint_u64().map_err(|e| malformed("op id", reader.position(), e.to_string()))?;
                 Ok(IfcMutation::RemoveEntity { id })
             }
             7 => {
-                let id = reader.read_varint_u64().map_err(|e| malformed("op id", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
-                let name = read_str_bin(&mut reader).map_err(|e| malformed("op name", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let id = reader.read_varint_u64().map_err(|e| malformed("op id", reader.position(), e.to_string()))?;
+                let name = read_str_bin(&mut reader).map_err(|e| malformed("op name", reader.position(), e))?;
                 Ok(IfcMutation::SetEntityName { id, name })
             }
             8 => {
-                let id = reader.read_varint_u64().map_err(|e| malformed("op id", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
-                let index = reader.read_varint_u64().map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
-                let value = dec_ifc_value_bin(&mut reader).map_err(|e| malformed("op value", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let id = reader.read_varint_u64().map_err(|e| malformed("op id", reader.position(), e.to_string()))?;
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
+                let value = dec_ifc_value_bin(&mut reader).map_err(|e| malformed("op value", reader.position(), e))?;
                 Ok(IfcMutation::SetEntityArg { id, index, value })
             }
             9 => {
-                let id = reader.read_varint_u64().map_err(|e| malformed("op id", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
-                let index = reader.read_varint_u64().map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
-                let value = dec_ifc_value_bin(&mut reader).map_err(|e| malformed("op value", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let id = reader.read_varint_u64().map_err(|e| malformed("op id", reader.position(), e.to_string()))?;
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
+                let value = dec_ifc_value_bin(&mut reader).map_err(|e| malformed("op value", reader.position(), e))?;
                 Ok(IfcMutation::InsertEntityArg { id, index, value })
             }
             10 => {
-                let id = reader.read_varint_u64().map_err(|e| malformed("op id", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
-                let index = reader.read_varint_u64().map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
+                let id = reader.read_varint_u64().map_err(|e| malformed("op id", reader.position(), e.to_string()))?;
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
                 Ok(IfcMutation::RemoveEntityArg { id, index })
             }
             other => Err(malformed("op tag", 1, format!("unknown tag {other}"))),
@@ -383,7 +383,7 @@ impl OpBinary for IfcMutation {
 /// (incl. the recursive `Aggregate`/`TypedValue` cases) and `InsertEntity`'s bare `IfcEntity`
 /// payload are exercised at least once.
 #[cfg(test)]
-pub(crate) async fn demo_mutation_cases() -> Vec<IfcMutation> {
+pub(crate) fn demo_mutation_cases() -> Vec<IfcMutation> {
     let demo_entity = |id: u64, name: &str, args: Vec<IfcValue>| IfcEntity { id, name: name.into(), args, complex: Vec::new() };
     vec![
         IfcMutation::NoMutation,
@@ -427,8 +427,8 @@ mod tests {
     use protocol::command::DiffAlgebra;
     use protocol::MutationDiff;
 
-    #[semio_framework_async_macros::async_test]
-    async fn missing_entity_target_is_rejected_before_mutation() {
+    #[test]
+    fn missing_entity_target_is_rejected_before_mutation() {
         let base = IfcSnapshot::default();
         let diff = IfcDiff { entities: Some(IfcEntitiesDiff { removed: vec![1], ..Default::default() }), ..Default::default() };
         let error = diff.apply(&base).expect_err("missing entity target must be rejected");
@@ -438,11 +438,11 @@ mod tests {
     }
 
     //#region Fixtures
-    async fn entity(id: u64, name: &str, args: Vec<IfcValue>) -> IfcEntity {
+    fn entity(id: u64, name: &str, args: Vec<IfcValue>) -> IfcEntity {
         IfcEntity { id, name: name.into(), args, complex: vec![] }
     }
 
-    async fn base_snapshot() -> IfcSnapshot {
+    fn base_snapshot() -> IfcSnapshot {
         IfcSnapshot {
             schema: "stdio.ifc".into(),
             header: IfcHeader { file_description: vec![IfcValue::String("".into())], file_name: vec![IfcValue::String("semio.ifc".into())], file_schema: vec![IfcValue::Aggregate(vec![IfcValue::String("IFC4".into())])] },
@@ -456,7 +456,7 @@ mod tests {
     //#endregion Fixtures
 
     //#region 🔖️mutation_diff_law
-    async fn assert_mutation_diff_law(base: &IfcSnapshot, mutation: IfcMutation) {
+    fn assert_mutation_diff_law(base: &IfcSnapshot, mutation: IfcMutation) {
         let expected_diff = mutation.diff(base);
         let mut applied_snapshot = base.clone();
         let returned_diff = apply_ifc_mutation(&mut applied_snapshot, &mutation);
@@ -464,8 +464,8 @@ mod tests {
         assert_eq!(expected_diff.diff().apply(base).expect("valid mutation diff"), applied_snapshot, "diff.diff().apply(base) must equal the imperative mutation result for {mutation:?}");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn mutation_diff_law() {
+    #[test]
+    fn mutation_diff_law() {
         let base = base_snapshot();
         assert_mutation_diff_law(&base, IfcMutation::NoMutation);
         let mut alt = base.clone();
@@ -484,8 +484,8 @@ mod tests {
     //#endregion 🔖️mutation_diff_law
 
     //#region 🔖️inverse_law
-    #[semio_framework_async_macros::async_test]
-    async fn inverse_law() {
+    #[test]
+    fn inverse_law() {
         let base = base_snapshot();
         let variants = vec![
             IfcMutation::NoMutation,
@@ -514,7 +514,7 @@ mod tests {
     //#endregion 🔖️inverse_law
 
     //#region 🔖️absorb_law
-    async fn assert_absorb_law(base: &IfcSnapshot, m1: IfcMutation, m2: IfcMutation) {
+    fn assert_absorb_law(base: &IfcSnapshot, m1: IfcMutation, m2: IfcMutation) {
         let d1 = m1.diff(base);
         let mid = d1.diff().apply(base).expect("valid first diff");
         let d2 = m2.diff(&mid);
@@ -525,8 +525,8 @@ mod tests {
         assert_eq!(merged.apply(base).expect("valid absorbed diff"), sequential, "absorb(d1,d2).apply(base) must equal sequential application for {m1:?} + {m2:?}");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn absorb_law() {
+    #[test]
+    fn absorb_law() {
         let base = base_snapshot();
 
         // Insert+Remove-before: added entity's carried final index shifts once an earlier base
@@ -552,8 +552,8 @@ mod tests {
         assert_absorb_law(&base, IfcMutation::SetFileDescription { values: vec![IfcValue::String("first".into())] }, IfcMutation::SetFileDescription { values: vec![IfcValue::String("second".into())] });
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn absorb_law_associativity() {
+    #[test]
+    fn absorb_law_associativity() {
         let base = base_snapshot();
         let d1 = IfcMutation::SetFileDescription { values: vec![IfcValue::String("one".into())] }.diff(&base);
         let mid1 = d1.diff().apply(&base).expect("valid first diff");
@@ -576,8 +576,8 @@ mod tests {
     //#endregion 🔖️absorb_law
 
     //#region 🔖️between_roundtrip_law
-    #[semio_framework_async_macros::async_test]
-    async fn between_roundtrip_law() {
+    #[test]
+    fn between_roundtrip_law() {
         let a = base_snapshot();
         let mut b = base_snapshot();
         b.header.file_name = vec![IfcValue::String("changed.ifc".into())];
@@ -594,8 +594,8 @@ mod tests {
     //#endregion 🔖️between_roundtrip_law
 
     //#region 🔖️codec_retention_law
-    #[semio_framework_async_macros::async_test]
-    async fn codec_retention_law() {
+    #[test]
+    fn codec_retention_law() {
         let text = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🗿️artifacts/🏗️ifc/📚️examples/🎬️demo/🖼️assets/🏗️example.ifc"));
         let text = match text {
             Ok(t) => t,
@@ -615,7 +615,7 @@ mod tests {
     /// 🌪️ `sweep_a`/`sweep_b` differ in EVERY mutable field: HEADER's three records, one removed
     /// entity, one entity modified in every field (name, an arg removed/modified/added, and
     /// `complex` exercising the COMPLEX-instance weak-list replace), one added entity.
-    async fn sweep_a() -> IfcSnapshot {
+    fn sweep_a() -> IfcSnapshot {
         IfcSnapshot {
             schema: "stdio.ifc".into(),
             header: IfcHeader { file_description: vec![IfcValue::String("before desc".into())], file_name: vec![IfcValue::String("before.ifc".into())], file_schema: vec![IfcValue::Aggregate(vec![IfcValue::String("IFC4".into())])] },
@@ -631,7 +631,7 @@ mod tests {
         }
     }
 
-    async fn sweep_b() -> IfcSnapshot {
+    fn sweep_b() -> IfcSnapshot {
         IfcSnapshot {
             schema: "stdio.ifc".into(),
             header: IfcHeader { file_description: vec![IfcValue::String("after desc".into())], file_name: vec![IfcValue::String("after.ifc".into())], file_schema: vec![IfcValue::Aggregate(vec![IfcValue::String("IFC4X3".into())])] },
@@ -650,8 +650,8 @@ mod tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn field_sweep_covers_every_mutable_field() {
+    #[test]
+    fn field_sweep_covers_every_mutable_field() {
         let a = sweep_a();
         let b = sweep_b();
 
@@ -686,8 +686,8 @@ mod tests {
     }
     //#endregion 🔖️field_sweep
 
-    #[semio_framework_async_macros::async_test]
-    async fn out_of_range_entity_mutation_is_rejected_without_mutating() {
+    #[test]
+    fn out_of_range_entity_mutation_is_rejected_without_mutating() {
         let base = base_snapshot();
         let mut snap = base.clone();
         let outcome = apply_ifc_mutation(&mut snap, &IfcMutation::SetEntityName { id: 404, name: "X".into() });
@@ -702,8 +702,8 @@ mod tests {
     /// 🧪️ F6: `OpText`/`OpBinary` round-trip laws for the hand-rolled `IfcMutation` grammar —
     /// exercises every variant incl. `SetSnapshot`'s whole-snapshot payload and every `IfcValue`
     /// tag (`Unset`/`Derived`/`Integer`/`Real`/`String`/`Enum`/`Reference`/`Aggregate`/`TypedValue`).
-    #[semio_framework_async_macros::async_test]
-    async fn op_text_binary_roundtrip_law() {
+    #[test]
+    fn op_text_binary_roundtrip_law() {
         let base = base_snapshot();
         let mutations = vec![
             IfcMutation::NoMutation,

@@ -27,7 +27,7 @@ pub struct SemioModelInference {
 }
 
 impl protocol::Inference<SemioModelSnapshot> for SemioModelInference {
-    async fn infer(snapshot: &SemioModelSnapshot) -> Self {
+    fn infer(snapshot: &SemioModelSnapshot) -> Self {
         Self { bounds: compute_semio_model_bounds(snapshot) }
     }
 }
@@ -43,13 +43,13 @@ impl Default for SemioModelInference {
 }
 
 impl protocol::InferenceSpec<SemioModelSnapshot> for SemioModelInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.stdio.semio.model.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.semio.model.inference.bounds", reads: &["spatial", "elements"] }]
     }
 }

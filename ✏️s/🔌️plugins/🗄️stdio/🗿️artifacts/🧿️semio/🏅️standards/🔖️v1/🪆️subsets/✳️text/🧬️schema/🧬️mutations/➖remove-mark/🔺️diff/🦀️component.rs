@@ -12,11 +12,7 @@ pub fn diff(payload: &RemoveMark, base: &SemioTextSnapshot) -> protocol::Mutatio
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Run #{} does not exist.", payload.run_index), [payload.run_index.to_string()]);
     };
     if payload.index >= existing.marks.len() {
-        return protocol::MutationOutcome::error(
-            "mutation.target-missing",
-            format!("Mark #{} does not exist on run #{}.", payload.index, payload.run_index),
-            [payload.run_index.to_string(), payload.index.to_string()],
-        );
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Mark #{} does not exist on run #{}.", payload.index, payload.run_index), [payload.run_index.to_string(), payload.index.to_string()]);
     }
     let mut runs = base.runs.clone();
     runs[payload.run_index].marks.remove(payload.index);

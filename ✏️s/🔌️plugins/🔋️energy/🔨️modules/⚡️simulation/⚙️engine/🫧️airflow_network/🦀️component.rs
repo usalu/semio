@@ -16,7 +16,7 @@ pub struct AfNode {
 }
 
 impl AfNode {
-    pub async fn density(&self, p_atm: f64) -> f64 {
+    pub fn density(&self, p_atm: f64) -> f64 {
         moist_air_density(self.temperature_c, self.humidity_ratio, p_atm)
     }
 }
@@ -63,12 +63,12 @@ pub struct AirflowNetwork {
 }
 
 impl AirflowNetwork {
-    pub async fn node_index(&self, id: u32) -> Option<usize> {
+    pub fn node_index(&self, id: u32) -> Option<usize> {
         self.nodes.iter().position(|n| n.id == id)
     }
 
     /// 🌬️ Volumetric flow [m³/s] through link from node_a toward node_b (positive = a→b).
-    pub async fn link_flow_m3_s(&self, link: &AfLink, pressures_pa: &[f64], p_atm: f64) -> f64 {
+    pub fn link_flow_m3_s(&self, link: &AfLink, pressures_pa: &[f64], p_atm: f64) -> f64 {
         let ia = self.node_index(link.node_a).unwrap_or(0);
         let ib = self.node_index(link.node_b).unwrap_or(0);
         let node_a = &self.nodes[ia];
@@ -80,7 +80,7 @@ impl AirflowNetwork {
     }
 
     /// 🔍️ Solve zone pressures [Pa] relative to reference node via Gauss-Seidel mass balance.
-    pub async fn solve_pressures(&self, p_atm: f64, max_iter: usize, tol: f64) -> Option<Vec<f64>> {
+    pub fn solve_pressures(&self, p_atm: f64, max_iter: usize, tol: f64) -> Option<Vec<f64>> {
         let n = self.nodes.len();
         if n == 0 {
             return Some(Vec::new());
@@ -112,7 +112,7 @@ impl AirflowNetwork {
     }
 
     /// 📊️ Flow rates [m³/s] for all links after pressure solve.
-    pub async fn solve_flows(&self, p_atm: f64) -> Option<Vec<f64>> {
+    pub fn solve_flows(&self, p_atm: f64) -> Option<Vec<f64>> {
         let pressures = self.solve_pressures(p_atm, 200, 1e-4)?;
         Some(self.links.iter().map(|link| self.link_flow_m3_s(link, &pressures, p_atm)).collect())
     }
@@ -120,26 +120,26 @@ impl AirflowNetwork {
 // #endregion 🔖️AirflowNetwork
 
 // #region 🔖️Physics
-async fn stack_pressure_pa(node_a: &AfNode, node_b: &AfNode, p_atm: f64) -> f64 {
+fn stack_pressure_pa(node_a: &AfNode, node_b: &AfNode, p_atm: f64) -> f64 {
     let rho_a = node_a.density(p_atm);
     let rho_b = node_b.density(p_atm);
     GRAVITY * (node_a.elevation_m - node_b.elevation_m) * (rho_a - rho_b) * 0.5
 }
 
-async fn wind_pressure_pa(link: &AfLink, wind_speed_m_s: f64, wind_direction_deg: f64) -> f64 {
+fn wind_pressure_pa(link: &AfLink, wind_speed_m_s: f64, wind_direction_deg: f64) -> f64 {
     let angle = (wind_direction_deg - link.orientation_deg).to_radians();
     let cp = angle.cos();
     0.5 * RHO_AIR_REF * wind_speed_m_s * wind_speed_m_s * cp * link.wind_exposure_factor
 }
 
-async fn power_law_flow(link: &AfLink, dp_pa: f64, rho: f64) -> f64 {
+fn power_law_flow(link: &AfLink, dp_pa: f64, rho: f64) -> f64 {
     let n = link.flow_exponent.clamp(0.5, 1.0);
     let c = link.flow_coefficient.max(1e-12);
     let sign = if dp_pa >= 0.0 { 1.0 } else { -1.0 };
     sign * c * dp_pa.abs().powf(n) / rho.sqrt()
 }
 
-async fn link_conductance(link: &AfLink, dp_pa: f64, rho: f64) -> f64 {
+fn link_conductance(link: &AfLink, dp_pa: f64, rho: f64) -> f64 {
     let n = link.flow_exponent.clamp(0.5, 1.0);
     let c = link.flow_coefficient.max(1e-12);
     if dp_pa.abs() < 1e-6 {
@@ -149,7 +149,7 @@ async fn link_conductance(link: &AfLink, dp_pa: f64, rho: f64) -> f64 {
     }
 }
 
-async fn node_mass_balance(network: &AirflowNetwork, node_i: usize, pressures: &[f64], p_atm: f64) -> (f64, f64) {
+fn node_mass_balance(network: &AirflowNetwork, node_i: usize, pressures: &[f64], p_atm: f64) -> (f64, f64) {
     let mut sum_q = 0.0;
     let mut sum_g = 0.0;
     for link in &network.links {
@@ -184,7 +184,7 @@ mod tests {
     use super::*;
     use crate::units::P_STD;
 
-    async fn two_zone_network() -> AirflowNetwork {
+    fn two_zone_network() -> AirflowNetwork {
         AirflowNetwork {
             nodes: vec![AfNode { id: 0, elevation_m: 0.0, temperature_c: 5.0, humidity_ratio: 0.004, is_reference: true }, AfNode { id: 1, elevation_m: 0.0, temperature_c: 22.0, humidity_ratio: 0.009, is_reference: false }],
             links: vec![AfLink { id: 1, node_a: 1, node_b: 0, kind: AfLinkKind::Crack, flow_coefficient: 0.01, flow_exponent: 0.65, area_m2: 0.05, discharge_coefficient: 0.6, orientation_deg: 0.0, wind_exposure_factor: 1.0 }],
@@ -196,7 +196,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn stack_pressure_positive_when_outdoor_colder() {
+    fn stack_pressure_positive_when_outdoor_colder() {
         let outdoor = AfNode { id: 0, elevation_m: 0.0, temperature_c: 5.0, humidity_ratio: 0.004, is_reference: true };
         let zone = AfNode { id: 1, elevation_m: 3.0, temperature_c: 22.0, humidity_ratio: 0.009, is_reference: false };
         let dp = stack_pressure_pa(&zone, &outdoor, P_STD);
@@ -204,7 +204,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn network_solves_pressures() {
+    fn network_solves_pressures() {
         let net = two_zone_network();
         let pressures = net.solve_pressures(P_STD, 100, 1e-3).unwrap();
         assert_eq!(pressures.len(), 2);
@@ -212,7 +212,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn infiltration_flow_when_zone_warmer() {
+    fn infiltration_flow_when_zone_warmer() {
         let net = two_zone_network();
         let flows = net.solve_flows(P_STD).unwrap();
         assert_eq!(flows.len(), 1);

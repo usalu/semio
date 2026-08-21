@@ -87,11 +87,8 @@ async fn committed_json_is_canonical() {
 async fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
     let status = outcome.get("status").and_then(serde_json::Value::as_str).expect("outcome carries a status");
-    let declared: Vec<(String, String)> = outcome
-        .get("messages")
-        .and_then(serde_json::Value::as_array)
-        .map(|rows| rows.iter().map(|row| (row["level"].as_str().unwrap_or_default().to_string(), row["code"].as_str().unwrap_or_default().to_string())).collect())
-        .unwrap_or_default();
+    let declared: Vec<(String, String)> =
+        outcome.get("messages").and_then(serde_json::Value::as_array).map(|rows| rows.iter().map(|row| (row["level"].as_str().unwrap_or_default().to_string(), row["code"].as_str().unwrap_or_default().to_string())).collect()).unwrap_or_default();
     let raised = <BcfMutation as protocol::Mutation<BcfSnapshot>>::diff(&mutation(), &before());
     let produced: Vec<(String, String)> = raised
         .messages()
@@ -140,7 +137,10 @@ async fn committed_diff_is_canonical() {
     let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "set-snapshot/closes-the-clash-topic-and-answers-its-comment: committed diff JSON is not canonical");
-    assert!(decoded.topics.as_ref().expect("topics triple").modified[0].diff.comments.as_ref().expect("comments triple").modified[0].diff.viewpoint_ref.is_none(), "set-snapshot/closes-the-clash-topic-and-answers-its-comment: viewpointRef must round-trip as absent — a committed null would collapse the Some(None) 'reference cleared' state that Option<Option<String>> cannot express in JSON");
+    assert!(
+        decoded.topics.as_ref().expect("topics triple").modified[0].diff.comments.as_ref().expect("comments triple").modified[0].diff.viewpoint_ref.is_none(),
+        "set-snapshot/closes-the-clash-topic-and-answers-its-comment: viewpointRef must round-trip as absent — a committed null would collapse the Some(None) 'reference cleared' state that Option<Option<String>> cannot express in JSON"
+    );
 }
 
 /// 🩹 Applying the committed diff directly to `before` yields the committed `after` — the diff is

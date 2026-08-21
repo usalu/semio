@@ -12,20 +12,20 @@ macro_rules! id_newtype {
         impl $name {
             /// 🔖️ The raw `u32` value.
             #[inline]
-            pub async fn get(self) -> u32 {
+            pub fn get(self) -> u32 {
                 self.0
             }
 
             /// 🔖️ The value as a `usize` index, for slice/vec indexing.
             #[inline]
-            pub async fn index(self) -> usize {
+            pub fn index(self) -> usize {
                 self.0 as usize
             }
 
             /// 🔖️ Builds an id from a `usize` index (e.g. a loop counter). Truncates silently only
             /// if `i > u32::MAX`, which every builder in this crate rejects long before this point.
             #[inline]
-            pub async fn from_index(i: usize) -> Self {
+            pub fn from_index(i: usize) -> Self {
                 Self(i as u32)
             }
         }
@@ -80,16 +80,16 @@ id_newtype!(
 mod tests {
     use super::*;
 
-    #[semio_framework_async_macros::async_test]
-    async fn id_index_roundtrip() {
+    #[test]
+    fn id_index_roundtrip() {
         let p = PatternId::from_index(7);
         assert_eq!(p.index(), 7);
         assert_eq!(p.get(), 7);
         assert_eq!(format!("{p}"), "7");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn id_ordering_and_equality() {
+    #[test]
+    fn id_ordering_and_equality() {
         let a = NodeId(1);
         let b = NodeId(2);
         assert!(a < b);
@@ -97,8 +97,8 @@ mod tests {
         assert_ne!(a, b);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn id_serde_roundtrip() {
+    #[test]
+    fn id_serde_roundtrip() {
         let r = RelationId(42);
         let json = serde_json::to_string(&r).unwrap();
         let back: RelationId = serde_json::from_str(&json).unwrap();

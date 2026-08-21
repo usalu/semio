@@ -92,7 +92,7 @@ async fn produces_committed_diff() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical_and_narrowly_scoped() {
     let decoded: SemioBrepDiff = serde_json::from_str(DIFF).expect("committed create-face diff decodes");
-    
+
     let faces = decoded.faces.as_ref().expect("create-face must write the faces triple");
     assert_eq!(faces.added.len(), 1, "exactly one face is added");
     assert!(faces.removed.is_empty() && faces.modified.is_empty(), "a create neither removes nor modifies");

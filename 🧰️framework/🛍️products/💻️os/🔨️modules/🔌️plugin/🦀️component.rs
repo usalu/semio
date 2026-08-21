@@ -160,6 +160,7 @@ pub mod app {
     /// default (same module, trait declared first — finding 1's bare-invocation requirement).
     use semio_framework_dispatch_macros::{dyn_enum, dyn_enum_close};
     use semio_framework_ui_contract as ui;
+    pub use semio_framework_ui_contract::BuiltNode;
     /// 🧬️ SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY (`sdk-flip`, 26/08/20): the choke point. Every
     /// UI-bearing plugin in the fleet imports its UI vocabulary through THIS block, so flipping it
     /// here redirects all 33 at once — `ui_wgpu` leaves the guest dependency graph entirely
@@ -172,7 +173,8 @@ pub mod app {
     /// glob brings every contract type (`Component`, `UiPatch`, `Label`, `ActionId`, …) into scope
     /// too, since this module already used every one of the old wgpu-target types unqualified.
     use semio_framework_ui_contract::*;
-    use semio_framework_ui_runtime::{ComponentTree, Present, PresentCx, TreeNode};
+    pub use semio_framework_ui_runtime::{ComponentTree, TreeNode};
+    use semio_framework_ui_runtime::{Present, PresentCx};
     use serde::de::DeserializeOwned;
     use serde::{Deserialize, Serialize};
     use serde_json::Value;
@@ -218,7 +220,7 @@ pub mod app {
     /// the dependency runs the other way — see `📦️glue.rs`). Shared once here since this packet
     /// converts dozens of `BuiltNode`-returning SDK helpers that all cross this same boundary.
     // 🚫️async: E1-adjacent pure recursive structural transform consumed by sync `ComponentTree::new` call sites
-    fn built_to_tree(node: BuiltNode) -> TreeNode {
+    pub fn built_to_tree(node: BuiltNode) -> TreeNode {
         TreeNode {
             key: node.key,
             component: node.component,
@@ -237,8 +239,13 @@ pub mod app {
     /// `Present::present` body in this file turns its `BuiltNode` root into what it must actually
     /// return.
     // 🚫️async: E1-adjacent pure recursive structural transform consumed by sync render() bodies
-    fn built_to_component_tree(node: BuiltNode) -> ComponentTree {
+    pub fn built_to_component_tree(node: BuiltNode) -> ComponentTree {
         ComponentTree::new(built_to_tree(node))
+    }
+
+    /// 🏷️ Builds one semantic text node from the SDK's retained non-node label type.
+    pub fn built_text_node(label: ui_wgpu::wgpu::Label) -> BuiltNode {
+        ui::text(label.to_string()).build()
     }
     //#endregion 🔖️TreeConvert
 
@@ -1091,7 +1098,7 @@ pub mod app {
         type Inference: protocol::Inference<Self::Snapshot>;
 
         async fn infer(snapshot: &Self::Snapshot) -> Self::Inference {
-            <Self::Inference as protocol::Inference<Self::Snapshot>>::infer(snapshot).await
+            <Self::Inference as protocol::Inference<Self::Snapshot>>::infer(snapshot)
         }
 
         /// 🧠️ Cache-aware variant; the default passthrough ignores `cache`/`session` and just calls
@@ -2157,12 +2164,12 @@ pub mod app {
         }
 
         /// 🎹️ Composer capability category.
-        pub async fn composer() -> Self {
+        pub fn composer() -> Self {
             Self("composer".into())
         }
 
         /// 🧾️ Subset-validator capability category.
-        pub async fn subset_validator() -> Self {
+        pub fn subset_validator() -> Self {
             Self("subset-validator".into())
         }
 
@@ -2889,8 +2896,8 @@ pub mod app {
 
     impl ArtifactDeclaration {
         /// 🪪️ Starts a declaration from its one authoritative artifact definition.
-        pub async fn builder(definition: ArtifactDefinition) -> ArtifactDeclarationBuilder<NeedsSchema> {
-            let kind = definition.identity().await.as_str().await.to_string();
+        pub fn builder(definition: ArtifactDefinition) -> ArtifactDeclarationBuilder<NeedsSchema> {
+            let kind = definition.identity.value.clone();
             ArtifactDeclarationBuilder {
                 kind,
                 schemas: Vec::new(),
@@ -2915,7 +2922,11 @@ pub mod app {
     impl ArtifactDeclarationBuilder<NeedsSchema> {
         /// 🧬️ Sets the artifact's four-facet schema descriptor — mandatory, so this is the one call
         /// that unlocks every other declaration method.
-        pub async fn schema(mut self, descriptor: ::semio_framework_schema::ArtifactSchemaDescriptor) -> ArtifactDeclarationBuilder<DeclarationReady> {
+        pub fn schema(self, descriptor: ::semio_framework_schema::ArtifactSchemaDescriptor) -> ArtifactDeclarationBuilder<DeclarationReady> {
+            resolve_ready(self.schema_async(descriptor))
+        }
+
+        async fn schema_async(mut self, descriptor: ::semio_framework_schema::ArtifactSchemaDescriptor) -> ArtifactDeclarationBuilder<DeclarationReady> {
             require_declared_capability_or_record(
                 &self.definition,
                 &mut self.definition_error,
@@ -2951,7 +2962,11 @@ pub mod app {
         }
 
         /// 🧬️ Appends further schema descriptors for independently versioned standards or profiles.
-        pub async fn schemas(mut self, items: impl IntoIterator<Item = ::semio_framework_schema::ArtifactSchemaDescriptor>) -> Self {
+        pub fn schemas(self, items: impl IntoIterator<Item = ::semio_framework_schema::ArtifactSchemaDescriptor>) -> Self {
+            resolve_ready(self.schemas_async(items))
+        }
+
+        async fn schemas_async(mut self, items: impl IntoIterator<Item = ::semio_framework_schema::ArtifactSchemaDescriptor>) -> Self {
             for item in items {
                 require_declared_capability_or_record(
                     &self.definition,
@@ -2966,7 +2981,11 @@ pub mod app {
         }
 
         /// 💡️ Appends inference descriptors for transactional registration. Repeatable.
-        pub async fn inferences(mut self, items: impl IntoIterator<Item = ::semio_framework_schema::ArtifactInferenceDescriptor>) -> Self {
+        pub fn inferences(self, items: impl IntoIterator<Item = ::semio_framework_schema::ArtifactInferenceDescriptor>) -> Self {
+            resolve_ready(self.inferences_async(items))
+        }
+
+        async fn inferences_async(mut self, items: impl IntoIterator<Item = ::semio_framework_schema::ArtifactInferenceDescriptor>) -> Self {
             for item in items {
                 require_declared_capability_or_record(
                     &self.definition,
@@ -2982,7 +3001,11 @@ pub mod app {
 
         /// 🧠️ Appends executable native inference services. Each service is ownership- and
         /// schema-checked against this declaration before deterministic registry insertion.
-        pub async fn inference_services(mut self, items: impl IntoIterator<Item = ArtifactInferenceService>) -> Self {
+        pub fn inference_services(self, items: impl IntoIterator<Item = ArtifactInferenceService>) -> Self {
+            resolve_ready(self.inference_services_async(items))
+        }
+
+        async fn inference_services_async(mut self, items: impl IntoIterator<Item = ArtifactInferenceService>) -> Self {
             for service in items {
                 let metadata = service.metadata();
                 require_declared_capability_or_record(
@@ -2998,12 +3021,16 @@ pub mod app {
         }
 
         /// 🎹️ Appends this artifact's composer table for transactional registration.
-        pub async fn composers(mut self, entries: &'static [ComposerEntry]) -> Self {
+        pub fn composers(self, entries: &'static [ComposerEntry]) -> Self {
+            resolve_ready(self.composers_async(entries))
+        }
+
+        async fn composers_async(mut self, entries: &'static [ComposerEntry]) -> Self {
             for entry in entries {
                 require_declared_capability_or_record(
                     &self.definition,
                     &mut self.definition_error,
-                    ArtifactCapabilityKind::composer().await,
+                    ArtifactCapabilityKind::composer(),
                     ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect().await, ArtifactDialect::from(entry.writes).to_coordinate()).await.map(|claim| vec![claim]),
                 )
                 .await;
@@ -3013,7 +3040,11 @@ pub mod app {
         }
 
         /// 🗂️ Appends format rows (`register_format_descriptors`).
-        pub async fn formats(mut self, rows: impl IntoIterator<Item = semio_framework::FormatDescriptor>) -> Self {
+        pub fn formats(self, rows: impl IntoIterator<Item = semio_framework::FormatDescriptor>) -> Self {
+            resolve_ready(self.formats_async(rows))
+        }
+
+        async fn formats_async(mut self, rows: impl IntoIterator<Item = semio_framework::FormatDescriptor>) -> Self {
             for row in rows {
                 let mut claims = Vec::with_capacity(row.mimes.len() + row.extensions.len());
                 let mut claim_error = None;
@@ -3048,12 +3079,16 @@ pub mod app {
         }
 
         /// 🧾️ Appends this artifact's subset-validator table (`register_subset_validator`, one call per entry).
-        pub async fn subset_validators(mut self, entries: &'static [SubsetValidatorEntry]) -> Self {
+        pub fn subset_validators(self, entries: &'static [SubsetValidatorEntry]) -> Self {
+            resolve_ready(self.subset_validators_async(entries))
+        }
+
+        async fn subset_validators_async(mut self, entries: &'static [SubsetValidatorEntry]) -> Self {
             for entry in entries {
                 require_declared_capability_or_record(
                     &self.definition,
                     &mut self.definition_error,
-                    ArtifactCapabilityKind::subset_validator().await,
+                    ArtifactCapabilityKind::subset_validator(),
                     ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect().await, ArtifactDialect::from(entry.dialect).to_coordinate()).await.map(|claim| vec![claim]),
                 )
                 .await;
@@ -3063,7 +3098,11 @@ pub mod app {
         }
 
         /// 📖️ Appends this artifact's grammar table (`register_language`, one call per entry).
-        pub async fn languages(mut self, specs: &'static [dsl::LanguageSpec]) -> Self {
+        pub fn languages(self, specs: &'static [dsl::LanguageSpec]) -> Self {
+            resolve_ready(self.languages_async(specs))
+        }
+
+        async fn languages_async(mut self, specs: &'static [dsl::LanguageSpec]) -> Self {
             for spec in specs {
                 require_declared_capability_or_record(
                     &self.definition,
@@ -3080,7 +3119,11 @@ pub mod app {
         /// 🗂️ Declares the document codec for one document-owning `ArtifactApp`
         /// (`register_document_codec_for_app::<A>`, keyed by `A::DOCUMENT_SCHEMA`). Repeatable:
         /// every schema-owned codec is retained and conflict-checked before runtime registration.
-        pub async fn document_codec<A: ArtifactApp>(mut self) -> Self {
+        pub fn document_codec<A: ArtifactApp>(self) -> Self {
+            resolve_ready(self.document_codec_async::<A>())
+        }
+
+        async fn document_codec_async<A: ArtifactApp>(mut self) -> Self {
             let codec = DocumentCodecSpec::of::<A>().await;
             let namespace_codec = ArtifactIdentityNamespace::codec().await;
             let claims = match ArtifactIdentityClaim::new(namespace_codec, codec.schema.clone()).await {
@@ -3102,7 +3145,15 @@ pub mod app {
         /// headless library plugin (energy's `EnergyModelSnapshot`/`EnergyModelMutation` is the
         /// motivating case) has no such type. Same bounds as `store::ArtifactCodec::of`; it appends
         /// to the same plural codec capability set as `.document_codec::<A>()`.
-        pub async fn document_codec_bare<Snapshot, Mutation>(mut self, schema: impl Into<String>) -> Self
+        pub fn document_codec_bare<Snapshot, Mutation>(self, schema: impl Into<String>) -> Self
+        where
+            Snapshot: Clone + PartialEq + Serialize + DeserializeOwned + Send + store::ArtifactDsl + ArtifactPack + 'static,
+            Mutation: ::protocol::Mutation<Snapshot> + PartialEq + Serialize + DeserializeOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static,
+        {
+            resolve_ready(self.document_codec_bare_async::<Snapshot, Mutation>(schema))
+        }
+
+        async fn document_codec_bare_async<Snapshot, Mutation>(mut self, schema: impl Into<String>) -> Self
         where
             Snapshot: Clone + PartialEq + Serialize + DeserializeOwned + Send + store::ArtifactDsl + ArtifactPack + 'static,
             Mutation: ::protocol::Mutation<Snapshot> + PartialEq + Serialize + DeserializeOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static,
@@ -3122,7 +3173,7 @@ pub mod app {
         }
 
         /// 🧭️ Appends dialect migrations for transactional registration.
-        pub async fn migrations(mut self, items: impl IntoIterator<Item = store::DialectMigration>) -> Self {
+        pub fn migrations(mut self, items: impl IntoIterator<Item = store::DialectMigration>) -> Self {
             self.migrations.extend(items);
             self
         }
@@ -3131,16 +3182,16 @@ pub mod app {
         /// ONLY way to set them (UCAS review, 2026-08-12: a hand-written list could silently disagree
         /// with the `#[derive(ArtifactSchema)]`-emitted impl the composition runtime actually reads,
         /// so there is deliberately no other setter).
-        pub async fn composition<Snapshot: ::semio_framework_schema::ArtifactCompositionFields>(mut self) -> Self {
-            self.child_slots = Snapshot::child_slots().await;
-            self.link_slots = Snapshot::link_slots().await;
+        pub fn composition<Snapshot: ::semio_framework_schema::ArtifactCompositionFields>(mut self) -> Self {
+            self.child_slots = resolve_ready(Snapshot::child_slots());
+            self.link_slots = resolve_ready(Snapshot::link_slots());
             self
         }
 
         /// 🔒️ Declares a capability requirement owned by this artifact (unioned into
         /// `PluginManifest.capabilities` at assembly time) — IO is artifact-owned, so an artifact
         /// that reads assets declares this on itself, not on the plugin.
-        pub async fn capability(mut self, capability: CapabilityRequirement) -> Self {
+        pub fn capability(mut self, capability: CapabilityRequirement) -> Self {
             if !self.capabilities.contains(&capability) {
                 self.capabilities.push(capability);
             }
@@ -3148,7 +3199,7 @@ pub mod app {
         }
 
         /// ✅️ Validates the declaration-local contract before assembly.
-        pub async fn try_build(self) -> Result<ArtifactDeclaration, ArtifactDefinitionError> {
+        pub fn try_build(self) -> Result<ArtifactDeclaration, ArtifactDefinitionError> {
             if let Some(error) = self.definition_error {
                 return Err(error);
             }
@@ -3266,9 +3317,7 @@ pub mod app {
             rows.push(ArtifactRuntimeCapabilityRequirement::new(ArtifactCapabilityKind::inference().await, vec![ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema().await, service.metadata().inference_schema).await?]).await);
         }
         for entry in composers {
-            rows.push(
-                ArtifactRuntimeCapabilityRequirement::new(ArtifactCapabilityKind::composer().await, vec![ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect().await, ArtifactDialect::from(entry.writes).to_coordinate()).await?]).await,
-            );
+            rows.push(ArtifactRuntimeCapabilityRequirement::new(ArtifactCapabilityKind::composer(), vec![ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect().await, ArtifactDialect::from(entry.writes).to_coordinate()).await?]).await);
         }
         for row in formats {
             let mut claims = Vec::with_capacity(row.mimes.len() + row.extensions.len());
@@ -3282,8 +3331,7 @@ pub mod app {
         }
         for entry in subset_validators {
             rows.push(
-                ArtifactRuntimeCapabilityRequirement::new(ArtifactCapabilityKind::subset_validator().await, vec![ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect().await, ArtifactDialect::from(entry.dialect).to_coordinate()).await?])
-                    .await,
+                ArtifactRuntimeCapabilityRequirement::new(ArtifactCapabilityKind::subset_validator(), vec![ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect().await, ArtifactDialect::from(entry.dialect).to_coordinate()).await?]).await,
             );
         }
         for spec in languages {
@@ -4080,8 +4128,8 @@ pub mod app {
                 resolve_ready(async {
                     let base = Snapshot::decode_pack(snapshot_pack).map_err(|error| ContributedMutationExecutionError::new("artifact-mutation.snapshot-decode", error.to_string()))?;
                     let kind: K = decode_contributed_wire(payload).await.map_err(|error| ContributedMutationExecutionError::new("artifact-mutation.payload-decode", error))?;
-                    let steps = ::protocol::plan_of(&kind, &base).await.map_err(|error| ContributedMutationExecutionError::new("artifact-mutation.plan", error.to_string()))?;
-                    let label = kind.label().await;
+                    let steps = ::protocol::plan_of(&kind, &base).map_err(|error| ContributedMutationExecutionError::new("artifact-mutation.plan", error.to_string()))?;
+                    let label = kind.label();
                     let mut owner_ops = Vec::new();
                     let mut foreign = Vec::new();
                     for step in steps {
@@ -4631,8 +4679,8 @@ pub mod app {
                 artifact_kinds: Vec::new(),
                 media_inputs: Vec::new(),
                 media_outputs: Vec::new(),
-                config: ConfigSpec::empty().await,
-                command_grammar: CommandGrammar::empty().await,
+                config: resolve_ready(ConfigSpec::empty()),
+                command_grammar: resolve_ready(CommandGrammar::empty()),
                 io: AppIo::default(),
             }
         }
@@ -4718,7 +4766,7 @@ pub mod app {
             self
         }
 
-        pub async fn document<I, S>(mut self, document: I) -> Self
+        pub fn document<I, S>(mut self, document: I) -> Self
         where
             I: IntoIterator<Item = S>,
             S: Into<String>,
@@ -4923,17 +4971,17 @@ pub mod app {
 
         /// @emoji ✏️ Declares a document-mutating action — dispatched as VCS operations with a true inverse.
         pub async fn mutation(self, id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
-            self.action_with(ActionDefinition::new_catalog(id, label, ActionKind::Mutation).await).await
+            self.action_with(ActionDefinition::new_catalog(id, label, ActionKind::Mutation)).await
         }
 
         /// @emoji 👁️ Declares an ephemeral view action (camera, selection, hover, active utility) — not recorded in history.
         pub async fn view_action(self, id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
-            self.action_with(ActionDefinition::new_catalog(id, label, ActionKind::View).await).await
+            self.action_with(ActionDefinition::new_catalog(id, label, ActionKind::View)).await
         }
 
         /// @emoji 🐚️ Declares a shell-only effect action (navigate, export, spawn) — no document mutation.
         pub async fn shell_action(self, id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
-            self.action_with(ActionDefinition::new_catalog(id, label, ActionKind::Shell).await).await
+            self.action_with(ActionDefinition::new_catalog(id, label, ActionKind::Shell)).await
         }
 
         /// @emoji 📇️ Declares a fully specified action (icon, args, keybinding, palette visibility, category).
@@ -4961,7 +5009,7 @@ pub mod app {
 
         /// @emoji 🎛️ Declares an app-scope command (applies whenever this app is focused, in any mode).
         pub async fn app_command(self, id: impl Into<String>, label: impl Into<LocalizedLabel>, category: impl Into<String>, kind: ActionKind) -> Self {
-            self.command(CommandDefinition::new_catalog(id, label, category, kind).await).await
+            self.command(CommandDefinition::new_catalog(id, label, category, kind)).await
         }
 
         /// @emoji 📝️ Attaches typed argument declarations to an already-declared command (post-hoc,
@@ -9419,11 +9467,11 @@ pub mod app {
         {
             let mut labels: Vec<String> = Vec::with_capacity(ops.len());
             for op in ops.iter() {
-                labels.push(protocol::SemanticMutation::label(op).await);
+                labels.push(protocol::SemanticMutation::label(op));
             }
             let op_schema = match ops.first() {
                 Some(op) => {
-                    let semantics = protocol::SemanticMutation::semantics(op).await;
+                    let semantics = protocol::SemanticMutation::semantics(op);
                     SchemaId(format!("{}.{}", semantics.entity, semantics.kind))
                 }
                 None => SchemaId("child.empty".to_string()),
@@ -13598,12 +13646,12 @@ pub mod app {
     //#region 🔖️WindowKits
     // 🪟️ The seven framework window kits (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET
     // §2.6) — each pairs a `WindowKindDefinition` (read-only + editable variants) with a `render`
-    // function turning a plain owned view-model into a `ui_wgpu::wgpu::UiNode`. Frozen kind ids/labels/command ids,
+    // function turning a plain owned view-model into a semantic `BuiltNode`. Frozen kind ids/labels/command ids,
     // not app-declared: apps compose these kits into their own `AppDefinition.window_kinds` rather
     // than each app hand-rolling a text/table/tree/image/mesh/document/media window from scratch.
 
     /// 🏗️ Shared `WindowKindDefinition` scaffold — every kit differs only in id/label/surface/icon/actions.
-    async fn window_kind_definition(id: &'static str, en: &'static str, de: &'static str, surface_kind: SurfaceKind, icon_id: &'static str, actions: Vec<ActionDefinition>) -> WindowKindDefinition {
+    fn window_kind_definition(id: &'static str, en: &'static str, de: &'static str, surface_kind: SurfaceKind, icon_id: &'static str, actions: Vec<ActionDefinition>) -> WindowKindDefinition {
         WindowKindDefinition {
             id: id.into(),
             label: LocalizedLabel::native(en, de),
@@ -13623,29 +13671,15 @@ pub mod app {
     }
 
     /// 🪟️ A framework window kit: declares its read-only/editable `WindowKindDefinition` pair and
-    /// renders its plain owned `ViewModel` into a node. See `render` implementations for the per-kit
-    /// shape each one picks.
-    ///
-    /// ⚠️ Gap (SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY packet `sdk-helpers` — see
-    /// `📓️terra-sdk-helpers-report.md`): deliberately left on `ui_wgpu::wgpu::UiNode` this wave, fully
-    /// qualified rather than converted. Three of the seven kits (`TextWindowKit`, `TableWindowKit`,
-    /// `MeshWindowKit`) build a `ComponentScene`-shaped payload with no tractable `ui::*` translation —
-    /// the contract's own `Component::Surface(SurfaceProps)` needs a pack-encoded `SurfaceDoc.bytes`
-    /// payload whose product-specific scene structs (`TextEditorScene`/`TableScene`/`World3dScene`, …)
-    /// "move to `🖱️ui/🎬️scene/🦀️component.rs` in a later packet" per `🦦️contract/🦀️surface.rs`'s own
-    /// header — that crate doesn't exist yet, and `🦀️surface.rs` itself is still an unfinished
-    /// SCAFFOLD. `📓️recipe-plugin.md` §2 names exactly this case as out of its depth. Since `render`
-    /// is ONE trait method shared by all seven impls, it needs ONE return type — the four kits that
-    /// individually COULD convert today (`TreeWindowKit`, `ImageWindowKit`, `DocumentWindowKit`,
-    /// `MediaWindowKit`) are held back by the other three rather than half-migrating the trait. Flagged
-    /// to the coordinator: worth its own follow-up packet once `contract-layout`'s `SurfaceProps` and
-    /// the scene crate exist.
+    /// renders its plain owned `ViewModel` into a semantic contract node. Product surfaces encode
+    /// their typed scene payload through `semio_framework_ui_scene`; ordinary widgets use the
+    /// contract builder DSL directly, so no renderer-owned `UiNode` crosses this SDK boundary.
     pub trait WindowKit {
         type ViewModel;
         const KIND_ID: &'static str;
-        async fn window_kind() -> WindowKindDefinition;
-        async fn editable_window_kind() -> WindowKindDefinition;
-        async fn render(view: &Self::ViewModel) -> ui_wgpu::wgpu::UiNode;
+        fn window_kind() -> WindowKindDefinition;
+        fn editable_window_kind() -> WindowKindDefinition;
+        fn render(view: &Self::ViewModel) -> BuiltNode;
     }
 
     //#region 🔖️TextWindowKit
@@ -13664,37 +13698,34 @@ pub mod app {
         type ViewModel = TextView;
         const KIND_ID: &'static str = "framework.window.text";
 
-        async fn window_kind() -> WindowKindDefinition {
-            window_kind_definition(Self::KIND_ID, "Text", "Text", SurfaceKind::TextEditor, "type", Vec::new()).await
+        fn window_kind() -> WindowKindDefinition {
+            window_kind_definition(Self::KIND_ID, "Text", "Text", SurfaceKind::TextEditor, "type", Vec::new())
         }
 
-        async fn editable_window_kind() -> WindowKindDefinition {
-            window_kind_definition(Self::KIND_ID, "Text", "Text", SurfaceKind::TextEditor, "type", vec![ActionDefinition::new_catalog("replace-text", LocalizedLabel::native("Replace Text", "Text ersetzen"), ActionKind::Mutation).await]).await
+        fn editable_window_kind() -> WindowKindDefinition {
+            window_kind_definition(Self::KIND_ID, "Text", "Text", SurfaceKind::TextEditor, "type", vec![ActionDefinition::new_catalog("replace-text", LocalizedLabel::native("Replace Text", "Text ersetzen"), ActionKind::Mutation)])
         }
 
-        async fn render(view: &TextView) -> ui_wgpu::wgpu::UiNode {
-            ui_wgpu::wgpu::build_text_editor_scene(
-                Self::KIND_ID,
-                Self::KIND_ID,
-                ui_wgpu::wgpu::TextEditorScene {
-                    buffer: view.text.clone(),
-                    language: view.language.clone(),
-                    selection_json: None,
-                    tokens_json: None,
-                    diagnostics_json: None,
-                    completions_json: None,
-                    overlays_json: None,
-                    occurrences_json: None,
-                    placeholders_json: None,
-                    extra_carets_json: None,
-                    selectable_spans_json: None,
-                    settings_json: view.read_only.then(|| serde_json::json!({ "readOnly": true }).to_string()),
-                    camera_json: None,
-                    hover_json: None,
-                    newline_gates_json: None,
-                    rename_json: None,
-                },
-            )
+        fn render(view: &TextView) -> BuiltNode {
+            let scene = semio_framework_ui_scene::TextEditorScene {
+                buffer: view.text.clone(),
+                language: view.language.clone(),
+                selection_json: None,
+                tokens_json: None,
+                diagnostics_json: None,
+                completions_json: None,
+                overlays_json: None,
+                occurrences_json: None,
+                placeholders_json: None,
+                extra_carets_json: None,
+                selectable_spans_json: None,
+                settings_json: view.read_only.then(|| serde_json::json!({ "readOnly": true }).to_string()),
+                camera_json: None,
+                hover_json: None,
+                newline_gates_json: None,
+                rename_json: None,
+            };
+            ui::surface(semio_framework_ui_scene::encode(SurfaceKind::TextEditor, &scene)).id(Self::KIND_ID).build()
         }
     }
     //#endregion 🔖️TextWindowKit
@@ -13714,21 +13745,22 @@ pub mod app {
         type ViewModel = TableView;
         const KIND_ID: &'static str = "framework.window.table";
 
-        async fn window_kind() -> WindowKindDefinition {
-            window_kind_definition(Self::KIND_ID, "Table", "Tabelle", SurfaceKind::Table, "table-2", Vec::new()).await
+        fn window_kind() -> WindowKindDefinition {
+            window_kind_definition(Self::KIND_ID, "Table", "Tabelle", SurfaceKind::Table, "table-2", Vec::new())
         }
 
-        async fn editable_window_kind() -> WindowKindDefinition {
-            window_kind_definition(Self::KIND_ID, "Table", "Tabelle", SurfaceKind::Table, "table-2", vec![ActionDefinition::new_catalog("set-cell", LocalizedLabel::native("Set Cell", "Zelle setzen"), ActionKind::Mutation).await]).await
+        fn editable_window_kind() -> WindowKindDefinition {
+            window_kind_definition(Self::KIND_ID, "Table", "Tabelle", SurfaceKind::Table, "table-2", vec![ActionDefinition::new_catalog("set-cell", LocalizedLabel::native("Set Cell", "Zelle setzen"), ActionKind::Mutation)])
         }
 
-        async fn render(view: &TableView) -> ui_wgpu::wgpu::UiNode {
+        fn render(view: &TableView) -> BuiltNode {
             let columns_json = serde_json::to_string(&view.columns).unwrap_or_else(|_| "[]".into());
             let rows_json = serde_json::to_string(&view.rows).unwrap_or_else(|_| "[]".into());
             // 🧬️ M2 fallout (terra-sdk-wire): `TableScene` moved to `semio-framework-ui-scene` and its
             // `base` constructor is now the E6 sync-by-decree shape (no suspension point) — the
             // OUTER `build_table_scene` (unmoved, `ui_wgpu::wgpu`) stays a real `async fn`.
-            ui_wgpu::wgpu::build_table_scene(Self::KIND_ID, Self::KIND_ID, semio_framework_ui_scene::TableScene::base(columns_json, rows_json))
+            let scene = semio_framework_ui_scene::TableScene::base(columns_json, rows_json);
+            ui::surface(semio_framework_ui_scene::encode(SurfaceKind::Table, &scene)).id(Self::KIND_ID).build()
         }
     }
 
@@ -13779,7 +13811,7 @@ pub mod app {
         /// `render`'s flat positional-string grid, which carries neither. The actions column is only
         /// appended when at least one row has an action, so plain identified tables (no row buttons yet)
         /// don't grow a dead column.
-        pub async fn render_rows(view: &TableRowsView) -> ui_wgpu::wgpu::UiNode {
+        pub fn render_rows(view: &TableRowsView) -> BuiltNode {
             let has_actions = view.rows.iter().any(|row| !row.actions.is_empty());
             let mut columns: Vec<Value> = view.columns.iter().enumerate().map(|(index, label)| serde_json::json!({ "id": format!("col{index}"), "label": label })).collect();
             if has_actions {
@@ -13803,7 +13835,8 @@ pub mod app {
             // 🧬️ M2 fallout (terra-sdk-wire): `TableScene` moved to `semio-framework-ui-scene` and its
             // `base` constructor is now the E6 sync-by-decree shape (no suspension point) — the
             // OUTER `build_table_scene` (unmoved, `ui_wgpu::wgpu`) stays a real `async fn`.
-            ui_wgpu::wgpu::build_table_scene(Self::KIND_ID, Self::KIND_ID, semio_framework_ui_scene::TableScene::base(columns_json, rows_json))
+            let scene = semio_framework_ui_scene::TableScene::base(columns_json, rows_json);
+            ui::surface(semio_framework_ui_scene::encode(SurfaceKind::Table, &scene)).id(Self::KIND_ID).build()
         }
     }
     //#endregion 🔖️TableWindowKit
@@ -13828,42 +13861,21 @@ pub mod app {
         type ViewModel = TreeView;
         const KIND_ID: &'static str = "framework.window.tree";
 
-        async fn window_kind() -> WindowKindDefinition {
-            window_kind_definition(Self::KIND_ID, "Tree", "Baum", SurfaceKind::BlockList, "list-tree", Vec::new()).await
+        fn window_kind() -> WindowKindDefinition {
+            window_kind_definition(Self::KIND_ID, "Tree", "Baum", SurfaceKind::BlockList, "list-tree", Vec::new())
         }
 
-        async fn editable_window_kind() -> WindowKindDefinition {
-            window_kind_definition(Self::KIND_ID, "Tree", "Baum", SurfaceKind::BlockList, "list-tree", vec![ActionDefinition::new_catalog("set-node", LocalizedLabel::native("Set Node", "Knoten setzen"), ActionKind::Mutation).await]).await
+        fn editable_window_kind() -> WindowKindDefinition {
+            window_kind_definition(Self::KIND_ID, "Tree", "Baum", SurfaceKind::BlockList, "list-tree", vec![ActionDefinition::new_catalog("set-node", LocalizedLabel::native("Set Node", "Knoten setzen"), ActionKind::Mutation)])
         }
 
-        async fn render(view: &TreeView) -> ui_wgpu::wgpu::UiNode {
-            // 🌉️ Recursive async fn — boxed at the recursive call (residue shape 3), and rewritten from
-            // a `.map(to_item).collect()` into an explicit loop (sync — `Iterator::map` cannot take an
-            // async closure) at both this fn's own recursion and `render`'s own roots below.
-            fn to_item(node: &TreeNodeView) -> std::pin::Pin<Box<dyn std::future::Future<Output = ui_wgpu::wgpu::UiTreeItemNode> + '_>> {
-                Box::pin(async move {
-                    let mut item = ui_wgpu::wgpu::UiTreeItemNode::base(node.id.clone(), ui_wgpu::wgpu::Label::data(node.label.clone()));
-                    if !node.children.is_empty() {
-                        let mut children = Vec::with_capacity(node.children.len());
-                        for child in node.children.iter() {
-                            children.push(to_item(child).await);
-                        }
-                        item.items = Some(children);
-                    }
-                    item
-                })
+        fn render(view: &TreeView) -> BuiltNode {
+            fn to_item(node: &TreeNodeView) -> BuiltNode {
+                let children = node.children.iter().map(to_item).collect::<Vec<_>>();
+                ui::tree_item(node.label.clone()).id(node.id.clone()).default_open(!children.is_empty()).children(children).build()
             }
-            let mut roots = Vec::with_capacity(view.roots.len());
-            for node in view.roots.iter() {
-                roots.push(to_item(node).await);
-            }
-            ui_wgpu::wgpu::UiNode::Tree(ui_wgpu::wgpu::UiTreeNode {
-                sections: vec![ui_wgpu::wgpu::UiTreeSectionNode { id: format!("{}-root", Self::KIND_ID), label: None, default_open: Some(true), presence: ui_wgpu::wgpu::UiPresence::default(), items: roots }],
-                presence: ui_wgpu::wgpu::UiPresence::default(),
-                drop_action: None,
-                menu: None,
-                interaction_domain: None,
-            })
+            let section = ui::tree_section("").id(format!("{}-root", Self::KIND_ID)).default_open(true).children(view.roots.iter().map(to_item)).build();
+            ui::tree().id(Self::KIND_ID).child(section).build()
         }
     }
     //#endregion 🔖️TreeWindowKit
@@ -13885,18 +13897,17 @@ pub mod app {
         type ViewModel = ImageView;
         const KIND_ID: &'static str = "framework.window.image";
 
-        async fn window_kind() -> WindowKindDefinition {
-            window_kind_definition(Self::KIND_ID, "Image", "Bild", SurfaceKind::Canvas2d, "image", Vec::new()).await
+        fn window_kind() -> WindowKindDefinition {
+            window_kind_definition(Self::KIND_ID, "Image", "Bild", SurfaceKind::Canvas2d, "image", Vec::new())
         }
 
-        async fn editable_window_kind() -> WindowKindDefinition {
-            window_kind_definition(Self::KIND_ID, "Image", "Bild", SurfaceKind::Canvas2d, "image", vec![ActionDefinition::new_catalog("set-pixel-region", LocalizedLabel::native("Set Pixel Region", "Pixelbereich setzen"), ActionKind::Mutation).await])
-                .await
+        fn editable_window_kind() -> WindowKindDefinition {
+            window_kind_definition(Self::KIND_ID, "Image", "Bild", SurfaceKind::Canvas2d, "image", vec![ActionDefinition::new_catalog("set-pixel-region", LocalizedLabel::native("Set Pixel Region", "Pixelbereich setzen"), ActionKind::Mutation)])
         }
 
-        async fn render(view: &ImageView) -> ui_wgpu::wgpu::UiNode {
+        fn render(view: &ImageView) -> BuiltNode {
             let src = format!("data:{};base64,{}", view.mime, view.base64);
-            ui_wgpu::wgpu::ui_image(Self::KIND_ID, src, Some(ui_wgpu::wgpu::Label::data(format!("{}x{}", view.width, view.height))))
+            ui::image(src).id(Self::KIND_ID).alt(format!("{}x{}", view.width, view.height)).build()
         }
     }
     //#endregion 🔖️ImageWindowKit
@@ -13918,18 +13929,18 @@ pub mod app {
         type ViewModel = MeshView;
         const KIND_ID: &'static str = "framework.window.mesh";
 
-        async fn window_kind() -> WindowKindDefinition {
-            window_kind_definition(Self::KIND_ID, "Mesh", "Netz", SurfaceKind::World3d, "box", Vec::new()).await
+        fn window_kind() -> WindowKindDefinition {
+            window_kind_definition(Self::KIND_ID, "Mesh", "Netz", SurfaceKind::World3d, "box", Vec::new())
         }
 
-        async fn editable_window_kind() -> WindowKindDefinition {
-            window_kind_definition(Self::KIND_ID, "Mesh", "Netz", SurfaceKind::World3d, "box", vec![ActionDefinition::new_catalog("set-vertex", LocalizedLabel::native("Set Vertex", "Vertex setzen"), ActionKind::Mutation).await]).await
+        fn editable_window_kind() -> WindowKindDefinition {
+            window_kind_definition(Self::KIND_ID, "Mesh", "Netz", SurfaceKind::World3d, "box", vec![ActionDefinition::new_catalog("set-vertex", LocalizedLabel::native("Set Vertex", "Vertex setzen"), ActionKind::Mutation)])
         }
 
-        async fn render(view: &MeshView) -> ui_wgpu::wgpu::UiNode {
+        fn render(view: &MeshView) -> BuiltNode {
             let sun_config = crate::world3d_host::WorldSunConfig::default();
             let scene = crate::world3d_host::world3d_scene(view.camera_json.clone(), view.meshes_json.clone(), view.instances_json.clone(), view.selection_json.clone(), &sun_config);
-            ui_wgpu::wgpu::build_world_3d_scene(Self::KIND_ID, Self::KIND_ID, scene.await)
+            ui::surface(semio_framework_ui_scene::encode(SurfaceKind::World3d, &scene)).id(Self::KIND_ID).build()
         }
     }
     //#endregion 🔖️MeshWindowKit
@@ -13952,20 +13963,17 @@ pub mod app {
         type ViewModel = DocumentView;
         const KIND_ID: &'static str = "framework.window.document";
 
-        async fn window_kind() -> WindowKindDefinition {
-            window_kind_definition(Self::KIND_ID, "Document", "Dokument", SurfaceKind::TextEditor, "file-text", Vec::new()).await
+        fn window_kind() -> WindowKindDefinition {
+            window_kind_definition(Self::KIND_ID, "Document", "Dokument", SurfaceKind::TextEditor, "file-text", Vec::new())
         }
 
-        async fn editable_window_kind() -> WindowKindDefinition {
-            window_kind_definition(Self::KIND_ID, "Document", "Dokument", SurfaceKind::TextEditor, "file-text", vec![ActionDefinition::new_catalog("set-page", LocalizedLabel::native("Set Page", "Seite setzen"), ActionKind::Mutation).await]).await
+        fn editable_window_kind() -> WindowKindDefinition {
+            window_kind_definition(Self::KIND_ID, "Document", "Dokument", SurfaceKind::TextEditor, "file-text", vec![ActionDefinition::new_catalog("set-page", LocalizedLabel::native("Set Page", "Seite setzen"), ActionKind::Mutation)])
         }
 
-        async fn render(view: &DocumentView) -> ui_wgpu::wgpu::UiNode {
-            let mut children = Vec::with_capacity(view.pages.len());
-            for page in view.pages.iter() {
-                children.push(ui_wgpu::wgpu::ui_text(ui_wgpu::wgpu::Label::data(page.text.clone())));
-            }
-            ui_wgpu::wgpu::ui_stack_vertical(children)
+        fn render(view: &DocumentView) -> BuiltNode {
+            let children = view.pages.iter().enumerate().map(|(index, page)| ui::text(page.text.clone()).id(format!("page-{index}")).build());
+            ui::column().id(Self::KIND_ID).children(children).build()
         }
     }
     //#endregion 🔖️DocumentWindowKit
@@ -13991,28 +13999,37 @@ pub mod app {
         type ViewModel = MediaView;
         const KIND_ID: &'static str = "framework.window.media";
 
-        async fn window_kind() -> WindowKindDefinition {
-            window_kind_definition(Self::KIND_ID, "Media", "Medien", SurfaceKind::Canvas2d, "play", Vec::new()).await
+        fn window_kind() -> WindowKindDefinition {
+            window_kind_definition(Self::KIND_ID, "Media", "Medien", SurfaceKind::Canvas2d, "play", Vec::new())
         }
 
-        async fn editable_window_kind() -> WindowKindDefinition {
-            window_kind_definition(Self::KIND_ID, "Media", "Medien", SurfaceKind::Canvas2d, "play", vec![ActionDefinition::new_catalog("seek-media", LocalizedLabel::native("Seek", "Position setzen"), ActionKind::Mutation).await]).await
+        fn editable_window_kind() -> WindowKindDefinition {
+            window_kind_definition(Self::KIND_ID, "Media", "Medien", SurfaceKind::Canvas2d, "play", vec![ActionDefinition::new_catalog("seek-media", LocalizedLabel::native("Seek", "Position setzen"), ActionKind::Mutation)])
         }
 
-        async fn render(view: &MediaView) -> ui_wgpu::wgpu::UiNode {
+        fn render(view: &MediaView) -> BuiltNode {
             let kind_label = match view.kind {
                 MediaKind::Audio => "audio",
                 MediaKind::Video => "video",
             };
-            ui_wgpu::wgpu::UiNode::KeyValue(ui_wgpu::wgpu::UiKeyValueNode {
-                entries: vec![
-                    ui_wgpu::wgpu::UiKeyValueEntry { label: ui_wgpu::wgpu::Label::data("Duration"), value: view.duration_ms.to_string() },
-                    ui_wgpu::wgpu::UiKeyValueEntry { label: ui_wgpu::wgpu::Label::data("Position"), value: view.position_ms.to_string() },
-                    ui_wgpu::wgpu::UiKeyValueEntry { label: ui_wgpu::wgpu::Label::data("Kind"), value: kind_label.to_string() },
-                ],
-                presence: ui_wgpu::wgpu::UiPresence::default(),
+            BuiltNode {
+                key: Self::KIND_ID.into(),
+                component: Component::KeyValueList(KeyValueListProps {
+                    entries: vec![
+                        KeyValueEntry { label: Label::from("Duration"), value: view.duration_ms.to_string() },
+                        KeyValueEntry { label: Label::from("Position"), value: view.position_ms.to_string() },
+                        KeyValueEntry { label: Label::from("Kind"), value: kind_label.into() },
+                    ],
+                }),
+                layout: LayoutSpec::default(),
+                style: StyleSpec::default(),
+                activity: Activity::default(),
+                disabled: false,
+                accessibility: AccessibilitySpec::default(),
+                bindings: Vec::new(),
                 menu: None,
-            })
+                children: Vec::new(),
+            }
         }
     }
     //#endregion 🔖️MediaWindowKit
@@ -14808,17 +14825,17 @@ pub mod app {
     pub struct Editor;
 
     impl Viewer {
-        pub async fn builder(dialect: Dialect) -> ViewerBuilder {
+        pub fn builder(dialect: Dialect) -> ViewerBuilder {
             let dialect: ArtifactDialect = dialect.into();
-            let inner = AppBuilder::new(surface_app_id(&dialect, AppRole::Viewer).await, LocalizedLabel::native("Viewer", "Betrachter")).await;
+            let inner = resolve_ready(AppBuilder::new(resolve_ready(surface_app_id(&dialect, AppRole::Viewer)), LocalizedLabel::native("Viewer", "Betrachter")));
             ViewerBuilder { inner, dialect }
         }
     }
 
     impl Editor {
-        pub async fn builder(dialect: Dialect) -> EditorBuilder {
+        pub fn builder(dialect: Dialect) -> EditorBuilder {
             let dialect: ArtifactDialect = dialect.into();
-            let inner = AppBuilder::new(surface_app_id(&dialect, AppRole::Editor).await, LocalizedLabel::native("Editor", "Editor")).await;
+            let inner = resolve_ready(AppBuilder::new(resolve_ready(surface_app_id(&dialect, AppRole::Editor)), LocalizedLabel::native("Editor", "Editor")));
             EditorBuilder { inner, dialect }
         }
     }
@@ -14839,20 +14856,20 @@ pub mod app {
     }
 
     impl ViewerBuilder {
-        pub async fn document<I, S>(mut self, document: I) -> Self
+        pub fn document<I, S>(mut self, document: I) -> Self
         where
             I: IntoIterator<Item = S>,
             S: Into<String>,
         {
-            self.inner = self.inner.document(document).await;
+            self.inner = self.inner.document(document);
             self
         }
-        pub async fn terminology_document(mut self, id: impl Into<String>, document: impl IntoIterator<Item = impl Into<String>>) -> Self {
-            self.inner = self.inner.terminology_document(id, document).await;
+        pub fn terminology_document(mut self, id: impl Into<String>, document: impl IntoIterator<Item = impl Into<String>>) -> Self {
+            self.inner = resolve_ready(self.inner.terminology_document(id, document));
             self
         }
-        pub async fn build_definition(self) -> AppDefinition {
-            let mut definition = self.inner.build_definition().await;
+        pub fn build_definition(self) -> AppDefinition {
+            let mut definition = resolve_ready(self.inner.build_definition());
             definition.role = AppRole::Viewer;
             definition.dialect = self.dialect;
             definition
@@ -14860,25 +14877,25 @@ pub mod app {
     }
 
     impl EditorBuilder {
-        pub async fn document<I, S>(mut self, document: I) -> Self
+        pub fn document<I, S>(mut self, document: I) -> Self
         where
             I: IntoIterator<Item = S>,
             S: Into<String>,
         {
-            self.inner = self.inner.document(document).await;
+            self.inner = self.inner.document(document);
             self
         }
-        pub async fn terminology_document(mut self, id: impl Into<String>, document: impl IntoIterator<Item = impl Into<String>>) -> Self {
-            self.inner = self.inner.terminology_document(id, document).await;
+        pub fn terminology_document(mut self, id: impl Into<String>, document: impl IntoIterator<Item = impl Into<String>>) -> Self {
+            self.inner = resolve_ready(self.inner.terminology_document(id, document));
             self
         }
         /// @emoji ✏️ Declares a document-mutating action — the one method `ViewerBuilder` doesn't have.
-        pub async fn mutation(mut self, id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
-            self.inner = self.inner.mutation(id, label).await;
+        pub fn mutation(mut self, id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
+            self.inner = resolve_ready(self.inner.mutation(id, label));
             self
         }
-        pub async fn build_definition(self) -> AppDefinition {
-            let mut definition = self.inner.build_definition().await;
+        pub fn build_definition(self) -> AppDefinition {
+            let mut definition = resolve_ready(self.inner.build_definition());
             definition.role = AppRole::Editor;
             definition.dialect = self.dialect;
             definition
@@ -14898,8 +14915,8 @@ pub mod app {
         ( @type $Type:ident; { $( $name:ident ( $( $arg:ident : $ty:ty ),* ) ),+ $(,)? } ) => {
             impl $Type {
                 $(
-                    pub async fn $name(mut self, $( $arg: $ty ),* ) -> Self {
-                        self.inner = self.inner.$name( $( $arg ),* ).await;
+                    pub fn $name(mut self, $( $arg: $ty ),* ) -> Self {
+                        self.inner = resolve_ready(self.inner.$name( $( $arg ),* ));
                         self
                     }
                 )+
@@ -20553,7 +20570,7 @@ pub mod world3d_host {
     }
 
     /** 🌞️ Builds the `environment_json` payload consumed by `world-3d-host.tsx`'s `WorldEnvironmentRecord.sun`. */
-    pub async fn world3d_environment_json(sun: &WorldSunConfig) -> String {
+    pub fn world3d_environment_json(sun: &WorldSunConfig) -> String {
         json!({ "sun": sun }).to_string()
     }
 
@@ -20972,10 +20989,10 @@ pub mod world3d_host {
 
     pub async fn world3d_meshes_json_from_kinds(kinds: &[String]) -> String {
         // 🌉️ Rewritten from a `.map(...).collect()` into an explicit loop (sync — `Iterator::map`
-        // cannot take an async closure, and `mesh_from_kind` is genuinely async).
+        // cannot take an async closure; mesh construction itself is synchronous CPU work.
         let mut meshes: Vec<Value> = Vec::with_capacity(kinds.len());
         for kind in kinds.iter() {
-            let data = mesh_from_kind(kind).await;
+            let data = mesh_from_kind(kind);
             meshes.push(json!({ "id": kind, "data": data }));
         }
         serde_json::to_string(&meshes).unwrap_or_else(|_| "[]".into())
@@ -21000,10 +21017,10 @@ pub mod world3d_host {
 
     pub async fn world3d_meshes_json_from_kinds_and_urls(kinds: &[String], urls: &[String]) -> String {
         // 🌉️ Rewritten from a `.map(...).collect()` into an explicit loop (sync — `Iterator::map`
-        // cannot take an async closure, and `mesh_from_kind` is genuinely async).
+        // cannot take an async closure; mesh construction itself is synchronous CPU work.
         let mut meshes: Vec<Value> = Vec::with_capacity(kinds.len());
         for kind in kinds.iter() {
-            let data = mesh_from_kind(kind).await;
+            let data = mesh_from_kind(kind);
             meshes.push(json!({ "id": kind, "data": data }));
         }
         for url in urls {
@@ -21016,11 +21033,11 @@ pub mod world3d_host {
         serde_json::to_string(&meshes).unwrap_or_else(|_| "[]".into())
     }
 
-    pub async fn world3d_selection_json(method: &str, ids: &[String], hovered_id: Option<&str>) -> String {
-        world3d_selection_json_with_granularity(method, ids, hovered_id, None).await
+    pub fn world3d_selection_json(method: &str, ids: &[String], hovered_id: Option<&str>) -> String {
+        world3d_selection_json_with_granularity(method, ids, hovered_id, None)
     }
 
-    pub async fn world3d_selection_json_with_granularity(method: &str, ids: &[String], hovered_id: Option<&str>, granularity: Option<&str>) -> String {
+    pub fn world3d_selection_json_with_granularity(method: &str, ids: &[String], hovered_id: Option<&str>, granularity: Option<&str>) -> String {
         let mut value = json!({
             "method": method,
             "mode": "replace",
@@ -21035,14 +21052,14 @@ pub mod world3d_host {
         value.to_string()
     }
 
-    pub async fn world3d_scene(camera_json: String, meshes_json: String, instances_json: String, selection_json: String, sun: &WorldSunConfig) -> World3dScene {
-        world3d_scene_extended(camera_json, meshes_json, instances_json, selection_json, None, None, None, None, None, None, None, None, None, Some(world3d_environment_json(sun).await), None, None, None, None, None, None, None).await
+    pub fn world3d_scene(camera_json: String, meshes_json: String, instances_json: String, selection_json: String, sun: &WorldSunConfig) -> World3dScene {
+        world3d_scene_extended(camera_json, meshes_json, instances_json, selection_json, None, None, None, None, None, None, None, None, None, Some(world3d_environment_json(sun)), None, None, None, None, None, None, None)
     }
 
     /// 🪟️ `domain_id`/`domain_granularity_id`: see `World3dScene`'s own doc comments — pass the app's
     /// bound `InteractionRef` id (and its plain-pick granularity id) for this window kind, or `None`
     /// to leave this window on the OS's shared `world` board domain.
-    pub async fn world3d_scene_extended(
+    pub fn world3d_scene_extended(
         camera_json: String,
         meshes_json: String,
         instances_json: String,
@@ -21410,6 +21427,9 @@ pub use app::testkit;
 pub use app::ActionFactory;
 pub use app::{
     artifact_inference_service,
+    built_text_node,
+    built_to_component_tree,
+    built_to_tree,
     cancel_artifact_inference,
     composer_entry_of,
     deserializer_entry_of,
@@ -21467,8 +21487,10 @@ pub use app::{
     ArtifactView,
     ArtifactViewer,
     AsyncComposeFn,
+    BuiltNode,
     // 🧸️👥️🫧️ Composition child-read seam plus the two ephemeral state lanes.
     ChildContentView,
+    ComponentTree,
     ComposeFuture,
     Confidence,
     ConfigView,
@@ -21530,6 +21552,7 @@ pub use app::{
     StandardId,
     SubsetId,
     TransientView,
+    TreeNode,
     TwoDSvgDocumentRenderer,
     TwoDSvgExportRequest,
     TwoDSvgExportResult,
@@ -21631,7 +21654,7 @@ macro_rules! derive_artifact_facets {
             async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> { Ok(Self(<$crate::DerivedArtifactBuilder<$spec> as $crate::ArtifactBuilder>::from_binary(bytes).await?)) }
             async fn mutate(self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) { let (builder, outcome) = <$crate::DerivedArtifactBuilder<$spec> as $crate::ArtifactBuilder>::mutate(self.0, mutation).await; (Self(builder), outcome) }
             async fn absorb(self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> { <$crate::DerivedArtifactBuilder<$spec> as $crate::ArtifactBuilder>::absorb(self.0, diff).await.map(Self) }
-            async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> { <$crate::DerivedArtifactBuilder<$spec> as $crate::ArtifactBuilder>::build(self.0) }
+            async fn build(self) -> Result<Self::Snapshot, Vec<dsl::Diagnostic>> { <$crate::DerivedArtifactBuilder<$spec> as $crate::ArtifactBuilder>::build(self.0).await }
         }
 
         #[allow(dead_code, reason = "grammar-smoke-test invocations never construct this — see comment above $builder")]
@@ -21641,13 +21664,13 @@ macro_rules! derive_artifact_facets {
             type Parts = <$analysis as $crate::ArtifactAnalysis>::Parts;
             const DIALECT: $crate::Dialect = <$analysis as $crate::ArtifactAnalysis>::DIALECT;
             async fn sniff(source: &$crate::AnalyzeSource<'_>) -> $crate::IoConfidence { <$analysis as $crate::ArtifactAnalysis>::sniff(source).await }
-            async fn analyze(sources: &[$crate::AnalyzeSource<'_>]) -> $crate::Analysis<Self::Parts> { <$analysis as $crate::ArtifactAnalysis>::analyze(sources) }
+            async fn analyze(sources: &[$crate::AnalyzeSource<'_>]) -> $crate::Analysis<Self::Parts> { <$analysis as $crate::ArtifactAnalysis>::analyze(sources).await }
         }
 
         #[allow(dead_code, reason = "grammar-smoke-test invocations never call the inherent duplicates — see comment above $builder")]
         impl $analyzer {
             pub async fn sniff(source: &$crate::AnalyzeSource<'_>) -> $crate::IoConfidence { <Self as $crate::ArtifactAnalyzer>::sniff(source).await }
-            pub async fn analyze(sources: &[$crate::AnalyzeSource<'_>]) -> $crate::Analysis<<Self as $crate::ArtifactAnalyzer>::Parts> { <Self as $crate::ArtifactAnalyzer>::analyze(sources) }
+            pub async fn analyze(sources: &[$crate::AnalyzeSource<'_>]) -> $crate::Analysis<<Self as $crate::ArtifactAnalyzer>::Parts> { <Self as $crate::ArtifactAnalyzer>::analyze(sources).await }
         }
 
         $visibility struct $composer;

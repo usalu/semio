@@ -29,7 +29,7 @@ pub struct SemioInference {
 }
 
 impl protocol::Inference<SemioSnapshot> for SemioInference {
-    async fn infer(snapshot: &SemioSnapshot) -> Self {
+    fn infer(snapshot: &SemioSnapshot) -> Self {
         Self { kind: compute_semio_kind(snapshot) }
     }
 }
@@ -44,13 +44,13 @@ impl Default for SemioInference {
 }
 
 impl protocol::InferenceSpec<SemioSnapshot> for SemioInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.stdio.semio.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.semio.inference.kind", reads: &["subset"] }]
     }
 }

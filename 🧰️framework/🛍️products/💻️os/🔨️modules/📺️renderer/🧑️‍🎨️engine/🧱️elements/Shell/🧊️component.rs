@@ -210,9 +210,7 @@ fn shell_context_menu_item_from_spec(spec: ui_wgpu::wgpu::ContextMenuItemSpec, c
 /// booting the same pid at the same millisecond, which the OS itself already rules out.
 #[cfg(not(target_arch = "wasm32"))]
 fn mint_shell_session_id() -> String {
-    let pid = std::process::id();
-    let now_ms = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|duration| duration.as_millis()).unwrap_or(0);
-    format!("wgpu-{pid}-{now_ms:x}")
+    format!("wgpu-{}", semio_framework_os_kernel::os_identity::time_ordered_id())
 }
 
 /// 🌱️ Native: `S_HUB_URL`/`S_USER`/`S_DATA_DIR` straight off the process env (contract §C0 — "wgpu
@@ -1202,6 +1200,12 @@ mod shell_pool_future_tests {
     }
 }
 
+#[cfg(not(target_arch = "wasm32"))]
+enum ShellIoCompletion {
+    Actions(Vec<ActionDescriptor>),
+    Finished,
+}
+
 pub struct ShellState {
     pub plugins: Vec<ProgramBridgeEntry>,
     pub plugin_filter: String,
@@ -1280,6 +1284,8 @@ pub struct ShellState {
     pub split_resize_secondary_origin: Vec<f32>,
     pub measures_resize_window_id: Option<String>,
     pub deferred_actions: Vec<ActionDescriptor>,
+    #[cfg(not(target_arch = "wasm32"))]
+    shell_io_pending: std::collections::VecDeque<std::sync::mpsc::Receiver<ShellIoCompletion>>,
     pub fullscreen_toggle_requested: bool,
     pub fullscreen_active: bool,
     pub active_utilities: Vec<UtilityNode>,
@@ -1572,6 +1578,46 @@ fn save_panel_layout_to_store(layout: &PanelLayoutPersisted) {
 //#endregion 🧭️PanelAnchorModel
 
 impl ShellState {
+    #[cfg(not(target_arch = "wasm32"))]
+    fn submit_shell_io(&mut self, operation: impl FnOnce() -> ShellIoCompletion + Send + 'static) {
+        const MAX_PENDING_SHELL_IO: usize = 64;
+        if self.shell_io_pending.len() >= MAX_PENDING_SHELL_IO {
+            return;
+        }
+        let (sender, receiver) = std::sync::mpsc::channel();
+        crate::renderer_worker_pool().submit(
+            Lane::Io,
+            Box::new(move || {
+                let _ = sender.send(operation());
+            }),
+        );
+        self.shell_io_pending.push_back(receiver);
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    fn poll_shell_io(&mut self) -> bool {
+        const MAX_COMPLETIONS_PER_FRAME: usize = 8;
+        let mut changed = false;
+        for _ in 0..MAX_COMPLETIONS_PER_FRAME {
+            let result = match self.shell_io_pending.front() {
+                Some(receiver) => receiver.try_recv(),
+                None => break,
+            };
+            match result {
+                Ok(ShellIoCompletion::Actions(actions)) => {
+                    self.shell_io_pending.pop_front();
+                    changed |= !actions.is_empty();
+                    self.deferred_actions.extend(actions);
+                }
+                Ok(ShellIoCompletion::Finished) | Err(std::sync::mpsc::TryRecvError::Disconnected) => {
+                    self.shell_io_pending.pop_front();
+                }
+                Err(std::sync::mpsc::TryRecvError::Empty) => break,
+            }
+        }
+        changed
+    }
+
     //#region 🏷️LabelResolution
     /// 🌐️ Active `Locale` derived from `locale_id`. This engine is not manifest-aware the way the
     /// React renderer is (no per-window locale/terminology context is threaded through render
@@ -1689,6 +1735,8 @@ impl ShellState {
             split_resize_secondary_origin: Vec::new(),
             measures_resize_window_id: None,
             deferred_actions: Vec::new(),
+            #[cfg(not(target_arch = "wasm32"))]
+            shell_io_pending: std::collections::VecDeque::new(),
             fullscreen_toggle_requested: false,
             fullscreen_active: false,
             active_utilities: Vec::new(),
@@ -2072,6 +2120,15 @@ impl ShellState {
                     self.deferred_actions.push(ActionDescriptor { controller_id: controller_id.to_string(), action: dispatch_action_id, args });
                 }
                 semio_framework::kernel::Effect::RequestMediaFrames { accept, frame_action, done_action, fallback_action, sample_stride, max_frames, max_long_edge_px, fps_hint, payload, args, .. } => {
+                    #[cfg(not(target_arch = "wasm32"))]
+                    {
+                        let controller_id = controller_id.to_string();
+                        let args = optional_dsl_value_as_json(args);
+                        self.submit_shell_io(move || {
+                            ShellIoCompletion::Actions(request_media_frames(&controller_id, &accept, &frame_action, &done_action, &fallback_action, sample_stride, max_frames, max_long_edge_px, fps_hint, payload.as_deref(), args))
+                        });
+                    }
+                    #[cfg(target_arch = "wasm32")]
                     for descriptor in request_media_frames(controller_id, &accept, &frame_action, &done_action, &fallback_action, sample_stride, max_frames, max_long_edge_px, fps_hint, payload.as_deref(), optional_dsl_value_as_json(args)) {
                         self.deferred_actions.push(descriptor);
                     }
@@ -2608,10 +2665,11 @@ impl ShellState {
     #[cfg(not(target_arch = "wasm32"))]
     pub async fn pump_sync_events(&mut self) -> bool {
         use tokio::sync::broadcast::error::TryRecvError;
+        let shell_io_changed = self.poll_shell_io();
         // 📇️ ticket §1/§3 — non-blocking identity bootstrap result + directory-stream/command-queue
         // drain, folded into this same every-frame pump (glue.rs's frame loop already calls this
         // method once per tick; adding a second call site outside this lane's lease was avoidable).
-        let directory_changed = self.pump_directory_events().await;
+        let directory_changed = self.pump_directory_events().await || shell_io_changed;
         // 📌️ ticket §C5 item 2 — the auto check-in poll, folded into the same every-frame pump for the
         // identical reason (no timer wheel exists in this shell; see `auto_checkin_should_fire`'s doc).
         self.poll_auto_checkin().await;
@@ -3340,6 +3398,21 @@ impl ShellState {
                 // dispatches them through the normal `dispatch_action` path (including its own nested
                 // `requested_effects`) in order, one per tick's drain.
                 semio_framework::kernel::Effect::RequestMediaFrames { accept, frame_action, done_action, fallback_action, sample_stride, max_frames, max_long_edge_px, fps_hint, payload, args, .. } => {
+                    #[cfg(not(target_arch = "wasm32"))]
+                    {
+                        let controller_id = action.controller_id.clone();
+                        let accept = accept.clone();
+                        let frame_action = frame_action.clone();
+                        let done_action = done_action.clone();
+                        let fallback_action = fallback_action.clone();
+                        let (sample_stride, max_frames, max_long_edge_px, fps_hint) = (*sample_stride, *max_frames, *max_long_edge_px, *fps_hint);
+                        let payload = payload.clone();
+                        let args = optional_dsl_value_as_json(args.clone());
+                        self.submit_shell_io(move || {
+                            ShellIoCompletion::Actions(request_media_frames(&controller_id, &accept, &frame_action, &done_action, &fallback_action, sample_stride, max_frames, max_long_edge_px, fps_hint, payload.as_deref(), args))
+                        });
+                    }
+                    #[cfg(target_arch = "wasm32")]
                     for descriptor in
                         request_media_frames(&action.controller_id, accept, frame_action, done_action, fallback_action, *sample_stride, *max_frames, *max_long_edge_px, *fps_hint, payload.as_deref(), optional_dsl_value_as_json(args.clone()))
                     {
@@ -3641,6 +3714,15 @@ impl ShellState {
                 if operation.get("operation").and_then(|v| v.as_str()) == Some("downloadMediaExport") {
                     if let (Some(filename), Some(mime_type), Some(data)) = (operation.get("filename").and_then(|v| v.as_str()), operation.get("mimeType").and_then(|v| v.as_str()), operation.get("data").and_then(|v| v.as_str())) {
                         let encoding = operation.get("encoding").and_then(|v| v.as_str());
+                        #[cfg(not(target_arch = "wasm32"))]
+                        {
+                            let (filename, mime_type, data, encoding) = (filename.to_string(), mime_type.to_string(), data.to_string(), encoding.map(str::to_string));
+                            self.submit_shell_io(move || {
+                                download_media_export_worker(&filename, &mime_type, &data, encoding.as_deref());
+                                ShellIoCompletion::Finished
+                            });
+                        }
+                        #[cfg(target_arch = "wasm32")]
                         download_media_export(filename, mime_type, data, encoding);
                     }
                 }
@@ -3653,6 +3735,36 @@ impl ShellState {
                         // byte-for-byte unchanged when absent/false since `request_file_open` then returns at
                         // most one entry and this loop runs exactly once with the same args shape as before.
                         let multiple = operation.get("multiple").and_then(|v| v.as_bool()).unwrap_or(false);
+                        #[cfg(not(target_arch = "wasm32"))]
+                        if let Some(session) = self.session.clone() {
+                            let accept = accept.to_string();
+                            let read_as = read_as.map(str::to_string);
+                            let import_action = import_action.to_string();
+                            let base_args = operation.get("args").cloned().unwrap_or_else(|| serde_json::json!({}));
+                            self.submit_shell_io(move || {
+                                let opened = request_file_open(&accept, read_as.as_deref(), multiple);
+                                let total = opened.len();
+                                let actions = opened
+                                    .into_iter()
+                                    .enumerate()
+                                    .map(|(index, contents)| {
+                                        let payload = serde_json::from_str::<Value>(&contents).unwrap_or_else(|_| Value::String(contents.clone()));
+                                        let mut args = base_args.clone();
+                                        if let Some(obj) = args.as_object_mut() {
+                                            obj.insert("json".into(), Value::String(contents));
+                                            obj.insert("payload".into(), payload);
+                                            if multiple {
+                                                obj.insert("index".into(), serde_json::json!(index));
+                                                obj.insert("total".into(), serde_json::json!(total));
+                                            }
+                                        }
+                                        ActionDescriptor { controller_id: session.app.controller_id.clone(), action: import_action.clone(), args: semio_framework::optional_json_to_dsl(Some(args)) }
+                                    })
+                                    .collect();
+                                ShellIoCompletion::Actions(actions)
+                            });
+                        }
+                        #[cfg(target_arch = "wasm32")]
                         if let Some(session) = self.session.clone() {
                             let opened = request_file_open(accept, read_as, multiple);
                             let total = opened.len();
@@ -3682,46 +3794,36 @@ impl ShellState {
                 if operation.get("operation").and_then(|v| v.as_str()) == Some("requestFileSave") {
                     #[cfg(not(target_arch = "wasm32"))]
                     if let (Some(filename), Some(data), Some(space_id)) = (operation.get("filename").and_then(|v| v.as_str()), operation.get("data").and_then(|v| v.as_str()), operation.get("spaceId").and_then(|v| v.as_str())) {
-                        if let Some(path) = request_file_save(filename) {
-                            let _ = std::fs::write(&path, data.as_bytes());
-                            if let Some(session) = self.session.clone() {
-                                let action = ActionDescriptor {
-                                    controller_id: session.app.controller_id.clone(),
-                                    action: "bindSpaceFile".into(),
-                                    args: crate::action_args_json!({
-                                        "spaceId": space_id,
-                                        "filePath": path.display().to_string(),
-                                    }),
-                                };
-                                if let Some(program) = self.plugins.iter().find(|p| p.plugin_id == session.plugin_id) {
-                                    if let Ok(action_json) = serde_json::to_string(&action) {
-                                        if let Ok(bind_result) = program.handle_action(session.instance_id, &action_json, &session.view_state).await {
-                                            follow_up_operations.extend(patch_ops_from_action_result(&bind_result));
-                                        }
-                                    }
+                        if let Some(session) = self.session.clone() {
+                            let (filename, data, space_id) = (filename.to_string(), data.to_string(), space_id.to_string());
+                            self.submit_shell_io(move || {
+                                let Some(path) = request_file_save(&filename) else { return ShellIoCompletion::Finished };
+                                use std::fs as system_fs;
+                                if system_fs::write(&path, data.as_bytes()).is_err() {
+                                    return ShellIoCompletion::Finished;
                                 }
-                            }
+                                ShellIoCompletion::Actions(vec![ActionDescriptor {
+                                    controller_id: session.app.controller_id,
+                                    action: "bindSpaceFile".into(),
+                                    args: crate::action_args_json!({ "spaceId": space_id, "filePath": path.display().to_string() }),
+                                }])
+                            });
                         }
                     }
                 }
                 if operation.get("operation").and_then(|v| v.as_str()) == Some("requestFolderPick") {
                     #[cfg(not(target_arch = "wasm32"))]
                     if let Some(import_action) = operation.get("importAction").and_then(|v| v.as_str()) {
-                        if let Some(folder_path) = pick_folder() {
+                        if let Some(session) = self.session.clone() {
+                            let import_action = import_action.to_string();
                             let mut args = operation.get("args").cloned().unwrap_or_else(|| serde_json::json!({}));
-                            if let Some(obj) = args.as_object_mut() {
-                                obj.insert("folderPath".into(), serde_json::json!(folder_path));
-                            }
-                            if let Some(session) = self.session.clone() {
-                                let action = ActionDescriptor { controller_id: session.app.controller_id.clone(), action: import_action.to_string(), args: semio_framework::optional_json_to_dsl(Some(args)) };
-                                if let Some(program) = self.plugins.iter().find(|p| p.plugin_id == session.plugin_id) {
-                                    if let Ok(action_json) = serde_json::to_string(&action) {
-                                        if let Ok(folder_result) = program.handle_action(session.instance_id, &action_json, &session.view_state).await {
-                                            follow_up_operations.extend(patch_ops_from_action_result(&folder_result));
-                                        }
-                                    }
+                            self.submit_shell_io(move || {
+                                let Some(folder_path) = pick_folder() else { return ShellIoCompletion::Finished };
+                                if let Some(obj) = args.as_object_mut() {
+                                    obj.insert("folderPath".into(), serde_json::json!(folder_path));
                                 }
-                            }
+                                ShellIoCompletion::Actions(vec![ActionDescriptor { controller_id: session.app.controller_id, action: import_action, args: semio_framework::optional_json_to_dsl(Some(args)) }])
+                            });
                         }
                     }
                 }
@@ -11274,7 +11376,17 @@ impl PrefsStore for WebLocalStorage {
 #[cfg(not(target_arch = "wasm32"))]
 struct FilePrefsStore {
     path: std::path::PathBuf,
-    cache: HashMap<String, String>,
+    cache: std::cell::RefCell<HashMap<String, String>>,
+    pending_load: std::cell::RefCell<Option<std::sync::mpsc::Receiver<HashMap<String, String>>>>,
+    dirty: std::cell::Cell<bool>,
+    flush_state: std::sync::Arc<std::sync::Mutex<FilePrefsFlushState>>,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+#[derive(Default)]
+struct FilePrefsFlushState {
+    latest: Option<HashMap<String, String>>,
+    running: bool,
 }
 
 /// 📁️ Resolves the native prefs file path: `$SEMIO_PREFS_DIR/ui-prefs.json` when set, else a
@@ -11292,29 +11404,85 @@ fn native_prefs_file_path() -> std::path::PathBuf {
 #[cfg(not(target_arch = "wasm32"))]
 impl FilePrefsStore {
     fn new() -> Self {
-        let path = native_prefs_file_path();
-        let cache = std::fs::read_to_string(&path).ok().and_then(|raw| serde_json::from_str::<HashMap<String, String>>(&raw).ok()).unwrap_or_default();
-        Self { path, cache }
+        Self::with_path(native_prefs_file_path())
+    }
+
+    fn with_path(path: std::path::PathBuf) -> Self {
+        let (sender, receiver) = std::sync::mpsc::channel();
+        let load_path = path.clone();
+        crate::renderer_worker_pool().submit(
+            Lane::Io,
+            Box::new(move || {
+                use std::fs as system_fs;
+                let cache = system_fs::read_to_string(load_path).ok().and_then(|raw| serde_json::from_str::<HashMap<String, String>>(&raw).ok()).unwrap_or_default();
+                let _ = sender.send(cache);
+            }),
+        );
+        Self { path, cache: std::cell::RefCell::new(HashMap::new()), pending_load: std::cell::RefCell::new(Some(receiver)), dirty: std::cell::Cell::new(false), flush_state: std::sync::Arc::new(std::sync::Mutex::new(FilePrefsFlushState::default())) }
+    }
+
+    fn poll_load(&self) {
+        let result = self.pending_load.borrow().as_ref().map(std::sync::mpsc::Receiver::try_recv);
+        match result {
+            Some(Ok(loaded)) => {
+                self.pending_load.borrow_mut().take();
+                if !self.dirty.get() {
+                    *self.cache.borrow_mut() = loaded;
+                }
+            }
+            Some(Err(std::sync::mpsc::TryRecvError::Disconnected)) => {
+                self.pending_load.borrow_mut().take();
+            }
+            Some(Err(std::sync::mpsc::TryRecvError::Empty)) | None => {}
+        }
     }
 
     fn flush(&self) {
-        if let Some(parent) = self.path.parent() {
-            let _ = std::fs::create_dir_all(parent);
+        let mut state = self.flush_state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        state.latest = Some(self.cache.borrow().clone());
+        if state.running {
+            return;
         }
-        if let Ok(json) = serde_json::to_string_pretty(&self.cache) {
-            let _ = std::fs::write(&self.path, json);
-        }
+        state.running = true;
+        drop(state);
+        let path = self.path.clone();
+        let flush_state = std::sync::Arc::clone(&self.flush_state);
+        crate::renderer_worker_pool().submit(
+            Lane::Io,
+            Box::new(move || loop {
+                let snapshot = {
+                    let mut state = flush_state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+                    match state.latest.take() {
+                        Some(snapshot) => snapshot,
+                        None => {
+                            state.running = false;
+                            break;
+                        }
+                    }
+                };
+                use std::fs as system_fs;
+                if let Some(parent) = path.parent() {
+                    let _ = system_fs::create_dir_all(parent);
+                }
+                if let Ok(json) = serde_json::to_string_pretty(&snapshot) {
+                    let _ = system_fs::write(&path, json);
+                }
+            }),
+        );
     }
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 impl PrefsStore for FilePrefsStore {
     fn get(&self, key: &str) -> Option<String> {
-        self.cache.get(key).cloned()
+        self.poll_load();
+        self.cache.borrow().get(key).cloned()
     }
 
     fn set(&mut self, key: &str, value: &str) {
-        self.cache.insert(key.to_string(), value.to_string());
+        self.poll_load();
+        self.cache.borrow_mut().insert(key.to_string(), value.to_string());
+        self.dirty.set(true);
         self.flush();
     }
 }
@@ -11872,11 +12040,13 @@ mod ui_prefs_themes_i18n_tests {
     /// file) round-trips a value through an actual disk write + independent re-read.
     #[test]
     fn file_prefs_store_round_trips_through_disk() {
-        let dir = std::env::temp_dir().join(format!("semio-wp14-prefs-test-{}-{:?}", std::process::id(), std::thread::current().id()));
-        let _ = std::fs::create_dir_all(&dir);
+        use std::fs as system_fs;
+        use std::process as system_process;
+        let dir = std::env::temp_dir().join(format!("semio-wp14-prefs-test-{}-{:?}", system_process::id(), std::thread::current().id()));
+        let _ = system_fs::create_dir_all(&dir);
         let path = dir.join("ui-prefs.json");
-        let _ = std::fs::remove_file(&path);
-        let mut store = FilePrefsStore { path: path.clone(), cache: HashMap::new() };
+        let _ = system_fs::remove_file(&path);
+        let mut store = FilePrefsStore::with_path(path.clone());
         store.set(
             OS_SHELL_CONFIG_STORAGE_KEY,
             &serde_json::json!({
@@ -11892,14 +12062,23 @@ mod ui_prefs_themes_i18n_tests {
         assert_eq!(prefs_get_from(&store, UI_CHROME_APPEARANCE_STORAGE_KEY), None);
         prefs_set_in(&mut store, UI_CHROME_APPEARANCE_STORAGE_KEY, "dark");
         assert_eq!(prefs_get_from(&store, UI_CHROME_APPEARANCE_STORAGE_KEY), Some("dark".to_string()));
-        let raw = std::fs::read_to_string(&path).expect("flush() must write the prefs file");
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(1);
+        let raw = loop {
+            if let Ok(raw) = system_fs::read_to_string(&path) {
+                if raw.contains("dark") {
+                    break raw;
+                }
+            }
+            assert!(std::time::Instant::now() < deadline, "flush worker must write the latest prefs snapshot");
+            std::thread::yield_now();
+        };
         let reloaded: HashMap<String, String> = serde_json::from_str(&raw).expect("valid JSON");
         let config: serde_json::Value = serde_json::from_str(reloaded.get(OS_SHELL_CONFIG_STORAGE_KEY).expect("one config document")).expect("valid config JSON");
         assert_eq!(config["preferences"][UI_CHROME_APPEARANCE_STORAGE_KEY], "dark");
         assert_eq!(config["dockLayouts"]["apps"], serde_json::json!({}));
         assert_eq!(config["namedLayouts"]["draw"][0]["id"], "wide", "preference writes must preserve sibling projections");
         assert_eq!(reloaded.len(), 1, "wgpu preferences use the shared OS config authority");
-        let _ = std::fs::remove_file(&path);
+        let _ = system_fs::remove_file(&path);
     }
 
     /// 🧪️ `env_lock` treats an empty-string env value the same as unset (matches
@@ -12622,10 +12801,17 @@ fn download_media_export(filename: &str, mime_type: &str, data: &str, _encoding:
 
 #[cfg(not(target_arch = "wasm32"))]
 fn download_media_export(filename: &str, mime_type: &str, data: &str, encoding: Option<&str>) {
+    let (filename, mime_type, data, encoding) = (filename.to_string(), mime_type.to_string(), data.to_string(), encoding.map(str::to_string));
+    crate::renderer_worker_pool().submit(Lane::Io, Box::new(move || download_media_export_worker(&filename, &mime_type, &data, encoding.as_deref())));
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn download_media_export_worker(filename: &str, mime_type: &str, data: &str, encoding: Option<&str>) {
     if let Some(path) = rfd::FileDialog::new().set_file_name(filename).add_filter("export", &[mime_type.rsplit_once('/').map(|(_, ext)| ext).unwrap_or("dat")]).save_file() {
         use base64::Engine;
+        use std::fs as system_fs;
         let bytes = if encoding == Some("base64") { base64::engine::general_purpose::STANDARD.decode(data).unwrap_or_else(|_| data.as_bytes().to_vec()) } else { data.as_bytes().to_vec() };
-        let _ = std::fs::write(path, bytes);
+        let _ = system_fs::write(path, bytes);
     }
 }
 
@@ -12655,6 +12841,7 @@ fn pick_folder() -> Option<String> {
 /// no bespoke picker needed.
 #[cfg(not(target_arch = "wasm32"))]
 fn request_file_open(accept: &str, read_as: Option<&str>, multiple: bool) -> Vec<String> {
+    use std::fs as system_fs;
     let extensions: Vec<&str> = accept.split(',').filter_map(|entry| entry.trim().strip_prefix('.')).collect();
     let mut dialog = rfd::FileDialog::new();
     if !extensions.is_empty() {
@@ -12666,11 +12853,11 @@ fn request_file_open(accept: &str, read_as: Option<&str>, multiple: bool) -> Vec
         .filter_map(|path| {
             if read_as == Some("dataUrl") {
                 use base64::Engine;
-                let bytes = std::fs::read(&path).ok()?;
+                let bytes = system_fs::read(&path).ok()?;
                 let mime = extensions.first().map(|ext| format!("application/{ext}")).unwrap_or_else(|| "application/octet-stream".into());
                 return Some(format!("data:{mime};base64,{}", base64::engine::general_purpose::STANDARD.encode(bytes)));
             }
-            std::fs::read_to_string(path).ok()
+            system_fs::read_to_string(path).ok()
         })
         .collect()
 }
@@ -12731,7 +12918,8 @@ fn approx_sampled_timestamp_ms(index: u32, sample_stride: u32, fps_hint: f64) ->
 
 #[cfg(not(target_arch = "wasm32"))]
 fn ffmpeg_available() -> bool {
-    std::process::Command::new("ffmpeg").arg("-version").stdout(std::process::Stdio::null()).stderr(std::process::Stdio::null()).status().is_ok_and(|status| status.success())
+    use std::process as system_process;
+    system_process::Command::new("ffmpeg").arg("-version").stdout(system_process::Stdio::null()).stderr(system_process::Stdio::null()).status().is_ok_and(|status| status.success())
 }
 
 /// 🎞️ D5 native pipeline, beside `request_file_open` above: obtains video bytes (native `rfd` file
@@ -12757,6 +12945,8 @@ fn request_media_frames(
     args: Option<Value>,
 ) -> Vec<ActionDescriptor> {
     use base64::Engine;
+    use std::fs as system_fs;
+    use std::process as system_process;
     let base_args = args.unwrap_or_else(|| serde_json::json!({}));
     let (bytes, name) = match payload {
         Some(data_url) => match decode_data_url(data_url) {
@@ -12772,7 +12962,7 @@ fn request_media_frames(
             let Some(path) = dialog.pick_file() else {
                 return Vec::new();
             };
-            let Ok(bytes) = std::fs::read(&path) else {
+            let Ok(bytes) = system_fs::read(&path) else {
                 return Vec::new();
             };
             let name = path.file_name().map_or_else(|| "video".to_string(), |value| value.to_string_lossy().into_owned());
@@ -12782,28 +12972,28 @@ fn request_media_frames(
     if !ffmpeg_available() {
         return vec![fallback_action_descriptor(controller_id, fallback_action, &bytes, &name, &base_args)];
     }
-    let scratch_dir = std::env::temp_dir().join(format!("semio-media-frames-{}-{}", std::process::id(), name.len()));
-    if std::fs::create_dir_all(&scratch_dir).is_err() {
+    let scratch_dir = std::env::temp_dir().join(format!("semio-media-frames-{}-{}", system_process::id(), name.len()));
+    if system_fs::create_dir_all(&scratch_dir).is_err() {
         return vec![fallback_action_descriptor(controller_id, fallback_action, &bytes, &name, &base_args)];
     }
     let input_path = scratch_dir.join("source.bin");
-    if std::fs::write(&input_path, &bytes).is_err() {
-        let _ = std::fs::remove_dir_all(&scratch_dir);
+    if system_fs::write(&input_path, &bytes).is_err() {
+        let _ = system_fs::remove_dir_all(&scratch_dir);
         return vec![fallback_action_descriptor(controller_id, fallback_action, &bytes, &name, &base_args)];
     }
     let ffmpeg_args = ffmpeg_frame_extraction_args(sample_stride, max_frames, max_long_edge_px, &input_path, &scratch_dir);
-    let extracted = std::process::Command::new("ffmpeg").args(&ffmpeg_args).status().is_ok_and(|status| status.success());
+    let extracted = system_process::Command::new("ffmpeg").args(&ffmpeg_args).status().is_ok_and(|status| status.success());
     if !extracted {
-        let _ = std::fs::remove_dir_all(&scratch_dir);
+        let _ = system_fs::remove_dir_all(&scratch_dir);
         return vec![fallback_action_descriptor(controller_id, fallback_action, &bytes, &name, &base_args)];
     }
     let mut frame_paths: Vec<std::path::PathBuf> =
-        std::fs::read_dir(&scratch_dir).map(|entries| entries.filter_map(|entry| entry.ok().map(|entry| entry.path())).filter(|path| path.extension().and_then(|ext| ext.to_str()) == Some("jpg")).collect()).unwrap_or_default();
+        system_fs::read_dir(&scratch_dir).map(|entries| entries.filter_map(|entry| entry.ok().map(|entry| entry.path())).filter(|path| path.extension().and_then(|ext| ext.to_str()) == Some("jpg")).collect()).unwrap_or_default();
     frame_paths.sort();
     let total = frame_paths.len();
     let mut actions = Vec::with_capacity(total + 1);
     for (index, frame_path) in frame_paths.iter().enumerate() {
-        let Ok(jpeg_bytes) = std::fs::read(frame_path) else {
+        let Ok(jpeg_bytes) = system_fs::read(frame_path) else {
             continue;
         };
         let mut frame_args = base_args.clone();
@@ -12824,7 +13014,7 @@ fn request_media_frames(
         obj.insert("sampledCount".into(), serde_json::json!(total));
     }
     actions.push(ActionDescriptor { controller_id: controller_id.to_string(), action: done_action.to_string(), args: semio_framework::optional_json_to_dsl(Some(done_args)) });
-    let _ = std::fs::remove_dir_all(&scratch_dir);
+    let _ = system_fs::remove_dir_all(&scratch_dir);
     actions
 }
 
@@ -12856,6 +13046,25 @@ fn request_media_frames(
 #[cfg(test)]
 mod media_frames_tests {
     use super::*;
+
+    #[cfg(not(target_arch = "wasm32"))]
+    #[test]
+    fn stalled_shell_io_keeps_mailbox_poll_p99_below_two_ms() {
+        let mut state = ShellState::new(Vec::new(), String::new());
+        state.submit_shell_io(|| {
+            std::thread::sleep(std::time::Duration::from_millis(80));
+            ShellIoCompletion::Finished
+        });
+        let mut samples = Vec::with_capacity(4096);
+        for _ in 0..4096 {
+            let started = std::time::Instant::now();
+            let _ = state.poll_shell_io();
+            samples.push(started.elapsed());
+        }
+        samples.sort_unstable();
+        let p99 = samples[samples.len() * 99 / 100];
+        assert!(p99 < std::time::Duration::from_millis(2), "[DEBUG] shell I/O callback p99 was {p99:?}");
+    }
 
     #[test]
     fn ffmpeg_args_apply_stride_scale_and_frame_cap() {

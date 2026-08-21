@@ -1,0 +1,4 @@
+[run r13-oj3p24xg] crate=semio-s-plugin-stdio dryRun=false target=(host) excludePath=/🗿️artifacts/📄️pdf/
+[run r13-oj3p24xg] iteration 1: total errors=814, async-class=513
+[run r13-oj3p24xg] iteration 1: planned 5 edits (508 residue)
+[run r13-oj3p24xg] reached max-iterations=1 without reaching a fixpoint.

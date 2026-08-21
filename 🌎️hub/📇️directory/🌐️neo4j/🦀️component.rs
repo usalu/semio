@@ -8,8 +8,8 @@ use crate::directory::error::{DirectoryError, DirectoryResult};
 use crate::directory::model::*;
 use crate::directory::{kind_to_str, role_from_wire, visibility_to_str, HubClock, HubDirectory, NewDirectoryEvent};
 use directory::os_directory::{DirectoryActor, DirectoryActorKind, DirectoryEvent, DirectoryEventBody, DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility, Hlc};
+use directory::os_identity::time_ordered_id;
 use neo4rs::{query, Graph, Txn};
-use uuid::Uuid;
 
 fn now_ms() -> i64 {
     use std::time::{SystemTime, UNIX_EPOCH};
@@ -181,7 +181,7 @@ impl Neo4jDirectory {
 impl HubDirectory for Neo4jDirectory {
     //#region ShareTokens
     async fn create_share_token(&self, document_id: &str) -> DirectoryResult<String> {
-        let token = Uuid::now_v7().to_string();
+        let token = time_ordered_id();
         self.graph.run(query("CREATE (t:ShareToken {token: $token, documentId: $document_id, createdAt: $created_at})").param("document_id", document_id).param("token", token.clone()).param("created_at", now_ms())).await.map_err(backend)?;
         Ok(token)
     }
@@ -205,7 +205,7 @@ impl HubDirectory for Neo4jDirectory {
 
     //#region Users
     async fn create_user(&self, email: &str, display_name: &str, password_hash: Option<&str>, sso_subject: Option<&str>, sso_provider: Option<&str>) -> DirectoryResult<UserRecord> {
-        let id = Uuid::now_v7().to_string();
+        let id = time_ordered_id();
         let created_at = now_ms();
         self.graph
             .run(
@@ -326,7 +326,7 @@ impl HubDirectory for Neo4jDirectory {
 
     //#region AuthSessions
     async fn create_auth_session(&self, user_id: &str, ttl_secs: i64, sso_provider: Option<&str>) -> DirectoryResult<AuthSessionRecord> {
-        let id = Uuid::now_v7().to_string();
+        let id = time_ordered_id();
         let created_at = now_ms();
         let expires_at = created_at + ttl_secs * 1000;
         self.graph
@@ -372,8 +372,8 @@ impl HubDirectory for Neo4jDirectory {
 
     //#region Invites
     async fn create_invite(&self, space_id: &str, role: SpaceRole, ttl_secs: i64) -> DirectoryResult<InviteRecord> {
-        let id = Uuid::now_v7().to_string();
-        let token = Uuid::now_v7().to_string();
+        let id = time_ordered_id();
+        let token = time_ordered_id();
         let created_at = now_ms();
         let expires_at = created_at + ttl_secs * 1000;
         self.graph
@@ -416,7 +416,7 @@ impl HubDirectory for Neo4jDirectory {
 
     //#region SyncSessions
     async fn record_sync_session_open(&self, space_id: &str, document_id: &str, surface: &str, user_id: Option<&str>, space_role: Option<SpaceRole>, client_label: &str) -> DirectoryResult<SyncSessionRecord> {
-        let id = Uuid::now_v7().to_string();
+        let id = time_ordered_id();
         let connected_at = now_ms();
         let role_str = space_role.map(|r| r.as_str().to_string()).unwrap_or_default();
         match user_id {
@@ -527,7 +527,7 @@ impl HubDirectory for Neo4jDirectory {
         let mut txn = self.graph.start_txn().await.map_err(backend)?;
         let mut persisted = Vec::with_capacity(events.len());
         for event in events {
-            let id = Uuid::now_v7().to_string();
+            let id = time_ordered_id();
             let recorded_at_ms = now_ms();
             let payload_value = serde_json::to_value(&event.body).map_err(backend)?;
             let kind = payload_value.get("kind").and_then(|value| value.as_str()).unwrap_or_default().to_string();

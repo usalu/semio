@@ -257,7 +257,7 @@ impl MutationDiff<GltfSnapshot> for GltfMutationDiff {
     fn apply(&self, base: &GltfSnapshot) -> protocol::MutationApplyResult<GltfSnapshot> {
         self.try_apply(base).map_err(|error| {
             let target = self.envelopes.first().map(|envelope| envelope.command_id.clone()).into_iter();
-            semio_framework_plugin::resolve_ready(MutationApplyError::new("gltf.mutation.apply-rejected", error.to_string())).at(target)
+            MutationApplyError::new("gltf.mutation.apply-rejected", error.to_string()).at(target)
         })
     }
 

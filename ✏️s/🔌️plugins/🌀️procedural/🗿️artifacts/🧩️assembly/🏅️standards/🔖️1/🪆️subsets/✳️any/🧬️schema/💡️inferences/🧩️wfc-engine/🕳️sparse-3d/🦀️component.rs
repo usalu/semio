@@ -27,7 +27,7 @@ pub struct SparseVolume {
 impl SparseVolume {
     /// 🌌️ Builds from an iterator of coordinates, deduplicating while preserving first-seen order
     /// (so `NodeId` assignment is deterministic given a deterministic input order).
-    pub async fn from_coords(coords: impl IntoIterator<Item = VoxelCoord>) -> Self {
+    pub fn from_coords(coords: impl IntoIterator<Item = VoxelCoord>) -> Self {
         let mut occupied = Vec::new();
         let mut index = HashMap::new();
         for c in coords {
@@ -40,27 +40,27 @@ impl SparseVolume {
     }
 
     #[inline]
-    pub async fn len(&self) -> usize {
+    pub fn len(&self) -> usize {
         self.occupied.len()
     }
 
     #[inline]
-    pub async fn is_empty(&self) -> bool {
+    pub fn is_empty(&self) -> bool {
         self.occupied.is_empty()
     }
 
     #[inline]
-    pub async fn contains(&self, c: VoxelCoord) -> bool {
+    pub fn contains(&self, c: VoxelCoord) -> bool {
         self.index.contains_key(&c)
     }
 
     /// 🌌️ The coordinate `n` was assigned (panics if `n` is out of range — every `NodeId` this
     /// crate hands back for this volume is always in range by construction).
-    pub async fn coord_of(&self, n: NodeId) -> VoxelCoord {
+    pub fn coord_of(&self, n: NodeId) -> VoxelCoord {
         self.occupied[n.index()]
     }
 
-    pub async fn node_of(&self, c: VoxelCoord) -> Option<NodeId> {
+    pub fn node_of(&self, c: VoxelCoord) -> Option<NodeId> {
         self.index.get(&c).map(|&i| NodeId::from_index(i))
     }
 
@@ -70,7 +70,7 @@ impl SparseVolume {
     /// (e.g. from [`crate::wfc_engine::grid3d::declare_stencil_relations_3d`]) — an arc is emitted from a
     /// voxel to its offset-neighbor only when that neighbor is *also* occupied, which is exactly
     /// what makes this "sparse" rather than a dense masked grid.
-    pub async fn to_graph_topology(&self, face_relations: &[(VoxelCoord, RelationId)]) -> Result<GraphTopology, TopologyError> {
+    pub fn to_graph_topology(&self, face_relations: &[(VoxelCoord, RelationId)]) -> Result<GraphTopology, TopologyError> {
         let mut b = GraphTopologyBuilder::new(self.occupied.len());
         for (i, &c) in self.occupied.iter().enumerate() {
             for &(offset, relation) in face_relations {
@@ -93,13 +93,13 @@ mod tests {
     use crate::wfc_engine::model::ModelBuilder;
     use crate::wfc_engine::topology::Topology;
 
-    async fn face6_relations(b: &mut ModelBuilder) -> Vec<(VoxelCoord, RelationId)> {
+    fn face6_relations(b: &mut ModelBuilder) -> Vec<(VoxelCoord, RelationId)> {
         let rels = declare_stencil_relations_3d(b, &Stencil3d::Face6).unwrap();
         Stencil3d::Face6.offsets().into_iter().zip(rels).collect()
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn from_coords_dedups_and_assigns_stable_first_seen_ids() {
+    #[test]
+    fn from_coords_dedups_and_assigns_stable_first_seen_ids() {
         let volume = SparseVolume::from_coords([(0, 0, 0), (1, 0, 0), (0, 0, 0), (0, 1, 0)]);
         assert_eq!(volume.len(), 3);
         assert_eq!(volume.node_of((0, 0, 0)), Some(NodeId(0)));
@@ -109,8 +109,8 @@ mod tests {
         assert_eq!(volume.coord_of(NodeId(1)), (1, 0, 0));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn to_graph_topology_only_connects_occupied_neighbors() {
+    #[test]
+    fn to_graph_topology_only_connects_occupied_neighbors() {
         let mut b = ModelBuilder::new();
         let rels = face6_relations(&mut b);
         // An L-shape: (0,0,0), (1,0,0), (1,1,0) — (0,0,0) and (1,1,0) are NOT face-adjacent, and
@@ -135,8 +135,8 @@ mod tests {
         assert_eq!(mid_neighbors, expected);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn empty_volume_builds_a_zero_node_topology() {
+    #[test]
+    fn empty_volume_builds_a_zero_node_topology() {
         let mut b = ModelBuilder::new();
         let rels = face6_relations(&mut b);
         let volume = SparseVolume::from_coords(std::iter::empty());
@@ -145,8 +145,8 @@ mod tests {
         assert_eq!(topo.node_count(), 0);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn a_single_isolated_voxel_has_no_arcs() {
+    #[test]
+    fn a_single_isolated_voxel_has_no_arcs() {
         let mut b = ModelBuilder::new();
         let rels = face6_relations(&mut b);
         let volume = SparseVolume::from_coords([(3, -2, 7)]);
@@ -157,8 +157,8 @@ mod tests {
         assert!(neighbors.is_empty());
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn negative_coordinates_work_like_any_other_origin() {
+    #[test]
+    fn negative_coordinates_work_like_any_other_origin() {
         let mut b = ModelBuilder::new();
         let rels = face6_relations(&mut b);
         let volume = SparseVolume::from_coords([(-1, -1, -1), (0, -1, -1)]);
@@ -170,8 +170,8 @@ mod tests {
         assert_eq!(neighbors, vec![b_node]);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn sparse_graph_solves_through_the_ordinary_kernel() {
+    #[test]
+    fn sparse_graph_solves_through_the_ordinary_kernel() {
         use crate::wfc_engine::outcome::SolveOutcome;
         use crate::wfc_engine::search::{self, SearchConfig};
         let mut b = ModelBuilder::new();

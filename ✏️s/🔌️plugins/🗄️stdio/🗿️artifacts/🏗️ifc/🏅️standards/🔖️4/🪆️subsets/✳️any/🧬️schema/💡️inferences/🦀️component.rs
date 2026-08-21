@@ -26,7 +26,7 @@ pub struct IfcInference {
 }
 
 impl protocol::Inference<IfcSnapshot> for IfcInference {
-    async fn infer(snapshot: &IfcSnapshot) -> Self {
+    fn infer(snapshot: &IfcSnapshot) -> Self {
         Self { bounds: compute_ifc_bounds(snapshot) }
     }
 }
@@ -40,13 +40,13 @@ impl Default for IfcInference {
 }
 
 impl protocol::InferenceSpec<IfcSnapshot> for IfcInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.stdio.ifc.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.ifc.inference.bounds", reads: &["entities"] }]
     }
 }

@@ -781,7 +781,7 @@ impl protocol::DiffCodec for SemioVideoDiff {
             return Err(protocol::ProtocolError::Malformed { what: "diff format", offset: 0, detail: format!("unsupported diff format {}", bytes[0]) });
         }
         let presence = bytes[1];
-        let mut reader = semio_framework_plugin::resolve_ready(store::ByteReader::new(&bytes[2..]));
+        let mut reader = store::ByteReader::new(&bytes[2..]);
         let streams = if presence & 0b01 != 0 {
             let text = read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff streams blob", offset: 2, detail: e })?;
             Some(dec_streams_diff(&text).map_err(|e| protocol::ProtocolError::Malformed { what: "diff streams text", offset: 2, detail: e })?)

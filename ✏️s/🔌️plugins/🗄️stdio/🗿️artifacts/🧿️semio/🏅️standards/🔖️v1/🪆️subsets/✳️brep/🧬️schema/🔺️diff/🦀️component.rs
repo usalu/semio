@@ -1029,7 +1029,7 @@ impl protocol::DiffCodec for SemioBrepDiff {
             return Err(protocol::ProtocolError::Malformed { what: "diff format", offset: 0, detail: format!("unsupported diff format {}", bytes[0]) });
         }
         let presence = bytes[1];
-        let mut reader = semio_framework_plugin::resolve_ready(store::ByteReader::new(&bytes[2..]));
+        let mut reader = store::ByteReader::new(&bytes[2..]);
         let mut next_blob = |what: &'static str| -> Result<String, protocol::ProtocolError> { read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what, offset: 2, detail: e }) };
         let vertices = if presence & 0b0000_0001 != 0 {
             Some(dec_named_triple(&next_blob("diff vertices blob")?, dec_str, dec_vertex_diff, dec_vertex).map_err(|e| protocol::ProtocolError::Malformed { what: "diff vertices text", offset: 2, detail: e })?)

@@ -4,7 +4,7 @@
 
 use crate::artifacts::tsv::TsvSnapshot;
 use semio_framework_plugin::app::{TableView, TableWindowKit, WindowKit};
-use semio_framework_plugin::{LocalizedLabel, UiNode, WindowKindDefinition};
+use semio_framework_plugin::{BuiltNode, LocalizedLabel, WindowKindDefinition};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = TableWindowKit::KIND_ID;
@@ -20,9 +20,9 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-/// 👁️ Pure `TsvSnapshot -> UiNode` read: one row per record, no mutation, no selection state.
+/// 👁️ Pure `TsvSnapshot -> BuiltNode` read: one row per record, no mutation, no selection state.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &TsvSnapshot) -> UiNode {
+pub fn render(document: &TsvSnapshot) -> BuiltNode {
     let width = document.records.iter().map(|record| record.len()).max().unwrap_or(0);
     let columns = (0..width).map(|index| format!("Column {}", index + 1)).collect();
     let rows = document.records.clone();

@@ -36,7 +36,7 @@ pub struct GltfSizeInference;
 impl GltfInferenceStage<GltfGeometryContext<'_>> for GltfSizeInference {
     type Output = GltfSizeIndicators;
 
-    async fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
+    fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
         Self::Output {
             overall_size: overall_size::infer(context),
             axis_aligned_bounds: axis_aligned_bounds::infer(context),
@@ -48,7 +48,7 @@ impl GltfInferenceStage<GltfGeometryContext<'_>> for GltfSizeInference {
         }
     }
 
-    async fn unavailable(diagnostic_ids: &[String]) -> Self::Output {
+    fn unavailable(diagnostic_ids: &[String]) -> Self::Output {
         Self::Output {
             overall_size: overall_size::unavailable_measure(diagnostic_ids),
             axis_aligned_bounds: axis_aligned_bounds::unavailable_measure(diagnostic_ids),

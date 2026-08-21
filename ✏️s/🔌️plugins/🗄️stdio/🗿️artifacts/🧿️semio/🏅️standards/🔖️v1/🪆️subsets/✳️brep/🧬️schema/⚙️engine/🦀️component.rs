@@ -125,17 +125,6 @@ pub enum BrepError {
 }
 // #endregion ⚠️ Errors
 
-// #region ⏳️Compute
-/// ⏳️ Block the current thread until an async kernel call completes.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn block_on<F>(future: F) -> F::Output
-where
-    F: std::future::Future,
-{
-    pollster::block_on(future)
-}
-// #endregion ⏳️Compute
-
 // #region 🔖️Kernel
 /// 🔌️ Model-free BREP kernel interface (fully async).
 #[async_trait(?Send)]

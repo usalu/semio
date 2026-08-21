@@ -1,11 +1,11 @@
 //! 👁️ `gif` view (any) — Main window: real `ImageWindowKit`
 //! render of the current document (read-only).
 
-use base64::Engine as _;
 use crate::artifacts::gif::standards::v87a::subsets::any::io::encode_gif;
 use crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::GifSnapshot;
+use base64::Engine as _;
 use semio_framework_plugin::app::{ImageView, ImageWindowKit};
-use semio_framework_plugin::{UiNode, WindowKindDefinition, WindowKit};
+use semio_framework_plugin::{BuiltNode, WindowKindDefinition, WindowKit};
 
 pub const WINDOW_KIND_ID: &str = ImageWindowKit::KIND_ID;
 pub const BODY_KEY: &str = ImageWindowKit::KIND_ID;
@@ -16,7 +16,7 @@ pub fn definition() -> WindowKindDefinition {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(snapshot: &GifSnapshot) -> UiNode {
+pub fn render(snapshot: &GifSnapshot) -> BuiltNode {
     ImageWindowKit::render(&image_view(snapshot))
 }
 

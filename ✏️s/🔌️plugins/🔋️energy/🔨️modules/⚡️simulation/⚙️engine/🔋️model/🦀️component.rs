@@ -10,7 +10,7 @@ use std::collections::HashSet;
 pub struct EntityId(pub u32);
 
 impl EntityId {
-    pub async fn new(id: u32) -> Self {
+    pub fn new(id: u32) -> Self {
         Self(id)
     }
 }
@@ -578,7 +578,7 @@ pub struct Model {
 
 impl Model {
     /// ✅️ Validate model topology, references, and SI ranges.
-    pub async fn validate(&self) -> Result<(), Diagnostics> {
+    pub fn validate(&self) -> Result<(), Diagnostics> {
         let mut diag = Diagnostics::default();
         let zone_ids: HashSet<_> = self.zones.iter().map(|z| z.id).collect();
         let surface_ids: HashSet<_> = self.surfaces.iter().map(|s| s.id).collect();
@@ -702,19 +702,19 @@ impl Model {
         }
     }
 
-    pub async fn zone_by_id(&self, id: EntityId) -> Option<&Zone> {
+    pub fn zone_by_id(&self, id: EntityId) -> Option<&Zone> {
         self.zones.iter().find(|z| z.id == id)
     }
 
-    pub async fn construction_by_id(&self, id: EntityId) -> Option<&Construction> {
+    pub fn construction_by_id(&self, id: EntityId) -> Option<&Construction> {
         self.constructions.iter().find(|c| c.id == id)
     }
 
-    pub async fn material_by_id(&self, id: EntityId) -> Option<&Material> {
+    pub fn material_by_id(&self, id: EntityId) -> Option<&Material> {
         self.materials.iter().find(|m| m.id == id)
     }
 
-    pub async fn surfaces_for_zone(&self, zone_id: EntityId) -> Vec<&Surface> {
+    pub fn surfaces_for_zone(&self, zone_id: EntityId) -> Vec<&Surface> {
         self.surfaces.iter().filter(|s| s.zone_id == zone_id).collect()
     }
 }
@@ -724,23 +724,23 @@ impl Model {
 mod tests {
     use super::*;
 
-    async fn minimal_zone() -> Zone {
+    fn minimal_zone() -> Zone {
         Zone { id: EntityId(1), name: "Zone1".into(), volume_m3: 100.0, multiplier: 1, conditioned: true, part_of_total_floor_area: true }
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn empty_model_fails_validation() {
+    fn empty_model_fails_validation() {
         let model = Model::default();
         assert!(model.validate().is_err());
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn zone_only_still_fails_without_construction() {
+    fn zone_only_still_fails_without_construction() {
         let model = Model { zones: vec![minimal_zone()], ..Default::default() };
         assert!(model.validate().is_ok() || model.validate().is_err());
     }
 
-    async fn valid_model() -> Model {
+    fn valid_model() -> Model {
         Model {
             zones: vec![minimal_zone()],
             materials: vec![Material { id: EntityId(10), name: "Mat".into(), thickness_m: 0.1, conductivity_w_m_k: 0.04, density_kg_m3: 50.0, specific_heat_j_kg_k: 1000.0, thermal_absorptance: 0.9, solar_absorptance: 0.7, visible_absorptance: 0.7 }],
@@ -762,89 +762,89 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn valid_model_passes_validation() {
+    fn valid_model_passes_validation() {
         assert!(valid_model().validate().is_ok());
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn duplicate_zone_name_fails() {
+    fn duplicate_zone_name_fails() {
         let mut m = valid_model();
         m.zones.push(minimal_zone());
         assert!(m.validate().is_err());
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn non_positive_volume_fails() {
+    fn non_positive_volume_fails() {
         let mut m = valid_model();
         m.zones[0].volume_m3 = 0.0;
         assert!(m.validate().is_err());
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn surface_unknown_zone_fails() {
+    fn surface_unknown_zone_fails() {
         let mut m = valid_model();
         m.surfaces[0].zone_id = EntityId(999);
         assert!(m.validate().is_err());
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn surface_unknown_construction_fails() {
+    fn surface_unknown_construction_fails() {
         let mut m = valid_model();
         m.surfaces[0].construction_id = EntityId(999);
         assert!(m.validate().is_err());
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn surface_too_few_vertices_fails() {
+    fn surface_too_few_vertices_fails() {
         let mut m = valid_model();
         m.surfaces[0].vertices_m = vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0]];
         assert!(m.validate().is_err());
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn interzone_missing_pair_fails() {
+    fn interzone_missing_pair_fails() {
         let mut m = valid_model();
         m.surfaces[0].outside_boundary_condition = OutsideBoundary::Interzone(EntityId(999));
         assert!(m.validate().is_err());
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn fenestration_unknown_surface_fails() {
+    fn fenestration_unknown_surface_fails() {
         let mut m = valid_model();
         m.fenestrations.push(Fenestration { id: EntityId(40), name: "Win".into(), surface_id: EntityId(999), u_value_w_m2k: 2.0, shgc: 0.4, vlt: 0.6, area_m2: 2.0, frame_conductance_w_k: 0.0, divider_conductance_w_k: 0.0 });
         assert!(m.validate().is_err());
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn construction_empty_layers_fails() {
+    fn construction_empty_layers_fails() {
         let mut m = valid_model();
         m.constructions[0].layer_material_ids.clear();
         assert!(m.validate().is_err());
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn construction_unknown_material_fails() {
+    fn construction_unknown_material_fails() {
         let mut m = valid_model();
         m.constructions[0].layer_material_ids = vec![EntityId(999)];
         assert!(m.validate().is_err());
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn material_invalid_thermal_properties_fails() {
+    fn material_invalid_thermal_properties_fails() {
         let mut m = valid_model();
         m.materials[0].thickness_m = 0.0;
         assert!(m.validate().is_err());
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn thermostat_unknown_zone_fails() {
+    fn thermostat_unknown_zone_fails() {
         let mut m = valid_model();
         m.thermostats.push(Thermostat { id: EntityId(50), zone_id: EntityId(999), heating_setpoint_schedule_id: ScheduleId(1), cooling_setpoint_schedule_id: ScheduleId(1), heating_throttle_range_k: 1.0, cooling_throttle_range_k: 1.0 });
         assert!(m.validate().is_err());
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn ideal_loads_unknown_zone_fails() {
+    fn ideal_loads_unknown_zone_fails() {
         let mut m = valid_model();
         m.ideal_loads.push(IdealLoadsSystem {
             id: EntityId(60),
@@ -860,7 +860,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn humidistat_unknown_zone_fails() {
+    fn humidistat_unknown_zone_fails() {
         let mut m = valid_model();
         m.humidistats.push(Humidistat {
             id: EntityId(70),
@@ -874,42 +874,42 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn zone_equipment_unknown_zone_fails() {
+    fn zone_equipment_unknown_zone_fails() {
         let mut m = valid_model();
         m.zone_equipment.push(ZoneEquipmentAssignment { id: EntityId(80), zone_id: EntityId(999), equipment_type: ZoneEquipmentType::Baseboard, priority: 1, heating_capacity_w: 1000.0, cooling_capacity_w: 0.0 });
         assert!(m.validate().is_err());
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn mechanical_ventilation_unknown_zone_fails() {
+    fn mechanical_ventilation_unknown_zone_fails() {
         let mut m = valid_model();
         m.mechanical_ventilations.push(MechanicalVentilation { id: EntityId(90), zone_id: EntityId(999), schedule_id: ScheduleId(1), design_flow_m3_s: 0.1, fan_total_efficiency: 0.6, fan_delta_pressure_pa: 500.0 });
         assert!(m.validate().is_err());
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn air_loop_unknown_zone_fails() {
+    fn air_loop_unknown_zone_fails() {
         let mut m = valid_model();
         m.air_loops.push(ModelAirLoop { id: EntityId(100), name: "AL1".into(), supply_node_id: 1, return_node_id: 2, design_supply_air_flow_m3_s: 1.0, terminal_zone_ids: vec![EntityId(999)] });
         assert!(m.validate().is_err());
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn daylight_zone_unknown_zone_fails() {
+    fn daylight_zone_unknown_zone_fails() {
         let mut m = valid_model();
         m.daylight_zones.push(DaylightZoneConfig { id: EntityId(110), zone_id: EntityId(999), illuminance_target_lux: 500.0, glare_limit: 0.4, window_transmittance: 0.6 });
         assert!(m.validate().is_err());
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn adjacency_pair_unknown_surface_fails() {
+    fn adjacency_pair_unknown_surface_fails() {
         let mut m = valid_model();
         m.adjacency_pairs.push(AdjacencyPair { surface_a_id: EntityId(999), surface_b_id: EntityId(998) });
         assert!(m.validate().is_err());
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn lookup_helpers_find_entities() {
+    fn lookup_helpers_find_entities() {
         let m = valid_model();
         assert!(m.zone_by_id(EntityId(1)).is_some());
         assert!(m.construction_by_id(EntityId(20)).is_some());

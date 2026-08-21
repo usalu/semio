@@ -1,0 +1,10 @@
+    Checking memchr v2.8.0
+   Compiling syn v2.0.117
+    Checking serde_json v1.0.149
+   Compiling serde_derive v1.0.228
+   Compiling gltf-derive v1.4.1
+    Checking serde v1.0.228
+    Checking gltf-json v1.4.1
+    Checking gltf v1.4.1
+    Checking semio-framework-mesh-engine v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust)
+    Finished `dev` profile [unoptimized] target(s) in 1m 37s

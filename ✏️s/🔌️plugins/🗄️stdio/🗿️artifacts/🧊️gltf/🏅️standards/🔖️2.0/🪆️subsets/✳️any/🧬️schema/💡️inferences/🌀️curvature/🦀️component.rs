@@ -81,7 +81,7 @@ pub(crate) fn raw(context: &GltfGeometryContext<'_>) -> GltfCurvatureRaw {
 impl GltfInferenceStage<GltfGeometryContext<'_>> for GltfCurvatureInference {
     type Output = GltfCurvatureIndicators;
 
-    async fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
+    fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
         let raw = raw(context);
         Self::Output {
             mean_curvature: mean_curvature::from_raw(context, &raw),
@@ -91,7 +91,7 @@ impl GltfInferenceStage<GltfGeometryContext<'_>> for GltfCurvatureInference {
         }
     }
 
-    async fn unavailable(diagnostic_ids: &[String]) -> Self::Output {
+    fn unavailable(diagnostic_ids: &[String]) -> Self::Output {
         Self::Output {
             mean_curvature: mean_curvature::unavailable_measure(diagnostic_ids),
             gaussian_curvature: gaussian_curvature::unavailable_measure(diagnostic_ids),

@@ -1,0 +1,40 @@
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:422:21
+    |
+422 |         let waker = std::task::Waker::noop();
+    |                     ^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+422 -         let waker = std::task::Waker::noop();
+422 +         let waker = Waker::noop();
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:423:22
+    |
+423 |         let mut cx = std::task::Context::from_waker(waker);
+    |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+423 -         let mut cx = std::task::Context::from_waker(waker);
+423 +         let mut cx = Context::from_waker(waker);
+    |
+
+warning: unnecessary qualification
+   --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/../../🦀️component.rs:425:20
+    |
+425 |             if let std::task::Poll::Ready(value) = fut.as_mut().poll(&mut cx) {
+    |                    ^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+425 -             if let std::task::Poll::Ready(value) = fut.as_mut().poll(&mut cx) {
+425 +             if let Poll::Ready(value) = fut.as_mut().poll(&mut cx) {
+    |
+
+warning: `semio-framework-async` (lib) generated 3 warnings (run `cargo fix --lib -p semio-framework-async` to apply 3 suggestions)
+    Checking semio-fem-solver-harness v0.0.0 (/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/RESUMABLE-FEM-JOB-GRAPH/🧪️harness-p6)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.43s

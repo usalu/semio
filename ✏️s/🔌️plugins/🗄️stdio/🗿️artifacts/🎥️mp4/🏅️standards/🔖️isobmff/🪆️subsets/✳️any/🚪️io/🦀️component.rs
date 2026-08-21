@@ -46,9 +46,9 @@ pub mod derived_composition {
     pub async fn register() {
         ::schema::register_artifact_schema_descriptor(crate::artifacts::mp4::standards::isobmff::subsets::any::schema::mp4_artifact_schema_descriptor());
         register_artifact_inferences();
-        let _ = store::register_document_codec(store::ArtifactCodec::of::<Mp4Snapshot, crate::artifacts::mp4::standards::isobmff::subsets::any::schema::mutations::Mp4Mutation>(
-            crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::STDIO_MP4_DOCUMENT_SCHEMA,
-        ).await);
+        let _ = store::register_document_codec(
+            store::ArtifactCodec::of::<Mp4Snapshot, crate::artifacts::mp4::standards::isobmff::subsets::any::schema::mutations::Mp4Mutation>(crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::STDIO_MP4_DOCUMENT_SCHEMA).await,
+        );
     }
 
     /// 💡️ Registers `s.stdio.mp4.inference`'s facet leaves into the OS-wide inference
@@ -817,7 +817,7 @@ fn build_edts(track: &Mp4Track) -> Vec<u8> {
         payload.extend_from_slice(&edit.media_rate_integer.to_be_bytes());
         payload.extend_from_slice(&edit.media_rate_fraction.to_be_bytes());
     }
-    write_box(b"edts", &write_boxasync (b"elst", &payload))
+    write_box(b"edts", &write_boxasync(b"elst", &payload))
 }
 
 fn build_trak(track: &Mp4Track, chunk_offsets: &[u32]) -> Vec<u8> {

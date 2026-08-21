@@ -15,7 +15,7 @@ use crate::artifacts::docx::schema::snapshot::{DocxParagraph, DocxRun, DocxTable
 use crate::artifacts::docx::DocxSnapshot;
 use crate::artifacts::zip::opc::{OpcContentTypes, OpcPackage, OpcRelationship};
 #[cfg(test)]
-use crate::artifacts::zip::opc::{OpcTargetMode, REL_TYPE_OFFICE_DOCUMENT, RELS_CONTENT_TYPE};
+use crate::artifacts::zip::opc::{OpcTargetMode, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
 use protocol::OpBinary;
 use protocol::{Mutation, OpText};
 use serde::{Deserialize, Serialize};
@@ -607,64 +607,64 @@ impl OpBinary for DocxMutation {
         match tag {
             0 => Ok(DocxMutation::NoMutation),
             1 => {
-                let snapshot = dec_docx_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let snapshot = dec_docx_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", reader.position(), e))?;
                 Ok(DocxMutation::SetSnapshot { snapshot })
             }
             2 => {
-                let path = dec_block_path_bin(&mut reader).map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let block = dec_block_bin(&mut reader).map_err(|e| malformed("op block", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let path = dec_block_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
+                let block = dec_block_bin(&mut reader).map_err(|e| malformed("op block", reader.position(), e))?;
                 Ok(DocxMutation::InsertBlock { path, block })
             }
             3 => {
-                let path = dec_block_path_bin(&mut reader).map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let path = dec_block_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
                 Ok(DocxMutation::RemoveBlock { path })
             }
             4 => {
-                let path = dec_block_path_bin(&mut reader).map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let block = dec_block_bin(&mut reader).map_err(|e| malformed("op block", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let path = dec_block_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
+                let block = dec_block_bin(&mut reader).map_err(|e| malformed("op block", reader.position(), e))?;
                 Ok(DocxMutation::SetBlockContent { path, block })
             }
             5 => {
-                let path = dec_block_path_bin(&mut reader).map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let run_index = reader.read_varint_u64().map_err(|e| malformed("op run_index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
-                let text = read_str_lp(&mut reader).map_err(|e| malformed("op text", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let path = dec_block_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
+                let run_index = reader.read_varint_u64().map_err(|e| malformed("op run_index", reader.position(), e.to_string()))? as usize;
+                let text = read_str_lp(&mut reader).map_err(|e| malformed("op text", reader.position(), e))?;
                 Ok(DocxMutation::SetRunText { path, run_index, text })
             }
             6 => {
-                let path = dec_block_path_bin(&mut reader).map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let run_index = reader.read_varint_u64().map_err(|e| malformed("op run_index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
-                let bold = reader.read_u8().map_err(|e| malformed("op bold", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? != 0;
-                let italic = reader.read_u8().map_err(|e| malformed("op italic", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? != 0;
-                let underline = reader.read_u8().map_err(|e| malformed("op underline", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? != 0;
+                let path = dec_block_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
+                let run_index = reader.read_varint_u64().map_err(|e| malformed("op run_index", reader.position(), e.to_string()))? as usize;
+                let bold = reader.read_u8().map_err(|e| malformed("op bold", reader.position(), e.to_string()))? != 0;
+                let italic = reader.read_u8().map_err(|e| malformed("op italic", reader.position(), e.to_string()))? != 0;
+                let underline = reader.read_u8().map_err(|e| malformed("op underline", reader.position(), e.to_string()))? != 0;
                 Ok(DocxMutation::SetRunFormatting { path, run_index, bold, italic, underline })
             }
             7 => {
-                let style = dec_style_bin(&mut reader).map_err(|e| malformed("op style", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let style = dec_style_bin(&mut reader).map_err(|e| malformed("op style", reader.position(), e))?;
                 Ok(DocxMutation::InsertStyle { style })
             }
             8 => {
-                let id = read_str_lp(&mut reader).map_err(|e| malformed("op id", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let id = read_str_lp(&mut reader).map_err(|e| malformed("op id", reader.position(), e))?;
                 Ok(DocxMutation::RemoveStyle { id })
             }
             9 => {
-                let id = read_str_lp(&mut reader).map_err(|e| malformed("op id", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let name = read_str_lp(&mut reader).map_err(|e| malformed("op name", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let id = read_str_lp(&mut reader).map_err(|e| malformed("op id", reader.position(), e))?;
+                let name = read_str_lp(&mut reader).map_err(|e| malformed("op name", reader.position(), e))?;
                 Ok(DocxMutation::SetStyleName { id, name })
             }
             10 => {
-                let id = read_str_lp(&mut reader).map_err(|e| malformed("op id", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let has = reader.read_u8().map_err(|e| malformed("op based_on presence", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
-                let based_on = if has != 0 { Some(read_str_lp(&mut reader).map_err(|e| malformed("op based_on", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
+                let id = read_str_lp(&mut reader).map_err(|e| malformed("op id", reader.position(), e))?;
+                let has = reader.read_u8().map_err(|e| malformed("op based_on presence", reader.position(), e.to_string()))?;
+                let based_on = if has != 0 { Some(read_str_lp(&mut reader).map_err(|e| malformed("op based_on", reader.position(), e))?) } else { None };
                 Ok(DocxMutation::SetStyleBasedOn { id, based_on })
             }
             11 => {
-                let path = read_str_lp(&mut reader).map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let content_type = read_str_lp(&mut reader).map_err(|e| malformed("op content_type", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let bytes = read_bytes_lp(&mut reader).map_err(|e| malformed("op bytes", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let path = read_str_lp(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
+                let content_type = read_str_lp(&mut reader).map_err(|e| malformed("op content_type", reader.position(), e))?;
+                let bytes = read_bytes_lp(&mut reader).map_err(|e| malformed("op bytes", reader.position(), e))?;
                 Ok(DocxMutation::SetPart { path, content_type, bytes })
             }
             12 => {
-                let path = read_str_lp(&mut reader).map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let path = read_str_lp(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
                 Ok(DocxMutation::RemovePart { path })
             }
             other => Err(malformed("op tag", 1, format!("unknown DocxMutation tag {other}"))),

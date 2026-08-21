@@ -12,10 +12,10 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 
+use crate::artifacts::md::standards::v_commonmark::subsets::any::schema::diff::MdBlockDiff;
 use crate::artifacts::md::standards::v_commonmark::subsets::any::schema::diff::MdDiff;
 use crate::artifacts::md::standards::v_commonmark::subsets::any::schema::mutations::{apply_md_mutation, MdMutation};
 use crate::artifacts::md::standards::v_commonmark::subsets::any::schema::snapshot::MdSnapshot;
-use crate::artifacts::md::standards::v_commonmark::subsets::any::schema::diff::MdBlockDiff;
 use crate::artifacts::md::standards::v_commonmark::subsets::any::schema::snapshot::{MdBlock, MdInline};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️component.json");
@@ -84,11 +84,8 @@ async fn committed_json_is_canonical() {
 async fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
     let status = outcome.get("status").and_then(serde_json::Value::as_str).expect("outcome carries a status");
-    let declared: Vec<(String, String)> = outcome
-        .get("messages")
-        .and_then(serde_json::Value::as_array)
-        .map(|rows| rows.iter().map(|row| (row["level"].as_str().unwrap_or_default().to_string(), row["code"].as_str().unwrap_or_default().to_string())).collect())
-        .unwrap_or_default();
+    let declared: Vec<(String, String)> =
+        outcome.get("messages").and_then(serde_json::Value::as_array).map(|rows| rows.iter().map(|row| (row["level"].as_str().unwrap_or_default().to_string(), row["code"].as_str().unwrap_or_default().to_string())).collect()).unwrap_or_default();
     let raised = <MdMutation as protocol::Mutation<MdSnapshot>>::diff(&mutation(), &before());
     let produced: Vec<(String, String)> = raised
         .messages()
@@ -122,7 +119,10 @@ async fn produces_committed_diff() {
     assert!(blocks.removed.is_empty() && blocks.added.is_empty(), "set-snapshot/demotes-the-tower-heading-to-level-3: the block sequence keeps its length and kinds, so nothing is removed or added");
     assert_eq!(blocks.modified.len(), 1, "set-snapshot/demotes-the-tower-heading-to-level-3: only the heading block is patched — the paragraph must not appear in the delta at all");
     assert_eq!(blocks.modified[0].index, 0, "set-snapshot/demotes-the-tower-heading-to-level-3: MdBlockModified indices are BASE-state indices");
-    assert!(matches!(blocks.modified[0].diff, MdBlockDiff::Heading { level: Some(3), inlines: None }), "set-snapshot/demotes-the-tower-heading-to-level-3: a level-only edit must keep the kind-shaped Heading variant with inlines unset — an MdBlockDiff::Replace here would mean between_block lost the kind match");
+    assert!(
+        matches!(blocks.modified[0].diff, MdBlockDiff::Heading { level: Some(3), inlines: None }),
+        "set-snapshot/demotes-the-tower-heading-to-level-3: a level-only edit must keep the kind-shaped Heading variant with inlines unset — an MdBlockDiff::Replace here would mean between_block lost the kind match"
+    );
 }
 
 /// 🔣️ The committed diff is itself canonical and decodes to MdDiff.
@@ -132,7 +132,10 @@ async fn committed_diff_is_canonical() {
     let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "set-snapshot/demotes-the-tower-heading-to-level-3: committed diff JSON is not canonical");
-    assert!(matches!(decoded.blocks.as_ref().expect("blocks triple").modified[0].diff, MdBlockDiff::Heading { .. }), "set-snapshot/demotes-the-tower-heading-to-level-3: the committed diff must decode to the kind-tagged Heading variant, not to Replace");
+    assert!(
+        matches!(decoded.blocks.as_ref().expect("blocks triple").modified[0].diff, MdBlockDiff::Heading { .. }),
+        "set-snapshot/demotes-the-tower-heading-to-level-3: the committed diff must decode to the kind-tagged Heading variant, not to Replace"
+    );
 }
 
 /// 🩹 Applying the committed diff directly to `before` yields the committed `after` — the diff is

@@ -8,7 +8,8 @@
 //! `crate::artifacts::bcf::declaration()` (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE).
 
 use crate::artifacts::bcf::{
-    schema::snapshot::{BcfCamera, BcfColoring, BcfComment, BcfComponents, BcfPoint3, BcfRawPart, BcfTopic, BcfViewpoint, BcfVisibility}, BcfSnapshot, STDIO_BCF_DOCUMENT_SCHEMA,
+    schema::snapshot::{BcfCamera, BcfColoring, BcfComment, BcfComponents, BcfPoint3, BcfRawPart, BcfTopic, BcfViewpoint, BcfVisibility},
+    BcfSnapshot, STDIO_BCF_DOCUMENT_SCHEMA,
 };
 use crate::artifacts::xml::schema::snapshot::{xml_document_from_text, xml_document_to_text, XmlAttr, XmlDocument, XmlNode};
 use crate::artifacts::zip::schema::snapshot::ZipEntry;

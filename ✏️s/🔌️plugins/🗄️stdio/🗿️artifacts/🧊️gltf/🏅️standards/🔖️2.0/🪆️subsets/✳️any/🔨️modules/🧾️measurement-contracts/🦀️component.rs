@@ -244,8 +244,8 @@ pub struct GltfEntityAddress {
 pub(crate) trait GltfInferenceStage<Context> {
     type Output;
 
-    async fn infer(context: &Context) -> Self::Output;
-    async fn unavailable(diagnostic_ids: &[String]) -> Self::Output;
+    fn infer(context: &Context) -> Self::Output;
+    fn unavailable(diagnostic_ids: &[String]) -> Self::Output;
 }
 //#endregion 🧩️InferenceStage
 //#endregion 🧾️MeasurementContracts

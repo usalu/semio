@@ -1317,7 +1317,7 @@ pub mod layout {
     mod layout_wire_format_tests {
         use super::*;
 
-        const GOLDEN_ACTION_DESCRIPTOR_JSON: &str = "[{\"controllerId\":\"ctrl\",\"action\":\"doThing\",\"args\":42},{\"controllerId\":\"ctrl\",\"action\":\"doOther\"},{\"variant\":\"primary\",\"size\":\"md\"}]";
+        const GOLDEN_ACTION_DESCRIPTOR_JSON: &str = "[{\"controllerId\":\"ctrl\",\"action\":\"doThing\",\"args\":42.0},{\"controllerId\":\"ctrl\",\"action\":\"doOther\"},{\"variant\":\"primary\",\"size\":\"md\"}]";
 
         #[semio_framework_async_macros::async_test]
         async fn action_descriptor_and_style_spec_serialize_to_golden_json() {
@@ -1844,13 +1844,21 @@ pub mod role_chrome {
 
     /// 🗣️ Context-menu/palette entry — contract freeze §5: en `"Open with…"` / de `"Öffnen mit…"`.
     pub fn open_with_label_text(is_de: bool) -> &'static str {
-        if is_de { "Öffnen mit…" } else { "Open with…" }
+        if is_de {
+            "Öffnen mit…"
+        } else {
+            "Open with…"
+        }
     }
 
     /// 🗣️ "Set as default" toggle — contract freeze §5: en `"Set as default"` / de `"Als Standard
     /// festlegen"`.
     pub fn set_as_default_label_text(is_de: bool) -> &'static str {
-        if is_de { "Als Standard festlegen" } else { "Set as default" }
+        if is_de {
+            "Als Standard festlegen"
+        } else {
+            "Set as default"
+        }
     }
     //#endregion 🔖️FrozenStrings
 
@@ -2069,10 +2077,7 @@ pub mod role_chrome {
         async fn apply_role_to_utilities_disables_history_only_for_viewer() {
             let press = ActionDescriptor { controller_id: "history".into(), action: "undo".into(), args: None };
             let toggle = ActionDescriptor { controller_id: "select".into(), action: "toggleSelect".into(), args: None };
-            let utilities = vec![
-                utility_button("undo", IconName::RotateCcw, "Undo", press).with_category(UtilityCategory::History),
-                utility_toggle("select", IconName::MousePointer, "Select", false, toggle),
-            ];
+            let utilities = vec![utility_button("undo", IconName::RotateCcw, "Undo", press).with_category(UtilityCategory::History), utility_toggle("select", IconName::MousePointer, "Select", false, toggle)];
             let viewer = apply_role_to_utilities(utilities.clone(), ChromeRole::Viewer);
             assert_eq!(viewer[0].category(), UtilityCategory::History);
             assert!(matches!(&viewer[0], UtilityNode::Button { disabled: Some(true), .. }), "undo must be disabled for a viewer");
@@ -2635,13 +2640,7 @@ pub mod ui {
     /// as, whether or not this particular item is currently marked; `peer_marks_for` resolves an
     /// item's own peer roster by id (called once per item, not pre-collected, since the caller's
     /// `InteractionView::peers_selecting`/`peers_hovering` are themselves per-id lookups).
-    pub fn ui_tree_stamp_presence(
-        sections: &mut [UiTreeSectionNode],
-        selected: &std::collections::HashSet<String>,
-        previewed: &std::collections::HashSet<String>,
-        own_color: Option<u8>,
-        peer_marks_for: &dyn Fn(&str) -> Vec<UiPeerMark>,
-    ) {
+    pub fn ui_tree_stamp_presence(sections: &mut [UiTreeSectionNode], selected: &std::collections::HashSet<String>, previewed: &std::collections::HashSet<String>, own_color: Option<u8>, peer_marks_for: &dyn Fn(&str) -> Vec<UiPeerMark>) {
         fn stamp_items(items: &mut [UiTreeItemNode], selected: &std::collections::HashSet<String>, previewed: &std::collections::HashSet<String>, own_color: Option<u8>, peer_marks_for: &dyn Fn(&str) -> Vec<UiPeerMark>) {
             for item in items {
                 item.presence.selected = selected.contains(&item.id);
@@ -2828,13 +2827,7 @@ pub mod ui {
             for (index, child) in section.children.iter().enumerate() {
                 items.push(ui_declarative_child_to_tree_item(child, format!("{}.{}", section.id, index)));
             }
-            tree_sections.push(UiTreeSectionNode {
-                id: section.id.clone(),
-                label: section.label.clone(),
-                default_open: Some(section.default_open.unwrap_or(true)),
-                presence: section.presence.clone(),
-                items,
-            });
+            tree_sections.push(UiTreeSectionNode { id: section.id.clone(), label: section.label.clone(), default_open: Some(section.default_open.unwrap_or(true)), presence: section.presence.clone(), items });
         }
         UiNode::Tree(if tree_sections.is_empty() {
             UiTreeNode {
@@ -3083,8 +3076,8 @@ pub mod ui {
     // own `🦀️scenes.rs` header for why (that crate is wasm-safe and depends on nothing beyond
     // `ui_contract`/`serde`, so it cannot carry either type).
     pub use ui_scene::{
-        Board2dScene, Canvas2dScene, DiffViewScene, EventFeedScene, GraphTimelineScene, IconRenderScene, InkCanvasScene, NodeGraphEdgeRecord, NodeGraphFindItem, NodeGraphHover, NodeGraphNodeRecord, NodeGraphOperatorChannelRecord, NodeGraphOperatorRecord,
-        NodeGraphOperatorVariadicRecord, NodeGraphPortRecord, NodeGraphScene, NodeGraphViewport, Paint2dScene, SceneDoc, TableScene, TextEditorScene, TiledMapScene, VirtualFileSystemScene, World3dScene, BlockListScene,
+        BlockListScene, Board2dScene, Canvas2dScene, DiffViewScene, EventFeedScene, GraphTimelineScene, IconRenderScene, InkCanvasScene, NodeGraphEdgeRecord, NodeGraphFindItem, NodeGraphHover, NodeGraphNodeRecord, NodeGraphOperatorChannelRecord,
+        NodeGraphOperatorRecord, NodeGraphOperatorVariadicRecord, NodeGraphPortRecord, NodeGraphScene, NodeGraphViewport, Paint2dScene, SceneDoc, TableScene, TextEditorScene, TiledMapScene, VirtualFileSystemScene, World3dScene,
     };
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -4217,8 +4210,10 @@ pub mod ui {
 
         #[semio_framework_async_macros::async_test]
         async fn diff_view_and_event_feed_scenes_serialize_to_golden_json() {
-            let scenes =
-                (DiffViewScene { before: "a".into(), after: "b".into(), language: Some("rust".into()), mode: Some("unified".into()), domain_id: None }, EventFeedScene { entries_json: "[]".into(), follow: Some(true), activate_action: Some("openEvent".into()), domain_id: None });
+            let scenes = (
+                DiffViewScene { before: "a".into(), after: "b".into(), language: Some("rust".into()), mode: Some("unified".into()), domain_id: None },
+                EventFeedScene { entries_json: "[]".into(), follow: Some(true), activate_action: Some("openEvent".into()), domain_id: None },
+            );
             let json = serde_json::to_string(&scenes).unwrap();
             assert_eq!(json, GOLDEN_DIFF_VIEW_EVENT_FEED_SCENES_JSON);
             let roundtripped: (DiffViewScene, EventFeedScene) = serde_json::from_str(&json).unwrap();
@@ -4272,8 +4267,7 @@ pub mod ui {
             assert_menu_serializes(
                 UiNode::Stack(UiStackNode { menu: None, direction: "vertical".into(), gap: None, padding: None, id: None, presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, children: vec![] }),
                 "Stack",
-            )
-            ;
+            );
             assert_menu_serializes(UiNode::Text(UiTextNode { menu: None, value: Label::data("x"), emphasize: None, data_attributes: None, presence: UiPresence::default() }), "Text");
             assert_menu_serializes(UiNode::Button(UiButtonNode { menu: None, id: None, icon_id: IconName::CircleDot, label: Label::data("l"), action: act("a"), style: None, presence: UiPresence::default() }), "Button");
             assert_menu_serializes(UiNode::Separator(UiSeparatorNode { menu: None, presence: UiPresence::default() }), "Separator");
@@ -4329,11 +4323,7 @@ pub mod ui {
 
         #[semio_framework_async_macros::async_test]
         async fn organize_context_menu_merges_same_id_groups_and_dedupes_children_by_id() {
-            let items = vec![
-                menu_group("view", vec![menu_leaf("zoomIn"), menu_leaf("zoomOut")]),
-                menu_leaf("a"),
-                menu_group("view", vec![menu_leaf("zoomOut"), menu_leaf("resetZoom")]),
-            ];
+            let items = vec![menu_group("view", vec![menu_leaf("zoomIn"), menu_leaf("zoomOut")]), menu_leaf("a"), menu_group("view", vec![menu_leaf("zoomOut"), menu_leaf("resetZoom")])];
             let organized = organize_context_menu(items, &no_category);
             assert_eq!(organized.iter().filter(|item| item.id == "menu.group.view").count(), 1, "only one merged row remains: {organized:?}");
             let view_group = organized.iter().find(|item| item.id == "menu.group.view").expect("merged view group present");
@@ -4343,14 +4333,7 @@ pub mod ui {
 
         #[semio_framework_async_macros::async_test]
         async fn organize_context_menu_collapses_doubled_bare_separators_and_drops_leading_trailing_ones() {
-            let items = vec![
-                menu_separator("lead-bare"),
-                menu_leaf("a"),
-                menu_separator("dup-1"),
-                menu_separator("dup-2"),
-                menu_leaf("b"),
-                menu_separator("trail-bare"),
-            ];
+            let items = vec![menu_separator("lead-bare"), menu_leaf("a"), menu_separator("dup-1"), menu_separator("dup-2"), menu_leaf("b"), menu_separator("trail-bare")];
             let organized = organize_context_menu(items, &no_category);
             assert_eq!(organized.len(), 3, "leading/trailing bare separators drop, the doubled run collapses to one: {organized:?}");
             assert_eq!(organized[0].id, "a");
@@ -4370,11 +4353,7 @@ pub mod ui {
 
         #[semio_framework_async_macros::async_test]
         async fn organize_context_menu_sorts_group_rows_in_taxonomy_order_unknown_last() {
-            let items = vec![
-                menu_group("mystery", vec![menu_leaf("x")]),
-                menu_group("export", vec![menu_leaf("y")]),
-                menu_group("view", vec![menu_leaf("z")]),
-            ];
+            let items = vec![menu_group("mystery", vec![menu_leaf("x")]), menu_group("export", vec![menu_leaf("y")]), menu_group("view", vec![menu_leaf("z")])];
             let organized = organize_context_menu(items, &no_category);
             let ids: Vec<&str> = organized.iter().map(|item| item.id.as_str()).collect();
             assert_eq!(ids, vec!["menu.group.view", "menu.group.export", "menu.group.mystery"], "view < export < unknown category: {ids:?}");

@@ -60,7 +60,7 @@ use crate::artifacts::deflate::STDIO_DEFLATE_DOCUMENT_SCHEMA;
 
 //#region Adler32
 /// 🧮 Adler-32 (RFC1950).
-pub async fn adler32(data: &[u8]) -> u32 {
+pub fn adler32(data: &[u8]) -> u32 {
     const MOD: u32 = 65521;
     let mut a: u32 = 1;
     let mut b: u32 = 0;
@@ -80,10 +80,10 @@ struct BitWriter {
 }
 
 impl BitWriter {
-    async fn new() -> Self {
+    fn new() -> Self {
         Self { out: Vec::new(), cur: 0, nbits: 0 }
     }
-    async fn write_bits(&mut self, mut value: u32, mut count: u8) {
+    fn write_bits(&mut self, mut value: u32, mut count: u8) {
         while count > 0 {
             let take = (8 - self.nbits).min(count);
             let mask = (1u32 << take) - 1;
@@ -98,14 +98,14 @@ impl BitWriter {
             }
         }
     }
-    async fn align_byte(&mut self) {
+    fn align_byte(&mut self) {
         if self.nbits > 0 {
             self.out.push(self.cur);
             self.cur = 0;
             self.nbits = 0;
         }
     }
-    async fn finish(mut self) -> Vec<u8> {
+    fn finish(mut self) -> Vec<u8> {
         self.align_byte();
         self.out
     }
@@ -119,10 +119,10 @@ struct BitReader<'a> {
 }
 
 impl<'a> BitReader<'a> {
-    async fn new(data: &'a [u8]) -> Self {
+    fn new(data: &'a [u8]) -> Self {
         Self { data, pos: 0, cur: 0, nbits: 0 }
     }
-    async fn read_bits(&mut self, count: u8) -> Result<u32, String> {
+    fn read_bits(&mut self, count: u8) -> Result<u32, String> {
         let mut out = 0u32;
         for i in 0..count {
             if self.nbits == 0 {
@@ -140,7 +140,7 @@ impl<'a> BitReader<'a> {
         }
         Ok(out)
     }
-    async fn align_byte(&mut self) {
+    fn align_byte(&mut self) {
         self.nbits = 0;
         self.cur = 0;
     }
@@ -148,7 +148,7 @@ impl<'a> BitReader<'a> {
 //#endregion BitIO
 
 //#region Huffman
-async fn reverse_bits(mut v: u32, len: u8) -> u32 {
+fn reverse_bits(mut v: u32, len: u8) -> u32 {
     let mut r = 0u32;
     for _ in 0..len {
         r = (r << 1) | (v & 1);
@@ -157,7 +157,7 @@ async fn reverse_bits(mut v: u32, len: u8) -> u32 {
     r
 }
 
-async fn build_codes(lengths: &[u8]) -> Vec<(u32, u8)> {
+fn build_codes(lengths: &[u8]) -> Vec<(u32, u8)> {
     let mut bl_count = [0u32; 16];
     for &l in lengths {
         if l > 0 {
@@ -175,7 +175,7 @@ async fn build_codes(lengths: &[u8]) -> Vec<(u32, u8)> {
         if len != 0 {
             let c = next_code[len as usize];
             next_code[len as usize] += 1;
-            codes[i] = (reverse_bits(c, len).await, len);
+            codes[i] = (reverse_bits(c, len), len);
         }
     }
     codes
@@ -187,14 +187,14 @@ struct HuffDecoder {
 }
 
 impl HuffDecoder {
-    async fn from_lengths(lengths: &[u8]) -> Result<Self, String> {
+    fn from_lengths(lengths: &[u8]) -> Result<Self, String> {
         let max_bits = lengths.iter().copied().max().unwrap_or(0);
         if max_bits > 15 {
             return Err("invalid huffman length".into());
         }
         let size = 1usize << max_bits;
         let mut table = vec![None; size.max(1)];
-        let codes = build_codes(lengths).await;
+        let codes = build_codes(lengths);
         for (sym, &(code, len)) in codes.iter().enumerate() {
             if len == 0 {
                 continue;
@@ -209,13 +209,13 @@ impl HuffDecoder {
         Ok(Self { table, max_bits })
     }
 
-    async fn decode(&self, br: &mut BitReader<'_>) -> Result<u16, String> {
+    fn decode(&self, br: &mut BitReader<'_>) -> Result<u16, String> {
         if self.max_bits == 0 {
             return Err("empty huffman alphabet".into());
         }
         let mut acc = 0u32;
         for len in 1..=self.max_bits {
-            let bit = br.read_bits(1).await?;
+            let bit = br.read_bits(1)?;
             acc |= bit << (len - 1);
             if let Some(Some((sym, l))) = self.table.get(acc as usize) {
                 if *l == len {
@@ -227,7 +227,7 @@ impl HuffDecoder {
     }
 }
 
-async fn fixed_lit_lengths() -> Vec<u8> {
+fn fixed_lit_lengths() -> Vec<u8> {
     let mut l = vec![0u8; 288];
     for i in 0..=143 {
         l[i] = 8;
@@ -244,7 +244,7 @@ async fn fixed_lit_lengths() -> Vec<u8> {
     l
 }
 
-async fn fixed_dist_lengths() -> Vec<u8> {
+fn fixed_dist_lengths() -> Vec<u8> {
     vec![5u8; 32]
 }
 //#endregion Huffman
@@ -267,7 +267,7 @@ const HASH_BITS: u32 = 15;
 const HASH_SIZE: usize = 1 << HASH_BITS;
 
 #[inline]
-async fn hash3(data: &[u8], i: usize) -> usize {
+fn hash3(data: &[u8], i: usize) -> usize {
     // A cheap multiplicative hash over 3 bytes; collisions just mean a longer (still correct)
     // chain walk, never a wrong match -- every candidate is verified byte-by-byte below.
     let v = (data[i] as u32) | ((data[i + 1] as u32) << 8) | ((data[i + 2] as u32) << 16);
@@ -278,7 +278,7 @@ async fn hash3(data: &[u8], i: usize) -> usize {
 /// collisions are possible; a wrong-length "match" would corrupt the stream, so every candidate
 /// is checked in full before being accepted). `max_chain` bounds how many chain entries we walk
 /// before settling -- a simple, deterministic time/ratio tradeoff (higher = better ratio, slower).
-async fn longest_match(data: &[u8], pos: usize, head: &[i32], prev: &[i32], max_chain: usize) -> Option<(usize, usize)> {
+fn longest_match(data: &[u8], pos: usize, head: &[i32], prev: &[i32], max_chain: usize) -> Option<(usize, usize)> {
     if pos + MIN_MATCH > data.len() {
         return None;
     }
@@ -315,7 +315,7 @@ async fn longest_match(data: &[u8], pos: usize, head: &[i32], prev: &[i32], max_
     }
 }
 
-async fn length_symbol(len: usize) -> (usize, u32, u8) {
+fn length_symbol(len: usize) -> (usize, u32, u8) {
     // Highest base <= len; LEN_BASE is ascending so a linear scan from the top is exact and simple.
     for (idx, &base) in LEN_BASE.iter().enumerate().rev() {
         if len >= base as usize {
@@ -325,7 +325,7 @@ async fn length_symbol(len: usize) -> (usize, u32, u8) {
     unreachable!("length_symbol called with len < MIN_MATCH")
 }
 
-async fn distance_symbol(dist: usize) -> (usize, u32, u8) {
+fn distance_symbol(dist: usize) -> (usize, u32, u8) {
     for (idx, &base) in DIST_BASE.iter().enumerate().rev() {
         if dist >= base as usize {
             return (idx, (dist - base as usize) as u32, DIST_EXTRA[idx]);
@@ -339,20 +339,20 @@ async fn distance_symbol(dist: usize) -> (usize, u32, u8) {
 /// lookahead) emitted as a single fixed-Huffman block. Fixes the prior "literals only" encoder,
 /// which never searched for matches at all and so always expanded its input by ~12.5%
 /// (9 bits/byte average under the fixed literal table) instead of compressing it.
-pub async fn deflate_raw(data: &[u8]) -> Vec<u8> {
+pub fn deflate_raw(data: &[u8]) -> Vec<u8> {
     let lit_codes = build_codes(&fixed_lit_lengths());
     let dist_codes = build_codes(&fixed_dist_lengths());
-    let mut bw = BitWriter::new().await;
-    bw.write_bits(0b011, 3).await; // BFINAL=1, BTYPE=01 (fixed Huffman)
+    let mut bw = BitWriter::new();
+    bw.write_bits(0b011, 3); // BFINAL=1, BTYPE=01 (fixed Huffman)
 
     if data.len() < MIN_MATCH {
         for &byte in data {
             let (code, len) = lit_codes[byte as usize];
-            bw.write_bits(code, len).await;
+            bw.write_bits(code, len);
         }
         let (eob, elen) = lit_codes[256];
-        bw.write_bits(eob, elen).await;
-        return bw.finish().await;
+        bw.write_bits(eob, elen);
+        return bw.finish();
     }
 
     const MAX_CHAIN: usize = 128;
@@ -381,28 +381,28 @@ pub async fn deflate_raw(data: &[u8]) -> Vec<u8> {
                 pos += 1;
             }
             (Some((start, len, dist)), next_m) => {
-                let better_next = matches!(next_m.await, Some((nlen, _)) if nlen > len);
+                let better_next = matches!(next_m, Some((nlen, _)) if nlen > len);
                 if better_next {
                     // Emit the deferred position as a literal, keep the new (better) match pending.
                     let (code, clen) = lit_codes[data[start] as usize];
-                    bw.write_bits(code, clen).await;
-                    if let Some((nlen, ndist)) = next_m.await {
+                    bw.write_bits(code, clen);
+                    if let Some((nlen, ndist)) = next_m {
                         pending_match = Some((pos, nlen, ndist));
                     }
                     pos += 1;
                 } else {
                     // Commit the deferred match starting at `start` (== pos - 1 here).
-                    let (lsym, lextra, lebits) = length_symbol(len).await;
+                    let (lsym, lextra, lebits) = length_symbol(len);
                     let (lcode, llen) = lit_codes[lsym];
-                    bw.write_bits(lcode, llen).await;
+                    bw.write_bits(lcode, llen);
                     if lebits > 0 {
-                        bw.write_bits(lextra, lebits).await;
+                        bw.write_bits(lextra, lebits);
                     }
-                    let (dsym, dextra, debits) = distance_symbol(dist).await;
+                    let (dsym, dextra, debits) = distance_symbol(dist);
                     let (dcode, dlen) = dist_codes[dsym];
-                    bw.write_bits(dcode, dlen).await;
+                    bw.write_bits(dcode, dlen);
                     if debits > 0 {
-                        bw.write_bits(dextra, debits).await;
+                        bw.write_bits(dextra, debits);
                     }
                     // Hash-insert every position the match covers (except `start`, `start+1`
                     // already inserted above) so future matches can reference into it.
@@ -415,34 +415,34 @@ pub async fn deflate_raw(data: &[u8]) -> Vec<u8> {
             }
             (None, None) => {
                 let (code, clen) = lit_codes[data[pos] as usize];
-                bw.write_bits(code, clen).await;
+                bw.write_bits(code, clen);
                 pos += 1;
             }
         }
     }
     if let Some((start, len, dist)) = pending_match {
-        let (lsym, lextra, lebits) = length_symbol(len).await;
+        let (lsym, lextra, lebits) = length_symbol(len);
         let (lcode, llen) = lit_codes[lsym];
-        bw.write_bits(lcode, llen).await;
+        bw.write_bits(lcode, llen);
         if lebits > 0 {
-            bw.write_bits(lextra, lebits).await;
+            bw.write_bits(lextra, lebits);
         }
-        let (dsym, dextra, debits) = distance_symbol(dist).await;
+        let (dsym, dextra, debits) = distance_symbol(dist);
         let (dcode, dlen) = dist_codes[dsym];
-        bw.write_bits(dcode, dlen).await;
+        bw.write_bits(dcode, dlen);
         if debits > 0 {
-            bw.write_bits(dextra, debits).await;
+            bw.write_bits(dextra, debits);
         }
         let _ = start;
     }
 
     let (eob, elen) = lit_codes[256];
-    bw.write_bits(eob, elen).await;
-    bw.finish().await
+    bw.write_bits(eob, elen);
+    bw.finish()
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-async fn deflate_raw_tuned(data: &[u8], memory: i32, good: i32, lazy: i32, nice: i32, chain: i32, sync: bool) -> Result<Vec<u8>, String> {
+fn deflate_raw_tuned(data: &[u8], memory: i32, good: i32, lazy: i32, nice: i32, chain: i32, sync: bool) -> Result<Vec<u8>, String> {
     let input_len = u32::try_from(data.len()).map_err(|_| "raw DEFLATE input exceeds 4 GiB".to_string())?;
     let mut stream = libz_sys::z_stream {
         next_in: std::ptr::null_mut(),
@@ -497,7 +497,7 @@ async fn deflate_raw_tuned(data: &[u8], memory: i32, good: i32, lazy: i32, nice:
 }
 
 #[cfg(target_arch = "wasm32")]
-async fn deflate_raw_tuned(data: &[u8], _memory: i32, _good: i32, _lazy: i32, _nice: i32, _chain: i32, _sync: bool) -> Result<Vec<u8>, String> {
+fn deflate_raw_tuned(data: &[u8], _memory: i32, _good: i32, _lazy: i32, _nice: i32, _chain: i32, _sync: bool) -> Result<Vec<u8>, String> {
     use std::io::Write;
     let mut encoder = flate2::write::DeflateEncoder::new(Vec::new(), flate2::Compression::default());
     encoder.write_all(data).map_err(|error| error.to_string())?;
@@ -505,21 +505,21 @@ async fn deflate_raw_tuned(data: &[u8], _memory: i32, _good: i32, _lazy: i32, _n
 }
 
 /// 🎯 Deterministic Office-compatible raw DEFLATE materialization for container formats.
-pub async fn deflate_raw_deterministic(data: &[u8]) -> Result<Vec<u8>, String> {
-    deflate_raw_tuned(data, 8, 1, 4, 258, 1024, true).await
+pub fn deflate_raw_deterministic(data: &[u8]) -> Result<Vec<u8>, String> {
+    deflate_raw_tuned(data, 8, 1, 4, 258, 1024, true)
 }
 
 /// 🖼️ Deterministic high-search raw DEFLATE materialization for vector-media payloads.
-pub async fn deflate_raw_deterministic_high_search(data: &[u8]) -> Result<Vec<u8>, String> {
-    deflate_raw_tuned(data, 8, 4, 4, 258, 4096, true).await
+pub fn deflate_raw_deterministic_high_search(data: &[u8]) -> Result<Vec<u8>, String> {
+    deflate_raw_tuned(data, 8, 4, 4, 258, 4096, true)
 }
 
 /// 🧳 Deterministic compact-block high-search raw DEFLATE for embedded binary payloads.
-pub async fn deflate_raw_deterministic_compact_high_search(data: &[u8]) -> Result<Vec<u8>, String> {
-    deflate_raw_tuned(data, 7, 4, 4, 258, 4096, true).await
+pub fn deflate_raw_deterministic_compact_high_search(data: &[u8]) -> Result<Vec<u8>, String> {
+    deflate_raw_tuned(data, 7, 4, 4, 258, 4096, true)
 }
 
-async fn inflate_block_stored(br: &mut BitReader<'_>, out: &mut Vec<u8>) -> Result<(), String> {
+fn inflate_block_stored(br: &mut BitReader<'_>, out: &mut Vec<u8>) -> Result<(), String> {
     br.align_byte();
     if br.pos + 4 > br.data.len() {
         return Err("truncated stored block".into());
@@ -539,9 +539,9 @@ async fn inflate_block_stored(br: &mut BitReader<'_>, out: &mut Vec<u8>) -> Resu
     Ok(())
 }
 
-async fn inflate_codes(br: &mut BitReader<'_>, out: &mut Vec<u8>, lit: &HuffDecoder, dist: &HuffDecoder) -> Result<(), String> {
+fn inflate_codes(br: &mut BitReader<'_>, out: &mut Vec<u8>, lit: &HuffDecoder, dist: &HuffDecoder) -> Result<(), String> {
     loop {
-        let sym = lit.decode(br).await? as usize;
+        let sym = lit.decode(br)? as usize;
         if sym < 256 {
             out.push(sym as u8);
         } else if sym == 256 {
@@ -554,16 +554,16 @@ async fn inflate_codes(br: &mut BitReader<'_>, out: &mut Vec<u8>, lit: &HuffDeco
             let mut length = LEN_BASE[idx] as usize;
             let extra = LEN_EXTRA[idx];
             if extra > 0 {
-                length += br.read_bits(extra).await? as usize;
+                length += br.read_bits(extra)? as usize;
             }
-            let dsym = dist.decode(br).await? as usize;
+            let dsym = dist.decode(br)? as usize;
             if dsym >= DIST_BASE.len() {
                 return Err("invalid distance symbol".into());
             }
             let mut distance = DIST_BASE[dsym] as usize;
             let dextra = DIST_EXTRA[dsym];
             if dextra > 0 {
-                distance += br.read_bits(dextra).await? as usize;
+                distance += br.read_bits(dextra)? as usize;
             }
             if distance == 0 || distance > out.len() {
                 return Err("invalid backreference".into());
@@ -579,32 +579,32 @@ async fn inflate_codes(br: &mut BitReader<'_>, out: &mut Vec<u8>, lit: &HuffDeco
     Ok(())
 }
 
-async fn inflate_dynamic(br: &mut BitReader<'_>, out: &mut Vec<u8>) -> Result<(), String> {
-    let hlit = br.read_bits(5).await? as usize + 257;
-    let hdist = br.read_bits(5).await? as usize + 1;
-    let hclen = br.read_bits(4).await? as usize + 4;
+fn inflate_dynamic(br: &mut BitReader<'_>, out: &mut Vec<u8>) -> Result<(), String> {
+    let hlit = br.read_bits(5)? as usize + 257;
+    let hdist = br.read_bits(5)? as usize + 1;
+    let hclen = br.read_bits(4)? as usize + 4;
     const ORDER: [usize; 19] = [16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15];
     let mut cl_lens = vec![0u8; 19];
     for i in 0..hclen {
-        cl_lens[ORDER[i]] = br.read_bits(3).await? as u8;
+        cl_lens[ORDER[i]] = br.read_bits(3)? as u8;
     }
-    let cl_dec = HuffDecoder::from_lengths(&cl_lens).await?;
+    let cl_dec = HuffDecoder::from_lengths(&cl_lens)?;
     let mut lens = Vec::with_capacity(hlit + hdist);
     while lens.len() < hlit + hdist {
-        let sym = cl_dec.decode(br).await? as usize;
+        let sym = cl_dec.decode(br)? as usize;
         match sym {
             0..=15 => lens.push(sym as u8),
             16 => {
-                let rep = br.read_bits(2).await? as usize + 3;
+                let rep = br.read_bits(2)? as usize + 3;
                 let prev = *lens.last().ok_or("bad repeat")?;
                 lens.extend(std::iter::repeat(prev).take(rep));
             }
             17 => {
-                let rep = br.read_bits(3).await? as usize + 3;
+                let rep = br.read_bits(3)? as usize + 3;
                 lens.extend(std::iter::repeat(0u8).take(rep));
             }
             18 => {
-                let rep = br.read_bits(7).await? as usize + 11;
+                let rep = br.read_bits(7)? as usize + 11;
                 lens.extend(std::iter::repeat(0u8).take(rep));
             }
             _ => return Err("bad code-length symbol".into()),
@@ -613,26 +613,26 @@ async fn inflate_dynamic(br: &mut BitReader<'_>, out: &mut Vec<u8>) -> Result<()
     if lens.len() < hlit + hdist {
         return Err("incomplete dynamic trees".into());
     }
-    let lit = HuffDecoder::from_lengths(&lens[..hlit]).await?;
-    let dist = HuffDecoder::from_lengths(&lens[hlit..hlit + hdist]).await?;
-    inflate_codes(br, out, &lit, &dist).await
+    let lit = HuffDecoder::from_lengths(&lens[..hlit])?;
+    let dist = HuffDecoder::from_lengths(&lens[hlit..hlit + hdist])?;
+    inflate_codes(br, out, &lit, &dist)
 }
 
 /// 🗜️ Raw DEFLATE inflate (stored + fixed + dynamic).
-pub async fn inflate_raw(data: &[u8]) -> Result<Vec<u8>, String> {
-    let mut br = BitReader::new(data).await;
+pub fn inflate_raw(data: &[u8]) -> Result<Vec<u8>, String> {
+    let mut br = BitReader::new(data);
     let mut out = Vec::new();
     loop {
-        let bfinal = br.read_bits(1).await?;
-        let btype = br.read_bits(2).await?;
+        let bfinal = br.read_bits(1)?;
+        let btype = br.read_bits(2)?;
         match btype {
-            0 => inflate_block_stored(&mut br, &mut out).await?,
+            0 => inflate_block_stored(&mut br, &mut out)?,
             1 => {
-                let lit = HuffDecoder::from_lengths(&fixed_lit_lengths()).await?;
-                let dist = HuffDecoder::from_lengths(&fixed_dist_lengths()).await?;
-                inflate_codes(&mut br, &mut out, &lit, &dist).await?;
+                let lit = HuffDecoder::from_lengths(&fixed_lit_lengths())?;
+                let dist = HuffDecoder::from_lengths(&fixed_dist_lengths())?;
+                inflate_codes(&mut br, &mut out, &lit, &dist)?;
             }
-            2 => inflate_dynamic(&mut br, &mut out).await?,
+            2 => inflate_dynamic(&mut br, &mut out)?,
             _ => return Err("reserved BTYPE".into()),
         }
         if bfinal == 1 {
@@ -643,19 +643,19 @@ pub async fn inflate_raw(data: &[u8]) -> Result<Vec<u8>, String> {
 }
 
 /// 🗜️ Zlib-wrap compress (CMF/FLG + raw deflate + Adler32).
-pub async fn zlib_compress(data: &[u8]) -> Result<Vec<u8>, String> {
-    let raw = deflate_raw(data).await;
+pub fn zlib_compress(data: &[u8]) -> Result<Vec<u8>, String> {
+    let raw = deflate_raw(data);
     let mut out = Vec::with_capacity(2 + raw.len() + 4);
     out.push(0x78);
     out.push(0x01);
     out.extend_from_slice(&raw);
-    out.extend_from_slice(&adler32(data).await.to_be_bytes());
+    out.extend_from_slice(&adler32(data).to_be_bytes());
     Ok(out)
 }
 
 /// 🎯 Deterministic maximum-compression RFC 1950 materialization for formats whose native
 /// canonical writer requires dynamic-Huffman zlib output.
-pub async fn zlib_compress_deterministic(data: &[u8]) -> Result<Vec<u8>, String> {
+pub fn zlib_compress_deterministic(data: &[u8]) -> Result<Vec<u8>, String> {
     use std::io::Write;
     let mut encoder = flate2::write::ZlibEncoder::new(Vec::new(), flate2::Compression::new(9));
     encoder.write_all(data).map_err(|error| error.to_string())?;
@@ -701,7 +701,7 @@ async unsafe fn illustrator_zlib_free(_opaque: *mut std::ffi::c_void, address: *
 /// 🎨 Deterministic Adobe Illustrator Flate materialization: its PDF producer uses a 4 KiB
 /// window and closes a level-six stream with a partial flush before the final block.
 #[cfg(not(target_arch = "wasm32"))]
-pub(crate) async fn zlib_compress_illustrator(data: &[u8]) -> Result<Vec<u8>, String> {
+pub(crate) fn zlib_compress_illustrator(data: &[u8]) -> Result<Vec<u8>, String> {
     let input_length = libz_sys::uInt::try_from(data.len()).map_err(|_| "zlib input exceeds uInt".to_string())?;
     let mut stream = libz_sys::z_stream {
         next_in: std::ptr::null_mut(),
@@ -750,12 +750,12 @@ pub(crate) async fn zlib_compress_illustrator(data: &[u8]) -> Result<Vec<u8>, St
 }
 
 #[cfg(target_arch = "wasm32")]
-pub(crate) async fn zlib_compress_illustrator(data: &[u8]) -> Result<Vec<u8>, String> {
+pub(crate) fn zlib_compress_illustrator(data: &[u8]) -> Result<Vec<u8>, String> {
     zlib_compress_deterministic(data)
 }
 
 /// 🗜️ Zlib unwrap + inflate + Adler32 verify.
-pub async fn zlib_decompress(data: &[u8]) -> Result<Vec<u8>, String> {
+pub fn zlib_decompress(data: &[u8]) -> Result<Vec<u8>, String> {
     if data.len() < 6 {
         return Err("zlib stream too short".into());
     }
@@ -773,7 +773,7 @@ pub async fn zlib_decompress(data: &[u8]) -> Result<Vec<u8>, String> {
     let adler_bytes = &data[data.len() - 4..];
     let expect = u32::from_be_bytes([adler_bytes[0], adler_bytes[1], adler_bytes[2], adler_bytes[3]]);
     let raw = &data[2..data.len() - 4];
-    let out = inflate_raw(raw).await?;
+    let out = inflate_raw(raw)?;
     let got = adler32(&out);
     if got != expect {
         return Err(format!("adler32 mismatch: expected {expect:#010x}, got {got:#010x}"));
@@ -794,14 +794,14 @@ pub async fn zlib_decompress(data: &[u8]) -> Result<Vec<u8>, String> {
 /// the typed fields (with a freshly computed FCHECK -- it's a pure function of the other header
 /// bits, never independently stored), the preset-dictionary id when present, the raw DEFLATE
 /// payload, and a freshly computed Adler-32 trailer (never a stale stored checksum).
-pub async fn encode_deflate_snapshot(snapshot: &DeflateSnapshot) -> Vec<u8> {
+pub fn encode_deflate_snapshot(snapshot: &DeflateSnapshot) -> Vec<u8> {
     let cmf = ((snapshot.window_bits & 0x0F) << 4) | (snapshot.compression_method & 0x0F);
     let fdict = snapshot.dict_id.is_some();
     let flg_hi = (snapshot.compression_level_hint.to_bits() << 6) | ((fdict as u8) << 5);
     let fcheck = (31 - (((cmf as u16) * 256 + flg_hi as u16) % 31)) % 31;
     let flg = flg_hi | (fcheck as u8);
 
-    let raw = deflate_raw(&snapshot.payload).await;
+    let raw = deflate_raw(&snapshot.payload);
     let mut out = Vec::with_capacity(2 + 4 + raw.len() + 4);
     out.push(cmf);
     out.push(flg);
@@ -809,7 +809,7 @@ pub async fn encode_deflate_snapshot(snapshot: &DeflateSnapshot) -> Vec<u8> {
         out.extend_from_slice(&dict_id.to_be_bytes());
     }
     out.extend_from_slice(&raw);
-    out.extend_from_slice(&adler32(&snapshot.payload).await.to_be_bytes());
+    out.extend_from_slice(&adler32(&snapshot.payload).to_be_bytes());
     out
 }
 
@@ -824,7 +824,7 @@ pub async fn encode_deflate_snapshot(snapshot: &DeflateSnapshot) -> Vec<u8> {
 /// primes a dictionary either); a foreign stream that truly relied on dictionary-primed
 /// backreferences would surface as an "invalid backreference" error from `inflate_raw`, same as
 /// any other genuinely undecodable stream.
-pub async fn decode_deflate_snapshot(data: &[u8]) -> Result<DeflateSnapshot, String> {
+pub fn decode_deflate_snapshot(data: &[u8]) -> Result<DeflateSnapshot, String> {
     if data.len() < 6 {
         return Err("zlib stream too short".into());
     }
@@ -859,7 +859,7 @@ pub async fn decode_deflate_snapshot(data: &[u8]) -> Result<DeflateSnapshot, Str
     let adler_bytes = &data[data.len() - 4..];
     let expect = u32::from_be_bytes([adler_bytes[0], adler_bytes[1], adler_bytes[2], adler_bytes[3]]);
     let raw = &data[pos..data.len() - 4];
-    let payload = inflate_raw(raw).await?;
+    let payload = inflate_raw(raw)?;
     let got = adler32(&payload);
     if got != expect {
         return Err(format!("adler32 mismatch: expected {expect:#010x}, got {got:#010x}"));
@@ -881,7 +881,7 @@ mod codec_tests {
         Match { output: usize, length: usize, distance: usize },
     }
 
-    async fn trace_codes(br: &mut BitReader<'_>, out: &mut Vec<u8>, lit: &HuffDecoder, dist: &HuffDecoder, tokens: &mut Vec<TraceToken>) -> Result<(), String> {
+    fn trace_codes(br: &mut BitReader<'_>, out: &mut Vec<u8>, lit: &HuffDecoder, dist: &HuffDecoder, tokens: &mut Vec<TraceToken>) -> Result<(), String> {
         loop {
             let sym = lit.decode(br)? as usize;
             if sym < 256 {
@@ -910,7 +910,7 @@ mod codec_tests {
         }
     }
 
-    async fn trace_first_dynamic_block_details(data: &[u8]) -> Result<(Vec<u8>, Vec<u8>, Vec<TraceToken>), String> {
+    fn trace_first_dynamic_block_details(data: &[u8]) -> Result<(Vec<u8>, Vec<u8>, Vec<TraceToken>), String> {
         let mut br = BitReader::new(data);
         let _final = br.read_bits(1)?;
         if br.read_bits(2)? != 2 {
@@ -955,11 +955,11 @@ mod codec_tests {
         Ok((lit_lengths, dist_lengths, tokens))
     }
 
-    async fn trace_first_dynamic_block(data: &[u8]) -> Result<Vec<TraceToken>, String> {
+    fn trace_first_dynamic_block(data: &[u8]) -> Result<Vec<TraceToken>, String> {
         Ok(trace_first_dynamic_block_details(data)?.2)
     }
 
-    async fn raw_zip_member<'a>(archive: &'a [u8], wanted: &str) -> Option<&'a [u8]> {
+    fn raw_zip_member<'a>(archive: &'a [u8], wanted: &str) -> Option<&'a [u8]> {
         let mut offset = 0usize;
         while archive.get(offset..offset + 4) == Some(b"PK\x03\x04") {
             let compressed = u32::from_le_bytes(archive[offset + 18..offset + 22].try_into().ok()?) as usize;
@@ -975,7 +975,7 @@ mod codec_tests {
         None
     }
 
-    async fn miniz_probe_sync(input: &[u8], probes: u32) -> Vec<u8> {
+    fn miniz_probe_sync(input: &[u8], probes: u32) -> Vec<u8> {
         let mut compressor = miniz_oxide::deflate::core::CompressorOxide::new(probes);
         let mut output = Vec::new();
         let _ = miniz_oxide::deflate::core::compress_to_output(&mut compressor, input, miniz_oxide::deflate::core::TDEFLFlush::Sync, |chunk| {
@@ -989,30 +989,30 @@ mod codec_tests {
         output
     }
 
-    async fn zlib_level(input: &[u8], level: u32) -> Vec<u8> {
+    fn zlib_level(input: &[u8], level: u32) -> Vec<u8> {
         use std::io::Write;
         let mut encoder = flate2::write::DeflateEncoder::new(Vec::new(), flate2::Compression::new(level));
         encoder.write_all(input).expect("zlib input");
         encoder.finish().expect("zlib output")
     }
 
-    async fn zlib_tuned_sync(input: &[u8], good: i32, lazy: i32, nice: i32, chain: i32) -> Vec<u8> {
+    fn zlib_tuned_sync(input: &[u8], good: i32, lazy: i32, nice: i32, chain: i32) -> Vec<u8> {
         deflate_raw_tuned(input, 8, good, lazy, nice, chain, true).expect("tuned raw DEFLATE")
     }
 
-    async fn zlib_tuned_finish(input: &[u8], good: i32, lazy: i32, nice: i32, chain: i32) -> Vec<u8> {
+    fn zlib_tuned_finish(input: &[u8], good: i32, lazy: i32, nice: i32, chain: i32) -> Vec<u8> {
         deflate_raw_tuned(input, 8, good, lazy, nice, chain, false).expect("tuned raw DEFLATE")
     }
 
-    async fn zlib_tuned_finish_memory(input: &[u8], memory: i32, good: i32, lazy: i32, nice: i32, chain: i32) -> Vec<u8> {
+    fn zlib_tuned_finish_memory(input: &[u8], memory: i32, good: i32, lazy: i32, nice: i32, chain: i32) -> Vec<u8> {
         deflate_raw_tuned(input, memory, good, lazy, nice, chain, false).expect("tuned raw DEFLATE")
     }
 
-    async fn token_divergence(expected: &[TraceToken], candidate: &[TraceToken]) -> usize {
+    fn token_divergence(expected: &[TraceToken], candidate: &[TraceToken]) -> usize {
         expected.iter().zip(candidate).position(|(left, right)| left != right).unwrap_or(expected.len().min(candidate.len()))
     }
 
-    async fn token_at_output(tokens: &[TraceToken], output: usize) -> usize {
+    fn token_at_output(tokens: &[TraceToken], output: usize) -> usize {
         tokens
             .iter()
             .position(|token| match token {
@@ -1021,8 +1021,8 @@ mod codec_tests {
             .unwrap_or(tokens.len())
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn exact_pptx_token_divergence_matrix() {
+    #[test]
+    fn exact_pptx_token_divergence_matrix() {
         let archive = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../temp/domai-specific-programmaning-language-for-architects.pptx")).expect("fixture");
         for path in ["[Content_Types].xml", "ppt/presentation.xml", "ppt/slides/slide1.xml", "ppt/slides/slide39.xml"] {
             let expected = raw_zip_member(&archive, path).expect("raw fixture member");
@@ -1059,8 +1059,8 @@ mod codec_tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn exact_pptx_zlib_tune_matrix() {
+    #[test]
+    fn exact_pptx_zlib_tune_matrix() {
         let archive = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../temp/domai-specific-programmaning-language-for-architects.pptx")).expect("fixture");
         let members: Vec<_> = ["[Content_Types].xml", "ppt/presentation.xml", "ppt/slides/slide1.xml", "ppt/slides/slide39.xml"]
             .into_iter()
@@ -1096,19 +1096,19 @@ mod codec_tests {
         for (path, input, _) in &members {
             let expected = raw_zip_member(&archive, path).expect("raw fixture member");
             let candidate = zlib_tuned_sync(input, best.1, best.2, b.awaitest.3, best.4);
-            let prefix = expected.iter().zip(&candidate).position(|(left, right)| left != right).unwrap_or(expected.len().min(candidate.await.len()));
-            eprintln!("[DEBUG] zlib_tune_exact path={path} expected={} candidate={} prefix={prefix} exact={}", expected.len(), candidate.await.len(), expected == candidate);
+            let prefix = expected.iter().zip(&candidate).position(|(left, right)| left != right).unwrap_or(expected.len().min(candidate.len()));
+            eprintln!("[DEBUG] zlib_tune_exact path={path} expected={} candidate={} prefix={prefix} exact={}", expected.len(), candidate.len(), expected == candidate);
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn exact_pptx_emf_tune_matrix() {
+    #[test]
+    fn exact_pptx_emf_tune_matrix() {
         let archive = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../temp/domai-specific-programmaning-language-for-architects.pptx")).expect("fixture");
         let members: Vec<_> = ["ppt/media/image9.emf", "ppt/media/image10.emf", "ppt/media/image11.emf"]
             .into_iter()
             .map(|path| {
                 let expected = raw_zip_member(&archive, path).expect("fixture EMF");
-                (path, inflate_raw(expected).await.expect("inflate fixture EMF"), expected)
+                (path, inflate_raw(expected).expect("inflate fixture EMF"), expected)
             })
             .collect();
         let mut exact = None;
@@ -1122,9 +1122,9 @@ mod codec_tests {
                         let mut all_exact = true;
                         for (_, input, expected) in &members {
                             let candidate = zlib_tuned_sync(input, good, lazy, nice, chain);
-                            let prefix = expected.iter().zip(&candidate).position(|(left, right)| left != right).unwrap_or(expected.len().min(candidate.await.len()));
+                            let prefix = expected.iter().zip(&candidate).position(|(left, right)| left != right).unwrap_or(expected.len().min(candidate.len()));
                             score += prefix;
-                            prefixes.push((prefix, candidate.await.len(), expected.len()));
+                            prefixes.push((prefix, candidate.len(), expected.len()));
                             all_exact &= candidate == *expected;
                         }
                         if score > best.0 {
@@ -1140,11 +1140,11 @@ mod codec_tests {
         eprintln!("[DEBUG] emf_tune paths={:?} exact={exact:?} best={best:?}", members.iter().map(|member| member.0).collect::<Vec<_>>());
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn exact_pptx_bin_tune_matrix() {
+    #[test]
+    fn exact_pptx_bin_tune_matrix() {
         let archive = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../temp/domai-specific-programmaning-language-for-architects.pptx")).expect("fixture");
         let expected = raw_zip_member(&archive, "ppt/embeddings/oleObject1.bin").expect("fixture OLE");
-        let input = inflate_raw(expected).await.expect("inflate fixture OLE");
+        let input = inflate_raw(expected).expect("inflate fixture OLE");
         let expected_tokens = trace_first_dynamic_block(expected).expect("fixture OLE token trace");
         let mut exact = None;
         let mut best = (0usize, 0i32, 0i32, 0i32, 0i32, 0usize);
@@ -1157,11 +1157,11 @@ mod codec_tests {
                         let tokens = trace_first_dynamic_block(&candidate).expect("candidate OLE token trace");
                         let divergence = token_divergence(&expected_tokens, &tokens);
                         if divergence > best.0 {
-                            best = (divergence.await, good, lazy, nice, chain, candidate.await.len());
+                            best = (divergence, good, lazy, nice, chain, candidate.len());
                         }
-                        let size_difference = candidate.await.len().abs_diff(expected.len());
+                        let size_difference = candidate.len().abs_diff(expected.len());
                         if size_difference < closest.0 {
-                            closest = (size_difference, good, lazy, nice, chain, candidate.await.len());
+                            closest = (size_difference, good, lazy, nice, chain, candidate.len());
                         }
                         if candidate == expected {
                             exact = Some((good, lazy, nice, chain));
@@ -1173,23 +1173,23 @@ mod codec_tests {
         eprintln!("[DEBUG] bin_tune input={} expected={} expected_tokens={} exact={exact:?} best_tokens={best:?} closest_size={closest:?}", input.len(), expected.len(), expected_tokens.len());
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn exact_pptx_bin_token_lineage() {
+    #[test]
+    fn exact_pptx_bin_token_lineage() {
         let archive = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../temp/domai-specific-programmaning-language-for-architects.pptx")).expect("fixture");
         let expected = raw_zip_member(&archive, "ppt/embeddings/oleObject1.bin").expect("fixture OLE");
-        let input = inflate_raw(expected).await.expect("inflate fixture OLE");
+        let input = inflate_raw(expected).expect("inflate fixture OLE");
         let expected_tokens = trace_first_dynamic_block(expected).expect("fixture OLE token trace");
         for level in 1..=9 {
             let candidate = zlib_level(&input, level);
             let tokens = trace_first_dynamic_block(&candidate).expect("zlib OLE token trace");
             let divergence = token_divergence(&expected_tokens, &tokens);
-            eprintln!("[DEBUG] bin_lineage backend=zlib level={level} bytes={} first={divergence} expected={:?} candidate={:?}", candidate.await.len(), expected_tokens.get(divergence), tokens.get(divergence));
+            eprintln!("[DEBUG] bin_lineage backend=zlib level={level} bytes={} first={divergence} expected={:?} candidate={:?}", candidate.len(), expected_tokens.get(divergence), tokens.get(divergence));
         }
         for probes in [1, 4, 16, 64, 100, 256, 1024, 4095] {
             let candidate = miniz_probe_sync(&input, probes);
             let tokens = trace_first_dynamic_block(&candidate).expect("miniz OLE token trace");
             let divergence = token_divergence(&expected_tokens, &tokens);
-            eprintln!("[DEBUG] bin_lineage backend=miniz probes={probes} bytes={} first={divergence} expected={:?} candidate={:?}", candidate.await.len(), expected_tokens.get(divergence), tokens.get(divergence));
+            eprintln!("[DEBUG] bin_lineage backend=miniz probes={probes} bytes={} first={divergence} expected={:?} candidate={:?}", candidate.len(), expected_tokens.get(divergence), tokens.get(divergence));
         }
         let candidate = zlib_tuned_finish(&input, 4, 4, 258, 4096);
         let (expected_lit, expected_dist, _) = trace_first_dynamic_block_details(expected).expect("fixture OLE details");
@@ -1207,34 +1207,34 @@ mod codec_tests {
             let candidate = zlib_tuned_finish_memory(&input, memory, 4, 4, 258, 4096);
             let tokens = trace_first_dynamic_block(&candidate).expect("memory OLE token trace");
             let divergence = token_divergence(&expected_tokens, &tokens);
-            let prefix = expected.iter().zip(&cand.awaitidate).position(|(left, right)| left != right).unwrap_or(expected.len().min(candidate.await.len()));
-            eprintln!("[DEBUG] bin_memory memory={memory} bytes={} tokens={} first_token={divergence} prefix={prefix} exact={}", candidate.await.len(), tokens.len(), candidate == expected);
+            let prefix = expected.iter().zip(&cand.awaitidate).position(|(left, right)| left != right).unwrap_or(expected.len().min(candidate.len()));
+            eprintln!("[DEBUG] bin_memory memory={memory} bytes={} tokens={} first_token={divergence} prefix={prefix} exact={}", candidate.len(), tokens.len(), candidate == expected);
         }
-        let candidate = deflate_raw_tuned(&input, 7, 4, 4, 258, 4096, true).await.expect("memory-seven sync OLE");
+        let candidate = deflate_raw_tuned(&input, 7, 4, 4, 258, 4096, true).expect("memory-seven sync OLE");
         let prefix = expected.iter().zip(&candidate).position(|(left, right)| left != right).unwrap_or(expected.len().min(candidate.len()));
         eprintln!("[DEBUG] bin_memory_sync bytes={} prefix={prefix} exact={}", candidate.len(), candidate == expected);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn exact_pptx_bin_policy() {
+    #[test]
+    fn exact_pptx_bin_policy() {
         let archive = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../temp/domai-specific-programmaning-language-for-architects.pptx")).expect("fixture");
         for path in ["ppt/embeddings/oleObject1.bin", "ppt/embeddings/oleObject2.bin", "ppt/embeddings/oleObject3.bin"] {
             let expected = raw_zip_member(&archive, path).expect("fixture OLE");
-            let input = inflate_raw(expected).await.expect("inflate fixture OLE");
-            let candidate = deflate_raw_deterministic_compact_high_search(&input).await.expect("compress fixture OLE");
+            let input = inflate_raw(expected).expect("inflate fixture OLE");
+            let candidate = deflate_raw_deterministic_compact_high_search(&input).expect("compress fixture OLE");
             assert_eq!(candidate, expected, "embedded binary policy must reproduce {path}");
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn exact_pptx_first_member_backend_matrix() {
+    #[test]
+    fn exact_pptx_first_member_backend_matrix() {
         let archive = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../temp/domai-specific-programmaning-language-for-architects.pptx")).expect("fixture");
         let name_len = u16::from_le_bytes([archive[26], archive[27]]) as usize;
         let extra_len = u16::from_le_bytes([archive[28], archive[29]]) as usize;
         let compressed_len = u32::from_le_bytes([archive[18], archive[19], archive[20], archive[21]]) as usize;
         let start = 30 + name_len + extra_len;
         let expected = &archive[start..start + compressed_len];
-        let input = inflate_raw(expected).await.expect("inflate fixture member");
+        let input = inflate_raw(expected).expect("inflate fixture member");
         for level in 0..=10 {
             let candidate = miniz_oxide::deflate::compress_to_vec(&input, level);
             let prefix = candidate.iter().zip(expected).position(|(left, right)| left != right).unwrap_or(candidate.len().min(expected.len()));
@@ -1304,37 +1304,37 @@ mod codec_tests {
         eprintln!("[DEBUG] backend=miniz_oxide probe_matrix exact={exact:?} best={best:?} same_length_count={} same_length_best={:?}", same_length.len(), same_length.iter().max_by_key(|candidate| candidate.3));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn adler32_empty_is_one() {
+    #[test]
+    fn adler32_empty_is_one() {
         assert_eq!(adler32(b""), 1);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn zlib_round_trip() {
+    #[test]
+    fn zlib_round_trip() {
         let payloads: &[&[u8]] = &[b"", b"a", b"hello zlib", &[0u8; 64], b"abracadabra abracadabra"];
         for p in payloads {
-            let enc = zlib_compress(p).await.expect("compress");
-            let dec = zlib_decompress(&enc).await.expect("decompress");
+            let enc = zlib_compress(p).expect("compress");
+            let dec = zlib_decompress(&enc).expect("decompress");
             assert_eq!(&dec, p);
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn illustrator_partial_flush_materialization_matches_fixture_stream() {
+    #[test]
+    fn illustrator_partial_flush_materialization_matches_fixture_stream() {
         let fixture = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../temp/📄️bachelor-thesis.pdf")).expect("fixture");
         let marker = b"/Length 3362\n/Filter /FlateDecode\n>>\nstream\n";
         let start = fixture.windows(marker.len()).position(|window| window == marker).expect("Illustrator stream") + marker.len();
         let expected = &fixture[start..start + 3362];
-        let decoded = zlib_decompress(expected).await.expect("decode Illustrator stream");
-        let actual = zlib_compress_illustrator(&decoded).await.expect("encode Illustrator stream");
+        let decoded = zlib_decompress(expected).expect("decode Illustrator stream");
+        let actual = zlib_compress_illustrator(&decoded).expect("encode Illustrator stream");
         assert_eq!(actual, expected);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn raw_deflate_round_trip() {
+    #[test]
+    fn raw_deflate_round_trip() {
         let p = b"stdio-deflate-conformance";
         let enc = deflate_raw(p);
-        let dec = inflate_raw(&enc).await.expect("inflate");
+        let dec = inflate_raw(&enc).expect("inflate");
         assert_eq!(dec, p);
     }
 
@@ -1343,18 +1343,18 @@ mod codec_tests {
     /// Huffman literal (~9 bits/byte average), so compressing ALWAYS expanded the input by ~12.5%.
     /// This is the regression test for that: real, repetitive text must come out smaller, not
     /// bigger, and must still round-trip exactly.
-    #[semio_framework_async_macros::async_test]
-    async fn raw_deflate_compresses_repetitive_text() {
+    #[test]
+    fn raw_deflate_compresses_repetitive_text() {
         let text = "the quick brown fox jumps over the lazy dog. ".repeat(200);
         let p = text.as_bytes();
         let enc = deflate_raw(p);
-        assert!(enc.await.len() < p.len(), "compressed ({}) should be smaller than input ({}) for highly repetitive text", enc.await.len(), p.len());
-        let dec = inflate_raw(&enc).await.expect("inflate");
+        assert!(enc.len() < p.len(), "compressed ({}) should be smaller than input ({}) for highly repetitive text", enc.len(), p.len());
+        let dec = inflate_raw(&enc).expect("inflate");
         assert_eq!(dec, p);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn raw_deflate_round_trips_binary_with_long_range_matches() {
+    #[test]
+    fn raw_deflate_round_trips_binary_with_long_range_matches() {
         // A repeating 4-byte pattern well past MIN_MATCH, exercising the hash-chain match finder
         // across many window-fulls (data.len() > WINDOW) so distances near the 32KB boundary are
         // exercised too, not just short-range matches.
@@ -1363,13 +1363,13 @@ mod codec_tests {
             p.extend_from_slice(&i.to_le_bytes());
         }
         let enc = deflate_raw(&p);
-        assert!(enc.await.len() < p.len());
-        let dec = inflate_raw(&enc).await.expect("inflate");
+        assert!(enc.len() < p.len());
+        let dec = inflate_raw(&enc).expect("inflate");
         assert_eq!(dec, p);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn raw_deflate_round_trips_random_incompressible_data() {
+    #[test]
+    fn raw_deflate_round_trips_random_incompressible_data() {
         // Match search finding nothing (or only sub-MIN_MATCH runs) must still round-trip --
         // pure-literal fallback path.
         let mut state = 0x2545F4914F6CDD1Du64;
@@ -1381,41 +1381,41 @@ mod codec_tests {
             p.push((state & 0xFF) as u8);
         }
         let enc = deflate_raw(&p);
-        let dec = inflate_raw(&enc).await.expect("inflate");
+        let dec = inflate_raw(&enc).expect("inflate");
         assert_eq!(dec, p);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn codec_round_trip() {
+    #[test]
+    fn codec_round_trip() {
         let payload = b"pack-envelope-payload".to_vec();
         let snap = DeflateSnapshot { schema: STDIO_DEFLATE_DOCUMENT_SCHEMA.into(), compression_method: 8, window_bits: 7, compression_level_hint: DeflateLevelHint::Default, dict_id: None, payload: payload.clone() };
         let pack = store::ArtifactPack::encode_pack(&snap);
-        let decoded = <DeflateSnapshot as store::ArtifactPack>::decode_pack(&pack).await.expect("decode");
+        let decoded = <DeflateSnapshot as store::ArtifactPack>::decode_pack(&pack).expect("decode");
         assert_eq!(decoded, snap);
         assert_eq!(decoded.payload, payload);
     }
 
     /// 🧪️ `encode_deflate_snapshot`/`decode_deflate_snapshot` round-trip every typed header field,
     /// including a preset-dictionary id.
-    #[semio_framework_async_macros::async_test]
-    async fn snapshot_codec_round_trip_with_preset_dictionary() {
+    #[test]
+    fn snapshot_codec_round_trip_with_preset_dictionary() {
         let snap =
             DeflateSnapshot { schema: STDIO_DEFLATE_DOCUMENT_SCHEMA.into(), compression_method: 8, window_bits: 5, compression_level_hint: DeflateLevelHint::Maximum, dict_id: Some(0x1234_5678), payload: b"preset-dictionary-id-round-trip".to_vec() };
         let bytes = encode_deflate_snapshot(&snap);
         // 🪆️ FDICT set + DICTID present between CMF/FLG and the deflate body.
         assert_eq!(bytes[1] & 0x20, 0x20);
-        let decoded = decode_deflate_snapshot(&bytes).await.expect("decode");
+        let decoded = decode_deflate_snapshot(&bytes).expect("decode");
         assert_eq!(decoded, snap);
     }
 
     /// 🧪️ Ticket 26/08/10/…: `decode_deflate_snapshot` rejects a CMF/FLG check failure --
     /// FCHECK is derived, not fabricated, so a corrupted header must not silently decode.
-    #[semio_framework_async_macros::async_test]
-    async fn snapshot_codec_rejects_bad_check_bits() {
+    #[test]
+    fn snapshot_codec_rejects_bad_check_bits() {
         let mut bytes =
             encode_deflate_snapshot(&DeflateSnapshot { schema: STDIO_DEFLATE_DOCUMENT_SCHEMA.into(), compression_method: 8, window_bits: 7, compression_level_hint: DeflateLevelHint::Default, dict_id: None, payload: b"corrupt-me".to_vec() });
         bytes[1] ^= 0x01; // flip a FCHECK bit
-        assert!(decode_deflate_snapshot(&bytes).await.is_err());
+        assert!(decode_deflate_snapshot(&bytes).is_err());
     }
 }
 //#endregion 🧪️CodecTests
@@ -1454,10 +1454,10 @@ pub mod io_registry {
 /// `deflate::declaration()`'s own conversion, repointed directly at this new location by stdio's
 /// plugin root (`🗄️stdio/🦀️component.rs`).
 #[cfg(not(target_arch = "wasm32"))]
-pub async fn register_schema_specs() {
+pub fn register_schema_specs() {
     dsl::registry::register_schema_spec("stdio.deflate", DeflateSnapshot::__dsl_spec);
 }
 
 #[cfg(target_arch = "wasm32")]
-pub async fn register_schema_specs() {}
+pub fn register_schema_specs() {}
 //#endregion 🔖️RegisterSchemaSpecs

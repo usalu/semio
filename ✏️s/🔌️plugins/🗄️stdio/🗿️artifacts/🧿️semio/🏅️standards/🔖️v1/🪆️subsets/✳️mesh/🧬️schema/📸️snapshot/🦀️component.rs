@@ -514,7 +514,7 @@ fn encode_mesh_snapshot_binary(s: &SemioMeshSnapshot) -> Vec<u8> {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn decode_mesh_snapshot_binary(bytes: &[u8]) -> Result<SemioMeshSnapshot, String> {
     const PACK_BINARY_FORMAT: u8 = 1;
-    let mut reader = semio_framework_plugin::resolve_ready(store::ByteReader::new(bytes));
+    let mut reader = store::ByteReader::new(bytes);
     let format = reader.read_u8().map_err(|e| e.to_string())?;
     if format != PACK_BINARY_FORMAT {
         return Err(format!("unsupported pack format {format}"));
@@ -635,17 +635,9 @@ pub fn demo_mesh_snapshot() -> SemioMeshSnapshot {
             primitives: vec![SemioPrimitive {
                 id: "prim-1".into(),
                 topology: SemioTopology::Triangles,
-                positions: vec![
-                    SemioPoint3 { x: 0.0, y: 0.0, z: 0.0 },
-                    SemioPoint3 { x: 1.0, y: 0.0, z: 0.0 },
-                    SemioPoint3 { x: 0.0, y: 1.0, z: 0.0 },
-                ],
+                positions: vec![SemioPoint3 { x: 0.0, y: 0.0, z: 0.0 }, SemioPoint3 { x: 1.0, y: 0.0, z: 0.0 }, SemioPoint3 { x: 0.0, y: 1.0, z: 0.0 }],
                 normals: vec![SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 }; 3],
-                uvs: vec![
-                    SemioUv { u: 0.0, v: 0.0 },
-                    SemioUv { u: 1.0, v: 0.0 },
-                    SemioUv { u: 0.0, v: 1.0 },
-                ],
+                uvs: vec![SemioUv { u: 0.0, v: 0.0 }, SemioUv { u: 1.0, v: 0.0 }, SemioUv { u: 0.0, v: 1.0 }],
                 colors: vec![SemioRgba { r: 1.0, g: 1.0, b: 1.0, a: 1.0 }; 3],
                 indices: vec![0, 1, 2],
                 material_id: Some("mat-1".into()),

@@ -42,10 +42,10 @@ use serde::{Deserialize, Serialize};
 /// `DxfBlock` — the latter's own nested `entities` field reuses `DxfEntity`'s impl directly).
 trait DxfIndexElem: Clone + PartialEq {
     type Diff: Clone + PartialEq;
-    async fn diff_is_empty(d: &Self::Diff) -> bool;
-    async fn diff_between(a: &Self, b: &Self) -> Self::Diff;
-    async fn diff_apply(d: &Self::Diff, item: &mut Self);
-    async fn diff_absorb(base: &mut Self::Diff, other: Self::Diff);
+    fn diff_is_empty(d: &Self::Diff) -> bool;
+    fn diff_between(a: &Self, b: &Self) -> Self::Diff;
+    fn diff_apply(d: &Self::Diff, item: &mut Self);
+    fn diff_absorb(base: &mut Self::Diff, other: Self::Diff);
 }
 
 /// ▶️ Applies a `(removed, modified, added)` triple to a base array — modified on BASE
@@ -211,10 +211,10 @@ fn generic_absorb_pair<T: DxfIndexElem>(
 /// entries).
 trait DxfNamedElem: Clone + PartialEq {
     type Diff: Clone + PartialEq + Default;
-    async fn key(&self) -> &str;
-    async fn diff_between(a: &Self, b: &Self) -> Self::Diff;
-    async fn diff_apply(d: &Self::Diff, item: &mut Self);
-    async fn diff_absorb(base: &mut Self::Diff, other: Self::Diff);
+    fn key(&self) -> &str;
+    fn diff_between(a: &Self, b: &Self) -> Self::Diff;
+    fn diff_apply(d: &Self::Diff, item: &mut Self);
+    fn diff_absorb(base: &mut Self::Diff, other: Self::Diff);
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -315,17 +315,17 @@ pub struct DxfHeaderVarDiff {
 }
 impl DxfNamedElem for DxfHeaderVar {
     type Diff = DxfHeaderVarDiff;
-    async fn key(&self) -> &str {
+    fn key(&self) -> &str {
         &self.name
     }
-    async fn diff_between(a: &Self, b: &Self) -> Self::Diff {
+    fn diff_between(a: &Self, b: &Self) -> Self::Diff {
         DxfHeaderVarDiff {
             group_code: (a.group_code != b.group_code).then_some(b.group_code),
             value: (a.value != b.value).then(|| b.value.clone()),
             extra_group_codes: (a.extra_group_codes != b.extra_group_codes).then(|| b.extra_group_codes.clone()),
         }
     }
-    async fn diff_apply(d: &Self::Diff, item: &mut Self) {
+    fn diff_apply(d: &Self::Diff, item: &mut Self) {
         if let Some(v) = d.group_code {
             item.group_code = v;
         }
@@ -336,7 +336,7 @@ impl DxfNamedElem for DxfHeaderVar {
             item.extra_group_codes = v.clone();
         }
     }
-    async fn diff_absorb(base: &mut Self::Diff, other: Self::Diff) {
+    fn diff_absorb(base: &mut Self::Diff, other: Self::Diff) {
         if other.group_code.is_some() {
             base.group_code = other.group_code;
         }
@@ -423,10 +423,10 @@ pub struct DxfLayerDiff {
 }
 impl DxfNamedElem for DxfLayer {
     type Diff = DxfLayerDiff;
-    async fn key(&self) -> &str {
+    fn key(&self) -> &str {
         &self.name
     }
-    async fn diff_between(a: &Self, b: &Self) -> Self::Diff {
+    fn diff_between(a: &Self, b: &Self) -> Self::Diff {
         DxfLayerDiff {
             color: (a.color != b.color).then_some(b.color),
             linetype: (a.linetype != b.linetype).then(|| b.linetype.clone()),
@@ -434,7 +434,7 @@ impl DxfNamedElem for DxfLayer {
             unknown_group_codes: (a.unknown_group_codes != b.unknown_group_codes).then(|| b.unknown_group_codes.clone()),
         }
     }
-    async fn diff_apply(d: &Self::Diff, item: &mut Self) {
+    fn diff_apply(d: &Self::Diff, item: &mut Self) {
         if let Some(v) = d.color {
             item.color = v;
         }
@@ -448,7 +448,7 @@ impl DxfNamedElem for DxfLayer {
             item.unknown_group_codes = v.clone();
         }
     }
-    async fn diff_absorb(base: &mut Self::Diff, other: Self::Diff) {
+    fn diff_absorb(base: &mut Self::Diff, other: Self::Diff) {
         if other.color.is_some() {
             base.color = other.color;
         }
@@ -536,17 +536,17 @@ pub struct DxfStyleDiff {
 }
 impl DxfNamedElem for DxfStyle {
     type Diff = DxfStyleDiff;
-    async fn key(&self) -> &str {
+    fn key(&self) -> &str {
         &self.name
     }
-    async fn diff_between(a: &Self, b: &Self) -> Self::Diff {
+    fn diff_between(a: &Self, b: &Self) -> Self::Diff {
         DxfStyleDiff {
             flags: (a.flags != b.flags).then_some(b.flags),
             font_name: (a.font_name != b.font_name).then(|| b.font_name.clone()),
             unknown_group_codes: (a.unknown_group_codes != b.unknown_group_codes).then(|| b.unknown_group_codes.clone()),
         }
     }
-    async fn diff_apply(d: &Self::Diff, item: &mut Self) {
+    fn diff_apply(d: &Self::Diff, item: &mut Self) {
         if let Some(v) = d.flags {
             item.flags = v;
         }
@@ -557,7 +557,7 @@ impl DxfNamedElem for DxfStyle {
             item.unknown_group_codes = v.clone();
         }
     }
-    async fn diff_absorb(base: &mut Self::Diff, other: Self::Diff) {
+    fn diff_absorb(base: &mut Self::Diff, other: Self::Diff) {
         if other.flags.is_some() {
             base.flags = other.flags;
         }
@@ -642,17 +642,17 @@ pub struct DxfLinetypeDiff {
 }
 impl DxfNamedElem for DxfLinetype {
     type Diff = DxfLinetypeDiff;
-    async fn key(&self) -> &str {
+    fn key(&self) -> &str {
         &self.name
     }
-    async fn diff_between(a: &Self, b: &Self) -> Self::Diff {
+    fn diff_between(a: &Self, b: &Self) -> Self::Diff {
         DxfLinetypeDiff {
             flags: (a.flags != b.flags).then_some(b.flags),
             description: (a.description != b.description).then(|| b.description.clone()),
             unknown_group_codes: (a.unknown_group_codes != b.unknown_group_codes).then(|| b.unknown_group_codes.clone()),
         }
     }
-    async fn diff_apply(d: &Self::Diff, item: &mut Self) {
+    fn diff_apply(d: &Self::Diff, item: &mut Self) {
         if let Some(v) = d.flags {
             item.flags = v;
         }
@@ -663,7 +663,7 @@ impl DxfNamedElem for DxfLinetype {
             item.unknown_group_codes = v.clone();
         }
     }
-    async fn diff_absorb(base: &mut Self::Diff, other: Self::Diff) {
+    fn diff_absorb(base: &mut Self::Diff, other: Self::Diff) {
         if other.flags.is_some() {
             base.flags = other.flags;
         }
@@ -1124,13 +1124,13 @@ fn apply_entity_diff(d: &DxfEntityDiff, item: &mut DxfEntity) {
 
 impl DxfIndexElem for DxfEntity {
     type Diff = DxfEntityDiff;
-    async fn diff_is_empty(d: &Self::Diff) -> bool {
+    fn diff_is_empty(d: &Self::Diff) -> bool {
         entity_diff_is_empty(d)
     }
-    async fn diff_between(a: &Self, b: &Self) -> Self::Diff {
+    fn diff_between(a: &Self, b: &Self) -> Self::Diff {
         entity_diff_between(a, b)
     }
-    async fn diff_apply(d: &Self::Diff, item: &mut Self) {
+    fn diff_apply(d: &Self::Diff, item: &mut Self) {
         if let DxfEntityDiff::Replace { entity } = d {
             *item = entity.clone();
         } else {
@@ -1141,7 +1141,7 @@ impl DxfIndexElem for DxfEntity {
     /// merge field-by-field (LWW); a `Replace` on either side wins (mid/after ultimately becomes
     /// that literal entity), with a trailing kind-specific `other` patched INTO the carried
     /// replacement payload — the recipe's canonical "patch into added/replaced payload" case.
-    async fn diff_absorb(base: &mut Self::Diff, other: Self::Diff) {
+    fn diff_absorb(base: &mut Self::Diff, other: Self::Diff) {
         *base = match (base.clone(), other) {
             (DxfEntityDiff::Replace { .. }, DxfEntityDiff::Replace { entity: e2 }) => DxfEntityDiff::Replace { entity: e2 },
             (DxfEntityDiff::Replace { mut entity }, other_diff) => {
@@ -1357,10 +1357,10 @@ pub struct DxfBlockDiff {
 }
 impl DxfIndexElem for DxfBlock {
     type Diff = DxfBlockDiff;
-    async fn diff_is_empty(d: &Self::Diff) -> bool {
+    fn diff_is_empty(d: &Self::Diff) -> bool {
         d == &DxfBlockDiff::default()
     }
-    async fn diff_between(a: &Self, b: &Self) -> Self::Diff {
+    fn diff_between(a: &Self, b: &Self) -> Self::Diff {
         DxfBlockDiff {
             name: (a.name != b.name).then(|| b.name.clone()),
             base_point: (a.base_point != b.base_point).then_some(b.base_point),
@@ -1368,7 +1368,7 @@ impl DxfIndexElem for DxfBlock {
             unknown_group_codes: (a.unknown_group_codes != b.unknown_group_codes).then(|| b.unknown_group_codes.clone()),
         }
     }
-    async fn diff_apply(d: &Self::Diff, item: &mut Self) {
+    fn diff_apply(d: &Self::Diff, item: &mut Self) {
         if let Some(v) = &d.name {
             item.name = v.clone();
         }
@@ -1382,7 +1382,7 @@ impl DxfIndexElem for DxfBlock {
             item.unknown_group_codes = v.clone();
         }
     }
-    async fn diff_absorb(base: &mut Self::Diff, other: Self::Diff) {
+    fn diff_absorb(base: &mut Self::Diff, other: Self::Diff) {
         if other.name.is_some() {
             base.name = other.name;
         }
@@ -3080,7 +3080,7 @@ pub(crate) fn enc_header_var_diff_bin(d: &DxfHeaderVarDiff, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_header_var_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfHeaderVarDiff, String> {
-    let group_code = read_option_bin(reader, |r| Ok(semio_framework_plugin::resolve_ready(r.read_varint_i64()).map_err(|e| e.to_string())? as i32))?;
+    let group_code = read_option_bin(reader, |r| Ok(r.read_varint_i64().map_err(|e| e.to_string())? as i32))?;
     let value = read_option_bin(reader, dec_dxf_value_bin)?;
     let extra_group_codes = read_option_bin(reader, dec_group_codes_bin)?;
     Ok(DxfHeaderVarDiff { group_code, value, extra_group_codes })
@@ -3094,9 +3094,9 @@ pub(crate) fn enc_layer_diff_bin(d: &DxfLayerDiff, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_layer_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfLayerDiff, String> {
-    let color = read_option_bin(reader, |r| Ok(semio_framework_plugin::resolve_ready(r.read_varint_i64()).map_err(|e| e.to_string())? as i32))?;
+    let color = read_option_bin(reader, |r| Ok(r.read_varint_i64().map_err(|e| e.to_string())? as i32))?;
     let linetype = read_option_bin(reader, read_str_lp)?;
-    let flags = read_option_bin(reader, |r| Ok(semio_framework_plugin::resolve_ready(r.read_varint_i64()).map_err(|e| e.to_string())? as i32))?;
+    let flags = read_option_bin(reader, |r| Ok(r.read_varint_i64().map_err(|e| e.to_string())? as i32))?;
     let unknown_group_codes = read_option_bin(reader, dec_group_codes_bin)?;
     Ok(DxfLayerDiff { color, linetype, flags, unknown_group_codes })
 }
@@ -3108,7 +3108,7 @@ pub(crate) fn enc_style_diff_bin(d: &DxfStyleDiff, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_style_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfStyleDiff, String> {
-    let flags = read_option_bin(reader, |r| Ok(semio_framework_plugin::resolve_ready(r.read_varint_i64()).map_err(|e| e.to_string())? as i32))?;
+    let flags = read_option_bin(reader, |r| Ok(r.read_varint_i64().map_err(|e| e.to_string())? as i32))?;
     let font_name = read_option_bin(reader, read_str_lp)?;
     let unknown_group_codes = read_option_bin(reader, dec_group_codes_bin)?;
     Ok(DxfStyleDiff { flags, font_name, unknown_group_codes })
@@ -3121,7 +3121,7 @@ pub(crate) fn enc_linetype_diff_bin(d: &DxfLinetypeDiff, out: &mut Vec<u8>) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_linetype_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfLinetypeDiff, String> {
-    let flags = read_option_bin(reader, |r| Ok(semio_framework_plugin::resolve_ready(r.read_varint_i64()).map_err(|e| e.to_string())? as i32))?;
+    let flags = read_option_bin(reader, |r| Ok(r.read_varint_i64().map_err(|e| e.to_string())? as i32))?;
     let description = read_option_bin(reader, read_str_lp)?;
     let unknown_group_codes = read_option_bin(reader, dec_group_codes_bin)?;
     Ok(DxfLinetypeDiff { flags, description, unknown_group_codes })
@@ -3226,7 +3226,7 @@ pub(crate) fn dec_entity_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<
         }
         3 => {
             let vertices = read_option_bin(reader, dec_vertices_bin)?;
-            let closed = read_option_bin(reader, |r| Ok(semio_framework_plugin::resolve_ready(r.read_u8()).map_err(|e| e.to_string())? != 0))?;
+            let closed = read_option_bin(reader, |r| Ok(r.read_u8().map_err(|e| e.to_string())? != 0))?;
             let layer = read_option_bin(reader, read_str_lp)?;
             let unknown_group_codes = read_option_bin(reader, dec_group_codes_bin)?;
             Ok(DxfEntityDiff::Polyline(DxfPolylineDiff { vertices, closed, layer, unknown_group_codes }))
@@ -3543,10 +3543,10 @@ impl protocol::DiffCodec for DxfDiff {
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
         let _format = reader.read_u8().map_err(|e| malformed("diff format", 0, e.to_string()))?;
         let flags = reader.read_u8().map_err(|e| malformed("diff flags", 1, e.to_string()))?;
-        let header_vars = if flags & 0b0001 != 0 { Some(dec_header_vars_diff_bin(&mut reader).map_err(|e| malformed("diff header_vars", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
-        let tables = if flags & 0b0010 != 0 { Some(dec_tables_diff_bin(&mut reader).map_err(|e| malformed("diff tables", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
-        let blocks = if flags & 0b0100 != 0 { Some(dec_blocks_diff_bin(&mut reader).map_err(|e| malformed("diff blocks", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
-        let entities = if flags & 0b1000 != 0 { Some(dec_entities_diff_bin(&mut reader).map_err(|e| malformed("diff entities", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
+        let header_vars = if flags & 0b0001 != 0 { Some(dec_header_vars_diff_bin(&mut reader).map_err(|e| malformed("diff header_vars", reader.position(), e))?) } else { None };
+        let tables = if flags & 0b0010 != 0 { Some(dec_tables_diff_bin(&mut reader).map_err(|e| malformed("diff tables", reader.position(), e))?) } else { None };
+        let blocks = if flags & 0b0100 != 0 { Some(dec_blocks_diff_bin(&mut reader).map_err(|e| malformed("diff blocks", reader.position(), e))?) } else { None };
+        let entities = if flags & 0b1000 != 0 { Some(dec_entities_diff_bin(&mut reader).map_err(|e| malformed("diff entities", reader.position(), e))?) } else { None };
         Ok(DxfDiff { header_vars, tables, blocks, entities })
     }
 }
@@ -3632,8 +3632,8 @@ mod handcrafted_diff_codec_tests {
     /// `Replace` (kind-change) branch of `DxfEntityDiff` and a NON-`Replace` kind-specific patch,
     /// plus a nested block-level `entities` sub-diff (the SAME `DxfEntitiesDiff` machinery reused
     /// at two tree depths) — shared with `⚙️engine/🦀️component.rs`'s own conformance laws.
-    #[semio_framework_async_macros::async_test]
-    async fn diff_codec_text_binary_roundtrip_law() {
+    #[test]
+    fn diff_codec_text_binary_roundtrip_law() {
         for d in demo_diff_cases() {
             let printed = d.print_diff();
             assert!(!printed.contains('\n'), "print_diff must never contain a newline, for {d:?}");

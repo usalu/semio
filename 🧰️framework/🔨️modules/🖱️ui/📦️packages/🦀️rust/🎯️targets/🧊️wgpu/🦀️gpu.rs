@@ -34,10 +34,8 @@ impl GpuContext {
         let css_height = size.height as f32 / dpr;
         let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor { backends: if cfg!(target_arch = "wasm32") { wgpu::Backends::BROWSER_WEBGPU } else { wgpu::Backends::PRIMARY }, ..Default::default() });
         let surface = instance.create_surface(wgpu::SurfaceTarget::Window(Box::new(window))).map_err(|err| format!("surface: {err:?}"))?;
-        let adapter = instance
-            .request_adapter(&wgpu::RequestAdapterOptions { power_preference: wgpu::PowerPreference::HighPerformance, compatible_surface: Some(&surface), force_fallback_adapter: false })
-            .await
-            .map_err(|err| format!("adapter: {err:?}"))?;
+        let adapter =
+            instance.request_adapter(&wgpu::RequestAdapterOptions { power_preference: wgpu::PowerPreference::HighPerformance, compatible_surface: Some(&surface), force_fallback_adapter: false }).await.map_err(|err| format!("adapter: {err:?}"))?;
         let (device, queue) = adapter
             .request_device(&wgpu::DeviceDescriptor {
                 label: Some("ui_wgpu"),
@@ -166,7 +164,21 @@ impl GpuContext {
         self.pipelines.render_scene_content(&self.device, &self.queue, &mut scene_encoder, scene, depth_view, &packet.draw, &self.mesh_store, &self.raster_store, &mut self.frame_buffers, self.width as f32, self.height as f32, packet.time_seconds);
         self.queue.submit(Some(scene_encoder.finish()));
         let mut composite_encoder = self.device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("ui_wgpu_composite") });
-        self.pipelines.composite_to_swapchain(&self.device, &self.queue, &mut composite_encoder, &view, scene, depth_view, &packet.draw, packet.overlay.as_ref(), &self.mesh_store, &self.raster_store, &mut self.frame_buffers, self.width as f32, self.height as f32);
+        self.pipelines.composite_to_swapchain(
+            &self.device,
+            &self.queue,
+            &mut composite_encoder,
+            &view,
+            scene,
+            depth_view,
+            &packet.draw,
+            packet.overlay.as_ref(),
+            &self.mesh_store,
+            &self.raster_store,
+            &mut self.frame_buffers,
+            self.width as f32,
+            self.height as f32,
+        );
         self.queue.submit(Some(composite_encoder.finish()));
         frame.present();
         Ok(())
@@ -181,19 +193,7 @@ impl GpuContext {
     }
 
     pub fn ensure_raster_texture(&mut self, key: &str, pixels: &[u8], width: u32, height: u32) {
-        self.raster_store.ensure_raster(
-            &self.device,
-            &self.queue,
-            self.pipelines.globals_buffer(),
-            &self.pipelines.glyph_view(),
-            self.pipelines.glyph_sampler(),
-            &self.pipelines.icon_view(),
-            self.pipelines.icon_sampler(),
-            key,
-            pixels,
-            width,
-            height,
-        );
+        self.raster_store.ensure_raster(&self.device, &self.queue, self.pipelines.globals_buffer(), &self.pipelines.glyph_view(), self.pipelines.glyph_sampler(), &self.pipelines.icon_view(), self.pipelines.icon_sampler(), key, pixels, width, height);
     }
 
     pub fn ensure_world_plane_texture(&mut self, key: &str, pixels: &[u8], width: u32, height: u32) {

@@ -97,11 +97,11 @@ impl ArtifactViewer for XlsxViewer {
         Ok(ViewEmit::default())
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
-        match body_key {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::ComponentTree {
+        semio_framework_plugin::built_to_component_tree(match body_key {
             main::BODY_KEY => main::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
-        }
+            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))),
+        })
     }
 }
 //#endregion 🔖️Viewer
@@ -109,14 +109,7 @@ impl ArtifactViewer for XlsxViewer {
 //#region 🔖️Manifest
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn create_xlsx_viewer() -> semio_framework_plugin::AppDefinition {
-    Viewer::builder(XLSX_DIALECT)
-        .document(["stdio", "xlsx"])
-        .icon_id("table")
-        .mode_def(view::definition())
-        .default_mode_id(view::XLSX_VIEW_MODE_ID)
-        .window_kind_def(main::definition())
-        .default_layout(view::layout())
-        .build_definition()
+    Viewer::builder(XLSX_DIALECT).document(["stdio", "xlsx"]).icon_id("table").mode_def(view::definition()).default_mode_id(view::XLSX_VIEW_MODE_ID).window_kind_def(main::definition()).default_layout(view::layout()).build_definition()
 }
 //#endregion 🔖️Manifest
 

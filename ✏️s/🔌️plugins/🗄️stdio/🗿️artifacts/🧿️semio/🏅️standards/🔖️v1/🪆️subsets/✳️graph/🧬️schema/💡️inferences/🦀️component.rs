@@ -26,19 +26,19 @@ pub struct SemioGraphInference {
 }
 
 impl protocol::Inference<SemioGraphSnapshot> for SemioGraphInference {
-    async fn infer(snapshot: &SemioGraphSnapshot) -> Self {
+    fn infer(snapshot: &SemioGraphSnapshot) -> Self {
         Self { topology: compute_semio_graph_topology(snapshot) }
     }
 }
 
 impl protocol::InferenceSpec<SemioGraphSnapshot> for SemioGraphInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.stdio.semio.graph.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.semio.graph.inference.topology", reads: &["nodes", "edges"] }]
     }
 }

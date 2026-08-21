@@ -9,7 +9,7 @@
 use crate::artifacts::deflate::schema::snapshot::DeflateLevelHint;
 use crate::artifacts::deflate::DeflateSnapshot;
 use semio_framework_plugin::app::{TextView, TextWindowKit, WindowKit};
-use semio_framework_plugin::{LocalizedLabel, UiNode, WindowKindDefinition};
+use semio_framework_plugin::{BuiltNode, LocalizedLabel, WindowKindDefinition};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = TextWindowKit::KIND_ID;
@@ -61,11 +61,11 @@ pub fn preset_dictionary_text(dict_id: Option<u32>) -> String {
 //#endregion 🔖️Codec
 
 //#region 🔖️Render
-/// ✏️ Real `DeflateSnapshot -> UiNode`: a `key=value` line per header field, editable
+/// ✏️ Real `DeflateSnapshot -> BuiltNode`: a `key=value` line per header field, editable
 /// (`read_only: false`), plus a trailing `#`-prefixed comment line stating the payload byte count
 /// (informational only — `#`-prefixed lines are never parsed back on `replace-text`).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &DeflateSnapshot) -> UiNode {
+pub fn render(document: &DeflateSnapshot) -> BuiltNode {
     let text = format!(
         "method={}\nwindowBits={}\nlevelHint={}\npresetDictionary={}\n# payloadBytes: {} (payload content is not shown or editable here)",
         document.compression_method,

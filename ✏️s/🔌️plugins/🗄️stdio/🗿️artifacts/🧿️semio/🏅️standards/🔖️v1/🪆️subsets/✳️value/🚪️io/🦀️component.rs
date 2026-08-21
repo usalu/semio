@@ -7,8 +7,8 @@ pub mod derived_composition {
     use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueSnapshot, ValueId};
     use crate::artifacts::semio::standards::v1::subsets::value::schema::SemioValueAnalyzer;
     use semio_framework_plugin::{
-        deserializer_entry_of, register_composer_entries, register_subset_validator, serializer_entry_of, subset_validator_entry_of, AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, ComposerEntry, Composition,
-        Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry,
+        deserializer_entry_of, register_composer_entries, register_subset_validator, serializer_entry_of, subset_validator_entry_of, AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, ComposerEntry, Composition, Dialect, IoPayload,
+        StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry,
     };
     use std::collections::HashSet;
 
@@ -138,7 +138,6 @@ pub mod derived_composition {
     //#region 🧪️Tests
     #[cfg(test)]
     mod tests {
-        
 
         //#region 🔖️ConformanceLaws
         /// 🧪️ Per-facet conformance laws (grammar-recipe.md §4 deliverable 7): grammar/protocol
@@ -150,7 +149,7 @@ pub mod derived_composition {
         /// scope), same convention `json`'s `⚙️engine/🦀️component.rs` and `flow`'s own
         /// `🎹️composer/🦀️component.rs` use.
         mod conformance_laws {
-            
+
             use crate::artifacts::semio::standards::v1::subsets::value::schema::{diff, mutations, snapshot};
             use protocol::{DiffCodec, OpBinary, OpText};
 

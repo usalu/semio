@@ -1,0 +1,13 @@
+{
+  "title": "Resumable WFC Puzzle2D and Energy Jobs",
+  "emoji": "🌀️",
+  "status": "open",
+  "description": "Phase 7 of the Interactivity-First Refactor. Convert WFC compile-and-solve into a persistent staged solver with domain bitsets, entropy heap generations, propagation queue, trail, seeded checkpointed RNG, bounded edge work and detailed previews; migrate Puzzle2D fill to the same bounded job pattern as Puzzle3D; convert Energy Engine::run into a staged EnergyJob with quality tiers, chronological deterministic reductions, progress previews, cancellation, checkpoints, and a batch adapter driving the same job. Verify continuous internal progress, cancellation at every stage, deterministic results across worker counts, and no solver-owned pools.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2583"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪7504c10594734723b185fb2f8f5ac055"
+  ]
+}

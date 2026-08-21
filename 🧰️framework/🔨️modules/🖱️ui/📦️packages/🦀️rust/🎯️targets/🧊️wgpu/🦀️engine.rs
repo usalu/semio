@@ -7,13 +7,13 @@
 //! path stays the only pipeline actually driving pixels until a later workstream proves this façade
 //! out (via the golden `tests` module below) and cuts over.
 
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 
 use crate::wgpu::component::layout::WindowLayout;
 use crate::wgpu::component::ui::UiNode;
 use crate::wgpu::draw::{DrawList, IconAtlas};
 use crate::wgpu::events::{EventRouter, UiCommand, UiEvent};
-use crate::wgpu::flex::LayoutEngine;
+use crate::wgpu::flex::{LayoutEngine, LayoutJob, LayoutJobStage, LayoutJobStep};
 use crate::wgpu::paint::paint_tree;
 use crate::wgpu::scene_slots::{collect_scene_slots, SceneHost};
 use crate::wgpu::shell::{Shell, ShellEvent};
@@ -34,11 +34,14 @@ struct UiWindow {
     router: EventRouter,
     draw: DrawList,
     viewport: (f32, f32),
+    layout_job: Option<LayoutJob>,
+    lane: SurfaceLane,
+    queued: bool,
 }
 
 impl UiWindow {
     fn new(window_id: &str) -> Self {
-        Self { tree: UiTree::new(), layout: LayoutEngine::new(), router: EventRouter::new(window_id), draw: DrawList::default(), viewport: (0.0, 0.0) }
+        Self { tree: UiTree::new(), layout: LayoutEngine::new(), router: EventRouter::new(window_id), draw: DrawList::default(), viewport: (0.0, 0.0), layout_job: None, lane: SurfaceLane::UserVisible, queued: false }
     }
 
     /// 🚨️ Whether this window's root (and thus, transitively, anything below it per
@@ -48,6 +51,53 @@ impl UiWindow {
     }
 }
 //#endregion 🔖️UiWindow
+
+//#region 🚦️SurfaceScheduling
+/// 🚦️Priority lane for resumable per-surface layout. The weighted wheel favors direct
+/// interaction without allowing user-visible or background surfaces to starve.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum SurfaceLane {
+    Interactive,
+    #[default]
+    UserVisible,
+    Background,
+}
+
+impl SurfaceLane {
+    const fn index(self) -> usize {
+        match self {
+            Self::Interactive => 0,
+            Self::UserVisible => 1,
+            Self::Background => 2,
+        }
+    }
+}
+
+const LANE_WHEEL: [SurfaceLane; 6] = [SurfaceLane::Interactive, SurfaceLane::Interactive, SurfaceLane::UserVisible, SurfaceLane::Interactive, SurfaceLane::UserVisible, SurfaceLane::Background];
+
+/// 🧭️Observable result of exactly one bounded surface-layout scheduling call.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum UiLayoutStep {
+    Idle,
+    Yielded { window_id: String, lane: SurfaceLane, stage: &'static str, nodes: usize, glyphs: usize },
+    Ready { window_id: String, lane: SurfaceLane },
+    Cancelled { window_id: String, lane: SurfaceLane },
+}
+
+fn stage_label(stage: LayoutJobStage) -> &'static str {
+    match stage {
+        LayoutJobStage::CollectNodes => "Layout.CollectNodes",
+        LayoutJobStage::ShapeText => "Layout.ShapeText",
+        LayoutJobStage::PruneRemoved => "Layout.PruneRemoved",
+        LayoutJobStage::SyncNodes => "Layout.SyncNodes",
+        LayoutJobStage::SolveLayout => "Layout.SolveLayout",
+        LayoutJobStage::MeasureFallback => "Layout.MeasureFallback",
+        LayoutJobStage::ArrangeFallback => "Layout.ArrangeFallback",
+        LayoutJobStage::CollectResults => "Layout.CollectResults",
+        LayoutJobStage::PublishResults => "Layout.PublishResults",
+    }
+}
+//#endregion 🚦️SurfaceScheduling
 
 //#region 🔖️Ui
 /// 🧵️ Assembles the individually-milestoned retained modules into the one façade a host drives per
@@ -64,15 +114,27 @@ pub struct Ui {
     shell: Shell,
     theme: Theme,
     pending_commands: Vec<UiCommand>,
+    layout_queues: [VecDeque<String>; 3],
+    lane_cursor: usize,
 }
 
 impl Ui {
     pub fn new() -> Self {
-        Self { windows: HashMap::new(), shell: Shell::new(), theme: Theme::default(), pending_commands: Vec::new() }
+        Self { windows: HashMap::new(), shell: Shell::new(), theme: Theme::default(), pending_commands: Vec::new(), layout_queues: std::array::from_fn(|_| VecDeque::new()), lane_cursor: 0 }
     }
 
     pub fn set_theme(&mut self, theme: Theme) {
         self.theme = theme;
+        let ids: Vec<String> = self.windows.keys().cloned().collect();
+        for id in ids {
+            if let Some(window) = self.windows.get_mut(&id) {
+                window.layout_job = None;
+                if let Some(root) = window.tree.root {
+                    window.tree.mark_dirty(root, NodeFlags::DIRTY_LAYOUT);
+                }
+            }
+            self.enqueue_layout(&id);
+        }
     }
 
     fn window_mut(&mut self, window_id: &str) -> &mut UiWindow {
@@ -82,13 +144,98 @@ impl Ui {
     /// 📐️ Stores the viewport a later `frame` call lays out against for `window_id`, creating that
     /// window's retained state on first use.
     pub fn set_viewport(&mut self, window_id: &str, width: f32, height: f32) {
-        self.window_mut(window_id).viewport = (width, height);
+        let window = self.window_mut(window_id);
+        if window.viewport == (width, height) {
+            return;
+        }
+        window.viewport = (width, height);
+        window.layout_job = None;
+        if let Some(root) = window.tree.root {
+            window.tree.mark_dirty(root, NodeFlags::DIRTY_LAYOUT);
+        }
+        self.enqueue_layout(window_id);
     }
 
     /// 🔁️ Runs `UiTree::apply_tree` (`reconcile`) to diff `ui_node` into `window_id`'s retained tree,
     /// creating that window's tree/layout-engine/event-router on first use.
     pub fn apply_tree(&mut self, window_id: &str, ui_node: &UiNode) {
-        self.window_mut(window_id).tree.apply_tree(ui_node);
+        let window = self.window_mut(window_id);
+        let unchanged = window.tree.root.and_then(|root| window.tree.node(root)).is_some_and(|node| node.spec.0 == *ui_node);
+        window.tree.apply_tree(ui_node);
+        let needs_layout = window.tree.root.and_then(|root| window.tree.node(root)).is_some_and(|node| node.flags.contains(NodeFlags::DIRTY_LAYOUT) || node.flags.contains(NodeFlags::SUBTREE_DIRTY));
+        if needs_layout {
+            if !unchanged {
+                window.layout_job = None;
+            }
+            self.enqueue_layout(window_id);
+        }
+    }
+
+    /// 🚦️Changes a surface lane without duplicating its pending queue entry.
+    pub fn set_surface_lane(&mut self, window_id: &str, lane: SurfaceLane) {
+        let window = self.window_mut(window_id);
+        if window.lane == lane {
+            return;
+        }
+        window.lane = lane;
+        if window.queued {
+            for queue in &mut self.layout_queues {
+                queue.retain(|queued| queued != window_id);
+            }
+            self.layout_queues[lane.index()].push_back(window_id.to_string());
+        }
+    }
+
+    /// 🧵️Advances one surface layout by one cursor unit under the caller's fuel/deadline and
+    /// cancellation context. Completed geometry publishes only after the whole job is consistent.
+    pub fn step_layouts(&mut self, atlas: &mut FontAtlas, cx: &mut semio_framework_job::StepContext<'_>) -> UiLayoutStep {
+        if cx.should_yield() {
+            return UiLayoutStep::Idle;
+        }
+        let Some((window_id, lane)) = self.next_layout() else { return UiLayoutStep::Idle };
+        let theme = self.theme;
+        let window = self.windows.get_mut(&window_id).expect("queued layout surface exists");
+        window.queued = false;
+        let Some(root) = window.tree.root else { return UiLayoutStep::Idle };
+        if window.layout_job.is_none() {
+            window.layout_job = LayoutJob::new(&window.tree, root, theme, window.viewport.0, window.viewport.1);
+        }
+        let Some(job) = window.layout_job.as_mut() else { return UiLayoutStep::Ready { window_id, lane } };
+        let outcome = job.step(&mut window.layout, &mut window.tree, atlas, cx);
+        match outcome {
+            LayoutJobStep::Yield { stage, nodes, glyphs } => {
+                self.enqueue_layout(&window_id);
+                UiLayoutStep::Yielded { window_id, lane, stage: stage_label(stage), nodes, glyphs }
+            }
+            LayoutJobStep::Complete => {
+                window.layout_job = None;
+                UiLayoutStep::Ready { window_id, lane }
+            }
+            LayoutJobStep::Cancelled => {
+                window.layout_job = None;
+                UiLayoutStep::Cancelled { window_id, lane }
+            }
+        }
+    }
+
+    fn enqueue_layout(&mut self, window_id: &str) {
+        let Some(window) = self.windows.get_mut(window_id) else { return };
+        if window.queued {
+            return;
+        }
+        window.queued = true;
+        self.layout_queues[window.lane.index()].push_back(window_id.to_string());
+    }
+
+    fn next_layout(&mut self) -> Option<(String, SurfaceLane)> {
+        for _ in 0..LANE_WHEEL.len() {
+            let lane = LANE_WHEEL[self.lane_cursor];
+            self.lane_cursor = (self.lane_cursor + 1) % LANE_WHEEL.len();
+            if let Some(window_id) = self.layout_queues[lane.index()].pop_front() {
+                return Some((window_id, lane));
+            }
+        }
+        None
     }
 
     pub fn set_window_kind_icons(&mut self, icons: HashMap<String, IconName>) {
@@ -149,18 +296,21 @@ impl Ui {
     // generic argument-position case (R11(a)): each call site already hands `frame` ONE concrete host
     // reference, so `H: SceneHost` loses no expressiveness versus `dyn` and every existing caller's
     // call syntax (`Some(&mut concrete_host)`) is unchanged — `H` is inferred from the argument.
-    pub fn frame<H: SceneHost>(&mut self, window_id: &str, viewport_width: f32, viewport_height: f32, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, mut scene_host: Option<&mut H>) -> Option<&DrawList> {
+    pub fn frame<H: SceneHost>(&mut self, window_id: &str, viewport_width: f32, viewport_height: f32, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, scene_host: Option<&mut H>) -> Option<&DrawList> {
+        self.set_viewport(window_id, viewport_width, viewport_height);
         let window = self.windows.get_mut(window_id)?;
         let root = window.tree.root?;
-        window.viewport = (viewport_width, viewport_height);
-        let dirty = window.tree.node(root).is_some_and(|node| node.flags.contains(NodeFlags::DIRTY_LAYOUT) || node.flags.contains(NodeFlags::DIRTY_PAINT) || node.flags.contains(NodeFlags::SUBTREE_DIRTY));
+        let layout_dirty = window.tree.node(root).is_some_and(|node| node.flags.contains(NodeFlags::DIRTY_LAYOUT) || node.flags.contains(NodeFlags::SUBTREE_DIRTY));
+        if layout_dirty {
+            return Some(&window.draw);
+        }
+        let dirty = window.tree.node(root).is_some_and(|node| node.flags.contains(NodeFlags::DIRTY_PAINT));
         if !dirty {
             return Some(&window.draw);
         }
-        window.layout.compute(&mut window.tree, root, atlas, &self.theme, viewport_width, viewport_height);
         window.draw.clear();
         paint_tree(&mut window.tree, root, &self.theme, atlas, icons, scene_host.is_some(), &mut window.draw);
-        if let Some(host) = scene_host.as_deref_mut() {
+        if let Some(host) = scene_host {
             for slot in collect_scene_slots(&window.tree, root) {
                 host.paint_slot(&slot, &mut window.draw, atlas, icons);
             }
@@ -251,18 +401,18 @@ mod tests {
     use super::*;
     use crate::wgpu::component::layout::ActionDescriptor;
     use crate::wgpu::component::ui::{
-        ui_node_to_control, SurfaceKind, UiButtonNode, UiComponentSceneNode, UiControlNode, UiExternalSlotNode, UiFieldNode, UiGroupNode, UiIconSelectNode, UiImageNode, UiInputNode, UiKeyValueEntry, UiKeyValueNode, UiNumberStepperNode,
-        UiPresence, UiRingNode, UiSectionNode, UiSelectItem, UiSelectNode, UiSeparatorNode, UiSliderNode, UiStackNode, UiState, UiTextNode, UiToggleNode, UiTreeActionPlacement, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
+        ui_node_to_control, SurfaceKind, UiButtonNode, UiComponentSceneNode, UiControlNode, UiExternalSlotNode, UiFieldNode, UiGroupNode, UiIconSelectNode, UiImageNode, UiInputNode, UiKeyValueEntry, UiKeyValueNode, UiNumberStepperNode, UiPresence,
+        UiRingNode, UiSectionNode, UiSelectItem, UiSelectNode, UiSeparatorNode, UiSliderNode, UiStackNode, UiState, UiTextNode, UiToggleNode, UiTreeActionPlacement, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
     };
-    use crate::wgpu::Label;
     use crate::wgpu::events::PointerButton;
     use crate::wgpu::geometry::Rect;
     use crate::wgpu::input::InputState;
     use crate::wgpu::scene_slots::SceneSlot;
     use crate::wgpu::widgets::{
-        draw_text_on, draw_text_overlay_on, measure_widget, render_scroll_region, render_widget, wrap_text, ControlNode, InputMeta, KeyValueEntry, RingMeta, SelectItem, SliderMeta, StepperMeta, TreeItem, TreeItemAction, TreeSection,
-        WidgetContext, WidgetInteractionMaps, WidgetNode,
+        draw_text_on, draw_text_overlay_on, measure_widget, render_scroll_region, render_widget, wrap_text, ControlNode, InputMeta, KeyValueEntry, RingMeta, SelectItem, SliderMeta, StepperMeta, TreeItem, TreeItemAction, TreeSection, WidgetContext,
+        WidgetInteractionMaps, WidgetNode,
     };
+    use crate::wgpu::Label;
     use std::collections::HashMap as StdHashMap;
 
     //#region 🔖️FacadeTests
@@ -278,6 +428,23 @@ mod tests {
         UiNode::Button(UiButtonNode { id: Some(id.into()), icon_id: IconName::CircleDot, label: Label::data(label), action: action(), style: None, presence: UiPresence::default(), menu: None })
     }
 
+    fn test_clock() -> u64 {
+        0
+    }
+
+    fn drive_layout(ui: &mut Ui, window_id: &str, width: f32, height: f32, atlas: &mut FontAtlas) {
+        ui.set_viewport(window_id, width, height);
+        let operation = semio_framework_job::allocate_operation_id();
+        let cancel = semio_framework_job::CancelToken::root_now();
+        let mut preview_sequence = 0;
+        loop {
+            let mut cx = semio_framework_job::StepContext::new(operation, semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), test_clock, &mut preview_sequence);
+            if matches!(ui.step_layouts(atlas, &mut cx), UiLayoutStep::Idle) {
+                break;
+            }
+        }
+    }
+
     #[test]
     fn apply_tree_then_frame_produces_a_non_empty_draw_list() {
         let mut ui = Ui::new();
@@ -285,6 +452,7 @@ mod tests {
         ui.apply_tree("main", &stack_ui(vec![UiNode::Text(UiTextNode { value: Label::data("hi"), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None })]));
 
         assert!(ui.needs_frame(), "a freshly applied tree must report needing a frame");
+        drive_layout(&mut ui, "main", 400.0, 400.0, &mut atlas);
         let draw = ui.frame::<RecordingSceneHost>("main", 400.0, 400.0, &mut atlas, None, None).expect("frame must produce a draw list once a tree was applied");
         let total: usize = draw.layers.iter().map(|layer| layer.ui_instances.len()).sum();
         assert!(total > 0, "expected the text node to emit at least one glyph instance");
@@ -303,6 +471,7 @@ mod tests {
         let mut atlas = FontAtlas::builtin();
         let ui_node = stack_ui(vec![UiNode::Text(UiTextNode { value: Label::data("hi"), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None })]);
         ui.apply_tree("main", &ui_node);
+        drive_layout(&mut ui, "main", 400.0, 400.0, &mut atlas);
         ui.frame::<RecordingSceneHost>("main", 400.0, 400.0, &mut atlas, None, None);
         assert!(!ui.needs_frame(), "nothing changed since the last frame, so no frame should be needed");
 
@@ -315,6 +484,7 @@ mod tests {
         let mut ui = Ui::new();
         let mut atlas = FontAtlas::builtin();
         ui.apply_tree("main", &stack_ui(vec![button_ui("go", "Go")]));
+        drive_layout(&mut ui, "main", 400.0, 400.0, &mut atlas);
         ui.frame::<RecordingSceneHost>("main", 400.0, 400.0, &mut atlas, None, None);
 
         ui.dispatch_event("main", UiEvent::PointerDown { x: 10.0, y: 10.0, button: PointerButton::Primary });
@@ -331,6 +501,80 @@ mod tests {
         let mut ui = Ui::new();
         ui.set_window_layout(crate::wgpu::even_window_layout(&["app.viewport".to_string()]));
         assert!(ui.shell().window_layout().is_some());
+    }
+
+    #[test]
+    fn resize_storm_coalesces_to_one_latest_surface_job() {
+        let mut ui = Ui::new();
+        let mut atlas = FontAtlas::builtin();
+        ui.apply_tree("resize", &stack_ui(vec![button_ui("go", "Go")]));
+        for width in 1..=2_000 {
+            ui.set_viewport("resize", width as f32, 480.0);
+        }
+        assert_eq!(ui.layout_queues.iter().map(VecDeque::len).sum::<usize>(), 1, "a resize storm must retain one coalesced surface entry");
+
+        drive_layout(&mut ui, "resize", 2_000.0, 480.0, &mut atlas);
+        let root = ui.tree("resize").and_then(|tree| tree.root).expect("root");
+        assert_eq!(ui.tree("resize").and_then(|tree| tree.node(root)).expect("root node").layout.width, 2_000.0);
+    }
+
+    #[test]
+    fn interactive_storm_does_not_starve_background_surface_lane() {
+        let mut ui = Ui::new();
+        let mut atlas = FontAtlas::builtin();
+        ui.apply_tree("interactive", &stack_ui(vec![button_ui("go", "Go")]));
+        ui.apply_tree("background", &stack_ui(vec![button_ui("bg", "Background")]));
+        ui.set_surface_lane("interactive", SurfaceLane::Interactive);
+        ui.set_surface_lane("background", SurfaceLane::Background);
+        ui.set_viewport("interactive", 400.0, 400.0);
+        ui.set_viewport("background", 400.0, 400.0);
+
+        let operation = semio_framework_job::allocate_operation_id();
+        let cancel = semio_framework_job::CancelToken::root_now();
+        let mut preview_sequence = 0;
+        let mut background_progress_at = None;
+        for slice in 0..12 {
+            ui.set_viewport("interactive", 401.0 + slice as f32, 400.0);
+            let mut cx = semio_framework_job::StepContext::new(operation, semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), test_clock, &mut preview_sequence);
+            let step = ui.step_layouts(&mut atlas, &mut cx);
+            if matches!(step, UiLayoutStep::Yielded { ref window_id, .. } | UiLayoutStep::Ready { ref window_id, .. } if window_id == "background") {
+                background_progress_at = Some(slice);
+                break;
+            }
+        }
+        assert!(background_progress_at.is_some_and(|slice| slice < LANE_WHEEL.len()), "the weighted wheel must service background within one six-slot cycle");
+    }
+
+    #[test]
+    fn large_layout_and_shaping_job_keeps_every_observed_slice_below_eight_ms() {
+        let mut ui = Ui::new();
+        let mut atlas = FontAtlas::builtin();
+        let children = (0..1_024).map(|index| UiNode::Text(UiTextNode { value: Label::data(format!("node-{index}")), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None })).collect();
+        ui.apply_tree("large", &stack_ui(children));
+        ui.set_viewport("large", 1_920.0, 1_080.0);
+
+        let operation = semio_framework_job::allocate_operation_id();
+        let cancel = semio_framework_job::CancelToken::root_now();
+        let mut preview_sequence = 0;
+        let mut slices = 0;
+        let mut max_slice = std::time::Duration::ZERO;
+        loop {
+            let mut cx = semio_framework_job::StepContext::new(operation, semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), test_clock, &mut preview_sequence);
+            let started = std::time::Instant::now();
+            let step = ui.step_layouts(&mut atlas, &mut cx);
+            max_slice = max_slice.max(started.elapsed());
+            slices += 1;
+            if matches!(step, UiLayoutStep::Idle) {
+                break;
+            }
+        }
+        let tree = ui.tree("large").expect("large tree");
+        let root = tree.root.expect("large root");
+        let children: Vec<_> = tree.children(root).collect();
+        assert!(slices > 10_000, "the 1,025-node/text workload must be observably chunked, got {slices} slices");
+        assert!(max_slice < std::time::Duration::from_millis(8), "largest observed layout slice was {max_slice:?}");
+        assert_eq!(tree.node(root).expect("root node").layout.width, 1_920.0);
+        assert!(tree.node(*children.last().expect("last child")).expect("last child node").layout.y > tree.node(children[0]).expect("first child node").layout.y);
     }
     //#endregion 🔖️FacadeTests
 
@@ -384,6 +628,7 @@ mod tests {
         let mut ui = Ui::new();
         let mut atlas = FontAtlas::builtin();
         ui.apply_tree("w", &stack_ui(vec![component_scene_ui("surface.no-host")]));
+        drive_layout(&mut ui, "w", 400.0, 400.0, &mut atlas);
         let draw = ui.frame::<RecordingSceneHost>("w", 400.0, 400.0, &mut atlas, None, None).expect("frame must produce a draw list");
         let instances: usize = draw.layers.iter().map(|layer| layer.ui_instances.len()).sum();
         assert!(instances > 0, "with no scene host registered, paint_component_scene's placeholder chrome should still paint");
@@ -394,6 +639,7 @@ mod tests {
         let mut ui = Ui::new();
         let mut atlas = FontAtlas::builtin();
         ui.apply_tree("w", &stack_ui(vec![component_scene_ui("surface.host-test")]));
+        drive_layout(&mut ui, "w", 400.0, 400.0, &mut atlas);
 
         let mut host = RecordingSceneHost { paint_calls: 0, last_surface_id: None };
         let draw = ui.frame("w", 400.0, 400.0, &mut atlas, None, Some(&mut host)).expect("frame must produce a draw list even with a scene host registered");
@@ -420,6 +666,7 @@ mod tests {
             menu: None,
         });
         ui.apply_tree("w", &group_node);
+        drive_layout(&mut ui, "w", 400.0, 400.0, &mut atlas);
 
         let mut host = RecordingSceneHost { paint_calls: 0, last_surface_id: None };
         ui.frame("w", 400.0, 400.0, &mut atlas, None, Some(&mut host)).expect("frame must produce a draw list");
@@ -444,9 +691,14 @@ mod tests {
             UiNode::Text(text) => WidgetNode::Text { value: text.value.to_string(), emphasize: text.emphasize.unwrap_or(false) },
             UiNode::Separator(_) => WidgetNode::Separator,
             UiNode::Button(button) => WidgetNode::Button { id: button.id.clone(), icon_id: Some(button.icon_id.clone()), label: button.label.to_string(), event: Some(button.action.clone()) },
-            UiNode::Input(input) => {
-                WidgetNode::Input { id: input.id.clone(), input_kind: input.input_kind.clone(), value: input.value.clone(), placeholder: input.placeholder.clone().map(|l| l.to_string()), commit: input.commit.clone(), on_change: Some(input.on_change.clone()) }
-            }
+            UiNode::Input(input) => WidgetNode::Input {
+                id: input.id.clone(),
+                input_kind: input.input_kind.clone(),
+                value: input.value.clone(),
+                placeholder: input.placeholder.clone().map(|l| l.to_string()),
+                commit: input.commit.clone(),
+                on_change: Some(input.on_change.clone()),
+            },
             UiNode::Select(select) => WidgetNode::Select {
                 id: select.id.clone(),
                 value: select.value.clone(),
@@ -466,7 +718,9 @@ mod tests {
                 Some(control) => WidgetNode::Field { id: field.id.clone(), label: field.label.to_string(), child: control_to_widget(&control) },
                 None => WidgetNode::Section { id: field.id.clone(), label: Some(field.label.to_string()), default_open: true, children: vec![to_widget_node(&field.child)] },
             },
-            UiNode::Section(section) => WidgetNode::Section { id: section.id.clone(), label: section.label.clone().map(|l| l.to_string()), default_open: section.default_open.unwrap_or(true), children: section.children.iter().map(to_widget_node).collect() },
+            UiNode::Section(section) => {
+                WidgetNode::Section { id: section.id.clone(), label: section.label.clone().map(|l| l.to_string()), default_open: section.default_open.unwrap_or(true), children: section.children.iter().map(to_widget_node).collect() }
+            }
             UiNode::Group(group) => WidgetNode::Section { id: group.id.clone(), label: Some(group.label.to_string()), default_open: group.default_open.unwrap_or(true), children: group.children.iter().map(to_widget_node).collect() },
             UiNode::Tree(tree) => WidgetNode::Tree {
                 // 🧭️ Per-item `selected`/`highlighted` (see `tree_item_to_widget`) already carry the
@@ -493,7 +747,9 @@ mod tests {
     fn control_to_widget(control: &UiControlNode) -> ControlNode<ActionDescriptor> {
         match control {
             UiControlNode::Button(n) => ControlNode::Button { id: n.id.clone(), icon_id: Some(n.icon_id.clone()), label: n.label.to_string(), event: Some(n.action.clone()) },
-            UiControlNode::Input(n) => ControlNode::Input { id: n.id.clone(), input_kind: n.input_kind.clone(), value: n.value.clone(), placeholder: n.placeholder.clone().map(|l| l.to_string()), commit: n.commit.clone(), on_change: Some(n.on_change.clone()) },
+            UiControlNode::Input(n) => {
+                ControlNode::Input { id: n.id.clone(), input_kind: n.input_kind.clone(), value: n.value.clone(), placeholder: n.placeholder.clone().map(|l| l.to_string()), commit: n.commit.clone(), on_change: Some(n.on_change.clone()) }
+            }
             UiControlNode::Select(n) => ControlNode::Select {
                 id: n.id.clone(),
                 value: n.value.clone(),
@@ -516,7 +772,9 @@ mod tests {
     fn control_to_widget_node(control: &UiControlNode) -> WidgetNode<ActionDescriptor> {
         match control {
             UiControlNode::Button(n) => WidgetNode::Button { id: n.id.clone(), icon_id: Some(n.icon_id.clone()), label: n.label.to_string(), event: Some(n.action.clone()) },
-            UiControlNode::Input(n) => WidgetNode::Input { id: n.id.clone(), input_kind: n.input_kind.clone(), value: n.value.clone(), placeholder: n.placeholder.clone().map(|l| l.to_string()), commit: n.commit.clone(), on_change: Some(n.on_change.clone()) },
+            UiControlNode::Input(n) => {
+                WidgetNode::Input { id: n.id.clone(), input_kind: n.input_kind.clone(), value: n.value.clone(), placeholder: n.placeholder.clone().map(|l| l.to_string()), commit: n.commit.clone(), on_change: Some(n.on_change.clone()) }
+            }
             UiControlNode::Select(n) => WidgetNode::Select {
                 id: n.id.clone(),
                 value: n.value.clone(),
@@ -578,6 +836,7 @@ mod tests {
         let mut ui = Ui::new();
         let mut atlas = FontAtlas::builtin();
         ui.apply_tree("golden", node);
+        drive_layout(&mut ui, "golden", 400.0, 400.0, &mut atlas);
         let draw = ui.frame::<RecordingSceneHost>("golden", 400.0, 400.0, &mut atlas, None, None).expect("apply_tree then frame must produce a draw list");
         stats(draw)
     }
@@ -1061,7 +1320,8 @@ mod tests {
     fn measure_widget_field_combines_label_and_child_height() {
         let mut atlas = FontAtlas::builtin();
         let theme = Theme::default();
-        let node = WidgetNode::<ActionDescriptor>::Field { id: "f".into(), label: Label::data("Label").to_string(), child: ControlNode::Slider { id: "s".into(), value: 0.5, min: 0.0, max: 1.0, step: 0.1, ready: None, disabled: false, on_change: None } };
+        let node =
+            WidgetNode::<ActionDescriptor>::Field { id: "f".into(), label: Label::data("Label").to_string(), child: ControlNode::Slider { id: "s".into(), value: 0.5, min: 0.0, max: 1.0, step: 0.1, ready: None, disabled: false, on_change: None } };
         let (_, h) = measure_widget(&mut atlas, &theme, &node);
         assert!(h > theme.control_height, "a Field's total height must be its label plus its child control, so it must exceed the control's own height alone");
     }
@@ -1099,8 +1359,7 @@ mod tests {
             control: None,
             children: vec![],
         };
-        let visible =
-            WidgetNode::<ActionDescriptor>::Tree { sections: vec![TreeSection { id: "sec".into(), label: None, default_open: true, items: vec![item("a", false)] }], selected_ids: vec![], highlighted_ids: vec![], selection_change: None };
+        let visible = WidgetNode::<ActionDescriptor>::Tree { sections: vec![TreeSection { id: "sec".into(), label: None, default_open: true, items: vec![item("a", false)] }], selected_ids: vec![], highlighted_ids: vec![], selection_change: None };
         let dimmed = WidgetNode::<ActionDescriptor>::Tree { sections: vec![TreeSection { id: "sec".into(), label: None, default_open: true, items: vec![item("a", true)] }], selected_ids: vec![], highlighted_ids: vec![], selection_change: None };
         let (_, visible_h) = measure_widget(&mut atlas, &theme, &visible);
         let (_, dimmed_h) = measure_widget(&mut atlas, &theme, &dimmed);

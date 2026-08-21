@@ -33,19 +33,19 @@ pub struct SemioDrawingInference {
 }
 
 impl protocol::Inference<SemioDrawingSnapshot> for SemioDrawingInference {
-    async fn infer(snapshot: &SemioDrawingSnapshot) -> Self {
+    fn infer(snapshot: &SemioDrawingSnapshot) -> Self {
         Self { flattened_scene: store::infer_field::<SemioDrawingSnapshot, DrawFlattenedScene>(snapshot, None).into_iter().collect() }
     }
 }
 
 impl protocol::InferenceSpec<SemioDrawingSnapshot> for SemioDrawingInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.stdio.semio.drawing.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.semio.drawing.inference.flattenedScene", reads: &["layers", "styles"] }]
     }
 }

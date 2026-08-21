@@ -36,7 +36,7 @@ pub enum PatternSelector {
 }
 
 impl PatternSelector {
-    pub async fn matches(&self, model: &CompiledModel, p: PatternId) -> bool {
+    pub fn matches(&self, model: &CompiledModel, p: PatternId) -> bool {
         match self {
             PatternSelector::Pattern(target) => *target == p,
             PatternSelector::Tag(tag) => model.pattern_info(p).tags.contains(tag),
@@ -44,7 +44,7 @@ impl PatternSelector {
         }
     }
 
-    pub async fn as_pattern_set(&self, model: &CompiledModel) -> PatternSet {
+    pub fn as_pattern_set(&self, model: &CompiledModel) -> PatternSet {
         match self {
             PatternSelector::Any(set) => set.clone(),
             _ => {
@@ -73,20 +73,20 @@ pub struct AdjacencyView {
 }
 
 impl AdjacencyView {
-    pub(crate) async fn new(neighbors: Vec<Vec<NodeId>>, regions: Vec<RegionId>) -> Self {
+    pub(crate) fn new(neighbors: Vec<Vec<NodeId>>, regions: Vec<RegionId>) -> Self {
         debug_assert_eq!(neighbors.len(), regions.len());
         Self { neighbors, regions }
     }
 
-    pub async fn node_count(&self) -> usize {
+    pub fn node_count(&self) -> usize {
         self.neighbors.len()
     }
 
-    pub async fn neighbors(&self, n: NodeId) -> &[NodeId] {
+    pub fn neighbors(&self, n: NodeId) -> &[NodeId] {
         &self.neighbors[n.index()]
     }
 
-    pub async fn region_of(&self, n: NodeId) -> RegionId {
+    pub fn region_of(&self, n: NodeId) -> RegionId {
         self.regions[n.index()]
     }
 }
@@ -94,7 +94,7 @@ impl AdjacencyView {
 /// 🧷️ Materializes an [`AdjacencyView`] from any concrete `Topology` — the one place this crate
 /// converts the hot-path, non-object-safe `Topology` trait into the object-safe shape constraints
 /// need. Called once per solver `build()`, not per solve attempt.
-pub(crate) async fn build_adjacency_view<T: crate::wfc_engine::topology::Topology>(topo: &T) -> AdjacencyView {
+pub(crate) fn build_adjacency_view<T: crate::wfc_engine::topology::Topology>(topo: &T) -> AdjacencyView {
     let node_count = topo.node_count();
     let mut neighbors = vec![Vec::new(); node_count];
     let mut regions = vec![RegionId(0); node_count];
@@ -120,17 +120,17 @@ pub enum Exactness {
 /// 🧷️ One global constraint.
 #[dyn_enum]
 pub trait Constraint {
-    async fn name(&self) -> &'static str;
-    async fn exactness(&self) -> Exactness;
+    fn name(&self) -> &'static str;
+    fn exactness(&self) -> Exactness;
 
     /// 🧷️ Restricts initial per-node domains once, before search starts. Returning a narrower
     /// `PatternSet` than a node's current entry in `domains` intersects it in; returning the same
     /// set is a no-op. Called once per solve attempt, before the first propagation pass.
-    async fn initialize(&self, domains: &DomainStore, weights: &WeightTable, adjacency: &AdjacencyView) -> Result<Vec<(NodeId, PatternSet)>, ConstraintError>;
+    fn initialize(&self, domains: &DomainStore, weights: &WeightTable, adjacency: &AdjacencyView) -> Result<Vec<(NodeId, PatternSet)>, ConstraintError>;
 
     /// 🧷️ Checks one complete (every node singleton) candidate assignment. `Ok(())` means this
     /// constraint accepts it.
-    async fn validate_complete(&self, assignment: &[PatternId], adjacency: &AdjacencyView) -> Result<(), String>;
+    fn validate_complete(&self, assignment: &[PatternId], adjacency: &AdjacencyView) -> Result<(), String>;
 }
 
 /// 🧷️ Every concrete [`Constraint`] this crate implements, closed here (bare `dyn_enum_close!`
@@ -158,8 +158,8 @@ pub(crate) struct ConstraintSet<'a> {
 mod tests {
     use super::*;
 
-    #[semio_framework_async_macros::async_test]
-    async fn adjacency_view_exposes_neighbors_and_regions() {
+    #[test]
+    fn adjacency_view_exposes_neighbors_and_regions() {
         let view = AdjacencyView::new(vec![vec![NodeId(1)], vec![NodeId(0), NodeId(2)], vec![NodeId(1)]], vec![RegionId(0), RegionId(1), RegionId(0)]);
         assert_eq!(view.node_count(), 3);
         assert_eq!(view.neighbors(NodeId(1)), &[NodeId(0), NodeId(2)]);

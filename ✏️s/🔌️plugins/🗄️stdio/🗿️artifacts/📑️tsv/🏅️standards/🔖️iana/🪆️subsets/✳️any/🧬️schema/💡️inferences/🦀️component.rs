@@ -23,19 +23,19 @@ pub struct TsvInference {
 }
 
 impl protocol::Inference<TsvSnapshot> for TsvInference {
-    async fn infer(snapshot: &TsvSnapshot) -> Self {
+    fn infer(snapshot: &TsvSnapshot) -> Self {
         Self { outline: TsvOutline::compute(snapshot) }
     }
 }
 
 impl protocol::InferenceSpec<TsvSnapshot> for TsvInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.stdio.tsv.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.tsv.inference.outline", reads: &["records"] }]
     }
 }

@@ -1,11 +1,11 @@
 //! 👁️ `png` view (any) — Main window: real `ImageWindowKit`
 //! render of the current document (read-only).
 
-use base64::Engine as _;
 use crate::artifacts::png::standards::v1_2::subsets::any::io::encode_png;
 use crate::artifacts::png::standards::v1_2::subsets::any::schema::snapshot::PngSnapshot;
+use base64::Engine as _;
 use semio_framework_plugin::app::{ImageView, ImageWindowKit};
-use semio_framework_plugin::{UiNode, WindowKindDefinition, WindowKit};
+use semio_framework_plugin::{BuiltNode, WindowKindDefinition, WindowKit};
 
 pub const WINDOW_KIND_ID: &str = ImageWindowKit::KIND_ID;
 pub const BODY_KEY: &str = ImageWindowKit::KIND_ID;
@@ -16,7 +16,7 @@ pub fn definition() -> WindowKindDefinition {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(snapshot: &PngSnapshot) -> UiNode {
+pub fn render(snapshot: &PngSnapshot) -> BuiltNode {
     ImageWindowKit::render(&image_view(snapshot))
 }
 

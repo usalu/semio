@@ -9,7 +9,7 @@
 use crate::artifacts::docx::schema::snapshot::DocxBlock;
 use crate::artifacts::docx::DocxSnapshot;
 use semio_framework_plugin::app::{DocumentPage, DocumentView, DocumentWindowKit, WindowKit};
-use semio_framework_plugin::{LocalizedLabel, UiNode, WindowKindDefinition};
+use semio_framework_plugin::{BuiltNode, LocalizedLabel, WindowKindDefinition};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = DocumentWindowKit::KIND_ID;
@@ -36,9 +36,9 @@ fn block_text(block: &DocxBlock) -> String {
     }
 }
 
-/// ✏️ Real `DocxSnapshot -> UiNode`: one `DocumentPage` per top-level `document.body` block.
+/// ✏️ Real `DocxSnapshot -> BuiltNode`: one `DocumentPage` per top-level `document.body` block.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &DocxSnapshot) -> UiNode {
+pub fn render(document: &DocxSnapshot) -> BuiltNode {
     let pages = document.document.body.iter().map(|block| DocumentPage { text: block_text(block) }).collect();
     DocumentWindowKit::render(&DocumentView { pages })
 }

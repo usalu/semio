@@ -124,7 +124,7 @@ impl GltfSymmetryInference {
 impl GltfInferenceStage<GltfGeometryContext<'_>> for GltfSymmetryInference {
     type Output = GltfSymmetryIndicators;
 
-    async fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
+    fn infer(context: &GltfGeometryContext<'_>) -> Self::Output {
         let raw = raw(context);
         Self::Output {
             reflection_symmetry_score: reflection_symmetry_score::from_raw(context, &raw),
@@ -136,7 +136,7 @@ impl GltfInferenceStage<GltfGeometryContext<'_>> for GltfSymmetryInference {
         }
     }
 
-    async fn unavailable(diagnostic_ids: &[String]) -> Self::Output {
+    fn unavailable(diagnostic_ids: &[String]) -> Self::Output {
         Self::Output {
             reflection_symmetry_score: reflection_symmetry_score::unavailable_measure(diagnostic_ids),
             rotational_symmetry_score: rotational_symmetry_score::unavailable_measure(diagnostic_ids),

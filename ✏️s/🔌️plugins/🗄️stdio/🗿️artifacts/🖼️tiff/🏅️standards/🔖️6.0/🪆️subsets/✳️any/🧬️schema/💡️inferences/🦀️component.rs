@@ -22,7 +22,7 @@ pub struct TiffInference {
 }
 
 impl protocol::Inference<TiffSnapshot> for TiffInference {
-    async fn infer(snapshot: &TiffSnapshot) -> Self {
+    fn infer(snapshot: &TiffSnapshot) -> Self {
         Self { dimensions: compute_tiff_dimensions(snapshot) }
     }
 }
@@ -39,13 +39,13 @@ impl Default for TiffInference {
 }
 
 impl protocol::InferenceSpec<TiffSnapshot> for TiffInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.stdio.tiff.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.tiff.inference.dimensions", reads: &["ifds"] }]
     }
 }

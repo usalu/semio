@@ -175,7 +175,7 @@ pub mod derived_analysis {
             // stopping at "does a well-formed EOCD exist" rather than parsing every entry).
             use crate::artifacts::zip::standards::v2_0::subsets::any::io::{sniff_zip_bytes, SniffConfidence};
             match source {
-                AnalyzeSource::Binary(bytes) => match sniff_zip_bytes(bytes).await {
+                AnalyzeSource::Binary(bytes) => match sniff_zip_bytes(bytes) {
                     SniffConfidence::Low => IoConfidence::Low,
                     zip_confidence => {
                         let needle = b"bcf.version";

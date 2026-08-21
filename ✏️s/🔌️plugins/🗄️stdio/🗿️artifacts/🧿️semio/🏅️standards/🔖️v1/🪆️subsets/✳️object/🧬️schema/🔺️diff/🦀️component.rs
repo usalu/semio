@@ -191,7 +191,7 @@ impl protocol::DiffCodec for SemioObjectDiff {
             return Err(protocol::ProtocolError::Malformed { what: "diff format", offset: 0, detail: format!("unsupported diff format {}", bytes[0]) });
         }
         let presence = bytes[1];
-        let mut reader = semio_framework_plugin::resolve_ready(store::ByteReader::new(&bytes[2..]));
+        let mut reader = store::ByteReader::new(&bytes[2..]);
         let map_err = |e: String| protocol::ProtocolError::Malformed { what: "object diff field", offset: 2, detail: e };
         let transform = if presence & 0b0001 != 0 { Some(read_transform(&mut reader).map_err(map_err)?) } else { None };
         let brep = if presence & 0b0010 != 0 { Some(read_child_opt(&mut reader).map_err(map_err)?) } else { None };

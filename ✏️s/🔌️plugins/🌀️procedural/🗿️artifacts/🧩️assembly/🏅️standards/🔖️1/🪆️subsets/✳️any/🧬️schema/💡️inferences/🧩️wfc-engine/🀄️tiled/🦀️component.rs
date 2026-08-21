@@ -15,12 +15,12 @@ pub struct TiledModelBuilder {
 }
 
 impl TiledModelBuilder {
-    pub async fn new() -> Self {
+    pub fn new() -> Self {
         Self { builder: ModelBuilder::new(), tile_pattern: Vec::new() }
     }
 
     /// 🧱️ Registers a new tile with the given sampling weight.
-    pub async fn tile(&mut self, weight: f64) -> TileId {
+    pub fn tile(&mut self, weight: f64) -> TileId {
         let p = self.builder.add_pattern(weight);
         let id = TileId::from_index(self.tile_pattern.len());
         self.tile_pattern.push(p);
@@ -28,34 +28,34 @@ impl TiledModelBuilder {
         id
     }
 
-    pub async fn tag(&mut self, tile: TileId, name: &str) -> u32 {
+    pub fn tag(&mut self, tile: TileId, name: &str) -> u32 {
         self.builder.add_tag(self.tile_pattern[tile.index()], name)
     }
 
-    pub async fn relation(&mut self, name: &str) -> RelationId {
+    pub fn relation(&mut self, name: &str) -> RelationId {
         self.builder.add_relation(name)
     }
 
-    pub async fn set_relation_inverse(&mut self, a: RelationId, b: RelationId) {
+    pub fn set_relation_inverse(&mut self, a: RelationId, b: RelationId) {
         self.builder.set_relation_inverse(a, b);
     }
 
-    pub async fn allow(&mut self, r: RelationId, a: TileId, b: TileId) {
+    pub fn allow(&mut self, r: RelationId, a: TileId, b: TileId) {
         self.builder.allow(r, self.tile_pattern[a.index()], self.tile_pattern[b.index()]);
     }
 
     /// 🧱️ `deny` always wins over `allow`, regardless of call order.
-    pub async fn deny(&mut self, r: RelationId, a: TileId, b: TileId) {
+    pub fn deny(&mut self, r: RelationId, a: TileId, b: TileId) {
         self.builder.deny(r, self.tile_pattern[a.index()], self.tile_pattern[b.index()]);
     }
 
-    pub async fn allow_mirrored(&mut self, r: RelationId, a: TileId, b: TileId) {
+    pub fn allow_mirrored(&mut self, r: RelationId, a: TileId, b: TileId) {
         self.builder.allow_mirrored(r, self.tile_pattern[a.index()], self.tile_pattern[b.index()]);
     }
 
     /// 🧱️ Bulk allow from a predicate over every pair in `tiles`, compiled eagerly right now (the
     /// predicate itself is never stored — only its resolved allow pairs survive into the model).
-    pub async fn allow_where(&mut self, r: RelationId, tiles: &[TileId], pred: impl Fn(TileId, TileId) -> bool) {
+    pub fn allow_where(&mut self, r: RelationId, tiles: &[TileId], pred: impl Fn(TileId, TileId) -> bool) {
         for &a in tiles {
             for &b in tiles {
                 if pred(a, b) {
@@ -65,15 +65,15 @@ impl TiledModelBuilder {
         }
     }
 
-    pub async fn pattern_of(&self, tile: TileId) -> crate::wfc_engine::ids::PatternId {
+    pub fn pattern_of(&self, tile: TileId) -> crate::wfc_engine::ids::PatternId {
         self.tile_pattern[tile.index()]
     }
 
-    pub async fn tile_count(&self) -> usize {
+    pub fn tile_count(&self) -> usize {
         self.tile_pattern.len()
     }
 
-    pub async fn compile(self) -> Result<CompiledModel, ModelError> {
+    pub fn compile(self) -> Result<CompiledModel, ModelError> {
         self.builder.compile()
     }
 }
@@ -84,8 +84,8 @@ impl TiledModelBuilder {
 mod tests {
     use super::*;
 
-    #[semio_framework_async_macros::async_test]
-    async fn tile_to_pattern_is_one_to_one() {
+    #[test]
+    fn tile_to_pattern_is_one_to_one() {
         let mut b = TiledModelBuilder::new();
         let grass = b.tile(3.0);
         let water = b.tile(1.0);
@@ -93,8 +93,8 @@ mod tests {
         assert_eq!(b.tile_count(), 2);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn allow_and_deny_compile_correctly() {
+    #[test]
+    fn allow_and_deny_compile_correctly() {
         let mut b = TiledModelBuilder::new();
         let a = b.tile(1.0);
         let c = b.tile(1.0);
@@ -109,8 +109,8 @@ mod tests {
         assert!(!m.allowed(r, pa).get(pd));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn allow_where_compiles_predicate_eagerly() {
+    #[test]
+    fn allow_where_compiles_predicate_eagerly() {
         let mut b = TiledModelBuilder::new();
         let tiles: Vec<TileId> = (0..4).map(|_| b.tile(1.0)).collect();
         let r = b.relation("le");
@@ -125,8 +125,8 @@ mod tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn tags_round_trip_through_tiles() {
+    #[test]
+    fn tags_round_trip_through_tiles() {
         let mut b = TiledModelBuilder::new();
         let t = b.tile(1.0);
         let id = b.tag(t, "solid");

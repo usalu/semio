@@ -14,16 +14,16 @@ pub struct ChangeRunLanguage {
 impl protocol::MutationKind<SemioTextSnapshot, SemioTextMutation> for ChangeRunLanguage {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "run-language", kind: "change-run-language", record: "ChangedRunLanguage" };
 
-    async fn diff(&self, base: &SemioTextSnapshot) -> protocol::MutationOutcome<<SemioTextMutation as protocol::Mutation<SemioTextSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioTextSnapshot) -> protocol::MutationOutcome<<SemioTextMutation as protocol::Mutation<SemioTextSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &SemioTextSnapshot) -> Vec<SemioTextMutation> {
+    fn inverse(&self, base: &SemioTextSnapshot) -> Vec<SemioTextMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change run #{} language to {}", self.index, self.new_language)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.index.to_string()]
     }
 }

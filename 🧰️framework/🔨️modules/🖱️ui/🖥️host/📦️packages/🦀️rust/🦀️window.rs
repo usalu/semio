@@ -127,52 +127,74 @@ pub fn apply_canvas_cursor(canvas: &web_sys::HtmlCanvasElement, cursor: CursorRe
 
 //#region 📋️Clipboard
 
-/// 📋️ Wraps `arboard`/the browser Clipboard API behind an interface so neither leaks past this crate
-/// (repo convention: external libraries stay behind an interface — see root `CLAUDE.md`).
+/// 📋️ Wraps the browser Clipboard API behind an interface so it does not leak past this crate.
+#[cfg(target_arch = "wasm32")]
 pub trait ClipboardHost {
     fn write_text(&mut self, text: &str);
     fn read_text(&mut self) -> Option<String>;
 }
 
-/// 📋️ Ported from `host.rs::clipboard_write_text`/`clipboard_read_text`'s native halves, made sync —
-/// `arboard::Clipboard::get_text`/`set_text` were already synchronous; only the old fn signatures were
-/// (needlessly) `async`.
 #[cfg(not(target_arch = "wasm32"))]
-pub struct NativeClipboard {
-    inner: Option<arboard::Clipboard>,
+enum NativeClipboardOperation {
+    Read,
+    Write(String),
+}
+
+/// 📋️ Native clipboard operation whose only execution entry is `InteractiveJob::step` on a
+/// caller-supplied process `WorkerPool` I/O lane.
+#[cfg(not(target_arch = "wasm32"))]
+pub struct NativeClipboardJob {
+    operation: Option<NativeClipboardOperation>,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-impl NativeClipboard {
-    /// 📋️ `Clipboard::new()`'s `Err` (no display/clipboard backend, e.g. headless CI) is swallowed
-    /// here rather than propagated — same rationale `host.rs` documented: there is no sensible way for
-    /// a UI copy gesture to surface a clipboard backend failure back through this call chain.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    pub fn new() -> Self {
-        Self { inner: arboard::Clipboard::new().ok() }
+impl NativeClipboardJob {
+    pub fn read() -> Self {
+        Self { operation: Some(NativeClipboardOperation::Read) }
+    }
+
+    pub fn write(text: String) -> Self {
+        Self { operation: Some(NativeClipboardOperation::Write(text)) }
+    }
+
+    pub fn read_candidate(outcome: &semio_framework_job::StepOutcome) -> Option<String> {
+        let semio_framework_job::StepOutcome::Complete(candidate) = outcome else { return None };
+        let (&present, bytes) = candidate.output.split_first()?;
+        (present == 1).then(|| String::from_utf8(bytes.to_vec()).ok()).flatten()
     }
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-impl Default for NativeClipboard {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-impl ClipboardHost for NativeClipboard {
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    fn write_text(&mut self, text: &str) {
-        if let Some(clipboard) = self.inner.as_mut() {
-            let _ = clipboard.set_text(text.to_string());
+impl semio_framework_job::InteractiveJob for NativeClipboardJob {
+    fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
+        if cx.is_cancelled() {
+            return semio_framework_job::StepOutcome::Cancelled;
         }
-    }
-
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    fn read_text(&mut self) -> Option<String> {
-        self.inner.as_mut()?.get_text().ok()
+        if cx.should_yield() {
+            return semio_framework_job::StepOutcome::Yield;
+        }
+        cx.set_stage("NativeClipboardIo");
+        use arboard as system_clipboard;
+        let output = match self.operation.take() {
+            Some(NativeClipboardOperation::Read) => system_clipboard::Clipboard::new().ok().and_then(|mut clipboard| clipboard.get_text().ok()).map_or_else(
+                || vec![0],
+                |text| {
+                    let mut output = Vec::with_capacity(text.len() + 1);
+                    output.push(1);
+                    output.extend_from_slice(text.as_bytes());
+                    output
+                },
+            ),
+            Some(NativeClipboardOperation::Write(text)) => {
+                if let Ok(mut clipboard) = system_clipboard::Clipboard::new() {
+                    let _ = clipboard.set_text(text);
+                }
+                Vec::new()
+            }
+            None => Vec::new(),
+        };
+        cx.consume_fuel(1);
+        semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate { state: Vec::new(), output })
     }
 }
 

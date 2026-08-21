@@ -902,33 +902,33 @@ impl protocol::DiffCodec for Ifc2x3Diff {
         if flags & !0b0011_1111 != 0 {
             return Err(malformed("diff flags", 1, "unknown flag bits".into()));
         }
-        let schema = if flags & 1 != 0 { Some(read_str_bin(&mut reader).map_err(|e| malformed("diff schema", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
-        let header = if flags & 2 != 0 { Some(dec_part21_header_bin(&mut reader).map_err(|e| malformed("diff header", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
+        let schema = if flags & 1 != 0 { Some(read_str_bin(&mut reader).map_err(|e| malformed("diff schema", reader.position(), e))?) } else { None };
+        let header = if flags & 2 != 0 { Some(dec_part21_header_bin(&mut reader).map_err(|e| malformed("diff header", reader.position(), e))?) } else { None };
         let removed_instances = if flags & 4 != 0 {
-            let count = reader.read_varint_u64().map_err(|e| malformed("diff removed count", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
+            let count = reader.read_varint_u64().map_err(|e| malformed("diff removed count", reader.position(), e.to_string()))?;
             let mut v = Vec::with_capacity(count as usize);
             for _ in 0..count {
-                v.push(reader.read_varint_u64().map_err(|e| malformed("diff removed id", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?);
+                v.push(reader.read_varint_u64().map_err(|e| malformed("diff removed id", reader.position(), e.to_string()))?);
             }
             v
         } else {
             Vec::new()
         };
-        let upserted_instances = if flags & 8 != 0 { dec_instance_list_bin(&mut reader).map_err(|e| malformed("diff upserted", semio_framework_plugin::resolve_ready(reader.position()), e))? } else { Vec::new() };
+        let upserted_instances = if flags & 8 != 0 { dec_instance_list_bin(&mut reader).map_err(|e| malformed("diff upserted", reader.position(), e))? } else { Vec::new() };
         let edm_preamble = if flags & 16 != 0 {
-            Some(match reader.read_u8().map_err(|e| malformed("diff EDM preamble presence", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? {
+            Some(match reader.read_u8().map_err(|e| malformed("diff EDM preamble presence", reader.position(), e.to_string()))? {
                 0 => None,
-                1 => Some(dec_edm_preamble_bin(&mut reader).map_err(|e| malformed("diff EDM preamble", semio_framework_plugin::resolve_ready(reader.position()), e))?),
+                1 => Some(dec_edm_preamble_bin(&mut reader).map_err(|e| malformed("diff EDM preamble", reader.position(), e))?),
                 tag => return Err(malformed("diff EDM preamble presence", reader.position(), format!("unknown tag {tag}"))),
             })
         } else {
             None
         };
         let instance_order = if flags & 32 != 0 {
-            let count = reader.read_varint_u64().map_err(|error| malformed("diff instance order", semio_framework_plugin::resolve_ready(reader.position()), error.to_string()))?;
+            let count = reader.read_varint_u64().map_err(|error| malformed("diff instance order", reader.position(), error.to_string()))?;
             let mut order = Vec::with_capacity(count as usize);
             for _ in 0..count {
-                order.push(reader.read_varint_u64().map_err(|error| malformed("diff instance order", semio_framework_plugin::resolve_ready(reader.position()), error.to_string()))?);
+                order.push(reader.read_varint_u64().map_err(|error| malformed("diff instance order", reader.position(), error.to_string()))?);
             }
             Some(order)
         } else {

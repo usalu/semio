@@ -7,7 +7,10 @@
 use crate::artifacts::pdf::{PdfMutation, PdfSnapshot, PDF_ARTIFACT_SCHEMA_ID, STDIO_PDF_DOCUMENT_SCHEMA};
 use crate::viewer::pdf17a::modes::view;
 use crate::viewer::pdf17a::modes::view::windows::main;
-use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId, UiNode, ViewEmit, Viewer};
+use semio_framework_plugin::{
+    built_to_component_tree, ArtifactView, ArtifactViewer, ComponentTree, ConfigView, Dialect, Fault, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId, ViewEmit, Viewer,
+};
+use semio_framework_ui_contract::Buildable;
 
 //#region 🔖️Dialect
 /// 🪪️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract: this file's own surface-id
@@ -68,10 +71,10 @@ impl ArtifactViewer for Pdf17AViewer {
         Ok(ViewEmit::default())
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> ComponentTree {
         match body_key {
-            main::BODY_KEY => main::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
+            main::BODY_KEY => built_to_component_tree(main::render(doc.snapshot)),
+            _ => built_to_component_tree(semio_framework_ui_contract::text(format!("Unknown body: {body_key}")).build()),
         }
     }
 }
@@ -80,14 +83,14 @@ impl ArtifactViewer for Pdf17AViewer {
 //#region 🔖️Manifest
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn create_pdf17_a_viewer() -> semio_framework_plugin::AppDefinition {
-    Viewer::builder(PDF17A_DIALECT)
-        .document(["stdio", "pdf", "1.7", "a"])
-        .icon_id("file-text")
-        .mode_def(view::definition())
-        .default_mode_id(view::PDF17A_VIEW_MODE_ID)
-        .window_kind_def(main::definition())
-        .default_layout(view::layout())
-        .build_definition()
+    let builder = Viewer::builder(PDF17A_DIALECT);
+    let builder = semio_framework_plugin::resolve_ready(builder.document(["stdio", "pdf", "1.7", "a"]));
+    let builder = semio_framework_plugin::resolve_ready(builder.icon_id("file-text"));
+    let builder = semio_framework_plugin::resolve_ready(builder.mode_def(view::definition()));
+    let builder = semio_framework_plugin::resolve_ready(builder.default_mode_id(view::PDF17A_VIEW_MODE_ID));
+    let builder = semio_framework_plugin::resolve_ready(builder.window_kind_def(main::definition()));
+    let builder = semio_framework_plugin::resolve_ready(builder.default_layout(view::layout()));
+    semio_framework_plugin::resolve_ready(builder.build_definition())
 }
 //#endregion 🔖️Manifest
 

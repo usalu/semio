@@ -28,7 +28,7 @@
 // iteration and stops rather than thrashing.
 //
 // Usage:
-//   bun 🔧️r13-deasync-codemod.ts run --crate=<cargo-package-name> [--dry-run] [--tests] [--max-iterations=20] [--target=<triple>]
+//   bun 🔧️r13-deasync-codemod.ts run --crate=<cargo-package-name> [--dry-run] [--lib] [--max-iterations=20] [--target=<triple>] [--exclude-path=<substring>] [--edit-kinds=<comma-separated-kinds>]
 //   bun 🔧️r13-deasync-codemod.ts revert --run=<runId>
 //   bun 🔧️r13-deasync-codemod.ts selftest
 
@@ -44,6 +44,7 @@ const ROOT = "/Users/ueli/Documents/semio";
 const TICKET_DIR = "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/PHASE-1-5-DE-ASYNC-REPAIR-SWEEP";
 const JOURNAL_PATH = join(TICKET_DIR, "📝️r13-journal.jsonl");
 const EXCLUDE_PATH_SUBSTR = ["/compose/", "/target/", "/node_modules/"];
+let runExcludePathSubstr: string[] = [];
 
 // SAFETY: rustc's diagnostics can carry spans into files OUTSIDE this repo entirely — a real
 // example hit during this packet: a diagnostic against `semio-s-plugin-stdio` produced a
@@ -60,7 +61,7 @@ const EXCLUDE_PATH_SUBSTR = ["/compose/", "/target/", "/node_modules/"];
 // WITHIN the repo (compose/target/node_modules).
 function isEditableFile(absPath: string): boolean {
   if (!absPath.startsWith(ROOT + "/")) return false;
-  return !EXCLUDE_PATH_SUBSTR.some((sub) => absPath.includes(sub));
+  return ![...EXCLUDE_PATH_SUBSTR, ...runExcludePathSubstr].some((sub) => absPath.includes(sub));
 }
 
 //#endregion
@@ -77,7 +78,7 @@ interface Edit {
   end: number;
   before: string;
   after: string;
-  kind: "call-add-await" | "call-remove-await" | "def-remove-async" | "test-remove-async" | "defuse-call-add-await" | "test-sync-attribute";
+  kind: "call-add-await" | "call-remove-await" | "call-remove-ready-wrapper" | "call-remove-box-pin-wrapper" | "def-remove-async" | "test-remove-async" | "defuse-call-add-await" | "test-sync-attribute";
   diagnosticCode: string | null;
   diagnosticMessage: string;
 }
@@ -177,10 +178,15 @@ function mentionsFutureOrAwait(d: RustcDiagnostic): boolean {
   return /Future|\.await|await/i.test(blob);
 }
 
+function isConcretePinnedTryDiagnostic(d: RustcDiagnostic): boolean {
+  if (d.code?.code !== "E0277" || !/operator can only be applied to values that implement `Try`/i.test(d.message)) return false;
+  return /Pin<(?:std::boxed::)?Box<(?:Result|Option)</.test(d.spans.map((span) => span.label ?? "").join(" "));
+}
+
 function isAsyncClassDiagnostic(d: RustcDiagnostic): boolean {
   if (d.level !== "error") return false;
   if (isExcludedDiag(d)) return false;
-  if (!mentionsFutureOrAwait(d)) return false;
+  if (!mentionsFutureOrAwait(d) && !isConcretePinnedTryDiagnostic(d)) return false;
   return ASYNC_SIGNATURE_PATTERNS.some((re) => re.test(d.message) || re.test(d.rendered ?? ""));
 }
 
@@ -502,6 +508,24 @@ function resolveCalleeInFile(absPath: string, name: string): CalleeInfo | null {
   if (!sig || !sig.hasBody || sig.bodyStart === undefined) return { file: absPath, line: cand.line, suspends: true, guarded: "signature scan failed" };
   const suspends = ownBodyHasAwait(clean, sig.bodyStart);
   return { file: absPath, line: cand.line, suspends, guarded: null };
+}
+
+function resolvePureCalleeCandidatesInFile(absPath: string, name: string): CalleeInfo[] {
+  const { src, clean } = loadFile(absPath);
+  const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const re = new RegExp(`\\basync\\s+fn\\s+${escaped}\\b`, "g");
+  const results: CalleeInfo[] = [];
+  let match: RegExpExecArray | null;
+  while ((match = re.exec(clean))) {
+    const pos = match.index;
+    const line = lineOfOffset(src, pos);
+    if (insideAny(getQuoteRanges(absPath), pos) || isInsideTraitImpl(clean, pos) || hasAsyncTestAttribute(src, line)) continue;
+    const fnKwIdx = clean.indexOf("fn", pos);
+    const sig = findBodyOrDecl(clean, fnKwIdx + 2);
+    if (!sig || !sig.hasBody || sig.bodyStart === undefined || ownBodyHasAwait(clean, sig.bodyStart)) continue;
+    results.push({ file: absPath, line, suspends: false, guarded: null });
+  }
+  return results;
 }
 
 //#region Repo-wide callee index (cross-file resolution, uniqueness-gated)
@@ -1626,10 +1650,141 @@ function tryPlanE0728(d: RustcDiagnostic, plan: PlanResult): boolean {
   return true;
 }
 
+function tryPlanNonFutureReadyWrapper(d: RustcDiagnostic, plan: PlanResult): boolean {
+  if (d.code?.code !== "E0277" || !/is not a future/i.test(d.message)) return false;
+  const primary = d.spans.find((span) => span.is_primary);
+  if (!primary) return false;
+  const absPath = resolveFilePath(primary.file_name);
+  if (!isEditableFile(absPath) || !existsSync(absPath)) return true;
+  const { src } = loadFile(absPath);
+  const argStart = toCharOffset(absPath, primary.byte_start);
+  const argEnd = toCharOffset(absPath, primary.byte_end);
+  const prefixWindowStart = Math.max(0, argStart - 96);
+  const prefixWindow = src.slice(prefixWindowStart, argStart);
+  const prefixMatch = /(?:semio_framework_plugin::)?resolve_ready\(\s*$/.exec(prefixWindow);
+  if (!prefixMatch || src[argEnd] !== ")") return false;
+  const wrapperStart = prefixWindowStart + prefixMatch.index;
+  plan.edits.push({
+    file: absPath,
+    start: wrapperStart,
+    end: argStart,
+    before: src.slice(wrapperStart, argStart),
+    after: "",
+    kind: "call-remove-ready-wrapper",
+    diagnosticCode: d.code.code,
+    diagnosticMessage: `${d.message} [E0277: compiler-primary argument is already concrete; remove ready-only wrapper]`,
+  });
+  plan.edits.push({
+    file: absPath,
+    start: argEnd,
+    end: argEnd + 1,
+    before: ")",
+    after: "",
+    kind: "call-remove-ready-wrapper",
+    diagnosticCode: d.code.code,
+    diagnosticMessage: `${d.message} [E0277: matching ready-only wrapper close]`,
+  });
+  return true;
+}
+
+function tryPlanConcreteBoxPinWrapper(d: RustcDiagnostic, plan: PlanResult): boolean {
+  if (d.code?.code !== "E0277" || !/operator can only be applied to values that implement `Try`/i.test(d.message)) return false;
+  const typeEvidence = d.spans.map((span) => span.label ?? "").join(" ");
+  if (!/Pin<(?:std::boxed::)?Box<(?:Result|Option)</.test(typeEvidence)) return false;
+  const primary = d.spans.find((span) => span.is_primary);
+  if (!primary) return false;
+  const absPath = resolveFilePath(primary.file_name);
+  if (!isEditableFile(absPath) || !existsSync(absPath)) return true;
+  const { src } = loadFile(absPath);
+  const start = toCharOffset(absPath, primary.byte_start);
+  const end = toCharOffset(absPath, primary.byte_end);
+  const expression = src.slice(start, end);
+  const close = expression.endsWith(")?") ? end - 2 : expression.endsWith(")") ? end - 1 : -1;
+  if (!expression.startsWith("Box::pin(") || close < 0) return false;
+  plan.edits.push({
+    file: absPath,
+    start,
+    end: start + "Box::pin(".length,
+    before: "Box::pin(",
+    after: "",
+    kind: "call-remove-box-pin-wrapper",
+    diagnosticCode: d.code.code,
+    diagnosticMessage: `${d.message} [E0277: compiler-primary is a pinned concrete Try value]`,
+  });
+  plan.edits.push({
+    file: absPath,
+    start: close,
+    end: close + 1,
+    before: ")",
+    after: "",
+    kind: "call-remove-box-pin-wrapper",
+    diagnosticCode: d.code.code,
+    diagnosticMessage: `${d.message} [E0277: matching concrete Box::pin close]`,
+  });
+  return true;
+}
+
+function tryPlanE0308ReferencedPureCallee(d: RustcDiagnostic, plan: PlanResult): boolean {
+  if (d.code?.code !== "E0308" || !/impl Future/.test(d.rendered ?? "")) return false;
+  const primary = d.spans.find((span) => span.is_primary);
+  if (!primary) return false;
+  const absPath = resolveFilePath(primary.file_name);
+  if (!isEditableFile(absPath) || !existsSync(absPath)) return true;
+  const { src } = loadFile(absPath);
+  const start = toCharOffset(absPath, primary.byte_start);
+  const end = toCharOffset(absPath, primary.byte_end);
+  const expression = src.slice(start, end).trim();
+  const call = /^(?:&\s*)?(?:(?:[A-Za-z_][A-Za-z0-9_]*)::)*([A-Za-z_][A-Za-z0-9_]*)\s*\(/.exec(expression);
+  const bare = /^([A-Za-z_][A-Za-z0-9_]*)$/.exec(expression);
+  const callee = call?.[1] ?? bare?.[1];
+  if (!callee || (bare && !(d.rendered ?? "").includes(`{${callee}}`))) return false;
+  return planDeasyncDefinition(absPath, callee, plan, d, "E0308 compiler-primary Future callee");
+}
+
+function tryPlanE0308PrimaryLocalPureCallees(d: RustcDiagnostic, plan: PlanResult): boolean {
+  if (!isAsyncClassDiagnostic(d) || !/Future/.test(d.rendered ?? "")) return false;
+  const primary = d.spans.find((span) => span.is_primary);
+  if (!primary) return false;
+  const absPath = resolveFilePath(primary.file_name);
+  if (!isEditableFile(absPath) || !existsSync(absPath)) return true;
+  const { src } = loadFile(absPath);
+  const start = toCharOffset(absPath, primary.byte_start);
+  const end = toCharOffset(absPath, primary.byte_end);
+  const expression = src.slice(start, end);
+  const names = new Set<string>();
+  const callRe = /\b([A-Za-z_][A-Za-z0-9_]*)\s*\(/g;
+  let match: RegExpExecArray | null;
+  while ((match = callRe.exec(expression))) names.add(match[1]);
+  let planned = false;
+  for (const name of names) {
+    for (const info of resolvePureCalleeCandidatesInFile(absPath, name)) {
+      const kw = locateAsyncKeyword(info.file, name, info.line);
+      if (!kw) continue;
+      const defSrc = loadFile(info.file).src;
+      plan.edits.push({
+        file: info.file,
+        start: kw.start,
+        end: kw.end,
+        before: defSrc.slice(kw.start, kw.end),
+        after: "",
+        kind: "def-remove-async",
+        diagnosticCode: d.code?.code ?? null,
+        diagnosticMessage: `${d.message} [compiler-primary expression references local pure callee ${name}]`,
+      });
+      planned = true;
+    }
+  }
+  return planned;
+}
+
 function planEditsForDiagnostic(d: RustcDiagnostic, plan: PlanResult): void {
   if (tryPlanE0053(d, plan)) return;
   if (tryPlanE0733(d, plan)) return;
   if (tryPlanE0728(d, plan)) return;
+  if (tryPlanNonFutureReadyWrapper(d, plan)) return;
+  if (tryPlanConcreteBoxPinWrapper(d, plan)) return;
+  if (tryPlanE0308ReferencedPureCallee(d, plan)) return;
+  if (tryPlanE0308PrimaryLocalPureCallees(d, plan)) return;
 
   const suggestions: Suggestion[] = [];
   collectSuggestions(d, suggestions);
@@ -1986,9 +2141,10 @@ function residueCategory(reason: string): string {
   return "other/unclassified";
 }
 
-async function runCrate(crate: string, opts: { dryRun: boolean; maxIterations: number; libOnly?: boolean; target?: string; verbose?: boolean }): Promise<void> {
+async function runCrate(crate: string, opts: { dryRun: boolean; maxIterations: number; libOnly?: boolean; target?: string; verbose?: boolean; excludePath?: string; editKinds?: Set<Edit["kind"]> }): Promise<void> {
+  runExcludePathSubstr = opts.excludePath ? [opts.excludePath] : [];
   const runId = randomRunId();
-  console.log(`[run ${runId}] crate=${crate} dryRun=${opts.dryRun} target=${opts.target ?? "(host)"}`);
+  console.log(`[run ${runId}] crate=${crate} dryRun=${opts.dryRun} target=${opts.target ?? "(host)"} excludePath=${opts.excludePath ?? "(none)"}`);
 
   let prevErrorCount = Infinity;
   let prevDiagKeys: Set<string> = new Set();
@@ -2032,6 +2188,7 @@ async function runCrate(crate: string, opts: { dryRun: boolean; maxIterations: n
 
     const plan: PlanResult = { edits: [], residue: [] };
     for (const d of asyncDiags) planEditsForDiagnostic(d, plan);
+    if (opts.editKinds) plan.edits = plan.edits.filter((edit) => opts.editKinds!.has(edit.kind));
 
     if (plan.edits.length === 0) {
       console.log(`[run ${runId}] ${asyncDiags.length} async-class diagnostics but zero automatable edits planned. Residue:`);
@@ -2676,7 +2833,7 @@ function stripStackedAwaits(dryRun: boolean): void {
 
 //#region Audited pure-file de-async
 
-function deasyncPureFile(file: string, crate: string, dryRun: boolean): void {
+function deasyncPureFile(file: string, crate: string, dryRun: boolean, startLine = 1, endLine = Number.MAX_SAFE_INTEGER): void {
   const absPath = resolveFilePath(file);
   if (!isEditableFile(absPath) || !existsSync(absPath)) throw new Error(`pure-file target is not an editable repo file: ${absPath}`);
   const runId = randomRunId();
@@ -2684,14 +2841,20 @@ function deasyncPureFile(file: string, crate: string, dryRun: boolean): void {
   const edits: PlannedEdit[] = [];
   for (const match of clean.matchAll(/\basync\s+fn\b/g)) {
     const start = match.index!;
+    const line = lineOfOffset(src, start);
+    if (line < startLine || line > endLine) continue;
     edits.push({ file: absPath, start, end: start + "async ".length, before: "async ", after: "", kind: "def-remove-async", diagnosticCode: null, diagnosticMessage: "audited pure-file de-async: exact async-fn declaration token" });
   }
   for (const match of clean.matchAll(/\.await\b/g)) {
     const start = match.index!;
+    const line = lineOfOffset(src, start);
+    if (line < startLine || line > endLine) continue;
     edits.push({ file: absPath, start, end: start + ".await".length, before: ".await", after: "", kind: "call-remove-await", diagnosticCode: null, diagnosticMessage: "audited pure-file de-async: exact await-expression token" });
   }
   for (const match of src.matchAll(/#\[semio_framework_async_macros::async_test\]/g)) {
     const start = match.index!;
+    const line = lineOfOffset(src, start);
+    if (line < startLine || line > endLine) continue;
     edits.push({ file: absPath, start, end: start + match[0].length, before: match[0], after: "#[test]", kind: "test-sync-attribute", diagnosticCode: null, diagnosticMessage: "audited pure-file de-async: sync test attribute" });
   }
   const byFile = dedupeAndOrderEdits(edits);
@@ -2734,6 +2897,8 @@ async function main(): Promise<void> {
       libOnly: !!opts.lib,
       target: opts.target ? String(opts.target) : undefined,
       verbose: !!opts.verbose,
+      excludePath: opts["exclude-path"] ? String(opts["exclude-path"]) : undefined,
+      editKinds: opts["edit-kinds"] ? new Set(String(opts["edit-kinds"]).split(",") as Edit["kind"][]) : undefined,
     });
     return;
   }
@@ -2745,7 +2910,7 @@ async function main(): Promise<void> {
     const file = String(opts.file ?? "");
     const crate = String(opts.crate ?? "");
     if (!file || !crate) throw new Error("--file=<repo-relative-path> and --crate=<package-name> required");
-    deasyncPureFile(file, crate, !!opts["dry-run"]);
+    deasyncPureFile(file, crate, !!opts["dry-run"], opts["start-line"] ? Number(opts["start-line"]) : 1, opts["end-line"] ? Number(opts["end-line"]) : Number.MAX_SAFE_INTEGER);
     return;
   }
   if (cmd === "revert") {
@@ -2754,7 +2919,7 @@ async function main(): Promise<void> {
     revertRun(runId);
     return;
   }
-  console.log("usage: bun 🔧️r13-deasync-codemod.ts run --crate=<name> [--dry-run] [--max-iterations=N] [--target=<triple>]");
+    console.log("usage: bun 🔧️r13-deasync-codemod.ts run --crate=<name> [--dry-run] [--lib] [--max-iterations=N] [--target=<triple>] [--exclude-path=<substring>] [--edit-kinds=<comma-separated-kinds>]");
   console.log("       bun 🔧️r13-deasync-codemod.ts revert --run=<runId>");
   console.log("       bun 🔧️r13-deasync-codemod.ts selftest");
 }

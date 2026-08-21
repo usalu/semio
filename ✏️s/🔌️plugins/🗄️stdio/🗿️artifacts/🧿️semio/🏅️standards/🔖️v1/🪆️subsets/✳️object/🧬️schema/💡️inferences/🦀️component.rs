@@ -30,7 +30,7 @@ pub struct SemioObjectInference {
 }
 
 impl protocol::Inference<SemioObjectSnapshot> for SemioObjectInference {
-    async fn infer(snapshot: &SemioObjectSnapshot) -> Self {
+    fn infer(snapshot: &SemioObjectSnapshot) -> Self {
         Self { composition: compute_semio_object_composition(snapshot) }
     }
 }
@@ -46,13 +46,13 @@ impl Default for SemioObjectInference {
 }
 
 impl protocol::InferenceSpec<SemioObjectSnapshot> for SemioObjectInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.stdio.semio.object.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.semio.object.inference.composition", reads: &["transform", "brep", "mesh", "properties"] }]
     }
 }

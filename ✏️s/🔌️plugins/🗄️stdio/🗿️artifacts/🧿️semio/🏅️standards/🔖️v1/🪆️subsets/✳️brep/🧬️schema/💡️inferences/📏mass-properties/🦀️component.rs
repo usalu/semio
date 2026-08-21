@@ -7,12 +7,12 @@
 
 // 📏 Divergence-theorem mass properties, axis-aligned bounds, and solid distance queries on [`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body`].
 
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::{EdgeId, FaceId, SolidId};
 #[cfg(test)]
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::{CoedgeId, VertexId};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::{EdgeId, FaceId, SolidId};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::curve_ops;
 #[cfg(test)]
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::curve_ops;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::error::KernelError;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::surface_ops;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
@@ -1338,8 +1338,9 @@ pub mod oracle {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn watertightness_of_box_is_watertight() {
+    #[cfg(test)]
+    #[test]
+    fn watertightness_of_box_is_watertight() {
         use crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::primitives::make_box;
         use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
         let mut body = Body::new();

@@ -24,7 +24,7 @@ pub struct AviInference {
 }
 
 impl protocol::Inference<AviSnapshot> for AviInference {
-    async fn infer(snapshot: &AviSnapshot) -> Self {
+    fn infer(snapshot: &AviSnapshot) -> Self {
         Self { duration: compute_avi_duration(snapshot) }
     }
 }
@@ -40,13 +40,13 @@ impl Default for AviInference {
 }
 
 impl protocol::InferenceSpec<AviSnapshot> for AviInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.stdio.avi.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.avi.inference.duration", reads: &["mainHeader", "streams"] }]
     }
 }

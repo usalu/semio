@@ -177,27 +177,27 @@ pub mod host;
 pub use component::layout::{
     build_shell_context_menu_specs, collect_window_kind_ids_from_layout, create_default_layout, create_named_layout, create_stack_layout, create_tab_stack_layout, create_window_layout, default_viewport_engagement, even_window_layout,
     framework_panel_tab_label, merge_named_layouts, organize_context_menu, partition_window_measures, ribbon_parent_label, ActionDescriptor, MeasureSelectItem, NamedLayout, ShellMenuAction, StyleSpec, WindowEngagement, WindowEngagementControl,
-    WindowEngagementInput, WindowEngagementOption, WindowEngagementPossible, WindowEngagementSlot, WindowEngagementStatus, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode, WindowStackCorner,
-    WindowMeasure, WindowOptions, FRAMEWORK_HISTORY_BODY_KEY, FRAMEWORK_PANEL_TAB_ARTIFACT_ICON_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
-    FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HISTORY_ICON_ID, FRAMEWORK_PANEL_TAB_HISTORY_ID, FRAMEWORK_PANEL_TAB_HISTORY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
-    FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, FRAMEWORK_PANEL_TAB_PARAMETERS_ICON_ID, FRAMEWORK_PANEL_TAB_PARAMETERS_ID, FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL, RIBBON_PARENT_CATEGORIES,
+    WindowEngagementInput, WindowEngagementOption, WindowEngagementPossible, WindowEngagementSlot, WindowEngagementStatus, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode,
+    WindowMeasure, WindowOptions, WindowStackCorner, FRAMEWORK_HISTORY_BODY_KEY, FRAMEWORK_PANEL_TAB_ARTIFACT_ICON_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID,
+    FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HISTORY_ICON_ID, FRAMEWORK_PANEL_TAB_HISTORY_ID, FRAMEWORK_PANEL_TAB_HISTORY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID,
+    FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, FRAMEWORK_PANEL_TAB_PARAMETERS_ICON_ID, FRAMEWORK_PANEL_TAB_PARAMETERS_ID, FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL, RIBBON_PARENT_CATEGORIES,
 };
 pub use component::ui::*;
 pub use component::utilities::{utility_button, utility_collection, utility_separator, utility_toggle, UtilityCategory, UtilityNode};
 pub use geometry::Rect;
-pub use theme::{GlassStyle, Level, Rgba, Theme};
 #[cfg(feature = "wgpu")]
 pub use presence_bar::{build_presence_bar, build_presence_bar_localized, presence_color, presence_css_var, PresenceAppearance, PresenceHsl, PresencePeerRow, PresenceRole, PRESENCE_BAR_DEFAULT_MAX};
+pub use theme::{GlassStyle, Level, Rgba, Theme};
 
 // 🖥️ Retained-mode engine surface (feature = "wgpu-engine" only).
 #[cfg(feature = "wgpu-engine")]
 pub use arena::{Arena, NodeId};
 #[cfg(all(feature = "wgpu-engine", target_arch = "wasm32"))]
 pub use cursor::apply_canvas_cursor;
-#[cfg(feature = "wgpu-engine")]
-pub use cursor::{resolve_semio_cursor, CursorDragState, SemioCursor};
 #[cfg(all(feature = "wgpu-engine", not(target_os = "wasi")))]
 pub use cursor::apply_window_cursor;
+#[cfg(feature = "wgpu-engine")]
+pub use cursor::{resolve_semio_cursor, CursorDragState, SemioCursor};
 #[cfg(feature = "wgpu-engine")]
 pub use draw::{ear_clip_polygon, mesh_content_version, paint_selection_marquee, DrawList, IconAtlas, MeshGpuTable, RasterTextureTable};
 #[cfg(feature = "wgpu-engine")]
@@ -220,19 +220,20 @@ pub use shell::{Shell, ShellEvent};
 #[cfg(feature = "wgpu-engine")]
 pub use chrome::{chrome_item_bg, chrome_item_text, item_bg, item_text, measure_action_item, push_chrome_border, push_chrome_group_border, push_control_border, push_icon, push_window_cap_border, ICON_TINY};
 #[cfg(feature = "wgpu-engine")]
-pub use engine::Ui;
+pub use engine::{SurfaceLane, Ui, UiLayoutStep};
 #[cfg(all(feature = "wgpu-engine", not(target_os = "wasi")))]
 pub use gpu::schedule_frame;
 #[cfg(feature = "wgpu-engine")]
 pub use gpu::GpuContext;
-#[cfg(feature = "wgpu-engine")]
-pub use prepared::{PreparedRenderGate, PreparedRenderInput, PreparedRenderJob, PreparedRenderLimits, PreparedRenderPacket, PreparedRenderRejection, PreparedRenderUpload, PreparedRenderUsage, RenderDirective, UiPresentToken};
-#[cfg(all(feature = "wgpu-engine", not(target_os = "wasi")))]
+#[cfg(all(feature = "wgpu-engine", target_arch = "wasm32", not(target_os = "wasi")))]
 pub use host::{clipboard_read_text, clipboard_write_text, dispatch_window_event, modifiers_from_winit, pointer_coords, WindowInputState};
+#[cfg(all(feature = "wgpu-engine", not(target_arch = "wasm32"), not(target_os = "wasi")))]
+pub use host::{dispatch_window_event, modifiers_from_winit, pointer_coords, ClipboardIoJob, WindowInputState};
 #[cfg(feature = "wgpu-engine")]
 pub use input::{DragAxis, DragState, HitKind, HitTarget, InputState, KeyAction, PointerCallbacks, PointerModifiers, TreeDragState, TreeDropPosition};
 #[cfg(feature = "wgpu-engine")]
-
+pub use prepared::{PreparedRenderGate, PreparedRenderInput, PreparedRenderJob, PreparedRenderLimits, PreparedRenderPacket, PreparedRenderReceiver, PreparedRenderRejection, PreparedRenderUpload, PreparedRenderUsage, RenderDirective, UiPresentToken};
+#[cfg(feature = "wgpu-engine")]
 // 🎬️ Relocated out of this crate into `semio-framework-ui-scene`'s `math` module (ticket
 // 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME packet `scene-surface`; previously relocated
 // verbatim from `🧰️framework/🔨️modules/🧊️3d/🎬️scene/🦀️component.rs` per ticket
@@ -244,9 +245,10 @@ pub use ui_scene::math as kernel_3d_scene;
 
 #[cfg(feature = "wgpu-engine")]
 pub use kernel_3d_scene::{
-    aabb_intersects_frustum, axis_rotate_angle, frustum_planes, grid_placement_anchor, gumball_axis_drag_plane_normal, gumball_extent, gumball_eye, gumball_project_ray_onto_axis, interpolate_mesh_uv, lod_from_camera_distance, lod_progressive_grid_layers,
-    marquee_is_crossing_from_path, pick_closest_mesh_url, point_in_polygon, project_point, quat_from_basis, ray_aabb_slab, ray_pick_instance, ray_pick_mesh_detail, ray_plane_point, ray_segment_distance, rect_contains, rotate_vector, screen_segment_distance, screen_select_components,
-    screen_select_instances, transform_aabb, vec3_from_f64, Camera3d, Instance3d, LineDraw3d, LineVertex3d, Mat4, Mat4Math, Mesh3d, OrbitController, SceneDraw3d, ScenePass3d, TexturedDraw3d, TexturedInstance3d, Vec3, Vec3Math,
+    aabb_intersects_frustum, axis_rotate_angle, frustum_planes, grid_placement_anchor, gumball_axis_drag_plane_normal, gumball_extent, gumball_eye, gumball_project_ray_onto_axis, interpolate_mesh_uv, lod_from_camera_distance,
+    lod_progressive_grid_layers, marquee_is_crossing_from_path, pick_closest_mesh_url, point_in_polygon, project_point, quat_from_basis, ray_aabb_slab, ray_pick_instance, ray_pick_mesh_detail, ray_plane_point, ray_segment_distance, rect_contains,
+    rotate_vector, screen_segment_distance, screen_select_components, screen_select_instances, transform_aabb, vec3_from_f64, Camera3d, Instance3d, LineDraw3d, LineVertex3d, Mat4, Mat4Math, Mesh3d, OrbitController, SceneDraw3d, ScenePass3d,
+    TexturedDraw3d, TexturedInstance3d, Vec3, Vec3Math,
 };
 #[cfg(feature = "wgpu-engine")]
 pub use layout::{gap_for_token, layout_horizontal, layout_vertical, padding_for_token};

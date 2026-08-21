@@ -387,7 +387,7 @@ where
         }
     }
     for m in &diff.modified {
-        let item = items.get_mut(m.index).ok_or_else(|| semio_framework_plugin::resolve_ready(MutationApplyError::new("mutation.apply.missing-target", "indexed modification target does not exist")).at(vec!["modified".to_string(), m.index.to_string()]))?;
+        let item = items.get_mut(m.index).ok_or_else(|| MutationApplyError::new("mutation.apply.missing-target", "indexed modification target does not exist").at(vec!["modified".to_string(), m.index.to_string()]))?;
         apply_item(item, &m.diff).map_err(|error| error.under(vec!["modified".to_string(), m.index.to_string()]))?;
     }
     let mut removed_sorted = diff.removed.clone();
@@ -620,7 +620,7 @@ where
     }
     items.retain(|i| !diff.removed.contains(&key_of(i)));
     for m in &diff.modified {
-        let item = items.iter_mut().find(|i| key_of(i) == m.key).ok_or_else(|| semio_framework_plugin::resolve_ready(MutationApplyError::new("mutation.apply.missing-target", "named modification target does not exist")).at(["modified"]))?;
+        let item = items.iter_mut().find(|i| key_of(i) == m.key).ok_or_else(|| MutationApplyError::new("mutation.apply.missing-target", "named modification target does not exist").at(["modified"]))?;
         apply_item(item, &m.diff).map_err(|error| error.under(["modified"]))?;
     }
     for item in &diff.added {
@@ -1328,7 +1328,7 @@ fn apply_relationships(rels: &mut HashMap<String, Vec<OpcRelationship>>, diff: &
         rels.remove(owner);
     }
     for m in &diff.modified {
-        let list = rels.get_mut(&m.key).ok_or_else(|| semio_framework_plugin::resolve_ready(MutationApplyError::new("mutation.apply.missing-target", "relationship owner does not exist")).at(vec!["modified".to_string(), m.key.clone()]))?;
+        let list = rels.get_mut(&m.key).ok_or_else(|| MutationApplyError::new("mutation.apply.missing-target", "relationship owner does not exist").at(vec!["modified".to_string(), m.key.clone()]))?;
         apply_rel_list(list, &m.diff).map_err(|error| error.under(vec!["modified".to_string(), m.key.clone()]))?;
     }
     for (owner, list) in &diff.added {
@@ -2312,7 +2312,7 @@ pub(crate) fn dec_xml_node_bin(reader: &mut store::ByteReader<'_>) -> Result<Xml
             let child_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
             let mut children = Vec::with_capacity(child_count as usize);
             for _ in 0..child_count {
-                children.push(Box::pin(dec_xml_node_bin(reader))?);
+                children.push(dec_xml_node_bin(reader)?);
             }
             Ok(XmlNode::Element { name, attrs, children })
         }
@@ -2420,7 +2420,7 @@ fn dec_cell_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxTableCell, Str
     let block_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut blocks = Vec::with_capacity(block_count as usize);
     for _ in 0..block_count {
-        blocks.push(Box::pin(dec_block_bin(reader))?);
+        blocks.push(dec_block_bin(reader)?);
     }
     let extra_cell_properties = dec_xml_node_list_bin(reader)?;
     Ok(DocxTableCell { blocks, extra_cell_properties })
@@ -2439,7 +2439,7 @@ fn dec_row_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxTableRow, Strin
     let cell_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut cells = Vec::with_capacity(cell_count as usize);
     for _ in 0..cell_count {
-        cells.push(Box::pin(dec_cell_bin(reader))?);
+        cells.push(dec_cell_bin(reader)?);
     }
     let extra_row_properties = dec_xml_node_list_bin(reader)?;
     Ok(DocxTableRow { cells, extra_row_properties })
@@ -2458,7 +2458,7 @@ fn dec_table_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxTable, String
     let row_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut rows = Vec::with_capacity(row_count as usize);
     for _ in 0..row_count {
-        rows.push(Box::pin(dec_row_bin(reader))?);
+        rows.push(dec_row_bin(reader)?);
     }
     let extra_table_properties = dec_xml_node_list_bin(reader)?;
     Ok(DocxTable { rows, extra_table_properties })
@@ -2482,7 +2482,7 @@ pub(crate) fn enc_block_bin(b: &DocxBlock, out: &mut Vec<u8>) {
 pub(crate) fn dec_block_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxBlock, String> {
     match reader.read_u8().map_err(|e| e.to_string())? {
         0 => Ok(DocxBlock::Paragraph(dec_paragraph_bin(reader)?)),
-        1 => Ok(DocxBlock::Table(Box::pin(dec_table_bin(reader))?)),
+        1 => Ok(DocxBlock::Table(dec_table_bin(reader)?)),
         other => Err(format!("block binary: unknown tag {other}")),
     }
 }
@@ -3045,8 +3045,8 @@ impl protocol::DiffCodec for DocxDiff {
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
         let _format = reader.read_u8().map_err(|e| malformed("diff format", 0, e.to_string()))?;
         let flags = reader.read_u8().map_err(|e| malformed("diff flags", 1, e.to_string()))?;
-        let opc = if flags & 0b01 != 0 { Some(dec_opc_diff_bin(&mut reader).map_err(|e| malformed("diff opc", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
-        let document = if flags & 0b10 != 0 { Some(dec_document_diff_bin(&mut reader).map_err(|e| malformed("diff document", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
+        let opc = if flags & 0b01 != 0 { Some(dec_opc_diff_bin(&mut reader).map_err(|e| malformed("diff opc", reader.position(), e))?) } else { None };
+        let document = if flags & 0b10 != 0 { Some(dec_document_diff_bin(&mut reader).map_err(|e| malformed("diff document", reader.position(), e))?) } else { None };
         Ok(DocxDiff { opc, document })
     }
 }

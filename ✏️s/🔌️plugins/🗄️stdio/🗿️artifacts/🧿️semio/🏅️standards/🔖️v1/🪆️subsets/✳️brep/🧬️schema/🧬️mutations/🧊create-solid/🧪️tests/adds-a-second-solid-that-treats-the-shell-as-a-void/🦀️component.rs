@@ -92,7 +92,7 @@ async fn produces_committed_diff() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical_and_narrowly_scoped() {
     let decoded: SemioBrepDiff = serde_json::from_str(DIFF).expect("committed create-solid diff decodes");
-    
+
     let solids = decoded.solids.as_ref().expect("create-solid must write the solids triple");
     assert_eq!(solids.added.len(), 1, "exactly one solid is added");
     assert!(solids.removed.is_empty() && solids.modified.is_empty(), "a create neither removes nor modifies");

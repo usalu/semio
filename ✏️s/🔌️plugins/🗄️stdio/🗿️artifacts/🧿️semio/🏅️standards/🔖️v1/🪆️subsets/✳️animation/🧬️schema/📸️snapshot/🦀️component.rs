@@ -589,7 +589,7 @@ fn encode_animation_snapshot_binary(s: &SemioAnimationSnapshot) -> Vec<u8> {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn decode_animation_snapshot_binary(bytes: &[u8]) -> Result<SemioAnimationSnapshot, String> {
     const PACK_BINARY_FORMAT: u8 = 1;
-    let mut reader = semio_framework_plugin::resolve_ready(store::ByteReader::new(bytes));
+    let mut reader = store::ByteReader::new(bytes);
     let format = reader.read_u8().map_err(|e| e.to_string())?;
     if format != PACK_BINARY_FORMAT {
         return Err(format!("unsupported pack format {format}"));

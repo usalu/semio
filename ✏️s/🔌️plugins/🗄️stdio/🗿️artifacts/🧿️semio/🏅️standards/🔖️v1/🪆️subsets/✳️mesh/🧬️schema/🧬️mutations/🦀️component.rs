@@ -56,17 +56,15 @@
 //! `📸️set-snapshot` is DELETED, with no replacement, per the locked decision
 //! (`📌️important.md`): whole-document replace goes through `ArtifactStore::reset`, outside history.
 
+#[cfg(test)]
+use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint3, SemioRgba, SemioUv};
 use crate::artifacts::semio::standards::v1::subsets::mesh::schema::diff::{
     dec_list, dec_material, dec_mesh, dec_point3, dec_primitive, dec_rgba, dec_str, dec_texture, dec_topology, dec_uv, decode_option, enc_list, enc_material, enc_mesh, enc_point3, enc_primitive, enc_rgba, enc_str, enc_texture, enc_topology, enc_uv,
     encode_option, hex_decode, hex_encode, SemioMeshDiff,
 };
 use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 #[cfg(test)]
-use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{
-    SemioMaterial, SemioMesh, SemioPrimitive, SemioTexture, SemioTopology,
-};
-#[cfg(test)]
-use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint3, SemioRgba, SemioUv};
+use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMaterial, SemioMesh, SemioPrimitive, SemioTexture, SemioTopology};
 /// 🔧️ Unconditional — the non-test `impl protocol::OpBinary for SemioMeshMutation` block below
 /// calls `self.print_op()` via method syntax, which needs `OpText` in scope in production code
 /// too, not merely under `#[cfg(test)]` (same fix `✳️brep`/`✳️flow`'s own facets document).
@@ -463,7 +461,11 @@ mod tests {
             let hand_diff = m.diff(&base);
             let after = hand_diff.diff().apply(&base).expect("apply must succeed for a well-formed fixture");
             let independent_diff = SemioMeshDiff::between(&base, &after);
-            assert_eq!(hand_diff.diff().apply(&base).expect("apply must succeed for a well-formed fixture"), independent_diff.apply(&base).expect("apply must succeed for a well-formed fixture"), "diff({m:?}) must match an independent before/after comparison");
+            assert_eq!(
+                hand_diff.diff().apply(&base).expect("apply must succeed for a well-formed fixture"),
+                independent_diff.apply(&base).expect("apply must succeed for a well-formed fixture"),
+                "diff({m:?}) must match an independent before/after comparison"
+            );
         }
     }
     //#endregion 🧪️DiffConsistencyLaw
@@ -516,39 +518,39 @@ mod tests {
 #[cfg(test)]
 #[path = "."]
 mod fixture_tests {
-    #[path = "🕸️create-mesh/🧪️tests/adds-an-empty-second-mesh-at-the-end/🦀️component.rs"]
-    mod tests_create_mesh_adds_an_empty_second_mesh_at_the_end;
-    #[path = "🗑️delete-mesh/🧪️tests/removes-the-leading-mesh-and-keeps-the-trailing-one/🦀️component.rs"]
-    mod tests_delete_mesh_removes_the_leading_mesh_and_keeps_the_trailing_one;
-    #[path = "🔺create-primitive/🧪️tests/adds-a-second-primitive-inside-the-existing-mesh/🦀️component.rs"]
-    mod tests_create_primitive_adds_a_second_primitive_inside_the_existing_mesh;
-    #[path = "✂️delete-primitive/🧪️tests/removes-the-leading-primitive-and-keeps-the-trailing-one/🦀️component.rs"]
-    mod tests_delete_primitive_removes_the_leading_primitive_and_keeps_the_trailing_one;
-    #[path = "🔀set-primitive-topology/🧪️tests/switches-the-primitive-to-a-triangle-strip/🦀️component.rs"]
-    mod tests_set_primitive_topology_switches_the_primitive_to_a_triangle_strip;
-    #[path = "📐replace-primitive-geometry/🧪️tests/swaps-the-triangle-for-a-textured-quad/🦀️component.rs"]
-    mod tests_replace_primitive_geometry_swaps_the_triangle_for_a_textured_quad;
-    #[path = "🔗set-primitive-material/🧪️tests/binds-the-primitive-to-the-existing-material/🦀️component.rs"]
-    mod tests_set_primitive_material_binds_the_primitive_to_the_existing_material;
-    #[path = "📍move-vertex/🧪️tests/lifts-the-third-vertex-of-the-triangle/🦀️component.rs"]
-    mod tests_move_vertex_lifts_the_third_vertex_of_the_triangle;
-    #[path = "🎨create-material/🧪️tests/adds-a-second-material-at-the-end/🦀️component.rs"]
-    mod tests_create_material_adds_a_second_material_at_the_end;
-    #[path = "🚮delete-material/🧪️tests/removes-the-leading-material-and-keeps-the-trailing-one/🦀️component.rs"]
-    mod tests_delete_material_removes_the_leading_material_and_keeps_the_trailing_one;
     #[path = "🌈change-material-base-color/🧪️tests/repaints-the-material-from-red-to-blue/🦀️component.rs"]
     mod tests_change_material_base_color_repaints_the_material_from_red_to_blue;
     #[path = "⚙️change-material-metallic/🧪️tests/raises-the-metallic-factor-to-fully-metallic/🦀️component.rs"]
     mod tests_change_material_metallic_raises_the_metallic_factor_to_fully_metallic;
     #[path = "🧱change-material-roughness/🧪️tests/lowers-the-roughness-factor-to-a-quarter/🦀️component.rs"]
     mod tests_change_material_roughness_lowers_the_roughness_factor_to_a_quarter;
-    #[path = "🖼️create-texture/🧪️tests/adds-a-second-texture-at-the-end/🦀️component.rs"]
-    mod tests_create_texture_adds_a_second_texture_at_the_end;
-    #[path = "🕳️delete-texture/🧪️tests/removes-the-leading-texture-and-keeps-the-trailing-one/🦀️component.rs"]
-    mod tests_delete_texture_removes_the_leading_texture_and_keeps_the_trailing_one;
     #[path = "🏷️change-texture-mime/🧪️tests/retags-the-texture-as-jpeg-without-touching-its-bytes/🦀️component.rs"]
     mod tests_change_texture_mime_retags_the_texture_as_jpeg_without_touching_its_bytes;
+    #[path = "🎨create-material/🧪️tests/adds-a-second-material-at-the-end/🦀️component.rs"]
+    mod tests_create_material_adds_a_second_material_at_the_end;
+    #[path = "🕸️create-mesh/🧪️tests/adds-an-empty-second-mesh-at-the-end/🦀️component.rs"]
+    mod tests_create_mesh_adds_an_empty_second_mesh_at_the_end;
+    #[path = "🔺create-primitive/🧪️tests/adds-a-second-primitive-inside-the-existing-mesh/🦀️component.rs"]
+    mod tests_create_primitive_adds_a_second_primitive_inside_the_existing_mesh;
+    #[path = "🖼️create-texture/🧪️tests/adds-a-second-texture-at-the-end/🦀️component.rs"]
+    mod tests_create_texture_adds_a_second_texture_at_the_end;
+    #[path = "🚮delete-material/🧪️tests/removes-the-leading-material-and-keeps-the-trailing-one/🦀️component.rs"]
+    mod tests_delete_material_removes_the_leading_material_and_keeps_the_trailing_one;
+    #[path = "🗑️delete-mesh/🧪️tests/removes-the-leading-mesh-and-keeps-the-trailing-one/🦀️component.rs"]
+    mod tests_delete_mesh_removes_the_leading_mesh_and_keeps_the_trailing_one;
+    #[path = "✂️delete-primitive/🧪️tests/removes-the-leading-primitive-and-keeps-the-trailing-one/🦀️component.rs"]
+    mod tests_delete_primitive_removes_the_leading_primitive_and_keeps_the_trailing_one;
+    #[path = "🕳️delete-texture/🧪️tests/removes-the-leading-texture-and-keeps-the-trailing-one/🦀️component.rs"]
+    mod tests_delete_texture_removes_the_leading_texture_and_keeps_the_trailing_one;
+    #[path = "📍move-vertex/🧪️tests/lifts-the-third-vertex-of-the-triangle/🦀️component.rs"]
+    mod tests_move_vertex_lifts_the_third_vertex_of_the_triangle;
+    #[path = "📐replace-primitive-geometry/🧪️tests/swaps-the-triangle-for-a-textured-quad/🦀️component.rs"]
+    mod tests_replace_primitive_geometry_swaps_the_triangle_for_a_textured_quad;
     #[path = "📀replace-texture-bytes/🧪️tests/swaps-the-texture-payload-without-retagging-its-mime/🦀️component.rs"]
     mod tests_replace_texture_bytes_swaps_the_texture_payload_without_retagging_its_mime;
+    #[path = "🔗set-primitive-material/🧪️tests/binds-the-primitive-to-the-existing-material/🦀️component.rs"]
+    mod tests_set_primitive_material_binds_the_primitive_to_the_existing_material;
+    #[path = "🔀set-primitive-topology/🧪️tests/switches-the-primitive-to-a-triangle-strip/🦀️component.rs"]
+    mod tests_set_primitive_topology_switches_the_primitive_to_a_triangle_strip;
 }
 //#endregion 🧪️FixtureTests

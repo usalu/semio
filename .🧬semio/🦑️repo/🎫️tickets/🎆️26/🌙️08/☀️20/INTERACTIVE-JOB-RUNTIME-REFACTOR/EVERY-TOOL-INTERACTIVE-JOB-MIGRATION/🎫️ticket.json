@@ -1,0 +1,13 @@
+{
+  "title": "Every Tool Interactive Job Migration",
+  "emoji": "🧵️",
+  "status": "open",
+  "description": "Phase 8 of the Interactivity-First Refactor: migrate every remaining interactive tool and framework command from direct event callbacks/run-to-completion work to InteractiveJob factories and progress/preview/commit streams. Classify the complete Phase 0 command inventory as migrated, batch-only pending rewrite, forbidden from UI, or deleted; enforce release rejection of unclassified commands; migrate imports/exports, serialization, compression, selection expansion, snapping, boolean geometry, routing, animation baking, search, diffing, and package operations; verify zero unmigrated interactive callbacks reachable from UI.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2581"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪ffa186463ce14c61a8ded0ec185e8599"
+  ]
+}

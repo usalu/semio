@@ -15,12 +15,12 @@ pub struct EndUseLoad {
 
 impl EndUseLoad {
     /// 💡️ Instantaneous real power [W].
-    pub async fn power_w(&self) -> f64 {
+    pub fn power_w(&self) -> f64 {
         self.rated_power_w * self.schedule_factor.clamp(0.0, 1.0)
     }
 
     /// ⚡️ Apparent power [VA].
-    pub async fn apparent_va(&self) -> f64 {
+    pub fn apparent_va(&self) -> f64 {
         let pf = self.power_factor.clamp(0.1, 1.0);
         self.power_w() / pf
     }
@@ -42,7 +42,7 @@ pub struct PvSystem {
 
 impl PvSystem {
     /// ☀️ AC power output from plane-of-array irradiance.
-    pub async fn simulate(&self, poa_irradiance_w_m2: f64, cell_temperature_c: f64) -> f64 {
+    pub fn simulate(&self, poa_irradiance_w_m2: f64, cell_temperature_c: f64) -> f64 {
         if poa_irradiance_w_m2 <= 0.0 {
             return 0.0;
         }
@@ -53,7 +53,7 @@ impl PvSystem {
     }
 
     /// 📐️ Tilt/azimuth factor relative to horizontal south-facing surface.
-    pub async fn orientation_factor(&self, solar_altitude_deg: f64, solar_azimuth_deg: f64) -> f64 {
+    pub fn orientation_factor(&self, solar_altitude_deg: f64, solar_azimuth_deg: f64) -> f64 {
         let tilt = deg_to_rad(self.tilt_deg);
         let surf_az = deg_to_rad(self.azimuth_deg);
         let sun_alt = deg_to_rad(solar_altitude_deg);
@@ -78,7 +78,7 @@ pub struct WindTurbine {
 
 impl WindTurbine {
     /// 💨️ Electrical output from semio_hub-height wind speed.
-    pub async fn simulate(&self, wind_speed_m_s: f64, air_density: f64) -> f64 {
+    pub fn simulate(&self, wind_speed_m_s: f64, air_density: f64) -> f64 {
         let v = wind_speed_m_s;
         if v < self.cut_in_m_s || v > self.cut_out_m_s {
             return 0.0;
@@ -104,7 +104,7 @@ pub struct Generator {
 
 impl Generator {
     /// 🔌️ Generator electrical output and fuel consumption.
-    pub async fn simulate(&self, requested_w: f64, operating: bool) -> (f64, f64) {
+    pub fn simulate(&self, requested_w: f64, operating: bool) -> (f64, f64) {
         if !operating || requested_w <= 0.0 {
             return (0.0, 0.0);
         }
@@ -127,7 +127,7 @@ pub struct Inverter {
 
 impl Inverter {
     /// 🔄️ Convert DC to AC with part-load efficiency penalty.
-    pub async fn simulate(&self, dc_w: f64) -> f64 {
+    pub fn simulate(&self, dc_w: f64) -> f64 {
         if dc_w <= 0.0 {
             return -self.standby_w;
         }
@@ -153,7 +153,7 @@ pub struct Battery {
 
 impl Battery {
     /// 🔋️ Charge or discharge for one timestep; returns (grid_power_w, new_soc).
-    pub async fn simulate(&self, requested_w: f64, dt_s: f64) -> (f64, f64) {
+    pub fn simulate(&self, requested_w: f64, dt_s: f64) -> (f64, f64) {
         let capacity_j = self.capacity_kwh * 3_600_000.0;
         let mut soc = self.state_of_charge.clamp(self.min_soc, self.max_soc);
         let mut actual_w = 0.0;
@@ -199,13 +199,13 @@ pub struct Transformer {
 
 impl Transformer {
     /// 🔌️ Transformer total losses [W] at given apparent load.
-    pub async fn losses_w(&self, apparent_va: f64) -> f64 {
+    pub fn losses_w(&self, apparent_va: f64) -> f64 {
         let plr = (apparent_va / (self.rated_kva * 1000.0)).clamp(0.0, 1.5);
         self.no_load_loss_w + self.load_loss_w * plr * plr
     }
 
     /// 📉️ Secondary voltage drop fraction.
-    pub async fn voltage_drop_fraction(&self, apparent_va: f64) -> f64 {
+    pub fn voltage_drop_fraction(&self, apparent_va: f64) -> f64 {
         let plr = (apparent_va / (self.rated_kva * 1000.0)).clamp(0.0, 1.5);
         self.impedance_fraction * plr
     }
@@ -227,7 +227,7 @@ pub struct GridBalance {
 }
 
 /// 🏭️ Compute grid import/export from supply and demand.
-pub async fn grid_balance(building_load_w: f64, pv_w: f64, wind_w: f64, generator_w: f64, battery_w: f64, transformer: &Transformer) -> GridBalance {
+pub fn grid_balance(building_load_w: f64, pv_w: f64, wind_w: f64, generator_w: f64, battery_w: f64, transformer: &Transformer) -> GridBalance {
     let supply_w = pv_w + wind_w + generator_w - battery_w;
     let apparent = (building_load_w - supply_w).abs();
     let transformer_loss = transformer.losses_w(apparent);
@@ -241,19 +241,19 @@ mod tests {
     use super::*;
 
     #[semio_framework_async_macros::async_test]
-    async fn end_use_scales_with_schedule() {
+    fn end_use_scales_with_schedule() {
         let load = EndUseLoad { name: "Lighting".into(), rated_power_w: 1000.0, schedule_factor: 0.5, power_factor: 0.95 };
         assert!((load.power_w() - 500.0).abs() < 1e-6);
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn pv_zero_at_night() {
+    fn pv_zero_at_night() {
         let pv = PvSystem { dc_capacity_w: 10_000.0, module_efficiency: 0.2, area_m2: 50.0, inverter_efficiency: 0.96, temperature_coefficient: -0.004, tilt_deg: 30.0, azimuth_deg: 180.0 };
         assert!(pv.simulate(0.0, 20.0).abs() < 1e-6);
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn wind_cubic_below_rated() {
+    fn wind_cubic_below_rated() {
         let turbine = WindTurbine { rated_power_w: 20_000.0, cut_in_m_s: 3.0, rated_speed_m_s: 12.0, cut_out_m_s: 25.0, hub_height_m: 30.0, rotor_diameter_m: 12.0 };
         let low = turbine.simulate(5.0, 1.2);
         let high = turbine.simulate(8.0, 1.2);
@@ -262,7 +262,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn battery_soc_bounds() {
+    fn battery_soc_bounds() {
         let battery = Battery { capacity_kwh: 10.0, max_charge_w: 5000.0, max_discharge_w: 5000.0, round_trip_efficiency: 0.92, min_soc: 0.1, max_soc: 0.95, state_of_charge: 0.5 };
         let (charge_w, soc_after) = battery.simulate(3000.0, 3600.0);
         assert!(charge_w > 0.0);
@@ -272,7 +272,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn grid_balance_import_when_load_exceeds_supply() {
+    fn grid_balance_import_when_load_exceeds_supply() {
         let xf = Transformer { rated_kva: 100.0, no_load_loss_w: 50.0, load_loss_w: 800.0, impedance_fraction: 0.04 };
         let balance = grid_balance(50_000.0, 10_000.0, 0.0, 0.0, 0.0, &xf);
         assert!(balance.net_import_w > 0.0);
@@ -280,7 +280,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn generator_respects_minimum_load() {
+    fn generator_respects_minimum_load() {
         let gen = Generator { rated_power_w: 100_000.0, fuel_lhv_j_per_kg: 42e6, electrical_efficiency: 0.35, min_load_fraction: 0.3 };
         let (out, fuel) = gen.simulate(5000.0, true);
         assert!(out >= 30_000.0);

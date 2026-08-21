@@ -6,7 +6,7 @@
 use crate::artifacts::json::schema::snapshot::{JsonMember, JsonValue};
 use crate::artifacts::json::JsonSnapshot;
 use semio_framework_plugin::app::{TreeNodeView, TreeView, TreeWindowKit, WindowKit};
-use semio_framework_plugin::{LocalizedLabel, UiNode, WindowKindDefinition};
+use semio_framework_plugin::{BuiltNode, LocalizedLabel, WindowKindDefinition};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = TreeWindowKit::KIND_ID;
@@ -22,9 +22,9 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-/// 👁️ Pure `JsonSnapshot -> UiNode` read: same shape as the editor's own render, no mutation.
+/// 👁️ Pure `JsonSnapshot -> BuiltNode` read: same shape as the editor's own render, no mutation.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &JsonSnapshot) -> UiNode {
+pub fn render(document: &JsonSnapshot) -> BuiltNode {
     TreeWindowKit::render(&TreeView { roots: vec![node_view(Vec::new(), None, &document.value)] })
 }
 

@@ -567,7 +567,7 @@ fn write_transform(out: &mut Vec<u8>, t: &SemioTransform) {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn read_transform(reader: &mut store::ByteReader<'_>) -> Result<SemioTransform, String> {
-    let mut next = || semio_framework_plugin::resolve_ready(reader.read_f64_le()).map_err(|e| e.to_string());
+    let mut next = || reader.read_f64_le().map_err(|e| e.to_string());
     let translation = SemioPoint3 { x: next()?, y: next()?, z: next()? };
     let rotation = SemioQuaternion { x: next()?, y: next()?, z: next()?, w: next()? };
     let scale = SemioPoint3 { x: next()?, y: next()?, z: next()? };
@@ -822,7 +822,7 @@ fn encode_model_snapshot_binary(s: &SemioModelSnapshot) -> Vec<u8> {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn decode_model_snapshot_binary(bytes: &[u8]) -> Result<SemioModelSnapshot, String> {
     const PACK_BINARY_FORMAT: u8 = 1;
-    let mut reader = semio_framework_plugin::resolve_ready(store::ByteReader::new(bytes));
+    let mut reader = store::ByteReader::new(bytes);
     let format = reader.read_u8().map_err(|e| e.to_string())?;
     if format != PACK_BINARY_FORMAT {
         return Err(format!("unsupported pack format {format}"));

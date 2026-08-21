@@ -183,11 +183,11 @@ async fn analyzer_to_builder_round_trip_reproduces_equivalent_pages() {
     // actually sufficient to reconstruct what the analyzer sees, round-tripped through real bytes.
     let original = decode_pdf(FIXTURE_BYTES).expect("decode");
 
-    let mut builder = PdfBuilder::empty();
+    let mut builder = PdfBuilder::empty().await;
     for page in &original.pages {
-        builder = builder.add_page(page.clone());
+        builder = builder.add_page(page.clone()).await;
     }
-    let rebuilt_snapshot = builder.build().expect("builder-only reconstruction must succeed");
+    let rebuilt_snapshot = builder.build().await.expect("builder-only reconstruction must succeed");
     let rebuilt_bytes = encode_pdf(&rebuilt_snapshot).expect("encode rebuilt snapshot");
     let rebuilt_redecoded = decode_pdf(&rebuilt_bytes).expect("re-decode rebuilt bytes");
 

@@ -26,7 +26,7 @@ pub struct SemioKitInference {
 }
 
 impl protocol::Inference<SemioKitSnapshot> for SemioKitInference {
-    async fn infer(snapshot: &SemioKitSnapshot) -> Self {
+    fn infer(snapshot: &SemioKitSnapshot) -> Self {
         Self { entries: compute_semio_kit_entries(snapshot) }
     }
 }
@@ -42,13 +42,13 @@ impl Default for SemioKitInference {
 }
 
 impl protocol::InferenceSpec<SemioKitSnapshot> for SemioKitInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.stdio.semio.kit.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.stdio.semio.kit.inference.entries", reads: &["types", "designs", "objects", "models", "properties", "representations"] }]
     }
 }

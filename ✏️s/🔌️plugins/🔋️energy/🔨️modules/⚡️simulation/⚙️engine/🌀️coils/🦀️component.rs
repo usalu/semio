@@ -66,7 +66,7 @@ pub struct CoolingCoilOutput {
 
 // #region 🔖️HeatingOutput
 /// 🔥️ Compute heating coil delivered capacity and outlet air state [W].
-pub async fn heating_coil_output_w(coil: &HeatingCoil, inlet: &CoilAirState, load_w: f64) -> HeatingCoilOutput {
+pub fn heating_coil_output_w(coil: &HeatingCoil, inlet: &CoilAirState, load_w: f64) -> HeatingCoilOutput {
     let m_dot = inlet.mass_flow_kg_s.max(0.0);
     if m_dot < 1e-9 || load_w <= 0.0 {
         return HeatingCoilOutput { outlet: *inlet, total_heating_w: 0.0, gas_consumption_w: 0.0, water_heat_removal_w: 0.0 };
@@ -102,7 +102,7 @@ pub async fn heating_coil_output_w(coil: &HeatingCoil, inlet: &CoilAirState, loa
 
 // #region 🔖️CoolingOutput
 /// ❄️ Compute cooling coil capacity with bypass factor and wet/dry behavior [W].
-pub async fn cooling_coil_output_w(coil: &CoolingCoil, inlet: &CoilAirState, load_w: f64, bypass_factor: f64) -> CoolingCoilOutput {
+pub fn cooling_coil_output_w(coil: &CoolingCoil, inlet: &CoilAirState, load_w: f64, bypass_factor: f64) -> CoolingCoilOutput {
     let m_dot = inlet.mass_flow_kg_s.max(0.0);
     let bf = bypass_factor.clamp(0.0, 0.95);
     if m_dot < 1e-9 || load_w <= 0.0 {
@@ -180,14 +180,14 @@ pub async fn cooling_coil_output_w(coil: &CoolingCoil, inlet: &CoilAirState, loa
     }
 }
 
-async fn apparatus_dew_point_c(t_db: f64, w: f64, p_atm: f64) -> f64 {
+fn apparatus_dew_point_c(t_db: f64, w: f64, p_atm: f64) -> f64 {
     let p_ws = saturation_pressure_pa(t_db);
     let p_w = w * p_atm / (0.621_945 + w);
     let rh = (p_w / p_ws).clamp(0.01, 1.0);
     t_db - (1.0 - rh) * 5.0
 }
 
-async fn saturation_humidity_ratio(t_c: f64, p_atm: f64) -> f64 {
+fn saturation_humidity_ratio(t_c: f64, p_atm: f64) -> f64 {
     let p_ws = saturation_pressure_pa(t_c);
     0.621_945 * p_ws / (p_atm - p_ws).max(1.0)
 }
@@ -198,7 +198,7 @@ mod tests {
     use super::*;
 
     #[semio_framework_async_macros::async_test]
-    async fn electric_heating_raises_temperature() {
+    fn electric_heating_raises_temperature() {
         let coil = HeatingCoil::Electric { capacity_w: 10_000.0, efficiency: 1.0 };
         let inlet = CoilAirState { temperature_c: 15.0, humidity_ratio: 0.008, mass_flow_kg_s: 0.5, pressure_pa: 101_325.0 };
         let out = heating_coil_output_w(&coil, &inlet, 5000.0);
@@ -207,7 +207,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn dx_cooling_removes_sensible_and_latent() {
+    fn dx_cooling_removes_sensible_and_latent() {
         let coil = CoolingCoil::DxSingleSpeed { rated_capacity_w: 15_000.0, rated_shr: 0.75, cop_curve: PerformanceCurve::Constant(1.0) };
         let inlet = CoilAirState { temperature_c: 28.0, humidity_ratio: 0.012, mass_flow_kg_s: 0.6, pressure_pa: 101_325.0 };
         let out = cooling_coil_output_w(&coil, &inlet, 10_000.0, 0.1);
@@ -218,7 +218,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn bypass_factor_reduces_effect() {
+    fn bypass_factor_reduces_effect() {
         let coil = CoolingCoil::DxSingleSpeed { rated_capacity_w: 15_000.0, rated_shr: 0.8, cop_curve: PerformanceCurve::Constant(1.0) };
         let inlet = CoilAirState { temperature_c: 30.0, humidity_ratio: 0.014, mass_flow_kg_s: 0.5, pressure_pa: 101_325.0 };
         let out_low_bf = cooling_coil_output_w(&coil, &inlet, 8000.0, 0.05);

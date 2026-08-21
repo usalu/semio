@@ -88,11 +88,8 @@ async fn committed_json_is_canonical() {
 async fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
     let status = outcome.get("status").and_then(serde_json::Value::as_str).expect("outcome carries a status");
-    let declared: Vec<(String, String)> = outcome
-        .get("messages")
-        .and_then(serde_json::Value::as_array)
-        .map(|rows| rows.iter().map(|row| (row["level"].as_str().unwrap_or_default().to_string(), row["code"].as_str().unwrap_or_default().to_string())).collect())
-        .unwrap_or_default();
+    let declared: Vec<(String, String)> =
+        outcome.get("messages").and_then(serde_json::Value::as_array).map(|rows| rows.iter().map(|row| (row["level"].as_str().unwrap_or_default().to_string(), row["code"].as_str().unwrap_or_default().to_string())).collect()).unwrap_or_default();
     let raised = <Mp3Mutation as protocol::Mutation<Mp3Snapshot>>::diff(&mutation(), &before());
     let produced: Vec<(String, String)> = raised
         .messages()
@@ -135,7 +132,10 @@ async fn committed_diff_is_canonical() {
     let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "set-snapshot/retitles-the-id3v2-tit2-frame: committed diff JSON is not canonical");
-    assert!(decoded.id3v1.is_none(), "set-snapshot/retitles-the-id3v2-tit2-frame: id3v1 must round-trip as absent — a committed null would be indistinguishable from the Some(None) 'trailer cleared' state that Option<Option<Id3v1Tag>> cannot express in JSON");
+    assert!(
+        decoded.id3v1.is_none(),
+        "set-snapshot/retitles-the-id3v2-tit2-frame: id3v1 must round-trip as absent — a committed null would be indistinguishable from the Some(None) 'trailer cleared' state that Option<Option<Id3v1Tag>> cannot express in JSON"
+    );
 }
 
 /// 🩹 Applying the committed diff directly to `before` yields the committed `after` — the diff is

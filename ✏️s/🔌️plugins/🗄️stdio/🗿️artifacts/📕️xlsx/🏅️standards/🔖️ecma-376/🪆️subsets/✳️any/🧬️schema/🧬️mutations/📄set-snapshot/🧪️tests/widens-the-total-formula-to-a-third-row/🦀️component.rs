@@ -46,7 +46,10 @@ async fn applies_to_committed_after() {
     assert!(outcome.messages().is_empty(), "set-snapshot/widens-the-total-formula-to-a-third-row: set-snapshot raised diagnostics it should not have");
     assert_eq!(snapshot, expected_after(), "set-snapshot/widens-the-total-formula-to-a-third-row: applied state differs from committed after-snapshot");
     let cells = &snapshot.workbook.sheets[0].cells;
-    assert!(matches!(&cells[0].value, crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::snapshot::XlsxCellValue::Formula { expr, cached } if expr == "SUM(B1:B3)" && cached.is_none()), "set-snapshot/widens-the-total-formula-to-a-third-row: the total cell must carry the widened formula and still have no cached value");
+    assert!(
+        matches!(&cells[0].value, crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::snapshot::XlsxCellValue::Formula { expr, cached } if expr == "SUM(B1:B3)" && cached.is_none()),
+        "set-snapshot/widens-the-total-formula-to-a-third-row: the total cell must carry the widened formula and still have no cached value"
+    );
     assert_eq!((cells[0].row, cells[0].col), (4, 1), "set-snapshot/widens-the-total-formula-to-a-third-row: a cell's (row, col) pair is its identity and is never rewritten by a value edit");
     assert_eq!(cells[1], before().workbook.sheets[0].cells[1], "set-snapshot/widens-the-total-formula-to-a-third-row: the empty cell below is identical on both sides and must survive untouched");
     assert!(snapshot.workbook.shared_strings.is_empty(), "set-snapshot/widens-the-total-formula-to-a-third-row: the shared-string table is untouched — this workbook has none");
@@ -91,11 +94,8 @@ async fn committed_json_is_canonical() {
 async fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
     let status = outcome.get("status").and_then(serde_json::Value::as_str).expect("outcome carries a status");
-    let declared: Vec<(String, String)> = outcome
-        .get("messages")
-        .and_then(serde_json::Value::as_array)
-        .map(|rows| rows.iter().map(|row| (row["level"].as_str().unwrap_or_default().to_string(), row["code"].as_str().unwrap_or_default().to_string())).collect())
-        .unwrap_or_default();
+    let declared: Vec<(String, String)> =
+        outcome.get("messages").and_then(serde_json::Value::as_array).map(|rows| rows.iter().map(|row| (row["level"].as_str().unwrap_or_default().to_string(), row["code"].as_str().unwrap_or_default().to_string())).collect()).unwrap_or_default();
     let raised = <XlsxMutation as protocol::Mutation<XlsxSnapshot>>::diff(&mutation(), &before());
     let produced: Vec<(String, String)> = raised
         .messages()
@@ -143,7 +143,11 @@ async fn committed_diff_is_canonical() {
     let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "set-snapshot/widens-the-total-formula-to-a-third-row: committed diff JSON is not canonical");
-    assert_eq!(serde_json::from_str::<serde_json::Value>(DIFF).expect("diff reparses").pointer("/workbook/sheets/modified/0/diff/cells/modified/0/key"), Some(&serde_json::json!([4, 1])), "set-snapshot/widens-the-total-formula-to-a-third-row: the (u32, u32) cell key encodes as a two-element JSON array — anything else would mean the committed diff was keyed by list position instead of by cell identity");
+    assert_eq!(
+        serde_json::from_str::<serde_json::Value>(DIFF).expect("diff reparses").pointer("/workbook/sheets/modified/0/diff/cells/modified/0/key"),
+        Some(&serde_json::json!([4, 1])),
+        "set-snapshot/widens-the-total-formula-to-a-third-row: the (u32, u32) cell key encodes as a two-element JSON array — anything else would mean the committed diff was keyed by list position instead of by cell identity"
+    );
 }
 
 /// 🩹 Applying the committed diff directly to `before` yields the committed `after` — the diff is

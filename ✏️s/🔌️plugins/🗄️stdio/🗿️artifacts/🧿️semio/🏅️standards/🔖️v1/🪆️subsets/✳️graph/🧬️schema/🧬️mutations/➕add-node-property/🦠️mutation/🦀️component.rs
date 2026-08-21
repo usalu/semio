@@ -19,16 +19,16 @@ pub struct AddNodeProperty {
 impl protocol::MutationKind<SemioGraphSnapshot, SemioGraphMutation> for AddNodeProperty {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "node-property", kind: "add-node-property", record: "AddedNodeProperty" };
 
-    async fn diff(&self, base: &SemioGraphSnapshot) -> protocol::MutationOutcome<<SemioGraphMutation as protocol::Mutation<SemioGraphSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioGraphSnapshot) -> protocol::MutationOutcome<<SemioGraphMutation as protocol::Mutation<SemioGraphSnapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &SemioGraphSnapshot) -> Vec<SemioGraphMutation> {
+    fn inverse(&self, base: &SemioGraphSnapshot) -> Vec<SemioGraphMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Add property to node \"{}\" at #{}", self.node_id.value, self.index)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.node_id.value.clone(), self.index.to_string()]
     }
 }

@@ -850,7 +850,7 @@ pub(crate) fn dec_json_value_bin(reader: &mut store::ByteReader<'_>) -> Result<J
             let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
             let mut items = Vec::with_capacity(count as usize);
             for _ in 0..count {
-                items.push(Box::pin(dec_json_value_bin(reader))?);
+                items.push(dec_json_value_bin(reader)?);
             }
             Ok(JsonValue::Array { items })
         }
@@ -859,7 +859,7 @@ pub(crate) fn dec_json_value_bin(reader: &mut store::ByteReader<'_>) -> Result<J
             let mut members = Vec::with_capacity(count as usize);
             for _ in 0..count {
                 let key = read_str_lp(reader)?;
-                let value = Box::pin(dec_json_value_bin(reader))?;
+                let value = dec_json_value_bin(reader)?;
                 members.push(JsonMember { key, value });
             }
             Ok(JsonValue::Object { members })
@@ -1006,8 +1006,8 @@ pub(crate) fn dec_value_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<J
         1 => Ok(JsonValueDiff::Bool { value: reader.read_u8().map_err(|e| e.to_string())? != 0 }),
         2 => Ok(JsonValueDiff::Number { lexeme: read_str_lp(reader)? }),
         3 => Ok(JsonValueDiff::String { value: read_str_lp(reader)? }),
-        4 => Ok(JsonValueDiff::Array { diff: Box::pin(dec_array_diff_bin(reader))? }),
-        5 => Ok(JsonValueDiff::Object { diff: Box::pin(dec_object_diff_bin(reader))? }),
+        4 => Ok(JsonValueDiff::Array { diff: dec_array_diff_bin(reader)? }),
+        5 => Ok(JsonValueDiff::Object { diff: dec_object_diff_bin(reader)? }),
         other => Err(format!("json value diff binary: unknown tag {other}")),
     }
 }
@@ -1040,7 +1040,7 @@ fn dec_array_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<JsonArrayDif
     let mut modified = Vec::with_capacity(modified_count as usize);
     for _ in 0..modified_count {
         let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-        let diff = Box::pin(dec_value_diff_bin(reader))?;
+        let diff = dec_value_diff_bin(reader)?;
         modified.push(JsonArrayModified { index, diff });
     }
     let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
@@ -1082,7 +1082,7 @@ fn dec_object_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<JsonObjectD
     let mut modified = Vec::with_capacity(modified_count as usize);
     for _ in 0..modified_count {
         let key = read_str_lp(reader)?;
-        let diff = Box::pin(dec_value_diff_bin(reader))?;
+        let diff = dec_value_diff_bin(reader)?;
         modified.push(JsonObjectModified { key, diff });
     }
     let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
@@ -1148,7 +1148,7 @@ impl protocol::DiffCodec for JsonDiff {
         let mut reader = store::ByteReader::new(bytes);
         let _format = reader.read_u8().map_err(|e| protocol::ProtocolError::Malformed { what: "diff format", offset: 0, detail: e.to_string() })?;
         let has_value = reader.read_u8().map_err(|e| protocol::ProtocolError::Malformed { what: "diff has_value", offset: 1, detail: e.to_string() })?;
-        let value = if has_value != 0 { Some(dec_value_diff_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff value", offset: semio_framework_plugin::resolve_ready(reader.position()) as u64, detail: e })?) } else { None };
+        let value = if has_value != 0 { Some(dec_value_diff_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "diff value", offset: reader.position() as u64, detail: e })?) } else { None };
         Ok(JsonDiff { value })
     }
 }
@@ -1235,8 +1235,8 @@ mod tests {
     }
 
     //#region between_roundtrip_law
-    #[semio_framework_async_macros::async_test]
-    async fn between_roundtrip_law_scalars_and_kind_change() {
+    #[test]
+    fn between_roundtrip_law_scalars_and_kind_change() {
         let cases = [(JsonValue::Null, JsonValue::Bool { value: true }), (JsonValue::Bool { value: true }, JsonValue::Bool { value: false }), (num("1"), num("2.5e10")), (str_("a"), str_("b")), (num("1"), str_("1"))];
         for (a, b) in cases {
             let (sa, sb) = (snap(a.clone()), snap(b.clone()));
@@ -1245,8 +1245,8 @@ mod tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn between_roundtrip_law_nested_collections() {
+    #[test]
+    fn between_roundtrip_law_nested_collections() {
         let a = objv(vec![("tags", arr(vec![str_("x"), str_("y")])), ("n", num("1"))]);
         let b = objv(vec![("tags", arr(vec![str_("x"), str_("z"), str_("w")])), ("n", num("2")), ("extra", JsonValue::Bool { value: true })]);
         let (sa, sb) = (snap(a.clone()), snap(b.clone()));
@@ -1254,8 +1254,8 @@ mod tests {
         assert_eq!(JsonDiff::between(&sb, &sa).apply(&sb).unwrap(), sa);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn between_self_is_empty() {
+    #[test]
+    fn between_self_is_empty() {
         let a = objv(vec![("x", num("1"))]);
         let sa = snap(a);
         assert!(JsonDiff::between(&sa, &sa).is_empty());
@@ -1263,8 +1263,8 @@ mod tests {
     //#endregion between_roundtrip_law
 
     //#region inverse_law
-    #[semio_framework_async_macros::async_test]
-    async fn inverse_law_diff_level() {
+    #[test]
+    fn inverse_law_diff_level() {
         let a = objv(vec![("x", num("1")), ("y", arr(vec![num("1"), num("2")]))]);
         let b = objv(vec![("x", num("2")), ("z", str_("new"))]);
         let (sa, sb) = (snap(a), snap(b));
@@ -1289,8 +1289,8 @@ mod tests {
         JsonDiff { value: Some(JsonValueDiff::Array { diff: d }) }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn absorb_array_insert_then_remove_before() {
+    #[test]
+    fn absorb_array_insert_then_remove_before() {
         // base = [a,b,c]; d1 = Insert(2,f) -> mid=[a,b,f,c]; d2 = Remove(0) -> after=[b,f,c].
         let base = snap(arr(vec![str_("a"), str_("b"), str_("c")]));
         let d1 = array_diff(JsonArrayDiff { added: vec![JsonArrayAdded { index: 2, item: str_("f") }], ..Default::default() });
@@ -1309,8 +1309,8 @@ mod tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn absorb_array_insert_insert_same_index_both_survive() {
+    #[test]
+    fn absorb_array_insert_insert_same_index_both_survive() {
         // base = [a,b]; d1 = Insert(2,f); d2 = Insert(2,g) (against mid=[a,b,f]) -> [a,b,g,f].
         let base = snap(arr(vec![str_("a"), str_("b")]));
         let d1 = array_diff(JsonArrayDiff { added: vec![JsonArrayAdded { index: 2, item: str_("f") }], ..Default::default() });
@@ -1326,8 +1326,8 @@ mod tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn absorb_array_insert_then_remove_of_same_added_item_cancels() {
+    #[test]
+    fn absorb_array_insert_then_remove_of_same_added_item_cancels() {
         // base = [a]; d1 = Insert(1,f) -> mid=[a,f]; d2 = Remove(1) -> after=[a].
         let base = snap(arr(vec![str_("a")]));
         let d1 = array_diff(JsonArrayDiff { added: vec![JsonArrayAdded { index: 1, item: str_("f") }], ..Default::default() });
@@ -1340,8 +1340,8 @@ mod tests {
         assert!(combined.is_empty(), "cancelling insert+remove must coalesce to an empty diff");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn absorb_array_add_then_setfield_patches_added_payload() {
+    #[test]
+    fn absorb_array_add_then_setfield_patches_added_payload() {
         // base = []; d1 = Insert(0,{x:1}) -> mid=[{x:1}]; d2 = SetMember([0],y,2) -> [{x:1,y:2}].
         let base = snap(arr(vec![]));
         let d1 = array_diff(JsonArrayDiff { added: vec![JsonArrayAdded { index: 0, item: objv(vec![("x", num("1"))]) }], ..Default::default() });
@@ -1364,8 +1364,8 @@ mod tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn absorb_array_modify_then_remove_drops_pending_patch() {
+    #[test]
+    fn absorb_array_modify_then_remove_drops_pending_patch() {
         // base = [1,2]; d1 = Modify(0,9) -> mid=[9,2]; d2 = Remove(0) -> after=[2].
         let base = snap(arr(vec![num("1"), num("2")]));
         let d1 = array_diff(JsonArrayDiff { modified: vec![JsonArrayModified { index: 0, diff: JsonValueDiff::Number { lexeme: "9".into() } }], ..Default::default() });
@@ -1384,8 +1384,8 @@ mod tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn absorb_array_associativity() {
+    #[test]
+    fn absorb_array_associativity() {
         let s0 = snap(arr(vec![num("1"), num("2"), num("3")]));
         let s1 = snap(arr(vec![num("1"), num("9"), num("3")]));
         let s2 = snap(arr(vec![num("9"), num("3"), num("4")]));
@@ -1410,8 +1410,8 @@ mod tests {
     //#endregion absorb_law canonical cases (array/index-keyed)
 
     //#region absorb_law canonical cases (object/name-keyed)
-    #[semio_framework_async_macros::async_test]
-    async fn absorb_object_add_then_setfield_patches_added_payload() {
+    #[test]
+    fn absorb_object_add_then_setfield_patches_added_payload() {
         let base = objv(vec![]);
         let mid = objv(vec![("config", objv(vec![]))]);
         let after = objv(vec![("config", objv(vec![("x", num("5"))]))]);
@@ -1431,8 +1431,8 @@ mod tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn absorb_object_modify_then_remove_drops_pending_patch() {
+    #[test]
+    fn absorb_object_modify_then_remove_drops_pending_patch() {
         let base = objv(vec![("a", num("1")), ("b", num("2"))]);
         let mid = objv(vec![("a", num("9")), ("b", num("2"))]);
         let after = objv(vec![("b", num("2"))]);
@@ -1451,8 +1451,8 @@ mod tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn absorb_object_insert_insert_both_survive() {
+    #[test]
+    fn absorb_object_insert_insert_both_survive() {
         let base = objv(vec![("a", num("1"))]);
         let mid = objv(vec![("a", num("1")), ("f", num("2"))]);
         let after = objv(vec![("a", num("1")), ("f", num("2")), ("g", num("3"))]);
@@ -1468,8 +1468,8 @@ mod tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn absorb_object_insert_then_remove_of_same_added_item_cancels() {
+    #[test]
+    fn absorb_object_insert_then_remove_of_same_added_item_cancels() {
         let base = objv(vec![("a", num("1"))]);
         let mid = objv(vec![("a", num("1")), ("f", num("2"))]);
         let after = objv(vec![("a", num("1"))]);
@@ -1482,8 +1482,8 @@ mod tests {
         assert!(combined.is_empty());
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn absorb_object_associativity() {
+    #[test]
+    fn absorb_object_associativity() {
         let s0 = snap(objv(vec![("a", num("1"))]));
         let s1 = snap(objv(vec![("a", num("1")), ("b", num("2"))]));
         let s2 = snap(objv(vec![("a", num("9")), ("b", num("2"))]));
@@ -1538,16 +1538,16 @@ mod tests {
         ]))
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn field_sweep_between_roundtrips_both_directions() {
+    #[test]
+    fn field_sweep_between_roundtrips_both_directions() {
         let (a, b) = (sweep_a(), sweep_b());
         assert_eq!(JsonDiff::between(&a, &b).apply(&a).unwrap(), b);
         assert_eq!(JsonDiff::between(&b, &a).apply(&b).unwrap(), a);
         assert!(JsonDiff::between(&a, &a).is_empty());
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn field_sweep_every_field_present_in_diff() {
+    #[test]
+    fn field_sweep_every_field_present_in_diff() {
         let (a, b) = (sweep_a(), sweep_b());
         let diff = JsonDiff::between(&a, &b);
         let object_diff = match diff.value {
@@ -1589,8 +1589,8 @@ mod tests {
     /// 🧪️ F6: `DiffCodec` round-trip laws over the hand-rolled `JsonDiff` grammar — exercises
     /// every `JsonValueDiff` variant (incl. the `Replace` kind-change fallback), nested
     /// array/object collection triples, and the empty (`None`) diff.
-    #[semio_framework_async_macros::async_test]
-    async fn diff_codec_text_binary_roundtrip_law() {
+    #[test]
+    fn diff_codec_text_binary_roundtrip_law() {
         use protocol::DiffCodec;
 
         for d in demo_diff_cases() {

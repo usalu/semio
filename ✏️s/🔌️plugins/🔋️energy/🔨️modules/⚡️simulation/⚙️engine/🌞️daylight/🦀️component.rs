@@ -33,14 +33,14 @@ pub struct IlluminanceMap {
 
 // #region 🔖️Illuminance
 /// 💡️ Simplified interior illuminance at a point [lux] (split-flux daylight factor).
-pub async fn reference_point_illuminance_lux(diffuse_horizontal_lux: f64, direct_normal_lux: f64, incidence_cosine: f64, window_transmittance: f64, daylight_factor: f64, shading_factor: f64) -> f64 {
+pub fn reference_point_illuminance_lux(diffuse_horizontal_lux: f64, direct_normal_lux: f64, incidence_cosine: f64, window_transmittance: f64, daylight_factor: f64, shading_factor: f64) -> f64 {
     let diffuse_contrib = diffuse_horizontal_lux * window_transmittance * daylight_factor * shading_factor;
     let direct_contrib = direct_normal_lux * incidence_cosine * window_transmittance * shading_factor * 0.5;
     diffuse_contrib + direct_contrib
 }
 
 /// 🗺️ Build illuminance map from reference points.
-pub async fn illuminance_map(points: &[ReferencePoint], lux_per_point: &[f64]) -> IlluminanceMap {
+pub fn illuminance_map(points: &[ReferencePoint], lux_per_point: &[f64]) -> IlluminanceMap {
     let values_lux: Vec<f64> = points.iter().zip(lux_per_point.iter()).map(|(p, &lux)| lux * p.fraction).collect();
     let empty = values_lux.is_empty();
     let min_lux = values_lux.iter().copied().fold(f64::INFINITY, f64::min);
@@ -51,14 +51,14 @@ pub async fn illuminance_map(points: &[ReferencePoint], lux_per_point: &[f64]) -
 }
 
 /// 💡️ Zone-averaged daylight illuminance [lux].
-pub async fn zone_daylight_illuminance(zone: &DaylightZone, lux_per_point: &[f64]) -> f64 {
+pub fn zone_daylight_illuminance(zone: &DaylightZone, lux_per_point: &[f64]) -> f64 {
     illuminance_map(&zone.reference_points, lux_per_point).average_lux
 }
 // #endregion 🔖️Illuminance
 
 // #region 🔖️Glare
 /// 😎️ Simplified daylight glare index (0–1, higher = more glare).
-pub async fn simplified_glare_index(window_luminance_cd_m2: f64, solid_angle_sr: f64, eye_illuminance_lux: f64) -> f64 {
+pub fn simplified_glare_index(window_luminance_cd_m2: f64, solid_angle_sr: f64, eye_illuminance_lux: f64) -> f64 {
     let omega = solid_angle_sr.max(1e-6);
     let l_b = window_luminance_cd_m2.max(1.0);
     let e_i = eye_illuminance_lux.max(1.0);
@@ -67,14 +67,14 @@ pub async fn simplified_glare_index(window_luminance_cd_m2: f64, solid_angle_sr:
 }
 
 /// 😎️ Glare acceptable when index below limit.
-pub async fn glare_acceptable(glare_index: f64, limit: f64) -> bool {
+pub fn glare_acceptable(glare_index: f64, limit: f64) -> bool {
     glare_index <= limit
 }
 // #endregion 🔖️Glare
 
 // #region 🔖️Control
 /// 💡️ Continuous lighting dimming fraction (0 = off, 1 = full) for daylight harvesting.
-pub async fn lighting_dimming_fraction(current_illuminance_lux: f64, target_lux: f64, min_fraction: f64) -> f64 {
+pub fn lighting_dimming_fraction(current_illuminance_lux: f64, target_lux: f64, min_fraction: f64) -> f64 {
     if target_lux <= 0.0 {
         return 1.0;
     }
@@ -86,12 +86,12 @@ pub async fn lighting_dimming_fraction(current_illuminance_lux: f64, target_lux:
 }
 
 /// 💡️ Electric lighting power after dimming [W].
-pub async fn dimmed_lighting_power_w(full_power_w: f64, dimming_fraction: f64) -> f64 {
+pub fn dimmed_lighting_power_w(full_power_w: f64, dimming_fraction: f64) -> f64 {
     full_power_w * dimming_fraction.clamp(0.0, 1.0)
 }
 
 /// 💡️ Daylight factor from geometry (simplified: window-to-floor ratio).
-pub async fn simplified_daylight_factor(window_area_m2: f64, floor_area_m2: f64, transmittance: f64) -> f64 {
+pub fn simplified_daylight_factor(window_area_m2: f64, floor_area_m2: f64, transmittance: f64) -> f64 {
     if floor_area_m2 <= 0.0 {
         return 0.0;
     }
@@ -103,7 +103,7 @@ pub async fn simplified_daylight_factor(window_area_m2: f64, floor_area_m2: f64,
 mod tests {
     use super::*;
 
-    async fn sample_zone() -> DaylightZone {
+    fn sample_zone() -> DaylightZone {
         DaylightZone {
             zone_id: 1,
             floor_area_m2: 25.0,
@@ -115,31 +115,31 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn illuminance_increases_with_sun() {
+    fn illuminance_increases_with_sun() {
         let e = reference_point_illuminance_lux(10_000.0, 50_000.0, 0.5, 0.6, 0.05, 1.0);
         assert!(e > 500.0);
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn dimming_reduces_at_high_daylight() {
+    fn dimming_reduces_at_high_daylight() {
         let frac = lighting_dimming_fraction(600.0, 500.0, 0.1);
         assert!((frac - 0.1).abs() < 1e-6);
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn dimming_full_when_dark() {
+    fn dimming_full_when_dark() {
         let frac = lighting_dimming_fraction(50.0, 500.0, 0.1);
         assert!(frac > 0.8);
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn glare_high_for_bright_window() {
+    fn glare_high_for_bright_window() {
         let gi = simplified_glare_index(5000.0, 0.2, 300.0);
         assert!(gi > 0.1);
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn zone_average_illuminance() {
+    fn zone_average_illuminance() {
         let zone = sample_zone();
         let lux = vec![400.0, 600.0];
         let avg = zone_daylight_illuminance(&zone, &lux);

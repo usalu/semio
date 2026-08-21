@@ -7,8 +7,8 @@
 //! `inverse()` is handcrafted per variant.
 
 use crate::artifacts::pdf::standards::v1_7::subsets::any::schema::diff::{
-    self, dec_box, dec_objref, dec_pdf_info, dec_pdf_object, dec_pdf_page, dec_str, decode_option, enc_box, enc_objref, enc_pdf_info, enc_pdf_object, enc_pdf_page, enc_str, encode_option, hex_decode, hex_encode,
-    split_top_level, strip_brackets, PdfDiff, PdfPathSegment,
+    self, dec_box, dec_objref, dec_pdf_info, dec_pdf_object, dec_pdf_page, dec_str, decode_option, enc_box, enc_objref, enc_pdf_info, enc_pdf_object, enc_pdf_page, enc_str, encode_option, hex_decode, hex_encode, split_top_level, strip_brackets,
+    PdfDiff, PdfPathSegment,
 };
 /// 🧪️ P2-FG3: real recursive binary primitives backing the upgraded `OpBinary` impl below --
 /// reuses the diff facet's own `pub(crate)` binary codecs (`../🔺️diff/🦀️component.rs`) rather
@@ -257,7 +257,7 @@ fn enc_pdf_snapshot(s: &PdfSnapshot) -> String {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_pdf_snapshot(s: &str) -> Result<PdfSnapshot, String> {
     let bytes = hex_decode(s)?;
-    let mut reader = semio_framework_plugin::resolve_ready(store::ByteReader::new(&bytes));
+    let mut reader = store::ByteReader::new(&bytes);
     let snapshot = dec_pdf_snapshot_bin(&mut reader)?;
     if reader.remaining() != 0 {
         return Err(format!("snapshot: {} trailing bytes", reader.remaining()));
@@ -412,63 +412,63 @@ impl OpBinary for PdfMutation {
         let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
         let mutation = match tag {
             0 => Ok(PdfMutation::NoMutation),
-            1 => Ok(PdfMutation::SetSnapshot { snapshot: dec_pdf_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", semio_framework_plugin::resolve_ready(reader.position()), e))? }),
+            1 => Ok(PdfMutation::SetSnapshot { snapshot: dec_pdf_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", reader.position(), e))? }),
             2 => {
-                let index = reader.read_varint_u64().map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
-                let page = dec_pdf_page_bin(&mut reader).map_err(|e| malformed("op page", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
+                let page = dec_pdf_page_bin(&mut reader).map_err(|e| malformed("op page", reader.position(), e))?;
                 Ok(PdfMutation::InsertPage { index, page })
             }
-            3 => Ok(PdfMutation::RemovePage { index: reader.read_varint_u64().map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize }),
+            3 => Ok(PdfMutation::RemovePage { index: reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize }),
             4 => {
-                let index = reader.read_varint_u64().map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
-                let media_box = dec_box_bin(&mut reader).map_err(|e| malformed("op media_box", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
+                let media_box = dec_box_bin(&mut reader).map_err(|e| malformed("op media_box", reader.position(), e))?;
                 Ok(PdfMutation::SetPageMediaBox { index, media_box })
             }
             5 => {
-                let index = reader.read_varint_u64().map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
-                let has = reader.read_u8().map_err(|e| malformed("op crop_box presence", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))?;
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
+                let has = reader.read_u8().map_err(|e| malformed("op crop_box presence", reader.position(), e.to_string()))?;
                 if has > 1 {
                     return Err(malformed("op crop_box presence", reader.position() - 1, format!("expected 0 or 1, got {has}")));
                 }
-                let crop_box = if has != 0 { Some(dec_box_bin(&mut reader).map_err(|e| malformed("op crop_box", semio_framework_plugin::resolve_ready(reader.position()), e))?) } else { None };
+                let crop_box = if has != 0 { Some(dec_box_bin(&mut reader).map_err(|e| malformed("op crop_box", reader.position(), e))?) } else { None };
                 Ok(PdfMutation::SetPageCropBox { index, crop_box })
             }
             6 => {
-                let index = reader.read_varint_u64().map_err(|e| malformed("op index", semio_framework_plugin::resolve_ready(reader.position()), e.to_string()))? as usize;
-                let text = read_str_lp(&mut reader).map_err(|e| malformed("op text", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
+                let text = read_str_lp(&mut reader).map_err(|e| malformed("op text", reader.position(), e))?;
                 Ok(PdfMutation::AppendPageContent { index, text })
             }
-            7 => Ok(PdfMutation::SetInfo { info: dec_pdf_info_bin(&mut reader).map_err(|e| malformed("op info", semio_framework_plugin::resolve_ready(reader.position()), e))? }),
+            7 => Ok(PdfMutation::SetInfo { info: dec_pdf_info_bin(&mut reader).map_err(|e| malformed("op info", reader.position(), e))? }),
             8 => {
-                let id = dec_objref_bin(&mut reader).map_err(|e| malformed("op id", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let value = dec_pdf_object_bin(&mut reader).map_err(|e| malformed("op value", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let id = dec_objref_bin(&mut reader).map_err(|e| malformed("op id", reader.position(), e))?;
+                let value = dec_pdf_object_bin(&mut reader).map_err(|e| malformed("op value", reader.position(), e))?;
                 Ok(PdfMutation::InsertObject { id, value })
             }
-            9 => Ok(PdfMutation::RemoveObject { id: dec_objref_bin(&mut reader).map_err(|e| malformed("op id", semio_framework_plugin::resolve_ready(reader.position()), e))? }),
+            9 => Ok(PdfMutation::RemoveObject { id: dec_objref_bin(&mut reader).map_err(|e| malformed("op id", reader.position(), e))? }),
             10 => {
-                let id = dec_objref_bin(&mut reader).map_err(|e| malformed("op id", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let value = dec_pdf_object_bin(&mut reader).map_err(|e| malformed("op value", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let id = dec_objref_bin(&mut reader).map_err(|e| malformed("op id", reader.position(), e))?;
+                let value = dec_pdf_object_bin(&mut reader).map_err(|e| malformed("op value", reader.position(), e))?;
                 Ok(PdfMutation::SetObjectValue { id, value })
             }
             11 => {
-                let id = dec_objref_bin(&mut reader).map_err(|e| malformed("op id", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let path = dec_path_bin(&mut reader).map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let key = read_str_lp(&mut reader).map_err(|e| malformed("op key", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let value = dec_pdf_object_bin(&mut reader).map_err(|e| malformed("op value", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let id = dec_objref_bin(&mut reader).map_err(|e| malformed("op id", reader.position(), e))?;
+                let path = dec_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
+                let key = read_str_lp(&mut reader).map_err(|e| malformed("op key", reader.position(), e))?;
+                let value = dec_pdf_object_bin(&mut reader).map_err(|e| malformed("op value", reader.position(), e))?;
                 Ok(PdfMutation::SetDictEntry { id, path, key, value })
             }
             12 => {
-                let id = dec_objref_bin(&mut reader).map_err(|e| malformed("op id", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let path = dec_path_bin(&mut reader).map_err(|e| malformed("op path", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let key = read_str_lp(&mut reader).map_err(|e| malformed("op key", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let id = dec_objref_bin(&mut reader).map_err(|e| malformed("op id", reader.position(), e))?;
+                let path = dec_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
+                let key = read_str_lp(&mut reader).map_err(|e| malformed("op key", reader.position(), e))?;
                 Ok(PdfMutation::RemoveDictEntry { id, path, key })
             }
             13 => {
-                let key = read_str_lp(&mut reader).map_err(|e| malformed("op key", semio_framework_plugin::resolve_ready(reader.position()), e))?;
-                let value = dec_pdf_object_bin(&mut reader).map_err(|e| malformed("op value", semio_framework_plugin::resolve_ready(reader.position()), e))?;
+                let key = read_str_lp(&mut reader).map_err(|e| malformed("op key", reader.position(), e))?;
+                let value = dec_pdf_object_bin(&mut reader).map_err(|e| malformed("op value", reader.position(), e))?;
                 Ok(PdfMutation::SetTrailerEntry { key, value })
             }
-            14 => Ok(PdfMutation::RemoveTrailerEntry { key: read_str_lp(&mut reader).map_err(|e| malformed("op key", semio_framework_plugin::resolve_ready(reader.position()), e))? }),
+            14 => Ok(PdfMutation::RemoveTrailerEntry { key: read_str_lp(&mut reader).map_err(|e| malformed("op key", reader.position(), e))? }),
             other => Err(malformed("op tag", 1, format!("unknown PdfMutation tag {other}"))),
         }?;
         if reader.remaining() != 0 {
@@ -525,8 +525,8 @@ mod tests {
     }
 
     //#region mutation_diff_law
-    #[semio_framework_async_macros::async_test]
-    async fn mutation_diff_law_matches_apply_pdf_mutation() {
+    #[test]
+    fn mutation_diff_law_matches_apply_pdf_mutation() {
         let base = base_snapshot();
         let cases = vec![
             PdfMutation::NoMutation,
@@ -555,8 +555,8 @@ mod tests {
     //#endregion mutation_diff_law
 
     //#region inverse_law
-    #[semio_framework_async_macros::async_test]
-    async fn mutation_apply_inverse_round_trips_every_variant() {
+    #[test]
+    fn mutation_apply_inverse_round_trips_every_variant() {
         let base = base_snapshot();
         round_trips(&base, PdfMutation::NoMutation);
         round_trips(&base, PdfMutation::SetSnapshot { snapshot: PdfSnapshot { info: PdfInfo { title: Some("X".into()), ..Default::default() }, ..base.clone() } });
@@ -580,8 +580,8 @@ mod tests {
         round_trips(&base, PdfMutation::RemoveTrailerEntry { key: "Size".into() });
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn set_dict_entry_nested_path_round_trips() {
+    #[test]
+    fn set_dict_entry_nested_path_round_trips() {
         let mut base = base_snapshot();
         base.objects.push(PdfIndirectObject { id: oref(4, 0), value: PdfObject::Dict(vec![PdfDictEntry { key: "Kids".into(), value: PdfObject::Array(vec![PdfObject::Dict(vec![PdfDictEntry { key: "Rotate".into(), value: PdfObject::Int(0) }])]) }]) });
         let path = vec![PdfPathSegment::DictKey { key: "Kids".into() }, PdfPathSegment::ArrayIndex { index: 0 }];
@@ -589,16 +589,16 @@ mod tests {
         round_trips(&base, PdfMutation::RemoveDictEntry { id: oref(4, 0), path, key: "Rotate".into() });
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn remove_page_out_of_range_is_noop_not_panic() {
+    #[test]
+    fn remove_page_out_of_range_is_noop_not_panic() {
         let base = base_snapshot();
         let mut snap = base.clone();
         apply_pdf_mutation(&mut snap, &PdfMutation::RemovePage { index: 99 });
         assert_eq!(snap, base);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn set_dict_entry_unresolvable_path_is_noop_not_panic() {
+    #[test]
+    fn set_dict_entry_unresolvable_path_is_noop_not_panic() {
         let base = base_snapshot();
         let mut snap = base.clone();
         let d = apply_pdf_mutation(&mut snap, &PdfMutation::SetDictEntry { id: oref(999, 0), path: vec![], key: "X".into(), value: PdfObject::Int(1) });
@@ -608,8 +608,8 @@ mod tests {
     //#endregion inverse_law
 
     //#region field_sweep (see 🔺️diff module's own field_sweep tests for the full snapshot-level sweep)
-    #[semio_framework_async_macros::async_test]
-    async fn field_sweep_mutation_vocabulary_covers_every_snapshot_field() {
+    #[test]
+    fn field_sweep_mutation_vocabulary_covers_every_snapshot_field() {
         // 📏 One mutation exists (or composes via SetSnapshot) per top-level PdfSnapshot field:
         // declaredVersion (via SetSnapshot), info (SetInfo), pages (Insert/Remove/SetMediaBox/
         // SetCropBox/AppendPageContent), objects (Insert/Remove/SetObjectValue/SetDictEntry/
@@ -635,8 +635,8 @@ mod tests {
     /// exercises every variant, incl. `SetSnapshot`'s full object-graph payload (`PdfObject::
     /// Array`/`Dict`/`Stream`/`Ref` recursion), `SetPageCropBox`'s tri-state-like `Option<[f64;4]>`
     /// arg, and `SetDictEntry`/`RemoveDictEntry`'s `path: Vec<PdfPathSegment>` (both segment kinds).
-    #[semio_framework_async_macros::async_test]
-    async fn op_text_binary_roundtrip_law() {
+    #[test]
+    fn op_text_binary_roundtrip_law() {
         let base = base_snapshot();
         let mutations = vec![
             PdfMutation::NoMutation,
